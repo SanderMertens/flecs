@@ -1,0 +1,7 @@
+{
+    "id":"ecs",
+    "type":"package",
+    "value": {
+        "managed": false
+    }
+}
