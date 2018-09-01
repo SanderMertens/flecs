@@ -1,6 +1,9 @@
 #ifndef ECS_ENTITY_H
 #define ECS_ENTITY_H
 
+#include <stdint.h>
+#include <ecs/log.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -10,8 +13,8 @@ typedef void *EcsData;
 
 EcsEntity *ecs_declare(
     EcsEntity *parent,
-    EcsData id,
-    EcsEntity *prefab);
+    const char *id,
+    EcsEntity *base);
 
 EcsResult ecs_define(
     EcsEntity *entity);

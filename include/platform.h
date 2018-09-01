@@ -4,15 +4,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <alloca.h>
+
 #include <ecs/log.h>
-#include <ecs/export.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #ifndef __cplusplus
-/* Boolean definitions (compatible with C++ and C99 stdbool) */
 #undef bool
 #undef true
 #undef false

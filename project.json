@@ -1,6 +1,6 @@
 {
     "id":"ecs",
-    "type":"package",
+    "type":"application",
     "value": {
         "managed": false
     }

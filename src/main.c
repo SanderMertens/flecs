@@ -2,10 +2,17 @@
 
 #include <ecs/ecs.h>
 
+int main(int argc, char *argv[]) {
 
-int cortomain(int argc, char *argv[]) {
+    char *str = "Hello World\n";
+    uint64_t hash = 0;
+    ecs_hash(str, strlen(str), &hash);
+    printf("hash = %lld\n", hash);
 
-    /* Insert implementation */
-    
+    str = "Hello World1\n";
+    hash = 0;
+    ecs_hash(str, strlen(str), &hash);
+    printf("hash = %lld\n", hash);
+
     return 0;
 }

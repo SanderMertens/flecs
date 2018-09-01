@@ -1,5 +1,5 @@
-#ifndef ECS_TYPES_H
-#define ECS_TYPES_H
+#ifndef ECS_ENTITY_H
+#define ECS_ENTITY_H
 
 typedef struct EcsComponentElement {
     void *data_ptr;
@@ -7,7 +7,7 @@ typedef struct EcsComponentElement {
 } EcsComponentElement;
 
 struct EcsEntity {
-    EcsEntity *prefab;
+    EcsEntity *base;
     EcsVector *components;
 };
 

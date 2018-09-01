@@ -10,9 +10,7 @@ void ecs_vector_deinit(
     do {
         next = el->next;
         if (el == &me->first) {
-            if (!me->initial_buffer_set) {
-                free(el->buffer);
-            }
+            free(el->buffer);
         } else {
             free (el->buffer);
         }
@@ -23,39 +21,41 @@ void ecs_vector_deinit(
 }
 
 static
-uint32_t ecs_vector_buffer_size(
-    EcsVector *me)
-{
-    return me->size * me->buffer_count;
-}
-
-static
 void ecs_vector_chunk_new(
-    EcsVector *me)
+    EcsVector *me,
+    const EcsVectorParams *params)
 {
-    uint32_t buffer_size = ecs_vector_buffer_size(me);
+    uint32_t buffer_size = params->element_size * params->chunk_count;
     EcsVectorChunk *el = malloc(sizeof(EcsVectorChunk) + buffer_size);
     el->buffer = ECS_OFFSET(el, sizeof(EcsVectorChunk));
-    el->count = 0;
     el->next = NULL;
     me->current->next= el;
     me->current = el;
+    me->count = 0;
 }
 
 static
 EcsVectorChunk* ecs_vector_find_chunk(
     EcsVector *me,
+    const EcsVectorParams *params,
     void *el)
 {
-    EcsVectorChunk *result = NULL, *cur = me->current;
+    EcsVectorChunk *result = NULL, *cur = me->current, *next;
+    uint32_t count = params->chunk_count;
 
     do {
+        next = cur->next;
+
+        if (!next) {
+            count = me->count % params->chunk_count;
+        }
+
         if (el >= cur->buffer &&
-            el < ECS_OFFSET(cur->buffer, cur->count * me->size))
+            el < ECS_OFFSET(cur->buffer, count * params->element_size))
         {
             result = cur;
         } else {
-            cur = cur->next;
+            cur = next;
         }
     } while (!result);
 
@@ -80,30 +80,53 @@ EcsVectorChunk* ecs_vector_prev_chunk(
     return cur;
 }
 
-EcsVector* ecs_vector_new(
-    uint32_t size,
-    uint32_t buffer_count,
-    void *initial_buffer)
+static
+bool ecs_vector_hasnext(
+    EcsIter *me)
 {
-    EcsVector *buffer;
+    EcsVector *vec = me->data;
+    EcsVectorIter *iter_data = me->ctx;
 
-    if (initial_buffer) {
-        buffer = malloc(sizeof(EcsVector));
-        buffer->first.buffer = initial_buffer;
-        buffer->initial_buffer_set = true;
+    if (iter_data->index < vec->count) {
+        return true;
     } else {
-        uint32_t buffer_size = size * buffer_count;
-        buffer = malloc(sizeof(EcsVector) + buffer_size);
-        buffer->first.buffer = ECS_OFFSET(buffer, buffer_size);
-        buffer->initial_buffer_set = false;
+        return false;
     }
+}
 
-    buffer->size = size;
-    buffer->buffer_count = buffer_count;
+static
+void *ecs_vector_next(
+    EcsIter *me)
+{
+    EcsVectorIter *iter_data = me->ctx;
+    const EcsVectorParams *params = iter_data->params;
+    EcsVectorChunk *current = iter_data->current;
+    uint32_t index = iter_data->index;
+    uint32_t chunk_count = params->chunk_count;
+    uint32_t size = params->element_size;
+
+    if (!index || index < chunk_count) {
+        return ECS_OFFSET(current->buffer, size * index);
+    } else {
+        uint32_t cur_index = index % chunk_count;
+        if (cur_index) {
+            return ECS_OFFSET(current->buffer, size * cur_index);
+        } else {
+            iter_data->current = current->next;
+            return iter_data->current->buffer;
+        }
+    }
+}
+
+EcsVector* ecs_vector_new(
+    const EcsVectorParams *params)
+{
+    uint32_t buffer_size = params->element_size * params->chunk_count;
+    EcsVector *buffer = malloc(sizeof(EcsVector) + buffer_size);
     buffer->current = &buffer->first;
-    buffer->first.count = 0;
+    buffer->count = 0;
+    buffer->first.buffer = ECS_OFFSET(buffer, buffer_size);
     buffer->first.next = NULL;
-
     return buffer;
 }
 
@@ -115,45 +138,56 @@ void ecs_vector_free(
 }
 
 void* ecs_vector_add(
-    EcsVector *me)
+    EcsVector *me,
+    const EcsVectorParams *params)
 {
     void *result;
     EcsVectorChunk *chunk = me->current;
-    uint32_t count = chunk->count;
+    uint32_t count = params->chunk_count;
 
-    if (count == me->buffer_count) {
-        ecs_vector_chunk_new(me);
+    if (!chunk->next) {
+        count = me->count % params->chunk_count;
+    }
+
+    if (count == params->chunk_count) {
+        ecs_vector_chunk_new(me, params);
         count = 0;
         chunk = chunk->next;
     }
 
-    result = ECS_OFFSET(chunk->buffer, me->size * count);
-    chunk->count = count + 1;
+    result = ECS_OFFSET(chunk->buffer, params->element_size * count);
+    me->count = count + 1;
 
     return result;
 }
 
 EcsResult ecs_vector_remove(
     EcsVector *me,
-    void *el)
+    const EcsVectorParams *params,
+    void *element)
 {
-    EcsVectorChunk *chunk = ecs_vector_find_chunk(me, el);
+    EcsVectorChunk *chunk = ecs_vector_find_chunk(me, params, element);
     if (!chunk) {
         return EcsError;
     }
 
-    EcsVectorChunk *current = me->current;
-    uint32_t size = me->size;
-    void *last_element =
-        ECS_OFFSET(current->buffer, (current->count - 1) * size);
-
-    if (last_element != el) {
-        memcpy(el, last_element, size);
+    uint32_t chunk_count = params->chunk_count;
+    if (!chunk->next) {
+        chunk_count = me->count % params->chunk_count;
     }
 
-    current->count --;
+    EcsVectorChunk *current = me->current;
+    uint32_t size = params->element_size;
+    void *last_element =
+        ECS_OFFSET(current->buffer, (chunk_count - 1) * size);
 
-    if (!current->count) {
+    if (last_element != element) {
+        memcpy(element, last_element, size);
+    }
+
+    me->count --;
+
+    if (!(chunk_count - 1)) {
         EcsVectorChunk *prev_chunk = ecs_vector_prev_chunk(me, current);
         if (prev_chunk) {
             free(current);
@@ -165,4 +199,20 @@ EcsResult ecs_vector_remove(
     }
 
     return EcsOk;
+}
+
+EcsIter _ecs_vector_iter(
+    EcsVector *me,
+    const EcsVectorParams *params,
+    EcsVectorIter *iter_data)
+{
+    EcsIter result = {
+        .data = me,
+        .ctx = iter_data,
+        .hasnext = ecs_vector_hasnext,
+        .next = ecs_vector_next,
+        .release = NULL
+    };
+
+    return result;
 }
