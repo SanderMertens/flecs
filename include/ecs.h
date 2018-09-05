@@ -12,12 +12,18 @@
 #define ECS_EXPORT
 #endif
 
+#include <ecs/entity.h>
+#include <ecs/hash.h>
+#include <ecs/entity.h>
+#include <ecs/components.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <ecs/entity.h>
-#include <ecs/hash.h>
+void ecs_init(void);
+
+void ecs_fini(void);
 
 #ifdef __cplusplus
 }

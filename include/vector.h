@@ -8,16 +8,8 @@
 extern "C" {
 #endif
 
-typedef struct EcsVectorChunk {
-    struct EcsVectorChunk *next;
-    void *buffer;
-} EcsVectorChunk;
-
-typedef struct EcsVector {
-    uint32_t count;
-    EcsVectorChunk *current;
-    EcsVectorChunk first;
-} EcsVector;
+typedef struct EcsVector EcsVector;
+typedef struct EcsVectorChunk EcsVectorChunk;
 
 typedef struct EcsVectorParams {
     uint32_t element_size; /* Size of an element */
@@ -49,6 +41,18 @@ EcsIter _ecs_vector_iter(
     EcsVector *me,
     const EcsVectorParams *params,
     EcsVectorIter *iter_data);
+
+uint32_t ecs_vector_count(
+    EcsVector *me);
+
+void ecs_vector_sort(
+    EcsVector *me,
+    const EcsVectorParams *params,
+    EcsComparator compare);
+
+bool ecs_vector_compare_ptr(
+    void *a,
+    void *b);
 
 #define ecs_vector_iter(me, params)\
     _ecs_vector_iter(me, params, alloca(sizeof(EcsVectorIter)))

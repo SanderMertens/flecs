@@ -8,35 +8,35 @@
 extern "C" {
 #endif
 
+typedef struct EcsWorld EcsWorld;
 typedef struct EcsEntity EcsEntity;
-typedef void *EcsData;
 
-EcsEntity *ecs_declare(
-    EcsEntity *parent,
+EcsWorld* ecs_world_new(
+    uint32_t initial_size);
+
+EcsEntity* ecs_entity_new(
+    EcsWorld *world,
     const char *id,
     EcsEntity *base);
-
-EcsResult ecs_define(
-    EcsEntity *entity);
 
 EcsResult ecs_delete(
     EcsEntity *entity);
 
-EcsEntity* ecs_claim(
+void ecs_entity_edit(
     EcsEntity *entity);
 
-int32_t ecs_release(
+void ecs_entity_finalize(
     EcsEntity *entity);
 
-EcsData ecs_add_component(
+void ecs_entity_add_component(
     EcsEntity *entity,
     EcsEntity *component);
 
-EcsData ecs_get_component(
+void* ecs_entity_get_component(
     EcsEntity *entity,
     EcsEntity *component);
 
-EcsResult ecs_remove_component(
+void ecs_entity_remove_component(
     EcsEntity *entity,
     EcsEntity *component);
 

@@ -1,5 +1,16 @@
 #include <ecs/vector.h>
 
+struct EcsVectorChunk {
+    struct EcsVectorChunk *next;
+    void *buffer;
+};
+
+struct EcsVector {
+    uint32_t count;
+    EcsVectorChunk *current;
+    EcsVectorChunk first;
+};
+
 static
 void ecs_vector_deinit(
     EcsVector *me)
@@ -214,5 +225,30 @@ EcsIter _ecs_vector_iter(
         .release = NULL
     };
 
+    iter_data->params = 0;
+    iter_data->current = NULL;
+    iter_data->index = 0;
+
     return result;
+}
+
+uint32_t ecs_vector_count(
+    EcsVector *me)
+{
+    return me->count;
+}
+
+void ecs_vector_sort(
+    EcsVector *me,
+    const EcsVectorParams *params,
+    EcsComparator compare)
+{
+
+}
+
+bool ecs_vector_compare_ptr(
+    void *a,
+    void *b)
+{
+    return false;
 }

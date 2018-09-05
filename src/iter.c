@@ -1,6 +1,6 @@
 #include <ecs/iter.h>
 
-int ecs_iter_hasnext(
+bool ecs_iter_hasnext(
     EcsIter* iter)
 {
     if (iter->hasnext) {
@@ -19,7 +19,11 @@ int ecs_iter_hasnext(
 void* ecs_iter_next(
     EcsIter* iter)
 {
-    return iter->next(iter);
+    if (iter->next) {
+        return iter->next(iter);
+    } else {
+        return NULL;
+    }
 }
 
 void ecs_iter_release(

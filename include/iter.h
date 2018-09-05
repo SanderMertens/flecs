@@ -16,7 +16,7 @@ struct EcsIter {
     void (*release)(EcsIter*);
 };
 
-int ecs_iter_hasnext(EcsIter* iter);
+bool ecs_iter_hasnext(EcsIter* iter);
 void* ecs_iter_next(EcsIter* iter);
 void ecs_iter_release(EcsIter* iter);
 

@@ -38,6 +38,8 @@ extern "C" {
 #define ECS_ALIGN(size, alignment) (((((size) - 1) / (alignment)) + 1) * (alignment))
 #define ECS_ISNAN(x) ((x) != (x))
 
+typedef bool (*EcsComparator)(void* a, void *b);
+
 #ifdef __cplusplus
 }
 #endif
