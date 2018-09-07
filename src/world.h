@@ -19,22 +19,26 @@ struct EcsWorld {
 
 /* -- Private functions -- */
 
-EcsEntity* ecs_world_add_entity(
+EcsEntity* ecs_world_alloc_entity(
     EcsWorld *world);
 
-void ecs_world_finalize_entity(
+void ecs_world_add_entity(
     EcsWorld *world,
     EcsEntity *entity);
 
-EcsTable *ecs_world_add_table(
+EcsTable *ecs_world_alloc_table(
     EcsWorld *world);
 
-void ecs_world_finalize_table(
+void ecs_world_add_table(
     EcsWorld *world,
     EcsTable *table);
 
 void ecs_world_remove_table(
     EcsWorld *world,
     EcsTable *table);
+
+EcsTable* ecs_world_lookup_table(
+    EcsWorld *world,
+    uint64_t component_hash);
 
 #endif

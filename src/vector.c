@@ -194,6 +194,10 @@ EcsResult ecs_vector_remove(
 
     if (last_element != element) {
         memcpy(element, last_element, size);
+
+        if (params->move_action) {
+            params->move_action(element, last_element, params->move_action_ctx);
+        }
     }
 
     me->count --;
@@ -210,6 +214,32 @@ EcsResult ecs_vector_remove(
     }
 
     return EcsOk;
+}
+
+void* ecs_vector_get(
+    EcsVector *me,
+    const EcsVectorParams *params,
+    uint32_t index)
+{
+    if (!index) {
+        return me->first.buffer;
+    }
+
+    if (index > me->count) {
+        return NULL;
+    }
+
+    uint32_t chunk_count = params->chunk_count;
+    uint32_t element_size = params->element_size;
+    uint32_t chunk_index = index / chunk_count;
+    uint32_t i;
+    EcsVectorChunk *chunk_ptr = &me->first;
+
+    for (i = 0; i < chunk_index; i ++) {
+        chunk_ptr = chunk_ptr->next;
+    }
+
+    return ECS_OFFSET(chunk_ptr->buffer, element_size * (index % chunk_count));
 }
 
 EcsIter _ecs_vector_iter(

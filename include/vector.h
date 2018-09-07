@@ -11,9 +11,13 @@ extern "C" {
 typedef struct EcsVector EcsVector;
 typedef struct EcsVectorChunk EcsVectorChunk;
 
+typedef void (*EcsVectorMove)(void *to, void *from, void *ctx);
+
 typedef struct EcsVectorParams {
     uint32_t element_size; /* Size of an element */
     uint32_t chunk_count;  /* Number of elements in a chunk */
+    EcsVectorMove move_action; /* Callback invoked when element is moved */
+    void *move_action_ctx; /* Context passed to move_action */
 } EcsVectorParams;
 
 typedef struct EcsVectorIter {
@@ -44,6 +48,11 @@ EcsIter _ecs_vector_iter(
 
 uint32_t ecs_vector_count(
     EcsVector *me);
+
+void* ecs_vector_get(
+    EcsVector *me,
+    const EcsVectorParams *params,
+    uint32_t index);
 
 void ecs_vector_sort(
     EcsVector *me,

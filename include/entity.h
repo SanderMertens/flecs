@@ -14,31 +14,34 @@ typedef struct EcsEntity EcsEntity;
 EcsWorld* ecs_world_new(
     uint32_t initial_size);
 
-EcsEntity* ecs_entity_new(
+EcsWorld* ecs_world_delete(
+    uint32_t initial_size);
+
+EcsEntity* ecs_new(
     EcsWorld *world,
-    const char *id,
-    EcsEntity *base);
+    const char *id);
 
-EcsResult ecs_delete(
+void ecs_delete(
     EcsEntity *entity);
 
-void ecs_entity_edit(
-    EcsEntity *entity);
-
-void ecs_entity_finalize(
-    EcsEntity *entity);
-
-void ecs_entity_add_component(
+void ecs_add(
     EcsEntity *entity,
     EcsEntity *component);
 
-void* ecs_entity_get_component(
+void* ecs_get(
     EcsEntity *entity,
     EcsEntity *component);
 
-void ecs_entity_remove_component(
+void ecs_remove(
     EcsEntity *entity,
     EcsEntity *component);
+
+void ecs_commit(
+    EcsEntity *entity);
+
+EcsEntity* ecs_lookup(
+    EcsWorld *world,
+    const char *id);
 
 #ifdef __cplusplus
 }

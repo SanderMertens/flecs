@@ -13,6 +13,7 @@ typedef struct EcsTable {
     EcsWorld *world;              /* World associated with the table */
     EcsVectorParams rows_params;  /* Parameters for the rows vector */
     EcsVector *rows;              /* vector<T> */
+    uint32_t *columns;            /* Offsets to columns in row */
 } EcsTable;
 
 
@@ -29,6 +30,20 @@ EcsResult ecs_table_finalize(
     EcsTable *table);
 
 void* ecs_table_insert(
-    EcsTable *table);
+    EcsTable *table,
+    EcsEntity *entity);
+
+void ecs_table_remove(
+    EcsTable *table,
+    void *row);
+
+void* ecs_table_column(
+    EcsTable *table,
+    void *row,
+    uint32_t column);
+
+size_t ecs_table_column_size(
+    EcsTable *table,
+    uint32_t column);
 
 #endif

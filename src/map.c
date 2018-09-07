@@ -212,7 +212,7 @@ void ecs_map_remove(
     }
 }
 
-const void* ecs_map_lookup(
+void* ecs_map_lookup(
     EcsMap *map,
     uint64_t key_hash)
 {
@@ -220,7 +220,7 @@ const void* ecs_map_lookup(
     if (bucket->elems) {
         EcsMapData *elem = ecs_map_get_elem(bucket, key_hash);
         if (elem) {
-            return elem->data;
+            return (void*)elem->data;
         }
     }
 

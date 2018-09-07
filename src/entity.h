@@ -12,19 +12,25 @@
 /* -- Private types -- */
 
 typedef struct EcsComponentElement {
-    EcsEntity *type;              /* Type of component */
-    void *data_ptr;               /* Pointer to component data */
+    EcsEntity *component;         /* Type of component */
+    void *data;                   /* Pointer to component data */
 } EcsComponentElement;
 
 
 /* -- Public (opaque) types -- */
 
 struct EcsEntity {
-    char *id;                     /* String-based id */
     uint64_t id_hash;             /* Hashed id */
+    uint64_t components_hash;     /* Hashed components list */
+    char *id;                     /* String-based id */
     EcsVector *components;        /* vector<EcsComponentElement> */
     EcsEntity *base;              /* Base of entity (optional) */
-    bool edit_mode;               /* Enable to efficiently add/remove components */
+    EcsWorld *world;              /* Reference to the world */
 };
+
+void ecs_entity_move(
+    EcsEntity *entity,
+    void *to,
+    void *from);
 
 #endif
