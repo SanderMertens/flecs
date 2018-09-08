@@ -1,7 +1,7 @@
-#ifndef ECS_ITER_H_
-#define ECS_ITER_H_
+#ifndef REFLECS_ITER_H_
+#define REFLECS_ITER_H_
 
-#include <ecs/platform.h>
+#include <reflecs/platform.h>
 
 #ifdef __cplusplus
 extern "C" {

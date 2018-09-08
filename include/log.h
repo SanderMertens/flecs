@@ -1,5 +1,5 @@
-#ifndef ECS_LOG_H
-#define ECS_LOG_H
+#ifndef REFLECS_LOG_H
+#define REFLECS_LOG_H
 
 #ifdef __cplusplus
 extern "C" {

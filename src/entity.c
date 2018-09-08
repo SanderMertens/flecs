@@ -1,7 +1,7 @@
-#include <ecs/entity.h>
-#include <ecs/vector.h>
-#include <ecs/hash.h>
-#include <ecs/components.h>
+#include <reflecs/entity.h>
+#include <reflecs/vector.h>
+#include <reflecs/hash.h>
+#include <reflecs/components.h>
 #include "entity.h"
 #include "table.h"
 
@@ -9,7 +9,7 @@ EcsEntity *EcsType_e;
 
 static const EcsVectorParams components_vec_params = {
     .element_size = sizeof(EcsComponentElement),
-    .chunk_count = ECS_INITIAL_CHUNK_COUNT
+    .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
 };
 
 static
@@ -134,7 +134,7 @@ void ecs_commit(
     EcsIter it = ecs_vector_iter(entity->components, &components_vec_params);
 
     ecs_vector_sort(
-        entity->components, &components_vec_params, ecs_components_compare);
+        entity->components, &components_vec_params);
 
     while (ecs_iter_hasnext(&it)) {
         EcsComponentElement *elem = ecs_iter_next(&it);

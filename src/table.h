@@ -1,8 +1,8 @@
-#ifndef ECS_TABLE_PRIVATE_H
-#define ECS_TABLE_PRIVATE_H
+#ifndef REFLECS_TABLE_PRIVATE_H
+#define REFLECS_TABLE_PRIVATE_H
 
-#include <ecs/entity.h>
-#include <ecs/vector.h>
+#include <reflecs/entity.h>
+#include <reflecs/vector.h>
 
 
 /* -- Private types -- */

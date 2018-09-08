@@ -1,9 +1,9 @@
-#ifndef ECS_WORLD_PRIVATE_H
-#define ECS_WORLD_PRIVATE_H
+#ifndef REFLECS_WORLD_PRIVATE_H
+#define REFLECS_WORLD_PRIVATE_H
 
-#include <ecs/entity.h>
-#include <ecs/vector.h>
-#include <ecs/map.h>
+#include <reflecs/entity.h>
+#include <reflecs/vector.h>
+#include <reflecs/map.h>
 #include "table.h"
 
 

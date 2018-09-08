@@ -1,7 +1,7 @@
-#ifndef ECS_HASH_H
-#define ECS_HASH_H
+#ifndef REFLECS_HASH_H
+#define REFLECS_HASH_H
 
-#include <ecs/platform.h>
+#include <reflecs/platform.h>
 
 #ifdef __cplusplus
 extern "C" {

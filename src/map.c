@@ -1,7 +1,7 @@
-#include <ecs/map.h>
-#include <ecs/vector.h>
+#include <reflecs/map.h>
+#include <reflecs/vector.h>
 
-#define ECS_LOAD_FACTOR (2.0f / 3.0f)
+#define REFLECS_LOAD_FACTOR (2.0f / 3.0f)
 
 typedef struct EcsMapData {
     uint64_t key_hash;
@@ -190,7 +190,7 @@ void ecs_map_set(
         }
     }
 
-    if ((float)map->count / (float)map->bucket_count > ECS_LOAD_FACTOR) {
+    if ((float)map->count / (float)map->bucket_count > REFLECS_LOAD_FACTOR) {
         ecs_map_resize(map, map->bucket_count * 2);
     }
 }

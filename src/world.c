@@ -1,17 +1,17 @@
-#include <ecs/vector.h>
-#include <ecs/map.h>
+#include <reflecs/vector.h>
+#include <reflecs/map.h>
 #include "world.h"
 #include "table.h"
 #include "entity.h"
 
 static const EcsVectorParams entities_vec_params = {
     .element_size = sizeof(EcsEntity),
-    .chunk_count = ECS_INITIAL_CHUNK_COUNT
+    .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
 };
 
 static const EcsVectorParams tables_vec_params = {
     .element_size = sizeof(EcsTable),
-    .chunk_count = ECS_INITIAL_CHUNK_COUNT
+    .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
 };
 
 EcsWorld* ecs_world_new(
@@ -21,7 +21,7 @@ EcsWorld* ecs_world_new(
     result->entities = ecs_vector_new(&entities_vec_params);
     result->entities_map = ecs_map_new(initial_size);
     result->tables = ecs_vector_new(&tables_vec_params);
-    result->tables_map = ecs_map_new(ECS_INITIAL_TABLE_COUNT);
+    result->tables_map = ecs_map_new(REFLECS_INITIAL_TABLE_COUNT);
     return result;
 }
 

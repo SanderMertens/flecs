@@ -1,8 +1,8 @@
-#ifndef ECS_MAP_H
-#define ECS_MAP_H
+#ifndef REFLECS_MAP_H
+#define REFLECS_MAP_H
 
-#include <ecs/platform.h>
-#include <ecs/iter.h>
+#include <reflecs/platform.h>
+#include <reflecs/iter.h>
 
 #ifdef __cplusplus
 extern "C" {

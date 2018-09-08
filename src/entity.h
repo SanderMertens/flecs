@@ -1,12 +1,12 @@
-#ifndef ECS_ENTITY_PRIVATE_H
-#define ECS_ENTITY_PRIVATE_H
+#ifndef REFLECS_ENTITY_PRIVATE_H
+#define REFLECS_ENTITY_PRIVATE_H
 
-#include <ecs/map.h>
-#include <ecs/vector.h>
+#include <reflecs/map.h>
+#include <reflecs/vector.h>
 #include "world.h"
 
-#define ECS_INITIAL_TABLE_COUNT (32)
-#define ECS_INITIAL_CHUNK_COUNT (64)
+#define REFLECS_INITIAL_TABLE_COUNT (32)
+#define REFLECS_INITIAL_CHUNK_COUNT (64)
 
 
 /* -- Private types -- */

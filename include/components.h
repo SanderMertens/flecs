@@ -1,8 +1,8 @@
-#ifndef ECS_COMPONENTS_H
-#define ECS_COMPONENTS_H
+#ifndef REFLECS_COMPONENTS_H
+#define REFLECS_COMPONENTS_H
 
-#include <ecs/platform.h>
-#include <ecs/entity.h>
+#include <reflecs/platform.h>
+#include <reflecs/entity.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,7 +1,7 @@
-#include <ecs/vector.h>
+#include <reflecs/vector.h>
 
 struct EcsVectorChunk {
-    struct EcsVectorChunk *next;
+    struct EcsVectorChunk *next, *prev;
     void *buffer;
 };
 
@@ -20,11 +20,6 @@ void ecs_vector_deinit(
 
     do {
         next = el->next;
-        if (el == &me->first) {
-            free(el->buffer);
-        } else {
-            free (el->buffer);
-        }
         if (el != &me->first) {
             free(el);
         }
@@ -40,6 +35,7 @@ void ecs_vector_chunk_new(
     EcsVectorChunk *el = malloc(sizeof(EcsVectorChunk) + buffer_size);
     el->buffer = ECS_OFFSET(el, sizeof(EcsVectorChunk));
     el->next = NULL;
+    el->prev = me->current;
     me->current->next= el;
     me->current = el;
     me->count = 0;
@@ -74,24 +70,6 @@ EcsVectorChunk* ecs_vector_find_chunk(
 }
 
 static
-EcsVectorChunk* ecs_vector_prev_chunk(
-    EcsVector *me,
-    EcsVectorChunk *chunk)
-{
-    EcsVectorChunk *cur = &me->first;
-
-    if (chunk == cur) {
-        return NULL;
-    }
-
-    while (cur && cur->next != chunk) {
-        cur = cur->next;
-    }
-
-    return cur;
-}
-
-static
 bool ecs_vector_hasnext(
     EcsIter *me)
 {
@@ -115,30 +93,35 @@ void *ecs_vector_next(
     uint32_t index = iter_data->index;
     uint32_t chunk_count = params->chunk_count;
     uint32_t size = params->element_size;
+    void *result;
 
     if (!index || index < chunk_count) {
-        return ECS_OFFSET(current->buffer, size * index);
+        result = ECS_OFFSET(current->buffer, size * index);
     } else {
         uint32_t cur_index = index % chunk_count;
         if (cur_index) {
-            return ECS_OFFSET(current->buffer, size * cur_index);
+            result = ECS_OFFSET(current->buffer, size * cur_index);
         } else {
             iter_data->current = current->next;
-            return iter_data->current->buffer;
+            result = iter_data->current->buffer;
         }
     }
+
+    iter_data->index ++;
+    return result;
 }
 
 EcsVector* ecs_vector_new(
     const EcsVectorParams *params)
 {
     uint32_t buffer_size = params->element_size * params->chunk_count;
-    EcsVector *buffer = malloc(sizeof(EcsVector) + buffer_size);
-    buffer->current = &buffer->first;
-    buffer->count = 0;
-    buffer->first.buffer = ECS_OFFSET(buffer, buffer_size);
-    buffer->first.next = NULL;
-    return buffer;
+    EcsVector *result = malloc(sizeof(EcsVector) + buffer_size);
+    result->current = &result->first;
+    result->count = 0;
+    result->first.buffer = ECS_OFFSET(result, sizeof(EcsVector));
+    result->first.next = NULL;
+    result->first.prev = NULL;
+    return result;
 }
 
 void ecs_vector_free(
@@ -196,14 +179,14 @@ EcsResult ecs_vector_remove(
         memcpy(element, last_element, size);
 
         if (params->move_action) {
-            params->move_action(element, last_element, params->move_action_ctx);
+            params->move_action(element, last_element, params->ctx);
         }
     }
 
     me->count --;
 
     if (!(chunk_count - 1)) {
-        EcsVectorChunk *prev_chunk = ecs_vector_prev_chunk(me, current);
+        EcsVectorChunk *prev_chunk = current->prev;
         if (prev_chunk) {
             free(current);
             prev_chunk->next = NULL;
@@ -255,8 +238,8 @@ EcsIter _ecs_vector_iter(
         .release = NULL
     };
 
-    iter_data->params = 0;
-    iter_data->current = NULL;
+    iter_data->params = params;
+    iter_data->current = &me->first;
     iter_data->index = 0;
 
     return result;
@@ -268,12 +251,121 @@ uint32_t ecs_vector_count(
     return me->count;
 }
 
+typedef struct cursor {
+    const EcsVectorParams *params;
+    EcsVectorChunk *chunk;
+    uint32_t index;
+} cursor;
+
+static
+void* cursor_value(
+    cursor *c)
+{
+    return ECS_OFFSET(c->chunk->buffer, c->index * c->params->element_size);
+}
+
+static
+void cursor_next(
+    cursor *cur)
+{
+    if (cur->index >= cur->params->chunk_count) {
+        cur->chunk = cur->chunk->next;
+    } else {
+        cur->index ++;
+    }
+}
+
+static
+void cursor_swap(
+    cursor *c1,
+    cursor *c2)
+{
+    int i, size = c1->params->element_size;
+    char *v1 = cursor_value(c1);
+    char *v2 = cursor_value(c2);
+    for (i = 0; i < size; i ++) {
+        char t = v1[i];
+        v1[i] = v2[i];
+        v2[i] = t;
+    }
+}
+
+static
+void ecs_vector_qsort(
+    cursor start,
+    cursor end,
+    uint32_t total_count)
+{
+repeat:
+    {
+        const EcsVectorParams *params = start.params;
+        void *pivot = cursor_value(&end);
+        cursor c_l = start, c_r = start;
+        uint32_t r_count = 0, l_count = 0;
+
+        do {
+            if (params->compare_action(cursor_value(&c_r), pivot) < 0) {
+                cursor_swap(&c_l, &c_r);
+                cursor_next(&c_l);
+                l_count ++;
+            }
+            r_count ++;
+            if (r_count < total_count) {
+                cursor_next(&c_r);
+            } else {
+                break;
+            }
+        } while (true);
+
+        cursor_swap(&c_r, &end);
+
+        int r_size = total_count - r_count;
+        if (r_size > l_count) {
+            if (l_count) {
+                ecs_vector_qsort(start, c_l, l_count);
+            }
+            cursor_next(&c_l);
+            start = c_l;
+            total_count = r_size;
+        } else {
+            if (r_size) {
+                cursor next = c_l;
+                cursor_next(&next);
+                ecs_vector_qsort(next, end, r_size);
+            }
+            end = c_l;
+            total_count = l_count;
+        }
+
+        if (total_count < 2) {
+            return;
+        } else {
+            goto repeat;
+        }
+    }
+}
+
 void ecs_vector_sort(
     EcsVector *me,
-    const EcsVectorParams *params,
-    EcsComparator compare)
+    const EcsVectorParams *params)
 {
+    if (me->count < 2) {
+        return;
+    }
 
+    cursor start = {
+        .params = params,
+        .chunk = &me->first,
+        .index = 0
+    };
+
+    cursor stop = {
+        .params = params,
+        .chunk = me->current,
+        .index = me->count % params->chunk_count
+    };
+
+    ecs_vector_qsort(start, stop, me->count);
 }
 
 bool ecs_vector_compare_ptr(

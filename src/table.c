@@ -1,12 +1,12 @@
-#include <ecs/components.h>
-#include <ecs/hash.h>
-#include <ecs/entity.h>
+#include <reflecs/components.h>
+#include <reflecs/hash.h>
+#include <reflecs/entity.h>
 #include "table.h"
 #include "entity.h"
 
 static const EcsVectorParams components_vec_params = {
     .element_size = sizeof(EcsEntity*),
-    .chunk_count = ECS_INITIAL_CHUNK_COUNT
+    .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
 };
 
 static
@@ -59,7 +59,7 @@ EcsResult ecs_table_finalize(
     table->columns = malloc((1 + component_count) * sizeof(uint32_t));
 
     ecs_vector_sort(
-        table->components, &components_vec_params, ecs_vector_compare_ptr);
+        table->components, &components_vec_params);
 
     while (ecs_iter_hasnext(&it)) {
         EcsEntity **e = ecs_iter_next(&it);
@@ -76,7 +76,7 @@ EcsResult ecs_table_finalize(
 
     table->columns[column] = table_size;
     table->rows_params.element_size = table_size;
-    table->rows_params.chunk_count = ECS_INITIAL_CHUNK_COUNT;
+    table->rows_params.chunk_count = REFLECS_INITIAL_CHUNK_COUNT;
     table->rows_params.move_action = ecs_table_row_move;
     table->components_hash = components_hash;
     table->rows = ecs_vector_new(&table->rows_params);

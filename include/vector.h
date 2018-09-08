@@ -1,8 +1,8 @@
-#ifndef ECS_VECTOR_H
-#define ECS_VECTOR_H
+#ifndef REFLECS_VECTOR_H
+#define REFLECS_VECTOR_H
 
-#include <ecs/platform.h>
-#include <ecs/iter.h>
+#include <reflecs/platform.h>
+#include <reflecs/iter.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,8 +16,9 @@ typedef void (*EcsVectorMove)(void *to, void *from, void *ctx);
 typedef struct EcsVectorParams {
     uint32_t element_size; /* Size of an element */
     uint32_t chunk_count;  /* Number of elements in a chunk */
+    EcsComparator compare_action; /* Comparator function */
     EcsVectorMove move_action; /* Callback invoked when element is moved */
-    void *move_action_ctx; /* Context passed to move_action */
+    void *ctx; /* Context passed to actions (if applicable) */
 } EcsVectorParams;
 
 typedef struct EcsVectorIter {
@@ -56,8 +57,7 @@ void* ecs_vector_get(
 
 void ecs_vector_sort(
     EcsVector *me,
-    const EcsVectorParams *params,
-    EcsComparator compare);
+    const EcsVectorParams *params);
 
 bool ecs_vector_compare_ptr(
     void *a,

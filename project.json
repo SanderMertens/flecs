@@ -1,6 +1,6 @@
 {
-    "id":"ecs",
-    "type":"application",
+    "id":"reflecs",
+    "type":"package",
     "value": {
         "managed": false
     }

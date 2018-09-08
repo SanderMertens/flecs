@@ -1,8 +1,8 @@
-#ifndef ECS_ENTITY_H
-#define ECS_ENTITY_H
+#ifndef REFLECS_ENTITY_H
+#define REFLECS_ENTITY_H
 
 #include <stdint.h>
-#include <ecs/log.h>
+#include <reflecs/log.h>
 
 #ifdef __cplusplus
 extern "C" {
