@@ -208,7 +208,7 @@ void* ecs_vector_get(
         return me->first.buffer;
     }
 
-    if (index > me->count) {
+    if (index >= me->count) {
         return NULL;
     }
 
