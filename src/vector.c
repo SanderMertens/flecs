@@ -64,7 +64,7 @@ EcsVectorChunk* ecs_vector_find_chunk(
         } else {
             cur = next;
         }
-    } while (!result);
+    } while (!result && cur);
 
     return result;
 }
@@ -160,6 +160,10 @@ EcsResult ecs_vector_remove(
     const EcsVectorParams *params,
     void *element)
 {
+    if (!element) {
+        return EcsError;
+    }
+
     EcsVectorChunk *chunk = ecs_vector_find_chunk(me, params, element);
     if (!chunk) {
         return EcsError;
