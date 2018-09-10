@@ -6,8 +6,6 @@
 #include <string.h>
 #include <alloca.h>
 
-#include <reflecs/log.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

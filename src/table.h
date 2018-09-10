@@ -1,7 +1,7 @@
 #ifndef REFLECS_TABLE_PRIVATE_H
 #define REFLECS_TABLE_PRIVATE_H
 
-#include <reflecs/entity.h>
+#include <reflecs/reflecs.h>
 #include <reflecs/vector.h>
 
 

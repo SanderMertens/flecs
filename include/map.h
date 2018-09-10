@@ -52,7 +52,6 @@ EcsIter _ecs_map_iter(
 #define ecs_map_iter(me)\
     _ecs_map_iter(me, alloca(sizeof(EcsMapIter)))
 
-
 #ifdef __cplusplus
 }
 #endif
