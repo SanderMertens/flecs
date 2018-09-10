@@ -83,6 +83,14 @@ EcsEntity* ecs_lookup(
     EcsWorld *world,
     const char *id);
 
+
+/* -- Utilities -- */
+
+void ecs_hash(
+    const void *key,
+    size_t length,
+    uint64_t *result);
+
 #ifdef __cplusplus
 }
 #endif
