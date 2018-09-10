@@ -89,6 +89,19 @@ uint32_t ecs_map_next_bucket(
 }
 
 static
+void ecs_map_get_bucket_iter(
+    EcsMap *map,
+    EcsMapIter *iter_data,
+    uint32_t bucket_index)
+{
+    iter_data->bucket_iter =
+        _ecs_vector_iter(
+            map->buckets[bucket_index].elems,
+            &bucket_vec_params,
+            &iter_data->bucket_iter_data);
+}
+
+static
 bool ecs_map_hasnext(
     EcsIter *iter)
 {
@@ -96,20 +109,32 @@ bool ecs_map_hasnext(
     EcsMapIter *iter_data = iter->ctx;
     uint32_t bucket_index = iter_data->bucket_index;
 
+    if (!map->buckets[bucket_index].elems) {
+        bucket_index = ecs_map_next_bucket(map, bucket_index + 1);
+        if (bucket_index >= map->bucket_count) {
+            return false;
+        }
+
+        ecs_map_get_bucket_iter(map, iter_data, bucket_index);
+    }
+
+    if (!iter_data->bucket_iter.hasnext) {
+        ecs_map_get_bucket_iter(map, iter_data, bucket_index);
+    }
+
     if (ecs_iter_hasnext(&iter_data->bucket_iter)) {
+        iter_data->bucket_index = bucket_index;
         return true;
-    } else if (bucket_index < map->bucket_count) {
-        iter_data->bucket_index = ecs_map_next_bucket(map, bucket_index + 1);
+    } else {
+        bucket_index = ecs_map_next_bucket(map, bucket_index + 1);
+        if (bucket_index < map->bucket_count) {
+            ecs_map_get_bucket_iter(map, iter_data, bucket_index);
+            iter_data->bucket_index = bucket_index;
+            return ecs_iter_hasnext(&iter_data->bucket_iter);
+        } else {
+            return false;
+        }
     }
-
-    if (bucket_index >= map->bucket_count) {
-        return false;
-    }
-
-    iter_data->bucket_iter =
-        ecs_vector_iter(map->buckets[bucket_index].elems, &bucket_vec_params);
-
-    return ecs_iter_hasnext(&iter_data->bucket_iter);
 }
 
 static
@@ -117,7 +142,8 @@ void *ecs_map_next(
     EcsIter *iter)
 {
     EcsMapIter *iter_data = iter->ctx;
-    return ecs_iter_next(&iter_data->bucket_iter);
+    EcsMapData *elem = ecs_iter_next(&iter_data->bucket_iter);
+    return (void*)elem->data;
 }
 
 static
@@ -127,8 +153,10 @@ void ecs_map_resize(
 {
     EcsMapBucket *old_buckets = map->buckets;
     uint32_t old_bucket_count = map->bucket_count;
+
     map->buckets = malloc(sizeof(EcsMapBucket) * bucket_count);
     map->bucket_count = bucket_count;
+    map->count = 0;
 
     uint32_t bucket_index;
     for (bucket_index = 0; bucket_index < old_bucket_count; bucket_index ++) {
@@ -231,6 +259,12 @@ uint32_t ecs_map_count(
     EcsMap *map)
 {
     return map->count;
+}
+
+uint32_t ecs_map_bucket_count(
+    EcsMap *map)
+{
+    return map->bucket_count;
 }
 
 EcsIter _ecs_map_iter(
