@@ -23,7 +23,7 @@ void ecs_vector_deinit(
         if (el != &me->first) {
             free(el);
         }
-    } while (next);
+    } while ((el = next));
 }
 
 static
@@ -33,10 +33,11 @@ void ecs_vector_chunk_new(
 {
     uint32_t buffer_size = params->element_size * params->chunk_count;
     EcsVectorChunk *el = malloc(sizeof(EcsVectorChunk) + buffer_size);
+    EcsVectorChunk *current = me->current;
     el->buffer = ECS_OFFSET(el, sizeof(EcsVectorChunk));
     el->next = NULL;
-    el->prev = me->current;
-    me->current->next= el;
+    el->prev = current;
+    current->next= el;
     me->current = el;
     me->count = 0;
 }
@@ -47,14 +48,15 @@ EcsVectorChunk* ecs_vector_find_chunk(
     const EcsVectorParams *params,
     void *el)
 {
-    EcsVectorChunk *result = NULL, *cur = me->current, *next;
+    EcsVectorChunk *result = NULL, *cur = &me->first, *next;
     uint32_t count = params->chunk_count;
+    uint32_t vector_count = me->count;
 
     do {
         next = cur->next;
 
         if (!next) {
-            count = me->count % params->chunk_count;
+            count = (vector_count - 1) % params->chunk_count + 1;
         }
 
         if (el >= cur->buffer &&
@@ -138,19 +140,20 @@ void* ecs_vector_add(
     void *result;
     EcsVectorChunk *chunk = me->current;
     uint32_t count = params->chunk_count;
+    uint32_t v_count = me->count;
 
     if (!chunk->next) {
         count = me->count % params->chunk_count;
     }
 
-    if (count == params->chunk_count) {
+    if (!count && v_count) {
         ecs_vector_chunk_new(me, params);
         count = 0;
         chunk = chunk->next;
     }
 
     result = ECS_OFFSET(chunk->buffer, params->element_size * count);
-    me->count = count + 1;
+    me->count = v_count + 1;
 
     return result;
 }
@@ -171,7 +174,7 @@ EcsResult ecs_vector_remove(
 
     uint32_t chunk_count = params->chunk_count;
     if (!chunk->next) {
-        chunk_count = me->count % params->chunk_count;
+        chunk_count = (me->count - 1) % params->chunk_count + 1;
     }
 
     EcsVectorChunk *current = me->current;
@@ -272,10 +275,10 @@ static
 void cursor_next(
     cursor *cur)
 {
+    cur->index ++;
     if (cur->index >= cur->params->chunk_count) {
         cur->chunk = cur->chunk->next;
-    } else {
-        cur->index ++;
+        cur->index = 0;
     }
 }
 
@@ -302,7 +305,7 @@ static
 void ecs_vector_qsort(
     cursor start,
     cursor end,
-    uint32_t total_count)
+    int32_t total_count)
 {
 repeat:
     {
@@ -330,7 +333,6 @@ repeat:
         cursor_swap(&c_l, &end);
 
         int r_size = r_count - l_count;
-
         if (r_size > l_count) {
             if (l_count) {
                 ecs_vector_qsort(start, c_prev, l_count);
@@ -373,7 +375,7 @@ void ecs_vector_sort(
     cursor stop = {
         .params = params,
         .chunk = me->current,
-        .index = me->count % params->chunk_count - 1
+        .index = (me->count - 1) % params->chunk_count
     };
 
     ecs_vector_qsort(start, stop, me->count);

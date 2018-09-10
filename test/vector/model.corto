@@ -21,3 +21,19 @@ test.suite OneChunk {
     tc_sort_sorted()
     tc_sort_empty()
 }
+
+test.suite TwoChunks {
+    tc_count()
+    tc_get()
+    tc_get_first()
+    tc_get_last()
+    tc_get_out_of_bound()
+    tc_iter()
+    tc_remove()
+    tc_remove_first()
+    tc_remove_last()
+    tc_remove_all()
+    tc_remove_out_of_bound()
+    tc_sort_rnd()
+    tc_sort_sorted()
+}
