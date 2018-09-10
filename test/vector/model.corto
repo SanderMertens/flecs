@@ -17,4 +17,7 @@ test.suite OneChunk {
     tc_remove_empty()
     tc_remove_all()
     tc_remove_out_of_bound()
+    tc_sort_rnd()
+    tc_sort_sorted()
+    tc_sort_empty()
 }

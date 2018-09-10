@@ -7,9 +7,27 @@
 #define ELEMENT_COUNT (32)
 
 static
+int compare_int(
+    void *p1,
+    void *p2)
+{
+    int v1 = *(int*)p1;
+    int v2 = *(int*)p2;
+
+    if (v1 == v2) {
+        return 0;
+    } else if (v1 < v2) {
+        return -1;
+    } else {
+        return 1;
+    }
+}
+
+static
 EcsVectorParams vec_params = {
     .chunk_count = CHUNK_COUNT,
-    .element_size = sizeof(int)
+    .element_size = sizeof(int),
+    .compare_action = compare_int
 };
 
 static
@@ -240,6 +258,65 @@ void test_OneChunk_tc_remove_out_of_bound(
     test_assert(elem != NULL);
     test_assertint(*elem, ELEMENT_COUNT - 1);
     test_assert(ecs_vector_remove(vec, &vec_params, elem + 1) == EcsError);
-    
+
+    ecs_vector_free(vec);
+}
+
+void test_OneChunk_tc_sort_empty(
+    test_OneChunk this)
+{
+    EcsVector *vec = ecs_vector_new(&vec_params);
+
+    ecs_vector_sort(vec, &vec_params);
+    test_assertint(ecs_vector_count(vec), 0);
+
+    ecs_vector_free(vec);
+}
+
+void test_OneChunk_tc_sort_rnd(
+    test_OneChunk this)
+{
+    int nums[] = {23, 16, 21, 13, 30, 5, 28, 31, 8, 19, 29, 12, 24, 14, 15, 1, 26, 18, 9, 25, 22, 0, 10, 3, 2, 17, 27, 20, 6, 11, 4, 7};
+    EcsVector *vec = ecs_vector_new(&vec_params);
+
+    int i, count = sizeof(nums) / sizeof(int);
+    for (i = 0; i < count; i ++) {
+        int *elem = ecs_vector_add(vec, &vec_params);
+        *elem = nums[i];
+    }
+
+    test_assertint(ecs_vector_count(vec), sizeof(nums) / sizeof(int));
+
+    ecs_vector_sort(vec, &vec_params);
+
+    EcsIter it = ecs_vector_iter(vec, &vec_params);
+    count = 0;
+    while (ecs_iter_hasnext(&it)) {
+        int *v = ecs_iter_next(&it);
+        test_assertint(*v, count);
+        count ++;
+    }
+
+    ecs_vector_free(vec);
+}
+
+void test_OneChunk_tc_sort_sorted(
+    test_OneChunk this)
+{
+    EcsVector *vec = ecs_vector_new(&vec_params);
+    fill_vector(vec);
+    test_assertint(ecs_vector_count(vec), ELEMENT_COUNT);
+
+    ecs_vector_sort(vec, &vec_params);
+
+    EcsIter it = ecs_vector_iter(vec, &vec_params);
+
+    int count = 0;
+    while (ecs_iter_hasnext(&it)) {
+        int *v = ecs_iter_next(&it);
+        test_assertint(*v, count);
+        count ++;
+    }
+
     ecs_vector_free(vec);
 }

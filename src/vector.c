@@ -287,6 +287,10 @@ void cursor_swap(
     int i, size = c1->params->element_size;
     char *v1 = cursor_value(c1);
     char *v2 = cursor_value(c2);
+
+    if (v1 == v2)
+        return;
+
     for (i = 0; i < size; i ++) {
         char t = v1[i];
         v1[i] = v2[i];
@@ -304,12 +308,13 @@ repeat:
     {
         const EcsVectorParams *params = start.params;
         void *pivot = cursor_value(&end);
-        cursor c_l = start, c_r = start;
+        cursor c_l = start, c_r = start, c_prev = c_l;
         uint32_t r_count = 0, l_count = 0;
 
         do {
             if (params->compare_action(cursor_value(&c_r), pivot) < 0) {
                 cursor_swap(&c_l, &c_r);
+                c_prev = c_l;
                 cursor_next(&c_l);
                 l_count ++;
             }
@@ -320,13 +325,15 @@ repeat:
                 break;
             }
         } while (true);
+        r_count --;
 
-        cursor_swap(&c_r, &end);
+        cursor_swap(&c_l, &end);
 
-        int r_size = total_count - r_count;
+        int r_size = r_count - l_count;
+
         if (r_size > l_count) {
             if (l_count) {
-                ecs_vector_qsort(start, c_l, l_count);
+                ecs_vector_qsort(start, c_prev, l_count);
             }
             cursor_next(&c_l);
             start = c_l;
@@ -337,7 +344,7 @@ repeat:
                 cursor_next(&next);
                 ecs_vector_qsort(next, end, r_size);
             }
-            end = c_l;
+            end = c_prev;
             total_count = l_count;
         }
 
@@ -366,7 +373,7 @@ void ecs_vector_sort(
     cursor stop = {
         .params = params,
         .chunk = me->current,
-        .index = me->count % params->chunk_count
+        .index = me->count % params->chunk_count - 1
     };
 
     ecs_vector_qsort(start, stop, me->count);
