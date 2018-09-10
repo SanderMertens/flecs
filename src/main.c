@@ -5,6 +5,8 @@
 #include <reflecs/vector.h>
 #include <stdio.h>
 
+#include <unistd.h>
+
 int compare_int(void *p1, void *p2) {
     int v1 = *(int*)p1;
     int v2 = *(int*)p2;
@@ -17,24 +19,14 @@ int compare_int(void *p1, void *p2) {
 }
 
 int main(int argc, char *argv[]) {
-    int nums[] = {12, 56, 32, 85, 81, 78, 69, 43, 41, 23, 51, 21, 48, 10, 16, 14, 33, 29, 37, 60, 96};
-    int count = sizeof(nums) / sizeof(int);
-
-    EcsVectorParams params = {
-        .chunk_count = 1000 * 1000,
-        .element_size = sizeof(int),
-        .compare_action = compare_int
-    };
-
-    EcsVector *vec = ecs_vector_new(&params);
+    EcsWorld *world = ecs_world_new(0);
 
     int i;
-    for (i = 0; i < 1000 * 1000 * 1000; i ++) {
-        int *elem = ecs_vector_add(vec, &params);
-        *elem = i;
+    for (i = 0; i < 1000 * 1000; i ++) {
+        ecs_new(world, NULL);
     }
 
-    EcsIter it = ecs_vector_iter(vec, &params);
+    sleep(10000);
 
     /*while (ecs_iter_hasnext(&it)) {
         int *elem = ecs_iter_next(&it);

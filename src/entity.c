@@ -56,6 +56,26 @@ void ecs_entity_insert(
     }
 }
 
+/* Generate random id */
+static
+char* random_id(
+    uint16_t n)
+{
+    static char *alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static char *alphanum = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890";
+    uint16_t i;
+    char *result = malloc(n + 1);
+
+    result[0] = alpha[rand() % strlen(alpha)];
+    for (i = 1; i < n; i++) {
+        result[i] = alphanum[rand() % strlen(alphanum)];
+    }
+
+    result[i] = '\0';
+
+    return result;
+}
+
 void ecs_entity_move(
     EcsEntity *entity,
     void *to,
@@ -77,7 +97,13 @@ EcsEntity* ecs_new(
     const char *id)
 {
     EcsEntity *result = ecs_world_alloc_entity(world);
-    result->id = strdup(id);
+    if (id) {
+        result->id = strdup(id);
+    } else {
+        result->id = random_id(8);
+        id = result->id;
+    }
+
     result->id_hash = 0;
     ecs_hash(id, strlen(id), &result->id_hash);
     result->base = NULL;

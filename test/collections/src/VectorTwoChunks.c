@@ -41,8 +41,8 @@ void fill_vector(
     }
 }
 
-void test_TwoChunks_tc_count(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_count(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -51,8 +51,8 @@ void test_TwoChunks_tc_count(
 }
 
 
-void test_TwoChunks_tc_count_empty(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_count_empty(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     test_assertint(ecs_vector_count(vec), 0);
@@ -60,8 +60,8 @@ void test_TwoChunks_tc_count_empty(
 }
 
 
-void test_TwoChunks_tc_free_empty(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_free_empty(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     ecs_vector_free(vec);
@@ -69,8 +69,8 @@ void test_TwoChunks_tc_free_empty(
 }
 
 
-void test_TwoChunks_tc_get(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_get(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -81,8 +81,8 @@ void test_TwoChunks_tc_get(
 }
 
 
-void test_TwoChunks_tc_get_empty(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_get_empty(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     test_assert(ecs_vector_get(vec, &vec_params, 10) == NULL);
@@ -90,8 +90,8 @@ void test_TwoChunks_tc_get_empty(
 }
 
 
-void test_TwoChunks_tc_get_first(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_get_first(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -102,8 +102,8 @@ void test_TwoChunks_tc_get_first(
 }
 
 
-void test_TwoChunks_tc_get_last(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_get_last(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -114,8 +114,8 @@ void test_TwoChunks_tc_get_last(
 }
 
 
-void test_TwoChunks_tc_get_out_of_bound(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_get_out_of_bound(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -125,8 +125,8 @@ void test_TwoChunks_tc_get_out_of_bound(
 }
 
 
-void test_TwoChunks_tc_iter(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_iter(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -144,8 +144,8 @@ void test_TwoChunks_tc_iter(
 }
 
 
-void test_TwoChunks_tc_iter_empty(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_iter_empty(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     EcsIter it = ecs_vector_iter(vec, &vec_params);
@@ -154,8 +154,8 @@ void test_TwoChunks_tc_iter_empty(
 }
 
 
-void test_TwoChunks_tc_remove(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_remove(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -176,8 +176,8 @@ void test_TwoChunks_tc_remove(
     ecs_vector_free(vec);
 }
 
-void test_TwoChunks_tc_remove_all(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_remove_all(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -194,8 +194,8 @@ void test_TwoChunks_tc_remove_all(
 }
 
 
-void test_TwoChunks_tc_remove_empty(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_remove_empty(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     test_assert(ecs_vector_remove(vec, &vec_params, NULL) == EcsError);
@@ -203,8 +203,8 @@ void test_TwoChunks_tc_remove_empty(
 }
 
 
-void test_TwoChunks_tc_remove_first(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_remove_first(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -226,8 +226,8 @@ void test_TwoChunks_tc_remove_first(
 }
 
 
-void test_TwoChunks_tc_remove_last(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_remove_last(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -246,8 +246,8 @@ void test_TwoChunks_tc_remove_last(
     ecs_vector_free(vec);
 }
 
-void test_TwoChunks_tc_remove_out_of_bound(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_remove_out_of_bound(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);
@@ -261,8 +261,8 @@ void test_TwoChunks_tc_remove_out_of_bound(
     ecs_vector_free(vec);
 }
 
-void test_TwoChunks_tc_sort_empty(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_sort_empty(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
 
@@ -272,8 +272,8 @@ void test_TwoChunks_tc_sort_empty(
     ecs_vector_free(vec);
 }
 
-void test_TwoChunks_tc_sort_rnd(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_sort_rnd(
+    test_VectorTwoChunks this)
 {
     int nums[] = {23, 16, 21, 13, 30, 5, 28, 31, 8, 19, 29, 12, 24, 14, 15, 1, 26, 18, 9, 25, 22, 0, 10, 3, 2, 17, 27, 20, 6, 11, 4, 7};
     vec_params.chunk_count = 16;
@@ -300,8 +300,8 @@ void test_TwoChunks_tc_sort_rnd(
     ecs_vector_free(vec);
 }
 
-void test_TwoChunks_tc_sort_sorted(
-    test_TwoChunks this)
+void test_VectorTwoChunks_tc_sort_sorted(
+    test_VectorTwoChunks this)
 {
     EcsVector *vec = ecs_vector_new(&vec_params);
     fill_vector(vec);

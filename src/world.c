@@ -63,5 +63,5 @@ EcsTable* ecs_world_lookup_table(
     EcsWorld *world,
     uint64_t component_hash)
 {
-    return ecs_map_lookup(world->tables_map, component_hash);
+    return ecs_map_get(world->tables_map, component_hash);
 }

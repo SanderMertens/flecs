@@ -21,6 +21,9 @@ EcsMap* ecs_map_new(
 void ecs_map_free(
     EcsMap *map);
 
+uint32_t ecs_map_count(
+    EcsMap *map);
+
 void ecs_map_clear(
     EcsMap *map);
 
@@ -33,7 +36,7 @@ void ecs_map_remove(
     EcsMap *map,
     uint64_t key_hash);
 
-void* ecs_map_lookup(
+void* ecs_map_get(
     EcsMap *map,
     uint64_t key_hash);
 

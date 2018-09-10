@@ -28,7 +28,7 @@ EcsMap *ecs_map_alloc(
     uint32_t bucket_count)
 {
     EcsMap *result = malloc(sizeof(EcsMap));
-    result->buckets = calloc(bucket_count * sizeof(EcsMapBucket), 0);
+    result->buckets = calloc(bucket_count * sizeof(EcsMapBucket), 1);
     result->bucket_count = bucket_count;
     result->count = 0;
     return result;
@@ -44,7 +44,6 @@ void ecs_map_add_elem(
     EcsMapData *elem = ecs_vector_add(bucket->elems, &bucket_vec_params);
     elem->key_hash = key_hash;
     elem->data = data;
-
     map->count ++;
 }
 
@@ -212,7 +211,7 @@ void ecs_map_remove(
     }
 }
 
-void* ecs_map_lookup(
+void* ecs_map_get(
     EcsMap *map,
     uint64_t key_hash)
 {
@@ -225,6 +224,13 @@ void* ecs_map_lookup(
     }
 
     return NULL;
+}
+
+
+uint32_t ecs_map_count(
+    EcsMap *map)
+{
+    return map->count;
 }
 
 EcsIter _ecs_map_iter(
