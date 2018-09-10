@@ -276,6 +276,7 @@ void test_TwoChunks_tc_sort_rnd(
     test_TwoChunks this)
 {
     int nums[] = {23, 16, 21, 13, 30, 5, 28, 31, 8, 19, 29, 12, 24, 14, 15, 1, 26, 18, 9, 25, 22, 0, 10, 3, 2, 17, 27, 20, 6, 11, 4, 7};
+    vec_params.chunk_count = 16;
     EcsVector *vec = ecs_vector_new(&vec_params);
 
     int i, count = sizeof(nums) / sizeof(int);
