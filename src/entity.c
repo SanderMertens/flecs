@@ -1,6 +1,5 @@
 #include <reflecs/reflecs.h>
 #include <reflecs/vector.h>
-#include <reflecs/hash.h>
 #include "entity.h"
 #include "table.h"
 

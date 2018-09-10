@@ -1,5 +1,4 @@
 #include <reflecs/reflecs.h>
-#include <reflecs/hash.h>
 #include "table.h"
 #include "entity.h"
 
