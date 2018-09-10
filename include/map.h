@@ -37,7 +37,7 @@ void ecs_map_set(
     uint64_t key_hash,
     const void *data);
 
-void ecs_map_remove(
+EcsResult ecs_map_remove(
     EcsMap *map,
     uint64_t key_hash);
 

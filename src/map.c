@@ -222,7 +222,7 @@ void ecs_map_set(
     }
 }
 
-void ecs_map_remove(
+EcsResult ecs_map_remove(
     EcsMap *map,
     uint64_t key_hash)
 {
@@ -235,8 +235,11 @@ void ecs_map_remove(
                 ecs_vector_free(bucket->elems);
                 bucket->elems = NULL;
             }
+            map->count --;
+            return EcsOk;
         }
     }
+    return EcsError;
 }
 
 void* ecs_map_get(

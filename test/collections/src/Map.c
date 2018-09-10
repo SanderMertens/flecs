@@ -95,21 +95,37 @@ void test_Map_tc_get_all(
 void test_Map_tc_remove(
     test_Map this)
 {
-    /* Insert implementation */
+    EcsMap *map = ecs_map_new(16);
+    fill_map(map);
+    test_assert(ecs_map_remove(map, 3) == EcsOk);
+    test_assert(ecs_map_get(map, 3) == NULL);
+    test_assertint(ecs_map_count(map), 3);
+    ecs_map_free(map);
 }
 
 
 void test_Map_tc_remove_empty(
     test_Map this)
 {
-    /* Insert implementation */
+    EcsMap *map = ecs_map_new(16);
+    test_assert(ecs_map_remove(map, 3) == EcsError);
+    test_assertint(ecs_map_count(map), 0);
+    ecs_map_free(map);
 }
 
 
 void test_Map_tc_remove_unknown(
     test_Map this)
 {
-    /* Insert implementation */
+    EcsMap *map = ecs_map_new(16);
+    fill_map(map);
+    test_assert(ecs_map_remove(map, 5) == EcsError);
+    test_assertstr(ecs_map_get(map, 1), "hello");
+    test_assertstr(ecs_map_get(map, 2), "world");
+    test_assertstr(ecs_map_get(map, 3), "foo");
+    test_assertstr(ecs_map_get(map, 4), "bar");
+    test_assertint(ecs_map_count(map), 4);
+    ecs_map_free(map);
 }
 
 void test_Map_tc_set_overwrite(
