@@ -46,7 +46,7 @@ EcsResult ecs_world_init(
     uint64_t stage_hash;
 
     EcsEntity *type = ecs_new(world, "EcsType");
-    ecs_add(type, type);
+    _ecs_add(type, type);
     stage_hash = type->stage_hash;
 
     EcsTable *table =

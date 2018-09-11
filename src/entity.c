@@ -92,14 +92,14 @@ EcsEntity* ecs_component_new(
     size_t size)
 {
     EcsEntity *result = ecs_new(world, id);
-    ecs_add(result, world->type);
+    _ecs_add(result, world->type);
     ecs_commit(result);
     EcsType *type_data = ecs_get(result, world->type);
     type_data->size = size;
     return result;
 }
 
-void ecs_stage(
+void _ecs_stage(
     EcsEntity *entity,
     EcsEntity *component)
 {
@@ -115,11 +115,11 @@ void ecs_stage(
     entity->stage_hash = ecs_world_components_hash(world, set, component);
 }
 
-void* ecs_add(
+void* _ecs_add(
     EcsEntity *entity,
     EcsEntity *component)
 {
-    ecs_stage(entity, component);
+    _ecs_stage(entity, component);
     if (ecs_commit(entity) != EcsOk) {
         return NULL;
     }

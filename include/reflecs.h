@@ -68,13 +68,17 @@ EcsEntity* ecs_component_new(
 void ecs_delete(
     EcsEntity *entity);
 
-void ecs_stage(
+void _ecs_stage(
     EcsEntity *entity,
     EcsEntity *component);
 
-void* ecs_add(
+#define ecs_stage(entity, component) _ecs_stage(entity, component##_e)
+
+void* _ecs_add(
     EcsEntity *entity,
     EcsEntity *component);
+
+#define ecs_add(entity, component) _ecs_add(entity, component##_e)
 
 void* ecs_get(
     EcsEntity *entity,
