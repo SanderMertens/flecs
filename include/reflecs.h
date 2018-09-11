@@ -73,7 +73,7 @@ void ecs_remove(
     EcsEntity *entity,
     EcsEntity *component);
 
-void ecs_commit(
+EcsResult ecs_commit(
     EcsEntity *entity);
 
 EcsEntity* ecs_lookup(

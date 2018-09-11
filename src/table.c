@@ -18,72 +18,97 @@ void ecs_table_row_move(
     ecs_entity_move(e, to, from);
 }
 
-EcsTable* ecs_table_new(
-    EcsWorld *world)
-{
-    /*EcsTable *result = ecs_world_alloc_table(world);
-    result->world = world;
-    result->components = ecs_vector_new(&components_vec_params);
-    result->components_hash = 0;
-    result->rows = NULL;
-    ecs_world_add_table(world, result);
-    return result;*/
-}
-
-void ecs_table_add_component(
+static
+EcsResult ecs_table_init(
+    EcsWorld *world,
     EcsTable *table,
-    EcsEntity *component_type)
+    EcsArray *components)
 {
-    if (!table->rows) {
-        EcsEntity **el = ecs_vector_add(
-            table->components, &components_vec_params);
-        *el = component_type;
-    }
-}
-
-EcsResult ecs_table_finalize(
-    EcsTable *table)
-{
-    /*EcsIter it = ecs_vector_iter(table->components, &components_vec_params);
-    size_t table_size = sizeof(EcsEntity*);
-    uint64_t components_hash = 0;
-    uint32_t component_count = ecs_vector_count(table->components);
+    size_t column_offset = sizeof(EcsEntity*);
     uint32_t column = 0;
 
-    if (!component_count) {
-        goto error;
-    }
+    table->columns = malloc(sizeof(uint32_t) * (ecs_array_count(components) + 1));
 
-    table->columns = malloc((1 + component_count) * sizeof(uint32_t));
-
-    ecs_vector_sort(
-        table->components, &components_vec_params);
-
+    EcsIter it = ecs_array_iter(components, &entityptr_arr_params);
     while (ecs_iter_hasnext(&it)) {
-        EcsEntity **e = ecs_iter_next(&it);
-        EcsType *t = ecs_get(*e, EcsType_e);
-        if (!t) {
-            goto error;
+        EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
+
+        EcsType *type = ecs_get(e, world->type);
+        if (!type) {
+            return EcsError;
         }
 
-        table->columns[column] = table_size;
-        table_size += t->size;
+        table->columns[column] = column_offset;
+        column_offset += type->size;
         column ++;
-        ecs_hash(*e, sizeof(EcsEntity*), &components_hash);
     }
 
-    table->columns[column] = table_size;
-    table->rows_params.element_size = table_size;
+    table->columns[column] = column_offset;
+
+    table->rows_params.element_size = column_offset;
     table->rows_params.chunk_count = REFLECS_INITIAL_CHUNK_COUNT;
-    table->rows_params.move_action = ecs_table_row_move;
-    table->components_hash = components_hash;
+    table->rows_params.compare_action = NULL;
+    table->rows_params.move_action = NULL;
+    table->rows_params.ctx = NULL;
     table->rows = ecs_vector_new(&table->rows_params);
 
-    ecs_world_add_table(table->world, table);
     return EcsOk;
-error:
-    ecs_world_remove_table(table->world, table);
-    return EcsError;*/
+}
+
+static
+EcsTable* ecs_table_alloc(
+    EcsWorld *world,
+    uint64_t components_hash)
+{
+    EcsTable *result = ecs_vector_add(world->tables, &tables_vec_params);
+    result->world = world;
+    result->components_hash = components_hash;
+    return result;
+}
+
+EcsTable* ecs_table_new(
+    EcsWorld *world,
+    uint64_t components_hash)
+{
+    EcsArray *components = ecs_world_get_components(world, components_hash);
+    if (!components) {
+        return NULL;
+    }
+
+    EcsTable *result = ecs_table_alloc(world, components_hash);
+    if (!result) {
+        return NULL;
+    }
+
+    if (ecs_table_init(world, result, components) != EcsOk) {
+        ecs_vector_remove(world->tables, &tables_vec_params, result);
+        return NULL;
+    }
+
+    return result;
+}
+
+EcsTable* ecs_table_new_w_size(
+    EcsWorld *world,
+    uint64_t components_hash,
+    size_t size)
+{
+    EcsTable *result = ecs_table_alloc(world, components_hash);
+    if (!result) {
+        return NULL;
+    }
+
+    result->rows_params.chunk_count = REFLECS_INITIAL_CHUNK_COUNT;
+    result->rows_params.element_size = size;
+    result->rows_params.compare_action = NULL;
+    result->rows_params.move_action = NULL;
+    result->rows_params.ctx = NULL;
+    result->columns = malloc(sizeof(uint32_t) * 2);
+    result->columns[0] = sizeof(EcsEntity*);
+    result->columns[1] = sizeof(EcsEntity*) + size;
+    result->rows = ecs_vector_new(&result->rows_params);
+
+    return result;
 }
 
 void* ecs_table_insert(

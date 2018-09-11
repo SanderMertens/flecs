@@ -8,7 +8,6 @@
 /* -- Private types -- */
 
 typedef struct EcsTable {
-    EcsVector *components;        /* Components stored in the table */
     uint64_t components_hash;     /* Hash of the components */
     EcsWorld *world;              /* World associated with the table */
     EcsVectorParams rows_params;  /* Parameters for the rows vector */
@@ -20,7 +19,13 @@ typedef struct EcsTable {
 /* -- Private functions -- */
 
 EcsTable* ecs_table_new(
-    EcsWorld *world);
+    EcsWorld *world,
+    uint64_t components_hash);
+
+EcsTable* ecs_table_new_w_size(
+    EcsWorld *world,
+    uint64_t components_hash,
+    size_t size);
 
 void ecs_table_add_component(
     EcsTable *table,

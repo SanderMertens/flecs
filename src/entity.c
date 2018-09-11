@@ -69,20 +69,76 @@ void ecs_add(
         set = ecs_map_get(world->components_map, entity->table_hash);
     }
 
-    entity->stage_hash = ecs_world_component_set_hash(world, set, component);
+    entity->stage_hash = ecs_world_components_hash(world, set, component);
 }
 
-void ecs_commit(
+EcsResult ecs_commit(
     EcsEntity *entity)
 {
+    EcsWorld *world = entity->world;
 
+    if (entity->stage_hash) {
+        if (entity->stage_hash != entity->table_hash) {
+            EcsTable *current = NULL;
+            if (entity->table_hash) {
+                current = ecs_world_lookup_table(world, entity->table_hash);
+            }
+
+            EcsTable *table = ecs_world_lookup_table(world, entity->stage_hash);
+            if (!table) {
+                table = ecs_world_create_table(world, entity->stage_hash);
+                if (!table) {
+                    return EcsError;
+                }
+            }
+
+            entity->row = ecs_table_insert(table, entity);
+            entity->table_hash = entity->stage_hash;
+        }
+    }
+
+    return EcsOk;
 }
 
 void* ecs_get(
     EcsEntity *entity,
     EcsEntity *component)
 {
-    return NULL;
+    if (!entity->table_hash) {
+        return NULL;
+    }
+
+    EcsWorld *world = entity->world;
+    EcsArray *components = ecs_world_get_components(world, entity->table_hash);
+    if (!components) {
+        return NULL;
+    }
+
+    uint32_t column = 0;
+    EcsIter it = ecs_array_iter(components, &entityptr_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
+        if (e == component) {
+            break;
+        }
+        column ++;
+    }
+
+    EcsTable *table = ecs_world_lookup_table(world, entity->table_hash);
+    if (!table) {
+        return NULL;
+    }
+
+    return ECS_OFFSET(entity->row, table->columns[column]);
+}
+
+EcsEntity* ecs_lookup(
+    EcsWorld *world,
+    const char *id)
+{
+    uint64_t hash = 0;
+    ecs_hash(id, strlen(id), &hash);
+    return ecs_map_get(world->entities_map, hash);
 }
 
 void ecs_init(void)

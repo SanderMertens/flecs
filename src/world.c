@@ -14,7 +14,7 @@ const EcsVectorParams tables_vec_params = {
     .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
 };
 
-const EcsArrayParams entities_arr_params = {
+const EcsArrayParams entityptr_arr_params = {
     .element_size = sizeof(EcsEntity*)
 };
 
@@ -40,10 +40,34 @@ uint64_t hash_entity_array(
 }
 
 static
-void ecs_world_init(
+EcsResult ecs_world_init(
     EcsWorld *world)
 {
-    ecs_new(world, "EcsType");
+    uint64_t stage_hash;
+
+    EcsEntity *type = ecs_new(world, "EcsType");
+    ecs_add(type, type);
+    stage_hash = type->stage_hash;
+
+    EcsTable *table =
+        ecs_table_new_w_size(world, stage_hash, sizeof(EcsType));
+
+    ecs_map_set(world->tables_map, stage_hash, table);
+
+    world->type = type;
+
+    if (ecs_commit(world->type) != EcsOk) {
+        return EcsError;
+    }
+
+    EcsType *type_data = ecs_get(type, type);
+    if (!type_data) {
+        return EcsError;
+    }
+
+    type_data->size = sizeof(EcsType);
+
+    return EcsOk;
 }
 
 EcsWorld* ecs_world_new(void)
@@ -58,7 +82,7 @@ EcsWorld* ecs_world_new(void)
     return result;
 }
 
-uint64_t ecs_world_component_set_hash(
+uint64_t ecs_world_components_hash(
     EcsWorld *world,
     EcsArray *set,
     EcsEntity *to_add)
@@ -87,9 +111,36 @@ uint64_t ecs_world_component_set_hash(
 
     EcsArray *stage_set = ecs_map_get(world->components_map, stage_hash);
     if (!stage_set) {
-        stage_set = ecs_array_new_from_buffer(count, &entities_arr_params, new_buffer);
+        stage_set = ecs_array_new_from_buffer(count, &entityptr_arr_params, new_buffer);
         ecs_map_set(world->components_map, stage_hash, stage_set);
     }
 
     return stage_hash;
+}
+
+EcsArray* ecs_world_get_components(
+    EcsWorld *world,
+    uint64_t components_hash)
+{
+    return ecs_map_get(world->components_map, components_hash);
+}
+
+EcsTable *ecs_world_lookup_table(
+    EcsWorld *world,
+    uint64_t components_hash)
+{
+    return ecs_map_get(world->tables_map, components_hash);
+}
+
+EcsTable *ecs_world_create_table(
+    EcsWorld *world,
+    uint64_t components_hash)
+{
+    EcsTable *table = ecs_table_new(world, components_hash);
+    if (!table) {
+        return NULL;
+    }
+
+    ecs_map_set(world->tables_map, components_hash, table);
+    return table;
 }
