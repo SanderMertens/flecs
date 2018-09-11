@@ -8,8 +8,8 @@
 
 static
 int compare_int(
-    void *p1,
-    void *p2)
+    const void *p1,
+    const void *p2)
 {
     int v1 = *(int*)p1;
     int v2 = *(int*)p2;

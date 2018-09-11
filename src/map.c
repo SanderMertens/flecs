@@ -1,7 +1,7 @@
 #include <reflecs/map.h>
 #include <reflecs/vector.h>
 
-#define REFLECS_LOAD_FACTOR (2.0f / 3.0f)
+#define REFLECS_LOAD_FACTOR (3.0f / 4.0f)
 
 typedef struct EcsMapData {
     uint64_t key_hash;
@@ -19,17 +19,30 @@ struct EcsMap {
 };
 
 const EcsVectorParams bucket_vec_params = {
-    .element_size = sizeof(void*),
-    .chunk_count = 4
+    .element_size = sizeof(EcsMapData),
+    .chunk_count = 2
 };
+
+static
+void ecs_map_alloc_buffer(
+    EcsMap *map,
+    uint32_t bucket_count)
+{
+    if (bucket_count) {
+        map->buckets = calloc(bucket_count * sizeof(EcsMapBucket), 1);
+    } else {
+        map->buckets = NULL;
+    }
+
+    map->bucket_count = bucket_count;
+}
 
 static
 EcsMap *ecs_map_alloc(
     uint32_t bucket_count)
 {
     EcsMap *result = malloc(sizeof(EcsMap));
-    result->buckets = calloc(bucket_count * sizeof(EcsMapBucket), 1);
-    result->bucket_count = bucket_count;
+    ecs_map_alloc_buffer(result, bucket_count);
     result->count = 0;
     return result;
 }
@@ -106,6 +119,11 @@ bool ecs_map_hasnext(
     EcsIter *iter)
 {
     EcsMap *map = iter->data;
+
+    if (!map->buckets) {
+        return false;
+    }
+
     EcsMapIter *iter_data = iter->ctx;
     uint32_t bucket_index = iter_data->bucket_index;
 
@@ -154,15 +172,15 @@ void ecs_map_resize(
     EcsMapBucket *old_buckets = map->buckets;
     uint32_t old_bucket_count = map->bucket_count;
 
-    map->buckets = malloc(sizeof(EcsMapBucket) * bucket_count);
-    map->bucket_count = bucket_count;
+    ecs_map_alloc_buffer(map, bucket_count);
     map->count = 0;
 
     uint32_t bucket_index;
     for (bucket_index = 0; bucket_index < old_bucket_count; bucket_index ++) {
         EcsMapBucket *bucket = &old_buckets[bucket_index];
         if (bucket->elems) {
-            EcsIter it = ecs_vector_iter(bucket->elems, &bucket_vec_params);
+            EcsVectorIter iter_data;
+            EcsIter it = _ecs_vector_iter(bucket->elems, &bucket_vec_params, &iter_data);
             while (ecs_iter_hasnext(&it)) {
                 EcsMapData *data = ecs_iter_next(&it);
                 ecs_map_set(map, data->key_hash, data->data);
@@ -204,9 +222,14 @@ void ecs_map_set(
     uint64_t key_hash,
     const void *data)
 {
+    if (!map->bucket_count) {
+        ecs_map_alloc_buffer(map, 2);
+    }
+
     EcsMapBucket *bucket = ecs_map_get_bucket(map, key_hash);
+
     if (!bucket->elems) {
-        bucket->elems = ecs_vector_new(&bucket_vec_params);;
+        bucket->elems = ecs_vector_new(&bucket_vec_params);
         ecs_map_add_elem(map, bucket, key_hash, data);
     } else {
         EcsMapData *elem = ecs_map_get_elem(bucket, key_hash);

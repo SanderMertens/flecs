@@ -192,4 +192,23 @@ void test_Map_tc_iter_empty(
     EcsMap *map = ecs_map_new(16);
     EcsIter it = ecs_map_iter(map);
     test_assert(!ecs_iter_hasnext(&it));
+    ecs_map_free(map);
+}
+
+void test_Map_tc_iter_zero_buckets(
+    test_Map this)
+{
+    EcsMap *map = ecs_map_new(0);
+    EcsIter it = ecs_map_iter(map);
+    test_assert(!ecs_iter_hasnext(&it));
+    ecs_map_free(map);
+}
+
+void test_Map_tc_set_zero_buckets(
+    test_Map this)
+{
+    EcsMap *map = ecs_map_new(0);
+    ecs_map_set(map, 1, "hello");
+    test_assertint(ecs_map_count(map), 1);
+    ecs_map_free(map);
 }

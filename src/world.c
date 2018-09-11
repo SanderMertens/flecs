@@ -14,12 +14,11 @@ static const EcsVectorParams tables_vec_params = {
     .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
 };
 
-EcsWorld* ecs_world_new(
-    uint32_t initial_size)
+EcsWorld* ecs_world_new(void)
 {
     EcsWorld *result = malloc(sizeof(EcsWorld));
     result->entities = ecs_vector_new(&entities_vec_params);
-    result->entities_map = ecs_map_new(initial_size);
+    result->entities_map = ecs_map_new(REFLECS_INITIAL_ENTITY_COUNT);
     result->tables = ecs_vector_new(&tables_vec_params);
     result->tables_map = ecs_map_new(REFLECS_INITIAL_TABLE_COUNT);
     return result;

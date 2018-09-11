@@ -51,8 +51,7 @@ void ecs_fini(void);
 
 /* -- Entity API -- */
 
-EcsWorld* ecs_world_new(
-    uint32_t initial_size);
+EcsWorld* ecs_world_new(void);
 
 EcsWorld* ecs_world_delete(
     uint32_t initial_size);

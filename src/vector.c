@@ -1,15 +1,16 @@
 #include <reflecs/vector.h>
 
 struct EcsVectorChunk {
-    struct EcsVectorChunk *next, *prev;
-    void *buffer;
+    struct EcsVectorChunk *next;
 };
 
 struct EcsVector {
-    uint32_t count;
     EcsVectorChunk *current;
+    uint32_t count;
     EcsVectorChunk first;
 };
+
+#define CHUNK_BUFFER(chunk) ECS_OFFSET(chunk, sizeof(EcsVectorChunk))
 
 static
 void ecs_vector_deinit(
@@ -34,9 +35,7 @@ void ecs_vector_chunk_new(
     uint32_t buffer_size = params->element_size * params->chunk_count;
     EcsVectorChunk *el = malloc(sizeof(EcsVectorChunk) + buffer_size);
     EcsVectorChunk *current = me->current;
-    el->buffer = ECS_OFFSET(el, sizeof(EcsVectorChunk));
     el->next = NULL;
-    el->prev = current;
     current->next= el;
     me->current = el;
     me->count = 0;
@@ -59,8 +58,9 @@ EcsVectorChunk* ecs_vector_find_chunk(
             count = (vector_count - 1) % params->chunk_count + 1;
         }
 
-        if (el >= cur->buffer &&
-            el < ECS_OFFSET(cur->buffer, count * params->element_size))
+        void *buffer = CHUNK_BUFFER(cur);
+        if (el >= buffer &&
+            el < ECS_OFFSET(buffer, count * params->element_size))
         {
             result = cur;
         } else {
@@ -69,6 +69,24 @@ EcsVectorChunk* ecs_vector_find_chunk(
     } while (!result && cur);
 
     return result;
+}
+
+static
+EcsVectorChunk* ecs_vector_prev_chunk(
+    EcsVector *me,
+    EcsVectorChunk *chunk)
+{
+    EcsVectorChunk *next, *ptr = &me->first;
+
+    if (ptr == chunk) {
+        return NULL;
+    }
+
+    while ((next = ptr->next) != chunk) {
+        ptr = next;
+    }
+
+    return ptr;
 }
 
 static
@@ -96,16 +114,17 @@ void *ecs_vector_next(
     uint32_t chunk_count = params->chunk_count;
     uint32_t size = params->element_size;
     void *result;
+    void *buffer = CHUNK_BUFFER(current);
 
     if (!index || index < chunk_count) {
-        result = ECS_OFFSET(current->buffer, size * index);
+        result = ECS_OFFSET(buffer, size * index);
     } else {
         uint32_t cur_index = index % chunk_count;
         if (cur_index) {
-            result = ECS_OFFSET(current->buffer, size * cur_index);
+            result = ECS_OFFSET(buffer, size * cur_index);
         } else {
             iter_data->current = current->next;
-            result = iter_data->current->buffer;
+            result = CHUNK_BUFFER(iter_data->current);
         }
     }
 
@@ -120,9 +139,7 @@ EcsVector* ecs_vector_new(
     EcsVector *result = malloc(sizeof(EcsVector) + buffer_size);
     result->current = &result->first;
     result->count = 0;
-    result->first.buffer = ECS_OFFSET(result, sizeof(EcsVector));
     result->first.next = NULL;
-    result->first.prev = NULL;
     return result;
 }
 
@@ -152,7 +169,7 @@ void* ecs_vector_add(
         chunk = chunk->next;
     }
 
-    result = ECS_OFFSET(chunk->buffer, params->element_size * count);
+    result = ECS_OFFSET(CHUNK_BUFFER(chunk), params->element_size * count);
     me->count = v_count + 1;
 
     return result;
@@ -180,7 +197,7 @@ EcsResult ecs_vector_remove(
     EcsVectorChunk *current = me->current;
     uint32_t size = params->element_size;
     void *last_element =
-        ECS_OFFSET(current->buffer, (chunk_count - 1) * size);
+        ECS_OFFSET(CHUNK_BUFFER(current), (chunk_count - 1) * size);
 
     if (last_element != element) {
         memcpy(element, last_element, size);
@@ -193,7 +210,7 @@ EcsResult ecs_vector_remove(
     me->count --;
 
     if (!(chunk_count - 1)) {
-        EcsVectorChunk *prev_chunk = current->prev;
+        EcsVectorChunk *prev_chunk = ecs_vector_prev_chunk(me, current);
         if (prev_chunk) {
             free(current);
             prev_chunk->next = NULL;
@@ -212,7 +229,7 @@ void* ecs_vector_get(
     uint32_t index)
 {
     if (!index) {
-        return me->first.buffer;
+        return CHUNK_BUFFER(&me->first);
     }
 
     if (index >= me->count) {
@@ -229,7 +246,7 @@ void* ecs_vector_get(
         chunk_ptr = chunk_ptr->next;
     }
 
-    return ECS_OFFSET(chunk_ptr->buffer, element_size * (index % chunk_count));
+    return ECS_OFFSET(CHUNK_BUFFER(chunk_ptr), element_size * (index % chunk_count));
 }
 
 EcsIter _ecs_vector_iter(
@@ -268,7 +285,7 @@ static
 void* cursor_value(
     cursor *c)
 {
-    return ECS_OFFSET(c->chunk->buffer, c->index * c->params->element_size);
+    return ECS_OFFSET(CHUNK_BUFFER(c->chunk), c->index * c->params->element_size);
 }
 
 static

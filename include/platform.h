@@ -36,7 +36,7 @@ extern "C" {
 #define REFLECS_ALIGN(size, alignment) (((((size) - 1) / (alignment)) + 1) * (alignment))
 #define REFLECS_ISNAN(x) ((x) != (x))
 
-typedef int (*EcsComparator)(void* a, void *b);
+typedef int (*EcsComparator)(const void* p1, const void *p2);
 
 #ifdef __cplusplus
 }

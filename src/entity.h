@@ -6,6 +6,7 @@
 #include "world.h"
 
 #define REFLECS_INITIAL_TABLE_COUNT (32)
+#define REFLECS_INITIAL_ENTITY_COUNT (32)
 #define REFLECS_INITIAL_CHUNK_COUNT (64)
 
 
