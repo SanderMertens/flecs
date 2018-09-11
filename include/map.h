@@ -12,9 +12,8 @@ extern "C" {
 typedef struct EcsMap EcsMap;
 
 typedef struct EcsMapIter {
-    EcsIter bucket_iter;
-    EcsArrayIter bucket_iter_data;
     uint32_t bucket_index;
+    void *node;
 } EcsMapIter;
 
 EcsMap* ecs_map_new(

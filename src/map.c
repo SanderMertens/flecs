@@ -1,25 +1,28 @@
 #include <reflecs/map.h>
-#include <reflecs/array.h>
+#include <reflecs/vector.h>
 
 #define REFLECS_LOAD_FACTOR (3.0f / 4.0f)
 
-typedef struct EcsMapData {
+typedef struct EcsMapNode {
     uint64_t key_hash;
     const void *data;
-} EcsMapData;
+    struct EcsMapNode *next;
+} EcsMapNode;
 
 typedef struct EcsMapBucket {
-    EcsArray *elems;
+    EcsMapNode *nodes;
 } EcsMapBucket;
 
 struct EcsMap {
     EcsMapBucket *buckets;  /* array of buckets */
     size_t bucket_count;    /* number of buckets */
     uint32_t count;         /* number of elements */
+    EcsVector *data_elems;  /* Vector with memory for data elements */
 };
 
-const EcsArrayParams bucket_arr_params = {
-    .element_size = sizeof(EcsMapData)
+const EcsVectorParams bucket_vec_params = {
+    .chunk_count = 128,
+    .element_size = sizeof(EcsMapNode)
 };
 
 static
@@ -43,6 +46,7 @@ EcsMap *ecs_map_alloc(
     EcsMap *result = malloc(sizeof(EcsMap));
     ecs_map_alloc_buffer(result, bucket_count);
     result->count = 0;
+    result->data_elems = ecs_vector_new(&bucket_vec_params);
     return result;
 }
 
@@ -51,12 +55,24 @@ void ecs_map_add_elem(
     EcsMap *map,
     EcsMapBucket *bucket,
     uint64_t key_hash,
-    const void *data)
+    const void *data,
+    EcsMapNode *elem)
 {
-    EcsMapData *elem;
-    bucket->elems = ecs_array_add(bucket->elems, &bucket_arr_params, &elem);
+    if (!elem) {
+        elem = ecs_vector_add(map->data_elems, &bucket_vec_params);
+    }
+
     elem->key_hash = key_hash;
     elem->data = data;
+    elem->next = NULL;
+
+    if (!bucket->nodes) {
+        bucket->nodes = elem;
+    } else {
+        elem->next = bucket->nodes;
+        bucket->nodes = elem;
+    }
+
     map->count ++;
 }
 
@@ -70,35 +86,25 @@ EcsMapBucket *ecs_map_get_bucket(
 }
 
 static
-int ecs_map_get_elem_index(
+EcsMapNode *ecs_map_get_node(
     EcsMapBucket *bucket,
-    uint64_t key_hash)
+    uint64_t key_hash,
+    EcsMapNode **prev_node_out)
 {
-    EcsIter it = ecs_array_iter(bucket->elems, &bucket_arr_params);
-    uint32_t index = 0;
+    EcsMapNode *prev = NULL, *node = bucket->nodes;
 
-    while (ecs_iter_hasnext(&it)) {
-        EcsMapData *data = ecs_iter_next(&it);
-        if (data->key_hash == key_hash) {
-            return index;
+    while (node) {
+        if (node->key_hash == key_hash) {
+            if (prev_node_out) {
+                *prev_node_out = prev;
+            }
+            return node;
         }
-        index ++;
+        prev = node;
+        node = node->next;
     }
 
-    return -1;
-}
-
-static
-EcsMapData *ecs_map_get_elem(
-    EcsMapBucket *bucket,
-    uint64_t key_hash)
-{
-    uint32_t index = ecs_map_get_elem_index(bucket, key_hash);
-    if (index == -1) {
-        return NULL;
-    }
-
-    return ecs_array_get(bucket->elems, &bucket_arr_params, index);
+    return NULL;
 }
 
 static
@@ -108,25 +114,12 @@ uint32_t ecs_map_next_bucket(
 {
     int i;
     for (i = start_index; i < map->bucket_count; i ++) {
-        if (map->buckets[i].elems) {
+        if (map->buckets[i].nodes) {
             break;
         }
     }
 
     return i;
-}
-
-static
-void ecs_map_get_bucket_iter(
-    EcsMap *map,
-    EcsMapIter *iter_data,
-    uint32_t bucket_index)
-{
-    iter_data->bucket_iter =
-        _ecs_array_iter(
-            map->buckets[bucket_index].elems,
-            &bucket_arr_params,
-            &iter_data->bucket_iter_data);
 }
 
 static
@@ -141,32 +134,23 @@ bool ecs_map_hasnext(
 
     EcsMapIter *iter_data = iter->ctx;
     uint32_t bucket_index = iter_data->bucket_index;
+    EcsMapNode *node = iter_data->node;
 
-    if (!map->buckets[bucket_index].elems) {
+    if (node) {
+        node = node->next;
+    }
+
+    if (!node) {
         bucket_index = ecs_map_next_bucket(map, bucket_index + 1);
-        if (bucket_index >= map->bucket_count) {
-            return false;
-        }
-
-        ecs_map_get_bucket_iter(map, iter_data, bucket_index);
+        node = map->buckets[bucket_index].nodes;
     }
 
-    if (!iter_data->bucket_iter.hasnext) {
-        ecs_map_get_bucket_iter(map, iter_data, bucket_index);
-    }
-
-    if (ecs_iter_hasnext(&iter_data->bucket_iter)) {
+    if (node) {
+        iter_data->node = node;
         iter_data->bucket_index = bucket_index;
         return true;
     } else {
-        bucket_index = ecs_map_next_bucket(map, bucket_index + 1);
-        if (bucket_index < map->bucket_count) {
-            ecs_map_get_bucket_iter(map, iter_data, bucket_index);
-            iter_data->bucket_index = bucket_index;
-            return ecs_iter_hasnext(&iter_data->bucket_iter);
-        } else {
-            return false;
-        }
+        return false;
     }
 }
 
@@ -175,8 +159,8 @@ void *ecs_map_next(
     EcsIter *iter)
 {
     EcsMapIter *iter_data = iter->ctx;
-    EcsMapData *elem = ecs_iter_next(&iter_data->bucket_iter);
-    return (void*)elem->data;
+    EcsMapNode *node = iter_data->node;
+    return (void*)node->data;
 }
 
 static
@@ -187,49 +171,26 @@ void ecs_map_resize(
     EcsMapBucket *old_buckets = map->buckets;
     uint32_t old_bucket_count = map->bucket_count;
 
-    printf(" -- RESIZE (%d - %d)\n", map->count, bucket_count);
-
     ecs_map_alloc_buffer(map, bucket_count);
     map->count = 0;
 
     uint32_t bucket_index;
     for (bucket_index = 0; bucket_index < old_bucket_count; bucket_index ++) {
         EcsMapBucket *bucket = &old_buckets[bucket_index];
-        if (bucket->elems) {
-            EcsArray *elems = bucket->elems;
-            uint32_t bucket_count = ecs_array_count(elems);
-            bool use_existing_array = false;
+        if (bucket->nodes) {
+            EcsMapNode *node = bucket->nodes;
 
-            if (bucket_count) {
-                if (bucket_count == 1) {
-                    EcsMapData *data =
-                        ecs_array_get(elems, &bucket_arr_params, 0);
-
-                    EcsMapBucket *new_bucket =
-                        ecs_map_get_bucket(map, data->key_hash);
-
-                    if (!new_bucket->elems) {
-                        new_bucket->elems = elems;
-                        use_existing_array = true;
-                    }
-                }
-
-                if (!use_existing_array) {
-                    int i;
-                    for (i = 0; i < bucket_count; i ++) {
-                        EcsMapData *data =
-                            ecs_array_get(elems, &bucket_arr_params, i);
-                        ecs_map_set(map, data->key_hash, data->data);
-                    }
-                    ecs_array_free(elems);
-                }
-            }
+            EcsMapNode *next;
+            do {
+                next = node->next;
+                EcsMapBucket *new_bucket =
+                    ecs_map_get_bucket(map, node->key_hash);
+                ecs_map_add_elem(map, new_bucket, node->key_hash, node->data, node);
+            } while ((node = next));
         }
     }
 
     free(old_buckets);
-
-    printf("    RESIZE DONE\n");
 }
 
 EcsMap* ecs_map_new(
@@ -243,11 +204,9 @@ void ecs_map_clear(
 {
     int i;
     for (i = 0; i < map->bucket_count; i ++) {
-        if (map->buckets[i].elems) {
-            ecs_array_free(map->buckets[i].elems);
-            map->buckets[i].elems = NULL;
-        }
+        map->buckets[i].nodes = NULL;
     }
+    ecs_vector_free(map->data_elems);
 }
 
 void ecs_map_free(
@@ -262,26 +221,27 @@ void ecs_map_set(
     uint64_t key_hash,
     const void *data)
 {
-    if (!map->bucket_count) {
+    uint32_t bucket_count = map->bucket_count;
+    if (!bucket_count) {
         ecs_map_alloc_buffer(map, 2);
+        bucket_count = map->bucket_count;
     }
 
     EcsMapBucket *bucket = ecs_map_get_bucket(map, key_hash);
 
-    if (!bucket->elems) {
-        bucket->elems = ecs_array_new(1, &bucket_arr_params);
-        ecs_map_add_elem(map, bucket, key_hash, data);
+    if (!bucket->nodes) {
+        ecs_map_add_elem(map, bucket, key_hash, data, NULL);
     } else {
-        EcsMapData *elem = ecs_map_get_elem(bucket, key_hash);
+        EcsMapNode *elem = ecs_map_get_node(bucket, key_hash, NULL);
         if (elem) {
             elem->data = data;
         } else {
-            ecs_map_add_elem(map, bucket, key_hash, data);
+            ecs_map_add_elem(map, bucket, key_hash, data, NULL);
         }
     }
 
-    if ((float)map->count / (float)map->bucket_count > REFLECS_LOAD_FACTOR) {
-        ecs_map_resize(map, map->bucket_count * 2);
+    if ((float)map->count / (float)bucket_count > REFLECS_LOAD_FACTOR) {
+        ecs_map_resize(map, bucket_count * 2);
     }
 }
 
@@ -290,14 +250,16 @@ EcsResult ecs_map_remove(
     uint64_t key_hash)
 {
     EcsMapBucket *bucket = ecs_map_get_bucket(map, key_hash);
-    if (bucket->elems) {
-        uint32_t elem = ecs_map_get_elem_index(bucket, key_hash);
-        if (elem != -1) {
-            ecs_array_remove(bucket->elems, &bucket_arr_params, elem);
-            if (!ecs_array_count(bucket->elems)) {
-                ecs_array_free(bucket->elems);
-                bucket->elems = NULL;
+    if (bucket->nodes) {
+        EcsMapNode *prev_node = NULL, *node = ecs_map_get_node(bucket, key_hash, &prev_node);
+        if (node) {
+            if (prev_node) {
+                prev_node->next = node->next;
+            } else {
+                bucket->nodes = node->next;
             }
+
+            ecs_vector_remove(map->data_elems, &bucket_vec_params, node);
             map->count --;
             return EcsOk;
         }
@@ -310,8 +272,8 @@ void* ecs_map_get(
     uint64_t key_hash)
 {
     EcsMapBucket *bucket = ecs_map_get_bucket(map, key_hash);
-    if (bucket->elems) {
-        EcsMapData *elem = ecs_map_get_elem(bucket, key_hash);
+    if (bucket->nodes) {
+        EcsMapNode *elem = ecs_map_get_node(bucket, key_hash, NULL);
         if (elem) {
             return (void*)elem->data;
         }
@@ -319,7 +281,6 @@ void* ecs_map_get(
 
     return NULL;
 }
-
 
 uint32_t ecs_map_count(
     EcsMap *map)
@@ -345,10 +306,8 @@ EcsIter _ecs_map_iter(
         .release = NULL
     };
 
-    iter_data->bucket_iter.hasnext = NULL;
-    iter_data->bucket_iter.next = NULL;
-    iter_data->bucket_iter.release = NULL;
     iter_data->bucket_index = 0;
+    iter_data->node = NULL;
 
     return result;
 }
