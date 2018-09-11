@@ -26,6 +26,18 @@ EcsArray* ecs_array_new(
     return result;
 }
 
+EcsArray* ecs_array_new_from_buffer(
+    uint32_t size,
+    const EcsArrayParams *params,
+    void *buffer)
+{
+    EcsArray *result = ecs_array_new(size, params);
+    void *my_buffer = ARRAY_BUFFER(result);
+    memcpy(my_buffer, buffer, size * params->element_size);
+    result->count = size;
+    return result;
+}
+
 void ecs_array_free(
     EcsArray *array)
 {
@@ -96,13 +108,25 @@ EcsArray* ecs_array_remove(
 uint32_t ecs_array_count(
     EcsArray *array)
 {
+    if (!array) {
+        return 0;
+    }
     return array->count;
 }
 
 uint32_t ecs_array_size(
     EcsArray *array)
 {
+    if (!array) {
+        return 0;
+    }
     return array->size;
+}
+
+void* ecs_array_buffer(
+    EcsArray *array)
+{
+    return ARRAY_BUFFER(array);
 }
 
 void* ecs_array_get(

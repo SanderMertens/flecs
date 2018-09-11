@@ -24,6 +24,11 @@ EcsArray* ecs_array_new(
     uint32_t size,
     const EcsArrayParams *params);
 
+EcsArray* ecs_array_new_from_buffer(
+    uint32_t size,
+    const EcsArrayParams *params,
+    void *buffer);
+
 void ecs_array_free(
     EcsArray *array);
 
@@ -46,6 +51,9 @@ uint32_t ecs_array_count(
     EcsArray *array);
 
 uint32_t ecs_array_size(
+    EcsArray *array);
+
+void* ecs_array_buffer(
     EcsArray *array);
 
 EcsIter _ecs_array_iter(

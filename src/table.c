@@ -21,13 +21,13 @@ void ecs_table_row_move(
 EcsTable* ecs_table_new(
     EcsWorld *world)
 {
-    EcsTable *result = ecs_world_alloc_table(world);
+    /*EcsTable *result = ecs_world_alloc_table(world);
     result->world = world;
     result->components = ecs_vector_new(&components_vec_params);
     result->components_hash = 0;
     result->rows = NULL;
     ecs_world_add_table(world, result);
-    return result;
+    return result;*/
 }
 
 void ecs_table_add_component(
@@ -44,7 +44,7 @@ void ecs_table_add_component(
 EcsResult ecs_table_finalize(
     EcsTable *table)
 {
-    EcsIter it = ecs_vector_iter(table->components, &components_vec_params);
+    /*EcsIter it = ecs_vector_iter(table->components, &components_vec_params);
     size_t table_size = sizeof(EcsEntity*);
     uint64_t components_hash = 0;
     uint32_t component_count = ecs_vector_count(table->components);
@@ -83,7 +83,7 @@ EcsResult ecs_table_finalize(
     return EcsOk;
 error:
     ecs_world_remove_table(table->world, table);
-    return EcsError;
+    return EcsError;*/
 }
 
 void* ecs_table_insert(

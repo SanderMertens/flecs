@@ -14,31 +14,17 @@ struct EcsWorld {
     EcsVector *tables;            /* vector<EcsTable> */
     EcsMap *entities_map;         /* Map for quick entity lookups */
     EcsMap *tables_map;           /* Map for quick table lookups */
+    EcsMap *components_map;       /* Map that stores component sets */
 };
 
+extern const EcsVectorParams entities_vec_params;
+extern const EcsVectorParams tables_vec_params;
+extern const EcsArrayParams entities_arr_params;
 
-/* -- Private functions -- */
-
-EcsEntity* ecs_world_alloc_entity(
-    EcsWorld *world);
-
-void ecs_world_add_entity(
+uint64_t ecs_world_component_set_hash(
     EcsWorld *world,
-    EcsEntity *entity);
+    EcsArray *set,
+    EcsEntity *to_add);
 
-EcsTable *ecs_world_alloc_table(
-    EcsWorld *world);
-
-void ecs_world_add_table(
-    EcsWorld *world,
-    EcsTable *table);
-
-void ecs_world_remove_table(
-    EcsWorld *world,
-    EcsTable *table);
-
-EcsTable* ecs_world_lookup_table(
-    EcsWorld *world,
-    uint64_t component_hash);
 
 #endif

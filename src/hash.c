@@ -773,5 +773,5 @@ void ecs_hash(
         key,
         length,
         (uint32_t*)result,
-        ((uint32_t*)result) + sizeof(uint32_t));
+        ((uint32_t*)result) + 1);
 }

@@ -4,15 +4,47 @@
 #include "table.h"
 #include "entity.h"
 
-static const EcsVectorParams entities_vec_params = {
+const EcsVectorParams entities_vec_params = {
     .element_size = sizeof(EcsEntity),
     .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
 };
 
-static const EcsVectorParams tables_vec_params = {
+const EcsVectorParams tables_vec_params = {
     .element_size = sizeof(EcsTable),
     .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
 };
+
+const EcsArrayParams entities_arr_params = {
+    .element_size = sizeof(EcsEntity*)
+};
+
+static
+int compare_ptr(
+    const void *p1,
+    const void *p2)
+{
+    return *(void**)p1 - *(void**)p2;
+}
+
+static
+uint64_t hash_entity_array(
+    EcsEntity** array,
+    uint32_t count)
+{
+    uint64_t hash = 0;
+    int i;
+    for (i = 0; i < count; i ++) {
+        ecs_hash(array[i], sizeof(void*), &hash);
+    }
+    return hash;
+}
+
+static
+void ecs_world_init(
+    EcsWorld *world)
+{
+    ecs_new(world, "EcsType");
+}
 
 EcsWorld* ecs_world_new(void)
 {
@@ -21,46 +53,43 @@ EcsWorld* ecs_world_new(void)
     result->entities_map = ecs_map_new(REFLECS_INITIAL_ENTITY_COUNT);
     result->tables = ecs_vector_new(&tables_vec_params);
     result->tables_map = ecs_map_new(REFLECS_INITIAL_TABLE_COUNT);
+    result->components_map = ecs_map_new(REFLECS_INITIAL_COMPONENT_SET_COUNT);
+    ecs_world_init(result);
     return result;
 }
 
-EcsEntity* ecs_world_alloc_entity(
-    EcsWorld *world)
-{
-    return ecs_vector_add(world->entities, &entities_vec_params);
-}
-
-void ecs_world_add_entity(
+uint64_t ecs_world_component_set_hash(
     EcsWorld *world,
-    EcsEntity *entity)
+    EcsArray *set,
+    EcsEntity *to_add)
 {
-    ecs_map_set(world->entities_map, entity->id_hash, entity);
-}
+    uint64_t stage_hash = 0;
+    uint32_t count = ecs_array_count(set);
+    EcsEntity *new_set[count + 1];
+    void *new_buffer = new_set;
 
-EcsTable *ecs_world_alloc_table(
-    EcsWorld *world)
-{
-    return ecs_vector_add(world->tables, &tables_vec_params);
-}
+    if (to_add) {
+        void *buffer = ecs_array_buffer(set);
+        if (count) {
+            memcpy(new_set, buffer, sizeof(EcsEntity*) * count);
+        }
+        new_set[count] = to_add;
+        qsort(new_set, count + 1, sizeof(EcsEntity*), compare_ptr);
+        stage_hash = hash_entity_array(new_set, count + 1);
+        count ++;
+    } else if (set) {
+        void *buffer = ecs_array_buffer(set);
+        stage_hash = hash_entity_array(buffer, count);
+        new_buffer = buffer;
+    } else {
+        return 0;
+    }
 
-void ecs_world_add_table(
-    EcsWorld *world,
-    EcsTable *table)
-{
-    ecs_map_set(world->tables_map, table->components_hash, table);
-}
+    EcsArray *stage_set = ecs_map_get(world->components_map, stage_hash);
+    if (!stage_set) {
+        stage_set = ecs_array_new_from_buffer(count, &entities_arr_params, new_buffer);
+        ecs_map_set(world->components_map, stage_hash, stage_set);
+    }
 
-void ecs_world_remove_table(
-    EcsWorld *world,
-    EcsTable *table)
-{
-    ecs_map_remove(world->tables_map, table->components_hash);
-    ecs_vector_remove(world->tables, &tables_vec_params, table);
-}
-
-EcsTable* ecs_world_lookup_table(
-    EcsWorld *world,
-    uint64_t component_hash)
-{
-    return ecs_map_get(world->tables_map, component_hash);
+    return stage_hash;
 }

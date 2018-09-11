@@ -5,28 +5,20 @@
 #include <reflecs/vector.h>
 #include "world.h"
 
-#define REFLECS_INITIAL_TABLE_COUNT (32)
-#define REFLECS_INITIAL_ENTITY_COUNT (32)
+#define REFLECS_INITIAL_TABLE_COUNT (8)
+#define REFLECS_INITIAL_ENTITY_COUNT (8)
 #define REFLECS_INITIAL_CHUNK_COUNT (64)
-
-
-/* -- Private types -- */
-
-typedef struct EcsComponentElement {
-    EcsEntity *component;         /* Type of component */
-    void *data;                   /* Pointer to component data */
-} EcsComponentElement;
-
+#define REFLECS_INITIAL_COMPONENT_SET_COUNT (8)
 
 /* -- Public (opaque) types -- */
 
 struct EcsEntity {
-    uint64_t id_hash;             /* Hashed id */
-    uint64_t components_hash;     /* Hashed components list */
-    char *id;                     /* String-based id */
-    EcsVector *components;        /* vector<EcsComponentElement> */
-    EcsEntity *base;              /* Base of entity (optional) */
-    EcsWorld *world;              /* Reference to the world */
+    char *id;
+    uint64_t stage_hash;
+    uint64_t table_hash;
+    void *row;
+    EcsEntity *base;
+    EcsWorld *world;
 };
 
 void ecs_entity_move(

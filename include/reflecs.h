@@ -39,8 +39,6 @@ typedef struct EcsType {
 
 /* -- Builtin component entities -- */
 
-extern EcsEntity *EcsType_e;
-
 
 /* -- Start / stop reflecs -- */
 
