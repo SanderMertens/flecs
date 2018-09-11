@@ -48,7 +48,7 @@ EcsResult ecs_table_init(
     table->rows_params.element_size = column_offset;
     table->rows_params.chunk_count = REFLECS_INITIAL_CHUNK_COUNT;
     table->rows_params.compare_action = NULL;
-    table->rows_params.move_action = NULL;
+    table->rows_params.move_action = ecs_table_row_move;
     table->rows_params.ctx = NULL;
     table->rows = ecs_vector_new(&table->rows_params);
 
@@ -99,9 +99,9 @@ EcsTable* ecs_table_new_w_size(
     }
 
     result->rows_params.chunk_count = REFLECS_INITIAL_CHUNK_COUNT;
-    result->rows_params.element_size = size;
+    result->rows_params.element_size = size + sizeof(EcsEntity*);
     result->rows_params.compare_action = NULL;
-    result->rows_params.move_action = NULL;
+    result->rows_params.move_action = ecs_table_row_move;
     result->rows_params.ctx = NULL;
     result->columns = malloc(sizeof(uint32_t) * 2);
     result->columns[0] = sizeof(EcsEntity*);
@@ -141,4 +141,27 @@ size_t ecs_table_column_size(
 {
     uint32_t *columns = table->columns;
     return columns[column + 1] - columns[column];
+}
+
+int32_t ecs_table_find_column(
+    EcsTable *table,
+    EcsEntity *component)
+{
+    EcsWorld *world = table->world;
+    EcsArray *set = ecs_world_get_components(world, table->components_hash);
+    if (!set) {
+        return -1;
+    }
+
+    uint32_t column = 0;
+    EcsIter it = ecs_array_iter(set, &entityptr_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
+        if (e == component) {
+            return column;
+        }
+        column ++;
+    }
+
+    return -1;
 }

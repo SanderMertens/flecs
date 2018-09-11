@@ -25,12 +25,42 @@ char* random_id(
     return result;
 }
 
+static
+void ecs_entity_copy_row(
+    EcsEntity *entity,
+    EcsTable *to_table,
+    void *to_row,
+    EcsTable *from_table,
+    void *from_row)
+{
+    EcsWorld *world = entity->world;
+    EcsArray *from_set = ecs_world_get_components(world, entity->table_hash);
+
+    int column = 0, to_column;
+    EcsIter it = ecs_array_iter(from_set, &entityptr_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
+
+        to_column = ecs_table_find_column(to_table, e);
+        if (to_column == -1) {
+            continue;
+        }
+
+        void *to_ptr = ecs_table_column(to_table, to_row, to_column);
+        void *from_ptr = ecs_table_column(from_table, from_row, column);
+        size_t size = ecs_table_column_size(from_table, column);
+        memcpy(to_ptr, from_ptr, size);
+
+        column ++;
+    }
+}
+
 void ecs_entity_move(
     EcsEntity *entity,
     void *to,
     void *from)
 {
-
+    entity->row = to;
 }
 
 EcsEntity* ecs_new(
@@ -56,7 +86,20 @@ EcsEntity* ecs_new(
     return result;
 }
 
-void ecs_add(
+EcsEntity* ecs_component_new(
+    EcsWorld *world,
+    const char *id,
+    size_t size)
+{
+    EcsEntity *result = ecs_new(world, id);
+    ecs_add(result, world->type);
+    ecs_commit(result);
+    EcsType *type_data = ecs_get(result, world->type);
+    type_data->size = size;
+    return result;
+}
+
+void ecs_stage(
     EcsEntity *entity,
     EcsEntity *component)
 {
@@ -70,6 +113,18 @@ void ecs_add(
     }
 
     entity->stage_hash = ecs_world_components_hash(world, set, component);
+}
+
+void* ecs_add(
+    EcsEntity *entity,
+    EcsEntity *component)
+{
+    ecs_stage(entity, component);
+    if (ecs_commit(entity) != EcsOk) {
+        return NULL;
+    }
+
+    return ecs_get(entity, component);
 }
 
 EcsResult ecs_commit(
@@ -92,8 +147,14 @@ EcsResult ecs_commit(
                 }
             }
 
-            entity->row = ecs_table_insert(table, entity);
+            void *row = ecs_table_insert(table, entity);
+            if (current) {
+                ecs_entity_copy_row(entity, table, row, current, entity->row);
+            }
+
+            entity->row = row;
             entity->table_hash = entity->stage_hash;
+            entity->stage_hash = 0;
         }
     }
 

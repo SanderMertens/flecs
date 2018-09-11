@@ -49,6 +49,8 @@ void ecs_fini(void);
 
 /* -- Entity API -- */
 
+#define ECS_COMPONENT(world, type) EcsEntity *type##_e = ecs_component_new(world, #type, sizeof(type));
+
 EcsWorld* ecs_world_new(void);
 
 EcsWorld* ecs_world_delete(
@@ -58,10 +60,19 @@ EcsEntity* ecs_new(
     EcsWorld *world,
     const char *id);
 
+EcsEntity* ecs_component_new(
+    EcsWorld *world,
+    const char *id,
+    size_t size);
+
 void ecs_delete(
     EcsEntity *entity);
 
-void ecs_add(
+void ecs_stage(
+    EcsEntity *entity,
+    EcsEntity *component);
+
+void* ecs_add(
     EcsEntity *entity,
     EcsEntity *component);
 

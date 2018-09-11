@@ -31,9 +31,6 @@ void ecs_table_add_component(
     EcsTable *table,
     EcsEntity *component_type);
 
-EcsResult ecs_table_finalize(
-    EcsTable *table);
-
 void* ecs_table_insert(
     EcsTable *table,
     EcsEntity *entity);
@@ -41,6 +38,10 @@ void* ecs_table_insert(
 void ecs_table_remove(
     EcsTable *table,
     void *row);
+
+int32_t ecs_table_find_column(
+    EcsTable *table,
+    EcsEntity *component);
 
 void* ecs_table_column(
     EcsTable *table,
