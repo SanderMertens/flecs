@@ -1,6 +1,4 @@
-#include <reflecs/reflecs.h>
-#include "table.h"
-#include "entity.h"
+#include "reflecs.h"
 
 static const EcsVectorParams components_vec_params = {
     .element_size = sizeof(EcsEntity*),
@@ -33,7 +31,7 @@ EcsResult ecs_table_init(
     while (ecs_iter_hasnext(&it)) {
         EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
 
-        EcsType *type = ecs_get(e, world->type);
+        EcsComponent *type = ecs_get(e, world->component);
         if (!type) {
             return EcsError;
         }
@@ -164,4 +162,20 @@ int32_t ecs_table_find_column(
     }
 
     return -1;
+}
+
+bool ecs_table_has_components(
+    EcsTable *table,
+    EcsArray *components)
+{
+    EcsIter it = ecs_array_iter(components, &entityptr_arr_params);
+
+    while (ecs_iter_hasnext(&it)) {
+        EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
+        if (ecs_table_find_column(table, e) == -1) {
+            return false;
+        }
+    }
+
+    return true;
 }

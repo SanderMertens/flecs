@@ -1,7 +1,7 @@
 #ifndef REFLECS_VECTOR_H
 #define REFLECS_VECTOR_H
 
-#include <reflecs/reflecs.h>
+#include <reflecs/platform.h>
 #include <reflecs/iter.h>
 
 #ifdef __cplusplus

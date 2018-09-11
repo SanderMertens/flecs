@@ -1,6 +1,6 @@
 {
     "id":"reflecs",
-    "type":"package",
+    "type":"application",
     "value": {
         "managed": false
     }

@@ -3,44 +3,53 @@
 #include <reflecs/reflecs.h>
 #include <reflecs/vector.h>
 #include <stdio.h>
+#include <reflecs/map.h>
 
 #include <unistd.h>
 
-int compare_int(void *p1, void *p2) {
-    int v1 = *(int*)p1;
-    int v2 = *(int*)p2;
-    return v1 > v2
-      ? 1
-      : v2 < v1
-        ? -1
-        : 0
-        ;
+typedef struct Location {
+    int x, y;
+} Location;
+
+typedef struct Speed {
+    int x, y;
+} Speed;
+
+void Move(
+    EcsEntity *system,
+    EcsEntity *e,
+    void *data[])
+{
+    Location *location = data[0];
+    Speed *speed = data[1];
+    location->x += speed->x;
+    location->y += speed->y;
+    printf("%s: location = %d, %d\n", ecs_idof(e), location->x, location->y);
 }
 
 int main(int argc, char *argv[]) {
-    EcsWorld *world = ecs_world_new(0);
+    EcsWorld *world = ecs_world_new();
 
-    int i;
-    for (i = 0; i < 1000 * 1000; i ++) {
-        ecs_new(world, NULL);
-    }
+    /* Create Location and Speed components */
+    ECS_COMPONENT(world, Location);
+    ECS_COMPONENT(world, Speed);
 
-    sleep(10000);
+    /* Create Move system that depends on Location and Speed */
+    ECS_SYSTEM(world, Move, Location, Speed);
 
-    /*while (ecs_iter_hasnext(&it)) {
-        int *elem = ecs_iter_next(&it);
-        printf("%d ", *elem);
-    }
-    printf("\n");*/
+    /* Create new entity, add and initialize 'Location' component */
+    EcsEntity *my_car = ecs_new(world, "my_car");
+    Location *location_data = ecs_add(my_car, Location);
+    location_data->x = 10;
+    location_data->y = 20;
 
-    /*ecs_vector_sort(vec, &params);
+    /* Add and initialize 'Speed' to entity */
+    Speed *speed_data = ecs_add(my_car, Speed);
+    speed_data->x = 5;
+    speed_data->y = 5;
 
-    it = ecs_vector_iter(vec, &params);
-    while (ecs_iter_hasnext(&it)) {
-        int *elem = ecs_iter_next(&it);
-        printf("%d ", *elem);
-    }
-    printf("\n");*/
+    /* Process all systems in the world */
+    ecs_world_progress(world);
 
     return 0;
 }

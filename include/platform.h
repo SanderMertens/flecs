@@ -39,6 +39,11 @@ extern "C" {
 
 typedef int (*EcsComparator)(const void* p1, const void *p2);
 
+typedef enum EcsResult {
+    EcsOk,
+    EcsError
+} EcsResult;
+
 #ifdef __cplusplus
 }
 #endif

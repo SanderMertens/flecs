@@ -1,9 +1,6 @@
-#include <reflecs/reflecs.h>
-#include <reflecs/vector.h>
-#include "entity.h"
-#include "table.h"
+#include "reflecs.h"
 
-EcsEntity *EcsType_e;
+EcsEntity *EcsComponent_e;
 
 /* Generate random id */
 static
@@ -74,7 +71,6 @@ EcsEntity* ecs_new(
         result->id = random_id(8);
     }
 
-    result->base = NULL;
     result->world = world;
     result->stage_hash = 0;
     result->table_hash = 0;
@@ -83,19 +79,6 @@ EcsEntity* ecs_new(
     ecs_hash(id, strlen(id), &hash);
     ecs_map_set(world->entities_map, hash, result);
 
-    return result;
-}
-
-EcsEntity* ecs_component_new(
-    EcsWorld *world,
-    const char *id,
-    size_t size)
-{
-    EcsEntity *result = ecs_new(world, id);
-    _ecs_add(result, world->type);
-    ecs_commit(result);
-    EcsType *type_data = ecs_get(result, world->type);
-    type_data->size = size;
     return result;
 }
 
@@ -200,6 +183,12 @@ EcsEntity* ecs_lookup(
     uint64_t hash = 0;
     ecs_hash(id, strlen(id), &hash);
     return ecs_map_get(world->entities_map, hash);
+}
+
+const char* ecs_idof(
+    EcsEntity *entity)
+{
+    return entity->id;
 }
 
 void ecs_init(void)

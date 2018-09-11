@@ -3,7 +3,6 @@
 
 #include <reflecs/platform.h>
 #include <reflecs/iter.h>
-#include <reflecs/array.h>
 
 #ifdef __cplusplus
 extern "C" {

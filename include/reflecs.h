@@ -13,6 +13,8 @@
 #endif
 
 #include <reflecs/platform.h>
+#include <reflecs/vector.h>
+#include <reflecs/array.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,23 +23,28 @@ extern "C" {
 
 /* -- Types -- */
 
-typedef enum EcsResult {
-    EcsOk,
-    EcsError
-} EcsResult;
-
 typedef struct EcsWorld EcsWorld;
 typedef struct EcsEntity EcsEntity;
 
 
 /* -- Builtin component types -- */
 
-typedef struct EcsType {
+typedef void (*EcsSystemAction)(
+    EcsEntity *system,
+    EcsEntity *entity,
+    void *data[]);
+
+typedef struct EcsComponent {
     uint32_t size;
-} EcsType;
+} EcsComponent;
 
-
-/* -- Builtin component entities -- */
+typedef struct EcsSystem {
+    EcsSystemAction action;
+    EcsArray *components;
+    EcsVector *tables;
+    EcsVectorParams tables_params;
+    bool enabled;
+} EcsSystem;
 
 
 /* -- Start / stop reflecs -- */
@@ -47,23 +54,21 @@ void ecs_init(void);
 void ecs_fini(void);
 
 
-/* -- Entity API -- */
-
-#define ECS_COMPONENT(world, type) EcsEntity *type##_e = ecs_component_new(world, #type, sizeof(type));
+/* -- World API -- */
 
 EcsWorld* ecs_world_new(void);
 
-EcsWorld* ecs_world_delete(
-    uint32_t initial_size);
+void ecs_world_delete(
+    EcsWorld *world);
+
+void ecs_world_progress(
+    EcsWorld *world);
+
+/* -- Entity API -- */
 
 EcsEntity* ecs_new(
     EcsWorld *world,
     const char *id);
-
-EcsEntity* ecs_component_new(
-    EcsWorld *world,
-    const char *id,
-    size_t size);
 
 void ecs_delete(
     EcsEntity *entity);
@@ -94,6 +99,35 @@ EcsResult ecs_commit(
 EcsEntity* ecs_lookup(
     EcsWorld *world,
     const char *id);
+
+const char* ecs_idof(
+    EcsEntity *entity);
+
+/* -- Component API -- */
+
+#define ECS_COMPONENT(world, id) EcsEntity *id##_e = ecs_component_new(world, #id, sizeof(id)); (void)id##_e;
+
+EcsEntity* ecs_component_new(
+    EcsWorld *world,
+    const char *id,
+    size_t size);
+
+
+/* -- System API -- */
+
+#define ECS_SYSTEM(world, id, ...) EcsEntity *id##_e = ecs_system_new(world, #id, #__VA_ARGS__, id); (void)id##_e;
+
+EcsEntity *ecs_system_new(
+    EcsWorld *world,
+    const char *id,
+    const char *sig,
+    EcsSystemAction action);
+
+#define ecs_system_enable(e, enabled) _ecs_system_enable(e##_e, enabled)
+
+EcsResult _ecs_system_enable(
+    EcsEntity *entity,
+    bool enabled);
 
 
 /* -- Utilities -- */

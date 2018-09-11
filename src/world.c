@@ -1,8 +1,4 @@
-#include <reflecs/vector.h>
-#include <reflecs/map.h>
-#include "world.h"
-#include "table.h"
-#include "entity.h"
+#include "reflecs.h"
 
 const EcsVectorParams entities_vec_params = {
     .element_size = sizeof(EcsEntity),
@@ -11,6 +7,11 @@ const EcsVectorParams entities_vec_params = {
 
 const EcsVectorParams tables_vec_params = {
     .element_size = sizeof(EcsTable),
+    .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
+};
+
+const EcsVectorParams entityptr_vec_params = {
+    .element_size = sizeof(EcsEntity*),
     .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
 };
 
@@ -40,32 +41,64 @@ uint64_t hash_entity_array(
 }
 
 static
-EcsResult ecs_world_init(
+EcsResult ecs_world_init_component(
     EcsWorld *world)
 {
     uint64_t stage_hash;
 
-    EcsEntity *type = ecs_new(world, "EcsType");
-    _ecs_add(type, type);
-    stage_hash = type->stage_hash;
+    EcsEntity *component_e = ecs_new(world, "EcsComponent");
+    world->component = component_e;
+
+    _ecs_stage(component_e, component_e);
+    stage_hash = component_e->stage_hash;
 
     EcsTable *table =
-        ecs_table_new_w_size(world, stage_hash, sizeof(EcsType));
+        ecs_table_new_w_size(world, stage_hash, sizeof(EcsComponent));
 
     ecs_map_set(world->tables_map, stage_hash, table);
 
-    world->type = type;
-
-    if (ecs_commit(world->type) != EcsOk) {
+    if (ecs_commit(world->component) != EcsOk) {
         return EcsError;
     }
 
-    EcsType *type_data = ecs_get(type, type);
+    EcsComponent *type_data = ecs_get(component_e, component_e);
     if (!type_data) {
         return EcsError;
     }
 
-    type_data->size = sizeof(EcsType);
+    type_data->size = sizeof(EcsComponent);
+
+    return EcsOk;
+}
+
+static
+EcsResult ecs_world_init_system(
+    EcsWorld *world)
+{
+    EcsEntity *system_e = ecs_new(world, "EcsSystem");
+    world->system = system_e;
+
+    EcsComponent *component_data = _ecs_add(system_e, world->component);
+    if (!component_data) {
+        return EcsError;
+    }
+
+    component_data->size = sizeof(EcsSystem);
+
+    return EcsOk;
+}
+
+static
+EcsResult ecs_world_init(
+    EcsWorld *world)
+{
+    if (ecs_world_init_component(world) != EcsOk) {
+        return EcsError;
+    }
+
+    if (ecs_world_init_system(world) != EcsOk) {
+        return EcsError;
+    }
 
     return EcsOk;
 }
@@ -74,8 +107,9 @@ EcsWorld* ecs_world_new(void)
 {
     EcsWorld *result = malloc(sizeof(EcsWorld));
     result->entities = ecs_vector_new(&entities_vec_params);
-    result->entities_map = ecs_map_new(REFLECS_INITIAL_ENTITY_COUNT);
     result->tables = ecs_vector_new(&tables_vec_params);
+    result->systems = ecs_vector_new(&entityptr_vec_params);
+    result->entities_map = ecs_map_new(REFLECS_INITIAL_ENTITY_COUNT);
     result->tables_map = ecs_map_new(REFLECS_INITIAL_TABLE_COUNT);
     result->components_map = ecs_map_new(REFLECS_INITIAL_COMPONENT_SET_COUNT);
     ecs_world_init(result);
@@ -142,5 +176,23 @@ EcsTable *ecs_world_create_table(
     }
 
     ecs_map_set(world->tables_map, components_hash, table);
+
+    EcsIter it = ecs_vector_iter(world->systems, &entityptr_vec_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
+        ecs_system_notify_create_table(e, table);
+    }
+
     return table;
+}
+
+void ecs_world_progress(
+    EcsWorld *world)
+{
+    EcsIter it = ecs_vector_iter(world->systems, &entityptr_vec_params);
+
+    while (ecs_iter_hasnext(&it)) {
+        EcsEntity *sys = *(EcsEntity**)ecs_iter_next(&it);
+        ecs_system_run(sys);
+    }
 }
