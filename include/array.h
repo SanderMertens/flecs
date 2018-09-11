@@ -22,24 +22,24 @@ typedef struct EcsArrayIter {
 
 EcsArray* ecs_array_new(
     uint32_t size,
-    EcsArrayParams *params);
+    const EcsArrayParams *params);
 
 void ecs_array_free(
     EcsArray *array);
 
 EcsArray* ecs_array_add(
     EcsArray *array,
-    EcsArrayParams *params,
+    const EcsArrayParams *params,
     void *elem_out);
 
 void* ecs_array_get(
     EcsArray *array,
-    EcsArrayParams *params,
+    const EcsArrayParams *params,
     uint32_t index);
 
 EcsArray* ecs_array_remove(
     EcsArray *array,
-    EcsArrayParams *params,
+    const EcsArrayParams *params,
     uint32_t index);
 
 uint32_t ecs_array_count(
@@ -50,7 +50,7 @@ uint32_t ecs_array_size(
 
 EcsIter _ecs_array_iter(
     EcsArray *array,
-    EcsArrayParams *params,
+    const EcsArrayParams *params,
     EcsArrayIter *iter_data);
 
 #define ecs_array_iter(me, params)\
@@ -58,7 +58,7 @@ EcsIter _ecs_array_iter(
 
 void ecs_array_sort(
     EcsArray *array,
-    EcsArrayParams *params);
+    const EcsArrayParams *params);
 
 #ifdef __cplusplus
 }

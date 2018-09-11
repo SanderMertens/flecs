@@ -3,7 +3,7 @@
 
 #include <reflecs/platform.h>
 #include <reflecs/iter.h>
-#include <reflecs/vector.h>
+#include <reflecs/array.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,7 +13,7 @@ typedef struct EcsMap EcsMap;
 
 typedef struct EcsMapIter {
     EcsIter bucket_iter;
-    EcsVectorIter bucket_iter_data;
+    EcsArrayIter bucket_iter_data;
     uint32_t bucket_index;
 } EcsMapIter;
 

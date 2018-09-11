@@ -18,7 +18,7 @@ EcsArray* resize(
 
 EcsArray* ecs_array_new(
     uint32_t size,
-    EcsArrayParams *params)
+    const EcsArrayParams *params)
 {
     EcsArray *result = malloc(sizeof(EcsArray) + size * params->element_size);
     result->count = 0;
@@ -34,7 +34,7 @@ void ecs_array_free(
 
 EcsArray* ecs_array_add(
     EcsArray *array,
-    EcsArrayParams *params,
+    const EcsArrayParams *params,
     void *elem_out)
 {
     uint16_t size = array->size;
@@ -60,7 +60,7 @@ EcsArray* ecs_array_add(
 
 EcsArray* ecs_array_remove(
     EcsArray *array,
-    EcsArrayParams *params,
+    const EcsArrayParams *params,
     uint32_t index)
 {
     uint16_t size = array->size;
@@ -73,7 +73,7 @@ EcsArray* ecs_array_remove(
     }
 
     void *buffer = ARRAY_BUFFER(array);
-    void *elem = ECS_OFFSET(buffer, element_size * index);
+    void *elem = ECS_OFFSET(buffer, index * element_size);
 
     if (index != (count - 1)) {
         void *last_elem = ECS_OFFSET(buffer, element_size * (count - 1));
@@ -107,7 +107,7 @@ uint32_t ecs_array_size(
 
 void* ecs_array_get(
     EcsArray *array,
-    EcsArrayParams *params,
+    const EcsArrayParams *params,
     uint32_t index)
 {
     uint16_t count = array->count;
@@ -148,7 +148,7 @@ void* ecs_array_next(
 
 EcsIter _ecs_array_iter(
     EcsArray *array,
-    EcsArrayParams *params,
+    const EcsArrayParams *params,
     EcsArrayIter *iter_data)
 {
     EcsIter result = {
@@ -158,7 +158,7 @@ EcsIter _ecs_array_iter(
         .data = iter_data /* store index */
     };
 
-    iter_data->params = params;
+    iter_data->params = (void*)params;
     iter_data->index = 0;
 
     return result;
@@ -166,7 +166,7 @@ EcsIter _ecs_array_iter(
 
 void ecs_array_sort(
     EcsArray *array,
-    EcsArrayParams *params)
+    const EcsArrayParams *params)
 {
     uint16_t count = array->count;
     uint32_t element_size = params->element_size;
