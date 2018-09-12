@@ -219,3 +219,10 @@ void ecs_world_set_context(
 {
     world->context = context;
 }
+
+EcsIter _ecs_world_iter_systems(
+    EcsWorld *world,
+    EcsVectorIter *iter_data)
+{
+    return _ecs_vector_iter(world->systems, &entityptr_vec_params, iter_data);
+}

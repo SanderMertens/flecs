@@ -1,6 +1,16 @@
 #ifndef REFLECS_PLATFORM_H
 #define REFLECS_PLATFORM_H
 
+#if REFLECS_IMPL && defined _MSC_VER
+#define REFLECS_EXPORT __declspec(dllexport)
+#elif REFLECS_IMPL
+#define REFLECS_EXPORT __attribute__((__visibility__("default")))
+#elif defined _MSC_VER
+#define REFLECS_EXPORT __declspec(dllimport)
+#else
+#define REFLECS_EXPORT
+#endif
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>

@@ -246,7 +246,7 @@ EcsEntity *ecs_system_new(
     return result;
 }
 
-EcsResult _ecs_system_enable(
+EcsResult ecs_system_enable(
     EcsEntity *entity,
     bool enabled)
 {
@@ -259,4 +259,12 @@ EcsResult _ecs_system_enable(
     system_data->enabled = enabled;
 
     return EcsOk;
+}
+
+bool ecs_system_is_enabled(
+    EcsEntity *entity)
+{
+    EcsWorld *world = entity->world;
+    EcsSystem *system_data = ecs_get(entity, world->system);
+    return system_data->enabled;
 }

@@ -2,16 +2,6 @@
 #ifndef REFLECS_H
 #define REFLECS_H
 
-#if REFLECS_IMPL && defined _MSC_VER
-#define REFLECS_EXPORT __declspec(dllexport)
-#elif REFLECS_IMPL
-#define REFLECS_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-#define REFLECS_EXPORT __declspec(dllimport)
-#else
-#define REFLECS_EXPORT
-#endif
-
 #include <reflecs/platform.h>
 #include <reflecs/vector.h>
 #include <reflecs/array.h>
@@ -88,6 +78,13 @@ REFLECS_EXPORT
 void* ecs_world_get_context(
     EcsWorld *world);
 
+#define ecs_world_iter_systems(world)\
+    _ecs_world_iter_systems(world, alloca(sizeof(EcsVectorIter)))
+
+REFLECS_EXPORT
+EcsIter _ecs_world_iter_systems(
+    EcsWorld *world,
+    EcsVectorIter *iter_data);
 
 /* -- Entity API -- */
 
@@ -159,13 +156,14 @@ EcsEntity *ecs_system_new(
     const char *sig,
     EcsSystemAction action);
 
-#define ecs_system_enable(e, enabled) _ecs_system_enable(e##_e, enabled)
-
 REFLECS_EXPORT
-EcsResult _ecs_system_enable(
+EcsResult ecs_system_enable(
     EcsEntity *entity,
     bool enabled);
 
+REFLECS_EXPORT
+bool ecs_system_is_enabled(
+    EcsEntity *entity);
 
 /* -- Utilities -- */
 
