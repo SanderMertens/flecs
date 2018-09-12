@@ -82,7 +82,7 @@ EcsEntity* ecs_new(
     return result;
 }
 
-void _ecs_stage(
+void ecs_stage(
     EcsEntity *entity,
     EcsEntity *component)
 {
@@ -98,16 +98,82 @@ void _ecs_stage(
     entity->stage_hash = ecs_world_components_hash(world, set, component);
 }
 
-void* _ecs_add(
+void* ecs_add(
     EcsEntity *entity,
     EcsEntity *component)
 {
-    _ecs_stage(entity, component);
+    ecs_stage(entity, component);
     if (ecs_commit(entity) != EcsOk) {
         return NULL;
     }
 
     return ecs_get(entity, component);
+}
+
+static
+void ecs_run_init_systems(
+    EcsWorld *world,
+    EcsTable *table,
+    EcsEntity *entity)
+{
+    EcsArray *new = ecs_world_get_components(world, table->components_hash);
+    EcsArray *old = ecs_world_get_components(world, entity->table_hash);
+    EcsArray *diff;
+
+    if (!old) {
+        diff = new;
+    } else {
+        diff = ecs_components_diff(new, old);
+    }
+
+    if (diff) {
+        EcsIter it = ecs_vector_iter(table->init_systems, &entityptr_vec_params);
+        while (ecs_iter_hasnext(&it)) {
+            EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
+            EcsSystem *system_data = ecs_get(e, world->system);
+
+            if (!ecs_components_is_union_empty(diff, system_data->components)) {
+                ecs_system_notify(e, table, entity);
+            }
+        }
+    }
+
+    if (diff != new) {
+        ecs_array_free(diff);
+    }
+}
+
+static
+void ecs_run_deinit_systems(
+    EcsWorld *world,
+    EcsTable *table,
+    EcsEntity *entity)
+{
+    EcsArray *old = ecs_world_get_components(world, table->components_hash);
+    EcsArray *new = ecs_world_get_components(world, entity->stage_hash);
+    EcsArray *diff;
+
+    if (!old) {
+        diff = new;
+    } else {
+        diff = ecs_components_diff(new, old);
+    }
+
+    if (diff) {
+        EcsIter it = ecs_vector_iter(table->deinit_systems, &entityptr_vec_params);
+        while (ecs_iter_hasnext(&it)) {
+            EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
+            EcsSystem *system_data = ecs_get(e, world->system);
+
+            if (!ecs_components_is_union_empty(diff, system_data->components)) {
+                ecs_system_notify(e, table, entity);
+            }
+        }
+    }
+
+    if (diff != new) {
+        ecs_array_free(diff);
+    }
 }
 
 EcsResult ecs_commit(
@@ -120,6 +186,9 @@ EcsResult ecs_commit(
             EcsTable *current = NULL;
             if (entity->table_hash) {
                 current = ecs_world_lookup_table(world, entity->table_hash);
+                if (ecs_vector_count(current->deinit_systems)) {
+                    ecs_run_deinit_systems(world, current, entity);
+                }
             }
 
             EcsTable *table = ecs_world_lookup_table(world, entity->stage_hash);
@@ -136,6 +205,11 @@ EcsResult ecs_commit(
             }
 
             entity->row = row;
+
+            if (ecs_vector_count(table->init_systems)) {
+                ecs_run_init_systems(world, table, entity);
+            }
+
             entity->table_hash = entity->stage_hash;
             entity->stage_hash = 0;
         }
@@ -176,19 +250,16 @@ void* ecs_get(
     return ECS_OFFSET(entity->row, table->columns[column]);
 }
 
-EcsEntity* ecs_lookup(
-    EcsWorld *world,
-    const char *id)
-{
-    uint64_t hash = 0;
-    ecs_hash(id, strlen(id), &hash);
-    return ecs_map_get(world->entities_map, hash);
-}
-
-const char* ecs_idof(
+const char* ecs_get_id(
     EcsEntity *entity)
 {
     return entity->id;
+}
+
+EcsWorld* ecs_get_world(
+    EcsEntity *entity)
+{
+    return entity->world;
 }
 
 void ecs_init(void)

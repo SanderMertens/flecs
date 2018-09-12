@@ -1,7 +1,8 @@
 {
     "id":"reflecs",
-    "type":"application",
+    "type":"package",
     "value": {
-        "managed": false
+        "managed": false,
+        "cflags": ["-fvisibility=hidden"]
     }
 }

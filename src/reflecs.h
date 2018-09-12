@@ -13,6 +13,17 @@ void ecs_entity_move(
     void *from);
 
 
+/* -- Private component API -- */
+
+EcsArray* ecs_components_diff(
+    EcsArray *to,
+    EcsArray *from);
+
+bool ecs_components_is_union_empty(
+    EcsArray *to,
+    EcsArray *from);
+
+
 /* -- Private system API -- */
 
 EcsResult ecs_system_notify_create_table(
@@ -22,6 +33,10 @@ EcsResult ecs_system_notify_create_table(
 void ecs_system_run(
     EcsEntity *system);
 
+void ecs_system_notify(
+    EcsEntity *system,
+    EcsTable *table,
+    EcsEntity *entity);
 
 /* -- Private world API -- */
 
@@ -83,5 +98,12 @@ size_t ecs_table_column_size(
     EcsTable *table,
     uint32_t column);
 
+void ecs_table_add_on_init(
+    EcsTable *table,
+    EcsEntity *system);
+
+void ecs_table_add_on_deinit(
+    EcsTable *table,
+    EcsEntity *system);
 
 #endif

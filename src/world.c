@@ -49,7 +49,7 @@ EcsResult ecs_world_init_component(
     EcsEntity *component_e = ecs_new(world, "EcsComponent");
     world->component = component_e;
 
-    _ecs_stage(component_e, component_e);
+    ecs_stage(component_e, component_e);
     stage_hash = component_e->stage_hash;
 
     EcsTable *table =
@@ -78,7 +78,7 @@ EcsResult ecs_world_init_system(
     EcsEntity *system_e = ecs_new(world, "EcsSystem");
     world->system = system_e;
 
-    EcsComponent *component_data = _ecs_add(system_e, world->component);
+    EcsComponent *component_data = ecs_add(system_e, world->component);
     if (!component_data) {
         return EcsError;
     }
@@ -112,6 +112,7 @@ EcsWorld* ecs_world_new(void)
     result->entities_map = ecs_map_new(REFLECS_INITIAL_ENTITY_COUNT);
     result->tables_map = ecs_map_new(REFLECS_INITIAL_TABLE_COUNT);
     result->components_map = ecs_map_new(REFLECS_INITIAL_COMPONENT_SET_COUNT);
+    result->context = NULL;
     ecs_world_init(result);
     return result;
 }
@@ -195,4 +196,26 @@ void ecs_world_progress(
         EcsEntity *sys = *(EcsEntity**)ecs_iter_next(&it);
         ecs_system_run(sys);
     }
+}
+
+EcsEntity* ecs_world_lookup(
+    EcsWorld *world,
+    const char *id)
+{
+    uint64_t hash = 0;
+    ecs_hash(id, strlen(id), &hash);
+    return ecs_map_get(world->entities_map, hash);
+}
+
+void* ecs_world_get_context(
+    EcsWorld *world)
+{
+    return world->context;
+}
+
+void ecs_world_set_context(
+    EcsWorld *world,
+    void *context)
+{
+    world->context = context;
 }

@@ -1,10 +1,5 @@
 #include "reflecs.h"
 
-static const EcsVectorParams components_vec_params = {
-    .element_size = sizeof(EcsEntity*),
-    .chunk_count = REFLECS_INITIAL_CHUNK_COUNT
-};
-
 static
 void ecs_table_row_move(
     void *to,
@@ -61,6 +56,8 @@ EcsTable* ecs_table_alloc(
     EcsTable *result = ecs_vector_add(world->tables, &tables_vec_params);
     result->world = world;
     result->components_hash = components_hash;
+    result->init_systems = NULL;
+    result->deinit_systems = NULL;
     return result;
 }
 
@@ -114,6 +111,7 @@ void* ecs_table_insert(
     EcsEntity *entity)
 {
     void* row = ecs_vector_add(table->rows, &table->rows_params);
+    memset(row, 0, table->rows_params.element_size);
     *(EcsEntity**)row = entity;
     return row;
 }
@@ -178,4 +176,28 @@ bool ecs_table_has_components(
     }
 
     return true;
+}
+
+void ecs_table_add_on_init(
+    EcsTable *table,
+    EcsEntity *system)
+{
+    if (!table->init_systems) {
+        table->init_systems = ecs_vector_new(&entityptr_vec_params);
+    }
+
+    EcsEntity **e = ecs_vector_add(table->init_systems, &entityptr_vec_params);
+    *e = system;
+}
+
+void ecs_table_add_on_deinit(
+    EcsTable *table,
+    EcsEntity *system)
+{
+    if (!table->deinit_systems) {
+        table->deinit_systems = ecs_vector_new(&entityptr_vec_params);
+    }
+
+    EcsEntity **e = ecs_vector_add(table->deinit_systems, &entityptr_vec_params);
+    *e = system;
 }

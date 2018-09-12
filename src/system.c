@@ -29,7 +29,7 @@ EcsResult add_component(
     EcsSystem *system_data,
     const char *component_id)
 {
-    EcsEntity *component = ecs_lookup(world, component_id);
+    EcsEntity *component = ecs_world_lookup(world, component_id);
     if (!component) {
         return EcsError;
     }
@@ -82,6 +82,7 @@ error:
 
 static
 void add_table(
+    EcsEntity *entity,
     EcsSystem *system_data,
     EcsTable *table)
 {
@@ -99,18 +100,25 @@ void add_table(
         offsets[i] = (uintptr_t)ecs_table_column(table, NULL, column);
         i ++;
     }
+
+    if (system_data->kind == EcsOnInit) {
+        ecs_table_add_on_init(table, entity);
+    } else if (system_data->kind == EcsOnDeinit) {
+        ecs_table_add_on_deinit(table, entity);
+    }
 }
 
 static
 void match_tables(
     EcsWorld *world,
+    EcsEntity *entity,
     EcsSystem *system_data)
 {
     EcsIter it = ecs_vector_iter(world->tables, &tables_vec_params);
     while (ecs_iter_hasnext(&it)) {
         EcsTable *table = ecs_iter_next(&it);
         if (ecs_table_has_components(table, system_data->components)) {
-            add_table(system_data, table);
+            add_table(entity, system_data, table);
         }
     }
 }
@@ -126,10 +134,31 @@ EcsResult ecs_system_notify_create_table(
     }
 
     if (ecs_table_has_components(table, system_data->components)) {
-        add_table(system_data, table);
+        add_table(entity, system_data, table);
     }
 
     return EcsOk;
+}
+
+static
+void ecs_system_do_row(
+    EcsEntity *sys,
+    EcsSystem *system_data,
+    EcsSystemTable *systable,
+    void *row)
+{
+    uint32_t *offsets = ECS_OFFSET(systable, sizeof(EcsSystemTable));
+    uint32_t component_count = ecs_array_count(system_data->components);
+    void *data[component_count];
+
+    EcsEntity *e = *(EcsEntity**)row;
+
+    int i;
+    for (i = 0; i < component_count; i ++) {
+        data[i] = ECS_OFFSET(row, offsets[i]);
+    }
+
+    system_data->action(sys, e, data);
 }
 
 void ecs_system_run(
@@ -137,8 +166,10 @@ void ecs_system_run(
 {
     EcsWorld *world = sys->world;
     EcsSystem *system_data = ecs_get(sys, world->system);
-    uint32_t component_count = ecs_array_count(system_data->components);
-    void *data[component_count];
+
+    if (system_data->kind != EcsPeriodic) {
+        return;
+    }
 
     if (system_data->enabled) {
         EcsIter it =
@@ -148,22 +179,31 @@ void ecs_system_run(
         while (ecs_iter_hasnext(&it)) {
             EcsSystemTable *systable = ecs_iter_next(&it);
             EcsTable *table = systable->table;
-            uint32_t *offsets = ECS_OFFSET(systable, sizeof(EcsSystemTable));
 
-            EcsIter row_iter =
-                _ecs_vector_iter(table->rows, &table->rows_params, &iter_data);
-
+            EcsIter row_iter = _ecs_vector_iter(table->rows, &table->rows_params, &iter_data);
             while (ecs_iter_hasnext(&row_iter)) {
                 void *row = ecs_iter_next(&row_iter);
-                EcsEntity *e = *(EcsEntity**)row;
-
-                int i;
-                for (i = 0; i < component_count; i ++) {
-                    data[i] = ECS_OFFSET(row, offsets[i]);
-                }
-
-                system_data->action(sys, e, data);
+                ecs_system_do_row(sys, system_data, systable, row);
             }
+        }
+    }
+}
+
+void ecs_system_notify(
+    EcsEntity *sys,
+    EcsTable *table,
+    EcsEntity *entity)
+{
+    EcsWorld *world = sys->world;
+    EcsSystem *system_data = ecs_get(sys, world->system);
+    EcsIter it =
+        ecs_vector_iter(system_data->tables, &system_data->tables_params);
+
+    while (ecs_iter_hasnext(&it)) {
+        EcsSystemTable *systable = ecs_iter_next(&it);
+        if (systable->table == table) {
+            ecs_system_do_row(sys, system_data, systable, entity->row);
+            break;
         }
     }
 }
@@ -171,6 +211,7 @@ void ecs_system_run(
 EcsEntity *ecs_system_new(
     EcsWorld *world,
     const char *id,
+    EcsSystemKind kind,
     const char *sig,
     EcsSystemAction action)
 {
@@ -180,7 +221,7 @@ EcsEntity *ecs_system_new(
     }
 
     EcsEntity *result = ecs_new(world, id);
-    EcsSystem *system_data = _ecs_add(result, world->system);
+    EcsSystem *system_data = ecs_add(result, world->system);
     system_data->action = action;
     system_data->enabled = true;
     system_data->tables_params.chunk_count = REFLECS_INITIAL_CHUNK_COUNT;
@@ -191,12 +232,13 @@ EcsEntity *ecs_system_new(
     system_data->tables_params.ctx = NULL;
     system_data->tables = ecs_vector_new(&system_data->tables_params);
     system_data->components = ecs_array_new(count, &entityptr_arr_params);
+    system_data->kind = kind;
 
     if (parse_components(world, system_data, sig) != EcsOk) {
         return NULL;
     }
 
-    match_tables(world, system_data);
+    match_tables(world, result, system_data);
 
     EcsEntity **elem = ecs_vector_add(world->systems, &entityptr_vec_params);
     *elem = result;

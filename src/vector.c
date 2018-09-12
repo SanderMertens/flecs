@@ -272,7 +272,11 @@ EcsIter _ecs_vector_iter(
 uint32_t ecs_vector_count(
     EcsVector *me)
 {
-    return me->count;
+    if (me) {
+        return me->count;
+    } else {
+        return 0;
+    }
 }
 
 typedef struct cursor {

@@ -10,6 +10,9 @@
 #define REFLECS_INITIAL_CHUNK_COUNT (64)
 #define REFLECS_INITIAL_COMPONENT_SET_COUNT (8)
 
+
+/* -- Private types -- */
+
 struct EcsEntity {
     char *id;
     uint64_t stage_hash;
@@ -24,6 +27,8 @@ typedef struct EcsTable {
     EcsVectorParams rows_params;  /* Parameters for the rows vector */
     EcsVector *rows;              /* vector<T> */
     uint32_t *columns;            /* Offsets to columns in row */
+    EcsVector *init_systems;      /* OnInit systems active on this table */
+    EcsVector *deinit_systems;    /* OnDeinit systems active on this table */
 } EcsTable;
 
 typedef struct EcsSystemTable {
@@ -33,12 +38,13 @@ typedef struct EcsSystemTable {
 struct EcsWorld {
     EcsVector *entities;          /* vector<EcsEntity> */
     EcsVector *tables;            /* vector<EcsTable> */
-    EcsVector *systems;           /* vector<EcsEntity*> */
+    EcsVector *systems;           /* vector<EcsEntity*> Periodic systems */
     EcsMap *entities_map;         /* Map for quick entity lookups */
     EcsMap *tables_map;           /* Map for quick table lookups */
     EcsMap *components_map;       /* Map that stores component sets */
     EcsEntity *component;         /* Component type entity */
     EcsEntity *system;            /* System type entity */
+    void *context;                /* Application context */
 };
 
 extern const EcsVectorParams entities_vec_params;
