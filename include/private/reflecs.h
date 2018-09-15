@@ -1,8 +1,12 @@
 #ifndef REFLECS_PRIVATE_H
 #define REFLECS_PRIVATE_H
 
-#include <reflecs/reflecs.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "types.h"
+
 
 
 /* -- Private entity API -- */
@@ -12,6 +16,10 @@ void ecs_entity_move(
     void *to,
     void *from);
 
+void* ecs_entity_get(
+    EcsWorld *world,
+    EcsEntity *entity,
+    EcsHandle h_component);
 
 /* -- Private component API -- */
 
@@ -27,14 +35,17 @@ bool ecs_components_is_union_empty(
 /* -- Private system API -- */
 
 EcsResult ecs_system_notify_create_table(
-    EcsEntity *system,
+    EcsWorld *world,
+    EcsHandle system,
     EcsTable *table);
 
 void ecs_system_run(
-    EcsEntity *system);
+    EcsWorld *world,
+    EcsHandle system);
 
 void ecs_system_notify(
-    EcsEntity *system,
+    EcsWorld *world,
+    EcsHandle system,
     EcsTable *table,
     EcsEntity *entity);
 
@@ -47,7 +58,7 @@ EcsArray* ecs_world_get_components(
 uint64_t ecs_world_components_hash(
     EcsWorld *world,
     EcsArray *set,
-    EcsEntity *to_add);
+    EcsHandle to_add);
 
 EcsTable *ecs_world_lookup_table(
     EcsWorld *world,
@@ -71,11 +82,11 @@ EcsTable* ecs_table_new_w_size(
 
 void ecs_table_add_component(
     EcsTable *table,
-    EcsEntity *component_type);
+    EcsHandle component_type);
 
 void* ecs_table_insert(
     EcsTable *table,
-    EcsEntity *entity);
+    EcsHandle entity);
 
 void ecs_table_remove(
     EcsTable *table,
@@ -83,7 +94,7 @@ void ecs_table_remove(
 
 int32_t ecs_table_find_column(
     EcsTable *table,
-    EcsEntity *component);
+    EcsHandle component);
 
 bool ecs_table_has_components(
     EcsTable *table,
@@ -100,10 +111,19 @@ size_t ecs_table_column_size(
 
 void ecs_table_add_on_init(
     EcsTable *table,
-    EcsEntity *system);
+    EcsHandle system);
 
 void ecs_table_add_on_deinit(
     EcsTable *table,
-    EcsEntity *system);
+    EcsHandle system);
+
+
+/* -- Private utilities -- */
+
+void ecs_hash(
+    const void *key,
+    size_t length,
+    uint64_t *result);
+
 
 #endif

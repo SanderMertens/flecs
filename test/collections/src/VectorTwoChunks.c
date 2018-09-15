@@ -1,7 +1,7 @@
 /* This is a managed file. Do not delete this comment. */
 
 #include <include/test.h>
-#include <reflecs/vector.h>
+#include "../../include/private/types.h"
 
 #define CHUNK_COUNT (64)
 #define ELEMENT_COUNT (128)

@@ -1,4 +1,5 @@
-#include <reflecs/vector.h>
+#include <string.h>
+#include "include/private/types.h"
 
 struct EcsVectorChunk {
     struct EcsVectorChunk *next;

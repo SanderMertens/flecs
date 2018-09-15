@@ -1,5 +1,6 @@
 
-#include <reflecs/array.h>
+#include <string.h>
+#include "include/private/types.h"
 
 struct EcsArray {
     uint16_t count;

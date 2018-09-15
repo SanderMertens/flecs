@@ -1,4 +1,5 @@
-#include <reflecs/iter.h>
+
+#include "include/private/types.h"
 
 bool ecs_iter_hasnext(
     EcsIter* iter)

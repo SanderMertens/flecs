@@ -1,24 +1,51 @@
 #ifndef REFLECS_TYPES_PRIVATE_H
 #define REFLECS_TYPES_PRIVATE_H
 
-#include <reflecs/map.h>
-#include <reflecs/vector.h>
-#include <reflecs/array.h>
+#include <stdlib.h>
+
+#include "array.h"
+#include "vector.h"
+#include "map.h"
 
 #define REFLECS_INITIAL_TABLE_COUNT (8)
 #define REFLECS_INITIAL_ENTITY_COUNT (8)
-#define REFLECS_INITIAL_CHUNK_COUNT (64)
+#define REFLECS_ENTITIES_CHUNK_COUNT (256)
+#define REFLECS_TABLES_CHUNK_COUNT (4)
+#define REFLECS_SYSTEMS_CHUNK_COUNT (4)
+#define REFLECS_ROW_CHUNK_COUNT (64)
 #define REFLECS_INITIAL_COMPONENT_SET_COUNT (8)
+
+#define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
+
+typedef struct EcsEntity EcsEntity;
+
+
+/* -- Builtin component types -- */
+
+typedef struct EcsSystem {
+    EcsSystemAction action;
+    EcsArray *components;
+    EcsVector *tables;
+    EcsVectorParams tables_params;
+    EcsSystemKind kind;
+    bool enabled;
+} EcsSystem;
+
+typedef struct EcsComponent {
+    uint32_t size;
+} EcsComponent;
+
+typedef struct EcsId {
+    const char *id;
+} EcsId;
 
 
 /* -- Private types -- */
 
 struct EcsEntity {
-    char *id;
     uint64_t stage_hash;
     uint64_t table_hash;
     void *row;
-    EcsWorld *world;
 };
 
 typedef struct EcsTable {
@@ -42,14 +69,15 @@ struct EcsWorld {
     EcsMap *entities_map;         /* Map for quick entity lookups */
     EcsMap *tables_map;           /* Map for quick table lookups */
     EcsMap *components_map;       /* Map that stores component sets */
-    EcsEntity *component;         /* Component type entity */
-    EcsEntity *system;            /* System type entity */
+    EcsHandle component;          /* Component type entity */
+    EcsHandle system;             /* System type entity */
+    EcsHandle id;                 /* Id type entity */
     void *context;                /* Application context */
 };
 
 extern const EcsVectorParams entities_vec_params;
 extern const EcsVectorParams tables_vec_params;
-extern const EcsVectorParams entityptr_vec_params;
-extern const EcsArrayParams entityptr_arr_params;
+extern const EcsVectorParams handle_vec_params;
+extern const EcsArrayParams handle_arr_params;
 
 #endif

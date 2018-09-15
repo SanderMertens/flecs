@@ -1,7 +1,7 @@
 /* This is a managed file. Do not delete this comment. */
 
 #include <include/test.h>
-#include <reflecs/array.h>
+#include "../../include/private/types.h"
 
 static
 int compare_int(

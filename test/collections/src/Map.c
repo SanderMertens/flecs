@@ -1,7 +1,7 @@
 /* This is a managed file. Do not delete this comment. */
 
 #include <include/test.h>
-#include <reflecs/map.h>
+#include "../../include/private/types.h"
 
 struct elem { int hash; char *value; } elems[] = {
     {1, "hello"},

@@ -1,4 +1,4 @@
-#include "reflecs.h"
+#include "include/private/reflecs.h"
 
 static
 void ecs_table_row_move(
@@ -22,11 +22,11 @@ EcsResult ecs_table_init(
 
     table->columns = malloc(sizeof(uint32_t) * (ecs_array_count(components) + 1));
 
-    EcsIter it = ecs_array_iter(components, &entityptr_arr_params);
+    EcsIter it = ecs_array_iter(components, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
-        EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
+        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
 
-        EcsComponent *type = ecs_get(e, world->component);
+        EcsComponent *type = ecs_get(world, h, world->component);
         if (!type) {
             return EcsError;
         }
@@ -39,7 +39,7 @@ EcsResult ecs_table_init(
     table->columns[column] = column_offset;
 
     table->rows_params.element_size = column_offset;
-    table->rows_params.chunk_count = REFLECS_INITIAL_CHUNK_COUNT;
+    table->rows_params.chunk_count = REFLECS_ROW_CHUNK_COUNT;
     table->rows_params.compare_action = NULL;
     table->rows_params.move_action = ecs_table_row_move;
     table->rows_params.ctx = NULL;
@@ -93,7 +93,7 @@ EcsTable* ecs_table_new_w_size(
         return NULL;
     }
 
-    result->rows_params.chunk_count = REFLECS_INITIAL_CHUNK_COUNT;
+    result->rows_params.chunk_count = REFLECS_ROW_CHUNK_COUNT;
     result->rows_params.element_size = size + sizeof(EcsEntity*);
     result->rows_params.compare_action = NULL;
     result->rows_params.move_action = ecs_table_row_move;
@@ -108,11 +108,11 @@ EcsTable* ecs_table_new_w_size(
 
 void* ecs_table_insert(
     EcsTable *table,
-    EcsEntity *entity)
+    EcsHandle entity)
 {
     void* row = ecs_vector_add(table->rows, &table->rows_params);
     memset(row, 0, table->rows_params.element_size);
-    *(EcsEntity**)row = entity;
+    *(EcsHandle*)row = entity;
     return row;
 }
 
@@ -141,7 +141,7 @@ size_t ecs_table_column_size(
 
 int32_t ecs_table_find_column(
     EcsTable *table,
-    EcsEntity *component)
+    EcsHandle component)
 {
     EcsWorld *world = table->world;
     EcsArray *set = ecs_world_get_components(world, table->components_hash);
@@ -150,9 +150,9 @@ int32_t ecs_table_find_column(
     }
 
     uint32_t column = 0;
-    EcsIter it = ecs_array_iter(set, &entityptr_arr_params);
+    EcsIter it = ecs_array_iter(set, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
-        EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
+        EcsHandle e = *(EcsHandle*)ecs_iter_next(&it);
         if (e == component) {
             return column;
         }
@@ -166,11 +166,11 @@ bool ecs_table_has_components(
     EcsTable *table,
     EcsArray *components)
 {
-    EcsIter it = ecs_array_iter(components, &entityptr_arr_params);
+    EcsIter it = ecs_array_iter(components, &handle_arr_params);
 
     while (ecs_iter_hasnext(&it)) {
-        EcsEntity *e = *(EcsEntity**)ecs_iter_next(&it);
-        if (ecs_table_find_column(table, e) == -1) {
+        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
+        if (ecs_table_find_column(table, h) == -1) {
             return false;
         }
     }
@@ -180,24 +180,24 @@ bool ecs_table_has_components(
 
 void ecs_table_add_on_init(
     EcsTable *table,
-    EcsEntity *system)
+    EcsHandle system)
 {
     if (!table->init_systems) {
-        table->init_systems = ecs_vector_new(&entityptr_vec_params);
+        table->init_systems = ecs_vector_new(&handle_vec_params);
     }
 
-    EcsEntity **e = ecs_vector_add(table->init_systems, &entityptr_vec_params);
+    EcsHandle *e = ecs_vector_add(table->init_systems, &handle_vec_params);
     *e = system;
 }
 
 void ecs_table_add_on_deinit(
     EcsTable *table,
-    EcsEntity *system)
+    EcsHandle system)
 {
     if (!table->deinit_systems) {
-        table->deinit_systems = ecs_vector_new(&entityptr_vec_params);
+        table->deinit_systems = ecs_vector_new(&handle_vec_params);
     }
 
-    EcsEntity **e = ecs_vector_add(table->deinit_systems, &entityptr_vec_params);
+    EcsHandle *e = ecs_vector_add(table->deinit_systems, &handle_vec_params);
     *e = system;
 }

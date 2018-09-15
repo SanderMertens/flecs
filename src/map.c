@@ -1,5 +1,5 @@
-#include <reflecs/map.h>
-#include <reflecs/vector.h>
+
+#include "include/private/types.h"
 
 #define REFLECS_LOAD_FACTOR (3.0f / 4.0f)
 
