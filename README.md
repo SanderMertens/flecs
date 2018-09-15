@@ -1,4 +1,4 @@
-# reflECS
+# reflecs
 
 ## Overview
 Reflecs is a C99 implementation of the Entity Component System. It is optimized for usage as a microservice API, with pluggable interfaces for persistency and realtime data synchronization.
