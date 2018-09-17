@@ -409,3 +409,20 @@ bool ecs_vector_compare_ptr(
 {
     return false;
 }
+
+EcsVectorChunk* ecs_vector_get_next_chunk(
+    EcsVector *me,
+    EcsVectorChunk *chunk)
+{
+    if (!chunk) {
+        return &me->first;
+    } else {
+        return chunk->next;
+    }
+}
+
+void* ecs_vector_chunk_get_buffer(
+    EcsVectorChunk *chunk)
+{
+    return ECS_OFFSET(chunk, sizeof(chunk));
+}

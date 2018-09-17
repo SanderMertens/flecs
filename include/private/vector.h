@@ -71,6 +71,15 @@ bool ecs_vector_compare_ptr(
     void *a,
     void *b);
 
+REFLECS_EXPORT
+EcsVectorChunk* ecs_vector_get_next_chunk(
+    EcsVector *me,
+    EcsVectorChunk *chunk);
+
+REFLECS_EXPORT
+void* ecs_vector_chunk_get_buffer(
+    EcsVectorChunk *chunk);
+
 #define ecs_vector_iter(me, params)\
     _ecs_vector_iter(me, params, alloca(sizeof(EcsVectorIter)))
 
