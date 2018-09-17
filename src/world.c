@@ -185,7 +185,13 @@ EcsTable *ecs_world_create_table(
 
     ecs_map_set(world->tables_map, components_hash, table);
 
-    EcsIter it = ecs_vector_iter(world->systems, &handle_vec_params);
+    EcsIter it = ecs_vector_iter(world->periodic_systems, &handle_vec_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
+        ecs_system_notify_create_table(world, system, table);
+    }
+
+    it = ecs_vector_iter(world->other_systems, &handle_vec_params);
     while (ecs_iter_hasnext(&it)) {
         EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
         ecs_system_notify_create_table(world, system, table);
@@ -202,7 +208,8 @@ EcsWorld* ecs_init(void)
     EcsWorld *result = malloc(sizeof(EcsWorld));
     result->entities = ecs_vector_new(&entities_vec_params);
     result->tables = ecs_vector_new(&tables_vec_params);
-    result->systems = ecs_vector_new(&handle_vec_params);
+    result->periodic_systems = ecs_vector_new(&handle_vec_params);
+    result->other_systems = ecs_vector_new(&handle_vec_params);
     result->entities_map = ecs_map_new(REFLECS_INITIAL_ENTITY_COUNT);
     result->tables_map = ecs_map_new(REFLECS_INITIAL_TABLE_COUNT);
     result->components_map = ecs_map_new(REFLECS_INITIAL_COMPONENT_SET_COUNT);
@@ -216,7 +223,8 @@ void ecs_fini(
 {
     ecs_vector_free(world->entities);
     ecs_vector_free(world->tables);
-    ecs_vector_free(world->systems);
+    ecs_vector_free(world->periodic_systems);
+    ecs_vector_free(world->other_systems);
     ecs_map_free(world->entities_map);
     ecs_map_free(world->tables_map);
     ecs_map_free(world->components_map);
@@ -226,11 +234,11 @@ void ecs_fini(
 void ecs_progress(
     EcsWorld *world)
 {
-    EcsIter it = ecs_vector_iter(world->systems, &handle_vec_params);
+    EcsIter it = ecs_vector_iter(world->periodic_systems, &handle_vec_params);
 
     while (ecs_iter_hasnext(&it)) {
         EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
-        ecs_system_run(world, system);
+        ecs_run_system(world, system, NULL);
     }
 }
 

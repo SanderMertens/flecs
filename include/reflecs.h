@@ -59,13 +59,20 @@ typedef enum EcsResult {
 typedef enum EcsSystemKind {
     EcsPeriodic,
     EcsOnInit,
-    EcsOnDeinit
+    EcsOnDeinit,
+    EcsOnDemand
 } EcsSystemKind;
 
+typedef struct EcsInfo {
+    EcsWorld *world;
+    EcsHandle system;
+    EcsHandle entity;
+    void *param;
+} EcsInfo;
+
 typedef void (*EcsSystemAction)(
-    EcsHandle h_system,
-    EcsHandle h_entity,
-    void *data[]);
+    void *data[],
+    EcsInfo *info);
 
 
 /* -- World API -- */
@@ -371,6 +378,7 @@ EcsHandle ecs_component_new(
  * - EcsPeriodic: the system is invoked when ecs_progress is called.
  * - EcsOnInit: the system is invoked when a component is committed to memory.
  * - EcsOnDeinit: the system is invoked when a component is removed from memory.
+ * - EcsOnDemand: the system is only invoked on demand (ecs_run)
  *
  * The signature of the system is a string formatted as a comma separated list
  * of component identifiers. For example, a system that wants to receive the
@@ -438,6 +446,23 @@ bool ecs_is_enabled(
     EcsWorld *world,
     EcsHandle system);
 
+/** Run a specific component manually.
+ * This operation runs a single system on demand. It is an efficient way to
+ * invoke logic on a set of entities, as on demand systems are only matched to
+ * tables at creation time or after creation time, when a new table is created.
+ *
+ * On demand systems can be used as alternative to requesting lists of entities
+ * repeatedly inside periodic/reactive systems, which is not efficient.
+ *
+ * @param world: The world.
+ * @param system: The system to run.
+ * @param param: A user-defined parameter to pass to the system.
+ */
+REFLECS_EXPORT
+void ecs_run_system(
+    EcsWorld *world,
+    EcsHandle system,
+    void *param);
 
 /* -- Iterator utility API -- */
 
@@ -492,7 +517,7 @@ void ecs_iter_release(
  * holds the handle to the new system.
  */
 #define ECS_SYSTEM(world, id, kind, ...) \
-    void id(EcsHandle, EcsHandle, void*[]);\
+    void id(void*[], EcsInfo*);\
     EcsHandle id##_h = ecs_system_new(world, #id, kind, #__VA_ARGS__, id);\
     (void)id##_h;
 

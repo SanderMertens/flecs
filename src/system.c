@@ -150,39 +150,42 @@ EcsResult ecs_system_notify_create_table(
 
 /** Invoke system action for a table row */
 static
-void ecs_system_do_row(
+void ecs_system_visit_row(
+    EcsWorld *world,
     EcsHandle system,
     EcsSystem *system_data,
     EcsSystemTable *systable,
-    void *row)
+    void *row,
+    void *param)
 {
     uint32_t *offsets = ECS_OFFSET(systable, sizeof(EcsSystemTable));
     uint32_t component_count = ecs_array_count(system_data->components);
     void *data[component_count];
+    EcsInfo info;
 
-    EcsHandle e = *(EcsHandle*)row;
+    EcsHandle entity = *(EcsHandle*)row;
 
     int i;
     for (i = 0; i < component_count; i ++) {
         data[i] = ECS_OFFSET(row, offsets[i]);
     }
 
-    system_data->action(system, e, data);
+    info.world = world;
+    info.system = system;
+    info.entity = entity;
+    info.param = param;
+    system_data->action(data, &info);
 }
 
 /** Run system against all rows in all matching tables */
-void ecs_system_run(
+void ecs_run_system(
     EcsWorld *world,
-    EcsHandle system)
+    EcsHandle system,
+    void *param)
 {
     EcsSystem *system_data = ecs_get(world, system, world->system);
 
-    if (system_data->kind != EcsPeriodic) {
-        return;
-    }
-
     if (system_data->enabled) {
-        EcsVectorIter iter_data;
         EcsIter it =
             ecs_vector_iter(system_data->tables, &system_data->tables_params);
 
@@ -190,11 +193,21 @@ void ecs_system_run(
             EcsSystemTable *systable = ecs_iter_next(&it);
             EcsTable *table = systable->table;
 
-            EcsIter row_iter = _ecs_vector_iter(
-                table->rows, &table->rows_params, &iter_data);
-            while (ecs_iter_hasnext(&row_iter)) {
-                void *row = ecs_iter_next(&row_iter);
-                ecs_system_do_row(system, system_data, systable, row);
+            EcsVectorChunk *chunk = NULL;
+            size_t element_size = table->rows_params.element_size;
+            uint32_t chunk_count = table->rows_params.chunk_count;
+            uint32_t row_count = ecs_vector_count(table->rows);
+            uint32_t count = 0, i = 0;
+            while ((chunk = ecs_vector_get_next_chunk(table->rows, chunk))) {
+                void *row, *buffer = ecs_vector_chunk_get_buffer(chunk);
+                for (row = buffer, i = 0;
+                     i < chunk_count && count < row_count;
+                     i ++, count ++)
+                {
+                    ecs_system_visit_row(
+                        world, system, system_data, systable, row, param);
+                    row = (void*)((uintptr_t)row + element_size);
+                }
             }
         }
     }
@@ -214,7 +227,8 @@ void ecs_system_notify(
     while (ecs_iter_hasnext(&it)) {
         EcsSystemTable *systable = ecs_iter_next(&it);
         if (systable->table == table) {
-            ecs_system_do_row(system, system_data, systable, entity->row);
+            ecs_system_visit_row(
+                world, system, system_data, systable, entity->row, NULL);
             break;
         }
     }
@@ -267,8 +281,13 @@ EcsHandle ecs_system_new(
 
     match_tables(world, result, system_data);
 
-    EcsHandle *elem = ecs_vector_add(world->systems, &handle_vec_params);
-    *elem = result;
+    if (kind == EcsPeriodic) {
+        EcsHandle *elem = ecs_vector_add(world->periodic_systems, &handle_vec_params);
+        *elem = result;
+    } else {
+        EcsHandle *elem = ecs_vector_add(world->other_systems, &handle_vec_params);
+        *elem = result;
+    }
 
     return result;
 }

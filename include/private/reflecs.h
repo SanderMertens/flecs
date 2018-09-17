@@ -39,10 +39,6 @@ EcsResult ecs_system_notify_create_table(
     EcsHandle system,
     EcsTable *table);
 
-void ecs_system_run(
-    EcsWorld *world,
-    EcsHandle system);
-
 void ecs_system_notify(
     EcsWorld *world,
     EcsHandle system,

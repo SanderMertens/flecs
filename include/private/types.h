@@ -65,7 +65,8 @@ typedef struct EcsSystemTable {
 struct EcsWorld {
     EcsVector *entities;          /* vector<EcsEntity> */
     EcsVector *tables;            /* vector<EcsTable> */
-    EcsVector *systems;           /* vector<EcsEntity*> Periodic systems */
+    EcsVector *periodic_systems;  /* vector<EcsHandle> Periodic systems */
+    EcsVector *other_systems;     /* vector<EcsHandle> Non-periodic systems */
     EcsMap *entities_map;         /* Map for quick entity lookups */
     EcsMap *tables_map;           /* Map for quick table lookups */
     EcsMap *components_map;       /* Map that stores component sets */
