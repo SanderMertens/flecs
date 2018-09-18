@@ -210,6 +210,7 @@ EcsWorld* ecs_init(void)
     result->tables = ecs_vector_new(&tables_vec_params);
     result->periodic_systems = ecs_vector_new(&handle_vec_params);
     result->other_systems = ecs_vector_new(&handle_vec_params);
+    result->worker_threads = NULL;
     result->entities_map = ecs_map_new(REFLECS_INITIAL_ENTITY_COUNT);
     result->tables_map = ecs_map_new(REFLECS_INITIAL_TABLE_COUNT);
     result->components_map = ecs_map_new(REFLECS_INITIAL_COMPONENT_SET_COUNT);
@@ -228,6 +229,10 @@ void ecs_fini(
     ecs_map_free(world->entities_map);
     ecs_map_free(world->tables_map);
     ecs_map_free(world->components_map);
+    if (world->worker_threads) {
+        ecs_set_threads(world, 0);
+    }
+
     free(world);
 }
 
@@ -235,10 +240,16 @@ void ecs_progress(
     EcsWorld *world)
 {
     EcsIter it = ecs_vector_iter(world->periodic_systems, &handle_vec_params);
+    bool has_threads = ecs_vector_count(world->worker_threads) != 0;
 
     while (ecs_iter_hasnext(&it)) {
         EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
-        ecs_run_system(world, system, NULL);
+
+        if (has_threads) {
+            ecs_schedule_system(world, system);
+        } else {
+            ecs_run_system(world, system, NULL);
+        }
     }
 }
 

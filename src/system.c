@@ -213,6 +213,64 @@ void ecs_run_system(
     }
 }
 
+void ecs_run_job(
+    EcsJob *job)
+{
+    EcsWorld *world = job->world;
+    EcsHandle system = job->system;
+    EcsSystem *system_data = job->system_data;
+    uint32_t table_index = job->table_index;
+    uint32_t chunk_index = job->chunk_index;
+    uint32_t job_count = job->total_rows;
+    EcsVectorChunk *chunk = job->chunk;
+    bool first = true;
+
+    EcsIter it =
+        ecs_vector_iter(system_data->tables, &system_data->tables_params);
+
+    int i;
+    for (i = 0; i < table_index; i ++) {
+        if (!ecs_iter_hasnext(&it)) {
+            job->finished = true;
+            break;
+        }
+
+        ecs_iter_next(&it);
+    }
+
+    while (ecs_iter_hasnext(&it)) {
+        EcsSystemTable *systable = ecs_iter_next(&it);
+        EcsTable *table = systable->table;
+
+        size_t element_size = table->rows_params.element_size;
+        uint32_t chunk_count = table->rows_params.chunk_count;
+        uint32_t table_count = ecs_vector_count(table->rows);
+        uint32_t table_i = 0, chunk_i, job_i = 0;
+        while ((chunk = ecs_vector_get_next_chunk(table->rows, chunk))) {
+            void *row, *buffer = ecs_vector_chunk_get_buffer(chunk);
+
+            if (first) {
+                row = ECS_OFFSET(buffer, element_size * chunk_index);
+                chunk_i = chunk_index;
+                first = false;
+            } else {
+                row = buffer;
+                chunk_i = 0;
+            }
+
+            for (;
+              chunk_i < chunk_count && table_i < table_count && job_i < job_count;
+              chunk_i ++, table_i ++, job_i ++)
+            {
+                ecs_system_visit_row(
+                    world, system, system_data, systable, row, NULL);
+
+                row = (void*)((uintptr_t)row + element_size);
+            }
+        }
+    }
+}
+
 /** Run system on a single row */
 void ecs_system_notify(
     EcsWorld *world,

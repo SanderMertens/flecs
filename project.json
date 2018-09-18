@@ -3,6 +3,7 @@
     "type":"package",
     "value": {
         "managed": false,
-        "cflags": ["-fvisibility=hidden"]
+        "cflags": ["-fvisibility=hidden"],
+        "lib": ["pthread"]
     }
 }

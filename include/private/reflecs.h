@@ -45,6 +45,13 @@ void ecs_system_notify(
     EcsTable *table,
     EcsEntity *entity);
 
+void ecs_run_job(
+    EcsJob *job);
+
+void ecs_schedule_system(
+    EcsWorld *world,
+    EcsHandle system);
+
 /* -- Private world API -- */
 
 EcsArray* ecs_world_get_components(

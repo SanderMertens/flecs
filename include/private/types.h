@@ -2,6 +2,7 @@
 #define REFLECS_TYPES_PRIVATE_H
 
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "array.h"
 #include "vector.h"
@@ -13,6 +14,7 @@
 #define REFLECS_TABLES_CHUNK_COUNT (4)
 #define REFLECS_SYSTEMS_CHUNK_COUNT (4)
 #define REFLECS_ROW_CHUNK_COUNT (64)
+#define REFLECS_THREAD_CHUNK_COUNT (8)
 #define REFLECS_INITIAL_COMPONENT_SET_COUNT (8)
 
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
@@ -62,11 +64,35 @@ typedef struct EcsSystemTable {
     EcsTable *table;
 } EcsSystemTable;
 
+typedef struct EcsJob {
+    EcsWorld *world;
+    EcsHandle system;               /* System handle */
+    EcsSystem *system_data;         /* System to run */
+    EcsVectorChunk *chunk;          /* Chunk of row vector */
+    uint32_t table_index;           /* Current SystemTable */
+    uint32_t chunk_index;           /* Start index in row chunk */
+    uint32_t total_rows;            /* Total number of rows to process */
+    bool finished;                  /* Has the job finished */
+} EcsJob;
+
+typedef struct EcsThread {
+    pthread_t thread;
+    pthread_cond_t job_cond;
+    pthread_mutex_t job_mutex;
+    EcsJob job;
+    bool quit;
+    bool running;
+} EcsThread;
+
 struct EcsWorld {
     EcsVector *entities;          /* vector<EcsEntity> */
     EcsVector *tables;            /* vector<EcsTable> */
     EcsVector *periodic_systems;  /* vector<EcsHandle> Periodic systems */
     EcsVector *other_systems;     /* vector<EcsHandle> Non-periodic systems */
+    EcsVector *worker_threads;    /* vector<EcsThread> Worker threads */
+    pthread_cond_t job_cond;      /* Signal that worker thread job is done */
+    pthread_mutex_t job_mutex;    /* Mutex for protecting job counter */
+    uint32_t jobs_finished;       /* Number of jobs finished */
     EcsMap *entities_map;         /* Map for quick entity lookups */
     EcsMap *tables_map;           /* Map for quick table lookups */
     EcsMap *components_map;       /* Map that stores component sets */

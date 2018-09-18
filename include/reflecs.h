@@ -110,6 +110,27 @@ REFLECS_EXPORT
 void ecs_progress(
     EcsWorld *world);
 
+/** Set number of worker threads.
+ * This operation sets the number of worker threads to which to distribute the
+ * processing load. If this function is called multiple times, the total number
+ * of threads running will reflect the number specified in the last call.
+ *
+ * This function should not be called while processing an iteration, but should
+ * only be called before or after calling ecs_progress.
+ *
+ * The initial value is zero, which means that ecs_progress will only use the
+ * mainthread.
+ *
+ * @time-complexity: O(n)
+ * @param world: The world.
+ * @param threads: The number of threads.
+ * @returns: EcsOk if successful, or EcsError if failed.
+ */
+REFLECS_EXPORT
+EcsResult ecs_set_threads(
+    EcsWorld *world,
+    uint32_t threads);
+
 /** Set a world context.
  * This operation allows an application to register custom data with a world
  * that can be accessed anywhere where the application has the world object.
