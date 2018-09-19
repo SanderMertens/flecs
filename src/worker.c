@@ -254,7 +254,9 @@ void ecs_run_jobs(
         ecs_iter_hasnext(&job_it);
         thread->job = ecs_iter_next(&job_it);
 
+        pthread_mutex_lock(&thread->mutex);
         pthread_cond_signal(&thread->cond);
+        pthread_mutex_unlock(&thread->mutex);
     }
 
     ecs_wait_for_jobs(world);
@@ -266,9 +268,13 @@ EcsResult ecs_set_threads(
 {
     if (ecs_vector_count(world->worker_threads)) {
         ecs_stop_threads(world);
+        pthread_cond_destroy(&world->job_cond);
+        pthread_mutex_destroy(&world->job_mutex);
     }
 
     if (threads) {
+        pthread_cond_init(&world->job_cond, NULL);
+        pthread_mutex_init(&world->job_mutex, NULL);
         if (ecs_start_threads(world, threads) != EcsOk) {
             return EcsError;
         }
