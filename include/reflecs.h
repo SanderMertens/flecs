@@ -99,7 +99,7 @@ EcsWorld* ecs_init(void);
  * @param world The world to delete.
  */
 REFLECS_EXPORT
-void ecs_fini(
+EcsResult ecs_fini(
     EcsWorld *world);
 
 /** Progress a world.

@@ -17,6 +17,16 @@ typedef struct Vector2D {
 typedef Vector2D Position;
 typedef Vector2D Velocity;
 
+void SetVector2D(Vector2D *vec, float x, float y) {
+    vec->x = x;
+    vec->y = y;
+}
+
+void Init(void *data[], EcsInfo *info) {
+    SetVector2D(data[0], 0, 0);
+    SetVector2D(data[1], 0.5, 1.0);
+}
+
 void Move(void *data[], EcsInfo *info) {
     Position *position = data[0];
     Velocity *velocity = data[1];
@@ -24,22 +34,26 @@ void Move(void *data[], EcsInfo *info) {
     position->y += velocity->y * info->delta_time;
 }
 
-void main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     EcsWorld *world = ecs_init();
 
+    /* Register components and systems */
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, Init, EcsOnInit, Position, Velocity);
     ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity);
 
+    /* Create entity, add components, commit to memory (invokes Init system) */
     EcsHandle e = ecs_new(world);
     ecs_stage(world, e, Position_h);
     ecs_stage(world, e, Velocity_h);
     ecs_commit(world, e);
 
+    /* Progress world in main loop (invokes Move system) */
     while (true) {
         ecs_progress(world);
     }
 
-    ecs_fini(world);
+    return ecs_fini(world);
 }
 ```

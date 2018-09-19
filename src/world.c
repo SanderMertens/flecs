@@ -289,7 +289,7 @@ EcsWorld* ecs_init(void)
     return result;
 }
 
-void ecs_fini(
+EcsResult ecs_fini(
     EcsWorld *world)
 {
     ecs_vector_free(world->entities);
@@ -304,6 +304,7 @@ void ecs_fini(
     }
 
     free(world);
+    return EcsOk;
 }
 
 void ecs_progress(
