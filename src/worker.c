@@ -92,7 +92,9 @@ EcsResult ecs_start_threads(
     bool running;
     do {
         running = true;
-        EcsIter it = ecs_vector_iter(world->worker_threads, &thread_vec_params);
+        EcsVectorIter iter_data;
+        EcsIter it = _ecs_vector_iter(
+            world->worker_threads, &thread_vec_params, &iter_data);
         while (running && ecs_iter_hasnext(&it)) {
             EcsThread *thread = ecs_iter_next(&it);
             pthread_mutex_lock(&thread->mutex);
@@ -153,6 +155,7 @@ EcsResult ecs_schedule_next_job(
 
     job->chunk = chunk;
     job->chunk_index = chunk_index;
+    job->table_index = table_index;
     job->total_rows = rows_per_thread;
 
     *table_index_inout = table_index;
