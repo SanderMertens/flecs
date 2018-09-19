@@ -155,26 +155,23 @@ void ecs_system_visit_row(
     EcsHandle system,
     EcsSystem *system_data,
     EcsSystemTable *systable,
+    EcsInfo *info,
     void *row,
     void *param)
 {
     uint32_t *offsets = ECS_OFFSET(systable, sizeof(EcsSystemTable));
     uint32_t component_count = ecs_array_count(system_data->components);
     void *data[component_count];
-    EcsInfo info;
 
     EcsHandle entity = *(EcsHandle*)row;
+    info->entity = entity;
 
     int i;
     for (i = 0; i < component_count; i ++) {
         data[i] = ECS_OFFSET(row, offsets[i]);
     }
 
-    info.world = world;
-    info.system = system;
-    info.entity = entity;
-    info.param = param;
-    system_data->action(data, &info);
+    system_data->action(data, info);
 }
 
 /** Run system against all rows in all matching tables */
@@ -184,6 +181,13 @@ void ecs_run_system(
     void *param)
 {
     EcsSystem *system_data = ecs_get(world, system, world->system);
+    EcsInfo info = {
+        .world = world,
+        .system = system,
+        .param = param,
+        .time = world->time,
+        .delta_time = world->delta_time
+    };
 
     if (system_data->enabled) {
         EcsIter it =
@@ -205,7 +209,7 @@ void ecs_run_system(
                      i ++, count ++)
                 {
                     ecs_system_visit_row(
-                        world, system, system_data, systable, row, param);
+                        world, system, system_data, systable, &info, row, param);
                     row = (void*)((uintptr_t)row + element_size);
                 }
             }
@@ -224,6 +228,14 @@ void ecs_run_job(
     uint32_t job_count = job->total_rows;
     EcsVectorChunk *chunk = job->chunk;
     bool first = true;
+
+    EcsInfo info = {
+        .world = world,
+        .system = system,
+        .param = NULL,
+        .time = world->time,
+        .delta_time = world->delta_time
+    };
 
     EcsIter it =
         ecs_vector_iter(system_data->tables, &system_data->tables_params);
@@ -262,7 +274,7 @@ void ecs_run_job(
               chunk_i ++, table_i ++, job_i ++)
             {
                 ecs_system_visit_row(
-                    world, system, system_data, systable, row, NULL);
+                    world, system, system_data, systable, &info, row, NULL);
 
                 row = (void*)((uintptr_t)row + element_size);
             }
@@ -278,6 +290,15 @@ void ecs_system_notify(
     EcsEntity *entity)
 {
     EcsSystem *system_data = ecs_get(world, system, world->system);
+
+    EcsInfo info = {
+        .world = world,
+        .system = system,
+        .param = NULL,
+        .time = world->time,
+        .delta_time = 0
+    };
+
     EcsIter it =
         ecs_vector_iter(system_data->tables, &system_data->tables_params);
 
@@ -285,7 +306,7 @@ void ecs_system_notify(
         EcsSystemTable *systable = ecs_iter_next(&it);
         if (systable->table == table) {
             ecs_system_visit_row(
-                world, system, system_data, systable, entity->row, NULL);
+                world, system, system_data, systable, &info, entity->row, NULL);
             break;
         }
     }

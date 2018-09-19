@@ -99,6 +99,8 @@ struct EcsWorld {
     EcsHandle component;          /* Component type entity */
     EcsHandle system;             /* System type entity */
     EcsHandle id;                 /* Id type entity */
+    struct timespec time;         /* Current time */
+    double delta_time;            /* Time difference since last iteration */
     void *context;                /* Application context */
     bool valid_schedule;          /* Is the current job schedule valid */
 };

@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <alloca.h>
+#include <time.h>
 
 /* -- Export macro's -- */
 
@@ -67,6 +68,8 @@ typedef struct EcsInfo {
     EcsWorld *world;
     EcsHandle system;
     EcsHandle entity;
+    struct timespec time;
+    double delta_time;
     void *param;
 } EcsInfo;
 

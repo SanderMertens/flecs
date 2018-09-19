@@ -1,4 +1,8 @@
 #include "include/private/reflecs.h"
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
 
 const EcsVectorParams entities_vec_params = {
     .element_size = sizeof(EcsEntity),
@@ -28,6 +32,56 @@ int compare_handle(
     return *(EcsHandle*)p1 - *(EcsHandle*)p2;
 }
 
+/** Get high resolution time */
+static
+void time_get(
+    struct timespec* time)
+{
+#ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    time->tv_sec = mts.tv_sec;
+    time->tv_nsec = mts.tv_nsec;
+#else
+    clock_gettime(CLOCK_REALTIME, time);
+#endif
+}
+
+/** Convert time to double */
+static
+double time_to_double(
+    struct timespec t)
+{
+    double result;
+
+    result = t.tv_sec;
+    result += (double)t.tv_nsec / (double)1000000000;
+
+    return result;
+}
+
+static
+struct timespec time_sub(
+    struct timespec t1,
+    struct timespec t2)
+{
+    struct timespec result;
+
+    if (t1.tv_nsec >= t2.tv_nsec) {
+        result.tv_nsec = t1.tv_nsec - t2.tv_nsec;
+        result.tv_sec = t1.tv_sec - t2.tv_sec;
+    } else {
+        result.tv_nsec = t1.tv_nsec - t2.tv_nsec + 1000000000;
+        result.tv_sec = t1.tv_sec - t2.tv_sec - 1;
+    }
+
+    return result;
+}
+
+
 /** Hash array of handles */
 static
 uint64_t hash_entity_array(
@@ -40,6 +94,17 @@ uint64_t hash_entity_array(
         ecs_hash(&array[i], sizeof(EcsHandle), &hash);
     }
     return hash;
+}
+
+static
+void ecs_update_time(
+    EcsWorld *world)
+{
+    struct timespec time, diff;
+    time_get(&time);
+    diff = time_sub(time, world->time);
+    world->time = time;
+    world->delta_time = time_to_double(diff);
 }
 
 /** Bootstrap the EcsComponent component */
@@ -216,6 +281,10 @@ EcsWorld* ecs_init(void)
     result->components_map = ecs_map_new(REFLECS_INITIAL_COMPONENT_SET_COUNT);
     result->context = NULL;
     result->valid_schedule = false;
+    result->time.tv_sec = 0;
+    result->time.tv_nsec = 0;
+    result->delta_time = 0;
+    ecs_update_time(result);
     ecs_world_init(result);
     return result;
 }
@@ -243,6 +312,8 @@ void ecs_progress(
     EcsIter it = ecs_vector_iter(world->periodic_systems, &handle_vec_params);
     bool has_threads = ecs_vector_count(world->worker_threads) != 0;
     bool valid_schedule = world->valid_schedule;
+
+    ecs_update_time(world);
 
     while (ecs_iter_hasnext(&it)) {
         EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
