@@ -31,9 +31,9 @@ void main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity);
     
     EcsHandle e = ecs_new(world);
-    ecs_stage(e, Position_h);
-    ecs_stage(e, Velocity_h);
-    ecs_commit(e);
+    ecs_stage(world, e, Position_h);
+    ecs_stage(world, e, Velocity_h);
+    ecs_commit(world, e);
     
     while (true) {
         ecs_progress(world);
