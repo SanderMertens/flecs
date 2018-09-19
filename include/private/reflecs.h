@@ -46,11 +46,17 @@ void ecs_system_notify(
     EcsEntity *entity);
 
 void ecs_run_job(
+    EcsWorld *world,
     EcsJob *job);
 
-void ecs_schedule_system(
+void ecs_schedule_jobs(
     EcsWorld *world,
     EcsHandle system);
+
+void ecs_run_jobs(
+    EcsWorld *world,
+    EcsHandle system);
+
 
 /* -- Private world API -- */
 

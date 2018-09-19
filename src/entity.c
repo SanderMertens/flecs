@@ -171,6 +171,7 @@ void ecs_delete(
         ecs_vector_remove(world->entities, &entities_vec_params, entity);
     }
     ecs_map_remove(world->entities_map, h_entity);
+    world->valid_schedule = false;
 }
 
 EcsResult ecs_stage(
@@ -249,6 +250,8 @@ EcsResult ecs_commit(
             entity->stage_hash = 0;
         }
     }
+
+    world->valid_schedule = false;
 
     return EcsOk;
 }

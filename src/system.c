@@ -214,9 +214,9 @@ void ecs_run_system(
 }
 
 void ecs_run_job(
+    EcsWorld *world,
     EcsJob *job)
 {
-    EcsWorld *world = job->world;
     EcsHandle system = job->system;
     EcsSystem *system_data = job->system_data;
     uint32_t table_index = job->table_index;
@@ -231,7 +231,6 @@ void ecs_run_job(
     int i;
     for (i = 0; i < table_index; i ++) {
         if (!ecs_iter_hasnext(&it)) {
-            job->finished = true;
             break;
         }
 
@@ -326,6 +325,7 @@ EcsHandle ecs_system_new(
     system_data->tables_params.move_action = NULL;
     system_data->tables_params.ctx = NULL;
     system_data->tables = ecs_vector_new(&system_data->tables_params);
+    system_data->jobs = NULL;
     system_data->components = ecs_array_new(count, &handle_arr_params);
     system_data->kind = kind;
 

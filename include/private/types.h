@@ -28,6 +28,7 @@ typedef struct EcsSystem {
     EcsSystemAction action;
     EcsArray *components;
     EcsVector *tables;
+    EcsVector *jobs;
     EcsVectorParams tables_params;
     EcsSystemKind kind;
     bool enabled;
@@ -65,21 +66,20 @@ typedef struct EcsSystemTable {
 } EcsSystemTable;
 
 typedef struct EcsJob {
-    EcsWorld *world;
     EcsHandle system;               /* System handle */
     EcsSystem *system_data;         /* System to run */
     EcsVectorChunk *chunk;          /* Chunk of row vector */
     uint32_t table_index;           /* Current SystemTable */
     uint32_t chunk_index;           /* Start index in row chunk */
     uint32_t total_rows;            /* Total number of rows to process */
-    bool finished;                  /* Has the job finished */
 } EcsJob;
 
 typedef struct EcsThread {
+    EcsWorld *world;
+    EcsJob *job;
     pthread_t thread;
-    pthread_cond_t job_cond;
-    pthread_mutex_t job_mutex;
-    EcsJob job;
+    pthread_cond_t cond;
+    pthread_mutex_t mutex;
     bool quit;
     bool running;
 } EcsThread;
@@ -100,6 +100,7 @@ struct EcsWorld {
     EcsHandle system;             /* System type entity */
     EcsHandle id;                 /* Id type entity */
     void *context;                /* Application context */
+    bool valid_schedule;          /* Is the current job schedule valid */
 };
 
 extern const EcsVectorParams entities_vec_params;

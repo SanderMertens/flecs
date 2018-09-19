@@ -5,29 +5,35 @@ const EcsVectorParams thread_vec_params = {
     .chunk_count = REFLECS_THREAD_CHUNK_COUNT
 };
 
+const EcsVectorParams job_vec_params = {
+    .element_size = sizeof(EcsJob),
+    .chunk_count = REFLECS_THREAD_CHUNK_COUNT
+};
+
 static
 void* ecs_worker(void *arg) {
     EcsThread *thread = arg;
-    EcsJob *job = &thread->job;
+    EcsWorld *world = thread->world;
 
-    pthread_mutex_lock(&thread->job_mutex);
+    pthread_mutex_lock(&thread->mutex);
     thread->running = true;
 
     while (!thread->quit) {
-        pthread_cond_wait(&thread->job_cond, &thread->job_mutex);
+        pthread_cond_wait(&thread->cond, &thread->mutex);
         if (thread->quit) {
             break;
         }
 
-        ecs_run_job(job);
+        EcsJob *job = thread->job;
+        ecs_run_job(world, job);
 
-        pthread_mutex_lock(&job->world->job_mutex);
-        job->world->jobs_finished ++;
-        pthread_cond_signal(&job->world->job_cond);
-        pthread_mutex_unlock(&job->world->job_mutex);
+        pthread_mutex_lock(&world->job_mutex);
+        world->jobs_finished ++;
+        pthread_cond_signal(&world->job_cond);
+        pthread_mutex_unlock(&world->job_mutex);
     }
 
-    pthread_mutex_unlock(&thread->job_mutex);
+    pthread_mutex_unlock(&thread->mutex);
 
     return NULL;
 }
@@ -39,11 +45,13 @@ void ecs_stop_threads(
     EcsIter it = ecs_vector_iter(world->worker_threads, &thread_vec_params);
     while (ecs_iter_hasnext(&it)) {
         EcsThread *thread = ecs_iter_next(&it);
-        pthread_mutex_lock(&thread->job_mutex);
+        pthread_mutex_lock(&thread->mutex);
         thread->quit = true;
-        pthread_cond_signal(&thread->job_cond);
-        pthread_mutex_unlock(&thread->job_mutex);
+        pthread_cond_signal(&thread->cond);
+        pthread_mutex_unlock(&thread->mutex);
         pthread_join(thread->thread, NULL);
+        pthread_cond_destroy(&thread->cond);
+        pthread_mutex_destroy(&thread->mutex);
     }
 
     ecs_vector_free(world->worker_threads);
@@ -65,14 +73,15 @@ EcsResult ecs_start_threads(
     int i;
     for (i = 0; i < threads; i ++) {
         EcsThread *thread = ecs_vector_add(world->worker_threads, &thread_vec_params);
+        thread->world = world;
         thread->thread = 0;
         thread->quit = false;
         thread->running = false;
 
-        if (pthread_cond_init(&thread->job_cond, NULL)) {
+        if (pthread_cond_init(&thread->cond, NULL)) {
             goto error;
         }
-        if (pthread_mutex_init(&thread->job_mutex, NULL)) {
+        if (pthread_mutex_init(&thread->mutex, NULL)) {
             goto error;
         }
         if (pthread_create(&thread->thread, NULL, ecs_worker, thread)) {
@@ -86,11 +95,11 @@ EcsResult ecs_start_threads(
         EcsIter it = ecs_vector_iter(world->worker_threads, &thread_vec_params);
         while (running && ecs_iter_hasnext(&it)) {
             EcsThread *thread = ecs_iter_next(&it);
-            pthread_mutex_lock(&thread->job_mutex);
+            pthread_mutex_lock(&thread->mutex);
             if (!thread->running) {
                 running = false;
             }
-            pthread_mutex_unlock(&thread->job_mutex);
+            pthread_mutex_unlock(&thread->mutex);
         }
     } while (!running);
 
@@ -154,7 +163,41 @@ error:
     return EcsError;
 }
 
-void ecs_schedule_system(
+static
+void ecs_wait_for_jobs(
+    EcsWorld *world)
+{
+    uint32_t thread_count = ecs_vector_count(world->worker_threads);
+
+    pthread_mutex_lock(&world->job_mutex);
+
+    if (world->jobs_finished != thread_count) {
+        do {
+            pthread_cond_wait(&world->job_cond, &world->job_mutex);
+        } while (world->jobs_finished != thread_count);
+    }
+
+    pthread_mutex_unlock(&world->job_mutex);
+}
+
+static
+void ecs_create_jobs(
+    EcsSystem *system_data,
+    uint32_t thread_count)
+{
+    if (system_data->jobs) {
+        ecs_vector_free(system_data->jobs);
+    }
+
+    system_data->jobs = ecs_vector_new(&job_vec_params);
+
+    int i;
+    for (i = 0; i < thread_count; i ++) {
+        ecs_vector_add(system_data->jobs, &job_vec_params);
+    }
+}
+
+void ecs_schedule_jobs(
     EcsWorld *world,
     EcsHandle system)
 {
@@ -164,7 +207,9 @@ void ecs_schedule_system(
     uint32_t table_index = 0;
     EcsTable *table = NULL;
 
-    world->jobs_finished = 0;
+    if (ecs_vector_count(system_data->jobs) != thread_count) {
+        ecs_create_jobs(system_data, thread_count);
+    }
 
     EcsIter table_it = ecs_vector_iter(
         system_data->tables, &system_data->tables_params);
@@ -176,33 +221,43 @@ void ecs_schedule_system(
 
     int rows_per_thread = total_rows / thread_count;
 
-    EcsIter it = ecs_vector_iter(world->worker_threads, &thread_vec_params);
+    EcsIter it = ecs_vector_iter(system_data->jobs, &job_vec_params);
     table_it = ecs_vector_iter(
         system_data->tables, &system_data->tables_params);
 
     while (ecs_iter_hasnext(&it)) {
-        EcsThread *thread = ecs_iter_next(&it);
-
-        pthread_mutex_lock(&thread->job_mutex);
-        thread->job.world = world;
-        thread->job.system = system;
-        thread->job.system_data = system_data;
-        thread->job.finished = false;
-        thread->job.chunk = NULL;
-        thread->job.chunk_index = 0;
+        EcsJob *job = ecs_iter_next(&it);
+        job->system = system;
+        job->system_data = system_data;
+        job->chunk = NULL;
+        job->chunk_index = 0;
         ecs_schedule_next_job(
-            &thread->job, &table_it, &table, &table_index, rows_per_thread);
-        pthread_cond_signal(&thread->job_cond);
-        pthread_mutex_unlock(&thread->job_mutex);
+            job, &table_it, &table, &table_index, rows_per_thread);
     }
 
-    pthread_mutex_lock(&world->job_mutex);
+    world->valid_schedule = true;
+}
 
-    do {
-        pthread_cond_wait(&world->job_cond, &world->job_mutex);
-    } while (world->jobs_finished != thread_count);
+void ecs_run_jobs(
+    EcsWorld *world,
+    EcsHandle system)
+{
+    EcsSystem *system_data = ecs_get(world, system, world->system);
+    world->jobs_finished = 0;
 
-    pthread_mutex_unlock(&world->job_mutex);
+    EcsIter job_it = ecs_vector_iter(system_data->jobs, &job_vec_params);
+    EcsIter thr_it = ecs_vector_iter(world->worker_threads, &thread_vec_params);
+
+    while (ecs_iter_hasnext(&thr_it)) {
+        EcsThread *thread = ecs_iter_next(&thr_it);
+
+        ecs_iter_hasnext(&job_it);
+        thread->job = ecs_iter_next(&job_it);
+
+        pthread_cond_signal(&thread->cond);
+    }
+
+    ecs_wait_for_jobs(world);
 }
 
 EcsResult ecs_set_threads(
@@ -211,14 +266,9 @@ EcsResult ecs_set_threads(
 {
     if (ecs_vector_count(world->worker_threads)) {
         ecs_stop_threads(world);
-        pthread_cond_destroy(&world->job_cond);
-        pthread_mutex_destroy(&world->job_mutex);
     }
 
     if (threads) {
-        pthread_cond_init(&world->job_cond, NULL);
-        pthread_mutex_init(&world->job_mutex, NULL);
-
         if (ecs_start_threads(world, threads) != EcsOk) {
             return EcsError;
         }

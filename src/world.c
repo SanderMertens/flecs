@@ -215,6 +215,7 @@ EcsWorld* ecs_init(void)
     result->tables_map = ecs_map_new(REFLECS_INITIAL_TABLE_COUNT);
     result->components_map = ecs_map_new(REFLECS_INITIAL_COMPONENT_SET_COUNT);
     result->context = NULL;
+    result->valid_schedule = false;
     ecs_world_init(result);
     return result;
 }
@@ -241,12 +242,17 @@ void ecs_progress(
 {
     EcsIter it = ecs_vector_iter(world->periodic_systems, &handle_vec_params);
     bool has_threads = ecs_vector_count(world->worker_threads) != 0;
+    bool valid_schedule = world->valid_schedule;
 
     while (ecs_iter_hasnext(&it)) {
         EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
 
         if (has_threads) {
-            ecs_schedule_system(world, system);
+            if (!valid_schedule) {
+                ecs_schedule_jobs(world, system);
+            }
+
+            ecs_run_jobs(world, system);
         } else {
             ecs_run_system(world, system, NULL);
         }
