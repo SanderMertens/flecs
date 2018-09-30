@@ -1,26 +1,12 @@
 #include "include/private/reflecs.h"
-#ifdef __MACH__
-#include <mach/clock.h>
-#include <mach/mach.h>
-#endif
+#include <string.h>
 
-const EcsVectorParams entities_vec_params = {
-    .element_size = sizeof(EcsEntity),
-    .chunk_count = REFLECS_ENTITIES_CHUNK_COUNT
-};
-
-const EcsVectorParams tables_vec_params = {
-    .element_size = sizeof(EcsTable),
-    .chunk_count = REFLECS_TABLES_CHUNK_COUNT
-};
-
-const EcsVectorParams handle_vec_params = {
-    .element_size = sizeof(EcsEntity*),
-    .chunk_count = REFLECS_SYSTEMS_CHUNK_COUNT
+const EcsArrayParams table_arr_params = {
+    .element_size = sizeof(EcsTable)
 };
 
 const EcsArrayParams handle_arr_params = {
-    .element_size = sizeof(EcsEntity*)
+    .element_size = sizeof(EcsHandle)
 };
 
 /** Comparator function for handles */
@@ -32,63 +18,13 @@ int compare_handle(
     return *(EcsHandle*)p1 - *(EcsHandle*)p2;
 }
 
-/** Get high resolution time */
-static
-void time_get(
-    struct timespec* time)
-{
-#ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
-    clock_serv_t cclock;
-    mach_timespec_t mts;
-    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
-    clock_get_time(cclock, &mts);
-    mach_port_deallocate(mach_task_self(), cclock);
-    time->tv_sec = mts.tv_sec;
-    time->tv_nsec = mts.tv_nsec;
-#else
-    clock_gettime(CLOCK_REALTIME, time);
-#endif
-}
-
-/** Convert time to double */
-static
-double time_to_double(
-    struct timespec t)
-{
-    double result;
-
-    result = t.tv_sec;
-    result += (double)t.tv_nsec / (double)1000000000;
-
-    return result;
-}
-
-static
-struct timespec time_sub(
-    struct timespec t1,
-    struct timespec t2)
-{
-    struct timespec result;
-
-    if (t1.tv_nsec >= t2.tv_nsec) {
-        result.tv_nsec = t1.tv_nsec - t2.tv_nsec;
-        result.tv_sec = t1.tv_sec - t2.tv_sec;
-    } else {
-        result.tv_nsec = t1.tv_nsec - t2.tv_nsec + 1000000000;
-        result.tv_sec = t1.tv_sec - t2.tv_sec - 1;
-    }
-
-    return result;
-}
-
-
 /** Hash array of handles */
 static
-uint64_t hash_entity_array(
+uint32_t hash_handle_array(
     EcsHandle* array,
     uint32_t count)
 {
-    uint64_t hash = 0;
+    uint32_t hash = 0;
     int i;
     for (i = 0; i < count; i ++) {
         ecs_hash(&array[i], sizeof(EcsHandle), &hash);
@@ -97,38 +33,39 @@ uint64_t hash_entity_array(
 }
 
 static
-void ecs_update_time(
-    EcsWorld *world)
+void bootstrap_component_table(
+    EcsWorld *world,
+    uint64_t family_id)
 {
-    struct timespec time, diff;
-    time_get(&time);
-    diff = time_sub(time, world->time);
-    world->time = time;
-    world->delta_time = time_to_double(diff);
+    EcsTable *result = ecs_array_add(&world->table_db, &table_arr_params);
+    result->family_id = family_id;
+    result->family = ecs_map_get_ptr(world->family_index, family_id);
+    result->columns = malloc(sizeof(uintptr_t));
+    result->columns[0] = sizeof(EcsComponent);
+    result->row_params.element_size = sizeof(EcsComponent) + sizeof(EcsHandle);
+    result->rows = ecs_array_new(&result->row_params, ECS_TABLE_INITIAL_ROW_COUNT);
+    ecs_map_set_ptr(world->table_index, family_id, result);
 }
 
 /** Bootstrap the EcsComponent component */
 static
-EcsResult ecs_world_bootstrap_component(
+EcsResult bootstrap_component(
     EcsWorld *world)
 {
-    EcsHandle component_h = ecs_new(world);
-    EcsEntity *component_e = ecs_map_get(world->entities_map, component_h);
-    ecs_stage(world, component_h, component_h);
-    uint64_t stage_hash = component_e->stage_hash;
+    EcsHandle handle = ecs_new(world);
+    ecs_stage(world, handle, handle);
+    uint64_t family_id = ecs_map_get(world->staging_index, handle);
 
-    world->component = component_h;
+    world->component = handle;
 
-    EcsTable *table =
-        ecs_table_new_w_size(world, stage_hash, sizeof(EcsComponent));
-
-    ecs_map_set(world->tables_map, stage_hash, table);
+    ecs_world_register_family(world, handle, NULL);
+    bootstrap_component_table(world, family_id);
 
     if (ecs_commit(world, world->component) != EcsOk) {
         return EcsError;
     }
 
-    EcsComponent *type_data = ecs_get(world, component_h, component_h);
+    EcsComponent *type_data = ecs_get(world, handle, handle);
     if (!type_data) {
         return EcsError;
     }
@@ -140,7 +77,7 @@ EcsResult ecs_world_bootstrap_component(
 
 /** Generic function for initializing built-in components */
 static
-EcsHandle ecs_world_init_component(
+EcsHandle init_component(
     EcsWorld *world,
     size_t size)
 {
@@ -158,40 +95,32 @@ EcsHandle ecs_world_init_component(
 
 /** Generic function to add identifier to builtin entities */
 static
-void ecs_world_init_id(
+void init_id(
     EcsWorld *world,
     EcsHandle handle,
     const char *id)
 {
     EcsId *id_data = ecs_add(world, handle, world->id);
+    if (!id_data) {
+        abort();
+    }
     id_data->id = (char*)id;
 }
 
-/** Initialize world */
-static
-EcsResult ecs_world_init(
+/* -- Private functions -- */
+
+EcsHandle ecs_world_new_handle(
     EcsWorld *world)
 {
-    if (ecs_world_bootstrap_component(world) != EcsOk) {
-        return EcsError;
-    }
-
-    world->system = ecs_world_init_component(world, sizeof(EcsSystem));
-    world->id = ecs_world_init_component(world, sizeof(EcsId));
-
-    ecs_world_init_id(world, world->system, "EcsSystem");
-    ecs_world_init_id(world, world->id, "EcsId");
-
-    return EcsOk;
+    return ++ world->last_handle;
 }
 
-/** Register new component array hash with world */
-uint64_t ecs_world_components_hash(
+EcsFamily ecs_world_register_family(
     EcsWorld *world,
-    EcsArray *set,
-    EcsHandle to_add)
+    EcsHandle to_add,
+    EcsArray *set)
 {
-    uint64_t stage_hash = 0;
+    uint32_t stage_hash = 0;
     uint32_t count = ecs_array_count(set);
     EcsHandle new_set[count + 1];
     void *new_buffer = new_set;
@@ -203,160 +132,95 @@ uint64_t ecs_world_components_hash(
         }
         new_set[count] = to_add;
         qsort(new_set, count + 1, sizeof(EcsHandle), compare_handle);
-        stage_hash = hash_entity_array(new_set, count + 1);
+        stage_hash = hash_handle_array(new_set, count + 1);
         count ++;
     } else if (set) {
         void *buffer = ecs_array_buffer(set);
-        stage_hash = hash_entity_array(buffer, count);
+        stage_hash = hash_handle_array(buffer, count);
         new_buffer = buffer;
     } else {
         return 0;
     }
 
-    EcsArray *stage_set = ecs_map_get(world->components_map, stage_hash);
+    EcsArray *stage_set = ecs_map_get_ptr(world->family_index, stage_hash);
     if (!stage_set) {
-        stage_set = ecs_array_new_from_buffer(count, &handle_arr_params, new_buffer);
-        ecs_map_set(world->components_map, stage_hash, stage_set);
+        stage_set = ecs_array_new_from_buffer(&handle_arr_params, count, new_buffer);
+        ecs_map_set_ptr(world->family_index, stage_hash, stage_set);
     }
 
     return stage_hash;
 }
 
-/** Get components array */
-EcsArray* ecs_world_get_components(
+EcsTable* ecs_world_get_table(
     EcsWorld *world,
-    uint64_t components_hash)
+    EcsFamily family_id)
 {
-    return ecs_map_get(world->components_map, components_hash);
+    EcsTable *result = ecs_map_get_ptr(world->table_index, family_id);
+    if (!result) {
+        result = ecs_array_add(&world->table_db, &table_arr_params);
+        result->family_id = family_id;
+        if (ecs_table_init(world, result) != EcsOk) {
+            return NULL;
+        }
+        ecs_map_set_ptr(world->table_index, family_id, result);
+    }
+
+    return result;
 }
 
-/** Lookup table with components hash */
-EcsTable *ecs_world_lookup_table(
-    EcsWorld *world,
-    uint64_t components_hash)
+union RowUnion {
+    EcsRow row;
+    uint64_t value;
+};
+
+EcsRow ecs_to_row(
+    uint64_t value)
 {
-    return ecs_map_get(world->tables_map, components_hash);
+    union RowUnion u = {.value = value};
+    return u.row;
 }
 
-/** Create a new table from a components array */
-EcsTable *ecs_world_create_table(
-    EcsWorld *world,
-    uint64_t components_hash)
+uint64_t ecs_from_row(
+    EcsRow row)
 {
-    EcsTable *table = ecs_table_new(world, components_hash);
-    if (!table) {
-        return NULL;
-    }
-
-    ecs_map_set(world->tables_map, components_hash, table);
-
-    EcsIter it = ecs_vector_iter(world->periodic_systems, &handle_vec_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
-        ecs_system_notify_create_table(world, system, table);
-    }
-
-    it = ecs_vector_iter(world->other_systems, &handle_vec_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
-        ecs_system_notify_create_table(world, system, table);
-    }
-
-    return table;
+    union RowUnion u = {.row = row};
+    return u.value;
 }
 
 
 /* -- Public functions -- */
 
-EcsWorld* ecs_init(void)
-{
+EcsWorld *ecs_init(void) {
     EcsWorld *result = malloc(sizeof(EcsWorld));
-    result->entities = ecs_vector_new(&entities_vec_params);
-    result->tables = ecs_vector_new(&tables_vec_params);
-    result->periodic_systems = ecs_vector_new(&handle_vec_params);
-    result->other_systems = ecs_vector_new(&handle_vec_params);
-    result->worker_threads = NULL;
-    result->entities_map = ecs_map_new(REFLECS_INITIAL_ENTITY_COUNT);
-    result->tables_map = ecs_map_new(REFLECS_INITIAL_TABLE_COUNT);
-    result->components_map = ecs_map_new(REFLECS_INITIAL_COMPONENT_SET_COUNT);
-    result->context = NULL;
-    result->valid_schedule = false;
-    result->time.tv_sec = 0;
-    result->time.tv_nsec = 0;
-    result->delta_time = 0;
-    ecs_update_time(result);
-    ecs_world_init(result);
+    result->table_db = ecs_array_new(&table_arr_params, ECS_WORLD_INITIAL_TABLE_COUNT);
+    result->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
+    result->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
+    result->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
+    result->staging_index = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    result->component = 0;
+    result->system = 0;
+    result->id = 0;
+    result->last_handle = 0;
+
+    bootstrap_component(result);
+
+    //result->system = init_component(result, sizeof(EcsSystem));
+    result->id = init_component(result, sizeof(EcsId));
+
+    //init_id(result, result->system, "EcsSystem");
+    init_id(result, result->id, "EcsId");
+
     return result;
 }
 
 EcsResult ecs_fini(
     EcsWorld *world)
 {
-    ecs_vector_free(world->entities);
-    ecs_vector_free(world->tables);
-    ecs_vector_free(world->periodic_systems);
-    ecs_vector_free(world->other_systems);
-    ecs_map_free(world->entities_map);
-    ecs_map_free(world->tables_map);
-    ecs_map_free(world->components_map);
-    if (world->worker_threads) {
-        ecs_set_threads(world, 0);
-    }
-
+    ecs_array_free(world->table_db);
+    ecs_map_free(world->entity_index);
+    ecs_map_free(world->table_index);
+    ecs_map_free(world->family_index);
+    ecs_map_free(world->staging_index);
     free(world);
     return EcsOk;
-}
-
-void ecs_progress(
-    EcsWorld *world)
-{
-    EcsIter it = ecs_vector_iter(world->periodic_systems, &handle_vec_params);
-    bool has_threads = ecs_vector_count(world->worker_threads) != 0;
-    bool valid_schedule = world->valid_schedule;
-
-    ecs_update_time(world);
-
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
-
-        if (has_threads) {
-            if (!valid_schedule) {
-                ecs_schedule_jobs(world, system);
-            }
-
-            ecs_run_jobs(world, system);
-        } else {
-            ecs_run_system(world, system, NULL);
-        }
-    }
-}
-
-void* ecs_get_context(
-    EcsWorld *world)
-{
-    return world->context;
-}
-
-void ecs_set_context(
-    EcsWorld *world,
-    void *context)
-{
-    world->context = context;
-}
-
-EcsHandle ecs_lookup(
-    EcsWorld *world,
-    const char *id)
-{
-    EcsIter it = ecs_vector_iter(world->entities, &entities_vec_params);
-
-    while (ecs_iter_hasnext(&it)) {
-        EcsEntity *e = ecs_iter_next(&it);
-        EcsId *e_id = ecs_entity_get(world, e, world->id);
-        if (e_id && !strcmp(id, e_id->id)) {
-            return *(EcsHandle*)e->row;
-        }
-    }
-
-    return 0;
 }

@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <alloca.h>
 #include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 /* -- Export macro's -- */
 
@@ -71,6 +73,7 @@ typedef struct EcsInfo {
     struct timespec time;
     double delta_time;
     void *param;
+    uint32_t index;
 } EcsInfo;
 
 typedef void (*EcsSystemAction)(
@@ -525,7 +528,8 @@ void ecs_iter_release(
  * handle to the new component.
  */
 #define ECS_COMPONENT(world, id) \
-    EcsHandle id##_h = ecs_component_new(world, #id, sizeof(id)); (void)id##_h;
+    EcsHandle id##_h = ecs_component_new(world, #id, sizeof(id));\
+    if (!id##_h) abort();
 
 /** Wrapper around ecs_system_new.
  * This macro provides a convenient way to register systems with a world. It can
@@ -543,8 +547,7 @@ void ecs_iter_release(
 #define ECS_SYSTEM(world, id, kind, ...) \
     void id(void*[], EcsInfo*);\
     EcsHandle id##_h = ecs_system_new(world, #id, kind, #__VA_ARGS__, id);\
-    (void)id##_h;
-
+    if (!id##_h) abort();
 
 #ifdef __cplusplus
 }

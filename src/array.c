@@ -3,8 +3,8 @@
 #include "include/private/types.h"
 
 struct EcsArray {
-    uint16_t count;
-    uint16_t size;
+    uint32_t count;
+    uint32_t size;
 };
 
 #define ARRAY_BUFFER(array) ECS_OFFSET(array, sizeof(EcsArray))
@@ -12,14 +12,14 @@ struct EcsArray {
 static
 EcsArray* resize(
     EcsArray *array,
-    uint16_t size)
+    uint32_t size)
 {
     return realloc(array, sizeof(EcsArray) + size);
 }
 
 EcsArray* ecs_array_new(
-    uint32_t size,
-    const EcsArrayParams *params)
+    const EcsArrayParams *params,
+    uint32_t size)
 {
     EcsArray *result = malloc(sizeof(EcsArray) + size * params->element_size);
     result->count = 0;
@@ -28,11 +28,11 @@ EcsArray* ecs_array_new(
 }
 
 EcsArray* ecs_array_new_from_buffer(
-    uint32_t size,
     const EcsArrayParams *params,
+    uint32_t size,
     void *buffer)
 {
-    EcsArray *result = ecs_array_new(size, params);
+    EcsArray *result = ecs_array_new(params, size);
     void *my_buffer = ARRAY_BUFFER(result);
     memcpy(my_buffer, buffer, size * params->element_size);
     result->count = size;
@@ -45,15 +45,14 @@ void ecs_array_free(
     free(array);
 }
 
-EcsArray* ecs_array_add(
-    EcsArray *array,
-    const EcsArrayParams *params,
-    void *elem_out)
+void* ecs_array_add(
+    EcsArray **array_inout,
+    const EcsArrayParams *params)
 {
-    uint16_t size = array->size;
-    uint16_t count = array->count;
+    EcsArray *array = *array_inout;
+    uint32_t size = array->size;
+    uint32_t count = array->count;
     uint32_t element_size = params->element_size;
-    EcsArray *result = array;
 
     if (count == size) {
         if (!size) {
@@ -61,49 +60,85 @@ EcsArray* ecs_array_add(
         } else {
             size *= 2;
         }
-        result = resize(array, size * element_size);
-        result->size = size;
+        array = resize(array, size * element_size);
+        array->size = size;
+        *array_inout = array;
     }
 
-    result->count = count + 1;
-    *(void**)elem_out = ECS_OFFSET(ARRAY_BUFFER(result), element_size * count);
+    array->count = count + 1;
 
-    return result;
+    return ECS_OFFSET(ARRAY_BUFFER(array), element_size * count);;
 }
 
-EcsArray* ecs_array_remove(
+void ecs_array_remove(
     EcsArray *array,
     const EcsArrayParams *params,
-    uint32_t index)
+    void *elem)
 {
-    uint16_t size = array->size;
-    uint16_t count = array->count;
+    uint32_t count = array->count;
     uint32_t element_size = params->element_size;
-    EcsArray *result = array;
+    void *buffer = ARRAY_BUFFER(array);
+    uint32_t index = ((char*)elem - (char*)buffer) / element_size;
 
     if (index >= count) {
-        return NULL;
+        return;
     }
-
-    void *buffer = ARRAY_BUFFER(array);
-    void *elem = ECS_OFFSET(buffer, index * element_size);
 
     if (index != (count - 1)) {
         void *last_elem = ECS_OFFSET(buffer, element_size * (count - 1));
         memcpy(elem, last_elem, element_size);
+        if (params->move_action) {
+            params->move_action(array, elem, last_elem, params->move_ctx);
+        }
     }
 
     count --;
 
-    if (count < size / 2) {
-        size /= 2;
-        result = resize(array, size * element_size);
-        result->size = size;
+    array->count = count;
+}
+
+void ecs_array_remove_index(
+    EcsArray *array,
+    const EcsArrayParams *params,
+    uint32_t index)
+{
+    uint32_t count = array->count;
+    uint32_t element_size = params->element_size;
+    void *buffer = ARRAY_BUFFER(array);
+    void *elem = ECS_OFFSET(buffer, index * element_size);
+
+    if (index >= count) {
+        return;
     }
 
-    result->count = count;
+    if (index != (count - 1)) {
+        void *last_elem = ECS_OFFSET(buffer, element_size * (count - 1));
+        memcpy(elem, last_elem, element_size);
+        if (params->move_action) {
+            params->move_action(array, elem, last_elem, params->move_ctx);
+        }
+    }
 
-    return result;
+    count --;
+
+    array->count = count;
+}
+
+void ecs_array_reclaim(
+    EcsArray **array_inout,
+    const EcsArrayParams *params)
+{
+    EcsArray *array = *array_inout;
+    uint32_t size = array->size;
+    uint32_t count = array->count;
+    uint32_t element_size = params->element_size;
+
+    if (count < size) {
+        size = count;
+        array = resize(array, size * element_size);
+        array->size = size;
+        *array_inout = array;
+    }
 }
 
 uint32_t ecs_array_count(
@@ -135,7 +170,7 @@ void* ecs_array_get(
     const EcsArrayParams *params,
     uint32_t index)
 {
-    uint16_t count = array->count;
+    uint32_t count = array->count;
     uint32_t element_size = params->element_size;
 
     if (index >= count) {
@@ -143,6 +178,19 @@ void* ecs_array_get(
     }
 
     return ECS_OFFSET(ARRAY_BUFFER(array), element_size * index);
+}
+
+uint32_t ecs_array_get_index(
+    EcsArray *array,
+    const EcsArrayParams *params,
+    void *elem)
+{
+    if (!elem) {
+        return 0;
+    }
+    uint32_t element_size = params->element_size;
+    void *buffer = ARRAY_BUFFER(array);
+    return ((char*)elem - (char*)buffer) / element_size;
 }
 
 static
@@ -193,7 +241,7 @@ void ecs_array_sort(
     EcsArray *array,
     const EcsArrayParams *params)
 {
-    uint16_t count = array->count;
+    uint32_t count = array->count;
     uint32_t element_size = params->element_size;
     void *buffer = ARRAY_BUFFER(array);
 

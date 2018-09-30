@@ -767,11 +767,10 @@ uint32_t hashbig( const void *key, size_t length, uint32_t initval)
 void ecs_hash(
     const void *key,
     size_t length,
-    uint64_t *result)
+    uint32_t *result)
 {
-    hashlittle2(
+    *result = hashlittle(
         key,
         length,
-        (uint32_t*)result,
-        ((uint32_t*)result) + 1);
+        *(uint32_t*)result);
 }
