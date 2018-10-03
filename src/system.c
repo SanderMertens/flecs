@@ -31,7 +31,7 @@ const char *skip_space(const char *ptr) {
     return ptr;
 }
 
-/** Add component to the components array for a system */
+/** Parse callback that adds component to the components array for a system */
 static
 EcsResult add_component(
     EcsWorld *world,
@@ -51,6 +51,7 @@ EcsResult add_component(
     return EcsOk;
 }
 
+/** Parse callback that adds family to family identifier for ecs_family_get */
 static
 EcsResult add_family(
     EcsWorld *world,
@@ -158,6 +159,8 @@ void match_tables(
     }
 }
 
+/* -- Private functions -- */
+
 /** Match new table against system (table is created after system) */
 EcsResult ecs_system_notify_create_table(
     EcsWorld *world,
@@ -237,12 +240,15 @@ void ecs_system_notify(
 
     while (ecs_iter_hasnext(&it)) {
         uint32_t *table_data = ecs_iter_next(&it);
-        EcsTable *table_el = ecs_array_get(world->table_db, &table_arr_params, table_data[0]);
+        EcsTable *table_el = ecs_array_get(
+            world->table_db, &table_arr_params, table_data[0]);
         if (table_el == table) {
             info.buffer = ecs_array_buffer(table->rows);
             info.index = 0;
             info.columns = ECS_OFFSET(table_data, sizeof(uint32_t));
-            info.offset = table->row_params.element_size * row_data->index + sizeof(EcsHandle);
+            info.offset =
+                table->row_params.element_size *
+                    row_data->index + sizeof(EcsHandle);
             action(&info);
             break;
         }
@@ -276,9 +282,11 @@ EcsHandle ecs_system_new(
     EcsSystem *system_data = ecs_get(world, result, world->system);
     system_data->action = action;
     system_data->enabled = true;
-    system_data->table_params.element_size = sizeof(uint32_t) + sizeof(uint16_t) * (count + 1);
+    system_data->table_params.element_size =
+        sizeof(uint32_t) + sizeof(uint16_t) * (count + 1);
     system_data->table_params.move_action = NULL;
-    system_data->tables = ecs_array_new(&system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
+    system_data->tables = ecs_array_new(
+        &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     /*system_data->jobs = NULL;*/
     system_data->components = ecs_array_new(&handle_arr_params, count);
     system_data->kind = kind;
@@ -294,10 +302,12 @@ EcsHandle ecs_system_new(
     match_tables(world, result, system_data);
 
     if (kind == EcsPeriodic) {
-        EcsHandle *elem = ecs_array_add(&world->periodic_systems, &handle_arr_params);
+        EcsHandle *elem = ecs_array_add(
+            &world->periodic_systems, &handle_arr_params);
         *elem = result;
     } else {
-        EcsHandle *elem = ecs_array_add(&world->other_systems, &handle_arr_params);
+        EcsHandle *elem = ecs_array_add(
+            &world->other_systems, &handle_arr_params);
         *elem = result;
     }
 

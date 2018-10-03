@@ -1,5 +1,6 @@
 #include "include/private/reflecs.h"
 
+/** Callback that is invoked when a row is moved in the table->rows array */
 static
 void move_row(
     EcsArray *array,
@@ -15,6 +16,8 @@ void move_row(
     EcsRow row = {.family_id = table->family_id, .index = new_index};
     ecs_map_set64(world->entity_index, handle, ecs_from_row(row));
 }
+
+/* -- Private functions -- */
 
 EcsResult ecs_table_init_w_size(
     EcsWorld *world,

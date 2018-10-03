@@ -9,6 +9,7 @@ struct EcsArray {
 
 #define ARRAY_BUFFER(array) ECS_OFFSET(array, sizeof(EcsArray))
 
+/** Resize the array buffer */
 static
 EcsArray* resize(
     EcsArray *array,
@@ -16,6 +17,36 @@ EcsArray* resize(
 {
     return realloc(array, sizeof(EcsArray) + size);
 }
+
+/** Iterator hasnext callback */
+static
+bool ecs_array_hasnext(
+    EcsIter *iter)
+{
+    EcsArray *array = iter->ctx;
+    EcsArrayIter *iter_data = iter->data;
+    if (iter_data->index < array->count) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/** Iterator next callback */
+static
+void* ecs_array_next(
+    EcsIter *iter)
+{
+    EcsArray *array = iter->ctx;
+    EcsArrayIter *iter_data = iter->data;
+    uint32_t index = iter_data->index;
+    void *result = ECS_OFFSET(ARRAY_BUFFER(array),
+        index * iter_data->params->element_size);
+    iter_data->index = index + 1;
+    return result;
+}
+
+/* -- Public functions -- */
 
 EcsArray* ecs_array_new(
     const EcsArrayParams *params,
@@ -88,7 +119,8 @@ void ecs_array_remove(
         void *last_elem = ECS_OFFSET(buffer, element_size * (count - 1));
         memcpy(elem, last_elem, element_size);
         if (params->move_action) {
-            params->move_action(array, params, elem, last_elem, params->move_ctx);
+            params->move_action(
+                array, params, elem, last_elem, params->move_ctx);
         }
     }
 
@@ -115,7 +147,8 @@ void ecs_array_remove_index(
         void *last_elem = ECS_OFFSET(buffer, element_size * (count - 1));
         memcpy(elem, last_elem, element_size);
         if (params->move_action) {
-            params->move_action(array, params, elem, last_elem, params->move_ctx);
+            params->move_action(
+                array, params, elem, last_elem, params->move_ctx);
         }
     }
 
@@ -209,32 +242,6 @@ uint32_t ecs_array_get_index(
     uint32_t element_size = params->element_size;
     void *buffer = ARRAY_BUFFER(array);
     return ((char*)elem - (char*)buffer) / element_size;
-}
-
-static
-bool ecs_array_hasnext(
-    EcsIter *iter)
-{
-    EcsArray *array = iter->ctx;
-    EcsArrayIter *iter_data = iter->data;
-    if (iter_data->index < array->count) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-static
-void* ecs_array_next(
-    EcsIter *iter)
-{
-    EcsArray *array = iter->ctx;
-    EcsArrayIter *iter_data = iter->data;
-    uint32_t index = iter_data->index;
-    void *result = ECS_OFFSET(ARRAY_BUFFER(array),
-        index * iter_data->params->element_size);
-    iter_data->index = index + 1;
-    return result;
 }
 
 EcsIter _ecs_array_iter(

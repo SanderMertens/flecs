@@ -1,8 +1,9 @@
 #include "include/private/reflecs.h"
 #include <string.h>
 
+/** Move row from one table to another table */
 static
-void ecs_move_row(
+void move_row(
     EcsTable *new_table,
     EcsArray *new_family,
     void *new_row,
@@ -65,8 +66,9 @@ void ecs_move_row(
     }
 }
 
+/** Commit an entity with a specified family to memory */
 static
-EcsResult ecs_commit_w_family(
+EcsResult commit_w_family(
     EcsWorld *world,
     EcsHandle entity,
     EcsFamily family_id)
@@ -86,7 +88,7 @@ EcsResult ecs_commit_w_family(
         EcsArray *new_family = new_table->family;
         void *new_row_ptr = ecs_table_get(new_table, new_index);
 
-        ecs_move_row(
+        move_row(
             new_table,
             new_family,
             new_row_ptr,
@@ -103,12 +105,15 @@ EcsResult ecs_commit_w_family(
     return EcsOk;
 }
 
+
+/* -- Public functions -- */
+
 EcsResult ecs_commit(
     EcsWorld *world,
     EcsHandle entity)
 {
     EcsFamily family_id = (uintptr_t)ecs_map_get64(world->staging_index, entity);
-    return ecs_commit_w_family(world, entity, family_id);
+    return commit_w_family(world, entity, family_id);
 }
 
 EcsHandle ecs_new(
@@ -119,7 +124,7 @@ EcsHandle ecs_new(
         return ecs_world_new_handle(world);
     } else {
         EcsHandle entity = ecs_world_new_handle(world);
-        ecs_commit_w_family(world, entity, family_id);
+        commit_w_family(world, entity, family_id);
         return entity;
     }
 }

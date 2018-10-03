@@ -33,6 +33,9 @@ uint32_t hash_handle_array(
     return hash;
 }
 
+/** Initialize component table. This table is manually constructed to bootstrap
+ * reflecs. After this function has been called, the builtin components can be
+ * created. */
 static
 void bootstrap_component_table(
     EcsWorld *world,
@@ -110,6 +113,56 @@ void init_id(
     id_data->id = (char*)id;
 }
 
+/** Create a new table and register it with the world and systems */
+static
+EcsTable* ecs_world_create_table(
+    EcsWorld *world,
+    EcsFamily family_id)
+{
+    EcsTable *result = ecs_array_add(&world->table_db, &table_arr_params);
+    result->family_id = family_id;
+
+    if (ecs_table_init(world, result) != EcsOk) {
+        return NULL;
+    }
+
+    uint32_t table_index = ecs_array_get_index(
+        world->table_db, &table_arr_params, result);
+    ecs_map_set64(world->table_index, family_id, table_index + 1);
+
+    EcsIter it = ecs_array_iter(world->periodic_systems, &handle_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
+        ecs_system_notify_create_table(world, system, result);
+    }
+
+    it = ecs_array_iter(world->other_systems, &handle_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
+        ecs_system_notify_create_table(world, system, result);
+    }
+
+    return result;
+}
+
+/** Print components in a family. Used by ecs_dump */
+static
+void family_print(
+    EcsWorld *world,
+    EcsFamily family_id)
+{
+    EcsArray *family = ecs_map_get(world->family_index, family_id);
+
+    EcsIter it = ecs_array_iter(family, &handle_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
+        EcsId *id = ecs_get(world, h, world->id);
+        if (id) {
+            printf("%s ", id->id);
+        }
+    }
+}
+
 
 /* -- Private functions -- */
 
@@ -156,37 +209,6 @@ EcsFamily ecs_world_register_family(
     return stage_hash;
 }
 
-static
-EcsTable* ecs_world_create_table(
-    EcsWorld *world,
-    EcsFamily family_id)
-{
-    EcsTable *result = ecs_array_add(&world->table_db, &table_arr_params);
-    result->family_id = family_id;
-
-    if (ecs_table_init(world, result) != EcsOk) {
-        return NULL;
-    }
-
-    uint32_t table_index = ecs_array_get_index(
-        world->table_db, &table_arr_params, result);
-    ecs_map_set64(world->table_index, family_id, table_index + 1);
-
-    EcsIter it = ecs_array_iter(world->periodic_systems, &handle_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
-        ecs_system_notify_create_table(world, system, result);
-    }
-
-    it = ecs_array_iter(world->other_systems, &handle_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
-        ecs_system_notify_create_table(world, system, result);
-    }
-
-    return result;
-}
-
 EcsTable* ecs_world_get_table(
     EcsWorld *world,
     EcsFamily family_id)
@@ -224,23 +246,6 @@ uint64_t ecs_from_row(
 
 /* -- Public functions -- */
 
-static
-void ecs_family_print(
-    EcsWorld *world,
-    EcsFamily family_id)
-{
-    EcsArray *family = ecs_map_get(world->family_index, family_id);
-
-    EcsIter it = ecs_array_iter(family, &handle_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        EcsId *id = ecs_get(world, h, world->id);
-        if (id) {
-            printf("%s ", id->id);
-        }
-    }
-}
-
 void ecs_dump(
     EcsWorld *world)
 {
@@ -248,9 +253,11 @@ void ecs_dump(
     EcsIter it = ecs_map_iter(world->table_index);
     while (ecs_iter_hasnext(&it)) {
         uint32_t table_index = (uintptr_t)ecs_iter_next(&it);
-        EcsTable *table = ecs_array_get(world->table_db, &table_arr_params, table_index - 1);
-        printf("[%u] Rows: %u, Components: ", table->family_id, ecs_array_count(table->rows));
-        ecs_family_print(world, table->family_id);
+        EcsTable *table =
+            ecs_array_get(world->table_db, &table_arr_params, table_index - 1);
+        printf("[%u] Rows: %u, Components: ",
+            table->family_id, ecs_array_count(table->rows));
+        family_print(world, table->family_id);
         printf("\n");
     }
 
@@ -275,9 +282,12 @@ void ecs_dump(
 
 EcsWorld *ecs_init(void) {
     EcsWorld *result = malloc(sizeof(EcsWorld));
-    result->table_db = ecs_array_new(&table_arr_params, ECS_WORLD_INITIAL_TABLE_COUNT);
-    result->periodic_systems = ecs_array_new(&handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
-    result->other_systems = ecs_array_new(&handle_arr_params, ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT);
+    result->table_db = ecs_array_new(
+        &table_arr_params, ECS_WORLD_INITIAL_TABLE_COUNT);
+    result->periodic_systems = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+    result->other_systems = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT);
     result->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
     result->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
     result->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
@@ -367,4 +377,17 @@ void ecs_progress(
         EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
         ecs_run_system(world, system, NULL);
     }
+}
+
+void* ecs_get_context(
+    EcsWorld *world)
+{
+    return world->context;
+}
+
+void ecs_set_context(
+    EcsWorld *world,
+    void *context)
+{
+    world->context = context;
 }
