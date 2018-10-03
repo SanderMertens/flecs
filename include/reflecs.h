@@ -27,7 +27,6 @@
  * C: average number of components per entity in a world
  * t: number of entities in a matching tables
  * r: combined size of all components for one entity (a 'row')
- * c: chunk size of entity vector
  */
 
 /* -- The API uses the native bool type in C++, or a custom one in C -- */
@@ -171,7 +170,7 @@ void* ecs_get_context(
  * function, as the function must iterates over all entities and all components
  * in an entity.
  *
- * @time-complexity: O(e * c)
+ * @time-complexity: O(t * c)
  * @param world The world.
  * @param id The id to lookup.
  * @returns The entity handle if found, or ECS_HANDLE_NIL if not found.
@@ -189,6 +188,7 @@ EcsHandle ecs_lookup(
  *
  * The ECS_FAMILY macro wraps around this function.
  *
+ * @time-complexity: O(c)
  * @param world The world.
  * @param components A comma-separated string with the component identifiers.
  * @returns Handle to the family, zero if failed.
@@ -198,11 +198,47 @@ EcsFamily ecs_family_get(
     EcsWorld *world,
     const char *components);
 
+/** Dimension the world for a specified number of entities.
+ * This operation will preallocate memory in the world for the specified number
+ * of entities. Specifying a number lower than the current number of entities in
+ * the world will have no effect.
+ *
+ * When using this operation, note that reflecs uses entities for storing
+ * systems, components and builtin components. For an exact calculation of
+ * entities, do user_entity_count + component_count + system_count + 3. The 3
+ * stands for the number of builtin components.
+ *
+ * Note that this operation does not allocate memory in tables. To preallocate
+ * memory in a table, use ecs_dim_family. Correctly using these functions
+ * prevents reflecs from doing dynamic memory allocations in the main loop.
+ *
+ * @time-complexity: O(1)
+ * @param world The world.
+ * @param entity_count The number of entities to preallocate.
+ */
 REFLECS_EXPORT
 void ecs_dim(
     EcsWorld *world,
     uint32_t entity_count);
 
+/** Dimension a family for a specified number of entities.
+ * This operation will preallocate memory for a family (table) for the
+ * specified number of entites. Specifying a number lower than the current
+ * number of entities in the table will have no effect.
+ *
+ * If no table exists yet for this family (when no entities have been committed
+ * for the family) it will be created, even if the entity_count is zero. This
+ * operation can thus also be used to just preallocate empty tables.
+ *
+ * If the specified family is unknown, the behavior of this function is
+ * unspecified. To ensure that the family exists, use ecs_family_get or
+ * ECS_FAMILY.
+ *
+ * @time-complexity: O(1)
+ * @param world The world.
+ * @param family Handle to the family, as obtained by ecs_family_get.
+ * @param entity_count The number of entities to preallocate.
+ */
 REFLECS_EXPORT
 void ecs_dim_family(
     EcsWorld *world,
@@ -212,6 +248,7 @@ void ecs_dim_family(
 /** Dump contents of world
  * This operation prints current tables and entities to the console.
  *
+ * @time-complexity: O(e)
  * @param world The world.
  */
 REFLECS_EXPORT
@@ -239,7 +276,7 @@ void ecs_dump(
  * operations may move an entity in memory. Handles provide a safe mechanism for
  * addressing entities. The average lookup complexity for a handle is O(1).
  *
- * @time-complexity: O(1) (average, O(e) when rehashing lookup map)
+ * @time-complexity: O(1)
  * @param world: The world to which to add the entity.
  * @param family: A handle to a component family (optional, zero if no family).
  * @returns: A handle to the new entity.
@@ -264,7 +301,7 @@ EcsHandle ecs_new(
  * specified handle will exist after the operation. If a handle is provided to
  * the function that does not resolve to an entity, this function is a no-op.
  *
- * @time-complexity: O(1 + r + e / c)
+ * @time-complexity: O(r)
  * @param world: The world.
  * @param entity: A handle to the entity to delete.
  */
@@ -312,7 +349,7 @@ void* ecs_add(
  * This operation does not check whether the component handle is valid. If an
  * invalid component handle is provided, the ecs_commit operation will fail.
  *
- * @time-complexity: O(c)
+ * @time-complexity: O(1)
  * @param world: The world.
  * @param entity: Handle to the entity for which to stage the component.
  * @param component: Handle to the component.
@@ -347,7 +384,7 @@ EcsResult ecs_stage(
  * to be invoked. This comparison will be skipped if there are no init / deinit
  * systems on the new / old table.
  *
- * @time-complexity: O(2 * r + 2 * c ^ 2)
+ * @time-complexity: O(2 * r + c)
  * @param world: The world.
  * @param entity: The entity to commit.
  * @returns: EcsOk if succeeded, or EcsError if the operation failed.
@@ -420,7 +457,7 @@ void ecs_stage_remove(
  * to creating an entity with the EcsComponent and EcsId components. The
  * returned handle can be used in any function that accepts an entity handle.
  *
- * @time-complexity: O(1 + 2 * c + 2 * r)
+ * @time-complexity: O(2 * r + c)
  * @param world: The world.
  * @param id: A unique component identifier.
  * @param size: The size of the component type (as obtained by sizeof).
@@ -461,6 +498,7 @@ EcsHandle ecs_component_new(
  * creating an entity with the EcsSystem and EcsId components. The returned
  * handle can be used in any function that accepts an entity handle.
  *
+ * @time-complexity: O(2 * r + c)
  * @param world: The world.
  * @param id: The identifier of the system.
  * @param kind: The kind of system.
@@ -485,6 +523,7 @@ EcsHandle ecs_system_new(
  * with the EcsSystem component. If a handle to an entity is provided that does
  * not have this component, the operation will fail.
  *
+ * @time-complexity: O(c)
  * @param world: The world.
  * @param system: The system to enable or disable.
  * @param enabled: true to enable the system, false to disable the system.
@@ -502,6 +541,7 @@ EcsResult ecs_enable(
  * when a handle to an entity is provided that is not a system. If this
  * operation is called on a non-system entity, the operation will return true.
  *
+ * @time-complexity: O(c)
  * @param world: The world.
  * @param system: The system to check.
  * @returns: True if the system is enabled, false if the system is disabled.
@@ -519,6 +559,7 @@ bool ecs_is_enabled(
  * On demand systems can be used as alternative to requesting lists of entities
  * repeatedly inside periodic/reactive systems, which is not efficient.
  *
+ * @time-complexity: O(t)
  * @param world: The world.
  * @param system: The system to run.
  * @param param: A user-defined parameter to pass to the system.
