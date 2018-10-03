@@ -181,6 +181,18 @@ EcsHandle ecs_lookup(
     const char *id);
 
 
+/** Get handle to family.
+ * This operation obtains a handle to a family that can be used with
+ * ecs_new. Predefining families has performance benefits over using
+ * ecs_new, ecs_stage and ecs_commit separately. It also provides constant
+ * creation time regardless of the number of components.
+ *
+ * The ECS_FAMILY macro wraps around this function.
+ *
+ * @param world The world.
+ * @param components A comma-separated string with the component identifiers.
+ * @returns Handle to the family, zero if failed.
+ */
 REFLECS_EXPORT
 EcsFamily ecs_family_get(
     EcsWorld *world,
@@ -215,16 +227,11 @@ void ecs_dump(
  *
  * @time-complexity: O(1) (average, O(e) when rehashing lookup map)
  * @param world: The world to which to add the entity.
+ * @param family: A handle to a component family (optional, zero if no family).
  * @returns: A handle to the new entity.
  */
 REFLECS_EXPORT
 EcsHandle ecs_new(
-    EcsWorld *world);
-
-
-
-REFLECS_EXPORT
-EcsHandle ecs_new_w_family(
     EcsWorld *world,
     EcsFamily family);
 
@@ -552,7 +559,7 @@ void ecs_iter_release(
  * This macro provides a convenient way to register systems with a world. It can
  * be used like this:
  *
- * ECS_SYSTEM(world, Move, EcsPeriodic, Location, Speed)
+ * ECS_SYSTEM(world, Move, EcsPeriodic, Location, Speed);
  *
  * In this example, "Move" must be the identifier to a C function that matches
  * the signature of EcsSystemAction. The signature of this component will be
@@ -566,14 +573,18 @@ void ecs_iter_release(
     EcsHandle id##_h = ecs_system_new(world, #id, kind, #__VA_ARGS__, id);\
     if (!id##_h) abort();
 
-
 /** Wrapper around ecs_family_get.
  * This macro provides a convenient way to obtain a handle to a family. This
- * handle can be reused with ecs_new_w_family. Obtaining the handle to a family
- * and using it with ecs_new_w_family is faster than calling ecs_new, ecs_stage
- * and ecs_commit separately. This method also provides near-constant creation
- * time for entities regardless of the number of components, whereas using
- * ecs_stage and ecs_commit takes longer for larger numbers of components.
+ * handle can be reused with ecs_new like this:
+ *
+ * ECS_FAMILY(world, MyFamily, ComponentA, ComponentB);
+ * EcsHandle h = ecs_new(world, MyFamily);
+ *
+ * Obtaining the handle to a family and using it with ecs_new is faster
+ * than calling ecs_new, ecs_stage and ecs_commit separately. This method also
+ * provides near-constant creation time for entities regardless of the number of
+ * components, whereas using ecs_stage and ecs_commit takes longer for larger
+ * numbers of components.
  */
 #define ECS_FAMILY(world, id, ...) \
     EcsHandle id = ecs_family_get(world, #__VA_ARGS__);\

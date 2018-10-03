@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity);
 
     /* Create entity, add components, commit to memory (invokes Init system) */
-    EcsHandle e = ecs_new(world);
+    EcsHandle e = ecs_new(world, 0);
     ecs_stage(world, e, Position_h);
     ecs_stage(world, e, Velocity_h);
     ecs_commit(world, e);

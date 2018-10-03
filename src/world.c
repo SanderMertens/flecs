@@ -52,7 +52,7 @@ static
 EcsResult bootstrap_component(
     EcsWorld *world)
 {
-    EcsHandle handle = ecs_new(world);
+    EcsHandle handle = ecs_new(world, 0);
     ecs_stage(world, handle, handle);
     uint64_t family_id = ecs_map_get64(world->staging_index, handle);
 
@@ -81,7 +81,7 @@ EcsHandle init_component(
     EcsWorld *world,
     size_t size)
 {
-    EcsHandle handle = ecs_new(world);
+    EcsHandle handle = ecs_new(world, 0);
 
     EcsComponent *component_data = ecs_add(world, handle, world->component);
     if (!component_data) {

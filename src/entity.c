@@ -112,18 +112,16 @@ EcsResult ecs_commit(
 }
 
 EcsHandle ecs_new(
-    EcsWorld *world)
-{
-    return ecs_world_new_handle(world);
-}
-
-EcsHandle ecs_new_w_family(
     EcsWorld *world,
     EcsFamily family_id)
 {
-    EcsHandle entity = ecs_world_new_handle(world);
-    ecs_commit_w_family(world, entity, family_id);
-    return entity;
+    if (!family_id) {
+        return ecs_world_new_handle(world);
+    } else {
+        EcsHandle entity = ecs_world_new_handle(world);
+        ecs_commit_w_family(world, entity, family_id);
+        return entity;
+    }
 }
 
 void ecs_delete(
@@ -230,7 +228,7 @@ EcsHandle ecs_component_new(
     const char *id,
     size_t size)
 {
-    EcsHandle result = ecs_new(world);
+    EcsHandle result = ecs_new(world, 0);
 
     if (ecs_stage(world, result, world->component) != EcsOk) {
         return 0;

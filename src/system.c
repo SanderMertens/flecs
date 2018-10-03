@@ -261,7 +261,7 @@ EcsHandle ecs_system_new(
         return 0;
     }
 
-    EcsHandle result = ecs_new(world);
+    EcsHandle result = ecs_new(world, 0);
     ecs_stage(world, result, world->system);
     ecs_stage(world, result, world->id);
 
