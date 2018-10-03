@@ -645,10 +645,45 @@ void ecs_iter_release(
     EcsHandle id = ecs_family_get(world, #__VA_ARGS__);\
     if (!id) abort();
 
+/** Obtain an entity from a system action.
+ * Use this macro to obtain the entity handle for the entity currently iterated
+ * over from within the system action. Use
+ * this macro like this:
+ *
+ * void MySystem(EcsInfo *info) {
+ *     EcsHandle h = ECS_ENTITY(info);
+ * }
+ *
+ * Note: do NOT use the entity handle and ecs_get to obtain component data, as
+ * this is very inefficient. Instead, use the ECS_DATA macro.
+ */
+#define ECS_ENTITY(info)\
+    *(EcsHandle*)ECS_OFFSET(info->buffer, info->offset - sizeof(EcsHandle))
+
+/** Obtain component data for an entity from a system action.
+ * Use this macro to obtain pointers to the component data in the entity
+ * currently iterated over from within a system action. Use it like this:
+ *
+ * void MySystem(EcsInfo *info) {
+ *     ComponentA *a_ptr = ECS_DATA(info, 0);
+ *     ComponentB *b_ptr = ECS_DATA(info, 1);
+ * }
+ *
+ * The index passed to ECS_DATA corresponds with the order in which the
+ * components are specified in the system signature. For example, if a system
+ * was created like this:
+ *
+ * ECS_SYSTEM(world, MySystem, EcsPeriodic, ComponentX, ComponentY);
+ *
+ * then the data for ComponentX would be at index 0, and the data for ComponentY
+ * would be at index 1.
+ */
+#define ECS_DATA(info, index)\
+    ECS_OFFSET(info->buffer, info->offset + info->columns[index])
+
+/** Utility macro's */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 #define ECS_ROW(info)
-#define ECS_DATA(info, index) ECS_OFFSET(info->buffer, info->offset + info->columns[index])
-#define ECS_ENTITY(info) *(EcsHandle*)ECS_OFFSET(info->buffer, info->offset - sizeof(EcsHandle))
 
 #ifdef __cplusplus
 }
