@@ -16,7 +16,6 @@
 #define ECS_MAP_INITIAL_NODE_COUNT (64)
 #define ECS_TABLE_INITIAL_ROW_COUNT (8)
 #define ECS_SYSTEM_INITIAL_TABLE_COUNT (4)
-#define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 
 /* -- Builtin component types -- */
 

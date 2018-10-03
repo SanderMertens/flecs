@@ -72,8 +72,9 @@ typedef struct EcsInfo {
     EcsWorld *world;
     void *param;
     void *buffer;
+    uint32_t *columns;
     uint32_t index;
-    uint32_t element_size;
+    uint32_t offset;
 } EcsInfo;
 
 typedef void (*EcsSystemAction)(
@@ -589,6 +590,11 @@ void ecs_iter_release(
 #define ECS_FAMILY(world, id, ...) \
     EcsHandle id = ecs_family_get(world, #__VA_ARGS__);\
     if (!id) abort();
+
+#define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
+#define ECS_ROW(info)
+#define ECS_DATA(info, index) ECS_OFFSET(info->buffer, info->offset + info->columns[index])
+#define ECS_ENTITY(info) *(EcsHandle*)ECS_OFFSET(info->buffer, info->offset - sizeof(EcsHandle))
 
 #ifdef __cplusplus
 }

@@ -184,8 +184,7 @@ void ecs_run_system(
 {
     EcsSystem *system_data = ecs_get(world, system, world->system);
     EcsSystemAction action = system_data->action;
-    uint32_t component_count = ecs_array_count(system_data->components);
-    void *data[component_count];
+    int i;
 
     EcsInfo info = {
         .world = world,
@@ -200,15 +199,18 @@ void ecs_run_system(
         while (ecs_iter_hasnext(&it)) {
             uint32_t *table_data = ecs_iter_next(&it);
             EcsTable *table = ecs_array_get(
-                world->table_db, &table_arr_params, table_data[0]);
+                world->table_db, &table_arr_params, *table_data);
 
-            uint32_t i, count = ecs_array_count(table->rows);
-            info.element_size = table->row_params.element_size;
+            uint32_t count = ecs_array_count(table->rows);
+            uint32_t element_size = table->row_params.element_size;
             info.buffer = ecs_array_buffer(table->rows);
+            info.offset = sizeof(EcsHandle);
+            info.columns = ECS_OFFSET(table_data, sizeof(uint32_t));
 
             for (i = 0; i < count; i ++) {
                 action(&info);
-                info.index ++;
+                info.offset += element_size;
+                info.index = i;
             }
         }
     }
@@ -238,8 +240,9 @@ void ecs_system_notify(
         EcsTable *table_el = ecs_array_get(world->table_db, &table_arr_params, table_data[0]);
         if (table_el == table) {
             info.buffer = ecs_array_buffer(table->rows);
-            info.index = row_data->index;
-            info.element_size = table->row_params.element_size;
+            info.index = 0;
+            info.columns = ECS_OFFSET(table_data, sizeof(uint32_t));
+            info.offset = table->row_params.element_size * row_data->index + sizeof(EcsHandle);
             action(&info);
             break;
         }
@@ -273,7 +276,7 @@ EcsHandle ecs_system_new(
     EcsSystem *system_data = ecs_get(world, result, world->system);
     system_data->action = action;
     system_data->enabled = true;
-    system_data->table_params.element_size = sizeof(uint32_t) * (count + 1);
+    system_data->table_params.element_size = sizeof(uint32_t) + sizeof(uint16_t) * (count + 1);
     system_data->table_params.move_action = NULL;
     system_data->tables = ecs_array_new(&system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     /*system_data->jobs = NULL;*/

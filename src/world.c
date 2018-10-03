@@ -1,5 +1,6 @@
-#include "include/private/reflecs.h"
 #include <string.h>
+#include <inttypes.h>
+#include "include/private/reflecs.h"
 
 const EcsArrayParams table_arr_params = {
     .element_size = sizeof(EcsTable)
@@ -257,7 +258,7 @@ void ecs_dump(
         void *row_ptr = ecs_table_get(table, row.index);
         EcsHandle h = *(EcsHandle*)row_ptr;
 
-        printf("[%u, %u] %lu - ", row.family_id, row.index, h);
+        printf("[%u, %u] %" PRIu64 " - ", row.family_id, row.index, h);
         EcsId *id = ecs_get(world, h, world->id);
         if (id) {
             printf("%s", id->id);
