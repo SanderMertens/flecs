@@ -70,9 +70,6 @@ struct EcsWorld {
     EcsHandle system;             /* System type entity */
     EcsHandle id;                 /* Id type entity */
     EcsHandle last_handle;        /* Last issued handle */
-
-    struct timespec time;
-    double delta_time;
 };
 
 extern const EcsArrayParams handle_arr_params;

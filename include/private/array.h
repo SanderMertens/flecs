@@ -83,6 +83,12 @@ void ecs_array_reclaim(
     const EcsArrayParams *params);
 
 REFLECS_EXPORT
+uint32_t ecs_array_set_size(
+    EcsArray **array,
+    const EcsArrayParams *params,
+    uint32_t size);
+
+REFLECS_EXPORT
 uint32_t ecs_array_count(
     EcsArray *array);
 

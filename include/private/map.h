@@ -27,6 +27,11 @@ uint32_t ecs_map_count(
     EcsMap *map);
 
 REFLECS_EXPORT
+uint32_t ecs_map_set_size(
+    EcsMap *map,
+    uint32_t size);
+
+REFLECS_EXPORT
 uint32_t ecs_map_bucket_count(
     EcsMap *map);
 

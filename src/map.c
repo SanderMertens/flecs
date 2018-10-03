@@ -363,6 +363,15 @@ uint32_t ecs_map_bucket_count(
     return map->bucket_count;
 }
 
+uint32_t ecs_map_set_size(
+    EcsMap *map,
+    uint32_t size)
+{
+    uint32_t result = ecs_array_set_size(&map->nodes, &node_arr_params, size);
+    ecs_map_resize(map, size / REFLECS_LOAD_FACTOR);
+    return result;
+}
+
 EcsIter _ecs_map_iter(
     EcsMap *map,
     EcsMapIter *iter_data)
@@ -375,7 +384,7 @@ EcsIter _ecs_map_iter(
         .release = NULL
     };
 
-    iter_data->bucket_index = 0;
+    iter_data->bucket_index = -1;
     iter_data->node = 0;
 
     return result;

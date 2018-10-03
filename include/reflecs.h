@@ -181,7 +181,6 @@ EcsHandle ecs_lookup(
     EcsWorld *world,
     const char *id);
 
-
 /** Get handle to family.
  * This operation obtains a handle to a family that can be used with
  * ecs_new. Predefining families has performance benefits over using
@@ -199,7 +198,21 @@ EcsFamily ecs_family_get(
     EcsWorld *world,
     const char *components);
 
+REFLECS_EXPORT
+void ecs_dim(
+    EcsWorld *world,
+    uint32_t entity_count);
+
+REFLECS_EXPORT
+void ecs_dim_family(
+    EcsWorld *world,
+    EcsFamily family,
+    uint32_t entity_count);
+
 /** Dump contents of world
+ * This operation prints current tables and entities to the console.
+ *
+ * @param world The world.
  */
 REFLECS_EXPORT
 void ecs_dump(

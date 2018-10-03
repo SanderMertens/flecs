@@ -44,7 +44,8 @@ void bootstrap_component_table(
     ecs_table_init_w_size(world, result, family, sizeof(EcsComponent));
     result->columns = malloc(sizeof(uint16_t));
     result->columns[0] = sizeof(EcsComponent);
-    uint32_t table_index = ecs_array_get_index(world->table_db, &table_arr_params, result);
+    uint32_t table_index = ecs_array_get_index(
+        world->table_db, &table_arr_params, result);
     ecs_map_set64(world->table_index, family_id, table_index + 1);
 }
 
@@ -147,7 +148,8 @@ EcsFamily ecs_world_register_family(
 
     EcsArray *stage_set = ecs_map_get(world->family_index, stage_hash);
     if (!stage_set) {
-        stage_set = ecs_array_new_from_buffer(&handle_arr_params, count, new_buffer);
+        stage_set = ecs_array_new_from_buffer(
+            &handle_arr_params, count, new_buffer);
         ecs_map_set(world->family_index, stage_hash, stage_set);
     }
 
@@ -166,7 +168,8 @@ EcsTable* ecs_world_create_table(
         return NULL;
     }
 
-    uint32_t table_index = ecs_array_get_index(world->table_db, &table_arr_params, result);
+    uint32_t table_index = ecs_array_get_index(
+        world->table_db, &table_arr_params, result);
     ecs_map_set64(world->table_index, family_id, table_index + 1);
 
     EcsIter it = ecs_array_iter(world->periodic_systems, &handle_arr_params);
@@ -190,7 +193,8 @@ EcsTable* ecs_world_get_table(
 {
     uint32_t table_index = ecs_map_get64(world->table_index, family_id);
     if (table_index) {
-        return ecs_array_get(world->table_db, &table_arr_params, table_index - 1);
+        return ecs_array_get(
+            world->table_db, &table_arr_params, table_index - 1);
     } else {
         return ecs_world_create_table(world, family_id);
     }
@@ -307,6 +311,22 @@ EcsResult ecs_fini(
     return EcsOk;
 }
 
+void ecs_dim(
+    EcsWorld *world,
+    uint32_t entity_count)
+{
+    ecs_map_set_size(world->entity_index, entity_count);
+}
+
+void ecs_dim_family(
+    EcsWorld *world,
+    EcsFamily family_id,
+    uint32_t entity_count)
+{
+    EcsTable *table = ecs_world_get_table(world, family_id);
+    ecs_array_set_size(&table->rows, &table->row_params, entity_count);
+}
+
 EcsHandle ecs_lookup(
     EcsWorld *world,
     const char *id)
@@ -325,7 +345,7 @@ EcsHandle ecs_lookup(
         EcsIter row_it = _ecs_array_iter(
             table->rows, &table->row_params, &iter_data);
 
-        while (ecs_iter_hasnext(&it)) {
+        while (ecs_iter_hasnext(&row_it)) {
             void *row = ecs_iter_next(&row_it);
             EcsHandle h = *(EcsHandle*)row;
             EcsId *id_ptr = ecs_get(world, h, id_component);

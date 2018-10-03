@@ -159,6 +159,24 @@ uint32_t ecs_array_size(
     return array->size;
 }
 
+uint32_t ecs_array_set_size(
+    EcsArray **array_inout,
+    const EcsArrayParams *params,
+    uint32_t size)
+{
+    EcsArray *array = *array_inout;
+    uint32_t result = array->size;
+
+    if (result < size) {
+        array = resize(array, size * params->element_size);
+        array->size = size;
+        *array_inout = array;
+        result = size;
+    }
+
+    return result;
+}
+
 void* ecs_array_buffer(
     EcsArray *array)
 {
