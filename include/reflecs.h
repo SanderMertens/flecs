@@ -52,6 +52,7 @@ extern "C" {
 
 typedef struct EcsWorld EcsWorld;
 
+typedef uint32_t EcsFamily;
 typedef uint64_t EcsHandle;
 
 typedef enum EcsResult {
@@ -67,17 +68,15 @@ typedef enum EcsSystemKind {
 } EcsSystemKind;
 
 typedef struct EcsInfo {
-    EcsWorld *world;
     EcsHandle system;
-    EcsHandle entity;
-    struct timespec time;
-    double delta_time;
+    EcsWorld *world;
     void *param;
+    void *buffer;
     uint32_t index;
+    uint32_t element_size;
 } EcsInfo;
 
 typedef void (*EcsSystemAction)(
-    void *data[],
     EcsInfo *info);
 
 
@@ -182,6 +181,17 @@ EcsHandle ecs_lookup(
     const char *id);
 
 
+REFLECS_EXPORT
+EcsFamily ecs_family_get(
+    EcsWorld *world,
+    const char *components);
+
+/** Dump contents of world
+ */
+REFLECS_EXPORT
+void ecs_dump(
+    EcsWorld *world);
+
 /* -- Entity API -- */
 
 /** Create a new entity.
@@ -210,6 +220,13 @@ EcsHandle ecs_lookup(
 REFLECS_EXPORT
 EcsHandle ecs_new(
     EcsWorld *world);
+
+
+
+REFLECS_EXPORT
+EcsHandle ecs_new_w_family(
+    EcsWorld *world,
+    EcsFamily family);
 
 /** Delete an existing entity.
  * Deleting an entity in most cases causes the data of another entity to be
@@ -545,9 +562,22 @@ void ecs_iter_release(
  * holds the handle to the new system.
  */
 #define ECS_SYSTEM(world, id, kind, ...) \
-    void id(void*[], EcsInfo*);\
+    void id(EcsInfo*);\
     EcsHandle id##_h = ecs_system_new(world, #id, kind, #__VA_ARGS__, id);\
     if (!id##_h) abort();
+
+
+/** Wrapper around ecs_family_get.
+ * This macro provides a convenient way to obtain a handle to a family. This
+ * handle can be reused with ecs_new_w_family. Obtaining the handle to a family
+ * and using it with ecs_new_w_family is faster than calling ecs_new, ecs_stage
+ * and ecs_commit separately. This method also provides near-constant creation
+ * time for entities regardless of the number of components, whereas using
+ * ecs_stage and ecs_commit takes longer for larger numbers of components.
+ */
+#define ECS_FAMILY(world, id, ...) \
+    EcsHandle id = ecs_family_get(world, #__VA_ARGS__);\
+    if (!id) abort();
 
 #ifdef __cplusplus
 }

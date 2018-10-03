@@ -35,21 +35,21 @@ void ecs_map_clear(
     EcsMap *map);
 
 REFLECS_EXPORT
-void ecs_map_set(
+void ecs_map_set64(
     EcsMap *map,
     uint64_t key_hash,
     uint64_t data);
 
-#define ecs_map_set_ptr(map, key_hash, data) \
-    ecs_map_set(map, key_hash, (uintptr_t)data)
+#define ecs_map_set(map, key_hash, data) \
+    ecs_map_set64(map, key_hash, (uintptr_t)data)
 
 REFLECS_EXPORT
-uint64_t ecs_map_get(
+uint64_t ecs_map_get64(
     EcsMap *map,
     uint64_t key_hash);
 
-#define ecs_map_get_ptr(map, key_hash) \
-    (void*)(uintptr_t)ecs_map_get(map, key_hash)
+#define ecs_map_get(map, key_hash) \
+    (void*)(uintptr_t)ecs_map_get64(map, key_hash)
 
 REFLECS_EXPORT
 EcsResult ecs_map_remove(

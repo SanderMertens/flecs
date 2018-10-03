@@ -159,7 +159,7 @@ void test_Array_tc_remove(
 {
     EcsArray *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
-    ecs_array_remove(&array, &arr_params, ecs_array_get(array, 1));
+    ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 1));
     test_assertint(ecs_array_size(array), 4);
     test_assertint(ecs_array_count(array), 3);
     test_assertint(*(int*)ecs_array_get(array, &arr_params, 0), 0);
@@ -175,18 +175,18 @@ void test_Array_tc_remove_all(
 {
     EcsArray *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
-    ecs_array_remove(&array, &arr_params, ecs_array_get(array, 0));
+    ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 0));
     test_assertint(ecs_array_size(array), 4);
     test_assertint(ecs_array_count(array), 3);
-    ecs_array_remove(&array, &arr_params, ecs_array_get(array, 0));
+    ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 0));
     test_assertint(ecs_array_size(array), 4);
     test_assertint(ecs_array_count(array), 2);
-    ecs_array_remove(&array, &arr_params, ecs_array_get(array, 0));
-    test_assertint(ecs_array_size(array), 2);
+    ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 0));
+    test_assertint(ecs_array_size(array), 4);
     test_assertint(ecs_array_count(array), 1);
-    ecs_array_remove(&array, &arr_params, ecs_array_get(array, 0));
+    ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 0));
     test_assert(array != NULL);
-    test_assertint(ecs_array_size(array), 1);
+    test_assertint(ecs_array_size(array), 4);
     test_assertint(ecs_array_count(array), 0);
     ecs_array_free(array);
 }
@@ -196,9 +196,9 @@ void test_Array_tc_remove_empty(
     test_Array this)
 {
     EcsArray *array = ecs_array_new(&arr_params, 4);
-    EcsArray *array2 = ecs_array_remove(array, &arr_params, ecs_array_get(array, 0));
-    test_assert(array2 == NULL);
+    ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 0));
     ecs_array_free(array);
+    test_assert(true);
 }
 
 
@@ -207,7 +207,7 @@ void test_Array_tc_remove_first(
 {
     EcsArray *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
-    ecs_array_remove(&array, &arr_params, ecs_array_get(array, 0));
+    ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 0));
     test_assertint(ecs_array_count(array), 3);
     test_assertint(*(int*)ecs_array_get(array, &arr_params, 0), 3);
     ecs_array_free(array);
@@ -219,7 +219,7 @@ void test_Array_tc_remove_last(
 {
     EcsArray *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
-    ecs_array_remove(&array, &arr_params, ecs_array_get(array, 3));
+    ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 3));
     test_assertint(ecs_array_count(array), 3);
     ecs_array_free(array);
 }
@@ -230,9 +230,9 @@ void test_Array_tc_remove_out_of_bound(
 {
     EcsArray *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
-    EcsArray *array2 = ecs_array_remove(array, &arr_params, ecs_array_get(array, 4));
-    test_assert(array2 == NULL);
+    ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 4));
     ecs_array_free(array);
+    test_assert(true);
 }
 
 
@@ -308,7 +308,7 @@ void test_Array_tc_add_empty(
     test_assertint(ecs_array_count(array), 0);
     test_assertint(ecs_array_size(array), 0);
 
-    int *elem = ecs_array_add(&array, &arr_params);
+    ecs_array_add(&array, &arr_params);
     test_assertint(ecs_array_count(array), 1);
     test_assertint(ecs_array_size(array), 1);
     ecs_array_free(array);

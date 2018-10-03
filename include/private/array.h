@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 typedef struct EcsArray EcsArray;
+typedef struct EcsArrayParams EcsArrayParams;
 
 typedef int (*EcsComparator)(
     const void* p1,
@@ -15,16 +16,17 @@ typedef int (*EcsComparator)(
 
 typedef void (*EcsMove)(
     EcsArray *array,
+    const EcsArrayParams *params,
     void *to,
     void *from,
     void *ctx);
 
-typedef struct EcsArrayParams {
+struct EcsArrayParams {
     uint32_t element_size; /* Size of an element */
     EcsComparator compare_action; /* Comparator function */
     EcsMove move_action; /* Invoked when moving elements */
     void *move_ctx;
-} EcsArrayParams;
+};
 
 typedef struct EcsArrayIter {
     EcsArrayParams *params;

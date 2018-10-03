@@ -20,6 +20,7 @@ struct EcsMap {
 static
 void move_node(
     EcsArray *array,
+    const EcsArrayParams *params,
     void *to,
     void *from,
     void *ctx);
@@ -38,16 +39,33 @@ EcsMapNode *ecs_node_from_index(
 }
 
 static
+uint32_t* ecs_map_get_bucket(
+    EcsMap *map,
+    uint64_t key)
+{
+    uint64_t index = key % map->bucket_count;
+    return &map->buckets[index];
+}
+
+static
 void move_node(
     EcsArray *array,
+    const EcsArrayParams *params,
     void *to,
     void *from,
     void *ctx)
 {
     EcsMapNode *node_p = to;
     uint32_t node = ecs_array_get_index(array, &node_arr_params, to);
+
     EcsMapNode *prev_p = ecs_array_get(array, &node_arr_params, node_p->prev - 1);
-    prev_p->next = node;
+    if (prev_p) {
+        prev_p->next = node + 1;
+    } else {
+        EcsMap *map = ctx;
+        uint32_t *bucket = ecs_map_get_bucket(map, node_p->key);
+        *bucket = node + 1;
+    }
 }
 
 static
@@ -73,15 +91,6 @@ EcsMap *ecs_map_alloc(
     result->count = 0;
     result->nodes = ecs_array_new(&node_arr_params, ECS_MAP_INITIAL_NODE_COUNT);
     return result;
-}
-
-static
-uint32_t *ecs_map_get_bucket(
-    EcsMap *map,
-    uint64_t key)
-{
-    uint64_t index = key % map->bucket_count;
-    return &map->buckets[index];
 }
 
 static
@@ -177,7 +186,11 @@ bool ecs_map_hasnext(
 
     if (!node) {
         bucket_index = ecs_map_next_bucket(map, bucket_index + 1);
-        node = map->buckets[bucket_index];
+        if (bucket_index < map->bucket_count) {
+            node = map->buckets[bucket_index];
+        } else {
+            node = 0;
+        }
     }
 
     if (node) {
@@ -196,6 +209,9 @@ void *ecs_map_next(
     EcsMap *map = iter->data;
     EcsMapIter *iter_data = iter->ctx;
     EcsMapNode *node_p = ecs_node_from_index(map->nodes, iter_data->node);
+    if (!node_p) {
+        abort();
+    }
     return (void*)node_p->data;
 }
 
@@ -255,7 +271,7 @@ void ecs_map_free(
     free(map);
 }
 
-void ecs_map_set(
+void ecs_map_set64(
     EcsMap *map,
     uint64_t key,
     uint64_t data)
@@ -304,7 +320,10 @@ EcsResult ecs_map_remove(
                 *bucket = node->next;
             }
 
-            ecs_array_remove(map->nodes, &node_arr_params, node);
+            EcsArrayParams params = node_arr_params;
+            params.move_ctx = map;
+
+            ecs_array_remove(map->nodes, &params, node);
             map->count --;
             return EcsOk;
         }
@@ -313,7 +332,7 @@ EcsResult ecs_map_remove(
     return EcsError;
 }
 
-uint64_t ecs_map_get(
+uint64_t ecs_map_get64(
     EcsMap *map,
     uint64_t key)
 {

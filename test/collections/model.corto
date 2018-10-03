@@ -1,42 +1,5 @@
 in test
 
-test.suite VectorOneChunk {
-    tc_free_empty()
-    tc_count()
-    tc_count_empty()
-    tc_get()
-    tc_get_first()
-    tc_get_last()
-    tc_get_empty()
-    tc_get_out_of_bound()
-    tc_iter()
-    tc_iter_empty()
-    tc_remove()
-    tc_remove_first()
-    tc_remove_last()
-    tc_remove_empty()
-    tc_remove_all()
-    tc_remove_out_of_bound()
-    tc_sort_rnd()
-    tc_sort_sorted()
-    tc_sort_empty()
-}
-
-test.suite VectorTwoChunks {
-    tc_count()
-    tc_get()
-    tc_get_first()
-    tc_get_last()
-    tc_get_out_of_bound()
-    tc_iter()
-    tc_remove()
-    tc_remove_first()
-    tc_remove_last()
-    tc_remove_all()
-    tc_remove_out_of_bound()
-    tc_sort_rnd()
-    tc_sort_sorted()
-}
 
 test.suite Map {
     tc_count()

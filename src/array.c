@@ -88,7 +88,7 @@ void ecs_array_remove(
         void *last_elem = ECS_OFFSET(buffer, element_size * (count - 1));
         memcpy(elem, last_elem, element_size);
         if (params->move_action) {
-            params->move_action(array, elem, last_elem, params->move_ctx);
+            params->move_action(array, params, elem, last_elem, params->move_ctx);
         }
     }
 
@@ -115,7 +115,7 @@ void ecs_array_remove_index(
         void *last_elem = ECS_OFFSET(buffer, element_size * (count - 1));
         memcpy(elem, last_elem, element_size);
         if (params->move_action) {
-            params->move_action(array, elem, last_elem, params->move_ctx);
+            params->move_action(array, params, elem, last_elem, params->move_ctx);
         }
     }
 

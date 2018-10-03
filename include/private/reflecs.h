@@ -25,6 +25,12 @@ EcsResult ecs_table_init(
     EcsWorld *world,
     EcsTable *table);
 
+EcsResult ecs_table_init_w_size(
+    EcsWorld *world,
+    EcsTable *table,
+    EcsArray *family,
+    uint32_t size);
+
 uint32_t ecs_table_insert(
     EcsTable *table,
     EcsHandle entity);
@@ -32,6 +38,23 @@ uint32_t ecs_table_insert(
 void *ecs_table_get(
     EcsTable *table,
     uint32_t index);
+
+uint32_t ecs_table_column_offset(
+    EcsTable *table,
+    EcsHandle component);
+
+bool ecs_table_has_components(
+    EcsTable *table,
+    EcsArray *components);
+
+
+/* -- System API -- */
+
+EcsResult ecs_system_notify_create_table(
+    EcsWorld *world,
+    EcsHandle system,
+    EcsTable *table);
+
 
 /* -- Private utilities -- */
 
