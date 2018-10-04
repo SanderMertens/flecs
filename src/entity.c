@@ -136,7 +136,7 @@ void ecs_delete(
     EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
     if (row.family_id) {
         EcsTable *table = ecs_world_get_table(world, row.family_id);
-        ecs_array_remove_index(table->rows, &table->row_params, row.index);
+        ecs_table_delete(table, row.index);
         ecs_map_remove(world->entity_index, entity);
     }
 }

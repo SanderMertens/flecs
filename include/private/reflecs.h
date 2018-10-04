@@ -18,6 +18,10 @@ EcsTable* ecs_world_get_table(
     EcsWorld *world,
     EcsFamily family_id);
 
+void ecs_world_activate_system(
+    EcsWorld *world,
+    EcsHandle system,
+    bool active);
 
 /* -- Table API -- */
 
@@ -34,6 +38,10 @@ EcsResult ecs_table_init_w_size(
 uint32_t ecs_table_insert(
     EcsTable *table,
     EcsHandle entity);
+
+void ecs_table_delete(
+    EcsTable *table,
+    uint32_t index);
 
 void *ecs_table_get(
     EcsTable *table,
@@ -54,6 +62,12 @@ EcsResult ecs_system_notify_create_table(
     EcsWorld *world,
     EcsHandle system,
     EcsTable *table);
+
+void ecs_system_activate_table(
+    EcsWorld *world,
+    EcsHandle system,
+    EcsTable *table,
+    bool active);
 
 
 /* -- Private utilities -- */

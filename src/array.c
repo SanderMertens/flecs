@@ -81,6 +81,11 @@ void* ecs_array_add(
     const EcsArrayParams *params)
 {
     EcsArray *array = *array_inout;
+    if (!array) {
+        array = ecs_array_new(params, 1);
+        *array_inout = array;
+    }
+
     uint32_t size = array->size;
     uint32_t count = array->count;
     uint32_t element_size = params->element_size;
@@ -98,10 +103,22 @@ void* ecs_array_add(
 
     array->count = count + 1;
 
-    return ECS_OFFSET(ARRAY_BUFFER(array), element_size * count);;
+    return ECS_OFFSET(ARRAY_BUFFER(array), element_size * count);
 }
 
-void ecs_array_remove(
+uint32_t ecs_array_move_index(
+    EcsArray **dst_array,
+    EcsArray *src_array,
+    const EcsArrayParams *params,
+    uint32_t index)
+{
+    void *dst_elem = ecs_array_add(dst_array, params);
+    void *src_elem = ecs_array_get(src_array, params, index);
+    memcpy(dst_elem, src_elem, params->element_size);
+    return ecs_array_remove_index(src_array, params, index);
+}
+
+uint32_t ecs_array_remove(
     EcsArray *array,
     const EcsArrayParams *params,
     void *elem)
@@ -112,7 +129,7 @@ void ecs_array_remove(
     uint32_t index = ((char*)elem - (char*)buffer) / element_size;
 
     if (index >= count) {
-        return;
+        return count;
     }
 
     if (index != (count - 1)) {
@@ -125,11 +142,12 @@ void ecs_array_remove(
     }
 
     count --;
-
     array->count = count;
+
+    return count;
 }
 
-void ecs_array_remove_index(
+uint32_t ecs_array_remove_index(
     EcsArray *array,
     const EcsArrayParams *params,
     uint32_t index)
@@ -140,7 +158,7 @@ void ecs_array_remove_index(
     void *elem = ECS_OFFSET(buffer, index * element_size);
 
     if (index >= count) {
-        return;
+        return count;
     }
 
     if (index != (count - 1)) {
@@ -153,8 +171,9 @@ void ecs_array_remove_index(
     }
 
     count --;
-
     array->count = count;
+
+    return count;
 }
 
 void ecs_array_reclaim(

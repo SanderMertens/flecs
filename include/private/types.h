@@ -31,6 +31,7 @@ typedef struct EcsSystem {
     EcsSystemAction action; /* Callback to be invoked for matching rows */
     EcsArray *components;   /* System components in specified order */
     EcsArray *tables;       /* Table index + column offsets for components */
+    EcsArray *inactive_tables; /* Inactive tables */
     /* EcsArray *jobs; */
     EcsArrayParams table_params; /* Parameters for table array */
     EcsSystemKind kind;     /* Kind that determines when system is invoked */

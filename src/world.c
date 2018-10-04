@@ -136,6 +136,12 @@ EcsTable* ecs_world_create_table(
         ecs_system_notify_create_table(world, system, result);
     }
 
+    it = ecs_array_iter(world->inactive_systems, &handle_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
+        ecs_system_notify_create_table(world, system, result);
+    }
+
     it = ecs_array_iter(world->other_systems, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
@@ -166,12 +172,14 @@ void family_print(
 
 /* -- Private functions -- */
 
+/** Issue a new handle */
 EcsHandle ecs_world_new_handle(
     EcsWorld *world)
 {
     return ++ world->last_handle;
 }
 
+/** Register a new family, optionally extending from existing family */
 EcsFamily ecs_world_register_family(
     EcsWorld *world,
     EcsHandle to_add,
@@ -209,6 +217,7 @@ EcsFamily ecs_world_register_family(
     return stage_hash;
 }
 
+/** Get pointer to table data from family id */
 EcsTable* ecs_world_get_table(
     EcsWorld *world,
     EcsFamily family_id)
@@ -224,11 +233,59 @@ EcsTable* ecs_world_get_table(
     return NULL;
 }
 
+/** Inactive systems are systems that either:
+ * - are not enabled
+ * - matched with no tables
+ * - matched with only empty tables.
+ *
+ * These systems are not considered in the main loop, which can speed up things
+ * when applications contain large numbers of disabled systems.
+ */
+void ecs_world_activate_system(
+    EcsWorld *world,
+    EcsHandle system,
+    bool active)
+{
+    EcsArray *src_array, *dst_array;
+
+    if (active) {
+        src_array = world->inactive_systems;
+        dst_array = world->periodic_systems;
+    } else {
+        src_array = world->periodic_systems;
+        dst_array = world->inactive_systems;
+    }
+
+    uint32_t count = ecs_array_count(src_array);
+    int i;
+    for (i = 0; i < count; i ++) {
+        EcsHandle *h = ecs_array_get(
+            src_array, &handle_arr_params, i);
+        if (*h == system) {
+            break;
+        }
+    }
+
+    if (i == count) {
+        abort();
+    }
+
+    ecs_array_move_index(
+        &dst_array, src_array, &handle_arr_params, i);
+
+    if (active) {
+        world->periodic_systems = dst_array;
+    } else {
+        world->inactive_systems = dst_array;
+    }
+}
+
 union RowUnion {
     EcsRow row;
     uint64_t value;
 };
 
+/** Utility to translate from uint64 to EcsRow */
 EcsRow ecs_to_row(
     uint64_t value)
 {
@@ -236,6 +293,7 @@ EcsRow ecs_to_row(
     return u.row;
 }
 
+/** Utility to translate from EcsRow to uint64 */
 uint64_t ecs_from_row(
     EcsRow row)
 {
@@ -285,6 +343,8 @@ EcsWorld *ecs_init(void) {
     result->table_db = ecs_array_new(
         &table_arr_params, ECS_WORLD_INITIAL_TABLE_COUNT);
     result->periodic_systems = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+    result->inactive_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
     result->other_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT);
@@ -371,11 +431,13 @@ EcsHandle ecs_lookup(
 void ecs_progress(
     EcsWorld *world)
 {
-    EcsIter it = ecs_array_iter(world->periodic_systems, &handle_arr_params);
-
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
-        ecs_run_system(world, system, NULL);
+    uint32_t count = ecs_array_count(world->periodic_systems);
+    if (count) {
+        int i;
+        EcsHandle *buffer = ecs_array_buffer(world->periodic_systems);
+        for (i = 0; i < count; i ++) {
+            ecs_run_system(world, buffer[i], NULL);
+        }
     }
 }
 

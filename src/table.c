@@ -17,6 +17,23 @@ void move_row(
     ecs_map_set64(world->entity_index, handle, ecs_from_row(row));
 }
 
+/** Notify systems that a table has changed its active state */
+static
+void activate_table(
+    EcsWorld *world,
+    EcsTable *table,
+    bool activate)
+{
+    if (table->periodic_systems) {
+        EcsIter it = ecs_array_iter(
+            table->periodic_systems, &handle_arr_params);
+        while (ecs_iter_hasnext(&it)) {
+            EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
+            ecs_system_activate_table(world, system, table, activate);
+        }
+    }
+}
+
 /* -- Private functions -- */
 
 EcsResult ecs_table_init_w_size(
@@ -27,6 +44,10 @@ EcsResult ecs_table_init_w_size(
 {
     table->world = world;
     table->family = family;
+
+    table->periodic_systems = NULL;
+    table->init_systems = NULL;
+    table->deinit_systems = NULL;
 
     table->row_params.element_size = size + sizeof(EcsHandle);
     table->row_params.compare_action = NULL;
@@ -77,7 +98,23 @@ uint32_t ecs_table_insert(
 {
     void *row = ecs_array_add(&table->rows, &table->row_params);
     *(EcsHandle*)row = handle;
-    return ecs_array_count(table->rows) - 1;
+    uint32_t count = ecs_array_count(table->rows);
+
+    if (count == 1) {
+        activate_table(table->world, table, true);
+    }
+
+    return count - 1;
+}
+
+void ecs_table_delete(
+    EcsTable *table,
+    uint32_t index)
+{
+    uint32_t count = ecs_array_remove_index(table->rows, &table->row_params, index);
+    if (count == 0) {
+        activate_table(table->world, table, false);
+    }
 }
 
 void* ecs_table_get(
