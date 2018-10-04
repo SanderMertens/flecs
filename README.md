@@ -22,12 +22,12 @@ void SetVector2D(Vector2D *vec, float x, float y) {
     vec->y = y;
 }
 
-void Init(void *data[], EcsInfo *info) {
+void Init(void *data[], EcsData *data) {
     SetVector2D(data[0], 0, 0);
     SetVector2D(data[1], 0.5, 1.0);
 }
 
-void Move(void *data[], EcsInfo *info) {
+void Move(void *data[], EcsData *data) {
     Position *position = data[0];
     Velocity *velocity = data[1];
     position->x += velocity->x * info->delta_time;

@@ -66,18 +66,19 @@ typedef enum EcsSystemKind {
     EcsOnDemand
 } EcsSystemKind;
 
-typedef struct EcsInfo {
+typedef struct EcsData {
     EcsHandle system;
     EcsWorld *world;
     void *param;
-    void *buffer;
+    void *first;
+    void *last;
     uint32_t *columns;
-    uint32_t index;
-    uint32_t offset;
-} EcsInfo;
+    uint32_t element_size;
+    uint32_t count;
+} EcsData;
 
 typedef void (*EcsSystemAction)(
-    EcsInfo *info);
+    EcsData *data);
 
 
 /* -- World API -- */
@@ -624,7 +625,7 @@ void ecs_iter_release(
  * holds the handle to the new system.
  */
 #define ECS_SYSTEM(world, id, kind, ...) \
-    void id(EcsInfo*);\
+    void id(EcsData*);\
     EcsHandle id##_h = ecs_system_new(world, #id, kind, #__VA_ARGS__, id);\
     if (!id##_h) abort();
 
@@ -645,45 +646,12 @@ void ecs_iter_release(
     EcsHandle id = ecs_family_get(world, #__VA_ARGS__);\
     if (!id) abort();
 
-/** Obtain an entity from a system action.
- * Use this macro to obtain the entity handle for the entity currently iterated
- * over from within the system action. Use
- * this macro like this:
- *
- * void MySystem(EcsInfo *info) {
- *     EcsHandle h = ECS_ENTITY(info);
- * }
- *
- * Note: do NOT use the entity handle and ecs_get to obtain component data, as
- * this is very inefficient. Instead, use the ECS_DATA macro.
- */
-#define ECS_ENTITY(info)\
-    *(EcsHandle*)ECS_OFFSET(info->buffer, info->offset - sizeof(EcsHandle))
+#define ecs_data_next(data, row) ECS_OFFSET(row, (data)->element_size)
 
-/** Obtain component data for an entity from a system action.
- * Use this macro to obtain pointers to the component data in the entity
- * currently iterated over from within a system action. Use it like this:
- *
- * void MySystem(EcsInfo *info) {
- *     ComponentA *a_ptr = ECS_DATA(info, 0);
- *     ComponentB *b_ptr = ECS_DATA(info, 1);
- * }
- *
- * The index passed to ECS_DATA corresponds with the order in which the
- * components are specified in the system signature. For example, if a system
- * was created like this:
- *
- * ECS_SYSTEM(world, MySystem, EcsPeriodic, ComponentX, ComponentY);
- *
- * then the data for ComponentX would be at index 0, and the data for ComponentY
- * would be at index 1.
- */
-#define ECS_DATA(info, index)\
-    ECS_OFFSET(info->buffer, info->offset + info->columns[index])
+#define ecs_data_get(data, row, column) ECS_OFFSET(row, (data)->columns[column] + sizeof(EcsHandle))
 
 /** Utility macro's */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
-#define ECS_ROW(info)
 
 #ifdef __cplusplus
 }

@@ -43,6 +43,7 @@ typedef struct EcsTable {
     EcsWorld *world;              /* Reference to the world */
     EcsArray *family;             /* Reference to family_index entry */
     EcsArray *rows;               /* Rows of the table */
+    EcsArray *periodic_systems;   /* Periodic systems matched with table */
     EcsArray *init_systems;       /* Systems to run on init */
     EcsArray *deinit_systems;     /* Systems to run on deinit */
     EcsArrayParams row_params;    /* Parameters for rows array */
@@ -57,7 +58,8 @@ typedef struct EcsRow {
 
 struct EcsWorld {
     EcsArray *table_db;           /* Table storage */
-    EcsArray *periodic_systems;   /* Array with periodic systems */
+    EcsArray *periodic_systems;   /* Periodic systems */
+    EcsArray *inactive_systems;   /* Periodic systems with empty tables */
     EcsArray *other_systems;      /* Array with non-periodic systems */
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */

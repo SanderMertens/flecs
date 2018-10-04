@@ -187,9 +187,8 @@ void ecs_run_system(
 {
     EcsSystem *system_data = ecs_get(world, system, world->system);
     EcsSystemAction action = system_data->action;
-    int i;
 
-    EcsInfo info = {
+    EcsData info = {
         .world = world,
         .system = system,
         .param = param
@@ -205,15 +204,13 @@ void ecs_run_system(
                 world->table_db, &table_arr_params, *table_data);
 
             uint32_t count = ecs_array_count(table->rows);
-            uint32_t element_size = table->row_params.element_size;
-            info.buffer = ecs_array_buffer(table->rows);
-            info.offset = sizeof(EcsHandle);
-            info.columns = ECS_OFFSET(table_data, sizeof(uint32_t));
-
-            for (i = 0; i < count; i ++) {
+            if (count) {
+                info.count = count;
+                info.element_size = table->row_params.element_size;
+                info.first = ecs_array_buffer(table->rows);
+                info.last = ECS_OFFSET(info.first, info.element_size * count);
+                info.columns = ECS_OFFSET(table_data, sizeof(uint32_t));
                 action(&info);
-                info.offset += element_size;
-                info.index = i;
             }
         }
     }
@@ -229,7 +226,7 @@ void ecs_system_notify(
     EcsSystem *system_data = ecs_get(world, system, world->system);
     EcsSystemAction action = system_data->action;
 
-    EcsInfo info = {
+    EcsData info = {
         .world = world,
         .system = system,
         .param = NULL
@@ -243,12 +240,10 @@ void ecs_system_notify(
         EcsTable *table_el = ecs_array_get(
             world->table_db, &table_arr_params, table_data[0]);
         if (table_el == table) {
-            info.buffer = ecs_array_buffer(table->rows);
-            info.index = 0;
+            info.element_size = table->row_params.element_size;
             info.columns = ECS_OFFSET(table_data, sizeof(uint32_t));
-            info.offset =
-                table->row_params.element_size *
-                    row_data->index + sizeof(EcsHandle);
+            info.first = ecs_array_buffer(table->rows);
+            info.last = ECS_OFFSET(info.first, info.element_size);
             action(&info);
             break;
         }
