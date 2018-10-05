@@ -217,16 +217,25 @@ uint32_t ecs_array_set_size(
     uint32_t size)
 {
     EcsArray *array = *array_inout;
-    uint32_t result = array->size;
+    if (!array) {
+        *array_inout = ecs_array_new(params, size);
+        return size;
+    } else {
+        uint32_t result = array->size;
 
-    if (result < size) {
-        array = resize(array, size * params->element_size);
-        array->size = size;
-        *array_inout = array;
-        result = size;
+        if (size < array->count) {
+            size = array->count;
+        }
+
+        if (result < size) {
+            array = resize(array, size * params->element_size);
+            array->size = size;
+            *array_inout = array;
+            result = size;
+        }
+        
+        return result;
     }
-
-    return result;
 }
 
 void* ecs_array_buffer(

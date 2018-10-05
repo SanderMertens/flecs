@@ -228,6 +228,53 @@ void ecs_run_system(
     }
 }
 
+void ecs_run_job(
+    EcsWorld *world,
+    EcsJob *job)
+{
+    EcsHandle system = job->system;
+    EcsSystem *system_data = job->system_data;
+    EcsSystemAction action = system_data->action;
+    uint32_t table_element_size = system_data->table_params.element_size;
+    uint32_t table_index = job->table_index;
+    uint32_t start_index = job->start_index;
+    uint32_t remaining = job->row_count;
+    char *table_buffer = ecs_array_get(
+        system_data->tables, &system_data->table_params, table_index);
+
+    EcsData info = {
+        .world = world,
+        .system = system
+    };
+
+    do {
+        EcsTable *table = ecs_array_get(
+            world->table_db, &table_arr_params, *(uint32_t*)table_buffer);
+        EcsArray *rows = table->rows;
+        void *buffer = ecs_array_buffer(rows);
+        uint32_t count = ecs_array_count(rows);
+        uint32_t element_size = table->row_params.element_size;
+
+        info.count = count;
+        info.element_size = element_size;
+        info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t));
+        info.first = ECS_OFFSET(buffer, element_size * start_index);
+
+        if (remaining >= count) {
+            info.last = ECS_OFFSET(info.first, element_size * count);
+            table_buffer += table_element_size;
+            start_index = 0;
+            remaining -= count;
+        } else {
+            info.last = ECS_OFFSET(info.first, element_size * remaining);
+            remaining = 0;
+        }
+
+        action(&info);
+    } while (remaining);
+}
+
+
 /** Run system on a single row */
 void ecs_system_notify(
     EcsWorld *world,
@@ -351,6 +398,7 @@ EcsHandle ecs_system_new(
     /*system_data->jobs = NULL;*/
     system_data->components = ecs_array_new(&handle_arr_params, count);
     system_data->kind = kind;
+    system_data->jobs = NULL;
 
     EcsId *id_data = ecs_get(world, result, world->id);
     id_data->id = id;

@@ -69,6 +69,23 @@ void ecs_system_activate_table(
     EcsTable *table,
     bool active);
 
+void ecs_run_job(
+    EcsWorld *world,
+    EcsJob *job);
+
+
+/* -- Worker API -- */
+
+void ecs_schedule_jobs(
+    EcsWorld *world,
+    EcsHandle system);
+
+void ecs_prepare_jobs(
+    EcsWorld *world,
+    EcsHandle system);
+
+void ecs_run_jobs(
+    EcsWorld *world);
 
 /* -- Private utilities -- */
 

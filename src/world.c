@@ -172,13 +172,6 @@ void family_print(
 
 /* -- Private functions -- */
 
-/** Issue a new handle */
-EcsHandle ecs_world_new_handle(
-    EcsWorld *world)
-{
-    return ++ world->last_handle;
-}
-
 /** Register a new family, optionally extending from existing family */
 EcsFamily ecs_world_register_family(
     EcsWorld *world,
@@ -267,7 +260,7 @@ void ecs_world_activate_system(
     }
 
     if (i == count) {
-        abort();
+        return; /* System is disabled */
     }
 
     ecs_array_move_index(
@@ -348,6 +341,13 @@ EcsWorld *ecs_init(void) {
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
     result->other_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT);
+
+    result->worker_threads = NULL;
+    result->jobs_finished = 0;
+    result->threads_running = 0;
+    result->valid_schedule = false;
+    result->quit_workers = false;
+
     result->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
     result->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
     result->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
@@ -377,6 +377,9 @@ EcsResult ecs_fini(
     ecs_map_free(world->table_index);
     ecs_map_free(world->family_index);
     ecs_map_free(world->staging_index);
+    if (world->worker_threads) {
+        ecs_set_threads(world, 0);
+    }
     free(world);
     return EcsOk;
 }
@@ -394,7 +397,9 @@ void ecs_dim_family(
     uint32_t entity_count)
 {
     EcsTable *table = ecs_world_get_table(world, family_id);
-    ecs_array_set_size(&table->rows, &table->row_params, entity_count);
+    if (table) {
+        ecs_array_set_size(&table->rows, &table->row_params, entity_count);
+    }
 }
 
 EcsHandle ecs_lookup(
@@ -435,8 +440,22 @@ void ecs_progress(
     if (count) {
         int i;
         EcsHandle *buffer = ecs_array_buffer(world->periodic_systems);
-        for (i = 0; i < count; i ++) {
-            ecs_run_system(world, buffer[i], NULL);
+        bool has_threads = ecs_array_count(world->worker_threads) != 0;
+
+        if (has_threads) {
+            bool valid_schedule = world->valid_schedule;
+            for (i = 0; i < count; i ++) {
+                if (!valid_schedule) {
+                    ecs_schedule_jobs(world, buffer[i]);
+                }
+                ecs_prepare_jobs(world, buffer[i]);
+            }
+            ecs_run_jobs(world);
+            world->valid_schedule = true;
+        } else {
+            for (i = 0; i < count; i ++) {
+                ecs_run_system(world, buffer[i], NULL);
+            }
         }
     }
 }

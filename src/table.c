@@ -72,7 +72,6 @@ EcsResult ecs_table_init(
     EcsIter it = ecs_array_iter(family, &handle_arr_params);
     uint32_t column = 0;
     uint32_t total_size = 0;
-
     table->columns = malloc(sizeof(uint16_t) * ecs_array_count(family));
 
     while (ecs_iter_hasnext(&it)) {
@@ -98,21 +97,22 @@ uint32_t ecs_table_insert(
 {
     void *row = ecs_array_add(&table->rows, &table->row_params);
     *(EcsHandle*)row = handle;
-    uint32_t count = ecs_array_count(table->rows);
+    uint32_t index = ecs_array_count(table->rows) - 1;
 
-    if (count == 1) {
+    if (!index) {
         activate_table(table->world, table, true);
     }
 
-    return count - 1;
+    return index;
 }
 
 void ecs_table_delete(
     EcsTable *table,
     uint32_t index)
 {
-    uint32_t count = ecs_array_remove_index(table->rows, &table->row_params, index);
-    if (count == 0) {
+    uint32_t count = ecs_array_remove_index(
+        table->rows, &table->row_params, index);
+    if (!count) {
         activate_table(table->world, table, false);
     }
 }
