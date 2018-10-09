@@ -54,7 +54,7 @@ void bootstrap_component_table(
 
 /** Bootstrap the EcsComponent component */
 static
-EcsResult bootstrap_component(
+void bootstrap_component(
     EcsWorld *world)
 {
     EcsHandle handle = ecs_new(world, 0);
@@ -67,17 +67,15 @@ EcsResult bootstrap_component(
     bootstrap_component_table(world, family_id);
 
     if (ecs_commit(world, world->component) != EcsOk) {
-        return EcsError;
+        abort();
     }
 
     EcsComponent *type_data = ecs_get(world, handle, handle);
     if (!type_data) {
-        return EcsError;
+        abort();
     }
 
     type_data->size = sizeof(EcsComponent);
-
-    return EcsOk;
 }
 
 /** Generic function for initializing built-in components */
@@ -88,6 +86,7 @@ EcsHandle init_component(
 {
     EcsHandle handle = ecs_new(world, 0);
     ecs_add(world, handle, world->component);
+    ecs_commit(world, handle);
     EcsComponent *component_data = ecs_get(world, handle, world->component);
     if (!component_data) {
         abort();
@@ -106,6 +105,7 @@ void init_id(
     const char *id)
 {
     ecs_add(world, handle, world->id);
+    ecs_commit(world, handle);
     EcsId *id_data = ecs_get(world, handle, world->id);
     if (!id_data) {
         abort();
@@ -116,7 +116,7 @@ void init_id(
 
 /** Create a new table and register it with the world and systems */
 static
-EcsTable* ecs_world_create_table(
+EcsTable* create_table(
     EcsWorld *world,
     EcsFamily family_id)
 {
@@ -166,6 +166,8 @@ void family_print(
         EcsId *id = ecs_get(world, h, world->id);
         if (id) {
             printf("%s ", id->id);
+        } else {
+            printf(PRIu64 " ", h);
         }
     }
 }
@@ -196,7 +198,6 @@ EcsFamily ecs_world_register_family(
     EcsHandle to_add,
     EcsArray *set)
 {
-    uint32_t stage_hash = 0;
     uint32_t count = ecs_array_count(set);
     EcsHandle new_set[count + 1];
     void *new_buffer = new_set;
@@ -208,11 +209,9 @@ EcsFamily ecs_world_register_family(
         }
         new_set[count] = to_add;
         qsort(new_set, count + 1, sizeof(EcsHandle), compare_handle);
-        stage_hash = hash_handle_array(new_set, count + 1);
         count ++;
     } else if (set) {
         void *buffer = ecs_array_buffer(set);
-        stage_hash = hash_handle_array(buffer, count);
         new_buffer = buffer;
     } else {
         return 0;
@@ -248,7 +247,7 @@ EcsFamily ecs_world_merge_families(
         }
     }
 
-    if (cur) {
+    if (arr_cur) {
         cur_count = ecs_array_count(arr_cur);
         buf_cur = ecs_array_buffer(arr_cur);
         cur = buf_cur[0];
@@ -281,17 +280,17 @@ EcsFamily ecs_world_merge_families(
             }
         }
 
-        if (add && add < cur) {
+        if (add && (!cur || add < cur)) {
             buf_new[new_count] = add;
             new_count ++;
             i_add ++;
             add = i_add < add_count ? buf_add[i_add] : 0;
-        } else if (cur && cur < add) {
+        } else if (cur && (!add || cur < add)) {
             buf_new[new_count] = cur;
             new_count ++;
             i_cur ++;
             cur = i_cur < cur_count ? buf_cur[i_cur] : 0;
-        } else {
+        } else if (add && add == cur) {
             buf_new[new_count] = add;
             new_count ++;
             i_cur ++;
@@ -318,7 +317,7 @@ EcsTable* ecs_world_get_table(
         return ecs_array_get(
             world->table_db, &table_arr_params, table_index - 1);
     } else {
-        return ecs_world_create_table(world, family_id);
+        return create_table(world, family_id);
     }
 
     return NULL;

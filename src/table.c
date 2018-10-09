@@ -64,7 +64,7 @@ EcsResult ecs_table_init(
 {
     EcsArray *family = ecs_map_get(world->family_index, table->family_id);
     if (!family) {
-        return EcsError;
+        abort();
     }
 
     EcsIter it = ecs_array_iter(family, &handle_arr_params);

@@ -119,7 +119,7 @@ EcsResult ecs_stage(
         ecs_world_register_family(world, component, family);
 
     if (!new_family_id) {
-        return EcsError;
+        abort();
     }
 
     if (family_id != new_family_id) {
@@ -142,7 +142,7 @@ EcsResult commit_w_family(
 {
     EcsTable *new_table = ecs_world_get_table(world, family_id);
     if (!new_table) {
-        return EcsError;
+        abort();
     }
 
     uint32_t new_index = ecs_table_insert(new_table, entity);
