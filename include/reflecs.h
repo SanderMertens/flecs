@@ -51,14 +51,20 @@ extern "C" {
 
 typedef struct EcsWorld EcsWorld;
 
+/** A family identifies a set of components */
 typedef uint32_t EcsFamily;
+
+/** A handle identifies an entity */
 typedef uint64_t EcsHandle;
 
+
+/** Function return values */
 typedef enum EcsResult {
     EcsOk,
     EcsError
 } EcsResult;
 
+/** System kinds determine when and how systems are ran */
 typedef enum EcsSystemKind {
     EcsPeriodic,
     EcsOnInit,
@@ -66,6 +72,7 @@ typedef enum EcsSystemKind {
     EcsOnDemand
 } EcsSystemKind;
 
+/** Data passed to system action callback, used for iterating entities */
 typedef struct EcsData {
     EcsHandle system;
     EcsWorld *world;
@@ -77,6 +84,7 @@ typedef struct EcsData {
     uint32_t count;
 } EcsData;
 
+/** System action callback type */
 typedef void (*EcsSystemAction)(
     EcsData *data);
 
@@ -311,31 +319,6 @@ void ecs_delete(
     EcsWorld *world,
     EcsHandle entity);
 
-/** Add a component to an entity and return a pointer to its data.
- * This operation is a combination of ecs_stage, ecs_commit and ecs_get. It
- * adds a component to an entity, commits it to memory and subsequently
- * retrieves a pointer to the component, so that its data can be initialized by
- * an application.
- *
- * This operation is expensive as it results in moving component data and entity
- * data around in memory. When adding multiple components to an entity, it is
- * more efficient to use ecs_stage and ecs_commit directly.
- *
- * If the specific combination of components did not yet exist in the world, a
- * new table will be created to store the entity. Subsequent entities with the
- * same set of components will be stored in the new table as well.
- *
- * @time-complexity: O(2 * r + c)
- * @param world: The world.
- * @param entity: Handle to the entity to which to add the component.
- * @param component: Handle to the component to add.
- * @returns: A pointer to the component data, or NULL if the operation failed.
- */
-REFLECS_EXPORT
-void* ecs_add(
-    EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component);
 
 /** Stage a component for adding.
  * Staging a component will register a component with an entity, but will not
@@ -357,7 +340,27 @@ void* ecs_add(
  * @returns: EcsOk if succeeded, or EcsError if the operation failed.
  */
 REFLECS_EXPORT
-EcsResult ecs_stage(
+EcsResult ecs_add(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle component);
+
+/** Stage a component for removing.
+ * This operation stages a remove for a component from an entity. The remove
+ * will not yet be committed to memory. Similar to ecs_stage, this operation
+ * requires calling ecs_commit to actually commit the changes to memory.
+ *
+ * The post condition for this operation is that the entity will not have
+ * the component after invoking ecs_commit. If the entity does not have the
+ * component when this operation is called, it is a no-op.
+ *
+ * @time-complexity: O(1)
+ * @param world: The world.
+ * @param entity: Handle to the entity from which to remove the component.
+ * @param component: The component to remove.
+ */
+REFLECS_EXPORT
+EcsResult ecs_remove(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component);
@@ -413,26 +416,6 @@ EcsResult ecs_commit(
  */
 REFLECS_EXPORT
 void* ecs_get(
-    EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component);
-
-/** Remove a component from an entity.
- * This operation stages a remove for a component from an entity. The remove
- * will not yet be committed to memory. Similar to ecs_stage, this operation
- * requires calling ecs_commit to actually commit the changes to memory.
- *
- * The post condition for this operation is that the entity will not have
- * the component after invoking ecs_commit. If the entity does not have the
- * component when this operation is called, it is a no-op.
- *
- * @time-complexity: O(c)
- * @param world: The world.
- * @param entity: Handle to the entity from which to remove the component.
- * @param component: The component to remove.
- */
-REFLECS_EXPORT
-void ecs_stage_remove(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component);

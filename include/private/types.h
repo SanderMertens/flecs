@@ -29,6 +29,7 @@ typedef struct EcsId {
 } EcsId;
 
 typedef struct EcsSystem {
+    EcsFamily family;       /* Family of system components */
     EcsSystemAction action; /* Callback to be invoked for matching rows */
     EcsArray *components;   /* System components in specified order */
     EcsArray *tables;       /* Table index + column offsets for components */
@@ -46,8 +47,6 @@ typedef struct EcsTable {
     EcsArray *family;             /* Reference to family_index entry */
     EcsArray *rows;               /* Rows of the table */
     EcsArray *periodic_systems;   /* Periodic systems matched with table */
-    EcsArray *init_systems;       /* Systems to run on init */
-    EcsArray *deinit_systems;     /* Systems to run on deinit */
     EcsArrayParams row_params;    /* Parameters for rows array */
     EcsFamily family_id;          /* Identifies a family in family_index */
     uint16_t *columns;            /* Column (component) sizes */
@@ -78,10 +77,14 @@ struct EcsWorld {
     EcsArray *periodic_systems;   /* Periodic systems */
     EcsArray *inactive_systems;   /* Periodic systems with empty tables */
     EcsArray *other_systems;      /* Array with non-periodic systems */
+
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */
+    EcsMap *init_systems;         /* Init systems, indexed by family */
+    EcsMap *deinit_systems;       /* Deinit systems, indexed by family */
+    EcsMap *add_stage;            /* Entities with components to add */
+    EcsMap *remove_stage;         /* Entities with components to remove */
     EcsMap *family_index;         /* References to component families */
-    EcsMap *staging_index;        /* Staged family_id of uncommitted entities */
 
     EcsArray *worker_threads;     /* Worker threads */
     pthread_cond_t thread_cond;   /* Signal that worker threads can start */
@@ -98,8 +101,8 @@ struct EcsWorld {
     EcsHandle id;                 /* Id type entity */
     EcsHandle last_handle;        /* Last issued handle */
 
-    bool valid_schedule;
-    bool quit_workers;
+    bool valid_schedule;          /* Is job schedule still valid */
+    bool quit_workers;            /* Signals worker threads to quit */
 };
 
 extern const EcsArrayParams handle_arr_params;

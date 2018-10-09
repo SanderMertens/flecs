@@ -23,6 +23,12 @@ void ecs_world_activate_system(
     EcsHandle system,
     bool active);
 
+EcsFamily ecs_world_merge_families(
+    EcsWorld *world,
+    EcsFamily cur_id,
+    EcsFamily to_add_id,
+    EcsFamily to_remove_id);
+
 /* -- Table API -- */
 
 EcsResult ecs_table_init(

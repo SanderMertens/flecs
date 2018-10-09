@@ -58,8 +58,8 @@ EcsResult bootstrap_component(
     EcsWorld *world)
 {
     EcsHandle handle = ecs_new(world, 0);
-    ecs_stage(world, handle, handle);
-    uint64_t family_id = ecs_map_get64(world->staging_index, handle);
+    ecs_add(world, handle, handle);
+    uint64_t family_id = ecs_map_get64(world->add_stage, handle);
 
     world->component = handle;
 
@@ -87,8 +87,8 @@ EcsHandle init_component(
     size_t size)
 {
     EcsHandle handle = ecs_new(world, 0);
-
-    EcsComponent *component_data = ecs_add(world, handle, world->component);
+    ecs_add(world, handle, world->component);
+    EcsComponent *component_data = ecs_get(world, handle, world->component);
     if (!component_data) {
         abort();
     }
@@ -105,7 +105,8 @@ void init_id(
     EcsHandle handle,
     const char *id)
 {
-    EcsId *id_data = ecs_add(world, handle, world->id);
+    ecs_add(world, handle, world->id);
+    EcsId *id_data = ecs_get(world, handle, world->id);
     if (!id_data) {
         abort();
     }
@@ -169,6 +170,23 @@ void family_print(
     }
 }
 
+static
+EcsFamily register_family_from_buffer(
+    EcsWorld *world,
+    EcsHandle *buf,
+    uint32_t count)
+{
+    EcsFamily new_id = hash_handle_array(buf, count);
+    EcsArray *new_array = ecs_map_get(world->family_index, new_id);
+
+    if (!new_array) {
+        new_array = ecs_array_new_from_buffer(&handle_arr_params, count, buf);
+        ecs_map_set(world->family_index, new_id,  new_array);
+    }
+
+    return new_id;
+}
+
 
 /* -- Private functions -- */
 
@@ -200,14 +218,94 @@ EcsFamily ecs_world_register_family(
         return 0;
     }
 
-    EcsArray *stage_set = ecs_map_get(world->family_index, stage_hash);
-    if (!stage_set) {
-        stage_set = ecs_array_new_from_buffer(
-            &handle_arr_params, count, new_buffer);
-        ecs_map_set(world->family_index, stage_hash, stage_set);
+    return register_family_from_buffer(world, new_buffer, count);
+}
+
+/** Merge families (ordered sets of components) */
+EcsFamily ecs_world_merge_families(
+    EcsWorld *world,
+    EcsFamily cur_id,
+    EcsFamily to_add_id,
+    EcsFamily to_remove_id)
+{
+    EcsArray *arr_cur = ecs_map_get(world->family_index, cur_id);
+    EcsArray *to_add = NULL, *to_del = NULL;
+    EcsHandle *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
+    EcsHandle cur = 0, add = 0, del = 0;
+    uint32_t i_cur = 0, i_add = 0, i_del = 0;
+    uint32_t cur_count = 0, add_count = 0, del_count = 0;
+
+    if (to_remove_id) {
+        to_del = ecs_map_get(world->family_index, to_remove_id);
+        del_count = ecs_array_count(to_del);
+        buf_del = ecs_array_buffer(to_del);
+        del = buf_del[0];
+    } else {
+        if (cur_id && !to_add_id) {
+            return cur_id;
+        } else if (to_add_id && !cur_id) {
+            return to_add_id;
+        }
     }
 
-    return stage_hash;
+    if (cur) {
+        cur_count = ecs_array_count(arr_cur);
+        buf_cur = ecs_array_buffer(arr_cur);
+        cur = buf_cur[0];
+    }
+
+    if (to_add_id) {
+        to_add = ecs_map_get(world->family_index, to_add_id);
+        add_count = ecs_array_count(to_add);
+        buf_add = ecs_array_buffer(to_add);
+        add = buf_add[0];
+    }
+
+    EcsHandle buf_new[cur_count + add_count];
+    uint32_t new_count = 0, prev_count = 0;
+
+    do {
+        prev_count = new_count;
+
+        if (del && new_count) {
+            EcsFamily last = buf_new[new_count - 1];
+            if (last == del) {
+                prev_count = -- new_count;
+                i_del ++;
+                del = i_del < del_count ? buf_del[i_del] : 0;
+            } else if (last > del) {
+                do {
+                    i_del ++;
+                    del = i_del < del_count ? buf_del[i_del] : 0;
+                } while (del && last > del);
+            }
+        }
+
+        if (add && add < cur) {
+            buf_new[new_count] = add;
+            new_count ++;
+            i_add ++;
+            add = i_add < add_count ? buf_add[i_add] : 0;
+        } else if (cur && cur < add) {
+            buf_new[new_count] = cur;
+            new_count ++;
+            i_cur ++;
+            cur = i_cur < cur_count ? buf_cur[i_cur] : 0;
+        } else {
+            buf_new[new_count] = add;
+            new_count ++;
+            i_cur ++;
+            i_add ++;
+            add = i_add < add_count ? buf_add[i_add] : 0;
+            cur = i_cur < cur_count ? buf_cur[i_cur] : 0;
+        }
+    } while (prev_count != new_count);
+
+    if (new_count) {
+        return register_family_from_buffer(world, buf_new, new_count);
+    } else {
+        return 0;
+    }
 }
 
 /** Get pointer to table data from family id */
@@ -306,9 +404,12 @@ void ecs_dump(
         uint32_t table_index = (uintptr_t)ecs_iter_next(&it);
         EcsTable *table =
             ecs_array_get(world->table_db, &table_arr_params, table_index - 1);
-        printf("[%u] Rows: %u, Components: ",
-            table->family_id, ecs_array_count(table->rows));
+
+        uint32_t count = ecs_array_count(table->rows);
+        uint32_t size = ecs_array_size(table->rows);
+        printf("[%u] Rows: %u, Components: ", table->family_id, count);
         family_print(world, table->family_id);
+        printf(" - %.2fKb", (size * table->row_params.element_size) / 1000.0);
         printf("\n");
     }
 
@@ -351,7 +452,8 @@ EcsWorld *ecs_init(void) {
     result->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
     result->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
     result->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
-    result->staging_index = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    result->add_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    result->remove_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
     result->component = 0;
     result->system = 0;
     result->id = 0;
@@ -376,7 +478,8 @@ EcsResult ecs_fini(
     ecs_map_free(world->entity_index);
     ecs_map_free(world->table_index);
     ecs_map_free(world->family_index);
-    ecs_map_free(world->staging_index);
+    ecs_map_free(world->add_stage);
+    ecs_map_free(world->remove_stage);
     if (world->worker_threads) {
         ecs_set_threads(world, 0);
     }

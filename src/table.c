@@ -46,8 +46,6 @@ EcsResult ecs_table_init_w_size(
     table->family = family;
 
     table->periodic_systems = NULL;
-    table->init_systems = NULL;
-    table->deinit_systems = NULL;
 
     table->row_params.element_size = size + sizeof(EcsHandle);
     table->row_params.compare_action = NULL;

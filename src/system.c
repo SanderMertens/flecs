@@ -142,14 +142,7 @@ void add_table(
         i ++;
     }
 
-    if (system_data->kind == EcsOnInit) {
-        EcsHandle *h = ecs_array_add(&table->init_systems, &handle_arr_params);
-        *h = system;
-    } else if (system_data->kind == EcsOnDeinit) {
-        EcsHandle *h = ecs_array_add(
-            &table->deinit_systems, &handle_arr_params);
-        *h = system;
-    } else if (system_data->kind == EcsPeriodic) {
+    if (system_data->kind == EcsPeriodic) {
         EcsHandle *h = ecs_array_add(
             &table->periodic_systems, &handle_arr_params);
         *h = system;
@@ -171,6 +164,25 @@ void match_tables(
             add_table(world, system, system_data, table);
         }
     }
+}
+
+
+static
+EcsFamily family_from_components(
+    EcsWorld *world,
+    EcsArray *components)
+{
+    EcsIter it = ecs_array_iter(components, &handle_arr_params);
+    EcsArray *family_array = NULL;
+    EcsFamily result = 0;
+
+    while (ecs_iter_hasnext(&it)) {
+        EcsHandle *h = ecs_iter_next(&it);
+        result = ecs_world_register_family(world, *h, family_array);
+        family_array = ecs_map_get(world->family_index, result);
+    }
+
+    return result;
 }
 
 /* -- Private functions -- */
@@ -377,8 +389,8 @@ EcsHandle ecs_system_new(
     }
 
     EcsHandle result = ecs_new(world, 0);
-    ecs_stage(world, result, world->system);
-    ecs_stage(world, result, world->id);
+    ecs_add(world, result, world->system);
+    ecs_add(world, result, world->id);
 
     if (ecs_commit(world, result) != EcsOk) {
         ecs_delete(world, result);
@@ -395,7 +407,6 @@ EcsHandle ecs_system_new(
         &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     system_data->inactive_tables = ecs_array_new(
         &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
-    /*system_data->jobs = NULL;*/
     system_data->components = ecs_array_new(&handle_arr_params, count);
     system_data->kind = kind;
     system_data->jobs = NULL;
@@ -419,9 +430,36 @@ EcsHandle ecs_system_new(
         }
         *elem = result;
     } else {
+        bool new_array = false;
+        EcsArray *array = NULL;
+        EcsFamily family = family_from_components(
+            world, system_data->components);
+
         EcsHandle *elem = ecs_array_add(
             &world->other_systems, &handle_arr_params);
         *elem = result;
+
+        if (kind == EcsOnInit) {
+            array = ecs_map_get(world->init_systems, family);
+        } else if (kind == EcsOnDeinit) {
+            array = ecs_map_get(world->deinit_systems, family);
+        }
+
+        if (!array) {
+            array = ecs_array_new(&handle_arr_params, 1);
+            new_array = true;
+        }
+
+        EcsHandle *h = ecs_array_add(&array, &handle_arr_params);
+        *h = result;
+
+        if (new_array) {
+            if (kind == EcsOnInit) {
+                ecs_map_set(world->init_systems, family, array);
+            } else if (kind == EcsOnDeinit) {
+                ecs_map_set(world->deinit_systems, family, array);
+            }
+        }
     }
 
     return result;

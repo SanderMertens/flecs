@@ -73,6 +73,66 @@ void move_row(
     ecs_array_remove(old_table->rows, &old_table->row_params, old_row);
 }
 
+static
+void init_components(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsFamily to_init)
+{
+
+}
+
+static
+void deinit_components(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsFamily to_deinit)
+{
+
+}
+
+/** Stage components for adding or removing from an entity */
+static
+EcsResult ecs_stage(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle component,
+    bool is_remove)
+{
+    EcsFamily family_id = 0;
+    EcsArray *family = NULL;
+
+    if (is_remove) {
+        family_id = ecs_map_get64(world->remove_stage, entity);
+    } else {
+        family_id = ecs_map_get64(world->add_stage, entity);
+    }
+
+    if (family_id) {
+        family = ecs_map_get(world->family_index, family_id);
+        if (!family) {
+            return EcsError;
+        }
+    }
+
+    EcsFamily new_family_id =
+        ecs_world_register_family(world, component, family);
+
+    if (!new_family_id) {
+        return EcsError;
+    }
+
+    if (family_id != new_family_id) {
+        if (is_remove) {
+            ecs_map_set64(world->remove_stage, entity, new_family_id);
+        } else {
+            ecs_map_set64(world->add_stage, entity, new_family_id);
+        }
+    }
+
+    return EcsOk;
+}
+
 /** Commit an entity with a specified family to memory */
 static
 EcsResult commit_w_family(
@@ -109,8 +169,30 @@ EcsResult ecs_commit(
     EcsWorld *world,
     EcsHandle entity)
 {
-    EcsFamily family_id = (uintptr_t)ecs_map_get64(world->staging_index, entity);
-    return commit_w_family(world, entity, family_id);
+    EcsFamily to_add = ecs_map_get64(world->add_stage, entity);
+    EcsFamily to_remove = ecs_map_get64(world->remove_stage, entity);
+    uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
+    EcsFamily family_id = 0;
+
+    if (to_remove) {
+        deinit_components(world, entity, to_remove);
+        ecs_map_remove(world->remove_stage, entity);
+    }
+
+    if (row_64) {
+        EcsRow row = ecs_to_row(row_64);
+        family_id = row.family_id;
+    }
+
+    family_id = ecs_world_merge_families(world, family_id, to_add, to_remove);
+    EcsResult result = commit_w_family(world, entity, family_id);
+
+    if (to_add) {
+        init_components(world, entity, to_add);
+        ecs_map_remove(world->add_stage, entity);
+    }
+
+    return result;
 }
 
 EcsHandle ecs_new(
@@ -120,6 +202,7 @@ EcsHandle ecs_new(
     EcsHandle entity = ++ world->last_handle;
     if (family_id) {
         commit_w_family(world, entity, family_id);
+        init_components(world, entity, family_id);
     }
     return entity;
 }
@@ -137,37 +220,20 @@ void ecs_delete(
     }
 }
 
-EcsResult ecs_stage(
+EcsResult ecs_add(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component)
 {
-    EcsFamily family_id = (uintptr_t)ecs_map_get64(world->staging_index, entity);
-    EcsArray *family = NULL;
-    if (!family_id) {
-        EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
-        family_id = row.family_id;
-    }
+    return ecs_stage(world, entity, component, false);
+}
 
-    if (family_id) {
-        family = ecs_map_get(world->family_index, family_id);
-        if (!family) {
-            return EcsError;
-        }
-    }
-
-    EcsFamily new_family_id =
-        ecs_world_register_family(world, component, family);
-
-    if (!new_family_id) {
-        return EcsError;
-    }
-
-    if (family_id != new_family_id) {
-        ecs_map_set64(world->staging_index, entity, new_family_id);
-    }
-
-    return EcsOk;
+EcsResult ecs_remove(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle component)
+{
+    return ecs_stage(world, entity, component, true);
 }
 
 void* ecs_get(
@@ -207,20 +273,6 @@ void* ecs_get(
     return ECS_OFFSET(row_ptr, offset + sizeof(EcsHandle));
 }
 
-void* ecs_add(
-    EcsWorld *world,
-    EcsHandle h_entity,
-    EcsHandle h_component)
-{
-    ecs_stage(world, h_entity, h_component);
-
-    if (ecs_commit(world, h_entity) != EcsOk) {
-        return NULL;
-    }
-
-    return ecs_get(world, h_entity, h_component);
-}
-
 EcsHandle ecs_component_new(
     EcsWorld *world,
     const char *id,
@@ -228,11 +280,11 @@ EcsHandle ecs_component_new(
 {
     EcsHandle result = ecs_new(world, 0);
 
-    if (ecs_stage(world, result, world->component) != EcsOk) {
+    if (ecs_add(world, result, world->component) != EcsOk) {
         return 0;
     }
 
-    if (ecs_stage(world, result, world->id) != EcsOk) {
+    if (ecs_add(world, result, world->id) != EcsOk) {
         return 0;
     }
 
