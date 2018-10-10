@@ -1,7 +1,7 @@
 # reflecs
 Reflecs is an entity component system implemented in C99. It's design goal is to pack as much punch as possible into a tiny library with a minimal API and zero dependencies. The result: a lightning fast, feature-packed ECS framework in a library no larger than 30Kb. Here's what Reflecs has to offer:
 
-- Stupid simple, single header API (documentation [here](https://github.com/SanderMertens/reflecs/blob/master/include/reflecs.h))
+- Stupid simple, single header API (documentation [here](https://github.com/SanderMertens/reflecs/blob/master/include/reflecs.h#L92))
 - Memory efficient storage engine optimized to take full advantage of CPU cache lines
 - Periodic, on demand and on component init/deinit systems
 - Fast job scheduler for multi-threaded execution of systems
