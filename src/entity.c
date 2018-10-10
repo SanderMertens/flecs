@@ -77,7 +77,7 @@ void move_row(
         memcpy(dst, src, bytes_to_copy);
     }
 
-    ecs_array_remove(old_table->rows, &old_table->row_params, old_row);
+    ecs_table_delete(old_table, old_index);
 }
 
 static
@@ -215,9 +215,24 @@ EcsResult ecs_commit(
     EcsFamily to_remove = ecs_map_get64(world->remove_stage, entity);
     EcsFamily family_id = 0;
 
+    uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
+    if (row_64) {
+        EcsRow row = ecs_to_row(row_64);
+        family_id = row.family_id;
+    }
+
     family_id = ecs_family_merge(world, family_id, to_add, to_remove);
+
     EcsResult result = commit_w_family(
         world, entity, family_id, to_add, to_remove);
+
+    if (to_add) {
+        ecs_map_remove(world->add_stage, entity);
+    }
+
+    if (to_remove) {
+        ecs_map_remove(world->remove_stage, entity);
+    }
 
     return result;
 }

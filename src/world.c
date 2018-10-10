@@ -268,6 +268,7 @@ EcsFamily ecs_family_merge(
 
         if (del && new_count) {
             EcsFamily last = buf_new[new_count - 1];
+
             if (last == del) {
                 prev_count = -- new_count;
                 i_del ++;
