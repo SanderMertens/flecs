@@ -72,7 +72,7 @@ You can mix calling `ecs_add` and `ecs_remove` within a single commit:
 ```c
 ecs_add(world, e, Size_h);        // Stage adding the Size component
 ecs_remove(world, e, Velocity_h); // Stage removing the Velocity component
-ecs_commit(world, e);             // Actually remove the Velocity component
+ecs_commit(world, e);             // Remove Velocity component, add Size component
 ```
 
 ## Initializing components
