@@ -221,7 +221,7 @@ EcsFamily ecs_world_register_family(
 }
 
 /** Merge families (ordered sets of components) */
-EcsFamily ecs_world_merge_families(
+EcsFamily ecs_family_merge(
     EcsWorld *world,
     EcsFamily cur_id,
     EcsFamily to_add_id,
@@ -307,6 +307,49 @@ EcsFamily ecs_world_merge_families(
     }
 }
 
+bool ecs_family_contains(
+    EcsWorld *world,
+    EcsFamily family_id_1,
+    EcsFamily family_id_2)
+{
+    EcsArray *f_1 = ecs_map_get(world->family_index, family_id_1);
+    EcsArray *f_2 = ecs_map_get(world->family_index, family_id_2);
+
+    if (!f_1 || !f_2) {
+        abort();
+    }
+
+    uint32_t i_2, i_1 = 0;
+    EcsHandle *h2p, *h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
+    EcsHandle h1;
+
+    for (i_2 = 0; (h2p = ecs_array_get(f_2, &handle_arr_params, i_2)); i_2 ++) {
+        EcsHandle h2 = *h2p;
+
+        if (!h1p) {
+            return false;
+        }
+
+        h1 = *h1p;
+
+        if (h2 > h1) {
+            do {
+                i_1 ++;
+                h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
+            } while (h1p && (h1 = *h1p) && h2 > h1);
+        }
+
+        if (h1 != h2) {
+            return false;
+        } else {
+            i_1 ++;
+            h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
+        }
+    }
+
+    return true;
+}
+
 /** Get pointer to table data from family id */
 EcsTable* ecs_world_get_table(
     EcsWorld *world,
@@ -322,6 +365,7 @@ EcsTable* ecs_world_get_table(
 
     return NULL;
 }
+
 
 /** Inactive systems are systems that either:
  * - are not enabled

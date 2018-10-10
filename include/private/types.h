@@ -29,7 +29,7 @@ typedef struct EcsId {
 } EcsId;
 
 typedef struct EcsSystem {
-    EcsFamily family;       /* Family of system components */
+    EcsFamily family_id;    /* Family with all system components */
     EcsSystemAction action; /* Callback to be invoked for matching rows */
     EcsArray *components;   /* System components in specified order */
     EcsArray *tables;       /* Table index + column offsets for components */
@@ -47,6 +47,8 @@ typedef struct EcsTable {
     EcsArray *family;             /* Reference to family_index entry */
     EcsArray *rows;               /* Rows of the table */
     EcsArray *periodic_systems;   /* Periodic systems matched with table */
+    EcsArray *init_systems;       /* Init systems, indexed by family */
+    EcsArray *deinit_systems;     /* Deinit systems, indexed by family */
     EcsArrayParams row_params;    /* Parameters for rows array */
     EcsFamily family_id;          /* Identifies a family in family_index */
     uint16_t *columns;            /* Column (component) sizes */
@@ -80,8 +82,6 @@ struct EcsWorld {
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */
-    EcsMap *init_systems;         /* Init systems, indexed by family */
-    EcsMap *deinit_systems;       /* Deinit systems, indexed by family */
     EcsMap *add_stage;            /* Entities with components to add */
     EcsMap *remove_stage;         /* Entities with components to remove */
     EcsMap *family_index;         /* References to component families */

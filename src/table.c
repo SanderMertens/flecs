@@ -17,6 +17,22 @@ void move_row(
     ecs_map_set64(world->entity_index, handle, ecs_from_row(row));
 }
 
+static
+void activate_table_systems(
+    EcsWorld *world,
+    EcsTable *table,
+    EcsArray *systems,
+    bool activate)
+{
+    if (systems) {
+        EcsIter it = ecs_array_iter(systems, &handle_arr_params);
+        while (ecs_iter_hasnext(&it)) {
+            EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
+            ecs_system_activate_table(world, system, table, activate);
+        }
+    }
+}
+
 /** Notify systems that a table has changed its active state */
 static
 void activate_table(
@@ -24,14 +40,9 @@ void activate_table(
     EcsTable *table,
     bool activate)
 {
-    if (table->periodic_systems) {
-        EcsIter it = ecs_array_iter(
-            table->periodic_systems, &handle_arr_params);
-        while (ecs_iter_hasnext(&it)) {
-            EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
-            ecs_system_activate_table(world, system, table, activate);
-        }
-    }
+    activate_table_systems(world, table, table->periodic_systems, activate);
+    activate_table_systems(world, table, table->init_systems, activate);
+    activate_table_systems(world, table, table->deinit_systems, activate);
 }
 
 /* -- Private functions -- */
@@ -46,6 +57,8 @@ EcsResult ecs_table_init_w_size(
     table->family = family;
 
     table->periodic_systems = NULL;
+    table->init_systems = NULL;
+    table->deinit_systems = NULL;
 
     table->row_params.element_size = size + sizeof(EcsHandle);
     table->row_params.compare_action = NULL;
@@ -139,20 +152,4 @@ uint32_t ecs_table_column_offset(
     }
 
     return -1;
-}
-
-bool ecs_table_has_components(
-    EcsTable *table,
-    EcsArray *components)
-{
-    EcsIter it = ecs_array_iter(components, &handle_arr_params);
-
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        if (ecs_table_column_offset(table, h) == -1) {
-            return false;
-        }
-    }
-
-    return true;
 }

@@ -142,11 +142,16 @@ void add_table(
         i ++;
     }
 
+    EcsHandle *h = NULL;
     if (system_data->kind == EcsPeriodic) {
-        EcsHandle *h = ecs_array_add(
-            &table->periodic_systems, &handle_arr_params);
-        *h = system;
+        h = ecs_array_add(&table->periodic_systems, &handle_arr_params);
+    } else if (system_data->kind == EcsOnInit) {
+        h = ecs_array_add(&table->init_systems, &handle_arr_params);
+    } else if (system_data->kind == EcsOnDeinit) {
+        h = ecs_array_add(&table->deinit_systems, &handle_arr_params);
     }
+
+    if (h) *h = system;
 }
 
 
@@ -160,12 +165,14 @@ void match_tables(
     EcsIter it = ecs_array_iter(world->table_db, &table_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsTable *table = ecs_iter_next(&it);
-        if (ecs_table_has_components(table, system_data->components)) {
+
+        if (ecs_family_contains(
+            world, table->family_id, system_data->family_id))
+        {
             add_table(world, system, system_data, table);
         }
     }
 }
-
 
 static
 EcsFamily family_from_components(
@@ -198,7 +205,7 @@ EcsResult ecs_system_notify_create_table(
         return EcsError;
     }
 
-    if (ecs_table_has_components(table, system_data->components)) {
+    if (ecs_family_contains(world, table->family_id, system_data->family_id)) {
         add_table(world, system, system_data, table);
     }
 
@@ -240,6 +247,7 @@ void ecs_run_system(
     }
 }
 
+/** Run subset of the matching entities for a system (used in worker threads) */
 void ecs_run_job(
     EcsWorld *world,
     EcsJob *job)
@@ -291,10 +299,11 @@ void ecs_run_job(
 void ecs_system_notify(
     EcsWorld *world,
     EcsHandle system,
+    EcsSystem *system_data,
     EcsTable *table,
-    EcsRow *row_data)
+    uint32_t table_index,
+    uint32_t row_index)
 {
-    EcsSystem *system_data = ecs_get(world, system, world->system);
     EcsSystemAction action = system_data->action;
 
     EcsData info = {
@@ -303,14 +312,13 @@ void ecs_system_notify(
         .param = NULL
     };
 
-    EcsIter it =
-        ecs_array_iter(system_data->tables, &system_data->table_params);
+    uint32_t t, table_count = ecs_array_count(system_data->tables);
 
-    while (ecs_iter_hasnext(&it)) {
-        uint32_t *table_data = ecs_iter_next(&it);
-        EcsTable *table_el = ecs_array_get(
-            world->table_db, &table_arr_params, *table_data);
-        if (table_el == table) {
+    for (t = 0; t < table_count; t++) {
+        uint32_t *table_data = ecs_array_get(
+            system_data->tables, &table_arr_params, t);
+
+        if (*table_data == table_index) {
             info.element_size = table->row_params.element_size;
             info.columns = ECS_OFFSET(table_data, sizeof(uint32_t));
             info.first = ecs_array_buffer(table->rows);
@@ -419,6 +427,9 @@ EcsHandle ecs_system_new(
         return 0;
     }
 
+    system_data->family_id = family_from_components(
+        world, system_data->components);
+
     match_tables(world, result, system_data);
 
     if (kind == EcsPeriodic) {
@@ -430,36 +441,9 @@ EcsHandle ecs_system_new(
         }
         *elem = result;
     } else {
-        bool new_array = false;
-        EcsArray *array = NULL;
-        EcsFamily family = family_from_components(
-            world, system_data->components);
-
         EcsHandle *elem = ecs_array_add(
             &world->other_systems, &handle_arr_params);
         *elem = result;
-
-        if (kind == EcsOnInit) {
-            array = ecs_map_get(world->init_systems, family);
-        } else if (kind == EcsOnDeinit) {
-            array = ecs_map_get(world->deinit_systems, family);
-        }
-
-        if (!array) {
-            array = ecs_array_new(&handle_arr_params, 1);
-            new_array = true;
-        }
-
-        EcsHandle *h = ecs_array_add(&array, &handle_arr_params);
-        *h = result;
-
-        if (new_array) {
-            if (kind == EcsOnInit) {
-                ecs_map_set(world->init_systems, family, array);
-            } else if (kind == EcsOnDeinit) {
-                ecs_map_set(world->deinit_systems, family, array);
-            }
-        }
     }
 
     return result;

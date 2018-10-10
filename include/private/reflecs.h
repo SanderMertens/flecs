@@ -23,11 +23,18 @@ void ecs_world_activate_system(
     EcsHandle system,
     bool active);
 
-EcsFamily ecs_world_merge_families(
+/* -- Family utility API -- */
+
+EcsFamily ecs_family_merge(
     EcsWorld *world,
     EcsFamily cur_id,
     EcsFamily to_add_id,
     EcsFamily to_remove_id);
+
+bool ecs_family_contains(
+    EcsWorld *world,
+    EcsFamily family_id_1,
+    EcsFamily family_id_2);
 
 /* -- Table API -- */
 
@@ -79,6 +86,13 @@ void ecs_run_job(
     EcsWorld *world,
     EcsJob *job);
 
+void ecs_system_notify(
+    EcsWorld *world,
+    EcsHandle system,
+    EcsSystem *system_data,
+    EcsTable *table,
+    uint32_t table_index,
+    uint32_t row_index);
 
 /* -- Worker API -- */
 
