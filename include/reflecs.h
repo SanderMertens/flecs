@@ -73,7 +73,7 @@ typedef enum EcsSystemKind {
 } EcsSystemKind;
 
 /** Data passed to system action callback, used for iterating entities */
-typedef struct EcsData {
+typedef struct EcsRows {
     EcsHandle system;
     EcsWorld *world;
     void *param;
@@ -82,11 +82,11 @@ typedef struct EcsData {
     uint32_t *columns;
     uint32_t element_size;
     uint32_t count;
-} EcsData;
+} EcsRows;
 
 /** System action callback type */
 typedef void (*EcsSystemAction)(
-    EcsData *data);
+    EcsRows *data);
 
 
 /* -- World API -- */
@@ -608,7 +608,7 @@ void ecs_iter_release(
  * holds the handle to the new system.
  */
 #define ECS_SYSTEM(world, id, kind, ...) \
-    void id(EcsData*);\
+    void id(EcsRows*);\
     EcsHandle id##_h = ecs_system_new(world, #id, kind, #__VA_ARGS__, id);\
     if (!id##_h) abort();
 
@@ -629,9 +629,10 @@ void ecs_iter_release(
     EcsHandle id = ecs_family_get(world, #__VA_ARGS__);\
     if (!id) abort();
 
-#define ecs_data_next(data, row) ECS_OFFSET(row, (data)->element_size)
+#define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)
 
-#define ecs_data_get(data, row, column) ECS_OFFSET(row, (data)->columns[column] + sizeof(EcsHandle))
+#define ecs_column(data, row, column) \
+    ECS_OFFSET(row, (data)->columns[column] + sizeof(EcsHandle))
 
 /** Utility macro's */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))

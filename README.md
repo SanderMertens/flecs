@@ -19,11 +19,11 @@ typedef struct Vector2D {
 typedef Vector2D Position;
 typedef Vector2D Velocity;
 
-void Move(EcsData *data) {
+void Move(EcsRows *data) {
     void *row;
-    for (row = data->first; row < data->last; row = ecs_data_next(data, row)) {
-        Position *position = ecs_data_get(data, row, 0);
-        Velocity *velocity = ecs_data_get(data, row, 1);
+    for (row = data->first; row < data->last; row = ecs_next(data, row)) {
+        Position *position = ecs_column(data, row, 0);
+        Velocity *velocity = ecs_column(data, row, 1);
         position->x += velocity->x;
         position->y += velocity->y;
     }

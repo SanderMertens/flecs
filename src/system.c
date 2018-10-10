@@ -226,7 +226,7 @@ void ecs_run_system(
     char *buffer = ecs_array_buffer(tables);
     char *last = ECS_OFFSET(buffer, element_size * table_count);
 
-    EcsData info = {
+    EcsRows info = {
         .world = world,
         .system = system,
         .param = param
@@ -262,7 +262,7 @@ void ecs_run_job(
     char *table_buffer = ecs_array_get(
         system_data->tables, &system_data->table_params, table_index);
 
-    EcsData info = {
+    EcsRows info = {
         .world = world,
         .system = system
     };
@@ -306,7 +306,7 @@ void ecs_system_notify(
 {
     EcsSystemAction action = system_data->action;
 
-    EcsData info = {
+    EcsRows info = {
         .world = world,
         .system = system,
         .param = NULL
