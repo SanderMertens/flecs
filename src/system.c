@@ -143,7 +143,7 @@ void add_table(
     }
 
     EcsHandle *h = NULL;
-    if (system_data->kind == EcsPeriodic) {
+    if (system_data->kind == EcsPeriodic || system_data->kind == EcsOnDemand) {
         h = ecs_array_add(&table->periodic_systems, &handle_arr_params);
     } else if (system_data->kind == EcsOnInit) {
         h = ecs_array_add(&table->init_systems, &handle_arr_params);

@@ -634,6 +634,8 @@ void ecs_iter_release(
 #define ecs_column(data, row, column) \
     ECS_OFFSET(row, (data)->columns[column] + sizeof(EcsHandle))
 
+#define ecs_entity(row) *(EcsHandle*)row
+
 /** Utility macro's */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 
