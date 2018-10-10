@@ -167,7 +167,7 @@ void family_print(
         if (id) {
             printf("%s ", id->id);
         } else {
-            printf(PRIu64 " ", h);
+            printf("%" PRIu64 " ", h);
         }
     }
 }
