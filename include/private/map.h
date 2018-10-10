@@ -11,7 +11,7 @@ typedef struct EcsMap EcsMap;
 
 typedef struct EcsMapIter {
     uint32_t bucket_index;
-    void *node;
+    uint32_t node;
 } EcsMapIter;
 
 REFLECS_EXPORT
@@ -27,6 +27,11 @@ uint32_t ecs_map_count(
     EcsMap *map);
 
 REFLECS_EXPORT
+uint32_t ecs_map_set_size(
+    EcsMap *map,
+    uint32_t size);
+
+REFLECS_EXPORT
 uint32_t ecs_map_bucket_count(
     EcsMap *map);
 
@@ -35,18 +40,24 @@ void ecs_map_clear(
     EcsMap *map);
 
 REFLECS_EXPORT
-void ecs_map_set(
+void ecs_map_set64(
     EcsMap *map,
     uint64_t key_hash,
-    const void *data);
+    uint64_t data);
+
+#define ecs_map_set(map, key_hash, data) \
+    ecs_map_set64(map, key_hash, (uintptr_t)data)
 
 REFLECS_EXPORT
-EcsResult ecs_map_remove(
+uint64_t ecs_map_get64(
     EcsMap *map,
     uint64_t key_hash);
 
+#define ecs_map_get(map, key_hash) \
+    (void*)(uintptr_t)ecs_map_get64(map, key_hash)
+
 REFLECS_EXPORT
-void* ecs_map_get(
+EcsResult ecs_map_remove(
     EcsMap *map,
     uint64_t key_hash);
 

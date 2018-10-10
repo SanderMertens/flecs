@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <alloca.h>
 #include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 /* -- Export macro's -- */
 
@@ -25,7 +27,6 @@
  * C: average number of components per entity in a world
  * t: number of entities in a matching tables
  * r: combined size of all components for one entity (a 'row')
- * c: chunk size of entity vector
  */
 
 /* -- The API uses the native bool type in C++, or a custom one in C -- */
@@ -50,13 +51,20 @@ extern "C" {
 
 typedef struct EcsWorld EcsWorld;
 
+/** A family identifies a set of components */
+typedef uint32_t EcsFamily;
+
+/** A handle identifies an entity */
 typedef uint64_t EcsHandle;
 
+
+/** Function return values */
 typedef enum EcsResult {
     EcsOk,
     EcsError
 } EcsResult;
 
+/** System kinds determine when and how systems are ran */
 typedef enum EcsSystemKind {
     EcsPeriodic,
     EcsOnInit,
@@ -64,18 +72,21 @@ typedef enum EcsSystemKind {
     EcsOnDemand
 } EcsSystemKind;
 
-typedef struct EcsInfo {
-    EcsWorld *world;
+/** Data passed to system action callback, used for iterating entities */
+typedef struct EcsRows {
     EcsHandle system;
-    EcsHandle entity;
-    struct timespec time;
-    double delta_time;
+    EcsWorld *world;
     void *param;
-} EcsInfo;
+    void *first;
+    void *last;
+    uint32_t *columns;
+    uint32_t element_size;
+    uint32_t count;
+} EcsRows;
 
+/** System action callback type */
 typedef void (*EcsSystemAction)(
-    void *data[],
-    EcsInfo *info);
+    EcsRows *data);
 
 
 /* -- World API -- */
@@ -168,7 +179,7 @@ void* ecs_get_context(
  * function, as the function must iterates over all entities and all components
  * in an entity.
  *
- * @time-complexity: O(e * c)
+ * @time-complexity: O(t * c)
  * @param world The world.
  * @param id The id to lookup.
  * @returns The entity handle if found, or ECS_HANDLE_NIL if not found.
@@ -178,6 +189,80 @@ EcsHandle ecs_lookup(
     EcsWorld *world,
     const char *id);
 
+/** Get handle to family.
+ * This operation obtains a handle to a family that can be used with
+ * ecs_new. Predefining families has performance benefits over using
+ * ecs_new, ecs_stage and ecs_commit separately. It also provides constant
+ * creation time regardless of the number of components.
+ *
+ * The ECS_FAMILY macro wraps around this function.
+ *
+ * @time-complexity: O(c)
+ * @param world The world.
+ * @param components A comma-separated string with the component identifiers.
+ * @returns Handle to the family, zero if failed.
+ */
+REFLECS_EXPORT
+EcsFamily ecs_family_get(
+    EcsWorld *world,
+    const char *components);
+
+/** Dimension the world for a specified number of entities.
+ * This operation will preallocate memory in the world for the specified number
+ * of entities. Specifying a number lower than the current number of entities in
+ * the world will have no effect.
+ *
+ * When using this operation, note that reflecs uses entities for storing
+ * systems, components and builtin components. For an exact calculation of
+ * entities, do user_entity_count + component_count + system_count + 3. The 3
+ * stands for the number of builtin components.
+ *
+ * Note that this operation does not allocate memory in tables. To preallocate
+ * memory in a table, use ecs_dim_family. Correctly using these functions
+ * prevents reflecs from doing dynamic memory allocations in the main loop.
+ *
+ * @time-complexity: O(1)
+ * @param world The world.
+ * @param entity_count The number of entities to preallocate.
+ */
+REFLECS_EXPORT
+void ecs_dim(
+    EcsWorld *world,
+    uint32_t entity_count);
+
+/** Dimension a family for a specified number of entities.
+ * This operation will preallocate memory for a family (table) for the
+ * specified number of entites. Specifying a number lower than the current
+ * number of entities in the table will have no effect.
+ *
+ * If no table exists yet for this family (when no entities have been committed
+ * for the family) it will be created, even if the entity_count is zero. This
+ * operation can thus also be used to just preallocate empty tables.
+ *
+ * If the specified family is unknown, the behavior of this function is
+ * unspecified. To ensure that the family exists, use ecs_family_get or
+ * ECS_FAMILY.
+ *
+ * @time-complexity: O(1)
+ * @param world The world.
+ * @param family Handle to the family, as obtained by ecs_family_get.
+ * @param entity_count The number of entities to preallocate.
+ */
+REFLECS_EXPORT
+void ecs_dim_family(
+    EcsWorld *world,
+    EcsFamily family,
+    uint32_t entity_count);
+
+/** Dump contents of world
+ * This operation prints current tables and entities to the console.
+ *
+ * @time-complexity: O(e)
+ * @param world The world.
+ */
+REFLECS_EXPORT
+void ecs_dump(
+    EcsWorld *world);
 
 /* -- Entity API -- */
 
@@ -200,13 +285,15 @@ EcsHandle ecs_lookup(
  * operations may move an entity in memory. Handles provide a safe mechanism for
  * addressing entities. The average lookup complexity for a handle is O(1).
  *
- * @time-complexity: O(1) (average, O(e) when rehashing lookup map)
+ * @time-complexity: O(1)
  * @param world: The world to which to add the entity.
+ * @param family: A handle to a component family (optional, zero if no family).
  * @returns: A handle to the new entity.
  */
 REFLECS_EXPORT
 EcsHandle ecs_new(
-    EcsWorld *world);
+    EcsWorld *world,
+    EcsFamily family);
 
 /** Delete an existing entity.
  * Deleting an entity in most cases causes the data of another entity to be
@@ -223,7 +310,7 @@ EcsHandle ecs_new(
  * specified handle will exist after the operation. If a handle is provided to
  * the function that does not resolve to an entity, this function is a no-op.
  *
- * @time-complexity: O(1 + r + e / c)
+ * @time-complexity: O(r)
  * @param world: The world.
  * @param entity: A handle to the entity to delete.
  */
@@ -232,31 +319,6 @@ void ecs_delete(
     EcsWorld *world,
     EcsHandle entity);
 
-/** Add a component to an entity and return a pointer to its data.
- * This operation is a combination of ecs_stage, ecs_commit and ecs_get. It
- * adds a component to an entity, commits it to memory and subsequently
- * retrieves a pointer to the component, so that its data can be initialized by
- * an application.
- *
- * This operation is expensive as it results in moving component data and entity
- * data around in memory. When adding multiple components to an entity, it is
- * more efficient to use ecs_stage and ecs_commit directly.
- *
- * If the specific combination of components did not yet exist in the world, a
- * new table will be created to store the entity. Subsequent entities with the
- * same set of components will be stored in the new table as well.
- *
- * @time-complexity: O(2 * r + c)
- * @param world: The world.
- * @param entity: Handle to the entity to which to add the component.
- * @param component: Handle to the component to add.
- * @returns: A pointer to the component data, or NULL if the operation failed.
- */
-REFLECS_EXPORT
-void* ecs_add(
-    EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component);
 
 /** Stage a component for adding.
  * Staging a component will register a component with an entity, but will not
@@ -271,14 +333,34 @@ void* ecs_add(
  * This operation does not check whether the component handle is valid. If an
  * invalid component handle is provided, the ecs_commit operation will fail.
  *
- * @time-complexity: O(c)
+ * @time-complexity: O(1)
  * @param world: The world.
  * @param entity: Handle to the entity for which to stage the component.
  * @param component: Handle to the component.
  * @returns: EcsOk if succeeded, or EcsError if the operation failed.
  */
 REFLECS_EXPORT
-EcsResult ecs_stage(
+EcsResult ecs_add(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle component);
+
+/** Stage a component for removing.
+ * This operation stages a remove for a component from an entity. The remove
+ * will not yet be committed to memory. Similar to ecs_stage, this operation
+ * requires calling ecs_commit to actually commit the changes to memory.
+ *
+ * The post condition for this operation is that the entity will not have
+ * the component after invoking ecs_commit. If the entity does not have the
+ * component when this operation is called, it is a no-op.
+ *
+ * @time-complexity: O(1)
+ * @param world: The world.
+ * @param entity: Handle to the entity from which to remove the component.
+ * @param component: The component to remove.
+ */
+REFLECS_EXPORT
+EcsResult ecs_remove(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component);
@@ -306,7 +388,7 @@ EcsResult ecs_stage(
  * to be invoked. This comparison will be skipped if there are no init / deinit
  * systems on the new / old table.
  *
- * @time-complexity: O(2 * r + 2 * c ^ 2)
+ * @time-complexity: O(2 * r + c)
  * @param world: The world.
  * @param entity: The entity to commit.
  * @returns: EcsOk if succeeded, or EcsError if the operation failed.
@@ -338,26 +420,6 @@ void* ecs_get(
     EcsHandle entity,
     EcsHandle component);
 
-/** Remove a component from an entity.
- * This operation stages a remove for a component from an entity. The remove
- * will not yet be committed to memory. Similar to ecs_stage, this operation
- * requires calling ecs_commit to actually commit the changes to memory.
- *
- * The post condition for this operation is that the entity will not have
- * the component after invoking ecs_commit. If the entity does not have the
- * component when this operation is called, it is a no-op.
- *
- * @time-complexity: O(c)
- * @param world: The world.
- * @param entity: Handle to the entity from which to remove the component.
- * @param component: The component to remove.
- */
-REFLECS_EXPORT
-void ecs_stage_remove(
-    EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component);
-
 
 /* -- Component API -- */
 
@@ -379,7 +441,7 @@ void ecs_stage_remove(
  * to creating an entity with the EcsComponent and EcsId components. The
  * returned handle can be used in any function that accepts an entity handle.
  *
- * @time-complexity: O(1 + 2 * c + 2 * r)
+ * @time-complexity: O(2 * r + c)
  * @param world: The world.
  * @param id: A unique component identifier.
  * @param size: The size of the component type (as obtained by sizeof).
@@ -420,6 +482,7 @@ EcsHandle ecs_component_new(
  * creating an entity with the EcsSystem and EcsId components. The returned
  * handle can be used in any function that accepts an entity handle.
  *
+ * @time-complexity: O(2 * r + c)
  * @param world: The world.
  * @param id: The identifier of the system.
  * @param kind: The kind of system.
@@ -444,6 +507,7 @@ EcsHandle ecs_system_new(
  * with the EcsSystem component. If a handle to an entity is provided that does
  * not have this component, the operation will fail.
  *
+ * @time-complexity: O(c)
  * @param world: The world.
  * @param system: The system to enable or disable.
  * @param enabled: true to enable the system, false to disable the system.
@@ -461,6 +525,7 @@ EcsResult ecs_enable(
  * when a handle to an entity is provided that is not a system. If this
  * operation is called on a non-system entity, the operation will return true.
  *
+ * @time-complexity: O(c)
  * @param world: The world.
  * @param system: The system to check.
  * @returns: True if the system is enabled, false if the system is disabled.
@@ -478,6 +543,7 @@ bool ecs_is_enabled(
  * On demand systems can be used as alternative to requesting lists of entities
  * repeatedly inside periodic/reactive systems, which is not efficient.
  *
+ * @time-complexity: O(t)
  * @param world: The world.
  * @param system: The system to run.
  * @param param: A user-defined parameter to pass to the system.
@@ -525,13 +591,14 @@ void ecs_iter_release(
  * handle to the new component.
  */
 #define ECS_COMPONENT(world, id) \
-    EcsHandle id##_h = ecs_component_new(world, #id, sizeof(id)); (void)id##_h;
+    EcsHandle id##_h = ecs_component_new(world, #id, sizeof(id));\
+    if (!id##_h) abort();
 
 /** Wrapper around ecs_system_new.
  * This macro provides a convenient way to register systems with a world. It can
  * be used like this:
  *
- * ECS_SYSTEM(world, Move, EcsPeriodic, Location, Speed)
+ * ECS_SYSTEM(world, Move, EcsPeriodic, Location, Speed);
  *
  * In this example, "Move" must be the identifier to a C function that matches
  * the signature of EcsSystemAction. The signature of this component will be
@@ -541,10 +608,34 @@ void ecs_iter_release(
  * holds the handle to the new system.
  */
 #define ECS_SYSTEM(world, id, kind, ...) \
-    void id(void*[], EcsInfo*);\
+    void id(EcsRows*);\
     EcsHandle id##_h = ecs_system_new(world, #id, kind, #__VA_ARGS__, id);\
-    (void)id##_h;
+    if (!id##_h) abort();
 
+/** Wrapper around ecs_family_get.
+ * This macro provides a convenient way to obtain a handle to a family. This
+ * handle can be reused with ecs_new like this:
+ *
+ * ECS_FAMILY(world, MyFamily, ComponentA, ComponentB);
+ * EcsHandle h = ecs_new(world, MyFamily);
+ *
+ * Obtaining the handle to a family and using it with ecs_new is faster
+ * than calling ecs_new, ecs_stage and ecs_commit separately. This method also
+ * provides near-constant creation time for entities regardless of the number of
+ * components, whereas using ecs_stage and ecs_commit takes longer for larger
+ * numbers of components.
+ */
+#define ECS_FAMILY(world, id, ...) \
+    EcsHandle id = ecs_family_get(world, #__VA_ARGS__);\
+    if (!id) abort();
+
+#define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)
+
+#define ecs_column(data, row, column) \
+    ECS_OFFSET(row, (data)->columns[column] + sizeof(EcsHandle))
+
+/** Utility macro's */
+#define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 
 #ifdef __cplusplus
 }

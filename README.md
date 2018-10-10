@@ -1,7 +1,9 @@
 # reflecs
-Reflecs is an entity component system implemented in C99. It has zero dependencies, and has a footprint of around 30Kb. Its key features are:
-- Simple API that uses native types and functions for components and systems
-- High performance due to efficient memory design
+Reflecs is an entity component system implemented in C99. Its key features are:
+- An API design that is optimized for writing fast vectorized code
+- A very efficient and low-overhead storage engine
+- Dynamic evaluation of non-empty systems/tables
+- 30Kb library footprint
 - Job scheduler for running system workloads in parallel
 - Periodic, reactive and on-demand systems
 
@@ -17,21 +19,14 @@ typedef struct Vector2D {
 typedef Vector2D Position;
 typedef Vector2D Velocity;
 
-void SetVector2D(Vector2D *vec, float x, float y) {
-    vec->x = x;
-    vec->y = y;
-}
-
-void Init(void *data[], EcsInfo *info) {
-    SetVector2D(data[0], 0, 0);
-    SetVector2D(data[1], 0.5, 1.0);
-}
-
-void Move(void *data[], EcsInfo *info) {
-    Position *position = data[0];
-    Velocity *velocity = data[1];
-    position->x += velocity->x * info->delta_time;
-    position->y += velocity->y * info->delta_time;
+void Move(EcsRows *data) {
+    void *row;
+    for (row = data->first; row < data->last; row = ecs_next(data, row)) {
+        Position *position = ecs_column(data, row, 0);
+        Velocity *velocity = ecs_column(data, row, 1);
+        position->x += velocity->x;
+        position->y += velocity->y;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -40,14 +35,11 @@ int main(int argc, char *argv[]) {
     /* Register components and systems */
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Init, EcsOnInit, Position, Velocity);
+    ECS_FAMILY(world, Movable, Position, Velocity);
     ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity);
 
-    /* Create entity, add components, commit to memory (invokes Init system) */
-    EcsHandle e = ecs_new(world);
-    ecs_stage(world, e, Position_h);
-    ecs_stage(world, e, Velocity_h);
-    ecs_commit(world, e);
+    /* Create entity with Movable family */
+    EcsHandle e = ecs_new(world, Movable);
 
     /* Progress world in main loop (invokes Move system) */
     while (true) {

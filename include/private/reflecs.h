@@ -1,107 +1,66 @@
 #ifndef REFLECS_PRIVATE_H
 #define REFLECS_PRIVATE_H
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-
 #include "types.h"
 
 
+/* -- World API -- */
 
-/* -- Private entity API -- */
+EcsHandle ecs_world_new_handle(
+    EcsWorld *world);
 
-void ecs_entity_move(
-    EcsEntity *entity,
-    void *to,
-    void *from);
-
-void* ecs_entity_get(
+EcsFamily ecs_world_register_family(
     EcsWorld *world,
-    EcsEntity *entity,
-    EcsHandle h_component);
+    EcsHandle to_add,
+    EcsArray *set);
 
-/* -- Private component API -- */
+EcsTable* ecs_world_get_table(
+    EcsWorld *world,
+    EcsFamily family_id);
 
-EcsArray* ecs_components_diff(
-    EcsArray *to,
-    EcsArray *from);
-
-bool ecs_components_is_union_empty(
-    EcsArray *to,
-    EcsArray *from);
-
-
-/* -- Private system API -- */
-
-EcsResult ecs_system_notify_create_table(
+void ecs_world_activate_system(
     EcsWorld *world,
     EcsHandle system,
+    bool active);
+
+/* -- Family utility API -- */
+
+EcsFamily ecs_family_merge(
+    EcsWorld *world,
+    EcsFamily cur_id,
+    EcsFamily to_add_id,
+    EcsFamily to_remove_id);
+
+bool ecs_family_contains(
+    EcsWorld *world,
+    EcsFamily family_id_1,
+    EcsFamily family_id_2);
+
+/* -- Table API -- */
+
+EcsResult ecs_table_init(
+    EcsWorld *world,
     EcsTable *table);
 
-void ecs_system_notify(
+EcsResult ecs_table_init_w_size(
     EcsWorld *world,
-    EcsHandle system,
     EcsTable *table,
-    EcsEntity *entity);
+    EcsArray *family,
+    uint32_t size);
 
-void ecs_run_job(
-    EcsWorld *world,
-    EcsJob *job);
-
-void ecs_schedule_jobs(
-    EcsWorld *world,
-    EcsHandle system);
-
-void ecs_run_jobs(
-    EcsWorld *world,
-    EcsHandle system);
-
-
-/* -- Private world API -- */
-
-EcsArray* ecs_world_get_components(
-    EcsWorld *world,
-    uint64_t components_hash);
-
-uint64_t ecs_world_components_hash(
-    EcsWorld *world,
-    EcsArray *set,
-    EcsHandle to_add);
-
-EcsTable *ecs_world_lookup_table(
-    EcsWorld *world,
-    uint64_t components_hash);
-
-EcsTable *ecs_world_create_table(
-    EcsWorld *world,
-    uint64_t components_hash);
-
-
-/* -- Private table API -- */
-
-EcsTable* ecs_table_new(
-    EcsWorld *world,
-    uint64_t components_hash);
-
-EcsTable* ecs_table_new_w_size(
-    EcsWorld *world,
-    uint64_t components_hash,
-    size_t size);
-
-void ecs_table_add_component(
-    EcsTable *table,
-    EcsHandle component_type);
-
-void* ecs_table_insert(
+uint32_t ecs_table_insert(
     EcsTable *table,
     EcsHandle entity);
 
-void ecs_table_remove(
+void ecs_table_delete(
     EcsTable *table,
-    void *row);
+    uint32_t index);
 
-int32_t ecs_table_find_column(
+void *ecs_table_get(
+    EcsTable *table,
+    uint32_t index);
+
+uint32_t ecs_table_column_offset(
     EcsTable *table,
     EcsHandle component);
 
@@ -109,30 +68,56 @@ bool ecs_table_has_components(
     EcsTable *table,
     EcsArray *components);
 
-void* ecs_table_column(
-    EcsTable *table,
-    void *row,
-    uint32_t column);
 
-size_t ecs_table_column_size(
-    EcsTable *table,
-    uint32_t column);
+/* -- System API -- */
 
-void ecs_table_add_on_init(
+EcsResult ecs_system_notify_create_table(
+    EcsWorld *world,
+    EcsHandle system,
+    EcsTable *table);
+
+void ecs_system_activate_table(
+    EcsWorld *world,
+    EcsHandle system,
     EcsTable *table,
+    bool active);
+
+void ecs_run_job(
+    EcsWorld *world,
+    EcsJob *job);
+
+void ecs_system_notify(
+    EcsWorld *world,
+    EcsHandle system,
+    EcsSystem *system_data,
+    EcsTable *table,
+    uint32_t table_index,
+    uint32_t row_index);
+
+/* -- Worker API -- */
+
+void ecs_schedule_jobs(
+    EcsWorld *world,
     EcsHandle system);
 
-void ecs_table_add_on_deinit(
-    EcsTable *table,
+void ecs_prepare_jobs(
+    EcsWorld *world,
     EcsHandle system);
 
+void ecs_run_jobs(
+    EcsWorld *world);
 
 /* -- Private utilities -- */
 
 void ecs_hash(
     const void *key,
     size_t length,
-    uint64_t *result);
+    uint32_t *result);
 
+EcsRow ecs_to_row(
+    uint64_t value);
+
+uint64_t ecs_from_row(
+    EcsRow row);
 
 #endif

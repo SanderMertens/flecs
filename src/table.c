@@ -1,203 +1,155 @@
 #include "include/private/reflecs.h"
 
+/** Callback that is invoked when a row is moved in the table->rows array */
 static
-void ecs_table_row_move(
+void move_row(
+    EcsArray *array,
+    const EcsArrayParams *params,
     void *to,
     void *from,
     void *ctx)
 {
-    EcsEntity *e = *(EcsEntity**)from;
-    *(EcsEntity**)to = e;
-    ecs_entity_move(e, to, from);
+    EcsTable *table = ctx;
+    EcsWorld *world = table->world;
+    uint32_t new_index = ecs_array_get_index(array, params, to);
+    EcsHandle handle = *(EcsHandle*)to;
+    EcsRow row = {.family_id = table->family_id, .index = new_index};
+    ecs_map_set64(world->entity_index, handle, ecs_from_row(row));
 }
 
 static
-EcsResult ecs_table_init(
+void activate_table_systems(
     EcsWorld *world,
     EcsTable *table,
-    EcsArray *components)
+    EcsArray *systems,
+    bool activate)
 {
-    size_t column_offset = sizeof(EcsEntity*);
+    if (systems) {
+        EcsIter it = ecs_array_iter(systems, &handle_arr_params);
+        while (ecs_iter_hasnext(&it)) {
+            EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
+            ecs_system_activate_table(world, system, table, activate);
+        }
+    }
+}
+
+/** Notify systems that a table has changed its active state */
+static
+void activate_table(
+    EcsWorld *world,
+    EcsTable *table,
+    bool activate)
+{
+    activate_table_systems(world, table, table->periodic_systems, activate);
+    activate_table_systems(world, table, table->init_systems, activate);
+    activate_table_systems(world, table, table->deinit_systems, activate);
+}
+
+/* -- Private functions -- */
+
+EcsResult ecs_table_init_w_size(
+    EcsWorld *world,
+    EcsTable *table,
+    EcsArray *family,
+    uint32_t size)
+{
+    table->world = world;
+    table->family = family;
+
+    table->periodic_systems = NULL;
+    table->init_systems = NULL;
+    table->deinit_systems = NULL;
+
+    table->row_params.element_size = size + sizeof(EcsHandle);
+    table->row_params.compare_action = NULL;
+    table->row_params.move_action = move_row;
+    table->row_params.move_ctx = table;
+
+    table->rows = ecs_array_new(
+        &table->row_params, ECS_TABLE_INITIAL_ROW_COUNT);
+
+    return EcsOk;
+}
+
+EcsResult ecs_table_init(
+    EcsWorld *world,
+    EcsTable *table)
+{
+    EcsArray *family = ecs_map_get(world->family_index, table->family_id);
+    if (!family) {
+        abort();
+    }
+
+    EcsIter it = ecs_array_iter(family, &handle_arr_params);
     uint32_t column = 0;
+    uint32_t total_size = 0;
+    table->columns = malloc(sizeof(uint16_t) * ecs_array_count(family));
 
-    table->columns = malloc(sizeof(uint32_t) * (ecs_array_count(components) + 1));
-
-    EcsIter it = ecs_array_iter(components, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-
         EcsComponent *type = ecs_get(world, h, world->component);
         if (!type) {
             return EcsError;
         }
 
-        table->columns[column] = column_offset;
-        column_offset += type->size;
+        table->columns[column] = type->size;
+        total_size += type->size;
         column ++;
     }
 
-    table->columns[column] = column_offset;
-
-    table->rows_params.element_size = column_offset;
-    table->rows_params.chunk_count = REFLECS_ROW_CHUNK_COUNT;
-    table->rows_params.compare_action = NULL;
-    table->rows_params.move_action = ecs_table_row_move;
-    table->rows_params.ctx = NULL;
-    table->rows = ecs_vector_new(&table->rows_params);
+    ecs_table_init_w_size(world, table, family, total_size);
 
     return EcsOk;
 }
 
-static
-EcsTable* ecs_table_alloc(
-    EcsWorld *world,
-    uint64_t components_hash)
+uint32_t ecs_table_insert(
+    EcsTable *table,
+    EcsHandle handle)
 {
-    EcsTable *result = ecs_vector_add(world->tables, &tables_vec_params);
-    result->world = world;
-    result->components_hash = components_hash;
-    result->init_systems = NULL;
-    result->deinit_systems = NULL;
-    return result;
-}
+    void *row = ecs_array_add(&table->rows, &table->row_params);
+    *(EcsHandle*)row = handle;
+    uint32_t index = ecs_array_count(table->rows) - 1;
 
-EcsTable* ecs_table_new(
-    EcsWorld *world,
-    uint64_t components_hash)
-{
-    EcsArray *components = ecs_world_get_components(world, components_hash);
-    if (!components) {
-        return NULL;
+    if (!index) {
+        activate_table(table->world, table, true);
     }
 
-    EcsTable *result = ecs_table_alloc(world, components_hash);
-    if (!result) {
-        return NULL;
+    return index;
+}
+
+void ecs_table_delete(
+    EcsTable *table,
+    uint32_t index)
+{
+    uint32_t count = ecs_array_remove_index(
+        table->rows, &table->row_params, index);
+    if (!count) {
+        activate_table(table->world, table, false);
     }
-
-    if (ecs_table_init(world, result, components) != EcsOk) {
-        ecs_vector_remove(world->tables, &tables_vec_params, result);
-        return NULL;
-    }
-
-    return result;
 }
 
-EcsTable* ecs_table_new_w_size(
-    EcsWorld *world,
-    uint64_t components_hash,
-    size_t size)
-{
-    EcsTable *result = ecs_table_alloc(world, components_hash);
-    if (!result) {
-        return NULL;
-    }
-
-    result->rows_params.chunk_count = REFLECS_ROW_CHUNK_COUNT;
-    result->rows_params.element_size = size + sizeof(EcsEntity*);
-    result->rows_params.compare_action = NULL;
-    result->rows_params.move_action = ecs_table_row_move;
-    result->rows_params.ctx = NULL;
-    result->columns = malloc(sizeof(uint32_t) * 2);
-    result->columns[0] = sizeof(EcsEntity*);
-    result->columns[1] = sizeof(EcsEntity*) + size;
-    result->rows = ecs_vector_new(&result->rows_params);
-
-    return result;
-}
-
-void* ecs_table_insert(
+void* ecs_table_get(
     EcsTable *table,
-    EcsHandle entity)
+    uint32_t index)
 {
-    void* row = ecs_vector_add(table->rows, &table->rows_params);
-    memset(row, 0, table->rows_params.element_size);
-    *(EcsHandle*)row = entity;
-    return row;
+    return ecs_array_get(table->rows, &table->row_params, index);
 }
 
-void ecs_table_remove(
-    EcsTable *table,
-    void *row)
-{
-    ecs_vector_remove(table->rows, &table->rows_params, row);
-}
-
-void* ecs_table_column(
-    EcsTable *table,
-    void *row,
-    uint32_t column)
-{
-    return ECS_OFFSET(row, table->columns[column]);
-}
-
-size_t ecs_table_column_size(
-    EcsTable *table,
-    uint32_t column)
-{
-    uint32_t *columns = table->columns;
-    return columns[column + 1] - columns[column];
-}
-
-int32_t ecs_table_find_column(
+uint32_t ecs_table_column_offset(
     EcsTable *table,
     EcsHandle component)
 {
-    EcsWorld *world = table->world;
-    EcsArray *set = ecs_world_get_components(world, table->components_hash);
-    if (!set) {
-        return -1;
-    }
-
-    uint32_t column = 0;
-    EcsIter it = ecs_array_iter(set, &handle_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle e = *(EcsHandle*)ecs_iter_next(&it);
-        if (e == component) {
-            return column;
-        }
-        column ++;
-    }
-
-    return -1;
-}
-
-bool ecs_table_has_components(
-    EcsTable *table,
-    EcsArray *components)
-{
-    EcsIter it = ecs_array_iter(components, &handle_arr_params);
+    EcsIter it = ecs_array_iter(table->family, &handle_arr_params);
+    uint32_t i = 0, offset = 0;
 
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        if (ecs_table_find_column(table, h) == -1) {
-            return false;
+        if (h == component) {
+            return offset;
         }
+        offset += table->columns[i];
+        i ++;
     }
 
-    return true;
-}
-
-void ecs_table_add_on_init(
-    EcsTable *table,
-    EcsHandle system)
-{
-    if (!table->init_systems) {
-        table->init_systems = ecs_vector_new(&handle_vec_params);
-    }
-
-    EcsHandle *e = ecs_vector_add(table->init_systems, &handle_vec_params);
-    *e = system;
-}
-
-void ecs_table_add_on_deinit(
-    EcsTable *table,
-    EcsHandle system)
-{
-    if (!table->deinit_systems) {
-        table->deinit_systems = ecs_vector_new(&handle_vec_params);
-    }
-
-    EcsHandle *e = ecs_vector_add(table->deinit_systems, &handle_vec_params);
-    *e = system;
+    return -1;
 }

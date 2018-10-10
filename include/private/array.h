@@ -8,15 +8,25 @@ extern "C" {
 #endif
 
 typedef struct EcsArray EcsArray;
+typedef struct EcsArrayParams EcsArrayParams;
 
 typedef int (*EcsComparator)(
     const void* p1,
     const void *p2);
 
-typedef struct EcsArrayParams {
+typedef void (*EcsMove)(
+    EcsArray *array,
+    const EcsArrayParams *params,
+    void *to,
+    void *from,
+    void *ctx);
+
+struct EcsArrayParams {
     uint32_t element_size; /* Size of an element */
     EcsComparator compare_action; /* Comparator function */
-} EcsArrayParams;
+    EcsMove move_action; /* Invoked when moving elements */
+    void *move_ctx;
+};
 
 typedef struct EcsArrayIter {
     EcsArrayParams *params;
@@ -25,13 +35,13 @@ typedef struct EcsArrayIter {
 
 REFLECS_EXPORT
 EcsArray* ecs_array_new(
-    uint32_t size,
-    const EcsArrayParams *params);
+    const EcsArrayParams *params,
+    uint32_t size);
 
 REFLECS_EXPORT
 EcsArray* ecs_array_new_from_buffer(
-    uint32_t size,
     const EcsArrayParams *params,
+    uint32_t size,
     void *buffer);
 
 REFLECS_EXPORT
@@ -39,10 +49,9 @@ void ecs_array_free(
     EcsArray *array);
 
 REFLECS_EXPORT
-EcsArray* ecs_array_add(
-    EcsArray *array,
-    const EcsArrayParams *params,
-    void *elem_out);
+void* ecs_array_add(
+    EcsArray **array_inout,
+    const EcsArrayParams *params);
 
 REFLECS_EXPORT
 void* ecs_array_get(
@@ -51,10 +60,40 @@ void* ecs_array_get(
     uint32_t index);
 
 REFLECS_EXPORT
-EcsArray* ecs_array_remove(
+uint32_t ecs_array_get_index(
+    EcsArray *array,
+    const EcsArrayParams *params,
+    void *elem);
+
+REFLECS_EXPORT
+uint32_t ecs_array_remove(
+    EcsArray *array,
+    const EcsArrayParams *params,
+    void *elem);
+
+REFLECS_EXPORT
+uint32_t ecs_array_move_index(
+    EcsArray **dst_array,
+    EcsArray *src_array,
+    const EcsArrayParams *params,
+    uint32_t index);
+
+REFLECS_EXPORT
+uint32_t ecs_array_remove_index(
     EcsArray *array,
     const EcsArrayParams *params,
     uint32_t index);
+
+REFLECS_EXPORT
+void ecs_array_reclaim(
+    EcsArray **array,
+    const EcsArrayParams *params);
+
+REFLECS_EXPORT
+uint32_t ecs_array_set_size(
+    EcsArray **array,
+    const EcsArrayParams *params,
+    uint32_t size);
 
 REFLECS_EXPORT
 uint32_t ecs_array_count(
