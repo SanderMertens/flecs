@@ -52,23 +52,28 @@ int main(int argc, char *argv[]) {
 ```
 
 ## Dynamically assigning components
-The above example demonstrates how you can use a family to specify the components for an entity. This is useful when you know in advance which components you need. Sometimes you may want to add and remove components dynamically, in which case you can use `ecs_add`, `ecs_remove` and `ecs_commit`. These functions can be used like this:
+The above example demonstrates how you can use a family to specify the components for an entity. This is useful when you know in advance which components you need. Sometimes you may want to add components dynamically, in which case you can use `ecs_add` and `ecs_commit`. These functions can be used like this:
 
 ```c
 EcsHandle e = ecs_new(world, 0); // No family
-ecs_add(world, e, Position_h); // Stage Position component
-ecs_add(world, e, Velocity_h); // Stage Velocity component
-ecs_commit(world, e); // Commit components to memoy
+ecs_add(world, e, Position_h);   // Stage Position component
+ecs_add(world, e, Velocity_h);   // Stage Velocity component
+ecs_commit(world, e);            // Commit components to memoy
 ```
 
 Whenever the components of an entity change, the entity data will move between internal tables. To minimize moving the entity around, components are first *staged* before they are *committed*. No components actually get added until you call `ecs_commit`. Removing a component can be done similarly with `ecs_remove`:
 
 ```c
 ecs_remove(world, e, Velocity_h); // Stage removing the Velocity component
-ecs_commit(world, e); // Actually remove the Velocity component
+ecs_commit(world, e);             // Actually remove the Velocity component
 ```
 
-You can mix calling `ecs_add` and `ecs_remove` within a single commit.
+You can mix calling `ecs_add` and `ecs_remove` within a single commit:
+```c
+ecs_add(world, e, Size_h);        // Stage adding the Size component
+ecs_remove(world, e, Velocity_h); // Stage removing the Velocity component
+ecs_commit(world, e);             // Actually remove the Velocity component
+```
 
 ## Initializing components
 You can initialize the value of a component in two ways. The first way lets you set the value of a component for a single entity, with the `ecs_get` operation. It can be used like this:
@@ -78,7 +83,7 @@ Position *p = ecs_get(world, e, Position_h);
 p->x = 10;
 p->y = 20;
 ```
-This method is flexible, but does come at a performance penalty since the `ecs_get` operation has to iterate over the components of the entity to find the `Position` component. For entities with small numbers of components this is probably not significant.
+This method is flexible, but does come at a performance penalty since the `ecs_get` operation has to iterate over the components of the entity to find the `Position` component. For entities with small numbers of components the penalty is probably not significant.
 
 Alternatively, you can assign all entities with a given set of components with `OnInit` systems. This is much faster than calling `ecs_get` on every single entity. You can create an `OnInit` system just like normal systems, but instead of specifying `EcsOnPeriodic`, you specify `EcsOnInit`:
 
