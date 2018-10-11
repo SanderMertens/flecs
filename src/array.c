@@ -233,7 +233,7 @@ uint32_t ecs_array_set_size(
             *array_inout = array;
             result = size;
         }
-        
+
         return result;
     }
 }

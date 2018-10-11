@@ -223,8 +223,8 @@ void ecs_run_system(
     EcsArray *tables = system_data->tables;
     uint32_t table_count = ecs_array_count(tables);
     uint32_t element_size = system_data->table_params.element_size;
-    char *buffer = ecs_array_buffer(tables);
-    char *last = ECS_OFFSET(buffer, element_size * table_count);
+    char *table_buffer = ecs_array_buffer(tables);
+    char *last = ECS_OFFSET(table_buffer, element_size * table_count);
 
     EcsRows info = {
         .world = world,
@@ -232,17 +232,18 @@ void ecs_run_system(
         .param = param
     };
 
-    for (; buffer < last; buffer += element_size) {
+    for (; table_buffer < last; table_buffer += element_size) {
         EcsTable *table = ecs_array_get(
-            world->table_db, &table_arr_params, *(uint32_t*)buffer);
+            world->table_db, &table_arr_params, *(uint32_t*)table_buffer);
         EcsArray *rows = table->rows;
+        void *buffer = ecs_array_buffer(rows);
 
         uint32_t count = ecs_array_count(rows);
         info.count = count;
         info.element_size = table->row_params.element_size;
-        info.first = ecs_array_buffer(rows);
+        info.first = ECS_OFFSET(buffer, sizeof(EcsHandle));
         info.last = ECS_OFFSET(info.first, info.element_size * count);
-        info.columns = ECS_OFFSET(buffer, sizeof(uint32_t));
+        info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t));
         action(&info);
     }
 }
@@ -271,14 +272,14 @@ void ecs_run_job(
         EcsTable *table = ecs_array_get(
             world->table_db, &table_arr_params, *(uint32_t*)table_buffer);
         EcsArray *rows = table->rows;
-        void *buffer = ecs_array_buffer(rows);
+        void *start = ecs_array_get(rows, &table->row_params, start_index);
         uint32_t count = ecs_array_count(rows);
         uint32_t element_size = table->row_params.element_size;
 
         info.count = count;
         info.element_size = element_size;
         info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t));
-        info.first = ECS_OFFSET(buffer, element_size * start_index);
+        info.first = ECS_OFFSET(start, sizeof(EcsHandle));
 
         if (remaining >= count) {
             info.last = ECS_OFFSET(info.first, element_size * count);
@@ -319,9 +320,11 @@ void ecs_system_notify(
             system_data->tables, &table_arr_params, t);
 
         if (*table_data == table_index) {
+            EcsArray *rows = table->rows;
+            void *row = ecs_array_get(rows, &table->row_params, row_index);
             info.element_size = table->row_params.element_size;
             info.columns = ECS_OFFSET(table_data, sizeof(uint32_t));
-            info.first = ecs_array_buffer(table->rows);
+            info.first = ECS_OFFSET(row, sizeof(EcsHandle));
             info.last = ECS_OFFSET(info.first, info.element_size);
             action(&info);
             break;
@@ -409,7 +412,7 @@ EcsHandle ecs_system_new(
     system_data->action = action;
     system_data->enabled = true;
     system_data->table_params.element_size =
-        sizeof(uint32_t) + sizeof(uint16_t) * (count + 1);
+        sizeof(uint32_t) + sizeof(uint32_t) * (count + 1);
     system_data->table_params.move_action = NULL;
     system_data->tables = ecs_array_new(
         &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
