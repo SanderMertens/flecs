@@ -10,7 +10,7 @@ library no larger than 50Kb. Here's what Reflecs has to offer:
 - Fast job scheduler for multi-threaded execution of systems
 - Fine-grained control over preallocation of memory to prevent allocations in main loop
 - Adaptive optimizations that remove unused code from the critical path
-- Self-describing design that enables reflection and keeps implementation small 
+- Self-describing design that enables reflection and keeps implementation small
 
 ## Example
 The following code shows a simple reflecs application:
@@ -190,11 +190,11 @@ number of entities, it is probably more efficient to filter in the system code.
 In reflecs, tags and components are actually entities that have a special
 builtin component (`EcsComponent_h`). As a result of that, you can turn regular
 entities into tags. A useful application of this is when you have a group of
-entities of which subsets belong to another entity. In a multiplayer game you
-would have a number of player entities. Each player has their own set of
-entities. By making the player entities tags, you can get a quick overview of
-which entities belong to which player. The following example illustrates how you
-can achieve this:
+entities of which subsets belong to another entity. Imagine a multiplayer game
+with number of player entities. Each player has their own set of
+units. By making the player entities tags and adding them to the units, you can
+get a quick overview of which units belong to which player. The following
+example illustrates how you can achieve this:
 
 ```c
 ECS_COMPONENT(world, Player);
