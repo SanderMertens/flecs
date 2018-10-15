@@ -1,4 +1,3 @@
-
 #include "include/private/types.h"
 
 bool ecs_iter_hasnext(

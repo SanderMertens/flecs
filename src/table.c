@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "include/private/reflecs.h"
 
 /** Callback that is invoked when a row is moved in the table->rows array */
@@ -77,9 +78,8 @@ EcsResult ecs_table_init(
     EcsTable *table)
 {
     EcsArray *family = ecs_map_get(world->family_index, table->family_id);
-    if (!family) {
-        abort();
-    }
+
+    assert(family != NULL);
 
     EcsIter it = ecs_array_iter(family, &handle_arr_params);
     uint32_t column = 0;
@@ -88,7 +88,7 @@ EcsResult ecs_table_init(
 
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        EcsComponent *type = ecs_get(world, h, world->component);
+        EcsComponent *type = ecs_get(world, h, EcsComponent_h);
         if (!type) {
             return EcsError;
         }

@@ -1,5 +1,5 @@
 # reflecs
-Reflecs is an entity component system implemented in C99. It's design goal is to pack as much punch as possible into a tiny library with a minimal API and zero dependencies. The result: a lightning fast, feature-packed ECS framework in a library no larger than 50Kb. Here's what Reflecs has to offer:
+Reflecs is an entity component system implemented in C99. It's design goal is to pack as much punch as possible into a tiny library with a minimal API and zero dependencies. The result: a lightning fast, feature-rich ECS framework in a library no larger than 50Kb. Here's what Reflecs has to offer:
 
 - Stupid simple, single header API (documentation [here](https://github.com/SanderMertens/reflecs/blob/master/include/reflecs.h#L92))
 - Memory efficient storage engine optimized to take full advantage of CPU cache lines
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity);
 
     /* Create entity with Movable family */
-    ecs_new(world, Movable);
+    ecs_new(world, Movable_h);
 
     /* Progress world in main loop (invokes Move system) */
     while (true) {
@@ -112,10 +112,86 @@ ECS_SYSTEM(world, DeinitPosition, EcsOnDeinit, Position);
 
 Just like `OnInit` systems, `OnDeinit` systems are invoked only invoked when all components in the system list have been removed. Note that `OnDeinit` systems can only be invoked by an `ecs_commit`, and never by an `ecs_new`.
 
-## Preallocating memory
-To get the best performance out of Reflecs, it is recommended to preallocate memory wherever possible. Reflecs automatically allocates memory when needed, and because memory is not automatically freed, eventually your memory usage should stabilize. If you know in advance how much memory your application is going to need however, preallocating it will make your code perform more predictably.
+## Tags
+In reflecs you can create tags. A tag is a component that does not have any
+data. In the API, tags are treated no different than components. The following
+convenience macro can be used to create a tag:
 
-Reflecs offers fine grained control over how much memory you preallocate, by letting you specify amounts per component family. There are two calls used for preallocating memory:
+```c
+ECS_TAG(world, MyTag);
+```
+
+Note that underneath, this macro uses the same function as `ECS_COMPONENT`
+(`ecs_new_component`). You can thus use this tag just as you would use a
+component.
+
+Tags can be part of families:
+
+```c
+ECS_FAMILY(world, MyFamily, Position, MyTag);
+```
+
+You can add/remove tags from entities just like you would components:
+
+```c
+EcsHandle e = ecs_new(world, 0);
+ecs_add(world, e, MyTag);
+ecs_commit(world, e);
+```
+
+Systems can use tags in their signature, again just like components:
+
+```c
+ECS_SYSTEM(world, MySystem, EcsPeriodic, Position, MyTag);
+```
+
+Tags are a very efficient way of filtering data. Because tags are components,
+two entities with the same data but different tags are still stored in different
+tables. This allows reflecs to prematch systems to those tables, and ensures
+that a system never has to iterate over entities that do not match.
+
+Tags are slightly less efficient when you have a small number of entities and
+a comparatively large number of tags to subdivide them. Since each combination
+of components creates a new table, having many tags can result in many tables. A
+table has a much higher memory footprint than an entity, so if you have a small
+number of entities, it is probably more efficient to filter in the system code.
+
+## Entities as tags
+In reflecs, tags are actually entities that have a special EcsTag component. As
+a result of that, you can use regular entities as tags as well. A useful
+application of this is when you have a group of entities of which subsets belong
+to another entity. In a multiplayer game you would have a number of player
+entities. Each player has their own set of entities. By making the player
+entities tags, you can get a quick overview of which entities belong to which
+player. The following example illustrates how you can achieve this:
+
+```c
+ECS_COMPONENT(world, Player);
+ECS_COMPONENT(world, Unit);
+
+EcsHandle my_player = ecs_new(world, Player_h);
+ecs_make_tag(world, my_player);
+
+EcsHandle unit = ecs_new(world, Unit_h);
+ecs_add(world, unit, my_player);
+ecs_commit(world, unit);
+```
+
+The only thing that the `ecs_make_tag` function does is add an empty builtin
+`EcsComponent` component to the `my_player` entity, which allows it to be used
+as a tag.
+
+## Preallocating memory
+To get the best performance out of Reflecs, it is recommended to preallocate
+memory wherever possible. Reflecs automatically allocates memory when needed,
+and because memory is not automatically freed, eventually your memory usage
+should stabilize. If you know in advance how much memory your application is
+going to need however, preallocating it will make your code perform more
+predictably.
+
+Reflecs offers fine grained control over how much memory you preallocate, by
+letting you specify amounts per component family. There are two calls used for
+preallocating memory:
 
 ```c
 ecs_dim(world, N); // N being the number of entities
@@ -125,7 +201,7 @@ With `ecs_dim` you can specify the total number of entities you expect your appl
 
 ```c
 ECS_FAMILY(world, MyFamily, Component1, Component2);
-ecs_dim_family(world, MyFamily, N); // N being the number of entities
+ecs_dim_family(world, MyFamily_h, N); // N being the number of entities
 ```
 
 With `ecs_dim_family` you specify how many entities you expect per family. This will create the table for `MyFamily` in advance, and will also preallocate the space for the number of rows specified by the call.
@@ -137,7 +213,7 @@ One simple way to reclaim as much memory as possible is to provide `0` for the n
 
 ```c
 ecs_dim(world, 0);
-ecs_dim_family(world, MyFamily, 0);
+ecs_dim_family(world, MyFamily_h, 0);
 ```
 
 This will cause Reflecs to free up as much memory as possible. It won't actually free all memory, but only as much as possible given the amount of memory currently in use.
@@ -155,3 +231,37 @@ This will, under the right conditions, make your code run N times as fast! If yo
 - Synchronization code in your application is slowing stuff down
 
 Even if your scenario isn't perfect, you will likely still see some speedup. The Reflecs job scheduler minimizes the amount of context switches in an iteration, and the scheduler packs as much processing (from multiple systems) in each job sequence as possible. For most serious applications, you should see a decent speedup.
+
+## Components, tags, systems and families are entities
+In reflecs, components, entities and families are also entities. These entities
+have special builtin components (EcsComponent, EcsSystem, EcsFamily) which gives
+them special meaning in the reflecs framework. This means you can do some cool
+things, like adding components to systems, or even other components, like this
+example shows:
+
+```c
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, MySystemData);
+ECS_SYSTEM(world, MySystem, Position);
+
+ecs_add(world, MySystem_h, MySystemData_h);
+ecs_commit(world, MySystem_h);
+
+/* Store handle to component in a custom WorldContext type (not shown here!) so
+ * we can retrieve it from the MySystem callback */
+WorldContext ctx = {.system_data = MySystemData_h};
+ecs_world_set_context(world, &ctx);
+```
+
+To access this data, in the system callback you can then do:
+
+```c
+void MySystem(EcsRows *rows) {
+    WorldContext *ctx = ecs_world_get_context(rows->world);
+    MySystemData *data = ecs_get(rows->world, rows->system, ctx->system_data);
+}
+```
+
+Note that you use the same API (`ecs_add`, `ecs_commit`, `ecs_get`) to add and
+get components from the system as you would use for regular entities. This goes
+for components and families as well.

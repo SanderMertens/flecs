@@ -54,7 +54,6 @@ typedef struct EcsWorld EcsWorld;
 /** A handle identifies an entity */
 typedef uint64_t EcsHandle;
 
-
 /** Function return values */
 typedef enum EcsResult {
     EcsOk,
@@ -85,6 +84,13 @@ typedef struct EcsRows {
 /** System action callback type */
 typedef void (*EcsSystemAction)(
     EcsRows *data);
+
+/** Handles to builtin components */
+#define EcsComponent_h (1)
+#define EcsFamily_h (2)
+#define EcsPrefab_h (3)
+#define EcsSystem_h (4)
+#define EcsId_h (5)
 
 
 /* -- World API -- */
@@ -382,6 +388,12 @@ EcsResult ecs_remove(
  */
 REFLECS_EXPORT
 EcsResult ecs_commit(
+    EcsWorld *world,
+    EcsHandle entity);
+
+/** Allow an entity to be used as tag */
+REFLECS_EXPORT
+void ecs_make_tag(
     EcsWorld *world,
     EcsHandle entity);
 

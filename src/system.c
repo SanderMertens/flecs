@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
 #include "include/private/reflecs.h"
 
 typedef EcsResult (*parse_action)(
@@ -200,7 +201,7 @@ EcsResult ecs_system_notify_create_table(
     EcsHandle system,
     EcsTable *table)
 {
-    EcsSystem *system_data = ecs_get(world, system, world->system);
+    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
     if (!system_data) {
         return EcsError;
     }
@@ -305,7 +306,7 @@ void ecs_system_activate_table(
     bool active)
 {
     EcsArray *src_array, *dst_array;
-    EcsSystem *system_data = ecs_get(world, system, world->system);
+    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
     uint32_t table_index = ecs_array_get_index(
         world->table_db, &table_arr_params, table);
 
@@ -327,9 +328,7 @@ void ecs_system_activate_table(
         }
     }
 
-    if (i == count) {
-        abort();
-    }
+    assert(i != count);
 
     uint32_t src_count = ecs_array_move_index(
         &dst_array, src_array, &system_data->table_params, i);
@@ -365,7 +364,7 @@ EcsHandle ecs_new_system(
 
     EcsHandle result = ecs_new_w_family(world, world->system_family);
 
-    EcsSystem *system_data = ecs_get(world, result, world->system);
+    EcsSystem *system_data = ecs_get(world, result, EcsSystem_h);
     system_data->action = action;
     system_data->enabled = true;
     system_data->table_params.element_size =
@@ -379,7 +378,7 @@ EcsHandle ecs_new_system(
     system_data->kind = kind;
     system_data->jobs = NULL;
 
-    EcsId *id_data = ecs_get(world, result, world->id);
+    EcsId *id_data = ecs_get(world, result, EcsId_h);
     id_data->id = id;
 
     if (parse_components(world, sig, add_component, system_data) != EcsOk) {
@@ -414,7 +413,7 @@ EcsResult ecs_enable(
     EcsHandle system,
     bool enabled)
 {
-    EcsSystem *system_data = ecs_get(world, system, world->system);
+    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
     if (!system_data) {
         return EcsError;
     }
@@ -442,7 +441,7 @@ bool ecs_is_enabled(
     EcsWorld *world,
     EcsHandle system)
 {
-    EcsSystem *system_data = ecs_get(world, system, world->system);
+    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
     if (system_data) {
         return system_data->enabled;
     } else {
@@ -455,7 +454,7 @@ void ecs_run_system(
     EcsHandle system,
     void *param)
 {
-    EcsSystem *system_data = ecs_get(world, system, world->system);
+    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
     if (!system_data->enabled) {
         return;
     }
@@ -502,23 +501,19 @@ EcsHandle ecs_new_family(
 
     EcsTable *table = ecs_world_get_table(world, family);
     if (table->family_entity) {
-        EcsId *id_ptr = ecs_get(world, table->family_entity, world->id);
-        if (!id_ptr) {
-            abort();
-        }
+        EcsId *id_ptr = ecs_get(world, table->family_entity, EcsId_h);
 
-        if (strcmp(id_ptr->id, id)) {
-            abort();
-        }
+        assert(id_ptr != NULL);
+        assert(!strcmp(id_ptr->id, id));
 
         return table->family_entity;
     } else {
         EcsHandle result = ecs_new_w_family(world, world->family_family);
-        EcsId *id_ptr = ecs_get(world, result, world->id);
+        EcsId *id_ptr = ecs_get(world, result, EcsId_h);
         id_ptr->id = id;
         table->family_entity = result;
 
-        EcsFamily *family_ptr = ecs_get(world, result, world->family);
+        EcsFamily *family_ptr = ecs_get(world, result, EcsFamily_h);
         *family_ptr = family;
 
         return result;

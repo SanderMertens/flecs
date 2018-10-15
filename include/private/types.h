@@ -100,11 +100,6 @@ struct EcsWorld {
 
     void *context;                /* Application context */
 
-    EcsHandle component;          /* EcsComponent component handle */
-    EcsHandle family;             /* EcsFamily component handle */
-    EcsHandle prefab;             /* EcsPrefab tag handle */
-    EcsHandle system;             /* EcsSystem component handle */
-    EcsHandle id;                 /* EcsId component handle */
     EcsHandle last_handle;        /* Last issued handle */
 
     EcsFamily component_family;   /* EcsComponent, EcsId */

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <inttypes.h>
+#include <assert.h>
 #include "include/private/reflecs.h"
 
 const EcsArrayParams table_arr_params = {
@@ -61,19 +62,16 @@ void bootstrap_component(
     ecs_add(world, handle, handle);
     uint64_t family_id = ecs_map_get64(world->add_stage, handle);
 
-    world->component = handle;
+    assert (handle == EcsComponent_h);
 
     ecs_world_register_family(world, handle, NULL);
     bootstrap_component_table(world, family_id);
 
-    if (ecs_commit(world, world->component) != EcsOk) {
-        abort();
-    }
+    assert (ecs_commit(world, EcsComponent_h) == EcsOk);
 
     EcsComponent *type_data = ecs_get(world, handle, handle);
-    if (!type_data) {
-        abort();
-    }
+
+    assert(type_data != NULL);
 
     type_data->size = sizeof(EcsComponent);
 }
@@ -85,12 +83,11 @@ EcsHandle init_component(
     size_t size)
 {
     EcsHandle handle = ecs_new(world, 0);
-    ecs_add(world, handle, world->component);
+    ecs_add(world, handle, EcsComponent_h);
     ecs_commit(world, handle);
-    EcsComponent *component_data = ecs_get(world, handle, world->component);
-    if (!component_data) {
-        abort();
-    }
+    EcsComponent *component_data = ecs_get(world, handle, EcsComponent_h);
+
+    assert(component_data != NULL);
 
     component_data->size = size;
 
@@ -104,12 +101,11 @@ void init_id(
     EcsHandle handle,
     const char *id)
 {
-    ecs_add(world, handle, world->id);
+    ecs_add(world, handle, EcsId_h);
     ecs_commit(world, handle);
-    EcsId *id_data = ecs_get(world, handle, world->id);
-    if (!id_data) {
-        abort();
-    }
+    EcsId *id_data = ecs_get(world, handle, EcsId_h);
+
+    assert(id_data != NULL);
 
     id_data->id = (char*)id;
 }
@@ -122,7 +118,7 @@ EcsFamily init_family(
 {
     EcsFamily family = ecs_world_register_family(world, component, NULL);
     EcsArray *family_array = ecs_map_get(world->family_index, family);
-    return ecs_world_register_family(world, world->id, family_array);
+    return ecs_world_register_family(world, EcsId_h, family_array);
 }
 
 /** Create a new table and register it with the world and systems */
@@ -174,7 +170,7 @@ void family_print(
     EcsIter it = ecs_array_iter(family, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        EcsId *id = ecs_get(world, h, world->id);
+        EcsId *id = ecs_get(world, h, EcsId_h);
         if (id) {
             printf("%s ", id->id);
         } else {
@@ -210,30 +206,24 @@ EcsFamily ecs_family_from_handle(
 {
     uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
 
-    if (row_64) {
-        EcsRow row = ecs_to_row(row_64);
-        EcsTable *table = ecs_world_get_table(world, row.family_id);
-        EcsHandle *components = ecs_array_buffer(table->family);
-        EcsHandle component = components[0];
-        EcsFamily family = 0;
+    assert(row_64 != 0);
 
-        if (component == world->family) {
-            family = *(EcsFamily*)
-                ECS_OFFSET(ecs_table_get(table, row.index), sizeof(EcsHandle));
-        } else if (component == world->component || component == world->prefab){
-            family = ecs_world_register_family(world, entity, NULL);
-        }
+    EcsRow row = ecs_to_row(row_64);
+    EcsTable *table = ecs_world_get_table(world, row.family_id);
+    EcsHandle *components = ecs_array_buffer(table->family);
+    EcsHandle component = components[0];
+    EcsFamily family = 0;
 
-        if (!family) {
-            abort();
-        }
-
-        return family;
+    if (component == EcsFamily_h) {
+        family = *(EcsFamily*)
+            ECS_OFFSET(ecs_table_get(table, row.index), sizeof(EcsHandle));
+    } else if (component == EcsComponent_h || component == EcsPrefab_h){
+        family = ecs_world_register_family(world, entity, NULL);
     }
 
-    abort();
+    assert(family != 0);
 
-    return 0;
+    return family;
 }
 
 
@@ -361,9 +351,7 @@ bool ecs_family_contains(
     EcsArray *f_1 = ecs_map_get(world->family_index, family_id_1);
     EcsArray *f_2 = ecs_map_get(world->family_index, family_id_2);
 
-    if (!f_1 || !f_2) {
-        abort();
-    }
+    assert(f_1 && f_2);
 
     uint32_t i_2, i_1 = 0;
     EcsHandle *h2p, *h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
@@ -511,7 +499,7 @@ void ecs_dump(
         EcsHandle h = *(EcsHandle*)row_ptr;
 
         printf("[%u, %u] %" PRIu64 " - ", row.family_id, row.index, h);
-        EcsId *id = ecs_get(world, h, world->id);
+        EcsId *id = ecs_get(world, h, EcsId_h);
         if (id) {
             printf("%s", id->id);
         } else {
@@ -543,28 +531,24 @@ EcsWorld *ecs_init(void) {
     result->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
     result->add_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
     result->remove_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    result->component = 0;
-    result->system = 0;
-    result->id = 0;
     result->last_handle = 0;
 
     bootstrap_component(result);
+    assert (init_component(result, sizeof(EcsFamily)) == EcsFamily_h);
+    assert (init_component(result, 0) == EcsPrefab_h);
+    assert (init_component(result, sizeof(EcsSystem)) == EcsSystem_h);
+    assert (init_component(result, sizeof(EcsId)) == EcsId_h);
 
-    result->family = init_component(result, sizeof(EcsFamily));
-    result->prefab = init_component(result, 0);
-    result->system = init_component(result, sizeof(EcsSystem));
-    result->id = init_component(result, sizeof(EcsId));
+    init_id(result, EcsComponent_h, "EcsComponent");
+    init_id(result, EcsFamily_h, "EcsFamily");
+    init_id(result, EcsPrefab_h, "EcsPrefab");
+    init_id(result, EcsSystem_h, "EcsSystem");
+    init_id(result, EcsId_h, "EcsId");
 
-    init_id(result, result->component, "EcsComponent");
-    init_id(result, result->family, "EcsFamily");
-    init_id(result, result->prefab, "EcsPrefab");
-    init_id(result, result->system, "EcsSystem");
-    init_id(result, result->id, "EcsId");
-
-    result->component_family = init_family(result, result->component);
-    result->family_family = init_family(result, result->family);
-    result->prefab_family = init_family(result, result->prefab);
-    result->system_family = init_family(result, result->system);
+    result->component_family = init_family(result, EcsComponent_h);
+    result->family_family = init_family(result, EcsFamily_h);
+    result->prefab_family = init_family(result, EcsPrefab_h);
+    result->system_family = init_family(result, EcsSystem_h);
 
     return result;
 }
@@ -609,12 +593,11 @@ EcsHandle ecs_lookup(
     const char *id)
 {
     EcsIter it = ecs_array_iter(world->table_db, &table_arr_params);
-    EcsHandle id_component = world->id;
 
     while (ecs_iter_hasnext(&it)) {
         EcsTable *table = ecs_iter_next(&it);
 
-        if (ecs_table_column_offset(table, id_component) == -1) {
+        if (ecs_table_column_offset(table, EcsId_h) == -1) {
             continue;
         }
 
@@ -625,7 +608,7 @@ EcsHandle ecs_lookup(
         while (ecs_iter_hasnext(&row_it)) {
             void *row = ecs_iter_next(&row_it);
             EcsHandle h = *(EcsHandle*)row;
-            EcsId *id_ptr = ecs_get(world, h, id_component);
+            EcsId *id_ptr = ecs_get(world, h, EcsId_h);
             if (!strcmp(id_ptr->id, id)) {
                 return h;
             }

@@ -1,4 +1,3 @@
-
 #include <string.h>
 #include "include/private/types.h"
 

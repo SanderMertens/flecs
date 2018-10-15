@@ -1,5 +1,6 @@
-#include "include/private/reflecs.h"
 #include <string.h>
+#include <assert.h>
+#include "include/private/reflecs.h"
 
 /** Move row from one table to another table */
 static
@@ -95,7 +96,7 @@ void notify(
     for (i = 0; i < count; i ++) {
         EcsHandle h = *(EcsHandle*)
             ecs_array_get(systems, &handle_arr_params, i);
-        EcsSystem *system_data = ecs_get(world, h, world->system);
+        EcsSystem *system_data = ecs_get(world, h, EcsSystem_h);
 
         if (ecs_family_contains(world, system_data->family_id, family)) {
             ecs_system_notify(world, h, system_data, table, table_index, row);
@@ -150,9 +151,7 @@ EcsResult stage(
     EcsFamily new_family_id =
         ecs_world_register_family(world, component, family);
 
-    if (!new_family_id) {
-        abort();
-    }
+    assert(new_family_id != 0);
 
     if (family_id != new_family_id) {
         if (is_remove) {
@@ -175,9 +174,8 @@ EcsResult commit_w_family(
     EcsFamily to_remove)
 {
     EcsTable *new_table = ecs_world_get_table(world, family_id);
-    if (!new_table) {
-        abort();
-    }
+
+    assert(new_table != NULL);
 
     uint32_t new_index = ecs_table_insert(new_table, entity);
     uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
@@ -288,6 +286,17 @@ EcsResult ecs_remove(
     return stage(world, entity, component, true);
 }
 
+void ecs_make_tag(
+    EcsWorld *world,
+    EcsHandle entity)
+{
+    assert (ecs_add(world, entity, EcsComponent_h) == EcsOk);
+    assert (ecs_commit(world, entity) == EcsOk);
+
+    EcsComponent *ptr = ecs_get(world, entity, EcsComponent_h);
+    ptr->size = 0;
+}
+
 void* ecs_get(
     EcsWorld *world,
     EcsHandle entity,
@@ -332,12 +341,12 @@ EcsHandle ecs_new_component(
 {
     EcsHandle result = ecs_new_w_family(world, world->component_family);
 
-    EcsComponent *component_data = ecs_get(world, result, world->component);
+    EcsComponent *component_data = ecs_get(world, result, EcsComponent_h);
     if (!component_data) {
         return 0;
     }
 
-    EcsId *id_data = ecs_get(world, result, world->id);
+    EcsId *id_data = ecs_get(world, result, EcsId_h);
     if (!id_data) {
         return 0;
     }
@@ -355,7 +364,7 @@ EcsHandle ecs_new_prefab(
 {
     EcsHandle result = ecs_new_w_family(world, world->prefab_family);
 
-    EcsId *id_data = ecs_get(world, result, world->id);
+    EcsId *id_data = ecs_get(world, result, EcsId_h);
     if (!id_data) {
         return 0;
     }

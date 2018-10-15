@@ -1,4 +1,4 @@
-
+#include <assert.h>
 #include "include/private/types.h"
 
 #define REFLECS_LOAD_FACTOR (3.0f / 4.0f)
@@ -219,9 +219,7 @@ void *next(
     EcsMap *map = iter->data;
     EcsMapIter *iter_data = iter->ctx;
     EcsMapNode *node_p = node_from_index(map->nodes, iter_data->node);
-    if (!node_p) {
-        abort();
-    }
+    assert(node_p != NULL);
     return (void*)node_p->data;
 }
 
