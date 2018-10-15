@@ -125,7 +125,7 @@ void deinit_components(
 
 /** Stage components for adding or removing from an entity */
 static
-EcsResult ecs_stage(
+EcsResult stage(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component,
@@ -204,6 +204,15 @@ EcsResult commit_w_family(
     return EcsOk;
 }
 
+/* -- Private functions -- */
+EcsHandle ecs_new_w_family(
+    EcsWorld *world,
+    EcsFamily family_id)
+{
+    EcsHandle entity = ++ world->last_handle;
+    commit_w_family(world, entity, family_id, family_id, 0);
+    return entity;
+}
 
 /* -- Public functions -- */
 
@@ -239,10 +248,11 @@ EcsResult ecs_commit(
 
 EcsHandle ecs_new(
     EcsWorld *world,
-    EcsFamily family_id)
+    EcsHandle type)
 {
     EcsHandle entity = ++ world->last_handle;
-    if (family_id) {
+    if (type) {
+        EcsFamily family_id = ecs_family_from_handle(world, type);
         commit_w_family(world, entity, family_id, family_id, 0);
     }
 
@@ -267,7 +277,7 @@ EcsResult ecs_add(
     EcsHandle entity,
     EcsHandle component)
 {
-    return ecs_stage(world, entity, component, false);
+    return stage(world, entity, component, false);
 }
 
 EcsResult ecs_remove(
@@ -275,7 +285,7 @@ EcsResult ecs_remove(
     EcsHandle entity,
     EcsHandle component)
 {
-    return ecs_stage(world, entity, component, true);
+    return stage(world, entity, component, true);
 }
 
 void* ecs_get(
@@ -315,24 +325,12 @@ void* ecs_get(
     return ECS_OFFSET(row_ptr, offset + sizeof(EcsHandle));
 }
 
-EcsHandle ecs_component_new(
+EcsHandle ecs_new_component(
     EcsWorld *world,
     const char *id,
     size_t size)
 {
-    EcsHandle result = ecs_new(world, 0);
-
-    if (ecs_add(world, result, world->component) != EcsOk) {
-        return 0;
-    }
-
-    if (ecs_add(world, result, world->id) != EcsOk) {
-        return 0;
-    }
-
-    if (ecs_commit(world, result) != EcsOk) {
-        return 0;
-    }
+    EcsHandle result = ecs_new_w_family(world, world->component_family);
 
     EcsComponent *component_data = ecs_get(world, result, world->component);
     if (!component_data) {
@@ -346,6 +344,23 @@ EcsHandle ecs_component_new(
 
     id_data->id = id;
     component_data->size = size;
+
+    return result;
+}
+
+EcsHandle ecs_new_prefab(
+    EcsWorld *world,
+    const char *id,
+    EcsHandle type)
+{
+    EcsHandle result = ecs_new_w_family(world, world->prefab_family);
+
+    EcsId *id_data = ecs_get(world, result, world->id);
+    if (!id_data) {
+        return 0;
+    }
+
+    id_data->id = id;
 
     return result;
 }

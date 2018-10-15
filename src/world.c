@@ -114,6 +114,17 @@ void init_id(
     id_data->id = (char*)id;
 }
 
+/** Obtain family id for specified component + EcsId */
+static
+EcsFamily init_family(
+    EcsWorld *world,
+    EcsHandle component)
+{
+    EcsFamily family = ecs_world_register_family(world, component, NULL);
+    EcsArray *family_array = ecs_map_get(world->family_index, family);
+    return ecs_world_register_family(world, world->id, family_array);
+}
+
 /** Create a new table and register it with the world and systems */
 static
 EcsTable* create_table(
@@ -191,6 +202,40 @@ EcsFamily register_family_from_buffer(
 
 
 /* -- Private functions -- */
+
+/** Get family id from entity handle */
+EcsFamily ecs_family_from_handle(
+    EcsWorld *world,
+    EcsHandle entity)
+{
+    uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
+
+    if (row_64) {
+        EcsRow row = ecs_to_row(row_64);
+        EcsTable *table = ecs_world_get_table(world, row.family_id);
+        EcsHandle *components = ecs_array_buffer(table->family);
+        EcsHandle component = components[0];
+        EcsFamily family = 0;
+
+        if (component == world->family) {
+            family = *(EcsFamily*)
+                ECS_OFFSET(ecs_table_get(table, row.index), sizeof(EcsHandle));
+        } else if (component == world->component || component == world->prefab){
+            family = ecs_world_register_family(world, entity, NULL);
+        }
+
+        if (!family) {
+            abort();
+        }
+
+        return family;
+    }
+
+    abort();
+
+    return 0;
+}
+
 
 /** Register a new family, optionally extending from existing family */
 EcsFamily ecs_world_register_family(
@@ -505,12 +550,21 @@ EcsWorld *ecs_init(void) {
 
     bootstrap_component(result);
 
+    result->family = init_component(result, sizeof(EcsFamily));
+    result->prefab = init_component(result, 0);
     result->system = init_component(result, sizeof(EcsSystem));
     result->id = init_component(result, sizeof(EcsId));
 
     init_id(result, result->component, "EcsComponent");
+    init_id(result, result->family, "EcsFamily");
+    init_id(result, result->prefab, "EcsPrefab");
     init_id(result, result->system, "EcsSystem");
     init_id(result, result->id, "EcsId");
+
+    result->component_family = init_family(result, result->component);
+    result->family_family = init_family(result, result->family);
+    result->prefab_family = init_family(result, result->prefab);
+    result->system_family = init_family(result, result->system);
 
     return result;
 }
@@ -540,9 +594,10 @@ void ecs_dim(
 
 void ecs_dim_family(
     EcsWorld *world,
-    EcsFamily family_id,
+    EcsHandle type,
     uint32_t entity_count)
 {
+    EcsFamily family_id = ecs_family_from_handle(world, type);
     EcsTable *table = ecs_world_get_table(world, family_id);
     if (table) {
         ecs_array_set_size(&table->rows, &table->row_params, entity_count);

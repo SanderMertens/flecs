@@ -18,6 +18,9 @@
 #define ECS_SYSTEM_INITIAL_TABLE_COUNT (4)
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
+/** A family identifies a set of components */
+typedef uint32_t EcsFamily;
+
 /* -- Builtin component types -- */
 
 typedef struct EcsComponent {
@@ -32,10 +35,10 @@ typedef struct EcsSystem {
     EcsFamily family_id;    /* Family with all system components */
     EcsSystemAction action; /* Callback to be invoked for matching rows */
     EcsArray *components;   /* System components in specified order */
-    EcsArray *tables;       /* Table index + column offsets for components */
     EcsArray *inactive_tables; /* Inactive tables */
-    EcsArray *jobs;
-    EcsArrayParams table_params; /* Parameters for table array */
+    EcsArray *jobs;         /* Jobs for this system */
+    EcsArray *tables;       /* Table index + column offsets for components */
+    EcsArrayParams table_params; /* Parameters for tables array */
     EcsSystemKind kind;     /* Kind that determines when system is invoked */
     bool enabled;           /* Is system enabled or not */
 } EcsSystem;
@@ -43,6 +46,7 @@ typedef struct EcsSystem {
 /* -- Private types -- */
 
 typedef struct EcsTable {
+    EcsHandle family_entity;      /* Only set if family is explicitly created */
     EcsWorld *world;              /* Reference to the world */
     EcsArray *family;             /* Reference to family_index entry */
     EcsArray *rows;               /* Rows of the table */
@@ -55,7 +59,7 @@ typedef struct EcsTable {
 } EcsTable;
 
 typedef struct EcsRow {
-    uint32_t family_id;           /* Identifies a family in family_index */
+    uint32_t family_id;           /* Identifies a family (and table) in world */
     uint32_t index;               /* Index of the entity in its table */
 } EcsRow;
 
@@ -78,7 +82,7 @@ struct EcsWorld {
     EcsArray *table_db;           /* Table storage */
     EcsArray *periodic_systems;   /* Periodic systems */
     EcsArray *inactive_systems;   /* Periodic systems with empty tables */
-    EcsArray *other_systems;      /* Array with non-periodic systems */
+    EcsArray *other_systems;      /* Non-periodic systems */
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */
@@ -96,10 +100,17 @@ struct EcsWorld {
 
     void *context;                /* Application context */
 
-    EcsHandle component;          /* Component type entity */
-    EcsHandle system;             /* System type entity */
-    EcsHandle id;                 /* Id type entity */
+    EcsHandle component;          /* EcsComponent component handle */
+    EcsHandle family;             /* EcsFamily component handle */
+    EcsHandle prefab;             /* EcsPrefab tag handle */
+    EcsHandle system;             /* EcsSystem component handle */
+    EcsHandle id;                 /* EcsId component handle */
     EcsHandle last_handle;        /* Last issued handle */
+
+    EcsFamily component_family;   /* EcsComponent, EcsId */
+    EcsFamily system_family;      /* EcsSystem, EcsId */
+    EcsFamily family_family;      /* EcsFamily, EcsId */
+    EcsFamily prefab_family;      /* EcsPrefab, EcsId */
 
     bool valid_schedule;          /* Is job schedule still valid */
     bool quit_workers;            /* Signals worker threads to quit */

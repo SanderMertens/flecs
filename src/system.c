@@ -212,42 +212,6 @@ EcsResult ecs_system_notify_create_table(
     return EcsOk;
 }
 
-/** Run system against all rows in all matching tables */
-void ecs_run_system(
-    EcsWorld *world,
-    EcsHandle system,
-    void *param)
-{
-    EcsSystem *system_data = ecs_get(world, system, world->system);
-    EcsSystemAction action = system_data->action;
-    EcsArray *tables = system_data->tables;
-    uint32_t table_count = ecs_array_count(tables);
-    uint32_t element_size = system_data->table_params.element_size;
-    char *table_buffer = ecs_array_buffer(tables);
-    char *last = ECS_OFFSET(table_buffer, element_size * table_count);
-
-    EcsRows info = {
-        .world = world,
-        .system = system,
-        .param = param
-    };
-
-    for (; table_buffer < last; table_buffer += element_size) {
-        EcsTable *table = ecs_array_get(
-            world->table_db, &table_arr_params, *(uint32_t*)table_buffer);
-        EcsArray *rows = table->rows;
-        void *buffer = ecs_array_buffer(rows);
-
-        uint32_t count = ecs_array_count(rows);
-        info.count = count;
-        info.element_size = table->row_params.element_size;
-        info.first = ECS_OFFSET(buffer, sizeof(EcsHandle));
-        info.last = ECS_OFFSET(info.first, info.element_size * count);
-        info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t));
-        action(&info);
-    }
-}
-
 /** Run subset of the matching entities for a system (used in worker threads) */
 void ecs_run_job(
     EcsWorld *world,
@@ -387,7 +351,7 @@ void ecs_system_activate_table(
 
 /* -- Public API -- */
 
-EcsHandle ecs_system_new(
+EcsHandle ecs_new_system(
     EcsWorld *world,
     const char *id,
     EcsSystemKind kind,
@@ -399,14 +363,7 @@ EcsHandle ecs_system_new(
         return 0;
     }
 
-    EcsHandle result = ecs_new(world, 0);
-    ecs_add(world, result, world->system);
-    ecs_add(world, result, world->id);
-
-    if (ecs_commit(world, result) != EcsOk) {
-        ecs_delete(world, result);
-        return 0;
-    }
+    EcsHandle result = ecs_new_w_family(world, world->system_family);
 
     EcsSystem *system_data = ecs_get(world, result, world->system);
     system_data->action = action;
@@ -493,8 +450,48 @@ bool ecs_is_enabled(
     }
 }
 
-EcsFamily ecs_family_get(
+void ecs_run_system(
     EcsWorld *world,
+    EcsHandle system,
+    void *param)
+{
+    EcsSystem *system_data = ecs_get(world, system, world->system);
+    if (!system_data->enabled) {
+        return;
+    }
+
+    EcsSystemAction action = system_data->action;
+    EcsArray *tables = system_data->tables;
+    uint32_t table_count = ecs_array_count(tables);
+    uint32_t element_size = system_data->table_params.element_size;
+    char *table_buffer = ecs_array_buffer(tables);
+    char *last = ECS_OFFSET(table_buffer, element_size * table_count);
+
+    EcsRows info = {
+        .world = world,
+        .system = system,
+        .param = param
+    };
+
+    for (; table_buffer < last; table_buffer += element_size) {
+        EcsTable *table = ecs_array_get(
+            world->table_db, &table_arr_params, *(uint32_t*)table_buffer);
+        EcsArray *rows = table->rows;
+        void *buffer = ecs_array_buffer(rows);
+
+        uint32_t count = ecs_array_count(rows);
+        info.count = count;
+        info.element_size = table->row_params.element_size;
+        info.first = ECS_OFFSET(buffer, sizeof(EcsHandle));
+        info.last = ECS_OFFSET(info.first, info.element_size * count);
+        info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t));
+        action(&info);
+    }
+}
+
+EcsHandle ecs_new_family(
+    EcsWorld *world,
+    const char *id,
     const char *sig)
 {
     EcsFamily family = 0;
@@ -503,5 +500,27 @@ EcsFamily ecs_family_get(
         return 0;
     }
 
-    return family;
+    EcsTable *table = ecs_world_get_table(world, family);
+    if (table->family_entity) {
+        EcsId *id_ptr = ecs_get(world, table->family_entity, world->id);
+        if (!id_ptr) {
+            abort();
+        }
+
+        if (strcmp(id_ptr->id, id)) {
+            abort();
+        }
+
+        return table->family_entity;
+    } else {
+        EcsHandle result = ecs_new_w_family(world, world->family_family);
+        EcsId *id_ptr = ecs_get(world, result, world->id);
+        id_ptr->id = id;
+        table->family_entity = result;
+
+        EcsFamily *family_ptr = ecs_get(world, result, world->family);
+        *family_ptr = family;
+
+        return result;
+    }
 }

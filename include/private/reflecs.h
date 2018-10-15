@@ -3,6 +3,12 @@
 
 #include "types.h"
 
+/* -- Entity API -- */
+
+EcsHandle ecs_new_w_family(
+    EcsWorld *world,
+    EcsFamily family_id);
+
 
 /* -- World API -- */
 
@@ -24,6 +30,10 @@ void ecs_world_activate_system(
     bool active);
 
 /* -- Family utility API -- */
+
+EcsFamily ecs_family_from_handle(
+    EcsWorld *world,
+    EcsHandle entity);
 
 EcsFamily ecs_family_merge(
     EcsWorld *world,

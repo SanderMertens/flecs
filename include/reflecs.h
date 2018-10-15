@@ -51,9 +51,6 @@ extern "C" {
 
 typedef struct EcsWorld EcsWorld;
 
-/** A family identifies a set of components */
-typedef uint32_t EcsFamily;
-
 /** A handle identifies an entity */
 typedef uint64_t EcsHandle;
 
@@ -80,6 +77,7 @@ typedef struct EcsRows {
     void *first;
     void *last;
     uint32_t *columns;
+    void* *ptrs;
     uint32_t element_size;
     uint32_t count;
 } EcsRows;
@@ -189,24 +187,6 @@ EcsHandle ecs_lookup(
     EcsWorld *world,
     const char *id);
 
-/** Get handle to family.
- * This operation obtains a handle to a family that can be used with
- * ecs_new. Predefining families has performance benefits over using
- * ecs_new, ecs_stage and ecs_commit separately. It also provides constant
- * creation time regardless of the number of components.
- *
- * The ECS_FAMILY macro wraps around this function.
- *
- * @time-complexity: O(c)
- * @param world The world.
- * @param components A comma-separated string with the component identifiers.
- * @returns Handle to the family, zero if failed.
- */
-REFLECS_EXPORT
-EcsFamily ecs_family_get(
-    EcsWorld *world,
-    const char *components);
-
 /** Dimension the world for a specified number of entities.
  * This operation will preallocate memory in the world for the specified number
  * of entities. Specifying a number lower than the current number of entities in
@@ -251,7 +231,7 @@ void ecs_dim(
 REFLECS_EXPORT
 void ecs_dim_family(
     EcsWorld *world,
-    EcsFamily family,
+    EcsHandle family,
     uint32_t entity_count);
 
 /** Dump contents of world
@@ -287,13 +267,20 @@ void ecs_dump(
  *
  * @time-complexity: O(1)
  * @param world: The world to which to add the entity.
- * @param family: A handle to a component family (optional, zero if no family).
+ * @param type: Zero if no type, or handle to a component, family or prefab.
  * @returns: A handle to the new entity.
  */
 REFLECS_EXPORT
 EcsHandle ecs_new(
     EcsWorld *world,
-    EcsFamily family);
+    EcsHandle type);
+
+/** Create a new prefab entity */
+REFLECS_EXPORT
+EcsHandle ecs_new_prefab(
+    EcsWorld *world,
+    const char *id,
+    EcsHandle type);
 
 /** Delete an existing entity.
  * Deleting an entity in most cases causes the data of another entity to be
@@ -448,10 +435,37 @@ void* ecs_get(
  * @returns: A handle to the new component, or ECS_HANDLE_NIL if failed.
  */
 REFLECS_EXPORT
-EcsHandle ecs_component_new(
+EcsHandle ecs_new_component(
     EcsWorld *world,
     const char *id,
     size_t size);
+
+
+/* -- Family API -- */
+
+/** Get handle to family.
+ * This operation obtains a handle to a family that can be used with
+ * ecs_new. Predefining families has performance benefits over using
+ * ecs_new, ecs_stage and ecs_commit separately. It also provides constant
+ * creation time regardless of the number of components. This function will
+ * internally create a table for the family.
+ *
+ * If a family had been created for this set of components before with the same
+ * identifier, the existing family is returned. If the family had been created
+ * with a different identifier, this function will fail.
+ *
+ * The ECS_FAMILY macro wraps around this function.
+ *
+ * @time-complexity: O(c)
+ * @param world The world.
+ * @param components A comma-separated string with the component identifiers.
+ * @returns Handle to the family, zero if failed.
+ */
+REFLECS_EXPORT
+EcsHandle ecs_new_family(
+    EcsWorld *world,
+    const char *id,
+    const char *components);
 
 
 /* -- System API -- */
@@ -491,7 +505,7 @@ EcsHandle ecs_component_new(
  * @returns: A handle to the system.
  */
 REFLECS_EXPORT
-EcsHandle ecs_system_new(
+EcsHandle ecs_new_system(
     EcsWorld *world,
     const char *id,
     EcsSystemKind kind,
@@ -580,7 +594,7 @@ void ecs_iter_release(
 
 /* -- Convenience macro's -- */
 
-/** Wrapper around ecs_component_new.
+/** Wrapper around ecs_new_component.
  * This macro provides a convenient way to register components with a world. It
  * can be used like this:
  *
@@ -591,10 +605,15 @@ void ecs_iter_release(
  * handle to the new component.
  */
 #define ECS_COMPONENT(world, id) \
-    EcsHandle id##_h = ecs_component_new(world, #id, sizeof(id));\
+    EcsHandle id##_h = ecs_new_component(world, #id, sizeof(id));\
     if (!id##_h) abort();
 
-/** Wrapper around ecs_system_new.
+/** Same as component, but no size */
+#define ECS_TAG(world, id) \
+    EcsHandle id##_h = ecs_new_component(world, #id, 0);\
+    if (!id##_h) abort();
+
+/** Wrapper around ecs_new_system.
  * This macro provides a convenient way to register systems with a world. It can
  * be used like this:
  *
@@ -609,10 +628,10 @@ void ecs_iter_release(
  */
 #define ECS_SYSTEM(world, id, kind, ...) \
     void id(EcsRows*);\
-    EcsHandle id##_h = ecs_system_new(world, #id, kind, #__VA_ARGS__, id);\
+    EcsHandle id##_h = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
     if (!id##_h) abort();
 
-/** Wrapper around ecs_family_get.
+/** Wrapper around ecs_new_family.
  * This macro provides a convenient way to obtain a handle to a family. This
  * handle can be reused with ecs_new like this:
  *
@@ -626,13 +645,21 @@ void ecs_iter_release(
  * numbers of components.
  */
 #define ECS_FAMILY(world, id, ...) \
-    EcsHandle id = ecs_family_get(world, #__VA_ARGS__);\
-    if (!id) abort();
+    EcsHandle id##_h = ecs_new_family(world, #id, #__VA_ARGS__);\
+    if (!id##_h) abort();
+
+/** Wrapper around ecs_new_prefab
+ */
+#define ECS_PREFAB(world, id, type) \
+    EcsHandle id##_h = ecs_new_prefab(world, #id, type);\
+    if (!id##_h) abort();
 
 #define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)
 
 #define ecs_column(data, row, column) \
-    ECS_OFFSET(row, (data)->columns[column])
+  (data)->columns[column] >= 0 \
+    ? ECS_OFFSET(row, (data)->columns[column]) \
+    : data->ptrs[-(data)->columns[column]]
 
 #define ecs_entity(row) *(EcsHandle*)ECS_OFFSET(row, -sizeof(EcsHandle))
 
