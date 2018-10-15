@@ -55,6 +55,7 @@ EcsResult ecs_table_init_w_size(
 {
     table->world = world;
     table->family = family;
+    table->family_entity = 0;
 
     table->periodic_systems = NULL;
     table->init_systems = NULL;
