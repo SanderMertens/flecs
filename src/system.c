@@ -45,7 +45,6 @@ EcsResult add_component(
         return EcsError;
     }
 
-
     EcsHandle *e = ecs_array_add(&system_data->components, &handle_arr_params);
 
     *e = component;
@@ -72,7 +71,6 @@ EcsResult add_family(
 
     return EcsOk;
 }
-
 
 /** Parse system signature */
 static
@@ -282,7 +280,7 @@ void ecs_system_notify(
 
     for (t = 0; t < table_count; t++) {
         uint32_t *table_data = ecs_array_get(
-            system_data->tables, &table_arr_params, t);
+            system_data->tables, &system_data->table_params, t);
 
         if (*table_data == table_index) {
             EcsArray *rows = table->rows;
