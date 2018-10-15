@@ -7,6 +7,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 /* -- Export macro's -- */
 
@@ -391,12 +392,6 @@ EcsResult ecs_commit(
     EcsWorld *world,
     EcsHandle entity);
 
-/** Allow an entity to be used as tag */
-REFLECS_EXPORT
-void ecs_make_tag(
-    EcsWorld *world,
-    EcsHandle entity);
-
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
  * component was not added for the specified entity, the operation will return
@@ -618,12 +613,12 @@ void ecs_iter_release(
  */
 #define ECS_COMPONENT(world, id) \
     EcsHandle id##_h = ecs_new_component(world, #id, sizeof(id));\
-    if (!id##_h) abort();
+    assert (id##_h != 0);
 
 /** Same as component, but no size */
 #define ECS_TAG(world, id) \
     EcsHandle id##_h = ecs_new_component(world, #id, 0);\
-    if (!id##_h) abort();
+    assert (id##_h != 0);
 
 /** Wrapper around ecs_new_system.
  * This macro provides a convenient way to register systems with a world. It can
@@ -641,7 +636,7 @@ void ecs_iter_release(
 #define ECS_SYSTEM(world, id, kind, ...) \
     void id(EcsRows*);\
     EcsHandle id##_h = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
-    if (!id##_h) abort();
+    assert (id##_h != 0);
 
 /** Wrapper around ecs_new_family.
  * This macro provides a convenient way to obtain a handle to a family. This
@@ -658,13 +653,13 @@ void ecs_iter_release(
  */
 #define ECS_FAMILY(world, id, ...) \
     EcsHandle id##_h = ecs_new_family(world, #id, #__VA_ARGS__);\
-    if (!id##_h) abort();
+    assert (id##_h != 0);
 
 /** Wrapper around ecs_new_prefab
  */
 #define ECS_PREFAB(world, id, type) \
-    EcsHandle id##_h = ecs_new_prefab(world, #id, type);\
-    if (!id##_h) abort();
+    EcsHandle id##_h = ecs_new_prefab(world, #id, type##_h);\
+    assert (id##_h != 0)
 
 #define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)
 

@@ -286,17 +286,6 @@ EcsResult ecs_remove(
     return stage(world, entity, component, true);
 }
 
-void ecs_make_tag(
-    EcsWorld *world,
-    EcsHandle entity)
-{
-    assert_func (ecs_add(world, entity, EcsComponent_h) == EcsOk);
-    assert_func (ecs_commit(world, entity) == EcsOk);
-
-    EcsComponent *ptr = ecs_get(world, entity, EcsComponent_h);
-    ptr->size = 0;
-}
-
 void* ecs_get(
     EcsWorld *world,
     EcsHandle entity,

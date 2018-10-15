@@ -78,7 +78,7 @@ void bootstrap_component(
 
 /** Generic function for initializing built-in components */
 static
-EcsHandle init_component(
+EcsHandle new_builtin_component(
     EcsWorld *world,
     size_t size)
 {
@@ -96,7 +96,7 @@ EcsHandle init_component(
 
 /** Generic function to add identifier to builtin entities */
 static
-void init_id(
+void add_builtin_id(
     EcsWorld *world,
     EcsHandle handle,
     const char *id)
@@ -112,13 +112,25 @@ void init_id(
 
 /** Obtain family id for specified component + EcsId */
 static
-EcsFamily init_family(
+EcsFamily get_builtin_family(
     EcsWorld *world,
     EcsHandle component)
 {
     EcsFamily family = ecs_world_register_family(world, component, NULL);
     EcsArray *family_array = ecs_map_get(world->family_index, family);
     return ecs_world_register_family(world, EcsId_h, family_array);
+}
+
+/** Initialize size of new components to 0 */
+static
+void init_component(
+    EcsRows *rows)
+{
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsComponent *data = ecs_column(rows, row, 0);
+        data->size = 0;
+    }
 }
 
 /** Create a new table and register it with the world and systems */
@@ -498,10 +510,35 @@ void ecs_dump(
 
         uint32_t count = ecs_array_count(table->rows);
         uint32_t size = ecs_array_size(table->rows);
-        printf("[%u] Rows: %u, Components: ", table->family_id, count);
+        printf("[%10u] %u rows, %.2fKb, columns: ",
+          table->family_id,
+          count,
+          (size * table->row_params.element_size) / 1000.0);
         family_print(world, table->family_id);
-        printf(" - %.2fKb", (size * table->row_params.element_size) / 1000.0);
         printf("\n");
+    }
+
+    printf("\nPeriodic systems\n");
+    it = ecs_array_iter(world->periodic_systems, &handle_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
+        EcsId *id = ecs_get(world, h, EcsId_h);
+        printf(" - %s\n", id->id);
+    }
+
+    it = ecs_array_iter(world->inactive_systems, &handle_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
+        EcsId *id = ecs_get(world, h, EcsId_h);
+        printf(" - %s [inactive]\n", id->id);
+    }
+
+    printf("\nOther systems\n");
+    it = ecs_array_iter(world->other_systems, &handle_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
+        EcsId *id = ecs_get(world, h, EcsId_h);
+        printf(" - %s\n", id->id);
     }
 
     printf("\nEntities (%d)\n", ecs_map_count(world->entity_index));
@@ -548,21 +585,25 @@ EcsWorld *ecs_init(void) {
     result->last_handle = 0;
 
     bootstrap_component(result);
-    assert_func (init_component(result, sizeof(EcsFamily)) == EcsFamily_h);
-    assert_func (init_component(result, 0) == EcsPrefab_h);
-    assert_func (init_component(result, sizeof(EcsSystem)) == EcsSystem_h);
-    assert_func (init_component(result, sizeof(EcsId)) == EcsId_h);
+    assert_func (new_builtin_component(result, sizeof(EcsFamily)) == EcsFamily_h);
+    assert_func (new_builtin_component(result, 0) == EcsPrefab_h);
+    assert_func (new_builtin_component(result, sizeof(EcsSystem)) == EcsSystem_h);
+    assert_func (new_builtin_component(result, sizeof(EcsId)) == EcsId_h);
 
-    init_id(result, EcsComponent_h, "EcsComponent");
-    init_id(result, EcsFamily_h, "EcsFamily");
-    init_id(result, EcsPrefab_h, "EcsPrefab");
-    init_id(result, EcsSystem_h, "EcsSystem");
-    init_id(result, EcsId_h, "EcsId");
+    add_builtin_id(result, EcsComponent_h, "EcsComponent");
+    add_builtin_id(result, EcsFamily_h, "EcsFamily");
+    add_builtin_id(result, EcsPrefab_h, "EcsPrefab");
+    add_builtin_id(result, EcsSystem_h, "EcsSystem");
+    add_builtin_id(result, EcsId_h, "EcsId");
 
-    result->component_family = init_family(result, EcsComponent_h);
-    result->family_family = init_family(result, EcsFamily_h);
-    result->prefab_family = init_family(result, EcsPrefab_h);
-    result->system_family = init_family(result, EcsSystem_h);
+    result->component_family = get_builtin_family(result, EcsComponent_h);
+    result->family_family = get_builtin_family(result, EcsFamily_h);
+    result->prefab_family = get_builtin_family(result, EcsPrefab_h);
+    result->system_family = get_builtin_family(result, EcsSystem_h);
+
+    assert_func(ecs_new_system(
+        result, "EcsInitComponent", EcsOnInit, "EcsComponent", init_component)
+        != 0);
 
     return result;
 }
