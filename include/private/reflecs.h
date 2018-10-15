@@ -130,4 +130,12 @@ EcsRow ecs_to_row(
 uint64_t ecs_from_row(
     EcsRow row);
 
+#define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
+void _assert_func(
+    bool cond,
+    const char *cond_str,
+    const char *file,
+    uint32_t line,
+    const char *func);
+
 #endif

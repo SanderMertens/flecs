@@ -67,7 +67,7 @@ void bootstrap_component(
     ecs_world_register_family(world, handle, NULL);
     bootstrap_component_table(world, family_id);
 
-    assert (ecs_commit(world, EcsComponent_h) == EcsOk);
+    assert_func (ecs_commit(world, EcsComponent_h) == EcsOk);
 
     EcsComponent *type_data = ecs_get(world, handle, handle);
 
@@ -198,6 +198,20 @@ EcsFamily register_family_from_buffer(
 
 
 /* -- Private functions -- */
+
+void _assert_func(
+    bool cond,
+    const char *cond_str,
+    const char *file,
+    uint32_t line,
+    const char *func)
+{
+    if (!cond) {
+        fprintf(stderr, "Assertion failed: %s, file: %s, line: %d, func: %s\n",
+            cond_str, file, line, func);
+        abort();
+    }
+}
 
 /** Get family id from entity handle */
 EcsFamily ecs_family_from_handle(
@@ -534,10 +548,10 @@ EcsWorld *ecs_init(void) {
     result->last_handle = 0;
 
     bootstrap_component(result);
-    assert (init_component(result, sizeof(EcsFamily)) == EcsFamily_h);
-    assert (init_component(result, 0) == EcsPrefab_h);
-    assert (init_component(result, sizeof(EcsSystem)) == EcsSystem_h);
-    assert (init_component(result, sizeof(EcsId)) == EcsId_h);
+    assert_func (init_component(result, sizeof(EcsFamily)) == EcsFamily_h);
+    assert_func (init_component(result, 0) == EcsPrefab_h);
+    assert_func (init_component(result, sizeof(EcsSystem)) == EcsSystem_h);
+    assert_func (init_component(result, sizeof(EcsId)) == EcsId_h);
 
     init_id(result, EcsComponent_h, "EcsComponent");
     init_id(result, EcsFamily_h, "EcsFamily");

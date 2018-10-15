@@ -290,8 +290,8 @@ void ecs_make_tag(
     EcsWorld *world,
     EcsHandle entity)
 {
-    assert (ecs_add(world, entity, EcsComponent_h) == EcsOk);
-    assert (ecs_commit(world, entity) == EcsOk);
+    assert_func (ecs_add(world, entity, EcsComponent_h) == EcsOk);
+    assert_func (ecs_commit(world, entity) == EcsOk);
 
     EcsComponent *ptr = ecs_get(world, entity, EcsComponent_h);
     ptr->size = 0;

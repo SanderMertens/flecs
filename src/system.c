@@ -504,7 +504,7 @@ EcsHandle ecs_new_family(
         EcsId *id_ptr = ecs_get(world, table->family_entity, EcsId_h);
 
         assert(id_ptr != NULL);
-        assert(!strcmp(id_ptr->id, id));
+        assert_func(!strcmp(id_ptr->id, id));
 
         return table->family_entity;
     } else {
