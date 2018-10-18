@@ -415,6 +415,11 @@ void* ecs_get(
     EcsHandle component);
 
 
+REFLECS_EXPORT
+const char* ecs_id(
+    EcsWorld *world,
+    EcsHandle entity);
+
 /* -- Component API -- */
 
 /** Create a new component.

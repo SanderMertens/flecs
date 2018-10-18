@@ -31,16 +31,52 @@ typedef struct EcsId {
     const char *id;
 } EcsId;
 
+typedef enum EcsSystemExprElemKind {
+    EcsFromEntity,
+    EcsFromComponent
+} EcsSystemExprElemKind;
+
+typedef enum EcsSystemExprOperKind {
+    EcsOperAnd = 0,
+    EcsOperOr = 1,
+    EcsOperNot = 2,
+    EcsOperLast = 3
+} EcsSystemExprOperKind;
+
+typedef EcsResult (*ecs_parse_action)(
+    EcsWorld *world,
+    EcsSystemExprElemKind elem_kind,
+    EcsSystemExprOperKind oper_kind,
+    const char *component,
+    void *ctx);
+
+typedef struct EcsSystemColumn {
+    EcsSystemExprElemKind kind;       /* Element kind (Entity, Component) */
+    EcsSystemExprOperKind oper_kind;  /* Operator kind (AND, OR, NOT) */
+    union {
+        EcsFamily family;             /* Used for OR operator */
+        EcsHandle component;          /* Used for AND operator */
+    } is;
+} EcsSystemColumn;
+
+typedef struct EcsSystemRef {
+    EcsHandle entity;
+    EcsHandle component;
+} EcsSystemRef;
+
 typedef struct EcsSystem {
-    EcsFamily family_id;    /* Family with all system components */
-    EcsSystemAction action; /* Callback to be invoked for matching rows */
-    EcsArray *components;   /* System components in specified order */
+    EcsFamily from_entity[EcsOperLast]; /* Families from entities per oper */
+    EcsFamily from_component[EcsOperLast]; /* Same, from components */
+    EcsSystemAction action;    /* Callback to be invoked for matching rows */
+    EcsArray *columns;         /* System components in specified order */
     EcsArray *inactive_tables; /* Inactive tables */
-    EcsArray *jobs;         /* Jobs for this system */
-    EcsArray *tables;       /* Table index + column offsets for components */
+    EcsArray *jobs;            /* Jobs for this system */
+    EcsArray *tables;          /* Table index + refs index + column offsets */
+    EcsArray *refs;            /* Columns that point to other entities */
     EcsArrayParams table_params; /* Parameters for tables array */
-    EcsSystemKind kind;     /* Kind that determines when system is invoked */
-    bool enabled;           /* Is system enabled or not */
+    EcsArrayParams ref_params; /* Parameters for tables array */
+    EcsSystemKind kind;        /* Kind that determines when system is invoked */
+    bool enabled;              /* Is system enabled or not */
 } EcsSystem;
 
 /* -- Private types -- */

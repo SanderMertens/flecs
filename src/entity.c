@@ -2,6 +2,28 @@
 #include <assert.h>
 #include "include/private/reflecs.h"
 
+/** Parse callback that adds family to family identifier for ecs_new_family */
+static
+EcsResult add_family(
+    EcsWorld *world,
+    EcsSystemExprElemKind elem_kind,
+    EcsSystemExprOperKind oper_kind,
+    const char *component_id,
+    void *data)
+{
+    EcsFamily *family_id = data;
+    EcsArray *family = ecs_map_get(world->family_index, *(EcsFamily*)family_id);
+
+    EcsHandle component = ecs_lookup(world, component_id);
+    if (!component) {
+        return EcsError;
+    }
+
+    *family_id = ecs_family_register(world, component, family);
+
+    return EcsOk;
+}
+
 /** Move row from one table to another table */
 static
 void move_row(
@@ -98,7 +120,12 @@ void notify(
             ecs_array_get(systems, &handle_arr_params, i);
         EcsSystem *system_data = ecs_get(world, h, EcsSystem_h);
 
-        if (ecs_family_contains(world, system_data->family_id, family)) {
+        if (ecs_family_contains(
+            world,
+            system_data->from_entity[EcsOperAnd],
+            family,
+            true))
+        {
             ecs_system_notify(world, h, system_data, table, table_index, row);
         }
     }
@@ -149,7 +176,7 @@ EcsResult stage(
     }
 
     EcsFamily new_family_id =
-        ecs_world_register_family(world, component, family);
+        ecs_family_register(world, component, family);
 
     assert(new_family_id != 0);
 
@@ -346,6 +373,38 @@ EcsHandle ecs_new_component(
     return result;
 }
 
+EcsHandle ecs_new_family(
+    EcsWorld *world,
+    const char *id,
+    const char *sig)
+{
+    EcsFamily family = 0;
+
+    if (ecs_parse_component_expr(world, sig, add_family, &family) != EcsOk) {
+        return 0;
+    }
+
+    EcsTable *table = ecs_world_get_table(world, family);
+    if (table->family_entity) {
+        EcsId *id_ptr = ecs_get(world, table->family_entity, EcsId_h);
+
+        assert(id_ptr != NULL);
+        assert_func(!strcmp(id_ptr->id, id));
+
+        return table->family_entity;
+    } else {
+        EcsHandle result = ecs_new_w_family(world, world->family_family);
+        EcsId *id_ptr = ecs_get(world, result, EcsId_h);
+        id_ptr->id = id;
+        table->family_entity = result;
+
+        EcsFamily *family_ptr = ecs_get(world, result, EcsFamily_h);
+        *family_ptr = family;
+
+        return result;
+    }
+}
+
 EcsHandle ecs_new_prefab(
     EcsWorld *world,
     const char *id,
@@ -361,4 +420,17 @@ EcsHandle ecs_new_prefab(
     id_data->id = id;
 
     return result;
+}
+
+REFLECS_EXPORT
+const char* ecs_id(
+    EcsWorld *world,
+    EcsHandle entity)
+{
+    EcsId *id = ecs_get(world, entity, EcsId_h);
+    if (id) {
+        return id->id;
+    } else {
+        return NULL;
+    }
 }

@@ -66,6 +66,11 @@ uint32_t ecs_array_get_index(
     void *elem);
 
 REFLECS_EXPORT
+void* ecs_array_last(
+    EcsArray *array,
+    const EcsArrayParams *params);
+
+REFLECS_EXPORT
 uint32_t ecs_array_remove(
     EcsArray *array,
     const EcsArrayParams *params,

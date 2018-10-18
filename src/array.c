@@ -271,6 +271,15 @@ uint32_t ecs_array_get_index(
     return ((char*)elem - (char*)buffer) / element_size;
 }
 
+void* ecs_array_last(
+    EcsArray *array,
+    const EcsArrayParams *params)
+{
+    uint32_t count = array->count;
+    uint32_t element_size = params->element_size;
+    return ECS_OFFSET(ARRAY_BUFFER(array), element_size * count);
+}
+
 EcsIter _ecs_array_iter(
     EcsArray *array,
     const EcsArrayParams *params,

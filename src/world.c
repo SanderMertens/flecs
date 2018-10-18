@@ -64,7 +64,7 @@ void bootstrap_component(
 
     assert (handle == EcsComponent_h);
 
-    ecs_world_register_family(world, handle, NULL);
+    ecs_family_register(world, handle, NULL);
     bootstrap_component_table(world, family_id);
 
     assert_func (ecs_commit(world, EcsComponent_h) == EcsOk);
@@ -116,9 +116,9 @@ EcsFamily get_builtin_family(
     EcsWorld *world,
     EcsHandle component)
 {
-    EcsFamily family = ecs_world_register_family(world, component, NULL);
+    EcsFamily family = ecs_family_register(world, component, NULL);
     EcsArray *family_array = ecs_map_get(world->family_index, family);
-    return ecs_world_register_family(world, EcsId_h, family_array);
+    return ecs_family_register(world, EcsId_h, family_array);
 }
 
 /** Initialize size of new components to 0 */
@@ -169,26 +169,6 @@ EcsTable* create_table(
     }
 
     return result;
-}
-
-/** Print components in a family. Used by ecs_dump */
-static
-void family_print(
-    EcsWorld *world,
-    EcsFamily family_id)
-{
-    EcsArray *family = ecs_map_get(world->family_index, family_id);
-
-    EcsIter it = ecs_array_iter(family, &handle_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        EcsId *id = ecs_get(world, h, EcsId_h);
-        if (id) {
-            printf("%s ", id->id);
-        } else {
-            printf("%" PRIu64 " ", h);
-        }
-    }
 }
 
 static
@@ -244,7 +224,7 @@ EcsFamily ecs_family_from_handle(
         family = *(EcsFamily*)
             ECS_OFFSET(ecs_table_get(table, row.index), sizeof(EcsHandle));
     } else if (component == EcsComponent_h || component == EcsPrefab_h){
-        family = ecs_world_register_family(world, entity, NULL);
+        family = ecs_family_register(world, entity, NULL);
     }
 
     assert(family != 0);
@@ -254,7 +234,7 @@ EcsFamily ecs_family_from_handle(
 
 
 /** Register a new family, optionally extending from existing family */
-EcsFamily ecs_world_register_family(
+EcsFamily ecs_family_register(
     EcsWorld *world,
     EcsHandle to_add,
     EcsArray *set)
@@ -279,6 +259,16 @@ EcsFamily ecs_world_register_family(
     }
 
     return register_family_from_buffer(world, new_buffer, count);
+}
+
+EcsFamily ecs_family_add(
+    EcsWorld *world,
+    EcsFamily family,
+    EcsHandle component)
+{
+    EcsArray *array = ecs_map_get(world->family_index, family);
+    assert(!family || array != NULL);
+    return ecs_family_register(world, component, array);
 }
 
 /** Merge families (ordered sets of components) */
@@ -372,7 +362,8 @@ EcsFamily ecs_family_merge(
 bool ecs_family_contains(
     EcsWorld *world,
     EcsFamily family_id_1,
-    EcsFamily family_id_2)
+    EcsFamily family_id_2,
+    bool match_all)
 {
     EcsArray *f_1 = ecs_map_get(world->family_index, family_id_1);
     EcsArray *f_2 = ecs_map_get(world->family_index, family_id_2);
@@ -387,7 +378,7 @@ bool ecs_family_contains(
         EcsHandle h2 = *h2p;
 
         if (!h1p) {
-            return false;
+            return 0;
         }
 
         h1 = *h1p;
@@ -400,14 +391,19 @@ bool ecs_family_contains(
         }
 
         if (h1 != h2) {
-            return false;
+            if (match_all) return 0;
         } else {
+            if (!match_all) return h1;
             i_1 ++;
             h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
         }
     }
 
-    return true;
+    if (match_all) {
+        return h1;
+    } else {
+        return 0;
+    }
 }
 
 /** Get pointer to table data from family id */
@@ -495,6 +491,25 @@ uint64_t ecs_from_row(
     return u.value;
 }
 
+/** Print components in a family. Used by ecs_dump */
+void ecs_family_dump(
+    EcsWorld *world,
+    EcsFamily family_id)
+{
+    EcsArray *family = ecs_map_get(world->family_index, family_id);
+
+    EcsIter it = ecs_array_iter(family, &handle_arr_params);
+    while (ecs_iter_hasnext(&it)) {
+        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
+        EcsId *id = ecs_get(world, h, EcsId_h);
+        if (id) {
+            printf("%s ", id->id);
+        } else {
+            printf("%" PRIu64 " ", h);
+        }
+    }
+}
+
 
 /* -- Public functions -- */
 
@@ -514,7 +529,7 @@ void ecs_dump(
           table->family_id,
           count,
           (size * table->row_params.element_size) / 1000.0);
-        family_print(world, table->family_id);
+        ecs_family_dump(world, table->family_id);
         printf("\n");
     }
 

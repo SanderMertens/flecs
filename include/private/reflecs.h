@@ -9,16 +9,7 @@ EcsHandle ecs_new_w_family(
     EcsWorld *world,
     EcsFamily family_id);
 
-
 /* -- World API -- */
-
-EcsHandle ecs_world_new_handle(
-    EcsWorld *world);
-
-EcsFamily ecs_world_register_family(
-    EcsWorld *world,
-    EcsHandle to_add,
-    EcsArray *set);
 
 EcsTable* ecs_world_get_table(
     EcsWorld *world,
@@ -44,7 +35,22 @@ EcsFamily ecs_family_merge(
 bool ecs_family_contains(
     EcsWorld *world,
     EcsFamily family_id_1,
-    EcsFamily family_id_2);
+    EcsFamily family_id_2,
+    bool match_all);
+
+EcsFamily ecs_family_register(
+    EcsWorld *world,
+    EcsHandle to_add,
+    EcsArray *set);
+
+EcsFamily ecs_family_add(
+    EcsWorld *world,
+    EcsFamily family,
+    EcsHandle component);
+
+void ecs_family_dump(
+    EcsWorld *world,
+    EcsFamily family_id);
 
 /* -- Table API -- */
 
@@ -129,6 +135,12 @@ EcsRow ecs_to_row(
 
 uint64_t ecs_from_row(
     EcsRow row);
+
+EcsResult ecs_parse_component_expr(
+    EcsWorld *world,
+    const char *sig,
+    ecs_parse_action action,
+    void *ctx);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(
