@@ -365,6 +365,10 @@ bool ecs_family_contains(
     EcsFamily family_id_2,
     bool match_all)
 {
+    if (family_id_1 == family_id_2) {
+        return true;
+    }
+
     EcsArray *f_1 = ecs_map_get(world->family_index, family_id_1);
     EcsArray *f_2 = ecs_map_get(world->family_index, family_id_2);
 
@@ -569,7 +573,7 @@ void ecs_dump(
         if (id) {
             printf("%s", id->id);
         } else {
-            printf("...");
+            printf("<no id>");
         }
         printf("\n");
     }
@@ -595,6 +599,8 @@ EcsWorld *ecs_init(void) {
     result->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
     result->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
     result->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
+    result->family_handles = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
+    result->prefab_index = ecs_map_new(ECS_WORLD_INITIAL_PREFAB_COUNT);
     result->add_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
     result->remove_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
     result->last_handle = 0;
@@ -630,6 +636,8 @@ EcsResult ecs_fini(
     ecs_map_free(world->entity_index);
     ecs_map_free(world->table_index);
     ecs_map_free(world->family_index);
+    ecs_map_free(world->family_handles);
+    ecs_map_free(world->prefab_index);
     ecs_map_free(world->add_stage);
     ecs_map_free(world->remove_stage);
     if (world->worker_threads) {

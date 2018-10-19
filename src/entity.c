@@ -384,22 +384,23 @@ EcsHandle ecs_new_family(
         return 0;
     }
 
-    EcsTable *table = ecs_world_get_table(world, family);
-    if (table->family_entity) {
-        EcsId *id_ptr = ecs_get(world, table->family_entity, EcsId_h);
+    EcsHandle family_entity = ecs_map_get64(world->family_handles, family);
+    if (family_entity) {
+        EcsId *id_ptr = ecs_get(world, family_entity, EcsId_h);
 
         assert(id_ptr != NULL);
         assert_func(!strcmp(id_ptr->id, id));
 
-        return table->family_entity;
+        return family_entity;
     } else {
         EcsHandle result = ecs_new_w_family(world, world->family_family);
         EcsId *id_ptr = ecs_get(world, result, EcsId_h);
         id_ptr->id = id;
-        table->family_entity = result;
 
         EcsFamily *family_ptr = ecs_get(world, result, EcsFamily_h);
         *family_ptr = family;
+
+        ecs_map_set64(world->family_handles, family, result);
 
         return result;
     }

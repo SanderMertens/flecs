@@ -56,7 +56,6 @@ EcsResult ecs_table_init_w_size(
 {
     table->world = world;
     table->family = family;
-    table->family_entity = 0;
 
     table->periodic_systems = NULL;
     table->init_systems = NULL;
@@ -78,6 +77,7 @@ EcsResult ecs_table_init(
     EcsTable *table)
 {
     EcsArray *family = ecs_map_get(world->family_index, table->family_id);
+    bool prefab_set = false;
 
     assert(family != NULL);
 
@@ -90,7 +90,14 @@ EcsResult ecs_table_init(
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
         EcsComponent *type = ecs_get(world, h, EcsComponent_h);
         if (!type) {
-            return EcsError;
+            if (ecs_get(world, h, EcsPrefab_h)) {
+                assert(prefab_set == false);
+                ecs_map_set(world->prefab_index, table->family_id, h);
+                prefab_set = true;
+                continue;
+            } else {
+                return EcsError;
+            }
         }
 
         table->columns[column] = type->size;

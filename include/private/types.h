@@ -13,6 +13,7 @@
 #define ECS_WORLD_INITIAL_STAGING_COUNT (4)
 #define ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT (4)
 #define ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT (4)
+#define ECS_WORLD_INITIAL_PREFAB_COUNT (4)
 #define ECS_MAP_INITIAL_NODE_COUNT (64)
 #define ECS_TABLE_INITIAL_ROW_COUNT (8)
 #define ECS_SYSTEM_INITIAL_TABLE_COUNT (4)
@@ -82,7 +83,6 @@ typedef struct EcsSystem {
 /* -- Private types -- */
 
 typedef struct EcsTable {
-    EcsHandle family_entity;      /* Only set if family is explicitly created */
     EcsWorld *world;              /* Reference to the world */
     EcsArray *family;             /* Reference to family_index entry */
     EcsArray *rows;               /* Rows of the table */
@@ -125,6 +125,8 @@ struct EcsWorld {
     EcsMap *add_stage;            /* Entities with components to add */
     EcsMap *remove_stage;         /* Entities with components to remove */
     EcsMap *family_index;         /* References to component families */
+    EcsMap *family_handles;       /* Index to explicitly created families */
+    EcsMap *prefab_index;         /* Index for finding prefabs in families */
 
     EcsArray *worker_threads;     /* Worker threads */
     pthread_cond_t thread_cond;   /* Signal that worker threads can start */
