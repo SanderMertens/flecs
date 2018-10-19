@@ -168,7 +168,7 @@ void add_table(
     EcsSystem *system_data,
     EcsTable *table)
 {
-    uint32_t *table_data;
+    int32_t *table_data;
     EcsSystemRef *ref_data = NULL;
     EcsFamily table_family = table->family_id;
     uint32_t count = ecs_array_count(table->rows);
@@ -180,8 +180,12 @@ void add_table(
             &system_data->inactive_tables, &system_data->table_params);
     }
 
+    /* Table index is at element 0 */
     table_data[0] = ecs_array_get_index(
         world->table_db, &table_arr_params, table);
+
+    /* Index in ref array is at element 1 (0 means no refs) */
+    table_data[1] = 0;
 
     uint32_t i = 2; /* Offsets start after table index and refs index */
     uint32_t ref = 0;
@@ -232,6 +236,8 @@ void add_table(
             ref_data[ref].entity = entity;
             ref_data[ref].component = component;
             ref ++;
+
+            /* Refs are indicated by a negative index */
             table_data[i] = -ref;
         }
 
@@ -267,6 +273,25 @@ void match_tables(
     }
 }
 
+/** Resolve references */
+static
+void resolve_refs(
+    EcsWorld *world,
+    EcsSystem *system_data,
+    uint32_t refs_index,
+    EcsRows *info)
+{
+    EcsArray *system_refs = system_data->refs;
+    EcsSystemRef *refs = ecs_array_buffer(system_refs);
+    uint32_t i, count = ecs_array_count(system_refs);
+
+    for (i = 0; i < count; i ++) {
+        EcsSystemRef *ref = &refs[i];
+        info->refs[i] = ecs_get(world, ref->entity, ref->component);
+    }
+}
+
+
 /* -- Private functions -- */
 
 /** Match new table against system (table is created after system) */
@@ -285,6 +310,56 @@ EcsResult ecs_system_notify_create_table(
     }
 
     return EcsOk;
+}
+
+/** Table activation happens when a table was or becomes empty. Deactivated
+ * tables are not considered by the system in the main loop. */
+void ecs_system_activate_table(
+    EcsWorld *world,
+    EcsHandle system,
+    EcsTable *table,
+    bool active)
+{
+    EcsArray *src_array, *dst_array;
+    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
+    uint32_t table_index = ecs_array_get_index(
+        world->table_db, &table_arr_params, table);
+
+    if (active) {
+        src_array = system_data->inactive_tables;
+        dst_array = system_data->tables;
+    } else {
+        src_array = system_data->tables;
+        dst_array = system_data->inactive_tables;
+    }
+
+    uint32_t count = ecs_array_count(src_array);
+    int i;
+    for (i = 0; i < count; i ++) {
+        uint32_t *index = ecs_array_get(
+            src_array, &system_data->table_params, i);
+        if (*index == table_index) {
+            break;
+        }
+    }
+
+    assert(i != count);
+
+    uint32_t src_count = ecs_array_move_index(
+        &dst_array, src_array, &system_data->table_params, i);
+
+    if (active) {
+        uint32_t dst_count = ecs_array_count(dst_array);
+        if (dst_count == 1 && system_data->enabled) {
+            ecs_world_activate_system(world, system, true);
+        }
+        system_data->tables = dst_array;
+    } else {
+        if (src_count == 0) {
+            ecs_world_activate_system(world, system, false);
+        }
+        system_data->inactive_tables = dst_array;
+    }
 }
 
 /** Run subset of the matching entities for a system (used in worker threads) */
@@ -355,14 +430,14 @@ void ecs_system_notify(
     uint32_t t, table_count = ecs_array_count(system_data->tables);
 
     for (t = 0; t < table_count; t++) {
-        uint32_t *table_data = ecs_array_get(
+        int32_t *table_data = ecs_array_get(
             system_data->tables, &system_data->table_params, t);
 
         if (*table_data == table_index) {
             EcsArray *rows = table->rows;
             void *row = ecs_array_get(rows, &table->row_params, row_index);
             info.element_size = table->row_params.element_size;
-            info.columns = ECS_OFFSET(table_data, sizeof(uint32_t) * 2);
+            info.columns = ECS_OFFSET(table_data, sizeof(int32_t) * 2);
             info.first = ECS_OFFSET(row, sizeof(EcsHandle));
             info.last = ECS_OFFSET(info.first, info.element_size);
             action(&info);
@@ -371,58 +446,57 @@ void ecs_system_notify(
     }
 }
 
-/** Table activation happens when a table was or becomes empty. Deactivated
- * tables are not considered by the system in the main loop. */
-void ecs_system_activate_table(
-    EcsWorld *world,
-    EcsHandle system,
-    EcsTable *table,
-    bool active)
-{
-    EcsArray *src_array, *dst_array;
-    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
-    uint32_t table_index = ecs_array_get_index(
-        world->table_db, &table_arr_params, table);
-
-    if (active) {
-        src_array = system_data->inactive_tables;
-        dst_array = system_data->tables;
-    } else {
-        src_array = system_data->tables;
-        dst_array = system_data->inactive_tables;
-    }
-
-    uint32_t count = ecs_array_count(src_array);
-    int i;
-    for (i = 0; i < count; i ++) {
-        uint32_t *index = ecs_array_get(
-            src_array, &system_data->table_params, i);
-        if (*index == table_index) {
-            break;
-        }
-    }
-
-    assert(i != count);
-
-    uint32_t src_count = ecs_array_move_index(
-        &dst_array, src_array, &system_data->table_params, i);
-
-    if (active) {
-        uint32_t dst_count = ecs_array_count(dst_array);
-        if (dst_count == 1 && system_data->enabled) {
-            ecs_world_activate_system(world, system, true);
-        }
-        system_data->tables = dst_array;
-    } else {
-        if (src_count == 0) {
-            ecs_world_activate_system(world, system, false);
-        }
-        system_data->inactive_tables = dst_array;
-    }
-}
-
 
 /* -- Public API -- */
+
+void ecs_run_system(
+    EcsWorld *world,
+    EcsHandle system,
+    void *param)
+{
+    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
+    if (!system_data->enabled) {
+        return;
+    }
+
+    EcsSystemAction action = system_data->action;
+    EcsArray *tables = system_data->tables;
+    EcsArray *table_db = world->table_db;
+    uint32_t table_count = ecs_array_count(tables);
+    uint32_t column_count = ecs_array_count(system_data->columns);
+    uint32_t element_size = system_data->table_params.element_size;
+    char *table_buffer = ecs_array_buffer(tables);
+    char *last = ECS_OFFSET(table_buffer, element_size * table_count);
+    void *refs[column_count];
+
+    EcsRows info = {
+        .world = world,
+        .system = system,
+        .param = param,
+        .refs = refs
+    };
+
+    for (; table_buffer < last; table_buffer += element_size) {
+        int32_t table_index = ((int32_t*)table_buffer)[0];
+        int32_t refs_index = ((int32_t*)table_buffer)[1];
+        EcsTable *table = ecs_array_get(
+            table_db, &table_arr_params, table_index);
+        EcsArray *rows = table->rows;
+        void *buffer = ecs_array_buffer(rows);
+        uint32_t count = ecs_array_count(rows);
+
+        if (refs_index) {
+            resolve_refs(world, system_data, refs_index, &info);
+        }
+
+        info.count = count;
+        info.element_size = table->row_params.element_size;
+        info.first = ECS_OFFSET(buffer, sizeof(EcsHandle));
+        info.last = ECS_OFFSET(info.first, info.element_size * count);
+        info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * 2);
+        action(&info);
+    }
+}
 
 EcsHandle ecs_new_system(
     EcsWorld *world,
@@ -443,7 +517,7 @@ EcsHandle ecs_new_system(
     system_data->enabled = true;
     memset(system_data->from_entity, 0, sizeof(system_data->from_entity));
     memset(system_data->from_component, 0, sizeof(system_data->from_component));
-    system_data->table_params.element_size = sizeof(uint32_t) * (count + 2);
+    system_data->table_params.element_size = sizeof(int32_t) * (count + 2);
     system_data->table_params.move_action = NULL;
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
     system_data->ref_params.move_action = NULL;
@@ -523,44 +597,5 @@ bool ecs_is_enabled(
         return system_data->enabled;
     } else {
         return true;
-    }
-}
-
-void ecs_run_system(
-    EcsWorld *world,
-    EcsHandle system,
-    void *param)
-{
-    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
-    if (!system_data->enabled) {
-        return;
-    }
-
-    EcsSystemAction action = system_data->action;
-    EcsArray *tables = system_data->tables;
-    uint32_t table_count = ecs_array_count(tables);
-    uint32_t element_size = system_data->table_params.element_size;
-    char *table_buffer = ecs_array_buffer(tables);
-    char *last = ECS_OFFSET(table_buffer, element_size * table_count);
-
-    EcsRows info = {
-        .world = world,
-        .system = system,
-        .param = param
-    };
-
-    for (; table_buffer < last; table_buffer += element_size) {
-        EcsTable *table = ecs_array_get(
-            world->table_db, &table_arr_params, *(uint32_t*)table_buffer);
-        EcsArray *rows = table->rows;
-        void *buffer = ecs_array_buffer(rows);
-
-        uint32_t count = ecs_array_count(rows);
-        info.count = count;
-        info.element_size = table->row_params.element_size;
-        info.first = ECS_OFFSET(buffer, sizeof(EcsHandle));
-        info.last = ECS_OFFSET(info.first, info.element_size * count);
-        info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * 2);
-        action(&info);
     }
 }

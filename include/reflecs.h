@@ -76,8 +76,8 @@ typedef struct EcsRows {
     void *param;
     void *first;
     void *last;
-    uint32_t *columns;
-    void* *ptrs;
+    int32_t *columns;
+    void **refs;
     uint32_t element_size;
     uint32_t count;
 } EcsRows;
@@ -312,7 +312,6 @@ REFLECS_EXPORT
 void ecs_delete(
     EcsWorld *world,
     EcsHandle entity);
-
 
 /** Stage a component for adding.
  * Staging a component will register a component with an entity, but will not
@@ -671,7 +670,7 @@ void ecs_iter_release(
 #define ecs_column(data, row, column) \
   (data)->columns[column] >= 0 \
     ? ECS_OFFSET(row, (data)->columns[column]) \
-    : data->ptrs[-(data)->columns[column]]
+    : data->refs[-((data)->columns[column]) - 1]
 
 #define ecs_entity(row) *(EcsHandle*)ECS_OFFSET(row, -sizeof(EcsHandle))
 
