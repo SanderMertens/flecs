@@ -201,16 +201,39 @@ ECS_COMPONENT(world, Player);
 ECS_COMPONENT(world, Unit);
 
 EcsHandle my_player = ecs_new(world, Player_h);
-ecs_make_tag(world, my_player);
+ecs_add(world, my_player, EcsComponent_h);
+ecs_commit(world, my_player);
 
 EcsHandle unit = ecs_new(world, Unit_h);
 ecs_add(world, unit, my_player);
 ecs_commit(world, unit);
 ```
 
-The only thing that the `ecs_make_tag` function does is add an empty builtin
-`EcsComponent` component to the `my_player` entity, which allows it to be used
-as a tag.
+By adding the `EcsComponent` to the `my_player` entity, you can now use this
+entity as a component in `ecs_add` as is shown for the `unit` entity.
+
+The next step being able to access the `Player` entity when iterating over the
+units. Instead of making complicated (and expensive!) calls using `ecs_get` and
+reflection, there is a feature that lets you specify the `Player` component as
+an argument in your system signature, like this:
+
+```c
+ECS_SYSTEM(world, WalkPlayerUnits, EcsPeriodic, COMPONENT.Player, Unit);
+```
+The `COMPONENT.Player` adds a column to our system that contains a reference to
+the `Player` component. `COMPONENT` indicates to reflecs that the `Player`
+component should not be resolved on the unit, but on the *components
+of the unit*. In the system callback, you can now simply do:
+
+```c
+void WalkPlayerUnits(EcsRows *rows) {
+    void* row;
+    for (row = rows->first, row < rows->last; row = ecs_next(rows, row)) {
+        Player *p = ecs_column(rows, row, 0);
+        Unit *u = ecs_column(rows, row, 1);
+    }
+}
+```
 
 ## Preallocating memory
 To get the best performance out of Reflecs, it is recommended to preallocate
