@@ -122,8 +122,8 @@ void notify(
 
         if (ecs_family_contains(
             world,
-            system_data->from_entity[EcsOperAnd],
             family,
+            system_data->from_entity[EcsOperAnd],
             true))
         {
             ecs_system_notify(world, h, system_data, table, table_index, row);
@@ -410,7 +410,9 @@ EcsHandle ecs_new_prefab(
     const char *id,
     EcsHandle type)
 {
-    EcsHandle result = ecs_new_w_family(world, world->prefab_family);
+    EcsFamily family = ecs_family_from_handle(world, type);
+    family = ecs_family_merge(world, world->prefab_family, family, 0);
+    EcsHandle result = ecs_new_w_family(world, family);
 
     EcsId *id_data = ecs_get(world, result, EcsId_h);
     if (!id_data) {
