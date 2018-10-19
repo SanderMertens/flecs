@@ -374,12 +374,15 @@ void ecs_run_job(
     uint32_t table_index = job->table_index;
     uint32_t start_index = job->start_index;
     uint32_t remaining = job->row_count;
+    uint32_t column_count = ecs_array_count(system_data->columns);
+    void *refs[column_count];
     char *table_buffer = ecs_array_get(
         system_data->tables, &system_data->table_params, table_index);
 
     EcsRows info = {
         .world = world,
-        .system = system
+        .system = system,
+        .refs = refs
     };
 
     do {
@@ -389,11 +392,16 @@ void ecs_run_job(
         void *start = ecs_array_get(rows, &table->row_params, start_index);
         uint32_t count = ecs_array_count(rows);
         uint32_t element_size = table->row_params.element_size;
+        uint32_t refs_index = ((uint32_t*)table_buffer)[1];
 
         info.count = count;
         info.element_size = element_size;
         info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * 2);
         info.first = ECS_OFFSET(start, sizeof(EcsHandle));
+
+        if (refs_index) {
+            resolve_refs(world, system_data, refs_index, &info);
+        }
 
         if (remaining >= count) {
             info.last = ECS_OFFSET(info.first, element_size * count);
@@ -420,26 +428,33 @@ void ecs_system_notify(
     uint32_t row_index)
 {
     EcsSystemAction action = system_data->action;
+    uint32_t t, table_count = ecs_array_count(system_data->tables);
+    uint32_t column_count = ecs_array_count(system_data->columns);
+    void *refs[column_count];
 
     EcsRows info = {
         .world = world,
         .system = system,
-        .param = NULL
+        .param = NULL,
+        .refs = refs
     };
-
-    uint32_t t, table_count = ecs_array_count(system_data->tables);
 
     for (t = 0; t < table_count; t++) {
         int32_t *table_data = ecs_array_get(
             system_data->tables, &system_data->table_params, t);
+        int32_t sys_table_index = table_data[0];
 
-        if (*table_data == table_index) {
+        if (sys_table_index == table_index) {
             EcsArray *rows = table->rows;
             void *row = ecs_array_get(rows, &table->row_params, row_index);
+            int32_t refs_index = table_data[1];
             info.element_size = table->row_params.element_size;
             info.columns = ECS_OFFSET(table_data, sizeof(int32_t) * 2);
             info.first = ECS_OFFSET(row, sizeof(EcsHandle));
             info.last = ECS_OFFSET(info.first, info.element_size);
+            if (refs_index) {
+                resolve_refs(world, system_data, refs_index, &info);
+            }
             action(&info);
             break;
         }
