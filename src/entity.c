@@ -26,7 +26,7 @@ EcsResult add_family(
 
 /** Move row from one table to another table */
 static
-void move_row(
+void copy_row(
     EcsWorld *world,
     EcsTable *new_table,
     uint32_t new_index,
@@ -75,16 +75,13 @@ void move_row(
 
             if (old) {
                 if (new < old) {
-                    i_new ++;
                     new_offset += new_table->columns[i_new];
+                    i_new ++;
                 } else if (old < new) {
+                    old_offset += old_table->columns[i_old];
                     i_old ++;
                     old_ptr = ecs_array_get(
                        old_family, &handle_arr_params, i_old);
-
-                    if (old_ptr) {
-                        old_offset += old_table->columns[i_old];
-                    }
                 }
             }
         }
@@ -99,8 +96,6 @@ void move_row(
         void *src = ECS_OFFSET(old_row, old_offset);
         memcpy(dst, src, bytes_to_copy);
     }
-
-    ecs_table_delete(old_table, old_index);
 }
 
 static
@@ -191,6 +186,23 @@ EcsResult stage(
     return EcsOk;
 }
 
+/** Copy default values from base (and base of base) prefabs */
+static
+void copy_from_prefab(
+    EcsWorld *world,
+    EcsTable *new_table,
+    uint32_t new_index,
+    EcsFamily family_id)
+{
+    EcsHandle prefab;
+    while ((prefab = ecs_map_get64(world->prefab_index, family_id))) {
+        EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, prefab));
+        EcsTable *prefab_table = ecs_world_get_table(world, row.family_id);
+        copy_row(world, new_table, new_index, prefab_table, row.index);
+        family_id = row.family_id;
+    }
+}
+
 /** Commit an entity with a specified family to memory */
 static
 EcsResult commit_w_family(
@@ -210,7 +222,8 @@ EcsResult commit_w_family(
     if (row_64) {
         EcsRow old_row = ecs_to_row(row_64);
         EcsTable *old_table = ecs_world_get_table(world, old_row.family_id);
-        move_row(world, new_table, new_index, old_table, old_row.index);
+        copy_row(world, new_table, new_index, old_table, old_row.index);
+        ecs_table_delete(old_table, old_row.index);
         if (to_remove) {
             deinit_components(world, old_table, old_row.index, to_remove);
         }
@@ -218,6 +231,7 @@ EcsResult commit_w_family(
 
     if (to_add) {
         init_components(world, new_table, new_index, to_add);
+        copy_from_prefab(world, new_table, new_index, family_id);
     }
 
     EcsRow row = {.family_id = family_id, .index = new_index};
@@ -425,7 +439,6 @@ EcsHandle ecs_new_prefab(
     return result;
 }
 
-REFLECS_EXPORT
 const char* ecs_id(
     EcsWorld *world,
     EcsHandle entity)

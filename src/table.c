@@ -89,19 +89,22 @@ EcsResult ecs_table_init(
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
         EcsComponent *type = ecs_get(world, h, EcsComponent_h);
-        if (!type) {
+        uint32_t size;
+        if (type) {
+            size = type->size;
+        } else {
             if (ecs_get(world, h, EcsPrefab_h)) {
                 assert(prefab_set == false);
                 ecs_map_set(world->prefab_index, table->family_id, h);
                 prefab_set = true;
-                continue;
+                size = 0;
             } else {
                 return EcsError;
             }
         }
 
-        table->columns[column] = type->size;
-        total_size += type->size;
+        table->columns[column] = size;
+        total_size += size;
         column ++;
     }
 
