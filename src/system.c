@@ -106,6 +106,7 @@ EcsHandle components_contain(
     return 0;
 }
 
+/* Match table with system */
 static
 bool match_table(
     EcsWorld *world,
@@ -160,6 +161,68 @@ bool match_table(
     return true;
 }
 
+/* Get ref array for system table */
+static
+EcsSystemRef* get_ref_data(
+    EcsWorld *world,
+    EcsSystem *system_data,
+    int32_t *table_data)
+{
+    EcsSystemRef *ref_data = NULL;
+
+    if (!system_data->refs) {
+        system_data->refs = ecs_array_new(&system_data->ref_params, 1);
+    }
+
+    if (!table_data[1]) {
+        ref_data = ecs_array_add(
+            &system_data->refs, &system_data->ref_params);
+        table_data[1] = ecs_array_count(system_data->refs);
+    } else {
+        ref_data = ecs_array_get(
+            system_data->refs, &system_data->ref_params, table_data[1] - 1);
+    }
+
+    return ref_data;
+}
+
+/* Get actual entity on which specified component is stored */
+static
+EcsHandle get_entity_for_component(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsFamily family_id,
+    EcsHandle component)
+{
+    if (entity) {
+        EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
+        family_id = row.family_id;
+    }
+
+    EcsArray *family = ecs_map_get(world->family_index, family_id);
+    EcsHandle *buffer = ecs_array_buffer(family);
+    uint32_t i, count = ecs_array_count(family);
+
+    for (i = 0; i < count; i ++) {
+        if (buffer[i] == component) {
+            break;
+        }
+    }
+
+    if (i == count) {
+        EcsHandle prefab = ecs_map_get64(world->prefab_index, family_id);
+        if (prefab) {
+            return get_entity_for_component(world, prefab, 0, component);
+        }
+    }
+
+    /* This function must only be called if it has already been validated that
+     * a component is available for a given family or entity */
+    assert(entity != 0);
+
+    return entity;
+}
+
 /** Add table to system, compute offsets for system components in table rows */
 static
 void add_table(
@@ -171,8 +234,11 @@ void add_table(
     int32_t *table_data;
     EcsSystemRef *ref_data = NULL;
     EcsFamily table_family = table->family_id;
-    uint32_t count = ecs_array_count(table->rows);
-    if (count) {
+    uint32_t i = 2; /* Offsets start after table index and refs index */
+    uint32_t ref = 0;
+    uint32_t column_count = ecs_array_count(system_data->columns);
+
+    if (ecs_array_count(table->rows)) {
         table_data = ecs_array_add(
             &system_data->tables, &system_data->table_params);
     } else {
@@ -187,61 +253,51 @@ void add_table(
     /* Index in ref array is at element 1 (0 means no refs) */
     table_data[1] = 0;
 
-    uint32_t i = 2; /* Offsets start after table index and refs index */
-    uint32_t ref = 0;
     EcsIter it = ecs_array_iter(system_data->columns, &column_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsSystemColumn *column = ecs_iter_next(&it);
+        EcsHandle entity = 0, component = 0;
 
         if (column->kind == EcsFromEntity) {
-            EcsHandle component = 0;
-
             if (column->oper_kind == EcsOperAnd) {
                 component = column->is.component;
+
             } else if (column->oper_kind == EcsOperOr) {
-                /* Returns first component that matches between families */
                 component = ecs_family_contains(
                     world, table_family, column->is.family, false);
-            } else {
-                assert(0);
             }
-
-            table_data[i] = ecs_table_column_offset(table, component);
 
         } else if (column->kind == EcsFromComponent) {
-            if (!system_data->refs) {
-                system_data->refs = ecs_array_new(&system_data->ref_params, 1);
-            }
-
-            if (!ref_data) {
-                ref_data = ecs_array_add(
-                    &system_data->refs, &system_data->ref_params);
-                table_data[1] = ecs_array_count(system_data->refs);
-            }
-
-            EcsHandle entity = 0;
-            EcsHandle component = 0;
-
             if (column->oper_kind == EcsOperAnd) {
                 component = column->is.component;
                 EcsFamily family = ecs_family_add(world, 0, component);
                 components_contain(world, table_family, family, &entity, true);
+
             } else if (column->oper_kind == EcsOperOr) {
                 component = components_contain(
                     world, table_family, column->is.family, &entity, false);
-            } else {
-                assert(0);
             }
-
-            ref_data[ref].entity = entity;
-            ref_data[ref].component = component;
-            ref ++;
-
-            /* Refs are indicated by a negative index */
-            table_data[i] = -ref;
         }
 
+        if (!entity) {
+            table_data[i] = ecs_table_column_offset(table, component);
+        }
+
+        if (entity || table_data[i] == -1) {
+            if (!ref_data) {
+                ref_data = get_ref_data(world, system_data, table_data);
+            }
+            ref_data[ref].entity = get_entity_for_component(
+                world, entity, table_family, component);
+            ref_data[ref].component = component;
+            ref ++;
+            table_data[i] = -ref;
+        }
         i ++;
+    }
+
+    if (ref_data && ref < column_count) {
+        ref_data[ref].entity = 0;
     }
 
     EcsHandle *h = NULL;
@@ -282,12 +338,17 @@ void resolve_refs(
     EcsRows *info)
 {
     EcsArray *system_refs = system_data->refs;
-    EcsSystemRef *refs = ecs_array_buffer(system_refs);
-    uint32_t i, count = ecs_array_count(system_refs);
+    EcsSystemRef *refs = ecs_array_get(
+        system_refs, &system_data->ref_params, refs_index - 1);
+    uint32_t i, count = ecs_array_count(system_data->columns);
 
     for (i = 0; i < count; i ++) {
         EcsSystemRef *ref = &refs[i];
-        info->refs[i] = ecs_get(world, ref->entity, ref->component);
+        EcsHandle entity = ref->entity;
+        if (!entity) {
+            break;
+        }
+        info->refs[i] = ecs_get(world, entity, ref->component);
     }
 }
 

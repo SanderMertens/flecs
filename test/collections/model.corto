@@ -1,6 +1,5 @@
 in test
 
-
 test.suite Map {
     tc_count()
     tc_count_empty()

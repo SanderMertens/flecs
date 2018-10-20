@@ -319,33 +319,33 @@ void* ecs_get(
     EcsHandle component)
 {
     EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
-    if (!row.family_id) {
-        return NULL;
-    }
+    assert(row.family_id != 0);
 
     EcsTable *table = ecs_world_get_table(world, row.family_id);
-
-    void *row_ptr;
     uint32_t offset = 0;
     uint16_t column = 0;
-    bool found = false;
+    EcsArray *family = table->family;
+    EcsHandle *buffer = ecs_array_buffer(family);
+    uint32_t count = ecs_array_count(family);
 
-    EcsIter it = ecs_array_iter(table->family, &handle_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle handle = *(EcsHandle*)ecs_iter_next(&it);
-        if (component == handle) {
-            found = true;
+    for (column = 0; column < count; column ++) {
+        if (component == buffer[column]) {
             break;
         }
         offset += table->columns[column];
-        column ++;
     }
 
-    if (!found) {
-        return NULL;
+    if (column == count) {
+        EcsHandle prefab = ecs_map_get64(world->prefab_index, row.family_id);
+        if (prefab) {
+            return ecs_get(world, prefab, component);
+        } else {
+            return NULL;
+        }
     }
 
-    row_ptr = ecs_table_get(table, row.index);
+    void *row_ptr = ecs_table_get(table, row.index);
+    assert(row_ptr != NULL);
 
     return ECS_OFFSET(row_ptr, offset + sizeof(EcsHandle));
 }

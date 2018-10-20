@@ -271,7 +271,7 @@ EcsFamily ecs_family_add(
     return ecs_family_register(world, component, array);
 }
 
-/** Merge families (ordered sets of components) */
+/** O(n) algorithm to merge families */
 EcsFamily ecs_family_merge(
     EcsWorld *world,
     EcsFamily cur_id,
@@ -359,6 +359,7 @@ EcsFamily ecs_family_merge(
     }
 }
 
+/* O(n) algorithm to check whether family 1 is equal or superset of family 2 */
 bool ecs_family_contains(
     EcsWorld *world,
     EcsFamily family_id_1,
@@ -376,7 +377,8 @@ bool ecs_family_contains(
 
     uint32_t i_2, i_1 = 0;
     EcsHandle *h2p, *h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
-    EcsHandle h1;
+    EcsHandle h1, prefab = 0;
+    bool prefab_searched = false;
 
     for (i_2 = 0; (h2p = ecs_array_get(f_2, &handle_arr_params, i_2)); i_2 ++) {
         EcsHandle h2 = *h2p;
@@ -395,7 +397,20 @@ bool ecs_family_contains(
         }
 
         if (h1 != h2) {
-            if (match_all) return 0;
+            if (!prefab_searched) {
+                prefab = ecs_map_get64(world->prefab_index, family_id_1);
+                prefab_searched = true;
+            }
+
+            if (prefab) {
+                if (ecs_get(world, prefab, h2) != NULL) {
+                    h1 = h2;
+                }
+            }
+
+            if (h1 != h2) {
+                if (match_all) return 0;
+            }
         } else {
             if (!match_all) return h1;
             i_1 ++;
