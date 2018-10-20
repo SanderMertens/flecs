@@ -269,7 +269,14 @@ EcsResult ecs_commit(
         family_id = row.family_id;
     }
 
-    family_id = ecs_family_merge(world, family_id, to_add, to_remove);
+    EcsFamily new_family_id = ecs_family_merge(
+        world, family_id, to_add, to_remove);
+
+    if (new_family_id == family_id) {
+        return EcsOk;
+    }
+
+    family_id = new_family_id;
 
     EcsResult result = commit_w_family(
         world, entity, family_id, to_add, to_remove);
@@ -333,7 +340,9 @@ void* ecs_get(
     EcsHandle component)
 {
     EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
-    assert(row.family_id != 0);
+    if (!row.family_id) {
+        return NULL;
+    }
 
     EcsTable *table = ecs_world_get_table(world, row.family_id);
     uint32_t offset = 0;

@@ -1,0 +1,8 @@
+{
+    "id": "test",
+    "type": "package",
+    "value": {
+        "public": false,
+        "use": ["reflecs", "corto.test"]
+    }
+}

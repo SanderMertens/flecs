@@ -1,0 +1,18 @@
+in test
+
+test.suite EcsNew {
+    tc_new()
+    tc_new_w_component()
+    tc_new_w_family()
+    tc_new_w_family_of_2()
+    tc_new_w_prefab()
+    tc_new_w_prefab_of_2()
+}
+
+test.suite EcsAdd {
+    tc_add_component_to_empty()
+    tc_add_2_component_to_empty()
+    tc_add_component()
+    tc_add_2_component()
+    tc_add_existing_component()
+}
