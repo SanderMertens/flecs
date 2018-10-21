@@ -44,6 +44,20 @@ void test_EcsNew_tc_new_w_family(
     ecs_fini(world);
 }
 
+void test_EcsNew_tc_new_family_with_family(
+    test_EcsNew this)
+{
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, Family1, Foo);
+    ECS_FAMILY(world, Family2, Family1, Bar);
+    EcsHandle e = ecs_new(world, Family2_h);
+    test_assert(e != 0);
+    test_assert(ecs_get(world, e, Foo_h) != NULL);
+    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    ecs_fini(world);
+}
 
 void test_EcsNew_tc_new_w_family_of_2(
     test_EcsNew this)
@@ -79,7 +93,7 @@ void test_EcsNew_tc_new_w_prefab_of_2(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar)
+    ECS_FAMILY(world, MyFamily, Foo, Bar);
     ECS_PREFAB(world, MyPrefab, MyFamily);
     EcsHandle e = ecs_new(world, MyPrefab_h);
     test_assert(e != 0);

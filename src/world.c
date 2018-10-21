@@ -59,12 +59,11 @@ void bootstrap_component(
     EcsWorld *world)
 {
     EcsHandle handle = ecs_new(world, 0);
-    ecs_add(world, handle, handle);
-    uint64_t family_id = ecs_map_get64(world->add_stage, handle);
-
     assert (handle == EcsComponent_h);
 
-    ecs_family_register(world, handle, NULL);
+    EcsFamily family_id = ecs_family_register(world, handle, NULL);
+    ecs_map_set(world->add_stage, handle, family_id);
+
     bootstrap_component_table(world, family_id);
 
     assert_func (ecs_commit(world, EcsComponent_h) == EcsOk);
@@ -210,8 +209,11 @@ EcsFamily ecs_family_from_handle(
     EcsWorld *world,
     EcsHandle entity)
 {
-    uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
+    if (entity == 0) {
+        return 0;
+    }
 
+    uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
     assert(row_64 != 0);
 
     EcsRow row = ecs_to_row(row_64);

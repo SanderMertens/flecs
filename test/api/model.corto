@@ -5,6 +5,7 @@ test.suite EcsNew {
     tc_new_w_component()
     tc_new_w_family()
     tc_new_w_family_of_2()
+    tc_new_family_with_family()
     tc_new_w_prefab()
     tc_new_w_prefab_of_2()
 }
@@ -15,6 +16,10 @@ test.suite EcsAdd {
     tc_add_component()
     tc_add_2_component()
     tc_add_existing_component()
+    tc_add_family()
+    tc_add_family_with_family()
+    tc_add_overlapping_families()
+    tc_add_family_overlapping_w_entity()
 }
 
 test.suite EcsRemove {
@@ -22,4 +27,16 @@ test.suite EcsRemove {
     tc_remove_2_component()
     tc_remove_component_from_2()
     tc_remove_2_component_from_3()
+}
+
+test.suite EcsPrefab {
+    tc_prefab_empty()
+    tc_prefab_component()
+    tc_prefab_family()
+    tc_prefab_prefab()
+    tc_prefab_override_1_of_2()
+    tc_prefab_override_2_of_2()
+    tc_prefab_add_to_empty_entity()
+    tc_prefab_add_to_entity()
+    tc_prefab_add_component()
 }

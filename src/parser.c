@@ -13,6 +13,7 @@ const char *skip_space(
     return ptr;
 }
 
+/** Parse element with a dot-separated qualifier ('COMPONENT.Foo') */
 static
 char* parse_complex_elem(
     char *bptr,
@@ -44,6 +45,9 @@ char* parse_complex_elem(
 
     return bptr;
 }
+
+
+/* -- Private functions -- */
 
 /** Parse component expression */
 EcsResult ecs_parse_component_expr(

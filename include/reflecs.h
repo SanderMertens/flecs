@@ -287,7 +287,7 @@ REFLECS_EXPORT
 EcsHandle ecs_new_prefab(
     EcsWorld *world,
     const char *id,
-    EcsHandle type);
+    const char *sig);
 
 /** Delete an existing entity.
  * Deleting an entity in most cases causes the data of another entity to be
@@ -579,7 +579,7 @@ void ecs_run_system(
     EcsHandle system,
     void *param);
 
-/* -- Iterator utility API -- */
+/* -- Utility API -- */
 
 typedef struct EcsIter EcsIter;
 struct EcsIter {
@@ -617,12 +617,12 @@ void ecs_iter_release(
  */
 #define ECS_COMPONENT(world, id) \
     EcsHandle id##_h = ecs_new_component(world, #id, sizeof(id));\
-    assert (id##_h != 0);
+    assert (id##_h != 0)
 
 /** Same as component, but no size */
 #define ECS_TAG(world, id) \
     EcsHandle id##_h = ecs_new_component(world, #id, 0);\
-    assert (id##_h != 0);
+    assert (id##_h != 0)
 
 /** Wrapper around ecs_new_system.
  * This macro provides a convenient way to register systems with a world. It can
@@ -640,7 +640,7 @@ void ecs_iter_release(
 #define ECS_SYSTEM(world, id, kind, ...) \
     void id(EcsRows*);\
     EcsHandle id##_h = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
-    assert (id##_h != 0);
+    assert (id##_h != 0)
 
 /** Wrapper around ecs_new_family.
  * This macro provides a convenient way to obtain a handle to a family. This
@@ -657,12 +657,12 @@ void ecs_iter_release(
  */
 #define ECS_FAMILY(world, id, ...) \
     EcsHandle id##_h = ecs_new_family(world, #id, #__VA_ARGS__);\
-    assert (id##_h != 0);
+    assert (id##_h != 0)
 
 /** Wrapper around ecs_new_prefab
  */
-#define ECS_PREFAB(world, id, type) \
-    EcsHandle id##_h = ecs_new_prefab(world, #id, type##_h);\
+#define ECS_PREFAB(world, id, ...) \
+    EcsHandle id##_h = ecs_new_prefab(world, #id, #__VA_ARGS__);\
     assert (id##_h != 0)
 
 #define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)

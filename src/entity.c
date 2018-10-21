@@ -12,14 +12,20 @@ EcsResult add_family(
     void *data)
 {
     EcsFamily *family_id = data;
-    EcsArray *family = ecs_map_get(world->family_index, *(EcsFamily*)family_id);
 
-    EcsHandle component = ecs_lookup(world, component_id);
-    if (!component) {
-        return EcsError;
+    if (!strcmp(component_id, "0")) {
+        *family_id = 0;
+    } else {
+        EcsHandle component = ecs_lookup(world, component_id);
+        if (!component) {
+            return EcsError;
+        }
+
+        EcsFamily resolved_family = ecs_family_from_handle(world, component);
+        assert(resolved_family != 0);
+
+        *family_id = ecs_family_merge(world, *family_id, resolved_family, 0);
     }
-
-    *family_id = ecs_family_register(world, component, family);
 
     return EcsOk;
 }
@@ -154,33 +160,30 @@ EcsResult stage(
     EcsHandle component,
     bool is_remove)
 {
-    EcsFamily family_id = 0;
-    EcsArray *family = NULL;
-
+    EcsFamily family_id;
+    EcsMap *stage;
     if (is_remove) {
-        family_id = ecs_map_get64(world->remove_stage, entity);
+        stage = world->remove_stage;
     } else {
-        family_id = ecs_map_get64(world->add_stage, entity);
+        stage = world->add_stage;
     }
 
+    family_id = ecs_map_get64(stage, entity);
+    EcsFamily resolved_family = ecs_family_from_handle(world, component);
+    assert(resolved_family != 0);
+
+    EcsFamily new_family_id;
     if (family_id) {
-        family = ecs_map_get(world->family_index, family_id);
-        if (!family) {
-            return EcsError;
-        }
+        new_family_id = ecs_family_merge(
+            world, family_id, resolved_family, 0);
+    } else {
+        new_family_id = resolved_family;
     }
-
-    EcsFamily new_family_id =
-        ecs_family_register(world, component, family);
 
     assert(new_family_id != 0);
 
     if (family_id != new_family_id) {
-        if (is_remove) {
-            ecs_map_set64(world->remove_stage, entity, new_family_id);
-        } else {
-            ecs_map_set64(world->add_stage, entity, new_family_id);
-        }
+        ecs_map_set64(stage, entity, new_family_id);
     }
 
     return EcsOk;
@@ -441,9 +444,14 @@ EcsHandle ecs_new_family(
 EcsHandle ecs_new_prefab(
     EcsWorld *world,
     const char *id,
-    EcsHandle type)
+    const char *sig)
 {
-    EcsFamily family = ecs_family_from_handle(world, type);
+    EcsFamily family = 0;
+
+    if (ecs_parse_component_expr(world, sig, add_family, &family) != EcsOk) {
+        return 0;
+    }
+
     family = ecs_family_merge(world, world->prefab_family, family, 0);
     EcsHandle result = ecs_new_w_family(world, family);
 
