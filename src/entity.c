@@ -212,31 +212,40 @@ EcsResult commit_w_family(
     EcsFamily to_add,
     EcsFamily to_remove)
 {
-    EcsTable *new_table = ecs_world_get_table(world, family_id);
+    EcsTable *new_table = NULL;
+    uint32_t new_index = 0;
+    if (family_id) {
+        new_table = ecs_world_get_table(world, family_id);
+        assert(new_table != NULL);
+        new_index = ecs_table_insert(new_table, entity);
+    }
 
-    assert(new_table != NULL);
-
-    uint32_t new_index = ecs_table_insert(new_table, entity);
     uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
 
     if (row_64) {
         EcsRow old_row = ecs_to_row(row_64);
         EcsTable *old_table = ecs_world_get_table(world, old_row.family_id);
-        copy_row(world, new_table, new_index, old_table, old_row.index);
+        if (new_table) {
+            copy_row(world, new_table, new_index, old_table, old_row.index);
+        }
         ecs_table_delete(old_table, old_row.index);
         if (to_remove) {
             deinit_components(world, old_table, old_row.index, to_remove);
         }
     }
 
-    if (to_add) {
-        init_components(world, new_table, new_index, to_add);
-        copy_from_prefab(world, new_table, new_index, family_id);
-    }
+    if (new_table) {
+        if (to_add) {
+            init_components(world, new_table, new_index, to_add);
+            copy_from_prefab(world, new_table, new_index, family_id);
+        }
 
-    EcsRow row = {.family_id = family_id, .index = new_index};
-    row_64 = ecs_from_row(row);
-    ecs_map_set64(world->entity_index, entity, row_64);
+        EcsRow row = {.family_id = family_id, .index = new_index};
+        row_64 = ecs_from_row(row);
+        ecs_map_set64(world->entity_index, entity, row_64);
+    } else {
+        ecs_map_set64(world->entity_index, entity, 0);
+    }
 
     world->valid_schedule = false;
 

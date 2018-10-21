@@ -16,3 +16,10 @@ test.suite EcsAdd {
     tc_add_2_component()
     tc_add_existing_component()
 }
+
+test.suite EcsRemove {
+    tc_remove_component()
+    tc_remove_2_component()
+    tc_remove_component_from_2()
+    tc_remove_2_component_from_3()
+}

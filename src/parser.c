@@ -14,7 +14,7 @@ const char *skip_space(
 }
 
 static
-char* ecs_parse_complex_elem(
+char* parse_complex_elem(
     char *bptr,
     EcsSystemExprElemKind *elem_kind,
     EcsSystemExprOperKind *oper_kind)
@@ -72,7 +72,7 @@ EcsResult ecs_parse_component_expr(
             bptr = buffer;
 
             if (complex_expr) {
-                bptr = ecs_parse_complex_elem(bptr, &elem_kind, &oper_kind);
+                bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind);
                 if (!bptr) {
                     goto error;
                 }
