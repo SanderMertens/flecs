@@ -32,6 +32,10 @@ void test_EcsAdd_tc_add_2_component(
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Bar_h));
 
+    Bar *bar_ptr = ecs_get(world, e, Bar_h);
+    test_assert(bar_ptr != NULL);
+    bar_ptr->y = 10;
+
     ecs_add(world, e, Foo_h);
     ecs_add(world, e, Hello_h);
     test_assert(!ecs_has(world, e, Foo_h));
@@ -42,6 +46,10 @@ void test_EcsAdd_tc_add_2_component(
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
     test_assert(ecs_has(world, e, Foo_h));
+
+    bar_ptr = ecs_get(world, e, Bar_h);
+    test_assert(bar_ptr != NULL);
+    test_assertint(bar_ptr->y, 10);
 
     ecs_fini(world);
 }
@@ -83,6 +91,10 @@ void test_EcsAdd_tc_add_component(
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Bar_h));
 
+    Bar *bar_ptr = ecs_get(world, e, Bar_h);
+    test_assert(bar_ptr != NULL);
+    bar_ptr->y = 10;
+
     ecs_add(world, e, Foo_h);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
@@ -90,6 +102,10 @@ void test_EcsAdd_tc_add_component(
     ecs_commit(world, e);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
+
+    bar_ptr = ecs_get(world, e, Bar_h);
+    test_assert(bar_ptr != NULL);
+    test_assertint(bar_ptr->y, 10);
 
     ecs_fini(world);
 }
@@ -127,11 +143,19 @@ void test_EcsAdd_tc_add_existing_component(
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
 
+    Foo *foo_ptr = ecs_get(world, e, Foo_h);
+    test_assert(foo_ptr != NULL);
+    foo_ptr->x = 10;
+
     ecs_add(world, e, Foo_h);
     test_assert(ecs_has(world, e, Foo_h));
 
     ecs_commit(world, e);
     test_assert(ecs_has(world, e, Foo_h));
+
+    foo_ptr = ecs_get(world, e, Foo_h);
+    test_assert(foo_ptr != NULL);
+    test_assertint(foo_ptr->x, 10);
 
     ecs_fini(world);
 }
@@ -200,11 +224,19 @@ void test_EcsAdd_tc_add_family_overlapping_w_entity(
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
 
+    Foo *foo_ptr = ecs_get(world, e, Foo_h);
+    test_assert(foo_ptr != NULL);
+    foo_ptr->x = 10;
+
     ecs_add(world, e, MyFamily_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
+
+    foo_ptr = ecs_get(world, e, Foo_h);
+    test_assert(foo_ptr != NULL);
+    test_assertint(foo_ptr->x, 10);
 
     ecs_fini(world);
 }
