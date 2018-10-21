@@ -282,7 +282,43 @@ EcsHandle ecs_new(
     EcsWorld *world,
     EcsHandle type);
 
-/** Create a new prefab entity */
+/** Create a new prefab entity.
+ * Prefab entities allow entities to share a set of components. Components of
+ * the prefab will appear on the specified entity when using any of the API
+ * functions and ECS systems.
+ *
+ * A prefab is a regular entity, with the only difference that it has the
+ * EcsPrefab component. That means that all the regular API functions like
+ * ecs_get, ecs_add, ecs_commit etc. can be used on prefabs.
+ *
+ * The ECS_PREFAB macro wraps around this function.
+ *
+ * Changing the value of one of the components on the prefab will change the
+ * value for all entities that added the prefab, as components are stored only
+ * once in memory. This makes prefabs also a memory-saving mechanism; there can
+ * be many entities that reuse component records from the prefab.
+ *
+ * Entities can override components from a prefab by adding the component with
+ * ecs_add. When a component is overridden, its value will be copied from the
+ * prefab. This technique can be combined with families to automatically
+ * initialize entities, like this:
+ *
+ * ECS_PREFAB(world, MyPrefab, Foo);
+ * ECS_FAMILY(world, MyFamily, MyPrefab, Foo);
+ * EcsHandle e = ecs_new(world, MyFamily);
+ *
+ * In this code, the entity will be created with the prefab and directly
+ * override 'Foo', which will copy the value of 'Foo' from the prefab.
+ *
+ * Prefabs are explicitly stored on the component list of an entity. This means
+ * that two entities with the same set of components but a different prefab are
+ * stored in different tables.
+ *
+ * Prefabs can be part of the component list of other prefabs. This allows for
+ * creating hierarchies of prefabs, where the leaves are the most specialized.
+ *
+ * Only one prefab may be added to an entity.
+ */
 REFLECS_EXPORT
 EcsHandle ecs_new_prefab(
     EcsWorld *world,
@@ -405,7 +441,7 @@ EcsResult ecs_commit(
  * @param world: The world.
  * @param entity: Handle to the entity from which to obtain the component data.
  * @param component: The component to retrieve the data for.
- * @result: A pointer to the data, or NULL of the component was not found.
+ * @returns: A pointer to the data, or NULL of the component was not found.
  */
 REFLECS_EXPORT
 void* ecs_get(
@@ -413,7 +449,60 @@ void* ecs_get(
     EcsHandle entity,
     EcsHandle component);
 
+/** Check if entity has the specified type.
+ * This operation checks if the entity has the components associated with the
+ * specified type. It accepts component handles, families and prefabs.
+ *
+ * For example, if an entity has component 'Foo' and a family has 'Foo, Bar'
+ * invoking this function with the entity and family as type will return false
+ * because the entity does not have 'Bar'. Invoking the entity with the 'Bar'
+ * component, or a family that contains only 'Bar' will return true.
+ *
+ * @time-complexity: O(c)
+ * @param world: The world.
+ * @param entity: Handle to a entity.
+ * @param type: Handle to a component, family or prefab.
+ * @returns: true if entity has type, otherwise false.
+ */
+REFLECS_EXPORT
+bool ecs_has(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle type);
 
+
+/** Check if entity has any of the components in the specified type.
+ * This operation checks if the entity has any of the components associated with
+ * the specified type. It accepts component handles, families and prefabs.
+ *
+ * For example, if an entity has component 'Foo' and a family has 'Foo, Bar'
+ * invoking this function with the entity and family as type will return true
+ * because the entity has one of the components.
+ *
+ * @time-complexity: O(c)
+ * @param world: The world.
+ * @param entity: Handle to a entity.
+ * @param type: Handle to a component, family or prefab.
+ * @returns: true if entity has one of the components, otherwise false.
+ */
+REFLECS_EXPORT
+bool ecs_has_any(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle type);
+
+/** Return the entity id.
+ * This returns the string identifier of an entity, if the entity has the EcsId
+ * component. By default, all component, family, system and prefab entities add
+ * the EcsId component if they have been created with the ecs_new_* functions.
+ *
+ * If the entity does not contain the EcsId component, this function will return
+ * NULL.
+ *
+ * @param world: The world.
+ * @param entity: The entity for which to resolve the id.
+ * @returns: The id of the entity.
+ */
 REFLECS_EXPORT
 const char* ecs_id(
     EcsWorld *world,
@@ -643,23 +732,30 @@ void ecs_iter_release(
     assert (id##_h != 0)
 
 /** Wrapper around ecs_new_family.
- * This macro provides a convenient way to obtain a handle to a family. This
- * handle can be reused with ecs_new like this:
+ * This macro provides a convenient way to register a family with the world.
+ * It can be used like this:
  *
  * ECS_FAMILY(world, MyFamily, ComponentA, ComponentB);
- * EcsHandle h = ecs_new(world, MyFamily);
+ * EcsHandle h = ecs_new(world, MyFamily_h);
  *
- * Obtaining the handle to a family and using it with ecs_new is faster
- * than calling ecs_new, ecs_stage and ecs_commit separately. This method also
+ * Creating a family and using it with ecs_new is faster
+ * than calling ecs_new, ecs_add and ecs_commit separately. This method also
  * provides near-constant creation time for entities regardless of the number of
- * components, whereas using ecs_stage and ecs_commit takes longer for larger
+ * components, whereas using ecs_add and ecs_commit takes longer for larger
  * numbers of components.
  */
 #define ECS_FAMILY(world, id, ...) \
     EcsHandle id##_h = ecs_new_family(world, #id, #__VA_ARGS__);\
     assert (id##_h != 0)
 
-/** Wrapper around ecs_new_prefab
+/** Wrapper around ecs_new_prefab.
+ * This macro provides a convenient way to register a prefab with the world. It
+ * can be used like this:
+ *
+ * ECS_PREFAB(world, MyPrefab, ComponentA, ComponentB);
+ * EcsHandle h = ecs_new(world, MyPrefab_h);
+ *
+ * For more specifics, see description of ecs_new_prefab.
  */
 #define ECS_PREFAB(world, id, ...) \
     EcsHandle id##_h = ecs_new_prefab(world, #id, #__VA_ARGS__);\

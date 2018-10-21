@@ -89,11 +89,11 @@ void test_EcsPrefab_tc_prefab_prefab(
     EcsHandle e2 = ecs_new(world, Prefab2_h);
     test_assert(e2 != 0);
 
-    test_assert(ecs_get(world, e1, Foo_h) != NULL);
-    test_assert(ecs_get(world, e1, Bar_h) == NULL);
+    test_assert(ecs_has(world, e1, Foo_h));
+    test_assert(!ecs_has(world, e1, Bar_h));
 
-    test_assert(ecs_get(world, e2, Foo_h) != NULL);
-    test_assert(ecs_get(world, e2, Bar_h) != NULL);
+    test_assert(ecs_has(world, e2, Foo_h));
+    test_assert(ecs_has(world, e2, Bar_h));
 
     ecs_fini(world);
 }

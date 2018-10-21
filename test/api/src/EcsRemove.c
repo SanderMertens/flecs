@@ -23,13 +23,13 @@ void test_EcsRemove_tc_remove_2_component(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
     ecs_remove(world, e, Foo_h);
     ecs_remove(world, e, Bar_h);
     ecs_commit(world, e);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
-    test_assert(ecs_get(world, e, Bar_h) == NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
     ecs_fini(world);
 }
 
@@ -41,10 +41,10 @@ void test_EcsRemove_tc_remove_component(
     ECS_FAMILY(world, MyFamily, Foo);
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
     ecs_remove(world, e, Foo_h);
     ecs_commit(world, e);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
     ecs_fini(world);
 }
 
@@ -58,15 +58,15 @@ void test_EcsRemove_tc_remove_2_component_from_3(
     ECS_FAMILY(world, MyFamily, Foo, Bar, Hello);
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
-    test_assert(ecs_get(world, e, Hello_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assert(ecs_has(world, e, Hello_h));
     ecs_remove(world, e, Foo_h);
     ecs_remove(world, e, Bar_h);
     ecs_commit(world, e);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
-    test_assert(ecs_get(world, e, Bar_h) == NULL);
-    test_assert(ecs_get(world, e, Hello_h) != NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+    test_assert(ecs_has(world, e, Hello_h));
     ecs_fini(world);
 }
 
@@ -79,11 +79,11 @@ void test_EcsRemove_tc_remove_component_from_2(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
     ecs_remove(world, e, Foo_h);
     ecs_commit(world, e);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
     ecs_fini(world);
 }

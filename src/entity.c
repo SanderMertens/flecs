@@ -255,6 +255,24 @@ EcsResult commit_w_family(
     return EcsOk;
 }
 
+static
+bool has_type(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle type,
+    bool match_all)
+{
+    EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
+    EcsFamily family_id = row.family_id;
+    if (!family_id) {
+        return false;
+    }
+
+    EcsFamily type_family = ecs_family_from_handle(world, type);
+
+    return ecs_family_contains(world, family_id, type_family, match_all);
+}
+
 /* -- Private functions -- */
 EcsHandle ecs_new_w_family(
     EcsWorld *world,
@@ -383,6 +401,22 @@ void* ecs_get(
     assert(row_ptr != NULL);
 
     return ECS_OFFSET(row_ptr, offset + sizeof(EcsHandle));
+}
+
+bool ecs_has(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle type)
+{
+    return has_type(world, entity, type, true);
+}
+
+bool ecs_has_any(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle type)
+{
+    return has_type(world, entity, type, false);
 }
 
 EcsHandle ecs_new_component(

@@ -30,22 +30,21 @@ void test_EcsAdd_tc_add_2_component(
 
     EcsHandle e = ecs_new(world, Bar_h);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(ecs_has(world, e, Bar_h));
 
     ecs_add(world, e, Foo_h);
     ecs_add(world, e, Hello_h);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
-    test_assert(ecs_get(world, e, Hello_h) == NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
 
     ecs_commit(world, e);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
-    test_assert(ecs_get(world, e, Hello_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assert(ecs_has(world, e, Foo_h));
 
     ecs_fini(world);
 }
-
 
 void test_EcsAdd_tc_add_2_component_to_empty(
     test_EcsAdd this)
@@ -61,12 +60,12 @@ void test_EcsAdd_tc_add_2_component_to_empty(
 
     ecs_add(world, e, Foo_h);
     ecs_add(world, e, Hello_h);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
-    test_assert(ecs_get(world, e, Hello_h) == NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Foo_h));
 
     ecs_commit(world, e);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Hello_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Foo_h));
 
     ecs_fini(world);
 }
@@ -82,15 +81,15 @@ void test_EcsAdd_tc_add_component(
 
     EcsHandle e = ecs_new(world, Bar_h);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(ecs_has(world, e, Bar_h));
 
     ecs_add(world, e, Foo_h);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
 
     ecs_commit(world, e);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
 
     ecs_fini(world);
 }
@@ -108,10 +107,10 @@ void test_EcsAdd_tc_add_component_to_empty(
     test_assert(e != 0);
 
     ecs_add(world, e, Foo_h);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
 
     ecs_commit(world, e);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
 
     ecs_fini(world);
 }
@@ -126,13 +125,13 @@ void test_EcsAdd_tc_add_existing_component(
 
     EcsHandle e = ecs_new(world, Foo_h);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
 
     ecs_add(world, e, Foo_h);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
 
     ecs_commit(world, e);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
 
     ecs_fini(world);
 }
@@ -149,14 +148,14 @@ void test_EcsAdd_tc_add_family(
 
     EcsHandle e = ecs_new(world, 0);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
-    test_assert(ecs_get(world, e, Bar_h) == NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
 
     ecs_add(world, e, MyFamily_h);
     ecs_commit(world, e);
 
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
 
     ecs_fini(world);
 }
@@ -174,14 +173,14 @@ void test_EcsAdd_tc_add_family_with_family(
 
     EcsHandle e = ecs_new(world, 0);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
-    test_assert(ecs_get(world, e, Bar_h) == NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
 
     ecs_add(world, e, Family2_h);
     ecs_commit(world, e);
 
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
 
     ecs_fini(world);
 }
@@ -198,14 +197,14 @@ void test_EcsAdd_tc_add_family_overlapping_w_entity(
 
     EcsHandle e = ecs_new(world, Foo_h);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Bar_h) == NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
 
     ecs_add(world, e, MyFamily_h);
     ecs_commit(world, e);
 
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
 
     ecs_fini(world);
 }
@@ -224,15 +223,15 @@ void test_EcsAdd_tc_add_overlapping_families(
 
     EcsHandle e = ecs_new(world, 0);
     test_assert(e != 0);
-    test_assert(ecs_get(world, e, Foo_h) == NULL);
-    test_assert(ecs_get(world, e, Bar_h) == NULL);
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
 
     ecs_add(world, e, Family1_h);
     ecs_add(world, e, Family2_h);
     ecs_commit(world, e);
 
-    test_assert(ecs_get(world, e, Foo_h) != NULL);
-    test_assert(ecs_get(world, e, Bar_h) != NULL);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
 
     ecs_fini(world);
 }
