@@ -691,21 +691,21 @@ EcsHandle ecs_lookup(
 
     while (ecs_iter_hasnext(&it)) {
         EcsTable *table = ecs_iter_next(&it);
+        uint32_t offset;
 
-        if (ecs_table_column_offset(table, EcsId_h) == -1) {
+        if ((offset = ecs_table_column_offset(table, EcsId_h)) == -1) {
             continue;
         }
 
-        EcsArrayIter iter_data;
-        EcsIter row_it = _ecs_array_iter(
-            table->rows, &table->row_params, &iter_data);
+        void *buffer = ecs_array_buffer(table->rows);
+        uint32_t count = ecs_array_count(table->rows);
+        uint32_t element_size = table->row_params.element_size;
+        void *row, *last = ECS_OFFSET(buffer, count * element_size);
 
-        while (ecs_iter_hasnext(&row_it)) {
-            void *row = ecs_iter_next(&row_it);
-            EcsHandle h = *(EcsHandle*)row;
-            EcsId *id_ptr = ecs_get(world, h, EcsId_h);
+        for (row = buffer; row < last; row = ECS_OFFSET(row, element_size)) {
+            EcsId *id_ptr = ECS_OFFSET(row, offset + sizeof(EcsHandle));
             if (!strcmp(id_ptr->id, id)) {
-                return h;
+                return *(EcsHandle*)row;
             }
         }
     }
