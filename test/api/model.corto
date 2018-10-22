@@ -42,3 +42,17 @@ test.suite EcsPrefab {
     tc_prefab_add_to_entity()
     tc_prefab_add_component()
 }
+
+test.suite EcsPeriodicSystem {
+    tc_system_component()
+    tc_system_2_component()
+    tc_system_prefab()
+    tc_system_prefab_component()
+    tc_system_1_component_1_not()
+    tc_system_1_component_2_not()
+    tc_system_2_component_1_not()
+    tc_system_2_component_2_not()
+    tc_system_1_component_1_or2()
+    tc_system_1_component_2_or2()
+    tc_system_2_component_2_or3()
+}

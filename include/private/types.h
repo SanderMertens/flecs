@@ -100,11 +100,11 @@ typedef struct EcsRow {
 } EcsRow;
 
 typedef struct EcsJob {
-    EcsHandle system;               /* System handle */
-    EcsSystem *system_data;         /* System to run */
-    uint32_t table_index;           /* Current SystemTable */
-    uint32_t start_index;           /* Start index in row chunk */
-    uint32_t row_count;             /* Total number of rows to process */
+    EcsHandle system;             /* System handle */
+    EcsSystem *system_data;       /* System to run */
+    uint32_t table_index;         /* Current SystemTable */
+    uint32_t start_index;         /* Start index in row chunk */
+    uint32_t row_count;           /* Total number of rows to process */
 } EcsJob;
 
 typedef struct EcsThread {

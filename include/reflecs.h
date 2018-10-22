@@ -73,13 +73,14 @@ typedef enum EcsSystemKind {
 typedef struct EcsRows {
     EcsHandle system;
     EcsWorld *world;
-    void *param;
+    int32_t *columns;
     void *first;
     void *last;
-    int32_t *columns;
     void **refs;
+    void *param;
+    EcsHandle *components;
     uint32_t element_size;
-    uint32_t count;
+    uint32_t column_count;
 } EcsRows;
 
 /** System action callback type */
@@ -177,22 +178,6 @@ void ecs_set_context(
 REFLECS_EXPORT
 void* ecs_get_context(
     EcsWorld *world);
-
-/** Lookup an entity by id.
- * This operation is a convenient way to lookup entities by string identifier
- * that have the EcsId component. It is recommended to cache the result of this
- * function, as the function must iterates over all entities and all components
- * in an entity.
- *
- * @time-complexity: O(t * c)
- * @param world The world.
- * @param id The id to lookup.
- * @returns The entity handle if found, or ECS_HANDLE_NIL if not found.
- */
-REFLECS_EXPORT
-EcsHandle ecs_lookup(
-    EcsWorld *world,
-    const char *id);
 
 /** Dimension the world for a specified number of entities.
  * This operation will preallocate memory in the world for the specified number
@@ -470,7 +455,6 @@ bool ecs_has(
     EcsHandle entity,
     EcsHandle type);
 
-
 /** Check if entity has any of the components in the specified type.
  * This operation checks if the entity has any of the components associated with
  * the specified type. It accepts component handles, families and prefabs.
@@ -491,6 +475,9 @@ bool ecs_has_any(
     EcsHandle entity,
     EcsHandle type);
 
+
+/* -- Id API -- */
+
 /** Return the entity id.
  * This returns the string identifier of an entity, if the entity has the EcsId
  * component. By default, all component, family, system and prefab entities add
@@ -507,6 +494,23 @@ REFLECS_EXPORT
 const char* ecs_id(
     EcsWorld *world,
     EcsHandle entity);
+
+/** Lookup an entity by id.
+ * This operation is a convenient way to lookup entities by string identifier
+ * that have the EcsId component. It is recommended to cache the result of this
+ * function, as the function must iterates over all entities and all components
+ * in an entity.
+ *
+ * @time-complexity: O(t * c)
+ * @param world The world.
+ * @param id The id to lookup.
+ * @returns The entity handle if found, or ECS_HANDLE_NIL if not found.
+ */
+REFLECS_EXPORT
+EcsHandle ecs_lookup(
+    EcsWorld *world,
+    const char *id);
+
 
 /* -- Component API -- */
 
@@ -764,9 +768,9 @@ void ecs_iter_release(
 #define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)
 
 #define ecs_column(data, row, column) \
-  (data)->columns[column] >= 0 \
+  ((data)->columns[column] >= 0 \
     ? ECS_OFFSET(row, (data)->columns[column]) \
-    : data->refs[-((data)->columns[column]) - 1]
+    : data->refs[-((data)->columns[column]) - 1])
 
 #define ecs_entity(row) *(EcsHandle*)ECS_OFFSET(row, -sizeof(EcsHandle))
 

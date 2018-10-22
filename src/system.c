@@ -443,7 +443,8 @@ void ecs_run_job(
     EcsRows info = {
         .world = world,
         .system = system,
-        .refs = refs
+        .refs = refs,
+        .column_count = column_count
     };
 
     do {
@@ -455,7 +456,6 @@ void ecs_run_job(
         uint32_t element_size = table->row_params.element_size;
         uint32_t refs_index = ((uint32_t*)table_buffer)[1];
 
-        info.count = count;
         info.element_size = element_size;
         info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * 2);
         info.first = ECS_OFFSET(start, sizeof(EcsHandle));
@@ -497,7 +497,8 @@ void ecs_system_notify(
         .world = world,
         .system = system,
         .param = NULL,
-        .refs = refs
+        .refs = refs,
+        .column_count = column_count
     };
 
     for (t = 0; t < table_count; t++) {
@@ -549,7 +550,8 @@ void ecs_run_system(
         .world = world,
         .system = system,
         .param = param,
-        .refs = refs
+        .refs = refs,
+        .column_count = column_count
     };
 
     for (; table_buffer < last; table_buffer += element_size) {
@@ -565,7 +567,6 @@ void ecs_run_system(
             resolve_refs(world, system_data, refs_index, &info);
         }
 
-        info.count = count;
         info.element_size = table->row_params.element_size;
         info.first = ECS_OFFSET(buffer, sizeof(EcsHandle));
         info.last = ECS_OFFSET(info.first, info.element_size * count);
