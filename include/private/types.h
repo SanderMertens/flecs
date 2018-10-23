@@ -69,12 +69,14 @@ typedef struct EcsSystem {
     EcsFamily from_entity[EcsOperLast]; /* Families from entities per oper */
     EcsFamily from_component[EcsOperLast]; /* Same, from components */
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
-    EcsArray *columns;         /* System components in specified order */
+    EcsArray *columns;         /* Parsed component expression */
+    EcsArray *components;      /* Computed component list per matched table */
     EcsArray *inactive_tables; /* Inactive tables */
     EcsArray *jobs;            /* Jobs for this system */
     EcsArray *tables;          /* Table index + refs index + column offsets */
     EcsArray *refs;            /* Columns that point to other entities */
     EcsArrayParams table_params; /* Parameters for tables array */
+    EcsArrayParams component_params; /* Parameters for components array */
     EcsArrayParams ref_params; /* Parameters for tables array */
     EcsSystemKind kind;        /* Kind that determines when system is invoked */
     bool enabled;              /* Is system enabled or not */

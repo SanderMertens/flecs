@@ -14,6 +14,7 @@ typedef struct Context {
     int count;
     EcsHandle entities[COUNT];
     int column[COLUMN_COUNT][COUNT];
+    EcsHandle component[COLUMN_COUNT];
     int column_count;
 } Context;
 
@@ -24,6 +25,10 @@ void TestSystem(EcsRows *rows) {
     int column;
 
     ctx->column_count = rows->column_count;
+
+    for (column = 0; column < rows->column_count; column ++) {
+        ctx->component[column] = rows->components[column];
+    }
 
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         ctx->entities[ctx->count] = ecs_entity(row);
@@ -74,6 +79,7 @@ void test_EcsPeriodicSystem_tc_system_component(
     test_assert(ctx.entities[1] == e3);
     test_assertint(ctx.column[0][0], 10);
     test_assertint(ctx.column[0][1], 40);
+    test_assertint(ctx.component[0], Foo_h);
 
     ecs_fini(world);
 }
@@ -135,6 +141,8 @@ void test_EcsPeriodicSystem_tc_system_2_component(
     test_assertint(ctx.column[1][0], 50);
     test_assertint(ctx.column[0][1], 60);
     test_assertint(ctx.column[1][1], 80);
+    test_assertint(ctx.component[0], Foo_h);
+    test_assertint(ctx.component[1], Hello_h);
 
     ecs_fini(world);
 }

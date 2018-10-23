@@ -246,6 +246,9 @@ void add_table(
             &system_data->inactive_tables, &system_data->table_params);
     }
 
+    EcsHandle *component_data = ecs_array_add(
+        &system_data->components, &system_data->component_params);
+
     /* Table index is at element 0 */
     table_data[0] = ecs_array_get_index(
         world->table_db, &table_arr_params, table);
@@ -293,6 +296,9 @@ void add_table(
             ref ++;
             table_data[i] = -ref;
         }
+
+        component_data[i - 2] = component;
+
         i ++;
     }
 
@@ -432,6 +438,8 @@ void ecs_run_job(
     EcsSystem *system_data = job->system_data;
     EcsSystemAction action = system_data->action;
     uint32_t table_element_size = system_data->table_params.element_size;
+    uint32_t component_element_size =
+      system_data->component_params.element_size;
     uint32_t table_index = job->table_index;
     uint32_t start_index = job->start_index;
     uint32_t remaining = job->row_count;
@@ -439,6 +447,8 @@ void ecs_run_job(
     void *refs[column_count];
     char *table_buffer = ecs_array_get(
         system_data->tables, &system_data->table_params, table_index);
+    char *component_buffer = ecs_array_get(
+        system_data->components, &system_data->component_params, table_index);
 
     EcsRows info = {
         .world = world,
@@ -458,6 +468,7 @@ void ecs_run_job(
 
         info.element_size = element_size;
         info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * 2);
+        info.components = (EcsHandle*)component_buffer;
         info.first = ECS_OFFSET(start, sizeof(EcsHandle));
 
         if (refs_index) {
@@ -467,6 +478,7 @@ void ecs_run_job(
         if (remaining >= count) {
             info.last = ECS_OFFSET(info.first, element_size * count);
             table_buffer += table_element_size;
+            component_buffer += component_element_size;
             start_index = 0;
             remaining -= count;
         } else {
@@ -504,6 +516,9 @@ void ecs_system_notify(
     for (t = 0; t < table_count; t++) {
         int32_t *table_data = ecs_array_get(
             system_data->tables, &system_data->table_params, t);
+        char *component_buffer = ecs_array_get(
+            system_data->components, &system_data->component_params, t);
+
         int32_t sys_table_index = table_data[0];
 
         if (sys_table_index == table_index) {
@@ -514,6 +529,7 @@ void ecs_system_notify(
             info.columns = ECS_OFFSET(table_data, sizeof(int32_t) * 2);
             info.first = ECS_OFFSET(row, sizeof(EcsHandle));
             info.last = ECS_OFFSET(info.first, info.element_size);
+            info.components = (EcsHandle*)component_buffer;
             if (refs_index) {
                 resolve_refs(world, system_data, refs_index, &info);
             }
@@ -542,7 +558,9 @@ void ecs_run_system(
     uint32_t table_count = ecs_array_count(tables);
     uint32_t column_count = ecs_array_count(system_data->columns);
     uint32_t element_size = system_data->table_params.element_size;
+    uint32_t component_el_size = system_data->component_params.element_size;
     char *table_buffer = ecs_array_buffer(tables);
+    char *component_buffer = ecs_array_buffer(system_data->components);
     char *last = ECS_OFFSET(table_buffer, element_size * table_count);
     void *refs[column_count];
 
@@ -571,6 +589,8 @@ void ecs_run_system(
         info.first = ECS_OFFSET(buffer, sizeof(EcsHandle));
         info.last = ECS_OFFSET(info.first, info.element_size * count);
         info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * 2);
+        info.components = (EcsHandle*)component_buffer;
+        component_buffer += component_el_size;
         action(&info);
     }
 }
@@ -598,7 +618,11 @@ EcsHandle ecs_new_system(
     system_data->table_params.move_action = NULL;
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
     system_data->ref_params.move_action = NULL;
+    system_data->component_params.element_size = sizeof(EcsHandle) * count;
+    system_data->component_params.move_action = NULL;
     system_data->refs = NULL;
+    system_data->components = ecs_array_new(
+        &system_data->component_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     system_data->tables = ecs_array_new(
         &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     system_data->inactive_tables = ecs_array_new(
