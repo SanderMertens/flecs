@@ -14,7 +14,7 @@ typedef struct Context {
     int count;
     EcsHandle entities[COUNT];
     int column[COLUMN_COUNT][COUNT];
-    EcsHandle component[COLUMN_COUNT];
+    EcsHandle component[COLUMN_COUNT][COUNT];
     int column_count;
 } Context;
 
@@ -26,15 +26,12 @@ void TestSystem(EcsRows *rows) {
 
     ctx->column_count = rows->column_count;
 
-    for (column = 0; column < rows->column_count; column ++) {
-        ctx->component[column] = rows->components[column];
-    }
-
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         ctx->entities[ctx->count] = ecs_entity(row);
 
         for (column = 0; column < rows->column_count; column ++) {
             ctx->column[column][ctx->count] = *(int*)ecs_column(rows, row, column);
+            ctx->component[column][ctx->count] = rows->components[column];
         }
 
         ctx->count ++;
@@ -79,7 +76,7 @@ void test_EcsPeriodicSystem_tc_system_component(
     test_assert(ctx.entities[1] == e3);
     test_assertint(ctx.column[0][0], 10);
     test_assertint(ctx.column[0][1], 40);
-    test_assertint(ctx.component[0], Foo_h);
+    test_assertint(ctx.component[0][0], Foo_h);
 
     ecs_fini(world);
 }
@@ -141,8 +138,8 @@ void test_EcsPeriodicSystem_tc_system_2_component(
     test_assertint(ctx.column[1][0], 50);
     test_assertint(ctx.column[0][1], 60);
     test_assertint(ctx.column[1][1], 80);
-    test_assertint(ctx.component[0], Foo_h);
-    test_assertint(ctx.component[1], Hello_h);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[1][0], Hello_h);
 
     ecs_fini(world);
 }
@@ -193,7 +190,7 @@ void test_EcsPeriodicSystem_tc_system_prefab(
     test_assertint(ctx.column[0][0], 10);
     test_assertint(ctx.column[0][1], 70);
     test_assertint(ctx.column[0][2], 70);
-    test_assertint(ctx.component[0], Foo_h);
+    test_assertint(ctx.component[0][0], Foo_h);
 
     ecs_fini(world);
 }
@@ -249,8 +246,8 @@ void test_EcsPeriodicSystem_tc_system_prefab_component(
     test_assertint(ctx.column[1][0], 40);
     test_assertint(ctx.column[0][1], 70);
     test_assertint(ctx.column[1][1], 60);
-    test_assertint(ctx.component[0], Foo_h);
-    test_assertint(ctx.component[1], Bar_h);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[1][0], Bar_h);
 
     ecs_fini(world);
 }
@@ -301,7 +298,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_1_not(
     test_assert(ctx.entities[1] == e4);
     test_assertint(ctx.column[0][0], 10);
     test_assertint(ctx.column[0][1], 60);
-    test_assertint(ctx.component[0], Foo_h);
+    test_assertint(ctx.component[0][0], Foo_h);
 
     ecs_fini(world);
 }
@@ -360,7 +357,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_2_not(
     test_assert(ctx.entities[1] == e5);
     test_assertint(ctx.column[0][0], 10);
     test_assertint(ctx.column[0][1], 80);
-    test_assertint(ctx.component[0], Foo_h);
+    test_assertint(ctx.component[0][0], Foo_h);
 
     ecs_fini(world);
 }
@@ -423,8 +420,8 @@ void test_EcsPeriodicSystem_tc_system_2_component_1_not(
     test_assertint(ctx.column[1][0], 70);
     test_assertint(ctx.column[0][1], 80);
     test_assertint(ctx.column[1][1], 90);
-    test_assertint(ctx.component[0], Foo_h);
-    test_assertint(ctx.component[1], Bar_h);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[1][0], Bar_h);
 
     ecs_fini(world);
 }
@@ -485,8 +482,8 @@ void test_EcsPeriodicSystem_tc_system_2_component_2_not(
     test_assert(ctx.entities[0] == e4);
     test_assertint(ctx.column[0][0], 60);
     test_assertint(ctx.column[1][0], 70);
-    test_assertint(ctx.component[0], Foo_h);
-    test_assertint(ctx.component[1], Bar_h);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[1][0], Bar_h);
 
     ecs_fini(world);
 }
@@ -494,7 +491,65 @@ void test_EcsPeriodicSystem_tc_system_2_component_2_not(
 void test_EcsPeriodicSystem_tc_system_1_component_1_or2(
     test_EcsPeriodicSystem this)
 {
-    /* Insert implementation */
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_COMPONENT(world, Hello);
+    ECS_COMPONENT(world, World);
+    ECS_FAMILY(world, Family1, Foo, Hello);
+    ECS_FAMILY(world, Family2, Foo, Bar);
+    ECS_FAMILY(world, Family3, Foo, World);
+    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, Bar|Hello);
+
+    EcsHandle e1 = ecs_new(world, Foo_h);
+    EcsHandle e2 = ecs_new(world, Bar_h);
+    EcsHandle e3 = ecs_new(world, Family1_h);
+    EcsHandle e4 = ecs_new(world, Family2_h);
+    EcsHandle e5 = ecs_new(world, Family3_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+
+    int *foo_1 = ecs_get(world, e1, Foo_h);
+    int *bar_2 = ecs_get(world, e2, Bar_h);
+    int *foo_3 = ecs_get(world, e3, Foo_h);
+    int *hello_3 = ecs_get(world, e3, Hello_h);
+    int *foo_4 = ecs_get(world, e4, Foo_h);
+    int *bar_4 = ecs_get(world, e4, Bar_h);
+    int *foo_5 = ecs_get(world, e5, Foo_h);
+    int *world_5 = ecs_get(world, e5, World_h);
+
+    *foo_1 = 10;
+    *bar_2 = 20;
+    *foo_3 = 40;
+    *hello_3 = 50;
+    *foo_4 = 60;
+    *bar_4 = 70;
+    *foo_5 = 80;
+    *world_5 = 100;
+
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assertint(ctx.column_count, 2);
+    test_assertint(ctx.count, 2);
+    test_assert(ctx.entities[0] == e3);
+    test_assert(ctx.entities[1] == e4);
+    test_assertint(ctx.column[0][0], 40);
+    test_assertint(ctx.column[1][0], 50);
+    test_assertint(ctx.column[0][1], 60);
+    test_assertint(ctx.column[1][1], 70);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[1][0], Hello_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+    test_assertint(ctx.component[1][1], Bar_h);
+
+    ecs_fini(world);
 }
 
 

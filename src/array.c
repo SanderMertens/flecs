@@ -277,7 +277,7 @@ void* ecs_array_last(
 {
     uint32_t count = array->count;
     uint32_t element_size = params->element_size;
-    return ECS_OFFSET(ARRAY_BUFFER(array), element_size * count);
+    return ECS_OFFSET(ARRAY_BUFFER(array), element_size * (count - 1));
 }
 
 EcsIter _ecs_array_iter(

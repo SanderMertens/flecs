@@ -31,49 +31,79 @@ EcsResult add_component(
     void *data)
 {
     EcsSystem *system_data = data;
+    EcsSystemColumn *elem;
     EcsHandle component = ecs_lookup(world, component_id);
     if (!component) {
         return EcsError;
     }
-
-    if (elem_kind == EcsFromEntity) {
-        system_data->from_entity[oper_kind] = ecs_family_add(
-            world, system_data->from_entity[oper_kind], component);
-    } else {
-        system_data->from_component[oper_kind] = ecs_family_add(
-            world, system_data->from_component[oper_kind], component);
-    }
-
-    EcsSystemColumn *elem;
 
     if (oper_kind == EcsOperAnd) {
         elem = ecs_array_add(&system_data->columns, &column_arr_params);
         elem->kind = elem_kind;
         elem->oper_kind = EcsOperAnd;
         elem->is.component = component;
-
     } else if (oper_kind == EcsOperOr) {
         elem = ecs_array_last(system_data->columns, &column_arr_params);
         if (elem->oper_kind == EcsOperAnd) {
-            elem->is.family = ecs_family_add(world, 0, component);
+            elem->is.family = ecs_family_add(
+                world, 0, elem->is.component);
         } else {
             if (elem->kind != elem_kind) {
                 /* Cannot mix FromEntity and FromComponent in OR */
                 goto error;
             }
-            elem->is.family = ecs_family_add(world, elem->is.family, component);
         }
-        elem->kind = elem_kind;
-        elem->oper_kind = EcsOperAnd;
 
+        elem->is.family = ecs_family_add(world, elem->is.family, component);
+        elem->kind = elem_kind;
+        elem->oper_kind = EcsOperOr;
     } else {
-        /* Do not add NOT operators to columns */
+        EcsFamily *from_array;
+        if (elem_kind == EcsFromEntity) {
+            from_array = system_data->from_entity;
+        } else {
+            from_array = system_data->from_component;
+        }
+        from_array[EcsOperNot] = ecs_family_add(
+            world, from_array[EcsOperNot], component);
     }
 
     return EcsOk;
 error:
     return EcsError;
 }
+
+static
+void compute_match_families(
+    EcsWorld *world,
+    EcsSystem *system_data)
+{
+    int i, count = ecs_array_count(system_data->columns);
+    for (i = 0; i < count; i ++) {
+        EcsSystemColumn *elem = ecs_array_get(
+            system_data->columns, &column_arr_params, i);
+        EcsSystemExprOperKind oper_kind = elem->oper_kind;
+        EcsSystemExprElemKind elem_kind = elem->kind;
+        EcsFamily *from_family;
+        EcsFamily family_id;
+
+        if (elem_kind == EcsFromEntity) {
+            from_family = system_data->from_entity;
+        } else {
+            from_family = system_data->from_component;
+        }
+
+        if (oper_kind == EcsOperAnd) {
+            family_id = ecs_family_add(world, 0, elem->is.component);
+        } else {
+            family_id = elem->is.family;
+        }
+
+        from_family[oper_kind] = ecs_family_merge(
+            world, from_family[oper_kind], family_id, 0);
+    }
+}
+
 
 static
 EcsHandle components_contain(
@@ -270,7 +300,6 @@ void add_table(
         if (column->kind == EcsFromEntity) {
             if (column->oper_kind == EcsOperAnd) {
                 component = column->is.component;
-
             } else if (column->oper_kind == EcsOperOr) {
                 component = ecs_family_contains(
                     world, table_family, column->is.family, false, true);
@@ -296,6 +325,7 @@ void add_table(
             if (!ref_data) {
                 ref_data = get_ref_data(world, system_data, table_data);
             }
+
             ref_data[ref].entity = get_entity_for_component(
                 world, entity, table_family, component);
             ref_data[ref].component = component;
@@ -334,7 +364,6 @@ void match_tables(
     EcsIter it = ecs_array_iter(world->table_db, &table_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsTable *table = ecs_iter_next(&it);
-
         if (match_table(world, table, system_data)) {
             add_table(world, system, system_data, table);
         }
@@ -646,6 +675,8 @@ EcsHandle ecs_new_system(
         ecs_delete(world, result);
         return 0;
     }
+
+    compute_match_families(world, system_data);
 
     match_tables(world, result, system_data);
 

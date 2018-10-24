@@ -25,7 +25,7 @@ char* parse_complex_elem(
         if (!bptr[1]) {
             return NULL;
         }
-        
+
         bptr ++;
     }
 
@@ -95,7 +95,12 @@ EcsResult ecs_parse_component_expr(
 
             complex_expr = false;
             elem_kind = EcsFromEntity;
-            oper_kind = EcsOperAnd;
+            if (ch == '|') {
+                oper_kind = EcsOperOr;
+            } else {
+                oper_kind = EcsOperAnd;
+            }
+
             bptr = buffer;
         } else {
             *bptr = ch;
