@@ -125,6 +125,7 @@ void notify(
             world,
             family,
             system_data->from_entity[EcsOperAnd],
+            true,
             true))
         {
             ecs_system_notify(world, h, system_data, table, table_index, row);
@@ -270,7 +271,7 @@ bool has_type(
 
     EcsFamily type_family = ecs_family_from_handle(world, type);
 
-    return ecs_family_contains(world, family_id, type_family, match_all);
+    return ecs_family_contains(world, family_id, type_family, match_all, true);
 }
 
 /* -- Private functions -- */

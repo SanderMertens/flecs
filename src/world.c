@@ -366,7 +366,8 @@ bool ecs_family_contains(
     EcsWorld *world,
     EcsFamily family_id_1,
     EcsFamily family_id_2,
-    bool match_all)
+    bool match_all,
+    bool match_prefab)
 {
     if (family_id_1 == family_id_2) {
         return true;
@@ -379,7 +380,7 @@ bool ecs_family_contains(
 
     uint32_t i_2, i_1 = 0;
     EcsHandle *h2p, *h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
-    EcsHandle h1, prefab = 0;
+    EcsHandle h1 = 0, prefab = 0;
     bool prefab_searched = false;
 
     for (i_2 = 0; (h2p = ecs_array_get(f_2, &handle_arr_params, i_2)); i_2 ++) {
@@ -399,7 +400,7 @@ bool ecs_family_contains(
         }
 
         if (h1 != h2) {
-            if (!prefab_searched) {
+            if (match_prefab && !prefab_searched) {
                 prefab = ecs_map_get64(world->prefab_index, family_id_1);
                 prefab_searched = true;
             }

@@ -96,7 +96,7 @@ EcsHandle components_contain(
 
         EcsRow row = ecs_to_row(row_64);
         EcsHandle component = ecs_family_contains(
-            world, row.family_id, family, match_all);
+            world, row.family_id, family, match_all, true);
         if (component != 0) {
             if (entity_out) *entity_out = h;
             return component;
@@ -116,23 +116,29 @@ bool match_table(
     EcsFamily family, table_family;
     table_family = table->family_id;
 
+    EcsFamily prefab_family = ecs_family_from_handle(world, EcsPrefab_h);
+    if (ecs_family_contains(world, table_family, prefab_family, true, false)) {
+        /* Never match prefabs */
+        return false;
+    }
+
     family = system_data->from_entity[EcsOperAnd];
     if (family) {
-        if (!ecs_family_contains(world, table_family, family, true)) {
+        if (!ecs_family_contains(world, table_family, family, true, true)) {
             return false;
         }
     }
 
     family = system_data->from_entity[EcsOperOr];
     if (family) {
-        if (!ecs_family_contains(world, table_family, family, false)) {
+        if (!ecs_family_contains(world, table_family, family, false, true)) {
             return false;
         }
     }
 
     family = system_data->from_entity[EcsOperNot];
     if (family) {
-        if (ecs_family_contains(world, table_family, family, false)) {
+        if (ecs_family_contains(world, table_family, family, false, true)) {
             return false;
         }
     }
@@ -267,7 +273,7 @@ void add_table(
 
             } else if (column->oper_kind == EcsOperOr) {
                 component = ecs_family_contains(
-                    world, table_family, column->is.family, false);
+                    world, table_family, column->is.family, false, true);
             }
 
         } else if (column->kind == EcsFromComponent) {

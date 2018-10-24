@@ -36,7 +36,8 @@ bool ecs_family_contains(
     EcsWorld *world,
     EcsFamily family_id_1,
     EcsFamily family_id_2,
-    bool match_all);
+    bool match_all,
+    bool match_prefab);
 
 EcsFamily ecs_family_register(
     EcsWorld *world,
