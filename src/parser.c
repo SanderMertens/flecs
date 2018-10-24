@@ -25,6 +25,8 @@ char* parse_complex_elem(
         if (!bptr[1]) {
             return NULL;
         }
+        
+        bptr ++;
     }
 
     char *dot = strchr(bptr, '.');
