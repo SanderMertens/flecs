@@ -32,6 +32,7 @@ EcsResult add_component(
 {
     EcsSystem *system_data = data;
     EcsSystemColumn *elem;
+
     EcsHandle component = ecs_lookup(world, component_id);
     if (!component) {
         return EcsError;

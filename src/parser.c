@@ -84,7 +84,7 @@ EcsResult ecs_parse_component_expr(
                 }
             }
 
-            if (oper_kind != EcsOperAnd && ch == '|') {
+            if (oper_kind == EcsOperNot && ch == '|') {
                 /* Cannot combine OR and NOT */
                 goto error;
             }
