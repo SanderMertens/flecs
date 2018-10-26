@@ -163,7 +163,7 @@ void ecs_schedule_jobs(
     EcsWorld *world,
     EcsHandle system)
 {
-    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem_h);
     uint32_t thread_count = ecs_array_count(world->worker_threads);
     uint32_t total_rows = 0;
 
@@ -226,7 +226,7 @@ void ecs_prepare_jobs(
     EcsWorld *world,
     EcsHandle system)
 {
-    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem_h);
     EcsArray *threads = world->worker_threads;
     EcsArray *jobs = system_data->jobs;
     int i;

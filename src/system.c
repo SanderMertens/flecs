@@ -422,7 +422,7 @@ void resolve_refs(
         if (!entity) {
             break;
         }
-        info->refs[i] = ecs_get(world, entity, ref->component);
+        info->refs[i] = ecs_get_ptr(world, entity, ref->component);
     }
 }
 
@@ -435,7 +435,7 @@ EcsResult ecs_system_notify_create_table(
     EcsHandle system,
     EcsTable *table)
 {
-    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem_h);
     if (!system_data) {
         return EcsError;
     }
@@ -456,7 +456,7 @@ void ecs_system_activate_table(
     bool active)
 {
     EcsArray *src_array, *dst_array;
-    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem_h);
     uint32_t table_index = ecs_array_get_index(
         world->table_db, &table_arr_params, table);
 
@@ -615,7 +615,7 @@ void ecs_run_system(
     EcsHandle system,
     void *param)
 {
-    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem_h);
     if (!system_data->enabled) {
         return;
     }
@@ -677,7 +677,7 @@ EcsHandle ecs_new_system(
 
     EcsHandle result = ecs_new_w_family(world, world->system_family);
 
-    EcsSystem *system_data = ecs_get(world, result, EcsSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, result, EcsSystem_h);
     memset(system_data, 0, sizeof(EcsSystem));
 
     system_data->action = action;
@@ -694,7 +694,7 @@ EcsHandle ecs_new_system(
     system_data->columns = ecs_array_new(&column_arr_params, count);
     system_data->kind = kind;
 
-    EcsId *id_data = ecs_get(world, result, EcsId_h);
+    EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
     id_data->id = id;
 
     if (ecs_parse_component_expr(
@@ -730,7 +730,7 @@ EcsResult ecs_enable(
     EcsHandle system,
     bool enabled)
 {
-    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem_h);
     if (!system_data) {
         return EcsError;
     }
@@ -758,7 +758,7 @@ bool ecs_is_enabled(
     EcsWorld *world,
     EcsHandle system)
 {
-    EcsSystem *system_data = ecs_get(world, system, EcsSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem_h);
     if (system_data) {
         return system_data->enabled;
     } else {

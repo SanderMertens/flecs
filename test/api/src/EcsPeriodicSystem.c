@@ -58,10 +58,10 @@ void test_EcsPeriodicSystem_tc_system_component(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *bar_2 = ecs_get(world, e2, Bar_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *bar_3 = ecs_get(world, e3, Bar_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *bar_2 = ecs_get_ptr(world, e2, Bar_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *bar_3 = ecs_get_ptr(world, e3, Bar_h);
 
     *foo_1 = 10;
     *bar_2 = 20;
@@ -108,15 +108,15 @@ void test_EcsPeriodicSystem_tc_system_2_component(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *bar_2 = ecs_get(world, e2, Bar_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *hello_3 = ecs_get(world, e3, Hello_h);
-    int *foo_4 = ecs_get(world, e4, Foo_h);
-    int *bar_4 = ecs_get(world, e4, Bar_h);
-    int *hello_4 = ecs_get(world, e4, Hello_h);
-    int *foo_5 = ecs_get(world, e5, Foo_h);
-    int *bar_5 = ecs_get(world, e5, Bar_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *bar_2 = ecs_get_ptr(world, e2, Bar_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *hello_3 = ecs_get_ptr(world, e3, Hello_h);
+    int *foo_4 = ecs_get_ptr(world, e4, Foo_h);
+    int *bar_4 = ecs_get_ptr(world, e4, Bar_h);
+    int *hello_4 = ecs_get_ptr(world, e4, Hello_h);
+    int *foo_5 = ecs_get_ptr(world, e5, Foo_h);
+    int *bar_5 = ecs_get_ptr(world, e5, Bar_h);
 
     *foo_1 = 10;
     *bar_2 = 20;
@@ -168,11 +168,11 @@ void test_EcsPeriodicSystem_tc_system_prefab(
     test_assert(e3 != 0);
     test_assert(e4 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *bar_2 = ecs_get(world, e2, Bar_h);
-    int *bar_3 = ecs_get(world, e3, Bar_h);
-    int *bar_4 = ecs_get(world, e4, Bar_h);
-    int *foo_prefab = ecs_get(world, MyPrefab_h, Foo_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *bar_2 = ecs_get_ptr(world, e2, Bar_h);
+    int *bar_3 = ecs_get_ptr(world, e3, Bar_h);
+    int *bar_4 = ecs_get_ptr(world, e4, Bar_h);
+    int *foo_prefab = ecs_get_ptr(world, MyPrefab_h, Foo_h);
 
     *foo_1 = 10;
     *bar_2 = 20;
@@ -222,12 +222,12 @@ void test_EcsPeriodicSystem_tc_system_prefab_component(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *bar_2 = ecs_get(world, e2, Bar_h);
-    int *bar_3 = ecs_get(world, e3, Bar_h);
-    int *bar_4 = ecs_get(world, e4, Bar_h);
-    int *foo_prefab = ecs_get(world, MyPrefab_h, Foo_h);
-    int *hello_5 = ecs_get(world, e5, Hello_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *bar_2 = ecs_get_ptr(world, e2, Bar_h);
+    int *bar_3 = ecs_get_ptr(world, e3, Bar_h);
+    int *bar_4 = ecs_get_ptr(world, e4, Bar_h);
+    int *foo_prefab = ecs_get_ptr(world, MyPrefab_h, Foo_h);
+    int *hello_5 = ecs_get_ptr(world, e5, Hello_h);
 
     *foo_1 = 10;
     *bar_2 = 20;
@@ -276,12 +276,12 @@ void test_EcsPeriodicSystem_tc_system_1_component_1_not(
     test_assert(e3 != 0);
     test_assert(e4 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *bar_2 = ecs_get(world, e2, Bar_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *hello_3 = ecs_get(world, e3, Hello_h);
-    int *foo_4 = ecs_get(world, e4, Foo_h);
-    int *bar_4 = ecs_get(world, e4, Bar_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *bar_2 = ecs_get_ptr(world, e2, Bar_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *hello_3 = ecs_get_ptr(world, e3, Hello_h);
+    int *foo_4 = ecs_get_ptr(world, e4, Foo_h);
+    int *bar_4 = ecs_get_ptr(world, e4, Bar_h);
 
     *foo_1 = 10;
     *bar_2 = 20;
@@ -331,14 +331,14 @@ void test_EcsPeriodicSystem_tc_system_1_component_2_not(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *bar_2 = ecs_get(world, e2, Bar_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *hello_3 = ecs_get(world, e3, Hello_h);
-    int *foo_4 = ecs_get(world, e4, Foo_h);
-    int *bar_4 = ecs_get(world, e4, Bar_h);
-    int *foo_5 = ecs_get(world, e5, Foo_h);
-    int *world_5 = ecs_get(world, e5, World_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *bar_2 = ecs_get_ptr(world, e2, Bar_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *hello_3 = ecs_get_ptr(world, e3, Hello_h);
+    int *foo_4 = ecs_get_ptr(world, e4, Foo_h);
+    int *bar_4 = ecs_get_ptr(world, e4, Bar_h);
+    int *foo_5 = ecs_get_ptr(world, e5, Foo_h);
+    int *world_5 = ecs_get_ptr(world, e5, World_h);
 
     *foo_1 = 10;
     *bar_2 = 20;
@@ -390,15 +390,15 @@ void test_EcsPeriodicSystem_tc_system_2_component_1_not(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *bar_2 = ecs_get(world, e2, Bar_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *hello_3 = ecs_get(world, e3, Hello_h);
-    int *foo_4 = ecs_get(world, e4, Foo_h);
-    int *bar_4 = ecs_get(world, e4, Bar_h);
-    int *foo_5 = ecs_get(world, e5, Foo_h);
-    int *bar_5 = ecs_get(world, e5, Bar_h);
-    int *world_5 = ecs_get(world, e5, World_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *bar_2 = ecs_get_ptr(world, e2, Bar_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *hello_3 = ecs_get_ptr(world, e3, Hello_h);
+    int *foo_4 = ecs_get_ptr(world, e4, Foo_h);
+    int *bar_4 = ecs_get_ptr(world, e4, Bar_h);
+    int *foo_5 = ecs_get_ptr(world, e5, Foo_h);
+    int *bar_5 = ecs_get_ptr(world, e5, Bar_h);
+    int *world_5 = ecs_get_ptr(world, e5, World_h);
 
     *foo_1 = 10;
     *bar_2 = 20;
@@ -455,15 +455,15 @@ void test_EcsPeriodicSystem_tc_system_2_component_2_not(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *bar_2 = ecs_get(world, e2, Bar_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *hello_3 = ecs_get(world, e3, Hello_h);
-    int *foo_4 = ecs_get(world, e4, Foo_h);
-    int *bar_4 = ecs_get(world, e4, Bar_h);
-    int *foo_5 = ecs_get(world, e5, Foo_h);
-    int *bar_5 = ecs_get(world, e5, Bar_h);
-    int *world_5 = ecs_get(world, e5, World_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *bar_2 = ecs_get_ptr(world, e2, Bar_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *hello_3 = ecs_get_ptr(world, e3, Hello_h);
+    int *foo_4 = ecs_get_ptr(world, e4, Foo_h);
+    int *bar_4 = ecs_get_ptr(world, e4, Bar_h);
+    int *foo_5 = ecs_get_ptr(world, e5, Foo_h);
+    int *bar_5 = ecs_get_ptr(world, e5, Bar_h);
+    int *world_5 = ecs_get_ptr(world, e5, World_h);
 
     *foo_1 = 10;
     *bar_2 = 20;
@@ -516,14 +516,14 @@ void test_EcsPeriodicSystem_tc_system_1_component_1_or2(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *bar_2 = ecs_get(world, e2, Bar_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *hello_3 = ecs_get(world, e3, Hello_h);
-    int *foo_4 = ecs_get(world, e4, Foo_h);
-    int *bar_4 = ecs_get(world, e4, Bar_h);
-    int *foo_5 = ecs_get(world, e5, Foo_h);
-    int *world_5 = ecs_get(world, e5, World_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *bar_2 = ecs_get_ptr(world, e2, Bar_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *hello_3 = ecs_get_ptr(world, e3, Hello_h);
+    int *foo_4 = ecs_get_ptr(world, e4, Foo_h);
+    int *bar_4 = ecs_get_ptr(world, e4, Bar_h);
+    int *foo_5 = ecs_get_ptr(world, e5, Foo_h);
+    int *world_5 = ecs_get_ptr(world, e5, World_h);
 
     *foo_1 = 10;
     *bar_2 = 20;
@@ -587,19 +587,19 @@ void test_EcsPeriodicSystem_tc_system_1_component_2_or2(
     test_assert(e5 != 0);
     test_assert(e6 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *foo_2 = ecs_get(world, e2, Foo_h);
-    int *hello_2 = ecs_get(world, e2, Hello_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *bloop_3 = ecs_get(world, e3, Bloop_h);
-    int *foo_4 = ecs_get(world, e4, Foo_h);
-    int *bleep_4 = ecs_get(world, e4, Bleep_h);
-    int *world_4 = ecs_get(world, e4, World_h);
-    int *foo_5 = ecs_get(world, e5, Foo_h);
-    int *hello_5 = ecs_get(world, e5, Hello_h);
-    int *bloop_5 = ecs_get(world, e5, Bloop_h);
-    int *bloop_6 = ecs_get(world, e6, Bloop_h);
-    int *hello_6 = ecs_get(world, e6, Hello_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *foo_2 = ecs_get_ptr(world, e2, Foo_h);
+    int *hello_2 = ecs_get_ptr(world, e2, Hello_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *bloop_3 = ecs_get_ptr(world, e3, Bloop_h);
+    int *foo_4 = ecs_get_ptr(world, e4, Foo_h);
+    int *bleep_4 = ecs_get_ptr(world, e4, Bleep_h);
+    int *world_4 = ecs_get_ptr(world, e4, World_h);
+    int *foo_5 = ecs_get_ptr(world, e5, Foo_h);
+    int *hello_5 = ecs_get_ptr(world, e5, Hello_h);
+    int *bloop_5 = ecs_get_ptr(world, e5, Bloop_h);
+    int *bloop_6 = ecs_get_ptr(world, e6, Bloop_h);
+    int *hello_6 = ecs_get_ptr(world, e6, Hello_h);
 
     *foo_1 = 10;
     *foo_2 = 20;
@@ -674,23 +674,23 @@ void test_EcsPeriodicSystem_tc_system_2_component_2_or3(
     test_assert(e6 != 0);
     test_assert(e7 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *foo_2 = ecs_get(world, e2, Foo_h);
-    int *hello_2 = ecs_get(world, e2, Hello_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *bar_3 = ecs_get(world, e3, Bar_h);
-    int *foo_4 = ecs_get(world, e4, Foo_h);
-    int *bar_4 = ecs_get(world, e4, Bar_h);
-    int *world_4 = ecs_get(world, e4, World_h);
-    int *foo_5 = ecs_get(world, e5, Foo_h);
-    int *bar_5 = ecs_get(world, e5, Bar_h);
-    int *bleep_5 = ecs_get(world, e5, Bleep_h);
-    int *foo_6 = ecs_get(world, e6, Foo_h);
-    int *bar_6 = ecs_get(world, e6, Bar_h);
-    int *hello_6 = ecs_get(world, e6, Hello_h);
-    int *foo_7 = ecs_get(world, e7, Foo_h);
-    int *bar_7 = ecs_get(world, e7, Bar_h);
-    int *bloop_7 = ecs_get(world, e7, Bloop_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *foo_2 = ecs_get_ptr(world, e2, Foo_h);
+    int *hello_2 = ecs_get_ptr(world, e2, Hello_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *bar_3 = ecs_get_ptr(world, e3, Bar_h);
+    int *foo_4 = ecs_get_ptr(world, e4, Foo_h);
+    int *bar_4 = ecs_get_ptr(world, e4, Bar_h);
+    int *world_4 = ecs_get_ptr(world, e4, World_h);
+    int *foo_5 = ecs_get_ptr(world, e5, Foo_h);
+    int *bar_5 = ecs_get_ptr(world, e5, Bar_h);
+    int *bleep_5 = ecs_get_ptr(world, e5, Bleep_h);
+    int *foo_6 = ecs_get_ptr(world, e6, Foo_h);
+    int *bar_6 = ecs_get_ptr(world, e6, Bar_h);
+    int *hello_6 = ecs_get_ptr(world, e6, Hello_h);
+    int *foo_7 = ecs_get_ptr(world, e7, Foo_h);
+    int *bar_7 = ecs_get_ptr(world, e7, Bar_h);
+    int *bloop_7 = ecs_get_ptr(world, e7, Bloop_h);
 
     *foo_1 = 10;
     *foo_2 = 20;
@@ -767,15 +767,15 @@ void test_EcsPeriodicSystem_tc_system_1_component_or2_both_match(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *bar_2 = ecs_get(world, e2, Bar_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *bar_3 = ecs_get(world, e3, Bar_h);
-    int *hello_3 = ecs_get(world, e3, Hello_h);
-    int *foo_4 = ecs_get(world, e4, Foo_h);
-    int *bar_4 = ecs_get(world, e4, Bar_h);
-    int *foo_5 = ecs_get(world, e5, Foo_h);
-    int *hello_5 = ecs_get(world, e5, Hello_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *bar_2 = ecs_get_ptr(world, e2, Bar_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *bar_3 = ecs_get_ptr(world, e3, Bar_h);
+    int *hello_3 = ecs_get_ptr(world, e3, Hello_h);
+    int *foo_4 = ecs_get_ptr(world, e4, Foo_h);
+    int *bar_4 = ecs_get_ptr(world, e4, Bar_h);
+    int *foo_5 = ecs_get_ptr(world, e5, Foo_h);
+    int *hello_5 = ecs_get_ptr(world, e5, Hello_h);
 
     *foo_1 = 10;
     *bar_2 = 20;
@@ -840,13 +840,13 @@ void test_EcsPeriodicSystem_tc_system_1_or2(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *foo_2 = ecs_get(world, e2, Foo_h);
-    int *hello_2 = ecs_get(world, e2, Hello_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *world_3 = ecs_get(world, e3, World_h);
-    int *hello_4 = ecs_get(world, e4, Hello_h);
-    int *world_5 = ecs_get(world, e5, World_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *foo_2 = ecs_get_ptr(world, e2, Foo_h);
+    int *hello_2 = ecs_get_ptr(world, e2, Hello_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *world_3 = ecs_get_ptr(world, e3, World_h);
+    int *hello_4 = ecs_get_ptr(world, e4, Hello_h);
+    int *world_5 = ecs_get_ptr(world, e5, World_h);
 
     *foo_1 = 10;
     *foo_2 = 20;
@@ -910,19 +910,19 @@ void test_EcsPeriodicSystem_tc_system_2_or2(
     test_assert(e5 != 0);
     test_assert(e6 != 0);
 
-    int *foo_1 = ecs_get(world, e1, Foo_h);
-    int *foo_2 = ecs_get(world, e2, Foo_h);
-    int *hello_2 = ecs_get(world, e2, Hello_h);
-    int *foo_3 = ecs_get(world, e3, Foo_h);
-    int *bloop_3 = ecs_get(world, e3, Bloop_h);
-    int *foo_4 = ecs_get(world, e4, Foo_h);
-    int *bleep_4 = ecs_get(world, e4, Bleep_h);
-    int *world_4 = ecs_get(world, e4, World_h);
-    int *foo_5 = ecs_get(world, e5, Foo_h);
-    int *hello_5 = ecs_get(world, e5, Hello_h);
-    int *bloop_5 = ecs_get(world, e5, Bloop_h);
-    int *bloop_6 = ecs_get(world, e6, Bloop_h);
-    int *hello_6 = ecs_get(world, e6, Hello_h);
+    int *foo_1 = ecs_get_ptr(world, e1, Foo_h);
+    int *foo_2 = ecs_get_ptr(world, e2, Foo_h);
+    int *hello_2 = ecs_get_ptr(world, e2, Hello_h);
+    int *foo_3 = ecs_get_ptr(world, e3, Foo_h);
+    int *bloop_3 = ecs_get_ptr(world, e3, Bloop_h);
+    int *foo_4 = ecs_get_ptr(world, e4, Foo_h);
+    int *bleep_4 = ecs_get_ptr(world, e4, Bleep_h);
+    int *world_4 = ecs_get_ptr(world, e4, World_h);
+    int *foo_5 = ecs_get_ptr(world, e5, Foo_h);
+    int *hello_5 = ecs_get_ptr(world, e5, Hello_h);
+    int *bloop_5 = ecs_get_ptr(world, e5, Bloop_h);
+    int *bloop_6 = ecs_get_ptr(world, e6, Bloop_h);
+    int *hello_6 = ecs_get_ptr(world, e6, Hello_h);
 
     *foo_1 = 10;
     *foo_2 = 20;
@@ -990,11 +990,11 @@ void test_EcsPeriodicSystem_tc_system_1_from_component(
     ecs_add(world, e4, e1);
     ecs_commit(world, e4);
 
-    *(int*)ecs_get(world, e1, Bar_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
-    *(int*)ecs_get(world, e4, Bar_h) = 40;
-    *(int*)ecs_get(world, e5, Bar_h) = 50;
+    *(int*)ecs_get_ptr(world, e1, Bar_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e4, Bar_h) = 40;
+    *(int*)ecs_get_ptr(world, e5, Bar_h) = 50;
 
     ecs_set_context(world, &ctx);
 
@@ -1059,13 +1059,13 @@ void test_EcsPeriodicSystem_tc_system_2_from_component(
     ecs_add(world, e7, e2);
     ecs_commit(world, e7);
 
-    *(int*)ecs_get(world, e1, Bar_h) = 10;
-    *(int*)ecs_get(world, e2, World_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
-    *(int*)ecs_get(world, e4, Bar_h) = 40;
-    *(int*)ecs_get(world, e5, Bar_h) = 50;
-    *(int*)ecs_get(world, e6, World_h) = 60;
-    *(int*)ecs_get(world, e7, World_h) = 70;
+    *(int*)ecs_get_ptr(world, e1, Bar_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, World_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e4, Bar_h) = 40;
+    *(int*)ecs_get_ptr(world, e5, Bar_h) = 50;
+    *(int*)ecs_get_ptr(world, e6, World_h) = 60;
+    *(int*)ecs_get_ptr(world, e7, World_h) = 70;
 
     ecs_set_context(world, &ctx);
 
@@ -1135,13 +1135,13 @@ void test_EcsPeriodicSystem_tc_system_1_from_component_or2(
 
     ecs_commit(world, e7);
 
-    *(int*)ecs_get(world, e1, Bar_h) = 10;
-    *(int*)ecs_get(world, e2, World_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
-    *(int*)ecs_get(world, e4, Bar_h) = 40;
-    *(int*)ecs_get(world, e5, Bar_h) = 50;
-    *(int*)ecs_get(world, e6, World_h) = 60;
-    *(int*)ecs_get(world, e7, World_h) = 70;
+    *(int*)ecs_get_ptr(world, e1, Bar_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, World_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e4, Bar_h) = 40;
+    *(int*)ecs_get_ptr(world, e5, Bar_h) = 50;
+    *(int*)ecs_get_ptr(world, e6, World_h) = 60;
+    *(int*)ecs_get_ptr(world, e7, World_h) = 70;
 
     ecs_set_context(world, &ctx);
 
@@ -1216,15 +1216,15 @@ void test_EcsPeriodicSystem_tc_system_2_from_component_or2(
     ecs_add(world, e9, e4);
     ecs_commit(world, e9);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Bar_h) = 20;
-    *(int*)ecs_get(world, e3, Hello_h) = 30;
-    *(int*)ecs_get(world, e4, World_h) = 40;
-    *(int*)ecs_get(world, e5, Foo_h) = 50;
-    *(int*)ecs_get(world, e6, Foo_h) = 60;
-    *(int*)ecs_get(world, e7, Foo_h) = 70;
-    *(int*)ecs_get(world, e8, Foo_h) = 70;
-    *(int*)ecs_get(world, e9, Foo_h) = 70;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Bar_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Hello_h) = 30;
+    *(int*)ecs_get_ptr(world, e4, World_h) = 40;
+    *(int*)ecs_get_ptr(world, e5, Foo_h) = 50;
+    *(int*)ecs_get_ptr(world, e6, Foo_h) = 60;
+    *(int*)ecs_get_ptr(world, e7, Foo_h) = 70;
+    *(int*)ecs_get_ptr(world, e8, Foo_h) = 70;
+    *(int*)ecs_get_ptr(world, e9, Foo_h) = 70;
 
     ecs_set_context(world, &ctx);
 
@@ -1273,11 +1273,11 @@ void test_EcsPeriodicSystem_tc_system_from_component_not(
     ecs_add(world, e4, e1);
     ecs_commit(world, e4);
 
-    *(int*)ecs_get(world, e1, Bar_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
-    *(int*)ecs_get(world, e4, Foo_h) = 40;
-    *(int*)ecs_get(world, e5, Foo_h) = 50;
+    *(int*)ecs_get_ptr(world, e1, Bar_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e4, Foo_h) = 40;
+    *(int*)ecs_get_ptr(world, e5, Foo_h) = 50;
 
     ecs_set_context(world, &ctx);
 
@@ -1327,11 +1327,11 @@ void test_EcsPeriodicSystem_tc_system_2_from_component_not(
     ecs_add(world, e4, e2);
     ecs_commit(world, e4);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Bar_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
-    *(int*)ecs_get(world, e4, Foo_h) = 40;
-    *(int*)ecs_get(world, e5, Foo_h) = 50;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Bar_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e4, Foo_h) = 40;
+    *(int*)ecs_get_ptr(world, e5, Foo_h) = 50;
 
     ecs_set_context(world, &ctx);
 

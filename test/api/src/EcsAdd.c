@@ -32,7 +32,7 @@ void test_EcsAdd_tc_add_2_component(
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Bar_h));
 
-    Bar *bar_ptr = ecs_get(world, e, Bar_h);
+    Bar *bar_ptr = ecs_get_ptr(world, e, Bar_h);
     test_assert(bar_ptr != NULL);
     bar_ptr->y = 10;
 
@@ -47,7 +47,7 @@ void test_EcsAdd_tc_add_2_component(
     test_assert(ecs_has(world, e, Bar_h));
     test_assert(ecs_has(world, e, Foo_h));
 
-    bar_ptr = ecs_get(world, e, Bar_h);
+    bar_ptr = ecs_get_ptr(world, e, Bar_h);
     test_assert(bar_ptr != NULL);
     test_assertint(bar_ptr->y, 10);
 
@@ -91,7 +91,7 @@ void test_EcsAdd_tc_add_component(
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Bar_h));
 
-    Bar *bar_ptr = ecs_get(world, e, Bar_h);
+    Bar *bar_ptr = ecs_get_ptr(world, e, Bar_h);
     test_assert(bar_ptr != NULL);
     bar_ptr->y = 10;
 
@@ -103,7 +103,7 @@ void test_EcsAdd_tc_add_component(
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
 
-    bar_ptr = ecs_get(world, e, Bar_h);
+    bar_ptr = ecs_get_ptr(world, e, Bar_h);
     test_assert(bar_ptr != NULL);
     test_assertint(bar_ptr->y, 10);
 
@@ -143,7 +143,7 @@ void test_EcsAdd_tc_add_existing_component(
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
 
-    Foo *foo_ptr = ecs_get(world, e, Foo_h);
+    Foo *foo_ptr = ecs_get_ptr(world, e, Foo_h);
     test_assert(foo_ptr != NULL);
     foo_ptr->x = 10;
 
@@ -153,7 +153,7 @@ void test_EcsAdd_tc_add_existing_component(
     ecs_commit(world, e);
     test_assert(ecs_has(world, e, Foo_h));
 
-    foo_ptr = ecs_get(world, e, Foo_h);
+    foo_ptr = ecs_get_ptr(world, e, Foo_h);
     test_assert(foo_ptr != NULL);
     test_assertint(foo_ptr->x, 10);
 
@@ -224,7 +224,7 @@ void test_EcsAdd_tc_add_family_overlapping_w_entity(
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
 
-    Foo *foo_ptr = ecs_get(world, e, Foo_h);
+    Foo *foo_ptr = ecs_get_ptr(world, e, Foo_h);
     test_assert(foo_ptr != NULL);
     foo_ptr->x = 10;
 
@@ -234,7 +234,7 @@ void test_EcsAdd_tc_add_family_overlapping_w_entity(
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
 
-    foo_ptr = ecs_get(world, e, Foo_h);
+    foo_ptr = ecs_get_ptr(world, e, Foo_h);
     test_assert(foo_ptr != NULL);
     test_assertint(foo_ptr->x, 10);
 
@@ -349,9 +349,9 @@ void test_EcsAdd_tc_add_prev_in_progress(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
@@ -362,18 +362,18 @@ void test_EcsAdd_tc_add_prev_in_progress(
     test_assert(ecs_has(world, e2, Bar_h));
     test_assert(!ecs_has(world, e3, Bar_h));
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 11);
-    test_assertint(*(int*)ecs_get(world, e2, Foo_h), 21);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 31);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 11);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 21);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 31);
 
     test_assertint(ctx.count, 3);
 
     ecs_progress(world);
     test_assertint(ctx.count, 6);
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 12);
-    test_assertint(*(int*)ecs_get(world, e2, Foo_h), 22);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 32);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 22);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 32);
 
     ecs_fini(world);
 }
@@ -396,9 +396,9 @@ void test_EcsAdd_tc_add_cur_in_progress(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
@@ -409,18 +409,18 @@ void test_EcsAdd_tc_add_cur_in_progress(
     test_assert(ecs_has(world, e2, Bar_h));
     test_assert(!ecs_has(world, e3, Bar_h));
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 11);
-    test_assertint(*(int*)ecs_get(world, e2, Foo_h), 21);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 31);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 11);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 21);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 31);
 
     test_assertint(ctx.count, 3);
 
     ecs_progress(world);
     test_assertint(ctx.count, 6);
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 12);
-    test_assertint(*(int*)ecs_get(world, e2, Foo_h), 22);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 32);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 22);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 32);
 
     ecs_fini(world);
 }
@@ -443,9 +443,9 @@ void test_EcsAdd_tc_add_next_in_progress(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
@@ -456,18 +456,18 @@ void test_EcsAdd_tc_add_next_in_progress(
     test_assert(ecs_has(world, e2, Bar_h));
     test_assert(!ecs_has(world, e3, Bar_h));
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 11);
-    test_assertint(*(int*)ecs_get(world, e2, Foo_h), 21);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 31);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 11);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 21);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 31);
 
     test_assertint(ctx.count, 3);
 
     ecs_progress(world);
     test_assertint(ctx.count, 6);
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 12);
-    test_assertint(*(int*)ecs_get(world, e2, Foo_h), 22);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 32);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 22);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 32);
 
     ecs_fini(world);
 }
@@ -490,9 +490,9 @@ void test_EcsAdd_tc_add_all_in_progress(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
@@ -503,18 +503,18 @@ void test_EcsAdd_tc_add_all_in_progress(
     test_assert(ecs_has(world, e2, Bar_h));
     test_assert(ecs_has(world, e3, Bar_h));
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 11);
-    test_assertint(*(int*)ecs_get(world, e2, Foo_h), 21);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 31);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 11);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 21);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 31);
 
     test_assertint(ctx.count, 3);
 
     ecs_progress(world);
     test_assertint(ctx.count, 6);
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 12);
-    test_assertint(*(int*)ecs_get(world, e2, Foo_h), 22);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 32);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 22);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 32);
 
     ecs_fini(world);
 }

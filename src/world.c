@@ -45,7 +45,7 @@ void bootstrap_component(
 
     assert_func (ecs_commit(world, EcsComponent_h) == EcsOk);
 
-    EcsComponent *type_data = ecs_get(world, handle, handle);
+    EcsComponent *type_data = ecs_get_ptr(world, handle, handle);
 
     assert(type_data != NULL);
 
@@ -61,7 +61,7 @@ EcsHandle new_builtin_component(
     EcsHandle handle = ecs_new(world, 0);
     ecs_add(world, handle, EcsComponent_h);
     ecs_commit(world, handle);
-    EcsComponent *component_data = ecs_get(world, handle, EcsComponent_h);
+    EcsComponent *component_data = ecs_get_ptr(world, handle, EcsComponent_h);
 
     assert(component_data != NULL);
 
@@ -79,7 +79,7 @@ void add_builtin_id(
 {
     ecs_add(world, handle, EcsId_h);
     ecs_commit(world, handle);
-    EcsId *id_data = ecs_get(world, handle, EcsId_h);
+    EcsId *id_data = ecs_get_ptr(world, handle, EcsId_h);
 
     assert(id_data != NULL);
 
@@ -282,7 +282,7 @@ void ecs_family_dump(
     EcsIter it = ecs_array_iter(family, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        EcsId *id = ecs_get(world, h, EcsId_h);
+        EcsId *id = ecs_get_ptr(world, h, EcsId_h);
         if (id) {
             printf("%s ", id->id);
         } else {
@@ -318,14 +318,14 @@ void ecs_dump(
     it = ecs_array_iter(world->periodic_systems, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        EcsId *id = ecs_get(world, h, EcsId_h);
+        EcsId *id = ecs_get_ptr(world, h, EcsId_h);
         printf(" - %s\n", id->id);
     }
 
     it = ecs_array_iter(world->inactive_systems, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        EcsId *id = ecs_get(world, h, EcsId_h);
+        EcsId *id = ecs_get_ptr(world, h, EcsId_h);
         printf(" - %s [inactive]\n", id->id);
     }
 
@@ -333,7 +333,7 @@ void ecs_dump(
     it = ecs_array_iter(world->other_systems, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        EcsId *id = ecs_get(world, h, EcsId_h);
+        EcsId *id = ecs_get_ptr(world, h, EcsId_h);
         printf(" - %s\n", id->id);
     }
 
@@ -346,7 +346,7 @@ void ecs_dump(
         EcsHandle h = *(EcsHandle*)row_ptr;
 
         printf("[%u, %u] %" PRIu64 " - ", row.family_id, row.index, h);
-        EcsId *id = ecs_get(world, h, EcsId_h);
+        EcsId *id = ecs_get_ptr(world, h, EcsId_h);
         if (id) {
             printf("%s", id->id);
         } else {
@@ -374,6 +374,7 @@ EcsWorld *ecs_init(void) {
     result->threads_running = 0;
     result->valid_schedule = false;
     result->quit_workers = false;
+    result->in_progress = false;
 
     result->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
     result->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);

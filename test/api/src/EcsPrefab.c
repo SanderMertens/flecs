@@ -21,9 +21,9 @@ void test_EcsPrefab_tc_prefab_component(
     test_assert(e1 != 0);
     EcsHandle e2 = ecs_new(world, MyPrefab_h);
     test_assert(e2 != 0);
-    Foo *ptr1 = ecs_get(world, e1, Foo_h);
+    Foo *ptr1 = ecs_get_ptr(world, e1, Foo_h);
     test_assert(ptr1 != NULL);
-    Foo *ptr2 = ecs_get(world, e2, Foo_h);
+    Foo *ptr2 = ecs_get_ptr(world, e2, Foo_h);
     test_assert(ptr2 != NULL);
     test_assert(ptr1 == ptr2);
     ecs_fini(world);
@@ -58,14 +58,14 @@ void test_EcsPrefab_tc_prefab_family(
     test_assert(e1 != 0);
     EcsHandle e2 = ecs_new(world, MyPrefab_h);
     test_assert(e2 != 0);
-    Foo *foo1 = ecs_get(world, e1, Foo_h);
+    Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
     test_assert(foo1 != NULL);
-    Bar *bar1 = ecs_get(world, e1, Bar_h);
+    Bar *bar1 = ecs_get_ptr(world, e1, Bar_h);
     test_assert(bar1 != NULL);
 
-    Foo *foo2 = ecs_get(world, e2, Foo_h);
+    Foo *foo2 = ecs_get_ptr(world, e2, Foo_h);
     test_assert(foo2 != NULL);
-    Bar *bar2 = ecs_get(world, e2, Bar_h);
+    Bar *bar2 = ecs_get_ptr(world, e2, Bar_h);
     test_assert(bar2 != NULL);
 
     test_assert(foo1 == foo2);
@@ -107,7 +107,7 @@ void test_EcsPrefab_tc_prefab_override_1_of_2(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     ECS_PREFAB(world, MyPrefab, MyFamily);
 
-    Foo *foo_ptr = ecs_get(world, MyPrefab_h, Foo_h);
+    Foo *foo_ptr = ecs_get_ptr(world, MyPrefab_h, Foo_h);
     foo_ptr->x = 10;
 
     EcsHandle e1 = ecs_new(world, MyPrefab_h);
@@ -122,14 +122,14 @@ void test_EcsPrefab_tc_prefab_override_1_of_2(
     ecs_add(world, e2, Foo_h);
     ecs_commit(world, e2);
 
-    Foo *foo1 = ecs_get(world, e1, Foo_h);
+    Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
     test_assert(foo1 != NULL);
-    Bar *bar1 = ecs_get(world, e1, Bar_h);
+    Bar *bar1 = ecs_get_ptr(world, e1, Bar_h);
     test_assert(bar1 != NULL);
 
-    Foo *foo2 = ecs_get(world, e2, Foo_h);
+    Foo *foo2 = ecs_get_ptr(world, e2, Foo_h);
     test_assert(foo2 != NULL);
-    Bar *bar2 = ecs_get(world, e2, Bar_h);
+    Bar *bar2 = ecs_get_ptr(world, e2, Bar_h);
     test_assert(bar2 != NULL);
 
     test_assert(foo1->x == 10);
@@ -150,9 +150,9 @@ void test_EcsPrefab_tc_prefab_override_2_of_2(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     ECS_PREFAB(world, MyPrefab, MyFamily);
 
-    Foo *foo_ptr = ecs_get(world, MyPrefab_h, Foo_h);
+    Foo *foo_ptr = ecs_get_ptr(world, MyPrefab_h, Foo_h);
     foo_ptr->x = 10;
-    Bar *bar_ptr = ecs_get(world, MyPrefab_h, Bar_h);
+    Bar *bar_ptr = ecs_get_ptr(world, MyPrefab_h, Bar_h);
     bar_ptr->y = 20;
 
     EcsHandle e1 = ecs_new(world, MyPrefab_h);
@@ -169,14 +169,14 @@ void test_EcsPrefab_tc_prefab_override_2_of_2(
     ecs_add(world, e2, Bar_h);
     ecs_commit(world, e2);
 
-    Foo *foo1 = ecs_get(world, e1, Foo_h);
+    Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
     test_assert(foo1 != NULL);
-    Bar *bar1 = ecs_get(world, e1, Bar_h);
+    Bar *bar1 = ecs_get_ptr(world, e1, Bar_h);
     test_assert(bar1 != NULL);
 
-    Foo *foo2 = ecs_get(world, e2, Foo_h);
+    Foo *foo2 = ecs_get_ptr(world, e2, Foo_h);
     test_assert(foo2 != NULL);
-    Bar *bar2 = ecs_get(world, e2, Bar_h);
+    Bar *bar2 = ecs_get_ptr(world, e2, Bar_h);
     test_assert(bar2 != NULL);
 
     test_assert(foo1 != foo2);
@@ -200,7 +200,7 @@ void test_EcsPrefab_tc_prefab_override_w_family(
     ECS_PREFAB(world, MyPrefab, MyFamily);
     ECS_FAMILY(world, PrefabFamily, MyPrefab, Foo);
 
-    Foo *foo_ptr = ecs_get(world, MyPrefab_h, Foo_h);
+    Foo *foo_ptr = ecs_get_ptr(world, MyPrefab_h, Foo_h);
     foo_ptr->x = 10;
 
     EcsHandle e1 = ecs_new(world, PrefabFamily_h);
@@ -209,14 +209,14 @@ void test_EcsPrefab_tc_prefab_override_w_family(
     EcsHandle e2 = ecs_new(world, PrefabFamily_h);
     test_assert(e2 != 0);
 
-    Foo *foo1 = ecs_get(world, e1, Foo_h);
+    Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
     test_assert(foo1 != NULL);
-    Bar *bar1 = ecs_get(world, e1, Bar_h);
+    Bar *bar1 = ecs_get_ptr(world, e1, Bar_h);
     test_assert(bar1 != NULL);
 
-    Foo *foo2 = ecs_get(world, e2, Foo_h);
+    Foo *foo2 = ecs_get_ptr(world, e2, Foo_h);
     test_assert(foo2 != NULL);
-    Bar *bar2 = ecs_get(world, e2, Bar_h);
+    Bar *bar2 = ecs_get_ptr(world, e2, Bar_h);
     test_assert(bar2 != NULL);
 
     test_assert(foo1 != foo2);
@@ -238,9 +238,9 @@ void test_EcsPrefab_tc_prefab_override_2_w_family(
     ECS_PREFAB(world, MyPrefab, MyFamily);
     ECS_FAMILY(world, PrefabFamily, MyPrefab, Foo, Bar);
 
-    Foo *foo_ptr = ecs_get(world, MyPrefab_h, Foo_h);
+    Foo *foo_ptr = ecs_get_ptr(world, MyPrefab_h, Foo_h);
     foo_ptr->x = 10;
-    Bar *bar_ptr = ecs_get(world, MyPrefab_h, Bar_h);
+    Bar *bar_ptr = ecs_get_ptr(world, MyPrefab_h, Bar_h);
     bar_ptr->y = 20;
 
     EcsHandle e1 = ecs_new(world, PrefabFamily_h);
@@ -249,14 +249,14 @@ void test_EcsPrefab_tc_prefab_override_2_w_family(
     EcsHandle e2 = ecs_new(world, PrefabFamily_h);
     test_assert(e2 != 0);
 
-    Foo *foo1 = ecs_get(world, e1, Foo_h);
+    Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
     test_assert(foo1 != NULL);
-    Bar *bar1 = ecs_get(world, e1, Bar_h);
+    Bar *bar1 = ecs_get_ptr(world, e1, Bar_h);
     test_assert(bar1 != NULL);
 
-    Foo *foo2 = ecs_get(world, e2, Foo_h);
+    Foo *foo2 = ecs_get_ptr(world, e2, Foo_h);
     test_assert(foo2 != NULL);
-    Bar *bar2 = ecs_get(world, e2, Bar_h);
+    Bar *bar2 = ecs_get_ptr(world, e2, Bar_h);
     test_assert(bar2 != NULL);
 
     test_assert(foo1 != foo2);
@@ -283,18 +283,18 @@ void test_EcsPrefab_tc_prefab_add_component(
     EcsHandle e2 = ecs_new(world, MyPrefab_h);
     test_assert(e2 != 0);
 
-    Foo *foo1 = ecs_get(world, e1, Foo_h);
+    Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
     test_assert(foo1 != NULL);
-    Foo *foo2 = ecs_get(world, e2, Foo_h);
+    Foo *foo2 = ecs_get_ptr(world, e2, Foo_h);
     test_assert(foo2 != NULL);
     test_assert(foo1 == foo2);
 
     ecs_add(world, MyPrefab_h, Bar_h);
     ecs_commit(world, MyPrefab_h);
 
-    Bar *bar1 = ecs_get(world, e1, Bar_h);
+    Bar *bar1 = ecs_get_ptr(world, e1, Bar_h);
     test_assert(bar1 != NULL);
-    Bar *bar2 = ecs_get(world, e2, Bar_h);
+    Bar *bar2 = ecs_get_ptr(world, e2, Bar_h);
     test_assert(bar2 != NULL);
     test_assert(bar1 == bar2);
 
@@ -321,14 +321,14 @@ void test_EcsPrefab_tc_prefab_add_to_empty_entity(
     ecs_add(world, e2, MyPrefab_h);
     ecs_commit(world, e2);
 
-    Foo *foo1 = ecs_get(world, e1, Foo_h);
+    Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
     test_assert(foo1 != NULL);
-    Bar *bar1 = ecs_get(world, e1, Bar_h);
+    Bar *bar1 = ecs_get_ptr(world, e1, Bar_h);
     test_assert(bar1 != NULL);
 
-    Foo *foo2 = ecs_get(world, e2, Foo_h);
+    Foo *foo2 = ecs_get_ptr(world, e2, Foo_h);
     test_assert(foo2 != NULL);
-    Bar *bar2 = ecs_get(world, e2, Bar_h);
+    Bar *bar2 = ecs_get_ptr(world, e2, Bar_h);
     test_assert(bar2 != NULL);
 
     test_assert(foo1 == foo2);
@@ -356,14 +356,14 @@ void test_EcsPrefab_tc_prefab_add_to_entity(
     ecs_add(world, e2, MyPrefab_h);
     ecs_commit(world, e2);
 
-    Foo *foo1 = ecs_get(world, e1, Foo_h);
+    Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
     test_assert(foo1 != NULL);
-    Bar *bar1 = ecs_get(world, e1, Bar_h);
+    Bar *bar1 = ecs_get_ptr(world, e1, Bar_h);
     test_assert(bar1 != NULL);
 
-    Foo *foo2 = ecs_get(world, e2, Foo_h);
+    Foo *foo2 = ecs_get_ptr(world, e2, Foo_h);
     test_assert(foo2 != NULL);
-    Bar *bar2 = ecs_get(world, e2, Bar_h);
+    Bar *bar2 = ecs_get_ptr(world, e2, Bar_h);
     test_assert(bar2 != NULL);
 
     test_assert(foo1 != foo2);

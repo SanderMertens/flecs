@@ -88,21 +88,21 @@ ecs_commit(world, e);             // Remove Velocity component, add Size compone
 
 ## Initializing components
 You can initialize the value of a component in two ways. The first way lets you
-set the value of a component for a single entity, with the `ecs_get` operation.
+set the value of a component for a single entity, with the `ecs_get_ptr` operation.
 It can be used like this:
 
 ```c
-Position *p = ecs_get(world, e, Position_h);
+Position *p = ecs_get_ptr(world, e, Position_h);
 p->x = 10;
 p->y = 20;
 ```
 This method is flexible, but does come at a performance penalty since the
-`ecs_get` operation has to iterate over the components of the entity to find the
+`ecs_get_ptr` operation has to iterate over the components of the entity to find the
 `Position` component. For entities with small numbers of components the penalty
 is probably not significant.
 
 Alternatively, you can assign all entities with a given set of components with
-`OnInit` systems. This is much faster than calling `ecs_get` on every single
+`OnInit` systems. This is much faster than calling `ecs_get_ptr` on every single
 entity. You can create an `OnInit` system just like normal systems, but instead
 of specifying `EcsOnPeriodic`, you specify `EcsOnInit`:
 
@@ -213,7 +213,7 @@ By adding the `EcsComponent` to the `my_player` entity, you can now use this
 entity as a component in `ecs_add` as is shown for the `unit` entity.
 
 The next step being able to access the `Player` entity when iterating over the
-units. Instead of making complicated (and expensive!) calls using `ecs_get` and
+units. Instead of making complicated (and expensive!) calls using `ecs_get_ptr` and
 reflection, there is a feature that lets you specify the `Player` component as
 an argument in your system signature, like this:
 
@@ -333,10 +333,10 @@ To access this data, in the system callback you can then do:
 ```c
 void MySystem(EcsRows *rows) {
     WorldContext *ctx = ecs_world_get_context(rows->world);
-    MySystemData *data = ecs_get(rows->world, rows->system, ctx->system_data);
+    MySystemData *data = ecs_get_ptr(rows->world, rows->system, ctx->system_data);
 }
 ```
 
-Note that you use the same API (`ecs_add`, `ecs_commit`, `ecs_get`) to add and
+Note that you use the same API (`ecs_add`, `ecs_commit`, `ecs_get_ptr`) to add and
 get components from the system as you would use for regular entities. This goes
 for components and families as well.

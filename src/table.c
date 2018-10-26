@@ -90,12 +90,12 @@ EcsResult ecs_table_init(
 
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        EcsComponent *type = ecs_get(world, h, EcsComponent_h);
+        EcsComponent *type = ecs_get_ptr(world, h, EcsComponent_h);
         uint32_t size;
         if (type) {
             size = type->size;
         } else {
-            if (ecs_get(world, h, EcsPrefab_h)) {
+            if (ecs_get_ptr(world, h, EcsPrefab_h)) {
                 assert(prefab_set == false);
                 ecs_map_set(world->prefab_index, table->family_id, h);
                 prefab_set = true;

@@ -49,6 +49,16 @@ test.suite EcsRemove {
     tc_remove_all_in_progress()
 }
 
+test.suite EcsSet {
+    tc_set_int8()
+    tc_set_int16()
+    tc_set_int32()
+    tc_set_int64()
+    tc_set_struct64()
+    tc_set_struct128()
+    tc_set_array256()
+}
+
 test.suite EcsPrefab {
     tc_prefab_empty()
     tc_prefab_component()

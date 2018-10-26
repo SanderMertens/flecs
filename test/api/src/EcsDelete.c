@@ -20,9 +20,9 @@ void test_EcsDelete_tc_delete_1st_of_3(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     ecs_delete(world, e1);
 
@@ -30,12 +30,12 @@ void test_EcsDelete_tc_delete_1st_of_3(
     test_assert(ecs_valid(world, e2) == true);
     test_assert(ecs_valid(world, e3) == true);
 
-    test_assert(ecs_get(world, e1, Foo_h) == NULL);
-    test_assert(ecs_get(world, e2, Foo_h) != NULL);
-    test_assert(ecs_get(world, e3, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e1, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e2, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e3, Foo_h) != NULL);
 
-    test_assertint(*(int*)ecs_get(world, e2, Foo_h), 20);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 30);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 20);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 30);
 
     ecs_fini(world);
 }
@@ -54,9 +54,9 @@ void test_EcsDelete_tc_delete_2nd_of_3(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     ecs_delete(world, e2);
 
@@ -64,12 +64,12 @@ void test_EcsDelete_tc_delete_2nd_of_3(
     test_assert(ecs_valid(world, e2) == false);
     test_assert(ecs_valid(world, e3) == true);
 
-    test_assert(ecs_get(world, e1, Foo_h) != NULL);
-    test_assert(ecs_get(world, e2, Foo_h) == NULL);
-    test_assert(ecs_get(world, e3, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e1, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e3, Foo_h) != NULL);
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 10);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 30);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 10);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 30);
 
     ecs_fini(world);
 }
@@ -88,9 +88,9 @@ void test_EcsDelete_tc_delete_3rd_of_3(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     ecs_delete(world, e3);
 
@@ -98,12 +98,12 @@ void test_EcsDelete_tc_delete_3rd_of_3(
     test_assert(ecs_valid(world, e2) == true);
     test_assert(ecs_valid(world, e3) == false);
 
-    test_assert(ecs_get(world, e1, Foo_h) != NULL);
-    test_assert(ecs_get(world, e2, Foo_h) != NULL);
-    test_assert(ecs_get(world, e3, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e1, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e2, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e3, Foo_h) == NULL);
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 10);
-    test_assertint(*(int*)ecs_get(world, e2, Foo_h), 20);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 10);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 20);
 
     ecs_fini(world);
 }
@@ -122,9 +122,9 @@ void test_EcsDelete_tc_delete_2_of_3(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -133,11 +133,11 @@ void test_EcsDelete_tc_delete_2_of_3(
     test_assert(ecs_valid(world, e2) == false);
     test_assert(ecs_valid(world, e3) == true);
 
-    test_assert(ecs_get(world, e1, Foo_h) == NULL);
-    test_assert(ecs_get(world, e2, Foo_h) == NULL);
-    test_assert(ecs_get(world, e3, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e1, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e3, Foo_h) != NULL);
 
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 30);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 30);
 
     ecs_fini(world);
 }
@@ -156,9 +156,9 @@ void test_EcsDelete_tc_delete_3_of_3(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -168,9 +168,9 @@ void test_EcsDelete_tc_delete_3_of_3(
     test_assert(ecs_valid(world, e2) == false);
     test_assert(ecs_valid(world, e3) == false);
 
-    test_assert(ecs_get(world, e1, Foo_h) == NULL);
-    test_assert(ecs_get(world, e2, Foo_h) == NULL);
-    test_assert(ecs_get(world, e3, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e1, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e3, Foo_h) == NULL);
 
     ecs_fini(world);
 }
@@ -248,9 +248,9 @@ void test_EcsDelete_tc_delete_cur_in_progress(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     Context ctx = {.entity = e2};
     ecs_set_context(world, &ctx);
@@ -263,12 +263,12 @@ void test_EcsDelete_tc_delete_cur_in_progress(
     test_assert(ecs_valid(world, e2) == false);
     test_assert(ecs_valid(world, e3) == true);
 
-    test_assert(ecs_get(world, e1, Foo_h) != NULL);
-    test_assert(ecs_get(world, e2, Foo_h) == NULL);
-    test_assert(ecs_get(world, e3, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e1, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e3, Foo_h) != NULL);
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 11);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 31);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 11);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 31);
 
     ecs_fini(world);
 }
@@ -288,9 +288,9 @@ void test_EcsDelete_tc_delete_next_in_progress(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     Context ctx = {.entity = e2};
     ecs_set_context(world, &ctx);
@@ -303,12 +303,12 @@ void test_EcsDelete_tc_delete_next_in_progress(
     test_assert(ecs_valid(world, e2) == false);
     test_assert(ecs_valid(world, e3) == true);
 
-    test_assert(ecs_get(world, e1, Foo_h) != NULL);
-    test_assert(ecs_get(world, e2, Foo_h) == NULL);
-    test_assert(ecs_get(world, e3, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e1, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e3, Foo_h) != NULL);
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 11);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 31);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 11);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 31);
 
     ecs_fini(world);
 }
@@ -328,9 +328,9 @@ void test_EcsDelete_tc_delete_prev_in_progress(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     Context ctx = {.entity = e2};
     ecs_set_context(world, &ctx);
@@ -343,12 +343,12 @@ void test_EcsDelete_tc_delete_prev_in_progress(
     test_assert(ecs_valid(world, e2) == false);
     test_assert(ecs_valid(world, e3) == true);
 
-    test_assert(ecs_get(world, e1, Foo_h) != NULL);
-    test_assert(ecs_get(world, e2, Foo_h) == NULL);
-    test_assert(ecs_get(world, e3, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e1, Foo_h) != NULL);
+    test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e3, Foo_h) != NULL);
 
-    test_assertint(*(int*)ecs_get(world, e1, Foo_h), 11);
-    test_assertint(*(int*)ecs_get(world, e3, Foo_h), 31);
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 11);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 31);
 
     ecs_fini(world);
 }
@@ -368,9 +368,9 @@ void test_EcsDelete_tc_delete_all_in_progress(
     test_assert(e2 != 0);
     test_assert(e3 != 0);
 
-    *(int*)ecs_get(world, e1, Foo_h) = 10;
-    *(int*)ecs_get(world, e2, Foo_h) = 20;
-    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
 
     Context ctx = {.count = 0};
     ecs_set_context(world, &ctx);
@@ -383,9 +383,9 @@ void test_EcsDelete_tc_delete_all_in_progress(
     test_assert(ecs_valid(world, e2) == false);
     test_assert(ecs_valid(world, e3) == false);
 
-    test_assert(ecs_get(world, e1, Foo_h) == NULL);
-    test_assert(ecs_get(world, e2, Foo_h) == NULL);
-    test_assert(ecs_get(world, e3, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e1, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
+    test_assert(ecs_get_ptr(world, e3, Foo_h) == NULL);
 
     ecs_fini(world);
 }

@@ -244,7 +244,7 @@ EcsHandle ecs_family_contains(
             }
 
             if (prefab) {
-                if (ecs_get(world, prefab, h2) != NULL) {
+                if (ecs_get_ptr(world, prefab, h2) != NULL) {
                     h1 = h2;
                 }
             }

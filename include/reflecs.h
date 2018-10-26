@@ -274,7 +274,7 @@ EcsHandle ecs_new(
  *
  * A prefab is a regular entity, with the only difference that it has the
  * EcsPrefab component. That means that all the regular API functions like
- * ecs_get, ecs_add, ecs_commit etc. can be used on prefabs.
+ * ecs_get_ptr, ecs_add, ecs_commit etc. can be used on prefabs.
  *
  * The ECS_PREFAB macro wraps around this function.
  *
@@ -422,6 +422,11 @@ EcsResult ecs_commit(
  * to different locations. After one of these operations is invoked, the pointer
  * will have to be re-obtained.
  *
+ * This function is wrapped by the ecs_get convenience macro, which can be
+ * used like this:
+ *
+ * Foo value = ecs_get(world, e, Foo);
+ *
  * @time-complexity: O(c)
  * @param world: The world.
  * @param entity: Handle to the entity from which to obtain the component data.
@@ -429,10 +434,40 @@ EcsResult ecs_commit(
  * @returns: A pointer to the data, or NULL of the component was not found.
  */
 REFLECS_EXPORT
-void* ecs_get(
+void* ecs_get_ptr(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component);
+
+#define ecs_get(world, entity, component)\
+  *(component*)ecs_get_ptr(world, entity, component##_h)
+
+/* Set value of component.
+ * This function sets the value of a component on the specified entity. If the
+ * component does not yet exist, it will be added to the entity.
+ *
+ * This function can be used like this:
+ * Foo value = {.x = 10, .y = 20};
+ * ecs_set_ptr(world, e, Foo_h, &value);
+ *
+ * This function is wrapped by the ecs_set convenience macro, which can be used
+ * like this:
+ *
+ * ecs_set(world, e, Foo, {.x = 10, .y = 20});
+ *
+ * @param world: The world.
+ * @param entity: The entity on which to set the component.
+ * @param component: The component to set.
+ */
+REFLECS_EXPORT
+void ecs_set_ptr(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle component,
+    void *ptr);
+
+#define ecs_set(world, entity, component, ...)\
+  { component v = __VA_ARGS__; ecs_set_ptr(world, entity, component##_h, &v); }
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the
