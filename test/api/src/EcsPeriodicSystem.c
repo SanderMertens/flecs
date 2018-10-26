@@ -1245,3 +1245,52 @@ void test_EcsPeriodicSystem_tc_system_2_from_component_or2(
 
     ecs_fini(world);
 }
+
+void test_EcsPeriodicSystem_tc_system_from_component_not(
+    test_EcsPeriodicSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, Family1, EcsComponent, Bar);
+    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, !COMPONENT.Bar);
+
+    EcsHandle e1 = ecs_new(world, Family1_h);
+    EcsHandle e2 = ecs_new(world, Foo_h);
+    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsHandle e4 = ecs_new(world, Foo_h);
+    EcsHandle e5 = ecs_new(world, Foo_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+
+    ecs_add(world, e2, e1);
+    ecs_commit(world, e2);
+    ecs_add(world, e4, e1);
+    ecs_commit(world, e4);
+
+    *(int*)ecs_get(world, e1, Bar_h) = 10;
+    *(int*)ecs_get(world, e2, Foo_h) = 20;
+    *(int*)ecs_get(world, e3, Foo_h) = 30;
+    *(int*)ecs_get(world, e4, Foo_h) = 40;
+    *(int*)ecs_get(world, e5, Foo_h) = 50;
+
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 2);
+    test_assert(ctx.entities[0] == e5);
+    test_assert(ctx.entities[1] == e3);
+    test_assertint(ctx.column[0][0], 50);
+    test_assertint(ctx.column[0][1], 30);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+
+    ecs_fini(world);
+}
