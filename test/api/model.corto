@@ -19,6 +19,7 @@ test.suite EcsDelete {
     tc_delete_prev_in_progress()
     tc_delete_cur_in_progress()
     tc_delete_next_in_progress()
+    tc_delete_all_in_progress()
 }
 
 test.suite EcsAdd {

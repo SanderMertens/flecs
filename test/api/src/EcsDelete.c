@@ -219,6 +219,16 @@ void DeleteCurrent(EcsRows *rows) {
     }
 }
 
+void DeleteAll(EcsRows *rows) {
+    Context *ctx = ecs_get_context(rows->world);
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        ecs_delete(rows->world, ecs_entity(row));
+        (*(int*)ecs_column(rows, row, 0)) ++;
+        ctx->count ++;
+    }
+}
+
 void test_EcsDelete_tc_delete_cur_in_progress(
     test_EcsDelete this)
 {
@@ -335,6 +345,43 @@ void test_EcsDelete_tc_delete_prev_in_progress(
 
     test_assertint(*(int*)ecs_get(world, e1, Foo_h), 11);
     test_assertint(*(int*)ecs_get(world, e3, Foo_h), 31);
+
+    ecs_fini(world);
+}
+
+void test_EcsDelete_tc_delete_all_in_progress(
+    test_EcsDelete this)
+{
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_SYSTEM(world, DeleteAll, EcsPeriodic, Foo);
+
+    EcsHandle e1 = ecs_new(world, Foo_h);
+    EcsHandle e2 = ecs_new(world, Foo_h);
+    EcsHandle e3 = ecs_new(world, Foo_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    *(int*)ecs_get(world, e1, Foo_h) = 10;
+    *(int*)ecs_get(world, e2, Foo_h) = 20;
+    *(int*)ecs_get(world, e3, Foo_h) = 30;
+
+    Context ctx = {.count = 0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assertint(ctx.count, 3);
+
+    test_assert(ecs_valid(world, e1) == false);
+    test_assert(ecs_valid(world, e2) == false);
+    test_assert(ecs_valid(world, e3) == false);
+
+    test_assert(ecs_get(world, e1, Foo_h) == NULL);
+    test_assert(ecs_get(world, e2, Foo_h) == NULL);
+    test_assert(ecs_get(world, e3, Foo_h) == NULL);
 
     ecs_fini(world);
 }
