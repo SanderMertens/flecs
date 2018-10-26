@@ -159,6 +159,17 @@ void process_to_delete(
     ecs_array_clear(world->to_delete);
 }
 
+static
+void process_to_commit(
+    EcsWorld *world)
+{
+    EcsHandle *buffer = ecs_array_buffer(world->to_commit);
+    uint32_t i, count = ecs_array_count(world->to_commit);
+    for (i = 0; i < count; i ++) {
+        ecs_commit(world, buffer[i]);
+    }
+    ecs_array_clear(world->to_commit);
+}
 
 /* -- Private functions -- */
 
@@ -356,6 +367,7 @@ EcsWorld *ecs_init(void) {
     result->other_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT);
     result->to_delete = ecs_array_new(&handle_arr_params, 0);
+    result->to_commit = ecs_array_new(&handle_arr_params, 0);
 
     result->worker_threads = NULL;
     result->jobs_finished = 0;
@@ -495,6 +507,11 @@ void ecs_progress(
         uint32_t to_delete_count = ecs_array_count(world->to_delete);
         if (to_delete_count) {
             process_to_delete(world);
+        }
+
+        uint32_t to_commit_count = ecs_array_count(world->to_commit);
+        if (to_commit_count) {
+            process_to_commit(world);
         }
     }
 }

@@ -180,6 +180,7 @@ typedef struct Context {
     uint32_t count;
 } Context;
 
+static
 void DeleteNext(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
@@ -193,6 +194,7 @@ void DeleteNext(EcsRows *rows) {
     }
 }
 
+static
 void DeletePrev(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
@@ -206,6 +208,7 @@ void DeletePrev(EcsRows *rows) {
     }
 }
 
+static
 void DeleteCurrent(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
@@ -219,6 +222,7 @@ void DeleteCurrent(EcsRows *rows) {
     }
 }
 
+static
 void DeleteAll(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;

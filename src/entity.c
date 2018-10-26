@@ -290,37 +290,43 @@ EcsResult ecs_commit(
     EcsWorld *world,
     EcsHandle entity)
 {
-    EcsFamily to_add = ecs_map_get64(world->add_stage, entity);
-    EcsFamily to_remove = ecs_map_get64(world->remove_stage, entity);
-    EcsFamily family_id = 0;
-
-    uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
-    if (row_64) {
-        EcsRow row = ecs_to_row(row_64);
-        family_id = row.family_id;
-    }
-
-    EcsFamily new_family_id = ecs_family_merge(
-        world, family_id, to_add, to_remove);
-
-    if (new_family_id == family_id) {
+    if (world->in_progress) {
+        EcsHandle *h = ecs_array_add(&world->to_commit, &handle_arr_params);
+        *h = entity;
         return EcsOk;
+    } else {
+        EcsFamily to_add = ecs_map_get64(world->add_stage, entity);
+        EcsFamily to_remove = ecs_map_get64(world->remove_stage, entity);
+        EcsFamily family_id = 0;
+
+        uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
+        if (row_64) {
+            EcsRow row = ecs_to_row(row_64);
+            family_id = row.family_id;
+        }
+
+        EcsFamily new_family_id = ecs_family_merge(
+            world, family_id, to_add, to_remove);
+
+        if (new_family_id == family_id) {
+            return EcsOk;
+        }
+
+        family_id = new_family_id;
+
+        EcsResult result = commit_w_family(
+            world, entity, family_id, to_add, to_remove);
+
+        if (to_add) {
+            ecs_map_remove(world->add_stage, entity);
+        }
+
+        if (to_remove) {
+            ecs_map_remove(world->remove_stage, entity);
+        }
+
+        return result;
     }
-
-    family_id = new_family_id;
-
-    EcsResult result = commit_w_family(
-        world, entity, family_id, to_add, to_remove);
-
-    if (to_add) {
-        ecs_map_remove(world->add_stage, entity);
-    }
-
-    if (to_remove) {
-        ecs_map_remove(world->remove_stage, entity);
-    }
-
-    return result;
 }
 
 EcsHandle ecs_new(

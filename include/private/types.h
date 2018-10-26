@@ -122,6 +122,7 @@ struct EcsWorld {
     EcsArray *inactive_systems;   /* Periodic systems with empty tables */
     EcsArray *other_systems;      /* Non-periodic systems */
     EcsArray *to_delete;          /* Deleted entities while in progress */
+    EcsArray *to_commit;          /* Committed entities while in progress */
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */

@@ -32,6 +32,10 @@ test.suite EcsAdd {
     tc_add_family_with_family()
     tc_add_overlapping_families()
     tc_add_family_overlapping_w_entity()
+    tc_add_prev_in_progress()
+    tc_add_cur_in_progress()
+    tc_add_next_in_progress()
+    tc_add_all_in_progress()
 }
 
 test.suite EcsRemove {
@@ -39,6 +43,10 @@ test.suite EcsRemove {
     tc_remove_2_component()
     tc_remove_component_from_2()
     tc_remove_2_component_from_3()
+    tc_remove_prev_in_progress()
+    tc_remove_cur_in_progress()
+    tc_remove_next_in_progress()
+    tc_remove_all_in_progress()
 }
 
 test.suite EcsPrefab {
