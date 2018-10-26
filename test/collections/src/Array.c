@@ -22,8 +22,7 @@ int compare_int(
 
 static
 EcsArrayParams arr_params = {
-    .element_size = sizeof(int),
-    .compare_action = compare_int
+    .element_size = sizeof(int)
 };
 
 EcsArray* fill_array(
@@ -240,7 +239,7 @@ void test_Array_tc_sort_empty(
     test_Array this)
 {
     EcsArray *array = ecs_array_new(&arr_params, 0);
-    ecs_array_sort(array, &arr_params);
+    ecs_array_sort(array, &arr_params, compare_int);
     test_assert(true);
     ecs_array_free(array);
 }
@@ -260,7 +259,7 @@ void test_Array_tc_sort_rnd(
 
     test_assertint(ecs_array_count(array), sizeof(nums) / sizeof(int));
 
-    ecs_array_sort(array, &arr_params);
+    ecs_array_sort(array, &arr_params, compare_int);
 
     EcsIter it = ecs_array_iter(array, &arr_params);
     count = 0;
@@ -288,7 +287,7 @@ void test_Array_tc_sort_sorted(
 
     test_assertint(ecs_array_count(array), sizeof(nums) / sizeof(int));
 
-    ecs_array_sort(array, &arr_params);
+    ecs_array_sort(array, &arr_params, compare_int);
 
     EcsIter it = ecs_array_iter(array, &arr_params);
     count = 0;

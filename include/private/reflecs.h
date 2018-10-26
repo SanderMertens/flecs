@@ -71,10 +71,12 @@ EcsResult ecs_table_init_w_size(
     uint32_t size);
 
 uint32_t ecs_table_insert(
+    EcsWorld *world,
     EcsTable *table,
     EcsHandle entity);
 
 void ecs_table_delete(
+    EcsWorld *world,
     EcsTable *table,
     uint32_t index);
 

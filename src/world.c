@@ -147,6 +147,18 @@ EcsTable* create_table(
     return result;
 }
 
+static
+void process_to_delete(
+    EcsWorld *world)
+{
+    EcsHandle *buffer = ecs_array_buffer(world->to_delete);
+    uint32_t i, count = ecs_array_count(world->to_delete);
+    for (i = 0; i < count; i ++) {
+        ecs_delete(world, buffer[i]);
+    }
+    ecs_array_clear(world->to_delete);
+}
+
 
 /* -- Private functions -- */
 
@@ -343,6 +355,7 @@ EcsWorld *ecs_init(void) {
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
     result->other_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT);
+    result->to_delete = ecs_array_new(&handle_arr_params, 0);
 
     result->worker_threads = NULL;
     result->jobs_finished = 0;
@@ -459,6 +472,8 @@ void ecs_progress(
         EcsHandle *buffer = ecs_array_buffer(world->periodic_systems);
         bool has_threads = ecs_array_count(world->worker_threads) != 0;
 
+        world->in_progress = true;
+
         if (has_threads) {
             bool valid_schedule = world->valid_schedule;
             for (i = 0; i < count; i ++) {
@@ -473,6 +488,13 @@ void ecs_progress(
             for (i = 0; i < count; i ++) {
                 ecs_run_system(world, buffer[i], NULL);
             }
+        }
+
+        world->in_progress = false;
+
+        uint32_t to_delete_count = ecs_array_count(world->to_delete);
+        if (to_delete_count) {
+            process_to_delete(world);
         }
     }
 }

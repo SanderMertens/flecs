@@ -56,7 +56,6 @@ EcsResult ecs_table_init_w_size(
     EcsArray *family,
     uint32_t size)
 {
-    table->world = world;
     table->family = family;
 
     table->periodic_systems = NULL;
@@ -64,7 +63,6 @@ EcsResult ecs_table_init_w_size(
     table->deinit_systems = NULL;
 
     table->row_params.element_size = size + sizeof(EcsHandle);
-    table->row_params.compare_action = NULL;
     table->row_params.move_action = move_row;
     table->row_params.move_ctx = (void*)(uintptr_t)ecs_array_get_index(
         world->table_db, &table_arr_params, table);
@@ -118,6 +116,7 @@ EcsResult ecs_table_init(
 }
 
 uint32_t ecs_table_insert(
+    EcsWorld *world,
     EcsTable *table,
     EcsHandle handle)
 {
@@ -126,20 +125,21 @@ uint32_t ecs_table_insert(
     uint32_t index = ecs_array_count(table->rows) - 1;
 
     if (!index) {
-        activate_table(table->world, table, true);
+        activate_table(world, table, true);
     }
 
     return index;
 }
 
 void ecs_table_delete(
+    EcsWorld *world,
     EcsTable *table,
     uint32_t index)
 {
     uint32_t count = ecs_array_remove_index(
         table->rows, &table->row_params, index);
     if (!count) {
-        activate_table(table->world, table, false);
+        activate_table(world, table, false);
     }
 }
 

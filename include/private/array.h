@@ -22,7 +22,6 @@ typedef void (*EcsMove)(
     void *ctx);
 
 struct EcsArrayParams {
-    EcsComparator compare_action; /* Comparator function */
     EcsMove move_action; /* Invoked when moving elements */
     void *move_ctx;
     void *ctx;
@@ -47,6 +46,10 @@ EcsArray* ecs_array_new_from_buffer(
 
 REFLECS_EXPORT
 void ecs_array_free(
+    EcsArray *array);
+
+REFLECS_EXPORT
+void ecs_array_clear(
     EcsArray *array);
 
 REFLECS_EXPORT
@@ -125,7 +128,8 @@ EcsIter _ecs_array_iter(
 REFLECS_EXPORT
 void ecs_array_sort(
     EcsArray *array,
-    const EcsArrayParams *params);
+    const EcsArrayParams *params,
+    EcsComparator compare_action);
 
 #ifdef __cplusplus
 }

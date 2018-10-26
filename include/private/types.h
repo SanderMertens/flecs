@@ -86,7 +86,6 @@ typedef struct EcsSystem {
 /* -- Private types -- */
 
 typedef struct EcsTable {
-    EcsWorld *world;              /* Reference to the world */
     EcsArray *family;             /* Reference to family_index entry */
     EcsArray *rows;               /* Rows of the table */
     EcsArray *periodic_systems;   /* Periodic systems matched with table */
@@ -122,6 +121,7 @@ struct EcsWorld {
     EcsArray *periodic_systems;   /* Periodic systems */
     EcsArray *inactive_systems;   /* Periodic systems with empty tables */
     EcsArray *other_systems;      /* Non-periodic systems */
+    EcsArray *to_delete;          /* Deleted entities while in progress */
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */
@@ -150,6 +150,7 @@ struct EcsWorld {
 
     bool valid_schedule;          /* Is job schedule still valid */
     bool quit_workers;            /* Signals worker threads to quit */
+    bool in_progress;             /* Is world being progressed */
 };
 
 extern const EcsArrayParams handle_arr_params;

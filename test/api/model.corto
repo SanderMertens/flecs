@@ -10,6 +10,17 @@ test.suite EcsNew {
     tc_new_w_prefab_of_2()
 }
 
+test.suite EcsDelete {
+    tc_delete_1st_of_3()
+    tc_delete_2nd_of_3()
+    tc_delete_3rd_of_3()
+    tc_delete_2_of_3()
+    tc_delete_3_of_3()
+    tc_delete_prev_in_progress()
+    tc_delete_cur_in_progress()
+    tc_delete_next_in_progress()
+}
+
 test.suite EcsAdd {
     tc_add_component_to_empty()
     tc_add_2_component_to_empty()

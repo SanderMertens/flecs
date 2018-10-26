@@ -75,6 +75,12 @@ void ecs_array_free(
     free(array);
 }
 
+void ecs_array_clear(
+    EcsArray *array)
+{
+    array->count = 0;
+}
+
 void* ecs_array_add(
     EcsArray **array_inout,
     const EcsArrayParams *params)
@@ -300,13 +306,14 @@ EcsIter _ecs_array_iter(
 
 void ecs_array_sort(
     EcsArray *array,
-    const EcsArrayParams *params)
+    const EcsArrayParams *params,
+    EcsComparator compare_action)
 {
     uint32_t count = array->count;
     uint32_t element_size = params->element_size;
     void *buffer = ARRAY_BUFFER(array);
 
     if (count) {
-        qsort(buffer, count, element_size, params->compare_action);
+        qsort(buffer, count, element_size, compare_action);
     }
 }

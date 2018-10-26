@@ -221,7 +221,7 @@ EcsResult commit_w_family(
     if (family_id) {
         new_table = ecs_world_get_table(world, family_id);
         assert(new_table != NULL);
-        new_index = ecs_table_insert(new_table, entity);
+        new_index = ecs_table_insert(world, new_table, entity);
     }
 
     uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
@@ -232,7 +232,7 @@ EcsResult commit_w_family(
         if (new_table) {
             copy_row(world, new_table, new_index, old_table, old_row.index);
         }
-        ecs_table_delete(old_table, old_row.index);
+        ecs_table_delete(world, old_table, old_row.index);
         if (to_remove) {
             deinit_components(world, old_table, old_row.index, to_remove);
         }
@@ -340,12 +340,17 @@ void ecs_delete(
     EcsWorld *world,
     EcsHandle entity)
 {
-    EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
-    if (row.family_id) {
-        EcsTable *table = ecs_world_get_table(world, row.family_id);
-        ecs_table_delete(table, row.index);
-        ecs_map_remove(world->entity_index, entity);
-        world->valid_schedule = false;
+    if (world->in_progress) {
+        EcsHandle *h = ecs_array_add(&world->to_delete, &handle_arr_params);
+        *h = entity;
+    } else {
+        EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
+        if (row.family_id) {
+            EcsTable *table = ecs_world_get_table(world, row.family_id);
+            ecs_table_delete(world, table, row.index);
+            ecs_map_remove(world->entity_index, entity);
+            world->valid_schedule = false;
+        }
     }
 }
 
@@ -510,4 +515,12 @@ const char* ecs_id(
     } else {
         return NULL;
     }
+}
+
+bool ecs_valid(
+    EcsWorld *world,
+    EcsHandle entity)
+{
+    uint64_t row64 = ecs_map_get64(world->entity_index, entity);
+    return row64 != 0;
 }

@@ -476,6 +476,20 @@ bool ecs_has_any(
     EcsHandle type);
 
 
+/** Return if the entity is valid.
+ * This returns whether the provided entity handle is valid. An entity that has
+ * never been returned by ecs_new (or variants) or that has been deleted with
+ * ecs_delete is not valid.
+ *
+ * @param world: The world.
+ * @param entity: The entity handle.
+ * @returns: true if valid, false if not valid.
+ */
+REFLECS_EXPORT
+bool ecs_valid(
+    EcsWorld *world,
+    EcsHandle entity);
+
 /* -- Id API -- */
 
 /** Return the entity id.
