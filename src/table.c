@@ -10,8 +10,10 @@ void move_row(
     void *from,
     void *ctx)
 {
-    EcsTable *table = ctx;
-    EcsWorld *world = table->world;
+    EcsWorld *world = params->ctx;
+    uint32_t table_index = (uintptr_t)ctx;
+    EcsTable *table = ecs_array_get(
+        world->table_db, &table_arr_params, table_index);
     uint32_t new_index = ecs_array_get_index(array, params, to);
     EcsHandle handle = *(EcsHandle*)to;
     EcsRow row = {.family_id = table->family_id, .index = new_index};
@@ -64,7 +66,9 @@ EcsResult ecs_table_init_w_size(
     table->row_params.element_size = size + sizeof(EcsHandle);
     table->row_params.compare_action = NULL;
     table->row_params.move_action = move_row;
-    table->row_params.move_ctx = table;
+    table->row_params.move_ctx = (void*)(uintptr_t)ecs_array_get_index(
+        world->table_db, &table_arr_params, table);
+    table->row_params.ctx = world;
 
     table->rows = ecs_array_new(
         &table->row_params, ECS_TABLE_INITIAL_ROW_COUNT);

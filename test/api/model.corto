@@ -56,4 +56,10 @@ test.suite EcsPeriodicSystem {
     tc_system_1_component_2_or2()
     tc_system_2_component_2_or3()
     tc_system_1_component_or2_both_match()
+    tc_system_1_or2()
+    tc_system_2_or2()
+    tc_system_1_from_component()
+    tc_system_2_from_component()
+    tc_system_1_from_component_or2()
+    tc_system_2_from_component_or2()
 }

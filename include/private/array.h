@@ -22,10 +22,11 @@ typedef void (*EcsMove)(
     void *ctx);
 
 struct EcsArrayParams {
-    uint32_t element_size; /* Size of an element */
     EcsComparator compare_action; /* Comparator function */
     EcsMove move_action; /* Invoked when moving elements */
     void *move_ctx;
+    void *ctx;
+    uint32_t element_size; /* Size of an element */
 };
 
 typedef struct EcsArrayIter {

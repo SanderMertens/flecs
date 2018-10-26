@@ -124,7 +124,7 @@ void notify(
         if (ecs_family_contains(
             world,
             family,
-            system_data->from_entity[EcsOperAnd],
+            system_data->and_from_entity,
             true,
             true))
         {

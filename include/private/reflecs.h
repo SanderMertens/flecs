@@ -39,6 +39,11 @@ bool ecs_family_contains(
     bool match_all,
     bool match_prefab);
 
+bool ecs_family_contains_component(
+    EcsWorld *world,
+    EcsFamily family,
+    EcsHandle component);
+
 EcsFamily ecs_family_register(
     EcsWorld *world,
     EcsHandle to_add,

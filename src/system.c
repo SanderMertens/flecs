@@ -58,15 +58,14 @@ EcsResult add_component(
         elem->is.family = ecs_family_add(world, elem->is.family, component);
         elem->kind = elem_kind;
         elem->oper_kind = EcsOperOr;
-    } else {
-        EcsFamily *from_array;
+    } else if (oper_kind == EcsOperNot) {
         if (elem_kind == EcsFromEntity) {
-            from_array = system_data->from_entity;
+            system_data->not_from_entity =
+                ecs_family_add(world, system_data->not_from_entity, component);
         } else {
-            from_array = system_data->from_component;
+            system_data->not_from_component =
+              ecs_family_add(world, system_data->not_from_component, component);
         }
-        from_array[EcsOperNot] = ecs_family_add(
-            world, from_array[EcsOperNot], component);
     }
 
     return EcsOk;
@@ -75,39 +74,29 @@ error:
 }
 
 static
-void compute_match_families(
+void compute_and_from_entity(
     EcsWorld *world,
     EcsSystem *system_data)
 {
-    int i, count = ecs_array_count(system_data->columns);
-    for (i = 0; i < count; i ++) {
-        EcsSystemColumn *elem = ecs_array_get(
-            system_data->columns, &column_arr_params, i);
-        EcsSystemExprOperKind oper_kind = elem->oper_kind;
+    uint32_t i, column_count = ecs_array_count(system_data->columns);
+    EcsSystemColumn *buffer = ecs_array_buffer(system_data->columns);
+
+    for (i = 0; i < column_count; i ++) {
+        EcsSystemColumn *elem = &buffer[i];
         EcsSystemExprElemKind elem_kind = elem->kind;
-        EcsFamily *from_family;
-        EcsFamily family_id;
 
         if (elem_kind == EcsFromEntity) {
-            from_family = system_data->from_entity;
-        } else {
-            from_family = system_data->from_component;
+            EcsSystemExprOperKind oper_kind = elem->oper_kind;
+            if (oper_kind == EcsOperAnd) {
+                system_data->and_from_entity = ecs_family_add(
+                    world, system_data->and_from_entity, elem->is.component);
+            }
         }
-
-        if (oper_kind == EcsOperAnd) {
-            family_id = ecs_family_add(world, 0, elem->is.component);
-        } else {
-            family_id = elem->is.family;
-        }
-
-        from_family[oper_kind] = ecs_family_merge(
-            world, from_family[oper_kind], family_id, 0);
     }
 }
 
-
 static
-EcsHandle components_contain(
+EcsHandle components_contains(
     EcsWorld *world,
     EcsFamily table_family,
     EcsFamily family,
@@ -137,65 +126,34 @@ EcsHandle components_contain(
     return 0;
 }
 
-/* Match table with system */
 static
-bool match_table(
+bool components_contains_component(
     EcsWorld *world,
-    EcsTable *table,
-    EcsSystem *system_data)
+    EcsFamily table_family,
+    EcsHandle component,
+    EcsHandle *entity_out)
 {
-    EcsFamily family, table_family;
-    table_family = table->family_id;
+    EcsArray *components = ecs_map_get(world->family_index, table_family);
+    assert(components != NULL);
 
-    EcsFamily prefab_family = ecs_family_from_handle(world, EcsPrefab_h);
-    if (ecs_family_contains(world, table_family, prefab_family, true, false)) {
-        /* Never match prefabs */
-        return false;
-    }
+    uint32_t i, count = ecs_array_count(components);
+    for (i = 0; i < count; i ++) {
+        EcsHandle h = *(EcsHandle*)ecs_array_get(
+            components, &handle_arr_params, i);
 
-    family = system_data->from_entity[EcsOperAnd];
-    if (family) {
-        if (!ecs_family_contains(world, table_family, family, true, true)) {
-            return false;
+        uint64_t row_64 = ecs_map_get64(world->entity_index, h);
+        assert(row_64 != 0);
+
+        EcsRow row = ecs_to_row(row_64);
+        bool result = ecs_family_contains_component(
+            world, row.family_id, component);
+        if (result) {
+            if (entity_out) *entity_out = h;
+            return true;
         }
     }
 
-    family = system_data->from_entity[EcsOperOr];
-    if (family) {
-        if (!ecs_family_contains(world, table_family, family, false, true)) {
-            return false;
-        }
-    }
-
-    family = system_data->from_entity[EcsOperNot];
-    if (family) {
-        if (ecs_family_contains(world, table_family, family, false, true)) {
-            return false;
-        }
-    }
-
-    family = system_data->from_component[EcsOperAnd];
-    if (family) {
-        if (!components_contain(world, table_family, family, NULL, true)) {
-            return false;
-        }
-    }
-
-    family = system_data->from_component[EcsOperOr];
-    if (family) {
-        if (!components_contain(world, table_family, family, NULL, false)) {
-            return false;
-        }
-    }
-
-    family = system_data->from_component[EcsOperNot];
-    if (family) {
-        if (components_contain(world, table_family, family, NULL, false)) {
-            return false;
-        }
-    }
-
-    return true;
+    return false;
 }
 
 /* Get ref array for system table */
@@ -309,11 +267,10 @@ void add_table(
         } else if (column->kind == EcsFromComponent) {
             if (column->oper_kind == EcsOperAnd) {
                 component = column->is.component;
-                EcsFamily family = ecs_family_add(world, 0, component);
-                components_contain(world, table_family, family, &entity, true);
-
+                components_contains_component(
+                    world, table_family, component, &entity);
             } else if (column->oper_kind == EcsOperOr) {
-                component = components_contain(
+                component = components_contains(
                     world, table_family, column->is.family, &entity, false);
             }
         }
@@ -331,9 +288,12 @@ void add_table(
                 world, entity, table_family, component);
             ref_data[ref].component = component;
             ref ++;
+
+            /* negative number indicates ref instead of offset to ecs_column */
             table_data[i] = -ref;
         }
 
+        /* - 2, as component_data index is not offset by table id and refs id */
         component_data[i - 2] = component;
 
         i ++;
@@ -353,6 +313,78 @@ void add_table(
     }
 
     if (h) *h = system;
+}
+
+/* Match table with system */
+static
+bool match_table(
+    EcsWorld *world,
+    EcsTable *table,
+    EcsSystem *system_data)
+{
+    EcsFamily family, table_family;
+    table_family = table->family_id;
+
+    if (ecs_family_contains_component(world, table_family, EcsPrefab_h)) {
+        /* Never match prefabs */
+        return false;
+    }
+
+    family = system_data->and_from_entity;
+    if (family && !ecs_family_contains(world, table_family, family, true, true))
+    {
+        return false;
+    }
+
+    uint32_t i, column_count = ecs_array_count(system_data->columns);
+    EcsSystemColumn *buffer = ecs_array_buffer(system_data->columns);
+
+    for (i = 0; i < column_count; i ++) {
+        EcsSystemColumn *elem = &buffer[i];
+        EcsSystemExprElemKind elem_kind = elem->kind;
+        EcsSystemExprOperKind oper_kind = elem->oper_kind;
+
+        if (oper_kind == EcsOperAnd) {
+            if (elem_kind == EcsFromEntity) {
+                /* Already validated */
+            } else {
+                if (!components_contains_component(
+                    world, table_family, elem->is.component, NULL))
+                {
+                    return false;
+                }
+            }
+        } else if (oper_kind == EcsOperOr) {
+            family = elem->is.family;
+            if (elem_kind == EcsFromEntity) {
+                if (!ecs_family_contains(
+                    world, table_family, family, false, true))
+                {
+                    return false;
+                }
+            } else {
+                if (!components_contains(
+                    world, table_family, family, NULL, false))
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
+    family = system_data->not_from_entity;
+    if (family && ecs_family_contains(world, table_family, family, false, true))
+    {
+        return false;
+    }
+
+    family = system_data->not_from_component;
+    if (family && components_contains(world, table_family, family, NULL, false))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 /** Match existing tables against system (table is created before system) */
@@ -646,17 +678,13 @@ EcsHandle ecs_new_system(
     EcsHandle result = ecs_new_w_family(world, world->system_family);
 
     EcsSystem *system_data = ecs_get(world, result, EcsSystem_h);
+    memset(system_data, 0, sizeof(EcsSystem));
+
     system_data->action = action;
     system_data->enabled = true;
-    memset(system_data->from_entity, 0, sizeof(system_data->from_entity));
-    memset(system_data->from_component, 0, sizeof(system_data->from_component));
     system_data->table_params.element_size = sizeof(int32_t) * (count + 2);
-    system_data->table_params.move_action = NULL;
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
-    system_data->ref_params.move_action = NULL;
     system_data->component_params.element_size = sizeof(EcsHandle) * count;
-    system_data->component_params.move_action = NULL;
-    system_data->refs = NULL;
     system_data->components = ecs_array_new(
         &system_data->component_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     system_data->tables = ecs_array_new(
@@ -665,7 +693,6 @@ EcsHandle ecs_new_system(
         &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     system_data->columns = ecs_array_new(&column_arr_params, count);
     system_data->kind = kind;
-    system_data->jobs = NULL;
 
     EcsId *id_data = ecs_get(world, result, EcsId_h);
     id_data->id = id;
@@ -677,7 +704,7 @@ EcsHandle ecs_new_system(
         return 0;
     }
 
-    compute_match_families(world, system_data);
+    compute_and_from_entity(world, system_data);
 
     match_tables(world, result, system_data);
 

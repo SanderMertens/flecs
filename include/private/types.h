@@ -66,10 +66,8 @@ typedef struct EcsSystemRef {
 } EcsSystemRef;
 
 typedef struct EcsSystem {
-    EcsFamily from_entity[EcsOperLast]; /* Families from entities per oper */
-    EcsFamily from_component[EcsOperLast]; /* Same, from components */
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
-    EcsArray *columns;         /* Parsed component expression */
+    EcsArray *columns;         /* Column components (AND) and families (OR) */
     EcsArray *components;      /* Computed component list per matched table */
     EcsArray *inactive_tables; /* Inactive tables */
     EcsArray *jobs;            /* Jobs for this system */
@@ -79,6 +77,9 @@ typedef struct EcsSystem {
     EcsArrayParams component_params; /* Parameters for components array */
     EcsArrayParams ref_params; /* Parameters for tables array */
     EcsSystemKind kind;        /* Kind that determines when system is invoked */
+    EcsFamily not_from_entity;    /* Exclude components from entity */
+    EcsFamily not_from_component; /* Exclude components from components */
+    EcsFamily and_from_entity; /* Used to match init / deinit notifications */
     bool enabled;              /* Is system enabled or not */
 } EcsSystem;
 
