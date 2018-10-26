@@ -32,7 +32,7 @@ EcsFamily ecs_family_merge(
     EcsFamily to_add_id,
     EcsFamily to_remove_id);
 
-bool ecs_family_contains(
+EcsHandle ecs_family_contains(
     EcsWorld *world,
     EcsFamily family_id_1,
     EcsFamily family_id_2,

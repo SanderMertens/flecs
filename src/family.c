@@ -200,7 +200,7 @@ EcsFamily ecs_family_merge(
 }
 
 /* O(n) algorithm to check whether family 1 is equal or superset of family 2 */
-bool ecs_family_contains(
+EcsHandle ecs_family_contains(
     EcsWorld *world,
     EcsFamily family_id_1,
     EcsFamily family_id_2,
@@ -280,6 +280,6 @@ bool ecs_family_contains_component(
             return true;
         }
     }
-    
+
     return false;
 }
