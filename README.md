@@ -88,21 +88,19 @@ ecs_commit(world, e);             // Remove Velocity component, add Size compone
 
 ## Initializing components
 You can initialize the value of a component in two ways. The first way lets you
-set the value of a component for a single entity, with the `ecs_get_ptr` operation.
+set the value of a component for a single entity, with the `ecs_set` operation.
 It can be used like this:
 
 ```c
-Position *p = ecs_get_ptr(world, e, Position_h);
-p->x = 10;
-p->y = 20;
+ecs_set(world, e, Position, {.x = 10, .y = 20});
 ```
 This method is flexible, but does come at a performance penalty since the
-`ecs_get_ptr` operation has to iterate over the components of the entity to find the
+`ecs_set` operation has to iterate over the components of the entity to find the
 `Position` component. For entities with small numbers of components the penalty
 is probably not significant.
 
 Alternatively, you can assign all entities with a given set of components with
-`OnInit` systems. This is much faster than calling `ecs_get_ptr` on every single
+`OnInit` systems. This is much faster than calling `ecs_set` on every single
 entity. You can create an `OnInit` system just like normal systems, but instead
 of specifying `EcsOnPeriodic`, you specify `EcsOnInit`:
 
