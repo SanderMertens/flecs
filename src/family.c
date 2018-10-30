@@ -118,6 +118,14 @@ EcsFamily ecs_family_merge(
     EcsFamily to_add_id,
     EcsFamily to_remove_id)
 {
+    if (!to_remove_id) {
+        if (cur_id && !to_add_id) {
+            return cur_id;
+        } else if (to_add_id && !cur_id) {
+            return to_add_id;
+        }
+    }
+
     EcsArray *arr_cur = ecs_map_get(world->family_index, cur_id);
     EcsArray *to_add = NULL, *to_del = NULL;
     EcsHandle *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
@@ -130,12 +138,6 @@ EcsFamily ecs_family_merge(
         del_count = ecs_array_count(to_del);
         buf_del = ecs_array_buffer(to_del);
         del = buf_del[0];
-    } else {
-        if (cur_id && !to_add_id) {
-            return cur_id;
-        } else if (to_add_id && !cur_id) {
-            return to_add_id;
-        }
     }
 
     if (arr_cur) {

@@ -510,7 +510,6 @@ bool ecs_has_any(
     EcsHandle entity,
     EcsHandle type);
 
-
 /** Return if the entity is valid.
  * This returns whether the provided entity handle is valid. An entity that has
  * never been returned by ecs_new (or variants) or that has been deleted with

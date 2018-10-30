@@ -163,12 +163,37 @@ static
 void process_to_commit(
     EcsWorld *world)
 {
-    EcsHandle *buffer = ecs_array_buffer(world->to_commit);
-    uint32_t i, count = ecs_array_count(world->to_commit);
-    for (i = 0; i < count; i ++) {
-        ecs_commit(world, buffer[i]);
+    EcsIter it = ecs_map_iter(world->staged_entities);
+    while (ecs_iter_hasnext(&it)) {
+        uint64_t key;
+        uint64_t row64 = ecs_map_next(&it, &key);
+        ecs_commit(world, key);
+
+        if (row64) {
+            EcsRow staged_row = ecs_to_row(row64);
+            EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, key));
+            EcsTable *table = ecs_world_get_table(world, row.family_id);
+            EcsTable *staged_table = ecs_world_get_table(
+                world, staged_row.family_id);
+            EcsArray *staged_rows = ecs_map_get(
+                world->staged_components, staged_row.family_id);
+
+            void *row_ptr = ecs_table_get(table, row.index);
+            void *staged_row_ptr = ecs_array_get(
+                staged_rows, &staged_table->row_params, staged_row.index);
+
+            ecs_copy_row(
+                world,
+                table->family,
+                table->columns,
+                row_ptr,
+                staged_table->family,
+                staged_table->columns,
+                staged_row_ptr);
+        }
     }
-    ecs_array_clear(world->to_commit);
+
+    ecs_map_clear(world->staged_entities);
 }
 
 /* -- Private functions -- */
@@ -367,7 +392,6 @@ EcsWorld *ecs_init(void) {
     result->other_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT);
     result->to_delete = ecs_array_new(&handle_arr_params, 0);
-    result->to_commit = ecs_array_new(&handle_arr_params, 0);
 
     result->worker_threads = NULL;
     result->jobs_finished = 0;
@@ -383,6 +407,9 @@ EcsWorld *ecs_init(void) {
     result->prefab_index = ecs_map_new(ECS_WORLD_INITIAL_PREFAB_COUNT);
     result->add_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
     result->remove_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    result->staged_entities = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    result->staged_components = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+
     result->last_handle = 0;
 
     bootstrap_component(result);
@@ -510,7 +537,7 @@ void ecs_progress(
             process_to_delete(world);
         }
 
-        uint32_t to_commit_count = ecs_array_count(world->to_commit);
+        uint32_t to_commit_count = ecs_map_count(world->staged_entities);
         if (to_commit_count) {
             process_to_commit(world);
         }

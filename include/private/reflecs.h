@@ -9,6 +9,15 @@ EcsHandle ecs_new_w_family(
     EcsWorld *world,
     EcsFamily family_id);
 
+void ecs_copy_row(
+    EcsWorld *world,
+    EcsArray *new_family,
+    uint16_t *new_offsets,
+    void *new_row,
+    EcsArray *old_family,
+    uint16_t *old_offsets,
+    void *old_row);
+
 /* -- World API -- */
 
 EcsTable* ecs_world_get_table(

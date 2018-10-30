@@ -57,6 +57,12 @@ uint64_t ecs_map_get64(
     (void*)(uintptr_t)ecs_map_get64(map, key_hash)
 
 REFLECS_EXPORT
+bool ecs_map_has(
+    EcsMap *map,
+    uint64_t key_hash,
+    uint64_t *value_out);
+
+REFLECS_EXPORT
 EcsResult ecs_map_remove(
     EcsMap *map,
     uint64_t key_hash);
@@ -68,6 +74,11 @@ EcsIter _ecs_map_iter(
 
 #define ecs_map_iter(me)\
     _ecs_map_iter(me, alloca(sizeof(EcsMapIter)))
+
+REFLECS_EXPORT
+uint64_t ecs_map_next(
+    EcsIter *it,
+    uint64_t *key_out);
 
 #ifdef __cplusplus
 }

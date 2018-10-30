@@ -18,7 +18,6 @@ void test_EcsSet_tc_set_int16(
     ecs_fini(world);
 }
 
-
 void test_EcsSet_tc_set_int32(
     test_EcsSet this)
 {
@@ -35,7 +34,6 @@ void test_EcsSet_tc_set_int32(
     ecs_fini(world);
 }
 
-
 void test_EcsSet_tc_set_int64(
     test_EcsSet this)
 {
@@ -51,7 +49,6 @@ void test_EcsSet_tc_set_int64(
 
     ecs_fini(world);
 }
-
 
 void test_EcsSet_tc_set_int8(
     test_EcsSet this)
@@ -137,6 +134,96 @@ void test_EcsSet_tc_set_array256(
     test_assertint(v[1], 20);
     test_assertint(v[2], 30);
     test_assertint(v[3], 40);
+
+    ecs_fini(world);
+}
+
+typedef struct Context {
+    EcsHandle handle;
+} Context;
+
+static
+void SetExisting(EcsRows *rows) {
+    Context *ctx = ecs_get_context(rows->world);
+    EcsHandle int8_t_h = ctx->handle;
+    EcsWorld *world = rows->world;
+
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        int8_t value = ecs_get(world, ecs_entity(row), int8_t);
+        ecs_set(world, ecs_entity(row), int8_t, value + 1);
+    }
+}
+
+static
+void SetNew(EcsRows *rows) {
+    Context *ctx = ecs_get_context(rows->world);
+    EcsHandle int16_t_h = ctx->handle;
+    EcsWorld *world = rows->world;
+    int16_t value = 10;
+
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        ecs_set(world, ecs_entity(row), int16_t, value);
+        value += 10;
+    }
+}
+
+void test_EcsSet_tc_set_existing_in_progress(
+    test_EcsSet this)
+{
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, int8_t);
+    ECS_SYSTEM(world, SetExisting, EcsPeriodic, int8_t);
+
+    EcsHandle e1 = ecs_new(world, int8_t_h);
+    EcsHandle e2 = ecs_new(world, int8_t_h);
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+
+    ecs_set(world, e1, int8_t, 32);
+    ecs_set(world, e2, int8_t, 64);
+
+    Context ctx = {.handle = int8_t_h};
+
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assertint(ecs_get(world, e1, int8_t), 33);
+    test_assertint(ecs_get(world, e2, int8_t), 65);
+
+    ecs_fini(world);
+}
+
+void test_EcsSet_tc_set_new_in_progress(
+    test_EcsSet this)
+{
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, int8_t);
+    ECS_COMPONENT(world, int16_t);
+    ECS_SYSTEM(world, SetNew, EcsPeriodic, int8_t);
+
+    EcsHandle e1 = ecs_new(world, int8_t_h);
+    EcsHandle e2 = ecs_new(world, int8_t_h);
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+
+    ecs_set(world, e1, int8_t, 32);
+    ecs_set(world, e2, int8_t, 64);
+
+    Context ctx = {.handle = int16_t_h};
+
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assertint(ecs_get(world, e1, int8_t), 32);
+    test_assert(ecs_get_ptr(world, e1, int16_t_h) != NULL);
+    test_assertint(ecs_get(world, e1, int16_t), 10);
+    test_assertint(ecs_get(world, e2, int8_t), 64);
+    test_assert(ecs_get_ptr(world, e2, int16_t_h) != NULL);
+    test_assertint(ecs_get(world, e2, int16_t), 20);
 
     ecs_fini(world);
 }

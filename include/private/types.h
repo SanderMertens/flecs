@@ -122,7 +122,6 @@ struct EcsWorld {
     EcsArray *inactive_systems;   /* Periodic systems with empty tables */
     EcsArray *other_systems;      /* Non-periodic systems */
     EcsArray *to_delete;          /* Deleted entities while in progress */
-    EcsArray *to_commit;          /* Committed entities while in progress */
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */
@@ -131,6 +130,8 @@ struct EcsWorld {
     EcsMap *family_index;         /* References to component families */
     EcsMap *family_handles;       /* Index to explicitly created families */
     EcsMap *prefab_index;         /* Index for finding prefabs in families */
+    EcsMap *staged_entities;      /* Entities to commit with staged components*/
+    EcsMap *staged_components;    /* Arrays with staged component values */
 
     EcsArray *worker_threads;     /* Worker threads */
     pthread_cond_t thread_cond;   /* Signal that worker threads can start */

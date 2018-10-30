@@ -211,16 +211,26 @@ bool hasnext(
     }
 }
 
-/** Iterator next callback */
+/** Map-specific next functionality that returns keys and 64bit data */
 static
-void *next(
-    EcsIter *iter)
+uint64_t next_w_key(
+    EcsIter *iter,
+    uint64_t *key_out)
 {
     EcsMap *map = iter->data;
     EcsMapIter *iter_data = iter->ctx;
     EcsMapNode *node_p = node_from_index(map->nodes, iter_data->node);
     assert(node_p != NULL);
-    return (void*)node_p->data;
+    if (key_out) *key_out = node_p->key;
+    return node_p->data;
+}
+
+/** Iterator next callback */
+static
+void *next(
+    EcsIter *iter)
+{
+    return (void*)next_w_key(iter, NULL);
 }
 
 /** Resize number of buckets in a map */
@@ -273,7 +283,8 @@ void ecs_map_clear(
     for (i = 0; i < map->bucket_count; i ++) {
         map->buckets[i] = 0;
     }
-    ecs_array_free(map->nodes);
+    
+    ecs_array_clear(map->nodes);
 }
 
 void ecs_map_free(
@@ -363,6 +374,29 @@ uint64_t ecs_map_get64(
     return 0;
 }
 
+bool ecs_map_has(
+    EcsMap *map,
+    uint64_t key_hash,
+    uint64_t *value_out)
+{
+    if (!map->count) {
+        return false;
+    }
+
+    uint32_t *bucket = get_bucket(map, key_hash);
+    if (*bucket) {
+        EcsMapNode *elem = get_node(map, bucket, key_hash);
+        if (elem) {
+            if (value_out) {
+                *value_out = elem->data;
+            }
+            return true;
+        }
+    }
+
+    return false;
+}
+
 uint32_t ecs_map_count(
     EcsMap *map)
 {
@@ -400,4 +434,11 @@ EcsIter _ecs_map_iter(
     iter_data->node = 0;
 
     return result;
+}
+
+uint64_t ecs_map_next(
+    EcsIter *it,
+    uint64_t *key_out)
+{
+    return next_w_key(it, key_out);
 }
