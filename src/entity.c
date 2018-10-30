@@ -346,7 +346,7 @@ int32_t get_offset_for_component(
 }
 
 static
-int64_t add_staged_row(
+void* add_staged_row(
     EcsWorld *world,
     EcsTable *table,
     EcsHandle entity,
@@ -359,15 +359,15 @@ int64_t add_staged_row(
     }
 
     EcsRow row = {.family_id = family_id, .index = ecs_array_count(rows)};
-    uint64_t result = ecs_from_row(row);
+    uint64_t row64 = ecs_from_row(row);
 
-    ecs_array_add(&rows, &table->row_params);
+    void *result = ecs_array_add(&rows, &table->row_params);
 
     if (old_rows != rows) {
         ecs_map_set(world->staged_components, family_id, rows);
     }
 
-    ecs_map_set64(world->staged_entities, entity, result);
+    ecs_map_set64(world->staged_entities, entity, row64);
 
     return result;
 }
@@ -411,15 +411,33 @@ void* get_staged_component(
     }
 
     EcsTable *table = safe_get_table(world, family_id);
-    if (!staged_row64) {
-        staged_row64 = add_staged_row(world, table, entity, family_id);
-    }
-
-    void *row_ptr;
     EcsRow staged_row = ecs_to_row(staged_row64);
-    EcsFamily staged_family_id = staged_row.family_id;
+    EcsFamily old_family = staged_row.family_id;
+    void *old_ptr = NULL, *row_ptr = NULL;
 
-    if (staged_family_id == family_id) {
+    if (!old_family || old_family != family_id) {
+        EcsTable *old_table = NULL;
+        if (old_family) {
+            EcsArray *old_rows = ecs_map_get(
+                world->staged_components, old_family);
+            old_table = safe_get_table(world, old_family);
+            old_ptr = ecs_array_get(
+                old_rows, &old_table->row_params, staged_row.index);
+        }
+
+        row_ptr = add_staged_row(world, table, entity, family_id);
+
+        if (old_ptr) {
+            ecs_copy_row(
+                world,
+                table->family,
+                table->columns,
+                row_ptr,
+                old_table->family,
+                old_table->columns,
+                old_ptr);
+        }
+    } else {
         EcsArray *rows = ecs_map_get(world->staged_components, family_id);
         row_ptr = ecs_array_get(rows, &table->row_params, staged_row.index);
     }

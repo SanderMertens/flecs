@@ -59,6 +59,9 @@ test.suite EcsSet {
     tc_set_array256()
     tc_set_existing_in_progress()
     tc_set_new_in_progress()
+    tc_set_add_in_progress()
+    tc_set_2_new_in_progress()
+    tc_set_2_add_in_progress()
 }
 
 test.suite EcsPrefab {
