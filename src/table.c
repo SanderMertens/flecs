@@ -168,3 +168,16 @@ uint32_t ecs_table_column_offset(
 
     return -1;
 }
+
+void ecs_table_deinit(
+    EcsWorld *world,
+    EcsTable *table)
+{
+    if (table->deinit_systems) {
+        EcsHandle *buffer = ecs_array_buffer(table->deinit_systems);
+        uint32_t i, count = ecs_array_count(table->deinit_systems);
+        for (i = 0; i < count; i ++) {
+            ecs_run_system(world, buffer[i], NULL);
+        }
+    }
+}

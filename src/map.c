@@ -283,7 +283,7 @@ void ecs_map_clear(
     for (i = 0; i < map->bucket_count; i ++) {
         map->buckets[i] = 0;
     }
-    
+
     ecs_array_clear(map->nodes);
 }
 
@@ -291,6 +291,7 @@ void ecs_map_free(
     EcsMap *map)
 {
     ecs_array_free(map->nodes);
+    free(map->buckets);
     free(map);
 }
 

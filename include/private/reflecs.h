@@ -101,6 +101,9 @@ bool ecs_table_has_components(
     EcsTable *table,
     EcsArray *components);
 
+void ecs_table_deinit(
+    EcsWorld *world,
+    EcsTable *table);
 
 /* -- System API -- */
 

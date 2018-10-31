@@ -97,18 +97,6 @@ EcsFamily get_builtin_family(
     return ecs_family_register(world, EcsId_h, family_array);
 }
 
-/** Initialize size of new components to 0 */
-static
-void init_component(
-    EcsRows *rows)
-{
-    void *row;
-    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsComponent *data = ecs_column(rows, row, 0);
-        data->size = 0;
-    }
-}
-
 /** Create a new table and register it with the world and systems */
 static
 EcsTable* create_table(
@@ -194,6 +182,104 @@ void process_to_commit(
     }
 
     ecs_map_clear(world->staged_entities);
+}
+
+/** Initialize size of new components to 0 */
+static
+void init_component(
+    EcsRows *rows)
+{
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsComponent *data = ecs_column(rows, row, 0);
+        data->size = 0;
+    }
+}
+
+static
+void deinit_system(
+    EcsSystem *data)
+{
+    ecs_array_free(data->columns);
+    ecs_array_free(data->components);
+    ecs_array_free(data->tables);
+    ecs_array_free(data->inactive_tables);
+    if (data->jobs) ecs_array_free(data->jobs);
+    if (data->refs) ecs_array_free(data->refs);
+    data->enabled = false;
+}
+
+/** Cleanup resources allocated by systems */
+static
+void deinit_systems(
+    EcsRows *rows)
+{
+    void *row;
+    EcsSystem *deinit_system_ptr = NULL;
+
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        if (entity != rows->world->deinit_system) {
+            EcsSystem *data = ecs_column(rows, row, 0);
+            deinit_system(data);
+        } else {
+            deinit_system_ptr = ecs_column(rows, row, 0);
+        }
+    }
+
+    if (deinit_system_ptr) {
+        deinit_system(deinit_system_ptr);
+    }
+}
+
+static
+void clean_tables(
+    EcsWorld *world)
+{
+    EcsTable *buffer = ecs_array_buffer(world->table_db);
+    uint32_t i, count = ecs_array_count(world->table_db);
+
+    for (i = 0; i < count; i ++) {
+        EcsTable *table = &buffer[i];
+        ecs_table_deinit(world, table);
+    }
+
+    for (i = 0; i < count; i ++) {
+        EcsTable *table = &buffer[i];
+        ecs_array_free(table->rows);
+        if (table->periodic_systems) ecs_array_free(table->periodic_systems);
+        if (table->init_systems) ecs_array_free(table->init_systems);
+        if (table->deinit_systems) ecs_array_free(table->deinit_systems);
+        free(table->columns);
+    }
+
+    ecs_array_free(world->table_db);
+}
+
+static
+void clean_families(
+    EcsWorld *world)
+{
+    EcsIter it = ecs_map_iter(world->family_index);
+    while (ecs_iter_hasnext(&it)) {
+        EcsArray *family = ecs_iter_next(&it);
+        ecs_array_free(family);
+    }
+
+    ecs_map_free(world->family_index);
+}
+
+static
+void clean_staged_components(
+    EcsWorld *world)
+{
+    EcsIter it = ecs_map_iter(world->staged_components);
+    while (ecs_iter_hasnext(&it)) {
+        EcsArray *family = ecs_iter_next(&it);
+        ecs_array_free(family);
+    }
+
+    ecs_map_free(world->staged_components);
 }
 
 /* -- Private functions -- */
@@ -429,6 +515,10 @@ EcsWorld *ecs_init(void) {
     result->prefab_family = get_builtin_family(result, EcsPrefab_h);
     result->system_family = get_builtin_family(result, EcsSystem_h);
 
+    result->deinit_system = ecs_new_system(
+        result, "EcsDeinitSystem", EcsOnDeinit, "EcsSystem", deinit_systems);
+    assert(result->deinit_system != 0);
+
     assert_func(ecs_new_system(
         result, "EcsInitComponent", EcsOnInit, "EcsComponent", init_component)
         != 0);
@@ -439,14 +529,24 @@ EcsWorld *ecs_init(void) {
 EcsResult ecs_fini(
     EcsWorld *world)
 {
-    ecs_array_free(world->table_db);
+    clean_tables(world);
+    clean_families(world);
+    clean_staged_components(world);
+
+    ecs_array_free(world->periodic_systems);
+    ecs_array_free(world->inactive_systems);
+    ecs_array_free(world->other_systems);
+    ecs_array_free(world->to_delete);
+
     ecs_map_free(world->entity_index);
     ecs_map_free(world->table_index);
-    ecs_map_free(world->family_index);
     ecs_map_free(world->family_handles);
     ecs_map_free(world->prefab_index);
+
     ecs_map_free(world->add_stage);
     ecs_map_free(world->remove_stage);
+    ecs_map_free(world->staged_entities);
+
     if (world->worker_threads) {
         ecs_set_threads(world, 0);
     }

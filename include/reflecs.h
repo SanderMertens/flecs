@@ -814,6 +814,7 @@ void ecs_iter_release(
     assert (id##_h != 0)
 
 #define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)
+#define ecs_prev(data, row) ECS_OFFSET(row, -(data)->element_size)
 
 #define ecs_column(data, row, column) \
   ((data)->columns[column] >= 0 \

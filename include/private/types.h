@@ -125,11 +125,12 @@ struct EcsWorld {
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */
-    EcsMap *add_stage;            /* Entities with components to add */
-    EcsMap *remove_stage;         /* Entities with components to remove */
     EcsMap *family_index;         /* References to component families */
     EcsMap *family_handles;       /* Index to explicitly created families */
     EcsMap *prefab_index;         /* Index for finding prefabs in families */
+
+    EcsMap *add_stage;            /* Entities with components to add */
+    EcsMap *remove_stage;         /* Entities with components to remove */
     EcsMap *staged_entities;      /* Entities to commit with staged components*/
     EcsMap *staged_components;    /* Arrays with staged component values */
 
@@ -144,6 +145,7 @@ struct EcsWorld {
     void *context;                /* Application context */
 
     EcsHandle last_handle;        /* Last issued handle */
+    EcsHandle deinit_system;      /* Handle to internal deinit system */
 
     EcsFamily component_family;   /* EcsComponent, EcsId */
     EcsFamily system_family;      /* EcsSystem, EcsId */
