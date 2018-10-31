@@ -62,6 +62,8 @@ test.suite EcsSet {
     tc_set_add_in_progress()
     tc_set_2_new_in_progress()
     tc_set_2_add_in_progress()
+    tc_set_add_remove_in_progress()
+    tc_set_remove_in_progress()
 }
 
 test.suite EcsPrefab {

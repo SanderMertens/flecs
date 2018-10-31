@@ -393,3 +393,118 @@ void test_EcsSet_tc_set_2_add_in_progress(
 
     ecs_fini(world);
 }
+
+static
+void SetAddRemove(EcsRows *rows) {
+    Context *ctx = ecs_get_context(rows->world);
+    EcsHandle int16_t_h = ctx->handle;
+    EcsHandle int32_t_h = ctx->handle2;
+    EcsWorld *world = rows->world;
+    int16_t value = 10;
+
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        ecs_add(world, entity, int32_t_h);
+        ecs_remove(world, entity, int16_t_h);
+        ecs_commit(world, entity);
+        ecs_set(world, entity, int32_t, value);
+        value += 10;
+    }
+}
+
+void test_EcsSet_tc_set_add_remove_in_progress(
+    test_EcsSet this)
+{
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, int8_t);
+    ECS_COMPONENT(world, int16_t);
+    ECS_COMPONENT(world, int32_t);
+    ECS_FAMILY(world, int8_16, int8_t, int16_t);
+    ECS_SYSTEM(world, SetAddRemove, EcsPeriodic, int8_t);
+
+    EcsHandle e1 = ecs_new(world, int8_16_h);
+    EcsHandle e2 = ecs_new(world, int8_16_h);
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+
+    ecs_set(world, e1, int8_t, 32);
+    ecs_set(world, e1, int16_t, 64);
+    ecs_set(world, e2, int8_t, 96);
+    ecs_set(world, e2, int16_t, 128);
+
+    Context ctx = {.handle = int16_t_h, .handle2 = int32_t_h};
+
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assertint(ecs_get(world, e1, int8_t), 32);
+    test_assert(ecs_get_ptr(world, e1, int16_t_h) == NULL);
+    test_assert(ecs_get_ptr(world, e1, int32_t_h) != NULL);
+    test_assertint(ecs_get(world, e1, int32_t), 10);
+
+    test_assertint(ecs_get(world, e2, int8_t), 96);
+    test_assert(ecs_get_ptr(world, e2, int16_t_h) == NULL);
+    test_assert(ecs_get_ptr(world, e2, int32_t_h) != NULL);
+    test_assertint(ecs_get(world, e2, int32_t), 20);
+
+    ecs_fini(world);
+}
+
+static
+void SetRemove(EcsRows *rows) {
+    Context *ctx = ecs_get_context(rows->world);
+    EcsHandle int16_t_h = ctx->handle;
+    EcsHandle int32_t_h = ctx->handle2;
+    EcsWorld *world = rows->world;
+    int16_t value = 10;
+
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        ecs_remove(world, entity, int16_t_h);
+        ecs_commit(world, entity);
+        ecs_set(world, entity, int32_t, value);
+        value += 10;
+    }
+}
+
+void test_EcsSet_tc_set_remove_in_progress(
+    test_EcsSet this)
+{
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, int8_t);
+    ECS_COMPONENT(world, int16_t);
+    ECS_COMPONENT(world, int32_t);
+    ECS_FAMILY(world, int8_16, int8_t, int16_t);
+    ECS_SYSTEM(world, SetRemove, EcsPeriodic, int8_t);
+
+    EcsHandle e1 = ecs_new(world, int8_16_h);
+    EcsHandle e2 = ecs_new(world, int8_16_h);
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+
+    ecs_set(world, e1, int8_t, 32);
+    ecs_set(world, e1, int16_t, 64);
+    ecs_set(world, e2, int8_t, 96);
+    ecs_set(world, e2, int16_t, 128);
+
+    Context ctx = {.handle = int16_t_h, .handle2 = int32_t_h};
+
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assertint(ecs_get(world, e1, int8_t), 32);
+    test_assert(ecs_get_ptr(world, e1, int16_t_h) == NULL);
+    test_assert(ecs_get_ptr(world, e1, int32_t_h) != NULL);
+    test_assertint(ecs_get(world, e1, int32_t), 10);
+
+    test_assertint(ecs_get(world, e2, int8_t), 96);
+    test_assert(ecs_get_ptr(world, e2, int16_t_h) == NULL);
+    test_assert(ecs_get_ptr(world, e2, int32_t_h) != NULL);
+    test_assertint(ecs_get(world, e2, int32_t), 20);
+
+    ecs_fini(world);
+}
