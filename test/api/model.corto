@@ -58,12 +58,14 @@ test.suite EcsSet {
     tc_set_struct128()
     tc_set_array256()
     tc_set_existing_in_progress()
-    tc_set_new_in_progress()
+    tc_set_in_progress()
     tc_set_add_in_progress()
-    tc_set_2_new_in_progress()
+    tc_set_2_in_progress()
     tc_set_2_add_in_progress()
     tc_set_add_remove_in_progress()
     tc_set_remove_in_progress()
+    tc_set_remove_column_in_progress()
+    tc_set_new_in_progress()
 }
 
 test.suite EcsPrefab {
