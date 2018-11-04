@@ -29,6 +29,18 @@ void ecs_world_activate_system(
     EcsHandle system,
     bool active);
 
+/* -- Stage API -- */
+
+void ecs_stage_init(
+    EcsStage *stage);
+
+void ecs_stage_deinit(
+    EcsStage *stage);
+
+void ecs_stage_merge(
+    EcsWorld *world,
+    EcsStage *stage);
+
 /* -- Family utility API -- */
 
 EcsFamily ecs_family_from_handle(
