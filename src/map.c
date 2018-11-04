@@ -285,6 +285,7 @@ void ecs_map_clear(
     }
 
     ecs_array_clear(map->nodes);
+    map->count = 0;
 }
 
 void ecs_map_free(

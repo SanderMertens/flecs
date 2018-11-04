@@ -54,7 +54,7 @@ static
 void wait_for_threads(
     EcsWorld *world)
 {
-    uint32_t thread_count = ecs_array_count(world->worker_threads);
+    uint32_t thread_count = ecs_array_count(world->worker_threads) - 1;
     bool wait = true;
 
     do {
@@ -71,7 +71,7 @@ static
 void wait_for_jobs(
     EcsWorld *world)
 {
-    uint32_t thread_count = ecs_array_count(world->worker_threads);
+    uint32_t thread_count = ecs_array_count(world->worker_threads) - 1;
 
     pthread_mutex_lock(&world->job_mutex);
     if (world->jobs_finished != thread_count) {
@@ -120,16 +120,18 @@ EcsResult start_threads(
     for (i = 0; i < threads; i ++) {
         EcsThread *thread =
             ecs_array_add(&world->worker_threads, &thread_arr_params);
+
         thread->world = world;
         thread->thread = 0;
         thread->job_count = 0;
 
-        if (pthread_create(&thread->thread, NULL, ecs_worker, thread)) {
-            goto error;
+        if (i != 0) {
+            if (pthread_create(&thread->thread, NULL, ecs_worker, thread)) {
+                goto error;
+            }
+
         }
     }
-
-    wait_for_threads(world);
 
     return EcsOk;
 error:
@@ -257,11 +259,26 @@ void ecs_prepare_jobs(
 void ecs_run_jobs(
     EcsWorld *world)
 {
+    /* Make sure threads are ready to accept jobs */
+    wait_for_threads(world);
+
     pthread_mutex_lock(&world->thread_mutex);
     world->jobs_finished = 0;
     pthread_cond_broadcast(&world->thread_cond);
     pthread_mutex_unlock(&world->thread_mutex);
-    wait_for_jobs(world);
+
+    /* Run job for thread 0 in main thread */
+    EcsThread *thread = ecs_array_buffer(world->worker_threads);
+    EcsJob **jobs = thread->jobs;
+    uint32_t i, job_count = thread->job_count;
+    for (i = 0; i < job_count; i ++) {
+        ecs_run_job(world, jobs[i]);
+    }
+    thread->job_count = 0;
+
+    if (world->jobs_finished != ecs_array_count(world->worker_threads) - 1) {
+        wait_for_jobs(world);
+    }
 }
 
 
@@ -279,7 +296,7 @@ EcsResult ecs_set_threads(
         pthread_mutex_destroy(&world->job_mutex);
     }
 
-    if (threads) {
+    if (threads > 1) {
         pthread_cond_init(&world->thread_cond, NULL);
         pthread_mutex_init(&world->thread_mutex, NULL);
         pthread_cond_init(&world->job_cond, NULL);
