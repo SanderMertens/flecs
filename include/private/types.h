@@ -101,6 +101,14 @@ typedef struct EcsRow {
     uint32_t index;               /* Index of the entity in its table */
 } EcsRow;
 
+typedef struct EcsStage {
+    EcsMap *add_stage;            /* Entities with components to add */
+    EcsMap *remove_stage;         /* Entities with components to remove */
+    EcsArray *delete_stage;       /* Deleted entities while in progress */
+    EcsMap *entity_stage;         /* Committed entities in stage */
+    EcsMap *data_stage;           /* Arrays with staged component values */
+} EcsStage;
+
 typedef struct EcsJob {
     EcsHandle system;             /* System handle */
     EcsSystem *system_data;       /* System to run */
@@ -112,6 +120,7 @@ typedef struct EcsJob {
 typedef struct EcsThread {
     EcsWorld *world;
     EcsJob *jobs[ECS_MAX_JOBS_PER_WORKER];
+    EcsStage *stage;
     uint32_t job_count;
     pthread_t thread;
 } EcsThread;
@@ -121,7 +130,6 @@ struct EcsWorld {
     EcsArray *periodic_systems;   /* Periodic systems */
     EcsArray *inactive_systems;   /* Periodic systems with empty tables */
     EcsArray *other_systems;      /* Non-periodic systems */
-    EcsArray *to_delete;          /* Deleted entities while in progress */
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */
@@ -129,10 +137,7 @@ struct EcsWorld {
     EcsMap *family_handles;       /* Index to explicitly created families */
     EcsMap *prefab_index;         /* Index for finding prefabs in families */
 
-    EcsMap *add_stage;            /* Entities with components to add */
-    EcsMap *remove_stage;         /* Entities with components to remove */
-    EcsMap *staged_entities;      /* Entities to commit with staged components*/
-    EcsMap *staged_components;    /* Arrays with staged component values */
+    EcsStage stage;              /* Stage of main thread */
 
     EcsArray *worker_threads;     /* Worker threads */
     pthread_cond_t thread_cond;   /* Signal that worker threads can start */

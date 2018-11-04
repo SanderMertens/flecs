@@ -180,9 +180,9 @@ EcsResult stage(
     EcsFamily family_id;
     EcsMap *stage;
     if (is_remove) {
-        stage = world->remove_stage;
+        stage = world->stage.remove_stage;
     } else {
-        stage = world->add_stage;
+        stage = world->stage.add_stage;
     }
 
     family_id = ecs_map_get64(stage, entity);
@@ -352,7 +352,7 @@ void* add_staged_row(
     EcsHandle entity,
     EcsFamily family_id)
 {
-    EcsArray *rows = ecs_map_get(world->staged_components, family_id);
+    EcsArray *rows = ecs_map_get(world->stage.data_stage, family_id);
     EcsArray *old_rows = rows;
     if (!rows) {
         rows = ecs_array_new(&table->row_params, 1);
@@ -364,10 +364,10 @@ void* add_staged_row(
     void *result = ecs_array_add(&rows, &table->row_params);
 
     if (old_rows != rows) {
-        ecs_map_set(world->staged_components, family_id, rows);
+        ecs_map_set(world->stage.data_stage, family_id, rows);
     }
 
-    ecs_map_set64(world->staged_entities, entity, row64);
+    ecs_map_set64(world->stage.entity_stage, entity, row64);
 
     return result;
 }
@@ -386,12 +386,12 @@ void* get_staged_component(
     }
 
     /* If this entity has not been staged, there are no staged components */
-    if (!ecs_map_has(world->staged_entities, entity, &staged_row64)) {
+    if (!ecs_map_has(world->stage.entity_stage, entity, &staged_row64)) {
         return NULL;
     }
 
     /* If no components were staged, there is no staged data to get */
-    EcsFamily add_family = ecs_map_get64(world->add_stage, entity);
+    EcsFamily add_family = ecs_map_get64(world->stage.add_stage, entity);
     if (!add_family) {
         return NULL;
     }
@@ -402,7 +402,7 @@ void* get_staged_component(
     }
 
     EcsFamily family_id;
-    EcsFamily remove_family = ecs_map_get64(world->remove_stage, entity);
+    EcsFamily remove_family = ecs_map_get64(world->stage.remove_stage, entity);
     family_id = ecs_family_merge(world, 0, add_family, remove_family);
 
     /* If current + added + removed components is empty, there is no data */
@@ -419,7 +419,7 @@ void* get_staged_component(
         EcsTable *old_table = NULL;
         if (old_family) {
             EcsArray *old_rows = ecs_map_get(
-                world->staged_components, old_family);
+                world->stage.data_stage, old_family);
             old_table = safe_get_table(world, old_family);
             old_ptr = ecs_array_get(
                 old_rows, &old_table->row_params, staged_row.index);
@@ -438,7 +438,7 @@ void* get_staged_component(
                 old_ptr);
         }
     } else {
-        EcsArray *rows = ecs_map_get(world->staged_components, family_id);
+        EcsArray *rows = ecs_map_get(world->stage.data_stage, family_id);
         row_ptr = ecs_array_get(rows, &table->row_params, staged_row.index);
     }
 
@@ -464,24 +464,24 @@ EcsResult ecs_commit(
     EcsHandle entity)
 {
     if (world->in_progress) {
-        uint64_t row64 = ecs_map_get64(world->staged_entities, entity);
+        uint64_t row64 = ecs_map_get64(world->stage.entity_stage, entity);
         if (!row64) {
-            ecs_map_set64(world->staged_entities, entity, 0);
+            ecs_map_set64(world->stage.entity_stage, entity, 0);
         }
         return EcsOk;
     } else {
-        EcsFamily to_add = ecs_map_get64(world->add_stage, entity);
-        EcsFamily to_remove = ecs_map_get64(world->remove_stage, entity);
+        EcsFamily to_add = ecs_map_get64(world->stage.add_stage, entity);
+        EcsFamily to_remove = ecs_map_get64(world->stage.remove_stage, entity);
         EcsFamily family_id = family_of_entity(world, entity);
         EcsFamily new_family_id = ecs_family_merge(
             world, family_id, to_add, to_remove);
 
         if (to_add) {
-            ecs_map_remove(world->add_stage, entity);
+            ecs_map_remove(world->stage.add_stage, entity);
         }
 
         if (to_remove) {
-            ecs_map_remove(world->remove_stage, entity);
+            ecs_map_remove(world->stage.remove_stage, entity);
         }
 
         if (new_family_id == family_id) {
@@ -515,7 +515,7 @@ void ecs_delete(
     EcsHandle entity)
 {
     if (world->in_progress) {
-        EcsHandle *h = ecs_array_add(&world->to_delete, &handle_arr_params);
+        EcsHandle *h = ecs_array_add(&world->stage.delete_stage, &handle_arr_params);
         *h = entity;
     } else {
         EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));

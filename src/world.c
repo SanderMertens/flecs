@@ -39,7 +39,7 @@ void bootstrap_component(
     assert (handle == EcsComponent_h);
 
     EcsFamily family_id = ecs_family_register(world, handle, NULL);
-    ecs_map_set(world->add_stage, handle, family_id);
+    ecs_map_set(world->stage.add_stage, handle, family_id);
 
     bootstrap_component_table(world, family_id);
 
@@ -139,19 +139,19 @@ static
 void process_to_delete(
     EcsWorld *world)
 {
-    EcsHandle *buffer = ecs_array_buffer(world->to_delete);
-    uint32_t i, count = ecs_array_count(world->to_delete);
+    EcsHandle *buffer = ecs_array_buffer(world->stage.delete_stage);
+    uint32_t i, count = ecs_array_count(world->stage.delete_stage);
     for (i = 0; i < count; i ++) {
         ecs_delete(world, buffer[i]);
     }
-    ecs_array_clear(world->to_delete);
+    ecs_array_clear(world->stage.delete_stage);
 }
 
 static
 void process_to_commit(
     EcsWorld *world)
 {
-    EcsIter it = ecs_map_iter(world->staged_entities);
+    EcsIter it = ecs_map_iter(world->stage.entity_stage);
     while (ecs_iter_hasnext(&it)) {
         uint64_t key;
         uint64_t row64 = ecs_map_next(&it, &key);
@@ -164,7 +164,7 @@ void process_to_commit(
             EcsTable *staged_table = ecs_world_get_table(
                 world, staged_row.family_id);
             EcsArray *staged_rows = ecs_map_get(
-                world->staged_components, staged_row.family_id);
+                world->stage.data_stage, staged_row.family_id);
 
             void *row_ptr = ecs_table_get(table, row.index);
             void *staged_row_ptr = ecs_array_get(
@@ -181,7 +181,7 @@ void process_to_commit(
         }
     }
 
-    ecs_map_clear(world->staged_entities);
+    ecs_map_clear(world->stage.entity_stage);
 }
 
 /** Initialize size of new components to 0 */
@@ -270,16 +270,16 @@ void clean_families(
 }
 
 static
-void clean_staged_components(
+void clean_data_stage(
     EcsWorld *world)
 {
-    EcsIter it = ecs_map_iter(world->staged_components);
+    EcsIter it = ecs_map_iter(world->stage.data_stage);
     while (ecs_iter_hasnext(&it)) {
         EcsArray *family = ecs_iter_next(&it);
         ecs_array_free(family);
     }
 
-    ecs_map_free(world->staged_components);
+    ecs_map_free(world->stage.data_stage);
 }
 
 /* -- Private functions -- */
@@ -468,62 +468,63 @@ void ecs_dump(
 }
 
 EcsWorld *ecs_init(void) {
-    EcsWorld *result = malloc(sizeof(EcsWorld));
-    result->table_db = ecs_array_new(
+    EcsWorld *world = malloc(sizeof(EcsWorld));
+    world->table_db = ecs_array_new(
         &table_arr_params, ECS_WORLD_INITIAL_TABLE_COUNT);
-    result->periodic_systems = ecs_array_new(
+    world->periodic_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
-    result->inactive_systems = ecs_array_new(
+    world->inactive_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
-    result->other_systems = ecs_array_new(
+    world->other_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT);
-    result->to_delete = ecs_array_new(&handle_arr_params, 0);
 
-    result->worker_threads = NULL;
-    result->jobs_finished = 0;
-    result->threads_running = 0;
-    result->valid_schedule = false;
-    result->quit_workers = false;
-    result->in_progress = false;
+    world->worker_threads = NULL;
+    world->jobs_finished = 0;
+    world->threads_running = 0;
+    world->valid_schedule = false;
+    world->quit_workers = false;
+    world->in_progress = false;
 
-    result->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
-    result->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
-    result->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
-    result->family_handles = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
-    result->prefab_index = ecs_map_new(ECS_WORLD_INITIAL_PREFAB_COUNT);
-    result->add_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    result->remove_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    result->staged_entities = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    result->staged_components = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    world->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
+    world->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
+    world->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
+    world->family_handles = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
+    world->prefab_index = ecs_map_new(ECS_WORLD_INITIAL_PREFAB_COUNT);
 
-    result->last_handle = 0;
+    world->stage.add_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    world->stage.remove_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    world->stage.entity_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    world->stage.data_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    world->stage.delete_stage = ecs_array_new(&handle_arr_params, 0);
 
-    bootstrap_component(result);
-    assert_func (new_builtin_component(result, sizeof(EcsFamily)) == EcsFamily_h);
-    assert_func (new_builtin_component(result, 0) == EcsPrefab_h);
-    assert_func (new_builtin_component(result, sizeof(EcsSystem)) == EcsSystem_h);
-    assert_func (new_builtin_component(result, sizeof(EcsId)) == EcsId_h);
+    world->last_handle = 0;
 
-    add_builtin_id(result, EcsComponent_h, "EcsComponent");
-    add_builtin_id(result, EcsFamily_h, "EcsFamily");
-    add_builtin_id(result, EcsPrefab_h, "EcsPrefab");
-    add_builtin_id(result, EcsSystem_h, "EcsSystem");
-    add_builtin_id(result, EcsId_h, "EcsId");
+    bootstrap_component(world);
+    assert_func (new_builtin_component(world, sizeof(EcsFamily)) == EcsFamily_h);
+    assert_func (new_builtin_component(world, 0) == EcsPrefab_h);
+    assert_func (new_builtin_component(world, sizeof(EcsSystem)) == EcsSystem_h);
+    assert_func (new_builtin_component(world, sizeof(EcsId)) == EcsId_h);
 
-    result->component_family = get_builtin_family(result, EcsComponent_h);
-    result->family_family = get_builtin_family(result, EcsFamily_h);
-    result->prefab_family = get_builtin_family(result, EcsPrefab_h);
-    result->system_family = get_builtin_family(result, EcsSystem_h);
+    add_builtin_id(world, EcsComponent_h, "EcsComponent");
+    add_builtin_id(world, EcsFamily_h, "EcsFamily");
+    add_builtin_id(world, EcsPrefab_h, "EcsPrefab");
+    add_builtin_id(world, EcsSystem_h, "EcsSystem");
+    add_builtin_id(world, EcsId_h, "EcsId");
 
-    result->deinit_system = ecs_new_system(
-        result, "EcsDeinitSystem", EcsOnDeinit, "EcsSystem", deinit_systems);
-    assert(result->deinit_system != 0);
+    world->component_family = get_builtin_family(world, EcsComponent_h);
+    world->family_family = get_builtin_family(world, EcsFamily_h);
+    world->prefab_family = get_builtin_family(world, EcsPrefab_h);
+    world->system_family = get_builtin_family(world, EcsSystem_h);
+
+    world->deinit_system = ecs_new_system(
+        world, "EcsDeinitSystem", EcsOnDeinit, "EcsSystem", deinit_systems);
+    assert(world->deinit_system != 0);
 
     assert_func(ecs_new_system(
-        result, "EcsInitComponent", EcsOnInit, "EcsComponent", init_component)
+        world, "EcsInitComponent", EcsOnInit, "EcsComponent", init_component)
         != 0);
 
-    return result;
+    return world;
 }
 
 EcsResult ecs_fini(
@@ -531,21 +532,21 @@ EcsResult ecs_fini(
 {
     clean_tables(world);
     clean_families(world);
-    clean_staged_components(world);
+    clean_data_stage(world);
 
     ecs_array_free(world->periodic_systems);
     ecs_array_free(world->inactive_systems);
     ecs_array_free(world->other_systems);
-    ecs_array_free(world->to_delete);
+    ecs_array_free(world->stage.delete_stage);
 
     ecs_map_free(world->entity_index);
     ecs_map_free(world->table_index);
     ecs_map_free(world->family_handles);
     ecs_map_free(world->prefab_index);
 
-    ecs_map_free(world->add_stage);
-    ecs_map_free(world->remove_stage);
-    ecs_map_free(world->staged_entities);
+    ecs_map_free(world->stage.add_stage);
+    ecs_map_free(world->stage.remove_stage);
+    ecs_map_free(world->stage.entity_stage);
 
     if (world->worker_threads) {
         ecs_set_threads(world, 0);
@@ -632,12 +633,12 @@ void ecs_progress(
 
         world->in_progress = false;
 
-        uint32_t to_delete_count = ecs_array_count(world->to_delete);
+        uint32_t to_delete_count = ecs_array_count(world->stage.delete_stage);
         if (to_delete_count) {
             process_to_delete(world);
         }
 
-        uint32_t to_commit_count = ecs_map_count(world->staged_entities);
+        uint32_t to_commit_count = ecs_map_count(world->stage.entity_stage);
         if (to_commit_count) {
             process_to_commit(world);
         }
