@@ -102,3 +102,30 @@ test.suite EcsPeriodicSystem {
     tc_system_from_component_not()
     tc_system_2_from_component_not()
 }
+
+test.suite EcsJobs {
+    tc_2_thread_1_entity()
+    tc_2_thread_2_entity()
+    tc_2_thread_5_entity()
+    tc_2_thread_10_entity()
+
+    tc_3_thread_1_entity()
+    tc_3_thread_2_entity()
+    tc_3_thread_5_entity()
+    tc_3_thread_10_entity()
+
+    tc_4_thread_1_entity()
+    tc_4_thread_2_entity()
+    tc_4_thread_5_entity()
+    tc_4_thread_10_entity()
+
+    tc_5_thread_1_entity()
+    tc_5_thread_2_entity()
+    tc_5_thread_5_entity()
+    tc_5_thread_10_entity()
+
+    tc_6_thread_1_entity()
+    tc_6_thread_2_entity()
+    tc_6_thread_5_entity()
+    tc_6_thread_10_entity()
+}

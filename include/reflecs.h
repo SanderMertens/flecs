@@ -440,7 +440,7 @@ void* ecs_get_ptr(
     EcsHandle component);
 
 #define ecs_get(world, entity, component)\
-  *(component*)ecs_get_ptr(world, entity, component##_h)
+  (*(component*)ecs_get_ptr(world, entity, component##_h))
 
 /* Set value of component.
  * This function sets the value of a component on the specified entity. If the

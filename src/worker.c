@@ -181,7 +181,9 @@ void ecs_schedule_jobs(
         total_rows += ecs_array_count(table->rows);
     }
 
-    int rows_per_thread = total_rows / thread_count;
+    float rows_per_thread = (float)total_rows / (float)thread_count;
+    float residual = 0;
+    int32_t rows_per_thread_i = rows_per_thread;
 
     EcsIter it = ecs_array_iter(system_data->jobs, &job_arr_params);
     table_it = ecs_array_iter(system_data->tables, &system_data->table_params);
@@ -194,16 +196,23 @@ void ecs_schedule_jobs(
     uint32_t table_row_count = ecs_array_count(table->rows);
     uint32_t start_index = 0;
 
+    EcsJob *job;
     while (ecs_iter_hasnext(&it)) {
-        EcsJob *job = ecs_iter_next(&it);
+        job = ecs_iter_next(&it);
+        int32_t rows_per_job = rows_per_thread_i;
+        residual += rows_per_thread - rows_per_job;
+        if (residual > 1) {
+            rows_per_job ++;
+            residual --;
+        }
 
         job->system = system;
         job->system_data = system_data;
         job->table_index = sys_table_index;
         job->start_index = start_index;
-        job->row_count = rows_per_thread;
+        job->row_count = rows_per_job;
 
-        start_index += rows_per_thread;
+        start_index += rows_per_job;
 
         while (start_index > table_row_count) {
             sys_table_index ++;
@@ -218,6 +227,10 @@ void ecs_schedule_jobs(
                 start_index = 0;
             }
         }
+    }
+
+    if (residual >= 0.9) {
+        job->row_count ++;
     }
 }
 
