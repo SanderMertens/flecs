@@ -1,0 +1,445 @@
+/* This is a managed file. Do not delete this comment. */
+
+#include <include/test.h>
+
+typedef struct Foo {
+    int x;
+} Foo;
+
+typedef struct Bar {
+    int x;
+} Bar;
+
+typedef struct Hello {
+    int x;
+} Hello;
+
+typedef struct Context {
+    EcsHandle component;
+    EcsHandle component2;
+} Context;
+
+void MergeAdd(EcsRows *rows) {
+    EcsWorld *world = rows->world;
+    Context *ctx = ecs_get_context(world);
+    EcsHandle Bar_h = ctx->component;
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        Foo *foo = ecs_column(rows, row, 0);
+        ecs_add(world, entity, ctx->component);
+        ecs_commit(world, entity);
+        ecs_set(world, entity, Bar, {foo->x * 2});
+        foo->x += 2;
+    }
+}
+
+void test_EcsMerge_tc_merge_add(
+    test_EcsMerge this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_SYSTEM(world, MergeAdd, EcsPeriodic, Foo);
+
+    EcsHandle e = ecs_new(world, Foo_h);
+    test_assert(ecs_has(world, e, Foo_h));
+
+    ecs_set(world, e, Foo, {10});
+
+    Context ctx = {.component = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_set_automerge(world, false);
+    ecs_progress(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 12);
+
+    ecs_merge(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 12);
+    test_assertint(ecs_get(world, e, Bar).x, 20);
+
+    ecs_progress(world);
+
+    test_assertint(ecs_get(world, e, Foo).x, 14);
+    test_assertint(ecs_get(world, e, Bar).x, 20);
+
+    ecs_merge(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 14);
+    test_assertint(ecs_get(world, e, Bar).x, 24);
+
+    ecs_fini(world);
+}
+
+void MergeAdd2(EcsRows *rows) {
+    EcsWorld *world = rows->world;
+    Context *ctx = ecs_get_context(world);
+    EcsHandle Bar_h = ctx->component;
+    EcsHandle Hello_h = ctx->component2;
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        Foo *foo = ecs_column(rows, row, 0);
+        ecs_add(world, entity, ctx->component);
+        ecs_add(world, entity, ctx->component2);
+        ecs_commit(world, entity);
+        ecs_set(world, entity, Bar, {foo->x * 2});
+        ecs_set(world, entity, Hello, {foo->x * 3});
+        foo->x += 2;
+    }
+}
+
+void test_EcsMerge_tc_merge_add_2(
+    test_EcsMerge this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_COMPONENT(world, Hello);
+    ECS_SYSTEM(world, MergeAdd2, EcsPeriodic, Foo);
+
+    EcsHandle e = ecs_new(world, Foo_h);
+    test_assert(ecs_has(world, e, Foo_h));
+
+    ecs_set(world, e, Foo, {10});
+
+    Context ctx = {.component = Bar_h, .component2 = Hello_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_set_automerge(world, false);
+    ecs_progress(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+    test_assert(!ecs_has(world, e, Hello_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 12);
+
+    ecs_merge(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assert(ecs_has(world, e, Hello_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 12);
+    test_assertint(ecs_get(world, e, Bar).x, 20);
+    test_assertint(ecs_get(world, e, Hello).x, 30);
+
+    ecs_progress(world);
+
+    test_assertint(ecs_get(world, e, Foo).x, 14);
+    test_assertint(ecs_get(world, e, Bar).x, 20);
+    test_assertint(ecs_get(world, e, Hello).x, 30);
+
+    ecs_merge(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assert(ecs_has(world, e, Hello_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 14);
+    test_assertint(ecs_get(world, e, Bar).x, 24);
+    test_assertint(ecs_get(world, e, Hello).x, 36);
+
+    ecs_fini(world);
+}
+
+void MergeAddRemove(EcsRows *rows) {
+    EcsWorld *world = rows->world;
+    Context *ctx = ecs_get_context(world);
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        Foo *foo = ecs_column(rows, row, 0);
+        ecs_add(world, entity, ctx->component);
+        ecs_remove(world, entity, ctx->component);
+        ecs_commit(world, entity);
+        foo->x += 2;
+    }
+}
+
+void test_EcsMerge_tc_merge_add_remove(
+    test_EcsMerge this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_SYSTEM(world, MergeAddRemove, EcsPeriodic, Foo);
+
+    EcsHandle e = ecs_new(world, Foo_h);
+    test_assert(ecs_has(world, e, Foo_h));
+
+    ecs_set(world, e, Foo, {10});
+
+    Context ctx = {.component = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_set_automerge(world, false);
+    ecs_progress(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 12);
+
+    ecs_merge(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 12);
+
+    ecs_progress(world);
+
+    test_assertint(ecs_get(world, e, Foo).x, 14);
+
+    ecs_merge(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 14);
+
+    ecs_fini(world);
+}
+
+void MergeRemove(EcsRows *rows) {
+    EcsWorld *world = rows->world;
+    Context *ctx = ecs_get_context(world);
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        ecs_remove(world, entity, ctx->component);
+        ecs_commit(world, entity);
+    }
+}
+
+void test_EcsMerge_tc_merge_remove(
+    test_EcsMerge this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, FooBar, Foo, Bar);
+    ECS_SYSTEM(world, MergeRemove, EcsPeriodic, Foo);
+
+    EcsHandle e = ecs_new(world, FooBar_h);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+
+    ecs_set(world, e, Foo, {10});
+    ecs_set(world, e, Bar, {20});
+
+    Context ctx = {.component = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_set_automerge(world, false);
+    ecs_progress(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 10);
+    test_assertint(ecs_get(world, e, Bar).x, 20);
+
+    ecs_merge(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 10);
+
+    ecs_fini(world);
+}
+
+void MergeRemove2(EcsRows *rows) {
+    EcsWorld *world = rows->world;
+    Context *ctx = ecs_get_context(world);
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        ecs_remove(world, entity, ctx->component);
+        ecs_remove(world, entity, ctx->component2);
+        ecs_commit(world, entity);
+    }
+}
+
+void test_EcsMerge_tc_merge_remove_2(
+    test_EcsMerge this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, FooBar, Foo, Bar);
+    ECS_SYSTEM(world, MergeRemove2, EcsPeriodic, Foo);
+
+    EcsHandle e = ecs_new(world, FooBar_h);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+
+    ecs_set(world, e, Foo, {10});
+    ecs_set(world, e, Bar, {20});
+
+    Context ctx = {.component = Foo_h, .component2 = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_set_automerge(world, false);
+    ecs_progress(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+
+    test_assertint(ecs_get(world, e, Foo).x, 10);
+    test_assertint(ecs_get(world, e, Bar).x, 20);
+
+    ecs_merge(world);
+
+    test_assert(!ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+
+    ecs_fini(world);
+}
+
+void MergeAddN(EcsRows *rows) {
+    EcsWorld *world = rows->world;
+    Context *ctx = ecs_get_context(world);
+    EcsHandle Bar_h = ctx->component;
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        Foo *foo = ecs_column(rows, row, 0);
+
+        if (!ecs_has(world, entity, Bar_h)) {
+            ecs_add(world, entity, Bar_h);
+            ecs_commit(world, entity);
+            ecs_set(world, entity, Bar, {0});
+        }
+
+        ecs_set(world, entity, Bar, {ecs_get(world, entity, Bar).x + 1});
+        foo->x += 1;
+    }
+}
+
+void test_EcsMerge_tc_merge_n_add(
+    test_EcsMerge this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_SYSTEM(world, MergeAddN, EcsPeriodic, Foo);
+
+    EcsHandle e = ecs_new(world, Foo_h);
+    test_assert(ecs_has(world, e, Foo_h));
+
+    ecs_set(world, e, Foo, {1});
+
+    Context ctx = {.component = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_set_automerge(world, false);
+    ecs_progress(world);
+    ecs_progress(world);
+    ecs_progress(world);
+    ecs_progress(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+
+    ecs_merge(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assertint(ecs_get(world, e, Foo).x, 5);
+    test_assertint(ecs_get(world, e, Bar).x, 4);
+
+    ecs_fini(world);
+}
+
+void MergeAddRemoveN(EcsRows *rows) {
+    EcsWorld *world = rows->world;
+    Context *ctx = ecs_get_context(world);
+    EcsHandle Bar_h = ctx->component;
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        Foo *foo = ecs_column(rows, row, 0);
+
+        if (!ecs_has(world, entity, Bar_h)) {
+            ecs_add(world, entity, Bar_h);
+            foo->x += 1;
+        } else {
+            ecs_remove(world, entity, Bar_h);
+        }
+
+        ecs_commit(world, entity);
+    }
+}
+
+void test_EcsMerge_tc_merge_n_add_remove(
+    test_EcsMerge this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_SYSTEM(world, MergeAddRemoveN, EcsPeriodic, Foo);
+
+    EcsHandle e = ecs_new(world, Foo_h);
+    test_assert(ecs_has(world, e, Foo_h));
+
+    ecs_set(world, e, Foo, {1});
+
+    Context ctx = {.component = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_set_automerge(world, false);
+    ecs_progress(world);
+    ecs_progress(world);
+    ecs_progress(world);
+    ecs_progress(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+
+    ecs_merge(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+    test_assertint(ecs_get(world, e, Foo).x, 3);
+
+    ecs_progress(world);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+    test_assertint(ecs_get(world, e, Foo).x, 4);
+
+    ecs_merge(world);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assertint(ecs_get(world, e, Foo).x, 4);
+
+    ecs_fini(world);
+}

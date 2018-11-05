@@ -123,12 +123,57 @@ EcsResult ecs_fini(
  * This operation progresses the world by running all systems that are both
  * enabled and periodic on their matching entities.
  *
+ * To ensure consistency of the data, modifications to the data that change
+ * components for entities are stored in a thread-specific staging area until
+ * they are merged with the world state. Threads will be able to see their own
+ * changes, but may not see changes from other threads until changes are merged.
+ *
  * @time-complexity: O(s * t)
  * @param world The world to progress.
  */
 REFLECS_EXPORT
 void ecs_progress(
     EcsWorld *world);
+
+/** Merge staged data.
+ * This operation merges data from one or more stages (if there are multiple
+ * threads) to the world state. By default, this happens every time ecs_progress
+ * is called. To change this to manual merging, call ecs_set_automerge.
+ *
+ * Calling ecs_merge manually is a performance optimization which trades
+ * consistency for speed. By default thread-specific staging areas are merged
+ * automatically after each time ecs_progress is called. For some applications
+ * this may impact performance too much, in which case manual merging may be
+ * used.
+ *
+ * Manual merging requires that the application logic is capable of handling
+ * application state that is out of sync for multiple iterations.
+ *
+ * @param world: The world.
+ */
+REFLECS_EXPORT
+void ecs_merge(
+    EcsWorld *world);
+
+/** Set whether the world should merge data each frame.
+ * By default, ecs_progress merges data each frame. With this operation that
+ * behavior can be changed to merge manually, using ecs_merge.
+ *
+ * Merging is an expensive task, and having to merge each time ecs_progress is
+ * called can slow down the application. If ecs_progress is invoked at high
+ * frequencies, it may be sufficient to merge at a reduced rate.
+ *
+ * As a result of delayed merging, any operation that requires adding or
+ * removing components from an entity will not be visible to all threads until
+ * the merge occurs.
+ *
+ * @param world: The world.
+ * @param auto_merge: When true, ecs_progress performs merging.
+ */
+REFLECS_EXPORT
+void ecs_set_automerge(
+    EcsWorld *world,
+    bool auto_merge);
 
 /** Set number of worker threads.
  * This operation sets the number of worker threads to which to distribute the

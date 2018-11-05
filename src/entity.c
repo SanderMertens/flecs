@@ -201,6 +201,12 @@ bool has_type(
     bool match_all)
 {
     EcsFamily family_id = family_of_entity(world, entity);
+    if (world->in_progress) {
+        EcsFamily staged_id = ecs_map_get64(world->stage.entity_stage, entity);
+        EcsFamily to_remove = ecs_map_get64(world->stage.remove_merge, entity);
+        family_id = ecs_family_merge(world, family_id, staged_id, to_remove);
+    }
+
     if (!family_id) {
         return false;
     }

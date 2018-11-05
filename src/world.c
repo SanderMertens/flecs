@@ -426,6 +426,7 @@ EcsWorld *ecs_init(void) {
     world->valid_schedule = false;
     world->quit_workers = false;
     world->in_progress = false;
+    world->auto_merge = true;
 
     world->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
     world->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
@@ -568,8 +569,23 @@ void ecs_progress(
 
         world->in_progress = false;
 
-        ecs_stage_merge(world, &world->stage);
+        if (world->auto_merge) {
+            ecs_stage_merge(world, &world->stage);
+        }
     }
+}
+
+void ecs_merge(
+    EcsWorld *world)
+{
+    ecs_stage_merge(world, &world->stage);
+}
+
+void ecs_set_automerge(
+    EcsWorld *world,
+    bool auto_merge)
+{
+    world->auto_merge = auto_merge;
 }
 
 void* ecs_get_context(

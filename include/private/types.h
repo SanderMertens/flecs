@@ -161,6 +161,7 @@ struct EcsWorld {
     bool valid_schedule;          /* Is job schedule still valid */
     bool quit_workers;            /* Signals worker threads to quit */
     bool in_progress;             /* Is world being progressed */
+    bool auto_merge;              /* Are stages auto-merged by ecs_progress */
 };
 
 extern const EcsArrayParams handle_arr_params;
