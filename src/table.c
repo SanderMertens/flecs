@@ -101,7 +101,8 @@ EcsResult ecs_table_init(
                 prefab_set = true;
                 size = 0;
             } else {
-                return EcsError;
+                /* Invalid entity handle in family */
+                abort();
             }
         }
 
@@ -118,13 +119,14 @@ EcsResult ecs_table_init(
 uint32_t ecs_table_insert(
     EcsWorld *world,
     EcsTable *table,
+    EcsArray **rows,
     EcsHandle handle)
 {
-    void *row = ecs_array_add(&table->rows, &table->row_params);
+    void *row = ecs_array_add(rows, &table->row_params);
     *(EcsHandle*)row = handle;
-    uint32_t index = ecs_array_count(table->rows) - 1;
+    uint32_t index = ecs_array_count(*rows) - 1;
 
-    if (!index) {
+    if (!index && *rows == table->rows) {
         activate_table(world, table, true);
     }
 
@@ -145,9 +147,10 @@ void ecs_table_delete(
 
 void* ecs_table_get(
     EcsTable *table,
+    EcsArray *rows,
     uint32_t index)
 {
-    return ecs_array_get(table->rows, &table->row_params, index);
+    return ecs_array_get(rows, &table->row_params, index);
 }
 
 uint32_t ecs_table_column_offset(

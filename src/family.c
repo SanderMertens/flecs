@@ -62,7 +62,7 @@ EcsFamily ecs_family_from_handle(
 
     if (component == EcsFamily_h) {
         family = *(EcsFamily*)
-            ECS_OFFSET(ecs_table_get(table, row.index), sizeof(EcsHandle));
+            ECS_OFFSET(ecs_table_get(table, table->rows, row.index), sizeof(EcsHandle));
     } else if (component == EcsComponent_h || component == EcsPrefab_h){
         family = ecs_family_register(world, entity, NULL);
     }
@@ -123,7 +123,17 @@ EcsFamily ecs_family_merge(
             return cur_id;
         } else if (to_add_id && !cur_id) {
             return to_add_id;
+        } else if (to_add_id == cur_id) {
+            return cur_id;
         }
+    } else if (to_remove_id == cur_id) {
+        if (!to_add_id) {
+            return 0;
+        } else {
+            return to_add_id;
+        }
+    } else if (to_remove_id == to_add_id) {
+        return cur_id;
     }
 
     EcsArray *arr_cur = ecs_map_get(world->family_index, cur_id);
@@ -154,34 +164,28 @@ EcsFamily ecs_family_merge(
     }
 
     EcsHandle buf_new[cur_count + add_count];
-    uint32_t new_count = 0, prev_count = 0;
+    uint32_t new_count = 0;
 
     do {
-        prev_count = new_count;
-
-        if (del && new_count) {
-            EcsFamily last = buf_new[new_count - 1];
-
-            if (last == del) {
-                prev_count = -- new_count;
-                i_del ++;
-                del = i_del < del_count ? buf_del[i_del] : 0;
-            } else if (last > del) {
-                do {
-                    i_del ++;
-                    del = i_del < del_count ? buf_del[i_del] : 0;
-                } while (del && last > del);
-            }
-        }
-
         if (add && (!cur || add < cur)) {
             buf_new[new_count] = add;
             new_count ++;
             i_add ++;
             add = i_add < add_count ? buf_add[i_add] : 0;
         } else if (cur && (!add || cur < add)) {
-            buf_new[new_count] = cur;
-            new_count ++;
+            while (del && del < cur) {
+                i_del ++;
+                del = i_del < del_count ? buf_del[i_del] : 0;
+            }
+
+            if (del != cur) {
+                buf_new[new_count] = cur;
+                new_count ++;
+            } else if (del == cur) {
+                i_del ++;
+                del = i_del < del_count ? buf_del[i_del] : 0;
+            }
+
             i_cur ++;
             cur = i_cur < cur_count ? buf_cur[i_cur] : 0;
         } else if (add && add == cur) {
@@ -192,7 +196,7 @@ EcsFamily ecs_family_merge(
             add = i_add < add_count ? buf_add[i_add] : 0;
             cur = i_cur < cur_count ? buf_cur[i_cur] : 0;
         }
-    } while (prev_count != new_count);
+    } while (cur || add);
 
     if (new_count) {
         return register_family_from_buffer(world, buf_new, new_count);

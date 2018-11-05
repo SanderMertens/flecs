@@ -132,6 +132,8 @@ EcsTable* create_table(
         ecs_system_notify_create_table(world, system, result);
     }
 
+    assert(result != NULL);
+
     return result;
 }
 
@@ -393,7 +395,7 @@ void ecs_dump(
     while (ecs_iter_hasnext(&it)) {
         EcsRow row = ecs_to_row((uintptr_t)ecs_iter_next(&it));
         EcsTable *table = ecs_world_get_table(world, row.family_id);
-        void *row_ptr = ecs_table_get(table, row.index);
+        void *row_ptr = ecs_table_get(table, table->rows, row.index);
         EcsHandle h = *(EcsHandle*)row_ptr;
 
         printf("[%u, %u] %" PRIu64 " - ", row.family_id, row.index, h);

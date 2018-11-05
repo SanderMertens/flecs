@@ -9,14 +9,10 @@ EcsHandle ecs_new_w_family(
     EcsWorld *world,
     EcsFamily family_id);
 
-void ecs_copy_row(
+void ecs_merge_entity(
     EcsWorld *world,
-    EcsArray *new_family,
-    uint16_t *new_offsets,
-    void *new_row,
-    EcsArray *old_family,
-    uint16_t *old_offsets,
-    void *old_row);
+    EcsHandle entity,
+    EcsRow *staged_row);
 
 /* -- World API -- */
 
@@ -94,6 +90,7 @@ EcsResult ecs_table_init_w_size(
 uint32_t ecs_table_insert(
     EcsWorld *world,
     EcsTable *table,
+    EcsArray **rows,
     EcsHandle entity);
 
 void ecs_table_delete(
@@ -101,8 +98,9 @@ void ecs_table_delete(
     EcsTable *table,
     uint32_t index);
 
-void *ecs_table_get(
+void* ecs_table_get(
     EcsTable *table,
+    EcsArray *rows,
     uint32_t index);
 
 uint32_t ecs_table_column_offset(

@@ -26,9 +26,9 @@ void test_EcsDelete_tc_delete_1st_of_3(
 
     ecs_delete(world, e1);
 
-    test_assert(ecs_valid(world, e1) == false);
-    test_assert(ecs_valid(world, e2) == true);
-    test_assert(ecs_valid(world, e3) == true);
+    test_assert(ecs_empty(world, e1) == false);
+    test_assert(ecs_empty(world, e2) == true);
+    test_assert(ecs_empty(world, e3) == true);
 
     test_assert(ecs_get_ptr(world, e1, Foo_h) == NULL);
     test_assert(ecs_get_ptr(world, e2, Foo_h) != NULL);
@@ -60,9 +60,9 @@ void test_EcsDelete_tc_delete_2nd_of_3(
 
     ecs_delete(world, e2);
 
-    test_assert(ecs_valid(world, e1) == true);
-    test_assert(ecs_valid(world, e2) == false);
-    test_assert(ecs_valid(world, e3) == true);
+    test_assert(ecs_empty(world, e1) == true);
+    test_assert(ecs_empty(world, e2) == false);
+    test_assert(ecs_empty(world, e3) == true);
 
     test_assert(ecs_get_ptr(world, e1, Foo_h) != NULL);
     test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
@@ -94,9 +94,9 @@ void test_EcsDelete_tc_delete_3rd_of_3(
 
     ecs_delete(world, e3);
 
-    test_assert(ecs_valid(world, e1) == true);
-    test_assert(ecs_valid(world, e2) == true);
-    test_assert(ecs_valid(world, e3) == false);
+    test_assert(ecs_empty(world, e1) == true);
+    test_assert(ecs_empty(world, e2) == true);
+    test_assert(ecs_empty(world, e3) == false);
 
     test_assert(ecs_get_ptr(world, e1, Foo_h) != NULL);
     test_assert(ecs_get_ptr(world, e2, Foo_h) != NULL);
@@ -129,9 +129,9 @@ void test_EcsDelete_tc_delete_2_of_3(
     ecs_delete(world, e1);
     ecs_delete(world, e2);
 
-    test_assert(ecs_valid(world, e1) == false);
-    test_assert(ecs_valid(world, e2) == false);
-    test_assert(ecs_valid(world, e3) == true);
+    test_assert(ecs_empty(world, e1) == false);
+    test_assert(ecs_empty(world, e2) == false);
+    test_assert(ecs_empty(world, e3) == true);
 
     test_assert(ecs_get_ptr(world, e1, Foo_h) == NULL);
     test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
@@ -164,9 +164,9 @@ void test_EcsDelete_tc_delete_3_of_3(
     ecs_delete(world, e2);
     ecs_delete(world, e3);
 
-    test_assert(ecs_valid(world, e1) == false);
-    test_assert(ecs_valid(world, e2) == false);
-    test_assert(ecs_valid(world, e3) == false);
+    test_assert(ecs_empty(world, e1) == false);
+    test_assert(ecs_empty(world, e2) == false);
+    test_assert(ecs_empty(world, e3) == false);
 
     test_assert(ecs_get_ptr(world, e1, Foo_h) == NULL);
     test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
@@ -259,9 +259,9 @@ void test_EcsDelete_tc_delete_cur_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    test_assert(ecs_valid(world, e1) == true);
-    test_assert(ecs_valid(world, e2) == false);
-    test_assert(ecs_valid(world, e3) == true);
+    test_assert(ecs_empty(world, e1) == true);
+    test_assert(ecs_empty(world, e2) == false);
+    test_assert(ecs_empty(world, e3) == true);
 
     test_assert(ecs_get_ptr(world, e1, Foo_h) != NULL);
     test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
@@ -299,9 +299,9 @@ void test_EcsDelete_tc_delete_next_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    test_assert(ecs_valid(world, e1) == true);
-    test_assert(ecs_valid(world, e2) == false);
-    test_assert(ecs_valid(world, e3) == true);
+    test_assert(ecs_empty(world, e1) == true);
+    test_assert(ecs_empty(world, e2) == false);
+    test_assert(ecs_empty(world, e3) == true);
 
     test_assert(ecs_get_ptr(world, e1, Foo_h) != NULL);
     test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
@@ -339,9 +339,9 @@ void test_EcsDelete_tc_delete_prev_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    test_assert(ecs_valid(world, e1) == true);
-    test_assert(ecs_valid(world, e2) == false);
-    test_assert(ecs_valid(world, e3) == true);
+    test_assert(ecs_empty(world, e1) == true);
+    test_assert(ecs_empty(world, e2) == false);
+    test_assert(ecs_empty(world, e3) == true);
 
     test_assert(ecs_get_ptr(world, e1, Foo_h) != NULL);
     test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);
@@ -379,9 +379,9 @@ void test_EcsDelete_tc_delete_all_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    test_assert(ecs_valid(world, e1) == false);
-    test_assert(ecs_valid(world, e2) == false);
-    test_assert(ecs_valid(world, e3) == false);
+    test_assert(ecs_empty(world, e1) == false);
+    test_assert(ecs_empty(world, e2) == false);
+    test_assert(ecs_empty(world, e3) == false);
 
     test_assert(ecs_get_ptr(world, e1, Foo_h) == NULL);
     test_assert(ecs_get_ptr(world, e2, Foo_h) == NULL);

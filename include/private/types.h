@@ -104,6 +104,7 @@ typedef struct EcsRow {
 typedef struct EcsStage {
     EcsMap *add_stage;            /* Entities with components to add */
     EcsMap *remove_stage;         /* Entities with components to remove */
+    EcsMap *remove_merge;         /* All removed components before merge */
     EcsArray *delete_stage;       /* Deleted entities while in progress */
     EcsMap *entity_stage;         /* Committed entities in stage */
     EcsMap *data_stage;           /* Arrays with staged component values */

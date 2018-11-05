@@ -79,6 +79,7 @@ void test_EcsRemove_tc_remove_component_from_2(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
+
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
     ecs_remove(world, e, Foo_h);

@@ -520,7 +520,7 @@ bool ecs_has_any(
  * @returns: true if valid, false if not valid.
  */
 REFLECS_EXPORT
-bool ecs_valid(
+bool ecs_empty(
     EcsWorld *world,
     EcsHandle entity);
 
