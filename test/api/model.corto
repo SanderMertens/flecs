@@ -47,6 +47,8 @@ test.suite EcsRemove {
     tc_remove_cur_in_progress()
     tc_remove_next_in_progress()
     tc_remove_all_in_progress()
+    tc_remove_add_in_progress()
+    tc_remove_2_add_in_progress()
 }
 
 test.suite EcsSet {

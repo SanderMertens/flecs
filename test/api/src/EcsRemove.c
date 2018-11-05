@@ -92,6 +92,7 @@ void test_EcsRemove_tc_remove_component_from_2(
 typedef struct Context {
     EcsHandle entity;
     EcsHandle component;
+    EcsHandle component2;
     uint32_t count;
 } Context;
 
@@ -370,4 +371,166 @@ void test_EcsRemove_tc_remove_all_in_progress(
     test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 51);
 
     ecs_fini(world);
+}
+
+static
+void RemoveAdd(EcsRows *rows) {
+    Context *ctx = ecs_get_context(rows->world);
+    EcsHandle Bar_h = ctx->component;
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        (*(int*)ecs_column(rows, row, 0)) ++;
+        (*(int*)ecs_column(rows, row, 1)) += 2;
+        ecs_add(rows->world, entity, ctx->component);
+        ecs_remove(rows->world, entity, ctx->component);
+        ecs_commit(rows->world, entity);
+        ecs_set(rows->world, entity, Bar, {1});
+        ctx->count ++;
+    }
+}
+
+void test_EcsRemove_tc_remove_add_in_progress(
+    test_EcsRemove this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_SYSTEM(world, RemoveAdd, EcsPeriodic, Foo, Bar);
+
+    EcsHandle e1 = ecs_new(world, MyFamily_h);
+    EcsHandle e2 = ecs_new(world, MyFamily_h);
+    EcsHandle e3 = ecs_new(world, MyFamily_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e1, Bar_h) = 20;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e2, Bar_h) = 40;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 50;
+    *(int*)ecs_get_ptr(world, e3, Bar_h) = 60;
+
+    Context ctx = {.component = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assert(ecs_has(world, e1, Foo_h));
+    test_assert(ecs_has(world, e2, Foo_h));
+    test_assert(ecs_has(world, e3, Foo_h));
+    test_assert(ecs_has(world, e1, Bar_h));
+    test_assert(ecs_has(world, e2, Bar_h));
+    test_assert(ecs_has(world, e3, Bar_h));
+
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 11);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 31);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 51);
+
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Bar_h), 1);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Bar_h), 1);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Bar_h), 1);
+
+    ecs_progress(world);
+
+    test_assert(ecs_has(world, e1, Foo_h));
+    test_assert(ecs_has(world, e2, Foo_h));
+    test_assert(ecs_has(world, e3, Foo_h));
+    test_assert(ecs_has(world, e1, Bar_h));
+    test_assert(ecs_has(world, e2, Bar_h));
+    test_assert(ecs_has(world, e3, Bar_h));
+
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Foo_h), 32);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Foo_h), 52);
+
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Bar_h), 1);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Bar_h), 1);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Bar_h), 1);
+}
+
+static
+void Remove2Add(EcsRows *rows) {
+    Context *ctx = ecs_get_context(rows->world);
+    EcsHandle Bar_h = ctx->component;
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        (*(int*)ecs_column(rows, row, 0)) ++;
+        (*(int*)ecs_column(rows, row, 1)) += 2;
+        ecs_add(rows->world, entity, ctx->component);
+        ecs_remove(rows->world, entity, ctx->component);
+        ecs_remove(rows->world, entity, ctx->component2);
+        ecs_commit(rows->world, entity);
+        ecs_set(rows->world, entity, Bar, {1});
+        ctx->count ++;
+    }
+}
+
+void test_EcsRemove_tc_remove_2_add_in_progress(
+    test_EcsRemove this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_SYSTEM(world, Remove2Add, EcsPeriodic, Foo, Bar);
+
+    EcsHandle e1 = ecs_new(world, MyFamily_h);
+    EcsHandle e2 = ecs_new(world, MyFamily_h);
+    EcsHandle e3 = ecs_new(world, MyFamily_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e1, Bar_h) = 20;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e2, Bar_h) = 40;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 50;
+    *(int*)ecs_get_ptr(world, e3, Bar_h) = 60;
+
+    test_assert(ecs_has(world, e1, Foo_h));
+    test_assert(ecs_has(world, e2, Foo_h));
+    test_assert(ecs_has(world, e3, Foo_h));
+    test_assert(ecs_has(world, e1, Bar_h));
+    test_assert(ecs_has(world, e2, Bar_h));
+    test_assert(ecs_has(world, e3, Bar_h));
+
+    Context ctx = {.component = Bar_h, .component2 = Foo_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assert(!ecs_has(world, e1, Foo_h));
+    test_assert(!ecs_has(world, e2, Foo_h));
+    test_assert(!ecs_has(world, e3, Foo_h));
+    test_assert(ecs_has(world, e1, Bar_h));
+    test_assert(ecs_has(world, e2, Bar_h));
+    test_assert(ecs_has(world, e3, Bar_h));
+
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Bar_h), 1);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Bar_h), 1);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Bar_h), 1);
+
+    ecs_progress(world);
+
+    test_assert(!ecs_has(world, e1, Foo_h));
+    test_assert(!ecs_has(world, e2, Foo_h));
+    test_assert(!ecs_has(world, e3, Foo_h));
+    test_assert(ecs_has(world, e1, Bar_h));
+    test_assert(ecs_has(world, e2, Bar_h));
+    test_assert(ecs_has(world, e3, Bar_h));
+
+    test_assertint(*(int*)ecs_get_ptr(world, e1, Bar_h), 1);
+    test_assertint(*(int*)ecs_get_ptr(world, e2, Bar_h), 1);
+    test_assertint(*(int*)ecs_get_ptr(world, e3, Bar_h), 1);
 }

@@ -127,13 +127,7 @@ EcsFamily ecs_family_merge(
             return cur_id;
         }
     } else if (to_remove_id == cur_id) {
-        if (!to_add_id) {
-            return 0;
-        } else {
-            return to_add_id;
-        }
-    } else if (to_remove_id == to_add_id) {
-        return cur_id;
+        return to_add_id;
     }
 
     EcsArray *arr_cur = ecs_map_get(world->family_index, cur_id);
