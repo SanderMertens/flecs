@@ -111,7 +111,9 @@ typedef struct EcsStage {
     EcsArray *delete_stage;       /* Deleted entities while in progress */
     EcsMap *entity_stage;         /* Entities committed while in progress */
     EcsMap *data_stage;           /* Arrays with staged component values */
-    EcsMap *family_stage;         /* New families created while in progress */
+    EcsMap *family_stage;         /* Families created while >1 threads running*/
+    EcsArray *table_db_stage;     /* Tables created while >1 threads running */
+    EcsMap *table_stage;          /* Index for table stage */
 } EcsStage;
 
 typedef struct EcsJob {

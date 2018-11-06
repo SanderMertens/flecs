@@ -20,6 +20,38 @@ void process_families(
 }
 
 static
+void process_tables(
+    EcsWorld *world,
+    EcsStage *stage)
+{
+    EcsTable *buffer = ecs_array_buffer(stage->table_db_stage);
+    uint32_t i, count = ecs_array_count(stage->table_db_stage);
+    for (i = 0; i < count; i ++) {
+        EcsTable *table = &buffer[i];
+        EcsFamily family_id = table->family_id;
+        if (!ecs_map_has(world->table_index, family_id, NULL)) {
+            ecs_array_move_index(
+                &world->table_db,
+                stage->table_db_stage,
+                &table_arr_params,
+                i);
+
+            uint32_t index = ecs_array_count(world->table_db) - 1;
+            ecs_map_set(world->table_index, family_id, index + 1);
+
+            /* Table might still refer to family in stage */
+            table = ecs_array_get(world->table_db, &table_arr_params, index);
+            table->family = ecs_family_get(world, NULL, family_id);
+        } else {
+            ecs_table_deinit(world, table);
+        }
+    }
+
+    ecs_array_clear(stage->table_db_stage);
+    ecs_map_clear(stage->table_stage);
+}
+
+static
 void process_to_delete(
     EcsWorld *world,
     EcsStage *stage)
@@ -70,7 +102,7 @@ EcsResult stage_components(
     EcsFamily family_id;
 
     family_id = ecs_map_get64(stage_index, entity);
-    EcsFamily resolved_family = ecs_family_from_handle(world, component);
+    EcsFamily resolved_family = ecs_family_from_handle(world, stage, component);
     assert(resolved_family != 0);
 
     EcsFamily new_family_id;
@@ -102,6 +134,8 @@ void ecs_stage_init(
     stage->delete_stage = ecs_array_new(&handle_arr_params, 0);
     stage->data_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
     stage->family_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    stage->table_db_stage = ecs_array_new(&table_arr_params, 0);
+    stage->table_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
 }
 
 void ecs_stage_deinit(
@@ -121,6 +155,7 @@ void ecs_stage_merge(
     EcsStage *stage)
 {
     process_families(world, stage);
+    process_tables(world, stage);
     process_to_delete(world, stage);
     process_to_commit(world, stage);
 }

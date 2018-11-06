@@ -97,7 +97,7 @@ EcsResult ecs_table_init(
             size = type->size;
         } else {
             if (ecs_get_ptr(world, h, EcsPrefab_h)) {
-                assert(prefab_set == false);
+                assert_func(prefab_set == false);
                 ecs_map_set(world->prefab_index, table->family_id, h);
                 prefab_set = true;
                 size = 0;
@@ -184,4 +184,10 @@ void ecs_table_deinit(
             ecs_run_system(world, buffer[i], NULL);
         }
     }
+
+    ecs_array_free(table->rows);
+    if (table->periodic_systems) ecs_array_free(table->periodic_systems);
+    if (table->init_systems) ecs_array_free(table->init_systems);
+    if (table->deinit_systems) ecs_array_free(table->deinit_systems);
+    free(table->columns);
 }

@@ -35,7 +35,7 @@ EcsFamily register_family_from_buffer(
     EcsFamily new_id = hash_handle_array(buf, count);
     EcsMap *family_index;
 
-    if (world->threads_running) {
+    if (world->in_progress && world->threads_running) {
         assert(stage != NULL);
         family_index = stage->family_stage;
     } else {
@@ -73,6 +73,7 @@ EcsArray* ecs_family_get(
 /** Get family id from entity handle */
 EcsFamily ecs_family_from_handle(
     EcsWorld *world,
+    EcsStage *stage,
     EcsHandle entity)
 {
     if (entity == 0) {
@@ -83,7 +84,7 @@ EcsFamily ecs_family_from_handle(
     assert(row_64 != 0);
 
     EcsRow row = ecs_to_row(row_64);
-    EcsTable *table = ecs_world_get_table(world, NULL, row.family_id);
+    EcsTable *table = ecs_world_get_table(world, stage, row.family_id);
     EcsHandle *components = ecs_array_buffer(table->family);
     EcsHandle component = components[0];
     EcsFamily family = 0;
@@ -93,7 +94,7 @@ EcsFamily ecs_family_from_handle(
             ECS_OFFSET(ecs_table_get(
                 table, table->rows, row.index), sizeof(EcsHandle));
     } else if (component == EcsComponent_h || component == EcsPrefab_h){
-        family = ecs_family_register(world, NULL, entity, NULL);
+        family = ecs_family_register(world, stage, entity, NULL);
     }
 
     assert(family != 0);

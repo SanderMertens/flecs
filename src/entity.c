@@ -22,7 +22,8 @@ EcsResult add_family(
             return EcsError;
         }
 
-        EcsFamily resolved_family = ecs_family_from_handle(world, component);
+        EcsFamily resolved_family = ecs_family_from_handle(
+            world, NULL, component);
         assert(resolved_family != 0);
 
         *family_id = ecs_family_merge(
@@ -222,34 +223,9 @@ bool has_type(
         return false;
     }
 
-    EcsFamily type_family = ecs_family_from_handle(world, type);
+    EcsFamily type_family = ecs_family_from_handle(world, stage, type);
     return ecs_family_contains(
         world, stage, family_id, type_family, match_all, true);
-}
-
-static
-int32_t get_offset_for_component(
-    EcsTable *table,
-    EcsHandle component)
-{
-    uint32_t offset = 0;
-    uint16_t column = 0;
-    EcsArray *family = table->family;
-    EcsHandle *buffer = ecs_array_buffer(family);
-    uint32_t count = ecs_array_count(family);
-
-    for (column = 0; column < count; column ++) {
-        if (component == buffer[column]) {
-            break;
-        }
-        offset += table->columns[column];
-    }
-
-    if (column == count) {
-        return -1;
-    } else {
-        return offset;
-    }
 }
 
 /** Commit an entity with a specified family to memory */
@@ -349,6 +325,31 @@ uint32_t commit_w_family(
 }
 
 static
+int32_t get_offset_for_component(
+    EcsTable *table,
+    EcsHandle component)
+{
+    uint32_t offset = 0;
+    uint16_t column = 0;
+    EcsArray *family = table->family;
+    EcsHandle *buffer = ecs_array_buffer(family);
+    uint32_t count = ecs_array_count(family);
+
+    for (column = 0; column < count; column ++) {
+        if (component == buffer[column]) {
+            break;
+        }
+        offset += table->columns[column];
+    }
+
+    if (column == count) {
+        return -1;
+    } else {
+        return offset;
+    }
+}
+
+static
 void* get_row_ptr(
     EcsWorld *world,
     EcsStage *stage,
@@ -358,6 +359,8 @@ void* get_row_ptr(
     EcsFamily family_id)
 {
     EcsTable *table = ecs_world_get_table(world, stage, family_id);
+    assert(table->family_id == family_id);
+
     if (!rows) rows = table->rows;
     void *row = ecs_table_get(table, rows, index);
     assert(row != NULL);
@@ -376,7 +379,7 @@ void* get_ptr(
     bool staged_only)
 {
     uint64_t row_64;
-    EcsFamily family_id, staged_id;
+    EcsFamily family_id, staged_id = 0;
     void *ptr = NULL;
     EcsStage *stage = ecs_get_stage(&world);
 
@@ -519,7 +522,7 @@ EcsHandle ecs_new(
     EcsStage *stage = ecs_get_stage(&world);
     EcsHandle entity = ++ world->last_handle;
     if (type) {
-        EcsFamily family_id = ecs_family_from_handle(world, type);
+        EcsFamily family_id = ecs_family_from_handle(world, stage, type);
         commit_w_family(world, stage, entity, 0, family_id, family_id, 0);
     }
 

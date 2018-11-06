@@ -279,6 +279,7 @@ void ecs_run_jobs(
     EcsThread *thread = ecs_array_buffer(world->worker_threads);
     EcsJob **jobs = thread->jobs;
     uint32_t i, job_count = thread->job_count;
+
     for (i = 0; i < job_count; i ++) {
         ecs_run_job(world, NULL, jobs[i]);
     }

@@ -803,11 +803,13 @@ void ecs_iter_release(
  */
 #define ECS_COMPONENT(world, id) \
     EcsHandle id##_h = ecs_new_component(world, #id, sizeof(id));\
+    (void)id##_h;\
     assert (id##_h != 0)
-
+    
 /** Same as component, but no size */
 #define ECS_TAG(world, id) \
     EcsHandle id##_h = ecs_new_component(world, #id, 0);\
+    (void)id##_h;\
     assert (id##_h != 0)
 
 /** Wrapper around ecs_new_system.
@@ -826,6 +828,7 @@ void ecs_iter_release(
 #define ECS_SYSTEM(world, id, kind, ...) \
     void id(EcsRows*);\
     EcsHandle id##_h = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
+    (void)id##_h;\
     assert (id##_h != 0)
 
 /** Wrapper around ecs_new_family.
@@ -843,6 +846,7 @@ void ecs_iter_release(
  */
 #define ECS_FAMILY(world, id, ...) \
     EcsHandle id##_h = ecs_new_family(world, #id, #__VA_ARGS__);\
+    (void)id##_h;\
     assert (id##_h != 0)
 
 /** Wrapper around ecs_new_prefab.
@@ -856,6 +860,7 @@ void ecs_iter_release(
  */
 #define ECS_PREFAB(world, id, ...) \
     EcsHandle id##_h = ecs_new_prefab(world, #id, #__VA_ARGS__);\
+    (void)id##_h;\
     assert (id##_h != 0)
 
 #define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)

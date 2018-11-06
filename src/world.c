@@ -108,16 +108,26 @@ EcsTable* create_table(
     EcsStage *stage,
     EcsFamily family_id)
 {
-    EcsTable *result = ecs_array_add(&world->table_db, &table_arr_params);
+    EcsArray **table_db;
+    EcsMap *table_index;
+
+    if (world->in_progress && world->threads_running) {
+        table_db = &stage->table_db_stage;
+        table_index = stage->table_stage;
+    } else {
+        table_db = &world->table_db;
+        table_index = world->table_index;
+    }
+
+    EcsTable *result = ecs_array_add(table_db, &table_arr_params);
     result->family_id = family_id;
 
     if (ecs_table_init(world, stage, result) != EcsOk) {
         return NULL;
     }
 
-    uint32_t table_index = ecs_array_get_index(
-        world->table_db, &table_arr_params, result);
-    ecs_map_set64(world->table_index, family_id, table_index + 1);
+    uint32_t index = ecs_array_get_index(*table_db, &table_arr_params, result);
+    ecs_map_set64(table_index, family_id, index + 1);
 
     EcsIter it = ecs_array_iter(world->periodic_systems, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
@@ -203,15 +213,6 @@ void clean_tables(
         ecs_table_deinit(world, table);
     }
 
-    for (i = 0; i < count; i ++) {
-        EcsTable *table = &buffer[i];
-        ecs_array_free(table->rows);
-        if (table->periodic_systems) ecs_array_free(table->periodic_systems);
-        if (table->init_systems) ecs_array_free(table->init_systems);
-        if (table->deinit_systems) ecs_array_free(table->deinit_systems);
-        free(table->columns);
-    }
-
     ecs_array_free(world->table_db);
 }
 
@@ -252,6 +253,15 @@ EcsTable* ecs_world_get_table(
     EcsFamily family_id)
 {
     uint32_t table_index = ecs_map_get64(world->table_index, family_id);
+    if (!table_index && world->in_progress && world->threads_running) {
+        assert(stage != NULL);
+        table_index = ecs_map_get64(stage->table_stage, family_id);
+        if (table_index) {
+            return ecs_array_get(
+                stage->table_db_stage, &table_arr_params, table_index - 1);
+        }
+    }
+
     if (table_index) {
         return ecs_array_get(
             world->table_db, &table_arr_params, table_index - 1);
@@ -534,7 +544,7 @@ void ecs_dim_family(
     uint32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    EcsFamily family_id = ecs_family_from_handle(world, type);
+    EcsFamily family_id = ecs_family_from_handle(world, NULL, type);
     EcsTable *table = ecs_world_get_table(world, NULL, family_id);
     if (table) {
         ecs_array_set_size(&table->rows, &table->row_params, entity_count);
