@@ -76,9 +76,10 @@ EcsResult ecs_table_init_w_size(
 
 EcsResult ecs_table_init(
     EcsWorld *world,
+    EcsStage *stage,
     EcsTable *table)
 {
-    EcsArray *family = ecs_map_get(world->family_index, table->family_id);
+    EcsArray *family = ecs_family_get(world, stage, table->family_id);
     bool prefab_set = false;
 
     assert(family != NULL);

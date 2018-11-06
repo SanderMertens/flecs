@@ -2,6 +2,24 @@
 #include "include/private/reflecs.h"
 
 static
+void process_families(
+    EcsWorld *world,
+    EcsStage *stage)
+{
+    EcsIter it = ecs_map_iter(stage->family_stage);
+    while (ecs_iter_hasnext(&it)) {
+        uint64_t family_id;
+        EcsArray *family = (void*)(uintptr_t)ecs_map_next(&it, &family_id);
+
+        if (!ecs_map_has(world->family_index, family_id, NULL)) {
+            ecs_map_set(world->family_index, family_id, family);
+        }
+    }
+
+    ecs_map_clear(stage->family_stage);
+}
+
+static
 void process_to_delete(
     EcsWorld *world,
     EcsStage *stage)
@@ -20,12 +38,11 @@ void process_to_commit(
     EcsStage *stage)
 {
     EcsIter it = ecs_map_iter(stage->entity_stage);
-
     while (ecs_iter_hasnext(&it)) {
         EcsHandle entity;
         uint64_t row64 = ecs_map_next(&it, &entity);
         EcsRow staged_row = ecs_to_row(row64);
-        ecs_merge_entity(world, entity, &staged_row);
+        ecs_merge_entity(world, stage, entity, &staged_row);
     }
 
     it = ecs_map_iter(stage->data_stage);
@@ -43,22 +60,23 @@ void process_to_commit(
 
 /** Stage components for adding or removing from an entity */
 static
-EcsResult stage(
+EcsResult stage_components(
     EcsWorld *world,
+    EcsStage *stage,
     EcsHandle entity,
     EcsHandle component,
-    EcsMap *stage)
+    EcsMap *stage_index)
 {
     EcsFamily family_id;
 
-    family_id = ecs_map_get64(stage, entity);
+    family_id = ecs_map_get64(stage_index, entity);
     EcsFamily resolved_family = ecs_family_from_handle(world, component);
     assert(resolved_family != 0);
 
     EcsFamily new_family_id;
     if (family_id) {
         new_family_id = ecs_family_merge(
-            world, family_id, resolved_family, 0);
+            world, stage, family_id, resolved_family, 0);
     } else {
         new_family_id = resolved_family;
     }
@@ -66,7 +84,7 @@ EcsResult stage(
     assert(new_family_id != 0);
 
     if (family_id != new_family_id) {
-        ecs_map_set64(stage, entity, new_family_id);
+        ecs_map_set64(stage_index, entity, new_family_id);
     }
 
     return EcsOk;
@@ -81,8 +99,9 @@ void ecs_stage_init(
     stage->remove_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
     stage->remove_merge = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
     stage->entity_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    stage->data_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
     stage->delete_stage = ecs_array_new(&handle_arr_params, 0);
+    stage->data_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    stage->family_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
 }
 
 void ecs_stage_deinit(
@@ -92,14 +111,16 @@ void ecs_stage_deinit(
     ecs_map_free(stage->remove_stage);
     ecs_map_free(stage->remove_merge);
     ecs_map_free(stage->entity_stage);
-    ecs_map_free(stage->data_stage);
     ecs_array_free(stage->delete_stage);
+    ecs_map_free(stage->data_stage);
+    ecs_map_free(stage->family_stage);
 }
 
 void ecs_stage_merge(
     EcsWorld *world,
     EcsStage *stage)
 {
+    process_families(world, stage);
     process_to_delete(world, stage);
     process_to_commit(world, stage);
 }
@@ -111,7 +132,8 @@ EcsResult ecs_add(
     EcsHandle entity,
     EcsHandle component)
 {
-    return stage(world, entity, component, world->stage.add_stage);
+    EcsStage *stage = ecs_get_stage(&world);
+    return stage_components(world, stage, entity, component, stage->add_stage);
 }
 
 EcsResult ecs_remove(
@@ -119,5 +141,7 @@ EcsResult ecs_remove(
     EcsHandle entity,
     EcsHandle component)
 {
-    return stage(world, entity, component, world->stage.remove_stage);
+    EcsStage *stage = ecs_get_stage(&world);
+    return stage_components(
+        world, stage, entity, component, stage->remove_stage);
 }

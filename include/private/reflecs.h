@@ -7,10 +7,12 @@
 
 EcsHandle ecs_new_w_family(
     EcsWorld *world,
+    EcsStage *stage,
     EcsFamily family_id);
 
 void ecs_merge_entity(
     EcsWorld *world,
+    EcsStage *stage,
     EcsHandle entity,
     EcsRow *staged_row);
 
@@ -18,12 +20,16 @@ void ecs_merge_entity(
 
 EcsTable* ecs_world_get_table(
     EcsWorld *world,
+    EcsStage *stage,
     EcsFamily family_id);
 
 void ecs_world_activate_system(
     EcsWorld *world,
     EcsHandle system,
     bool active);
+
+EcsStage *ecs_get_stage(
+    EcsWorld **world_ptr);
 
 /* -- Stage API -- */
 
@@ -45,12 +51,14 @@ EcsFamily ecs_family_from_handle(
 
 EcsFamily ecs_family_merge(
     EcsWorld *world,
+    EcsStage *stage,
     EcsFamily cur_id,
     EcsFamily to_add_id,
     EcsFamily to_remove_id);
 
 EcsHandle ecs_family_contains(
     EcsWorld *world,
+    EcsStage *stage,
     EcsFamily family_id_1,
     EcsFamily family_id_2,
     bool match_all,
@@ -58,27 +66,37 @@ EcsHandle ecs_family_contains(
 
 bool ecs_family_contains_component(
     EcsWorld *world,
+    EcsStage *stage,
     EcsFamily family,
     EcsHandle component);
 
 EcsFamily ecs_family_register(
     EcsWorld *world,
+    EcsStage *stage,
     EcsHandle to_add,
     EcsArray *set);
 
 EcsFamily ecs_family_add(
     EcsWorld *world,
+    EcsStage *stage,
     EcsFamily family,
     EcsHandle component);
 
 void ecs_family_dump(
     EcsWorld *world,
+    EcsStage *stage,
+    EcsFamily family_id);
+
+EcsArray* ecs_family_get(
+    EcsWorld *world,
+    EcsStage *stage,
     EcsFamily family_id);
 
 /* -- Table API -- */
 
 EcsResult ecs_table_init(
     EcsWorld *world,
+    EcsStage *stage,
     EcsTable *table);
 
 EcsResult ecs_table_init_w_size(
@@ -119,6 +137,7 @@ void ecs_table_deinit(
 
 EcsResult ecs_system_notify_create_table(
     EcsWorld *world,
+    EcsStage *stage,
     EcsHandle system,
     EcsTable *table);
 
@@ -130,10 +149,12 @@ void ecs_system_activate_table(
 
 void ecs_run_job(
     EcsWorld *world,
+    EcsThread *thread,
     EcsJob *job);
 
 void ecs_system_notify(
     EcsWorld *world,
+    EcsStage *stage,
     EcsHandle system,
     EcsSystem *system_data,
     EcsTable *table,

@@ -19,6 +19,9 @@
 #define ECS_SYSTEM_INITIAL_TABLE_COUNT (4)
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
+#define ECS_WORLD_MAGIC (0x65637377)
+#define ECS_THREAD_MAGIC (0x65637374)
+
 /** A family identifies a set of components */
 typedef uint32_t EcsFamily;
 
@@ -106,8 +109,9 @@ typedef struct EcsStage {
     EcsMap *remove_stage;         /* Entities with components to remove */
     EcsMap *remove_merge;         /* All removed components before merge */
     EcsArray *delete_stage;       /* Deleted entities while in progress */
-    EcsMap *entity_stage;         /* Committed entities in stage */
+    EcsMap *entity_stage;         /* Entities committed while in progress */
     EcsMap *data_stage;           /* Arrays with staged component values */
+    EcsMap *family_stage;         /* New families created while in progress */
 } EcsStage;
 
 typedef struct EcsJob {
@@ -119,14 +123,19 @@ typedef struct EcsJob {
 } EcsJob;
 
 typedef struct EcsThread {
-    EcsWorld *world;
-    EcsJob *jobs[ECS_MAX_JOBS_PER_WORKER];
-    EcsStage *stage;
-    uint32_t job_count;
-    pthread_t thread;
+    uint32_t magic;               /* Magic number to verify thread pointer */
+    uint32_t job_count;           /* Number of jobs scheduled for thread */
+    EcsWorld *world;              /* Reference to world */
+    EcsJob *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
+    EcsStage *stage;              /* Stage for thread */
+    pthread_t thread;             /* Thread handle */
 } EcsThread;
 
 struct EcsWorld {
+    uint32_t magic;               /* Magic number to verify world pointer */
+
+    void *context;                /* Application context */
+
     EcsArray *table_db;           /* Table storage */
     EcsArray *periodic_systems;   /* Periodic systems */
     EcsArray *inactive_systems;   /* Periodic systems with empty tables */
@@ -141,14 +150,13 @@ struct EcsWorld {
     EcsStage stage;              /* Stage of main thread */
 
     EcsArray *worker_threads;     /* Worker threads */
+    EcsArray *stage_db;           /* Stage storage (one for each worker) */
     pthread_cond_t thread_cond;   /* Signal that worker threads can start */
     pthread_mutex_t thread_mutex; /* Mutex for thread condition */
     pthread_cond_t job_cond;      /* Signal that worker thread job is done */
     pthread_mutex_t job_mutex;    /* Mutex for protecting job counter */
     uint32_t jobs_finished;       /* Number of jobs finished */
     uint32_t threads_running;     /* Number of threads running */
-
-    void *context;                /* Application context */
 
     EcsHandle last_handle;        /* Last issued handle */
     EcsHandle deinit_system;      /* Handle to internal deinit system */
@@ -165,6 +173,7 @@ struct EcsWorld {
 };
 
 extern const EcsArrayParams handle_arr_params;
+extern const EcsArrayParams stage_arr_params;
 extern const EcsArrayParams table_arr_params;
 
 #endif

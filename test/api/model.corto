@@ -137,9 +137,13 @@ test.suite EcsJobs {
 test.suite EcsMerge {
     tc_merge_add()
     tc_merge_add_2()
+    tc_merge_add_existing()
     tc_merge_remove()
     tc_merge_remove_2()
     tc_merge_add_remove()
     tc_merge_n_add()
     tc_merge_n_add_remove()
+    tc_merge_set()
+    tc_merge_set_2()
+    tc_merge_set_existing()
 }

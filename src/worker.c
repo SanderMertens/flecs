@@ -30,7 +30,7 @@ void* ecs_worker(void *arg) {
         pthread_mutex_unlock(&world->thread_mutex);
 
         for (i = 0; i < job_count; i ++) {
-            ecs_run_job(world, jobs[i]);
+            ecs_run_job(world, thread, jobs[i]);
         }
 
         pthread_mutex_lock(&world->thread_mutex);
@@ -92,13 +92,16 @@ void ecs_stop_threads(
     pthread_cond_broadcast(&world->thread_cond);
     pthread_mutex_unlock(&world->thread_mutex);
 
-    EcsIter it = ecs_array_iter(world->worker_threads, &thread_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsThread *thread = ecs_iter_next(&it);
-        pthread_join(thread->thread, NULL);
+    EcsThread *buffer = ecs_array_buffer(world->worker_threads);
+    uint32_t i, count = ecs_array_count(world->worker_threads);
+    for (i = 1; i < count; i ++) {
+        pthread_join(buffer[i].thread, NULL);
+        ecs_stage_deinit(buffer[i].stage);
     }
 
     ecs_array_free(world->worker_threads);
+    ecs_array_free(world->stage_db);
+    world->stage_db = NULL;
     world->worker_threads = NULL;
     world->quit_workers = false;
     world->threads_running = 0;
@@ -115,21 +118,26 @@ EcsResult start_threads(
     }
 
     world->worker_threads = ecs_array_new(&thread_arr_params, threads);
+    world->stage_db = ecs_array_new(&stage_arr_params, threads - 1);
 
     int i;
     for (i = 0; i < threads; i ++) {
         EcsThread *thread =
             ecs_array_add(&world->worker_threads, &thread_arr_params);
 
+        thread->magic = ECS_THREAD_MAGIC;
         thread->world = world;
         thread->thread = 0;
         thread->job_count = 0;
 
         if (i != 0) {
+            thread->stage = ecs_array_add(&world->stage_db, &stage_arr_params);
+            ecs_stage_init(thread->stage);
             if (pthread_create(&thread->thread, NULL, ecs_worker, thread)) {
                 goto error;
             }
-
+        } else {
+            thread->stage = NULL;
         }
     }
 
@@ -272,7 +280,7 @@ void ecs_run_jobs(
     EcsJob **jobs = thread->jobs;
     uint32_t i, job_count = thread->job_count;
     for (i = 0; i < job_count; i ++) {
-        ecs_run_job(world, jobs[i]);
+        ecs_run_job(world, NULL, jobs[i]);
     }
     thread->job_count = 0;
 

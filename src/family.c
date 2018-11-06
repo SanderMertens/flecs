@@ -28,18 +28,46 @@ uint32_t hash_handle_array(
 static
 EcsFamily register_family_from_buffer(
     EcsWorld *world,
+    EcsStage *stage,
     EcsHandle *buf,
     uint32_t count)
 {
     EcsFamily new_id = hash_handle_array(buf, count);
-    EcsArray *new_array = ecs_map_get(world->family_index, new_id);
+    EcsMap *family_index;
+
+    if (world->threads_running) {
+        assert(stage != NULL);
+        family_index = stage->family_stage;
+    } else {
+        family_index = world->family_index;
+    }
+
+    EcsArray *new_array = ecs_map_get(family_index, new_id);
 
     if (!new_array) {
         new_array = ecs_array_new_from_buffer(&handle_arr_params, count, buf);
-        ecs_map_set(world->family_index, new_id,  new_array);
+        ecs_map_set(family_index, new_id,  new_array);
     }
 
     return new_id;
+}
+
+/* -- Private functions -- */
+
+EcsArray* ecs_family_get(
+    EcsWorld *world,
+    EcsStage *stage,
+    EcsFamily family_id)
+{
+    EcsArray *result = ecs_map_get(world->family_index, family_id);
+    if (!result) {
+        if (world->in_progress && world->threads_running) {
+            assert(stage != NULL);
+            result = ecs_map_get(stage->family_stage, family_id);
+        }
+    }
+
+    return result;
 }
 
 /** Get family id from entity handle */
@@ -55,16 +83,17 @@ EcsFamily ecs_family_from_handle(
     assert(row_64 != 0);
 
     EcsRow row = ecs_to_row(row_64);
-    EcsTable *table = ecs_world_get_table(world, row.family_id);
+    EcsTable *table = ecs_world_get_table(world, NULL, row.family_id);
     EcsHandle *components = ecs_array_buffer(table->family);
     EcsHandle component = components[0];
     EcsFamily family = 0;
 
     if (component == EcsFamily_h) {
         family = *(EcsFamily*)
-            ECS_OFFSET(ecs_table_get(table, table->rows, row.index), sizeof(EcsHandle));
+            ECS_OFFSET(ecs_table_get(
+                table, table->rows, row.index), sizeof(EcsHandle));
     } else if (component == EcsComponent_h || component == EcsPrefab_h){
-        family = ecs_family_register(world, entity, NULL);
+        family = ecs_family_register(world, NULL, entity, NULL);
     }
 
     assert(family != 0);
@@ -76,6 +105,7 @@ EcsFamily ecs_family_from_handle(
 /** Register a new family, optionally extending from existing family */
 EcsFamily ecs_family_register(
     EcsWorld *world,
+    EcsStage *stage,
     EcsHandle to_add,
     EcsArray *set)
 {
@@ -98,22 +128,24 @@ EcsFamily ecs_family_register(
         return 0;
     }
 
-    return register_family_from_buffer(world, new_buffer, count);
+    return register_family_from_buffer(world, stage, new_buffer, count);
 }
 
 EcsFamily ecs_family_add(
     EcsWorld *world,
+    EcsStage *stage,
     EcsFamily family,
     EcsHandle component)
 {
-    EcsArray *array = ecs_map_get(world->family_index, family);
+    EcsArray *array = ecs_family_get(world, stage, family);
     assert(!family || array != NULL);
-    return ecs_family_register(world, component, array);
+    return ecs_family_register(world, stage, component, array);
 }
 
 /** O(n) algorithm to merge families */
 EcsFamily ecs_family_merge(
     EcsWorld *world,
+    EcsStage *stage,
     EcsFamily cur_id,
     EcsFamily to_add_id,
     EcsFamily to_remove_id)
@@ -130,7 +162,7 @@ EcsFamily ecs_family_merge(
         return to_add_id;
     }
 
-    EcsArray *arr_cur = ecs_map_get(world->family_index, cur_id);
+    EcsArray *arr_cur = ecs_family_get(world, stage, cur_id);
     EcsArray *to_add = NULL, *to_del = NULL;
     EcsHandle *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
     EcsHandle cur = 0, add = 0, del = 0;
@@ -138,7 +170,7 @@ EcsFamily ecs_family_merge(
     uint32_t cur_count = 0, add_count = 0, del_count = 0;
 
     if (to_remove_id) {
-        to_del = ecs_map_get(world->family_index, to_remove_id);
+        to_del = ecs_family_get(world, stage, to_remove_id);
         del_count = ecs_array_count(to_del);
         buf_del = ecs_array_buffer(to_del);
         del = buf_del[0];
@@ -151,7 +183,7 @@ EcsFamily ecs_family_merge(
     }
 
     if (to_add_id) {
-        to_add = ecs_map_get(world->family_index, to_add_id);
+        to_add = ecs_family_get(world, stage, to_add_id);
         add_count = ecs_array_count(to_add);
         buf_add = ecs_array_buffer(to_add);
         add = buf_add[0];
@@ -193,7 +225,7 @@ EcsFamily ecs_family_merge(
     } while (cur || add);
 
     if (new_count) {
-        return register_family_from_buffer(world, buf_new, new_count);
+        return register_family_from_buffer(world, stage, buf_new, new_count);
     } else {
         return 0;
     }
@@ -202,6 +234,7 @@ EcsFamily ecs_family_merge(
 /* O(n) algorithm to check whether family 1 is equal or superset of family 2 */
 EcsHandle ecs_family_contains(
     EcsWorld *world,
+    EcsStage *stage,
     EcsFamily family_id_1,
     EcsFamily family_id_2,
     bool match_all,
@@ -211,8 +244,8 @@ EcsHandle ecs_family_contains(
         return true;
     }
 
-    EcsArray *f_1 = ecs_map_get(world->family_index, family_id_1);
-    EcsArray *f_2 = ecs_map_get(world->family_index, family_id_2);
+    EcsArray *f_1 = ecs_family_get(world, stage, family_id_1);
+    EcsArray *f_2 = ecs_family_get(world, stage, family_id_2);
 
     assert(f_1 && f_2);
 
@@ -268,10 +301,11 @@ EcsHandle ecs_family_contains(
 
 bool ecs_family_contains_component(
     EcsWorld *world,
+    EcsStage *stage,
     EcsFamily family_id,
     EcsHandle component)
 {
-    EcsArray *family = ecs_map_get(world->family_index, family_id);
+    EcsArray *family = ecs_family_get(world, stage, family_id);
     EcsHandle *buffer = ecs_array_buffer(family);
     uint32_t i, count = ecs_array_count(family);
 

@@ -8,7 +8,7 @@ library no larger than 50Kb. Here's what Reflecs has to offer:
 - Memory efficient storage engine optimized to take full advantage of CPU cache lines
 - Periodic, on demand and on component init/deinit systems
 - Fast job scheduler for multi-threaded execution of systems
-- Fine-grained control over preallocation of memory to prevent allocations in main loop
+- Fine-grained control over every aspect of the framework, like preallocation of memory.
 - Adaptive optimizations that remove unused code from the critical path
 - Self-describing design that enables reflection and keeps implementation small
 
