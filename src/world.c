@@ -544,10 +544,12 @@ void ecs_dim_family(
     uint32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    EcsFamily family_id = ecs_family_from_handle(world, NULL, type);
-    EcsTable *table = ecs_world_get_table(world, NULL, family_id);
-    if (table) {
-        ecs_array_set_size(&table->rows, &table->row_params, entity_count);
+    if (type) {
+        EcsFamily family_id = ecs_family_from_handle(world, NULL, type);
+        EcsTable *table = ecs_world_get_table(world, NULL, family_id);
+        if (table) {
+            ecs_array_set_size(&table->rows, &table->row_params, entity_count);
+        }
     }
 }
 
@@ -653,4 +655,13 @@ void ecs_set_context(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     world->context = context;
+}
+
+void ecs_import(
+    EcsWorld *world,
+    EcsModuleInitAction module,
+    int flags,
+    void *handles)
+{
+    module(world, flags, handles);
 }

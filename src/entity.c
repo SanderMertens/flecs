@@ -244,7 +244,7 @@ uint32_t commit_w_family(
     EcsMap *entity_index;
     EcsRow new_row, old_row;
     EcsFamily old_family_id = 0;
-    uint32_t new_index, old_index;
+    uint32_t new_index = -1, old_index;
     bool in_progress = world->in_progress;
 
     if (in_progress) {
@@ -527,6 +527,35 @@ EcsHandle ecs_new(
     }
 
     return entity;
+}
+
+EcsHandle ecs_new_w_count(
+    EcsWorld *world,
+    EcsHandle type,
+    uint32_t count,
+    EcsHandle *handles_out)
+{
+    EcsStage *stage = ecs_get_stage(&world);
+    EcsHandle result = world->last_handle + 1;
+    world->last_handle += count;
+
+    if (type) {
+        EcsFamily family_id = ecs_family_from_handle(world, stage, type);
+        EcsTable *table = ecs_world_get_table(world, stage, family_id);
+        uint32_t row_count = ecs_array_count(table->rows);
+        row_count += count;
+        ecs_array_set_size(&table->rows, &table->row_params, row_count);
+
+        int i;
+        for (i = result; i < (result + count); i ++) {
+            commit_w_family(world, stage, i, 0, family_id, family_id, 0);
+            if (handles_out) {
+                handles_out[i - result] = i;
+            }
+        }
+    }
+
+    return result;
 }
 
 void ecs_delete(

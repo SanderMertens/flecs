@@ -105,6 +105,12 @@ uint32_t ecs_array_set_size(
     uint32_t size);
 
 REFLECS_EXPORT
+uint32_t ecs_array_set_count(
+    EcsArray **array,
+    const EcsArrayParams *params,
+    uint32_t size);
+
+REFLECS_EXPORT
 uint32_t ecs_array_count(
     EcsArray *array);
 

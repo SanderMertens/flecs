@@ -87,6 +87,12 @@ typedef struct EcsRows {
 typedef void (*EcsSystemAction)(
     EcsRows *data);
 
+/** Initialization function signature of modules */
+typedef void (*EcsModuleInitAction)(
+    EcsWorld *world,
+    int flags,
+    void *handles_out);
+
 /** Handles to builtin components */
 #define EcsComponent_h (1)
 #define EcsFamily_h (2)
@@ -118,6 +124,58 @@ EcsWorld* ecs_init(void);
 REFLECS_EXPORT
 EcsResult ecs_fini(
     EcsWorld *world);
+
+/** Import a reflecs module.
+ * Reflecs modules enable reusing components and systems across projects. To
+ * use a module, a project needs to link with its library and include its header
+ * file.
+ *
+ * The module returns a struct with handles to the loaded components / systems
+ * so they can be accessed by the application. Note that if the module is loaded
+ * in different worlds, the handles may not be the same.
+ *
+ * For a module with the name 'ecs.components.transform', the following
+ * naming conventions are used:
+ *
+ * To include its include file:
+ *   #include <ecs/components/transform/transform.h>
+ *
+ * To link with its library:
+ *   -lecs_components_transform
+ *
+ * To load the module with the reflecs API:
+ *   ecs_import(world, EcsComponentsTransform, 0, &handles);
+ *
+ * The declaration of handles:
+ *    EcsComponentsTransformHandles handles;
+ *
+ * These naming conventions are not enforced, and projects are free to use their
+ * own conventions, though these are the conventions used by the modules
+ * provided by reflecs.
+ *
+ * The load function has an additional flags argument which is passed to the
+ * module, and is intended to allow applications to select only features they
+ * require from a module. The mapping granularity of flags to components/systems
+ * is to be defined by the module.
+ *
+ * This function is wrapped by the ECS_IMPORT convenience macro:
+ *
+ * ECS_IMPORT(world, EcsComponentsTransform 0);
+ *
+ * This macro automatically creates a variable called EcsComponentsTransform_h
+ * that is the struct with the handles for that component.
+ *
+ * @param world The world.
+ * @param module The module to load.
+ * @param flags A bitmask that specifies which parts of the module to load.
+ * @param handles_out A struct with handles to the module components/systems.
+ */
+REFLECS_EXPORT
+void ecs_import(
+    EcsWorld *world,
+    EcsModuleInitAction module,
+    int flags,
+    void *handles_out);
 
 /** Progress a world.
  * This operation progresses the world by running all systems that are both
@@ -311,6 +369,23 @@ REFLECS_EXPORT
 EcsHandle ecs_new(
     EcsWorld *world,
     EcsHandle type);
+
+/** Create a new set of entities.
+ * This operation creates the number of specified entities with one API call
+ * which is a more efficient alternative to calling ecs_new in a loop.
+ *
+ * @param world: The world.
+ * @param type: Zero if no type, or handle to a component, family or prefab.
+ * @param count: The number of entities to create.
+ * @param handles_out: An array which contains the handles of the new entities.
+ * @param returns: The handle to the first created entity.
+ */
+REFLECS_EXPORT
+EcsHandle ecs_new_w_count(
+    EcsWorld *world,
+    EcsHandle type,
+    uint32_t count,
+    EcsHandle *handles_out);
 
 /** Create a new prefab entity.
  * Prefab entities allow entities to share a set of components. Components of
@@ -725,7 +800,7 @@ EcsHandle ecs_new_system(
  * @returns: EcsOk if succeeded, EcsError if the operation failed.
  */
 REFLECS_EXPORT
-EcsResult ecs_enable(
+void ecs_enable(
     EcsWorld *world,
     EcsHandle system,
     bool enabled);
@@ -805,7 +880,7 @@ void ecs_iter_release(
     EcsHandle id##_h = ecs_new_component(world, #id, sizeof(id));\
     (void)id##_h;\
     assert (id##_h != 0)
-    
+
 /** Same as component, but no size */
 #define ECS_TAG(world, id) \
     EcsHandle id##_h = ecs_new_component(world, #id, 0);\
@@ -863,14 +938,29 @@ void ecs_iter_release(
     (void)id##_h;\
     assert (id##_h != 0)
 
+/** Wrapper around ecs_load.
+ * This macro provides a convenient way to load a module with the world. It can
+ * be used like this:
+ *
+ * ECS_IMPORT(world, EcsSystemsMovement, 0);
+ *
+ * ecs_enable(world, EcsSystemsMovement_h.Move);
+ */
+#define ECS_IMPORT(world, module, flags) \
+    module##Handles module##_h;\
+    ecs_load(world, module, flags, &module##_h);
+
+/** Convenience macro's for iterating entities */
 #define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)
 #define ecs_prev(data, row) ECS_OFFSET(row, -(data)->element_size)
 
+/** Obtain a system column from an entity */
 #define ecs_column(data, row, column) \
   ((data)->columns[column] >= 0 \
     ? ECS_OFFSET(row, (data)->columns[column]) \
     : data->refs[-((data)->columns[column]) - 1])
 
+/* Obtain the entity handle from a row */
 #define ecs_entity(row) *(EcsHandle*)ECS_OFFSET(row, -sizeof(EcsHandle))
 
 /** Utility macro's */

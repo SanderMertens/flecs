@@ -243,6 +243,16 @@ uint32_t ecs_array_set_size(
     }
 }
 
+uint32_t ecs_array_set_count(
+    EcsArray **array_inout,
+    const EcsArrayParams *params,
+    uint32_t count)
+{
+    (*array_inout)->count = count;
+    uint32_t size = ecs_array_set_size(array_inout, params, count);
+    return size;
+}
+
 void* ecs_array_buffer(
     EcsArray *array)
 {

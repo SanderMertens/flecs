@@ -747,33 +747,40 @@ EcsHandle ecs_new_system(
     return result;
 }
 
-EcsResult ecs_enable(
+void ecs_enable(
     EcsWorld *world,
     EcsHandle system,
     bool enabled)
 {
     EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem_h);
     if (!system_data) {
-        return EcsError;
-    }
-
-    if (enabled) {
-        if (!system_data->enabled) {
-            if (ecs_array_count(system_data->tables)) {
-                ecs_world_activate_system(world, system, true);
-            }
+        uint32_t *family_data = ecs_get_ptr(world, system, EcsFamily_h);
+        assert(family_data != NULL);
+        EcsWorld *world_temp = world;
+        EcsStage *stage = ecs_get_stage(&world_temp);
+        EcsArray *family = ecs_family_get(world, stage, *family_data);
+        EcsHandle *buffer = ecs_array_buffer(family);
+        uint32_t i, count = ecs_array_count(family);
+        for (i = 0; i < count; i ++) {
+            ecs_enable(world, buffer[i], enabled);
         }
     } else {
-        if (system_data->enabled) {
-            if (ecs_array_count(system_data->tables)) {
-                ecs_world_activate_system(world, system, false);
+        if (enabled) {
+            if (!system_data->enabled) {
+                if (ecs_array_count(system_data->tables)) {
+                    ecs_world_activate_system(world, system, true);
+                }
+            }
+        } else {
+            if (system_data->enabled) {
+                if (ecs_array_count(system_data->tables)) {
+                    ecs_world_activate_system(world, system, false);
+                }
             }
         }
+
+        system_data->enabled = enabled;
     }
-
-    system_data->enabled = enabled;
-
-    return EcsOk;
 }
 
 bool ecs_is_enabled(
