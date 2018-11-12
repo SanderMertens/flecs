@@ -25,7 +25,12 @@ char* parse_complex_elem(
         if (!bptr[1]) {
             return NULL;
         }
-
+        bptr ++;
+    } else if (bptr[0] == '?') {
+        *oper_kind = EcsOperOptional;
+        if (!bptr[1]) {
+            return NULL;
+        }
         bptr ++;
     }
 
@@ -106,7 +111,7 @@ EcsResult ecs_parse_component_expr(
             *bptr = ch;
             bptr ++;
 
-            if (ch == '.' || ch == '!') {
+            if (ch == '.' || ch == '!' || ch == '?') {
                 complex_expr = true;
             }
         }

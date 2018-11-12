@@ -38,10 +38,10 @@ EcsResult add_component(
         return EcsError;
     }
 
-    if (oper_kind == EcsOperAnd) {
+    if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
         elem = ecs_array_add(&system_data->columns, &column_arr_params);
         elem->kind = elem_kind;
-        elem->oper_kind = EcsOperAnd;
+        elem->oper_kind = oper_kind;
         elem->is.component = component;
     } else if (oper_kind == EcsOperOr) {
         elem = ecs_array_last(system_data->columns, &column_arr_params);
@@ -268,13 +268,22 @@ void add_table(
         if (column->kind == EcsFromEntity) {
             if (column->oper_kind == EcsOperAnd) {
                 component = column->is.component;
+            } else if (column->oper_kind == EcsOperOptional) {
+                component = column->is.component;
+                if (!ecs_family_contains_component(
+                    world, stage, table_family, component))
+                {
+                    component = 0;
+                }
             } else if (column->oper_kind == EcsOperOr) {
                 component = ecs_family_contains(
                     world, stage, table_family, column->is.family, false, true);
             }
 
         } else if (column->kind == EcsFromComponent) {
-            if (column->oper_kind == EcsOperAnd) {
+            if (column->oper_kind == EcsOperAnd ||
+                column->oper_kind == EcsOperOptional)
+            {
                 component = column->is.component;
                 components_contains_component(
                     world, stage, table_family, component, &entity);
@@ -290,7 +299,11 @@ void add_table(
         }
 
         if (!entity) {
-            table_data[i] = ecs_table_column_offset(table, component);
+            if (component) {
+                table_data[i] = ecs_table_column_offset(table, component);
+            } else {
+                table_data[i] = 0;
+            }
         }
 
         if (entity || table_data[i] == -1) {
@@ -558,7 +571,7 @@ void ecs_run_job(
         info.element_size = element_size;
         info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * 2);
         info.components = (EcsHandle*)component_buffer;
-        info.first = ECS_OFFSET(start, sizeof(EcsHandle));
+        info.first = start;
 
         if (refs_index) {
             resolve_refs(world, system_data, refs_index, &info);
@@ -617,7 +630,7 @@ void ecs_system_notify(
             int32_t refs_index = table_data[1];
             info.element_size = table->row_params.element_size;
             info.columns = ECS_OFFSET(table_data, sizeof(int32_t) * 2);
-            info.first = ECS_OFFSET(row, sizeof(EcsHandle));
+            info.first = row;
             info.last = ECS_OFFSET(info.first, info.element_size);
             info.components = (EcsHandle*)component_buffer;
             if (refs_index) {
@@ -676,7 +689,7 @@ void ecs_run_system(
         }
 
         info.element_size = table->row_params.element_size;
-        info.first = ECS_OFFSET(buffer, sizeof(EcsHandle));
+        info.first = buffer;
         info.last = ECS_OFFSET(info.first, info.element_size * count);
         info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * 2);
         info.components = (EcsHandle*)component_buffer;

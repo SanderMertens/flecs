@@ -164,7 +164,7 @@ uint32_t ecs_table_column_offset(
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
         if (h == component) {
-            return offset;
+            return offset + sizeof(EcsHandle);
         }
         offset += table->columns[i];
         i ++;

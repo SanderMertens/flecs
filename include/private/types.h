@@ -44,7 +44,8 @@ typedef enum EcsSystemExprOperKind {
     EcsOperAnd = 0,
     EcsOperOr = 1,
     EcsOperNot = 2,
-    EcsOperLast = 3
+    EcsOperOptional = 3,
+    EcsOperLast = 4
 } EcsSystemExprOperKind;
 
 typedef EcsResult (*ecs_parse_action)(

@@ -457,6 +457,7 @@ EcsWorld *ecs_init(void) {
     world->other_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT);
 
+    world->stage_db = NULL;
     world->worker_threads = NULL;
     world->jobs_finished = 0;
     world->threads_running = 0;
@@ -573,7 +574,7 @@ EcsHandle ecs_lookup(
         void *row, *last = ECS_OFFSET(buffer, count * element_size);
 
         for (row = buffer; row < last; row = ECS_OFFSET(row, element_size)) {
-            EcsId *id_ptr = ECS_OFFSET(row, offset + sizeof(EcsHandle));
+            EcsId *id_ptr = ECS_OFFSET(row, offset);
             if (!strcmp(id_ptr->id, id)) {
                 return *(EcsHandle*)row;
             }

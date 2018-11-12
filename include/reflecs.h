@@ -948,7 +948,8 @@ void ecs_iter_release(
  */
 #define ECS_IMPORT(world, module, flags) \
     module##Handles module##_h;\
-    ecs_load(world, module, flags, &module##_h);
+    ecs_import(world, module, flags, &module##_h);\
+    module##_DeclareHandles(module##_h);
 
 /** Convenience macro's for iterating entities */
 #define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)
@@ -956,15 +957,21 @@ void ecs_iter_release(
 
 /** Obtain a system column from an entity */
 #define ecs_column(data, row, column) \
-  ((data)->columns[column] >= 0 \
+  ((data)->columns[column] > 0 \
     ? ECS_OFFSET(row, (data)->columns[column]) \
-    : data->refs[-((data)->columns[column]) - 1])
+    : ((data)->columns[column] == 0) \
+      ? NULL \
+      : data->refs[-((data)->columns[column]) - 1])
 
 /* Obtain the entity handle from a row */
-#define ecs_entity(row) *(EcsHandle*)ECS_OFFSET(row, -sizeof(EcsHandle))
+#define ecs_entity(row) *(EcsHandle*)row
 
 /** Utility macro's */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
+
+/** Utility macro for declaring handles by modules */
+#define EcsDeclareHandle(handles, component)\
+    EcsHandle Ecs##component##_h = handles.component; (void)Ecs##component##_h
 
 #ifdef __cplusplus
 }
