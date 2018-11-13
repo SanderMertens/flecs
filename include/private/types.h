@@ -31,10 +31,6 @@ typedef struct EcsComponent {
     uint32_t size;
 } EcsComponent;
 
-typedef struct EcsId {
-    const char *id;
-} EcsId;
-
 typedef enum EcsSystemExprElemKind {
     EcsFromEntity,
     EcsFromComponent

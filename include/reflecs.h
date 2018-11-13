@@ -43,12 +43,21 @@
 
 #define ECS_HANDLE_NIL (0)
 
+/** -- Builtin module flags -- */
+#define ECS_2D (1)
+#define ECS_3D (2)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
 /* -- Supporting types -- */
+
+/** Id component type */
+typedef struct EcsId {
+    const char *id;
+} EcsId;
 
 typedef struct EcsWorld EcsWorld;
 

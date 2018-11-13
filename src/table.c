@@ -184,7 +184,12 @@ void ecs_table_deinit(
             ecs_run_system(world, buffer[i], NULL);
         }
     }
+}
 
+void ecs_table_free(
+    EcsWorld *world,
+    EcsTable *table)
+{
     ecs_array_free(table->rows);
     if (table->periodic_systems) ecs_array_free(table->periodic_systems);
     if (table->init_systems) ecs_array_free(table->init_systems);

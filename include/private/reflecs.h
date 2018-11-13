@@ -134,6 +134,10 @@ void ecs_table_deinit(
     EcsWorld *world,
     EcsTable *table);
 
+void ecs_table_free(
+    EcsWorld *world,
+    EcsTable *table);
+
 /* -- System API -- */
 
 EcsResult ecs_system_notify_create_table(

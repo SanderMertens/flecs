@@ -110,7 +110,24 @@ test.suite EcsPeriodicSystem {
     tc_system_2_optional_set()
     tc_system_1_optional_set_1_not_set()
     tc_system_2_optional_not_set()
+}
 
+test.suite EcsInitSystem {
+    tc_init_after_new()
+    tc_init_after_new_w_count()
+    tc_init_after_add_to_empty()
+    tc_init_after_add()
+    tc_init_after_new_in_progress()
+    tc_init_after_add_in_progress()
+    tc_deinit_after_remove()
+    tc_deinit_after_delete()
+    tc_deinit_after_remove_in_progress()
+    tc_deinit_after_delete_in_progress()
+    tc_deinit_after_fini()
+    tc_add_in_init()
+    tc_add_in_init_from_prefab()
+    tc_remove_in_init()
+    tc_new_in_init()
 }
 
 test.suite EcsJobs {

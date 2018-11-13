@@ -206,11 +206,16 @@ void clean_tables(
     EcsWorld *world)
 {
     EcsTable *buffer = ecs_array_buffer(world->table_db);
-    uint32_t i, count = ecs_array_count(world->table_db);
+    int32_t i, count = ecs_array_count(world->table_db);
+
+    for (i = count - 1; i >= 0; i --) {
+        EcsTable *table = &buffer[i];
+        ecs_table_deinit(world, table);
+    }
 
     for (i = 0; i < count; i ++) {
         EcsTable *table = &buffer[i];
-        ecs_table_deinit(world, table);
+        ecs_table_free(world, table);
     }
 
     ecs_array_free(world->table_db);
