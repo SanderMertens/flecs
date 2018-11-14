@@ -608,3 +608,36 @@ void test_EcsInitSystem_tc_deinit_after_remove_in_progress(
 
     ecs_fini(world);
 }
+
+static
+void InitTwo(EcsRows *rows) {
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        Bar *b = ecs_column(rows, row, 0);
+        Foo *f = ecs_column(rows, row, 1);
+        *b = 20;
+        *f = 10;
+    }
+}
+
+void test_EcsInitSystem_tc_init_2_components(
+    test_EcsInitSystem this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_SYSTEM(world, InitTwo, EcsOnInit, Bar, Foo);
+
+    EcsHandle e = ecs_new(world, MyFamily_h);
+    test_assert(e != 0);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assertint(ecs_get(world, e, Foo), 10);
+    test_assertint(ecs_get(world, e, Bar), 20);
+
+    ecs_fini(world);
+}

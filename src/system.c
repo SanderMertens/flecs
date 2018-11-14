@@ -67,8 +67,13 @@ EcsHandle new_row_system(
         index = world->deinit_systems;
     }
 
-    EcsFamily family_id = ecs_family_register(
-        world, NULL, 0, system_data->components);
+    EcsFamily family_id = 0;
+    uint32_t i, component_count = ecs_array_count(system_data->components);
+    EcsHandle *buffer = ecs_array_buffer(system_data->components);
+    for (i = 0; i < component_count; i ++) {
+        family_id = ecs_family_add(world, NULL, family_id, buffer[i]);
+    }
+
     assert(!ecs_map_has(index, family_id, NULL));
 
     ecs_map_set64(index, family_id, result);

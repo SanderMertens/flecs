@@ -442,7 +442,7 @@ bool ecs_notify(
 
         EcsArray *family = ecs_family_get(world, stage, family_id);
         uint32_t i, column_count = ecs_array_count(family);
-        EcsHandle *buffer = ecs_array_buffer(family);
+        EcsHandle *buffer = ecs_array_buffer(system_data->components);
         int32_t columns[column_count];
         for (i = 0; i < column_count; i ++) {
             columns[i] = ecs_table_column_offset(table, buffer[i]);

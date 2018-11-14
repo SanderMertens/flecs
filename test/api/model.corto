@@ -120,6 +120,7 @@ test.suite EcsInitSystem {
     tc_init_after_add()
     tc_init_after_new_in_progress()
     tc_init_after_add_in_progress()
+    tc_init_2_components()
     tc_deinit_after_remove()
     tc_deinit_after_delete()
     tc_deinit_after_remove_in_progress()
