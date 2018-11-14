@@ -500,21 +500,21 @@ EcsWorld *ecs_init(void) {
     ecs_stage_init(&world->stage);
 
     bootstrap_component(world);
-    assert_func(new_builtin_component(world, sizeof(EcsFamily)) == EcsFamily_h);
+    assert_func(new_builtin_component(world, sizeof(EcsFamilyComponent)) == EcsFamilyComponent_h);
     assert_func(new_builtin_component(world, 0) == EcsPrefab_h);
     assert_func(new_builtin_component(world, sizeof(EcsRowSystem)) == EcsRowSystem_h);
     assert_func(new_builtin_component(world, sizeof(EcsTableSystem)) == EcsTableSystem_h);
     assert_func(new_builtin_component(world, sizeof(EcsId)) == EcsId_h);
 
     add_builtin_id(world, EcsComponent_h, "EcsComponent");
-    add_builtin_id(world, EcsFamily_h, "EcsFamily");
+    add_builtin_id(world, EcsFamilyComponent_h, "EcsFamilyComponent");
     add_builtin_id(world, EcsPrefab_h, "EcsPrefab");
     add_builtin_id(world, EcsRowSystem_h, "EcsRowSystem");
     add_builtin_id(world, EcsTableSystem_h, "EcsTableSystem");
     add_builtin_id(world, EcsId_h, "EcsId");
 
     world->component_family = get_builtin_family(world, EcsComponent_h);
-    world->family_family = get_builtin_family(world, EcsFamily_h);
+    world->family_family = get_builtin_family(world, EcsFamilyComponent_h);
     world->prefab_family = get_builtin_family(world, EcsPrefab_h);
     world->row_system_family = get_builtin_family(world, EcsRowSystem_h);
     world->table_system_family = get_builtin_family(world, EcsTableSystem_h);

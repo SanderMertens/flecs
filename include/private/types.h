@@ -29,6 +29,11 @@ typedef uint32_t EcsFamily;
 
 /* -- Builtin component types -- */
 
+typedef struct EcsFamilyComponent {
+    EcsFamily family;    /* Preserved nested families */
+    EcsFamily resolved;  /* Resolved nested families */
+} EcsFamilyComponent;
+
 typedef struct EcsComponent {
     uint32_t size;
 } EcsComponent;
@@ -82,6 +87,7 @@ typedef struct EcsTableSystem {
     EcsFamily not_from_entity;    /* Exclude components from entity */
     EcsFamily not_from_component; /* Exclude components from components */
     EcsFamily and_from_entity; /* Used to match init / deinit notifications */
+    EcsFamily and_from_system; /* Used to auto-add components to system */
     bool enabled;              /* Is system enabled or not */
 } EcsTableSystem;
 

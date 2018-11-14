@@ -66,7 +66,7 @@ error:
 }
 
 static
-void compute_and_from_entity(
+void compute_and_families(
     EcsWorld *world,
     EcsTableSystem *system_data)
 {
@@ -76,15 +76,17 @@ void compute_and_from_entity(
     for (i = 0; i < column_count; i ++) {
         EcsSystemColumn *elem = &buffer[i];
         EcsSystemExprElemKind elem_kind = elem->kind;
+        EcsSystemExprOperKind oper_kind = elem->oper_kind;
 
         if (elem_kind == EcsFromEntity) {
-            EcsSystemExprOperKind oper_kind = elem->oper_kind;
             if (oper_kind == EcsOperAnd) {
                 system_data->and_from_entity = ecs_family_add(
-                    world,
-                    NULL,
-                    system_data->and_from_entity,
-                    elem->is.component);
+                 world, NULL, system_data->and_from_entity, elem->is.component);
+            }
+        } else if (elem_kind == EcsFromSystem) {
+            if (oper_kind == EcsOperAnd) {
+                system_data->and_from_system = ecs_family_add(
+                 world, NULL, system_data->and_from_system, elem->is.component);
             }
         }
     }
@@ -621,7 +623,7 @@ EcsHandle ecs_new_table_system(
         return 0;
     }
 
-    compute_and_from_entity(world, system_data);
+    compute_and_families(world, system_data);
     match_tables(world, NULL, result, system_data);
 
     if (kind == EcsPeriodic) {
@@ -632,6 +634,16 @@ EcsHandle ecs_new_table_system(
             elem = ecs_array_add(&world->inactive_systems, &handle_arr_params);
         }
         *elem = result;
+    }
+
+    if (system_data->and_from_system) {
+        EcsArray *f = ecs_family_get(world, NULL, system_data->and_from_system);
+        EcsHandle *buffer = ecs_array_buffer(f);
+        uint32_t i, count = ecs_array_count(f);
+        for (i = 0; i < count; i ++) {
+            ecs_add(world, result, buffer[i]);
+        }
+        ecs_commit(world, result);
     }
 
     return result;
@@ -701,11 +713,12 @@ void ecs_enable(
 {
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     if (!system_data) {
-        uint32_t *family_data = ecs_get_ptr(world, system, EcsFamily_h);
+        EcsFamilyComponent *family_data = ecs_get_ptr(
+            world, system, EcsFamilyComponent_h);
         assert(family_data != NULL);
         EcsWorld *world_temp = world;
         EcsStage *stage = ecs_get_stage(&world_temp);
-        EcsArray *family = ecs_family_get(world, stage, *family_data);
+        EcsArray *family = ecs_family_get(world, stage, family_data->family);
         EcsHandle *buffer = ecs_array_buffer(family);
         uint32_t i, count = ecs_array_count(family);
         for (i = 0; i < count; i ++) {

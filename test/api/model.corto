@@ -112,6 +112,7 @@ test.suite EcsPeriodicSystem {
     tc_system_1_optional_set_1_not_set()
     tc_system_2_optional_not_set()
     tc_system_1_from_system()
+    tc_system_1_from_system_implicit_add()
 }
 
 test.suite EcsInitSystem {
@@ -172,4 +173,17 @@ test.suite EcsMerge {
     tc_merge_set()
     tc_merge_set_2()
     tc_merge_set_existing()
+}
+
+test.suite EcsFamily {
+    tc_family_nested_1()
+    tc_family_nested_2()
+    tc_family_2_lvl_nested_1()
+    tc_family_2_lvl_nested_2()
+    tc_family_of_systems_1()
+    tc_family_of_systems_2()
+    tc_family_of_systems_1_nested()
+    tc_family_of_systems_2_nested()
+    tc_family_of_systems_1_nested_2_lvl()
+    tc_family_of_systems_2_nested_2_lvl()
 }

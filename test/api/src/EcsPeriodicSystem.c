@@ -1623,3 +1623,64 @@ void test_EcsPeriodicSystem_tc_system_1_from_system(
 
     ecs_fini(world);
 }
+
+void InitBar(EcsRows *rows) {
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        Bar *v = ecs_column(rows, row, 0);
+        *v = 60;
+    }
+}
+
+void test_EcsPeriodicSystem_tc_system_1_from_system_implicit_add(
+    test_EcsPeriodicSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_SYSTEM(world, InitBar, EcsOnInit, Bar);
+    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, SYSTEM.Bar);
+
+    EcsHandle e1 = ecs_new(world, Foo_h);
+    EcsHandle e2 = ecs_new(world, Foo_h);
+    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsHandle e4 = ecs_new(world, Bar_h);
+    EcsHandle e5 = ecs_new(world, Bar_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+
+    *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e4, Bar_h) = 40;
+    *(int*)ecs_get_ptr(world, e5, Bar_h) = 50;
+
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assertint(ctx.column_count, 2);
+    test_assertint(ctx.count, 3);
+    test_assert(ctx.entities[0] == e1);
+    test_assert(ctx.entities[1] == e2);
+    test_assert(ctx.entities[2] == e3);
+    test_assertint(ctx.column[0][0], 10);
+    test_assertint(ctx.column[1][0], 60);
+    test_assertint(ctx.column[0][1], 20);
+    test_assertint(ctx.column[1][1], 60);
+    test_assertint(ctx.column[0][2], 30);
+    test_assertint(ctx.column[1][2], 60);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[1][0], Bar_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+    test_assertint(ctx.component[1][1], Bar_h);
+    test_assertint(ctx.component[0][2], Foo_h);
+    test_assertint(ctx.component[1][2], Bar_h);
+
+    ecs_fini(world);
+}

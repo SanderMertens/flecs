@@ -8,10 +8,10 @@ EcsResult add_family(
     EcsWorld *world,
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
-    const char *component_id,
+    const char *entity_id,
     void *data)
 {
-    EcsFamily *family_id = data;
+    EcsFamilyComponent *family = data;
 
     if (oper_kind != EcsOperAnd) {
         return EcsError;
@@ -21,20 +21,27 @@ EcsResult add_family(
         return EcsError;
     }
 
-    if (!strcmp(component_id, "0")) {
-        *family_id = 0;
+    if (!strcmp(entity_id, "0")) {
+        *family = (EcsFamilyComponent){0, 0};
     } else {
-        EcsHandle component = ecs_lookup(world, component_id);
-        if (!component) {
+        EcsHandle entity = ecs_lookup(world, entity_id);
+        if (!entity) {
             return EcsError;
         }
 
-        EcsFamily resolved_family = ecs_family_from_handle(
-            world, NULL, component);
-        assert(resolved_family != 0);
+        EcsFamily family_id = ecs_family_register(
+            world, NULL, entity, NULL);
+        assert(family_id != 0);
 
-        *family_id = ecs_family_merge(
-            world, NULL, *family_id, resolved_family, 0);
+        EcsFamily resolved_id = ecs_family_from_handle(
+            world, NULL, entity);
+        assert(resolved_id != 0);
+
+        family->family = ecs_family_merge(
+            world, NULL, family->family, family_id, 0);
+
+        family->resolved = ecs_family_merge(
+            world, NULL, family->resolved, resolved_id, 0);
     }
 
     return EcsOk;
@@ -127,11 +134,11 @@ EcsFamily ecs_family_from_handle(
     EcsHandle component = components[0];
     EcsFamily family = 0;
 
-    if (component == EcsFamily_h) {
-        family = *(EcsFamily*)
-            ECS_OFFSET(ecs_table_get(
-                table, table->rows, row.index), sizeof(EcsHandle));
-    } else if (component == EcsComponent_h || component == EcsPrefab_h){
+    if (component == EcsFamilyComponent_h) {
+        EcsFamilyComponent *fe = ECS_OFFSET(ecs_table_get(
+            table, table->rows, row.index), sizeof(EcsHandle));
+        family = fe->resolved;
+    } else {
         family = ecs_family_register(world, stage, entity, NULL);
     }
 
@@ -365,13 +372,14 @@ EcsHandle ecs_new_family(
     const char *sig)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    EcsFamily family = 0;
+    EcsFamilyComponent family = {0};
 
     if (ecs_parse_component_expr(world, sig, add_family, &family) != EcsOk) {
         return 0;
     }
 
-    EcsHandle family_entity = ecs_map_get64(world->family_handles, family);
+    EcsHandle family_entity = ecs_map_get64(
+        world->family_handles, family.family);
     if (family_entity) {
         EcsId *id_ptr = ecs_get_ptr(world, family_entity, EcsId_h);
 
@@ -384,10 +392,11 @@ EcsHandle ecs_new_family(
         EcsId *id_ptr = ecs_get_ptr(world, result, EcsId_h);
         id_ptr->id = id;
 
-        EcsFamily *family_ptr = ecs_get_ptr(world, result, EcsFamily_h);
+        EcsFamilyComponent *family_ptr = ecs_get_ptr(
+            world, result, EcsFamilyComponent_h);
         *family_ptr = family;
 
-        ecs_map_set64(world->family_handles, family, result);
+        ecs_map_set64(world->family_handles, family.family, result);
 
         return result;
     }
@@ -399,14 +408,15 @@ EcsHandle ecs_new_prefab(
     const char *sig)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    EcsFamily family = 0;
+    EcsFamilyComponent family = {0};
 
     if (ecs_parse_component_expr(world, sig, add_family, &family) != EcsOk) {
         return 0;
     }
 
-    family = ecs_family_merge(world, NULL, world->prefab_family, family, 0);
-    EcsHandle result = ecs_new_w_family(world, NULL, family);
+    family.resolved = ecs_family_merge(
+        world, NULL, world->prefab_family, family.resolved, 0);
+    EcsHandle result = ecs_new_w_family(world, NULL, family.resolved);
 
     EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
     if (!id_data) {
