@@ -23,6 +23,10 @@ EcsResult add_component(
         return EcsError;
     }
 
+    if (elem_kind == EcsFromSystem && oper_kind != EcsOperAnd) {
+        return EcsError;
+    }
+
     if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
         elem = ecs_array_add(&system_data->columns, &column_arr_params);
         elem->kind = elem_kind;
@@ -281,6 +285,12 @@ void add_table(
                     &entity,
                     false);
             }
+        } else if (column->kind == EcsFromSystem) {
+            if (column->oper_kind == EcsOperAnd) {
+                component = column->is.component;
+            }
+
+            entity = system;
         }
 
         if (!entity) {
@@ -326,6 +336,7 @@ bool match_table(
     EcsWorld *world,
     EcsStage *stage,
     EcsTable *table,
+    EcsHandle system,
     EcsTableSystem *system_data)
 {
     EcsFamily family, table_family;
@@ -354,7 +365,7 @@ bool match_table(
         if (oper_kind == EcsOperAnd) {
             if (elem_kind == EcsFromEntity) {
                 /* Already validated */
-            } else {
+            } else if (elem_kind == EcsFromComponent) {
                 if (!components_contains_component(
                     world, stage, table_family, elem->is.component, NULL))
                 {
@@ -369,7 +380,7 @@ bool match_table(
                 {
                     return false;
                 }
-            } else {
+            } else if (elem_kind == EcsFromComponent) {
                 if (!components_contains(
                     world, stage, table_family, family, NULL, false))
                 {
@@ -407,7 +418,7 @@ void match_tables(
     EcsIter it = ecs_array_iter(world->table_db, &table_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsTable *table = ecs_iter_next(&it);
-        if (match_table(world, stage, table, system_data)) {
+        if (match_table(world, stage, table, system, system_data)) {
             add_table(world, stage, system, system_data, table);
         }
     }
@@ -451,7 +462,7 @@ EcsResult ecs_system_notify_create_table(
         return EcsError;
     }
 
-    if (match_table(world, stage, table, system_data)) {
+    if (match_table(world, stage, table, system, system_data)) {
         add_table(world, stage, system, system_data, table);
     }
 

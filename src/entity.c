@@ -448,13 +448,13 @@ bool ecs_notify(
             columns[i] = ecs_table_column_offset(table, buffer[i]);
         }
 
-        uint32_t row = row_index, row_count = row_index + 1;
+        int32_t row = row_index;
         if (row_index == -1) {
-            row_count = ecs_array_count(rows);
-            row = 0;
+            row = ecs_array_count(rows) - 1;
+            row_index = 0;
         }
 
-        for (; row < row_count; row ++) {
+        for (; row >= row_index; row --) {
             ecs_row_notify(
                 world,
                 stage,
@@ -482,13 +482,13 @@ bool ecs_notify(
 
                 assert(system_data != NULL);
 
-                uint32_t row = row_index, row_count = row_index + 1;
+                int32_t row = row_index;
                 if (row_index == -1) {
-                    row_count = ecs_array_count(rows);
-                    row = 0;
+                    row = ecs_array_count(rows) - 1;
+                    row_index = 0;
                 }
 
-                for (; row < row_count; row ++) {
+                for (; row >= row_index; row --) {
                     ecs_row_notify(
                         world,
                         stage,

@@ -38,6 +38,8 @@ char* parse_complex_elem(
     if (dot) {
         if (!strncmp(bptr, "COMPONENT", dot - bptr)) {
             *elem_kind = EcsFromComponent;
+        } else if (!strncmp(bptr, "SYSTEM", dot - bptr)) {
+            *elem_kind = EcsFromSystem;
         } else if (!strncmp(bptr, "ENTITY", dot - bptr)) {
             /* default */
         } else {

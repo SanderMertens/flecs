@@ -111,6 +111,7 @@ test.suite EcsPeriodicSystem {
     tc_system_2_optional_set()
     tc_system_1_optional_set_1_not_set()
     tc_system_2_optional_not_set()
+    tc_system_1_from_system()
 }
 
 test.suite EcsInitSystem {

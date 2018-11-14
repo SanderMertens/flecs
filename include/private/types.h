@@ -35,7 +35,8 @@ typedef struct EcsComponent {
 
 typedef enum EcsSystemExprElemKind {
     EcsFromEntity,
-    EcsFromComponent
+    EcsFromComponent,
+    EcsFromSystem
 } EcsSystemExprElemKind;
 
 typedef enum EcsSystemExprOperKind {

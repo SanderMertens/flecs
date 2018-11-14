@@ -168,6 +168,7 @@ void clean_tables(
 
     for (i = count - 1; i >= 0; i --) {
         EcsTable *table = &buffer[i];
+
         ecs_table_deinit(world, table);
     }
 
