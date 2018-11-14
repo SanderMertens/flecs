@@ -434,7 +434,7 @@ void ecs_dump(
     printf("\nInit systems\n");
     it = ecs_map_iter(world->init_systems);
     while (ecs_iter_hasnext(&it)) {
-        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
+        EcsHandle h = ecs_map_next(&it, NULL);
         EcsId *id = ecs_get_ptr(world, h, EcsId_h);
         printf(" - %s\n", id->id);
     }
@@ -442,7 +442,7 @@ void ecs_dump(
     printf("\nDeinit systems\n");
     it = ecs_map_iter(world->deinit_systems);
     while (ecs_iter_hasnext(&it)) {
-        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
+        EcsHandle h = ecs_map_next(&it, NULL);
         EcsId *id = ecs_get_ptr(world, h, EcsId_h);
         printf(" - %s\n", id->id);
     }
