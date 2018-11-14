@@ -106,8 +106,9 @@ typedef void (*EcsModuleInitAction)(
 #define EcsComponent_h (1)
 #define EcsFamily_h (2)
 #define EcsPrefab_h (3)
-#define EcsSystem_h (4)
-#define EcsId_h (5)
+#define EcsRowSystem_h (4)
+#define EcsTableSystem_h (5)
+#define EcsId_h (6)
 
 
 /* -- World API -- */

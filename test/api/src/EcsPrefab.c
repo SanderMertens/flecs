@@ -190,6 +190,54 @@ void test_EcsPrefab_tc_prefab_override_2_of_2(
     ecs_fini(world);
 }
 
+void test_EcsPrefab_tc_prefab_override_1_after_1(
+    test_EcsPrefab this)
+{
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_PREFAB(world, MyPrefab, MyFamily);
+
+    ecs_set(world, MyPrefab_h, Foo, {.x = 10});
+    ecs_set(world, MyPrefab_h, Bar, {.y = 20});
+
+    EcsHandle e1 = ecs_new(world, MyPrefab_h);
+    test_assert(e1 != 0);
+
+    EcsHandle e2 = ecs_new(world, MyPrefab_h);
+    test_assert(e2 != 0);
+
+    ecs_add(world, e1, Foo_h);
+    ecs_commit(world, e1);
+
+    ecs_add(world, e2, Foo_h);
+    ecs_commit(world, e2);
+
+    ecs_set(world, e1, Foo, {.x = 15});
+    ecs_set(world, e2, Foo, {.x = 25});
+
+    test_assertint(ecs_get(world, e1, Foo).x, 15);
+    test_assertint(ecs_get(world, e2, Foo).x, 25);
+    test_assertint(ecs_get(world, e1, Bar).y, 20);
+    test_assertint(ecs_get(world, e2, Bar).y, 20);
+
+    ecs_add(world, e1, Bar_h);
+    ecs_commit(world, e1);
+
+    ecs_add(world, e2, Bar_h);
+    ecs_commit(world, e2);
+
+    ecs_set(world, e1, Bar, {.y = 35});
+
+    test_assertint(ecs_get(world, e1, Foo).x, 15);
+    test_assertint(ecs_get(world, e2, Foo).x, 25);
+    test_assertint(ecs_get(world, e1, Bar).y, 35);
+    test_assertint(ecs_get(world, e2, Bar).y, 20);
+
+    ecs_fini(world);
+}
+
 void test_EcsPrefab_tc_prefab_override_w_family(
     test_EcsPrefab this)
 {

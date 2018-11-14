@@ -20,22 +20,6 @@ void move_row(
     ecs_map_set64(world->entity_index, handle, ecs_from_row(row));
 }
 
-static
-void activate_table_systems(
-    EcsWorld *world,
-    EcsTable *table,
-    EcsArray *systems,
-    bool activate)
-{
-    if (systems) {
-        EcsIter it = ecs_array_iter(systems, &handle_arr_params);
-        while (ecs_iter_hasnext(&it)) {
-            EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
-            ecs_system_activate_table(world, system, table, activate);
-        }
-    }
-}
-
 /** Notify systems that a table has changed its active state */
 static
 void activate_table(
@@ -43,9 +27,14 @@ void activate_table(
     EcsTable *table,
     bool activate)
 {
-    activate_table_systems(world, table, table->periodic_systems, activate);
-    activate_table_systems(world, table, table->init_systems, activate);
-    activate_table_systems(world, table, table->deinit_systems, activate);
+    EcsArray *systems = table->periodic_systems;
+    if (systems) {
+        EcsIter it = ecs_array_iter(systems, &handle_arr_params);
+        while (ecs_iter_hasnext(&it)) {
+            EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
+            ecs_system_activate_table(world, system, table, activate);
+        }
+    }
 }
 
 /* -- Private functions -- */
@@ -59,9 +48,6 @@ EcsResult ecs_table_init_w_size(
     table->family = family;
 
     table->periodic_systems = NULL;
-    table->init_systems = NULL;
-    table->deinit_systems = NULL;
-
     table->row_params.element_size = size + sizeof(EcsHandle);
     table->row_params.move_action = move_row;
     table->row_params.move_ctx = (void*)(uintptr_t)ecs_array_get_index(
@@ -177,13 +163,8 @@ void ecs_table_deinit(
     EcsWorld *world,
     EcsTable *table)
 {
-    if (table->deinit_systems) {
-        EcsHandle *buffer = ecs_array_buffer(table->deinit_systems);
-        uint32_t i, count = ecs_array_count(table->deinit_systems);
-        for (i = 0; i < count; i ++) {
-            ecs_run_system(world, buffer[i], NULL);
-        }
-    }
+    ecs_notify(world, NULL,
+        world->deinit_systems, table->family_id, table, table->rows, -1);
 }
 
 void ecs_table_free(
@@ -192,7 +173,5 @@ void ecs_table_free(
 {
     ecs_array_free(table->rows);
     if (table->periodic_systems) ecs_array_free(table->periodic_systems);
-    if (table->init_systems) ecs_array_free(table->init_systems);
-    if (table->deinit_systems) ecs_array_free(table->deinit_systems);
     free(table->columns);
 }

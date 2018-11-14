@@ -150,7 +150,7 @@ error:
 /** Create jobs for system */
 static
 void create_jobs(
-    EcsSystem *system_data,
+    EcsTableSystem *system_data,
     uint32_t thread_count)
 {
     if (system_data->jobs) {
@@ -173,7 +173,7 @@ void ecs_schedule_jobs(
     EcsWorld *world,
     EcsHandle system)
 {
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem_h);
+    EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     uint32_t thread_count = ecs_array_count(world->worker_threads);
     uint32_t total_rows = 0;
 
@@ -249,7 +249,7 @@ void ecs_prepare_jobs(
     EcsWorld *world,
     EcsHandle system)
 {
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem_h);
+    EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     EcsArray *threads = world->worker_threads;
     EcsArray *jobs = system_data->jobs;
     int i;

@@ -56,6 +56,20 @@ char* parse_complex_elem(
 
 /* -- Private functions -- */
 
+/** Count components in a signature */
+uint32_t ecs_parse_components_count(
+    const char *sig)
+{
+    const char *ptr = sig;
+    uint32_t count = 1;
+
+    while ((ptr = strchr(ptr + 1, ','))) {
+        count ++;
+    }
+
+    return count;
+}
+
 /** Parse component expression */
 EcsResult ecs_parse_component_expr(
     EcsWorld *world,

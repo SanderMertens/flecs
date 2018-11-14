@@ -77,6 +77,7 @@ test.suite EcsPrefab {
     tc_prefab_prefab()
     tc_prefab_override_1_of_2()
     tc_prefab_override_2_of_2()
+    tc_prefab_override_1_after_1()
     tc_prefab_override_w_family()
     tc_prefab_override_2_w_family()
     tc_prefab_add_to_empty_entity()

@@ -290,6 +290,21 @@ void test_EcsInitSystem_tc_add_in_init(
     ecs_fini(world);
 }
 
+static
+void AddInInitPrefab(EcsRows *rows) {
+    void *row;
+    EcsWorld *world = rows->world;
+    HandleCtx *ctx = ecs_get_context(world);
+    EcsHandle int_h = ctx->h;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        ecs_add(world, entity, int_h);
+        ecs_commit(world, entity);
+        int prefab_value = ecs_get(world, entity, int);
+        ecs_set(world, entity, int, prefab_value + 10);
+    }
+}
+
 void test_EcsInitSystem_tc_add_in_init_from_prefab(
     test_EcsInitSystem this)
 {
@@ -300,7 +315,7 @@ void test_EcsInitSystem_tc_add_in_init_from_prefab(
     ECS_COMPONENT(world, Bar);
     ECS_PREFAB(world, MyPrefab, Bar);
     ECS_FAMILY(world, MyFamily, Foo, MyPrefab);
-    ECS_SYSTEM(world, AddInInit, EcsOnInit, Foo);
+    ECS_SYSTEM(world, AddInInitPrefab, EcsOnInit, Foo);
 
     ecs_set(world, MyPrefab_h, Bar, 20);
 
@@ -312,43 +327,284 @@ void test_EcsInitSystem_tc_add_in_init_from_prefab(
 
     test_assert(ecs_has(world, e, Bar_h));
     test_assertint(ecs_get(world, MyPrefab_h, Bar), 20);
-    test_assertint(ecs_get(world, e, Bar), 20);
+    test_assertint(ecs_get(world, e, Bar), 30);
 
     ecs_fini(world);
+}
+
+typedef struct Node {
+    int value;
+    EcsHandle entity;
+} Node;
+
+static
+void NewNode(EcsRows *rows) {
+    void *row;
+    EcsWorld *world = rows->world;
+    HandleCtx *ctx = ecs_get_context(world);
+    EcsHandle int_h = ctx->h;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        Node *node = ecs_column(rows, row, 0);
+        node->value = 10;
+        node->entity = ecs_new(world, int_h);
+        ecs_set(world, node->entity, int, 20);
+    }
 }
 
 void test_EcsInitSystem_tc_new_in_init(
     test_EcsInitSystem this)
 {
-    /* Insert implementation */
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Node);
+    ECS_COMPONENT(world, Foo);
+    ECS_SYSTEM(world, NewNode, EcsOnInit, Node);
+
+    HandleCtx ctx = {.h = Foo_h};
+    ecs_set_context(world, &ctx);
+
+    EcsHandle e = ecs_new(world, Node_h);
+    test_assert(e != 0);
+
+    EcsHandle new_entity = ecs_get(world, e, Node).entity;
+
+    test_assert(new_entity != 0);
+    test_assert(ecs_has(world, new_entity, Foo_h));
+    test_assertint(ecs_get(world, new_entity, Foo), 20);
+
+    ecs_fini(world);
+}
+
+static
+void RemoveInInit(EcsRows *rows) {
+    void *row;
+    EcsWorld *world = rows->world;
+    HandleCtx *ctx = ecs_get_context(world);
+    EcsHandle int_h = ctx->h;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        int *v1 = ecs_column(rows, row, 0);
+        int *v2 = ecs_column(rows, row, 1);
+        ecs_remove(world, entity, int_h);
+        ecs_commit(world, entity);
+        (*v1) = 10;
+        (*v2) = 20;
+    }
 }
 
 void test_EcsInitSystem_tc_remove_in_init(
     test_EcsInitSystem this)
 {
-    /* Insert implementation */
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_SYSTEM(world, RemoveInInit, EcsOnInit, Foo, Bar);
+
+    HandleCtx ctx = {.h = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    EcsHandle e = ecs_new(world, MyFamily_h);
+    test_assert(e != 0);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, Bar_h));
+    test_assertint(ecs_get(world, e, Foo), 10);
+
+    ecs_fini(world);
+}
+
+static
+void InitTest(EcsRows *rows) {
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        int *v = ecs_column(rows, row, 0);
+        *v = 100;
+    }
+}
+
+static
+void NewInProgress(EcsRows *rows) {
+    void *row;
+    EcsWorld *world = rows->world;
+    HandleCtx *ctx = ecs_get_context(world);
+    EcsHandle int_h = ctx->h;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        Node *node = ecs_column(rows, row, 0);
+        node->value = 10;
+        node->entity = ecs_new(world, int_h);
+    }
 }
 
 void test_EcsInitSystem_tc_init_after_new_in_progress(
     test_EcsInitSystem this)
 {
-    /* Insert implementation */
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Node);
+    ECS_COMPONENT(world, Foo);
+    ECS_SYSTEM(world, NewInProgress, EcsPeriodic, Node);
+    ECS_SYSTEM(world, InitTest, EcsOnInit, Foo);
+
+    HandleCtx ctx = {.h = Foo_h};
+    ecs_set_context(world, &ctx);
+
+    EcsHandle e = ecs_new(world, Node_h);
+    test_assert(e != 0);
+
+    ecs_set(world, e, Node, {0, 0});
+
+    ecs_progress(world);
+
+    EcsHandle new_e = ecs_get(world, e, Node).entity;
+    test_assertint(ecs_get(world, e, Node).value, 10);
+    test_assert(new_e != 0);
+    test_assert(ecs_has(world, new_e, Foo_h));
+    test_assertint(ecs_get(world, new_e, Foo), 100);
+
+    ecs_fini(world);
+}
+
+static
+void AddInProgress(EcsRows *rows) {
+    void *row;
+    EcsWorld *world = rows->world;
+    HandleCtx *ctx = ecs_get_context(world);
+    EcsHandle int_h = ctx->h;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        int *v = ecs_column(rows, row, 0);
+        ecs_add(world, entity, int_h);
+        ecs_commit(world, entity);
+        (*v) ++;
+    }
 }
 
 void test_EcsInitSystem_tc_init_after_add_in_progress(
     test_EcsInitSystem this)
 {
-    /* Insert implementation */
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_SYSTEM(world, AddInProgress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, InitTest, EcsOnInit, Bar);
+
+    HandleCtx ctx = {.h = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    EcsHandle e = ecs_new(world, Foo_h);
+    test_assert(e != 0);
+    ecs_set(world, e, Foo, 10);
+    test_assertint(ecs_get(world, e, Foo), 10);
+
+    ecs_progress(world);
+
+    test_assertint(ecs_get(world, e, Foo), 11);
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assertint(ecs_get(world, e, Bar), 100);
+
+    ecs_fini(world);
+}
+
+typedef int *IntPtr;
+
+static
+void DeinitTest(EcsRows *rows) {
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        int **v = ecs_column(rows, row, 0);
+        (**v) --;
+    }
+}
+
+static
+void DeleteInProgress(EcsRows *rows) {
+    void *row;
+    EcsWorld *world = rows->world;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        Node *node = ecs_column(rows, row, 0);
+        node->value = 10;
+        ecs_delete(world, node->entity);
+    }
 }
 
 void test_EcsInitSystem_tc_deinit_after_delete_in_progress(
     test_EcsInitSystem this)
 {
-    /* Insert implementation */
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Node);
+    ECS_COMPONENT(world, IntPtr);
+    ECS_SYSTEM(world, DeleteInProgress, EcsPeriodic, Node);
+    ECS_SYSTEM(world, DeinitTest, EcsOnDeinit, IntPtr);
+
+    EcsHandle e = ecs_new(world, Node_h);
+    test_assert(e != 0);
+
+    EcsHandle e2 = ecs_new(world, IntPtr_h);
+    test_assert(e2 != 0);
+
+    int counter = 1;
+    ecs_set(world, e2, IntPtr, &counter);
+    ecs_set(world, e, Node, {.value = 0, .entity = e2});
+
+    ecs_progress(world);
+
+    test_assertint(ecs_get(world, e, Node).value, 10);
+    test_assertint(counter, 0);
+
+    ecs_fini(world);
+}
+
+static
+void RemoveInProgress(EcsRows *rows) {
+    void *row;
+    EcsWorld *world = rows->world;
+    HandleCtx *ctx = ecs_get_context(world);
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        int *v = ecs_column(rows, row, 0);
+        ecs_remove(world, entity, ctx->h);
+        ecs_commit(world, entity);
+        (*v) ++;
+    }
 }
 
 void test_EcsInitSystem_tc_deinit_after_remove_in_progress(
     test_EcsInitSystem this)
 {
-    /* Insert implementation */
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, IntPtr);
+    ECS_FAMILY(world, MyFamily, Foo, IntPtr);
+    ECS_SYSTEM(world, RemoveInProgress, EcsPeriodic, Foo, IntPtr);
+    ECS_SYSTEM(world, DeinitTest, EcsOnDeinit, IntPtr);
+
+    EcsHandle e = ecs_new(world, MyFamily_h);
+    test_assert(e != 0);
+
+    int counter = 1;
+    ecs_set(world, e, IntPtr, &counter);
+    ecs_set(world, e, Foo, 10);
+
+    HandleCtx ctx = {.h = IntPtr_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world);
+
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(!ecs_has(world, e, IntPtr_h));
+    test_assertint(ecs_get(world, e, Foo), 11);
+    test_assertint(counter, 0);
+
+    ecs_fini(world);
 }

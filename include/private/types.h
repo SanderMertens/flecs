@@ -13,6 +13,8 @@
 #define ECS_WORLD_INITIAL_STAGING_COUNT (4)
 #define ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT (4)
 #define ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT (4)
+#define ECS_WORLD_INITIAL_INIT_SYSTEM_COUNT (4)
+#define ECS_WORLD_INITIAL_DEINIT_SYSTEM_COUNT (4)
 #define ECS_WORLD_INITIAL_PREFAB_COUNT (4)
 #define ECS_MAP_INITIAL_NODE_COUNT (64)
 #define ECS_TABLE_INITIAL_ROW_COUNT (8)
@@ -65,7 +67,7 @@ typedef struct EcsSystemRef {
     EcsHandle component;
 } EcsSystemRef;
 
-typedef struct EcsSystem {
+typedef struct EcsTableSystem {
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
     EcsArray *columns;         /* Column components (AND) and families (OR) */
     EcsArray *components;      /* Computed component list per matched table */
@@ -76,12 +78,16 @@ typedef struct EcsSystem {
     EcsArrayParams table_params; /* Parameters for tables array */
     EcsArrayParams component_params; /* Parameters for components array */
     EcsArrayParams ref_params; /* Parameters for tables array */
-    EcsSystemKind kind;        /* Kind that determines when system is invoked */
     EcsFamily not_from_entity;    /* Exclude components from entity */
     EcsFamily not_from_component; /* Exclude components from components */
     EcsFamily and_from_entity; /* Used to match init / deinit notifications */
     bool enabled;              /* Is system enabled or not */
-} EcsSystem;
+} EcsTableSystem;
+
+typedef struct EcsRowSystem {
+    EcsSystemAction action;     /* Callback to be invoked for matching rows */
+    EcsArray *components;       /* Components in order of signature */
+} EcsRowSystem;
 
 /* -- Private types -- */
 
@@ -89,8 +95,6 @@ typedef struct EcsTable {
     EcsArray *family;             /* Reference to family_index entry */
     EcsArray *rows;               /* Rows of the table */
     EcsArray *periodic_systems;   /* Periodic systems matched with table */
-    EcsArray *init_systems;       /* Init systems, indexed by family */
-    EcsArray *deinit_systems;     /* Deinit systems, indexed by family */
     EcsArrayParams row_params;    /* Parameters for rows array */
     EcsFamily family_id;          /* Identifies a family in family_index */
     uint16_t *columns;            /* Column (component) sizes */
@@ -115,7 +119,7 @@ typedef struct EcsStage {
 
 typedef struct EcsJob {
     EcsHandle system;             /* System handle */
-    EcsSystem *system_data;       /* System to run */
+    EcsTableSystem *system_data;  /* System to run */
     uint32_t table_index;         /* Current SystemTable */
     uint32_t start_index;         /* Start index in row chunk */
     uint32_t row_count;           /* Total number of rows to process */
@@ -138,8 +142,9 @@ struct EcsWorld {
     EcsArray *table_db;           /* Table storage */
     EcsArray *periodic_systems;   /* Periodic systems */
     EcsArray *inactive_systems;   /* Periodic systems with empty tables */
-    EcsArray *other_systems;      /* Non-periodic systems */
 
+    EcsMap *init_systems;         /* Init systems */
+    EcsMap *deinit_systems;       /* Deinit systems */
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */
     EcsMap *family_index;         /* References to component families */
@@ -158,16 +163,19 @@ struct EcsWorld {
     uint32_t threads_running;     /* Number of threads running */
 
     EcsHandle last_handle;        /* Last issued handle */
-    EcsHandle deinit_system;      /* Handle to internal deinit system */
+    EcsHandle deinit_table_system; /* Handle to internal deinit system */
+    EcsHandle deinit_row_system; /* Handle to internal deinit system */
 
     EcsFamily component_family;   /* EcsComponent, EcsId */
-    EcsFamily system_family;      /* EcsSystem, EcsId */
+    EcsFamily table_system_family; /* EcsTableSystem, EcsId */
+    EcsFamily row_system_family;  /* EcsRowSystem, EcsId */
     EcsFamily family_family;      /* EcsFamily, EcsId */
     EcsFamily prefab_family;      /* EcsPrefab, EcsId */
 
     bool valid_schedule;          /* Is job schedule still valid */
     bool quit_workers;            /* Signals worker threads to quit */
     bool in_progress;             /* Is world being progressed */
+    bool is_merging;              /* Is world currently being merged */
     bool auto_merge;              /* Are stages auto-merged by ecs_progress */
 };
 

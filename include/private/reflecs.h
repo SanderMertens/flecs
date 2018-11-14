@@ -16,6 +16,15 @@ void ecs_merge_entity(
     EcsHandle entity,
     EcsRow *staged_row);
 
+bool ecs_notify(
+    EcsWorld *world,
+    EcsStage *stage,
+    EcsMap *systems,
+    EcsFamily family_id,
+    EcsTable *table,
+    EcsArray *rows,
+    int32_t row_index);
+
 /* -- World API -- */
 
 EcsTable* ecs_world_get_table(
@@ -140,6 +149,13 @@ void ecs_table_free(
 
 /* -- System API -- */
 
+EcsHandle ecs_new_table_system(
+    EcsWorld *world,
+    const char *id,
+    EcsSystemKind kind,
+    const char *sig,
+    EcsSystemAction action);
+
 EcsResult ecs_system_notify_create_table(
     EcsWorld *world,
     EcsStage *stage,
@@ -157,14 +173,15 @@ void ecs_run_job(
     EcsThread *thread,
     EcsJob *job);
 
-void ecs_system_notify(
+void ecs_row_notify(
     EcsWorld *world,
     EcsStage *stage,
     EcsHandle system,
-    EcsSystem *system_data,
-    EcsTable *table,
-    uint32_t table_index,
-    uint32_t row_index);
+    EcsRowSystem *system_data,
+    EcsArray *rows,
+    EcsArrayParams *row_params,
+    uint32_t row_index,
+    int32_t *columns);
 
 /* -- Worker API -- */
 
@@ -197,6 +214,9 @@ EcsResult ecs_parse_component_expr(
     const char *sig,
     ecs_parse_action action,
     void *ctx);
+
+uint32_t ecs_parse_components_count(
+    const char *sig);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(

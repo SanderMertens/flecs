@@ -2,6 +2,44 @@
 #include <assert.h>
 #include "include/private/reflecs.h"
 
+/** Parse callback that adds family to family identifier for ecs_new_family */
+static
+EcsResult add_family(
+    EcsWorld *world,
+    EcsSystemExprElemKind elem_kind,
+    EcsSystemExprOperKind oper_kind,
+    const char *component_id,
+    void *data)
+{
+    EcsFamily *family_id = data;
+
+    if (oper_kind != EcsOperAnd) {
+        return EcsError;
+    }
+
+    if (elem_kind != EcsFromEntity) {
+        return EcsError;
+    }
+
+    if (!strcmp(component_id, "0")) {
+        *family_id = 0;
+    } else {
+        EcsHandle component = ecs_lookup(world, component_id);
+        if (!component) {
+            return EcsError;
+        }
+
+        EcsFamily resolved_family = ecs_family_from_handle(
+            world, NULL, component);
+        assert(resolved_family != 0);
+
+        *family_id = ecs_family_merge(
+            world, NULL, *family_id, resolved_family, 0);
+    }
+
+    return EcsOk;
+}
+
 /** Comparator function for handles */
 static
 int compare_handle(
@@ -317,4 +355,65 @@ bool ecs_family_contains_component(
     }
 
     return false;
+}
+
+/* -- Public API -- */
+
+EcsHandle ecs_new_family(
+    EcsWorld *world,
+    const char *id,
+    const char *sig)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+    EcsFamily family = 0;
+
+    if (ecs_parse_component_expr(world, sig, add_family, &family) != EcsOk) {
+        return 0;
+    }
+
+    EcsHandle family_entity = ecs_map_get64(world->family_handles, family);
+    if (family_entity) {
+        EcsId *id_ptr = ecs_get_ptr(world, family_entity, EcsId_h);
+
+        assert(id_ptr != NULL);
+        assert_func(!strcmp(id_ptr->id, id));
+
+        return family_entity;
+    } else {
+        EcsHandle result = ecs_new_w_family(world, NULL, world->family_family);
+        EcsId *id_ptr = ecs_get_ptr(world, result, EcsId_h);
+        id_ptr->id = id;
+
+        EcsFamily *family_ptr = ecs_get_ptr(world, result, EcsFamily_h);
+        *family_ptr = family;
+
+        ecs_map_set64(world->family_handles, family, result);
+
+        return result;
+    }
+}
+
+EcsHandle ecs_new_prefab(
+    EcsWorld *world,
+    const char *id,
+    const char *sig)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+    EcsFamily family = 0;
+
+    if (ecs_parse_component_expr(world, sig, add_family, &family) != EcsOk) {
+        return 0;
+    }
+
+    family = ecs_family_merge(world, NULL, world->prefab_family, family, 0);
+    EcsHandle result = ecs_new_w_family(world, NULL, family);
+
+    EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
+    if (!id_data) {
+        return 0;
+    }
+
+    id_data->id = id;
+
+    return result;
 }
