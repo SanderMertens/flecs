@@ -351,6 +351,10 @@ uint32_t commit_w_family(
         entity_index = world->entity_index;
     }
 
+    if (family_id) {
+        new_table = ecs_world_get_table(world, stage, family_id);
+    }
+
     if (old_row_64) {
         old_row = ecs_to_row(old_row_64);
         old_family_id = old_row.family_id;
@@ -368,7 +372,6 @@ uint32_t commit_w_family(
     }
 
     if (family_id) {
-        new_table = ecs_world_get_table(world, stage, family_id);
         if (in_progress) {
             EcsArray *rows = ecs_map_get(stage->data_stage, family_id);
             new_rows = rows;
