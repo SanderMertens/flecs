@@ -1639,7 +1639,7 @@ void test_EcsPeriodicSystem_tc_system_1_from_system_implicit_add(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, InitBar, EcsOnInit, Bar);
+    ECS_SYSTEM(world, InitBar, EcsOnAdd, Bar);
     ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, SYSTEM.Bar);
 
     EcsHandle e1 = ecs_new(world, Foo_h);

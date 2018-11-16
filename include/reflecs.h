@@ -73,8 +73,9 @@ typedef enum EcsResult {
 /** System kinds determine when and how systems are ran */
 typedef enum EcsSystemKind {
     EcsPeriodic,
-    EcsOnInit,
-    EcsOnDeinit,
+    EcsOnAdd,
+    EcsOnRemove,
+    EcsOnSet,
     EcsOnDemand
 } EcsSystemKind;
 
@@ -397,6 +398,12 @@ EcsHandle ecs_new_w_count(
     uint32_t count,
     EcsHandle *handles_out);
 
+/** Create new entity with same components as specified entity. */
+REFLECS_EXPORT
+EcsHandle ecs_dup(
+    EcsWorld *world,
+    EcsHandle entity);
+
 /** Create a new prefab entity.
  * Prefab entities allow entities to share a set of components. Components of
  * the prefab will appear on the specified entity when using any of the API
@@ -524,9 +531,9 @@ EcsResult ecs_remove(
  * entity is moved from that table to the new table. This will likely cause the
  * moving of another entity in the old table, to prevent fragmentation.
  *
- * Matching EcsOnInit and EcsOnDeinit systems will be ran as part of the commit
+ * Matching EcsOnAdd and EcsOnRemove systems will be ran as part of the commit
  * if one or more added / removed components matches their signature. Thus, if
- * a EcsOnInit system is registered for component A and B, and an entity already
+ * a EcsOnAdd system is registered for component A and B, and an entity already
  * had A but is now also committing B, the system will be invoked. A quadratic
  * loop is required to determine for which components init / deinit systems have
  * to be invoked. This comparison will be skipped if there are no init / deinit
@@ -590,7 +597,7 @@ void* ecs_get_ptr(
  * @param component: The component to set.
  */
 REFLECS_EXPORT
-void ecs_set_ptr(
+EcsHandle ecs_set_ptr(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component,
@@ -758,8 +765,8 @@ EcsHandle ecs_new_family(
  * created with three different kinds:
  *
  * - EcsPeriodic: the system is invoked when ecs_progress is called.
- * - EcsOnInit: the system is invoked when a component is committed to memory.
- * - EcsOnDeinit: the system is invoked when a component is removed from memory.
+ * - EcsOnAdd: the system is invoked when a component is committed to memory.
+ * - EcsOnRemove: the system is invoked when a component is removed from memory.
  * - EcsOnDemand: the system is only invoked on demand (ecs_run)
  *
  * The signature of the system is a string formatted as a comma separated list

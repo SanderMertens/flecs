@@ -374,6 +374,11 @@ EcsHandle ecs_new_family(
     assert(world->magic == ECS_WORLD_MAGIC);
     EcsFamilyComponent family = {0};
 
+    EcsHandle result = ecs_lookup(world, id);
+    if (result) {
+        return result;
+    }
+
     if (ecs_parse_component_expr(world, sig, add_family, &family) != EcsOk) {
         return 0;
     }
@@ -388,7 +393,7 @@ EcsHandle ecs_new_family(
 
         return family_entity;
     } else {
-        EcsHandle result = ecs_new_w_family(world, NULL, world->family_family);
+        result = ecs_new_w_family(world, NULL, world->family_family);
         EcsId *id_ptr = ecs_get_ptr(world, result, EcsId_h);
         id_ptr->id = id;
 
@@ -410,13 +415,18 @@ EcsHandle ecs_new_prefab(
     assert(world->magic == ECS_WORLD_MAGIC);
     EcsFamilyComponent family = {0};
 
+    EcsHandle result = ecs_lookup(world, id);
+    if (result) {
+        return result;
+    }
+
     if (ecs_parse_component_expr(world, sig, add_family, &family) != EcsOk) {
         return 0;
     }
 
     family.resolved = ecs_family_merge(
         world, NULL, world->prefab_family, family.resolved, 0);
-    EcsHandle result = ecs_new_w_family(world, NULL, family.resolved);
+    result = ecs_new_w_family(world, NULL, family.resolved);
 
     EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
     if (!id_data) {

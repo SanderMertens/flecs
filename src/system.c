@@ -61,10 +61,12 @@ EcsHandle new_row_system(
     }
 
     EcsMap *index;
-    if (kind == EcsOnInit) {
-        index = world->init_systems;
-    } else {
-        index = world->deinit_systems;
+    if (kind == EcsOnAdd) {
+        index = world->add_systems;
+    } else if (kind == EcsOnRemove) {
+        index = world->remove_systems;
+    } else if (kind == EcsOnSet) {
+        index = world->set_systems;
     }
 
     EcsFamily family_id = 0;
@@ -122,12 +124,18 @@ EcsHandle ecs_new_system(
     const char *sig,
     EcsSystemAction action)
 {
+    EcsHandle result = ecs_lookup(world, id);
+    if (result) {
+        return result;
+    }
+
     if (kind == EcsPeriodic || kind == EcsOnDemand) {
-        return ecs_new_table_system(world, id, kind, sig, action);
-    } else if (kind == EcsOnInit || kind == EcsOnDeinit) {
-        return new_row_system(world, id, kind, sig, action);
+        result = ecs_new_table_system(world, id, kind, sig, action);
+    } else if (kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet) {
+        result = new_row_system(world, id, kind, sig, action);
     } else {
         abort();
     }
-    return 0;
+
+    return result;
 }

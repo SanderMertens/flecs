@@ -157,6 +157,7 @@ void* get_row_ptr(
     void *row = ecs_table_get(table, rows, index);
     assert(row != NULL);
     uint32_t offset = get_offset_for_component(table, component);
+
     if (offset != -1) {
         return ECS_OFFSET(row, offset + sizeof(EcsHandle));
     } else {
@@ -279,12 +280,13 @@ void copy_from_prefab(
 }
 
 static
-bool init_components(
+bool notify_pre_merge(
     EcsWorld *world,
     EcsStage *stage,
     EcsTable *table,
     uint32_t row,
-    EcsFamily to_init)
+    EcsFamily to_init,
+    EcsMap *systems)
 {
     if (world->is_merging) {
         return false;
@@ -300,7 +302,7 @@ bool init_components(
     }
 
     bool result = ecs_notify(
-        world, stage, world->init_systems, to_init, table, rows, row);
+        world, stage, systems, to_init, table, rows, row);
 
     world->in_progress = in_progress;
     if (result && !in_progress) {
@@ -311,7 +313,7 @@ bool init_components(
 }
 
 static
-bool deinit_components(
+bool notify_post_merge(
     EcsWorld *world,
     EcsStage *stage,
     EcsTable *table,
@@ -323,7 +325,7 @@ bool deinit_components(
     }
 
     return ecs_notify(
-      world, stage, world->deinit_systems, to_deinit, table, table->rows, row);
+      world, stage, world->remove_systems, to_deinit, table, table->rows, row);
 }
 
 /** Commit an entity with a specified family to memory */
@@ -398,7 +400,7 @@ uint32_t commit_w_family(
                 new_table, new_rows, new_index, old_table, old_rows, old_index);
         }
         if (to_remove) {
-            deinit_components(world, stage, old_table, old_index, to_remove);
+            notify_post_merge(world, stage, old_table, old_index, to_remove);
         }
         ecs_table_delete(world, old_table, old_index);
     }
@@ -408,7 +410,8 @@ uint32_t commit_w_family(
         uint64_t row_64 = ecs_from_row(new_row);
         ecs_map_set64(entity_index, entity, row_64);
         if (to_add) {
-            init_components(world, stage, new_table, new_index, to_add);
+            notify_pre_merge
+              (world, stage, new_table, new_index, to_add, world->add_systems);
             copy_from_prefab(
                 world, stage, new_table, entity, new_index, family_id, to_add);
         }
@@ -447,6 +450,7 @@ bool ecs_notify(
         uint32_t i, column_count = ecs_array_count(family);
         EcsHandle *buffer = ecs_array_buffer(system_data->components);
         int32_t columns[column_count];
+
         for (i = 0; i < column_count; i ++) {
             columns[i] = ecs_table_column_offset(table, buffer[i]);
         }
@@ -613,6 +617,24 @@ EcsHandle ecs_new(
     return entity;
 }
 
+EcsHandle ecs_dup(
+    EcsWorld *world,
+    EcsHandle entity)
+{
+    EcsStage *stage = ecs_get_stage(&world);
+    EcsHandle result = ++ world->last_handle;
+    if (entity) {
+        int64_t row64 = ecs_map_get64(world->entity_index, entity);
+        if (row64) {
+            EcsRow row = ecs_to_row(row64);
+            EcsFamily family_id = row.family_id;
+            commit_w_family(world, stage, result, 0, family_id, family_id, 0);
+        }
+    }
+
+    return result;
+}
+
 EcsHandle ecs_new_w_count(
     EcsWorld *world,
     EcsHandle type,
@@ -670,7 +692,7 @@ void* ecs_get_ptr(
     return get_ptr(world, entity, component, false);
 }
 
-void ecs_set_ptr(
+EcsHandle ecs_set_ptr(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component,
@@ -678,15 +700,35 @@ void ecs_set_ptr(
 {
     EcsComponent *c = ecs_get_ptr(world, component, EcsComponent_h);
     int size = c->size;
+
+    if (!entity) {
+        entity = ecs_new(world, component);
+    }
+
     int *dst = get_ptr(world, entity, component, true);
     if (!dst) {
         ecs_add(world, entity, component);
         ecs_commit(world, entity);
+
         dst = get_ptr(world, entity, component, true);
         assert(dst != NULL);
     }
 
     memcpy(dst, src, size);
+
+    EcsStage *stage = ecs_get_stage(&world);
+    EcsFamily set_family = ecs_family_from_handle(world, stage, component);
+    uint64_t row64 = ecs_map_get64(world->entity_index, entity);
+    if (!row64) {
+        row64 = ecs_map_get64(stage->entity_stage, entity);
+    }
+    
+    EcsRow row = ecs_to_row(row64);
+    EcsTable *table = ecs_world_get_table(world, stage, row.family_id);
+    notify_pre_merge(
+        world, stage, table, row.index, set_family, world->set_systems);
+
+    return entity;
 }
 
 bool ecs_has(
@@ -711,7 +753,12 @@ EcsHandle ecs_new_component(
     size_t size)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    EcsHandle result = ecs_new_w_family(world, NULL, world->component_family);
+    EcsHandle result = ecs_lookup(world, id);
+    if (result) {
+        return result;
+    }
+
+    result = ecs_new_w_family(world, NULL, world->component_family);
 
     EcsComponent *component_data = ecs_get_ptr(world, result, EcsComponent_h);
     if (!component_data) {

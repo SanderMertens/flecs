@@ -215,7 +215,7 @@ void deinit_table_system(
 
 /** Cleanup resources allocated by table systems */
 static
-void deinit_systems(
+void remove_systems(
     EcsRows *rows)
 {
     void *row;
@@ -433,7 +433,7 @@ void ecs_dump(
     }
 
     printf("\nInit systems\n");
-    it = ecs_map_iter(world->init_systems);
+    it = ecs_map_iter(world->add_systems);
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = ecs_map_next(&it, NULL);
         EcsId *id = ecs_get_ptr(world, h, EcsId_h);
@@ -441,7 +441,7 @@ void ecs_dump(
     }
 
     printf("\nDeinit systems\n");
-    it = ecs_map_iter(world->deinit_systems);
+    it = ecs_map_iter(world->remove_systems);
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = ecs_map_next(&it, NULL);
         EcsId *id = ecs_get_ptr(world, h, EcsId_h);
@@ -478,8 +478,9 @@ EcsWorld *ecs_init(void) {
     world->inactive_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
 
-    world->init_systems = ecs_map_new(ECS_WORLD_INITIAL_INIT_SYSTEM_COUNT);
-    world->deinit_systems = ecs_map_new(ECS_WORLD_INITIAL_DEINIT_SYSTEM_COUNT);
+    world->add_systems = ecs_map_new(ECS_WORLD_INITIAL_INIT_SYSTEM_COUNT);
+    world->remove_systems = ecs_map_new(ECS_WORLD_INITIAL_DEINIT_SYSTEM_COUNT);
+    world->set_systems = ecs_map_new(ECS_WORLD_INITIAL_SET_SYSTEM_COUNT);
     world->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
     world->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
     world->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
@@ -520,17 +521,17 @@ EcsWorld *ecs_init(void) {
     world->table_system_family = get_builtin_family(world, EcsTableSystem_h);
 
     world->deinit_row_system = ecs_new_system(
-        world, "EcsDeinitRowSystem", EcsOnDeinit,
-               "EcsRowSystem", deinit_systems);
+        world, "EcsDeinitRowSystem", EcsOnRemove,
+               "EcsRowSystem", remove_systems);
     assert(world->deinit_row_system != 0);
 
     world->deinit_table_system = ecs_new_system(
-        world, "EcsDeinitTableSystem", EcsOnDeinit,
-               "EcsTableSystem", deinit_systems);
+        world, "EcsDeinitTableSystem", EcsOnRemove,
+               "EcsTableSystem", remove_systems);
     assert(world->deinit_table_system != 0);
 
     assert_func(ecs_new_system(
-        world, "EcsInitComponent", EcsOnInit, "EcsComponent", init_component)
+        world, "EcsInitComponent", EcsOnAdd, "EcsComponent", init_component)
         != 0);
 
     return world;
@@ -553,8 +554,9 @@ EcsResult ecs_fini(
     ecs_array_free(world->periodic_systems);
     ecs_array_free(world->inactive_systems);
 
-    ecs_map_free(world->init_systems);
-    ecs_map_free(world->deinit_systems);
+    ecs_map_free(world->add_systems);
+    ecs_map_free(world->remove_systems);
+    ecs_map_free(world->set_systems);
     ecs_map_free(world->entity_index);
     ecs_map_free(world->table_index);
     ecs_map_free(world->family_handles);

@@ -54,7 +54,7 @@ void test_EcsInitSystem_tc_init_after_add(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, TestInit, EcsOnInit, Bar);
+    ECS_SYSTEM(world, TestInit, EcsOnAdd, Bar);
 
     Context ctx = {0};
     ecs_set_context(world, &ctx);
@@ -86,7 +86,7 @@ void test_EcsInitSystem_tc_init_after_add_to_empty(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, TestInit, EcsOnInit, Bar);
+    ECS_SYSTEM(world, TestInit, EcsOnAdd, Bar);
 
     Context ctx = {0};
     ecs_set_context(world, &ctx);
@@ -115,7 +115,7 @@ void test_EcsInitSystem_tc_init_after_new(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, TestInit, EcsOnInit, Foo);
+    ECS_SYSTEM(world, TestInit, EcsOnAdd, Foo);
 
     Context ctx = {0};
     ecs_set_context(world, &ctx);
@@ -141,7 +141,7 @@ void test_EcsInitSystem_tc_init_after_new_w_count(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, TestInit, EcsOnInit, Foo);
+    ECS_SYSTEM(world, TestInit, EcsOnAdd, Foo);
 
     Context ctx = {0};
     ecs_set_context(world, &ctx);
@@ -178,7 +178,7 @@ void test_EcsInitSystem_tc_deinit_after_delete(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, TestInit, EcsOnDeinit, Foo);
+    ECS_SYSTEM(world, TestInit, EcsOnRemove, Foo);
 
     Context ctx = {0};
     ecs_set_context(world, &ctx);
@@ -205,7 +205,7 @@ void test_EcsInitSystem_tc_deinit_after_fini(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, TestInit, EcsOnDeinit, Foo);
+    ECS_SYSTEM(world, TestInit, EcsOnRemove, Foo);
 
     Context ctx = {0};
     ecs_set_context(world, &ctx);
@@ -230,7 +230,7 @@ void test_EcsInitSystem_tc_deinit_after_remove(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, TestInit, EcsOnDeinit, Foo);
+    ECS_SYSTEM(world, TestInit, EcsOnRemove, Foo);
 
     Context ctx = {0};
     ecs_set_context(world, &ctx);
@@ -276,7 +276,7 @@ void test_EcsInitSystem_tc_add_in_init(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, AddInInit, EcsOnInit, Foo);
+    ECS_SYSTEM(world, AddInInit, EcsOnAdd, Foo);
 
     HandleCtx ctx = {.h = Bar_h};
     ecs_set_context(world, &ctx);
@@ -315,7 +315,7 @@ void test_EcsInitSystem_tc_add_in_init_from_prefab(
     ECS_COMPONENT(world, Bar);
     ECS_PREFAB(world, MyPrefab, Bar);
     ECS_FAMILY(world, MyFamily, Foo, MyPrefab);
-    ECS_SYSTEM(world, AddInInitPrefab, EcsOnInit, Foo);
+    ECS_SYSTEM(world, AddInInitPrefab, EcsOnAdd, Foo);
 
     ecs_set(world, MyPrefab_h, Bar, 20);
 
@@ -359,7 +359,7 @@ void test_EcsInitSystem_tc_new_in_init(
 
     ECS_COMPONENT(world, Node);
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, NewNode, EcsOnInit, Node);
+    ECS_SYSTEM(world, NewNode, EcsOnAdd, Node);
 
     HandleCtx ctx = {.h = Foo_h};
     ecs_set_context(world, &ctx);
@@ -402,7 +402,7 @@ void test_EcsInitSystem_tc_remove_in_init(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, RemoveInInit, EcsOnInit, Foo, Bar);
+    ECS_SYSTEM(world, RemoveInInit, EcsOnAdd, Foo, Bar);
 
     HandleCtx ctx = {.h = Bar_h};
     ecs_set_context(world, &ctx);
@@ -448,7 +448,7 @@ void test_EcsInitSystem_tc_init_after_new_in_progress(
     ECS_COMPONENT(world, Node);
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, NewInProgress, EcsPeriodic, Node);
-    ECS_SYSTEM(world, InitTest, EcsOnInit, Foo);
+    ECS_SYSTEM(world, InitTest, EcsOnAdd, Foo);
 
     HandleCtx ctx = {.h = Foo_h};
     ecs_set_context(world, &ctx);
@@ -493,7 +493,7 @@ void test_EcsInitSystem_tc_init_after_add_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, AddInProgress, EcsPeriodic, Foo);
-    ECS_SYSTEM(world, InitTest, EcsOnInit, Bar);
+    ECS_SYSTEM(world, InitTest, EcsOnAdd, Bar);
 
     HandleCtx ctx = {.h = Bar_h};
     ecs_set_context(world, &ctx);
@@ -543,7 +543,7 @@ void test_EcsInitSystem_tc_deinit_after_delete_in_progress(
     ECS_COMPONENT(world, Node);
     ECS_COMPONENT(world, IntPtr);
     ECS_SYSTEM(world, DeleteInProgress, EcsPeriodic, Node);
-    ECS_SYSTEM(world, DeinitTest, EcsOnDeinit, IntPtr);
+    ECS_SYSTEM(world, DeinitTest, EcsOnRemove, IntPtr);
 
     EcsHandle e = ecs_new(world, Node_h);
     test_assert(e != 0);
@@ -587,7 +587,7 @@ void test_EcsInitSystem_tc_deinit_after_remove_in_progress(
     ECS_COMPONENT(world, IntPtr);
     ECS_FAMILY(world, MyFamily, Foo, IntPtr);
     ECS_SYSTEM(world, RemoveInProgress, EcsPeriodic, Foo, IntPtr);
-    ECS_SYSTEM(world, DeinitTest, EcsOnDeinit, IntPtr);
+    ECS_SYSTEM(world, DeinitTest, EcsOnRemove, IntPtr);
 
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
@@ -629,7 +629,7 @@ void test_EcsInitSystem_tc_init_2_components(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, InitTwo, EcsOnInit, Bar, Foo);
+    ECS_SYSTEM(world, InitTwo, EcsOnAdd, Bar, Foo);
 
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);

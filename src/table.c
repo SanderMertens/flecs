@@ -164,7 +164,7 @@ void ecs_table_deinit(
     EcsTable *table)
 {
     ecs_notify(world, NULL,
-        world->deinit_systems, table->family_id, table, table->rows, -1);
+        world->remove_systems, table->family_id, table, table->rows, -1);
 }
 
 void ecs_table_free(

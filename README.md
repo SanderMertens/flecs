@@ -102,10 +102,10 @@ is probably not significant.
 Alternatively, you can assign all entities with a given set of components with
 `OnInit` systems. This is much faster than calling `ecs_set` on every single
 entity. You can create an `OnInit` system just like normal systems, but instead
-of specifying `EcsOnPeriodic`, you specify `EcsOnInit`:
+of specifying `EcsOnPeriodic`, you specify `EcsOnAdd`:
 
 ```c
-ECS_SYSTEM(world, InitPosition, EcsOnInit, Position);
+ECS_SYSTEM(world, InitPosition, EcsOnAdd, Position);
 ```
 This system will be invoked whenever a Position component is added to an entity.
 This code is an example of a system action that simply initializes the values of
@@ -130,10 +130,10 @@ invoked- not even if `Velocity` was introduced in a subsequent commit.
 
 Similar to `OnInit` systems, there are also `OnDeinit` systems which are invoked
 when components are removed from an entity. These systems can be specified
-simply by specifying `EcsOnDeinit`:
+simply by specifying `EcsOnRemove`:
 
 ```c
-ECS_SYSTEM(world, DeinitPosition, EcsOnDeinit, Position);
+ECS_SYSTEM(world, DeinitPosition, EcsOnRemove, Position);
 ```
 
 Just like `OnInit` systems, `OnDeinit` systems are invoked only invoked when all

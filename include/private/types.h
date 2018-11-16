@@ -5,8 +5,8 @@
 #include <pthread.h>
 
 #include <reflecs/reflecs.h>
-#include "array.h"
-#include "map.h"
+#include <reflecs/util/array.h>
+#include <reflecs/util/map.h>
 
 #define ECS_WORLD_INITIAL_TABLE_COUNT (8)
 #define ECS_WORLD_INITIAL_ENTITY_COUNT (64)
@@ -15,6 +15,7 @@
 #define ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT (4)
 #define ECS_WORLD_INITIAL_INIT_SYSTEM_COUNT (4)
 #define ECS_WORLD_INITIAL_DEINIT_SYSTEM_COUNT (4)
+#define ECS_WORLD_INITIAL_SET_SYSTEM_COUNT (4)
 #define ECS_WORLD_INITIAL_PREFAB_COUNT (4)
 #define ECS_MAP_INITIAL_NODE_COUNT (64)
 #define ECS_TABLE_INITIAL_ROW_COUNT (8)
@@ -150,8 +151,10 @@ struct EcsWorld {
     EcsArray *periodic_systems;   /* Periodic systems */
     EcsArray *inactive_systems;   /* Periodic systems with empty tables */
 
-    EcsMap *init_systems;         /* Init systems */
-    EcsMap *deinit_systems;       /* Deinit systems */
+    EcsMap *add_systems;          /* Systems invoked on ecs_add */
+    EcsMap *remove_systems;       /* Systems invoked on ecs_remove */
+    EcsMap *set_systems;          /* Systems invoked on ecs_set */
+
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */
     EcsMap *family_index;         /* References to component families */

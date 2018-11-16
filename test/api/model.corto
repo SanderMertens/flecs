@@ -134,6 +134,14 @@ test.suite EcsInitSystem {
     tc_new_in_init()
 }
 
+test.suite EcsSetSystem {
+    tc_set_after_new_empty()
+    tc_set_after_new_nonempty()
+    tc_set_implicit_new()
+    tc_set_existing_components()
+    tc_set_twice()
+}
+
 test.suite EcsJobs {
     tc_2_thread_1_entity()
     tc_2_thread_2_entity()
