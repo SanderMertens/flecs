@@ -34,7 +34,7 @@ EcsResult add_family(
         assert(family_id != 0);
 
         EcsFamily resolved_id = ecs_family_from_handle(
-            world, NULL, entity);
+            world, NULL, entity, NULL);
         assert(resolved_id != 0);
 
         family->family = ecs_family_merge(
@@ -119,24 +119,37 @@ EcsArray* ecs_family_get(
 EcsFamily ecs_family_from_handle(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle entity)
+    EcsHandle entity,
+    EcsEntityInfo *info)
 {
     if (entity == 0) {
         return 0;
     }
 
-    uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
-    assert(row_64 != 0);
+    EcsTable *table;
+    EcsArray *rows;
+    uint32_t index;
 
-    EcsRow row = ecs_to_row(row_64);
-    EcsTable *table = ecs_world_get_table(world, stage, row.family_id);
+    if (!info) {
+        uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
+        assert(row_64 != 0);
+        EcsRow row = ecs_to_row(row_64);
+        table = ecs_world_get_table(world, stage, row.family_id);
+        rows = table->rows;
+        index = row.index;
+    } else {
+        table = info->table;
+        rows = info->rows;
+        index = info->index;
+    }
+
     EcsHandle *components = ecs_array_buffer(table->family);
     EcsHandle component = components[0];
     EcsFamily family = 0;
 
     if (component == EcsFamilyComponent_h) {
         EcsFamilyComponent *fe = ECS_OFFSET(ecs_table_get(
-            table, table->rows, row.index), sizeof(EcsHandle));
+            table, rows, index), sizeof(EcsHandle));
         family = fe->resolved;
     } else {
         family = ecs_family_register(world, stage, entity, NULL);

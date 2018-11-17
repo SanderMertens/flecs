@@ -58,6 +58,12 @@ void* ecs_array_add(
     const EcsArrayParams *params);
 
 REFLECS_EXPORT
+void* ecs_array_addn(
+    EcsArray **array_inout,
+    const EcsArrayParams *params,
+    uint32_t count);
+
+REFLECS_EXPORT
 void* ecs_array_get(
     EcsArray *array,
     const EcsArrayParams *params,

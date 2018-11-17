@@ -102,7 +102,8 @@ EcsResult stage_components(
     EcsFamily family_id;
 
     family_id = ecs_map_get64(stage_index, entity);
-    EcsFamily resolved_family = ecs_family_from_handle(world, stage, component);
+    EcsFamily resolved_family = ecs_family_from_handle(
+        world, stage, component, NULL);
     assert(resolved_family != 0);
 
     EcsFamily new_family_id;

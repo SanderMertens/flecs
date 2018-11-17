@@ -108,7 +108,7 @@ void ecs_row_notify(
     };
 
     info.element_size = row_params->element_size;
-    info.first = ecs_array_get(rows, row_params, row_index);;
+    info.first = ecs_array_get(rows, row_params, row_index);
     info.last = ECS_OFFSET(info.first, info.element_size);
     info.components = ecs_array_buffer(system_data->components);
 
@@ -136,6 +136,55 @@ EcsHandle ecs_new_system(
     } else {
         abort();
     }
+
+    return result;
+}
+
+void* ecs_set_system_context_ptr(
+    EcsWorld *world,
+    EcsHandle system,
+    EcsHandle component,
+    void *value)
+{
+    EcsTableSystem *table_system = ecs_get_ptr(world, system, EcsTableSystem_h);
+    if (table_system) {
+        table_system->ctx_handle = component;
+    } else {
+        EcsRowSystem *row_system = ecs_get_ptr(world, system, EcsRowSystem_h);
+        if (row_system) {
+            row_system->ctx_handle = component;
+        } else {
+            abort();
+        }
+    }
+
+    ecs_set_ptr(world, system, component, value);
+    void *result = ecs_get_ptr(world, system, component);
+    assert(result != NULL);
+
+    return result;
+}
+
+void* ecs_get_system_context(
+    EcsWorld *world,
+    EcsHandle system)
+{
+    EcsHandle component = 0;
+
+    EcsTableSystem *table_system = ecs_get_ptr(world, system, EcsTableSystem_h);
+    if (table_system) {
+        component = table_system->ctx_handle;
+    } else {
+        EcsRowSystem *row_system = ecs_get_ptr(world, system, EcsRowSystem_h);
+        if (row_system) {
+            component = row_system->ctx_handle;
+        } else {
+            abort();
+        }
+    }
+
+    void *result = ecs_get_ptr(world, system, component);
+    assert(result != NULL);
 
     return result;
 }

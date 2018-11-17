@@ -91,6 +91,7 @@ typedef struct EcsRows {
     EcsHandle *components;
     uint32_t element_size;
     uint32_t column_count;
+    EcsHandle interrupted_by;
 } EcsRows;
 
 /** System action callback type */
@@ -850,12 +851,33 @@ bool ecs_is_enabled(
  * @param world: The world.
  * @param system: The system to run.
  * @param param: A user-defined parameter to pass to the system.
+ * @param filter: A component or family to filter matched entities.
+ * @returns: handle to last evaluated entity if system was interrupted.
  */
 REFLECS_EXPORT
-void ecs_run_system(
+EcsHandle ecs_run_system(
     EcsWorld *world,
     EcsHandle system,
-    void *param);
+    void *param,
+    EcsHandle filter);
+
+/** Set component on system for user-defined context */
+REFLECS_EXPORT
+void* ecs_set_system_context_ptr(
+    EcsWorld *world,
+    EcsHandle system,
+    EcsHandle component,
+    void *ptr);
+
+/** Get component from system for user-defined context */
+REFLECS_EXPORT
+void* ecs_get_system_context(
+    EcsWorld *world,
+    EcsHandle system);
+
+#define ecs_set_system_context(world, system, component, ...)\
+  { component v = __VA_ARGS__; ecs_set_system_context_ptr(world, system, component##_h, &v); }
+
 
 /* -- Utility API -- */
 

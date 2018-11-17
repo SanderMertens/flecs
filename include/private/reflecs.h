@@ -57,7 +57,8 @@ void ecs_stage_merge(
 EcsFamily ecs_family_from_handle(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle entity);
+    EcsHandle entity,
+    EcsEntityInfo *info);
 
 EcsFamily ecs_family_merge(
     EcsWorld *world,

@@ -113,6 +113,8 @@ test.suite EcsPeriodicSystem {
     tc_system_2_optional_not_set()
     tc_system_1_from_system()
     tc_system_1_from_system_implicit_add()
+    tc_system_on_demand()
+    tc_system_on_demand_w_filter()
 }
 
 test.suite EcsInitSystem {
@@ -140,6 +142,8 @@ test.suite EcsSetSystem {
     tc_set_implicit_new()
     tc_set_existing_components()
     tc_set_twice()
+    tc_set_in_on_set()
+    tc_on_add_in_on_set()
 }
 
 test.suite EcsJobs {

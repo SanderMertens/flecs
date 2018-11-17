@@ -81,9 +81,10 @@ void ecs_array_clear(
     array->count = 0;
 }
 
-void* ecs_array_add(
+void* ecs_array_addn(
     EcsArray **array_inout,
-    const EcsArrayParams *params)
+    const EcsArrayParams *params,
+    uint32_t n_elems)
 {
     EcsArray *array = *array_inout;
     if (!array) {
@@ -92,23 +93,34 @@ void* ecs_array_add(
     }
 
     uint32_t size = array->size;
-    uint32_t count = array->count;
+    uint32_t old_count = array->count;
+    uint32_t count = old_count + n_elems;
     uint32_t element_size = params->element_size;
 
-    if (count == size) {
+    if ((count - 1) >= size) {
         if (!size) {
-            size = 1;
+            size = n_elems;
         } else {
-            size *= 2;
+            while (size < count) {
+                size *= 2;
+            }
         }
+
         array = resize(array, size * element_size);
         array->size = size;
         *array_inout = array;
     }
 
-    array->count = count + 1;
+    array->count = count;
 
-    return ECS_OFFSET(ARRAY_BUFFER(array), element_size * count);
+    return ECS_OFFSET(ARRAY_BUFFER(array), element_size * old_count);
+}
+
+void* ecs_array_add(
+    EcsArray **array_inout,
+    const EcsArrayParams *params)
+{
+    return ecs_array_addn(array_inout, params, 1);
 }
 
 uint32_t ecs_array_move_index(

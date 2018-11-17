@@ -82,6 +82,7 @@ typedef struct EcsTableSystem {
     EcsArray *jobs;            /* Jobs for this system */
     EcsArray *tables;          /* Table index + refs index + column offsets */
     EcsArray *refs;            /* Columns that point to other entities */
+    EcsHandle ctx_handle;      /* User-defined context for system */
     EcsArrayParams table_params; /* Parameters for tables array */
     EcsArrayParams component_params; /* Parameters for components array */
     EcsArrayParams ref_params; /* Parameters for tables array */
@@ -95,6 +96,7 @@ typedef struct EcsTableSystem {
 typedef struct EcsRowSystem {
     EcsSystemAction action;     /* Callback to be invoked for matching rows */
     EcsArray *components;       /* Components in order of signature */
+    EcsHandle ctx_handle;
 } EcsRowSystem;
 
 /* -- Private types -- */
@@ -109,9 +111,17 @@ typedef struct EcsTable {
 } EcsTable;
 
 typedef struct EcsRow {
-    uint32_t family_id;           /* Identifies a family (and table) in world */
+    EcsFamily family_id;          /* Identifies a family (and table) in world */
     uint32_t index;               /* Index of the entity in its table */
 } EcsRow;
+
+typedef struct EcsEntityInfo {
+    EcsHandle entity;
+    EcsFamily family_id;
+    uint32_t index;
+    EcsTable *table;
+    EcsArray *rows;
+} EcsEntityInfo;
 
 typedef struct EcsStage {
     EcsMap *add_stage;            /* Entities with components to add */
@@ -150,6 +160,7 @@ struct EcsWorld {
     EcsArray *table_db;           /* Table storage */
     EcsArray *periodic_systems;   /* Periodic systems */
     EcsArray *inactive_systems;   /* Periodic systems with empty tables */
+    EcsArray *on_demand_systems;  /* On demand systems */
 
     EcsMap *add_systems;          /* Systems invoked on ecs_add */
     EcsMap *remove_systems;       /* Systems invoked on ecs_remove */
@@ -174,7 +185,7 @@ struct EcsWorld {
 
     EcsHandle last_handle;        /* Last issued handle */
     EcsHandle deinit_table_system; /* Handle to internal deinit system */
-    EcsHandle deinit_row_system; /* Handle to internal deinit system */
+    EcsHandle deinit_row_system;  /* Handle to internal deinit system */
 
     EcsFamily component_family;   /* EcsComponent, EcsId */
     EcsFamily table_system_family; /* EcsTableSystem, EcsId */

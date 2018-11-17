@@ -579,6 +579,7 @@ void ecs_run_job(
         }
 
         action(&info);
+        if (info.interrupted_by) break;
     } while (remaining);
 }
 
@@ -634,6 +635,10 @@ EcsHandle ecs_new_table_system(
             elem = ecs_array_add(&world->inactive_systems, &handle_arr_params);
         }
         *elem = result;
+    } else if (kind == EcsOnDemand) {
+        EcsHandle *elem = ecs_array_add(
+            &world->on_demand_systems, &handle_arr_params);
+        *elem = result;
     }
 
     if (system_data->and_from_system) {
@@ -651,16 +656,17 @@ EcsHandle ecs_new_table_system(
 
 /* -- Public API -- */
 
-void ecs_run_system(
+EcsHandle ecs_run_system(
     EcsWorld *world,
     EcsHandle system,
-    void *param)
+    void *param,
+    EcsHandle filter)
 {
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     assert(system_data != NULL);
 
     if (!system_data->enabled) {
-        return;
+        return 0;
     }
 
     EcsSystemAction action = system_data->action;
@@ -674,6 +680,13 @@ void ecs_run_system(
     char *component_buffer = ecs_array_buffer(system_data->components);
     char *last = ECS_OFFSET(table_buffer, element_size * table_count);
     void *refs[column_count];
+    EcsFamily filter_id = 0;
+    EcsStage *stage;
+    if (filter) {
+        EcsWorld *temp = world;
+        stage = ecs_get_stage(&temp);
+        filter_id = ecs_family_from_handle(world, stage, filter, NULL);
+    }
 
     EcsRows info = {
         .world = world,
@@ -685,13 +698,21 @@ void ecs_run_system(
 
     for (; table_buffer < last; table_buffer += element_size) {
         int32_t table_index = ((int32_t*)table_buffer)[0];
-        int32_t refs_index = ((int32_t*)table_buffer)[1];
-        EcsTable *table = ecs_array_get(
-            table_db, &table_arr_params, table_index);
+        EcsTable *table = ecs_array_get(table_db,&table_arr_params,table_index);
+
+        if (filter_id) {
+            if (!ecs_family_contains(
+                world, stage, table->family_id, filter_id, true, true))
+            {
+                continue;
+            }
+        }
+
         EcsArray *rows = table->rows;
         void *buffer = ecs_array_buffer(rows);
         uint32_t count = ecs_array_count(rows);
 
+        int32_t refs_index = ((int32_t*)table_buffer)[1];
         if (refs_index) {
             resolve_refs(world, system_data, refs_index, &info);
         }
@@ -703,7 +724,12 @@ void ecs_run_system(
         info.components = (EcsHandle*)component_buffer;
         component_buffer += component_el_size;
         action(&info);
+        if (info.interrupted_by) {
+            return info.interrupted_by;
+        }
     }
+
+    return 0;
 }
 
 void ecs_enable(
