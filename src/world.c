@@ -884,6 +884,7 @@ void ecs_world_get_stats(
 
     stats->memory_used = mem_used;
     stats->memory_allocd = mem_allocd;
+    stats->entity_count = ecs_map_count(world->entity_index);
 }
 
 void ecs_world_free_stats(

@@ -141,6 +141,7 @@ void test_EcsSet_tc_set_array256(
 typedef struct Context {
     EcsHandle handle;
     EcsHandle handle2;
+    EcsHandle handle3;
     EcsHandle new_handles[32];
     int32_t count;
 } Context;
@@ -332,6 +333,50 @@ void test_EcsSet_tc_set_2_in_progress(
     test_assertint(ecs_get(world, e2, int16_t), 20);
     test_assert(ecs_get_ptr(world, e2, int32_t_h) != NULL);
     test_assertint(ecs_get(world, e2, int32_t), 2);
+
+    ecs_fini(world);
+}
+
+static
+void Set2OnNew(EcsRows *rows) {
+    Context *ctx = ecs_get_context(rows->world);
+    EcsHandle int8_t_h = ctx->handle;
+    EcsHandle int16_t_h = ctx->handle2;
+    EcsWorld *world = rows->world;
+
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle e = ecs_new(world, int8_t_h);
+        ecs_set(world, e, int16_t, 10);
+    }
+}
+
+static
+void FooTest(EcsRows *rows) {
+}
+
+void test_EcsSet_tc_set_2_on_new_in_progress(
+    test_EcsSet this)
+{
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, float);
+    ECS_COMPONENT(world, int8_t);
+    ECS_COMPONENT(world, int16_t);
+    ECS_COMPONENT(world, int32_t);
+
+    ECS_SYSTEM(world, FooTest, EcsPeriodic, int8_t);
+    ECS_SYSTEM(world, Set2OnNew, EcsOnAdd, float);
+
+    Context ctx = {
+        .handle = int8_t_h,
+        .handle2 = int16_t_h,
+        .handle3 = int32_t_h
+    };
+
+    ecs_set_context(world, &ctx);
+
+    EcsHandle e1 = ecs_new(world, float_h);
+    test_assert(e1 != 0);
 
     ecs_fini(world);
 }

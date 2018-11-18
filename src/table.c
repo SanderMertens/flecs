@@ -125,10 +125,13 @@ void ecs_table_delete(
     EcsTable *table,
     uint32_t index)
 {
-    uint32_t count = ecs_array_remove_index(
-        table->rows, &table->row_params, index);
-    if (!count) {
-        activate_table(world, table, false);
+    if (!world->in_progress) {
+        uint32_t count = ecs_array_remove_index(
+            table->rows, &table->row_params, index);
+
+        if (!count) {
+            activate_table(world, table, false);
+        }
     }
 }
 

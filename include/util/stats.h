@@ -27,6 +27,7 @@ typedef struct EcsWorldStats {
     uint32_t memory_allocd;
     uint32_t system_count;
     uint32_t table_count;
+    uint32_t entity_count;
     uint32_t thread_count;
     EcsArray *active_systems;
     EcsArray *inactive_systems;
