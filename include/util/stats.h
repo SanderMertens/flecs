@@ -11,6 +11,8 @@ extern "C" {
 typedef struct EcsSystemStats {
     EcsHandle system;
     const char *id;
+    uint32_t tables_matched;
+    uint32_t entities_matched;
     bool enabled;
     bool active;
 } EcsSystemStats;
@@ -29,8 +31,7 @@ typedef struct EcsWorldStats {
     uint32_t table_count;
     uint32_t entity_count;
     uint32_t thread_count;
-    EcsArray *active_systems;
-    EcsArray *inactive_systems;
+    EcsArray *periodic_systems;
     EcsArray *on_demand_systems;
     EcsArray *on_add_systems;
     EcsArray *on_remove_systems;

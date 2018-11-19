@@ -769,41 +769,12 @@ void ecs_import(
     module(world, flags, handles);
 }
 
-/*
-typedef struct EcsSystemStats {
-    EcsHandle system;
-    bool active;
-    bool enabled;
-} EcsSystemStats;
-
-typedef struct EcsTableStats {
-    char *columns;
-    uint32_t row_count;
-    uint32_t memory_allocd;
-    uint32_t memory_used;
-} EcsTableStats;
-
-typedef struct EcsWorldStats {
-    uint32_t memory_allocd;
-    uint32_t memory_used;
-    uint32_t system_count;
-    uint32_t table_count;
-    uint32_t thread_count;
-    EcsArray *active_systems;
-    EcsArray *inactive_systems;
-    EcsArray *on_demand_systems;
-    EcsArray *on_add_systems;
-    EcsArray *on_remove_systems;
-    EcsArray *on_set_systems;
-    EcsArray *tables;
-} EcsWorldStats;
-*/
-
 static
 void set_system_stats(
     EcsWorld *world,
     EcsArray **stats_array,
-    EcsHandle system)
+    EcsHandle system,
+    bool active)
 {
     EcsId *id = ecs_get_ptr(world, system, EcsId_h);
     EcsSystemStats *sstats = ecs_array_add(
@@ -811,19 +782,54 @@ void set_system_stats(
     sstats->system = system;
     sstats->id = id->id;
     sstats->enabled = ecs_is_enabled(world, system);
+    sstats->active = active;
+
+    EcsTableSystem *system_ptr = ecs_get_ptr(world, system, EcsTableSystem_h);
+    if (system_ptr) {
+        EcsArray *tables = system_ptr->tables;
+        uint32_t i, count = ecs_array_count(tables);
+        uint32_t entity_count = 0;
+        for (i = 0; i < count; i ++) {
+            int32_t *index = ecs_array_get(tables, &system_ptr->table_params, i);
+            EcsTable *table = ecs_array_get(
+                world->table_db, &table_arr_params, *index);
+            entity_count += ecs_array_count(table->rows);
+        }
+
+        sstats->entities_matched = entity_count;
+        sstats->tables_matched = count + ecs_array_count(
+            system_ptr->inactive_tables);
+    } else {
+        sstats->entities_matched = 0;
+        sstats->tables_matched = 0;
+    }
+}
+
+static
+int compare_sysstats(
+    const void *e1,
+    const void *e2)
+{
+    const EcsSystemStats *s1 = e1;
+    const EcsSystemStats *s2 = e2;
+    return strcmp(s1->id, s2->id);
 }
 
 static
 int system_stats_arr(
     EcsWorld *world,
     EcsArray **stats_array,
-    EcsArray *systems)
+    EcsArray *systems,
+    bool active)
 {
     EcsHandle *handles = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
-        set_system_stats(world, stats_array, handles[i]);
+        set_system_stats(world, stats_array, handles[i], active);
     }
+
+    ecs_array_sort(*stats_array, &systemstats_arr_params, compare_sysstats);
+
     return count;
 }
 
@@ -835,7 +841,7 @@ int system_stats_map(
 {
     EcsIter it = ecs_map_iter(systems);
     while (ecs_iter_hasnext(&it)) {
-        set_system_stats(world, stats_array, ecs_map_next(&it, NULL));
+        set_system_stats(world, stats_array, ecs_map_next(&it, NULL), true);
     }
     return ecs_map_count(systems);
 }
@@ -870,11 +876,11 @@ void ecs_world_get_stats(
 
     stats->system_count = 0;
     stats->system_count += system_stats_arr(
-        world, &stats->active_systems, world->periodic_systems);
+        world, &stats->periodic_systems, world->periodic_systems, true);
     stats->system_count += system_stats_arr(
-        world, &stats->inactive_systems, world->inactive_systems);
+        world, &stats->periodic_systems, world->inactive_systems, false);
     stats->system_count += system_stats_arr(
-        world, &stats->on_demand_systems, world->on_demand_systems);
+        world, &stats->on_demand_systems, world->on_demand_systems, true);
     stats->system_count += system_stats_map(
         world, &stats->on_add_systems, world->add_systems);
     stats->system_count += system_stats_map(
