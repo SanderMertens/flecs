@@ -339,3 +339,18 @@ void ecs_array_sort(
         qsort(buffer, count, element_size, compare_action);
     }
 }
+
+void ecs_array_memory(
+    EcsArray *array,
+    const EcsArrayParams *params,
+    uint32_t *allocd,
+    uint32_t *used)
+{
+    if (!array) return;
+    if (allocd) {
+        *allocd += array->size * params->element_size + sizeof(EcsArray);
+    }
+    if (used) {
+        *used += array->count * params->element_size;
+    }
+}

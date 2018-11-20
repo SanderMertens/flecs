@@ -15,7 +15,16 @@ typedef struct EcsSystemStats {
     uint32_t entities_matched;
     bool enabled;
     bool active;
+    bool is_framework;
 } EcsSystemStats;
+
+typedef struct EcsFeatureStats {
+    const char *id;
+    char *entities;
+    uint32_t system_count;
+    uint32_t systems_enabled;
+    bool is_framework;
+} EcsFeatureStats;
 
 typedef struct EcsTableStats {
     char *columns;
@@ -24,13 +33,29 @@ typedef struct EcsTableStats {
     uint32_t memory_allocd;
 } EcsTableStats;
 
+typedef struct EcsMemoryStat {
+    uint32_t allocd;
+    uint32_t used;
+} EcsMemoryStat;
+
+typedef struct EcsMemoryStats {
+    EcsMemoryStat total;
+    EcsMemoryStat components;
+    EcsMemoryStat entities;
+    EcsMemoryStat systems;
+    EcsMemoryStat families;
+    EcsMemoryStat tables;
+    EcsMemoryStat stage;
+    EcsMemoryStat world;
+} EcsMemoryStats;
+
 typedef struct EcsWorldStats {
-    uint32_t memory_used;
-    uint32_t memory_allocd;
     uint32_t system_count;
     uint32_t table_count;
     uint32_t entity_count;
     uint32_t thread_count;
+    EcsMemoryStats memory;
+    EcsArray *features;
     EcsArray *periodic_systems;
     EcsArray *on_demand_systems;
     EcsArray *on_add_systems;

@@ -111,6 +111,7 @@ typedef void (*EcsModuleInitAction)(
 #define EcsRowSystem_h (4)
 #define EcsTableSystem_h (5)
 #define EcsId_h (6)
+#define EcsFrameworkSystem_h (7)
 
 
 /* -- World API -- */

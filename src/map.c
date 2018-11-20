@@ -445,3 +445,24 @@ uint64_t ecs_map_next(
 {
     return next_w_key(it, key_out);
 }
+
+void ecs_map_memory(
+    EcsMap *map,
+    uint32_t *total,
+    uint32_t *used)
+{
+    if (!map) {
+        return;
+    }
+
+    if (total) {
+
+        *total += map->bucket_count * sizeof(uint32_t) + sizeof(EcsMap);
+        ecs_array_memory(map->nodes, &node_arr_params, total, NULL);
+    }
+
+    if (used) {
+        *used += map->count * sizeof(uint32_t);
+        ecs_array_memory(map->nodes, &node_arr_params, NULL, used);
+    }
+}

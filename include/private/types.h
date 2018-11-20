@@ -8,18 +8,18 @@
 #include <reflecs/util/array.h>
 #include <reflecs/util/map.h>
 
-#define ECS_WORLD_INITIAL_TABLE_COUNT (8)
-#define ECS_WORLD_INITIAL_ENTITY_COUNT (64)
-#define ECS_WORLD_INITIAL_STAGING_COUNT (4)
-#define ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT (4)
-#define ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT (4)
-#define ECS_WORLD_INITIAL_INIT_SYSTEM_COUNT (4)
-#define ECS_WORLD_INITIAL_DEINIT_SYSTEM_COUNT (4)
-#define ECS_WORLD_INITIAL_SET_SYSTEM_COUNT (4)
-#define ECS_WORLD_INITIAL_PREFAB_COUNT (4)
-#define ECS_MAP_INITIAL_NODE_COUNT (64)
-#define ECS_TABLE_INITIAL_ROW_COUNT (8)
-#define ECS_SYSTEM_INITIAL_TABLE_COUNT (4)
+#define ECS_WORLD_INITIAL_TABLE_COUNT (2)
+#define ECS_WORLD_INITIAL_ENTITY_COUNT (2)
+#define ECS_WORLD_INITIAL_STAGING_COUNT (0)
+#define ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT (1)
+#define ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT (0)
+#define ECS_WORLD_INITIAL_INIT_SYSTEM_COUNT (0)
+#define ECS_WORLD_INITIAL_DEINIT_SYSTEM_COUNT (0)
+#define ECS_WORLD_INITIAL_SET_SYSTEM_COUNT (0)
+#define ECS_WORLD_INITIAL_PREFAB_COUNT (0)
+#define ECS_MAP_INITIAL_NODE_COUNT (4)
+#define ECS_TABLE_INITIAL_ROW_COUNT (0)
+#define ECS_SYSTEM_INITIAL_TABLE_COUNT (0)
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
 #define ECS_WORLD_MAGIC (0x65637377)
@@ -203,5 +203,9 @@ struct EcsWorld {
 extern const EcsArrayParams handle_arr_params;
 extern const EcsArrayParams stage_arr_params;
 extern const EcsArrayParams table_arr_params;
+extern const EcsArrayParams thread_arr_params;
+extern const EcsArrayParams job_arr_params;
+extern const EcsArrayParams column_arr_params;
+
 
 #endif

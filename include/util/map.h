@@ -23,6 +23,12 @@ void ecs_map_free(
     EcsMap *map);
 
 REFLECS_EXPORT
+void ecs_map_memory(
+    EcsMap *map,
+    uint32_t *total,
+    uint32_t *used);
+
+REFLECS_EXPORT
 uint32_t ecs_map_count(
     EcsMap *map);
 

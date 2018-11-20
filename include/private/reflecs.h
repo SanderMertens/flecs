@@ -103,6 +103,11 @@ EcsArray* ecs_family_get(
     EcsStage *stage,
     EcsFamily family_id);
 
+char* ecs_family_tostr(
+    EcsWorld *world,
+    EcsStage *stage,
+    EcsFamily family_id);
+
 /* -- Table API -- */
 
 EcsResult ecs_table_init(

@@ -143,6 +143,13 @@ void ecs_array_sort(
     const EcsArrayParams *params,
     EcsComparator compare_action);
 
+REFLECS_EXPORT
+void ecs_array_memory(
+    EcsArray *array,
+    const EcsArrayParams *params,
+    uint32_t *allocd,
+    uint32_t *used);
+
 #ifdef __cplusplus
 }
 #endif

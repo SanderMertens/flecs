@@ -1,7 +1,6 @@
 #include <string.h>
 #include <inttypes.h>
 #include <assert.h>
-#include <reflecs/util/stats.h>
 #include "include/private/reflecs.h"
 
 const EcsArrayParams table_arr_params = {
@@ -14,14 +13,6 @@ const EcsArrayParams handle_arr_params = {
 
 const EcsArrayParams stage_arr_params = {
     .element_size = sizeof(EcsStage)
-};
-
-const EcsArrayParams tablestats_arr_params = {
-    .element_size = sizeof(EcsTableStats)
-};
-
-const EcsArrayParams systemstats_arr_params = {
-    .element_size = sizeof(EcsSystemStats)
 };
 
 const EcsArrayParams char_arr_params = {
@@ -568,6 +559,7 @@ EcsWorld *ecs_init(void) {
     assert_func(new_builtin_component(world, sizeof(EcsRowSystem)) == EcsRowSystem_h);
     assert_func(new_builtin_component(world, sizeof(EcsTableSystem)) == EcsTableSystem_h);
     assert_func(new_builtin_component(world, sizeof(EcsId)) == EcsId_h);
+    assert_func(new_builtin_component(world, 0) == EcsFrameworkSystem_h);
 
     add_builtin_id(world, EcsComponent_h, "EcsComponent");
     add_builtin_id(world, EcsFamilyComponent_h, "EcsFamilyComponent");
@@ -575,6 +567,7 @@ EcsWorld *ecs_init(void) {
     add_builtin_id(world, EcsRowSystem_h, "EcsRowSystem");
     add_builtin_id(world, EcsTableSystem_h, "EcsTableSystem");
     add_builtin_id(world, EcsId_h, "EcsId");
+    add_builtin_id(world, EcsFrameworkSystem_h, "EcsFrameworkSystem");
 
     world->component_family = get_builtin_family(world, EcsComponent_h);
     world->family_family = get_builtin_family(world, EcsFamilyComponent_h);
@@ -592,9 +585,18 @@ EcsWorld *ecs_init(void) {
                "EcsTableSystem", remove_systems);
     assert(world->deinit_table_system != 0);
 
-    assert_func(ecs_new_system(
-        world, "EcsInitComponent", EcsOnAdd, "EcsComponent", init_component)
-        != 0);
+    EcsHandle init_component_system = ecs_new_system(
+        world, "EcsInitComponent", EcsOnAdd, "EcsComponent", init_component);
+    assert(init_component_system != 0);
+
+    ecs_add(world, world->deinit_row_system, EcsFrameworkSystem_h);
+    ecs_commit(world, world->deinit_row_system);
+
+    ecs_add(world, world->deinit_table_system, EcsFrameworkSystem_h);
+    ecs_commit(world, world->deinit_table_system);
+
+    ecs_add(world, init_component_system, EcsFrameworkSystem_h);
+    ecs_commit(world, init_component_system);
 
     return world;
 }
@@ -767,134 +769,4 @@ void ecs_import(
     void *handles)
 {
     module(world, flags, handles);
-}
-
-static
-void set_system_stats(
-    EcsWorld *world,
-    EcsArray **stats_array,
-    EcsHandle system,
-    bool active)
-{
-    EcsId *id = ecs_get_ptr(world, system, EcsId_h);
-    EcsSystemStats *sstats = ecs_array_add(
-        stats_array, &systemstats_arr_params);
-    sstats->system = system;
-    sstats->id = id->id;
-    sstats->enabled = ecs_is_enabled(world, system);
-    sstats->active = active;
-
-    EcsTableSystem *system_ptr = ecs_get_ptr(world, system, EcsTableSystem_h);
-    if (system_ptr) {
-        EcsArray *tables = system_ptr->tables;
-        uint32_t i, count = ecs_array_count(tables);
-        uint32_t entity_count = 0;
-        for (i = 0; i < count; i ++) {
-            int32_t *index = ecs_array_get(tables, &system_ptr->table_params, i);
-            EcsTable *table = ecs_array_get(
-                world->table_db, &table_arr_params, *index);
-            entity_count += ecs_array_count(table->rows);
-        }
-
-        sstats->entities_matched = entity_count;
-        sstats->tables_matched = count + ecs_array_count(
-            system_ptr->inactive_tables);
-    } else {
-        sstats->entities_matched = 0;
-        sstats->tables_matched = 0;
-    }
-}
-
-static
-int compare_sysstats(
-    const void *e1,
-    const void *e2)
-{
-    const EcsSystemStats *s1 = e1;
-    const EcsSystemStats *s2 = e2;
-    return strcmp(s1->id, s2->id);
-}
-
-static
-int system_stats_arr(
-    EcsWorld *world,
-    EcsArray **stats_array,
-    EcsArray *systems,
-    bool active)
-{
-    EcsHandle *handles = ecs_array_buffer(systems);
-    uint32_t i, count = ecs_array_count(systems);
-    for (i = 0; i < count; i ++) {
-        set_system_stats(world, stats_array, handles[i], active);
-    }
-
-    ecs_array_sort(*stats_array, &systemstats_arr_params, compare_sysstats);
-
-    return count;
-}
-
-static
-int system_stats_map(
-    EcsWorld *world,
-    EcsArray **stats_array,
-    EcsMap *systems)
-{
-    EcsIter it = ecs_map_iter(systems);
-    while (ecs_iter_hasnext(&it)) {
-        set_system_stats(world, stats_array, ecs_map_next(&it, NULL), true);
-    }
-    return ecs_map_count(systems);
-}
-
-void ecs_world_get_stats(
-    EcsWorld *world,
-    EcsWorldStats *stats)
-{
-    uint32_t mem_used = 0, mem_allocd = 0;
-    stats->table_count = ecs_array_count(world->table_db);
-
-    if (!stats->tables) {
-        stats->tables = ecs_array_new(&table_arr_params, stats->table_count);
-    } else {
-        ecs_array_clear(stats->tables);
-    }
-
-    EcsTable *tables = ecs_array_buffer(world->table_db);
-    uint32_t i, count = ecs_array_count(world->table_db);
-    for (i = 0; i < count; i ++) {
-        EcsTable *table = &tables[i];
-        EcsTableStats *tstats = ecs_array_add(
-            &stats->tables, &tablestats_arr_params);
-        uint32_t row_size = table->row_params.element_size;
-        tstats->row_count = ecs_array_count(table->rows);
-        tstats->memory_used = tstats->row_count * row_size;
-        tstats->memory_allocd = ecs_array_size(table->rows) * row_size;
-        tstats->columns = ecs_family_tostr(world, NULL, table->family_id);
-        mem_used += tstats->memory_used;
-        mem_allocd += tstats->memory_allocd;
-    }
-
-    stats->system_count = 0;
-    stats->system_count += system_stats_arr(
-        world, &stats->periodic_systems, world->periodic_systems, true);
-    stats->system_count += system_stats_arr(
-        world, &stats->periodic_systems, world->inactive_systems, false);
-    stats->system_count += system_stats_arr(
-        world, &stats->on_demand_systems, world->on_demand_systems, true);
-    stats->system_count += system_stats_map(
-        world, &stats->on_add_systems, world->add_systems);
-    stats->system_count += system_stats_map(
-        world, &stats->on_set_systems, world->set_systems);
-    stats->system_count += system_stats_map(
-        world, &stats->on_remove_systems, world->remove_systems);
-
-    stats->memory_used = mem_used;
-    stats->memory_allocd = mem_allocd;
-    stats->entity_count = ecs_map_count(world->entity_index);
-}
-
-void ecs_world_free_stats(
-    EcsWorld *world,
-    EcsWorldStats *stats)
-{
 }
