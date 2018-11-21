@@ -166,7 +166,7 @@ void test_EcsRemove_tc_remove_prev_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, RemovePrev, EcsPeriodic, Foo, Bar);
+    ECS_SYSTEM(world, RemovePrev, EcsOnFrame, Foo, Bar);
 
     EcsHandle e1 = ecs_new(world, MyFamily_h);
     EcsHandle e2 = ecs_new(world, MyFamily_h);
@@ -186,7 +186,7 @@ void test_EcsRemove_tc_remove_prev_in_progress(
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(ecs_has(world, e1, Bar_h));
     test_assert(!ecs_has(world, e2, Bar_h));
@@ -200,7 +200,7 @@ void test_EcsRemove_tc_remove_prev_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
     test_assertint(ctx.count, 5);
 
     test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
@@ -221,7 +221,7 @@ void test_EcsRemove_tc_remove_cur_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, RemoveCurrent, EcsPeriodic, Foo, Bar);
+    ECS_SYSTEM(world, RemoveCurrent, EcsOnFrame, Foo, Bar);
 
     EcsHandle e1 = ecs_new(world, MyFamily_h);
     EcsHandle e2 = ecs_new(world, MyFamily_h);
@@ -241,7 +241,7 @@ void test_EcsRemove_tc_remove_cur_in_progress(
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(ecs_has(world, e1, Bar_h));
     test_assert(!ecs_has(world, e2, Bar_h));
@@ -255,7 +255,7 @@ void test_EcsRemove_tc_remove_cur_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
     test_assertint(ctx.count, 5);
 
     test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
@@ -276,7 +276,7 @@ void test_EcsRemove_tc_remove_next_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, RemoveNext, EcsPeriodic, Foo, Bar);
+    ECS_SYSTEM(world, RemoveNext, EcsOnFrame, Foo, Bar);
 
     EcsHandle e1 = ecs_new(world, MyFamily_h);
     EcsHandle e2 = ecs_new(world, MyFamily_h);
@@ -296,7 +296,7 @@ void test_EcsRemove_tc_remove_next_in_progress(
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(ecs_has(world, e1, Bar_h));
     test_assert(!ecs_has(world, e2, Bar_h));
@@ -310,7 +310,7 @@ void test_EcsRemove_tc_remove_next_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
     test_assertint(ctx.count, 5);
 
     test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
@@ -331,7 +331,7 @@ void test_EcsRemove_tc_remove_all_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, RemoveAll, EcsPeriodic, Foo, Bar);
+    ECS_SYSTEM(world, RemoveAll, EcsOnFrame, Foo, Bar);
 
     EcsHandle e1 = ecs_new(world, MyFamily_h);
     EcsHandle e2 = ecs_new(world, MyFamily_h);
@@ -351,7 +351,7 @@ void test_EcsRemove_tc_remove_all_in_progress(
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(!ecs_has(world, e1, Bar_h));
     test_assert(!ecs_has(world, e2, Bar_h));
@@ -363,7 +363,7 @@ void test_EcsRemove_tc_remove_all_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
     test_assertint(ctx.count, 3);
 
     test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 11);
@@ -399,7 +399,7 @@ void test_EcsRemove_tc_remove_add_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, RemoveAdd, EcsPeriodic, Foo, Bar);
+    ECS_SYSTEM(world, RemoveAdd, EcsOnFrame, Foo, Bar);
 
     EcsHandle e1 = ecs_new(world, MyFamily_h);
     EcsHandle e2 = ecs_new(world, MyFamily_h);
@@ -419,7 +419,7 @@ void test_EcsRemove_tc_remove_add_in_progress(
     Context ctx = {.component = Bar_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(ecs_has(world, e1, Foo_h));
     test_assert(ecs_has(world, e2, Foo_h));
@@ -436,7 +436,7 @@ void test_EcsRemove_tc_remove_add_in_progress(
     test_assertint(*(int*)ecs_get_ptr(world, e2, Bar_h), 1);
     test_assertint(*(int*)ecs_get_ptr(world, e3, Bar_h), 1);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(ecs_has(world, e1, Foo_h));
     test_assert(ecs_has(world, e2, Foo_h));
@@ -481,7 +481,7 @@ void test_EcsRemove_tc_remove_2_add_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, Remove2Add, EcsPeriodic, Foo, Bar);
+    ECS_SYSTEM(world, Remove2Add, EcsOnFrame, Foo, Bar);
 
     EcsHandle e1 = ecs_new(world, MyFamily_h);
     EcsHandle e2 = ecs_new(world, MyFamily_h);
@@ -508,7 +508,7 @@ void test_EcsRemove_tc_remove_2_add_in_progress(
     Context ctx = {.component = Bar_h, .component2 = Foo_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(!ecs_has(world, e1, Foo_h));
     test_assert(!ecs_has(world, e2, Foo_h));
@@ -521,7 +521,7 @@ void test_EcsRemove_tc_remove_2_add_in_progress(
     test_assertint(*(int*)ecs_get_ptr(world, e2, Bar_h), 1);
     test_assertint(*(int*)ecs_get_ptr(world, e3, Bar_h), 1);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(!ecs_has(world, e1, Foo_h));
     test_assert(!ecs_has(world, e2, Foo_h));

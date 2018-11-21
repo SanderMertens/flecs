@@ -76,6 +76,8 @@ typedef struct EcsSystemRef {
 
 typedef struct EcsTableSystem {
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
+    float period;              /* Minimum period inbetween system invocations */
+    float time_passed;         /* Time passed since last invocation */
     EcsArray *columns;         /* Column components (AND) and families (OR) */
     EcsArray *components;      /* Computed component list per matched table */
     EcsArray *inactive_tables; /* Inactive tables */
@@ -104,7 +106,7 @@ typedef struct EcsRowSystem {
 typedef struct EcsTable {
     EcsArray *family;             /* Reference to family_index entry */
     EcsArray *rows;               /* Rows of the table */
-    EcsArray *periodic_systems;   /* Periodic systems matched with table */
+    EcsArray *frame_systems;      /* Frame systems matched with table */
     EcsArrayParams row_params;    /* Parameters for rows array */
     EcsFamily family_id;          /* Identifies a family in family_index */
     uint16_t *columns;            /* Column (component) sizes */
@@ -155,11 +157,13 @@ typedef struct EcsThread {
 struct EcsWorld {
     uint32_t magic;               /* Magic number to verify world pointer */
 
+    float delta_time;             /* Time passed to ecs_progress */
+
     void *context;                /* Application context */
 
     EcsArray *table_db;           /* Table storage */
-    EcsArray *periodic_systems;   /* Periodic systems */
-    EcsArray *inactive_systems;   /* Periodic systems with empty tables */
+    EcsArray *frame_systems;      /* Frame systems */
+    EcsArray *inactive_systems;   /* Frame systems with empty tables */
     EcsArray *on_demand_systems;  /* On demand systems */
 
     EcsMap *add_systems;          /* Systems invoked on ecs_add */
@@ -193,6 +197,7 @@ struct EcsWorld {
     EcsFamily family_family;      /* EcsFamily, EcsId */
     EcsFamily prefab_family;      /* EcsPrefab, EcsId */
 
+    uint32_t tick;                /* Number of computed frames by world */
     bool valid_schedule;          /* Is job schedule still valid */
     bool quit_workers;            /* Signals worker threads to quit */
     bool in_progress;             /* Is world being progressed */

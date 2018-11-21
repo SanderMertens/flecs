@@ -339,7 +339,7 @@ void test_EcsAdd_tc_add_prev_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, AddPrev, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, AddPrev, EcsOnFrame, Foo);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -356,7 +356,7 @@ void test_EcsAdd_tc_add_prev_in_progress(
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(!ecs_has(world, e1, Bar_h));
     test_assert(ecs_has(world, e2, Bar_h));
@@ -368,7 +368,7 @@ void test_EcsAdd_tc_add_prev_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
     test_assertint(ctx.count, 6);
 
     test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
@@ -386,7 +386,7 @@ void test_EcsAdd_tc_add_cur_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, AddCurrent, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, AddCurrent, EcsOnFrame, Foo);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -403,7 +403,7 @@ void test_EcsAdd_tc_add_cur_in_progress(
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(!ecs_has(world, e1, Bar_h));
     test_assert(ecs_has(world, e2, Bar_h));
@@ -415,7 +415,7 @@ void test_EcsAdd_tc_add_cur_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
     test_assertint(ctx.count, 6);
 
     test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
@@ -433,7 +433,7 @@ void test_EcsAdd_tc_add_next_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, AddNext, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, AddNext, EcsOnFrame, Foo);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -450,7 +450,7 @@ void test_EcsAdd_tc_add_next_in_progress(
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(!ecs_has(world, e1, Bar_h));
     test_assert(ecs_has(world, e2, Bar_h));
@@ -462,7 +462,7 @@ void test_EcsAdd_tc_add_next_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
     test_assertint(ctx.count, 6);
 
     test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);
@@ -480,7 +480,7 @@ void test_EcsAdd_tc_add_all_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, AddAll, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, AddAll, EcsOnFrame, Foo);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -497,7 +497,7 @@ void test_EcsAdd_tc_add_all_in_progress(
     Context ctx = {.entity = e2, .component = Bar_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(ecs_has(world, e1, Bar_h));
     test_assert(ecs_has(world, e2, Bar_h));
@@ -509,7 +509,7 @@ void test_EcsAdd_tc_add_all_in_progress(
 
     test_assertint(ctx.count, 3);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
     test_assertint(ctx.count, 6);
 
     test_assertint(*(int*)ecs_get_ptr(world, e1, Foo_h), 12);

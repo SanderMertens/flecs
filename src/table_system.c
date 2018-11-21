@@ -327,7 +327,7 @@ void add_table(
         ref_data[ref].entity = 0;
     }
 
-    EcsHandle *h = ecs_array_add(&table->periodic_systems, &handle_arr_params);;
+    EcsHandle *h = ecs_array_add(&table->frame_systems, &handle_arr_params);;
 
     if (h) *h = system;
 }
@@ -627,10 +627,10 @@ EcsHandle ecs_new_table_system(
     compute_and_families(world, system_data);
     match_tables(world, NULL, result, system_data);
 
-    if (kind == EcsPeriodic) {
+    if (kind == EcsOnFrame) {
         EcsHandle *elem;
         if (ecs_array_count(system_data->tables)) {
-            elem = ecs_array_add(&world->periodic_systems, &handle_arr_params);
+            elem = ecs_array_add(&world->frame_systems, &handle_arr_params);
         } else {
             elem = ecs_array_add(&world->inactive_systems, &handle_arr_params);
         }
@@ -659,14 +659,34 @@ EcsHandle ecs_new_table_system(
 EcsHandle ecs_run_system(
     EcsWorld *world,
     EcsHandle system,
-    void *param,
-    EcsHandle filter)
+    float delta_time,
+    EcsHandle filter,
+    void *param)
 {
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     assert(system_data != NULL);
 
     if (!system_data->enabled) {
         return 0;
+    }
+
+    float period = system_data->period;
+    if (period) {
+        float time_passed = system_data->time_passed + delta_time;
+
+        delta_time = time_passed;
+
+        if (time_passed > period) {
+            time_passed -= period;
+            if (time_passed > period) {
+                time_passed = 0;
+            }
+
+            system_data->time_passed = time_passed;
+        } else {
+            system_data->time_passed = time_passed;
+            return 0;
+        }
     }
 
     EcsSystemAction action = system_data->action;
@@ -682,6 +702,7 @@ EcsHandle ecs_run_system(
     void *refs[column_count];
     EcsFamily filter_id = 0;
     EcsStage *stage;
+
     if (filter) {
         EcsWorld *temp = world;
         stage = ecs_get_stage(&temp);
@@ -693,7 +714,8 @@ EcsHandle ecs_run_system(
         .system = system,
         .param = param,
         .refs = refs,
-        .column_count = column_count
+        .column_count = column_count,
+        .delta_time = delta_time
     };
 
     for (; table_buffer < last; table_buffer += element_size) {
@@ -723,7 +745,9 @@ EcsHandle ecs_run_system(
         info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * 2);
         info.components = (EcsHandle*)component_buffer;
         component_buffer += component_el_size;
+
         action(&info);
+
         if (info.interrupted_by) {
             return info.interrupted_by;
         }
@@ -737,6 +761,8 @@ void ecs_enable(
     EcsHandle system,
     bool enabled)
 {
+    assert(world->magic == ECS_WORLD_MAGIC);
+
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     if (!system_data) {
         EcsFamilyComponent *family_data = ecs_get_ptr(
@@ -778,5 +804,17 @@ bool ecs_is_enabled(
         return system_data->enabled;
     } else {
         return true;
+    }
+}
+
+void ecs_set_period(
+    EcsWorld *world,
+    EcsHandle system,
+    float period)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+    EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
+    if (system_data) {
+        system_data->period = period;
     }
 }

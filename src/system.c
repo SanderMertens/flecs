@@ -129,7 +129,7 @@ EcsHandle ecs_new_system(
         return result;
     }
 
-    if (kind == EcsPeriodic || kind == EcsOnDemand) {
+    if (kind == EcsOnFrame || kind == EcsPeriodic || kind == EcsOnDemand) {
         result = ecs_new_table_system(world, id, kind, sig, action);
     } else if (kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet) {
         result = new_row_system(world, id, kind, sig, action);

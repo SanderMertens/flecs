@@ -41,14 +41,14 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_FAMILY(world, Movable, Position, Velocity);
-    ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity);
+    ECS_SYSTEM(world, Move, EcsOnFrame, Position, Velocity);
 
     /* Create entity with Movable family */
     ecs_new(world, Movable_h);
 
     /* Progress world in main loop (invokes Move system) */
     while (true) {
-        ecs_progress(world);
+        ecs_progress(world, 0);
     }
 
     return ecs_fini(world);
@@ -170,7 +170,7 @@ ecs_commit(world, e);
 Systems can use tags in their signature, again just like components:
 
 ```c
-ECS_SYSTEM(world, MySystem, EcsPeriodic, Position, MyTag);
+ECS_SYSTEM(world, MySystem, EcsOnFrame, Position, MyTag);
 ```
 
 Tags are a very efficient way of filtering data. Because tags are components,
@@ -216,7 +216,7 @@ reflection, there is a feature that lets you specify the `Player` component as
 an argument in your system signature, like this:
 
 ```c
-ECS_SYSTEM(world, WalkPlayerUnits, EcsPeriodic, COMPONENT.Player, Unit);
+ECS_SYSTEM(world, WalkPlayerUnits, EcsOnFrame, COMPONENT.Player, Unit);
 ```
 The `COMPONENT.Player` adds a column to our system that contains a reference to
 the `Player` component. `COMPONENT` indicates to reflecs that the `Player`

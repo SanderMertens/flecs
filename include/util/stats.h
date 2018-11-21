@@ -27,6 +27,7 @@ typedef struct EcsFeatureStats {
 } EcsFeatureStats;
 
 typedef struct EcsTableStats {
+    const char *id;
     char *columns;
     uint32_t row_count;
     uint32_t memory_used;
@@ -56,7 +57,7 @@ typedef struct EcsWorldStats {
     uint32_t thread_count;
     EcsMemoryStats memory;
     EcsArray *features;
-    EcsArray *periodic_systems;
+    EcsArray *frame_systems;
     EcsArray *on_demand_systems;
     EcsArray *on_add_systems;
     EcsArray *on_remove_systems;

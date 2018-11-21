@@ -57,7 +57,7 @@ void calculate_table_stats(
     uint32_t i, count = ecs_array_count(world->table_db);
     for (i = 0; i < count; i ++) {
         EcsTable *table = &buffer[i];
-        ecs_array_memory(table->periodic_systems, &handle_arr_params, allocd, used);
+        ecs_array_memory(table->frame_systems, &handle_arr_params, allocd, used);
         *allocd += ecs_array_count(table->family) * sizeof(uint16_t);
         *used += ecs_array_count(table->family) * sizeof(uint16_t);
     }
@@ -106,10 +106,10 @@ void get_memory_stats(
     ecs_map_memory(world->add_systems, &memory->systems.allocd, &memory->systems.used);
     ecs_map_memory(world->set_systems, &memory->systems.allocd, &memory->systems.used);
     ecs_map_memory(world->remove_systems, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->periodic_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_array_memory(world->frame_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->inactive_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->on_demand_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    calculate_system_stats(world, world->periodic_systems, &memory->systems.allocd, &memory->systems.used);
+    calculate_system_stats(world, world->frame_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->inactive_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->on_demand_systems, &memory->systems.allocd, &memory->systems.used);
 
@@ -199,6 +199,21 @@ int compare_sysstats(
 }
 
 static
+int compare_tablestats(
+    const void *e1,
+    const void *e2)
+{
+    const EcsTableStats *t1 = e1;
+    const EcsTableStats *t2 = e2;
+    return t2->row_count > t1->row_count
+      ? 1
+      : t2->row_count < t1->row_count
+        ? -1
+        : 0
+        ;
+}
+
+static
 int system_stats_arr(
     EcsWorld *world,
     EcsArray **stats_array,
@@ -253,9 +268,20 @@ void ecs_world_get_stats(
         tstats->memory_used = tstats->row_count * row_size;
         tstats->memory_allocd = ecs_array_size(table->rows) * row_size;
         tstats->columns = ecs_family_tostr(world, NULL, table->family_id);
+
+        EcsHandle family_handle = ecs_map_get64(
+            world->family_handles, table->family_id);
+        if (family_handle) {
+            tstats->id = ecs_id(world, family_handle);
+        } else {
+            tstats->id = NULL;
+        }
+
         mem_used += tstats->memory_used;
         mem_allocd += tstats->memory_allocd;
     }
+
+    ecs_array_sort(stats->tables, &tablestats_arr_params, compare_tablestats);
 
     if (!stats->features) {
         stats->features = ecs_array_new(&featurestats_arr_params, 0);
@@ -297,9 +323,9 @@ void ecs_world_get_stats(
 
     stats->system_count = 0;
     stats->system_count += system_stats_arr(
-        world, &stats->periodic_systems, world->periodic_systems, true);
+        world, &stats->frame_systems, world->frame_systems, true);
     stats->system_count += system_stats_arr(
-        world, &stats->periodic_systems, world->inactive_systems, false);
+        world, &stats->frame_systems, world->inactive_systems, false);
     stats->system_count += system_stats_arr(
         world, &stats->on_demand_systems, world->on_demand_systems, true);
 
@@ -354,7 +380,7 @@ void ecs_world_free_stats(
 
     ecs_array_free(stats->tables);
     ecs_array_free(stats->features);
-    ecs_array_free(stats->periodic_systems);
+    ecs_array_free(stats->frame_systems);
     ecs_array_free(stats->on_demand_systems);
     ecs_array_free(stats->on_add_systems);
     ecs_array_free(stats->on_set_systems);

@@ -147,7 +147,7 @@ EcsTable* create_table(
     uint32_t index = ecs_array_get_index(*table_db, &table_arr_params, result);
     ecs_map_set64(table_index, family_id, index + 1);
 
-    notify_create_table(world, stage, world->periodic_systems, result);
+    notify_create_table(world, stage, world->frame_systems, result);
     notify_create_table(world, stage, world->inactive_systems, result);
     notify_create_table(world, stage, world->on_demand_systems, result);
 
@@ -297,7 +297,6 @@ EcsTable* ecs_world_get_table(
     return NULL;
 }
 
-
 /** Inactive systems are systems that either:
  * - are not enabled
  * - matched with no tables
@@ -315,9 +314,9 @@ void ecs_world_activate_system(
 
     if (active) {
         src_array = world->inactive_systems;
-        dst_array = world->periodic_systems;
+        dst_array = world->frame_systems;
     } else {
-        src_array = world->periodic_systems;
+        src_array = world->frame_systems;
         dst_array = world->inactive_systems;
     }
 
@@ -339,7 +338,7 @@ void ecs_world_activate_system(
         &dst_array, src_array, &handle_arr_params, i);
 
     if (active) {
-        world->periodic_systems = dst_array;
+        world->frame_systems = dst_array;
     } else {
         world->inactive_systems = dst_array;
     }
@@ -406,17 +405,6 @@ char* ecs_family_tostr(
     return result;
 }
 
-/** Print components in a family. Used by ecs_dump */
-void ecs_family_dump(
-    EcsWorld *world,
-    EcsStage *stage,
-    EcsFamily family_id)
-{
-    char *str = ecs_family_tostr(world, stage, family_id);
-    printf("%s", str);
-    free(str);
-}
-
 EcsStage *ecs_get_stage(
     EcsWorld **world_ptr)
 {
@@ -434,89 +422,7 @@ EcsStage *ecs_get_stage(
     }
 }
 
-static
-void ecs_dump_systems_array(
-    EcsWorld *world,
-    EcsArray *systems,
-    char *post_str)
-{
-    EcsIter it = ecs_array_iter(systems, &handle_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
-        EcsId *id = ecs_get_ptr(world, h, EcsId_h);
-        printf(" - %s %s\n", id->id, post_str);
-    }
-}
-
-static
-void ecs_dump_systems_map(
-    EcsWorld *world,
-    EcsMap *systems,
-    char *post_str)
-{
-    EcsIter it = ecs_map_iter(world->remove_systems);
-    while (ecs_iter_hasnext(&it)) {
-        EcsHandle h = ecs_map_next(&it, NULL);
-        EcsId *id = ecs_get_ptr(world, h, EcsId_h);
-        printf(" - %s\n", id->id);
-    }
-}
-
 /* -- Public functions -- */
-
-void ecs_dump(
-    EcsWorld *world)
-{
-    assert(world->magic == ECS_WORLD_MAGIC);
-
-    printf("Tables (%d)\n", ecs_map_count(world->table_index));
-    EcsIter it = ecs_map_iter(world->table_index);
-    while (ecs_iter_hasnext(&it)) {
-        uint32_t table_index = (uintptr_t)ecs_iter_next(&it);
-        EcsTable *table =
-            ecs_array_get(world->table_db, &table_arr_params, table_index - 1);
-
-        uint32_t count = ecs_array_count(table->rows);
-        uint32_t size = ecs_array_size(table->rows);
-        printf("[%10u] %u rows, %.2fKb, columns: ",
-          table->family_id,
-          count,
-          (size * table->row_params.element_size) / 1000.0);
-        ecs_family_dump(world, NULL, table->family_id);
-        printf("\n");
-    }
-
-    printf("\nEcsPeriodic systems\n");
-    ecs_dump_systems_array(world, world->periodic_systems, "");
-    ecs_dump_systems_array(world, world->inactive_systems, " [inactive]");
-
-    printf("\nEcsOnAdd systems\n");
-    ecs_dump_systems_map(world, world->add_systems, "");
-
-    printf("\nEcsOnRemove systems\n");
-    ecs_dump_systems_map(world, world->remove_systems, "");
-
-    printf("\nEcsOnDemand systems\n");
-    ecs_dump_systems_array(world, world->on_demand_systems, "");
-
-    printf("\nEntities (%d)\n", ecs_map_count(world->entity_index));
-    it = ecs_map_iter(world->entity_index);
-    while (ecs_iter_hasnext(&it)) {
-        EcsRow row = ecs_to_row((uintptr_t)ecs_iter_next(&it));
-        EcsTable *table = ecs_world_get_table(world, NULL, row.family_id);
-        void *row_ptr = ecs_table_get(table, table->rows, row.index);
-        EcsHandle h = *(EcsHandle*)row_ptr;
-
-        printf("[%u, %u] %" PRIu64 " - ", row.family_id, row.index, h);
-        EcsId *id = ecs_get_ptr(world, h, EcsId_h);
-        if (id) {
-            printf("%s", id->id);
-        } else {
-            printf("<no id>");
-        }
-        printf("\n");
-    }
-}
 
 EcsWorld *ecs_init(void) {
     EcsWorld *world = malloc(sizeof(EcsWorld));
@@ -524,7 +430,7 @@ EcsWorld *ecs_init(void) {
 
     world->table_db = ecs_array_new(
         &table_arr_params, ECS_WORLD_INITIAL_TABLE_COUNT);
-    world->periodic_systems = ecs_array_new(
+    world->frame_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
     world->inactive_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
@@ -615,7 +521,7 @@ EcsResult ecs_fini(
 
     ecs_stage_deinit(&world->stage);
 
-    ecs_array_free(world->periodic_systems);
+    ecs_array_free(world->frame_systems);
     ecs_array_free(world->inactive_systems);
     ecs_array_free(world->on_demand_systems);
 
@@ -685,21 +591,23 @@ EcsHandle ecs_lookup(
 }
 
 void ecs_progress(
-    EcsWorld *world)
+    EcsWorld *world,
+    float delta_time)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    uint32_t count = ecs_array_count(world->periodic_systems);
-    if (count) {
+    uint32_t frame_count = ecs_array_count(world->frame_systems);
+    if (frame_count) {
         int i;
-        EcsHandle *buffer = ecs_array_buffer(world->periodic_systems);
+        EcsHandle *buffer = ecs_array_buffer(world->frame_systems);
         bool has_threads = ecs_array_count(world->worker_threads) != 0;
 
+        world->delta_time = delta_time;
         world->in_progress = true;
 
         if (has_threads) {
             bool valid_schedule = world->valid_schedule;
-            for (i = 0; i < count; i ++) {
+            for (i = 0; i < frame_count; i ++) {
                 if (!valid_schedule) {
                     ecs_schedule_jobs(world, buffer[i]);
                 }
@@ -708,8 +616,8 @@ void ecs_progress(
             ecs_run_jobs(world);
             world->valid_schedule = true;
         } else {
-            for (i = 0; i < count; i ++) {
-                ecs_run_system(world, buffer[i], NULL, 0);
+            for (i = 0; i < frame_count; i ++) {
+                ecs_run_system(world, buffer[i], delta_time, 0, NULL);
             }
         }
 
@@ -719,6 +627,15 @@ void ecs_progress(
             ecs_merge(world);
         }
     }
+
+    world->tick ++;
+}
+
+uint32_t ecs_get_tick(
+    EcsWorld *world)
+{
+    ecs_get_stage(&world);
+    return world->tick;
 }
 
 void ecs_merge(

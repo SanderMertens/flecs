@@ -447,7 +447,7 @@ void test_EcsInitSystem_tc_init_after_new_in_progress(
 
     ECS_COMPONENT(world, Node);
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, NewInProgress, EcsPeriodic, Node);
+    ECS_SYSTEM(world, NewInProgress, EcsOnFrame, Node);
     ECS_SYSTEM(world, InitTest, EcsOnAdd, Foo);
 
     HandleCtx ctx = {.h = Foo_h};
@@ -458,7 +458,7 @@ void test_EcsInitSystem_tc_init_after_new_in_progress(
 
     ecs_set(world, e, Node, {0, 0});
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     EcsHandle new_e = ecs_get(world, e, Node).entity;
     test_assertint(ecs_get(world, e, Node).value, 10);
@@ -492,7 +492,7 @@ void test_EcsInitSystem_tc_init_after_add_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, AddInProgress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, AddInProgress, EcsOnFrame, Foo);
     ECS_SYSTEM(world, InitTest, EcsOnAdd, Bar);
 
     HandleCtx ctx = {.h = Bar_h};
@@ -503,7 +503,7 @@ void test_EcsInitSystem_tc_init_after_add_in_progress(
     ecs_set(world, e, Foo, 10);
     test_assertint(ecs_get(world, e, Foo), 10);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ecs_get(world, e, Foo), 11);
     test_assert(ecs_has(world, e, Bar_h));
@@ -542,7 +542,7 @@ void test_EcsInitSystem_tc_deinit_after_delete_in_progress(
 
     ECS_COMPONENT(world, Node);
     ECS_COMPONENT(world, IntPtr);
-    ECS_SYSTEM(world, DeleteInProgress, EcsPeriodic, Node);
+    ECS_SYSTEM(world, DeleteInProgress, EcsOnFrame, Node);
     ECS_SYSTEM(world, DeinitTest, EcsOnRemove, IntPtr);
 
     EcsHandle e = ecs_new(world, Node_h);
@@ -555,7 +555,7 @@ void test_EcsInitSystem_tc_deinit_after_delete_in_progress(
     ecs_set(world, e2, IntPtr, &counter);
     ecs_set(world, e, Node, {.value = 0, .entity = e2});
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ecs_get(world, e, Node).value, 10);
     test_assertint(counter, 0);
@@ -586,7 +586,7 @@ void test_EcsInitSystem_tc_deinit_after_remove_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, IntPtr);
     ECS_FAMILY(world, MyFamily, Foo, IntPtr);
-    ECS_SYSTEM(world, RemoveInProgress, EcsPeriodic, Foo, IntPtr);
+    ECS_SYSTEM(world, RemoveInProgress, EcsOnFrame, Foo, IntPtr);
     ECS_SYSTEM(world, DeinitTest, EcsOnRemove, IntPtr);
 
     EcsHandle e = ecs_new(world, MyFamily_h);
@@ -599,7 +599,7 @@ void test_EcsInitSystem_tc_deinit_after_remove_in_progress(
     HandleCtx ctx = {.h = IntPtr_h};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, IntPtr_h));

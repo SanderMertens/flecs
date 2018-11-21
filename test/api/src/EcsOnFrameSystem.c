@@ -47,15 +47,15 @@ void TestSystem(EcsRows *rows) {
     }
 }
 
-void test_EcsPeriodicSystem_tc_system_component(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_component(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Bar_h);
@@ -77,7 +77,7 @@ void test_EcsPeriodicSystem_tc_system_component(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 2);
@@ -90,8 +90,8 @@ void test_EcsPeriodicSystem_tc_system_component(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_2_component(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_2_component(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -101,7 +101,7 @@ void test_EcsPeriodicSystem_tc_system_2_component(
     ECS_FAMILY(world, Family1, Foo, Hello);
     ECS_FAMILY(world, Family2, Foo, Bar, Hello);
     ECS_FAMILY(world, Family3, Foo, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, Hello);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Hello);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Bar_h);
@@ -137,7 +137,7 @@ void test_EcsPeriodicSystem_tc_system_2_component(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 2);
@@ -154,8 +154,8 @@ void test_EcsPeriodicSystem_tc_system_2_component(
 }
 
 
-void test_EcsPeriodicSystem_tc_system_prefab(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_prefab(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -163,7 +163,7 @@ void test_EcsPeriodicSystem_tc_system_prefab(
     ECS_COMPONENT(world, Bar);
     ECS_PREFAB(world, MyPrefab, Foo);
     ECS_FAMILY(world, MyFamily, MyPrefab, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Bar_h);
@@ -189,7 +189,7 @@ void test_EcsPeriodicSystem_tc_system_prefab(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 3);
@@ -205,8 +205,8 @@ void test_EcsPeriodicSystem_tc_system_prefab(
 }
 
 
-void test_EcsPeriodicSystem_tc_system_prefab_component(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_prefab_component(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -215,7 +215,7 @@ void test_EcsPeriodicSystem_tc_system_prefab_component(
     ECS_COMPONENT(world, Hello);
     ECS_PREFAB(world, MyPrefab, Foo);
     ECS_FAMILY(world, MyFamily, MyPrefab, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Bar_h);
@@ -245,7 +245,7 @@ void test_EcsPeriodicSystem_tc_system_prefab_component(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 2);
@@ -261,8 +261,8 @@ void test_EcsPeriodicSystem_tc_system_prefab_component(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_component_1_not(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_component_1_not(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -271,7 +271,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_1_not(
     ECS_COMPONENT(world, Hello);
     ECS_FAMILY(world, Family1, Foo, Hello);
     ECS_FAMILY(world, Family2, Foo, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, !Hello);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, !Hello);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Bar_h);
@@ -299,7 +299,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_1_not(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 2);
@@ -312,8 +312,8 @@ void test_EcsPeriodicSystem_tc_system_1_component_1_not(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_component_2_not(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_component_2_not(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -324,7 +324,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_2_not(
     ECS_FAMILY(world, Family1, Foo, Hello);
     ECS_FAMILY(world, Family2, Foo, Bar);
     ECS_FAMILY(world, Family3, Foo, World);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, !Hello, !Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, !Hello, !Bar);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Bar_h);
@@ -358,7 +358,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_2_not(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 2);
@@ -371,8 +371,8 @@ void test_EcsPeriodicSystem_tc_system_1_component_2_not(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_2_component_1_not(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_2_component_1_not(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -383,7 +383,7 @@ void test_EcsPeriodicSystem_tc_system_2_component_1_not(
     ECS_FAMILY(world, Family1, Foo, Hello);
     ECS_FAMILY(world, Family2, Foo, Bar);
     ECS_FAMILY(world, Family3, Foo, Bar, World);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, Bar, !Hello);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar, !Hello);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Bar_h);
@@ -419,7 +419,7 @@ void test_EcsPeriodicSystem_tc_system_2_component_1_not(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 2);
@@ -436,8 +436,8 @@ void test_EcsPeriodicSystem_tc_system_2_component_1_not(
 }
 
 
-void test_EcsPeriodicSystem_tc_system_2_component_2_not(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_2_component_2_not(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -448,7 +448,7 @@ void test_EcsPeriodicSystem_tc_system_2_component_2_not(
     ECS_FAMILY(world, Family1, Foo, Hello);
     ECS_FAMILY(world, Family2, Foo, Bar);
     ECS_FAMILY(world, Family3, Foo, Bar, World);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, Bar, !Hello, !World);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar, !Hello, !World);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Bar_h);
@@ -484,7 +484,7 @@ void test_EcsPeriodicSystem_tc_system_2_component_2_not(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 1);
@@ -497,8 +497,8 @@ void test_EcsPeriodicSystem_tc_system_2_component_2_not(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_component_1_or2(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_component_1_or2(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -509,7 +509,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_1_or2(
     ECS_FAMILY(world, Family1, Foo, Hello);
     ECS_FAMILY(world, Family2, Foo, Bar);
     ECS_FAMILY(world, Family3, Foo, World);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, Bar|Hello);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar|Hello);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Bar_h);
@@ -543,7 +543,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_1_or2(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 2);
@@ -562,8 +562,8 @@ void test_EcsPeriodicSystem_tc_system_1_component_1_or2(
 }
 
 
-void test_EcsPeriodicSystem_tc_system_1_component_2_or2(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_component_2_or2(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -578,7 +578,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_2_or2(
     ECS_FAMILY(world, Family3, Foo, Bleep, World);
     ECS_FAMILY(world, Family4, Foo, Hello, Bloop);
     ECS_FAMILY(world, Family5, Bloop, Hello);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, Bleep|Bloop, Hello|World);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bleep|Bloop, Hello|World);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Family1_h);
@@ -624,7 +624,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_2_or2(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 3);
     test_assertint(ctx.count, 2);
@@ -646,8 +646,8 @@ void test_EcsPeriodicSystem_tc_system_1_component_2_or2(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_2_component_2_or3(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_2_component_2_or3(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -663,7 +663,7 @@ void test_EcsPeriodicSystem_tc_system_2_component_2_or3(
     ECS_FAMILY(world, Family4, Foo, Bar, Bleep);
     ECS_FAMILY(world, Family5, Foo, Bar, Hello);
     ECS_FAMILY(world, Family6, Foo, Bar, Bloop);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, Bar, Hello|World|Bleep);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar, Hello|World|Bleep);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Family1_h);
@@ -719,7 +719,7 @@ void test_EcsPeriodicSystem_tc_system_2_component_2_or3(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 3);
     test_assertint(ctx.count, 3);
@@ -748,8 +748,8 @@ void test_EcsPeriodicSystem_tc_system_2_component_2_or3(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_component_or2_both_match(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_component_or2_both_match(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -760,7 +760,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_or2_both_match(
     ECS_FAMILY(world, Family1, Foo, Bar, Hello);
     ECS_FAMILY(world, Family2, Foo, Bar);
     ECS_FAMILY(world, Family3, Foo, Hello);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, Bar|Hello);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar|Hello);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Bar_h);
@@ -796,7 +796,7 @@ void test_EcsPeriodicSystem_tc_system_1_component_or2_both_match(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 3);
@@ -819,8 +819,8 @@ void test_EcsPeriodicSystem_tc_system_1_component_or2_both_match(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_or2(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_or2(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -833,7 +833,7 @@ void test_EcsPeriodicSystem_tc_system_1_or2(
     ECS_FAMILY(world, Family3, Foo, World);
     ECS_FAMILY(world, Family4, Hello);
     ECS_FAMILY(world, Family5, World);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Hello|World);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Hello|World);
 
     EcsHandle e1 = ecs_new(world, Family1_h);
     EcsHandle e2 = ecs_new(world, Family2_h);
@@ -865,7 +865,7 @@ void test_EcsPeriodicSystem_tc_system_1_or2(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 4);
@@ -885,8 +885,8 @@ void test_EcsPeriodicSystem_tc_system_1_or2(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_2_or2(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_2_or2(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -901,7 +901,7 @@ void test_EcsPeriodicSystem_tc_system_2_or2(
     ECS_FAMILY(world, Family3, Foo, Bleep, World);
     ECS_FAMILY(world, Family4, Foo, Hello, Bloop);
     ECS_FAMILY(world, Family5, Bloop, Hello);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Bleep|Bloop, Hello|World);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Bleep|Bloop, Hello|World);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Family1_h);
@@ -947,7 +947,7 @@ void test_EcsPeriodicSystem_tc_system_2_or2(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 3);
@@ -970,15 +970,15 @@ void test_EcsPeriodicSystem_tc_system_2_or2(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_from_component(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_from_component(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, Family1, EcsComponent, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, COMPONENT.Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, COMPONENT.Bar);
 
     EcsHandle e1 = ecs_new(world, Family1_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -1005,7 +1005,7 @@ void test_EcsPeriodicSystem_tc_system_1_from_component(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 2);
@@ -1019,8 +1019,8 @@ void test_EcsPeriodicSystem_tc_system_1_from_component(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_2_from_component(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_2_from_component(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -1030,7 +1030,7 @@ void test_EcsPeriodicSystem_tc_system_2_from_component(
     ECS_COMPONENT(world, World);
     ECS_FAMILY(world, Family1, EcsComponent, Bar);
     ECS_FAMILY(world, Family2, EcsComponent, World);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, COMPONENT.Bar, COMPONENT.World);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, COMPONENT.Bar, COMPONENT.World);
 
     EcsHandle e1 = ecs_new(world, Family1_h);
     EcsHandle e2 = ecs_new(world, Family2_h);
@@ -1076,7 +1076,7 @@ void test_EcsPeriodicSystem_tc_system_2_from_component(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 3);
@@ -1099,8 +1099,8 @@ void test_EcsPeriodicSystem_tc_system_2_from_component(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_from_component_or2(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_from_component_or2(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -1110,7 +1110,7 @@ void test_EcsPeriodicSystem_tc_system_1_from_component_or2(
     ECS_COMPONENT(world, World);
     ECS_FAMILY(world, Family1, EcsComponent, Bar);
     ECS_FAMILY(world, Family2, EcsComponent, World);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, COMPONENT.Bar|COMPONENT.World);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, COMPONENT.Bar|COMPONENT.World);
 
     EcsHandle e1 = ecs_new(world, Family1_h);
     EcsHandle e2 = ecs_new(world, Family2_h);
@@ -1152,7 +1152,7 @@ void test_EcsPeriodicSystem_tc_system_1_from_component_or2(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 3);
@@ -1169,8 +1169,8 @@ void test_EcsPeriodicSystem_tc_system_1_from_component_or2(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_2_from_component_or2(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_2_from_component_or2(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -1182,7 +1182,7 @@ void test_EcsPeriodicSystem_tc_system_2_from_component_or2(
     ECS_FAMILY(world, Family2, EcsComponent, Bar);
     ECS_FAMILY(world, Family3, EcsComponent, Hello);
     ECS_FAMILY(world, Family4, EcsComponent, World);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic,
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame,
       COMPONENT.Foo|COMPONENT.Bar,
       COMPONENT.Hello|COMPONENT.World);
 
@@ -1235,7 +1235,7 @@ void test_EcsPeriodicSystem_tc_system_2_from_component_or2(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 2);
@@ -1253,15 +1253,15 @@ void test_EcsPeriodicSystem_tc_system_2_from_component_or2(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_from_component_not(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_from_component_not(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, Family1, EcsComponent, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, !COMPONENT.Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, !COMPONENT.Bar);
 
     EcsHandle e1 = ecs_new(world, Family1_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -1288,7 +1288,7 @@ void test_EcsPeriodicSystem_tc_system_from_component_not(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 2);
@@ -1302,8 +1302,8 @@ void test_EcsPeriodicSystem_tc_system_from_component_not(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_2_from_component_not(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_2_from_component_not(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -1311,7 +1311,7 @@ void test_EcsPeriodicSystem_tc_system_2_from_component_not(
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, Family1, EcsComponent, Foo);
     ECS_FAMILY(world, Family2, EcsComponent, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, !COMPONENT.Foo, !COMPONENT.Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, !COMPONENT.Foo, !COMPONENT.Bar);
 
     EcsHandle e1 = ecs_new(world, Family1_h);
     EcsHandle e2 = ecs_new(world, Family2_h);
@@ -1342,7 +1342,7 @@ void test_EcsPeriodicSystem_tc_system_2_from_component_not(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 2);
@@ -1356,14 +1356,14 @@ void test_EcsPeriodicSystem_tc_system_2_from_component_not(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_optional_not_set(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_optional_not_set(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, ?Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, ?Bar);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -1376,7 +1376,7 @@ void test_EcsPeriodicSystem_tc_system_1_optional_not_set(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 2);
@@ -1394,15 +1394,15 @@ void test_EcsPeriodicSystem_tc_system_1_optional_not_set(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_optional_set(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_optional_set(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, ?Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, ?Bar);
 
     EcsHandle e1 = ecs_new(world, MyFamily_h);
     EcsHandle e2 = ecs_new(world, MyFamily_h);
@@ -1417,7 +1417,7 @@ void test_EcsPeriodicSystem_tc_system_1_optional_set(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 2);
@@ -1435,8 +1435,8 @@ void test_EcsPeriodicSystem_tc_system_1_optional_set(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_optional_set_1_not_set(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_optional_set_1_not_set(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -1444,7 +1444,7 @@ void test_EcsPeriodicSystem_tc_system_1_optional_set_1_not_set(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, ?Bar, ?Hello);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, ?Bar, ?Hello);
 
     EcsHandle e1 = ecs_new(world, MyFamily_h);
     EcsHandle e2 = ecs_new(world, MyFamily_h);
@@ -1459,7 +1459,7 @@ void test_EcsPeriodicSystem_tc_system_1_optional_set_1_not_set(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 3);
     test_assertint(ctx.count, 2);
@@ -1481,15 +1481,15 @@ void test_EcsPeriodicSystem_tc_system_1_optional_set_1_not_set(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_2_optional_not_set(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_2_optional_not_set(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, ?Bar, ?Hello);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, ?Bar, ?Hello);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -1502,7 +1502,7 @@ void test_EcsPeriodicSystem_tc_system_2_optional_not_set(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 3);
     test_assertint(ctx.count, 2);
@@ -1524,8 +1524,8 @@ void test_EcsPeriodicSystem_tc_system_2_optional_not_set(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_2_optional_set(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_2_optional_set(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -1533,7 +1533,7 @@ void test_EcsPeriodicSystem_tc_system_2_optional_set(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_FAMILY(world, MyFamily, Foo, Bar, Hello);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, ?Bar, ?Hello);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, ?Bar, ?Hello);
 
     EcsHandle e1 = ecs_new(world, MyFamily_h);
     EcsHandle e2 = ecs_new(world, MyFamily_h);
@@ -1550,7 +1550,7 @@ void test_EcsPeriodicSystem_tc_system_2_optional_set(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 3);
     test_assertint(ctx.count, 2);
@@ -1570,14 +1570,14 @@ void test_EcsPeriodicSystem_tc_system_2_optional_set(
     test_assertint(ctx.component[2][1], Hello_h);
 }
 
-void test_EcsPeriodicSystem_tc_system_1_from_system(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_from_system(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, SYSTEM.Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, SYSTEM.Bar);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -1601,7 +1601,7 @@ void test_EcsPeriodicSystem_tc_system_1_from_system(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 3);
@@ -1632,15 +1632,15 @@ void InitBar(EcsRows *rows) {
     }
 }
 
-void test_EcsPeriodicSystem_tc_system_1_from_system_implicit_add(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_1_from_system_implicit_add(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, InitBar, EcsOnAdd, Bar);
-    ECS_SYSTEM(world, TestSystem, EcsPeriodic, Foo, SYSTEM.Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, SYSTEM.Bar);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -1662,7 +1662,7 @@ void test_EcsPeriodicSystem_tc_system_1_from_system_implicit_add(
 
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.column_count, 2);
     test_assertint(ctx.count, 3);
@@ -1685,8 +1685,8 @@ void test_EcsPeriodicSystem_tc_system_1_from_system_implicit_add(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_on_demand(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_on_demand(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -1715,7 +1715,7 @@ void test_EcsPeriodicSystem_tc_system_on_demand(
 
     ecs_set_context(world, &ctx);
 
-    ecs_run_system(world, TestSystem_h, NULL, 0);
+    ecs_run_system(world, TestSystem_h, 0, 0, NULL);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 2);
@@ -1728,8 +1728,8 @@ void test_EcsPeriodicSystem_tc_system_on_demand(
     ecs_fini(world);
 }
 
-void test_EcsPeriodicSystem_tc_system_on_demand_w_filter(
-    test_EcsPeriodicSystem this)
+void test_EcsOnFrameSystem_tc_system_on_demand_w_filter(
+    test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
     EcsWorld *world = ecs_init();
@@ -1758,7 +1758,7 @@ void test_EcsPeriodicSystem_tc_system_on_demand_w_filter(
 
     ecs_set_context(world, &ctx);
 
-    ecs_run_system(world, TestSystem_h, NULL, Bar_h);
+    ecs_run_system(world, TestSystem_h, 0, Bar_h, NULL);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 1);

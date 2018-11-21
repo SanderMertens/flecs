@@ -27,7 +27,7 @@ void activate_table(
     EcsTable *table,
     bool activate)
 {
-    EcsArray *systems = table->periodic_systems;
+    EcsArray *systems = table->frame_systems;
     if (systems) {
         EcsIter it = ecs_array_iter(systems, &handle_arr_params);
         while (ecs_iter_hasnext(&it)) {
@@ -47,7 +47,7 @@ EcsResult ecs_table_init_w_size(
 {
     table->family = family;
 
-    table->periodic_systems = NULL;
+    table->frame_systems = NULL;
     table->row_params.element_size = size + sizeof(EcsHandle);
     table->row_params.move_action = move_row;
     table->row_params.move_ctx = (void*)(uintptr_t)ecs_array_get_index(
@@ -175,6 +175,6 @@ void ecs_table_free(
     EcsTable *table)
 {
     ecs_array_free(table->rows);
-    if (table->periodic_systems) ecs_array_free(table->periodic_systems);
+    if (table->frame_systems) ecs_array_free(table->frame_systems);
     free(table->columns);
 }

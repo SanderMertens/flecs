@@ -238,7 +238,7 @@ void test_EcsDelete_tc_delete_cur_in_progress(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, DeleteCurrent, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, DeleteCurrent, EcsOnFrame, Foo);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -255,7 +255,7 @@ void test_EcsDelete_tc_delete_cur_in_progress(
     Context ctx = {.entity = e2};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.count, 3);
 
@@ -278,7 +278,7 @@ void test_EcsDelete_tc_delete_next_in_progress(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, DeleteNext, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, DeleteNext, EcsOnFrame, Foo);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -295,7 +295,7 @@ void test_EcsDelete_tc_delete_next_in_progress(
     Context ctx = {.entity = e2};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.count, 3);
 
@@ -318,7 +318,7 @@ void test_EcsDelete_tc_delete_prev_in_progress(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, DeletePrev, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, DeletePrev, EcsOnFrame, Foo);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -335,7 +335,7 @@ void test_EcsDelete_tc_delete_prev_in_progress(
     Context ctx = {.entity = e2};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.count, 3);
 
@@ -358,7 +358,7 @@ void test_EcsDelete_tc_delete_all_in_progress(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, DeleteAll, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, DeleteAll, EcsOnFrame, Foo);
 
     EcsHandle e1 = ecs_new(world, Foo_h);
     EcsHandle e2 = ecs_new(world, Foo_h);
@@ -375,7 +375,7 @@ void test_EcsDelete_tc_delete_all_in_progress(
     Context ctx = {.count = 0};
     ecs_set_context(world, &ctx);
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     test_assertint(ctx.count, 3);
 

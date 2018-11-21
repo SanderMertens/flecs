@@ -72,11 +72,11 @@ typedef enum EcsResult {
 
 /** System kinds determine when and how systems are ran */
 typedef enum EcsSystemKind {
-    EcsPeriodic,
+    EcsOnFrame,
     EcsOnAdd,
     EcsOnRemove,
     EcsOnSet,
-    EcsOnDemand
+    EcsOnDemand,
 } EcsSystemKind;
 
 /** Data passed to system action callback, used for iterating entities */
@@ -89,9 +89,10 @@ typedef struct EcsRows {
     void **refs;
     void *param;
     EcsHandle *components;
+    EcsHandle interrupted_by;
     uint32_t element_size;
     uint32_t column_count;
-    EcsHandle interrupted_by;
+    float delta_time;
 } EcsRows;
 
 /** System action callback type */
@@ -201,10 +202,12 @@ void ecs_import(
  *
  * @time-complexity: O(s * t)
  * @param world The world to progress.
+ * @param delta_time The time passed since the last frame.
  */
 REFLECS_EXPORT
 void ecs_progress(
-    EcsWorld *world);
+    EcsWorld *world,
+    float delta_time);
 
 /** Merge staged data.
  * This operation merges data from one or more stages (if there are multiple
@@ -295,6 +298,18 @@ REFLECS_EXPORT
 void* ecs_get_context(
     EcsWorld *world);
 
+/** Returns number of frames computed by world.
+ * The number of computed frames is equal to the amount of times ecs_progress
+ * has been successfully invoked.
+ *
+ * @time-complexity: O(1)
+ * @param The world.
+ * @returns The number of calculated frames.
+ */
+REFLECS_EXPORT
+uint32_t ecs_get_tick(
+    EcsWorld *world);
+
 /** Dimension the world for a specified number of entities.
  * This operation will preallocate memory in the world for the specified number
  * of entities. Specifying a number lower than the current number of entities in
@@ -342,15 +357,6 @@ void ecs_dim_family(
     EcsHandle family,
     uint32_t entity_count);
 
-/** Dump contents of world
- * This operation prints current tables and entities to the console.
- *
- * @time-complexity: O(e)
- * @param world The world.
- */
-REFLECS_EXPORT
-void ecs_dump(
-    EcsWorld *world);
 
 /* -- Entity API -- */
 
@@ -766,7 +772,7 @@ EcsHandle ecs_new_family(
  * After this operation is called, the system will be active. Systems can be
  * created with three different kinds:
  *
- * - EcsPeriodic: the system is invoked when ecs_progress is called.
+ * - EcsOnFrame: the system is invoked when ecs_progress is called.
  * - EcsOnAdd: the system is invoked when a component is committed to memory.
  * - EcsOnRemove: the system is invoked when a component is removed from memory.
  * - EcsOnDemand: the system is only invoked on demand (ecs_run)
@@ -824,6 +830,29 @@ void ecs_enable(
     EcsHandle system,
     bool enabled);
 
+/** Configure how often a system should be invoked.
+ * This operation lets an application control how often a system should be
+ * invoked. The provided period is the minimum interval between two invocations.
+ *
+ * Correct operation of this feature relies on an application providing a
+ * delta_time value to ecs_progress. Once the delta_time exceeds the period that
+ * is specified for a system, ecs_progress will invoke it.
+ *
+ * This operation is only valid on EcsPeriodic systems. If it is invoked on
+ * handles of other systems or entities it will be ignored. An application may
+ * only set the period outside ecs_progress.
+ *
+ * Note that a system will never be invoked more often than ecs_progress is
+ * invoked. If the specified period is smaller than the interval at which
+ * ecs_progress is invoked, the system will be invoked at every ecs_progress,
+ * provided that the delta_time provided to ecs_progress is accurate.
+ */
+REFLECS_EXPORT
+void ecs_set_period(
+    EcsWorld *world,
+    EcsHandle system,
+    float period);
+
 /** Returns the enabled status for a system / entity.
  * This operation will return whether a system is enabled or disabled. Currently
  * only systems can be enabled or disabled, but this operation does not fail
@@ -840,27 +869,51 @@ bool ecs_is_enabled(
     EcsWorld *world,
     EcsHandle system);
 
-/** Run a specific component manually.
+/** Run a specific system manually.
  * This operation runs a single system on demand. It is an efficient way to
  * invoke logic on a set of entities, as on demand systems are only matched to
  * tables at creation time or after creation time, when a new table is created.
  *
- * On demand systems can be used as alternative to requesting lists of entities
- * repeatedly inside periodic/reactive systems, which is not efficient.
+ * On demand systems are useful to evaluate lists of prematched entities at
+ * application defined times. Because none of the matching logic is evaluated
+ * before the system is invoked, on demand systems are much more efficient than
+ * manually obtaining a list of entities and retrieving their components.
+ *
+ * An application may however want to apply a filter to an on demand system for
+ * fast-changing unpredictable selections of entity subsets. The filter
+ * parameter lets applications pass handles to components or component families,
+ * and only entities that have said components will be evaluated.
+ *
+ * Because the filter is evaluated not on a per-entity basis, but on a per table
+ * basis, filter evaluation is still very cheap, especially when compared to
+ * tables with large numbers of entities.
+ *
+ * An application may pass custom data to a system through the param parameter.
+ * This data can be accessed by the system through the param member in the
+ * EcsRows value that is passed to the system callback.
+ *
+ * Any system may interrupt execution by setting the interrupted_by member in
+ * the EcsRows value. This is particularly useful for on demand systems, where
+ * the value of interrupted_by is returned by this operation. This, in
+ * cominbation with the param argument lets applications use on demand systems
+ * to lookup entities: once the entity has been found its handle is passed to
+ * interrupted_by, which is then subsequently returned.
  *
  * @time-complexity: O(t)
  * @param world: The world.
  * @param system: The system to run.
- * @param param: A user-defined parameter to pass to the system.
+ * @param delta_time: The time passed since the last system invocation.
  * @param filter: A component or family to filter matched entities.
+ * @param param: A user-defined parameter to pass to the system.
  * @returns: handle to last evaluated entity if system was interrupted.
  */
 REFLECS_EXPORT
 EcsHandle ecs_run_system(
     EcsWorld *world,
     EcsHandle system,
-    void *param,
-    EcsHandle filter);
+    float delta_time,
+    EcsHandle filter,
+    void *param);
 
 /** Set component on system for user-defined context */
 REFLECS_EXPORT
@@ -931,7 +984,7 @@ void ecs_iter_release(
  * This macro provides a convenient way to register systems with a world. It can
  * be used like this:
  *
- * ECS_SYSTEM(world, Move, EcsPeriodic, Location, Speed);
+ * ECS_SYSTEM(world, Move, EcsOnFrame, Location, Speed);
  *
  * In this example, "Move" must be the identifier to a C function that matches
  * the signature of EcsSystemAction. The signature of this component will be

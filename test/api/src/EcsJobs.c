@@ -19,7 +19,7 @@ void test_EcsJobs_tc_2_thread_10_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 10, THREADS = 2;
     EcsHandle handles[ENTITIES];
@@ -30,13 +30,13 @@ void test_EcsJobs_tc_2_thread_10_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -51,7 +51,7 @@ void test_EcsJobs_tc_2_thread_1_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 1, THREADS = 2;
     EcsHandle handles[ENTITIES];
@@ -62,13 +62,13 @@ void test_EcsJobs_tc_2_thread_1_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -83,7 +83,7 @@ void test_EcsJobs_tc_2_thread_2_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 2, THREADS = 2;
     EcsHandle handles[ENTITIES];
@@ -94,13 +94,13 @@ void test_EcsJobs_tc_2_thread_2_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -115,7 +115,7 @@ void test_EcsJobs_tc_2_thread_5_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 5, THREADS = 2;
     EcsHandle handles[ENTITIES];
@@ -126,13 +126,13 @@ void test_EcsJobs_tc_2_thread_5_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -147,7 +147,7 @@ void test_EcsJobs_tc_3_thread_10_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 10, THREADS = 3;
     EcsHandle handles[ENTITIES];
@@ -158,13 +158,13 @@ void test_EcsJobs_tc_3_thread_10_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -179,7 +179,7 @@ void test_EcsJobs_tc_3_thread_1_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 1, THREADS = 3;
     EcsHandle handles[ENTITIES];
@@ -190,13 +190,13 @@ void test_EcsJobs_tc_3_thread_1_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -211,7 +211,7 @@ void test_EcsJobs_tc_3_thread_2_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 2, THREADS = 3;
     EcsHandle handles[ENTITIES];
@@ -222,13 +222,13 @@ void test_EcsJobs_tc_3_thread_2_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -243,7 +243,7 @@ void test_EcsJobs_tc_3_thread_5_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 5, THREADS = 3;
     EcsHandle handles[ENTITIES];
@@ -254,13 +254,13 @@ void test_EcsJobs_tc_3_thread_5_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -275,7 +275,7 @@ void test_EcsJobs_tc_4_thread_10_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 10, THREADS = 4;
     EcsHandle handles[ENTITIES];
@@ -286,13 +286,13 @@ void test_EcsJobs_tc_4_thread_10_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -307,7 +307,7 @@ void test_EcsJobs_tc_4_thread_1_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 1, THREADS = 4;
     EcsHandle handles[ENTITIES];
@@ -318,13 +318,13 @@ void test_EcsJobs_tc_4_thread_1_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -339,7 +339,7 @@ void test_EcsJobs_tc_4_thread_2_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 2, THREADS = 4;
     EcsHandle handles[ENTITIES];
@@ -350,13 +350,13 @@ void test_EcsJobs_tc_4_thread_2_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -371,7 +371,7 @@ void test_EcsJobs_tc_4_thread_5_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 5, THREADS = 4;
     EcsHandle handles[ENTITIES];
@@ -382,13 +382,13 @@ void test_EcsJobs_tc_4_thread_5_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -403,7 +403,7 @@ void test_EcsJobs_tc_5_thread_10_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 10, THREADS = 5;
     EcsHandle handles[ENTITIES];
@@ -414,13 +414,13 @@ void test_EcsJobs_tc_5_thread_10_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -435,7 +435,7 @@ void test_EcsJobs_tc_5_thread_1_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 1, THREADS = 5;
     EcsHandle handles[ENTITIES];
@@ -446,13 +446,13 @@ void test_EcsJobs_tc_5_thread_1_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -467,7 +467,7 @@ void test_EcsJobs_tc_5_thread_2_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 2, THREADS = 5;
     EcsHandle handles[ENTITIES];
@@ -478,13 +478,13 @@ void test_EcsJobs_tc_5_thread_2_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -499,7 +499,7 @@ void test_EcsJobs_tc_5_thread_5_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 5, THREADS = 5;
     EcsHandle handles[ENTITIES];
@@ -510,13 +510,13 @@ void test_EcsJobs_tc_5_thread_5_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -531,7 +531,7 @@ void test_EcsJobs_tc_6_thread_10_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 10, THREADS = 6;
     EcsHandle handles[ENTITIES];
@@ -542,13 +542,13 @@ void test_EcsJobs_tc_6_thread_10_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -563,7 +563,7 @@ void test_EcsJobs_tc_6_thread_1_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 1, THREADS = 6;
     EcsHandle handles[ENTITIES];
@@ -574,13 +574,13 @@ void test_EcsJobs_tc_6_thread_1_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -595,7 +595,7 @@ void test_EcsJobs_tc_6_thread_2_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 2, THREADS = 6;
     EcsHandle handles[ENTITIES];
@@ -606,13 +606,13 @@ void test_EcsJobs_tc_6_thread_2_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);
@@ -627,7 +627,7 @@ void test_EcsJobs_tc_6_thread_5_entity(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, Progress, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 5, THREADS = 6;
     EcsHandle handles[ENTITIES];
@@ -638,13 +638,13 @@ void test_EcsJobs_tc_6_thread_5_entity(
     }
 
     ecs_set_threads(world, THREADS);
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 1);
     }
 
-    ecs_progress(world);
+    ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
         test_assertint(ecs_get(world, handles[i], Foo).x, 2);

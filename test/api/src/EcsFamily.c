@@ -86,7 +86,7 @@ void test_EcsFamily_tc_family_of_systems_1(
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, TestSystem1, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
     ECS_FAMILY(world, Family, TestSystem1);
 
     test_assert(ecs_is_enabled(world, TestSystem1_h));
@@ -102,8 +102,8 @@ void test_EcsFamily_tc_family_of_systems_2(
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, TestSystem1, EcsPeriodic, Foo);
-    ECS_SYSTEM(world, TestSystem2, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
+    ECS_SYSTEM(world, TestSystem2, EcsOnFrame, Foo);
     ECS_FAMILY(world, Family, TestSystem1, TestSystem2);
 
     test_assert(ecs_is_enabled(world, TestSystem1_h));
@@ -121,7 +121,7 @@ void test_EcsFamily_tc_family_of_systems_1_nested(
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, TestSystem1, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
     ECS_FAMILY(world, Family, TestSystem1);
     ECS_FAMILY(world, SubFamily, Family);
 
@@ -138,7 +138,7 @@ void test_EcsFamily_tc_family_of_systems_1_nested_2_lvl(
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, TestSystem1, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
     ECS_FAMILY(world, Family, TestSystem1);
     ECS_FAMILY(world, SubFamily, Family);
     ECS_FAMILY(world, SubSubFamily, SubFamily);
@@ -156,8 +156,8 @@ void test_EcsFamily_tc_family_of_systems_2_nested(
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, TestSystem1, EcsPeriodic, Foo);
-    ECS_SYSTEM(world, TestSystem2, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
+    ECS_SYSTEM(world, TestSystem2, EcsOnFrame, Foo);
     ECS_FAMILY(world, Family1, TestSystem1);
     ECS_FAMILY(world, Family2, TestSystem2);
     ECS_FAMILY(world, SubFamily, Family1, Family2);
@@ -177,8 +177,8 @@ void test_EcsFamily_tc_family_of_systems_2_nested_2_lvl(
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
-    ECS_SYSTEM(world, TestSystem1, EcsPeriodic, Foo);
-    ECS_SYSTEM(world, TestSystem2, EcsPeriodic, Foo);
+    ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
+    ECS_SYSTEM(world, TestSystem2, EcsOnFrame, Foo);
     ECS_FAMILY(world, Family1, TestSystem1);
     ECS_FAMILY(world, Family2, TestSystem2);
     ECS_FAMILY(world, SubFamily1, Family1);

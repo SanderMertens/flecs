@@ -86,7 +86,7 @@ test.suite EcsPrefab {
     tc_prefab_add_component()
 }
 
-test.suite EcsPeriodicSystem {
+test.suite EcsOnFrameSystem {
     tc_system_component()
     tc_system_2_component()
     tc_system_prefab()
