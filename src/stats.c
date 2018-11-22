@@ -161,11 +161,12 @@ void set_system_stats(
     EcsId *id = ecs_get_ptr(world, system, EcsId_h);
     EcsSystemStats *sstats = ecs_array_add(
         stats_array, &systemstats_arr_params);
+
     sstats->system = system;
     sstats->id = id->id;
     sstats->enabled = ecs_is_enabled(world, system);
     sstats->active = active;
-    sstats->is_framework = ecs_has(world, system, EcsFrameworkSystem_h);
+    sstats->is_hidden = ecs_has(world, system, EcsHidden_h);
 
     EcsTableSystem *system_ptr = ecs_get_ptr(world, system, EcsTableSystem_h);
     if (system_ptr) {
@@ -179,12 +180,18 @@ void set_system_stats(
             entity_count += ecs_array_count(table->rows);
         }
 
+        sstats->signature = system_ptr->signature;
+        sstats->period = system_ptr->period;
         sstats->entities_matched = entity_count;
         sstats->tables_matched = count + ecs_array_count(
             system_ptr->inactive_tables);
     } else {
+        EcsRowSystem *row_ptr = ecs_get_ptr(world, system, EcsRowSystem_h);
+        assert(row_ptr != NULL);
+        sstats->signature = row_ptr->signature;
         sstats->entities_matched = 0;
         sstats->tables_matched = 0;
+        sstats->period = 0;
     }
 }
 
@@ -244,7 +251,7 @@ int system_stats_map(
     return ecs_map_count(systems);
 }
 
-void ecs_world_get_stats(
+void ecs_get_stats(
     EcsWorld *world,
     EcsWorldStats *stats)
 {
@@ -317,7 +324,7 @@ void ecs_world_get_stats(
             *elem = feature;
             elem->id = ecs_id(world, h);
             elem->entities = ecs_family_tostr(world, NULL, data->family);
-            elem->is_framework = ecs_has(world, h, EcsFrameworkSystem_h);
+            elem->is_hidden = ecs_has(world, h, EcsHidden_h);
         }
     }
 
@@ -360,9 +367,14 @@ void ecs_world_get_stats(
     stats->memory.families.allocd += family_memory;
 
     stats->entity_count = ecs_map_count(world->entity_index);
+    stats->tick_count = world->tick;
+    stats->frame_time = world->frame_time / (float)world->tick;
+
+    world->tick = 0;
+    world->frame_time = 0;
 }
 
-void ecs_world_free_stats(
+void ecs_free_stats(
     EcsWorld *world,
     EcsWorldStats *stats)
 {

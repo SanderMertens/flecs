@@ -649,8 +649,8 @@ void test_EcsSet_tc_set_new_in_progress(
     test_assert(ecs_has(world, ctx.new_handles[3], int8_t_h));
     test_assertint(ecs_get(world, ctx.new_handles[0], int8_t), 4);
     test_assertint(ecs_get(world, ctx.new_handles[1], int8_t), 8);
-    test_assertint(ecs_get(world, ctx.new_handles[2], int8_t), 8);
-    test_assertint(ecs_get(world, ctx.new_handles[3], int8_t), 16);
+    test_assertint(ecs_get(world, ctx.new_handles[3], int8_t), 8);
+    test_assertint(ecs_get(world, ctx.new_handles[2], int8_t), 16);
 
     ecs_fini(world);
 }

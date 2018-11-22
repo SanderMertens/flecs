@@ -598,7 +598,9 @@ EcsHandle ecs_new_table_system(
         return 0;
     }
 
-    EcsHandle result = ecs_new_w_family(world, NULL, world->table_system_family);
+    EcsHandle result = ecs_new_w_family(
+        world, NULL, world->table_system_family);
+        
     EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
     id_data->id = id;
 
@@ -606,9 +608,11 @@ EcsHandle ecs_new_table_system(
     memset(system_data, 0, sizeof(EcsTableSystem));
     system_data->action = action;
     system_data->enabled = true;
+    system_data->signature = sig;
     system_data->table_params.element_size = sizeof(int32_t) * (count + 2);
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
     system_data->component_params.element_size = sizeof(EcsHandle) * count;
+
     system_data->components = ecs_array_new(
         &system_data->component_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     system_data->tables = ecs_array_new(

@@ -112,7 +112,7 @@ typedef void (*EcsModuleInitAction)(
 #define EcsRowSystem_h (4)
 #define EcsTableSystem_h (5)
 #define EcsId_h (6)
-#define EcsFrameworkSystem_h (7)
+#define EcsHidden_h (7)
 
 
 /* -- World API -- */
@@ -296,18 +296,6 @@ void ecs_set_context(
  */
 REFLECS_EXPORT
 void* ecs_get_context(
-    EcsWorld *world);
-
-/** Returns number of frames computed by world.
- * The number of computed frames is equal to the amount of times ecs_progress
- * has been successfully invoked.
- *
- * @time-complexity: O(1)
- * @param The world.
- * @returns The number of calculated frames.
- */
-REFLECS_EXPORT
-uint32_t ecs_get_tick(
     EcsWorld *world);
 
 /** Dimension the world for a specified number of entities.

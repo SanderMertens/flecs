@@ -78,6 +78,7 @@ typedef struct EcsTableSystem {
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
     float period;              /* Minimum period inbetween system invocations */
     float time_passed;         /* Time passed since last invocation */
+    const char *signature;     /* Signature with which system was created */
     EcsArray *columns;         /* Column components (AND) and families (OR) */
     EcsArray *components;      /* Computed component list per matched table */
     EcsArray *inactive_tables; /* Inactive tables */
@@ -97,6 +98,7 @@ typedef struct EcsTableSystem {
 
 typedef struct EcsRowSystem {
     EcsSystemAction action;     /* Callback to be invoked for matching rows */
+    const char *signature;      /* Signature with which system was created */
     EcsArray *components;       /* Components in order of signature */
     EcsHandle ctx_handle;
 } EcsRowSystem;
@@ -198,11 +200,15 @@ struct EcsWorld {
     EcsFamily prefab_family;      /* EcsPrefab, EcsId */
 
     uint32_t tick;                /* Number of computed frames by world */
+    float frame_time;             /* Time spent calculating a frame */
+
     bool valid_schedule;          /* Is job schedule still valid */
     bool quit_workers;            /* Signals worker threads to quit */
     bool in_progress;             /* Is world being progressed */
     bool is_merging;              /* Is world currently being merged */
     bool auto_merge;              /* Are stages auto-merged by ecs_progress */
+    bool measure_frame_time;      /* Time spent on each frame */
+    bool measure_system_time;     /* Time spent by each system */
 };
 
 extern const EcsArrayParams handle_arr_params;

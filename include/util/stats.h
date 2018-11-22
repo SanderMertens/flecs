@@ -11,11 +11,13 @@ extern "C" {
 typedef struct EcsSystemStats {
     EcsHandle system;
     const char *id;
+    const char *signature;
     uint32_t tables_matched;
     uint32_t entities_matched;
+    float period;
     bool enabled;
     bool active;
-    bool is_framework;
+    bool is_hidden;
 } EcsSystemStats;
 
 typedef struct EcsFeatureStats {
@@ -23,7 +25,7 @@ typedef struct EcsFeatureStats {
     char *entities;
     uint32_t system_count;
     uint32_t systems_enabled;
-    bool is_framework;
+    bool is_hidden;
 } EcsFeatureStats;
 
 typedef struct EcsTableStats {
@@ -55,6 +57,8 @@ typedef struct EcsWorldStats {
     uint32_t table_count;
     uint32_t entity_count;
     uint32_t thread_count;
+    uint32_t tick_count;
+    float frame_time;
     EcsMemoryStats memory;
     EcsArray *features;
     EcsArray *frame_systems;
@@ -66,14 +70,24 @@ typedef struct EcsWorldStats {
 } EcsWorldStats;
 
 REFLECS_EXPORT
-void ecs_world_get_stats(
+void ecs_get_stats(
     EcsWorld *world,
     EcsWorldStats *stats);
 
 REFLECS_EXPORT
-void ecs_world_free_stats(
+void ecs_free_stats(
     EcsWorld *world,
     EcsWorldStats *stats);
+
+REFLECS_EXPORT
+void ecs_measure_frame_time(
+    EcsWorld *world,
+    bool enable);
+
+REFLECS_EXPORT
+void ecs_measure_system_time(
+    EcsWorld *world,
+    bool enable);
 
 #ifdef __cplusplus
 }

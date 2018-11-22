@@ -53,6 +53,7 @@ EcsHandle new_row_system(
     memset(system_data, 0, sizeof(EcsRowSystem));
     system_data->action = action;
     system_data->components = ecs_array_new(&handle_arr_params, count);
+    system_data->signature = sig;
 
     if (ecs_parse_component_expr(
         world, sig, add_component, system_data) != EcsOk)
@@ -129,7 +130,7 @@ EcsHandle ecs_new_system(
         return result;
     }
 
-    if (kind == EcsOnFrame || kind == EcsPeriodic || kind == EcsOnDemand) {
+    if (kind == EcsOnFrame || kind == EcsOnDemand) {
         result = ecs_new_table_system(world, id, kind, sig, action);
     } else if (kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet) {
         result = new_row_system(world, id, kind, sig, action);

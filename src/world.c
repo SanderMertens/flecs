@@ -1,6 +1,8 @@
 #include <string.h>
 #include <inttypes.h>
 #include <assert.h>
+#include "include/util/time.h"
+#include "include/util/stats.h"
 #include "include/private/reflecs.h"
 
 const EcsArrayParams table_arr_params = {
@@ -465,7 +467,7 @@ EcsWorld *ecs_init(void) {
     assert_func(new_builtin_component(world, sizeof(EcsRowSystem)) == EcsRowSystem_h);
     assert_func(new_builtin_component(world, sizeof(EcsTableSystem)) == EcsTableSystem_h);
     assert_func(new_builtin_component(world, sizeof(EcsId)) == EcsId_h);
-    assert_func(new_builtin_component(world, 0) == EcsFrameworkSystem_h);
+    assert_func(new_builtin_component(world, 0) == EcsHidden_h);
 
     add_builtin_id(world, EcsComponent_h, "EcsComponent");
     add_builtin_id(world, EcsFamilyComponent_h, "EcsFamilyComponent");
@@ -473,7 +475,7 @@ EcsWorld *ecs_init(void) {
     add_builtin_id(world, EcsRowSystem_h, "EcsRowSystem");
     add_builtin_id(world, EcsTableSystem_h, "EcsTableSystem");
     add_builtin_id(world, EcsId_h, "EcsId");
-    add_builtin_id(world, EcsFrameworkSystem_h, "EcsFrameworkSystem");
+    add_builtin_id(world, EcsHidden_h, "EcsHidden");
 
     world->component_family = get_builtin_family(world, EcsComponent_h);
     world->family_family = get_builtin_family(world, EcsFamilyComponent_h);
@@ -495,13 +497,13 @@ EcsWorld *ecs_init(void) {
         world, "EcsInitComponent", EcsOnAdd, "EcsComponent", init_component);
     assert(init_component_system != 0);
 
-    ecs_add(world, world->deinit_row_system, EcsFrameworkSystem_h);
+    ecs_add(world, world->deinit_row_system, EcsHidden_h);
     ecs_commit(world, world->deinit_row_system);
 
-    ecs_add(world, world->deinit_table_system, EcsFrameworkSystem_h);
+    ecs_add(world, world->deinit_table_system, EcsHidden_h);
     ecs_commit(world, world->deinit_table_system);
 
-    ecs_add(world, init_component_system, EcsFrameworkSystem_h);
+    ecs_add(world, init_component_system, EcsHidden_h);
     ecs_commit(world, init_component_system);
 
     return world;
@@ -595,9 +597,14 @@ void ecs_progress(
     float delta_time)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
+    struct timespec time_start;
 
-    uint32_t frame_count = ecs_array_count(world->frame_systems);
-    if (frame_count) {
+    if (world->measure_frame_time) {
+        ut_time_get(&time_start);
+    }
+
+    uint32_t system_count = ecs_array_count(world->frame_systems);
+    if (system_count) {
         int i;
         EcsHandle *buffer = ecs_array_buffer(world->frame_systems);
         bool has_threads = ecs_array_count(world->worker_threads) != 0;
@@ -607,7 +614,7 @@ void ecs_progress(
 
         if (has_threads) {
             bool valid_schedule = world->valid_schedule;
-            for (i = 0; i < frame_count; i ++) {
+            for (i = 0; i < system_count; i ++) {
                 if (!valid_schedule) {
                     ecs_schedule_jobs(world, buffer[i]);
                 }
@@ -616,7 +623,7 @@ void ecs_progress(
             ecs_run_jobs(world);
             world->valid_schedule = true;
         } else {
-            for (i = 0; i < frame_count; i ++) {
+            for (i = 0; i < system_count; i ++) {
                 ecs_run_system(world, buffer[i], delta_time, 0, NULL);
             }
         }
@@ -628,14 +635,11 @@ void ecs_progress(
         }
     }
 
-    world->tick ++;
-}
+    if (world->measure_frame_time) {
+        world->frame_time += ut_time_measure(&time_start);
+    }
 
-uint32_t ecs_get_tick(
-    EcsWorld *world)
-{
-    ecs_get_stage(&world);
-    return world->tick;
+    world->tick ++;
 }
 
 void ecs_merge(
@@ -662,6 +666,22 @@ void ecs_set_automerge(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     world->auto_merge = auto_merge;
+}
+
+void ecs_measure_frame_time(
+    EcsWorld *world,
+    bool enable)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+    world->measure_frame_time = enable;
+}
+
+void ecs_measure_system_time(
+    EcsWorld *world,
+    bool enable)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+    world->measure_system_time = enable;
 }
 
 void* ecs_get_context(
