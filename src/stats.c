@@ -185,12 +185,15 @@ void set_system_stats(
         sstats->entities_matched = entity_count;
         sstats->tables_matched = count + ecs_array_count(
             system_ptr->inactive_tables);
+        sstats->time_spent = system_ptr->time_spent;
+        system_ptr->time_spent = 0;
     } else {
         EcsRowSystem *row_ptr = ecs_get_ptr(world, system, EcsRowSystem_h);
         assert(row_ptr != NULL);
         sstats->signature = row_ptr->signature;
         sstats->entities_matched = 0;
         sstats->tables_matched = 0;
+        sstats->time_spent = 0;
         sstats->period = 0;
     }
 }

@@ -1,6 +1,7 @@
 #include <string.h>
 #include <assert.h>
 #include "include/private/reflecs.h"
+#include "include/util/time.h"
 
 const EcsArrayParams column_arr_params = {
     .element_size = sizeof(EcsSystemColumn)
@@ -600,7 +601,7 @@ EcsHandle ecs_new_table_system(
 
     EcsHandle result = ecs_new_w_family(
         world, NULL, world->table_system_family);
-        
+
     EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
     id_data->id = id;
 
@@ -612,6 +613,8 @@ EcsHandle ecs_new_table_system(
     system_data->table_params.element_size = sizeof(int32_t) * (count + 2);
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
     system_data->component_params.element_size = sizeof(EcsHandle) * count;
+    system_data->time_spent = 0;
+    system_data->period = 0;
 
     system_data->components = ecs_array_new(
         &system_data->component_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
@@ -693,6 +696,14 @@ EcsHandle ecs_run_system(
         }
     }
 
+    EcsWorld *real_world = world;
+    EcsStage *stage = ecs_get_stage(&real_world);
+    bool measure_time = real_world->measure_system_time;
+    struct timespec time_start;
+    if (measure_time) {
+        ut_time_get(&time_start);
+    }
+
     EcsSystemAction action = system_data->action;
     EcsArray *tables = system_data->tables;
     EcsArray *table_db = world->table_db;
@@ -705,13 +716,7 @@ EcsHandle ecs_run_system(
     char *last = ECS_OFFSET(table_buffer, element_size * table_count);
     void *refs[column_count];
     EcsFamily filter_id = 0;
-    EcsStage *stage;
-
-    if (filter) {
-        EcsWorld *temp = world;
-        stage = ecs_get_stage(&temp);
-        filter_id = ecs_family_from_handle(world, stage, filter, NULL);
-    }
+    EcsHandle interrupted_by = 0;
 
     EcsRows info = {
         .world = world,
@@ -721,6 +726,10 @@ EcsHandle ecs_run_system(
         .column_count = column_count,
         .delta_time = delta_time
     };
+
+    if (filter) {
+        filter_id = ecs_family_from_handle(world, stage, filter, NULL);
+    }
 
     for (; table_buffer < last; table_buffer += element_size) {
         int32_t table_index = ((int32_t*)table_buffer)[0];
@@ -753,11 +762,16 @@ EcsHandle ecs_run_system(
         action(&info);
 
         if (info.interrupted_by) {
-            return info.interrupted_by;
+            interrupted_by = info.interrupted_by;
+            break;
         }
     }
 
-    return 0;
+    if (measure_time) {
+        system_data->time_spent += ut_time_measure(&time_start);
+    }
+
+    return interrupted_by;
 }
 
 void ecs_enable(

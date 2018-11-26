@@ -15,6 +15,7 @@ typedef struct EcsSystemStats {
     uint32_t tables_matched;
     uint32_t entities_matched;
     float period;
+    float time_spent;
     bool enabled;
     bool active;
     bool is_hidden;

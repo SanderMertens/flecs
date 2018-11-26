@@ -76,8 +76,6 @@ typedef struct EcsSystemRef {
 
 typedef struct EcsTableSystem {
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
-    float period;              /* Minimum period inbetween system invocations */
-    float time_passed;         /* Time passed since last invocation */
     const char *signature;     /* Signature with which system was created */
     EcsArray *columns;         /* Column components (AND) and families (OR) */
     EcsArray *components;      /* Computed component list per matched table */
@@ -93,6 +91,9 @@ typedef struct EcsTableSystem {
     EcsFamily not_from_component; /* Exclude components from components */
     EcsFamily and_from_entity; /* Used to match init / deinit notifications */
     EcsFamily and_from_system; /* Used to auto-add components to system */
+    float period;              /* Minimum period inbetween system invocations */
+    float time_passed;         /* Time passed since last invocation */
+    float time_spent;          /* Time spent on running system */
     bool enabled;              /* Is system enabled or not */
 } EcsTableSystem;
 
