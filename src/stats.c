@@ -371,7 +371,15 @@ void ecs_get_stats(
 
     stats->entity_count = ecs_map_count(world->entity_index);
     stats->tick_count = world->tick;
-    stats->frame_time = world->frame_time / (float)world->tick;
+
+    if (world->tick) {
+        stats->frame_time = world->frame_time / (float)world->tick;
+    } else {
+        stats->frame_time = 0;
+    }
+
+    stats->frame_profiling = world->measure_frame_time;
+    stats->system_profiling = world->measure_system_time;
 
     world->tick = 0;
     world->frame_time = 0;

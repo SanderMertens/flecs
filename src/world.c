@@ -637,9 +637,8 @@ void ecs_progress(
 
     if (world->measure_frame_time) {
         world->frame_time += ut_time_measure(&time_start);
+        world->tick ++;
     }
-
-    world->tick ++;
 }
 
 void ecs_merge(

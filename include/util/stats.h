@@ -68,6 +68,8 @@ typedef struct EcsWorldStats {
     EcsArray *on_remove_systems;
     EcsArray *on_set_systems;
     EcsArray *tables;
+    bool frame_profiling;
+    bool system_profiling;
 } EcsWorldStats;
 
 REFLECS_EXPORT
