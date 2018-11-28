@@ -396,9 +396,10 @@ EcsHandle ecs_new_w_count(
 
 /** Create new entity with same components as specified entity. */
 REFLECS_EXPORT
-EcsHandle ecs_dup(
+EcsHandle ecs_clone(
     EcsWorld *world,
-    EcsHandle entity);
+    EcsHandle entity,
+    bool copy_value);
 
 /** Create a new prefab entity.
  * Prefab entities allow entities to share a set of components. Components of
@@ -600,7 +601,7 @@ EcsHandle ecs_set_ptr(
     void *ptr);
 
 #define ecs_set(world, entity, component, ...)\
-  { component v = __VA_ARGS__; ecs_set_ptr(world, entity, component##_h, &v); }
+  { component __v = __VA_ARGS__; ecs_set_ptr(world, entity, component##_h, &__v); }
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the
@@ -918,7 +919,7 @@ void* ecs_get_system_context(
     EcsHandle system);
 
 #define ecs_set_system_context(world, system, component, ...)\
-  { component v = __VA_ARGS__; ecs_set_system_context_ptr(world, system, component##_h, &v); }
+  { component __v = __VA_ARGS__; ecs_set_system_context_ptr(world, system, component##_h, &__v); }
 
 
 /* -- Utility API -- */

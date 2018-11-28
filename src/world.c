@@ -172,27 +172,6 @@ void init_component(
 }
 
 static
-void clean_tables(
-    EcsWorld *world)
-{
-    EcsTable *buffer = ecs_array_buffer(world->table_db);
-    int32_t i, count = ecs_array_count(world->table_db);
-
-    for (i = count - 1; i >= 0; i --) {
-        EcsTable *table = &buffer[i];
-
-        ecs_table_deinit(world, table);
-    }
-
-    for (i = 0; i < count; i ++) {
-        EcsTable *table = &buffer[i];
-        ecs_table_free(world, table);
-    }
-
-    ecs_array_free(world->table_db);
-}
-
-static
 void clean_families(
     EcsWorld *world)
 {
@@ -225,34 +204,55 @@ void deinit_table_system(
     data->enabled = false;
 }
 
+static
+void clean_tables(
+    EcsWorld *world)
+{
+    EcsTable *buffer = ecs_array_buffer(world->table_db);
+    int32_t i, count = ecs_array_count(world->table_db);
+
+    for (i = count - 1; i >= 0; i --) {
+        EcsTable *table = &buffer[i];
+
+        ecs_table_deinit(world, table);
+    }
+
+    /* Free builtin systems */
+    EcsRowSystem *deinit_row_sys = ecs_get_ptr(
+        world, world->deinit_row_system, EcsRowSystem_h);
+    EcsRowSystem *deinit_table_sys = ecs_get_ptr(
+        world, world->deinit_table_system, EcsRowSystem_h);
+
+    deinit_row_system(deinit_row_sys);
+    deinit_row_system(deinit_table_sys);
+
+    for (i = 0; i < count; i ++) {
+        EcsTable *table = &buffer[i];
+        ecs_table_free(world, table);
+    }
+
+    ecs_array_free(world->table_db);
+}
+
 /** Cleanup resources allocated by table systems */
 static
 void remove_systems(
     EcsRows *rows)
 {
     void *row;
-    void *deinit_system_ptr = NULL;
     EcsHandle component = rows->components[0];
 
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        if (entity != rows->world->deinit_table_system) {
+        if (entity != rows->world->deinit_table_system &&
+            entity != rows->world->deinit_row_system)
+        {
             void *data = ecs_column(rows, row, 0);
             if (component == EcsTableSystem_h) {
                 deinit_table_system(data);
             } else {
                 deinit_row_system(data);
             }
-        } else {
-            deinit_system_ptr = ecs_column(rows, row, 0);
-        }
-    }
-
-    if (deinit_system_ptr) {
-        if (component == EcsTableSystem_h) {
-            deinit_table_system(deinit_system_ptr);
-        } else {
-            deinit_row_system(deinit_system_ptr);
         }
     }
 }
@@ -457,6 +457,8 @@ EcsWorld *ecs_init(void) {
     world->in_progress = false;
     world->is_merging = false;
     world->auto_merge = true;
+    world->measure_frame_time = false;
+    world->measure_system_time = false;
     world->last_handle = 0;
 
     ecs_stage_init(&world->stage);

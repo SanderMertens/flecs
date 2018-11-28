@@ -188,6 +188,22 @@ test.suite EcsMerge {
     tc_merge_set_existing()
 }
 
+test.suite EcsClone {
+    tc_clone_empty()
+    tc_clone_empty_value()
+    tc_clone_1_component()
+    tc_clone_1_component_value()
+    tc_clone_1_component_in_progress()
+    tc_clone_1_component_value_in_progress()
+    tc_clone_1_component_value_in_progress_override_w_set()
+    tc_clone_2_component()
+    tc_clone_2_component_value()
+    tc_clone_2_component_in_progress()
+    tc_clone_2_component_value_in_progress()
+    tc_clone_2_component_value_in_progress_override_w_set()
+}
+
+
 test.suite EcsFamily {
     tc_family_nested_1()
     tc_family_nested_2()

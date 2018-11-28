@@ -59,15 +59,22 @@ void move_node(
     void *ctx)
 {
     EcsMapNode *node_p = to;
-    uint32_t node = ecs_array_get_index(array, &node_arr_params, to);
+    uint32_t node = ecs_array_get_index(array, &node_arr_params, to) + 1;
+    uint32_t prev = node_p->prev;
+    uint32_t next = node_p->next;
 
-    EcsMapNode *prev_p = ecs_array_get(array, &node_arr_params, node_p->prev - 1);
-    if (prev_p) {
-        prev_p->next = node + 1;
+    if (prev) {
+        EcsMapNode *prev_p = node_from_index(array, prev);
+        prev_p->next = node;
     } else {
         EcsMap *map = ctx;
         uint32_t *bucket = get_bucket(map, node_p->key);
-        *bucket = node + 1;
+        *bucket = node;
+    }
+
+    if (next) {
+        EcsMapNode *next_p = node_from_index(array, next);
+        next_p->prev = node;
     }
 }
 
@@ -140,15 +147,14 @@ void add_node(
     elem_p->next = 0;
     elem_p->prev = 0;
 
-    if (!*bucket) {
-        *bucket = elem;
-    } else {
-        uint32_t first = *bucket;
+    uint32_t first = *bucket;
+    if (first) {
         EcsMapNode *first_p = node_from_index(map->nodes, first);
         first_p->prev = elem;
-        elem_p->next = *bucket;
-        *bucket = elem;
+        elem_p->next = first;
     }
+
+    *bucket = elem;
 
     map->count ++;
 }
@@ -164,6 +170,14 @@ EcsMapNode *get_node(
 
     while (node) {
         EcsMapNode *node_p = node_from_index(map->nodes, node);
+
+        if (node_p->prev) {
+            assert(node_from_index(map->nodes, node_p->prev)->next == node);
+        }
+        if (node_p->next) {
+            assert(node_from_index(map->nodes, node_p->next)->prev == node);
+        }
+
         if (node_p->key == key) {
             return node_p;
         }
@@ -340,10 +354,18 @@ EcsResult ecs_map_remove(
         EcsMapNode *node = get_node(map, bucket, key);
         if (node) {
             EcsMapNode *prev_node = node_from_index(map->nodes, node->prev);
+            EcsMapNode *next_node = node_from_index(map->nodes, node->next);
+
             if (prev_node) {
+                assert(node_from_index(map->nodes, prev_node->next) == node);
                 prev_node->next = node->next;
             } else {
                 *bucket = node->next;
+            }
+
+            if (next_node) {
+                assert(node_from_index(map->nodes, next_node->prev) == node);
+                next_node->prev = node->prev;
             }
 
             EcsArrayParams params = node_arr_params;
@@ -351,6 +373,7 @@ EcsResult ecs_map_remove(
 
             ecs_array_remove(map->nodes, &params, node);
             map->count --;
+
             return EcsOk;
         }
     }

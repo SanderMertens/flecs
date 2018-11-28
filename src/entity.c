@@ -179,7 +179,6 @@ void* get_ptr(
             info->index = row.index;
             info->table = table;
             info->rows = rows;
-
             ptr = get_row_ptr(
                 world, stage, table, rows, row.index, component, staged_id);
         }
@@ -619,9 +618,10 @@ EcsHandle ecs_new(
     return entity;
 }
 
-EcsHandle ecs_dup(
+EcsHandle ecs_clone(
     EcsWorld *world,
-    EcsHandle entity)
+    EcsHandle entity,
+    bool copy_value)
 {
     EcsStage *stage = ecs_get_stage(&world);
     EcsHandle result = ++ world->last_handle;
@@ -631,6 +631,27 @@ EcsHandle ecs_dup(
             EcsRow row = ecs_to_row(row64);
             EcsFamily family_id = row.family_id;
             commit_w_family(world, stage, result, 0, family_id, family_id, 0);
+
+            if (copy_value) {
+                EcsTable *from_table = ecs_world_get_table(world, stage, family_id);
+                EcsArray *from_rows = from_table->rows;
+                EcsTable *to_table;
+                EcsArray *to_rows;
+                EcsRow to_row;
+
+                if (world->in_progress) {
+                    to_table = ecs_world_get_table(world, stage, family_id);
+                    to_rows = ecs_map_get(stage->data_stage, family_id);
+                    to_row = ecs_to_row(ecs_map_get64(stage->entity_stage, result));
+                } else {
+                    to_table = from_table;
+                    to_rows = from_rows;
+                    to_row = ecs_to_row(ecs_map_get64(world->entity_index, result));
+                }
+
+                copy_row(to_table, to_rows, to_row.index,
+                    from_table, from_rows, row.index);
+            }
         }
     }
 
