@@ -194,6 +194,10 @@ bool hasnext(
 {
     EcsMap *map = iter->data;
 
+    if (!map->count) {
+        return false;
+    }
+
     if (!map->buckets) {
         return false;
     }
@@ -293,14 +297,16 @@ EcsMap* ecs_map_new(
 void ecs_map_clear(
     EcsMap *map)
 {
-    int i;
-    for (i = 0; i < map->bucket_count; i ++) {
-        map->buckets[i] = 0;
+    if (map->count) {
+        int i;
+        for (i = 0; i < map->bucket_count; i ++) {
+            map->buckets[i] = 0;
+        }
+
+        ecs_array_clear(map->nodes);
+
+        map->count = 0;
     }
-
-    ecs_array_clear(map->nodes);
-
-    map->count = 0;
 }
 
 void ecs_map_free(
