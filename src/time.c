@@ -19,7 +19,17 @@ void ut_sleep(
     sleepTime.tv_sec = sec;
     sleepTime.tv_nsec = nanosec;
     if (nanosleep(&sleepTime, NULL)) {
-        fprintf(stderr, "nanosleep failed: %s", strerror(errno));
+        fprintf(stderr, "nanosleep failed: %s\n", strerror(errno));
+    }
+}
+
+void ut_sleepf(
+    double t)
+{
+    if (t > 0) {
+        int sec = t;
+        int nsec = ((t - sec) * 1000000000);
+        ut_sleep(sec, nsec);
     }
 }
 

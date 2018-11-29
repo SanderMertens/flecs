@@ -18,6 +18,10 @@ void ut_sleep(
   unsigned int nanosec);
 
 REFLECS_EXPORT
+void ut_sleepf(
+    double t);
+
+REFLECS_EXPORT
 void ut_time_get(
     struct timespec* time);
 
