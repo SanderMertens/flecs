@@ -201,7 +201,10 @@ struct EcsWorld {
     EcsFamily prefab_family;      /* EcsPrefab, EcsId */
 
     uint32_t tick;                /* Number of computed frames by world */
-    float frame_time;             /* Time spent calculating a frame */
+    float frame_time;             /* Time spent processing a frame */
+    float system_time;            /* Time spent processing systems */
+
+    /* The diff between frame_time and system_time is time spent on merging */
 
     bool valid_schedule;          /* Is job schedule still valid */
     bool quit_workers;            /* Signals worker threads to quit */

@@ -374,8 +374,10 @@ void ecs_get_stats(
 
     if (world->tick) {
         stats->frame_time = world->frame_time / (float)world->tick;
+        stats->system_time = world->system_time / (float)world->tick;
     } else {
         stats->frame_time = 0;
+        stats->system_time = 0;
     }
 
     stats->frame_profiling = world->measure_frame_time;
@@ -383,6 +385,7 @@ void ecs_get_stats(
 
     world->tick = 0;
     world->frame_time = 0;
+    world->system_time = 0;
 }
 
 void ecs_free_stats(

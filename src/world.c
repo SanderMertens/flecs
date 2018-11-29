@@ -461,6 +461,9 @@ EcsWorld *ecs_init(void) {
     world->measure_system_time = false;
     world->last_handle = 0;
 
+    world->frame_time = 0;
+    world->system_time = 0;
+
     ecs_stage_init(&world->stage);
 
     bootstrap_component(world);
@@ -630,6 +633,11 @@ void ecs_progress(
             }
         }
 
+        if (world->measure_frame_time) {
+            struct timespec temp = time_start;
+            world->system_time += ut_time_measure(&temp);
+        }
+
         world->in_progress = false;
 
         if (world->auto_merge) {
@@ -652,6 +660,7 @@ void ecs_merge(
     world->is_merging = true;
 
     ecs_stage_merge(world, &world->stage);
+
     uint32_t i, count = ecs_array_count(world->stage_db);
     EcsStage *buffer = ecs_array_buffer(world->stage_db);
     for (i = 0; i < count; i ++) {
