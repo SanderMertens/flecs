@@ -17,13 +17,13 @@ EcsResult add_family(
         return EcsError;
     }
 
-    if (elem_kind != EcsFromEntity) {
-        return EcsError;
-    }
-
     if (!strcmp(entity_id, "0")) {
         *family = (EcsFamilyComponent){0, 0};
     } else {
+        if (elem_kind != EcsFromEntity) {
+            return EcsError;
+        }
+        
         EcsHandle entity = ecs_lookup(world, entity_id);
         if (!entity) {
             return EcsError;

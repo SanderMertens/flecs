@@ -179,6 +179,11 @@ void ecs_run_job(
     EcsThread *thread,
     EcsJob *job);
 
+void ecs_run_task(
+    EcsWorld *world,
+    EcsHandle system,
+    float delta_time);
+
 void ecs_row_notify(
     EcsWorld *world,
     EcsStage *stage,
@@ -220,6 +225,10 @@ EcsResult ecs_parse_component_expr(
     const char *sig,
     ecs_parse_action action,
     void *ctx);
+
+bool ecs_needs_tables(
+    EcsWorld *world,
+    const char *signature);
 
 uint32_t ecs_parse_components_count(
     const char *sig);

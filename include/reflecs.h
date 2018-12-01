@@ -1048,6 +1048,9 @@ void ecs_iter_release(
 /* Obtain the entity handle from a row */
 #define ecs_entity(row) *(EcsHandle*)row
 
+/* Obtain the component handle from a row */
+#define ecs_handle(rows, column) (rows->components[column])
+
 /** Utility macro's */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 

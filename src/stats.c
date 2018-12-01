@@ -195,6 +195,7 @@ void set_system_stats(
         sstats->tables_matched = 0;
         sstats->time_spent = 0;
         sstats->period = 0;
+        sstats->enabled = row_ptr->enabled;
     }
 }
 
@@ -336,6 +337,9 @@ void ecs_get_stats(
         world, &stats->frame_systems, world->frame_systems, true);
     stats->system_count += system_stats_arr(
         world, &stats->frame_systems, world->inactive_systems, false);
+    stats->system_count += system_stats_arr(
+        world, &stats->frame_systems, world->tasks, true);
+
     stats->system_count += system_stats_arr(
         world, &stats->on_demand_systems, world->on_demand_systems, true);
 

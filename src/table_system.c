@@ -21,7 +21,9 @@ EcsResult add_component(
 
     EcsHandle component = ecs_lookup(world, component_id);
     if (!component) {
-        return EcsError;
+        if (strcmp(component_id, "0")) {
+            return EcsError;
+        }
     }
 
     if (elem_kind == EcsFromSystem && oper_kind != EcsOperAnd) {
@@ -272,6 +274,9 @@ void add_table(
                     world, stage, table_family, column->is.family, false, true);
             }
 
+        } else if (column->kind == EcsFromHandle) {
+            component = column->is.component;
+
         } else if (column->kind == EcsFromComponent) {
             if (column->oper_kind == EcsOperAnd ||
                 column->oper_kind == EcsOperOptional)
@@ -296,7 +301,7 @@ void add_table(
             entity = system;
         }
 
-        if (!entity) {
+        if (!entity && column->kind != EcsFromHandle) {
             if (component) {
                 table_data[i] = ecs_table_column_offset(table, component);
             } else {
@@ -446,6 +451,7 @@ void resolve_refs(
         if (!entity) {
             break;
         }
+
         info->refs[i] = ecs_get_ptr(world, entity, ref->component);
     }
 }
@@ -783,16 +789,21 @@ void ecs_enable(
 
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     if (!system_data) {
-        EcsFamilyComponent *family_data = ecs_get_ptr(
-            world, system, EcsFamilyComponent_h);
-        assert(family_data != NULL);
-        EcsWorld *world_temp = world;
-        EcsStage *stage = ecs_get_stage(&world_temp);
-        EcsArray *family = ecs_family_get(world, stage, family_data->family);
-        EcsHandle *buffer = ecs_array_buffer(family);
-        uint32_t i, count = ecs_array_count(family);
-        for (i = 0; i < count; i ++) {
-            ecs_enable(world, buffer[i], enabled);
+        EcsRowSystem *row_data = ecs_get_ptr(world, system, EcsRowSystem_h);
+        if (!row_data) {
+            EcsFamilyComponent *family_data = ecs_get_ptr(
+                world, system, EcsFamilyComponent_h);
+            assert(family_data != NULL);
+            EcsWorld *world_temp = world;
+            EcsStage *stage = ecs_get_stage(&world_temp);
+            EcsArray *family = ecs_family_get(world, stage, family_data->family);
+            EcsHandle *buffer = ecs_array_buffer(family);
+            uint32_t i, count = ecs_array_count(family);
+            for (i = 0; i < count; i ++) {
+                ecs_enable(world, buffer[i], enabled);
+            }
+        } else {
+            row_data->enabled = enabled;
         }
     } else {
         if (enabled) {

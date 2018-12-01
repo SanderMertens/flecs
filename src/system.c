@@ -14,16 +14,19 @@ EcsResult add_component(
     EcsRowSystem *system_data = data;
     EcsHandle *elem = ecs_array_add(
         &system_data->components, &handle_arr_params);
+
     EcsHandle component = ecs_lookup(world, component_id);
     if (!component) {
-        return EcsError;
+        if (strcmp(component_id, "0")) {
+            return EcsError;
+        }
     }
 
     if (oper_kind != EcsOperAnd) {
         return EcsError;
     }
 
-    if (elem_kind != EcsFromEntity) {
+    if (elem_kind != EcsFromEntity && elem_kind != EcsFromHandle) {
         return EcsError;
     }
 
@@ -54,14 +57,16 @@ EcsHandle new_row_system(
     system_data->action = action;
     system_data->components = ecs_array_new(&handle_arr_params, count);
     system_data->signature = sig;
+    system_data->enabled = true;
 
     if (ecs_parse_component_expr(
         world, sig, add_component, system_data) != EcsOk)
     {
+        printf("Expression error '%s'\n", sig);
         return 0;
     }
 
-    EcsMap *index;
+    EcsMap *index = NULL;
     if (kind == EcsOnAdd) {
         index = world->add_systems;
     } else if (kind == EcsOnRemove) {
@@ -70,16 +75,21 @@ EcsHandle new_row_system(
         index = world->set_systems;
     }
 
-    EcsFamily family_id = 0;
-    uint32_t i, component_count = ecs_array_count(system_data->components);
-    EcsHandle *buffer = ecs_array_buffer(system_data->components);
-    for (i = 0; i < component_count; i ++) {
-        family_id = ecs_family_add(world, NULL, family_id, buffer[i]);
+    if (index) {
+        EcsFamily family_id = 0;
+        uint32_t i, component_count = ecs_array_count(system_data->components);
+        EcsHandle *buffer = ecs_array_buffer(system_data->components);
+        for (i = 0; i < component_count; i ++) {
+            family_id = ecs_family_add(world, NULL, family_id, buffer[i]);
+        }
+
+        assert(!ecs_map_has(index, family_id, NULL));
+
+        ecs_map_set64(index, family_id, result);
+    } else {
+        EcsHandle *system = ecs_array_add(&world->tasks, &handle_arr_params);
+        *system = result;
     }
-
-    assert(!ecs_map_has(index, family_id, NULL));
-
-    ecs_map_set64(index, family_id, result);
 
     return result;
 }
@@ -116,6 +126,29 @@ void ecs_row_notify(
     action(&info);
 }
 
+void ecs_run_task(
+    EcsWorld *world,
+    EcsHandle system,
+    float delta_time)
+{
+    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
+    assert(system_data != NULL);
+
+    if (!system_data->enabled) {
+        return;
+    }
+
+    EcsRows info = {
+        .world = world,
+        .system = system,
+        .delta_time = delta_time,
+        .components = ecs_array_buffer(system_data->components),
+        .column_count = ecs_array_count(system_data->components)
+    };
+
+    system_data->action(&info);
+}
+
 /* -- Public API -- */
 
 EcsHandle ecs_new_system(
@@ -130,9 +163,20 @@ EcsHandle ecs_new_system(
         return result;
     }
 
-    if (kind == EcsOnFrame || kind == EcsOnDemand) {
+    bool needs_tables = ecs_needs_tables(world, sig);
+
+    if (!needs_tables && (kind == EcsOnAdd ||
+        kind == EcsOnRemove ||
+        kind == EcsOnSet))
+    {
+        abort();
+    }
+
+    if (needs_tables && (kind == EcsOnFrame || kind == EcsOnDemand)) {
         result = ecs_new_table_system(world, id, kind, sig, action);
-    } else if (kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet) {
+    } else if (!needs_tables ||
+        (kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet))
+    {
         result = new_row_system(world, id, kind, sig, action);
     } else {
         abort();

@@ -116,6 +116,11 @@ test.suite EcsOnFrameSystem {
     tc_system_1_from_system_implicit_add()
     tc_system_on_demand()
     tc_system_on_demand_w_filter()
+    tc_system_0_component()
+    tc_system_handle_component()
+    tc_system_2_handle_component()
+    tc_system_handle_only_component()
+    tc_system_2_handle_only_component()
 }
 
 test.suite EcsInitSystem {

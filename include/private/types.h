@@ -42,7 +42,8 @@ typedef struct EcsComponent {
 typedef enum EcsSystemExprElemKind {
     EcsFromEntity,
     EcsFromComponent,
-    EcsFromSystem
+    EcsFromSystem,
+    EcsFromHandle
 } EcsSystemExprElemKind;
 
 typedef enum EcsSystemExprOperKind {
@@ -101,7 +102,8 @@ typedef struct EcsRowSystem {
     EcsSystemAction action;     /* Callback to be invoked for matching rows */
     const char *signature;      /* Signature with which system was created */
     EcsArray *components;       /* Components in order of signature */
-    EcsHandle ctx_handle;
+    EcsHandle ctx_handle;       /* User-defined context for system */
+    bool enabled;               /* Is system enabled or not */
 } EcsRowSystem;
 
 /* -- Private types -- */
@@ -172,6 +174,7 @@ struct EcsWorld {
     EcsMap *add_systems;          /* Systems invoked on ecs_add */
     EcsMap *remove_systems;       /* Systems invoked on ecs_remove */
     EcsMap *set_systems;          /* Systems invoked on ecs_set */
+    EcsArray *tasks;              /* Periodic actions not invoked on entities */
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */

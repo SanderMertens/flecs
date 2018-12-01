@@ -1768,3 +1768,163 @@ void test_EcsOnFrameSystem_tc_system_on_demand_w_filter(
 
     ecs_fini(world);
 }
+
+void NullSystem(EcsRows *rows) {
+    bool *called = ecs_get_context(rows->world);
+    *called = true;
+    test_assert(rows->first == rows->last);
+    test_assertint(rows->column_count, 1);
+    test_assertint(ecs_handle(rows, 0), 0);
+}
+
+void test_EcsOnFrameSystem_tc_system_0_component(
+    test_EcsOnFrameSystem this)
+{
+    EcsWorld *world = ecs_init();
+
+    ECS_SYSTEM(world, NullSystem, EcsOnFrame, 0);
+
+    bool called = false;
+    ecs_set_context(world, &called);
+
+    ecs_progress(world, 1);
+
+    test_assert(called == true);
+
+    ecs_fini(world);
+}
+
+typedef struct OneHandle_t {
+    EcsHandle handle;
+    EcsHandle entity;
+    bool called;
+} OneHandle_t;
+
+typedef struct TwoHandle_t {
+    EcsHandle handle1;
+    EcsHandle handle2;
+    EcsHandle entity;
+    bool called;
+} TwoHandle_t;
+
+void TwoHandle(EcsRows *rows) {
+    TwoHandle_t *ctx = ecs_get_context(rows->world);
+    test_assert(rows->first != rows->last);
+    test_assertint(rows->column_count, 3);
+    test_assertint(ecs_handle(rows, 0), ctx->handle1);
+    test_assertint(ecs_handle(rows, 1), ctx->handle1);
+    test_assertint(ecs_handle(rows, 2), ctx->handle2);
+    ctx->entity = ecs_entity(rows->first);
+    ctx->called = true;
+}
+
+void test_EcsOnFrameSystem_tc_system_2_handle_component(
+    test_EcsOnFrameSystem this)
+{
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+
+    ECS_SYSTEM(world, TwoHandle, EcsOnFrame, Foo, HANDLE.Foo, HANDLE.Bar);
+
+    TwoHandle_t ctx = {.handle1 = Foo_h, .handle2 = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    EcsHandle entity = ecs_new(world, Foo_h);
+
+    ecs_progress(world, 1);
+
+    test_assert(ctx.called == true);
+    test_assert(ctx.entity = entity);
+
+    ecs_fini(world);
+}
+
+void OneHandle(EcsRows *rows) {
+    OneHandle_t *ctx = ecs_get_context(rows->world);
+    test_assert(rows->first != rows->last);
+    test_assertint(rows->column_count, 2);
+    test_assertint(ecs_handle(rows, 0), ctx->handle);
+    test_assertint(ecs_handle(rows, 1), ctx->handle);
+    ctx->entity = ecs_entity(rows->first);
+    ctx->called = true;
+}
+
+void test_EcsOnFrameSystem_tc_system_handle_component(
+    test_EcsOnFrameSystem this)
+{
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Foo);
+
+    ECS_SYSTEM(world, OneHandle, EcsOnFrame, Foo, HANDLE.Foo);
+
+    OneHandle_t ctx = {.handle = Foo_h};
+    ecs_set_context(world, &ctx);
+
+    EcsHandle entity = ecs_new(world, Foo_h);
+
+    ecs_progress(world, 1);
+
+    test_assert(ctx.called == true);
+    test_assert(ctx.entity = entity);
+
+    ecs_fini(world);
+}
+
+void TwoHandleOnly(EcsRows *rows) {
+    TwoHandle_t *ctx = ecs_get_context(rows->world);
+    test_assert(rows->first == rows->last);
+    test_assertint(rows->column_count, 2);
+    test_assertint(ecs_handle(rows, 0), ctx->handle1);
+    test_assertint(ecs_handle(rows, 1), ctx->handle2);
+    ctx->called = true;
+}
+
+void test_EcsOnFrameSystem_tc_system_2_handle_only_component(
+    test_EcsOnFrameSystem this)
+{
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+
+    ECS_SYSTEM(world, TwoHandleOnly, EcsOnFrame, HANDLE.Foo, HANDLE.Bar);
+
+    TwoHandle_t ctx = {.handle1 = Foo_h, .handle2 = Bar_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_assert(ctx.called == true);
+
+    ecs_fini(world);
+}
+
+void OneHandleOnly(EcsRows *rows) {
+    OneHandle_t *ctx = ecs_get_context(rows->world);
+    test_assert(rows->first == rows->last);
+    test_assertint(rows->column_count, 1);
+    test_assertint(ecs_handle(rows, 0), ctx->handle);
+    ctx->called = true;
+}
+
+void test_EcsOnFrameSystem_tc_system_handle_only_component(
+    test_EcsOnFrameSystem this)
+{
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Foo);
+
+    ECS_SYSTEM(world, OneHandleOnly, EcsOnFrame, HANDLE.Foo);
+
+    OneHandle_t ctx = {.handle = Foo_h};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_assert(ctx.called == true);
+
+    ecs_fini(world);
+}
