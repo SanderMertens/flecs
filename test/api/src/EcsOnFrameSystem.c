@@ -1928,3 +1928,39 @@ void test_EcsOnFrameSystem_tc_system_handle_only_component(
 
     ecs_fini(world);
 }
+
+void Invoked(EcsRows *rows) {
+    bool *called = ecs_get_context(rows->world);
+    *called = true;
+}
+
+void test_EcsOnFrameSystem_tc_system_disable(
+    test_EcsOnFrameSystem this)
+{
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Foo);
+    ECS_SYSTEM(world, Invoked, EcsOnFrame, Foo);
+
+    EcsHandle e = ecs_new(world, Foo_h);
+    test_assert(e != 0);
+
+    test_assert(ecs_is_enabled(world, Invoked_h) == true);
+    ecs_enable(world, Invoked_h, false);
+    test_assert(ecs_is_enabled(world, Invoked_h) == false);
+
+    bool called = false;
+    ecs_set_context(world, &called);
+
+    ecs_progress(world, 1);
+    test_assert(called == false);
+
+    test_assert(ecs_is_enabled(world, Invoked_h) == false);
+    ecs_enable(world, Invoked_h, true);
+    test_assert(ecs_is_enabled(world, Invoked_h) == true);
+
+    ecs_progress(world, 1);
+    test_assert(called == true);
+
+    ecs_fini(world);
+}

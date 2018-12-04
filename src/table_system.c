@@ -7,74 +7,13 @@ const EcsArrayParams column_arr_params = {
     .element_size = sizeof(EcsSystemColumn)
 };
 
-/** Parse callback that adds component to the components array for a system */
-static
-EcsResult add_component(
-    EcsWorld *world,
-    EcsSystemExprElemKind elem_kind,
-    EcsSystemExprOperKind oper_kind,
-    const char *component_id,
-    void *data)
-{
-    EcsTableSystem *system_data = data;
-    EcsSystemColumn *elem;
-
-    EcsHandle component = ecs_lookup(world, component_id);
-    if (!component) {
-        if (strcmp(component_id, "0")) {
-            return EcsError;
-        }
-    }
-
-    if (elem_kind == EcsFromSystem && oper_kind != EcsOperAnd) {
-        return EcsError;
-    }
-
-    if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
-        elem = ecs_array_add(&system_data->columns, &column_arr_params);
-        elem->kind = elem_kind;
-        elem->oper_kind = oper_kind;
-        elem->is.component = component;
-    } else if (oper_kind == EcsOperOr) {
-        elem = ecs_array_last(system_data->columns, &column_arr_params);
-        if (elem->oper_kind == EcsOperAnd) {
-            elem->is.family = ecs_family_add(
-                world, NULL, 0, elem->is.component);
-        } else {
-            if (elem->kind != elem_kind) {
-                /* Cannot mix FromEntity and FromComponent in OR */
-                goto error;
-            }
-        }
-
-        elem->is.family = ecs_family_add(
-            world, NULL, elem->is.family, component);
-        elem->kind = elem_kind;
-        elem->oper_kind = EcsOperOr;
-    } else if (oper_kind == EcsOperNot) {
-        if (elem_kind == EcsFromEntity) {
-            system_data->not_from_entity =
-                ecs_family_add(
-                    world, NULL, system_data->not_from_entity, component);
-        } else {
-            system_data->not_from_component =
-              ecs_family_add(
-                  world, NULL, system_data->not_from_component, component);
-        }
-    }
-
-    return EcsOk;
-error:
-    return EcsError;
-}
-
 static
 void compute_and_families(
     EcsWorld *world,
     EcsTableSystem *system_data)
 {
-    uint32_t i, column_count = ecs_array_count(system_data->columns);
-    EcsSystemColumn *buffer = ecs_array_buffer(system_data->columns);
+    uint32_t i, column_count = ecs_array_count(system_data->base.columns);
+    EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
 
     for (i = 0; i < column_count; i ++) {
         EcsSystemColumn *elem = &buffer[i];
@@ -234,8 +173,10 @@ void add_table(
     EcsFamily table_family = table->family_id;
     uint32_t i = 2; /* Offsets start after table index and refs index */
     uint32_t ref = 0;
-    uint32_t column_count = ecs_array_count(system_data->columns);
+    uint32_t column_count = ecs_array_count(system_data->base.columns);
 
+    /* If the table is empty, add it to the inactive array, so it is skipped
+     * when the system is evaluated */
     if (ecs_array_count(table->rows)) {
         table_data = ecs_array_add(
             &system_data->tables, &system_data->table_params);
@@ -244,6 +185,10 @@ void add_table(
             &system_data->inactive_tables, &system_data->table_params);
     }
 
+    /* Add element to array that contains components for this table. Tables
+     * typically share the same component list, unless the system contains OR
+     * expressions in the signature. In that case, the system can match against
+     * tables that have different components for a column. */
     EcsHandle *component_data = ecs_array_add(
         &system_data->components, &system_data->component_params);
 
@@ -254,11 +199,13 @@ void add_table(
     /* Index in ref array is at element 1 (0 means no refs) */
     table_data[1] = 0;
 
-    EcsIter it = ecs_array_iter(system_data->columns, &column_arr_params);
+    /* Walk columns parsed from the system signature */
+    EcsIter it = ecs_array_iter(system_data->base.columns, &column_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsSystemColumn *column = ecs_iter_next(&it);
         EcsHandle entity = 0, component = 0;
 
+        /* Column that retrieves data from an entity */
         if (column->kind == EcsFromEntity) {
             if (column->oper_kind == EcsOperAnd) {
                 component = column->is.component;
@@ -274,9 +221,11 @@ void add_table(
                     world, stage, table_family, column->is.family, false, true);
             }
 
+        /* Column that just passes a handle to the system (no data) */
         } else if (column->kind == EcsFromHandle) {
             component = column->is.component;
 
+        /* Column that retrieves data from a component */
         } else if (column->kind == EcsFromComponent) {
             if (column->oper_kind == EcsOperAnd ||
                 column->oper_kind == EcsOperOptional)
@@ -293,6 +242,8 @@ void add_table(
                     &entity,
                     false);
             }
+
+        /* Column that retrieves data from a system */
         } else if (column->kind == EcsFromSystem) {
             if (column->oper_kind == EcsOperAnd) {
                 component = column->is.component;
@@ -301,25 +252,37 @@ void add_table(
             entity = system;
         }
 
+        /* This column does not retrieve data from a static entity (either
+         * EcsFromSystem or EcsFromComponent) and is not just a handle */
         if (!entity && column->kind != EcsFromHandle) {
             if (component) {
+                /* Retrieve offset for component */
                 table_data[i] = ecs_table_column_offset(table, component);
+
+                /* ecs_table_column_offset may return -1 if the component comes
+                 * from a prefab. If so, the component will be resolved as a
+                 * reference (see below) */
             } else {
+                /* Columns with a NOT expression have no data */
                 table_data[i] = 0;
             }
         }
 
+        /* If entity is set, or component is not found in table, add it as a ref
+         * to data of a specific entity. */
         if (entity || table_data[i] == -1) {
             if (!ref_data) {
                 ref_data = get_ref_data(world, system_data, table_data);
             }
 
+            /* Find the entity for the component. If the code gets here, this
+             * function will return a prefab. */
             ref_data[ref].entity = get_entity_for_component(
                 world, entity, table_family, component);
             ref_data[ref].component = component;
             ref ++;
 
-            /* negative number indicates ref instead of offset to ecs_column */
+            /* Negative number indicates ref instead of offset to ecs_column */
             table_data[i] = -ref;
         }
 
@@ -333,8 +296,8 @@ void add_table(
         ref_data[ref].entity = 0;
     }
 
+    /* Register system with the table */
     EcsHandle *h = ecs_array_add(&table->frame_systems, &handle_arr_params);;
-
     if (h) *h = system;
 }
 
@@ -362,8 +325,8 @@ bool match_table(
         return false;
     }
 
-    uint32_t i, column_count = ecs_array_count(system_data->columns);
-    EcsSystemColumn *buffer = ecs_array_buffer(system_data->columns);
+    uint32_t i, column_count = ecs_array_count(system_data->base.columns);
+    EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
 
     for (i = 0; i < column_count; i ++) {
         EcsSystemColumn *elem = &buffer[i];
@@ -398,14 +361,14 @@ bool match_table(
         }
     }
 
-    family = system_data->not_from_entity;
+    family = system_data->base.not_from_entity;
     if (family && ecs_family_contains(
         world, stage, table_family, family, false, true))
     {
         return false;
     }
 
-    family = system_data->not_from_component;
+    family = system_data->base.not_from_component;
     if (family && components_contains(
         world, stage, table_family, family, NULL, false))
     {
@@ -443,7 +406,7 @@ void resolve_refs(
     EcsArray *system_refs = system_data->refs;
     EcsSystemRef *refs = ecs_array_get(
         system_refs, &system_data->ref_params, refs_index - 1);
-    uint32_t i, count = ecs_array_count(system_data->columns);
+    uint32_t i, count = ecs_array_count(system_data->base.columns);
 
     for (i = 0; i < count; i ++) {
         EcsSystemRef *ref = &refs[i];
@@ -516,7 +479,7 @@ void ecs_system_activate_table(
 
     if (active) {
         uint32_t dst_count = ecs_array_count(dst_array);
-        if (dst_count == 1 && system_data->enabled) {
+        if (dst_count == 1 && system_data->base.enabled) {
             ecs_world_activate_system(world, system, true);
         }
         system_data->tables = dst_array;
@@ -536,14 +499,14 @@ void ecs_run_job(
 {
     EcsHandle system = job->system;
     EcsTableSystem *system_data = job->system_data;
-    EcsSystemAction action = system_data->action;
+    EcsSystemAction action = system_data->base.action;
     uint32_t table_element_size = system_data->table_params.element_size;
     uint32_t component_element_size =
       system_data->component_params.element_size;
     uint32_t table_index = job->table_index;
     uint32_t start_index = job->start_index;
     uint32_t remaining = job->row_count;
-    uint32_t column_count = ecs_array_count(system_data->columns);
+    uint32_t column_count = ecs_array_count(system_data->base.columns);
     void *refs[column_count];
     char *table_buffer = ecs_array_get(
         system_data->tables, &system_data->table_params, table_index);
@@ -591,7 +554,7 @@ void ecs_run_job(
 }
 
 
-/* -- Public API -- */
+/* -- Private API -- */
 
 EcsHandle ecs_new_table_system(
     EcsWorld *world,
@@ -613,13 +576,14 @@ EcsHandle ecs_new_table_system(
 
     EcsTableSystem *system_data = ecs_get_ptr(world, result, EcsTableSystem_h);
     memset(system_data, 0, sizeof(EcsTableSystem));
-    system_data->action = action;
-    system_data->enabled = true;
-    system_data->signature = sig;
+    system_data->base.action = action;
+    system_data->base.enabled = true;
+    system_data->base.signature = sig;
+    system_data->base.time_spent = 0;
+    system_data->base.columns = ecs_array_new(&column_arr_params, count);
     system_data->table_params.element_size = sizeof(int32_t) * (count + 2);
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
     system_data->component_params.element_size = sizeof(EcsHandle) * count;
-    system_data->time_spent = 0;
     system_data->period = 0;
 
     system_data->components = ecs_array_new(
@@ -628,10 +592,9 @@ EcsHandle ecs_new_table_system(
         &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     system_data->inactive_tables = ecs_array_new(
         &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
-    system_data->columns = ecs_array_new(&column_arr_params, count);
 
     if (ecs_parse_component_expr(
-        world, sig, add_component, system_data) != EcsOk)
+        world, sig, ecs_parse_component_action, system_data) != EcsOk)
     {
         ecs_delete(world, result);
         return 0;
@@ -679,7 +642,7 @@ EcsHandle ecs_run_system(
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     assert(system_data != NULL);
 
-    if (!system_data->enabled) {
+    if (!system_data->base.enabled) {
         return 0;
     }
 
@@ -710,11 +673,11 @@ EcsHandle ecs_run_system(
         ut_time_get(&time_start);
     }
 
-    EcsSystemAction action = system_data->action;
+    EcsSystemAction action = system_data->base.action;
     EcsArray *tables = system_data->tables;
     EcsArray *table_db = world->table_db;
     uint32_t table_count = ecs_array_count(tables);
-    uint32_t column_count = ecs_array_count(system_data->columns);
+    uint32_t column_count = ecs_array_count(system_data->base.columns);
     uint32_t element_size = system_data->table_params.element_size;
     uint32_t component_el_size = system_data->component_params.element_size;
     char *table_buffer = ecs_array_buffer(tables);
@@ -774,76 +737,8 @@ EcsHandle ecs_run_system(
     }
 
     if (measure_time) {
-        system_data->time_spent += ut_time_measure(&time_start);
+        system_data->base.time_spent += ut_time_measure(&time_start);
     }
 
     return interrupted_by;
-}
-
-void ecs_enable(
-    EcsWorld *world,
-    EcsHandle system,
-    bool enabled)
-{
-    assert(world->magic == ECS_WORLD_MAGIC);
-
-    EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
-    if (!system_data) {
-        EcsRowSystem *row_data = ecs_get_ptr(world, system, EcsRowSystem_h);
-        if (!row_data) {
-            EcsFamilyComponent *family_data = ecs_get_ptr(
-                world, system, EcsFamilyComponent_h);
-            assert(family_data != NULL);
-            EcsWorld *world_temp = world;
-            EcsStage *stage = ecs_get_stage(&world_temp);
-            EcsArray *family = ecs_family_get(world, stage, family_data->family);
-            EcsHandle *buffer = ecs_array_buffer(family);
-            uint32_t i, count = ecs_array_count(family);
-            for (i = 0; i < count; i ++) {
-                ecs_enable(world, buffer[i], enabled);
-            }
-        } else {
-            row_data->enabled = enabled;
-        }
-    } else {
-        if (enabled) {
-            if (!system_data->enabled) {
-                if (ecs_array_count(system_data->tables)) {
-                    ecs_world_activate_system(world, system, true);
-                }
-            }
-        } else {
-            if (system_data->enabled) {
-                if (ecs_array_count(system_data->tables)) {
-                    ecs_world_activate_system(world, system, false);
-                }
-            }
-        }
-
-        system_data->enabled = enabled;
-    }
-}
-
-bool ecs_is_enabled(
-    EcsWorld *world,
-    EcsHandle system)
-{
-    EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
-    if (system_data) {
-        return system_data->enabled;
-    } else {
-        return true;
-    }
-}
-
-void ecs_set_period(
-    EcsWorld *world,
-    EcsHandle system,
-    float period)
-{
-    assert(world->magic == ECS_WORLD_MAGIC);
-    EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
-    if (system_data) {
-        system_data->period = period;
-    }
 }

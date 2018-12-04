@@ -194,6 +194,13 @@ void ecs_row_notify(
     uint32_t row_index,
     int32_t *columns);
 
+EcsResult ecs_parse_component_action(
+    EcsWorld *world,
+    EcsSystemExprElemKind elem_kind,
+    EcsSystemExprOperKind oper_kind,
+    const char *component_id,
+    void *data);
+
 /* -- Worker API -- */
 
 void ecs_schedule_jobs(

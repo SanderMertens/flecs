@@ -445,6 +445,10 @@ bool ecs_notify(
         EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
         assert(system_data != NULL);
 
+        if (!system_data->base.enabled) {
+            return false;
+        }
+
         EcsArray *family = ecs_family_get(world, stage, family_id);
         uint32_t i, column_count = ecs_array_count(family);
         EcsHandle *buffer = ecs_array_buffer(system_data->components);

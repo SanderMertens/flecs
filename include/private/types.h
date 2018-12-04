@@ -75,35 +75,36 @@ typedef struct EcsSystemRef {
     EcsHandle component;
 } EcsSystemRef;
 
-typedef struct EcsTableSystem {
+typedef struct EcsSystem {
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
     const char *signature;     /* Signature with which system was created */
     EcsArray *columns;         /* Column components (AND) and families (OR) */
+    EcsFamily not_from_entity; /* Exclude components from entity */
+    EcsFamily not_from_component; /* Exclude components from components */
+    EcsHandle ctx_handle;      /* User-defined context for system */
+    float time_spent;          /* Time spent on running system */
+    bool enabled;              /* Is system enabled or not */
+} EcsSystem;
+
+typedef struct EcsTableSystem {
+    EcsSystem base;
     EcsArray *components;      /* Computed component list per matched table */
     EcsArray *inactive_tables; /* Inactive tables */
     EcsArray *jobs;            /* Jobs for this system */
     EcsArray *tables;          /* Table index + refs index + column offsets */
     EcsArray *refs;            /* Columns that point to other entities */
-    EcsHandle ctx_handle;      /* User-defined context for system */
     EcsArrayParams table_params; /* Parameters for tables array */
     EcsArrayParams component_params; /* Parameters for components array */
     EcsArrayParams ref_params; /* Parameters for tables array */
-    EcsFamily not_from_entity;    /* Exclude components from entity */
-    EcsFamily not_from_component; /* Exclude components from components */
     EcsFamily and_from_entity; /* Used to match init / deinit notifications */
     EcsFamily and_from_system; /* Used to auto-add components to system */
     float period;              /* Minimum period inbetween system invocations */
     float time_passed;         /* Time passed since last invocation */
-    float time_spent;          /* Time spent on running system */
-    bool enabled;              /* Is system enabled or not */
 } EcsTableSystem;
 
 typedef struct EcsRowSystem {
-    EcsSystemAction action;     /* Callback to be invoked for matching rows */
-    const char *signature;      /* Signature with which system was created */
+    EcsSystem base;
     EcsArray *components;       /* Components in order of signature */
-    EcsHandle ctx_handle;       /* User-defined context for system */
-    bool enabled;               /* Is system enabled or not */
 } EcsRowSystem;
 
 /* -- Private types -- */
@@ -175,6 +176,7 @@ struct EcsWorld {
     EcsMap *remove_systems;       /* Systems invoked on ecs_remove */
     EcsMap *set_systems;          /* Systems invoked on ecs_set */
     EcsArray *tasks;              /* Periodic actions not invoked on entities */
+    EcsArray *fini_tasks;         /* Tasks to execute on ecs_fini */
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */

@@ -38,7 +38,7 @@ void calculate_system_stats(
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
         EcsTableSystem *sys = ecs_get_ptr(world, buffer[i], EcsTableSystem_h);
-        ecs_array_memory(sys->columns, &column_arr_params, allocd, used);
+        ecs_array_memory(sys->base.columns, &column_arr_params, allocd, used);
         ecs_array_memory(sys->components, &handle_arr_params, allocd, used);
         ecs_array_memory(sys->inactive_tables, &sys->table_params, allocd, used);
         ecs_array_memory(sys->jobs, &job_arr_params, allocd, used);
@@ -168,35 +168,35 @@ void set_system_stats(
     sstats->active = active;
     sstats->is_hidden = ecs_has(world, system, EcsHidden_h);
 
-    EcsTableSystem *system_ptr = ecs_get_ptr(world, system, EcsTableSystem_h);
+    EcsSystem *system_ptr = ecs_get_ptr(world, system, EcsTableSystem_h);
     if (system_ptr) {
-        EcsArray *tables = system_ptr->tables;
+        EcsTableSystem *table_system = (EcsTableSystem*)system_ptr;
+        EcsArray *tables = table_system->tables;
         uint32_t i, count = ecs_array_count(tables);
-        uint32_t entity_count = 0;
+
         for (i = 0; i < count; i ++) {
-            int32_t *index = ecs_array_get(tables, &system_ptr->table_params, i);
+            int32_t *index = ecs_array_get(tables, &table_system->table_params, i);
             EcsTable *table = ecs_array_get(
                 world->table_db, &table_arr_params, *index);
-            entity_count += ecs_array_count(table->rows);
+            sstats->entities_matched += ecs_array_count(table->rows);
         }
 
-        sstats->signature = system_ptr->signature;
-        sstats->period = system_ptr->period;
-        sstats->entities_matched = entity_count;
+        sstats->period = table_system->period;
         sstats->tables_matched = count + ecs_array_count(
-            system_ptr->inactive_tables);
-        sstats->time_spent = system_ptr->time_spent;
-        system_ptr->time_spent = 0;
+            table_system->inactive_tables);
     } else {
-        EcsRowSystem *row_ptr = ecs_get_ptr(world, system, EcsRowSystem_h);
-        assert(row_ptr != NULL);
-        sstats->signature = row_ptr->signature;
+        system_ptr = ecs_get_ptr(world, system, EcsRowSystem_h);
+        EcsRowSystem *row_system = (EcsRowSystem*)system_ptr;
+        assert(row_system != NULL);
         sstats->entities_matched = 0;
         sstats->tables_matched = 0;
-        sstats->time_spent = 0;
         sstats->period = 0;
-        sstats->enabled = row_ptr->enabled;
     }
+
+    sstats->signature = system_ptr->signature;
+    sstats->time_spent = system_ptr->time_spent;
+    sstats->enabled = system_ptr->enabled;
+    system_ptr->time_spent = 0;
 }
 
 static

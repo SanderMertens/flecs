@@ -121,6 +121,7 @@ test.suite EcsOnFrameSystem {
     tc_system_2_handle_component()
     tc_system_handle_only_component()
     tc_system_2_handle_only_component()
+    tc_system_disable()
 }
 
 test.suite EcsInitSystem {
@@ -140,6 +141,11 @@ test.suite EcsInitSystem {
     tc_add_in_init_from_prefab()
     tc_remove_in_init()
     tc_new_in_init()
+    tc_remove_0_system()
+    tc_add_w_handle_param()
+    tc_add_w_handle_param_2_components()
+    tc_on_add_disable()
+    tc_on_remove_disable()
 }
 
 test.suite EcsSetSystem {
@@ -207,7 +213,6 @@ test.suite EcsClone {
     tc_clone_2_component_value_in_progress()
     tc_clone_2_component_value_in_progress_override_w_set()
 }
-
 
 test.suite EcsFamily {
     tc_family_nested_1()

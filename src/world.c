@@ -195,13 +195,13 @@ static
 void deinit_table_system(
     EcsTableSystem *data)
 {
-    ecs_array_free(data->columns);
+    ecs_array_free(data->base.columns);
     ecs_array_free(data->components);
     ecs_array_free(data->tables);
     ecs_array_free(data->inactive_tables);
     if (data->jobs) ecs_array_free(data->jobs);
     if (data->refs) ecs_array_free(data->refs);
-    data->enabled = false;
+    data->base.enabled = false;
 }
 
 static
@@ -444,6 +444,8 @@ EcsWorld *ecs_init(void) {
     world->set_systems = ecs_map_new(ECS_WORLD_INITIAL_SET_SYSTEM_COUNT);
     world->tasks = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+    world->fini_tasks = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
 
     world->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
     world->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
@@ -521,6 +523,16 @@ EcsResult ecs_fini(
     EcsWorld *world)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
+    assert(!world->in_progress);
+    assert(!world->is_merging);
+
+    uint32_t i, system_count = ecs_array_count(world->fini_tasks);
+    if (system_count) {
+        EcsHandle *buffer = ecs_array_buffer(world->fini_tasks);
+        for (i = 0; i < system_count; i ++) {
+            ecs_run_task(world, buffer[i], 0);
+        }
+    }
 
     if (world->worker_threads) {
         ecs_set_threads(world, 0);
@@ -535,6 +547,7 @@ EcsResult ecs_fini(
     ecs_array_free(world->inactive_systems);
     ecs_array_free(world->on_demand_systems);
     ecs_array_free(world->tasks);
+    ecs_array_free(world->fini_tasks);
 
     ecs_map_free(world->add_systems);
     ecs_map_free(world->remove_systems);

@@ -641,3 +641,138 @@ void test_EcsInitSystem_tc_init_2_components(
 
     ecs_fini(world);
 }
+
+void IniTest(EcsRows *rows) {
+    bool *called = ecs_get_context(rows->world);
+    *called = true;
+}
+
+void test_EcsInitSystem_tc_remove_0_system(
+    test_EcsInitSystem this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_SYSTEM(world, IniTest, EcsOnRemove, 0);
+
+    bool called = false;
+    ecs_set_context(world, &called);
+
+    ecs_fini(world);
+
+    test_assert(called == true);
+}
+
+void test_EcsInitSystem_tc_add_w_handle_param(
+    test_EcsInitSystem this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_SYSTEM(world, IniTest, EcsOnAdd, Foo, HANDLE.Bar);
+
+    bool called = false;
+    ecs_set_context(world, &called);
+
+    EcsHandle e = ecs_new(world, Foo_h);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(called == true);
+
+    ecs_fini(world);
+}
+
+void test_EcsInitSystem_tc_add_w_handle_param_2_components(
+    test_EcsInitSystem this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_SYSTEM(world, IniTest, EcsOnAdd, Foo, Bar, HANDLE.Bar);
+
+    bool called = false;
+    ecs_set_context(world, &called);
+
+    EcsHandle e = ecs_new(world, MyFamily_h);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Foo_h));
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assert(called == true);
+
+    ecs_fini(world);
+}
+
+void test_EcsInitSystem_tc_on_add_disable(
+    test_EcsInitSystem this)
+{
+    EcsWorld *world = ecs_init();
+    bool called = false;
+    ecs_set_context(world, &called);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_SYSTEM(world, IniTest, EcsOnAdd, Foo);
+
+    test_assert(ecs_is_enabled(world, IniTest_h) == true);
+    ecs_enable(world, IniTest_h, false);
+    test_assert(ecs_is_enabled(world, IniTest_h) == false);
+
+    EcsHandle e = ecs_new(world, Foo_h);
+    test_assert(e != 0);
+    test_assert(called == false);
+
+    EcsHandle e2 = ecs_new(world, 0);
+    ecs_add(world, e2, Foo_h);
+    ecs_commit(world, e2);
+    test_assert(called == false);
+
+    test_assert(ecs_is_enabled(world, IniTest_h) == false);
+    ecs_enable(world, IniTest_h, true);
+    test_assert(ecs_is_enabled(world, IniTest_h) == true);
+
+    EcsHandle e3 = ecs_new(world, Foo_h);
+    test_assert(e3 != 0);
+    test_assert(called == true);
+
+    ecs_fini(world);
+}
+
+void test_EcsInitSystem_tc_on_remove_disable(
+    test_EcsInitSystem this)
+{
+    EcsWorld *world = ecs_init();
+    bool called = false;
+    ecs_set_context(world, &called);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_SYSTEM(world, IniTest, EcsOnRemove, Foo);
+
+    test_assert(ecs_is_enabled(world, IniTest_h) == true);
+    ecs_enable(world, IniTest_h, false);
+    test_assert(ecs_is_enabled(world, IniTest_h) == false);
+
+    EcsHandle e = ecs_new(world, Foo_h);
+    test_assert(e != 0);
+    ecs_delete(world, e);
+    test_assert(called == false);
+
+    EcsHandle e2 = ecs_new(world, Foo_h);
+    ecs_remove(world, e2, Foo_h);
+    ecs_commit(world, e2);
+    test_assert(called == false);
+
+    test_assert(ecs_is_enabled(world, IniTest_h) == false);
+    ecs_enable(world, IniTest_h, true);
+    test_assert(ecs_is_enabled(world, IniTest_h) == true);
+
+    EcsHandle e3 = ecs_new(world, Foo_h);
+    test_assert(e3 != 0);
+    ecs_delete(world, e3);
+    test_assert(called == true);
+
+    ecs_fini(world);
+}
