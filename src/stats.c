@@ -174,6 +174,7 @@ void set_system_stats(
         EcsArray *tables = table_system->tables;
         uint32_t i, count = ecs_array_count(tables);
 
+        sstats->entities_matched = 0;
         for (i = 0; i < count; i ++) {
             int32_t *index = ecs_array_get(tables, &table_system->table_params, i);
             EcsTable *table = ecs_array_get(
