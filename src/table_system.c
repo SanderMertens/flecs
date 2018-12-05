@@ -563,7 +563,7 @@ EcsHandle ecs_new_table_system(
     const char *sig,
     EcsSystemAction action)
 {
-    uint32_t count = ecs_parse_components_count(sig);
+    uint32_t count = ecs_columns_count(sig);
     if (!count) {
         return 0;
     }
@@ -655,7 +655,7 @@ EcsHandle ecs_run_system(
 
         delta_time = time_passed;
 
-        if (time_passed > period) {
+        if (time_passed >= period) {
             time_passed -= period;
             if (time_passed > period) {
                 time_passed = 0;

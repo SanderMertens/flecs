@@ -1,0 +1,7 @@
+{
+    "id":"features",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}

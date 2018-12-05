@@ -163,11 +163,11 @@ typedef struct EcsThread {
 struct EcsWorld {
     uint32_t magic;               /* Magic number to verify world pointer */
 
-    float delta_time;             /* Time passed to ecs_progress */
+    float delta_time;           /* Time passed to or computed by ecs_progress */
 
     void *context;                /* Application context */
 
-    EcsArray *table_db;           /* Table storage */
+    EcsArray *table_db;           /* All tables in the world */
     EcsArray *frame_systems;      /* Frame systems */
     EcsArray *inactive_systems;   /* Frame systems with empty tables */
     EcsArray *on_demand_systems;  /* On demand systems */

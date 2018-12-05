@@ -15,7 +15,7 @@ EcsHandle new_row_system(
     const char *sig,
     EcsSystemAction action)
 {
-    uint32_t count = ecs_parse_components_count(sig);
+    uint32_t count = ecs_columns_count(sig);
     if (!count) {
         return 0;
     }

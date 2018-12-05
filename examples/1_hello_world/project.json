@@ -1,0 +1,7 @@
+{
+    "id":"helloworld",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}

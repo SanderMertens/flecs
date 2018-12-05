@@ -86,7 +86,7 @@ bool ecs_needs_tables(
 }
 
 /** Count components in a signature */
-uint32_t ecs_parse_components_count(
+uint32_t ecs_columns_count(
     const char *sig)
 {
     const char *ptr = sig;

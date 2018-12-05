@@ -1,0 +1,7 @@
+{
+    "id":"periodicsystem",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}
