@@ -178,8 +178,6 @@ void ecs_row_notify(
     EcsRows info = {
         .world = world,
         .system = system,
-        .param = NULL,
-        .refs = NULL,
         .column_count = column_count,
         .columns = columns
     };

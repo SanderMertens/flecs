@@ -1,0 +1,7 @@
+{
+    "id":"dag",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}

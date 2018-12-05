@@ -84,7 +84,8 @@ typedef struct EcsRows {
     int32_t *columns;
     void *first;
     void *last;
-    void **refs;
+    EcsHandle *refs_entity;
+    void **refs_data;
     void *param;
     EcsHandle *components;
     EcsHandle interrupted_by;
@@ -1128,10 +1129,13 @@ void ecs_iter_release(
     ? ECS_OFFSET(row, (data)->columns[column]) \
     : ((data)->columns[column] == 0) \
       ? NULL \
-      : data->refs[-((data)->columns[column]) - 1])
+      : data->refs_data[-((data)->columns[column]) - 1])
 
 /* Obtain the entity handle from a row */
 #define ecs_entity(row) *(EcsHandle*)row
+
+/* Obtain a reference handle from a column */
+#define ecs_reference(rows, column) (rows->refs_entity[column])
 
 /* Obtain the component handle from a row */
 #define ecs_handle(rows, column) (rows->components[column])

@@ -415,7 +415,8 @@ void resolve_refs(
             break;
         }
 
-        info->refs[i] = ecs_get_ptr(world, entity, ref->component);
+        info->refs_entity[i] = entity;
+        info->refs_data[i] = ecs_get_ptr(world, entity, ref->component);
     }
 }
 
@@ -507,7 +508,8 @@ void ecs_run_job(
     uint32_t start_index = job->start_index;
     uint32_t remaining = job->row_count;
     uint32_t column_count = ecs_array_count(system_data->base.columns);
-    void *refs[column_count];
+    void *refs_data[column_count];
+    EcsHandle refs_entity[column_count];
     char *table_buffer = ecs_array_get(
         system_data->tables, &system_data->table_params, table_index);
     char *component_buffer = ecs_array_get(
@@ -515,7 +517,8 @@ void ecs_run_job(
     EcsRows info = {
         .world = thread ? (EcsWorld*)thread : world,
         .system = system,
-        .refs = refs,
+        .refs_data = refs_data,
+        .refs_entity = refs_entity,
         .column_count = column_count
     };
 
@@ -686,7 +689,8 @@ EcsHandle ecs_run_system(
     char *table_buffer = ecs_array_buffer(tables);
     char *component_buffer = ecs_array_buffer(system_data->components);
     char *last = ECS_OFFSET(table_buffer, element_size * table_count);
-    void *refs[column_count];
+    void *refs_data[column_count];
+    EcsHandle refs_entity[column_count];
     EcsFamily filter_id = 0;
     EcsHandle interrupted_by = 0;
 
@@ -694,7 +698,8 @@ EcsHandle ecs_run_system(
         .world = world,
         .system = system,
         .param = param,
-        .refs = refs,
+        .refs_entity = refs_entity,
+        .refs_data = refs_data,
         .column_count = column_count,
         .delta_time = system_delta_time
     };
