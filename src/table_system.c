@@ -642,11 +642,14 @@ EcsHandle ecs_run_system(
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     assert(system_data != NULL);
 
+
     if (!system_data->base.enabled) {
         return 0;
     }
 
+    float system_delta_time = delta_time + system_data->time_passed;
     float period = system_data->period;
+
     if (period) {
         float time_passed = system_data->time_passed + delta_time;
 
@@ -693,7 +696,7 @@ EcsHandle ecs_run_system(
         .param = param,
         .refs = refs,
         .column_count = column_count,
-        .delta_time = delta_time
+        .delta_time = system_delta_time
     };
 
     if (filter) {

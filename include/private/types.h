@@ -206,8 +206,11 @@ struct EcsWorld {
     EcsFamily prefab_family;      /* EcsPrefab, EcsId */
 
     uint32_t tick;                /* Number of computed frames by world */
+    struct timespec frame_start;  /* Starting timestamp of frame */
     float frame_time;             /* Time spent processing a frame */
     float system_time;            /* Time spent processing systems */
+    float target_fps;             /* Target fps */
+    float fps_sleep;              /* Sleep time to prevent fps overshoot */
 
     /* The diff between frame_time and system_time is time spent on merging */
 

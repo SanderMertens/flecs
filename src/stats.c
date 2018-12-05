@@ -378,8 +378,8 @@ void ecs_get_stats(
     stats->tick_count = world->tick;
 
     if (world->tick) {
-        stats->frame_time = world->frame_time / (float)world->tick;
-        stats->system_time = world->system_time / (float)world->tick;
+        stats->frame_time = world->frame_time;
+        stats->system_time = world->system_time;
     } else {
         stats->frame_time = 0;
         stats->system_time = 0;

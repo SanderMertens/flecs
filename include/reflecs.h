@@ -195,10 +195,54 @@ void ecs_import(
  * This operation progresses the world by running all systems that are both
  * enabled and periodic on their matching entities.
  *
- * To ensure consistency of the data, modifications to the data that change
- * components for entities are stored in a thread-specific staging area until
- * they are merged with the world state. Threads will be able to see their own
- * changes, but may not see changes from other threads until changes are merged.
+ * To ensure consistency of the data, mutations that add/remove components or
+ * create/delete entities are staged and merged after all systems are evaluated.
+ * When using multiple threads, each thread will have its own "staging area".
+ * Threads will be able to see their own changes, but may not see changes from
+ * other threads until changes are merged.
+ *
+ * Staging only occurs when ecs_progress is executing systems. The operations
+ * that use staging are:
+ *
+ * - ecs_new
+ * - ecs_new_w_count
+ * - ecs_clone
+ * - ecs_delete
+ * - ecs_add
+ * - ecs_remove
+ * - ecs_commit
+ * - ecs_set
+ *
+ * By default, staged data is merged each time ecs_progress has evaluated all
+ * systems. An application may choose to manually merge instead, by setting
+ * auto-merging to false with ecs_set_automerge and invoking ecs_merge when a
+ * merge is required. In applications with relatively lots of data to merge,
+ * this can significantly boost performance.
+ *
+ * It should be noted that delaying a merge in a multithreaded application
+ * causes temporary inconsistencies between threads. A thread will be able to
+ * see changes from the previous iteration, but will not be able to see updates
+ * from other threads until a merge has taken place.
+ *
+ * Note that staging only occurs for changes caused by the aforementioned
+ * functions. If a system makes in-place modifications to components (through
+ * pointers obtained with ecs_column) they will be "instantly" visible to other
+ * threads.
+ *
+ * An application can pass a delta_time into the function, which is the time
+ * passed since the last frame. This value is passed to systems so they can
+ * update entity values proportional to the elapsed time since their last
+ * invocation.
+ *
+ * By passing the delta_time into ecs_progress, an application can take full
+ * control of the "speed" at which entities are progressed. This can be
+ * particularly useful in simulations, where this feature can be used to control
+ * playback speed.
+ *
+ * When an application passes 0 to delta_time, ecs_progress will automatically
+ * measure the time passed since the last frame. If an application does not uses
+ * time management, it should pass a non-zero value for delta_time (1.0 is
+ * recommended). That way, no time will be wasted measuring the time.
  *
  * @time-complexity: O(s * t)
  * @param world The world to progress.
@@ -223,7 +267,7 @@ void ecs_progress(
  * Manual merging requires that the application logic is capable of handling
  * application state that is out of sync for multiple iterations.
  *
- * @param world: The world.
+ * @param world The world.
  */
 REFLECS_EXPORT
 void ecs_merge(
@@ -241,7 +285,7 @@ void ecs_merge(
  * removing components from an entity will not be visible to all threads until
  * the merge occurs.
  *
- * @param world: The world.
+ * @param world The world.
  * @param auto_merge: When true, ecs_progress performs merging.
  */
 REFLECS_EXPORT
@@ -261,14 +305,40 @@ void ecs_set_automerge(
  * mainthread.
  *
  * @time-complexity: O(n)
- * @param world: The world.
+ * @param world The world.
  * @param threads: The number of threads.
- * @returns: EcsOk if successful, or EcsError if failed.
+ * @returns EcsOk if successful, or EcsError if failed.
  */
 REFLECS_EXPORT
 EcsResult ecs_set_threads(
     EcsWorld *world,
     uint32_t threads);
+
+/** Set target frames per second (FPS) for application.
+ * Setting the target FPS ensures that ecs_progress is not invoked faster than
+ * the specified FPS. When enabled, ecs_progress tracks the time passed since
+ * the last invocation, and sleeps the remaining time of the frame (if any).
+ *
+ * This feature ensures systems are ran at a consistent interval, as well as
+ * conserving CPU time by not running systems more often than required.
+ *
+ * This feature depends upon frame profiling. When this operation is called,
+ * frame profiling is automatically enabled. Frame profiling can be manually
+ * turned on/off with ecs_measure_frame_time. It is not possible to turn off
+ * frame profiling if a target FPS is set.
+ *
+ * Note that ecs_progress only sleeps if there is time left in the frame. Both
+ * time spent in reflecs as time spent outside of reflecs are taken into
+ * account.
+ *
+ * Setting a target FPS can be more efficient than letting the application do it
+ * manually, as the feature can reuse clock measurements that are taken for
+ * frame profiling as well as automatically measuring delta_time.
+ */
+REFLECS_EXPORT
+void ecs_set_target_fps(
+    EcsWorld *world,
+    float fps);
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
@@ -368,9 +438,9 @@ void ecs_dim_family(
  * addressing entities. The average lookup complexity for a handle is O(1).
  *
  * @time-complexity: O(1)
- * @param world: The world to which to add the entity.
- * @param type: Zero if no type, or handle to a component, family or prefab.
- * @returns: A handle to the new entity.
+ * @param world The world to which to add the entity.
+ * @param type Zero if no type, or handle to a component, family or prefab.
+ * @returns A handle to the new entity.
  */
 REFLECS_EXPORT
 EcsHandle ecs_new(
@@ -381,11 +451,11 @@ EcsHandle ecs_new(
  * This operation creates the number of specified entities with one API call
  * which is a more efficient alternative to calling ecs_new in a loop.
  *
- * @param world: The world.
- * @param type: Zero if no type, or handle to a component, family or prefab.
- * @param count: The number of entities to create.
- * @param handles_out: An array which contains the handles of the new entities.
- * @param returns: The handle to the first created entity.
+ * @param world The world.
+ * @param type Zero if no type, or handle to a component, family or prefab.
+ * @param count The number of entities to create.
+ * @param handles_out An array which contains the handles of the new entities.
+ * @returns The handle to the first created entity.
  */
 REFLECS_EXPORT
 EcsHandle ecs_new_w_count(
@@ -394,7 +464,20 @@ EcsHandle ecs_new_w_count(
     uint32_t count,
     EcsHandle *handles_out);
 
-/** Create new entity with same components as specified entity. */
+/** Create new entity with same components as specified entity.
+ * This operation creates a new entity which has the same components as the
+ * specified entity. This includes prefabs and entity-components (entities to
+ * which the EcsComponent component has been added manually).
+ *
+ * The application can optionally copy the values of the specified entity by
+ * passing true to copy_value. In that case, the resulting entity will have the
+ * same value as source specified entity.
+ *
+ * @param world The world.
+ * @param entity The source entity.
+ * @param copy_value Whether to copy the entity value.
+ * @returns The handle to the new entity.
+ */
 REFLECS_EXPORT
 EcsHandle ecs_clone(
     EcsWorld *world,
@@ -460,8 +543,8 @@ EcsHandle ecs_new_prefab(
  * the function that does not resolve to an entity, this function is a no-op.
  *
  * @time-complexity: O(r)
- * @param world: The world.
- * @param entity: A handle to the entity to delete.
+ * @param world The world.
+ * @param entity A handle to the entity to delete.
  */
 REFLECS_EXPORT
 void ecs_delete(
@@ -482,10 +565,10 @@ void ecs_delete(
  * invalid component handle is provided, the ecs_commit operation will fail.
  *
  * @time-complexity: O(1)
- * @param world: The world.
- * @param entity: Handle to the entity for which to stage the component.
- * @param component: Handle to the component.
- * @returns: EcsOk if succeeded, or EcsError if the operation failed.
+ * @param world The world.
+ * @param entity Handle to the entity for which to stage the component.
+ * @param component Handle to the component.
+ * @returns EcsOk if succeeded, or EcsError if the operation failed.
  */
 REFLECS_EXPORT
 EcsResult ecs_add(
@@ -503,9 +586,9 @@ EcsResult ecs_add(
  * component when this operation is called, it is a no-op.
  *
  * @time-complexity: O(1)
- * @param world: The world.
- * @param entity: Handle to the entity from which to remove the component.
- * @param component: The component to remove.
+ * @param world The world.
+ * @param entity Handle to the entity from which to remove the component.
+ * @param component The component to remove.
  */
 REFLECS_EXPORT
 EcsResult ecs_remove(
@@ -537,9 +620,9 @@ EcsResult ecs_remove(
  * systems on the new / old table.
  *
  * @time-complexity: O(2 * r + c)
- * @param world: The world.
- * @param entity: The entity to commit.
- * @returns: EcsOk if succeeded, or EcsError if the operation failed.
+ * @param world The world.
+ * @param entity The entity to commit.
+ * @returns EcsOk if succeeded, or EcsError if the operation failed.
  */
 REFLECS_EXPORT
 EcsResult ecs_commit(
@@ -562,10 +645,10 @@ EcsResult ecs_commit(
  * Foo value = ecs_get(world, e, Foo);
  *
  * @time-complexity: O(c)
- * @param world: The world.
- * @param entity: Handle to the entity from which to obtain the component data.
- * @param component: The component to retrieve the data for.
- * @returns: A pointer to the data, or NULL of the component was not found.
+ * @param world The world.
+ * @param entity Handle to the entity from which to obtain the component data.
+ * @param component The component to retrieve the data for.
+ * @returns A pointer to the data, or NULL of the component was not found.
  */
 REFLECS_EXPORT
 void* ecs_get_ptr(
@@ -589,9 +672,9 @@ void* ecs_get_ptr(
  *
  * ecs_set(world, e, Foo, {.x = 10, .y = 20});
  *
- * @param world: The world.
- * @param entity: The entity on which to set the component.
- * @param component: The component to set.
+ * @param world The world.
+ * @param entity The entity on which to set the component.
+ * @param component The component to set.
  */
 REFLECS_EXPORT
 EcsHandle ecs_set_ptr(
@@ -613,10 +696,10 @@ EcsHandle ecs_set_ptr(
  * component, or a family that contains only 'Bar' will return true.
  *
  * @time-complexity: O(c)
- * @param world: The world.
- * @param entity: Handle to a entity.
- * @param type: Handle to a component, family or prefab.
- * @returns: true if entity has type, otherwise false.
+ * @param world The world.
+ * @param entity Handle to a entity.
+ * @param type Handle to a component, family or prefab.
+ * @returns true if entity has type, otherwise false.
  */
 REFLECS_EXPORT
 bool ecs_has(
@@ -633,10 +716,10 @@ bool ecs_has(
  * because the entity has one of the components.
  *
  * @time-complexity: O(c)
- * @param world: The world.
- * @param entity: Handle to a entity.
- * @param type: Handle to a component, family or prefab.
- * @returns: true if entity has one of the components, otherwise false.
+ * @param world The world.
+ * @param entity Handle to a entity.
+ * @param type Handle to a component, family or prefab.
+ * @returns true if entity has one of the components, otherwise false.
  */
 REFLECS_EXPORT
 bool ecs_has_any(
@@ -649,9 +732,9 @@ bool ecs_has_any(
  * never been returned by ecs_new (or variants) or that has been deleted with
  * ecs_delete is not valid.
  *
- * @param world: The world.
- * @param entity: The entity handle.
- * @returns: true if valid, false if not valid.
+ * @param world The world.
+ * @param entity The entity handle.
+ * @returns true if valid, false if not valid.
  */
 REFLECS_EXPORT
 bool ecs_empty(
@@ -668,9 +751,9 @@ bool ecs_empty(
  * If the entity does not contain the EcsId component, this function will return
  * NULL.
  *
- * @param world: The world.
- * @param entity: The entity for which to resolve the id.
- * @returns: The id of the entity.
+ * @param world The world.
+ * @param entity The entity for which to resolve the id.
+ * @returns The id of the entity.
  */
 REFLECS_EXPORT
 const char* ecs_id(
@@ -715,10 +798,10 @@ EcsHandle ecs_lookup(
  * returned handle can be used in any function that accepts an entity handle.
  *
  * @time-complexity: O(2 * r + c)
- * @param world: The world.
- * @param id: A unique component identifier.
- * @param size: The size of the component type (as obtained by sizeof).
- * @returns: A handle to the new component, or ECS_HANDLE_NIL if failed.
+ * @param world The world.
+ * @param id A unique component identifier.
+ * @param size The size of the component type (as obtained by sizeof).
+ * @returns A handle to the new component, or ECS_HANDLE_NIL if failed.
  */
 REFLECS_EXPORT
 EcsHandle ecs_new_component(
@@ -783,12 +866,12 @@ EcsHandle ecs_new_family(
  * handle can be used in any function that accepts an entity handle.
  *
  * @time-complexity: O(2 * r + c)
- * @param world: The world.
- * @param id: The identifier of the system.
- * @param kind: The kind of system.
- * @param signature: The signature that describes the components.
- * @param action: The action that is invoked for matching entities.
- * @returns: A handle to the system.
+ * @param world The world.
+ * @param id The identifier of the system.
+ * @param kind The kind of system.
+ * @param signature The signature that describes the components.
+ * @param action The action that is invoked for matching entities.
+ * @returns A handle to the system.
  */
 REFLECS_EXPORT
 EcsHandle ecs_new_system(
@@ -808,10 +891,10 @@ EcsHandle ecs_new_system(
  * not have this component, the operation will fail.
  *
  * @time-complexity: O(c)
- * @param world: The world.
- * @param system: The system to enable or disable.
- * @param enabled: true to enable the system, false to disable the system.
- * @returns: EcsOk if succeeded, EcsError if the operation failed.
+ * @param world The world.
+ * @param system The system to enable or disable.
+ * @param enabled true to enable the system, false to disable the system.
+ * @returns EcsOk if succeeded, EcsError if the operation failed.
  */
 REFLECS_EXPORT
 void ecs_enable(
@@ -835,6 +918,10 @@ void ecs_enable(
  * invoked. If the specified period is smaller than the interval at which
  * ecs_progress is invoked, the system will be invoked at every ecs_progress,
  * provided that the delta_time provided to ecs_progress is accurate.
+ *
+ * @param world The world.
+ * @param system The system for which to set the period.
+ * @param period The period.
  */
 REFLECS_EXPORT
 void ecs_set_period(
@@ -849,9 +936,9 @@ void ecs_set_period(
  * operation is called on a non-system entity, the operation will return true.
  *
  * @time-complexity: O(c)
- * @param world: The world.
- * @param system: The system to check.
- * @returns: True if the system is enabled, false if the system is disabled.
+ * @param world The world.
+ * @param system The system to check.
+ * @returns True if the system is enabled, false if the system is disabled.
  */
 REFLECS_EXPORT
 bool ecs_is_enabled(
@@ -889,12 +976,12 @@ bool ecs_is_enabled(
  * interrupted_by, which is then subsequently returned.
  *
  * @time-complexity: O(t)
- * @param world: The world.
- * @param system: The system to run.
+ * @param world The world.
+ * @param system The system to run.
  * @param delta_time: The time passed since the last system invocation.
- * @param filter: A component or family to filter matched entities.
- * @param param: A user-defined parameter to pass to the system.
- * @returns: handle to last evaluated entity if system was interrupted.
+ * @param filter A component or family to filter matched entities.
+ * @param param A user-defined parameter to pass to the system.
+ * @returns handle to last evaluated entity if system was interrupted.
  */
 REFLECS_EXPORT
 EcsHandle ecs_run_system(

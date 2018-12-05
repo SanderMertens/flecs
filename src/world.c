@@ -466,8 +466,11 @@ EcsWorld *ecs_init(void) {
     world->measure_system_time = false;
     world->last_handle = 0;
 
+    ut_time_get(&world->frame_start);
     world->frame_time = 0;
     world->system_time = 0;
+    world->target_fps = 0;
+    world->fps_sleep = 0;
 
     ecs_stage_init(&world->stage);
 
@@ -620,12 +623,15 @@ void ecs_progress(
     float delta_time)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    struct timespec time_start;
+
     bool measure_frame_time = world->measure_frame_time;
 
     /* Start measuring total frame time */
-    if (measure_frame_time) {
-        ut_time_get(&time_start);
+    if (measure_frame_time || !delta_time) {
+        float delta = ut_time_measure(&world->frame_start);
+        if (!delta_time) {
+            delta_time = delta;
+        }
     }
 
     world->delta_time = delta_time;
@@ -670,7 +676,7 @@ void ecs_progress(
     /* Proile system time & merge if systems were processed */
     if (world->in_progress) {
         if (measure_frame_time) {
-            struct timespec temp = time_start;
+            struct timespec temp = world->frame_start;
             world->system_time += ut_time_measure(&temp);
         }
 
@@ -683,8 +689,20 @@ void ecs_progress(
 
     /*  Profile total frame time */
     if (measure_frame_time) {
-        world->frame_time += ut_time_measure(&time_start);
+        struct timespec t = world->frame_start;
+        world->frame_time += ut_time_measure(&t);
         world->tick ++;
+
+        /* Sleep if processing faster than target FPS */
+        float target_fps = world->target_fps;
+        if (target_fps) {
+            float sleep = (1.0 / target_fps) - delta_time + world->fps_sleep;
+            if (sleep < 0) {
+                sleep = 0;
+            }
+            world->fps_sleep = sleep;
+            ut_sleepf(sleep);
+        }
     }
 }
 
@@ -720,7 +738,9 @@ void ecs_measure_frame_time(
     bool enable)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    world->measure_frame_time = enable;
+    if (!world->target_fps || enable) {
+        world->measure_frame_time = enable;
+    }
 }
 
 void ecs_measure_system_time(
@@ -729,6 +749,15 @@ void ecs_measure_system_time(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     world->measure_system_time = enable;
+}
+
+void ecs_set_target_fps(
+    EcsWorld *world,
+    float fps)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_measure_frame_time(world, true);
+    world->target_fps = fps;
 }
 
 void* ecs_get_context(
