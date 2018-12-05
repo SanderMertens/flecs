@@ -1135,7 +1135,7 @@ void ecs_iter_release(
 #define ecs_entity(row) *(EcsHandle*)row
 
 /* Obtain a reference handle from a column */
-#define ecs_reference(rows, column) (rows->refs_entity[column])
+#define ecs_source(rows, column) (rows->refs_entity[column])
 
 /* Obtain the component handle from a row */
 #define ecs_handle(rows, column) (rows->components[column])

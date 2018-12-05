@@ -1,0 +1,7 @@
+{
+    "id":"entityascomponent",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}

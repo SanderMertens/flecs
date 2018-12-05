@@ -60,11 +60,11 @@ void ListUnits(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        EcsHandle platoon = ecs_reference(rows, 0);
+        EcsHandle platoon = ecs_source(rows, 0);
         Position *p = ecs_column(rows, row, 1);
         Health *h = ecs_column(rows, row, 2);
 
-        printf("Unit %lld, %s, position (%d,%d), health %d\n",
+        printf("Unit %llu, %s, position (%d,%d), health %d\n",
             entity, ecs_id(world, platoon), p->x, p->y, *h);
     }
 }
@@ -76,8 +76,8 @@ void ListPlatoons(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        EcsHandle player = ecs_reference(rows, 0);
-        EcsHandle region = ecs_reference(rows, 1);
+        EcsHandle player = ecs_source(rows, 0);
+        EcsHandle region = ecs_source(rows, 1);
 
         printf("%s, %s, %s:\n",
             ecs_id(world, entity),
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
      * it does not contain any data. The reason we still add it to the signature
      * is so we get access to the platoon entity.
      *
-     * We can get access to the platoon entity with ecs_reference in the system
+     * We can get access to the platoon entity with ecs_source in the system
      * callback, which gives us the entity on which the Platoon component was
      * found, which in this case is the platoon to which the unit belongs. */
     ECS_SYSTEM(world, ListUnits, EcsOnDemand, COMPONENT.Platoon, Position, Health);

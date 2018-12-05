@@ -1,0 +1,7 @@
+{
+    "id":"demandsystem",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}
