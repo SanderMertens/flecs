@@ -1,0 +1,7 @@
+{
+    "id":"getset",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}

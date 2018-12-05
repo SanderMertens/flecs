@@ -1,0 +1,7 @@
+{
+    "id":"optionalcomponent",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}

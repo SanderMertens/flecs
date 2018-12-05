@@ -23,7 +23,7 @@ EcsResult add_family(
         if (elem_kind != EcsFromEntity) {
             return EcsError;
         }
-        
+
         EcsHandle entity = ecs_lookup(world, entity_id);
         if (!entity) {
             return EcsError;
@@ -402,13 +402,13 @@ EcsHandle ecs_new_family(
         EcsId *id_ptr = ecs_get_ptr(world, family_entity, EcsId_h);
 
         assert(id_ptr != NULL);
-        assert_func(!strcmp(id_ptr->id, id));
+        assert_func(!strcmp(*id_ptr, id));
 
         return family_entity;
     } else {
         result = ecs_new_w_family(world, NULL, world->family_family);
         EcsId *id_ptr = ecs_get_ptr(world, result, EcsId_h);
-        id_ptr->id = id;
+        *id_ptr = id;
 
         EcsFamilyComponent *family_ptr = ecs_get_ptr(
             world, result, EcsFamilyComponent_h);
@@ -446,7 +446,7 @@ EcsHandle ecs_new_prefab(
         return 0;
     }
 
-    id_data->id = id;
+    *id_data = id;
 
     return result;
 }

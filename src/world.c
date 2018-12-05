@@ -93,7 +93,7 @@ void add_builtin_id(
 
     assert(id_data != NULL);
 
-    id_data->id = (char*)id;
+    *id_data = (char*)id;
 }
 
 /** Obtain family id for specified component + EcsId */
@@ -390,7 +390,7 @@ char* ecs_family_tostr(
         const char *str = NULL;
         EcsId *id = ecs_get_ptr(world, h, EcsId_h);
         if (id) {
-            str = id->id;
+            str = *id;
         } else {
             sprintf(buf, "%" PRIu64, h);
             str = buf;
@@ -609,7 +609,7 @@ EcsHandle ecs_lookup(
 
         for (row = buffer; row < last; row = ECS_OFFSET(row, element_size)) {
             EcsId *id_ptr = ECS_OFFSET(row, offset);
-            if (!strcmp(id_ptr->id, id)) {
+            if (!strcmp(*id_ptr, id)) {
                 return *(EcsHandle*)row;
             }
         }

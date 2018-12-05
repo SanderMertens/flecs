@@ -572,7 +572,7 @@ EcsHandle ecs_new_table_system(
         world, NULL, world->table_system_family);
 
     EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
-    id_data->id = id;
+    *id_data = id;
 
     EcsTableSystem *system_data = ecs_get_ptr(world, result, EcsTableSystem_h);
     memset(system_data, 0, sizeof(EcsTableSystem));

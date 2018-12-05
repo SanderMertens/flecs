@@ -799,7 +799,7 @@ EcsHandle ecs_new_component(
         return 0;
     }
 
-    id_data->id = id;
+    *id_data = id;
     component_data->size = size;
 
     return result;
@@ -811,7 +811,7 @@ const char* ecs_id(
 {
     EcsId *id = ecs_get_ptr(world, entity, EcsId_h);
     if (id) {
-        return id->id;
+        return *id;
     } else {
         return NULL;
     }

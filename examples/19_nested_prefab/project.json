@@ -1,0 +1,7 @@
+{
+    "id":"nestedprefab",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}

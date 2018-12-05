@@ -55,9 +55,7 @@ extern "C" {
 /* -- Supporting types -- */
 
 /** Id component type */
-typedef struct EcsId {
-    const char *id;
-} EcsId;
+typedef const char *EcsId;
 
 typedef struct EcsWorld EcsWorld;
 

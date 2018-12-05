@@ -22,7 +22,7 @@ EcsHandle new_row_system(
 
     EcsHandle result = ecs_new_w_family(world, NULL, world->row_system_family);
     EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
-    id_data->id = id;
+    *id_data = id;
 
     EcsRowSystem *system_data = ecs_get_ptr(world, result, EcsRowSystem_h);
     memset(system_data, 0, sizeof(EcsRowSystem));
@@ -364,7 +364,7 @@ bool ecs_is_enabled(
     if (!system_data) {
         system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
     }
-    
+
     if (system_data) {
         return system_data->enabled;
     } else {

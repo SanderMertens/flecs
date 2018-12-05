@@ -1,0 +1,7 @@
+{
+    "id":"worlduserdata",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}

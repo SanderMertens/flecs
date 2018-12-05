@@ -1,0 +1,7 @@
+{
+    "id":"entityid",
+    "type":"executable",
+    "value": {
+        "use": ["reflecs"]
+    }
+}

@@ -163,7 +163,7 @@ void set_system_stats(
         stats_array, &systemstats_arr_params);
 
     sstats->system = system;
-    sstats->id = id->id;
+    sstats->id = *id;
     sstats->enabled = ecs_is_enabled(world, system);
     sstats->active = active;
     sstats->is_hidden = ecs_has(world, system, EcsHidden_h);
