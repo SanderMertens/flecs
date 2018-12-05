@@ -23,7 +23,7 @@ write powerful applications with just a few lines of code:
 - Create/delete entities and add/remove components while iterating in a system
 - Add components to systems to build stateful systems
 
-Check out the examples and [documentation](https://github.com/SanderMertens/reflecs/blob/master/include/reflecs.h) to learn more!
+Check out the [examples](https://github.com/SanderMertens/reflecs/tree/master/examples) and [documentation](https://github.com/SanderMertens/reflecs/blob/master/include/reflecs.h) to learn more!
 
 ## Building
 To build reflecs, you need to install bake which is currently only supported on
