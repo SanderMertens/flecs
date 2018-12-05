@@ -145,14 +145,14 @@ void test_Map_tc_set_rehash(
     EcsMap *map = ecs_map_new(8);
     fill_map(map);
 
-    test_assertint(ecs_map_bucket_count(map), 8);
+    test_assertint(ecs_map_bucket_count(map), 10);
 
     int i;
-    for (i = 5; i < 8; i ++) {
+    for (i = 5; i < 10; i ++) {
         ecs_map_set(map, i, "zzz");
     }
 
-    test_assertint(ecs_map_bucket_count(map), 16);
+    test_assertint(ecs_map_bucket_count(map), 20);
     test_assertstr(ecs_map_get(map, 1), "hello");
     test_assertstr(ecs_map_get(map, 2), "world");
     test_assertstr(ecs_map_get(map, 3), "foo");

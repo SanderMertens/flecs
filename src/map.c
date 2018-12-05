@@ -15,6 +15,7 @@ struct EcsMap {
     EcsArray *nodes;        /* Array with memory for map nodes */
     size_t bucket_count;    /* number of buckets */
     uint32_t count;         /* number of elements */
+    uint32_t min;           /* minimum number of elements */
 };
 
 static
@@ -101,6 +102,7 @@ EcsMap *alloc_map(
     EcsMap *result = malloc(sizeof(EcsMap));
     alloc_buffer(result, bucket_count);
     result->count = 0;
+    result->min = bucket_count;
     result->nodes = ecs_array_new(&node_arr_params, ECS_MAP_INITIAL_NODE_COUNT);
     return result;
 }
@@ -291,22 +293,32 @@ void resize_map(
 EcsMap* ecs_map_new(
     uint32_t size)
 {
-    return alloc_map(size);
+    return alloc_map((float)size / REFLECS_LOAD_FACTOR);
 }
 
 void ecs_map_clear(
     EcsMap *map)
 {
-    if (map->count) {
+    uint32_t target_size = (float)map->count / REFLECS_LOAD_FACTOR;
+
+    if (target_size < map->min) {
+        target_size = map->min;
+    }
+
+    if (target_size < (float)map->bucket_count * 0.75) {
+        free(map->buckets);
+        alloc_buffer(map, target_size);
+    } else {
         int i;
         for (i = 0; i < map->bucket_count; i ++) {
             map->buckets[i] = 0;
         }
-
-        ecs_array_clear(map->nodes);
-
-        map->count = 0;
     }
+
+    ecs_array_reclaim(&map->nodes, &node_arr_params);
+    ecs_array_clear(map->nodes);
+
+    map->count = 0;
 }
 
 void ecs_map_free(
