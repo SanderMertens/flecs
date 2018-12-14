@@ -1,8 +1,7 @@
 {
     "id":"reflecs",
     "type":"package",
-    "value": {
-        "managed": false,
+    "lang.c": {
         "cflags": ["-fvisibility=hidden"],
         "lib": ["pthread"]
     }
