@@ -1,8 +1,8 @@
 #ifndef REFLECS_STATS_H
 #define REFLECS_STATS_H
 
-#include <reflecs/reflecs.h>
-#include <reflecs/util/array.h>
+#include <reflecs>
+#include "array.h"
 
 #ifdef __cplusplus
 extern "C" {

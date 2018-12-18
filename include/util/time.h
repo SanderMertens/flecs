@@ -6,7 +6,7 @@
 #ifndef REFLECS_TIME_H_
 #define REFLECS_TIME_H_
 
-#include <reflecs/reflecs.h>
+#include <reflecs>
 
 #ifdef __cplusplus
 extern "C" {

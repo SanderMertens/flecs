@@ -3,7 +3,8 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <reflecs/util/time.h>
+#include <string.h>
+#include <include/util/time.h>
 
 #ifdef __MACH__
 #include <mach/clock.h>

@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#include <reflecs/reflecs.h>
-#include <reflecs/util/array.h>
-#include <reflecs/util/map.h>
+#include <reflecs>
+#include "../util/array.h"
+#include "../util/map.h"
 
 #define ECS_WORLD_INITIAL_TABLE_COUNT (2)
 #define ECS_WORLD_INITIAL_ENTITY_COUNT (2)
