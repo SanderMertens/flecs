@@ -89,7 +89,7 @@ EcsResult ecs_table_init(
                 size = 0;
             } else {
                 /* Invalid entity handle in family */
-                abort();
+                assert(0);
             }
         }
 

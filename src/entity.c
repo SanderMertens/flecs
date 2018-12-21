@@ -728,6 +728,8 @@ EcsHandle ecs_set_ptr(
 {
     EcsEntityInfo info = {0}, cinfo = {0};
     assert(src != NULL);
+    assert(world != NULL);
+    assert(component != 0);
 
     if (!entity) {
         entity = ecs_new(world, component);

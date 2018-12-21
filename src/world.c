@@ -269,7 +269,7 @@ void _assert_func(
     if (!cond) {
         fprintf(stderr, "Assertion failed: %s, file: %s, line: %d, func: %s\n",
             cond_str, file, line, func);
-        abort();
+        assert(0);
     }
 }
 
@@ -419,7 +419,7 @@ EcsStage *ecs_get_stage(
         return thread->stage;
     } else {
         fprintf(stderr, "Invalid world object\n");
-        abort();
+        assert(0);
         return NULL;
     }
 }

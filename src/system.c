@@ -79,7 +79,7 @@ EcsHandle new_row_system(
                 &world->tasks, &handle_arr_params);
             *system = result;
         } else {
-            abort();
+            assert(0);
         }
     }
 
@@ -245,7 +245,7 @@ EcsHandle ecs_new_system(
     if (!needs_tables && (kind == EcsOnAdd ||
         kind == EcsOnSet))
     {
-        abort();
+        assert(0);
     }
 
     if (needs_tables && (kind == EcsOnFrame || kind == EcsOnDemand)) {
@@ -255,7 +255,7 @@ EcsHandle ecs_new_system(
     {
         result = new_row_system(world, id, kind, needs_tables, sig, action);
     } else {
-        abort();
+        assert(0);
     }
 
     return result;
@@ -271,7 +271,7 @@ void* ecs_set_system_context_ptr(
     if (!system_data) {
         system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
     } else {
-        abort();
+        assert(0);
     }
 
     system_data->ctx_handle = component;
@@ -291,7 +291,7 @@ void* ecs_get_system_context(
     if (!system_data) {
         system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
     } else {
-        abort();
+        assert(0);
     }
 
     void *result = ecs_get_ptr(world, system, system_data->ctx_handle);
