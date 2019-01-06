@@ -1,6 +1,6 @@
 {
     "id":"entityid",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }

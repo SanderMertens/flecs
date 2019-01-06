@@ -1,6 +1,8 @@
 #ifndef FAMILIES_H
 #define FAMILIES_H
 
+#include "bake_config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -10,4 +12,3 @@ extern "C" {
 #endif
 
 #endif
-

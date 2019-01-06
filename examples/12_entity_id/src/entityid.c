@@ -1,5 +1,4 @@
 #include <include/entityid.h>
-#include <reflecs/reflecs.h>
 
 int main(int argc, char *argv[]) {
     /* An EcsWorld contains all our entities, components and systems */

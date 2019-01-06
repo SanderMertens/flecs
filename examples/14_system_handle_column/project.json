@@ -1,6 +1,6 @@
 {
     "id":"systemhandlecolumn",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }

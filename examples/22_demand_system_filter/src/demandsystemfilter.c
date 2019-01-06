@@ -1,5 +1,4 @@
 #include <include/demandsystemfilter.h>
-#include <reflecs/reflecs.h>
 
 /* This function is invoked when the ecs_progress function is called. */
 void ListEntities(EcsRows *rows) {

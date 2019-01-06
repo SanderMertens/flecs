@@ -1,6 +1,8 @@
 #ifndef PREFAB_H
 #define PREFAB_H
 
+#include "bake_config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -10,4 +12,3 @@ extern "C" {
 #endif
 
 #endif
-

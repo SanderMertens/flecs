@@ -1,6 +1,6 @@
 {
     "id":"getset",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }

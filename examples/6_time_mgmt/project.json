@@ -1,6 +1,6 @@
 {
     "id":"timemgmt",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }

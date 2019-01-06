@@ -1,6 +1,6 @@
 {
     "id":"disablesystem",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }

@@ -1,0 +1,10 @@
+{
+    "id": "randomplacement",
+    "type": "application",
+    "value": {
+        "use": ["reflecs"]
+    },
+    "lang.c": {
+        "lib": ["m"]
+    }
+}

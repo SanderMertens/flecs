@@ -1,6 +1,6 @@
 {
     "id":"orexpression",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }

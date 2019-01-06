@@ -1,5 +1,4 @@
 #include <include/helloworld.h>
-#include <reflecs/reflecs.h>
 
 typedef struct Message {
     int32_t id;

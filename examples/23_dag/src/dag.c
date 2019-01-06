@@ -1,5 +1,4 @@
 #include <include/dag.h>
-#include <reflecs/reflecs.h>
 
 /* This example demonstrates a technique to create a DAG (directed acyclic graph).
  * The graph will build a tree with players, platoons, regions and units:

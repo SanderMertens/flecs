@@ -1,6 +1,6 @@
 {
     "id":"features",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }

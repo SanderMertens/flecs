@@ -1,5 +1,4 @@
 #include <include/entityascomponent.h>
-#include <reflecs/reflecs.h>
 
 typedef struct Position {
     int32_t x;

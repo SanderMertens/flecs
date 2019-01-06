@@ -1,6 +1,6 @@
 {
     "id":"demandsystemfilter",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }

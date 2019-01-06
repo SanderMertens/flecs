@@ -1,6 +1,6 @@
 {
     "id":"periodicsystem",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }

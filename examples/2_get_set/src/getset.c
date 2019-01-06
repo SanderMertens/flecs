@@ -1,5 +1,4 @@
 #include <include/getset.h>
-#include <reflecs/reflecs.h>
 
 typedef struct Position {
     int32_t x;
