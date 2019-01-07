@@ -61,6 +61,12 @@ You can now use the reflecs API in your source code. If you get compiler errors 
 missing definitions, make sure that your project includes the (generated) file 
 `bake_config.h`, as it contains the include statements for your dependencies.
 
+To run the project, do:
+
+```
+bake run app
+```
+
 ## Modules
 To use a module in reflecs, first install it on your machine:
 
