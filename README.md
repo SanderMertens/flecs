@@ -45,9 +45,7 @@ Note that this also builds the reflecs examples.
 To create a new reflecs application, first create a new project:
 
 ```
-mkdir app
-cd app
-bake init
+bake init app
 ```
 
 To add reflecs as a dependency to your application, modify the `project.json` so
@@ -63,11 +61,9 @@ that it looks like this:
 }
 ```
 
-In any source file that uses reflecs, make sure to include the following header:
-
-```c
-#include <reflecs/reflecs.h>
-```
+You can now use the reflecs API in your source code. If you get compiler errors for 
+missing definitions, make sure that your project includes the (generated) file 
+`bake_config.h`, as it contains the include statements for your dependencies.
 
 ## Modules
 To use a module in reflecs, first add it as a dependency to the `project.json`:
@@ -89,9 +85,7 @@ ECS_IMPORT(world, EcsComponentsTransform);
 ```
 
 After that, you will be able to use the systems and components that are defined
-by the module. If you get compiler errors for missing definitions, make sure that
-your project includes the (generated) file `bake_config.h`, as it will contain the
-include statement for the module.
+by the module.
 
 Reflecs has a growing ecosystem of modules. The following modules are currently
 available:
