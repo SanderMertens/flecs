@@ -82,12 +82,6 @@ To use a module in reflecs, first add it as a dependency to the `project.json`:
 }
 ```
 
-Then add its header file to the files where you want to use it:
-
-```c
-#include <reflecs/components/transform/transform.h>
-```
-
 Then import it in code:
 
 ```c
@@ -95,7 +89,9 @@ ECS_IMPORT(world, EcsComponentsTransform);
 ```
 
 After that, you will be able to use the systems and components that are defined
-by the module.
+by the module. If you get compiler errors for missing definitions, make sure that
+your project includes the (generated) file `bake_config.h`, as it will contain the
+include statement for the module.
 
 Reflecs has a growing ecosystem of modules. The following modules are currently
 available:
