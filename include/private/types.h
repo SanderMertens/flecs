@@ -221,6 +221,7 @@ struct EcsWorld {
     bool auto_merge;              /* Are stages auto-merged by ecs_progress */
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */
+    bool should_quit;             /* Did a system signal that app should quit */
 };
 
 extern const EcsArrayParams handle_arr_params;

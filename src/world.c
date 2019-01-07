@@ -465,6 +465,7 @@ EcsWorld *ecs_init(void) {
     world->measure_frame_time = false;
     world->measure_system_time = false;
     world->last_handle = 0;
+    world->should_quit = false;
 
     ut_time_get(&world->frame_start);
     world->frame_time = 0;
@@ -618,7 +619,7 @@ EcsHandle ecs_lookup(
     return 0;
 }
 
-void ecs_progress(
+bool ecs_progress(
     EcsWorld *world,
     float delta_time)
 {
@@ -704,6 +705,14 @@ void ecs_progress(
             ut_sleepf(sleep);
         }
     }
+
+    return !world->should_quit;
+}
+
+void ecs_quit(
+    EcsWorld *world)
+{
+    world->should_quit = true;
 }
 
 void ecs_merge(

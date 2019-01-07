@@ -129,6 +129,17 @@ REFLECS_EXPORT
 EcsResult ecs_fini(
     EcsWorld *world);
 
+/** Signal exit
+ * This operation signals that the application should quit. It will cause
+ * ecs_progress to return false.
+ *
+ * @time-complexity: O(1)
+ * @param world The world to quit.
+ */
+REFLECS_EXPORT
+void ecs_quit(
+    EcsWorld *world);
+
 /** Import a reflecs module.
  * Reflecs modules enable reusing components and systems across projects. To
  * use a module, a project needs to link with its library and include its header
@@ -239,7 +250,7 @@ void ecs_import(
  * @param delta_time The time passed since the last frame.
  */
 REFLECS_EXPORT
-void ecs_progress(
+bool ecs_progress(
     EcsWorld *world,
     float delta_time);
 
