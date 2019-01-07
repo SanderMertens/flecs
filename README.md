@@ -67,7 +67,7 @@ To use a module in reflecs, first add it as a dependency to the `project.json`:
 ```json
 {
     "id":"app",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs", "reflecs.components.transform"]
     }
