@@ -27,19 +27,15 @@ Check out the [examples](https://github.com/SanderMertens/reflecs/tree/master/ex
 
 ## Building
 To build reflecs, you need to install bake which is currently only supported on
-Linux and macOS. Install bake with the following command:
+Linux and macOS. See the bake README for installation instructions:
+
+https://github.com/SanderMertens/bake/blob/master/README.md
+
+Then to clone, build and install reflecs, do:
 
 ```
-curl https://corto.io/install-bake | sh
+bake clone SanderMertens/reflecs
 ```
-
-After that, you can simply clone and build the repository by doing:
-
-```
-git clone https://github.com/SanderMertens/reflecs
-bake reflecs
-```
-Note that this also builds the reflecs examples.
 
 ## Getting started
 To create a new reflecs application, first create a new project:
@@ -54,7 +50,7 @@ that it looks like this:
 ```json
 {
     "id":"app",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }
