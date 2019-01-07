@@ -62,7 +62,13 @@ missing definitions, make sure that your project includes the (generated) file
 `bake_config.h`, as it contains the include statements for your dependencies.
 
 ## Modules
-To use a module in reflecs, first add it as a dependency to the `project.json`:
+To use a module in reflecs, first install it on your machine:
+
+```
+bake clone SanderMertens/reflecs-components-transform
+```
+
+Then, add it as a dependency to the `project.json` of your project:
 
 ```json
 {
