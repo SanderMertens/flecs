@@ -4,5 +4,6 @@
     "value": {
         "public": false,
         "use": ["reflecs", "corto.test"]
-    }
+    },
+    "corto": { }
 }

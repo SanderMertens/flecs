@@ -6,22 +6,20 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include <corto/corto.h>
-#include <include/_project.h>
-#include <corto/test/c/c.h>
-#include <corto/c/c.h>
-#include <corto/test/test.h>
-#include <reflecs/reflecs.h>
+#include "bake_config.h"
+
+#define TEST_ETC "etc"
 
 /* $header() */
 /* You can put your own definitions here! */
 /* $end */
 
-#include <include/_type.h>
-#include <include/_interface.h>
-#include <include/_load.h>
-#include <include/_binding.h>
-#include <include/_api.h>
+#include "_type.h"
+#include "_interface.h"
+#include "_load.h"
+#include "_binding.h"
+
+#include "_api.h"
 
 /* $body() */
 /* Enter code that requires types here */
