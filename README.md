@@ -27,27 +27,21 @@ Check out the [examples](https://github.com/SanderMertens/reflecs/tree/master/ex
 
 ## Building
 To build reflecs, you need to install bake which is currently only supported on
-Linux and macOS. Install bake with the following command:
+Linux and macOS. See the bake README for installation instructions:
+
+https://github.com/SanderMertens/bake/blob/master/README.md
+
+Then to clone, build and install reflecs, do:
 
 ```
-curl https://corto.io/install-bake | sh
+bake clone SanderMertens/reflecs
 ```
-
-After that, you can simply clone and build the repository by doing:
-
-```
-git clone https://github.com/SanderMertens/reflecs
-bake reflecs
-```
-Note that this also builds the reflecs examples.
 
 ## Getting started
 To create a new reflecs application, first create a new project:
 
 ```
-mkdir app
-cd app
-bake init
+bake init app
 ```
 
 To add reflecs as a dependency to your application, modify the `project.json` so
@@ -56,36 +50,40 @@ that it looks like this:
 ```json
 {
     "id":"app",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs"]
     }
 }
 ```
 
-In any source file that uses reflecs, make sure to include the following header:
+You can now use the reflecs API in your source code. If you get compiler errors for 
+missing definitions, make sure that your project includes the (generated) file 
+`bake_config.h`, as it contains the include statements for your dependencies.
 
-```c
-#include <reflecs/reflecs.h>
+To run the project, do:
+
+```
+bake run app
 ```
 
 ## Modules
-To use a module in reflecs, first add it as a dependency to the `project.json`:
+To use a module in reflecs, first install it on your machine:
+
+```
+bake clone SanderMertens/reflecs-components-transform
+```
+
+Then, add it as a dependency to the `project.json` of your project:
 
 ```json
 {
     "id":"app",
-    "type":"executable",
+    "type":"application",
     "value": {
         "use": ["reflecs", "reflecs.components.transform"]
     }
 }
-```
-
-Then add its header file to the files where you want to use it:
-
-```c
-#include <reflecs/components/transform/transform.h>
 ```
 
 Then import it in code:
@@ -105,10 +103,12 @@ Module      | Description
 [reflecs.components.transform](https://github.com/SanderMertens/reflecs-components-transform) | Components for positioning, rotating and scaling entities
 [reflecs.components.physics](https://github.com/SanderMertens/reflecs-components-physics) | Components for moving entities
 [reflecs.components.graphics](https://github.com/SanderMertens/reflecs-components-graphics) | Components for describing a drawing canvas
+[reflecs.components.geometry](https://github.com/SanderMertens/reflecs-components-geometry) | Components for describing geometry
 [reflecs.components.http](https://github.com/SanderMertens/reflecs-components-http) | Components for describing an HTTP server with endpoints
 [reflecs.systems.physics](https://github.com/SanderMertens/reflecs-systems-physics) | Simple 2D physics engine with limited 3D features
 [reflecs.systems.civetweb](https://github.com/SanderMertens/reflecs-systems-civetweb) | A civetweb-based implementation of components-http
 [reflecs.systems.admin](https://github.com/SanderMertens/reflecs-systems-admin) | A web-based dashboard for monitoring reflecs performance
+[reflecs.systems.sdl2](https://github.com/SanderMertens/reflecs-systems-sdl2) | An SDL2-based renderer
 
 ## Example
 The following code shows a simple reflecs application:
