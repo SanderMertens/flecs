@@ -472,6 +472,7 @@ EcsWorld *ecs_init(void) {
     world->system_time = 0;
     world->target_fps = 0;
     world->fps_sleep = 0;
+    world->tick = 0;
 
     ecs_stage_init(&world->stage);
 

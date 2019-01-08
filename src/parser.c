@@ -23,13 +23,13 @@ char* parse_complex_elem(
     if (bptr[0] == '!') {
         *oper_kind = EcsOperNot;
         if (!bptr[1]) {
-            return NULL;
+            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
         }
         bptr ++;
     } else if (bptr[0] == '?') {
         *oper_kind = EcsOperOptional;
         if (!bptr[1]) {
-            return NULL;
+            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
         }
         bptr ++;
     }
@@ -45,12 +45,12 @@ char* parse_complex_elem(
         } else if (!strncmp(bptr, "HANDLE", dot - bptr)) {
             *elem_kind = EcsFromHandle;
         } else {
-            return NULL;
+            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
         }
         bptr = dot + 1;
 
         if (!bptr[0]) {
-            return NULL;
+            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
         }
     }
 
@@ -69,7 +69,7 @@ EcsResult has_tables(
     if (elem_kind == EcsFromEntity || elem_kind == EcsFromComponent) {
         *needs_matching = true;
     }
-    
+
     return EcsOk;
 }
 
@@ -119,7 +119,7 @@ EcsResult ecs_parse_component_expr(
 
         if (ch == ',' || ch == '|' || ch == '\0') {
             if (bptr == buffer) {
-                goto error;
+                ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
             }
 
             *bptr = '\0';
@@ -128,31 +128,31 @@ EcsResult ecs_parse_component_expr(
             if (complex_expr) {
                 bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind);
                 if (!bptr) {
-                    goto error;
+                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
                 }
             }
 
             if (oper_kind == EcsOperNot && ch == '|') {
                 /* Cannot combine OR and NOT */
-                goto error;
+                ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
             }
 
             if (!strcmp(bptr, "0")) {
                 if (oper_kind != EcsOperAnd) {
                     /* Cannot combine 0 component with operators */
-                    goto error;
+                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
                 }
 
                 if (elem_kind != EcsFromEntity) {
                     /* Cannot get 0 component from anything other than entity */
-                    goto error;
+                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
                 }
 
                 elem_kind = EcsFromHandle;
             }
 
             if (action(world, elem_kind, oper_kind, bptr, ctx) != EcsOk) {
-                goto error;
+                ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
             }
 
             complex_expr = false;
@@ -161,7 +161,7 @@ EcsResult ecs_parse_component_expr(
             if (ch == '|') {
                 if (elem_kind == EcsFromHandle) {
                     /* Cannot OR handles */
-                    goto error;
+                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
                 }
                 oper_kind = EcsOperOr;
             } else {
@@ -181,7 +181,4 @@ EcsResult ecs_parse_component_expr(
 
     free(buffer);
     return EcsOk;
-error:
-    free(buffer);
-    return EcsError;
 }

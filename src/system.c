@@ -105,7 +105,7 @@ EcsResult ecs_parse_component_action(
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
         if (strcmp(component_id, "0")) {
-            return EcsError;
+            ecs_abort(ECS_INVALID_COMPONENT_ID, component_id);
         }
     }
 
@@ -113,7 +113,7 @@ EcsResult ecs_parse_component_action(
      * supported. The set of system components is expected to be constant, and
      * thus no conditional operators are needed. */
     if (elem_kind == EcsFromSystem && oper_kind != EcsOperAnd) {
-        return EcsError;
+        ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, 0);
     }
 
     /* AND (default) and optional columns are stored the same way */
@@ -245,7 +245,7 @@ EcsHandle ecs_new_system(
     if (!needs_tables && (kind == EcsOnAdd ||
         kind == EcsOnSet))
     {
-        assert(0);
+        ecs_abort(ECS_INVALID_PARAMETERS, 0);
     }
 
     if (needs_tables && (kind == EcsOnFrame || kind == EcsOnDemand)) {
@@ -255,7 +255,7 @@ EcsHandle ecs_new_system(
     {
         result = new_row_system(world, id, kind, needs_tables, sig, action);
     } else {
-        assert(0);
+        ecs_abort(ECS_INVALID_PARAMETERS, 0);
     }
 
     return result;
@@ -270,8 +270,6 @@ void* ecs_set_system_context_ptr(
     EcsSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     if (!system_data) {
         system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
-    } else {
-        assert(0);
     }
 
     system_data->ctx_handle = component;
@@ -290,12 +288,12 @@ void* ecs_get_system_context(
     EcsSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     if (!system_data) {
         system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
-    } else {
-        assert(0);
     }
 
     void *result = ecs_get_ptr(world, system, system_data->ctx_handle);
-    assert(result != NULL);
+    if (!result) {
+        ecs_abort(ECS_MISSING_SYSTEM_CONTEXT, 0);
+    }
 
     return result;
 }

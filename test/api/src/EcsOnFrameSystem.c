@@ -1964,3 +1964,38 @@ void test_EcsOnFrameSystem_tc_system_disable(
 
     ecs_fini(world);
 }
+
+void test_EcsOnFrameSystem_tc_systen_2_component_2_or_w_set(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_COMPONENT(world, Hello);
+
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo | Bar);
+
+    EcsHandle e1 = ecs_new(world, 0);
+    ecs_set(world, e1, Foo, 10);
+    ecs_set(world, e1, Hello, 20);
+
+    EcsHandle e2 = ecs_new(world, 1);
+    ecs_set(world, e2, Bar, 30);
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_system(world, TestSystem_h, 0, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 2);
+    test_assert(ctx.entities[0] == e1);
+    test_assert(ctx.entities[1] == e2);
+    test_assertint(ctx.column[0][0], 10);
+    test_assertint(ctx.column[0][1], 30);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Bar_h);
+
+    ecs_fini(world);
+}

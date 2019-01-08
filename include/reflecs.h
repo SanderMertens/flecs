@@ -1010,6 +1010,45 @@ void* ecs_get_system_context(
   { component __v = __VA_ARGS__; ecs_set_system_context_ptr(world, system, component##_h, &__v); }
 
 
+/* -- Error handling & error codes -- */
+
+/** Throw an error */
+REFLECS_EXPORT
+void ecs_throw(
+    uint32_t error_code,
+    const char *param);
+
+/** Raise last error to terminal */
+REFLECS_EXPORT
+uint32_t ecs_raise(void);
+
+/** Catch last error */
+REFLECS_EXPORT
+uint32_t ecs_catch(void);
+
+/** Get description for error code */
+REFLECS_EXPORT
+const char* ecs_strerror(
+    uint32_t error_code);
+
+/** Abort */
+REFLECS_EXPORT
+void _ecs_abort(
+    uint32_t error_code,
+    const char *param,
+    const char *file,
+    uint32_t line);
+
+#define ecs_abort(error_code, param) _ecs_abort(error_code, param, __FILE__, __LINE__)
+
+#define ECS_INVALID_HANDLE (1)
+#define ECS_INVALID_PARAMETERS (2)
+#define ECS_INVALID_COMPONENT_ID (3)
+#define ECS_INVALID_COMPONENT_EXPRESSION (4)
+#define ECS_UNKNOWN_COMPONENT_ID (5)
+#define ECS_MISSING_SYSTEM_CONTEXT (6)
+#define ECS_NOT_A_COMPONENT (7)
+
 /* -- Utility API -- */
 
 typedef struct EcsIter EcsIter;
@@ -1148,6 +1187,7 @@ void ecs_iter_release(
 /** Utility macro for declaring handles by modules */
 #define EcsDeclareHandle(handles, component)\
     EcsHandle Ecs##component##_h = handles.component; (void)Ecs##component##_h
+
 
 #ifdef __cplusplus
 }
