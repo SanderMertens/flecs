@@ -82,6 +82,7 @@ typedef struct EcsSystem {
     EcsFamily not_from_entity; /* Exclude components from entity */
     EcsFamily not_from_component; /* Exclude components from components */
     EcsHandle ctx_handle;      /* User-defined context for system */
+    EcsSystemKind kind;        /* Kind of system */
     float time_spent;          /* Time spent on running system */
     bool enabled;              /* Is system enabled or not */
 } EcsSystem;
@@ -169,6 +170,8 @@ struct EcsWorld {
 
     EcsArray *table_db;           /* All tables in the world */
     EcsArray *frame_systems;      /* Frame systems */
+    EcsArray *pre_frame_systems;  /* Systems executed before frame systems */
+    EcsArray *post_frame_systems; /* Systems executed after frame systems */
     EcsArray *inactive_systems;   /* Frame systems with empty tables */
     EcsArray *on_demand_systems;  /* On demand systems */
 

@@ -42,6 +42,7 @@ EcsTable* ecs_world_get_table(
 void ecs_world_activate_system(
     EcsWorld *world,
     EcsHandle system,
+    EcsSystemKind kind,
     bool active);
 
 /* Get current thread-specific stage */

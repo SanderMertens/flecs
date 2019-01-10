@@ -977,7 +977,7 @@ void test_EcsOnFrameSystem_tc_system_1_from_component(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, Family1, EcsComponent, Bar);
+    ECS_FAMILY(world, Family1, EcsContainer, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, COMPONENT.Bar);
 
     EcsHandle e1 = ecs_new(world, Family1_h);
@@ -1028,8 +1028,8 @@ void test_EcsOnFrameSystem_tc_system_2_from_component(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_FAMILY(world, Family1, EcsComponent, Bar);
-    ECS_FAMILY(world, Family2, EcsComponent, World);
+    ECS_FAMILY(world, Family1, EcsContainer, Bar);
+    ECS_FAMILY(world, Family2, EcsContainer, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, COMPONENT.Bar, COMPONENT.World);
 
     EcsHandle e1 = ecs_new(world, Family1_h);
@@ -1108,8 +1108,8 @@ void test_EcsOnFrameSystem_tc_system_1_from_component_or2(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_FAMILY(world, Family1, EcsComponent, Bar);
-    ECS_FAMILY(world, Family2, EcsComponent, World);
+    ECS_FAMILY(world, Family1, EcsContainer, Bar);
+    ECS_FAMILY(world, Family2, EcsContainer, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, COMPONENT.Bar|COMPONENT.World);
 
     EcsHandle e1 = ecs_new(world, Family1_h);
@@ -1178,10 +1178,10 @@ void test_EcsOnFrameSystem_tc_system_2_from_component_or2(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_FAMILY(world, Family1, EcsComponent, Foo);
-    ECS_FAMILY(world, Family2, EcsComponent, Bar);
-    ECS_FAMILY(world, Family3, EcsComponent, Hello);
-    ECS_FAMILY(world, Family4, EcsComponent, World);
+    ECS_FAMILY(world, Family1, EcsContainer, Foo);
+    ECS_FAMILY(world, Family2, EcsContainer, Bar);
+    ECS_FAMILY(world, Family3, EcsContainer, Hello);
+    ECS_FAMILY(world, Family4, EcsContainer, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame,
       COMPONENT.Foo|COMPONENT.Bar,
       COMPONENT.Hello|COMPONENT.World);
@@ -1260,7 +1260,7 @@ void test_EcsOnFrameSystem_tc_system_from_component_not(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, Family1, EcsComponent, Bar);
+    ECS_FAMILY(world, Family1, EcsContainer, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, !COMPONENT.Bar);
 
     EcsHandle e1 = ecs_new(world, Family1_h);
@@ -1309,8 +1309,8 @@ void test_EcsOnFrameSystem_tc_system_2_from_component_not(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, Family1, EcsComponent, Foo);
-    ECS_FAMILY(world, Family2, EcsComponent, Bar);
+    ECS_FAMILY(world, Family1, EcsContainer, Foo);
+    ECS_FAMILY(world, Family2, EcsContainer, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, !COMPONENT.Foo, !COMPONENT.Bar);
 
     EcsHandle e1 = ecs_new(world, Family1_h);

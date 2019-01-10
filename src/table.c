@@ -46,7 +46,6 @@ EcsResult ecs_table_init_w_size(
     uint32_t size)
 {
     table->family = family;
-
     table->frame_systems = NULL;
     table->row_params.element_size = size + sizeof(EcsHandle);
     table->row_params.move_action = move_row;
@@ -78,7 +77,8 @@ EcsResult ecs_table_init(
     while (ecs_iter_hasnext(&it)) {
         EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
         EcsComponent *type = ecs_get_ptr(world, h, EcsComponent_h);
-        uint32_t size;
+        uint32_t size = 0;
+
         if (type) {
             size = type->size;
         } else {
@@ -86,6 +86,8 @@ EcsResult ecs_table_init(
                 assert_func(prefab_set == false);
                 ecs_map_set(world->prefab_index, table->family_id, h);
                 prefab_set = true;
+                size = 0;
+            } else if (ecs_has(world, h, EcsContainer_h)) {
                 size = 0;
             } else {
                 /* Invalid entity handle in family */

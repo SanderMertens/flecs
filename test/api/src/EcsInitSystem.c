@@ -78,6 +78,66 @@ void test_EcsInitSystem_tc_init_after_add(
     ecs_fini(world);
 }
 
+void test_EcsInitSystem_tc_init_after_add_2(
+    test_EcsInitSystem this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_SYSTEM(world, TestInit, EcsOnAdd, Bar);
+
+    Context ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    EcsHandle e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    ecs_add(world, e, Foo_h);
+    ecs_add(world, e, Bar_h);
+    ecs_commit(world, e);
+
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assertint(ecs_get(world, e, Bar), 100);
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 1);
+    test_assert(ctx.entities[0] == e);
+    test_assert(ctx.component[0][0] == Bar_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsInitSystem_tc_init_after_add_family(
+    test_EcsInitSystem this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_SYSTEM(world, TestInit, EcsOnAdd, Bar);
+
+    Context ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    EcsHandle e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    ecs_add(world, e, MyFamily_h);
+    ecs_commit(world, e);
+
+    test_assert(ecs_has(world, e, Bar_h));
+    test_assertint(ecs_get(world, e, Bar), 100);
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 1);
+    test_assert(ctx.entities[0] == e);
+    test_assert(ctx.component[0][0] == Bar_h);
+
+    ecs_fini(world);
+}
+
 void test_EcsInitSystem_tc_init_after_add_to_empty(
     test_EcsInitSystem this)
 {

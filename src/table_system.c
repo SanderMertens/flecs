@@ -234,6 +234,7 @@ void add_table(
         /* Column that just passes a handle to the system (no data) */
         } else if (column->kind == EcsFromHandle) {
             component = column->is.component;
+            table_data[i] = 0;
 
         /* Column that retrieves data from a component */
         } else if (column->kind == EcsFromComponent) {
@@ -463,6 +464,8 @@ void ecs_system_activate_table(
 {
     EcsArray *src_array, *dst_array;
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
+    EcsSystemKind kind = system_data->base.kind;
+
     uint32_t table_index = ecs_array_get_index(
         world->table_db, &table_arr_params, table);
 
@@ -491,13 +494,19 @@ void ecs_system_activate_table(
 
     if (active) {
         uint32_t dst_count = ecs_array_count(dst_array);
-        if (dst_count == 1 && system_data->base.enabled) {
-            ecs_world_activate_system(world, system, true);
+        if (kind != EcsOnDemand) {
+            if (dst_count == 1 && system_data->base.enabled) {
+                ecs_world_activate_system(
+                    world, system, kind, true);
+            }
         }
         system_data->tables = dst_array;
     } else {
-        if (src_count == 0) {
-            ecs_world_activate_system(world, system, false);
+        if (kind != EcsOnDemand) {
+            if (src_count == 0) {
+                ecs_world_activate_system(
+                    world, system, kind, false);
+            }
         }
         system_data->inactive_tables = dst_array;
     }
@@ -537,7 +546,7 @@ void ecs_run_job(
 
     do {
         EcsTable *table = ecs_array_get(
-            world->table_db, &table_arr_params, *table_buffer);
+            world->table_db, &table_arr_params, table_buffer[TABLE_INDEX]);
         EcsArray *rows = table->rows;
         void *start = ecs_array_get(rows, &table->row_params, start_index);
         uint32_t count = ecs_array_count(rows);
@@ -601,6 +610,7 @@ EcsHandle ecs_new_table_system(
     system_data->base.signature = sig;
     system_data->base.time_spent = 0;
     system_data->base.columns = ecs_array_new(&column_arr_params, count);
+    system_data->base.kind = kind;
     system_data->table_params.element_size = sizeof(int32_t) * (count + 3);
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
     system_data->component_params.element_size = sizeof(EcsHandle) * count;
@@ -629,6 +639,14 @@ EcsHandle ecs_new_table_system(
         } else {
             elem = ecs_array_add(&world->inactive_systems, &handle_arr_params);
         }
+        *elem = result;
+    } else if (kind == EcsPreFrame) {
+        EcsHandle *elem = ecs_array_add(
+            &world->pre_frame_systems, &handle_arr_params);
+        *elem = result;
+    } else if (kind == EcsPostFrame) {
+        EcsHandle *elem = ecs_array_add(
+            &world->post_frame_systems, &handle_arr_params);
         *elem = result;
     } else if (kind == EcsOnDemand) {
         EcsHandle *elem = ecs_array_add(
@@ -696,7 +714,7 @@ EcsHandle ecs_run_system(
 
     EcsSystemAction action = system_data->base.action;
     EcsArray *tables = system_data->tables;
-    EcsArray *table_db = world->table_db;
+    EcsArray *table_db = real_world->table_db;
     uint32_t table_count = ecs_array_count(tables);
     uint32_t column_count = ecs_array_count(system_data->base.columns);
     uint32_t element_size = system_data->table_params.element_size;

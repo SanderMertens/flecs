@@ -62,6 +62,8 @@ typedef enum EcsResult {
 /** System kinds determine when and how systems are ran */
 typedef enum EcsSystemKind {
     EcsOnFrame,
+    EcsPreFrame,
+    EcsPostFrame,
     EcsOnAdd,
     EcsOnRemove,
     EcsOnSet,
@@ -103,6 +105,7 @@ typedef void (*EcsModuleInitAction)(
 #define EcsTableSystem_h (5)
 #define EcsId_h (6)
 #define EcsHidden_h (7)
+#define EcsContainer_h (8)
 
 
 /* -- World API -- */
@@ -340,6 +343,11 @@ REFLECS_EXPORT
 void ecs_set_target_fps(
     EcsWorld *world,
     float fps);
+
+/** Get last used delta time from world */
+REFLECS_EXPORT
+float ecs_get_delta_time(
+    EcsWorld *world);
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
@@ -1048,6 +1056,8 @@ void _ecs_abort(
 #define ECS_UNKNOWN_COMPONENT_ID (5)
 #define ECS_MISSING_SYSTEM_CONTEXT (6)
 #define ECS_NOT_A_COMPONENT (7)
+#define ECS_FAMILY_IN_USE (8)
+#define ECS_INTERNAL_ERROR (9)
 
 /* -- Utility API -- */
 

@@ -106,10 +106,16 @@ void get_memory_stats(
     ecs_map_memory(world->add_systems, &memory->systems.allocd, &memory->systems.used);
     ecs_map_memory(world->set_systems, &memory->systems.allocd, &memory->systems.used);
     ecs_map_memory(world->remove_systems, &memory->systems.allocd, &memory->systems.used);
+
     ecs_array_memory(world->frame_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_array_memory(world->pre_frame_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_array_memory(world->post_frame_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->inactive_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->on_demand_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+
     calculate_system_stats(world, world->frame_systems, &memory->systems.allocd, &memory->systems.used);
+    calculate_system_stats(world, world->pre_frame_systems, &memory->systems.allocd, &memory->systems.used);
+    calculate_system_stats(world, world->post_frame_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->inactive_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->on_demand_systems, &memory->systems.allocd, &memory->systems.used);
 
@@ -336,6 +342,10 @@ void ecs_get_stats(
     stats->system_count = 0;
     stats->system_count += system_stats_arr(
         world, &stats->frame_systems, world->frame_systems, true);
+    stats->system_count += system_stats_arr(
+        world, &stats->frame_systems, world->pre_frame_systems, true);
+    stats->system_count += system_stats_arr(
+        world, &stats->frame_systems, world->post_frame_systems, true);
     stats->system_count += system_stats_arr(
         world, &stats->frame_systems, world->inactive_systems, false);
     stats->system_count += system_stats_arr(

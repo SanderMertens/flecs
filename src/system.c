@@ -29,6 +29,7 @@ EcsHandle new_row_system(
     system_data->base.action = action;
     system_data->base.signature = sig;
     system_data->base.enabled = true;
+    system_data->base.kind = kind;
     system_data->components = ecs_array_new(&handle_arr_params, count);
 
     if (ecs_parse_component_expr(
@@ -67,6 +68,9 @@ EcsHandle new_row_system(
     }
 
     if (index) {
+        if (ecs_map_has(index, family_id, NULL)) {
+            ecs_abort(ECS_FAMILY_IN_USE, id);
+        }
         assert(!ecs_map_has(index, family_id, NULL));
         ecs_map_set64(index, family_id, result);
     } else {
@@ -248,7 +252,9 @@ EcsHandle ecs_new_system(
         ecs_abort(ECS_INVALID_PARAMETERS, 0);
     }
 
-    if (needs_tables && (kind == EcsOnFrame || kind == EcsOnDemand)) {
+    if (needs_tables && (kind == EcsOnFrame || kind == EcsPreFrame ||
+                         kind == EcsPostFrame || kind == EcsOnDemand))
+    {
         result = ecs_new_table_system(world, id, kind, sig, action);
     } else if (!needs_tables ||
         (kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet))
@@ -336,13 +342,15 @@ void ecs_enable(
             if (enabled) {
                 if (!system_data->enabled) {
                     if (ecs_array_count(table_system->tables)) {
-                        ecs_world_activate_system(world, system, true);
+                        ecs_world_activate_system(
+                            world, system, table_system->base.kind, true);
                     }
                 }
             } else {
                 if (system_data->enabled) {
                     if (ecs_array_count(table_system->tables)) {
-                        ecs_world_activate_system(world, system, false);
+                        ecs_world_activate_system(
+                            world, system, table_system->base.kind, false);
                     }
                 }
             }

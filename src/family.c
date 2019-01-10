@@ -398,6 +398,7 @@ EcsHandle ecs_new_family(
 
     EcsHandle family_entity = ecs_map_get64(
         world->family_handles, family.family);
+        
     if (family_entity) {
         EcsId *id_ptr = ecs_get_ptr(world, family_entity, EcsId_h);
 

@@ -130,6 +130,8 @@ test.suite EcsInitSystem {
     tc_init_after_new_w_count()
     tc_init_after_add_to_empty()
     tc_init_after_add()
+    tc_init_after_add_2()
+    tc_init_after_add_family()
     tc_init_after_new_in_progress()
     tc_init_after_add_in_progress()
     tc_init_2_components()

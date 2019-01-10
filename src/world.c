@@ -149,6 +149,8 @@ EcsTable* create_table(
     uint32_t index = ecs_array_get_index(*table_db, &table_arr_params, result);
     ecs_map_set64(table_index, family_id, index + 1);
 
+    notify_create_table(world, stage, world->pre_frame_systems, result);
+    notify_create_table(world, stage, world->post_frame_systems, result);
     notify_create_table(world, stage, world->frame_systems, result);
     notify_create_table(world, stage, world->inactive_systems, result);
     notify_create_table(world, stage, world->on_demand_systems, result);
@@ -158,18 +160,6 @@ EcsTable* create_table(
     return result;
 }
 
-
-/** Initialize size of new components to 0 */
-static
-void init_component(
-    EcsRows *rows)
-{
-    void *row;
-    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsComponent *data = ecs_column(rows, row, 0);
-        data->size = 0;
-    }
-}
 
 static
 void clean_families(
@@ -299,6 +289,24 @@ EcsTable* ecs_world_get_table(
     return NULL;
 }
 
+static
+EcsArray** frame_system_array(
+    EcsWorld *world,
+    EcsSystemKind kind)
+{
+    if (kind == EcsOnFrame) {
+        return &world->frame_systems;
+    } else if (kind == EcsPreFrame) {
+        return &world->pre_frame_systems;
+    } else if (kind == EcsPostFrame) {
+        return &world->post_frame_systems;
+    } else {
+        ecs_abort(ECS_INTERNAL_ERROR, 0);
+    }
+
+    return NULL;
+}
+
 /** Inactive systems are systems that either:
  * - are not enabled
  * - matched with no tables
@@ -310,15 +318,16 @@ EcsTable* ecs_world_get_table(
 void ecs_world_activate_system(
     EcsWorld *world,
     EcsHandle system,
+    EcsSystemKind kind,
     bool active)
 {
     EcsArray *src_array, *dst_array;
 
     if (active) {
         src_array = world->inactive_systems;
-        dst_array = world->frame_systems;
-    } else {
-        src_array = world->frame_systems;
+        dst_array = *frame_system_array(world, kind);
+     } else {
+        src_array = *frame_system_array(world, kind);
         dst_array = world->inactive_systems;
     }
 
@@ -340,7 +349,7 @@ void ecs_world_activate_system(
         &dst_array, src_array, &handle_arr_params, i);
 
     if (active) {
-        world->frame_systems = dst_array;
+         *frame_system_array(world, kind) = dst_array;
     } else {
         world->inactive_systems = dst_array;
     }
@@ -434,6 +443,10 @@ EcsWorld *ecs_init(void) {
         &table_arr_params, ECS_WORLD_INITIAL_TABLE_COUNT);
     world->frame_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+    world->pre_frame_systems = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+    world->post_frame_systems = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
     world->inactive_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
     world->on_demand_systems = ecs_array_new(
@@ -483,6 +496,7 @@ EcsWorld *ecs_init(void) {
     assert_func(new_builtin_component(world, sizeof(EcsTableSystem)) == EcsTableSystem_h);
     assert_func(new_builtin_component(world, sizeof(EcsId)) == EcsId_h);
     assert_func(new_builtin_component(world, 0) == EcsHidden_h);
+    assert_func(new_builtin_component(world, 0) == EcsContainer_h);
 
     add_builtin_id(world, EcsComponent_h, "EcsComponent");
     add_builtin_id(world, EcsFamilyComponent_h, "EcsFamilyComponent");
@@ -491,6 +505,7 @@ EcsWorld *ecs_init(void) {
     add_builtin_id(world, EcsTableSystem_h, "EcsTableSystem");
     add_builtin_id(world, EcsId_h, "EcsId");
     add_builtin_id(world, EcsHidden_h, "EcsHidden");
+    add_builtin_id(world, EcsContainer_h, "EcsContainer");
 
     world->component_family = get_builtin_family(world, EcsComponent_h);
     world->family_family = get_builtin_family(world, EcsFamilyComponent_h);
@@ -508,18 +523,11 @@ EcsWorld *ecs_init(void) {
                "EcsTableSystem", remove_systems);
     assert(world->deinit_table_system != 0);
 
-    EcsHandle init_component_system = ecs_new_system(
-        world, "EcsInitComponent", EcsOnAdd, "EcsComponent", init_component);
-    assert(init_component_system != 0);
-
     ecs_add(world, world->deinit_row_system, EcsHidden_h);
     ecs_commit(world, world->deinit_row_system);
 
     ecs_add(world, world->deinit_table_system, EcsHidden_h);
     ecs_commit(world, world->deinit_table_system);
-
-    ecs_add(world, init_component_system, EcsHidden_h);
-    ecs_commit(world, init_component_system);
 
     return world;
 }
@@ -638,10 +646,17 @@ bool ecs_progress(
 
     world->delta_time = delta_time;
 
+    /* Run pre-frame systems */
+    uint32_t i, system_count = ecs_array_count(world->pre_frame_systems);
+    EcsHandle *buffer = ecs_array_buffer(world->pre_frame_systems);
+    for (i = 0; i < system_count; i ++) {
+        ecs_run_system(world, buffer[i], delta_time, 0, NULL);
+    }
+
     /* Run periodic table systems */
-    uint32_t i, system_count = ecs_array_count(world->frame_systems);
+    system_count = ecs_array_count(world->frame_systems);
     if (system_count) {
-        EcsHandle *buffer = ecs_array_buffer(world->frame_systems);
+        buffer = ecs_array_buffer(world->frame_systems);
         bool has_threads = ecs_array_count(world->worker_threads) != 0;
 
         world->in_progress = true;
@@ -664,7 +679,7 @@ bool ecs_progress(
         }
     }
 
-    /* Run periodic row systems */
+    /* Run periodic row systems (not matched to any entity) */
     system_count = ecs_array_count(world->tasks);
     if (system_count) {
         world->in_progress = true;
@@ -675,7 +690,14 @@ bool ecs_progress(
         }
     }
 
-    /* Proile system time & merge if systems were processed */
+    /* Run post-frame systems */
+    system_count = ecs_array_count(world->post_frame_systems);
+    buffer = ecs_array_buffer(world->post_frame_systems);
+    for (i = 0; i < system_count; i ++) {
+        ecs_run_system(world, buffer[i], delta_time, 0, NULL);
+    }
+
+    /* Profile system time & merge if systems were processed */
     if (world->in_progress) {
         if (measure_frame_time) {
             struct timespec temp = world->frame_start;
@@ -708,6 +730,12 @@ bool ecs_progress(
     }
 
     return !world->should_quit;
+}
+
+float ecs_get_delta_time(
+    EcsWorld *world)
+{
+    return world->delta_time;
 }
 
 void ecs_quit(

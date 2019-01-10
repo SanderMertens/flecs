@@ -72,6 +72,10 @@ const char* ecs_strerror(
         return "unknown component id";
     case ECS_NOT_A_COMPONENT:
         return "handle is not a component";
+    case ECS_FAMILY_IN_USE:
+        return "family specified by system is already in use";
+    case ECS_INTERNAL_ERROR:
+        return "internal error";
     }
 
     return "unknown error code";
