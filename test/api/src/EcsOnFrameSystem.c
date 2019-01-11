@@ -1371,8 +1371,8 @@ void test_EcsOnFrameSystem_tc_system_1_optional_not_set(
     test_assert(e1 != 0);
     test_assert(e2 != 0);
 
-    ecs_set(world, e1, Foo, 10);
-    ecs_set(world, e2, Foo, 20);
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
 
     ecs_set_context(world, &ctx);
 
@@ -1410,10 +1410,10 @@ void test_EcsOnFrameSystem_tc_system_1_optional_set(
     test_assert(e1 != 0);
     test_assert(e2 != 0);
 
-    ecs_set(world, e1, Foo, 10);
-    ecs_set(world, e1, Bar, 15);
-    ecs_set(world, e2, Foo, 20);
-    ecs_set(world, e2, Bar, 25);
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e1, Bar, {15});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e2, Bar, {25});
 
     ecs_set_context(world, &ctx);
 
@@ -1452,10 +1452,10 @@ void test_EcsOnFrameSystem_tc_system_1_optional_set_1_not_set(
     test_assert(e1 != 0);
     test_assert(e2 != 0);
 
-    ecs_set(world, e1, Foo, 10);
-    ecs_set(world, e1, Bar, 15);
-    ecs_set(world, e2, Foo, 20);
-    ecs_set(world, e2, Bar, 25);
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e1, Bar, {15});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e2, Bar, {25});
 
     ecs_set_context(world, &ctx);
 
@@ -1497,8 +1497,8 @@ void test_EcsOnFrameSystem_tc_system_2_optional_not_set(
     test_assert(e1 != 0);
     test_assert(e2 != 0);
 
-    ecs_set(world, e1, Foo, 10);
-    ecs_set(world, e2, Foo, 20);
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
 
     ecs_set_context(world, &ctx);
 
@@ -1541,12 +1541,12 @@ void test_EcsOnFrameSystem_tc_system_2_optional_set(
     test_assert(e1 != 0);
     test_assert(e2 != 0);
 
-    ecs_set(world, e1, Foo, 10);
-    ecs_set(world, e1, Bar, 15);
-    ecs_set(world, e1, Hello, 18);
-    ecs_set(world, e2, Foo, 20);
-    ecs_set(world, e2, Bar, 25);
-    ecs_set(world, e2, Hello, 28);
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e1, Bar, {15});
+    ecs_set(world, e1, Hello, {18});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e2, Bar, {25});
+    ecs_set(world, e2, Hello, {28});
 
     ecs_set_context(world, &ctx);
 
@@ -1591,7 +1591,7 @@ void test_EcsOnFrameSystem_tc_system_1_from_system(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    ecs_set(world, TestSystem_h, Bar, 60);
+    ecs_set(world, TestSystem_h, Bar, {60});
 
     *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
     *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
@@ -1978,11 +1978,11 @@ void test_EcsOnFrameSystem_tc_systen_2_component_2_or_w_set(
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo | Bar);
 
     EcsHandle e1 = ecs_new(world, 0);
-    ecs_set(world, e1, Foo, 10);
-    ecs_set(world, e1, Hello, 20);
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e1, Hello, {20});
 
     EcsHandle e2 = ecs_new(world, 1);
-    ecs_set(world, e2, Bar, 30);
+    ecs_set(world, e2, Bar, {30});
 
     ecs_set_context(world, &ctx);
 

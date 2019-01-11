@@ -68,7 +68,7 @@ void test_EcsClone_tc_clone_1_component_value(
     EcsHandle e = ecs_new(world, Foo_h);
     test_assert(e != 0);
 
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, Foo, {10});
     test_assertint(ecs_get(world, e, Foo), 10);
 
     EcsHandle clone = ecs_clone(world, e, true);
@@ -101,7 +101,7 @@ void test_EcsClone_tc_clone_1_component_value_in_progress(
     EcsHandle e = ecs_new(world, Foo_h);
     test_assert(e != 0);
 
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, Foo, {10});
     test_assertint(ecs_get(world, e, Foo), 10);
 
     EcsHandle clone = 0;
@@ -125,7 +125,7 @@ void CloneOneValueOverrideInProgress(EcsRows *rows) {
         Foo *foo = ecs_column(rows, row, 0);
 
         EcsHandle clone = ecs_clone(rows->world, entity, true);
-        ecs_set(rows->world, clone, Foo, *foo * 2);
+        ecs_set(rows->world, clone, Foo, {*foo * 2});
         *ctx = clone;
     }
 }
@@ -142,7 +142,7 @@ void test_EcsClone_tc_clone_1_component_value_in_progress_override_w_set(
     EcsHandle e = ecs_new(world, Foo_h);
     test_assert(e != 0);
 
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, Foo, {10});
     test_assertint(ecs_get(world, e, Foo), 10);
 
     EcsHandle clone = 0;
@@ -229,9 +229,9 @@ void test_EcsClone_tc_clone_2_component_value(
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
 
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, Foo, {10});
     test_assertint(ecs_get(world, e, Foo), 10);
-    ecs_set(world, e, Bar, 20);
+    ecs_set(world, e, Bar, {20});
     test_assertint(ecs_get(world, e, Bar), 20);
 
 
@@ -269,9 +269,9 @@ void test_EcsClone_tc_clone_2_component_value_in_progress(
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
 
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, Foo, {10});
     test_assertint(ecs_get(world, e, Foo), 10);
-    ecs_set(world, e, Bar, 20);
+    ecs_set(world, e, Bar, {20});
     test_assertint(ecs_get(world, e, Bar), 20);
 
     EcsHandle clone = 0;
@@ -299,8 +299,8 @@ void CloneTwoValueOverrideInProgress(EcsRows *rows) {
         Bar *bar = ecs_column(rows, row, 1);
 
         EcsHandle clone = ecs_clone(rows->world, entity, true);
-        ecs_set(rows->world, clone, Foo, *foo * 2);
-        ecs_set(rows->world, clone, Bar, *bar * 2);
+        ecs_set(rows->world, clone, Foo, {*foo * 2});
+        ecs_set(rows->world, clone, Bar, {*bar * 2});
         *ctx = clone;
     }
 }
@@ -319,9 +319,9 @@ void test_EcsClone_tc_clone_2_component_value_in_progress_override_w_set(
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
 
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, Foo, {10});
     test_assertint(ecs_get(world, e, Foo), 10);
-    ecs_set(world, e, Bar, 20);
+    ecs_set(world, e, Bar, {20});
     test_assertint(ecs_get(world, e, Bar), 20);
 
     EcsHandle clone = 0;

@@ -29,7 +29,7 @@ void test_EcsSetSystem_tc_set_after_new_empty(
     EcsHandle h = ecs_new(world, 0);
 
     test_assertint(set_system_called, 0);
-    ecs_set(world, h, Foo, 10);
+    ecs_set(world, h, Foo, {10});
 
     test_assertint(set_system_called, 1);
     test_assertint(ecs_get(world, h, Foo), 11);
@@ -50,7 +50,7 @@ void test_EcsSetSystem_tc_set_after_new_nonempty(
     EcsHandle h = ecs_new(world, Bar_h);
 
     test_assertint(set_system_called, 0);
-    ecs_set(world, h, Foo, 10);
+    ecs_set(world, h, Foo, {10});
 
     test_assertint(set_system_called, 1);
     test_assertint(ecs_get(world, h, Foo), 11);
@@ -70,7 +70,7 @@ void test_EcsSetSystem_tc_set_existing_components(
     EcsHandle h = ecs_new(world, Foo_h);
 
     test_assertint(set_system_called, 0);
-    ecs_set(world, h, Foo, 10);
+    ecs_set(world, h, Foo, {10});
 
     test_assertint(set_system_called, 1);
     test_assertint(ecs_get(world, h, Foo), 11);
@@ -87,7 +87,7 @@ void test_EcsSetSystem_tc_set_implicit_new(
     ECS_SYSTEM(world, Set, EcsOnSet, Foo);
 
     test_assertint(set_system_called, 0);
-    ecs_set(world, 0, Foo, 10);
+    ecs_set(world, 0, Foo, {10});
 
     test_assertint(set_system_called, 1);
 
@@ -106,13 +106,13 @@ void test_EcsSetSystem_tc_set_twice(
     EcsHandle h = ecs_new(world, 0);
 
     test_assertint(set_system_called, 0);
-    ecs_set(world, h, Foo, 10);
+    ecs_set(world, h, Foo, {10});
 
     test_assertint(set_system_called, 1);
     test_assertint(ecs_get(world, h, Foo), 11);
 
     test_assertint(set_system_called, 1);
-    ecs_set(world, h, Foo, 11);
+    ecs_set(world, h, Foo, {11});
 
     test_assertint(set_system_called, 2);
     test_assertint(ecs_get(world, h, Foo), 12);
@@ -144,7 +144,7 @@ void SetFoo(EcsRows *rows) {
         Foo *v = ecs_column(rows, row, 0);
         (*v) ++;
 
-        ecs_set(world, entity, Bar, 20);
+        ecs_set(world, entity, Bar, {20});
     }
 }
 
@@ -166,7 +166,7 @@ void test_EcsSetSystem_tc_set_in_on_set(
     EcsHandle e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, Foo, {10});
 
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
@@ -219,7 +219,7 @@ void test_EcsSetSystem_tc_on_add_in_on_set(
     EcsHandle e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, Foo, {10});
 
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));

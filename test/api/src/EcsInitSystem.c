@@ -62,7 +62,7 @@ void test_EcsInitSystem_tc_init_after_add(
     EcsHandle e = ecs_new(world, Foo_h);
     test_assert(e != 0);
 
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, Foo, {10});
 
     ecs_add(world, e, Bar_h);
     ecs_commit(world, e);
@@ -324,7 +324,7 @@ void AddInInit(EcsRows *rows) {
         EcsHandle entity = ecs_entity(row);
         ecs_add(world, entity, int_h);
         ecs_commit(world, entity);
-        ecs_set(world, entity, int, 10);
+        ecs_set(world, entity, int, {10});
     }
 }
 
@@ -361,7 +361,7 @@ void AddInInitPrefab(EcsRows *rows) {
         ecs_add(world, entity, int_h);
         ecs_commit(world, entity);
         int prefab_value = ecs_get(world, entity, int);
-        ecs_set(world, entity, int, prefab_value + 10);
+        ecs_set(world, entity, int, {prefab_value + 10});
     }
 }
 
@@ -377,7 +377,7 @@ void test_EcsInitSystem_tc_add_in_init_from_prefab(
     ECS_FAMILY(world, MyFamily, Foo, MyPrefab);
     ECS_SYSTEM(world, AddInInitPrefab, EcsOnAdd, Foo);
 
-    ecs_set(world, MyPrefab_h, Bar, 20);
+    ecs_set(world, MyPrefab_h, Bar, {20});
 
     HandleCtx ctx = {.h = Bar_h};
     ecs_set_context(world, &ctx);
@@ -407,7 +407,7 @@ void NewNode(EcsRows *rows) {
         Node *node = ecs_column(rows, row, 0);
         node->value = 10;
         node->entity = ecs_new(world, int_h);
-        ecs_set(world, node->entity, int, 20);
+        ecs_set(world, node->entity, int, {20});
     }
 }
 
@@ -560,7 +560,7 @@ void test_EcsInitSystem_tc_init_after_add_in_progress(
 
     EcsHandle e = ecs_new(world, Foo_h);
     test_assert(e != 0);
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, Foo, {10});
     test_assertint(ecs_get(world, e, Foo), 10);
 
     ecs_progress(world, 0);
@@ -612,7 +612,7 @@ void test_EcsInitSystem_tc_deinit_after_delete_in_progress(
     test_assert(e2 != 0);
 
     int counter = 1;
-    ecs_set(world, e2, IntPtr, &counter);
+    ecs_set(world, e2, IntPtr, {&counter});
     ecs_set(world, e, Node, {.value = 0, .entity = e2});
 
     ecs_progress(world, 0);
@@ -653,8 +653,8 @@ void test_EcsInitSystem_tc_deinit_after_remove_in_progress(
     test_assert(e != 0);
 
     int counter = 1;
-    ecs_set(world, e, IntPtr, &counter);
-    ecs_set(world, e, Foo, 10);
+    ecs_set(world, e, IntPtr, {&counter});
+    ecs_set(world, e, Foo, {10});
 
     HandleCtx ctx = {.h = IntPtr_h};
     ecs_set_context(world, &ctx);

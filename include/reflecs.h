@@ -693,7 +693,7 @@ EcsHandle ecs_set_ptr(
     void *ptr);
 
 #define ecs_set(world, entity, component, ...)\
-  { component __v = __VA_ARGS__; ecs_set_ptr(world, entity, component##_h, &__v); }
+    ecs_set_ptr(world, entity, component##_h, &(component)__VA_ARGS__);
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the
