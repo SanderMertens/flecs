@@ -35,7 +35,7 @@ typedef int32_t Health;
  * on player, region or platoon */
 static
 void adopt(EcsWorld *world, EcsHandle object, EcsHandle parent) {
-    ecs_add(world, object, parent);
+    ecs_stage_add(world, object, parent);
     ecs_commit(world, object);
 }
 
@@ -45,9 +45,9 @@ void adopt(EcsWorld *world, EcsHandle object, EcsHandle parent) {
 static
 EcsHandle create(EcsWorld *world, EcsHandle parent, const char *id, EcsHandle type) {
     EcsHandle result = ecs_new(world, type);
-    ecs_add(world, result, EcsComponent_h);
+    ecs_stage_add(world, result, EcsComponent_h);
     if (parent)
-        ecs_add(world, result, parent);
+        ecs_stage_add(world, result, parent);
     ecs_set(world, result, EcsId, id);
     ecs_commit(world, result);
     return result;

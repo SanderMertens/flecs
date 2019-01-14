@@ -46,9 +46,9 @@ int main(int argc, char *argv[]) {
     int i;
     for (i = 0; i < 10; i ++) {
         if (i < 6) {
-            ecs_add(world, handles[i], index_a);
+            ecs_stage_add(world, handles[i], index_a);
         } else {
-            ecs_add(world, handles[i], index_b);
+            ecs_stage_add(world, handles[i], index_b);
         }
         ecs_commit(world, handles[i]);
     }

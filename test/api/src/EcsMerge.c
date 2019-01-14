@@ -27,7 +27,7 @@ void MergeAdd(EcsRows *rows) {
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
         Foo *foo = ecs_column(rows, row, 0);
-        ecs_add(world, entity, ctx->component);
+        ecs_stage_add(world, entity, ctx->component);
         ecs_commit(world, entity);
         ecs_set(world, entity, Bar, {foo->x * 2});
         foo->x += 2;
@@ -93,8 +93,8 @@ void MergeAdd2(EcsRows *rows) {
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
         Foo *foo = ecs_column(rows, row, 0);
-        ecs_add(world, entity, ctx->component);
-        ecs_add(world, entity, ctx->component2);
+        ecs_stage_add(world, entity, ctx->component);
+        ecs_stage_add(world, entity, ctx->component2);
         ecs_commit(world, entity);
         ecs_set(world, entity, Bar, {foo->x * 2});
         ecs_set(world, entity, Hello, {foo->x * 3});
@@ -220,8 +220,8 @@ void MergeAddRemove(EcsRows *rows) {
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
         Foo *foo = ecs_column(rows, row, 0);
-        ecs_add(world, entity, ctx->component);
-        ecs_remove(world, entity, ctx->component);
+        ecs_stage_add(world, entity, ctx->component);
+        ecs_stage_remove(world, entity, ctx->component);
         ecs_commit(world, entity);
         foo->x += 2;
     }
@@ -280,7 +280,7 @@ void MergeRemove(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        ecs_remove(world, entity, ctx->component);
+        ecs_stage_remove(world, entity, ctx->component);
         ecs_commit(world, entity);
     }
 }
@@ -331,8 +331,8 @@ void MergeRemove2(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        ecs_remove(world, entity, ctx->component);
-        ecs_remove(world, entity, ctx->component2);
+        ecs_stage_remove(world, entity, ctx->component);
+        ecs_stage_remove(world, entity, ctx->component2);
         ecs_commit(world, entity);
     }
 }
@@ -385,7 +385,7 @@ void MergeAddN(EcsRows *rows) {
         Foo *foo = ecs_column(rows, row, 0);
 
         if (!ecs_has(world, entity, Bar_h)) {
-            ecs_add(world, entity, Bar_h);
+            ecs_stage_add(world, entity, Bar_h);
             ecs_commit(world, entity);
             ecs_set(world, entity, Bar, {0});
         }
@@ -442,10 +442,10 @@ void MergeAddRemoveN(EcsRows *rows) {
         Foo *foo = ecs_column(rows, row, 0);
 
         if (!ecs_has(world, entity, Bar_h)) {
-            ecs_add(world, entity, Bar_h);
+            ecs_stage_add(world, entity, Bar_h);
             foo->x += 1;
         } else {
-            ecs_remove(world, entity, Bar_h);
+            ecs_stage_remove(world, entity, Bar_h);
         }
 
         ecs_commit(world, entity);

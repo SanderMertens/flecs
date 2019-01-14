@@ -343,6 +343,8 @@ EcsHandle ecs_family_contains(
 
             if (h1 != h2) {
                 if (match_all) return 0;
+            } else if (!match_all) {
+                return h1;
             }
         } else {
             if (!match_all) return h1;
@@ -398,7 +400,7 @@ EcsHandle ecs_new_family(
 
     EcsHandle family_entity = ecs_map_get64(
         world->family_handles, family.family);
-        
+
     if (family_entity) {
         EcsId *id_ptr = ecs_get_ptr(world, family_entity, EcsId_h);
 

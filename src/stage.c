@@ -163,7 +163,7 @@ void ecs_stage_merge(
 
 /* -- Public API -- */
 
-EcsResult ecs_add(
+EcsResult ecs_stage_add(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component)
@@ -172,7 +172,7 @@ EcsResult ecs_add(
     return stage_components(world, stage, entity, component, stage->add_stage);
 }
 
-EcsResult ecs_remove(
+EcsResult ecs_stage_remove(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component)
@@ -180,4 +180,36 @@ EcsResult ecs_remove(
     EcsStage *stage = ecs_get_stage(&world);
     return stage_components(
         world, stage, entity, component, stage->remove_stage);
+}
+
+EcsResult ecs_add(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle component)
+{
+    if (ecs_stage_add(world, entity, component)) {
+        return EcsError;
+    }
+
+    if (ecs_commit(world, entity)) {
+        return EcsError;
+    }
+
+    return EcsOk;
+}
+
+EcsResult ecs_remove(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle component)
+{
+    if (ecs_stage_remove(world, entity, component)) {
+        return EcsError;
+    }
+
+    if (ecs_commit(world, entity)) {
+        return EcsError;
+    }
+
+    return EcsOk;
 }

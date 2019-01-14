@@ -64,7 +64,7 @@ void test_EcsInitSystem_tc_init_after_add(
 
     ecs_set(world, e, Foo, {10});
 
-    ecs_add(world, e, Bar_h);
+    ecs_stage_add(world, e, Bar_h);
     ecs_commit(world, e);
 
     test_assertint(ecs_get(world, e, Foo), 10);
@@ -94,8 +94,8 @@ void test_EcsInitSystem_tc_init_after_add_2(
     EcsHandle e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_add(world, e, Foo_h);
-    ecs_add(world, e, Bar_h);
+    ecs_stage_add(world, e, Foo_h);
+    ecs_stage_add(world, e, Bar_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Bar_h));
@@ -125,7 +125,7 @@ void test_EcsInitSystem_tc_init_after_add_family(
     EcsHandle e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_add(world, e, MyFamily_h);
+    ecs_stage_add(world, e, MyFamily_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Bar_h));
@@ -154,7 +154,7 @@ void test_EcsInitSystem_tc_init_after_add_to_empty(
     EcsHandle e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_add(world, e, Bar_h);
+    ecs_stage_add(world, e, Bar_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Bar_h));
@@ -299,7 +299,7 @@ void test_EcsInitSystem_tc_deinit_after_remove(
     test_assert(e != 0);
 
     test_assertint(ctx.count, 0);
-    ecs_remove(world, e, Foo_h);
+    ecs_stage_remove(world, e, Foo_h);
     ecs_commit(world, e);
 
     test_assertint(ctx.count, 1);
@@ -322,7 +322,7 @@ void AddInInit(EcsRows *rows) {
     EcsHandle int_h = ctx->h;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        ecs_add(world, entity, int_h);
+        ecs_stage_add(world, entity, int_h);
         ecs_commit(world, entity);
         ecs_set(world, entity, int, {10});
     }
@@ -358,7 +358,7 @@ void AddInInitPrefab(EcsRows *rows) {
     EcsHandle int_h = ctx->h;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        ecs_add(world, entity, int_h);
+        ecs_stage_add(world, entity, int_h);
         ecs_commit(world, entity);
         int prefab_value = ecs_get(world, entity, int);
         ecs_set(world, entity, int, {prefab_value + 10});
@@ -446,7 +446,7 @@ void RemoveInInit(EcsRows *rows) {
         EcsHandle entity = ecs_entity(row);
         int *v1 = ecs_column(rows, row, 0);
         int *v2 = ecs_column(rows, row, 1);
-        ecs_remove(world, entity, int_h);
+        ecs_stage_remove(world, entity, int_h);
         ecs_commit(world, entity);
         (*v1) = 10;
         (*v2) = 20;
@@ -538,7 +538,7 @@ void AddInProgress(EcsRows *rows) {
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
         int *v = ecs_column(rows, row, 0);
-        ecs_add(world, entity, int_h);
+        ecs_stage_add(world, entity, int_h);
         ecs_commit(world, entity);
         (*v) ++;
     }
@@ -631,7 +631,7 @@ void RemoveInProgress(EcsRows *rows) {
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
         int *v = ecs_column(rows, row, 0);
-        ecs_remove(world, entity, ctx->h);
+        ecs_stage_remove(world, entity, ctx->h);
         ecs_commit(world, entity);
         (*v) ++;
     }
@@ -786,7 +786,7 @@ void test_EcsInitSystem_tc_on_add_disable(
     test_assert(called == false);
 
     EcsHandle e2 = ecs_new(world, 0);
-    ecs_add(world, e2, Foo_h);
+    ecs_stage_add(world, e2, Foo_h);
     ecs_commit(world, e2);
     test_assert(called == false);
 
@@ -821,7 +821,7 @@ void test_EcsInitSystem_tc_on_remove_disable(
     test_assert(called == false);
 
     EcsHandle e2 = ecs_new(world, Foo_h);
-    ecs_remove(world, e2, Foo_h);
+    ecs_stage_remove(world, e2, Foo_h);
     ecs_commit(world, e2);
     test_assert(called == false);
 

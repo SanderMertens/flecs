@@ -212,8 +212,8 @@ void ecs_import(
  * - ecs_new_w_count
  * - ecs_clone
  * - ecs_delete
- * - ecs_add
- * - ecs_remove
+ * - ecs_stage_add
+ * - ecs_stage_remove
  * - ecs_commit
  * - ecs_set
  *
@@ -440,7 +440,7 @@ void ecs_dim_family(
  * Component data is stored in tables, with one table for each combination of
  * components. An entity is stored in the table that matches its component list.
  * When components are added or removed from an entity, the entity is moved to
- * another table. See ecs_add, ecs_stage and ecs_commit for more information.
+ * another table. See ecs_stage_add, ecs_stage and ecs_commit for more information.
  *
  * Entities are accessed through handles instead of direct pointers. Certain
  * operations may move an entity in memory. Handles provide a safe mechanism for
@@ -500,7 +500,7 @@ EcsHandle ecs_clone(
  *
  * A prefab is a regular entity, with the only difference that it has the
  * EcsPrefab component. That means that all the regular API functions like
- * ecs_get_ptr, ecs_add, ecs_commit etc. can be used on prefabs.
+ * ecs_get_ptr, ecs_stage_add, ecs_commit etc. can be used on prefabs.
  *
  * The ECS_PREFAB macro wraps around this function.
  *
@@ -510,7 +510,7 @@ EcsHandle ecs_clone(
  * be many entities that reuse component records from the prefab.
  *
  * Entities can override components from a prefab by adding the component with
- * ecs_add. When a component is overridden, its value will be copied from the
+ * ecs_stage_add. When a component is overridden, its value will be copied from the
  * prefab. This technique can be combined with families to automatically
  * initialize entities, like this:
  *
@@ -580,7 +580,7 @@ void ecs_delete(
  * @returns EcsOk if succeeded, or EcsError if the operation failed.
  */
 REFLECS_EXPORT
-EcsResult ecs_add(
+EcsResult ecs_stage_add(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component);
@@ -600,7 +600,7 @@ EcsResult ecs_add(
  * @param component The component to remove.
  */
 REFLECS_EXPORT
-EcsResult ecs_remove(
+EcsResult ecs_stage_remove(
     EcsWorld *world,
     EcsHandle entity,
     EcsHandle component);
@@ -637,6 +637,20 @@ REFLECS_EXPORT
 EcsResult ecs_commit(
     EcsWorld *world,
     EcsHandle entity);
+
+/** Add a single component to an entity */
+REFLECS_EXPORT
+EcsResult ecs_add(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle component);
+
+/** Remove a single component from an entity */
+REFLECS_EXPORT
+EcsResult ecs_remove(
+    EcsWorld *world,
+    EcsHandle entity,
+    EcsHandle component);
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
@@ -791,7 +805,7 @@ EcsHandle ecs_lookup(
 /** Create a new component.
  * This operation creates a new component with a specified id and size. After
  * this operation is called, the component can be added to entities by using
- * the returned handle with ecs_stage or ecs_add.
+ * the returned handle with ecs_stage or ecs_stage_add.
  *
  * Components represent the data of entities. An entity can be composed out of
  * zero or more components. Internally compoments are stored in tables that
@@ -1133,9 +1147,9 @@ void ecs_iter_release(
  * EcsHandle h = ecs_new(world, MyFamily_h);
  *
  * Creating a family and using it with ecs_new is faster
- * than calling ecs_new, ecs_add and ecs_commit separately. This method also
+ * than calling ecs_new, ecs_stage_add and ecs_commit separately. This method also
  * provides near-constant creation time for entities regardless of the number of
- * components, whereas using ecs_add and ecs_commit takes longer for larger
+ * components, whereas using ecs_stage_add and ecs_commit takes longer for larger
  * numbers of components.
  */
 #define ECS_FAMILY(world, id, ...) \

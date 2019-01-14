@@ -25,8 +25,8 @@ void test_EcsRemove_tc_remove_2_component(
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
-    ecs_remove(world, e, Foo_h);
-    ecs_remove(world, e, Bar_h);
+    ecs_stage_remove(world, e, Foo_h);
+    ecs_stage_remove(world, e, Bar_h);
     ecs_commit(world, e);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
@@ -42,7 +42,7 @@ void test_EcsRemove_tc_remove_component(
     EcsHandle e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
-    ecs_remove(world, e, Foo_h);
+    ecs_stage_remove(world, e, Foo_h);
     ecs_commit(world, e);
     test_assert(!ecs_has(world, e, Foo_h));
     ecs_fini(world);
@@ -61,8 +61,8 @@ void test_EcsRemove_tc_remove_2_component_from_3(
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
     test_assert(ecs_has(world, e, Hello_h));
-    ecs_remove(world, e, Foo_h);
-    ecs_remove(world, e, Bar_h);
+    ecs_stage_remove(world, e, Foo_h);
+    ecs_stage_remove(world, e, Bar_h);
     ecs_commit(world, e);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
@@ -82,7 +82,7 @@ void test_EcsRemove_tc_remove_component_from_2(
 
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
-    ecs_remove(world, e, Foo_h);
+    ecs_stage_remove(world, e, Foo_h);
     ecs_commit(world, e);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
@@ -104,7 +104,7 @@ void RemoveNext(EcsRows *rows) {
         (*(int*)ecs_column(rows, row, 0)) ++;
         (*(int*)ecs_column(rows, row, 1)) += 2;
         if (ecs_entity(row) - 1 == ctx->entity) {
-            ecs_remove(rows->world, ctx->entity, ctx->component);
+            ecs_stage_remove(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
 
@@ -120,7 +120,7 @@ void RemovePrev(EcsRows *rows) {
         (*(int*)ecs_column(rows, row, 0)) ++;
         (*(int*)ecs_column(rows, row, 1)) += 2;
         if (ecs_entity(row) + 1 == ctx->entity) {
-            ecs_remove(rows->world, ctx->entity, ctx->component);
+            ecs_stage_remove(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
 
@@ -136,7 +136,7 @@ void RemoveCurrent(EcsRows *rows) {
         (*(int*)ecs_column(rows, row, 0)) ++;
         (*(int*)ecs_column(rows, row, 1)) += 2;
         if (ecs_entity(row) == ctx->entity) {
-            ecs_remove(rows->world, ctx->entity, ctx->component);
+            ecs_stage_remove(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
 
@@ -149,7 +149,7 @@ void RemoveAll(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        ecs_remove(rows->world, ecs_entity(row), ctx->component);
+        ecs_stage_remove(rows->world, ecs_entity(row), ctx->component);
         ecs_commit(rows->world, ecs_entity(row));
         (*(int*)ecs_column(rows, row, 0)) ++;
         (*(int*)ecs_column(rows, row, 1)) += 2;
@@ -382,8 +382,8 @@ void RemoveAdd(EcsRows *rows) {
         EcsHandle entity = ecs_entity(row);
         (*(int*)ecs_column(rows, row, 0)) ++;
         (*(int*)ecs_column(rows, row, 1)) += 2;
-        ecs_add(rows->world, entity, ctx->component);
-        ecs_remove(rows->world, entity, ctx->component);
+        ecs_stage_add(rows->world, entity, ctx->component);
+        ecs_stage_remove(rows->world, entity, ctx->component);
         ecs_commit(rows->world, entity);
         ecs_set(rows->world, entity, Bar, {1});
         ctx->count ++;
@@ -463,9 +463,9 @@ void Remove2Add(EcsRows *rows) {
         EcsHandle entity = ecs_entity(row);
         (*(int*)ecs_column(rows, row, 0)) ++;
         (*(int*)ecs_column(rows, row, 1)) += 2;
-        ecs_add(rows->world, entity, ctx->component);
-        ecs_remove(rows->world, entity, ctx->component);
-        ecs_remove(rows->world, entity, ctx->component2);
+        ecs_stage_add(rows->world, entity, ctx->component);
+        ecs_stage_remove(rows->world, entity, ctx->component);
+        ecs_stage_remove(rows->world, entity, ctx->component2);
         ecs_commit(rows->world, entity);
         ecs_set(rows->world, entity, Bar, {1});
         ctx->count ++;

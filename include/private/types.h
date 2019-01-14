@@ -175,8 +175,8 @@ struct EcsWorld {
     EcsArray *inactive_systems;   /* Frame systems with empty tables */
     EcsArray *on_demand_systems;  /* On demand systems */
 
-    EcsMap *add_systems;          /* Systems invoked on ecs_add */
-    EcsMap *remove_systems;       /* Systems invoked on ecs_remove */
+    EcsMap *add_systems;          /* Systems invoked on ecs_stage_add */
+    EcsMap *remove_systems;       /* Systems invoked on ecs_stage_remove */
     EcsMap *set_systems;          /* Systems invoked on ecs_set */
     EcsArray *tasks;              /* Periodic actions not invoked on entities */
     EcsArray *fini_tasks;         /* Tasks to execute on ecs_fini */

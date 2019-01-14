@@ -196,7 +196,7 @@ void SetFooAdd(EcsRows *rows) {
         Foo *v = ecs_column(rows, row, 0);
         (*v) ++;
 
-        ecs_add(world, entity, Bar_h);
+        ecs_stage_add(world, entity, Bar_h);
         ecs_commit(world, entity);
     }
 }

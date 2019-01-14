@@ -992,9 +992,9 @@ void test_EcsOnFrameSystem_tc_system_1_from_component(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    ecs_add(world, e2, e1);
+    ecs_stage_add(world, e2, e1);
     ecs_commit(world, e2);
-    ecs_add(world, e4, e1);
+    ecs_stage_add(world, e4, e1);
     ecs_commit(world, e4);
 
     *(int*)ecs_get_ptr(world, e1, Bar_h) = 10;
@@ -1048,22 +1048,22 @@ void test_EcsOnFrameSystem_tc_system_2_from_component(
     test_assert(e6 != 0);
     test_assert(e7 != 0);
 
-    ecs_add(world, e3, e1);
-    ecs_add(world, e3, e2);
+    ecs_stage_add(world, e3, e1);
+    ecs_stage_add(world, e3, e2);
     ecs_commit(world, e3);
 
-    ecs_add(world, e4, e1);
-    ecs_add(world, e4, e2);
+    ecs_stage_add(world, e4, e1);
+    ecs_stage_add(world, e4, e2);
     ecs_commit(world, e4);
 
-    ecs_add(world, e5, e1);
+    ecs_stage_add(world, e5, e1);
     ecs_commit(world, e5);
 
-    ecs_add(world, e6, e1);
-    ecs_add(world, e6, e2);
+    ecs_stage_add(world, e6, e1);
+    ecs_stage_add(world, e6, e2);
     ecs_commit(world, e6);
 
-    ecs_add(world, e7, e2);
+    ecs_stage_add(world, e7, e2);
     ecs_commit(world, e7);
 
     *(int*)ecs_get_ptr(world, e1, Bar_h) = 10;
@@ -1128,16 +1128,16 @@ void test_EcsOnFrameSystem_tc_system_1_from_component_or2(
     test_assert(e6 != 0);
     test_assert(e7 != 0);
 
-    ecs_add(world, e3, e1);
+    ecs_stage_add(world, e3, e1);
     ecs_commit(world, e3);
 
-    ecs_add(world, e4, e2);
+    ecs_stage_add(world, e4, e2);
     ecs_commit(world, e4);
 
     ecs_commit(world, e5);
 
-    ecs_add(world, e6, e1);
-    ecs_add(world, e6, e2);
+    ecs_stage_add(world, e6, e1);
+    ecs_stage_add(world, e6, e2);
     ecs_commit(world, e6);
 
     ecs_commit(world, e7);
@@ -1206,21 +1206,21 @@ void test_EcsOnFrameSystem_tc_system_2_from_component_or2(
     test_assert(e8 != 0);
     test_assert(e9 != 0);
 
-    ecs_add(world, e5, e1);
-    ecs_add(world, e5, e2);
+    ecs_stage_add(world, e5, e1);
+    ecs_stage_add(world, e5, e2);
     ecs_commit(world, e5);
 
-    ecs_add(world, e6, e1);
-    ecs_add(world, e6, e3);
+    ecs_stage_add(world, e6, e1);
+    ecs_stage_add(world, e6, e3);
     ecs_commit(world, e6);
 
-    ecs_add(world, e7, e3);
+    ecs_stage_add(world, e7, e3);
     ecs_commit(world, e7);
 
     ecs_commit(world, e8);
 
-    ecs_add(world, e9, e2);
-    ecs_add(world, e9, e4);
+    ecs_stage_add(world, e9, e2);
+    ecs_stage_add(world, e9, e4);
     ecs_commit(world, e9);
 
     *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
@@ -1275,9 +1275,9 @@ void test_EcsOnFrameSystem_tc_system_from_component_not(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    ecs_add(world, e2, e1);
+    ecs_stage_add(world, e2, e1);
     ecs_commit(world, e2);
-    ecs_add(world, e4, e1);
+    ecs_stage_add(world, e4, e1);
     ecs_commit(world, e4);
 
     *(int*)ecs_get_ptr(world, e1, Bar_h) = 10;
@@ -1325,13 +1325,13 @@ void test_EcsOnFrameSystem_tc_system_2_from_component_not(
     test_assert(e4 != 0);
     test_assert(e5 != 0);
 
-    ecs_add(world, e3, e1);
+    ecs_stage_add(world, e3, e1);
     ecs_commit(world, e3);
-    ecs_add(world, e4, e2);
+    ecs_stage_add(world, e4, e2);
     ecs_commit(world, e4);
 
-    ecs_add(world, e4, e1);
-    ecs_add(world, e4, e2);
+    ecs_stage_add(world, e4, e1);
+    ecs_stage_add(world, e4, e2);
     ecs_commit(world, e4);
 
     *(int*)ecs_get_ptr(world, e1, Foo_h) = 10;
@@ -1996,6 +1996,55 @@ void test_EcsOnFrameSystem_tc_systen_2_component_2_or_w_set(
     test_assertint(ctx.column[0][1], 30);
     test_assertint(ctx.component[0][0], Foo_h);
     test_assertint(ctx.component[0][1], Bar_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_prefab_or_component(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_COMPONENT(world, Hello);
+    ECS_PREFAB(world, MyPrefab, Foo);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Hello, Foo | Bar);
+
+    EcsHandle e1 = ecs_new(world, Hello_h);
+    EcsHandle e2 = ecs_new(world, Hello_h);
+    EcsHandle e3 = ecs_new(world, MyPrefab_h);
+    EcsHandle e4 = ecs_new(world, MyPrefab_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+
+    ecs_add(world, e1, MyPrefab_h);
+    ecs_add(world, e3, Hello_h);
+
+    ecs_set(world, e1, Hello, {10});
+    ecs_set(world, e2, Hello, {20});
+    ecs_set(world, e3, Hello, {30});
+    ecs_set(world, MyPrefab_h, Foo, {40});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 0);
+
+    test_assertint(ctx.column_count, 2);
+    test_assertint(ctx.count, 2);
+    test_assert(ctx.entities[0] == e1);
+    test_assert(ctx.entities[1] == e3);
+    test_assertint(ctx.column[0][0], 10);
+    test_assertint(ctx.column[1][0], 40);
+    test_assertint(ctx.column[0][1], 30);
+    test_assertint(ctx.column[1][1], 40);
+    test_assertint(ctx.component[0][0], Hello_h);
+    test_assertint(ctx.component[1][0], Foo_h);
+    test_assertint(ctx.component[0][1], Hello_h);
+    test_assertint(ctx.component[1][1], Foo_h);
 
     ecs_fini(world);
 }

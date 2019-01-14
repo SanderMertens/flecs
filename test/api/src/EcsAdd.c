@@ -36,8 +36,8 @@ void test_EcsAdd_tc_add_2_component(
     test_assert(bar_ptr != NULL);
     bar_ptr->y = 10;
 
-    ecs_add(world, e, Foo_h);
-    ecs_add(world, e, Hello_h);
+    ecs_stage_add(world, e, Foo_h);
+    ecs_stage_add(world, e, Hello_h);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
@@ -66,8 +66,8 @@ void test_EcsAdd_tc_add_2_component_to_empty(
     EcsHandle e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_add(world, e, Foo_h);
-    ecs_add(world, e, Hello_h);
+    ecs_stage_add(world, e, Foo_h);
+    ecs_stage_add(world, e, Hello_h);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Foo_h));
 
@@ -95,7 +95,7 @@ void test_EcsAdd_tc_add_component(
     test_assert(bar_ptr != NULL);
     bar_ptr->y = 10;
 
-    ecs_add(world, e, Foo_h);
+    ecs_stage_add(world, e, Foo_h);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
 
@@ -122,7 +122,7 @@ void test_EcsAdd_tc_add_component_to_empty(
     EcsHandle e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_add(world, e, Foo_h);
+    ecs_stage_add(world, e, Foo_h);
     test_assert(!ecs_has(world, e, Foo_h));
 
     ecs_commit(world, e);
@@ -147,7 +147,7 @@ void test_EcsAdd_tc_add_existing_component(
     test_assert(foo_ptr != NULL);
     foo_ptr->x = 10;
 
-    ecs_add(world, e, Foo_h);
+    ecs_stage_add(world, e, Foo_h);
     test_assert(ecs_has(world, e, Foo_h));
 
     ecs_commit(world, e);
@@ -175,7 +175,7 @@ void test_EcsAdd_tc_add_family(
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
 
-    ecs_add(world, e, MyFamily_h);
+    ecs_stage_add(world, e, MyFamily_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -200,7 +200,7 @@ void test_EcsAdd_tc_add_family_with_family(
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
 
-    ecs_add(world, e, Family2_h);
+    ecs_stage_add(world, e, Family2_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -228,7 +228,7 @@ void test_EcsAdd_tc_add_family_overlapping_w_entity(
     test_assert(foo_ptr != NULL);
     foo_ptr->x = 10;
 
-    ecs_add(world, e, MyFamily_h);
+    ecs_stage_add(world, e, MyFamily_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -258,8 +258,8 @@ void test_EcsAdd_tc_add_overlapping_families(
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
 
-    ecs_add(world, e, Family1_h);
-    ecs_add(world, e, Family2_h);
+    ecs_stage_add(world, e, Family1_h);
+    ecs_stage_add(world, e, Family2_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -281,7 +281,7 @@ void AddNext(EcsRows *rows) {
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         (*(int*)ecs_column(rows, row, 0)) ++;
         if (ecs_entity(row) - 1 == ctx->entity) {
-            ecs_add(rows->world, ctx->entity, ctx->component);
+            ecs_stage_add(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
 
@@ -296,7 +296,7 @@ void AddPrev(EcsRows *rows) {
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         (*(int*)ecs_column(rows, row, 0)) ++;
         if (ecs_entity(row) + 1 == ctx->entity) {
-            ecs_add(rows->world, ctx->entity, ctx->component);
+            ecs_stage_add(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
 
@@ -311,7 +311,7 @@ void AddCurrent(EcsRows *rows) {
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         (*(int*)ecs_column(rows, row, 0)) ++;
         if (ecs_entity(row) == ctx->entity) {
-            ecs_add(rows->world, ctx->entity, ctx->component);
+            ecs_stage_add(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
 
@@ -324,7 +324,7 @@ void AddAll(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        ecs_add(rows->world, ecs_entity(row), ctx->component);
+        ecs_stage_add(rows->world, ecs_entity(row), ctx->component);
         ecs_commit(rows->world, ecs_entity(row));
         (*(int*)ecs_column(rows, row, 0)) ++;
         ctx->count ++;

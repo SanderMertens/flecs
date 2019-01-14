@@ -331,6 +331,7 @@ bool match_table(
     }
 
     family = system_data->and_from_entity;
+
     if (family && !ecs_family_contains(
         world, stage, table_family, family, true, true))
     {
@@ -659,7 +660,7 @@ EcsHandle ecs_new_table_system(
         EcsHandle *buffer = ecs_array_buffer(f);
         uint32_t i, count = ecs_array_count(f);
         for (i = 0; i < count; i ++) {
-            ecs_add(world, result, buffer[i]);
+            ecs_stage_add(world, result, buffer[i]);
         }
         ecs_commit(world, result);
     }

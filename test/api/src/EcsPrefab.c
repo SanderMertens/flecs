@@ -113,13 +113,13 @@ void test_EcsPrefab_tc_prefab_override_1_of_2(
     EcsHandle e1 = ecs_new(world, MyPrefab_h);
     test_assert(e1 != 0);
 
-    ecs_add(world, e1, Foo_h);
+    ecs_stage_add(world, e1, Foo_h);
     ecs_commit(world, e1);
 
     EcsHandle e2 = ecs_new(world, MyPrefab_h);
     test_assert(e2 != 0);
 
-    ecs_add(world, e2, Foo_h);
+    ecs_stage_add(world, e2, Foo_h);
     ecs_commit(world, e2);
 
     Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
@@ -158,15 +158,15 @@ void test_EcsPrefab_tc_prefab_override_2_of_2(
     EcsHandle e1 = ecs_new(world, MyPrefab_h);
     test_assert(e1 != 0);
 
-    ecs_add(world, e1, Foo_h);
-    ecs_add(world, e1, Bar_h);
+    ecs_stage_add(world, e1, Foo_h);
+    ecs_stage_add(world, e1, Bar_h);
     ecs_commit(world, e1);
 
     EcsHandle e2 = ecs_new(world, MyPrefab_h);
     test_assert(e2 != 0);
 
-    ecs_add(world, e2, Foo_h);
-    ecs_add(world, e2, Bar_h);
+    ecs_stage_add(world, e2, Foo_h);
+    ecs_stage_add(world, e2, Bar_h);
     ecs_commit(world, e2);
 
     Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
@@ -208,10 +208,10 @@ void test_EcsPrefab_tc_prefab_override_1_after_1(
     EcsHandle e2 = ecs_new(world, MyPrefab_h);
     test_assert(e2 != 0);
 
-    ecs_add(world, e1, Foo_h);
+    ecs_stage_add(world, e1, Foo_h);
     ecs_commit(world, e1);
 
-    ecs_add(world, e2, Foo_h);
+    ecs_stage_add(world, e2, Foo_h);
     ecs_commit(world, e2);
 
     ecs_set(world, e1, Foo, {.x = 15});
@@ -222,10 +222,10 @@ void test_EcsPrefab_tc_prefab_override_1_after_1(
     test_assertint(ecs_get(world, e1, Bar).y, 20);
     test_assertint(ecs_get(world, e2, Bar).y, 20);
 
-    ecs_add(world, e1, Bar_h);
+    ecs_stage_add(world, e1, Bar_h);
     ecs_commit(world, e1);
 
-    ecs_add(world, e2, Bar_h);
+    ecs_stage_add(world, e2, Bar_h);
     ecs_commit(world, e2);
 
     ecs_set(world, e1, Bar, {.y = 35});
@@ -337,7 +337,7 @@ void test_EcsPrefab_tc_prefab_add_component(
     test_assert(foo2 != NULL);
     test_assert(foo1 == foo2);
 
-    ecs_add(world, MyPrefab_h, Bar_h);
+    ecs_stage_add(world, MyPrefab_h, Bar_h);
     ecs_commit(world, MyPrefab_h);
 
     Bar *bar1 = ecs_get_ptr(world, e1, Bar_h);
@@ -363,10 +363,10 @@ void test_EcsPrefab_tc_prefab_add_to_empty_entity(
     EcsHandle e2 = ecs_new(world, 0);
     test_assert(e2 != 0);
 
-    ecs_add(world, e1, MyPrefab_h);
+    ecs_stage_add(world, e1, MyPrefab_h);
     ecs_commit(world, e1);
 
-    ecs_add(world, e2, MyPrefab_h);
+    ecs_stage_add(world, e2, MyPrefab_h);
     ecs_commit(world, e2);
 
     Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);
@@ -398,10 +398,10 @@ void test_EcsPrefab_tc_prefab_add_to_entity(
     EcsHandle e2 = ecs_new(world, Foo_h);
     test_assert(e2 != 0);
 
-    ecs_add(world, e1, MyPrefab_h);
+    ecs_stage_add(world, e1, MyPrefab_h);
     ecs_commit(world, e1);
 
-    ecs_add(world, e2, MyPrefab_h);
+    ecs_stage_add(world, e2, MyPrefab_h);
     ecs_commit(world, e2);
 
     Foo *foo1 = ecs_get_ptr(world, e1, Foo_h);

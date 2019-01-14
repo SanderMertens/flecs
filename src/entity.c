@@ -737,7 +737,7 @@ EcsHandle ecs_set_ptr(
 
     int *dst = get_ptr(world, entity, component, true, &info);
     if (!dst) {
-        ecs_add(world, entity, component);
+        ecs_stage_add(world, entity, component);
         ecs_commit(world, entity);
 
         dst = get_ptr(world, entity, component, true, &info);

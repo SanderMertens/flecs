@@ -69,7 +69,7 @@ EcsHandle new_builtin_component(
     size_t size)
 {
     EcsHandle handle = ecs_new(world, 0);
-    ecs_add(world, handle, EcsComponent_h);
+    ecs_stage_add(world, handle, EcsComponent_h);
     ecs_commit(world, handle);
     EcsComponent *component_data = ecs_get_ptr(world, handle, EcsComponent_h);
 
@@ -87,7 +87,7 @@ void add_builtin_id(
     EcsHandle handle,
     const char *id)
 {
-    ecs_add(world, handle, EcsId_h);
+    ecs_stage_add(world, handle, EcsId_h);
     ecs_commit(world, handle);
     EcsId *id_data = ecs_get_ptr(world, handle, EcsId_h);
 
@@ -523,10 +523,10 @@ EcsWorld *ecs_init(void) {
                "EcsTableSystem", remove_systems);
     assert(world->deinit_table_system != 0);
 
-    ecs_add(world, world->deinit_row_system, EcsHidden_h);
+    ecs_stage_add(world, world->deinit_row_system, EcsHidden_h);
     ecs_commit(world, world->deinit_row_system);
 
-    ecs_add(world, world->deinit_table_system, EcsHidden_h);
+    ecs_stage_add(world, world->deinit_table_system, EcsHidden_h);
     ecs_commit(world, world->deinit_table_system);
 
     return world;

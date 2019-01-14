@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 
     /* Create a new entity, add a regular component */
     EcsHandle e = ecs_new(world, 0);
-    ecs_add(world, e, Position_h);
+    ecs_stage_add(world, e, Position_h);
     ecs_commit(world, e);
 
     /* The above code is straightforward- it adds the Position component to the
@@ -35,17 +35,17 @@ int main(int argc, char *argv[]) {
     /* You'll notice that 'e' does not have EcsComponent, while Position_h does
      * have it. Adding an entity that does not have this component to another
      * entity will result in an error (there are two exceptions to that rule:
-     * prefabs and families may also be added with ecs_add).
+     * prefabs and families may also be added with ecs_stage_add).
      *
      * From this follows that if we add EcsComponent to an entity, we should be
      * able to add it to another entity. Let's try it out: */
 
     EcsHandle ec = ecs_new(world, 0);
-    ecs_add(world, ec, EcsComponent_h);
+    ecs_stage_add(world, ec, EcsComponent_h);
     ecs_commit(world, ec);
 
     /* Now we should be able to add ec to our previous entity: */
-    ecs_add(world, e, ec);
+    ecs_stage_add(world, e, ec);
     ecs_commit(world, e);
 
     /* That worked! Now we can test if 'e' has 'ec': */

@@ -1,6 +1,10 @@
 {
     "id":"reflecs",
     "type":"package",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "Multithreaded Entity Component System written in C99"
+    },
     "lang.c": {
         "cflags": ["-fvisibility=hidden"],
         "lib": ["pthread"]

@@ -242,7 +242,7 @@ void SetAdd(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        ecs_add(world, entity, int16_t_h);
+        ecs_stage_add(world, entity, int16_t_h);
         ecs_commit(world, entity);
         ecs_set(world, entity, int16_t, {value});
         value += 10;
@@ -393,8 +393,8 @@ void SetAdd2(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        ecs_add(world, entity, int16_t_h);
-        ecs_add(world, entity, int32_t_h);
+        ecs_stage_add(world, entity, int16_t_h);
+        ecs_stage_add(world, entity, int32_t_h);
         ecs_commit(world, entity);
         ecs_set(world, entity, int16_t, {value});
         ecs_set(world, entity, int32_t, {value2});
@@ -452,8 +452,8 @@ void SetAddRemove(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        ecs_add(world, entity, int32_t_h);
-        ecs_remove(world, entity, int16_t_h);
+        ecs_stage_add(world, entity, int32_t_h);
+        ecs_stage_remove(world, entity, int16_t_h);
         ecs_commit(world, entity);
         ecs_set(world, entity, int32_t, {value});
         value += 10;
@@ -510,7 +510,7 @@ void SetRemove(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsHandle entity = ecs_entity(row);
-        ecs_remove(world, entity, int16_t_h);
+        ecs_stage_remove(world, entity, int16_t_h);
         ecs_commit(world, entity);
         ecs_set(world, entity, int32_t, {value});
         value += 10;
