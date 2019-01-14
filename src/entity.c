@@ -160,6 +160,7 @@ void* get_ptr(
     EcsHandle entity,
     EcsHandle component,
     bool staged_only,
+    bool search_prefab,
     EcsEntityInfo *info)
 {
     uint64_t row_64;
@@ -206,17 +207,17 @@ void* get_ptr(
 
         if (ptr) return ptr;
 
-        if (family_id) {
+        if (family_id && search_prefab) {
             prefab = ecs_map_get64(world->prefab_index, family_id);
         }
     }
 
-    if (!prefab && staged_id) {
+    if (!prefab && staged_id && search_prefab) {
         prefab = ecs_map_get64(world->prefab_index, staged_id);
     }
 
     if (prefab) {
-        return get_ptr(world, prefab, component, staged_only, info);
+        return get_ptr(world, prefab, component, staged_only, true, info);
     } else {
         return NULL;
     }
@@ -717,7 +718,7 @@ void* ecs_get_ptr(
     EcsHandle component)
 {
     EcsEntityInfo info;
-    return get_ptr(world, entity, component, false, &info);
+    return get_ptr(world, entity, component, false, true, &info);
 }
 
 EcsHandle ecs_set_ptr(
@@ -735,16 +736,16 @@ EcsHandle ecs_set_ptr(
         entity = ecs_new(world, component);
     }
 
-    int *dst = get_ptr(world, entity, component, true, &info);
+    int *dst = get_ptr(world, entity, component, true, false, &info);
     if (!dst) {
         ecs_stage_add(world, entity, component);
         ecs_commit(world, entity);
 
-        dst = get_ptr(world, entity, component, true, &info);
+        dst = get_ptr(world, entity, component, true, false, &info);
         assert(dst != NULL);
     }
 
-    EcsComponent *c = get_ptr(world, component, EcsComponent_h, false, &cinfo);
+    EcsComponent *c = get_ptr(world, component, EcsComponent_h, false, false, &cinfo);
     assert(c != NULL);
     memcpy(dst, src, c->size);
 

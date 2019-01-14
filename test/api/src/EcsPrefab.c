@@ -419,3 +419,28 @@ void test_EcsPrefab_tc_prefab_add_to_entity(
 
     ecs_fini(world);
 }
+
+void test_EcsPrefab_tc_prefab_override_w_set(
+    test_EcsPrefab this)
+{
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_PREFAB(world, MyPrefab, Foo, Bar);
+
+    EcsHandle e1 = ecs_new(world, MyPrefab_h);
+    EcsHandle e2 = ecs_new(world, MyPrefab_h);
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+
+    ecs_set(world, MyPrefab_h, Foo, {10});
+    ecs_set(world, MyPrefab_h, Bar, {20});
+    ecs_set(world, e1, Foo, {30});
+
+    test_assertint(ecs_get(world, e1, Foo).x, 30);
+    test_assertint(ecs_get(world, e1, Bar).y, 20);
+    test_assertint(ecs_get(world, e2, Foo).x, 10);
+    test_assertint(ecs_get(world, e2, Bar).y, 20);
+
+    ecs_fini(world);
+}

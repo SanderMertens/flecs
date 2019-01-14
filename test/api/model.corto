@@ -84,6 +84,7 @@ test.suite EcsPrefab {
     tc_prefab_add_to_empty_entity()
     tc_prefab_add_to_entity()
     tc_prefab_add_component()
+    tc_prefab_override_w_set()
 }
 
 test.suite EcsOnFrameSystem {
