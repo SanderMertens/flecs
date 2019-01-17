@@ -12,8 +12,8 @@ void Move(EcsRows *rows) {
     void *row;
 
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
-        Speed *s = ecs_column(rows, row, 1);
+        Position *p = ecs_data(rows, row, 0);
+        Speed *s = ecs_data(rows, row, 1);
 
         /* Scale progress with delta_time. This way, objects are updated at a
          * constant speed, regardless of how fast the CPU is */
@@ -29,8 +29,8 @@ void InitObject(EcsRows *rows) {
     void *row;
 
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
-        Speed *s = ecs_column(rows, row, 1);
+        Position *p = ecs_data(rows, row, 0);
+        Speed *s = ecs_data(rows, row, 1);
         p->x = 0;
         p->y = 0;
         *s = 1;

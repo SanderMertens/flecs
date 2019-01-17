@@ -16,12 +16,12 @@ void Metadata(EcsRows *rows) {
 
     int i;
     for (i = 0; i < rows->column_count; i ++) {
-        EcsHandle component = ecs_handle(rows, i);
+        EcsEntity component = ecs_component(rows, i);
         printf("column %d: %s\n", i, ecs_id(rows->world, component));
     }
 
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
         printf("process entity %lld\n", entity);
     }
 }

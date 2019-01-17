@@ -51,7 +51,7 @@ typedef const char *EcsId;
 typedef struct EcsWorld EcsWorld;
 
 /** A handle identifies an entity */
-typedef uint64_t EcsHandle;
+typedef uint64_t EcsEntity;
 
 /** Function return values */
 typedef enum EcsResult {
@@ -72,16 +72,16 @@ typedef enum EcsSystemKind {
 
 /** Data passed to system action callback, used for iterating entities */
 typedef struct EcsRows {
-    EcsHandle system;
+    EcsEntity system;
     EcsWorld *world;
     int32_t *columns;
     void *first;
     void *last;
-    EcsHandle *refs_entity;
+    EcsEntity *refs_entity;
     void **refs_data;
     void *param;
-    EcsHandle *components;
-    EcsHandle interrupted_by;
+    EcsEntity *components;
+    EcsEntity interrupted_by;
     uint32_t element_size;
     uint32_t column_count;
     float delta_time;
@@ -106,6 +106,7 @@ typedef void (*EcsModuleInitAction)(
 #define EcsId_h (6)
 #define EcsHidden_h (7)
 #define EcsContainer_h (8)
+#define EcsRoot_h (9)
 
 
 /* -- World API -- */
@@ -230,7 +231,7 @@ void ecs_import(
  *
  * Note that staging only occurs for changes caused by the aforementioned
  * functions. If a system makes in-place modifications to components (through
- * pointers obtained with ecs_column) they will be "instantly" visible to other
+ * pointers obtained with ecs_data) they will be "instantly" visible to other
  * threads.
  *
  * An application can pass a delta_time into the function, which is the time
@@ -421,7 +422,7 @@ void ecs_dim(
 REFLECS_EXPORT
 void ecs_dim_family(
     EcsWorld *world,
-    EcsHandle family,
+    EcsEntity family,
     uint32_t entity_count);
 
 
@@ -452,9 +453,9 @@ void ecs_dim_family(
  * @returns A handle to the new entity.
  */
 REFLECS_EXPORT
-EcsHandle ecs_new(
+EcsEntity ecs_new(
     EcsWorld *world,
-    EcsHandle type);
+    EcsEntity type);
 
 /** Create a new set of entities.
  * This operation creates the number of specified entities with one API call
@@ -467,11 +468,11 @@ EcsHandle ecs_new(
  * @returns The handle to the first created entity.
  */
 REFLECS_EXPORT
-EcsHandle ecs_new_w_count(
+EcsEntity ecs_new_w_count(
     EcsWorld *world,
-    EcsHandle type,
+    EcsEntity type,
     uint32_t count,
-    EcsHandle *handles_out);
+    EcsEntity *handles_out);
 
 /** Create new entity with same components as specified entity.
  * This operation creates a new entity which has the same components as the
@@ -488,9 +489,9 @@ EcsHandle ecs_new_w_count(
  * @returns The handle to the new entity.
  */
 REFLECS_EXPORT
-EcsHandle ecs_clone(
+EcsEntity ecs_clone(
     EcsWorld *world,
-    EcsHandle entity,
+    EcsEntity entity,
     bool copy_value);
 
 /** Create a new prefab entity.
@@ -516,7 +517,7 @@ EcsHandle ecs_clone(
  *
  * ECS_PREFAB(world, MyPrefab, Foo);
  * ECS_FAMILY(world, MyFamily, MyPrefab, Foo);
- * EcsHandle e = ecs_new(world, MyFamily);
+ * EcsEntity e = ecs_new(world, MyFamily);
  *
  * In this code, the entity will be created with the prefab and directly
  * override 'Foo', which will copy the value of 'Foo' from the prefab.
@@ -531,7 +532,7 @@ EcsHandle ecs_clone(
  * Only one prefab may be added to an entity.
  */
 REFLECS_EXPORT
-EcsHandle ecs_new_prefab(
+EcsEntity ecs_new_prefab(
     EcsWorld *world,
     const char *id,
     const char *sig);
@@ -558,7 +559,7 @@ EcsHandle ecs_new_prefab(
 REFLECS_EXPORT
 void ecs_delete(
     EcsWorld *world,
-    EcsHandle entity);
+    EcsEntity entity);
 
 /** Stage a component for adding.
  * Staging a component will register a component with an entity, but will not
@@ -582,8 +583,8 @@ void ecs_delete(
 REFLECS_EXPORT
 EcsResult ecs_stage_add(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component);
+    EcsEntity entity,
+    EcsEntity component);
 
 /** Stage a component for removing.
  * This operation stages a remove for a component from an entity. The remove
@@ -602,8 +603,8 @@ EcsResult ecs_stage_add(
 REFLECS_EXPORT
 EcsResult ecs_stage_remove(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component);
+    EcsEntity entity,
+    EcsEntity component);
 
 /** Commit components to memory.
  * This operation commits all staged components to memory. If no components were
@@ -636,21 +637,21 @@ EcsResult ecs_stage_remove(
 REFLECS_EXPORT
 EcsResult ecs_commit(
     EcsWorld *world,
-    EcsHandle entity);
+    EcsEntity entity);
 
 /** Add a single component to an entity */
 REFLECS_EXPORT
 EcsResult ecs_add(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component);
+    EcsEntity entity,
+    EcsEntity component);
 
 /** Remove a single component from an entity */
 REFLECS_EXPORT
 EcsResult ecs_remove(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component);
+    EcsEntity entity,
+    EcsEntity component);
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
@@ -676,8 +677,8 @@ EcsResult ecs_remove(
 REFLECS_EXPORT
 void* ecs_get_ptr(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component);
+    EcsEntity entity,
+    EcsEntity component);
 
 #define ecs_get(world, entity, component)\
   (*(component*)ecs_get_ptr(world, entity, component##_h))
@@ -700,10 +701,10 @@ void* ecs_get_ptr(
  * @param component The component to set.
  */
 REFLECS_EXPORT
-EcsHandle ecs_set_ptr(
+EcsEntity ecs_set_ptr(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component,
+    EcsEntity entity,
+    EcsEntity component,
     void *ptr);
 
 #define ecs_set(world, entity, component, ...)\
@@ -727,8 +728,8 @@ EcsHandle ecs_set_ptr(
 REFLECS_EXPORT
 bool ecs_has(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle type);
+    EcsEntity entity,
+    EcsEntity type);
 
 /** Check if entity has any of the components in the specified type.
  * This operation checks if the entity has any of the components associated with
@@ -747,8 +748,8 @@ bool ecs_has(
 REFLECS_EXPORT
 bool ecs_has_any(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle type);
+    EcsEntity entity,
+    EcsEntity type);
 
 /** Return if the entity is valid.
  * This returns whether the provided entity handle is valid. An entity that has
@@ -762,7 +763,7 @@ bool ecs_has_any(
 REFLECS_EXPORT
 bool ecs_empty(
     EcsWorld *world,
-    EcsHandle entity);
+    EcsEntity entity);
 
 /* -- Id API -- */
 
@@ -781,7 +782,7 @@ bool ecs_empty(
 REFLECS_EXPORT
 const char* ecs_id(
     EcsWorld *world,
-    EcsHandle entity);
+    EcsEntity entity);
 
 /** Lookup an entity by id.
  * This operation is a convenient way to lookup entities by string identifier
@@ -795,7 +796,7 @@ const char* ecs_id(
  * @returns The entity handle if found, or ECS_HANDLE_NIL if not found.
  */
 REFLECS_EXPORT
-EcsHandle ecs_lookup(
+EcsEntity ecs_lookup(
     EcsWorld *world,
     const char *id);
 
@@ -827,7 +828,7 @@ EcsHandle ecs_lookup(
  * @returns A handle to the new component, or ECS_HANDLE_NIL if failed.
  */
 REFLECS_EXPORT
-EcsHandle ecs_new_component(
+EcsEntity ecs_new_component(
     EcsWorld *world,
     const char *id,
     size_t size);
@@ -854,7 +855,7 @@ EcsHandle ecs_new_component(
  * @returns Handle to the family, zero if failed.
  */
 REFLECS_EXPORT
-EcsHandle ecs_new_family(
+EcsEntity ecs_new_family(
     EcsWorld *world,
     const char *id,
     const char *components);
@@ -880,8 +881,8 @@ EcsHandle ecs_new_family(
  * The action is a function that is invoked for every entity that has the
  * components the system is interested in. The action has three parameters:
  *
- * - EcsHandle system: Handle to the system (same as returned by this function)
- * - EcsHandle entity: Handle to the current entity
+ * - EcsEntity system: Handle to the system (same as returned by this function)
+ * - EcsEntity entity: Handle to the current entity
  * - void *data[]: Array of pointers to the component data
  *
  * Systems are stored internally as entities. This operation is equivalent to
@@ -897,7 +898,7 @@ EcsHandle ecs_new_family(
  * @returns A handle to the system.
  */
 REFLECS_EXPORT
-EcsHandle ecs_new_system(
+EcsEntity ecs_new_system(
     EcsWorld *world,
     const char *id,
     EcsSystemKind kind,
@@ -922,7 +923,7 @@ EcsHandle ecs_new_system(
 REFLECS_EXPORT
 void ecs_enable(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     bool enabled);
 
 /** Configure how often a system should be invoked.
@@ -949,7 +950,7 @@ void ecs_enable(
 REFLECS_EXPORT
 void ecs_set_period(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     float period);
 
 /** Returns the enabled status for a system / entity.
@@ -966,7 +967,7 @@ void ecs_set_period(
 REFLECS_EXPORT
 bool ecs_is_enabled(
     EcsWorld *world,
-    EcsHandle system);
+    EcsEntity system);
 
 /** Run a specific system manually.
  * This operation runs a single system on demand. It is an efficient way to
@@ -1007,26 +1008,26 @@ bool ecs_is_enabled(
  * @returns handle to last evaluated entity if system was interrupted.
  */
 REFLECS_EXPORT
-EcsHandle ecs_run_system(
+EcsEntity ecs_run(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     float delta_time,
-    EcsHandle filter,
+    EcsEntity filter,
     void *param);
 
 /** Set component on system for user-defined context */
 REFLECS_EXPORT
 void* ecs_set_system_context_ptr(
     EcsWorld *world,
-    EcsHandle system,
-    EcsHandle component,
+    EcsEntity system,
+    EcsEntity component,
     void *ptr);
 
 /** Get component from system for user-defined context */
 REFLECS_EXPORT
 void* ecs_get_system_context(
     EcsWorld *world,
-    EcsHandle system);
+    EcsEntity system);
 
 #define ecs_set_system_context(world, system, component, ...)\
   { component __v = __VA_ARGS__; ecs_set_system_context_ptr(world, system, component##_h, &__v); }
@@ -1061,7 +1062,18 @@ void _ecs_abort(
     const char *file,
     uint32_t line);
 
+/** Assert */
+REFLECS_EXPORT
+void _ecs_assert(
+    bool condition,
+    uint32_t error_code,
+    const char *param,
+    const char *condition_str,
+    const char *file,
+    uint32_t line);
+
 #define ecs_abort(error_code, param) _ecs_abort(error_code, param, __FILE__, __LINE__)
+#define ecs_assert(condition, error_code, param) _ecs_assert(condition, error_code, param, #condition, __FILE__, __LINE__)
 
 #define ECS_INVALID_HANDLE (1)
 #define ECS_INVALID_PARAMETERS (2)
@@ -1110,13 +1122,13 @@ void ecs_iter_release(
  * handle to the new component.
  */
 #define ECS_COMPONENT(world, id) \
-    EcsHandle id##_h = ecs_new_component(world, #id, sizeof(id));\
+    EcsEntity id##_h = ecs_new_component(world, #id, sizeof(id));\
     (void)id##_h;\
     assert (id##_h != 0)
 
 /** Same as component, but no size */
 #define ECS_TAG(world, id) \
-    EcsHandle id##_h = ecs_new_component(world, #id, 0);\
+    EcsEntity id##_h = ecs_new_component(world, #id, 0);\
     (void)id##_h;\
     assert (id##_h != 0)
 
@@ -1135,7 +1147,7 @@ void ecs_iter_release(
  */
 #define ECS_SYSTEM(world, id, kind, ...) \
     void id(EcsRows*);\
-    EcsHandle id##_h = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
+    EcsEntity id##_h = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
     (void)id##_h;\
     assert (id##_h != 0)
 
@@ -1144,7 +1156,7 @@ void ecs_iter_release(
  * It can be used like this:
  *
  * ECS_FAMILY(world, MyFamily, ComponentA, ComponentB);
- * EcsHandle h = ecs_new(world, MyFamily_h);
+ * EcsEntity h = ecs_new(world, MyFamily_h);
  *
  * Creating a family and using it with ecs_new is faster
  * than calling ecs_new, ecs_stage_add and ecs_commit separately. This method also
@@ -1153,7 +1165,7 @@ void ecs_iter_release(
  * numbers of components.
  */
 #define ECS_FAMILY(world, id, ...) \
-    EcsHandle id##_h = ecs_new_family(world, #id, #__VA_ARGS__);\
+    EcsEntity id##_h = ecs_new_family(world, #id, #__VA_ARGS__);\
     (void)id##_h;\
     assert (id##_h != 0)
 
@@ -1162,12 +1174,12 @@ void ecs_iter_release(
  * can be used like this:
  *
  * ECS_PREFAB(world, MyPrefab, ComponentA, ComponentB);
- * EcsHandle h = ecs_new(world, MyPrefab_h);
+ * EcsEntity h = ecs_new(world, MyPrefab_h);
  *
  * For more specifics, see description of ecs_new_prefab.
  */
 #define ECS_PREFAB(world, id, ...) \
-    EcsHandle id##_h = ecs_new_prefab(world, #id, #__VA_ARGS__);\
+    EcsEntity id##_h = ecs_new_prefab(world, #id, #__VA_ARGS__);\
     (void)id##_h;\
     assert (id##_h != 0)
 
@@ -1189,28 +1201,32 @@ void ecs_iter_release(
 #define ecs_prev(data, row) ECS_OFFSET(row, -(data)->element_size)
 
 /** Obtain a system column from an entity */
-#define ecs_column(data, row, column) \
+#define ecs_data(data, row, column) \
   ((data)->columns[column] > 0 \
     ? ECS_OFFSET(row, (data)->columns[column]) \
     : ((data)->columns[column] == 0) \
       ? NULL \
       : data->refs_data[-((data)->columns[column]) - 1])
 
-/* Obtain the entity handle from a row */
-#define ecs_entity(row) *(EcsHandle*)row
+      #define ECS_ROW_ENTITY (-1)
 
-/* Obtain a reference handle from a column */
-#define ecs_source(rows, column) (rows->refs_entity[column])
+/* Obtain the entity handle from a row */
+#define ecs_entity(data, row, column) \
+  (((data)->columns[column] > 0 || column == ECS_ROW_ENTITY) \
+    ? (row ? *(EcsEntity*)row : (EcsEntity)0) \
+    : ((data)->columns[column] == 0) \
+      ? ((EcsEntity)0) \
+      : (rows->refs_entity[column]))
 
 /* Obtain the component handle from a row */
-#define ecs_handle(rows, column) (rows->components[column])
+#define ecs_component(rows, column) (rows->components[column])
 
 /** Utility macro's */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 
 /** Utility macro for declaring handles by modules */
 #define EcsDeclareHandle(handles, component)\
-    EcsHandle Ecs##component##_h = handles.component; (void)Ecs##component##_h
+    EcsEntity Ecs##component##_h = handles.component; (void)Ecs##component##_h
 
 
 #ifdef __cplusplus

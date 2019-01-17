@@ -6,13 +6,13 @@ void ListEntities(EcsRows *rows) {
 
     /* This will loop over the 10 entities we created in the main function. */
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
 
         /* The ecs_source function obtains the entity from which the
          * column was resolved. Our column specifies IndexTag, which
          * has only been added to our index entities, thus ecs_source(0) will
          * return the index entity. */
-        EcsHandle index = ecs_source(rows, 0);
+        EcsEntity index = ecs_source(rows, 0);
         printf("Entity %llu (%s)\n", entity, ecs_id(rows->world, index));
     }
 }
@@ -30,16 +30,16 @@ int main(int argc, char *argv[]) {
     ECS_FAMILY(world, Index, IndexTag, EcsComponent);
 
     /* List all the entities with a Position component on demand */
-    ECS_SYSTEM(world, ListEntities, EcsOnDemand, COMPONENT.IndexTag, Object);
+    ECS_SYSTEM(world, ListEntities, EcsOnDemand, CONTAINER.IndexTag, Object);
 
     /* Create 10 entities with Object family */
-    EcsHandle handles[10];
+    EcsEntity handles[10];
     ecs_new_w_count(world, Object_h, 10, handles);
 
     /* Create two entities with EcsComponent to subdivide the entity list */
-    EcsHandle index_a = ecs_new(world, Index_h);
+    EcsEntity index_a = ecs_new(world, Index_h);
     ecs_set(world, index_a, EcsId, "Index A");
-    EcsHandle index_b = ecs_new(world, Index_h);
+    EcsEntity index_b = ecs_new(world, Index_h);
     ecs_set(world, index_b, EcsId, "Index B");
 
     /* Add 6 entities to index a, 4 entities to index b */
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 
     /* List all entities */
     printf("-- All entities:\n");
-    ecs_run_system(
+    ecs_run(
         world,           /* The world */
         ListEntities_h,  /* The system handle */
         1.0,             /* delta_time */
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
         NULL);           /* Userdata (can be accessed through rows->param) */
 
     printf("\n-- Only index a:\n");
-    ecs_run_system(
+    ecs_run(
         world,           /* The world */
         ListEntities_h,  /* The system handle */
         1.0,             /* delta_time */
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
         NULL);           /* Userdata (can be accessed through rows->param) */
 
     printf("\n-- Only index b:\n");
-    ecs_run_system(
+    ecs_run(
         world,           /* The world */
         ListEntities_h,  /* The system handle */
         1.0,             /* delta_time */

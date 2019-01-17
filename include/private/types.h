@@ -66,13 +66,13 @@ typedef struct EcsSystemColumn {
     EcsSystemExprOperKind oper_kind;  /* Operator kind (AND, OR, NOT) */
     union {
         EcsFamily family;             /* Used for OR operator */
-        EcsHandle component;          /* Used for AND operator */
+        EcsEntity component;          /* Used for AND operator */
     } is;
 } EcsSystemColumn;
 
 typedef struct EcsSystemRef {
-    EcsHandle entity;
-    EcsHandle component;
+    EcsEntity entity;
+    EcsEntity component;
 } EcsSystemRef;
 
 typedef struct EcsSystem {
@@ -81,7 +81,7 @@ typedef struct EcsSystem {
     EcsArray *columns;         /* Column components (AND) and families (OR) */
     EcsFamily not_from_entity; /* Exclude components from entity */
     EcsFamily not_from_component; /* Exclude components from components */
-    EcsHandle ctx_handle;      /* User-defined context for system */
+    EcsEntity ctx_handle;      /* User-defined context for system */
     EcsSystemKind kind;        /* Kind of system */
     float time_spent;          /* Time spent on running system */
     bool enabled;              /* Is system enabled or not */
@@ -125,7 +125,7 @@ typedef struct EcsRow {
 } EcsRow;
 
 typedef struct EcsEntityInfo {
-    EcsHandle entity;
+    EcsEntity entity;
     EcsFamily family_id;
     uint32_t index;
     EcsTable *table;
@@ -145,7 +145,7 @@ typedef struct EcsStage {
 } EcsStage;
 
 typedef struct EcsJob {
-    EcsHandle system;             /* System handle */
+    EcsEntity system;             /* System handle */
     EcsTableSystem *system_data;  /* System to run */
     uint32_t table_index;         /* Current SystemTable */
     uint32_t start_index;         /* Start index in row chunk */
@@ -198,9 +198,9 @@ struct EcsWorld {
     uint32_t jobs_finished;       /* Number of jobs finished */
     uint32_t threads_running;     /* Number of threads running */
 
-    EcsHandle last_handle;        /* Last issued handle */
-    EcsHandle deinit_table_system; /* Handle to internal deinit system */
-    EcsHandle deinit_row_system;  /* Handle to internal deinit system */
+    EcsEntity last_handle;        /* Last issued handle */
+    EcsEntity deinit_table_system; /* Handle to internal deinit system */
+    EcsEntity deinit_row_system;  /* Handle to internal deinit system */
 
     EcsFamily component_family;   /* EcsComponent, EcsId */
     EcsFamily table_system_family; /* EcsTableSystem, EcsId */

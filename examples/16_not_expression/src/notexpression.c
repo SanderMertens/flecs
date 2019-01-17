@@ -10,7 +10,7 @@ typedef uint32_t Speed;
 void PrintStatic(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
         printf("Entity '%s' matched\n", ecs_id(rows->world, entity));
     }
 }
@@ -27,13 +27,13 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, PrintStatic, EcsOnFrame, Position, !Speed);
 
     /* Create entity with Position and Speed component */
-    EcsHandle e1 = ecs_new(world, 0);
+    EcsEntity e1 = ecs_new(world, 0);
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Speed, 1);
     ecs_set(world, e1, EcsId, "MovingEntity");
 
     /* Create entity with just a Position component */
-    EcsHandle e2 = ecs_new(world, 0);
+    EcsEntity e2 = ecs_new(world, 0);
     ecs_set(world, e2, Position, {0, 0});
     ecs_set(world, e2, EcsId, "StaticEntity");
 

@@ -8,7 +8,7 @@
 /* -- Entity API -- */
 
 /* Create new entity with family */
-EcsHandle ecs_new_w_family(
+EcsEntity ecs_new_w_family(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily family_id);
@@ -17,7 +17,7 @@ EcsHandle ecs_new_w_family(
 void ecs_merge_entity(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle entity,
+    EcsEntity entity,
     EcsRow *staged_row);
 
 /* Notify row system of entity (identified by row_index) */
@@ -41,7 +41,7 @@ EcsTable* ecs_world_get_table(
 /* Activate system (move from inactive array to on_frame array or vice versa) */
 void ecs_world_activate_system(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     EcsSystemKind kind,
     bool active);
 
@@ -70,7 +70,7 @@ void ecs_stage_merge(
 EcsFamily ecs_family_from_handle(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle entity,
+    EcsEntity entity,
     EcsEntityInfo *info);
 
 /* Merge add/remove families */
@@ -82,7 +82,7 @@ EcsFamily ecs_family_merge(
     EcsFamily to_remove_id);
 
 /* Test if family_id_1 contains family_id_2 */
-EcsHandle ecs_family_contains(
+EcsEntity ecs_family_contains(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily family_id_1,
@@ -95,14 +95,14 @@ bool ecs_family_contains_component(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily family,
-    EcsHandle component);
+    EcsEntity component);
 
 /* Register new family from either a single component, an array of component
  * handles, or a combination */
 EcsFamily ecs_family_register(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle to_add,
+    EcsEntity to_add,
     EcsArray *set);
 
 /* Add component to family */
@@ -110,7 +110,7 @@ EcsFamily ecs_family_add(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily family,
-    EcsHandle component);
+    EcsEntity component);
 
 /* Get array with component handles from family */
 EcsArray* ecs_family_get(
@@ -144,7 +144,7 @@ uint32_t ecs_table_insert(
     EcsWorld *world,
     EcsTable *table,
     EcsArray **rows,
-    EcsHandle entity);
+    EcsEntity entity);
 
 /* Delete row from table */
 void ecs_table_delete(
@@ -161,7 +161,7 @@ void* ecs_table_get(
 /* Get offset for component in table */
 uint32_t ecs_table_column_offset(
     EcsTable *table,
-    EcsHandle component);
+    EcsEntity component);
 
 /* Test if table has component */
 bool ecs_table_has_components(
@@ -181,7 +181,7 @@ void ecs_table_free(
 /* -- System API -- */
 
 /* Create new table system */
-EcsHandle ecs_new_table_system(
+EcsEntity ecs_new_table_system(
     EcsWorld *world,
     const char *id,
     EcsSystemKind kind,
@@ -192,13 +192,13 @@ EcsHandle ecs_new_table_system(
 EcsResult ecs_system_notify_create_table(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle system,
+    EcsEntity system,
     EcsTable *table);
 
 /* Activate table for system (happens if table goes from empty to not empty) */
 void ecs_system_activate_table(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     EcsTable *table,
     bool active);
 
@@ -211,14 +211,14 @@ void ecs_run_job(
 /* Run a task (periodic system that is not matched against any tables) */
 void ecs_run_task(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     float delta_time);
 
 /* Invoke row system */
 void ecs_row_notify(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle system,
+    EcsEntity system,
     EcsRowSystem *system_data,
     EcsArray *rows,
     EcsArrayParams *row_params,
@@ -238,12 +238,12 @@ EcsResult ecs_parse_component_action(
 /* Compute schedule based on current number of entities matching system */
 void ecs_schedule_jobs(
     EcsWorld *world,
-    EcsHandle system);
+    EcsEntity system);
 
 /* Prepare jobs */
 void ecs_prepare_jobs(
     EcsWorld *world,
-    EcsHandle system);
+    EcsEntity system);
 
 /* Run jobs */
 void ecs_run_jobs(

@@ -14,7 +14,7 @@ void test_EcsFamily_tc_family_nested_1(
     ECS_FAMILY(world, BaseFamily, Foo);
     ECS_FAMILY(world, SubFamily, BaseFamily);
 
-    EcsHandle e = ecs_new(world, SubFamily_h);
+    EcsEntity e = ecs_new(world, SubFamily_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
 
@@ -32,7 +32,7 @@ void test_EcsFamily_tc_family_nested_2(
     ECS_FAMILY(world, BaseFamily2, Bar);
     ECS_FAMILY(world, SubFamily, BaseFamily1, BaseFamily2);
 
-    EcsHandle e = ecs_new(world, SubFamily_h);
+    EcsEntity e = ecs_new(world, SubFamily_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
@@ -50,7 +50,7 @@ void test_EcsFamily_tc_family_2_lvl_nested_1(
     ECS_FAMILY(world, SubFamily, BaseFamily);
     ECS_FAMILY(world, SubSubFamily, SubFamily);
 
-    EcsHandle e = ecs_new(world, SubSubFamily_h);
+    EcsEntity e = ecs_new(world, SubSubFamily_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
 
@@ -69,7 +69,7 @@ void test_EcsFamily_tc_family_2_lvl_nested_2(
     ECS_FAMILY(world, SubFamily, BaseFamily1, BaseFamily2);
     ECS_FAMILY(world, SubSubFamily, SubFamily);
 
-    EcsHandle e = ecs_new(world, SubSubFamily_h);
+    EcsEntity e = ecs_new(world, SubSubFamily_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));

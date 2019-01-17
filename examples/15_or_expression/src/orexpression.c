@@ -15,22 +15,22 @@ void Move(EcsRows *rows) {
     /* While the column can differ per entity, all entities per callback share
      * the same components. That is because this callback is invoked for every
      * matching table, which group entities per component set. */
-    EcsHandle component = ecs_handle(rows, 1);
+    EcsEntity component = ecs_component(rows, 1);
 
     /* Obtain the Speed handle so we can figure out which component is available
      * on the entities */
-    EcsHandle Speed_h = ecs_handle(rows, 2);
+    EcsEntity Speed_h = ecs_component(rows, 2);
 
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
+        Position *p = ecs_data(rows, row, 0);
 
         if (component == Speed_h) {
-            Speed *s = ecs_column(rows, row, 1);
+            Speed *s = ecs_data(rows, row, 1);
             p->x += *s;
             p->y += *s;
             printf("Moved to %d, %d (Speed)\n", p->x, p->y);
         } else {
-            Velocity *v = ecs_column(rows, row, 1);
+            Velocity *v = ecs_data(rows, row, 1);
             p->x += v->x;
             p->y += v->y;
             printf("Moved to %d, %d (Velocity)\n", p->x, p->y);
@@ -51,15 +51,15 @@ int main(int argc, char *argv[]) {
      * Position system, and the Speed OR Velocity system. Pass in the handle
      * to the Speed component so the callback can determine which component is
      * available. */
-    ECS_SYSTEM(world, Move, EcsOnFrame, Position, Speed | Velocity, HANDLE.Speed);
+    ECS_SYSTEM(world, Move, EcsOnFrame, Position, Speed | Velocity, ID.Speed);
 
     /* Create entity with Position and Speed component */
-    EcsHandle e1 = ecs_new(world, 0);
+    EcsEntity e1 = ecs_new(world, 0);
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Speed, 1);
 
     /* Create entity with Position and Velocity component */
-    EcsHandle e2 = ecs_new(world, 0);
+    EcsEntity e2 = ecs_new(world, 0);
     ecs_set(world, e2, Position, {0, 0});
     ecs_set(world, e2, Velocity, {1, 2});
 

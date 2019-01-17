@@ -24,7 +24,7 @@ EcsResult add_family(
             return EcsError;
         }
 
-        EcsHandle entity = ecs_lookup(world, entity_id);
+        EcsEntity entity = ecs_lookup(world, entity_id);
         if (!entity) {
             return EcsError;
         }
@@ -53,19 +53,19 @@ int compare_handle(
     const void *p1,
     const void *p2)
 {
-    return *(EcsHandle*)p1 - *(EcsHandle*)p2;
+    return *(EcsEntity*)p1 - *(EcsEntity*)p2;
 }
 
 /** Hash array of handles */
 static
 uint32_t hash_handle_array(
-    EcsHandle* array,
+    EcsEntity* array,
     uint32_t count)
 {
     uint32_t hash = 0;
     int i;
     for (i = 0; i < count; i ++) {
-        ecs_hash(&array[i], sizeof(EcsHandle), &hash);
+        ecs_hash(&array[i], sizeof(EcsEntity), &hash);
     }
     return hash;
 }
@@ -74,7 +74,7 @@ static
 EcsFamily register_family_from_buffer(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle *buf,
+    EcsEntity *buf,
     uint32_t count)
 {
     EcsFamily new_id = hash_handle_array(buf, count);
@@ -119,7 +119,7 @@ EcsArray* ecs_family_get(
 EcsFamily ecs_family_from_handle(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle entity,
+    EcsEntity entity,
     EcsEntityInfo *info)
 {
     if (entity == 0) {
@@ -143,13 +143,13 @@ EcsFamily ecs_family_from_handle(
         index = info->index;
     }
 
-    EcsHandle *components = ecs_array_buffer(table->family);
-    EcsHandle component = components[0];
+    EcsEntity *components = ecs_array_buffer(table->family);
+    EcsEntity component = components[0];
     EcsFamily family = 0;
 
     if (component == EcsFamilyComponent_h) {
         EcsFamilyComponent *fe = ECS_OFFSET(ecs_table_get(
-            table, rows, index), sizeof(EcsHandle));
+            table, rows, index), sizeof(EcsEntity));
         family = fe->resolved;
     } else {
         family = ecs_family_register(world, stage, entity, NULL);
@@ -165,20 +165,20 @@ EcsFamily ecs_family_from_handle(
 EcsFamily ecs_family_register(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle to_add,
+    EcsEntity to_add,
     EcsArray *set)
 {
     uint32_t count = ecs_array_count(set);
-    EcsHandle new_set[count + 1];
+    EcsEntity new_set[count + 1];
     void *new_buffer = new_set;
 
     if (to_add) {
         void *buffer = ecs_array_buffer(set);
         if (count) {
-            memcpy(new_set, buffer, sizeof(EcsHandle) * count);
+            memcpy(new_set, buffer, sizeof(EcsEntity) * count);
         }
         new_set[count] = to_add;
-        qsort(new_set, count + 1, sizeof(EcsHandle), compare_handle);
+        qsort(new_set, count + 1, sizeof(EcsEntity), compare_handle);
         count ++;
     } else if (set) {
         void *buffer = ecs_array_buffer(set);
@@ -194,7 +194,7 @@ EcsFamily ecs_family_add(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily family,
-    EcsHandle component)
+    EcsEntity component)
 {
     EcsArray *array = ecs_family_get(world, stage, family);
     assert(!family || array != NULL);
@@ -223,8 +223,8 @@ EcsFamily ecs_family_merge(
 
     EcsArray *arr_cur = ecs_family_get(world, stage, cur_id);
     EcsArray *to_add = NULL, *to_del = NULL;
-    EcsHandle *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
-    EcsHandle cur = 0, add = 0, del = 0;
+    EcsEntity *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
+    EcsEntity cur = 0, add = 0, del = 0;
     uint32_t i_cur = 0, i_add = 0, i_del = 0;
     uint32_t cur_count = 0, add_count = 0, del_count = 0;
 
@@ -248,7 +248,7 @@ EcsFamily ecs_family_merge(
         add = buf_add[0];
     }
 
-    EcsHandle buf_new[cur_count + add_count];
+    EcsEntity buf_new[cur_count + add_count];
     uint32_t new_count = 0;
 
     do {
@@ -291,7 +291,7 @@ EcsFamily ecs_family_merge(
 }
 
 /* O(n) algorithm to check whether family 1 is equal or superset of family 2 */
-EcsHandle ecs_family_contains(
+EcsEntity ecs_family_contains(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily family_id_1,
@@ -309,12 +309,12 @@ EcsHandle ecs_family_contains(
     assert(f_1 && f_2);
 
     uint32_t i_2, i_1 = 0;
-    EcsHandle *h2p, *h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
-    EcsHandle h1 = 0, prefab = 0;
+    EcsEntity *h2p, *h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
+    EcsEntity h1 = 0, prefab = 0;
     bool prefab_searched = false;
 
     for (i_2 = 0; (h2p = ecs_array_get(f_2, &handle_arr_params, i_2)); i_2 ++) {
-        EcsHandle h2 = *h2p;
+        EcsEntity h2 = *h2p;
 
         if (!h1p) {
             return 0;
@@ -364,10 +364,10 @@ bool ecs_family_contains_component(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily family_id,
-    EcsHandle component)
+    EcsEntity component)
 {
     EcsArray *family = ecs_family_get(world, stage, family_id);
-    EcsHandle *buffer = ecs_array_buffer(family);
+    EcsEntity *buffer = ecs_array_buffer(family);
     uint32_t i, count = ecs_array_count(family);
 
     for (i = 0; i < count; i++) {
@@ -381,7 +381,7 @@ bool ecs_family_contains_component(
 
 /* -- Public API -- */
 
-EcsHandle ecs_new_family(
+EcsEntity ecs_new_family(
     EcsWorld *world,
     const char *id,
     const char *sig)
@@ -389,7 +389,7 @@ EcsHandle ecs_new_family(
     assert(world->magic == ECS_WORLD_MAGIC);
     EcsFamilyComponent family = {0};
 
-    EcsHandle result = ecs_lookup(world, id);
+    EcsEntity result = ecs_lookup(world, id);
     if (result) {
         return result;
     }
@@ -398,7 +398,7 @@ EcsHandle ecs_new_family(
         return 0;
     }
 
-    EcsHandle family_entity = ecs_map_get64(
+    EcsEntity family_entity = ecs_map_get64(
         world->family_handles, family.family);
 
     if (family_entity) {
@@ -423,7 +423,7 @@ EcsHandle ecs_new_family(
     }
 }
 
-EcsHandle ecs_new_prefab(
+EcsEntity ecs_new_prefab(
     EcsWorld *world,
     const char *id,
     const char *sig)
@@ -431,7 +431,7 @@ EcsHandle ecs_new_prefab(
     assert(world->magic == ECS_WORLD_MAGIC);
     EcsFamilyComponent family = {0};
 
-    EcsHandle result = ecs_lookup(world, id);
+    EcsEntity result = ecs_lookup(world, id);
     if (result) {
         return result;
     }

@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
 
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
 
     /* Whenever components are added or removed from entities, entities
      * move around between different internal tables, which can be expensive.

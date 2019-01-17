@@ -35,12 +35,12 @@ void compute_and_families(
 }
 
 static
-EcsHandle components_contains(
+EcsEntity components_contains(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily table_family,
     EcsFamily family,
-    EcsHandle *entity_out,
+    EcsEntity *entity_out,
     bool match_all)
 {
     EcsArray *components = ecs_family_get(world, stage, table_family);
@@ -48,14 +48,14 @@ EcsHandle components_contains(
 
     uint32_t i, count = ecs_array_count(components);
     for (i = 0; i < count; i ++) {
-        EcsHandle h = *(EcsHandle*)ecs_array_get(
+        EcsEntity h = *(EcsEntity*)ecs_array_get(
             components, &handle_arr_params, i);
 
         uint64_t row_64 = ecs_map_get64(world->entity_index, h);
         assert(row_64 != 0);
 
         EcsRow row = ecs_to_row(row_64);
-        EcsHandle component = ecs_family_contains(
+        EcsEntity component = ecs_family_contains(
             world, stage, row.family_id, family, match_all, true);
         if (component != 0) {
             if (entity_out) *entity_out = h;
@@ -71,15 +71,15 @@ bool components_contains_component(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily table_family,
-    EcsHandle component,
-    EcsHandle *entity_out)
+    EcsEntity component,
+    EcsEntity *entity_out)
 {
     EcsArray *components = ecs_family_get(world, stage, table_family);
     assert(components != NULL);
 
     uint32_t i, count = ecs_array_count(components);
     for (i = 0; i < count; i ++) {
-        EcsHandle h = *(EcsHandle*)ecs_array_get(
+        EcsEntity h = *(EcsEntity*)ecs_array_get(
             components, &handle_arr_params, i);
 
         uint64_t row_64 = ecs_map_get64(world->entity_index, h);
@@ -130,11 +130,11 @@ EcsSystemRef* get_ref_data(
 
 /* Get actual entity on which specified component is stored */
 static
-EcsHandle get_entity_for_component(
+EcsEntity get_entity_for_component(
     EcsWorld *world,
-    EcsHandle entity,
+    EcsEntity entity,
     EcsFamily family_id,
-    EcsHandle component)
+    EcsEntity component)
 {
     if (entity) {
         EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
@@ -142,7 +142,7 @@ EcsHandle get_entity_for_component(
     }
 
     EcsArray *family = ecs_family_get(world, NULL, family_id);
-    EcsHandle *buffer = ecs_array_buffer(family);
+    EcsEntity *buffer = ecs_array_buffer(family);
     uint32_t i, count = ecs_array_count(family);
 
     for (i = 0; i < count; i ++) {
@@ -152,7 +152,7 @@ EcsHandle get_entity_for_component(
     }
 
     if (i == count) {
-        EcsHandle prefab = ecs_map_get64(world->prefab_index, family_id);
+        EcsEntity prefab = ecs_map_get64(world->prefab_index, family_id);
         if (prefab) {
             return get_entity_for_component(world, prefab, 0, component);
         }
@@ -170,7 +170,7 @@ static
 void add_table(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle system,
+    EcsEntity system,
     EcsTableSystem *system_data,
     EcsTable *table)
 {
@@ -195,7 +195,7 @@ void add_table(
      * typically share the same component list, unless the system contains OR
      * expressions in the signature. In that case, the system can match against
      * tables that have different components for a column. */
-    EcsHandle *component_data = ecs_array_add(
+    EcsEntity *component_data = ecs_array_add(
         &system_data->components, &system_data->component_params);
 
     /* Table index is at element 0 */
@@ -212,7 +212,7 @@ void add_table(
     EcsIter it = ecs_array_iter(system_data->base.columns, &column_arr_params);
     while (ecs_iter_hasnext(&it)) {
         EcsSystemColumn *column = ecs_iter_next(&it);
-        EcsHandle entity = 0, component = 0;
+        EcsEntity entity = 0, component = 0;
 
         /* Column that retrieves data from an entity */
         if (column->kind == EcsFromEntity) {
@@ -294,7 +294,7 @@ void add_table(
             ref_data[ref].component = component;
             ref ++;
 
-            /* Negative number indicates ref instead of offset to ecs_column */
+            /* Negative number indicates ref instead of offset to ecs_data */
             table_data[i] = -ref;
         }
 
@@ -309,7 +309,7 @@ void add_table(
     }
 
     /* Register system with the table */
-    EcsHandle *h = ecs_array_add(&table->frame_systems, &handle_arr_params);;
+    EcsEntity *h = ecs_array_add(&table->frame_systems, &handle_arr_params);;
     if (h) *h = system;
 }
 
@@ -319,7 +319,7 @@ bool match_table(
     EcsWorld *world,
     EcsStage *stage,
     EcsTable *table,
-    EcsHandle system,
+    EcsEntity system,
     EcsTableSystem *system_data)
 {
     EcsFamily family, table_family;
@@ -396,7 +396,7 @@ static
 void match_tables(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle system,
+    EcsEntity system,
     EcsTableSystem *system_data)
 {
     EcsIter it = ecs_array_iter(world->table_db, &table_arr_params);
@@ -423,7 +423,7 @@ void resolve_refs(
 
     for (i = 0; i < count; i ++) {
         EcsSystemRef *ref = &refs[i];
-        EcsHandle entity = ref->entity;
+        EcsEntity entity = ref->entity;
         if (!entity) {
             break;
         }
@@ -440,7 +440,7 @@ void resolve_refs(
 EcsResult ecs_system_notify_create_table(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle system,
+    EcsEntity system,
     EcsTable *table)
 {
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
@@ -459,7 +459,7 @@ EcsResult ecs_system_notify_create_table(
  * tables are not considered by the system in the main loop. */
 void ecs_system_activate_table(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     EcsTable *table,
     bool active)
 {
@@ -519,7 +519,7 @@ void ecs_run_job(
     EcsThread *thread,
     EcsJob *job)
 {
-    EcsHandle system = job->system;
+    EcsEntity system = job->system;
     EcsTableSystem *system_data = job->system_data;
     EcsSystemAction action = system_data->base.action;
     uint32_t table_element_size = system_data->table_params.element_size;
@@ -530,10 +530,11 @@ void ecs_run_job(
     uint32_t remaining = job->row_count;
     uint32_t column_count = ecs_array_count(system_data->base.columns);
     void *refs_data[column_count];
-    EcsHandle refs_entity[column_count];
+    EcsEntity refs_entity[column_count];
     int32_t *table_buffer = ecs_array_get(
         system_data->tables, &system_data->table_params, table_index);
     char *component_buffer = ecs_array_buffer(system_data->components);
+
     void *component_buffer_el = ECS_OFFSET(component_buffer,
         component_element_size * table_buffer[HANDLES_INDEX]);;
 
@@ -573,6 +574,7 @@ void ecs_run_job(
                 table_buffer[HANDLES_INDEX] * component_element_size);
             start_index = 0;
             remaining -= count;
+
         } else {
             info.last = ECS_OFFSET(info.first, element_size * remaining);
             remaining = 0;
@@ -586,7 +588,7 @@ void ecs_run_job(
 
 /* -- Private API -- */
 
-EcsHandle ecs_new_table_system(
+EcsEntity ecs_new_table_system(
     EcsWorld *world,
     const char *id,
     EcsSystemKind kind,
@@ -598,7 +600,7 @@ EcsHandle ecs_new_table_system(
         assert(0);
     }
 
-    EcsHandle result = ecs_new_w_family(
+    EcsEntity result = ecs_new_w_family(
         world, NULL, world->table_system_family);
 
     EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
@@ -614,7 +616,7 @@ EcsHandle ecs_new_table_system(
     system_data->base.kind = kind;
     system_data->table_params.element_size = sizeof(int32_t) * (count + 3);
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
-    system_data->component_params.element_size = sizeof(EcsHandle) * count;
+    system_data->component_params.element_size = sizeof(EcsEntity) * count;
     system_data->period = 0;
 
     system_data->components = ecs_array_new(
@@ -634,7 +636,7 @@ EcsHandle ecs_new_table_system(
     match_tables(world, NULL, result, system_data);
 
     if (kind == EcsOnFrame) {
-        EcsHandle *elem;
+        EcsEntity *elem;
         if (ecs_array_count(system_data->tables)) {
             elem = ecs_array_add(&world->frame_systems, &handle_arr_params);
         } else {
@@ -642,22 +644,22 @@ EcsHandle ecs_new_table_system(
         }
         *elem = result;
     } else if (kind == EcsPreFrame) {
-        EcsHandle *elem = ecs_array_add(
+        EcsEntity *elem = ecs_array_add(
             &world->pre_frame_systems, &handle_arr_params);
         *elem = result;
     } else if (kind == EcsPostFrame) {
-        EcsHandle *elem = ecs_array_add(
+        EcsEntity *elem = ecs_array_add(
             &world->post_frame_systems, &handle_arr_params);
         *elem = result;
     } else if (kind == EcsOnDemand) {
-        EcsHandle *elem = ecs_array_add(
+        EcsEntity *elem = ecs_array_add(
             &world->on_demand_systems, &handle_arr_params);
         *elem = result;
     }
 
     if (system_data->and_from_system) {
         EcsArray *f = ecs_family_get(world, NULL, system_data->and_from_system);
-        EcsHandle *buffer = ecs_array_buffer(f);
+        EcsEntity *buffer = ecs_array_buffer(f);
         uint32_t i, count = ecs_array_count(f);
         for (i = 0; i < count; i ++) {
             ecs_stage_add(world, result, buffer[i]);
@@ -670,11 +672,11 @@ EcsHandle ecs_new_table_system(
 
 /* -- Public API -- */
 
-EcsHandle ecs_run_system(
+EcsEntity ecs_run(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     float delta_time,
-    EcsHandle filter,
+    EcsEntity filter,
     void *param)
 {
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
@@ -724,9 +726,9 @@ EcsHandle ecs_run_system(
     char *component_buffer = ecs_array_buffer(system_data->components);
     int32_t *last = ECS_OFFSET(table_buffer, element_size * table_count);
     void *refs_data[column_count];
-    EcsHandle refs_entity[column_count];
+    EcsEntity refs_entity[column_count];
     EcsFamily filter_id = 0;
-    EcsHandle interrupted_by = 0;
+    EcsEntity interrupted_by = 0;
 
     EcsRows info = {
         .world = world,
@@ -739,7 +741,7 @@ EcsHandle ecs_run_system(
     };
 
     if (filter) {
-        filter_id = ecs_family_from_handle(world, stage, filter, NULL);
+        filter_id = ecs_family_from_handle(real_world, stage, filter, NULL);
     }
 
     for (; table_buffer < last; table_buffer = ECS_OFFSET(table_buffer, element_size)) {
@@ -748,7 +750,7 @@ EcsHandle ecs_run_system(
 
         if (filter_id) {
             if (!ecs_family_contains(
-                world, stage, table->family_id, filter_id, true, true))
+                real_world, stage, table->family_id, filter_id, true, true))
             {
                 continue;
             }

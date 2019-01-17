@@ -10,7 +10,7 @@ const EcsArrayParams table_arr_params = {
 };
 
 const EcsArrayParams handle_arr_params = {
-    .element_size = sizeof(EcsHandle)
+    .element_size = sizeof(EcsEntity)
 };
 
 const EcsArrayParams stage_arr_params = {
@@ -45,7 +45,7 @@ static
 void bootstrap_component(
     EcsWorld *world)
 {
-    EcsHandle handle = ecs_new(world, 0);
+    EcsEntity handle = ecs_new(world, 0);
     assert (handle == EcsComponent_h);
 
     EcsFamily family_id = ecs_family_register(world, NULL, handle, NULL);
@@ -64,11 +64,11 @@ void bootstrap_component(
 
 /** Generic function for initializing built-in components */
 static
-EcsHandle new_builtin_component(
+EcsEntity new_builtin_component(
     EcsWorld *world,
     size_t size)
 {
-    EcsHandle handle = ecs_new(world, 0);
+    EcsEntity handle = ecs_new(world, 0);
     ecs_stage_add(world, handle, EcsComponent_h);
     ecs_commit(world, handle);
     EcsComponent *component_data = ecs_get_ptr(world, handle, EcsComponent_h);
@@ -84,7 +84,7 @@ EcsHandle new_builtin_component(
 static
 void add_builtin_id(
     EcsWorld *world,
-    EcsHandle handle,
+    EcsEntity handle,
     const char *id)
 {
     ecs_stage_add(world, handle, EcsId_h);
@@ -100,7 +100,7 @@ void add_builtin_id(
 static
 EcsFamily get_builtin_family(
     EcsWorld *world,
-    EcsHandle component)
+    EcsEntity component)
 {
     EcsFamily family = ecs_family_register(world, NULL, component, NULL);
     EcsArray *family_array = ecs_family_get(world, NULL, family);
@@ -116,7 +116,7 @@ void notify_create_table(
 {
     EcsIter it = ecs_array_iter(systems, &handle_arr_params);
     while (ecs_iter_hasnext(&it)) {
-        EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
+        EcsEntity system = *(EcsEntity*)ecs_iter_next(&it);
         ecs_system_notify_create_table(world, stage, system, table);
     }
 }
@@ -230,14 +230,14 @@ void remove_systems(
     EcsRows *rows)
 {
     void *row;
-    EcsHandle component = rows->components[0];
+    EcsEntity component = rows->components[0];
 
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
+        EcsEntity entity = ecs_entity(rows, row, 0);
         if (entity != rows->world->deinit_table_system &&
             entity != rows->world->deinit_row_system)
         {
-            void *data = ecs_column(rows, row, 0);
+            void *data = ecs_data(rows, row, 0);
             if (component == EcsTableSystem_h) {
                 deinit_table_system(data);
             } else {
@@ -317,7 +317,7 @@ EcsArray** frame_system_array(
  */
 void ecs_world_activate_system(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     EcsSystemKind kind,
     bool active)
 {
@@ -334,7 +334,7 @@ void ecs_world_activate_system(
     uint32_t count = ecs_array_count(src_array);
     int i;
     for (i = 0; i < count; i ++) {
-        EcsHandle *h = ecs_array_get(
+        EcsEntity *h = ecs_array_get(
             src_array, &handle_arr_params, i);
         if (*h == system) {
             break;
@@ -387,11 +387,11 @@ char* ecs_family_tostr(
     uint32_t len;
     char buf[15];
 
-    EcsHandle *handles = ecs_array_buffer(family);
+    EcsEntity *handles = ecs_array_buffer(family);
     uint32_t i, count = ecs_array_count(family);
 
     for (i = 0; i < count; i ++) {
-        EcsHandle h = handles[i];
+        EcsEntity h = handles[i];
         if (i) {
             *(char*)ecs_array_add(&chbuf, &char_arr_params) = ',';
         }
@@ -480,7 +480,7 @@ EcsWorld *ecs_init(void) {
     world->last_handle = 0;
     world->should_quit = false;
 
-    ut_time_get(&world->frame_start);
+    world->frame_start = (struct timespec){0, 0};
     world->frame_time = 0;
     world->system_time = 0;
     world->target_fps = 0;
@@ -497,6 +497,7 @@ EcsWorld *ecs_init(void) {
     assert_func(new_builtin_component(world, sizeof(EcsId)) == EcsId_h);
     assert_func(new_builtin_component(world, 0) == EcsHidden_h);
     assert_func(new_builtin_component(world, 0) == EcsContainer_h);
+    assert_func(new_builtin_component(world, 0) == EcsRoot_h);
 
     add_builtin_id(world, EcsComponent_h, "EcsComponent");
     add_builtin_id(world, EcsFamilyComponent_h, "EcsFamilyComponent");
@@ -506,6 +507,7 @@ EcsWorld *ecs_init(void) {
     add_builtin_id(world, EcsId_h, "EcsId");
     add_builtin_id(world, EcsHidden_h, "EcsHidden");
     add_builtin_id(world, EcsContainer_h, "EcsContainer");
+    add_builtin_id(world, EcsRoot_h, "EcsRoot");
 
     world->component_family = get_builtin_family(world, EcsComponent_h);
     world->family_family = get_builtin_family(world, EcsFamilyComponent_h);
@@ -541,7 +543,7 @@ EcsResult ecs_fini(
 
     uint32_t i, system_count = ecs_array_count(world->fini_tasks);
     if (system_count) {
-        EcsHandle *buffer = ecs_array_buffer(world->fini_tasks);
+        EcsEntity *buffer = ecs_array_buffer(world->fini_tasks);
         for (i = 0; i < system_count; i ++) {
             ecs_run_task(world, buffer[i], 0);
         }
@@ -585,7 +587,7 @@ void ecs_dim(
 
 void ecs_dim_family(
     EcsWorld *world,
-    EcsHandle type,
+    EcsEntity type,
     uint32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
@@ -598,7 +600,7 @@ void ecs_dim_family(
     }
 }
 
-EcsHandle ecs_lookup(
+EcsEntity ecs_lookup(
     EcsWorld *world,
     const char *id)
 {
@@ -620,7 +622,7 @@ EcsHandle ecs_lookup(
         for (row = buffer; row < last; row = ECS_OFFSET(row, element_size)) {
             EcsId *id_ptr = ECS_OFFSET(row, offset);
             if (!strcmp(*id_ptr, id)) {
-                return *(EcsHandle*)row;
+                return *(EcsEntity*)row;
             }
         }
     }
@@ -638,9 +640,18 @@ bool ecs_progress(
 
     /* Start measuring total frame time */
     if (measure_frame_time || !delta_time) {
-        float delta = ut_time_measure(&world->frame_start);
-        if (!delta_time) {
-            delta_time = delta;
+        if (world->frame_start.tv_sec) {
+            float delta = ut_time_measure(&world->frame_start);
+            if (!delta_time) {
+                delta_time = delta;
+            }
+        } else {
+            ut_time_measure(&world->frame_start);
+            if (world->target_fps) {
+                delta_time = 1.0 / world->target_fps;
+            } else {
+                delta_time = 1.0 / 60.0; /* Best guess */
+            }
         }
     }
 
@@ -648,9 +659,9 @@ bool ecs_progress(
 
     /* Run pre-frame systems */
     uint32_t i, system_count = ecs_array_count(world->pre_frame_systems);
-    EcsHandle *buffer = ecs_array_buffer(world->pre_frame_systems);
+    EcsEntity *buffer = ecs_array_buffer(world->pre_frame_systems);
     for (i = 0; i < system_count; i ++) {
-        ecs_run_system(world, buffer[i], delta_time, 0, NULL);
+        ecs_run(world, buffer[i], delta_time, 0, NULL);
     }
 
     /* Run periodic table systems */
@@ -674,7 +685,7 @@ bool ecs_progress(
             world->valid_schedule = true;
         } else {
             for (i = 0; i < system_count; i ++) {
-                ecs_run_system(world, buffer[i], delta_time, 0, NULL);
+                ecs_run(world, buffer[i], delta_time, 0, NULL);
             }
         }
     }
@@ -684,7 +695,7 @@ bool ecs_progress(
     if (system_count) {
         world->in_progress = true;
 
-        EcsHandle *buffer = ecs_array_buffer(world->tasks);
+        EcsEntity *buffer = ecs_array_buffer(world->tasks);
         for (i = 0; i < system_count; i ++) {
             ecs_run_task(world, buffer[i], delta_time);
         }
@@ -694,7 +705,7 @@ bool ecs_progress(
     system_count = ecs_array_count(world->post_frame_systems);
     buffer = ecs_array_buffer(world->post_frame_systems);
     for (i = 0; i < system_count; i ++) {
-        ecs_run_system(world, buffer[i], delta_time, 0, NULL);
+        ecs_run(world, buffer[i], delta_time, 0, NULL);
     }
 
     /* Profile system time & merge if systems were processed */

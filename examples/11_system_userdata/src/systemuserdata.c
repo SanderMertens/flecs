@@ -10,12 +10,12 @@ typedef uint32_t Counter;
 void Move(EcsRows *rows) {
     /* We can obtain the Counter column outside of the loop since the component
      * is added to the system, and not on individual entities. */
-    Counter *count = ecs_column(rows, NULL, 0);
+    Counter *count = ecs_data(rows, NULL, 0);
     (*count) ++;
 
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 1);
+        Position *p = ecs_data(rows, row, 1);
         p->x += 1;
         p->y += 2;
     }
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsOnFrame, SYSTEM.Counter, Position);
 
     /* Create entity, add & initialize Position */
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     ecs_set(world, e, Position, {0, 0});
 
     /* Set system context */

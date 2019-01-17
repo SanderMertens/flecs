@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 typedef struct EcsSystemStats {
-    EcsHandle system;
+    EcsEntity system;
     const char *id;
     const char *signature;
     uint32_t tables_matched;

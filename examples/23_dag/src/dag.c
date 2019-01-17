@@ -34,7 +34,7 @@ typedef int32_t Health;
  * across different tables, which allows for making quick intersections based
  * on player, region or platoon */
 static
-void adopt(EcsWorld *world, EcsHandle object, EcsHandle parent) {
+void adopt(EcsWorld *world, EcsEntity object, EcsEntity parent) {
     ecs_stage_add(world, object, parent);
     ecs_commit(world, object);
 }
@@ -43,8 +43,8 @@ void adopt(EcsWorld *world, EcsHandle object, EcsHandle parent) {
  * added to other entities just like normal components- with the exception that
  * they don't add data. */
 static
-EcsHandle create(EcsWorld *world, EcsHandle parent, const char *id, EcsHandle type) {
-    EcsHandle result = ecs_new(world, type);
+EcsEntity create(EcsWorld *world, EcsEntity parent, const char *id, EcsEntity type) {
+    EcsEntity result = ecs_new(world, type);
     ecs_stage_add(world, result, EcsComponent_h);
     if (parent)
         ecs_stage_add(world, result, parent);
@@ -58,10 +58,10 @@ void ListUnits(EcsRows *rows) {
     EcsWorld *world = rows->world;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        EcsHandle platoon = ecs_source(rows, 0);
-        Position *p = ecs_column(rows, row, 1);
-        Health *h = ecs_column(rows, row, 2);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        EcsEntity platoon = ecs_source(rows, 0);
+        Position *p = ecs_data(rows, row, 1);
+        Health *h = ecs_data(rows, row, 2);
 
         printf("Unit %llu, %s, position (%d,%d), health %d\n",
             entity, ecs_id(world, platoon), p->x, p->y, *h);
@@ -71,19 +71,19 @@ void ListUnits(EcsRows *rows) {
 static
 void ListPlatoons(EcsRows *rows) {
     EcsWorld *world = rows->world;
-    EcsHandle ListUnits_h = ecs_handle(rows, 3);
+    EcsEntity ListUnits_h = ecs_component(rows, 3);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        EcsHandle player = ecs_source(rows, 0);
-        EcsHandle region = ecs_source(rows, 1);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        EcsEntity player = ecs_source(rows, 0);
+        EcsEntity region = ecs_source(rows, 1);
 
         printf("%s, %s, %s:\n",
             ecs_id(world, entity),
             ecs_id(world, region),
             ecs_id(world, player));
 
-        ecs_run_system(world, ListUnits_h, rows->delta_time, entity, NULL);
+        ecs_run(world, ListUnits_h, rows->delta_time, entity, NULL);
     }
 }
 
@@ -109,15 +109,15 @@ int main(int argc, char *argv[]) {
 
     /* On-demand system that lists all units. In addition to Position and Health
      * which are the "normal" components found on a unit, units also have the
-     * Platoon entity. With COMPONENT.Platoon, we select the "Platoon" component
-     * from this platoon entity. Since "Platoon" is a TAG and not a COMPONENT
+     * Platoon entity. With CONTAINER.Platoon, we select the "Platoon" component
+     * from this platoon entity. Since "Platoon" is a TAG and not a CONTAINER
      * it does not contain any data. The reason we still add it to the signature
      * is so we get access to the platoon entity.
      *
      * We can get access to the platoon entity with ecs_source in the system
      * callback, which gives us the entity on which the Platoon component was
      * found, which in this case is the platoon to which the unit belongs. */
-    ECS_SYSTEM(world, ListUnits, EcsOnDemand, COMPONENT.Platoon, Position, Health);
+    ECS_SYSTEM(world, ListUnits, EcsOnDemand, CONTAINER.Platoon, Position, Health);
 
     /* On-demand system that lists all platoons. This system selects all
      * entities that have the "Platoon" tag. In addition, it references the
@@ -127,18 +127,18 @@ int main(int argc, char *argv[]) {
      * Additionally, the ListUnits handle is passed to the system, so it can
      * invoke the ListUnits on-demand system to list the entities that match
      * with the platoon. */
-    ECS_SYSTEM(world, ListPlatoons, EcsOnDemand, COMPONENT.Player, COMPONENT.Region, Platoon, HANDLE.ListUnits);
+    ECS_SYSTEM(world, ListPlatoons, EcsOnDemand, CONTAINER.Player, CONTAINER.Region, Platoon, ID.ListUnits);
 
     /* Create players, platoons and regions */
-    EcsHandle player1 = create(world, 0, "Player 1", Player_h);
-    EcsHandle player2 = create(world, 0, "Player 2", Player_h);
+    EcsEntity player1 = create(world, 0, "Player 1", Player_h);
+    EcsEntity player2 = create(world, 0, "Player 2", Player_h);
 
-    EcsHandle region1 = create(world, 0, "Region 1", Region_h);
-    EcsHandle region2 = create(world, 0, "Region 2", Region_h);
+    EcsEntity region1 = create(world, 0, "Region 1", Region_h);
+    EcsEntity region2 = create(world, 0, "Region 2", Region_h);
 
-    EcsHandle platoon1 = create(world, player1, "Platoon 1", Platoon_h);
-    EcsHandle platoon2 = create(world, player1, "Platoon 2", Platoon_h);
-    EcsHandle platoon3 = create(world, player2, "Platoon 3", Platoon_h);
+    EcsEntity platoon1 = create(world, player1, "Platoon 1", Platoon_h);
+    EcsEntity platoon2 = create(world, player1, "Platoon 2", Platoon_h);
+    EcsEntity platoon3 = create(world, player2, "Platoon 3", Platoon_h);
 
     /* Add platoons to regions, in addition to players */
     adopt(world, platoon1, region1);
@@ -153,19 +153,19 @@ int main(int argc, char *argv[]) {
 
     /* List all units */
     printf("-- All units\n");
-    ecs_run_system(world, ListUnits_h, 1.0, 0, NULL);
+    ecs_run(world, ListUnits_h, 1.0, 0, NULL);
 
     /* Only list units for platoon 2 */
     printf("\n-- Platoon 2 filter\n");
-    ecs_run_system(world, ListUnits_h, 1.0, platoon2, NULL);
+    ecs_run(world, ListUnits_h, 1.0, platoon2, NULL);
 
     /* Only list units/platoons for player 1 */
     printf("\n-- Player 1 filter\n");
-    ecs_run_system(world, ListPlatoons_h, 1.0, player1, NULL);
+    ecs_run(world, ListPlatoons_h, 1.0, player1, NULL);
 
     /* Only list units/platoons for region 2 */
     printf("\n-- Region 2 filter\n");
-    ecs_run_system(world, ListPlatoons_h, 1.0, region2, NULL);
+    ecs_run(world, ListPlatoons_h, 1.0, region2, NULL);
 
     /* Cleanup the world. */
     return ecs_fini(world);

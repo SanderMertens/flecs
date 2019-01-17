@@ -5,7 +5,7 @@ int main(int argc, char *argv[]) {
     EcsWorld *world = ecs_init();
 
     /* Create empty entity */
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
 
     /* Set the id of the entity */
     ecs_set(world, e, EcsId, "MyEntity");

@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 
     ECS_COMPONENT(world, Position);
 
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
 
     /* Add & initialize Position component */
     ecs_set(world, e, Position, {.x = 10, .y = 20});

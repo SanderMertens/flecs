@@ -21,7 +21,7 @@ void test_EcsRemove_tc_remove_2_component(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    EcsHandle e = ecs_new(world, MyFamily_h);
+    EcsEntity e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
@@ -39,7 +39,7 @@ void test_EcsRemove_tc_remove_component(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_FAMILY(world, MyFamily, Foo);
-    EcsHandle e = ecs_new(world, MyFamily_h);
+    EcsEntity e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     ecs_stage_remove(world, e, Foo_h);
@@ -56,7 +56,7 @@ void test_EcsRemove_tc_remove_2_component_from_3(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_FAMILY(world, MyFamily, Foo, Bar, Hello);
-    EcsHandle e = ecs_new(world, MyFamily_h);
+    EcsEntity e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
@@ -77,7 +77,7 @@ void test_EcsRemove_tc_remove_component_from_2(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
-    EcsHandle e = ecs_new(world, MyFamily_h);
+    EcsEntity e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -90,9 +90,9 @@ void test_EcsRemove_tc_remove_component_from_2(
 }
 
 typedef struct Context {
-    EcsHandle entity;
-    EcsHandle component;
-    EcsHandle component2;
+    EcsEntity entity;
+    EcsEntity component;
+    EcsEntity component2;
     uint32_t count;
 } Context;
 
@@ -101,9 +101,9 @@ void RemoveNext(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        (*(int*)ecs_column(rows, row, 1)) += 2;
-        if (ecs_entity(row) - 1 == ctx->entity) {
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        (*(int*)ecs_data(rows, row, 1)) += 2;
+        if (ecs_entity(rows, row, ECS_ROW_ENTITY) - 1 == ctx->entity) {
             ecs_stage_remove(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
@@ -117,9 +117,9 @@ void RemovePrev(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        (*(int*)ecs_column(rows, row, 1)) += 2;
-        if (ecs_entity(row) + 1 == ctx->entity) {
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        (*(int*)ecs_data(rows, row, 1)) += 2;
+        if (ecs_entity(rows, row, ECS_ROW_ENTITY) + 1 == ctx->entity) {
             ecs_stage_remove(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
@@ -133,9 +133,9 @@ void RemoveCurrent(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        (*(int*)ecs_column(rows, row, 1)) += 2;
-        if (ecs_entity(row) == ctx->entity) {
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        (*(int*)ecs_data(rows, row, 1)) += 2;
+        if (ecs_entity(rows, row, ECS_ROW_ENTITY) == ctx->entity) {
             ecs_stage_remove(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
@@ -149,10 +149,10 @@ void RemoveAll(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        ecs_stage_remove(rows->world, ecs_entity(row), ctx->component);
-        ecs_commit(rows->world, ecs_entity(row));
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        (*(int*)ecs_column(rows, row, 1)) += 2;
+        ecs_stage_remove(rows->world, ecs_entity(rows, row, ECS_ROW_ENTITY), ctx->component);
+        ecs_commit(rows->world, ecs_entity(rows, row, ECS_ROW_ENTITY));
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        (*(int*)ecs_data(rows, row, 1)) += 2;
         ctx->count ++;
     }
 }
@@ -168,9 +168,9 @@ void test_EcsRemove_tc_remove_prev_in_progress(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, RemovePrev, EcsOnFrame, Foo, Bar);
 
-    EcsHandle e1 = ecs_new(world, MyFamily_h);
-    EcsHandle e2 = ecs_new(world, MyFamily_h);
-    EcsHandle e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyFamily_h);
+    EcsEntity e2 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyFamily_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -223,9 +223,9 @@ void test_EcsRemove_tc_remove_cur_in_progress(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, RemoveCurrent, EcsOnFrame, Foo, Bar);
 
-    EcsHandle e1 = ecs_new(world, MyFamily_h);
-    EcsHandle e2 = ecs_new(world, MyFamily_h);
-    EcsHandle e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyFamily_h);
+    EcsEntity e2 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyFamily_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -278,9 +278,9 @@ void test_EcsRemove_tc_remove_next_in_progress(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, RemoveNext, EcsOnFrame, Foo, Bar);
 
-    EcsHandle e1 = ecs_new(world, MyFamily_h);
-    EcsHandle e2 = ecs_new(world, MyFamily_h);
-    EcsHandle e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyFamily_h);
+    EcsEntity e2 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyFamily_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -333,9 +333,9 @@ void test_EcsRemove_tc_remove_all_in_progress(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, RemoveAll, EcsOnFrame, Foo, Bar);
 
-    EcsHandle e1 = ecs_new(world, MyFamily_h);
-    EcsHandle e2 = ecs_new(world, MyFamily_h);
-    EcsHandle e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyFamily_h);
+    EcsEntity e2 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyFamily_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -376,12 +376,12 @@ void test_EcsRemove_tc_remove_all_in_progress(
 static
 void RemoveAdd(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
-    EcsHandle Bar_h = ctx->component;
+    EcsEntity Bar_h = ctx->component;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        (*(int*)ecs_column(rows, row, 1)) += 2;
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        (*(int*)ecs_data(rows, row, 1)) += 2;
         ecs_stage_add(rows->world, entity, ctx->component);
         ecs_stage_remove(rows->world, entity, ctx->component);
         ecs_commit(rows->world, entity);
@@ -401,9 +401,9 @@ void test_EcsRemove_tc_remove_add_in_progress(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, RemoveAdd, EcsOnFrame, Foo, Bar);
 
-    EcsHandle e1 = ecs_new(world, MyFamily_h);
-    EcsHandle e2 = ecs_new(world, MyFamily_h);
-    EcsHandle e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyFamily_h);
+    EcsEntity e2 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyFamily_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -457,12 +457,12 @@ void test_EcsRemove_tc_remove_add_in_progress(
 static
 void Remove2Add(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
-    EcsHandle Bar_h = ctx->component;
+    EcsEntity Bar_h = ctx->component;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        (*(int*)ecs_column(rows, row, 1)) += 2;
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        (*(int*)ecs_data(rows, row, 1)) += 2;
         ecs_stage_add(rows->world, entity, ctx->component);
         ecs_stage_remove(rows->world, entity, ctx->component);
         ecs_stage_remove(rows->world, entity, ctx->component2);
@@ -483,9 +483,9 @@ void test_EcsRemove_tc_remove_2_add_in_progress(
     ECS_FAMILY(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, Remove2Add, EcsOnFrame, Foo, Bar);
 
-    EcsHandle e1 = ecs_new(world, MyFamily_h);
-    EcsHandle e2 = ecs_new(world, MyFamily_h);
-    EcsHandle e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyFamily_h);
+    EcsEntity e2 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyFamily_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);

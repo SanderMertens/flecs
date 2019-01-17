@@ -10,8 +10,8 @@ typedef uint32_t Speed;
 void Move(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
-        Speed *s = ecs_column(rows, row, 1);
+        Position *p = ecs_data(rows, row, 0);
+        Speed *s = ecs_data(rows, row, 1);
 
         /* Add Speed if available, otherwise just add 1 */
         if (s) {
@@ -38,12 +38,12 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsOnFrame, Position, ?Speed);
 
     /* Create entity with Position and Speed component */
-    EcsHandle e1 = ecs_new(world, 0);
+    EcsEntity e1 = ecs_new(world, 0);
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Speed, 2);
 
     /* Create entity with just a Position component */
-    EcsHandle e2 = ecs_new(world, 0);
+    EcsEntity e2 = ecs_new(world, 0);
     ecs_set(world, e2, Position, {0, 0});
 
     /* Call ecs_progress. Both entities will be matched by the Move system */

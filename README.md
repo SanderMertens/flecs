@@ -124,8 +124,8 @@ typedef int32_t Speed;
 void Move(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
-        Speed *s = ecs_column(rows, row, 1);
+        Position *p = ecs_data(rows, row, 0);
+        Speed *s = ecs_data(rows, row, 1);
         p->x += *s * rows->delta_time;
         p->y += *s * rows->delta_time;
     }

@@ -10,12 +10,12 @@ typedef uint32_t Speed;
 void Move(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
+        Position *p = ecs_data(rows, row, 0);
 
         /* The Speed component is actually defined on the prefab, but for the
          * callback it looks just like an ordinary component. This allows this
          * system to be reused for entities with and without prefabs. */
-        Speed *s = ecs_column(rows, row, 1);
+        Speed *s = ecs_data(rows, row, 1);
 
         /* Try to change the value of the Speed component here. You'll notice
          * that it changes the values for all entities created with the same

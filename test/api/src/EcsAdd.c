@@ -28,7 +28,7 @@ void test_EcsAdd_tc_add_2_component(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
 
-    EcsHandle e = ecs_new(world, Bar_h);
+    EcsEntity e = ecs_new(world, Bar_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Bar_h));
 
@@ -63,7 +63,7 @@ void test_EcsAdd_tc_add_2_component_to_empty(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Hello);
 
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_stage_add(world, e, Foo_h);
@@ -87,7 +87,7 @@ void test_EcsAdd_tc_add_component(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
 
-    EcsHandle e = ecs_new(world, Bar_h);
+    EcsEntity e = ecs_new(world, Bar_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Bar_h));
 
@@ -119,7 +119,7 @@ void test_EcsAdd_tc_add_component_to_empty(
 
     ECS_COMPONENT(world, Foo);
 
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_stage_add(world, e, Foo_h);
@@ -139,7 +139,7 @@ void test_EcsAdd_tc_add_existing_component(
 
     ECS_COMPONENT(world, Foo);
 
-    EcsHandle e = ecs_new(world, Foo_h);
+    EcsEntity e = ecs_new(world, Foo_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
 
@@ -170,7 +170,7 @@ void test_EcsAdd_tc_add_family(
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
 
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
@@ -195,7 +195,7 @@ void test_EcsAdd_tc_add_family_with_family(
     ECS_FAMILY(world, Family1, Foo);
     ECS_FAMILY(world, Family2, Family1, Bar);
 
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
@@ -219,7 +219,7 @@ void test_EcsAdd_tc_add_family_overlapping_w_entity(
     ECS_COMPONENT(world, Bar);
     ECS_FAMILY(world, MyFamily, Foo, Bar);
 
-    EcsHandle e = ecs_new(world, Foo_h);
+    EcsEntity e = ecs_new(world, Foo_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
@@ -253,7 +253,7 @@ void test_EcsAdd_tc_add_overlapping_families(
     ECS_FAMILY(world, Family1, Foo, Bar);
     ECS_FAMILY(world, Family2, Bar, Hello);
 
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
@@ -269,8 +269,8 @@ void test_EcsAdd_tc_add_overlapping_families(
 }
 
 typedef struct Context {
-    EcsHandle entity;
-    EcsHandle component;
+    EcsEntity entity;
+    EcsEntity component;
     uint32_t count;
 } Context;
 
@@ -279,8 +279,8 @@ void AddNext(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        if (ecs_entity(row) - 1 == ctx->entity) {
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        if (ecs_entity(rows, row, ECS_ROW_ENTITY) - 1 == ctx->entity) {
             ecs_stage_add(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
@@ -294,8 +294,8 @@ void AddPrev(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        if (ecs_entity(row) + 1 == ctx->entity) {
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        if (ecs_entity(rows, row, ECS_ROW_ENTITY) + 1 == ctx->entity) {
             ecs_stage_add(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
@@ -309,8 +309,8 @@ void AddCurrent(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        if (ecs_entity(row) == ctx->entity) {
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        if (ecs_entity(rows, row, ECS_ROW_ENTITY) == ctx->entity) {
             ecs_stage_add(rows->world, ctx->entity, ctx->component);
             ecs_commit(rows->world, ctx->entity);
         }
@@ -324,9 +324,9 @@ void AddAll(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        ecs_stage_add(rows->world, ecs_entity(row), ctx->component);
-        ecs_commit(rows->world, ecs_entity(row));
-        (*(int*)ecs_column(rows, row, 0)) ++;
+        ecs_stage_add(rows->world, ecs_entity(rows, row, ECS_ROW_ENTITY), ctx->component);
+        ecs_commit(rows->world, ecs_entity(rows, row, ECS_ROW_ENTITY));
+        (*(int*)ecs_data(rows, row, 0)) ++;
         ctx->count ++;
     }
 }
@@ -341,9 +341,9 @@ void test_EcsAdd_tc_add_prev_in_progress(
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, AddPrev, EcsOnFrame, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -388,9 +388,9 @@ void test_EcsAdd_tc_add_cur_in_progress(
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, AddCurrent, EcsOnFrame, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -435,9 +435,9 @@ void test_EcsAdd_tc_add_next_in_progress(
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, AddNext, EcsOnFrame, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -482,9 +482,9 @@ void test_EcsAdd_tc_add_all_in_progress(
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, AddAll, EcsOnFrame, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);

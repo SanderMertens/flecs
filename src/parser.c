@@ -13,7 +13,7 @@ const char *skip_space(
     return ptr;
 }
 
-/** Parse element with a dot-separated qualifier ('COMPONENT.Foo') */
+/** Parse element with a dot-separated qualifier ('CONTAINER.Foo') */
 static
 char* parse_complex_elem(
     char *bptr,
@@ -36,13 +36,13 @@ char* parse_complex_elem(
 
     char *dot = strchr(bptr, '.');
     if (dot) {
-        if (!strncmp(bptr, "COMPONENT", dot - bptr)) {
+        if (!strncmp(bptr, "CONTAINER", dot - bptr)) {
             *elem_kind = EcsFromComponent;
         } else if (!strncmp(bptr, "SYSTEM", dot - bptr)) {
             *elem_kind = EcsFromSystem;
         } else if (!strncmp(bptr, "ENTITY", dot - bptr)) {
             /* default */
-        } else if (!strncmp(bptr, "HANDLE", dot - bptr)) {
+        } else if (!strncmp(bptr, "ID", dot - bptr)) {
             *elem_kind = EcsFromHandle;
         } else {
             ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);

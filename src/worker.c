@@ -1,5 +1,6 @@
-#include <assert.h>
 #include "include/private/reflecs.h"
+#include <assert.h>
+#include <math.h>
 
 const EcsArrayParams thread_arr_params = {
     .element_size = sizeof(EcsThread)
@@ -171,15 +172,11 @@ void create_jobs(
 /** Create a job per available thread for system */
 void ecs_schedule_jobs(
     EcsWorld *world,
-    EcsHandle system)
+    EcsEntity system)
 {
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     uint32_t thread_count = ecs_array_count(world->worker_threads);
     uint32_t total_rows = 0;
-
-    if (ecs_array_count(system_data->jobs) != thread_count) {
-        create_jobs(system_data, thread_count);
-    }
 
     EcsIter table_it = ecs_array_iter(
         system_data->tables, &system_data->table_params);
@@ -191,11 +188,18 @@ void ecs_schedule_jobs(
         total_rows += ecs_array_count(table->rows);
     }
 
+    if (total_rows < thread_count) {
+        thread_count = total_rows;
+    }
+
+    if (ecs_array_count(system_data->jobs) != thread_count) {
+        create_jobs(system_data, thread_count);
+    }
+
     float rows_per_thread = (float)total_rows / (float)thread_count;
     float residual = 0;
     int32_t rows_per_thread_i = rows_per_thread;
 
-    EcsIter it = ecs_array_iter(system_data->jobs, &job_arr_params);
     table_it = ecs_array_iter(system_data->tables, &system_data->table_params);
 
     uint32_t sys_table_index = 0;
@@ -206,9 +210,10 @@ void ecs_schedule_jobs(
     uint32_t table_row_count = ecs_array_count(table->rows);
     uint32_t start_index = 0;
 
-    EcsJob *job;
-    while (ecs_iter_hasnext(&it)) {
-        job = ecs_iter_next(&it);
+    EcsJob *job = NULL;
+    uint32_t i;
+    for (i = 0; i < thread_count; i ++) {
+        job = ecs_array_get(system_data->jobs, &job_arr_params, i);
         int32_t rows_per_job = rows_per_thread_i;
         residual += rows_per_thread - rows_per_job;
         if (residual > 1) {
@@ -227,7 +232,7 @@ void ecs_schedule_jobs(
         while (start_index > table_row_count) {
             sys_table_index ++;
             table_index = *(uint32_t*)ecs_array_get(
-                system_data->tables, &system_data->table_params, 0);
+                system_data->tables, &system_data->table_params, sys_table_index);
             table = ecs_array_get(
                 world->table_db, &table_arr_params, table_index);
             table_row_count = ecs_array_count(table->rows);
@@ -247,14 +252,14 @@ void ecs_schedule_jobs(
 /** Assign jobs to worker threads, signal workers */
 void ecs_prepare_jobs(
     EcsWorld *world,
-    EcsHandle system)
+    EcsEntity system)
 {
     EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     EcsArray *threads = world->worker_threads;
     EcsArray *jobs = system_data->jobs;
     int i;
 
-    uint32_t thread_count = ecs_array_count(threads);
+    uint32_t thread_count = ecs_array_count(jobs);
 
     for (i = 0; i < thread_count; i++) {
         EcsThread *thr = ecs_array_get(threads, &thread_arr_params, i);

@@ -13,7 +13,7 @@ void PrintMessage(EcsRows *rows) {
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
 
         /* Obtain message component from first column */
-        Message *message = ecs_column(rows, row, 0);
+        Message *message = ecs_data(rows, row, 0);
 
         /* Print a message, and increase message id */
         printf("Hello World %d\n", message->id);
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, PrintMessage, EcsOnFrame, Message);
 
     /* Create a new entity, add and initialize the Message component */
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     ecs_set(world, e, Message, {.id = 0});
 
     /* Call ecs_progress 10 times. This will cause the system to be invoked 10

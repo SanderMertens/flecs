@@ -11,7 +11,7 @@ static
 void Set(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Foo *v = ecs_column(rows, row, 0);
+        Foo *v = ecs_data(rows, row, 0);
         (*v) ++;
         set_system_called ++;
     }
@@ -26,7 +26,7 @@ void test_EcsSetSystem_tc_set_after_new_empty(
     ECS_SYSTEM(world, Set, EcsOnSet, Foo);
 
     test_assertint(set_system_called, 0);
-    EcsHandle h = ecs_new(world, 0);
+    EcsEntity h = ecs_new(world, 0);
 
     test_assertint(set_system_called, 0);
     ecs_set(world, h, Foo, {10});
@@ -47,7 +47,7 @@ void test_EcsSetSystem_tc_set_after_new_nonempty(
     ECS_SYSTEM(world, Set, EcsOnSet, Foo);
 
     test_assertint(set_system_called, 0);
-    EcsHandle h = ecs_new(world, Bar_h);
+    EcsEntity h = ecs_new(world, Bar_h);
 
     test_assertint(set_system_called, 0);
     ecs_set(world, h, Foo, {10});
@@ -67,7 +67,7 @@ void test_EcsSetSystem_tc_set_existing_components(
     ECS_SYSTEM(world, Set, EcsOnSet, Foo);
 
     test_assertint(set_system_called, 0);
-    EcsHandle h = ecs_new(world, Foo_h);
+    EcsEntity h = ecs_new(world, Foo_h);
 
     test_assertint(set_system_called, 0);
     ecs_set(world, h, Foo, {10});
@@ -103,7 +103,7 @@ void test_EcsSetSystem_tc_set_twice(
     ECS_SYSTEM(world, Set, EcsOnSet, Foo);
 
     test_assertint(set_system_called, 0);
-    EcsHandle h = ecs_new(world, 0);
+    EcsEntity h = ecs_new(world, 0);
 
     test_assertint(set_system_called, 0);
     ecs_set(world, h, Foo, {10});
@@ -121,14 +121,14 @@ void test_EcsSetSystem_tc_set_twice(
 }
 
 typedef struct SetFooCtx {
-    EcsHandle Bar;
+    EcsEntity Bar;
 } SetFooCtx;
 
 static
 void SetBar(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Bar *v = ecs_column(rows, row, 0);
+        Bar *v = ecs_data(rows, row, 0);
         (*v) ++;
     }
 }
@@ -137,11 +137,11 @@ static
 void SetFoo(EcsRows *rows) {
     EcsWorld *world = rows->world;
     SetFooCtx *ctx = ecs_get_system_context(world, rows->system);
-    EcsHandle Bar_h = ctx->Bar;
+    EcsEntity Bar_h = ctx->Bar;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        Foo *v = ecs_column(rows, row, 0);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        Foo *v = ecs_data(rows, row, 0);
         (*v) ++;
 
         ecs_set(world, entity, Bar, {20});
@@ -163,7 +163,7 @@ void test_EcsSetSystem_tc_set_in_on_set(
         .Bar = Bar_h
     });
 
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_set(world, e, Foo, {10});
@@ -180,7 +180,7 @@ static
 void InitBar(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Bar *v = ecs_column(rows, row, 0);
+        Bar *v = ecs_data(rows, row, 0);
         *v = 20;
     }
 }
@@ -189,11 +189,11 @@ static
 void SetFooAdd(EcsRows *rows) {
     EcsWorld *world = rows->world;
     SetFooCtx *ctx = ecs_get_system_context(world, rows->system);
-    EcsHandle Bar_h = ctx->Bar;
+    EcsEntity Bar_h = ctx->Bar;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        Foo *v = ecs_column(rows, row, 0);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        Foo *v = ecs_data(rows, row, 0);
         (*v) ++;
 
         ecs_stage_add(world, entity, Bar_h);
@@ -216,7 +216,7 @@ void test_EcsSetSystem_tc_on_add_in_on_set(
         .Bar = Bar_h
     });
 
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_set(world, e, Foo, {10});

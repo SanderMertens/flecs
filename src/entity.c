@@ -22,19 +22,19 @@ void copy_row(
     assert(old_row != NULL);
     assert(new_row != NULL);
 
-    uint32_t new_offset = sizeof(EcsHandle);
-    uint32_t old_offset = sizeof(EcsHandle);
+    uint32_t new_offset = sizeof(EcsEntity);
+    uint32_t old_offset = sizeof(EcsEntity);
     uint32_t bytes_to_copy = 0;
     uint32_t count_new = ecs_array_count(new_family);
     int i_new = 0, i_old = 0;
 
-    EcsHandle *old_ptr = ecs_array_get(old_family, &handle_arr_params, i_old);
+    EcsEntity *old_ptr = ecs_array_get(old_family, &handle_arr_params, i_old);
 
     for (; i_new < count_new; ) {
-        EcsHandle new = *(EcsHandle*)ecs_array_get(
+        EcsEntity new = *(EcsEntity*)ecs_array_get(
             new_family, &handle_arr_params, i_new);
 
-        EcsHandle old = 0;
+        EcsEntity old = 0;
 
         if (old_ptr) {
             old = *old_ptr;
@@ -84,8 +84,8 @@ void copy_row(
 static
 bool has_type(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle type,
+    EcsEntity entity,
+    EcsEntity type,
     bool match_all)
 {
     EcsStage *stage = ecs_get_stage(&world);
@@ -111,12 +111,12 @@ bool has_type(
 static
 int32_t get_offset_for_component(
     EcsTable *table,
-    EcsHandle component)
+    EcsEntity component)
 {
     uint32_t offset = 0;
     uint16_t column = 0;
     EcsArray *family = table->family;
-    EcsHandle *buffer = ecs_array_buffer(family);
+    EcsEntity *buffer = ecs_array_buffer(family);
     uint32_t count = ecs_array_count(family);
 
     for (column = 0; column < count; column ++) {
@@ -140,7 +140,7 @@ void* get_row_ptr(
     EcsTable *table,
     EcsArray *rows,
     uint32_t index,
-    EcsHandle component,
+    EcsEntity component,
     EcsFamily family_id)
 {
     void *row = ecs_table_get(table, rows, index);
@@ -148,7 +148,7 @@ void* get_row_ptr(
     uint32_t offset = get_offset_for_component(table, component);
 
     if (offset != -1) {
-        return ECS_OFFSET(row, offset + sizeof(EcsHandle));
+        return ECS_OFFSET(row, offset + sizeof(EcsEntity));
     } else {
         return NULL;
     }
@@ -157,8 +157,8 @@ void* get_row_ptr(
 static
 void* get_ptr(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component,
+    EcsEntity entity,
+    EcsEntity component,
     bool staged_only,
     bool search_prefab,
     EcsEntityInfo *info)
@@ -187,7 +187,7 @@ void* get_ptr(
 
     if (ptr) return ptr;
 
-    EcsHandle prefab = 0;
+    EcsEntity prefab = 0;
 
     if (!world->in_progress || !staged_only) {
         row_64 = ecs_map_get64(world->entity_index, entity);
@@ -229,12 +229,12 @@ void copy_from_prefab(
     EcsWorld *world,
     EcsStage *stage,
     EcsTable *table,
-    EcsHandle entity,
+    EcsEntity entity,
     uint32_t index,
     EcsFamily family_id,
     EcsFamily to_add)
 {
-    EcsHandle prefab;
+    EcsEntity prefab;
     EcsFamily entity_family = family_id;
 
     if (world->in_progress) {
@@ -251,11 +251,11 @@ void copy_from_prefab(
             world, stage, row.family_id);
 
         EcsArray *add_family = ecs_family_get(world, stage, to_add);
-        EcsHandle *add_handles = ecs_array_buffer(add_family);
+        EcsEntity *add_handles = ecs_array_buffer(add_family);
         uint32_t i, add_count = ecs_array_count(add_family);
 
         for (i = 0; i < add_count; i ++) {
-            EcsHandle component = add_handles[i];
+            EcsEntity component = add_handles[i];
             void *prefab_ptr = get_row_ptr(
                 world, stage, prefab_table, prefab_table->rows,
                 row.index, component, row.family_id);
@@ -333,7 +333,7 @@ static
 uint32_t commit_w_family(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle entity,
+    EcsEntity entity,
     uint64_t old_row_64,
     EcsFamily family_id,
     EcsFamily to_add,
@@ -439,7 +439,7 @@ bool ecs_notify(
     EcsArray *rows,
     int32_t row_index)
 {
-    EcsHandle system = ecs_map_get64(systems, family_id);
+    EcsEntity system = ecs_map_get64(systems, family_id);
     bool notified = false;
 
     if (system) {
@@ -452,7 +452,7 @@ bool ecs_notify(
 
         EcsArray *family = ecs_family_get(world, stage, family_id);
         uint32_t i, column_count = ecs_array_count(family);
-        EcsHandle *buffer = ecs_array_buffer(system_data->components);
+        EcsEntity *buffer = ecs_array_buffer(system_data->components);
         int32_t columns[column_count];
 
         for (i = 0; i < column_count; i ++) {
@@ -481,8 +481,8 @@ bool ecs_notify(
     } else {
         EcsArray *family = ecs_family_get(world, stage, family_id);
         uint32_t i, count = ecs_array_count(family);
-        EcsHandle *buffer = ecs_array_buffer(family);
-        int32_t offset = sizeof(EcsHandle);
+        EcsEntity *buffer = ecs_array_buffer(family);
+        int32_t offset = sizeof(EcsEntity);
 
         for (i = 0; i < count; i ++) {
             EcsFamily fid = ecs_family_from_handle(
@@ -522,12 +522,12 @@ bool ecs_notify(
     return notified;
 }
 
-EcsHandle ecs_new_w_family(
+EcsEntity ecs_new_w_family(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily family_id)
 {
-    EcsHandle entity = ++ world->last_handle;
+    EcsEntity entity = ++ world->last_handle;
     commit_w_family(world, stage, entity, 0, family_id, family_id, 0);
     return entity;
 }
@@ -535,7 +535,7 @@ EcsHandle ecs_new_w_family(
 void ecs_merge_entity(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle entity,
+    EcsEntity entity,
     EcsRow *staged_row)
 {
     uint64_t old_row_64 = ecs_map_get64(world->entity_index, entity);
@@ -571,7 +571,7 @@ void ecs_merge_entity(
 
 EcsResult ecs_commit(
     EcsWorld *world,
-    EcsHandle entity)
+    EcsEntity entity)
 {
     EcsStage *stage = ecs_get_stage(&world);
 
@@ -609,12 +609,12 @@ EcsResult ecs_commit(
         world, stage, entity, row_64, family_id, to_add, to_remove);
 }
 
-EcsHandle ecs_new(
+EcsEntity ecs_new(
     EcsWorld *world,
-    EcsHandle type)
+    EcsEntity type)
 {
     EcsStage *stage = ecs_get_stage(&world);
-    EcsHandle entity = ++ world->last_handle;
+    EcsEntity entity = ++ world->last_handle;
     if (type) {
         EcsFamily family_id = ecs_family_from_handle(world, stage, type, NULL);
         commit_w_family(world, stage, entity, 0, family_id, family_id, 0);
@@ -623,13 +623,13 @@ EcsHandle ecs_new(
     return entity;
 }
 
-EcsHandle ecs_clone(
+EcsEntity ecs_clone(
     EcsWorld *world,
-    EcsHandle entity,
+    EcsEntity entity,
     bool copy_value)
 {
     EcsStage *stage = ecs_get_stage(&world);
-    EcsHandle result = ++ world->last_handle;
+    EcsEntity result = ++ world->last_handle;
     if (entity) {
         int64_t row64 = ecs_map_get64(world->entity_index, entity);
         if (row64) {
@@ -663,14 +663,14 @@ EcsHandle ecs_clone(
     return result;
 }
 
-EcsHandle ecs_new_w_count(
+EcsEntity ecs_new_w_count(
     EcsWorld *world,
-    EcsHandle type,
+    EcsEntity type,
     uint32_t count,
-    EcsHandle *handles_out)
+    EcsEntity *handles_out)
 {
     EcsStage *stage = ecs_get_stage(&world);
-    EcsHandle result = world->last_handle + 1;
+    EcsEntity result = world->last_handle + 1;
     world->last_handle += count;
 
     if (type) {
@@ -694,7 +694,7 @@ EcsHandle ecs_new_w_count(
 
 void ecs_delete(
     EcsWorld *world,
-    EcsHandle entity)
+    EcsEntity entity)
 {
     EcsStage *stage = ecs_get_stage(&world);
     bool in_progress = world->in_progress;
@@ -707,24 +707,24 @@ void ecs_delete(
             ecs_map_remove(world->entity_index, entity);
         }
     } else {
-        EcsHandle *h = ecs_array_add(&stage->delete_stage, &handle_arr_params);
+        EcsEntity *h = ecs_array_add(&stage->delete_stage, &handle_arr_params);
         *h = entity;
     }
 }
 
 void* ecs_get_ptr(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component)
+    EcsEntity entity,
+    EcsEntity component)
 {
     EcsEntityInfo info;
     return get_ptr(world, entity, component, false, true, &info);
 }
 
-EcsHandle ecs_set_ptr(
+EcsEntity ecs_set_ptr(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component,
+    EcsEntity entity,
+    EcsEntity component,
     void *src)
 {
     EcsEntityInfo info = {0}, cinfo = {0};
@@ -765,27 +765,27 @@ EcsHandle ecs_set_ptr(
 
 bool ecs_has(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle type)
+    EcsEntity entity,
+    EcsEntity type)
 {
     return has_type(world, entity, type, true);
 }
 
 bool ecs_has_any(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle type)
+    EcsEntity entity,
+    EcsEntity type)
 {
     return has_type(world, entity, type, false);
 }
 
-EcsHandle ecs_new_component(
+EcsEntity ecs_new_component(
     EcsWorld *world,
     const char *id,
     size_t size)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    EcsHandle result = ecs_lookup(world, id);
+    EcsEntity result = ecs_lookup(world, id);
     if (result) {
         return result;
     }
@@ -810,7 +810,7 @@ EcsHandle ecs_new_component(
 
 const char* ecs_id(
     EcsWorld *world,
-    EcsHandle entity)
+    EcsEntity entity)
 {
     EcsId *id = ecs_get_ptr(world, entity, EcsId_h);
     if (id) {
@@ -822,7 +822,7 @@ const char* ecs_id(
 
 bool ecs_empty(
     EcsWorld *world,
-    EcsHandle entity)
+    EcsEntity entity)
 {
     uint64_t row64 = ecs_map_get64(world->entity_index, entity);
     return row64 != 0;

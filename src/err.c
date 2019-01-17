@@ -54,6 +54,26 @@ void _ecs_abort(
     abort();
 }
 
+void _ecs_assert(
+    bool condition,
+    uint32_t error_code,
+    const char *param,
+    const char *condition_str,
+    const char *file,
+    uint32_t line)
+{
+    if (!condition) {
+        if (param) {
+            fprintf(stderr, "assert(%s) %s:%d: %s (%s)\n",
+                condition_str, file, line, ecs_strerror(error_code), param);
+        } else {
+            fprintf(stderr, "assert(%s) %s:%d: %s\n",
+                condition_str, file, line, ecs_strerror(error_code));
+        }
+        abort();
+    }
+}
+
 const char* ecs_strerror(
     uint32_t error_code)
 {

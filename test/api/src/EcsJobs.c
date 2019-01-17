@@ -9,7 +9,7 @@ typedef struct Foo {
 void Progress(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Foo *foo = ecs_column(rows, row, 0);
+        Foo *foo = ecs_data(rows, row, 0);
         foo->x ++;
     }
 }
@@ -22,7 +22,7 @@ void test_EcsJobs_tc_2_thread_10_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 10, THREADS = 2;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -54,7 +54,7 @@ void test_EcsJobs_tc_2_thread_1_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 1, THREADS = 2;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -86,7 +86,7 @@ void test_EcsJobs_tc_2_thread_2_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 2, THREADS = 2;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -118,7 +118,7 @@ void test_EcsJobs_tc_2_thread_5_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 5, THREADS = 2;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -150,7 +150,7 @@ void test_EcsJobs_tc_3_thread_10_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 10, THREADS = 3;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -182,7 +182,7 @@ void test_EcsJobs_tc_3_thread_1_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 1, THREADS = 3;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -214,7 +214,7 @@ void test_EcsJobs_tc_3_thread_2_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 2, THREADS = 3;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -246,7 +246,7 @@ void test_EcsJobs_tc_3_thread_5_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 5, THREADS = 3;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -278,7 +278,7 @@ void test_EcsJobs_tc_4_thread_10_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 10, THREADS = 4;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -310,7 +310,7 @@ void test_EcsJobs_tc_4_thread_1_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 1, THREADS = 4;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -342,7 +342,7 @@ void test_EcsJobs_tc_4_thread_2_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 2, THREADS = 4;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -374,7 +374,7 @@ void test_EcsJobs_tc_4_thread_5_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 5, THREADS = 4;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -406,7 +406,7 @@ void test_EcsJobs_tc_5_thread_10_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 10, THREADS = 5;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -438,7 +438,7 @@ void test_EcsJobs_tc_5_thread_1_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 1, THREADS = 5;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -470,7 +470,7 @@ void test_EcsJobs_tc_5_thread_2_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 2, THREADS = 5;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -502,7 +502,7 @@ void test_EcsJobs_tc_5_thread_5_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 5, THREADS = 5;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -534,7 +534,7 @@ void test_EcsJobs_tc_6_thread_10_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 10, THREADS = 6;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -566,7 +566,7 @@ void test_EcsJobs_tc_6_thread_1_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 1, THREADS = 6;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -598,7 +598,7 @@ void test_EcsJobs_tc_6_thread_2_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 2, THREADS = 6;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);
@@ -630,7 +630,7 @@ void test_EcsJobs_tc_6_thread_5_entity(
     ECS_SYSTEM(world, Progress, EcsOnFrame, Foo);
 
     int i, ENTITIES = 5, THREADS = 6;
-    EcsHandle handles[ENTITIES];
+    EcsEntity handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Foo_h);

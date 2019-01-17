@@ -21,8 +21,8 @@ void RandomPlacement(EcsRows *rows) {
     printf("RandomPlacement\n");
 
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
-        Rect *r = ecs_column(rows, row, 1);
+        Position *p = ecs_data(rows, row, 0);
+        Rect *r = ecs_data(rows, row, 1);
 
         p->x = r->left;
         p->y = r->top;
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     });
 
     /* Create 10 entities with the Position component */
-    EcsHandle handles[NUM_ENTITIES];
+    EcsEntity handles[NUM_ENTITIES];
     ecs_new_w_count(world, Position_h, NUM_ENTITIES, handles);
 
     /* Print entities */

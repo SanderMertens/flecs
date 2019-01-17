@@ -56,7 +56,7 @@ void process_to_delete(
     EcsWorld *world,
     EcsStage *stage)
 {
-    EcsHandle *buffer = ecs_array_buffer(stage->delete_stage);
+    EcsEntity *buffer = ecs_array_buffer(stage->delete_stage);
     uint32_t i, count = ecs_array_count(stage->delete_stage);
     for (i = 0; i < count; i ++) {
         ecs_delete(world, buffer[i]);
@@ -71,7 +71,7 @@ void process_to_commit(
 {
     EcsIter it = ecs_map_iter(stage->entity_stage);
     while (ecs_iter_hasnext(&it)) {
-        EcsHandle entity;
+        EcsEntity entity;
         uint64_t row64 = ecs_map_next(&it, &entity);
         EcsRow staged_row = ecs_to_row(row64);
         ecs_merge_entity(world, stage, entity, &staged_row);
@@ -95,8 +95,8 @@ static
 EcsResult stage_components(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle entity,
-    EcsHandle component,
+    EcsEntity entity,
+    EcsEntity component,
     EcsMap *stage_index)
 {
     EcsFamily family_id;
@@ -104,7 +104,7 @@ EcsResult stage_components(
     family_id = ecs_map_get64(stage_index, entity);
     EcsFamily resolved_family = ecs_family_from_handle(
         world, stage, component, NULL);
-    assert(resolved_family != 0);
+    ecs_assert(resolved_family != 0, ECS_NOT_A_COMPONENT, NULL);
 
     EcsFamily new_family_id;
     if (family_id) {
@@ -165,8 +165,8 @@ void ecs_stage_merge(
 
 EcsResult ecs_stage_add(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component)
+    EcsEntity entity,
+    EcsEntity component)
 {
     EcsStage *stage = ecs_get_stage(&world);
     return stage_components(world, stage, entity, component, stage->add_stage);
@@ -174,8 +174,8 @@ EcsResult ecs_stage_add(
 
 EcsResult ecs_stage_remove(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component)
+    EcsEntity entity,
+    EcsEntity component)
 {
     EcsStage *stage = ecs_get_stage(&world);
     return stage_components(
@@ -184,8 +184,8 @@ EcsResult ecs_stage_remove(
 
 EcsResult ecs_add(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component)
+    EcsEntity entity,
+    EcsEntity component)
 {
     if (ecs_stage_add(world, entity, component)) {
         return EcsError;
@@ -200,8 +200,8 @@ EcsResult ecs_add(
 
 EcsResult ecs_remove(
     EcsWorld *world,
-    EcsHandle entity,
-    EcsHandle component)
+    EcsEntity entity,
+    EcsEntity component)
 {
     if (ecs_stage_remove(world, entity, component)) {
         return EcsError;

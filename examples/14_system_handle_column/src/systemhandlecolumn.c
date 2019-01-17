@@ -9,16 +9,16 @@ typedef uint32_t Speed;
 
 void AddSpeed(EcsRows *rows) {
     /* Get the Speed handle from the HANDLE column */
-    EcsHandle Speed_h = ecs_handle(rows, 1);
+    EcsEntity Speed_h = ecs_component(rows, 1);
 
     /* Initialize position and add Speed to every entity */
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
+        Position *p = ecs_data(rows, row, 0);
         p->x = 0;
         p->y = 0;
 
-        EcsHandle entity = ecs_entity(row);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
 
         /* ecs_set is a macro that requires the Speed_h variable. Try removing
          * the line that declares Speed_h; the code won't compile. */
@@ -29,8 +29,8 @@ void AddSpeed(EcsRows *rows) {
 void Move(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
-        Speed *s = ecs_column(rows, row, 1);
+        Position *p = ecs_data(rows, row, 0);
+        Speed *s = ecs_data(rows, row, 1);
         p->x += *s;
         p->y += *s;
         printf("Moved to %d, %d\n", p->x, p->y);
@@ -45,9 +45,9 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
 
-    /* Register the AddSpeed system. The HANDLE.Object column will pass the
+    /* Register the AddSpeed system. The ID.Object column will pass the
      * Speed handle to the system so it can be used by the callback. */
-    ECS_SYSTEM(world, AddSpeed, EcsOnAdd, Position, HANDLE.Speed);
+    ECS_SYSTEM(world, AddSpeed, EcsOnAdd, Position, ID.Speed);
 
     /* Register the Move system. */
     ECS_SYSTEM(world, Move, EcsOnFrame, Position, Speed);

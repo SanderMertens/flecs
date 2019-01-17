@@ -13,14 +13,14 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Position);
 
     /* Create a new entity, add a regular component */
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     ecs_stage_add(world, e, Position_h);
     ecs_commit(world, e);
 
     /* The above code is straightforward- it adds the Position component to the
      * new (empty) entity. Something you might've noticed is that we store
      * component handles (Position_h) and entity handles (e) with the same
-     * datatype (EcsHandle). This is because under the hood, reflecs stores
+     * datatype (EcsEntity). This is because under the hood, reflecs stores
      * components also as entities.
      *
      * What then, allows a component to be added to an entity? Component
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
      * From this follows that if we add EcsComponent to an entity, we should be
      * able to add it to another entity. Let's try it out: */
 
-    EcsHandle ec = ecs_new(world, 0);
+    EcsEntity ec = ecs_new(world, 0);
     ecs_stage_add(world, ec, EcsComponent_h);
     ecs_commit(world, ec);
 

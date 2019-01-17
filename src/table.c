@@ -15,7 +15,7 @@ void move_row(
     EcsTable *table = ecs_array_get(
         world->table_db, &table_arr_params, table_index);
     uint32_t new_index = ecs_array_get_index(array, params, to);
-    EcsHandle handle = *(EcsHandle*)to;
+    EcsEntity handle = *(EcsEntity*)to;
     EcsRow row = {.family_id = table->family_id, .index = new_index};
     ecs_map_set64(world->entity_index, handle, ecs_from_row(row));
 }
@@ -31,7 +31,7 @@ void activate_table(
     if (systems) {
         EcsIter it = ecs_array_iter(systems, &handle_arr_params);
         while (ecs_iter_hasnext(&it)) {
-            EcsHandle system = *(EcsHandle*)ecs_iter_next(&it);
+            EcsEntity system = *(EcsEntity*)ecs_iter_next(&it);
             ecs_system_activate_table(world, system, table, activate);
         }
     }
@@ -47,7 +47,7 @@ EcsResult ecs_table_init_w_size(
 {
     table->family = family;
     table->frame_systems = NULL;
-    table->row_params.element_size = size + sizeof(EcsHandle);
+    table->row_params.element_size = size + sizeof(EcsEntity);
     table->row_params.move_action = move_row;
     table->row_params.move_ctx = (void*)(uintptr_t)ecs_array_get_index(
         world->table_db, &table_arr_params, table);
@@ -75,7 +75,7 @@ EcsResult ecs_table_init(
     table->columns = malloc(sizeof(uint16_t) * ecs_array_count(family));
 
     while (ecs_iter_hasnext(&it)) {
-        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
+        EcsEntity h = *(EcsEntity*)ecs_iter_next(&it);
         EcsComponent *type = ecs_get_ptr(world, h, EcsComponent_h);
         uint32_t size = 0;
 
@@ -110,10 +110,10 @@ uint32_t ecs_table_insert(
     EcsWorld *world,
     EcsTable *table,
     EcsArray **rows,
-    EcsHandle handle)
+    EcsEntity handle)
 {
     void *row = ecs_array_add(rows, &table->row_params);
-    *(EcsHandle*)row = handle;
+    *(EcsEntity*)row = handle;
     uint32_t index = ecs_array_count(*rows) - 1;
 
     if (!index && *rows == table->rows) {
@@ -148,15 +148,15 @@ void* ecs_table_get(
 
 uint32_t ecs_table_column_offset(
     EcsTable *table,
-    EcsHandle component)
+    EcsEntity component)
 {
     EcsIter it = ecs_array_iter(table->family, &handle_arr_params);
     uint32_t i = 0, offset = 0;
 
     while (ecs_iter_hasnext(&it)) {
-        EcsHandle h = *(EcsHandle*)ecs_iter_next(&it);
+        EcsEntity h = *(EcsEntity*)ecs_iter_next(&it);
         if (h == component) {
-            return offset + sizeof(EcsHandle);
+            return offset + sizeof(EcsEntity);
         }
         offset += table->columns[i];
         i ++;

@@ -12,9 +12,9 @@ void test_EcsDelete_tc_delete_1st_of_3(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -46,9 +46,9 @@ void test_EcsDelete_tc_delete_2nd_of_3(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -80,9 +80,9 @@ void test_EcsDelete_tc_delete_3rd_of_3(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -114,9 +114,9 @@ void test_EcsDelete_tc_delete_2_of_3(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -148,9 +148,9 @@ void test_EcsDelete_tc_delete_3_of_3(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -176,7 +176,7 @@ void test_EcsDelete_tc_delete_3_of_3(
 }
 
 typedef struct Context {
-    EcsHandle entity;
+    EcsEntity entity;
     uint32_t count;
 } Context;
 
@@ -185,8 +185,8 @@ void DeleteNext(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        if (ecs_entity(row) - 1 == ctx->entity) {
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        if (ecs_entity(rows, row, ECS_ROW_ENTITY) - 1 == ctx->entity) {
             ecs_delete(rows->world, ctx->entity);
         }
 
@@ -199,8 +199,8 @@ void DeletePrev(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        if (ecs_entity(row) + 1 == ctx->entity) {
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        if (ecs_entity(rows, row, ECS_ROW_ENTITY) + 1 == ctx->entity) {
             ecs_delete(rows->world, ctx->entity);
         }
 
@@ -213,8 +213,8 @@ void DeleteCurrent(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        (*(int*)ecs_column(rows, row, 0)) ++;
-        if (ecs_entity(row) == ctx->entity) {
+        (*(int*)ecs_data(rows, row, 0)) ++;
+        if (ecs_entity(rows, row, ECS_ROW_ENTITY) == ctx->entity) {
             ecs_delete(rows->world, ctx->entity);
         }
 
@@ -227,8 +227,8 @@ void DeleteAll(EcsRows *rows) {
     Context *ctx = ecs_get_context(rows->world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        ecs_delete(rows->world, ecs_entity(row));
-        (*(int*)ecs_column(rows, row, 0)) ++;
+        ecs_delete(rows->world, ecs_entity(rows, row, ECS_ROW_ENTITY));
+        (*(int*)ecs_data(rows, row, 0)) ++;
         ctx->count ++;
     }
 }
@@ -240,9 +240,9 @@ void test_EcsDelete_tc_delete_cur_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, DeleteCurrent, EcsOnFrame, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -280,9 +280,9 @@ void test_EcsDelete_tc_delete_next_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, DeleteNext, EcsOnFrame, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -320,9 +320,9 @@ void test_EcsDelete_tc_delete_prev_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, DeletePrev, EcsOnFrame, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -360,9 +360,9 @@ void test_EcsDelete_tc_delete_all_in_progress(
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, DeleteAll, EcsOnFrame, Foo);
 
-    EcsHandle e1 = ecs_new(world, Foo_h);
-    EcsHandle e2 = ecs_new(world, Foo_h);
-    EcsHandle e3 = ecs_new(world, Foo_h);
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);

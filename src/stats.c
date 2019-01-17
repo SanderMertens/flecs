@@ -34,7 +34,7 @@ void calculate_system_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    EcsHandle *buffer = ecs_array_buffer(systems);
+    EcsEntity *buffer = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
         EcsTableSystem *sys = ecs_get_ptr(world, buffer[i], EcsTableSystem_h);
@@ -161,7 +161,7 @@ static
 void set_system_stats(
     EcsWorld *world,
     EcsArray **stats_array,
-    EcsHandle system,
+    EcsEntity system,
     bool active)
 {
     EcsId *id = ecs_get_ptr(world, system, EcsId_h);
@@ -238,7 +238,7 @@ int system_stats_arr(
     EcsArray *systems,
     bool active)
 {
-    EcsHandle *handles = ecs_array_buffer(systems);
+    EcsEntity *handles = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
         set_system_stats(world, stats_array, handles[i], active);
@@ -287,7 +287,7 @@ void ecs_get_stats(
         tstats->memory_allocd = ecs_array_size(table->rows) * row_size;
         tstats->columns = ecs_family_tostr(world, NULL, table->family_id);
 
-        EcsHandle family_handle = ecs_map_get64(
+        EcsEntity family_handle = ecs_map_get64(
             world->family_handles, table->family_id);
         if (family_handle) {
             tstats->id = ecs_id(world, family_handle);
@@ -309,10 +309,10 @@ void ecs_get_stats(
 
     EcsIter it = ecs_map_iter(world->family_handles);
     while (ecs_iter_hasnext(&it)) {
-        EcsHandle h = ecs_map_next(&it, NULL);
+        EcsEntity h = ecs_map_next(&it, NULL);
         EcsFamilyComponent *data = ecs_get_ptr(world, h, EcsFamilyComponent_h);
         EcsArray *family = ecs_map_get(world->family_index, data->resolved);
-        EcsHandle *buffer = ecs_array_buffer(family);
+        EcsEntity *buffer = ecs_array_buffer(family);
         uint32_t i, count = ecs_array_count(family);
 
         EcsFeatureStats feature = {0};

@@ -15,7 +15,7 @@ void Move(EcsRows *rows) {
 
     /* This will loop over the 10 entities we created in the main function. */
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
+        Position *p = ecs_data(rows, row, 0);
         p->x += 1;
         p->y += 2;
     }
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsOnFrame, Position);
 
     /* Create entity, add & initialize Position */
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     ecs_set(world, e, Position, {0, 0});
 
     /* Set world context. This data can be accessed through the world object */

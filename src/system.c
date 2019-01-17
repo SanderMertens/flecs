@@ -7,7 +7,7 @@
  * typically as a result of a ADD, REMOVE or SET trigger.
  */
 static
-EcsHandle new_row_system(
+EcsEntity new_row_system(
     EcsWorld *world,
     const char *id,
     EcsSystemKind kind,
@@ -20,7 +20,7 @@ EcsHandle new_row_system(
         return 0;
     }
 
-    EcsHandle result = ecs_new_w_family(world, NULL, world->row_system_family);
+    EcsEntity result = ecs_new_w_family(world, NULL, world->row_system_family);
     EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
     *id_data = id;
 
@@ -44,7 +44,7 @@ EcsHandle new_row_system(
     EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
 
     for (i = 0; i < column_count; i ++) {
-        EcsHandle *h = ecs_array_add(
+        EcsEntity *h = ecs_array_add(
             &system_data->components, &handle_arr_params);
 
         EcsSystemColumn *column = &buffer[i];
@@ -75,11 +75,11 @@ EcsHandle new_row_system(
         ecs_map_set64(index, family_id, result);
     } else {
         if (kind == EcsOnRemove) {
-            EcsHandle *system = ecs_array_add(
+            EcsEntity *system = ecs_array_add(
                 &world->fini_tasks, &handle_arr_params);
             *system = result;
         } else if (kind == EcsOnFrame) {
-            EcsHandle *system = ecs_array_add(
+            EcsEntity *system = ecs_array_add(
                 &world->tasks, &handle_arr_params);
             *system = result;
         } else {
@@ -104,7 +104,7 @@ EcsResult ecs_parse_component_action(
     EcsSystemColumn *elem;
 
     /* Lookup component handly by string identifier */
-    EcsHandle component = ecs_lookup(world, component_id);
+    EcsEntity component = ecs_lookup(world, component_id);
     if (!component) {
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
@@ -145,11 +145,15 @@ EcsResult ecs_parse_component_action(
         elem->kind = elem_kind;
         elem->oper_kind = EcsOperOr;
 
-    /* NOT columns are not added to the columns list. Instead, the system
-     * stores two NOT familes; one for entities and one for components. These
-     * can be quickly & efficiently used to exclude tables with
+    /* A system stores two NOT familes; one for entities and one for components.
+     * These can be quickly & efficiently used to exclude tables with
      * ecs_family_contains. */
     } else if (oper_kind == EcsOperNot) {
+        elem = ecs_array_add(&system_data->columns, &column_arr_params);
+        elem->kind = EcsFromHandle; /* Just pass handle to system */
+        elem->oper_kind = EcsOperNot;
+        elem->is.component = component;
+
         if (elem_kind == EcsFromEntity) {
             system_data->not_from_entity =
                 ecs_family_add(
@@ -170,7 +174,7 @@ error:
 void ecs_row_notify(
     EcsWorld *world,
     EcsStage *stage,
-    EcsHandle system,
+    EcsEntity system,
     EcsRowSystem *system_data,
     EcsArray *rows,
     EcsArrayParams *row_params,
@@ -199,7 +203,7 @@ void ecs_row_notify(
  * Tasks are ran once every frame. */
 void ecs_run_task(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     float delta_time)
 {
     EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
@@ -232,14 +236,14 @@ void ecs_run_task(
 
 /* -- Public API -- */
 
-EcsHandle ecs_new_system(
+EcsEntity ecs_new_system(
     EcsWorld *world,
     const char *id,
     EcsSystemKind kind,
     const char *sig,
     EcsSystemAction action)
 {
-    EcsHandle result = ecs_lookup(world, id);
+    EcsEntity result = ecs_lookup(world, id);
     if (result) {
         return result;
     }
@@ -269,8 +273,8 @@ EcsHandle ecs_new_system(
 
 void* ecs_set_system_context_ptr(
     EcsWorld *world,
-    EcsHandle system,
-    EcsHandle component,
+    EcsEntity system,
+    EcsEntity component,
     void *value)
 {
     EcsSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
@@ -289,7 +293,7 @@ void* ecs_set_system_context_ptr(
 
 void* ecs_get_system_context(
     EcsWorld *world,
-    EcsHandle system)
+    EcsEntity system)
 {
     EcsSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     if (!system_data) {
@@ -306,7 +310,7 @@ void* ecs_get_system_context(
 
 void ecs_enable(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     bool enabled)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
@@ -330,7 +334,7 @@ void ecs_enable(
         EcsWorld *world_temp = world;
         EcsStage *stage = ecs_get_stage(&world_temp);
         EcsArray *family = ecs_family_get(world, stage, family_data->family);
-        EcsHandle *buffer = ecs_array_buffer(family);
+        EcsEntity *buffer = ecs_array_buffer(family);
         uint32_t i, count = ecs_array_count(family);
         for (i = 0; i < count; i ++) {
             /* Enable/disable all systems in family */
@@ -362,7 +366,7 @@ void ecs_enable(
 
 bool ecs_is_enabled(
     EcsWorld *world,
-    EcsHandle system)
+    EcsEntity system)
 {
     EcsSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
     if (!system_data) {
@@ -378,7 +382,7 @@ bool ecs_is_enabled(
 
 void ecs_set_period(
     EcsWorld *world,
-    EcsHandle system,
+    EcsEntity system,
     float period)
 {
     assert(world->magic == ECS_WORLD_MAGIC);

@@ -11,8 +11,8 @@ void ListEntities(EcsRows *rows) {
 
     /* This will loop over the 10 entities we created in the main function. */
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        Position *p = ecs_column(rows, row, 0);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        Position *p = ecs_data(rows, row, 0);
         printf("Entity %llu: (%d, %d)\n", entity, p->x, p->y);
     }
 }
@@ -31,14 +31,14 @@ int main(int argc, char *argv[]) {
 
     /* List all the entities with a Position component. Instead of running the
      * system every frame, EcsOnDemand requires a user to explicitly invoke the
-     * system with ecs_run_system. */
+     * system with ecs_run. */
     ECS_SYSTEM(world, ListEntities, EcsOnDemand, Position);
 
     /* Create 10 entities with Object family */
     ecs_new_w_count(world, Object_h, 10, NULL);
 
     /* List entities with on demand system */
-    ecs_run_system(
+    ecs_run(
         world,           /* The world */
         ListEntities_h,  /* The system handle */
         1.0,             /* delta_time */

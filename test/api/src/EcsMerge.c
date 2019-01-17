@@ -15,18 +15,18 @@ typedef struct Hello {
 } Hello;
 
 typedef struct Context {
-    EcsHandle component;
-    EcsHandle component2;
+    EcsEntity component;
+    EcsEntity component2;
 } Context;
 
 void MergeAdd(EcsRows *rows) {
     EcsWorld *world = rows->world;
     Context *ctx = ecs_get_context(world);
-    EcsHandle Bar_h = ctx->component;
+    EcsEntity Bar_h = ctx->component;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        Foo *foo = ecs_column(rows, row, 0);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        Foo *foo = ecs_data(rows, row, 0);
         ecs_stage_add(world, entity, ctx->component);
         ecs_commit(world, entity);
         ecs_set(world, entity, Bar, {foo->x * 2});
@@ -44,7 +44,7 @@ void test_EcsMerge_tc_merge_add(
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, MergeAdd, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, Foo_h);
+    EcsEntity e = ecs_new(world, Foo_h);
     test_assert(ecs_has(world, e, Foo_h));
 
     ecs_set(world, e, Foo, {10});
@@ -87,12 +87,12 @@ void test_EcsMerge_tc_merge_add(
 void MergeAdd2(EcsRows *rows) {
     EcsWorld *world = rows->world;
     Context *ctx = ecs_get_context(world);
-    EcsHandle Bar_h = ctx->component;
-    EcsHandle Hello_h = ctx->component2;
+    EcsEntity Bar_h = ctx->component;
+    EcsEntity Hello_h = ctx->component2;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        Foo *foo = ecs_column(rows, row, 0);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        Foo *foo = ecs_data(rows, row, 0);
         ecs_stage_add(world, entity, ctx->component);
         ecs_stage_add(world, entity, ctx->component2);
         ecs_commit(world, entity);
@@ -113,7 +113,7 @@ void test_EcsMerge_tc_merge_add_2(
     ECS_COMPONENT(world, Hello);
     ECS_SYSTEM(world, MergeAdd2, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, Foo_h);
+    EcsEntity e = ecs_new(world, Foo_h);
     test_assert(ecs_has(world, e, Foo_h));
 
     ecs_set(world, e, Foo, {10});
@@ -170,7 +170,7 @@ void test_EcsMerge_tc_merge_add_existing(
     ECS_FAMILY(world, FooBar, Foo, Bar);
     ECS_SYSTEM(world, MergeAdd, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, FooBar_h);
+    EcsEntity e = ecs_new(world, FooBar_h);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
 
@@ -218,8 +218,8 @@ void MergeAddRemove(EcsRows *rows) {
     Context *ctx = ecs_get_context(world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        Foo *foo = ecs_column(rows, row, 0);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        Foo *foo = ecs_data(rows, row, 0);
         ecs_stage_add(world, entity, ctx->component);
         ecs_stage_remove(world, entity, ctx->component);
         ecs_commit(world, entity);
@@ -237,7 +237,7 @@ void test_EcsMerge_tc_merge_add_remove(
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, MergeAddRemove, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, Foo_h);
+    EcsEntity e = ecs_new(world, Foo_h);
     test_assert(ecs_has(world, e, Foo_h));
 
     ecs_set(world, e, Foo, {10});
@@ -279,7 +279,7 @@ void MergeRemove(EcsRows *rows) {
     Context *ctx = ecs_get_context(world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
         ecs_stage_remove(world, entity, ctx->component);
         ecs_commit(world, entity);
     }
@@ -296,7 +296,7 @@ void test_EcsMerge_tc_merge_remove(
     ECS_FAMILY(world, FooBar, Foo, Bar);
     ECS_SYSTEM(world, MergeRemove, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, FooBar_h);
+    EcsEntity e = ecs_new(world, FooBar_h);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
 
@@ -330,7 +330,7 @@ void MergeRemove2(EcsRows *rows) {
     Context *ctx = ecs_get_context(world);
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
         ecs_stage_remove(world, entity, ctx->component);
         ecs_stage_remove(world, entity, ctx->component2);
         ecs_commit(world, entity);
@@ -348,7 +348,7 @@ void test_EcsMerge_tc_merge_remove_2(
     ECS_FAMILY(world, FooBar, Foo, Bar);
     ECS_SYSTEM(world, MergeRemove2, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, FooBar_h);
+    EcsEntity e = ecs_new(world, FooBar_h);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
 
@@ -378,11 +378,11 @@ void test_EcsMerge_tc_merge_remove_2(
 void MergeAddN(EcsRows *rows) {
     EcsWorld *world = rows->world;
     Context *ctx = ecs_get_context(world);
-    EcsHandle Bar_h = ctx->component;
+    EcsEntity Bar_h = ctx->component;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        Foo *foo = ecs_column(rows, row, 0);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        Foo *foo = ecs_data(rows, row, 0);
 
         if (!ecs_has(world, entity, Bar_h)) {
             ecs_stage_add(world, entity, Bar_h);
@@ -405,7 +405,7 @@ void test_EcsMerge_tc_merge_n_add(
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, MergeAddN, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, Foo_h);
+    EcsEntity e = ecs_new(world, Foo_h);
     test_assert(ecs_has(world, e, Foo_h));
 
     ecs_set(world, e, Foo, {1});
@@ -435,11 +435,11 @@ void test_EcsMerge_tc_merge_n_add(
 void MergeAddRemoveN(EcsRows *rows) {
     EcsWorld *world = rows->world;
     Context *ctx = ecs_get_context(world);
-    EcsHandle Bar_h = ctx->component;
+    EcsEntity Bar_h = ctx->component;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        Foo *foo = ecs_column(rows, row, 0);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        Foo *foo = ecs_data(rows, row, 0);
 
         if (!ecs_has(world, entity, Bar_h)) {
             ecs_stage_add(world, entity, Bar_h);
@@ -462,7 +462,7 @@ void test_EcsMerge_tc_merge_n_add_remove(
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, MergeAddRemoveN, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, Foo_h);
+    EcsEntity e = ecs_new(world, Foo_h);
     test_assert(ecs_has(world, e, Foo_h));
 
     ecs_set(world, e, Foo, {1});
@@ -501,11 +501,11 @@ void test_EcsMerge_tc_merge_n_add_remove(
 void MergeSet(EcsRows *rows) {
     EcsWorld *world = rows->world;
     Context *ctx = ecs_get_context(world);
-    EcsHandle Bar_h = ctx->component;
+    EcsEntity Bar_h = ctx->component;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        Foo *foo = ecs_column(rows, row, 0);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        Foo *foo = ecs_data(rows, row, 0);
         ecs_set(world, entity, Bar, {foo->x * 2});
         foo->x += 2;
     }
@@ -521,7 +521,7 @@ void test_EcsMerge_tc_merge_set(
     ECS_COMPONENT(world, Bar);
     ECS_SYSTEM(world, MergeSet, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, Foo_h);
+    EcsEntity e = ecs_new(world, Foo_h);
     test_assert(ecs_has(world, e, Foo_h));
 
     ecs_set(world, e, Foo, {10});
@@ -564,12 +564,12 @@ void test_EcsMerge_tc_merge_set(
 void MergeSet2(EcsRows *rows) {
     EcsWorld *world = rows->world;
     Context *ctx = ecs_get_context(world);
-    EcsHandle Bar_h = ctx->component;
-    EcsHandle Hello_h = ctx->component2;
+    EcsEntity Bar_h = ctx->component;
+    EcsEntity Hello_h = ctx->component2;
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        Foo *foo = ecs_column(rows, row, 0);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        Foo *foo = ecs_data(rows, row, 0);
         ecs_set(world, entity, Bar, {foo->x * 2});
         ecs_set(world, entity, Hello, {foo->x * 3});
         foo->x += 2;
@@ -587,7 +587,7 @@ void test_EcsMerge_tc_merge_set_2(
     ECS_COMPONENT(world, Hello);
     ECS_SYSTEM(world, MergeAdd2, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, Foo_h);
+    EcsEntity e = ecs_new(world, Foo_h);
     test_assert(ecs_has(world, e, Foo_h));
 
     ecs_set(world, e, Foo, {10});
@@ -644,7 +644,7 @@ void test_EcsMerge_tc_merge_set_existing(
     ECS_FAMILY(world, FooBar, Foo, Bar);
     ECS_SYSTEM(world, MergeSet, EcsOnFrame, Foo);
 
-    EcsHandle e = ecs_new(world, FooBar_h);
+    EcsEntity e = ecs_new(world, FooBar_h);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
 

@@ -10,8 +10,8 @@ typedef float Speed;
 void Move(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
-        Speed *s = ecs_column(rows, row, 1);
+        Position *p = ecs_data(rows, row, 0);
+        Speed *s = ecs_data(rows, row, 1);
         p->x += *s;
         p->y += *s;
         printf("Moved to %f, %f\n", p->x, p->y);
@@ -21,7 +21,7 @@ void Move(EcsRows *rows) {
 void Drag(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Speed *s = ecs_column(rows, row, 0);
+        Speed *s = ecs_data(rows, row, 0);
         *s *= 0.9;
         printf("Decrease speed to %f\n", *s);
     }
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     ECS_FAMILY(world, Movement, Move, Drag);
 
     /* Create entity, add & initialize Position */
-    EcsHandle e = ecs_new(world, 0);
+    EcsEntity e = ecs_new(world, 0);
     ecs_set(world, e, Position, {0, 0});
     ecs_set(world, e, Speed, 1);
 

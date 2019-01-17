@@ -11,7 +11,7 @@ void Move(EcsRows *rows) {
 
     /* This will loop over the 10 entities we created in the main function. */
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
+        Position *p = ecs_data(rows, row, 0);
         p->x += 1;
         p->y += 2;
         printf("Moved to %d, %d\n", p->x, p->y);
@@ -22,7 +22,7 @@ void Move(EcsRows *rows) {
 void InitPosition(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
+        Position *p = ecs_data(rows, row, 0);
         p->x += 10;
         p->y += 20;
         printf("Position initialized (%d, %d)\n", p->x, p->y);
@@ -33,7 +33,7 @@ void InitPosition(EcsRows *rows) {
 void DeinitPosition(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_column(rows, row, 0);
+        Position *p = ecs_data(rows, row, 0);
         printf("Position deinitialized (%d, %d)\n", p->x, p->y);
     }
 }
