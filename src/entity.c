@@ -827,3 +827,38 @@ bool ecs_empty(
     uint64_t row64 = ecs_map_get64(world->entity_index, entity);
     return row64 != 0;
 }
+
+EcsEntity ecs_get_component(
+    EcsWorld *world,
+    EcsEntity entity,
+    uint32_t index)
+{
+    EcsStage *stage = ecs_get_stage(&world);
+    int64_t row64;
+
+    if (world->in_progress) {
+        row64 = ecs_map_get64(stage->entity_stage, entity);
+    } else {
+        row64 = ecs_map_get64(world->entity_index, entity);
+    }
+
+    if (!row64) {
+        return 0;
+    }
+
+    EcsArray *components;
+    EcsRow row = ecs_to_row(row64);
+    if (world->in_progress) {
+        components = ecs_map_get(world->family_index, row.family_id);
+    } else {
+        components = ecs_map_get(stage->family_stage, row.family_id);
+    }
+
+    EcsEntity *buffer = ecs_array_buffer(components);
+
+    if (ecs_array_count(components) > index) {
+        return buffer[index];
+    } else {
+        return 0;
+    }
+}

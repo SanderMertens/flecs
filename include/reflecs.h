@@ -765,6 +765,13 @@ bool ecs_empty(
     EcsWorld *world,
     EcsEntity entity);
 
+/** Get component from entity */
+REFLECS_EXPORT
+EcsEntity ecs_get_component(
+    EcsWorld *world,
+    EcsEntity entity,
+    uint32_t index);
+
 /* -- Id API -- */
 
 /** Return the entity id.
