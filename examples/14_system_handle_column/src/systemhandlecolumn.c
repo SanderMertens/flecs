@@ -22,7 +22,7 @@ void AddSpeed(EcsRows *rows) {
 
         /* ecs_set is a macro that requires the Speed_h variable. Try removing
          * the line that declares Speed_h; the code won't compile. */
-        ecs_set(rows->world, entity, Speed, 1);
+        ecs_set(rows->world, entity, Speed, {1});
     }
 }
 

@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
     /* Create entity with Position and Speed component */
     EcsEntity e1 = ecs_new(world, 0);
     ecs_set(world, e1, Position, {0, 0});
-    ecs_set(world, e1, Speed, 1);
+    ecs_set(world, e1, Speed, {1});
 
     /* Create entity with Position and Velocity component */
     EcsEntity e2 = ecs_new(world, 0);

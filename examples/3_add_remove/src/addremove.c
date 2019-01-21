@@ -7,13 +7,19 @@ typedef struct Position {
 
 typedef int32_t Speed;
 
+typedef int32_t Mass;
+
 int main(int argc, char *argv[]) {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
+    ECS_COMPONENT(world, Mass);
 
     EcsEntity e = ecs_new(world, 0);
+
+    /* Components can be added to entities with the ecs_add function */
+    ecs_add(world, e, Mass_h);
 
     /* Whenever components are added or removed from entities, entities
      * move around between different internal tables, which can be expensive.
@@ -31,6 +37,8 @@ int main(int argc, char *argv[]) {
     ecs_stage_remove(world, e, Position_h);
     ecs_stage_remove(world, e, Speed_h);
     ecs_commit(world, e);
+
+    ecs_remove(world, e, Mass_h);
 
     return ecs_fini(world);
 }

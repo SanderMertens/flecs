@@ -46,9 +46,8 @@ int main(int argc, char *argv[]) {
     ECS_FAMILY(world, Movement, Move, Drag);
 
     /* Create entity, add & initialize Position */
-    EcsEntity e = ecs_new(world, 0);
-    ecs_set(world, e, Position, {0, 0});
-    ecs_set(world, e, Speed, 1);
+    EcsEntity e = ecs_set(world, 0, Position, {0, 0});
+    ecs_set(world, e, Speed, {1});
 
     /* Call ecs_progress. This will cause Move and Drag to be invoked. */
     ecs_progress(world, 0);

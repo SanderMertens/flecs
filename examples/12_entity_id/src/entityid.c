@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     EcsEntity e = ecs_new(world, 0);
 
     /* Set the id of the entity */
-    ecs_set(world, e, EcsId, "MyEntity");
+    ecs_set(world, e, EcsId, {"MyEntity"});
 
     /* Get the id of the entity */
     printf("Entity id = %s (ecs_id)\n", ecs_id(world, e));

@@ -38,13 +38,11 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsOnFrame, Position, ?Speed);
 
     /* Create entity with Position and Speed component */
-    EcsEntity e1 = ecs_new(world, 0);
-    ecs_set(world, e1, Position, {0, 0});
-    ecs_set(world, e1, Speed, 2);
+    EcsEntity e1 = ecs_set(world, 0, Position, {0, 0});
+    ecs_set(world, e1, Speed, {2});
 
     /* Create entity with just a Position component */
-    EcsEntity e2 = ecs_new(world, 0);
-    ecs_set(world, e2, Position, {0, 0});
+    ecs_set(world, 0, Position, {0, 0});
 
     /* Call ecs_progress. Both entities will be matched by the Move system */
     ecs_progress(world, 0);

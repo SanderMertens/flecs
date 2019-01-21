@@ -29,13 +29,13 @@ int main(int argc, char *argv[]) {
     /* Create entity with Position and Speed component */
     EcsEntity e1 = ecs_new(world, 0);
     ecs_set(world, e1, Position, {0, 0});
-    ecs_set(world, e1, Speed, 1);
-    ecs_set(world, e1, EcsId, "MovingEntity");
+    ecs_set(world, e1, Speed, {1});
+    ecs_set(world, e1, EcsId, {"MovingEntity"});
 
     /* Create entity with just a Position component */
     EcsEntity e2 = ecs_new(world, 0);
     ecs_set(world, e2, Position, {0, 0});
-    ecs_set(world, e2, EcsId, "StaticEntity");
+    ecs_set(world, e2, EcsId, {"StaticEntity"});
 
     /* Call ecs_progress. Both entities will be matched by the Move system */
     ecs_progress(world, 0);

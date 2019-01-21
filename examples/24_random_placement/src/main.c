@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
     /* The RandomPlacement system is called when Position is added to an entity.
      * It places entities within a specified rectangle */
-    ECS_SYSTEM(world, RandomPlacement, EcsOnAdd, Position, SYSTEM.Rect);
+    ECS_SYSTEM(world, RandomPlacement, EcsOnSet, Position, SYSTEM.Rect);
 
     /* Initialize values for the rectangle */
     ecs_set(world, RandomPlacement_h, Rect, {

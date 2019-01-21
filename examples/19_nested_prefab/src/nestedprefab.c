@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
     ecs_set(world, Vehicle_h, Position, {0, 0});
 
     /* Initialize prefab speeds */
-    ecs_set(world, CarPrefab_h, Speed, 50);
-    ecs_set(world, PlanePrefab_h, Speed, 500);
+    ecs_set(world, CarPrefab_h, Speed, {50});
+    ecs_set(world, PlanePrefab_h, Speed, {500});
 
     /* Create five cars */
     ecs_new_w_count(world, Car_h, 5, NULL);

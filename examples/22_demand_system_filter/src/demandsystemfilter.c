@@ -12,7 +12,7 @@ void ListEntities(EcsRows *rows) {
          * column was resolved. Our column specifies IndexTag, which
          * has only been added to our index entities, thus ecs_source(0) will
          * return the index entity. */
-        EcsEntity index = ecs_source(rows, 0);
+        EcsEntity index = ecs_entity(rows, row, 0);
         printf("Entity %llu (%s)\n", entity, ecs_id(rows->world, index));
     }
 }
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 
     /* Add both the tag and EcsComponent to an Index family which we'll use to
      * create two entities that will subdivide our data. */
-    ECS_FAMILY(world, Index, IndexTag, EcsComponent);
+    ECS_FAMILY(world, Index, IndexTag, EcsContainer);
 
     /* List all the entities with a Position component on demand */
     ECS_SYSTEM(world, ListEntities, EcsOnDemand, CONTAINER.IndexTag, Object);
@@ -38,19 +38,18 @@ int main(int argc, char *argv[]) {
 
     /* Create two entities with EcsComponent to subdivide the entity list */
     EcsEntity index_a = ecs_new(world, Index_h);
-    ecs_set(world, index_a, EcsId, "Index A");
+    ecs_set(world, index_a, EcsId, {"Index A"});
     EcsEntity index_b = ecs_new(world, Index_h);
-    ecs_set(world, index_b, EcsId, "Index B");
+    ecs_set(world, index_b, EcsId, {"Index B"});
 
     /* Add 6 entities to index a, 4 entities to index b */
     int i;
     for (i = 0; i < 10; i ++) {
         if (i < 6) {
-            ecs_stage_add(world, handles[i], index_a);
+            ecs_add(world, handles[i], index_a);
         } else {
-            ecs_stage_add(world, handles[i], index_b);
+            ecs_add(world, handles[i], index_b);
         }
-        ecs_commit(world, handles[i]);
     }
 
     /* List all entities */

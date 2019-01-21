@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     ecs_set(world, e, Position, {0, 0});
 
     /* Set system context */
-    ecs_set(world, Move_h, Counter, 0);
+    ecs_set(world, Move_h, Counter, {0});
 
     /* Call ecs_progress 10 times */
     int i;

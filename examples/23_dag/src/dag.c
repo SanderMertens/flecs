@@ -35,20 +35,19 @@ typedef int32_t Health;
  * on player, region or platoon */
 static
 void adopt(EcsWorld *world, EcsEntity object, EcsEntity parent) {
-    ecs_stage_add(world, object, parent);
-    ecs_commit(world, object);
+    ecs_add(world, object, parent);
 }
 
-/* Create entities with the EcsComponent component.  This allows entities to be
+/* Create entities with the EcsContainer component.  This allows entities to be
  * added to other entities just like normal components- with the exception that
  * they don't add data. */
 static
 EcsEntity create(EcsWorld *world, EcsEntity parent, const char *id, EcsEntity type) {
     EcsEntity result = ecs_new(world, type);
-    ecs_stage_add(world, result, EcsComponent_h);
+    ecs_stage_add(world, result, EcsContainer_h);
     if (parent)
         ecs_stage_add(world, result, parent);
-    ecs_set(world, result, EcsId, id);
+    ecs_set(world, result, EcsId, {id});
     ecs_commit(world, result);
     return result;
 }
@@ -59,7 +58,7 @@ void ListUnits(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
-        EcsEntity platoon = ecs_source(rows, 0);
+        EcsEntity platoon = ecs_entity(rows, row, 0);
         Position *p = ecs_data(rows, row, 1);
         Health *h = ecs_data(rows, row, 2);
 
@@ -75,8 +74,8 @@ void ListPlatoons(EcsRows *rows) {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
-        EcsEntity player = ecs_source(rows, 0);
-        EcsEntity region = ecs_source(rows, 1);
+        EcsEntity player = ecs_entity(rows, row, 0);
+        EcsEntity region = ecs_entity(rows, row, 1);
 
         printf("%s, %s, %s:\n",
             ecs_id(world, entity),
@@ -105,7 +104,7 @@ int main(int argc, char *argv[]) {
     ECS_PREFAB(world, UnitPrefab, Position, Health);
     ECS_FAMILY(world, Unit, UnitPrefab, Position, Health);
     ecs_set(world, UnitPrefab_h, Position, {0, 0});
-    ecs_set(world, UnitPrefab_h, Health, 100);
+    ecs_set(world, UnitPrefab_h, Health, {100});
 
     /* On-demand system that lists all units. In addition to Position and Health
      * which are the "normal" components found on a unit, units also have the
