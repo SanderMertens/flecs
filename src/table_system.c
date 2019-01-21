@@ -100,8 +100,8 @@ bool components_contains_component(
 /* Special indexes in table_data array */
 #define TABLE_INDEX (0)
 #define REFS_INDEX (1)
-#define HANDLES_INDEX (2)
-#define OFFSETS_INDEX (3)
+#define COMPONENTS_INDEX (2)
+#define COLUMNS_INDEX (3)
 
 /* Get ref array for system table */
 static
@@ -177,7 +177,7 @@ void add_table(
     int32_t *table_data;
     EcsSystemRef *ref_data = NULL;
     EcsFamily table_family = table->family_id;
-    uint32_t i = OFFSETS_INDEX;
+    uint32_t i = COLUMNS_INDEX;
     uint32_t ref = 0;
     uint32_t column_count = ecs_array_count(system_data->base.columns);
 
@@ -206,7 +206,7 @@ void add_table(
     table_data[REFS_INDEX] = 0;
 
     /* Index in components array is at element 2 */
-    table_data[HANDLES_INDEX] = ecs_array_count(system_data->components) - 1;
+    table_data[COMPONENTS_INDEX] = ecs_array_count(system_data->components) - 1;
 
     /* Walk columns parsed from the system signature */
     EcsIter it = ecs_array_iter(system_data->base.columns, &column_arr_params);
@@ -299,7 +299,7 @@ void add_table(
         }
 
         /* component_data index is not offset by anything */
-        component_data[i - OFFSETS_INDEX] = component;
+        component_data[i - COLUMNS_INDEX] = component;
 
         i ++;
     }
@@ -536,7 +536,7 @@ void ecs_run_job(
     char *component_buffer = ecs_array_buffer(system_data->components);
 
     void *component_buffer_el = ECS_OFFSET(component_buffer,
-        component_element_size * table_buffer[HANDLES_INDEX]);;
+        component_element_size * table_buffer[COMPONENTS_INDEX]);;
 
     EcsRows info = {
         .world = thread ? (EcsWorld*)thread : world,
@@ -556,10 +556,10 @@ void ecs_run_job(
         uint32_t refs_index = table_buffer[REFS_INDEX];
 
         component_buffer_el = ECS_OFFSET(component_buffer,
-            component_element_size * table_buffer[HANDLES_INDEX]);
+            component_element_size * table_buffer[COMPONENTS_INDEX]);
 
         info.element_size = element_size;
-        info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * OFFSETS_INDEX);
+        info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * COLUMNS_INDEX);
         info.components = component_buffer_el;
         info.first = start;
 
@@ -571,7 +571,7 @@ void ecs_run_job(
             info.last = ECS_OFFSET(info.first, element_size * count);
             table_buffer = ECS_OFFSET(table_buffer, table_element_size);
             component_buffer_el = ECS_OFFSET(component_buffer,
-                table_buffer[HANDLES_INDEX] * component_element_size);
+                table_buffer[COMPONENTS_INDEX] * component_element_size);
             start_index = 0;
             remaining -= count;
 
@@ -672,6 +672,31 @@ EcsEntity ecs_new_table_system(
 
 /* -- Public API -- */
 
+static
+bool should_run(
+    EcsTableSystem *system_data,
+    float period,
+    float delta_time)
+{
+    float time_passed = system_data->time_passed + delta_time;
+
+    delta_time = time_passed;
+
+    if (time_passed >= period) {
+        time_passed -= period;
+        if (time_passed > period) {
+            time_passed = 0;
+        }
+
+        system_data->time_passed = time_passed;
+    } else {
+        system_data->time_passed = time_passed;
+        return false;
+    }
+
+    return true;
+}
+
 EcsEntity ecs_run(
     EcsWorld *world,
     EcsEntity system,
@@ -686,49 +711,42 @@ EcsEntity ecs_run(
         return 0;
     }
 
+    EcsWorld *real_world = world;
+    EcsStage *stage = ecs_get_stage(&real_world);
+
     float system_delta_time = delta_time + system_data->time_passed;
     float period = system_data->period;
+    bool measure_time = real_world->measure_system_time;
+
+    EcsArray *tables = system_data->tables;
+    uint32_t tables_size = system_data->table_params.element_size;
+    int32_t *table_first = ecs_array_buffer(tables);
+    int32_t *table_last = ECS_OFFSET(table_first, tables_size * ecs_array_count(tables));
+
+    if (table_first == table_last) {
+        return 0;
+    }
 
     if (period) {
-        float time_passed = system_data->time_passed + delta_time;
-
-        delta_time = time_passed;
-
-        if (time_passed >= period) {
-            time_passed -= period;
-            if (time_passed > period) {
-                time_passed = 0;
-            }
-
-            system_data->time_passed = time_passed;
-        } else {
-            system_data->time_passed = time_passed;
+        if (!should_run(system_data, period, delta_time)) {
             return 0;
         }
     }
 
-    EcsWorld *real_world = world;
-    EcsStage *stage = ecs_get_stage(&real_world);
-    bool measure_time = real_world->measure_system_time;
     struct timespec time_start;
     if (measure_time) {
         ut_time_get(&time_start);
     }
 
-    EcsSystemAction action = system_data->base.action;
-    EcsArray *tables = system_data->tables;
-    EcsArray *table_db = real_world->table_db;
-    uint32_t table_count = ecs_array_count(tables);
+    EcsTable *world_tables = ecs_array_buffer(real_world->table_db);
     uint32_t column_count = ecs_array_count(system_data->base.columns);
-    uint32_t element_size = system_data->table_params.element_size;
-    uint32_t component_el_size = system_data->component_params.element_size;
-    int32_t *table_buffer = ecs_array_buffer(tables);
-    char *component_buffer = ecs_array_buffer(system_data->components);
-    int32_t *last = ECS_OFFSET(table_buffer, element_size * table_count);
-    void *refs_data[column_count];
-    EcsEntity refs_entity[column_count];
+    uint32_t components_size = system_data->component_params.element_size;
+    char *components = ecs_array_buffer(system_data->components);
     EcsFamily filter_id = 0;
     EcsEntity interrupted_by = 0;
+    void *refs_data[column_count];
+    EcsEntity refs_entity[column_count];
+    EcsSystemAction action = system_data->base.action;
 
     EcsRows info = {
         .world = world,
@@ -744,33 +762,35 @@ EcsEntity ecs_run(
         filter_id = ecs_family_from_handle(real_world, stage, filter, NULL);
     }
 
-    for (; table_buffer < last; table_buffer = ECS_OFFSET(table_buffer, element_size)) {
-        int32_t table_index = table_buffer[TABLE_INDEX];
-        EcsTable *table = ecs_array_get(table_db,&table_arr_params,table_index);
+    int32_t *table = table_first;
+    for (; table < table_last; table = ECS_OFFSET(table, tables_size)) {
+        int32_t table_index = table[TABLE_INDEX];
+        EcsTable *w_table = &world_tables[table_index];
 
         if (filter_id) {
             if (!ecs_family_contains(
-                real_world, stage, table->family_id, filter_id, true, true))
+                real_world, stage, w_table->family_id, filter_id, true, true))
             {
                 continue;
             }
         }
 
-        EcsArray *rows = table->rows;
-        void *buffer = ecs_array_buffer(rows);
-        uint32_t count = ecs_array_count(rows);
+        EcsArray *rows = w_table->rows;
+        void *row_buffer = ecs_array_buffer(rows);
+        uint32_t row_count = ecs_array_count(rows);
+        uint32_t row_size = w_table->row_params.element_size;
 
-        int32_t refs_index = table_buffer[REFS_INDEX];
+        int32_t refs_index = table[REFS_INDEX];
         if (refs_index) {
             resolve_refs(world, system_data, refs_index, &info);
         }
 
-        info.element_size = table->row_params.element_size;
-        info.first = buffer;
-        info.last = ECS_OFFSET(info.first, info.element_size * count);
-        info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * OFFSETS_INDEX);
-        info.components = ECS_OFFSET(component_buffer,
-            component_el_size * table_buffer[HANDLES_INDEX]);
+        info.element_size = row_size;
+        info.first = row_buffer;
+        info.last = ECS_OFFSET(info.first, info.element_size * row_count);
+        info.columns = ECS_OFFSET(table, sizeof(uint32_t) * COLUMNS_INDEX);
+        info.components = ECS_OFFSET(components,
+            components_size * table[COMPONENTS_INDEX]);
 
         action(&info);
 

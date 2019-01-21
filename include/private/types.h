@@ -78,7 +78,7 @@ typedef struct EcsSystemRef {
 typedef struct EcsSystem {
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
     const char *signature;     /* Signature with which system was created */
-    EcsArray *columns;         /* Column components (AND) and families (OR) */
+    EcsArray *columns;         /* Column components */
     EcsFamily not_from_entity; /* Exclude components from entity */
     EcsFamily not_from_component; /* Exclude components from components */
     EcsEntity ctx_handle;      /* User-defined context for system */
