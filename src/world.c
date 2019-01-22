@@ -151,7 +151,9 @@ EcsTable* create_table(
 
     notify_create_table(world, stage, world->pre_frame_systems, result);
     notify_create_table(world, stage, world->post_frame_systems, result);
-    notify_create_table(world, stage, world->frame_systems, result);
+    notify_create_table(world, stage, world->on_load_systems, result);
+    notify_create_table(world, stage, world->on_store_systems, result);
+    notify_create_table(world, stage, world->on_frame_systems, result);
     notify_create_table(world, stage, world->inactive_systems, result);
     notify_create_table(world, stage, world->on_demand_systems, result);
 
@@ -295,11 +297,15 @@ EcsArray** frame_system_array(
     EcsSystemKind kind)
 {
     if (kind == EcsOnFrame) {
-        return &world->frame_systems;
+        return &world->on_frame_systems;
     } else if (kind == EcsPreFrame) {
         return &world->pre_frame_systems;
     } else if (kind == EcsPostFrame) {
         return &world->post_frame_systems;
+    } else if (kind == EcsOnLoad) {
+        return &world->on_load_systems;
+    } else if (kind == EcsOnStore) {
+        return &world->on_store_systems;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, 0);
     }
@@ -441,11 +447,15 @@ EcsWorld *ecs_init(void) {
 
     world->table_db = ecs_array_new(
         &table_arr_params, ECS_WORLD_INITIAL_TABLE_COUNT);
-    world->frame_systems = ecs_array_new(
+    world->on_frame_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
     world->pre_frame_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
     world->post_frame_systems = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+    world->on_load_systems = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+    world->on_store_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
     world->inactive_systems = ecs_array_new(
         &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
@@ -558,7 +568,12 @@ EcsResult ecs_fini(
 
     ecs_stage_deinit(&world->stage);
 
-    ecs_array_free(world->frame_systems);
+    ecs_array_free(world->on_frame_systems);
+    ecs_array_free(world->pre_frame_systems);
+    ecs_array_free(world->post_frame_systems);
+    ecs_array_free(world->on_load_systems);
+    ecs_array_free(world->on_store_systems);
+
     ecs_array_free(world->inactive_systems);
     ecs_array_free(world->on_demand_systems);
     ecs_array_free(world->tasks);
@@ -630,16 +645,83 @@ EcsEntity ecs_lookup(
     return 0;
 }
 
-bool ecs_progress(
+static
+void run_single_thread_stage(
+    EcsWorld *world,
+    EcsArray *systems,
+    float delta_time)
+{
+    uint32_t i, system_count = ecs_array_count(systems);
+    if (system_count) {
+        EcsEntity *buffer = ecs_array_buffer(systems);
+
+        world->in_progress = true;
+
+        for (i = 0; i < system_count; i ++) {
+            ecs_run(world, buffer[i], delta_time, NULL);
+        }
+
+        if (world->auto_merge) {
+            world->in_progress = false;
+            ecs_merge(world);
+            world->in_progress = true;
+        }
+    }
+}
+
+static
+void run_multi_thread_stage(
+    EcsWorld *world,
+    EcsArray *systems,
+    float delta_time)
+{
+    /* Run periodic table systems */
+    uint32_t i, system_count = ecs_array_count(systems);
+    if (system_count) {
+        bool valid_schedule = world->valid_schedule;
+        EcsEntity *buffer = ecs_array_buffer(systems);
+
+        world->in_progress = true;
+
+        for (i = 0; i < system_count; i ++) {
+            if (!valid_schedule) {
+                ecs_schedule_jobs(world, buffer[i]);
+            }
+            ecs_prepare_jobs(world, buffer[i]);
+        }
+        ecs_run_jobs(world);
+
+        if (world->auto_merge) {
+            world->in_progress = false;
+            ecs_merge(world);
+            world->in_progress = true;
+        }
+    }
+}
+
+static
+void run_tasks(
     EcsWorld *world,
     float delta_time)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    /* Run periodic row systems (not matched to any entity) */
+    uint32_t i, system_count = ecs_array_count(world->tasks);
+    if (system_count) {
+        world->in_progress = true;
 
-    bool measure_frame_time = world->measure_frame_time;
+        EcsEntity *buffer = ecs_array_buffer(world->tasks);
+        for (i = 0; i < system_count; i ++) {
+            ecs_run_task(world, buffer[i], delta_time);
+        }
+    }
+}
 
-    /* Start measuring total frame time */
-    if (measure_frame_time || !delta_time) {
+static
+float start_measure_frame(
+    EcsWorld *world,
+    float delta_time)
+{
+    if (world->measure_frame_time || !delta_time) {
         if (world->frame_start.tv_sec) {
             float delta = ut_time_measure(&world->frame_start);
             if (!delta_time) {
@@ -655,75 +737,15 @@ bool ecs_progress(
         }
     }
 
-    world->delta_time = delta_time;
+    return delta_time;
+}
 
-    /* Run pre-frame systems */
-    uint32_t i, system_count = ecs_array_count(world->pre_frame_systems);
-    EcsEntity *buffer = ecs_array_buffer(world->pre_frame_systems);
-    for (i = 0; i < system_count; i ++) {
-        ecs_run(world, buffer[i], delta_time, 0, NULL);
-    }
-
-    /* Run periodic table systems */
-    system_count = ecs_array_count(world->frame_systems);
-    if (system_count) {
-        buffer = ecs_array_buffer(world->frame_systems);
-        bool has_threads = ecs_array_count(world->worker_threads) != 0;
-
-        world->in_progress = true;
-
-        if (has_threads) {
-            bool valid_schedule = world->valid_schedule;
-            for (i = 0; i < system_count; i ++) {
-                if (!valid_schedule) {
-                    ecs_schedule_jobs(world, buffer[i]);
-                }
-                ecs_prepare_jobs(world, buffer[i]);
-            }
-            ecs_run_jobs(world);
-
-            world->valid_schedule = true;
-        } else {
-            for (i = 0; i < system_count; i ++) {
-                ecs_run(world, buffer[i], delta_time, 0, NULL);
-            }
-        }
-    }
-
-    /* Run periodic row systems (not matched to any entity) */
-    system_count = ecs_array_count(world->tasks);
-    if (system_count) {
-        world->in_progress = true;
-
-        EcsEntity *buffer = ecs_array_buffer(world->tasks);
-        for (i = 0; i < system_count; i ++) {
-            ecs_run_task(world, buffer[i], delta_time);
-        }
-    }
-
-    /* Run post-frame systems */
-    system_count = ecs_array_count(world->post_frame_systems);
-    buffer = ecs_array_buffer(world->post_frame_systems);
-    for (i = 0; i < system_count; i ++) {
-        ecs_run(world, buffer[i], delta_time, 0, NULL);
-    }
-
-    /* Profile system time & merge if systems were processed */
-    if (world->in_progress) {
-        if (measure_frame_time) {
-            struct timespec temp = world->frame_start;
-            world->system_time += ut_time_measure(&temp);
-        }
-
-        world->in_progress = false;
-
-        if (world->auto_merge) {
-            ecs_merge(world);
-        }
-    }
-
-    /*  Profile total frame time */
-    if (measure_frame_time) {
+static
+void stop_measure_frame(
+    EcsWorld *world,
+    float delta_time)
+{
+    if (world->measure_frame_time) {
         struct timespec t = world->frame_start;
         world->frame_time += ut_time_measure(&t);
         world->tick ++;
@@ -739,6 +761,49 @@ bool ecs_progress(
             ut_sleepf(sleep);
         }
     }
+}
+
+bool ecs_progress(
+    EcsWorld *world,
+    float delta_time)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+
+    bool measure_frame_time = world->measure_frame_time;
+    bool has_threads = ecs_array_count(world->worker_threads) != 0;
+
+    /* Start measuring total frame time */
+    delta_time = start_measure_frame(world, delta_time);
+    world->delta_time = delta_time;
+
+    run_single_thread_stage(world, world->on_load_systems, delta_time);
+
+    if (has_threads) {
+        run_multi_thread_stage(world, world->pre_frame_systems, delta_time);
+        run_multi_thread_stage(world, world->on_frame_systems, delta_time);
+        run_multi_thread_stage(world, world->post_frame_systems, delta_time);
+        world->valid_schedule = true;
+    } else {
+        run_single_thread_stage(world, world->pre_frame_systems, delta_time);
+        run_single_thread_stage(world, world->on_frame_systems, delta_time);
+        run_single_thread_stage(world, world->post_frame_systems, delta_time);
+    }
+
+    run_tasks(world, delta_time);
+
+    run_single_thread_stage(world, world->on_store_systems, delta_time);
+
+    /* Profile system time & merge if systems were processed */
+    if (world->in_progress) {
+        if (measure_frame_time) {
+            struct timespec temp = world->frame_start;
+            world->system_time += ut_time_measure(&temp);
+        }
+
+        world->in_progress = false;
+    }
+
+    stop_measure_frame(world, delta_time);
 
     return !world->should_quit;
 }

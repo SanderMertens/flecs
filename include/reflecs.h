@@ -61,13 +61,20 @@ typedef enum EcsResult {
 
 /** System kinds determine when and how systems are ran */
 typedef enum EcsSystemKind {
-    EcsOnFrame,
+    /* Periodic systems */
+    EcsOnLoad,
     EcsPreFrame,
+    EcsOnFrame,
     EcsPostFrame,
+    EcsOnStore,
+
+    /* On demand systems */
+    EcsOnDemand,
+
+    /* Reactive systems */
     EcsOnAdd,
     EcsOnRemove,
     EcsOnSet,
-    EcsOnDemand,
 } EcsSystemKind;
 
 /** Data passed to system action callback, used for iterating entities */
@@ -1019,6 +1026,15 @@ EcsEntity ecs_run(
     EcsWorld *world,
     EcsEntity system,
     float delta_time,
+    void *param);
+
+REFLECS_EXPORT
+EcsEntity ecs_run_w_filter(
+    EcsWorld *world,
+    EcsEntity system,
+    float delta_time,
+    uint32_t offset,
+    uint32_t limit,
     EcsEntity filter,
     void *param);
 

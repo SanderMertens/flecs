@@ -169,11 +169,14 @@ struct EcsWorld {
     void *context;                /* Application context */
 
     EcsArray *table_db;           /* All tables in the world */
-    EcsArray *frame_systems;      /* Frame systems */
+
+    EcsArray *on_load_systems;    /* Systems executed at start of frame */
     EcsArray *pre_frame_systems;  /* Systems executed before frame systems */
+    EcsArray *on_frame_systems;   /* Frame systems */
     EcsArray *post_frame_systems; /* Systems executed after frame systems */
-    EcsArray *inactive_systems;   /* Frame systems with empty tables */
+    EcsArray *on_store_systems;   /* Systems executed at end of frame */
     EcsArray *on_demand_systems;  /* On demand systems */
+    EcsArray *inactive_systems;   /* Frame systems with empty tables */
 
     EcsMap *add_systems;          /* Systems invoked on ecs_stage_add */
     EcsMap *remove_systems;       /* Systems invoked on ecs_stage_remove */

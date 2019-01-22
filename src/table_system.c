@@ -635,27 +635,29 @@ EcsEntity ecs_new_table_system(
     compute_and_families(world, system_data);
     match_tables(world, NULL, result, system_data);
 
-    if (kind == EcsOnFrame) {
-        EcsEntity *elem;
-        if (ecs_array_count(system_data->tables)) {
-            elem = ecs_array_add(&world->frame_systems, &handle_arr_params);
+    EcsEntity *elem = NULL;
+
+    if (kind == EcsOnDemand) {
+        elem = ecs_array_add(&world->on_demand_systems, &handle_arr_params);
+    } else if (!ecs_array_count(system_data->tables)) {
+        elem = ecs_array_add(&world->inactive_systems, &handle_arr_params);
+    } else {
+        if (kind == EcsOnFrame) {
+            elem = ecs_array_add(&world->on_frame_systems, &handle_arr_params);
+        } else if (kind == EcsPreFrame) {
+            elem = ecs_array_add(&world->pre_frame_systems, &handle_arr_params);
+        } else if (kind == EcsPostFrame) {
+            elem = ecs_array_add(&world->post_frame_systems, &handle_arr_params);
+        } else if (kind == EcsOnLoad) {
+            elem = ecs_array_add(&world->on_load_systems, &handle_arr_params);
+        } else if (kind == EcsOnStore) {
+            elem = ecs_array_add(&world->on_store_systems, &handle_arr_params);
         } else {
-            elem = ecs_array_add(&world->inactive_systems, &handle_arr_params);
+            ecs_abort(ECS_INVALID_PARAMETERS, NULL);
         }
-        *elem = result;
-    } else if (kind == EcsPreFrame) {
-        EcsEntity *elem = ecs_array_add(
-            &world->pre_frame_systems, &handle_arr_params);
-        *elem = result;
-    } else if (kind == EcsPostFrame) {
-        EcsEntity *elem = ecs_array_add(
-            &world->post_frame_systems, &handle_arr_params);
-        *elem = result;
-    } else if (kind == EcsOnDemand) {
-        EcsEntity *elem = ecs_array_add(
-            &world->on_demand_systems, &handle_arr_params);
-        *elem = result;
     }
+
+    *elem = result;
 
     if (system_data->and_from_system) {
         EcsArray *f = ecs_family_get(world, NULL, system_data->and_from_system);
@@ -697,10 +699,12 @@ bool should_run(
     return true;
 }
 
-EcsEntity ecs_run(
+EcsEntity ecs_run_w_filter(
     EcsWorld *world,
     EcsEntity system,
     float delta_time,
+    uint32_t offset,
+    uint32_t limit,
     EcsEntity filter,
     void *param)
 {
@@ -747,6 +751,8 @@ EcsEntity ecs_run(
     void *refs_data[column_count];
     EcsEntity refs_entity[column_count];
     EcsSystemAction action = system_data->base.action;
+    bool offset_limit = offset | limit;
+    bool limit_set = limit != 0;
 
     EcsRows info = {
         .world = world,
@@ -776,9 +782,34 @@ EcsEntity ecs_run(
         }
 
         EcsArray *rows = w_table->rows;
-        void *row_buffer = ecs_array_buffer(rows);
         uint32_t row_count = ecs_array_count(rows);
         uint32_t row_size = w_table->row_params.element_size;
+        void *first = ecs_array_buffer(rows);
+        void *last = ECS_OFFSET(first, row_size * row_count);
+
+        if (offset_limit) {
+            if (offset) {
+                if (offset > row_count) {
+                    offset -= row_count;
+                    continue;
+                } else {
+                    first = ECS_OFFSET(first, row_size * offset);
+                    row_count -= offset;
+                    offset = 0;
+                }
+            }
+
+            if (limit) {
+                if (limit > row_count) {
+                    limit -= row_count;
+                } else {
+                    last = ECS_OFFSET(first, row_size * limit);
+                    limit = 0;
+                }
+            } else if (limit_set) {
+                break;
+            }
+        }
 
         int32_t refs_index = table[REFS_INDEX];
         if (refs_index) {
@@ -786,8 +817,8 @@ EcsEntity ecs_run(
         }
 
         info.element_size = row_size;
-        info.first = row_buffer;
-        info.last = ECS_OFFSET(info.first, info.element_size * row_count);
+        info.first = first;
+        info.last = last;
         info.columns = ECS_OFFSET(table, sizeof(uint32_t) * COLUMNS_INDEX);
         info.components = ECS_OFFSET(components,
             components_size * table[COMPONENTS_INDEX]);
@@ -805,4 +836,13 @@ EcsEntity ecs_run(
     }
 
     return interrupted_by;
+}
+
+EcsEntity ecs_run(
+    EcsWorld *world,
+    EcsEntity system,
+    float delta_time,
+    void *param)
+{
+    return ecs_run_w_filter(world, system, delta_time, 0, 0, 0, param);
 }
