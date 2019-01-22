@@ -306,6 +306,8 @@ EcsArray** frame_system_array(
         return &world->on_load_systems;
     } else if (kind == EcsOnStore) {
         return &world->on_store_systems;
+    } else if (kind == EcsOnDemand) {
+        return &world->on_demand_systems;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, 0);
     }
