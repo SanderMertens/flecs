@@ -58,22 +58,25 @@ int main(int argc, char *argv[]) {
         world,           /* The world */
         ListEntities_h,  /* The system handle */
         1.0,             /* delta_time */
-        0,               /* Component filter */
         NULL);           /* Userdata (can be accessed through rows->param) */
 
     printf("\n-- Only index a:\n");
-    ecs_run(
+    ecs_run_w_filter(
         world,           /* The world */
         ListEntities_h,  /* The system handle */
         1.0,             /* delta_time */
+        0,               /* Offset */
+        0,               /* Limit */
         index_a,         /* Component filter */
         NULL);           /* Userdata (can be accessed through rows->param) */
 
     printf("\n-- Only index b:\n");
-    ecs_run(
+    ecs_run_w_filter(
         world,           /* The world */
         ListEntities_h,  /* The system handle */
         1.0,             /* delta_time */
+        0,               /* Offset */
+        0,               /* Limit */
         index_b,         /* Component filter */
         NULL);           /* Userdata (can be accessed through rows->param) */
 

@@ -1726,7 +1726,7 @@ void test_EcsOnFrameSystem_tc_system_on_demand(
 
     ecs_set_context(world, &ctx);
 
-    ecs_run(world, TestSystem_h, 0, 0, NULL);
+    ecs_run(world, TestSystem_h, 0, NULL);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 2);
@@ -1769,7 +1769,7 @@ void test_EcsOnFrameSystem_tc_system_on_demand_w_filter(
 
     ecs_set_context(world, &ctx);
 
-    ecs_run(world, TestSystem_h, 0, Bar_h, NULL);
+    ecs_run_w_filter(world, TestSystem_h, 0, 0, 0, Bar_h, NULL);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 1);
@@ -1997,7 +1997,7 @@ void test_EcsOnFrameSystem_tc_systen_2_component_2_or_w_set(
 
     ecs_set_context(world, &ctx);
 
-    ecs_run(world, TestSystem_h, 0, 0, NULL);
+    ecs_run(world, TestSystem_h, 0, NULL);
 
     test_assertint(ctx.column_count, 1);
     test_assertint(ctx.count, 2);
@@ -2095,6 +2095,507 @@ void test_EcsOnFrameSystem_tc_system_match_prefab(
     test_assertint(ctx.component[1][0], MyPrefab_h);
     test_assertint(ctx.component[0][1], Foo_h);
     test_assertint(ctx.component[1][1], MyPrefab_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_limit(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e3, Foo, {30});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_w_filter(world, TestSystem_h, 1.0, 0, 2, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 2);
+    test_assert(ctx.entities[0] == e1);
+    test_assert(ctx.entities[1] == e2);
+    test_assertint(ctx.column[0][0], 10);
+    test_assertint(ctx.column[0][1], 20);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_offset(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e3, Foo, {30});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_w_filter(world, TestSystem_h, 1.0, 1, 0, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 2);
+    test_assert(ctx.entities[0] == e2);
+    test_assert(ctx.entities[1] == e3);
+    test_assertint(ctx.column[0][0], 20);
+    test_assertint(ctx.column[0][1], 30);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_offset_limit(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e3, Foo, {30});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_w_filter(world, TestSystem_h, 1.0, 1, 1, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 1);
+    test_assert(ctx.entities[0] == e2);
+    test_assertint(ctx.column[0][0], 20);
+    test_assertint(ctx.component[0][0], Foo_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_limit_2_tables(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, Family, Foo, Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+    EcsEntity e4 = ecs_new(world, Family_h);
+    EcsEntity e5 = ecs_new(world, Family_h);
+    EcsEntity e6 = ecs_new(world, Family_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+    test_assert(e6 != 0);
+
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e3, Foo, {30});
+    ecs_set(world, e4, Foo, {40});
+    ecs_set(world, e5, Foo, {50});
+    ecs_set(world, e6, Foo, {60});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_w_filter(world, TestSystem_h, 1.0, 0, 4, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 4);
+    test_assert(ctx.entities[0] == e1);
+    test_assert(ctx.entities[1] == e2);
+    test_assert(ctx.entities[2] == e3);
+    test_assert(ctx.entities[3] == e4);
+    test_assertint(ctx.column[0][0], 10);
+    test_assertint(ctx.column[0][1], 20);
+    test_assertint(ctx.column[0][2], 30);
+    test_assertint(ctx.column[0][3], 40);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+    test_assertint(ctx.component[0][2], Foo_h);
+    test_assertint(ctx.component[0][3], Foo_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_offset_2_tables(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, Family, Foo, Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+    EcsEntity e4 = ecs_new(world, Family_h);
+    EcsEntity e5 = ecs_new(world, Family_h);
+    EcsEntity e6 = ecs_new(world, Family_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+    test_assert(e6 != 0);
+
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e3, Foo, {30});
+    ecs_set(world, e4, Foo, {40});
+    ecs_set(world, e5, Foo, {50});
+    ecs_set(world, e6, Foo, {60});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_w_filter(world, TestSystem_h, 1.0, 2, 0, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 4);
+    test_assert(ctx.entities[0] == e3);
+    test_assert(ctx.entities[1] == e4);
+    test_assert(ctx.entities[2] == e5);
+    test_assert(ctx.entities[3] == e6);
+    test_assertint(ctx.column[0][0], 30);
+    test_assertint(ctx.column[0][1], 40);
+    test_assertint(ctx.column[0][2], 50);
+    test_assertint(ctx.column[0][3], 60);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+    test_assertint(ctx.component[0][2], Foo_h);
+    test_assertint(ctx.component[0][3], Foo_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_offset_limit_2_tables(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, Family, Foo, Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+    EcsEntity e4 = ecs_new(world, Family_h);
+    EcsEntity e5 = ecs_new(world, Family_h);
+    EcsEntity e6 = ecs_new(world, Family_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+    test_assert(e6 != 0);
+
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e3, Foo, {30});
+    ecs_set(world, e4, Foo, {40});
+    ecs_set(world, e5, Foo, {50});
+    ecs_set(world, e6, Foo, {60});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_w_filter(world, TestSystem_h, 1.0, 2, 3, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 3);
+    test_assertint(ctx.entities[0], e3);
+    test_assertint(ctx.entities[1], e4);
+    test_assertint(ctx.entities[2], e5);
+    test_assertint(ctx.column[0][0], 30);
+    test_assertint(ctx.column[0][1], 40);
+    test_assertint(ctx.column[0][2], 50);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+    test_assertint(ctx.component[0][2], Foo_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_limit_skip_table(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, Family, Foo, Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+    EcsEntity e4 = ecs_new(world, Family_h);
+    EcsEntity e5 = ecs_new(world, Family_h);
+    EcsEntity e6 = ecs_new(world, Family_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+    test_assert(e6 != 0);
+
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e3, Foo, {30});
+    ecs_set(world, e4, Foo, {40});
+    ecs_set(world, e5, Foo, {50});
+    ecs_set(world, e6, Foo, {60});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_w_filter(world, TestSystem_h, 1.0, 0, 3, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 3);
+    test_assert(ctx.entities[0] == e1);
+    test_assert(ctx.entities[1] == e2);
+    test_assert(ctx.entities[2] == e3);
+    test_assertint(ctx.column[0][0], 10);
+    test_assertint(ctx.column[0][1], 20);
+    test_assertint(ctx.column[0][2], 30);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+    test_assertint(ctx.component[0][2], Foo_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_offset_limit_skip_table(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, Family, Foo, Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+    EcsEntity e4 = ecs_new(world, Family_h);
+    EcsEntity e5 = ecs_new(world, Family_h);
+    EcsEntity e6 = ecs_new(world, Family_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+    test_assert(e6 != 0);
+
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e3, Foo, {30});
+    ecs_set(world, e4, Foo, {40});
+    ecs_set(world, e5, Foo, {50});
+    ecs_set(world, e6, Foo, {60});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_w_filter(world, TestSystem_h, 1.0, 3, 2, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 2);
+    test_assert(ctx.entities[0] == e4);
+    test_assert(ctx.entities[1] == e5);
+    test_assertint(ctx.column[0][0], 40);
+    test_assertint(ctx.column[0][1], 50);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_offset_skip_table(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, Family, Foo, Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+    EcsEntity e4 = ecs_new(world, Family_h);
+    EcsEntity e5 = ecs_new(world, Family_h);
+    EcsEntity e6 = ecs_new(world, Family_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+    test_assert(e6 != 0);
+
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e3, Foo, {30});
+    ecs_set(world, e4, Foo, {40});
+    ecs_set(world, e5, Foo, {50});
+    ecs_set(world, e6, Foo, {60});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_w_filter(world, TestSystem_h, 1.0, 3, 0, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 3);
+    test_assert(ctx.entities[0] == e4);
+    test_assert(ctx.entities[1] == e5);
+    test_assert(ctx.entities[2] == e6);
+    test_assertint(ctx.column[0][0], 40);
+    test_assertint(ctx.column[0][1], 50);
+    test_assertint(ctx.column[0][2], 60);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+    test_assertint(ctx.component[0][2], Foo_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_offset_limit_3_tables(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_COMPONENT(world, Hello);
+    ECS_FAMILY(world, Family1, Foo, Bar);
+    ECS_FAMILY(world, Family2, Foo, Bar, Hello);
+    ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+    EcsEntity e4 = ecs_new(world, Family1_h);
+    EcsEntity e5 = ecs_new(world, Family1_h);
+    EcsEntity e6 = ecs_new(world, Family1_h);
+    EcsEntity e7 = ecs_new(world, Family2_h);
+    EcsEntity e8 = ecs_new(world, Family2_h);
+    EcsEntity e9 = ecs_new(world, Family2_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+    test_assert(e6 != 0);
+    test_assert(e7 != 0);
+    test_assert(e8 != 0);
+    test_assert(e9 != 0);
+
+    ecs_set(world, e1, Foo, {10});
+    ecs_set(world, e2, Foo, {20});
+    ecs_set(world, e3, Foo, {30});
+    ecs_set(world, e4, Foo, {40});
+    ecs_set(world, e5, Foo, {50});
+    ecs_set(world, e6, Foo, {60});
+    ecs_set(world, e7, Foo, {70});
+    ecs_set(world, e8, Foo, {80});
+    ecs_set(world, e9, Foo, {90});
+
+    ecs_set_context(world, &ctx);
+
+    ecs_run_w_filter(world, TestSystem_h, 1.0, 2, 6, 0, NULL);
+
+    test_assertint(ctx.column_count, 1);
+    test_assertint(ctx.count, 6);
+    test_assert(ctx.entities[0] == e3);
+    test_assert(ctx.entities[1] == e4);
+    test_assert(ctx.entities[2] == e5);
+    test_assert(ctx.entities[3] == e6);
+    test_assert(ctx.entities[4] == e7);
+    test_assert(ctx.entities[5] == e8);
+    test_assertint(ctx.column[0][0], 30);
+    test_assertint(ctx.column[0][1], 40);
+    test_assertint(ctx.column[0][2], 50);
+    test_assertint(ctx.column[0][3], 60);
+    test_assertint(ctx.column[0][4], 70);
+    test_assertint(ctx.column[0][5], 80);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+    test_assertint(ctx.component[0][2], Foo_h);
+    test_assertint(ctx.component[0][3], Foo_h);
+    test_assertint(ctx.component[0][4], Foo_h);
+    test_assertint(ctx.component[0][5], Foo_h);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_w_same_or_family_as_table(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo | Bar);
+
+    EcsEntity e1 = ecs_new(world, 0);
+    ecs_add(world, e1, Foo_h);
+    ecs_add(world, e1, Bar_h);
+
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 0);
+
+    test_assertint(ctx.count, 1);
 
     ecs_fini(world);
 }
