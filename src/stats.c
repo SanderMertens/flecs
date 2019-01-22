@@ -241,16 +241,47 @@ static
 int system_stats_arr(
     EcsWorld *world,
     EcsArray **stats_array,
-    EcsArray *systems,
-    bool active)
+    EcsArray *systems)
 {
     EcsEntity *handles = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
-        set_system_stats(world, stats_array, handles[i], active);
+        set_system_stats(world, stats_array, handles[i], true);
     }
 
     ecs_array_sort(*stats_array, &systemstats_arr_params, compare_sysstats);
+
+    return count;
+}
+
+static
+int system_stats_arr_inactive(
+    EcsWorld *world,
+    EcsWorldStats *stats)
+{
+    EcsArray *systems = world->inactive_systems;
+    EcsEntity *handles = ecs_array_buffer(systems);
+    uint32_t i, count = ecs_array_count(systems);
+    for (i = 0; i < count; i ++) {
+        EcsTableSystem *data = ecs_get_ptr(world, handles[i], EcsTableSystem_h);
+        EcsArray **stats_array = NULL;
+
+        if (data->base.kind == EcsOnLoad) {
+            stats_array = &stats->on_load_systems;
+        } else if (data->base.kind == EcsPreFrame) {
+            stats_array = &stats->pre_frame_systems;
+        } else if (data->base.kind == EcsOnFrame) {
+            stats_array = &stats->on_frame_systems;
+        } else if (data->base.kind == EcsPostFrame) {
+            stats_array = &stats->post_frame_systems;
+        } else if (data->base.kind == EcsOnStore) {
+            stats_array = &stats->on_store_systems;
+        } else if (data->base.kind == EcsOnDemand) {
+            stats_array = &stats->on_demand_systems;
+        }
+
+        set_system_stats(world, stats_array, handles[i], false);
+    }
 
     return count;
 }
@@ -346,23 +377,21 @@ void ecs_get_stats(
     }
 
     stats->system_count = 0;
+    stats->system_count += system_stats_arr_inactive(world, stats);
     stats->system_count += system_stats_arr(
-        world, &stats->frame_systems, world->on_load_systems, true);
+        world, &stats->on_load_systems, world->on_load_systems);
     stats->system_count += system_stats_arr(
-        world, &stats->frame_systems, world->pre_frame_systems, true);
+        world, &stats->pre_frame_systems, world->pre_frame_systems);
     stats->system_count += system_stats_arr(
-        world, &stats->frame_systems, world->on_frame_systems, true);
+        world, &stats->on_frame_systems, world->on_frame_systems);
     stats->system_count += system_stats_arr(
-        world, &stats->frame_systems, world->post_frame_systems, true);
+        world, &stats->post_frame_systems, world->post_frame_systems);
     stats->system_count += system_stats_arr(
-        world, &stats->frame_systems, world->on_store_systems, true);
+        world, &stats->on_store_systems, world->on_store_systems);
     stats->system_count += system_stats_arr(
-        world, &stats->frame_systems, world->inactive_systems, false);
+        world, &stats->task_systems, world->tasks);
     stats->system_count += system_stats_arr(
-        world, &stats->frame_systems, world->tasks, true);
-
-    stats->system_count += system_stats_arr(
-        world, &stats->on_demand_systems, world->on_demand_systems, true);
+        world, &stats->on_demand_systems, world->on_demand_systems);
 
     uint32_t table_sys_count = stats->system_count;
 
@@ -431,7 +460,11 @@ void ecs_free_stats(
 
     ecs_array_free(stats->tables);
     ecs_array_free(stats->features);
-    ecs_array_free(stats->frame_systems);
+    ecs_array_free(stats->on_load_systems);
+    ecs_array_free(stats->pre_frame_systems);
+    ecs_array_free(stats->on_frame_systems);
+    ecs_array_free(stats->post_frame_systems);
+    ecs_array_free(stats->on_store_systems);
     ecs_array_free(stats->on_demand_systems);
     ecs_array_free(stats->on_add_systems);
     ecs_array_free(stats->on_set_systems);

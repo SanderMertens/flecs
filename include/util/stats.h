@@ -63,7 +63,13 @@ typedef struct EcsWorldStats {
     float frame_time;
     EcsMemoryStats memory;
     EcsArray *features;
-    EcsArray *frame_systems;
+    EcsArray *on_load_systems;
+    EcsArray *pre_frame_systems;
+    EcsArray *on_frame_systems;
+    EcsArray *post_frame_systems;
+    EcsArray *on_store_systems;
+    EcsArray *task_systems;
+    EcsArray *inactive_systems;
     EcsArray *on_demand_systems;
     EcsArray *on_add_systems;
     EcsArray *on_remove_systems;
