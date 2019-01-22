@@ -299,14 +299,14 @@ EcsEntity ecs_family_contains(
     bool match_all,
     bool match_prefab)
 {
-    if (family_id_1 == family_id_2) {
-        return true;
-    }
-
     EcsArray *f_1 = ecs_family_get(world, stage, family_id_1);
     EcsArray *f_2 = ecs_family_get(world, stage, family_id_2);
 
     assert(f_1 && f_2);
+
+    if (family_id_1 == family_id_2) {
+        return *(EcsEntity*)ecs_array_get(f_1, &handle_arr_params, 0);
+    }
 
     uint32_t i_2, i_1 = 0;
     EcsEntity *h2p, *h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
