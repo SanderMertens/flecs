@@ -217,7 +217,7 @@ Systems can be enabled / disabled. By default a system is enabled. To enable or 
 ecs_enable(world, LogPoints_h, false);
 ```
 
-Systems in reflecs are stored as entities internally, which is why handles to systems are of the `EcsEntity` type.
+Reflecs systems are stored as entities internally, which is why handles to systems are of the `EcsEntity` type.
 
 ### Task
 A task is a system that has no interest expression. Tasks are run once every frame. Tasks are defined the same way as normal systems, but instead of an interest expression, they provide `0`:
@@ -248,7 +248,7 @@ ecs_add(world, e, Object_h);
 
 This statement will add the `EcsCircle` and `EcsPosition2D` components to the entity. Note that while there are no restrictions on the number and kind of entities that can be added to a family, when a family is used with `ecs_add`, the family must only contain entities that can be used as component. Similarly, if a family is used with `ecs_enable`, the family must only contain systems.
 
-Families in reflecs are stored as entities internally, which is why handles to families are of the `EcsEntity` type.
+Reflecs families are stored as entities internally, which is why handles to families are of the `EcsEntity` type.
 
 ### Feature
 A feature is a family that contains solely out of systems. To create features, use the `ECS_FAMILY` macro or `ecs_new_family` function.
