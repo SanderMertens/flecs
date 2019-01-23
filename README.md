@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
 ```
 
 ## Concepts
-This section describes the high-level concepts used in the reflecs API.
+This section describes the high-level concepts used in reflecs, and how they are represented in the API. Rather than providing an exhaustive overview of the API behavior, this section is intended as an introduction to the different API features of reflecs.
 
 ### World
 A world is a container in which entities, components and systems can be stored and evaluated. An application can create any number of worlds. Data between worlds is not shared. If the application wants to share data between worlds, this has to be done manually. A world in ECS can be created with the `ecs_init` function:
@@ -237,14 +237,18 @@ A family is a combination of 1..n entities. Since components and systems are sto
 To define a family, you can use the `ECS_FAMILY` macro, which wraps the `ecs_new_family` function:
 
 ```c
-ECS_FAMILY(world, Object, Foo, Bar);
+ECS_FAMILY(world, Circle, EcsCircle, EcsPosition2D);
 ```
 
-This defines a family called `Object` that contains `Foo` and `Bar`. Note that in order to be able to refer to an entity in a family, the entity must have a string identifier, as defined by the `EcsId` component. Components and systems automatically register themselves with string identifiers. The macro will define the `Object_h` variable, which the application can use to refer to the family:
+This defines a family called `Object` that contains `EcsCircle` and `EcsPosition2D`. Note that in order to be able to refer to an entity in a family, the entity must have a string identifier, as defined by the `EcsId` component. Components and systems automatically register themselves with string identifiers. 
+
+The above macro will define the `Object_h` variable, which the application can use to refer to the family:
 
 ```
 ecs_add(world, e, Object_h);
 ```
+
+This statement will add the `EcsCircle` and `EcsPosition2D` components to the entity. Note that while there are no restrictions on the number and kind of entities that can be added to a family, when a family is used with `ecs_add`, the family must only contain entities that can be used as component. Similarly, if a family is used with `ecs_enable`, the family must only contain systems.
 
 Families in reflecs are stored as entities internally, which is why you will notice handles to families are of the `EcsEntity` type.
 
@@ -263,17 +267,88 @@ The macro will define the `MyTag_h` variable, which an application can then use 
 ecs_add(world, e, MyTag_h);
 ```
 
+As tags are equivalent to components, tags are also internally stored as entities, which is why you will notice handles to tags are of the `EcsEntity` type.
+
 ### Container
-A container is an entity that can contain other entities. Since components are stored as entities in reflecs, and components can be added with the `ecs_add` function, it is similarly possible to add entities with the `ecs_add` function. The entity that is added must however be a container. To turn an entity in a container, add the builtin `EcsContainer` component. Consider this example:
+A container is an entity that can contain other entities. Since components are stored as entities in reflecs, and components can be added with the `ecs_add` function, it is similarly possible to add entities to entities with the `ecs_add` function. The only restriction is that the entity that is to be added must be a "container". To turn an entity in a container, add the builtin `EcsContainer` component, like so:
 
 ```c
+// equivalent to calling ecs_new(world, 0) + ecs_add(world, my_container, EcsContainer_h)
 EcsEntity my_container = ecs_new(world, EcsContainer_h);
-EcsEntity my_child = ecs_new(world, my_container);
+```
+
+This entity can now be used like a component:
+
+```c
+ecs_new(world, e, my_container);
 ```
 
 The above code constructs a hierarchy with a parent and a child. For an example of how to walk over this hierarchy, see the `dag` example in the examples directory.
 
 ### Prefab
+Prefabs are a special kind of entity that enable applications to reuse a set of initialized components across entities. To create a prefab, you can use the `ECS_PREFAB` macro, or `ecs_new_prefab` function:
+
+```
+ECS_PREFAB(world, Circle, EcsCircle, EcsPosition2D);
+```
+
+This defines a prefab with the `EcsCircle` and `EcsPosition2D` components. The macro will declare a `Circle_h` variable, which can be used by the application to refer to the prefab. We can now add this prefab with regular entities:
+
+```c
+EcsEntity e1 = ecs_new(world, Circle_h);
+EcsEntity e2 = ecs_new(world, Circle_h);
+```
+
+This will cause the `EcsCircle` and `EcsPosition2D` components to now be available on the entities, similar to a family. What makes prefabs different from families, is that component values are now shared between entities, and are stored only once in memory. Changing the value of a component on the prefab, will change the value for both `e1` and `e2`:
+
+```c
+ecs_set(world, Circle_h, EcsPosition2D, {.x = 10, .y = 20});
+```
+
+It is possible for an entity to _override_ the prefab value, by adding the component to the entity itself. After the following statement, entity `e1` will have its own independent value for `EcsPosition2D`:
+
+```c
+ecs_add(world, e1, EcsPosition2D_h);
+```
+
+When adding the `EcsPosition2D` component, its value will be initialized with the value from the prefab.
+
+There are many uses for prefabs. They can be used to reduce code and memory footprint, by storing component values that are reused across many entities. They can also be used to efficiently update a value across many entities. 
+
+Another useful pattern for prefabs is that they can be combined with families, to automatically initialize entities. Remember, overriding a component on an entity from a prefab will copy its value, and a family automatically adds components to an entity. Therefore, we automatically initialize entities when doing this:
+
+```c
+ECS_PREFAB(world, CirclePrefab, EcsCircle, EcsPosition2D);
+ECS_FAMILY(world, Circle, CirclePrefab, EcsCircle, EcsPosition2D);
+ecs_set(world, CirclePrefab_h, EcsCircle, {.radius = 10});
+ecs_set(world, CirclePrefab_h, EcsPosition2D, {.x = 0, .y = 0});
+
+EcsEntity e = ecs_new(world, Circle_h);
+```
+
+Let's dissect this code. First, a prefab called `CirclePrefab` is created, with the `EcsCircle` and `EcsPosition2D` components. Then, a family called `Circle` is created, which specifies the same components _in addition to the prefab_. We then create the entity with the `Circle_h` family. When we do that, the components of `Circle` are automatically added to the new entity, including the prefab. This `ecs_new` statement is equivalent to doing:
+
+```
+EcsEntity e = ecs_new(world, 0);
+ecs_stage_add(world, e, CirclePrefab_h);
+ecs_stage_add(world, e, EcsCircle_h);
+ecs_stage_add(world, e, EcsPosition2D_h);
+ecs_commit(world, e);
+```
+
+The `ecs_stage_add` and `ecs_commit` functions are used to add any number of components to an entity in a single operation. You can see that by using a family that both includes the prefab as well as the components, we _immediately override_ the prefab components, which will cause the prefab values to be copied to our entity. For this to work, it is important that the prefab values are defined _before_ creating the entity.
 
 ### Module
+Modules are used to group entities / components / systems. They can be imported with the `ECS_IMPORT` macro:
 
+```
+ECS_IMPORT(world, EcsComponentsTransform, 0);
+```
+
+This will invoke the `EcsComponentsTransform` function, which will define the entities / components / systems. Furthermore, the macro will declare the variables to the entity / component / system handles to the local scope, so that they can be accessed by the code. 
+
+While there is no hard and fast rule on how to organize modules, they are recommended to either provide components or systems. This should be reflected in the naming, so that modules that contain components begin with `EcsComponents` and modules with systems begin with `EcsSystems`. It is furthermore good practice to ensure that a module only has a single purpose.
+
+In large code bases modules can be used to organize code and limit exposure of internal systems to other parts of the code. Modules may be implemented in separate shared libraries, or within the same project. The only requirements for using the `ECS_IMPORT` macro is that the name of the module (`EcsComponentsTransform`) can be resolved as a C function with the right type. For an example on how to implement modules, see the implementation of one of the reflecs modules (see above).
+
+Modules can be imported multiple times without causing side effects.
