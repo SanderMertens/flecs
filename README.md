@@ -290,7 +290,7 @@ Prefabs are a special kind of entity that enable applications to reuse component
 ECS_PREFAB(world, CirclePrefab, EcsCircle, EcsPosition2D);
 ```
 
-This defines a prefab with the `EcsCircle` and `EcsPosition2D` components. The macro will declare a `Circle_h` variable, which can be used by the application to refer to the prefab. We can now add this prefab with regular entities:
+This defines a prefab with the `EcsCircle` and `EcsPosition2D` components. The macro will declare a `Circle_h` variable, which can be used by the application to refer to the prefab. We can now add this prefab to regular entities:
 
 ```c
 EcsEntity e1 = ecs_new(world, CirclePrefab_h);
