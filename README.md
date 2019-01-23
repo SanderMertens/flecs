@@ -155,7 +155,7 @@ EcsWorld *world = ecs_init();
 ```
 
 ### Entity
-An entity is an integer that uniquely identifies an "object" in a system. Entities do not contain data or logic. To add data to an entity, an application should add components to an entity. An entity may have 0..n components. Each component can be added only once. An entity can be created in reflecs with the `ecs_new` function:
+An entity is an integer that uniquely identifies an "object" in a system. Entities do not contain data or logic. To add data to an entity, an application should add components to an entity. An entity may have `0..n` components. Each component can be added only once. An entity can be created in reflecs with the `ecs_new` function:
 
 ```c
 EcsEntity e = ecs_new(world, 0);
@@ -179,13 +179,19 @@ typedef struct Point {
 ECS_COMPONENT(world, Point);
 ```
 
-The macro will define the `Point_h` variable, which the application can then use to add the component to an entity with the `ecs_add` function:
+The macro will define a `Point_h` variable, which can be used to add the component to an entity with the `ecs_add` function:
 
 ```c
 ecs_add(world, e, Point_h);
 ```
 
-Components in reflecs are stored internally as entities, which is why you will notice handles to components are of the `EcsEntity` type.
+Additionally, the component can be added and initialized with the `ecs_set` function:
+
+```c
+ecs_set(world, e, Point, {.x = 10, .y = 20});
+```
+
+Reflecs components are stored internally as entities, which is why handles to components are of the `EcsEntity` type.
 
 ### System
 A system is logic (a function) that is executed for every entity that has a set of components that match a system's interest. In reflecs, systems specify their interest, and when they should run. To define a system, you can use the `ECS_SYSTEM` macro, which wraps around the `ecs_new_system` function:
@@ -211,10 +217,17 @@ Systems can be enabled / disabled. By default a system is enabled. To enable or 
 ecs_enable(world, LogPoints_h, false);
 ```
 
-Systems in reflecs are stored as entities internally, which is why you will notice handles to systems are of the `EcsEntity` type.
+Systems in reflecs are stored as entities internally, which is why handles to systems are of the `EcsEntity` type.
+
+### Task
+A task is a system that has no interest expression. Tasks are run once every frame. Tasks are defined the same way as normal systems, but instead of an interest expression, they provide `0`:
+
+```c
+ECS_SYSTEM(world, MyTask, EcsOnFrame, 0);
+```
 
 ### Family
-A family is a combination of 1..n entities. Since components and systems are stored as entities by reflecs, families can also be used to group components and systems. Typical uses for familes are:
+A family is a group of `1..n` entities. Since components and systems are stored as entities by reflecs, families can also be used to group components and systems. Typical uses for familes are:
 
 - Group components so that they can be added to an entity with a single `ecs_add` call
 - Group systems so that they can be enabled or disabled with a single `ecs_enable` call
@@ -235,7 +248,7 @@ ecs_add(world, e, Object_h);
 
 This statement will add the `EcsCircle` and `EcsPosition2D` components to the entity. Note that while there are no restrictions on the number and kind of entities that can be added to a family, when a family is used with `ecs_add`, the family must only contain entities that can be used as component. Similarly, if a family is used with `ecs_enable`, the family must only contain systems.
 
-Families in reflecs are stored as entities internally, which is why you will notice handles to families are of the `EcsEntity` type.
+Families in reflecs are stored as entities internally, which is why handles to families are of the `EcsEntity` type.
 
 ### Feature
 A feature is a family that contains solely out of systems. To create features, use the `ECS_FAMILY` macro or `ecs_new_family` function.
@@ -252,7 +265,7 @@ The macro will define the `MyTag_h` variable, which an application can then use 
 ecs_add(world, e, MyTag_h);
 ```
 
-As tags are equivalent to components, tags are also internally stored as entities, which is why you will notice handles to tags are of the `EcsEntity` type.
+As tags are equivalent to components, they are also stored as entities which is why handles to tags are of the `EcsEntity` type.
 
 ### Container
 A container is an entity that can contain other entities. Since components are stored as entities in reflecs, and components can be added with the `ecs_add` function, it is similarly possible to add entities to entities with the `ecs_add` function. The only restriction is that the entity that is to be added must be a "container". To turn an entity in a container, add the builtin `EcsContainer` component, like so:
