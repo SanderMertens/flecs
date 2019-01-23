@@ -287,20 +287,20 @@ The above code constructs a hierarchy with a parent and a child. For an example 
 Prefabs are a special kind of entity that enable applications to reuse components values across entities. To create a prefab, you can use the `ECS_PREFAB` macro, or `ecs_new_prefab` function:
 
 ```
-ECS_PREFAB(world, Circle, EcsCircle, EcsPosition2D);
+ECS_PREFAB(world, CirclePrefab, EcsCircle, EcsPosition2D);
 ```
 
 This defines a prefab with the `EcsCircle` and `EcsPosition2D` components. The macro will declare a `Circle_h` variable, which can be used by the application to refer to the prefab. We can now add this prefab with regular entities:
 
 ```c
-EcsEntity e1 = ecs_new(world, Circle_h);
-EcsEntity e2 = ecs_new(world, Circle_h);
+EcsEntity e1 = ecs_new(world, CirclePrefab_h);
+EcsEntity e2 = ecs_new(world, CirclePrefab_h);
 ```
 
 This will make the `EcsCircle` and `EcsPosition2D` components available on entities `e1` and `e2`, similar to a family. In contrast to familes, component values of `EcsCircle` and `EcsPosition2D` are now shared between entities, and stored only once in memory. Since a prefab can be used as a regular entity, we can change the value of a prefab component with the `ecs_set` function:
 
 ```
-ecs_set(world, Circle_h, EcsCircle, {.radius = 10});
+ecs_set(world, CirclePrefab_h, EcsCircle, {.radius = 10});
 ```
 
 This will change the value of `EcsCircle` across all entities that have the prefab. Entities can override component values from a prefab, by either adding or setting a component on themselves, using `ecs_add` or `ecs_set`. When a component is added using `ecs_add`, it will be initialized with the component value of the prefab.
