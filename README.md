@@ -220,7 +220,7 @@ ecs_enable(world, LogPoints_h, false);
 Reflecs systems are stored as entities internally, which is why handles to systems are of the `EcsEntity` type.
 
 ### Task
-A task is a system that has no interest expression. Tasks are run once every frame. Tasks are defined the same way as normal systems, but instead of an interest expression, they provide `0`:
+A task is a system that has no interest expression. Tasks are run once every frame. Tasks are defined the same way as normal systems, but instead of an interest expression, you specify `0`:
 
 ```c
 ECS_SYSTEM(world, MyTask, EcsOnFrame, 0);
