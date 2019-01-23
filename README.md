@@ -1,29 +1,41 @@
 # reflecs
 Reflecs is an entity component system implemented in C99. It's design goal is to
 pack as much punch as possible into a small library with a minimal API and zero
-dependencies. The result: a fast, feature-rich ECS framework in a library no
-larger than 80Kb. Here are the feature highlights:
+dependencies. Here are some of its features:
 
-- Periodic, reactive and on demand systems
-- A job scheduler for executing systems in multiple threads
-- A module system for organizing components and systems, and importing them from libraries
-- An ecosystem of modules that include a physics engine and a web dashboard
-- Automatic FPS limiter so application does not consume more CPU than needed
-- Adaptive optimizations that remove unused systems from critical path
-- Fine-grained memory preallocation API to prevent allocations in the main loop
+- A multi-threaded job scheduler
+- A module system for organizing components and systems in large projects
+- An growing list of reusable modules, including an SDL renderer, physics engine and web dashboard
+- An API for obtaining runtime statistics on performance and memory usage
+- Automatic and manual time management
+- Periodic, reactive and on-demand systems
 
 In addition, reflecs has a flexible architecture with many features that let you
 write powerful applications with just a few lines of code:
 
-- Prefab entities let you store components in memory once, and reuse it many times
+- Prefabs let you create components in memory once, and reuse it across many entities
 - Expressive system signatures, with AND, OR, NOT and optional operators
 - Use entities as components to create hierarchies, indexes and DAGs
-- Features group systems so they can be enabled/disabled with a single API call
-- Time management ensures frames progress at a constant pace, regardless of FPS
 - Create/delete entities and add/remove components while iterating in a system
-- Add components to systems to build stateful systems
 
 Check out the [examples](https://github.com/SanderMertens/reflecs/tree/master/examples) and [documentation](https://github.com/SanderMertens/reflecs/blob/master/include/reflecs.h) to learn more!
+
+## Contents
+* [Building](#building)
+* [Getting started](#getting-started)
+* [Modules](#modules)
+* [Example](#example)
+* [Concepts](#concepts)
+  * [entity](#entity)
+  * [component](#component)
+  * [system](#system)
+  * [family](#family)
+  * [feature](#feature)
+  * [tag](#tag)
+  * [container](#container)
+  * [prefab](#prefab)
+  * [module](#module)
+  
 
 ## Building
 To build reflecs, you need to install bake which is currently only supported on
@@ -68,33 +80,6 @@ bake run app
 ```
 
 ## Modules
-To use a module in reflecs, first install it on your machine:
-
-```
-bake clone SanderMertens/reflecs-components-transform
-```
-
-Then, add it as a dependency to the `project.json` of your project:
-
-```json
-{
-    "id":"app",
-    "type":"application",
-    "value": {
-        "use": ["reflecs", "reflecs.components.transform"]
-    }
-}
-```
-
-Then import it in code:
-
-```c
-ECS_IMPORT(world, EcsComponentsTransform);
-```
-
-After that, you will be able to use the systems and components that are defined
-by the module.
-
 Reflecs has a growing ecosystem of modules. The following modules are currently
 available:
 
