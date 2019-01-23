@@ -174,7 +174,7 @@ void set_system_stats(
     EcsSystemStats *sstats = ecs_array_add(
         stats_array, &systemstats_arr_params);
 
-    sstats->system = system;
+    sstats->handle = system;
     sstats->id = *id;
     sstats->enabled = ecs_is_enabled(world, system);
     sstats->active = active;
@@ -219,7 +219,7 @@ int compare_sysstats(
 {
     const EcsSystemStats *s1 = e1;
     const EcsSystemStats *s2 = e2;
-    return strcmp(s1->id, s2->id);
+    return s1->handle - s2->handle;
 }
 
 static

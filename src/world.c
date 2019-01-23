@@ -21,6 +21,15 @@ const EcsArrayParams char_arr_params = {
     .element_size = sizeof(char)
 };
 
+/** Comparator function for handles */
+static
+int compare_handle(
+    const void *p1,
+    const void *p2)
+{
+    return *(EcsEntity*)p1 - *(EcsEntity*)p2;
+}
+
 /** Initialize component table. This table is manually constructed to bootstrap
  * reflecs. After this function has been called, the builtin components can be
  * created. */
@@ -358,8 +367,12 @@ void ecs_world_activate_system(
 
     if (active) {
          *frame_system_array(world, kind) = dst_array;
+         qsort(dst_array, ecs_array_count(dst_array) + 1,
+          sizeof(EcsEntity), compare_handle);
     } else {
         world->inactive_systems = dst_array;
+        qsort(src_array, ecs_array_count(src_array) + 1,
+          sizeof(EcsEntity), compare_handle);
     }
 }
 

@@ -89,6 +89,7 @@ typedef struct EcsSystem {
 
 typedef struct EcsTableSystem {
     EcsSystem base;
+    EcsEntity entity;          /* Entity id of system, used for ordering */
     EcsArray *components;      /* Computed component list per matched table */
     EcsArray *inactive_tables; /* Inactive tables */
     EcsArray *jobs;            /* Jobs for this system */

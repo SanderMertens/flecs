@@ -333,7 +333,7 @@ void ecs_array_sort(
 {
     if (!array)
         return;
-        
+
     uint32_t count = array->count;
     uint32_t element_size = params->element_size;
     void *buffer = ARRAY_BUFFER(array);

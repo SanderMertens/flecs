@@ -618,6 +618,7 @@ EcsEntity ecs_new_table_system(
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
     system_data->component_params.element_size = sizeof(EcsEntity) * count;
     system_data->period = 0;
+    system_data->entity = result;
 
     system_data->components = ecs_array_new(
         &system_data->component_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
