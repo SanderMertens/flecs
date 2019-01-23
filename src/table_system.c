@@ -543,7 +543,8 @@ void ecs_run_job(
         .system = system,
         .refs_data = refs_data,
         .refs_entity = refs_entity,
-        .column_count = column_count
+        .column_count = column_count,
+        .start_index = 0
     };
 
     do {
@@ -581,6 +582,9 @@ void ecs_run_job(
         }
 
         action(&info);
+
+        info.start_index += count;
+
         if (info.interrupted_by) break;
     } while (remaining);
 }
@@ -762,7 +766,8 @@ EcsEntity ecs_run_w_filter(
         .refs_entity = refs_entity,
         .refs_data = refs_data,
         .column_count = column_count,
-        .delta_time = system_delta_time
+        .delta_time = system_delta_time,
+        .start_index = 0
     };
 
     if (filter) {
@@ -786,7 +791,6 @@ EcsEntity ecs_run_w_filter(
         uint32_t row_count = ecs_array_count(rows);
         uint32_t row_size = w_table->row_params.element_size;
         void *first = ecs_array_buffer(rows);
-        void *last = ECS_OFFSET(first, row_size * row_count);
 
         if (offset_limit) {
             if (offset) {
@@ -804,13 +808,15 @@ EcsEntity ecs_run_w_filter(
                 if (limit > row_count) {
                     limit -= row_count;
                 } else {
-                    last = ECS_OFFSET(first, row_size * limit);
+                    row_count = limit;
                     limit = 0;
                 }
             } else if (limit_set) {
                 break;
             }
         }
+
+        void *last = ECS_OFFSET(first, row_size * row_count);
 
         int32_t refs_index = table[REFS_INDEX];
         if (refs_index) {
@@ -825,6 +831,8 @@ EcsEntity ecs_run_w_filter(
             components_size * table[COMPONENTS_INDEX]);
 
         action(&info);
+
+        info.start_index += row_count;
 
         if (info.interrupted_by) {
             interrupted_by = info.interrupted_by;

@@ -91,6 +91,7 @@ typedef struct EcsRows {
     EcsEntity interrupted_by;
     uint32_t element_size;
     uint32_t column_count;
+    uint32_t start_index;
     float delta_time;
 } EcsRows;
 
