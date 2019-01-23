@@ -284,7 +284,7 @@ ecs_new(world, e, my_container);
 The above code constructs a hierarchy with a parent and a child. For an example of how to walk over this hierarchy, see the `dag` example in the examples directory.
 
 ### Prefab
-Prefabs are a special kind of entity that enable applications to reuse a set of initialized components across entities. To create a prefab, you can use the `ECS_PREFAB` macro, or `ecs_new_prefab` function:
+Prefabs are a special kind of entity that enable applications to reuse components values across entities. To create a prefab, you can use the `ECS_PREFAB` macro, or `ecs_new_prefab` function:
 
 ```
 ECS_PREFAB(world, Circle, EcsCircle, EcsPosition2D);
@@ -297,44 +297,13 @@ EcsEntity e1 = ecs_new(world, Circle_h);
 EcsEntity e2 = ecs_new(world, Circle_h);
 ```
 
-This will cause the `EcsCircle` and `EcsPosition2D` components to now be available on the entities, similar to a family. What makes prefabs different from families, is that component values are now shared between entities, and are stored only once in memory. Changing the value of a component on the prefab, will change the value for both `e1` and `e2`:
-
-```c
-ecs_set(world, Circle_h, EcsPosition2D, {.x = 10, .y = 20});
-```
-
-It is possible for an entity to _override_ the prefab value, by adding the component to the entity itself. After the following statement, entity `e1` will have its own independent value for `EcsPosition2D`:
-
-```c
-ecs_add(world, e1, EcsPosition2D_h);
-```
-
-When adding the `EcsPosition2D` component, its value will be initialized with the value from the prefab.
-
-There are many uses for prefabs. They can be used to reduce code and memory footprint, by storing component values that are reused across many entities. They can also be used to efficiently update a value across many entities. 
-
-Another useful pattern for prefabs is that they can be combined with families, to automatically initialize entities. Remember, overriding a component on an entity from a prefab will copy its value, and a family automatically adds components to an entity. Therefore, we automatically initialize entities when doing this:
-
-```c
-ECS_PREFAB(world, CirclePrefab, EcsCircle, EcsPosition2D);
-ECS_FAMILY(world, Circle, CirclePrefab, EcsCircle, EcsPosition2D);
-ecs_set(world, CirclePrefab_h, EcsCircle, {.radius = 10});
-ecs_set(world, CirclePrefab_h, EcsPosition2D, {.x = 0, .y = 0});
-
-EcsEntity e = ecs_new(world, Circle_h);
-```
-
-Let's dissect this code. First, a prefab called `CirclePrefab` is created, with the `EcsCircle` and `EcsPosition2D` components. Then, a family called `Circle` is created, which specifies the same components _in addition to the prefab_. We then create the entity with the `Circle_h` family. When we do that, the components of `Circle` are automatically added to the new entity, including the prefab. This `ecs_new` statement is equivalent to doing:
+This will make the `EcsCircle` and `EcsPosition2D` components available on entities `e1` and `e2`, similar to a family. In contrast to familes, component values of `EcsCircle` and `EcsPosition2D` are now shared between entities, and stored only once in memory. Since a prefab can be used as a regular entity, we can change the value of a prefab component with the `ecs_set` function:
 
 ```
-EcsEntity e = ecs_new(world, 0);
-ecs_stage_add(world, e, CirclePrefab_h);
-ecs_stage_add(world, e, EcsCircle_h);
-ecs_stage_add(world, e, EcsPosition2D_h);
-ecs_commit(world, e);
+ecs_set(world, Circle_h, EcsCircle, {.radius = 10});
 ```
 
-The `ecs_stage_add` and `ecs_commit` functions are used to add any number of components to an entity in a single operation. You can see that by using a family that both includes the prefab as well as the components, we _immediately override_ the prefab components, which will cause the prefab values to be copied to our entity. For this to work, it is important that the prefab values are defined _before_ creating the entity.
+This will change the value of `EcsCircle` across all entities that have the prefab. Entities can override component values from a prefab, by either adding or setting a component on themselves, using `ecs_add` or `ecs_set`. When a component is added using `ecs_add`, it will be initialized with the component value of the prefab.
 
 ### Module
 Modules are used to group entities / components / systems. They can be imported with the `ECS_IMPORT` macro:
