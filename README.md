@@ -106,6 +106,7 @@ Module      | Description
 [reflecs.components.geometry](https://github.com/SanderMertens/reflecs-components-geometry) | Components for describing geometry
 [reflecs.components.input](https://github.com/SanderMertens/reflecs-components-input) | Components for describing keyboard and mouse input
 [reflecs.components.http](https://github.com/SanderMertens/reflecs-components-http) | Components for describing an HTTP server with endpoints
+[reflecs.systems.transform](https://github.com/SanderMertens/reflecs-systems-transform) | Compute transformation matrices from transform components
 [reflecs.systems.physics](https://github.com/SanderMertens/reflecs-systems-physics) | Simple 2D physics engine with limited 3D features
 [reflecs.systems.civetweb](https://github.com/SanderMertens/reflecs-systems-civetweb) | A civetweb-based implementation of components-http
 [reflecs.systems.admin](https://github.com/SanderMertens/reflecs-systems-admin) | A web-based dashboard for monitoring reflecs performance
