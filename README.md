@@ -224,7 +224,7 @@ After a string identifier is added, the entity can be looked up like this:
 EcsEntity e = ecs_lookup(world, "MyEntity");
 ```
 
-Components, systems, tasks, families and prefabs automatically register the EcsId component when they are created, and can thus be looked up with `ecs_lookup`.
+Components, systems, tasks, families and prefabs automatically register the `EcsId` component when they are created, and can thus be looked up with `ecs_lookup`.
 
 ### Task
 A task is a system that has no interest expression. Tasks are run once every frame. Tasks are defined the same way as normal systems, but instead of an interest expression, you specify `0`:
@@ -249,7 +249,7 @@ This defines a family called `Object` that contains `EcsCircle` and `EcsPosition
 
 The above macro will define the `Object_h` variable, which the application can use to refer to the family:
 
-```
+```c
 ecs_add(world, e, Object_h);
 ```
 
@@ -268,7 +268,7 @@ ECS_TAG(world, MyTag);
 ```
 The macro will define the `MyTag_h` variable, which an application can then use as a regular component, like with the ecs_add function:
 
-```
+```c
 ecs_add(world, e, MyTag_h);
 ```
 
@@ -293,7 +293,7 @@ The above code constructs a hierarchy with a parent and a child. For an example 
 ### Prefab
 Prefabs are a special kind of entity that enable applications to reuse components values across entities. To create a prefab, you can use the `ECS_PREFAB` macro, or `ecs_new_prefab` function:
 
-```
+```c
 ECS_PREFAB(world, CirclePrefab, EcsCircle, EcsPosition2D);
 ```
 
@@ -306,7 +306,7 @@ EcsEntity e2 = ecs_new(world, CirclePrefab_h);
 
 This will make the `EcsCircle` and `EcsPosition2D` components available on entities `e1` and `e2`, similar to a family. In contrast to familes, component values of `EcsCircle` and `EcsPosition2D` are now shared between entities, and stored only once in memory. Since a prefab can be used as a regular entity, we can change the value of a prefab component with the `ecs_set` function:
 
-```
+```c
 ecs_set(world, CirclePrefab_h, EcsCircle, {.radius = 10});
 ```
 
@@ -315,7 +315,7 @@ This will change the value of `EcsCircle` across all entities that have the pref
 ### Module
 Modules are used to group entities / components / systems. They can be imported with the `ECS_IMPORT` macro:
 
-```
+```c
 ECS_IMPORT(world, EcsComponentsTransform, 0);
 ```
 
