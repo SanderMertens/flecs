@@ -29,6 +29,7 @@ Check out the [examples](https://github.com/SanderMertens/reflecs/tree/master/ex
   * [entity](#entity)
   * [component](#component)
   * [system](#system)
+  * [identifier](#identifier)
   * [family](#family)
   * [feature](#feature)
   * [tag](#tag)
