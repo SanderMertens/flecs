@@ -111,8 +111,7 @@ typedef struct Position {
 typedef int32_t Speed;
 
 void Move(EcsRows *rows) {
-    void *row;
-    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+    for (void *row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         Position *p = ecs_data(rows, row, 0);
         Speed *s = ecs_data(rows, row, 1);
         p->x += *s * rows->delta_time;
@@ -136,9 +135,7 @@ int main(int argc, char *argv[]) {
     ecs_set_target_fps(world, 100);
 
     /* Progress world in main loop (invokes Move system) */
-    while (true) {
-        ecs_progress(world, 0);
-    }
+    while (ecs_progress(world, 0));
 
     return ecs_fini(world);
 }
