@@ -152,16 +152,10 @@ EcsWorld *world = ecs_init();
 ```
 
 ### Entity
-An entity is an integer that uniquely identifies an "object" in a system. Entities do not contain data or logic. To add data to an entity, an application should add components to an entity. An entity may have `0..n` components. Each component can be added only once. An entity can be created in reflecs with the `ecs_new` function:
+An entity is an integer that uniquely identifies an "object" in a system. An entity may have `0..n` components, and each component can be added only once. Entities can be created in reflecs with the `ecs_new` function:
 
 ```c
 EcsEntity e = ecs_new(world, 0);
-```
-
-Entities can have an optional string identifier, which allows entities to be looked up in the world, and can make debugging easier. To add an identifier to an entity, an application needs to set the `EcsId` component, like this:
-
-```c
-ecs_set(world, e, EcsId, {"MyEntity"});
 ```
 
 ### Component
@@ -215,6 +209,21 @@ ecs_enable(world, LogPoints_h, false);
 ```
 
 Reflecs systems are stored as entities internally, which is why handles to systems are of the `EcsEntity` type.
+
+### Identifier
+Entities in reflecs may have an optional string-based identifier. An identifier can be added to an entity by setting the `EcsId` component, like this:
+
+```c
+ecs_set(world, e, EcsId, {"MyEntity"});
+```
+
+After a string identifier is added, the entity can be looked up like this:
+
+```c
+EcsEntity e = ecs_lookup(world, "MyEntity");
+```
+
+Components, systems, tasks, families and prefabs automatically register the EcsId component when they are created, and can thus be looked up with `ecs_lookup`.
 
 ### Task
 A task is a system that has no interest expression. Tasks are run once every frame. Tasks are defined the same way as normal systems, but instead of an interest expression, you specify `0`:
