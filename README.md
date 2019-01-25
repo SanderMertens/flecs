@@ -5,7 +5,7 @@ dependencies. Here are some of its features:
 
 - A multi-threaded job scheduler
 - A module system for organizing components and systems in large projects
-- An growing list of reusable modules, including an SDL renderer, physics engine and web dashboard
+- An growing list of reusable modules, including an [SDL renderer](https://github.com/SanderMertens/reflecs-systems-sdl2), [2D physics engine](https://github.com/SanderMertens/reflecs-systems-physics) and [web dashboard](https://github.com/SanderMertens/reflecs-systems-admin)
 - An API for obtaining runtime statistics on performance and memory usage
 - Automatic and manual time management
 - Periodic, reactive and on-demand systems
