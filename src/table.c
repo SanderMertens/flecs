@@ -67,7 +67,7 @@ EcsResult ecs_table_init(
     EcsArray *family = ecs_family_get(world, stage, table->family_id);
     bool prefab_set = false;
 
-    assert(family != NULL);
+    ecs_assert(family != NULL, ECS_INTERNAL_ERROR, "invalid family id in table");
 
     EcsIter it = ecs_array_iter(family, &handle_arr_params);
     uint32_t column = 0;
@@ -87,7 +87,9 @@ EcsResult ecs_table_init(
                 ecs_map_set(world->prefab_index, table->family_id, h);
                 prefab_set = true;
                 size = 0;
-            } else if (ecs_has(world, h, EcsContainer_h)) {
+            } else if (ecs_has(world, h, EcsContainer_h) || 
+                       ecs_has(world, h, EcsRoot_h)) 
+            {
                 size = 0;
             } else {
                 /* Invalid entity handle in family */

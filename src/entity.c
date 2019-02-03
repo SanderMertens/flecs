@@ -247,6 +247,7 @@ void copy_from_prefab(
 
     while ((prefab = ecs_map_get64(world->prefab_index, entity_family))) {
         EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, prefab));
+
         EcsTable *prefab_table = ecs_world_get_table(
             world, stage, row.family_id);
 
