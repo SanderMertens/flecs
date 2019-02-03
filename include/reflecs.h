@@ -1232,7 +1232,7 @@ void ecs_iter_release(
       ? NULL \
       : data->refs_data[-((data)->columns[column]) - 1])
 
-      #define ECS_ROW_ENTITY (-1)
+#define ECS_ROW_ENTITY (-1)
 
 /* Obtain the entity handle from a row */
 #define ecs_entity(data, row, column) \
@@ -1240,7 +1240,7 @@ void ecs_iter_release(
     ? (row ? *(EcsEntity*)row : (EcsEntity)0) \
     : ((data)->columns[column] == 0) \
       ? ((EcsEntity)0) \
-      : (rows->refs_entity[column]))
+      : (data->refs_entity[-((data)->columns[column]) - 1]))
 
 /* Obtain the component handle from a row */
 #define ecs_component(rows, column) (rows->components[column])

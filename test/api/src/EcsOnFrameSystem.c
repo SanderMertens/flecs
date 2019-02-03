@@ -17,6 +17,7 @@ typedef struct Context {
     EcsEntity entities[COUNT];
     int column[COLUMN_COUNT][COUNT];
     EcsEntity component[COLUMN_COUNT][COUNT];
+    EcsEntity entity[COLUMN_COUNT][COUNT];
     int column_count;
 } Context;
 
@@ -39,7 +40,9 @@ void TestSystem(EcsRows *rows) {
             } else {
                 ctx->column[column][ctx->count] = 0;
             }
+
             ctx->component[column][ctx->count] = rows->components[column];
+            ctx->entity[column][ctx->count] = ecs_entity(rows, row, column);
         }
 
         ctx->count ++;
@@ -975,7 +978,7 @@ void test_EcsOnFrameSystem_tc_system_2_or2(
     ecs_fini(world);
 }
 
-void test_EcsOnFrameSystem_tc_system_1_from_component(
+void test_EcsOnFrameSystem_tc_system_1_from_container(
     test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
@@ -1020,11 +1023,69 @@ void test_EcsOnFrameSystem_tc_system_1_from_component(
     test_assertint(ctx.column[0][1], 10);
     test_assertint(ctx.component[0][0], Bar_h);
     test_assertint(ctx.component[0][1], Bar_h);
+    test_assertint(ctx.entity[0][0], e1);
+    test_assertint(ctx.entity[0][1], e1);
 
     ecs_fini(world);
 }
 
-void test_EcsOnFrameSystem_tc_system_2_from_component(
+void test_EcsOnFrameSystem_tc_system_1_and_1_from_container(
+    test_EcsOnFrameSystem this)
+{
+    Context ctx = {0};
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_FAMILY(world, Family1, EcsContainer, Bar);
+    ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, CONTAINER.Bar);
+
+    EcsEntity e1 = ecs_new(world, Family1_h);
+    EcsEntity e2 = ecs_new(world, Foo_h);
+    EcsEntity e3 = ecs_new(world, Foo_h);
+    EcsEntity e4 = ecs_new(world, Bar_h);
+    EcsEntity e5 = ecs_new(world, Bar_h);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+
+    ecs_stage_add(world, e2, e1);
+    ecs_commit(world, e2);
+    ecs_stage_add(world, e4, Foo_h);
+    ecs_stage_add(world, e4, e1);
+    ecs_commit(world, e4);
+
+    *(int*)ecs_get_ptr(world, e1, Bar_h) = 10;
+    *(int*)ecs_get_ptr(world, e2, Foo_h) = 20;
+    *(int*)ecs_get_ptr(world, e3, Foo_h) = 30;
+    *(int*)ecs_get_ptr(world, e4, Bar_h) = 40;
+    *(int*)ecs_get_ptr(world, e5, Bar_h) = 50;
+
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 0);
+
+    test_assertint(ctx.column_count, 2);
+    test_assertint(ctx.count, 2);
+    test_assert(ctx.entities[0] == e2);
+    test_assert(ctx.entities[1] == e4);
+    test_assertint(ctx.column[1][0], 10);
+    test_assertint(ctx.column[1][1], 10);
+    test_assertint(ctx.component[0][0], Foo_h);
+    test_assertint(ctx.component[1][0], Bar_h);
+    test_assertint(ctx.component[0][1], Foo_h);
+    test_assertint(ctx.component[1][1], Bar_h);
+    test_assertint(ctx.entity[0][0], e2);
+    test_assertint(ctx.entity[1][0], e1);
+    test_assertint(ctx.entity[0][1], e4);
+    test_assertint(ctx.entity[1][1], e1);
+
+    ecs_fini(world);
+}
+
+void test_EcsOnFrameSystem_tc_system_2_from_container(
     test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
@@ -1100,11 +1161,17 @@ void test_EcsOnFrameSystem_tc_system_2_from_component(
     test_assertint(ctx.component[1][1], World_h);
     test_assertint(ctx.component[0][2], Bar_h);
     test_assertint(ctx.component[1][2], World_h);
+    test_assertint(ctx.entity[0][0], e1);
+    test_assertint(ctx.entity[1][0], e2);
+    test_assertint(ctx.entity[0][1], e1);
+    test_assertint(ctx.entity[1][1], e2);
+    test_assertint(ctx.entity[0][2], e1);
+    test_assertint(ctx.entity[1][2], e2);
 
     ecs_fini(world);
 }
 
-void test_EcsOnFrameSystem_tc_system_1_from_component_or2(
+void test_EcsOnFrameSystem_tc_system_1_from_container_or2(
     test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
@@ -1170,11 +1237,14 @@ void test_EcsOnFrameSystem_tc_system_1_from_component_or2(
     test_assertint(ctx.component[0][0], Bar_h);
     test_assertint(ctx.component[0][1], World_h);
     test_assertint(ctx.component[0][2], Bar_h);
+    test_assertint(ctx.entity[0][0], e1);
+    test_assertint(ctx.entity[0][1], e2);
+    test_assertint(ctx.entity[0][2], e1);
 
     ecs_fini(world);
 }
 
-void test_EcsOnFrameSystem_tc_system_2_from_component_or2(
+void test_EcsOnFrameSystem_tc_system_2_from_container_or2(
     test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
@@ -1258,7 +1328,7 @@ void test_EcsOnFrameSystem_tc_system_2_from_component_or2(
     ecs_fini(world);
 }
 
-void test_EcsOnFrameSystem_tc_system_from_component_not(
+void test_EcsOnFrameSystem_tc_system_from_container_not(
     test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
@@ -1309,7 +1379,7 @@ void test_EcsOnFrameSystem_tc_system_from_component_not(
     ecs_fini(world);
 }
 
-void test_EcsOnFrameSystem_tc_system_2_from_component_not(
+void test_EcsOnFrameSystem_tc_system_2_from_container_not(
     test_EcsOnFrameSystem this)
 {
     Context ctx = {0};
@@ -2599,3 +2669,5 @@ void test_EcsOnFrameSystem_tc_system_w_same_or_family_as_table(
 
     ecs_fini(world);
 }
+
+
