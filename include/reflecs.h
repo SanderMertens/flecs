@@ -465,6 +465,12 @@ EcsEntity ecs_new(
     EcsWorld *world,
     EcsEntity type);
 
+REFLECS_EXPORT
+EcsEntity ecs_new_entity(
+    EcsWorld *world,
+    const char *id,
+    const char *components);
+
 /** Create a new set of entities.
  * This operation creates the number of specified entities with one API call
  * which is a more efficient alternative to calling ecs_new in a loop.
@@ -1134,6 +1140,13 @@ void ecs_iter_release(
 
 
 /* -- Convenience macro's -- */
+
+/** Wrapper around ecs_new_entity.
+ */ 
+#define ECS_ENTITY(world, id, ...)\
+    EcsEntity id##_h = ecs_new_entity(world, #id, #__VA_ARGS__);\
+    (void)id##_h;\
+    assert (id##_h != 0)
 
 /** Wrapper around ecs_new_component.
  * This macro provides a convenient way to register components with a world. It

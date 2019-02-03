@@ -36,6 +36,7 @@ test.suite EcsAdd {
     tc_add_cur_in_progress()
     tc_add_next_in_progress()
     tc_add_all_in_progress()
+    tc_add_new_container_in_system()
 }
 
 test.suite EcsRemove {

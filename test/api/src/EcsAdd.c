@@ -518,3 +518,30 @@ void test_EcsAdd_tc_add_all_in_progress(
 
     ecs_fini(world);
 }
+
+static
+void AddNewContainerInSystem(EcsRows *rows) {
+    for (void *row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsEntity parent = ecs_new(rows->world, EcsContainer_h);
+        ecs_add(rows->world, ecs_entity(rows, row, 0), parent);
+    }
+}
+
+void test_EcsAdd_tc_add_new_container_in_system(
+    test_EcsAdd this)
+{
+    EcsWorld *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_SYSTEM(world, AddNewContainerInSystem, EcsOnFrame, Foo);
+
+    EcsEntity e1 = ecs_new(world, Foo_h);
+    test_assert(e1 != 0);
+
+    /* If this doesn't crash, test passes */
+    ecs_progress(world, 0);
+
+    ecs_fini(world);
+}

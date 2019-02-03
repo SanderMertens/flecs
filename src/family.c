@@ -132,7 +132,13 @@ EcsFamily ecs_family_from_handle(
 
     if (!info) {
         uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
-        assert(row_64 != 0);
+        if (!row_64 && world->in_progress) {
+            row_64 = ecs_map_get64(stage->entity_stage, entity);
+            if (!row_64) {
+                return 0;
+            }
+        }
+
         EcsRow row = ecs_to_row(row_64);
         table = ecs_world_get_table(world, stage, row.family_id);
         rows = table->rows;
@@ -442,6 +448,36 @@ EcsEntity ecs_new_prefab(
 
     family.resolved = ecs_family_merge(
         world, NULL, world->prefab_family, family.resolved, 0);
+    result = ecs_new_w_family(world, NULL, family.resolved);
+
+    EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
+    if (!id_data) {
+        return 0;
+    }
+
+    *id_data = id;
+
+    return result;
+}
+
+EcsEntity ecs_new_entity(
+    EcsWorld *world,
+    const char *id,
+    const char *components)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);
+    EcsFamilyComponent family = {0};
+
+    EcsEntity result = ecs_lookup(world, id);
+    if (result) {
+        return result;
+    }
+
+    if (ecs_parse_component_expr(world, components, add_family, &family) != EcsOk) {
+        return 0;
+    }
+
+    family.resolved = ecs_family_add(world, NULL, family.resolved, EcsId_h);
     result = ecs_new_w_family(world, NULL, family.resolved);
 
     EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
