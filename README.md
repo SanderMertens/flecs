@@ -284,7 +284,7 @@ This entity can now be used like a component:
 ecs_new(world, e, my_container);
 ```
 
-The above code constructs a hierarchy with a parent and a child. For an example of how to walk over this hierarchy, see the `dag` example in the examples directory.
+The above code constructs a hierarchy with a parent ("my_container") and a child ("e"). For an example of how to walk over this hierarchy, see the `dag` example in the examples directory.
 
 ### Prefab
 Prefabs are a special kind of entity that enable applications to reuse components values across entities. To create a prefab, you can use the `ECS_PREFAB` macro, or `ecs_new_prefab` function:
@@ -316,8 +316,6 @@ ECS_IMPORT(world, EcsComponentsTransform, 0);
 ```
 
 This will invoke the `EcsComponentsTransform` function, which will define the entities / components / systems. Furthermore, the macro will declare the variables to the entity / component / system handles to the local scope, so that they can be accessed by the code. 
-
-While there is no hard and fast rule on how to organize modules, they are recommended to either provide components or systems. This should be reflected in the naming, so that modules that contain components begin with `EcsComponents` and modules with systems begin with `EcsSystems`. It is furthermore good practice to ensure that a module only has a single purpose.
 
 In large code bases modules can be used to organize code and limit exposure of internal systems to other parts of the code. Modules may be implemented in separate shared libraries, or within the same project. The only requirements for using the `ECS_IMPORT` macro is that the name of the module (`EcsComponentsTransform`) can be resolved as a C function with the right type. For an example on how to implement modules, see the implementation of one of the reflecs modules (see above).
 
