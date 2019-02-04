@@ -40,10 +40,10 @@ typedef struct EcsComponent {
 } EcsComponent;
 
 typedef enum EcsSystemExprElemKind {
-    EcsFromEntity,
-    EcsFromComponent,
-    EcsFromSystem,
-    EcsFromHandle
+    EcsFromEntity,          /* Get component from entity (default) */
+    EcsFromContainer,       /* Get component from container */
+    EcsFromSystem,          /* Get component from system */
+    EcsFromId               /* Get entity by id */
 } EcsSystemExprElemKind;
 
 typedef enum EcsSystemExprOperKind {

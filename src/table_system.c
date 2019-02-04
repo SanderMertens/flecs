@@ -232,12 +232,12 @@ void add_table(
             }
 
         /* Column that just passes a handle to the system (no data) */
-        } else if (column->kind == EcsFromHandle) {
+        } else if (column->kind == EcsFromId) {
             component = column->is.component;
             table_data[i] = 0;
 
         /* Column that retrieves data from a component */
-        } else if (column->kind == EcsFromComponent) {
+        } else if (column->kind == EcsFromContainer) {
             if (column->oper_kind == EcsOperAnd ||
                 column->oper_kind == EcsOperOptional)
             {
@@ -265,8 +265,8 @@ void add_table(
         }
 
         /* This column does not retrieve data from a static entity (either
-         * EcsFromSystem or EcsFromComponent) and is not just a handle */
-        if (!entity && column->kind != EcsFromHandle) {
+         * EcsFromSystem or EcsFromContainer) and is not just a handle */
+        if (!entity && column->kind != EcsFromId) {
             if (component) {
                 /* Retrieve offset for component */
                 table_data[i] = ecs_table_column_offset(table, component);
@@ -349,7 +349,7 @@ bool match_table(
         if (oper_kind == EcsOperAnd) {
             if (elem_kind == EcsFromEntity) {
                 /* Already validated */
-            } else if (elem_kind == EcsFromComponent) {
+            } else if (elem_kind == EcsFromContainer) {
                 if (!components_contains_component(
                     world, stage, table_family, elem->is.component, NULL))
                 {
@@ -364,7 +364,7 @@ bool match_table(
                 {
                     return false;
                 }
-            } else if (elem_kind == EcsFromComponent) {
+            } else if (elem_kind == EcsFromContainer) {
                 if (!components_contains(
                     world, stage, table_family, family, NULL, false))
                 {

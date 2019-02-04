@@ -50,7 +50,7 @@ EcsEntity new_row_system(
         EcsSystemColumn *column = &buffer[i];
         *h = column->is.component;
 
-        if (column->kind != EcsFromHandle) {
+        if (column->kind != EcsFromId) {
             family_id = ecs_family_add(
                 world, NULL, family_id, column->is.component);
         }
@@ -150,7 +150,7 @@ EcsResult ecs_parse_component_action(
      * ecs_family_contains. */
     } else if (oper_kind == EcsOperNot) {
         elem = ecs_array_add(&system_data->columns, &column_arr_params);
-        elem->kind = EcsFromHandle; /* Just pass handle to system */
+        elem->kind = EcsFromId; /* Just pass handle to system */
         elem->oper_kind = EcsOperNot;
         elem->is.component = component;
 
@@ -199,7 +199,7 @@ void ecs_row_notify(
 }
 
 /** Run a task. A task is a system that contains no columns that can be matched
- * against a table. Examples of such columns are EcsFromSystem or EcsFromHandle.
+ * against a table. Examples of such columns are EcsFromSystem or EcsFromId.
  * Tasks are ran once every frame. */
 void ecs_run_task(
     EcsWorld *world,

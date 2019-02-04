@@ -37,13 +37,13 @@ char* parse_complex_elem(
     char *dot = strchr(bptr, '.');
     if (dot) {
         if (!strncmp(bptr, "CONTAINER", dot - bptr)) {
-            *elem_kind = EcsFromComponent;
+            *elem_kind = EcsFromContainer;
         } else if (!strncmp(bptr, "SYSTEM", dot - bptr)) {
             *elem_kind = EcsFromSystem;
         } else if (!strncmp(bptr, "ENTITY", dot - bptr)) {
             /* default */
         } else if (!strncmp(bptr, "ID", dot - bptr)) {
-            *elem_kind = EcsFromHandle;
+            *elem_kind = EcsFromId;
         } else {
             ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
         }
@@ -66,7 +66,7 @@ EcsResult has_tables(
     void *data)
 {
     bool *needs_matching = data;
-    if (elem_kind == EcsFromEntity || elem_kind == EcsFromComponent) {
+    if (elem_kind == EcsFromEntity || elem_kind == EcsFromContainer) {
         *needs_matching = true;
     }
 
@@ -148,7 +148,7 @@ EcsResult ecs_parse_component_expr(
                     ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
                 }
 
-                elem_kind = EcsFromHandle;
+                elem_kind = EcsFromId;
             }
 
             if (action(world, elem_kind, oper_kind, bptr, ctx) != EcsOk) {
@@ -159,7 +159,7 @@ EcsResult ecs_parse_component_expr(
             elem_kind = EcsFromEntity;
 
             if (ch == '|') {
-                if (elem_kind == EcsFromHandle) {
+                if (elem_kind == EcsFromId) {
                     /* Cannot OR handles */
                     ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
                 }
