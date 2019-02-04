@@ -444,3 +444,22 @@ void test_EcsPrefab_tc_prefab_override_w_set(
 
     ecs_fini(world);
 }
+
+void test_EcsPrefab_tc_prefab_add_to_entity_w_prefab(
+    test_EcsPrefab this)
+{
+    EcsWorld *world = ecs_init();
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    
+    ECS_PREFAB(world, Prefab1, EcsContainer, Foo);
+    ECS_ENTITY(world, E1, Prefab1);
+    ECS_ENTITY(world, E2, E1);
+
+    test_assert(ecs_has(world, E1_h, Foo_h));
+    test_assert(ecs_has(world, E1_h, EcsContainer_h));
+    test_assert(!ecs_has(world, E1_h, EcsPrefab_h));
+    test_assert(ecs_has(world, E2_h, E1_h));
+
+    ecs_fini(world);
+}
