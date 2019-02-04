@@ -469,9 +469,7 @@ EcsEntity ecs_new_entity(
     EcsFamilyComponent family = {0};
 
     EcsEntity result = ecs_lookup(world, id);
-    if (result) {
-        return result;
-    }
+    ecs_assert(!result, ECS_ENTITY_ALREADY_DEFINED, id);
 
     if (ecs_parse_component_expr(world, components, add_family, &family) != EcsOk) {
         return 0;

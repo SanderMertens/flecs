@@ -96,6 +96,10 @@ const char* ecs_strerror(
         return "family specified by system is already in use";
     case ECS_INTERNAL_ERROR:
         return "internal error";
+    case ECS_MORE_THAN_ONE_PREFAB:
+        return "more than one prefab added to entity";
+    case ECS_ENTITY_ALREADY_DEFINED:
+        return "entity has already been defined";
     }
 
     return "unknown error code";

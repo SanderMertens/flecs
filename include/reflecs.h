@@ -1114,6 +1114,8 @@ void _ecs_assert(
 #define ECS_NOT_A_COMPONENT (7)
 #define ECS_FAMILY_IN_USE (8)
 #define ECS_INTERNAL_ERROR (9)
+#define ECS_MORE_THAN_ONE_PREFAB (10)
+#define ECS_ENTITY_ALREADY_DEFINED (11)
 
 /* -- Utility API -- */
 

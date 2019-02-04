@@ -82,8 +82,8 @@ EcsResult ecs_table_init(
         if (type) {
             size = type->size;
         } else {
-            if (ecs_get_ptr(world, h, EcsPrefab_h)) {
-                assert_func(prefab_set == false);
+            if (ecs_has(world, h, EcsPrefab_h)) {
+                ecs_assert(prefab_set == false, ECS_MORE_THAN_ONE_PREFAB, ecs_id(world, h));
                 ecs_map_set(world->prefab_index, table->family_id, h);
                 prefab_set = true;
                 size = 0;
