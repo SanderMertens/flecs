@@ -51,6 +51,10 @@ EcsEntity components_contains(
         EcsEntity h = *(EcsEntity*)ecs_array_get(
             components, &handle_arr_params, i);
 
+        if (ecs_has(world, h, EcsPrefab_h)) {
+            return 0;
+        }
+
         uint64_t row_64 = ecs_map_get64(world->entity_index, h);
         assert(row_64 != 0);
 
