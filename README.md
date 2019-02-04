@@ -268,7 +268,7 @@ The macro will define the `MyTag_h` variable, which an application can then use 
 ecs_add(world, e, MyTag_h);
 ```
 
-As tags are equivalent to components, they are also stored as entities which is why handles to tags are of the `EcsEntity` type.
+Tags, like components, are stored as entities internally which is why handles to tags are of the `EcsEntity` type.
 
 ### Container
 A container is an entity that can contain other entities. Since components are stored as entities in reflecs, and components can be added with the `ecs_add` function, it is similarly possible to add entities to entities with the `ecs_add` function. The only restriction is that the entity that is to be added must be a "container". To turn an entity in a container, add the builtin `EcsContainer` component, like so:
