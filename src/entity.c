@@ -91,6 +91,7 @@ bool has_type(
     EcsStage *stage = ecs_get_stage(&world);
     EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
     EcsFamily family_id = row.family_id;
+    bool match_prefab = type != EcsPrefab_h && type != EcsId_h;
 
     if (world->in_progress) {
         row = ecs_to_row(ecs_map_get64(stage->entity_stage, entity));
@@ -105,7 +106,7 @@ bool has_type(
 
     EcsFamily type_family = ecs_family_from_handle(world, stage, type, NULL);
     return ecs_family_contains(
-        world, stage, family_id, type_family, match_all, true);
+        world, stage, family_id, type_family, match_all, match_prefab);
 }
 
 static
