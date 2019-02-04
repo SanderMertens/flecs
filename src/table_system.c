@@ -91,7 +91,7 @@ bool components_contains_component(
 
         EcsRow row = ecs_to_row(row_64);
         bool result = ecs_family_contains_component(
-            world, stage, row.family_id, component);
+            world, stage, row.family_id, component, true);
         if (result) {
             if (entity_out) *entity_out = h;
             return true;
@@ -224,8 +224,9 @@ void add_table(
                 component = column->is.component;
             } else if (column->oper_kind == EcsOperOptional) {
                 component = column->is.component;
+
                 if (!ecs_family_contains_component(
-                    world, stage, table_family, component))
+                    world, stage, table_family, component, true))
                 {
                     component = 0;
                 }
@@ -295,6 +296,7 @@ void add_table(
              * function will return a prefab. */
             ref_data[ref].entity = get_entity_for_component(
                 world, entity, table_family, component);
+
             ref_data[ref].component = component;
             ref ++;
 
@@ -329,7 +331,7 @@ bool match_table(
     EcsFamily family, table_family;
     table_family = table->family_id;
 
-    if (ecs_family_contains_component(world, stage, table_family, EcsPrefab_h)){
+    if (ecs_family_contains_component(world, stage, table_family, EcsPrefab_h, false)){
         /* Never match prefabs */
         return false;
     }
@@ -428,6 +430,7 @@ void resolve_refs(
     for (i = 0; i < count; i ++) {
         EcsSystemRef *ref = &refs[i];
         EcsEntity entity = ref->entity;
+        
         if (!entity) {
             break;
         }

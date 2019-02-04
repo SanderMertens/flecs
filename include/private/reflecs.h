@@ -95,7 +95,8 @@ bool ecs_family_contains_component(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily family,
-    EcsEntity component);
+    EcsEntity component,
+    bool match_prefab);
 
 /* Register new family from either a single component, an array of component
  * handles, or a combination */

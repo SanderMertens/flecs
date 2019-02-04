@@ -342,7 +342,7 @@ EcsEntity ecs_family_contains(
             }
 
             if (prefab) {
-                if (ecs_get_ptr(world, prefab, h2) != NULL) {
+                if (ecs_has(world, prefab, h2)) {
                     h1 = h2;
                 }
             }
@@ -370,7 +370,8 @@ bool ecs_family_contains_component(
     EcsWorld *world,
     EcsStage *stage,
     EcsFamily family_id,
-    EcsEntity component)
+    EcsEntity component,
+    bool match_prefab)
 {
     EcsArray *family = ecs_family_get(world, stage, family_id);
     EcsEntity *buffer = ecs_array_buffer(family);
@@ -379,6 +380,15 @@ bool ecs_family_contains_component(
     for (i = 0; i < count; i++) {
         if (buffer[i] == component) {
             return true;
+        }
+    }
+
+    if (match_prefab) {
+        EcsEntity prefab = ecs_map_get64(world->prefab_index, family_id);
+        if (prefab) {
+            if (ecs_has(world, prefab, component)) {
+                return true;
+            }
         }
     }
 

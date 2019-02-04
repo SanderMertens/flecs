@@ -114,6 +114,7 @@ test.suite EcsOnFrameSystem {
     tc_system_2_from_container_or2()
     tc_system_from_container_not()
     tc_system_from_container_not_from_prefab()
+    tc_system_optional_from_prefab()
     tc_system_2_from_container_not()
     tc_system_1_optional_set()
     tc_system_1_optional_not_set()

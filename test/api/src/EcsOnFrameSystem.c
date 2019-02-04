@@ -2727,4 +2727,29 @@ void test_EcsOnFrameSystem_tc_system_w_same_or_family_as_table(
     ecs_fini(world);
 }
 
+void HasBar(EcsRows *rows) {
+    bool *has_bar = ecs_get_context(rows->world);
+    *has_bar = ecs_data(rows, rows->first, 1) != NULL;
+}
 
+void test_EcsOnFrameSystem_tc_system_optional_from_prefab(
+    test_EcsOnFrameSystem this)
+{
+    EcsWorld *world = ecs_init();
+    bool has_bar = false;
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_PREFAB(world, Prefab, Bar);
+    ECS_ENTITY(world, E1, Prefab, Foo);
+
+    ECS_SYSTEM(world, HasBar, EcsOnFrame, Foo, ?Bar);
+
+    ecs_set_context(world, &has_bar);
+
+    ecs_progress(world, 0);
+
+    test_assert(has_bar != false);
+
+    ecs_fini(world);
+}
