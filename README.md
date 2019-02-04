@@ -245,15 +245,11 @@ To define a family, you can use the `ECS_FAMILY` macro, which wraps the `ecs_new
 ECS_FAMILY(world, Circle, EcsCircle, EcsPosition2D);
 ```
 
-This defines a family called `Object` that contains `EcsCircle` and `EcsPosition2D`. Note that in order to be able to refer to an entity in a family, the entity must have a string identifier, as defined by the `EcsId` component. Components and systems automatically register themselves with string identifiers. 
-
-The above macro will define the `Object_h` variable, which the application can use to refer to the family:
+This defines a family called `Circle` that contains `EcsCircle` and `EcsPosition2D`. The macro will define the `Circle_h` variable, which the application can use to refer to the family:
 
 ```c
-ecs_add(world, e, Object_h);
+ecs_add(world, e, Circle_h);
 ```
-
-This statement will add the `EcsCircle` and `EcsPosition2D` components to the entity. Note that while there are no restrictions on the number and kind of entities that can be added to a family, when a family is used with `ecs_add`, the family must only contain entities that can be used as component. Similarly, if a family is used with `ecs_enable`, the family must only contain systems.
 
 Reflecs families are stored as entities internally, which is why handles to families are of the `EcsEntity` type.
 
