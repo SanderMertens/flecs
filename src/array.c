@@ -131,6 +131,7 @@ uint32_t ecs_array_move_index(
 {
     void *dst_elem = ecs_array_add(dst_array, params);
     void *src_elem = ecs_array_get(src_array, params, index);
+
     memcpy(dst_elem, src_elem, params->element_size);
     return ecs_array_remove_index(src_array, params, index);
 }

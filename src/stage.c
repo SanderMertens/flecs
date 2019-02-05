@@ -30,11 +30,9 @@ void process_tables(
         EcsTable *table = &buffer[i];
         EcsFamily family_id = table->family_id;
         if (!ecs_map_has(world->table_index, family_id, NULL)) {
-            ecs_array_move_index(
-                &world->table_db,
-                stage->table_db_stage,
-                &table_arr_params,
-                i);
+            EcsTable *dst = ecs_array_add(&world->table_db, &table_arr_params);
+
+            *dst = *table;
 
             uint32_t index = ecs_array_count(world->table_db) - 1;
             ecs_map_set(world->table_index, family_id, index + 1);

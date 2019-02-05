@@ -495,7 +495,7 @@ void ecs_system_activate_table(
         }
     }
 
-    assert(i != count);
+    ecs_assert(i != count, ECS_INTERNAL_ERROR, "cannot find table to (de)activate");
 
     uint32_t src_count = ecs_array_move_index(
         &dst_array, src_array, &system_data->table_params, i);
