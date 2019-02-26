@@ -245,15 +245,11 @@ To define a family, you can use the `ECS_FAMILY` macro, which wraps the `ecs_new
 ECS_FAMILY(world, Circle, EcsCircle, EcsPosition2D);
 ```
 
-This defines a family called `Object` that contains `EcsCircle` and `EcsPosition2D`. Note that in order to be able to refer to an entity in a family, the entity must have a string identifier, as defined by the `EcsId` component. Components and systems automatically register themselves with string identifiers. 
-
-The above macro will define the `Object_h` variable, which the application can use to refer to the family:
+This defines a family called `Circle` that contains `EcsCircle` and `EcsPosition2D`. The macro will define the `Circle_h` variable, which the application can use to refer to the family:
 
 ```c
-ecs_add(world, e, Object_h);
+ecs_add(world, e, Circle_h);
 ```
-
-This statement will add the `EcsCircle` and `EcsPosition2D` components to the entity. Note that while there are no restrictions on the number and kind of entities that can be added to a family, when a family is used with `ecs_add`, the family must only contain entities that can be used as component. Similarly, if a family is used with `ecs_enable`, the family must only contain systems.
 
 Reflecs families are stored as entities internally, which is why handles to families are of the `EcsEntity` type.
 
@@ -272,7 +268,7 @@ The macro will define the `MyTag_h` variable, which an application can then use 
 ecs_add(world, e, MyTag_h);
 ```
 
-As tags are equivalent to components, they are also stored as entities which is why handles to tags are of the `EcsEntity` type.
+Tags, like components, are stored as entities internally which is why handles to tags are of the `EcsEntity` type.
 
 ### Container
 A container is an entity that can contain other entities. Since components are stored as entities in reflecs, and components can be added with the `ecs_add` function, it is similarly possible to add entities to entities with the `ecs_add` function. The only restriction is that the entity that is to be added must be a "container". To turn an entity in a container, add the builtin `EcsContainer` component, like so:
@@ -288,7 +284,7 @@ This entity can now be used like a component:
 ecs_new(world, e, my_container);
 ```
 
-The above code constructs a hierarchy with a parent and a child. For an example of how to walk over this hierarchy, see the `dag` example in the examples directory.
+The above code constructs a hierarchy with a parent ("my_container") and a child ("e"). For an example of how to walk over this hierarchy, see the `dag` example in the examples directory.
 
 ### Prefab
 Prefabs are a special kind of entity that enable applications to reuse components values across entities. To create a prefab, you can use the `ECS_PREFAB` macro, or `ecs_new_prefab` function:
@@ -320,8 +316,6 @@ ECS_IMPORT(world, EcsComponentsTransform, 0);
 ```
 
 This will invoke the `EcsComponentsTransform` function, which will define the entities / components / systems. Furthermore, the macro will declare the variables to the entity / component / system handles to the local scope, so that they can be accessed by the code. 
-
-While there is no hard and fast rule on how to organize modules, they are recommended to either provide components or systems. This should be reflected in the naming, so that modules that contain components begin with `EcsComponents` and modules with systems begin with `EcsSystems`. It is furthermore good practice to ensure that a module only has a single purpose.
 
 In large code bases modules can be used to organize code and limit exposure of internal systems to other parts of the code. Modules may be implemented in separate shared libraries, or within the same project. The only requirements for using the `ECS_IMPORT` macro is that the name of the module (`EcsComponentsTransform`) can be resolved as a C function with the right type. For an example on how to implement modules, see the implementation of one of the reflecs modules (see above).
 
