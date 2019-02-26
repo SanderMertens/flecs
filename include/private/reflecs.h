@@ -246,7 +246,7 @@ void ecs_row_notify(
     EcsWorld *world,
     EcsEntity system,
     EcsRowSystem *system_data,
-    int16_t *columns,
+    int32_t *columns,
     EcsTableColumn *table_columns,
     uint32_t offset,
     uint32_t limit);

@@ -355,8 +355,10 @@ uint32_t commit_w_family(
         uint64_t row_64 = ecs_from_row(new_row);
         ecs_map_set64(entity_index, entity, row_64);
         if (to_add) {
-            notify_pre_merge
-              (world, stage, new_table, new_columns, new_index, to_add, world->add_systems);
+            notify_pre_merge (
+              world, stage, new_table, new_columns, new_index, to_add, 
+              world->add_systems);
+
             copy_from_prefab(
                 world, stage, new_table, entity, new_index, family_id, to_add);
         }
@@ -384,6 +386,8 @@ bool ecs_notify(
     EcsTableColumn *table_columns,
     int32_t row_index)
 {
+    /* O(1) lookup to find a system that exactly matches the signature of the
+     * added / removed / set family */
     EcsEntity system = ecs_map_get64(systems, family_id);
     bool notified = false;
 
@@ -423,43 +427,62 @@ bool ecs_notify(
 
         notified = true;
     } else {
-        /* Walk over add/remove systems for each column in the table */
+        /* If no reactive system is found that exactly matches the added family,
+         * try to find reactive systems for each individual component that is
+         * in the family. Don't try to match systems that partially match, as
+         * this would be too big of a performance hit */
+
+        /* Look up the component array from the family id (O(1)) */
         EcsArray *family = ecs_family_get(world, stage, family_id);
         uint32_t i, count = ecs_array_count(family);
-        EcsEntity *buffer = ecs_array_buffer(family);
 
-        for (i = 0; i < count; i ++) {
-            EcsFamily fid = ecs_family_from_handle(
-                world, stage, buffer[i], NULL);
+        /* If the family only has a single component and it was not found when
+         * looking for a system that has an exact match, we won't find anything
+         * here either. */
+        if (count > 1) {
+            EcsEntity *buffer = ecs_array_buffer(family);
 
-            system = ecs_map_get64(systems, fid);
-            if (system) {
-                EcsRowSystem *system_data = ecs_get_ptr(
-                    world, system, EcsRowSystem_h);
+            for (i = 0; i < count; i ++) {
 
-                ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+                /* Obtain hash of family that only has the current component.
+                 * TODO:
+                 *   This operation is expensive. To optimize, a separate index
+                 *   should link component (entity) ids to family hashes */
+                EcsFamily fid = ecs_family_from_handle(
+                    world, stage, buffer[i], NULL);
 
-                int32_t row = row_index;
-                if (row_index == -1) {
-                    row = ecs_array_count(table_columns[0].data) - 1;
-                    row_index = 0;
+                /* Check if there is a reactive system for the family */
+                system = ecs_map_get64(systems, fid);
+                if (system) {
+                    /* Lookup the meta data corresponding to the system */
+                    EcsRowSystem *system_data = ecs_get_ptr(
+                        world, system, EcsRowSystem_h);
+
+                    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                    int32_t row = row_index;
+                    if (row_index == -1) {
+                        row = ecs_array_count(table_columns[0].data) - 1;
+                        row_index = 0;
+                    }
+
+                    /* Notify system. The column is the currently iterated over
+                     * component, as table columns are ordered the same way that
+                     * components in a family are */
+                    uint32_t column = i + 1; /* offset the entity column */
+                    for (; row >= row_index; row --) {
+                        ecs_row_notify(
+                            world,
+                            system,
+                            system_data,
+                            &column,
+                            table_columns,
+                            row,
+                            row + 1);
+                    }
+
+                    notified = true;
                 }
-
-                /* Offset column by one, to account for entity column */
-                int16_t column = i + 1;
-
-                for (; row >= row_index; row --) {
-                    ecs_row_notify(
-                        world,
-                        system,
-                        system_data,
-                        &column, /* TODO: validate whether this still works in column-design */
-                        table_columns,
-                        row,
-                        1);
-                }
-
-                notified = true;
             }
         }
     }
@@ -603,6 +626,11 @@ EcsEntity ecs_clone(
 
                 copy_row(to_table->family, to_columns, to_row.index,
                     from_table->family, from_columns, row.index);
+
+                /* A clone with value is equivalent to a set */
+                ecs_notify(
+                    world, stage, world->set_systems, from_table->family_id, 
+                    to_table, to_columns, to_row.index);
             }
         }
     }
@@ -696,6 +724,7 @@ EcsEntity ecs_set_ptr(
 
     EcsStage *stage = ecs_get_stage(&world);
     EcsFamily to_set = ecs_family_from_handle(world, stage, component, &cinfo);
+
     notify_pre_merge(
         world,
         stage,
