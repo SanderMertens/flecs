@@ -25,20 +25,25 @@
 #define ECS_WORLD_MAGIC (0x65637377)
 #define ECS_THREAD_MAGIC (0x65637374)
 
-/** A family identifies a set of components */
+
+/** A hash of the component identifiers in a family. */
 typedef uint32_t EcsFamily;
+
 
 /* -- Builtin component types -- */
 
+/** Metadata of an explicitly created family (identified by an entity id) */
 typedef struct EcsFamilyComponent {
     EcsFamily family;    /* Preserved nested families */
     EcsFamily resolved;  /* Resolved nested families */
 } EcsFamilyComponent;
 
+/** Metadata of a component */
 typedef struct EcsComponent {
     uint32_t size;
 } EcsComponent;
 
+/** Type that is used by systems to indicate where to fetch a component from */
 typedef enum EcsSystemExprElemKind {
     EcsFromEntity,          /* Get component from entity (default) */
     EcsFromContainer,       /* Get component from container */
@@ -46,6 +51,7 @@ typedef enum EcsSystemExprElemKind {
     EcsFromId               /* Get entity by id */
 } EcsSystemExprElemKind;
 
+/** Type describing an operator used in an signature of a system signature */
 typedef enum EcsSystemExprOperKind {
     EcsOperAnd = 0,
     EcsOperOr = 1,
@@ -54,6 +60,7 @@ typedef enum EcsSystemExprOperKind {
     EcsOperLast = 4
 } EcsSystemExprOperKind;
 
+/** Callback used by the system signature expression parser */
 typedef EcsResult (*ecs_parse_action)(
     EcsWorld *world,
     EcsSystemExprElemKind elem_kind,
@@ -61,6 +68,7 @@ typedef EcsResult (*ecs_parse_action)(
     const char *component,
     void *ctx);
 
+/** Type that describes a single column in the system signature */
 typedef struct EcsSystemColumn {
     EcsSystemExprElemKind kind;       /* Element kind (Entity, Component) */
     EcsSystemExprOperKind oper_kind;  /* Operator kind (AND, OR, NOT) */
@@ -70,11 +78,13 @@ typedef struct EcsSystemColumn {
     } is;
 } EcsSystemColumn;
 
+/** Type that stores a reference to components of external entities (prefabs) */
 typedef struct EcsSystemRef {
     EcsEntity entity;
     EcsEntity component;
 } EcsSystemRef;
 
+/** Base type for a system */
 typedef struct EcsSystem {
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
     const char *signature;     /* Signature with which system was created */
@@ -87,6 +97,8 @@ typedef struct EcsSystem {
     bool enabled;              /* Is system enabled or not */
 } EcsSystem;
 
+/** A column system is a system that is ran periodically (default = every frame)
+ * on all entities that match the system signature expression. */
 typedef struct EcsColSystem {
     EcsSystem base;
     EcsEntity entity;          /* Entity id of system, used for ordering */
@@ -104,30 +116,43 @@ typedef struct EcsColSystem {
     float time_passed;         /* Time passed since last invocation */
 } EcsColSystem;
 
+/** A row system is a system that is ran on 1..n entities for which a certain 
+ * operation has been invoked. The system kind determines on what kind of
+ * operation the row system is invoked. Example operations are ecs_add,
+ * ecs_remove and ecs_set. */
 typedef struct EcsRowSystem {
     EcsSystem base;
     EcsArray *components;       /* Components in order of signature */
 } EcsRowSystem;
 
+
 /* -- Private types -- */
 
+/** A table column describes a single column in a table (archetype) */
 typedef struct EcsTableColumn {
     EcsArray *data;               /* Column data */
     uint16_t size;                /* Column size (saves component lookups) */
 } EcsTableColumn;
 
+/** A table is the Reflecs equivalent of an archetype. Tables store all entities
+ * with a specific set of components. */
 typedef struct EcsTable {
     EcsArray *family;             /* Reference to family_index entry */
     EcsTableColumn *columns;      /* Columns storing components of array */
     EcsArray *frame_systems;      /* Frame systems matched with table */
     EcsFamily family_id;          /* Identifies table family in family_index */
-} EcsTable;
-
+ } EcsTable;
+ 
+/** The EcsRow struct is a 64-bit value that describes in which table
+ * (identified by a family_id) is stored, at which index. Entries in the 
+ * world::entity_index are of type EcsRow. */
 typedef struct EcsRow {
     EcsFamily family_id;          /* Identifies a family (and table) in world */
     uint32_t index;               /* Index of the entity in its table */
 } EcsRow;
 
+/** Supporting type that internal functions pass around to ensure that data
+ * related to an entity is only looked up once. */
 typedef struct EcsEntityInfo {
     EcsEntity entity;
     EcsFamily family_id;
@@ -136,6 +161,11 @@ typedef struct EcsEntityInfo {
     EcsTableColumn *columns;
 } EcsEntityInfo;
 
+/** A stage is a data structure in which delta's are stored until it is safe to
+ * merge those delta's with the main world stage. A stage allows reflecs systems
+ * to arbitrarily add/remove/set components and create/delete entities while
+ * iterating. Additionally, worker threads have their own stage that lets them
+ * mutate the state of entities without requiring locks. */
 typedef struct EcsStage {
     EcsMap *add_stage;            /* Entities with components to add */
     EcsMap *remove_stage;         /* Entities with components to remove */
@@ -148,6 +178,7 @@ typedef struct EcsStage {
     EcsMap *table_stage;          /* Index for table stage */
 } EcsStage;
 
+/** A type describing a unit of work to be executed by a worker thread. */ 
 typedef struct EcsJob {
     EcsEntity system;             /* System handle */
     EcsColSystem *system_data;  /* System to run */
@@ -156,6 +187,13 @@ typedef struct EcsJob {
     uint32_t row_count;           /* Total number of rows to process */
 } EcsJob;
 
+/** A type desribing a worker thread. When a system is invoked by a worker
+ * thread, it receives a pointer to an EcsThread instead of a pointer to an 
+ * EcsWorld (provided by the EcsRows type). When this EcsThread is passed down
+ * into the reflecs API, the API functions are able to tell whether this is an
+ * EcsThread or an EcsWorld by looking at the 'magic' number. This allows the
+ * API to transparently resolve the stage to which updates should be written,
+ * without requiring different API calls when working in multi threaded mode. */
 typedef struct EcsThread {
     uint32_t magic;               /* Magic number to verify thread pointer */
     uint32_t job_count;           /* Number of jobs scheduled for thread */
@@ -165,14 +203,17 @@ typedef struct EcsThread {
     pthread_t thread;             /* Thread handle */
 } EcsThread;
 
+/** The world stores and manages all ECS data. An application can have more than
+ * one world, but data is not shared between worlds. */
 struct EcsWorld {
     uint32_t magic;               /* Magic number to verify world pointer */
-
     float delta_time;           /* Time passed to or computed by ecs_progress */
-
     void *context;                /* Application context */
 
-    EcsArray *table_db;           /* All tables in the world */
+    EcsArray *table_db;           /* All tables (archetypes) in the world */
+
+
+    /* -- Column systems -- */
 
     EcsArray *on_load_systems;    /* Systems executed at start of frame */
     EcsArray *pre_frame_systems;  /* Systems executed before frame systems */
@@ -182,22 +223,39 @@ struct EcsWorld {
     EcsArray *on_demand_systems;  /* On demand systems */
     EcsArray *inactive_systems;   /* Frame systems with empty tables */
 
+
+    /* -- Row systems -- */
+
     EcsMap *add_systems;          /* Systems invoked on ecs_stage_add */
     EcsMap *remove_systems;       /* Systems invoked on ecs_stage_remove */
     EcsMap *set_systems;          /* Systems invoked on ecs_set */
+
+
+    /* -- Tasks -- */
+
     EcsArray *tasks;              /* Periodic actions not invoked on entities */
     EcsArray *fini_tasks;         /* Tasks to execute on ecs_fini */
+
+
+    /* -- Lookup Indices -- */
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
     EcsMap *table_index;          /* Identifies a table by family_id */
     EcsMap *family_index;         /* References to component families */
-    EcsMap *family_handles;       /* Index to explicitly created families */
-    EcsMap *prefab_index;         /* Index for finding prefabs in families */
+    EcsMap *family_handles;       /* Index to families created by API */
+    EcsMap *prefab_index;         /* Index to find prefabs in families */
+    EcsMap *family_row_index;     /* Index to find row systems for family */
 
-    EcsStage stage;              /* Stage of main thread */
+
+    /* -- Staging -- */
+
+    EcsStage stage;               /* Stage of main thread */
+    EcsArray *stage_db;           /* Stage storage (one for each worker) */
+
+
+    /* -- Multithreading -- */
 
     EcsArray *worker_threads;     /* Worker threads */
-    EcsArray *stage_db;           /* Stage storage (one for each worker) */
     pthread_cond_t thread_cond;   /* Signal that worker threads can start */
     pthread_mutex_t thread_mutex; /* Mutex for thread condition */
     pthread_cond_t job_cond;      /* Signal that worker thread job is done */
@@ -207,11 +265,17 @@ struct EcsWorld {
 
     EcsEntity last_handle;        /* Last issued handle */
 
+
+    /* -- Handles to builtin components families -- */
+
     EcsFamily component_family;   /* EcsComponent, EcsId */
     EcsFamily col_system_family;  /* EcsColSystem, EcsId */
     EcsFamily row_system_family;  /* EcsRowSystem, EcsId */
     EcsFamily family_family;      /* EcsFamily, EcsId */
     EcsFamily prefab_family;      /* EcsPrefab, EcsId */
+
+
+    /* -- Time management -- */
 
     uint32_t tick;                /* Number of computed frames by world */
     struct timespec frame_start;  /* Starting timestamp of frame */
@@ -220,7 +284,8 @@ struct EcsWorld {
     float target_fps;             /* Target fps */
     float fps_sleep;              /* Sleep time to prevent fps overshoot */
 
-    /* The diff between frame_time and system_time is time spent on merging */
+
+    /* -- World state -- */
 
     bool valid_schedule;          /* Is job schedule still valid */
     bool quit_workers;            /* Signals worker threads to quit */
@@ -232,6 +297,8 @@ struct EcsWorld {
     bool should_quit;             /* Did a system signal that app should quit */
 };
 
+
+/* Parameters for various array types */
 extern const EcsArrayParams handle_arr_params;
 extern const EcsArrayParams stage_arr_params;
 extern const EcsArrayParams table_arr_params;
