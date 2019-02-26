@@ -545,3 +545,42 @@ void test_EcsAdd_tc_add_new_container_in_system(
 
     ecs_fini(world);
 }
+
+void DoFoo(EcsRows *rows) {
+    for (void *row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+    }
+}
+
+void AddBar(EcsRows *rows) {
+    for (void *row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsEntity e = ecs_entity(rows, row, 0);
+        EcsEntity Bar_h = ecs_component(rows, 1);
+        ecs_add(rows->world, e, Bar_h);
+    }
+}
+
+
+void test_EcsAdd_tc_add_in_progress_before_2nd_system(
+    test_EcsAdd this)
+{
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Foo);
+    ECS_COMPONENT(world, Bar);
+    ECS_PREFAB(world, Prefab, EcsContainer);
+    
+    ECS_ENTITY(world, E1, Prefab, Foo);
+    ECS_ENTITY(world, E2, E1, Foo);
+
+    ECS_SYSTEM(world, AddBar, EcsOnFrame, Foo, ID.Bar);
+    ECS_SYSTEM(world, DoFoo, EcsOnFrame, Foo, ?EcsContainer, !CONTAINER.Bar);
+
+    ecs_set_target_fps(world, 1);
+
+    ecs_progress(world, 0);
+
+    /* If test doesn't crash, it succeeds */
+    test_assert(true);
+
+    ecs_fini(world);
+}

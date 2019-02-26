@@ -140,7 +140,7 @@ EcsTable* create_table(
     EcsArray **table_db;
     EcsMap *table_index;
 
-    if (world->in_progress && world->threads_running) {
+    if (world->in_progress) {
         table_db = &stage->table_db_stage;
         table_index = stage->table_stage;
     } else {
@@ -158,13 +158,16 @@ EcsTable* create_table(
     uint32_t index = ecs_array_get_index(*table_db, &table_arr_params, result);
     ecs_map_set64(table_index, family_id, index + 1);
 
-    notify_create_table(world, stage, world->pre_frame_systems, result);
-    notify_create_table(world, stage, world->post_frame_systems, result);
-    notify_create_table(world, stage, world->on_load_systems, result);
-    notify_create_table(world, stage, world->on_store_systems, result);
-    notify_create_table(world, stage, world->on_frame_systems, result);
-    notify_create_table(world, stage, world->inactive_systems, result);
-    notify_create_table(world, stage, world->on_demand_systems, result);
+    if (!world->in_progress) {
+        /* Only notify systems of tables that aren't staged */
+        notify_create_table(world, stage, world->pre_frame_systems, result);
+        notify_create_table(world, stage, world->post_frame_systems, result);
+        notify_create_table(world, stage, world->on_load_systems, result);
+        notify_create_table(world, stage, world->on_store_systems, result);
+        notify_create_table(world, stage, world->on_frame_systems, result);
+        notify_create_table(world, stage, world->inactive_systems, result);
+        notify_create_table(world, stage, world->on_demand_systems, result);
+    }
 
     assert(result != NULL);
 
@@ -281,7 +284,8 @@ EcsTable* ecs_world_get_table(
     EcsFamily family_id)
 {
     uint32_t table_index = ecs_map_get64(world->table_index, family_id);
-    if (!table_index && world->in_progress && world->threads_running) {
+
+    if (!table_index && world->in_progress) {
         assert(stage != NULL);
         table_index = ecs_map_get64(stage->table_stage, family_id);
         if (table_index) {
@@ -673,6 +677,7 @@ void run_single_thread_stage(
         world->in_progress = true;
 
         for (i = 0; i < system_count; i ++) {
+            printf("run on frame => %s\n", ecs_id(world, buffer[i]));
             ecs_run(world, buffer[i], delta_time, NULL);
         }
 
