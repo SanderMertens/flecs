@@ -88,7 +88,7 @@ typedef struct EcsRows {
     EcsWorld *world;     /* current world */
     EcsEntity system;    /* handle to current system */
 
-    int16_t *columns;    /* indices mapping system params to columns and refs */
+    int32_t *columns;    /* indices mapping system params to columns and refs */
     uint16_t column_count; /* Number of columns for system */
     void *table_columns; /* opaque structure that contains table column data */
     EcsReference *references; /* references to other entities */

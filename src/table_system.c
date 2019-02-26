@@ -276,6 +276,12 @@ void add_table(
                 /* Retrieve offset for component */
                 table_data[i] = ecs_family_index_of(table->family, component);
 
+                /* If column is found, add one to the index, as column zero in
+                 * a table is reserved for entity id's */
+                if (table_data[i] != -1) {
+                    table_data[i] ++;
+                }
+                
                 /* ecs_table_column_offset may return -1 if the component comes
                  * from a prefab. If so, the component will be resolved as a
                  * reference (see below) */
@@ -589,6 +595,7 @@ EcsEntity ecs_new_table_system(
     system_data->base.time_spent = 0;
     system_data->base.columns = ecs_array_new(&column_arr_params, count);
     system_data->base.kind = kind;
+
     system_data->table_params.element_size = sizeof(int32_t) * (count + 3);
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
     system_data->component_params.element_size = sizeof(EcsEntity) * count;
@@ -822,7 +829,13 @@ void* ecs_column(
         return NULL;
     }
 
-    uint32_t table_column = rows->columns[index];
+    uint32_t table_column;
+
+    if (index == 0) {
+        table_column = 0;
+    } else {
+        table_column = rows->columns[index - 1];
+    }
 
     EcsTableColumn *column = &((EcsTableColumn*)rows->table_columns)[table_column];
 

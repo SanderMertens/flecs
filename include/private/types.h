@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#include <include/reflecs.h>
+#include "../reflecs.h"
 #include "../util/array.h"
 #include "../util/map.h"
 
