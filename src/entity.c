@@ -398,7 +398,7 @@ bool ecs_notify(
         EcsArray *family = ecs_family_get(world, stage, family_id);
         uint32_t i, column_count = ecs_array_count(family);
         EcsEntity *buffer = ecs_array_buffer(system_data->components);
-        int16_t columns[column_count];
+        int32_t columns[column_count];
 
         for (i = 0; i < column_count; i ++) {
             columns[i] = ecs_family_index_of(table->family, buffer[i]) + 1;

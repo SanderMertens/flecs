@@ -820,24 +820,3 @@ EcsEntity ecs_run(
 {
     return ecs_run_w_filter(world, system, delta_time, 0, 0, 0, param);
 }
-
-void* ecs_column(
-    EcsRows *rows,
-    uint32_t index)
-{
-    if (index > rows->column_count) {
-        return NULL;
-    }
-
-    uint32_t table_column;
-
-    if (index == 0) {
-        table_column = 0;
-    } else {
-        table_column = rows->columns[index - 1];
-    }
-
-    EcsTableColumn *column = &((EcsTableColumn*)rows->table_columns)[table_column];
-
-    return ecs_array_buffer(column->data);
-}
