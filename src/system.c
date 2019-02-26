@@ -35,8 +35,7 @@ EcsEntity new_row_system(
     if (ecs_parse_component_expr(
         world, sig, ecs_parse_component_action, system_data) != EcsOk)
     {
-        printf("Expression error '%s'\n", sig);
-        return 0;
+        ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
     }
 
     EcsFamily family_id = 0;
@@ -173,29 +172,28 @@ error:
 /** Run system on a single row */
 void ecs_row_notify(
     EcsWorld *world,
-    EcsStage *stage,
     EcsEntity system,
     EcsRowSystem *system_data,
-    EcsArray *rows,
-    EcsArrayParams *row_params,
-    uint32_t row_index,
-    int32_t *columns)
+    int16_t *columns,
+    EcsTableColumn *table_columns,
+    uint32_t offset,
+    uint32_t limit)
 {
     EcsSystemAction action = system_data->base.action;
-    uint32_t column_count = ecs_array_count(system_data->components);
-    EcsRows info = {
+
+    EcsRows rows = {
         .world = world,
         .system = system,
-        .column_count = column_count,
-        .columns = columns
+        .columns = columns,
+        .column_count = ecs_array_count(system_data->components),
+        .table_columns = table_columns,
+        .components = ecs_array_buffer(system_data->components),
+        .index_offset = 0,
+        .offset = offset,
+        .limit = limit
     };
 
-    info.element_size = row_params->element_size;
-    info.first = ecs_array_get(rows, row_params, row_index);
-    info.last = ECS_OFFSET(info.first, info.element_size);
-    info.components = ecs_array_buffer(system_data->components);
-
-    action(&info);
+    action(&rows);
 }
 
 /** Run a task. A task is a system that contains no columns that can be matched
@@ -223,8 +221,8 @@ void ecs_run_task(
         .world = world,
         .system = system,
         .delta_time = delta_time,
+        .column_count = ecs_array_count(system_data->components),
         .components = ecs_array_buffer(system_data->components),
-        .column_count = ecs_array_count(system_data->components)
     };
 
     system_data->base.action(&info);

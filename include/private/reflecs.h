@@ -20,6 +20,7 @@ void ecs_merge_entity(
     EcsEntity entity,
     EcsRow *staged_row);
 
+
 /* Notify row system of entity (identified by row_index) */
 bool ecs_notify(
     EcsWorld *world,
@@ -27,7 +28,7 @@ bool ecs_notify(
     EcsMap *systems,
     EcsFamily family_id,
     EcsTable *table,
-    EcsArray *rows,
+    EcsTableColumn *table_columns,
     int32_t row_index);
 
 /* -- World API -- */
@@ -125,6 +126,11 @@ char* ecs_family_tostr(
     EcsStage *stage,
     EcsFamily family_id);
 
+/* Get index for entity in family */
+int16_t ecs_family_index_of(
+    EcsArray *family,
+    EcsEntity component);
+
 /* -- Table API -- */
 
 /* Initialize table */
@@ -144,8 +150,33 @@ EcsResult ecs_table_init_w_size(
 uint32_t ecs_table_insert(
     EcsWorld *world,
     EcsTable *table,
-    EcsArray **rows,
+    EcsTableColumn *columns,
     EcsEntity entity);
+
+/* Insert multiple rows into table (or stage) */
+uint32_t ecs_table_grow(
+    EcsWorld *world,
+    EcsTable *table,
+    EcsTableColumn *columns,
+    uint32_t count,
+    EcsEntity first_entity);
+
+/* Dimension array to have n rows (doesn't add entities) */
+int16_t ecs_table_dim(
+    EcsTable *table,
+    uint32_t count);
+
+/* Return number of entities in table */
+uint64_t ecs_table_count(
+    EcsTable *table);
+
+/* Return size of table row */
+uint32_t ecs_table_row_size(
+    EcsTable *table);
+
+/* Return size of table row */
+uint32_t ecs_table_rows_dimensioned(
+    EcsTable *table);    
 
 /* Delete row from table */
 void ecs_table_delete(
@@ -158,11 +189,6 @@ void* ecs_table_get(
     EcsTable *table,
     EcsArray *rows,
     uint32_t index);
-
-/* Get offset for component in table */
-uint32_t ecs_table_column_offset(
-    EcsTable *table,
-    EcsEntity component);
 
 /* Test if table has component */
 bool ecs_table_has_components(
@@ -218,13 +244,12 @@ void ecs_run_task(
 /* Invoke row system */
 void ecs_row_notify(
     EcsWorld *world,
-    EcsStage *stage,
     EcsEntity system,
     EcsRowSystem *system_data,
-    EcsArray *rows,
-    EcsArrayParams *row_params,
-    uint32_t row_index,
-    int32_t *columns);
+    int16_t *columns,
+    EcsTableColumn *table_columns,
+    uint32_t offset,
+    uint32_t limit);
 
 /* Callback for parse_component_expr that stores result as EcsSystemColumn's */
 EcsResult ecs_parse_component_action(

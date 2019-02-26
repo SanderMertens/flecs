@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#include <reflecs>
+#include <include/reflecs.h>
 #include "../util/array.h"
 #include "../util/map.h"
 
@@ -111,13 +111,16 @@ typedef struct EcsRowSystem {
 
 /* -- Private types -- */
 
+typedef struct EcsTableColumn {
+    EcsArray *data;               /* Column data */
+    uint16_t size;         /* Column size (saves component lookups) */
+} EcsTableColumn;
+
 typedef struct EcsTable {
     EcsArray *family;             /* Reference to family_index entry */
-    EcsArray *rows;               /* Rows of the table */
+    EcsTableColumn *columns;      /* Columns storing components of array */
     EcsArray *frame_systems;      /* Frame systems matched with table */
-    EcsArrayParams row_params;    /* Parameters for rows array */
-    EcsFamily family_id;          /* Identifies a family in family_index */
-    uint16_t *columns;            /* Column (component) sizes */
+    EcsFamily family_id;          /* Identifies table family in family_index */
 } EcsTable;
 
 typedef struct EcsRow {
@@ -130,7 +133,7 @@ typedef struct EcsEntityInfo {
     EcsFamily family_id;
     uint32_t index;
     EcsTable *table;
-    EcsArray *rows;
+    EcsTableColumn *columns;
 } EcsEntityInfo;
 
 typedef struct EcsStage {

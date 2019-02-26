@@ -191,7 +191,7 @@ void set_system_stats(
             int32_t *index = ecs_array_get(tables, &table_system->table_params, i);
             EcsTable *table = ecs_array_get(
                 world->table_db, &table_arr_params, *index);
-            sstats->entities_matched += ecs_array_count(table->rows);
+            sstats->entities_matched += ecs_table_count(table);
         }
 
         sstats->period = table_system->period;
@@ -318,10 +318,11 @@ void ecs_get_stats(
         EcsTable *table = &tables[i];
         EcsTableStats *tstats = ecs_array_add(
             &stats->tables, &tablestats_arr_params);
-        uint32_t row_size = table->row_params.element_size;
-        tstats->row_count = ecs_array_count(table->rows);
+
+        uint32_t row_size = ecs_table_row_size(table);
+        tstats->row_count = ecs_table_count(table);
         tstats->memory_used = tstats->row_count * row_size;
-        tstats->memory_allocd = ecs_array_size(table->rows) * row_size;
+        tstats->memory_allocd = ecs_table_rows_dimensioned(table) * row_size;
         tstats->columns = ecs_family_tostr(world, NULL, table->family_id);
 
         EcsEntity family_handle = ecs_map_get64(

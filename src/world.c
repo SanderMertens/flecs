@@ -39,14 +39,22 @@ void bootstrap_component_table(
     uint64_t family_id)
 {
     EcsTable *result = ecs_array_add(&world->table_db, &table_arr_params);
-    EcsArray *family = ecs_family_get(world, NULL, family_id);
+    EcsArray *family = ecs_map_get(world->family_index, family_id);
     result->family_id = family_id;
-    ecs_table_init_w_size(world, result, family, sizeof(EcsComponent));
-    result->columns = malloc(sizeof(uint16_t));
-    result->columns[0] = sizeof(EcsComponent);
-    uint32_t table_index = ecs_array_get_index(
+    result->family = family;
+    result->frame_systems = NULL;
+    result->columns = malloc(sizeof(EcsTableColumn) * 2);
+    result->columns[0].data = ecs_array_new(&handle_arr_params, 8);
+    result->columns[0].size = sizeof(EcsEntity);
+    result->columns[1].data = ecs_array_new(&handle_arr_params, 8);
+    result->columns[1].size = sizeof(EcsComponent);
+
+    uint32_t index = ecs_array_get_index(
         world->table_db, &table_arr_params, result);
-    ecs_map_set64(world->table_index, family_id, table_index + 1);
+
+    ecs_assert(index == 0, ECS_INTERNAL_ERROR, "first table index must be 0");
+
+    ecs_map_set64(world->table_index, family_id, 1);
 }
 
 /** Bootstrap the EcsComponent component */
@@ -98,6 +106,7 @@ void add_builtin_id(
 {
     ecs_stage_add(world, handle, EcsId_h);
     ecs_commit(world, handle);
+    
     EcsId *id_data = ecs_get_ptr(world, handle, EcsId_h);
 
     assert(id_data != NULL);
@@ -236,29 +245,6 @@ void clean_tables(
     }
 
     ecs_array_free(world->table_db);
-}
-
-/** Cleanup resources allocated by table systems */
-static
-void remove_systems(
-    EcsRows *rows)
-{
-    void *row;
-    EcsEntity component = rows->components[0];
-
-    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsEntity entity = ecs_entity(rows, row, 0);
-        if (entity != rows->world->deinit_table_system &&
-            entity != rows->world->deinit_row_system)
-        {
-            void *data = ecs_data(rows, row, 0);
-            if (component == EcsTableSystem_h) {
-                deinit_table_system(data);
-            } else {
-                deinit_row_system(data);
-            }
-        }
-    }
 }
 
 /* -- Private functions -- */
@@ -544,22 +530,6 @@ EcsWorld *ecs_init(void) {
     world->row_system_family = get_builtin_family(world, EcsRowSystem_h);
     world->table_system_family = get_builtin_family(world, EcsTableSystem_h);
 
-    world->deinit_row_system = ecs_new_system(
-        world, "EcsDeinitRowSystem", EcsOnRemove,
-               "EcsRowSystem", remove_systems);
-    assert(world->deinit_row_system != 0);
-
-    world->deinit_table_system = ecs_new_system(
-        world, "EcsDeinitTableSystem", EcsOnRemove,
-               "EcsTableSystem", remove_systems);
-    assert(world->deinit_table_system != 0);
-
-    ecs_stage_add(world, world->deinit_row_system, EcsHidden_h);
-    ecs_commit(world, world->deinit_row_system);
-
-    ecs_stage_add(world, world->deinit_table_system, EcsHidden_h);
-    ecs_commit(world, world->deinit_table_system);
-
     return world;
 }
 
@@ -629,7 +599,7 @@ void ecs_dim_family(
         EcsFamily family_id = ecs_family_from_handle(world, NULL, type, NULL);
         EcsTable *table = ecs_world_get_table(world, NULL, family_id);
         if (table) {
-            ecs_array_set_size(&table->rows, &table->row_params, entity_count);
+            ecs_table_dim(table, entity_count);
         }
     }
 }
@@ -642,21 +612,21 @@ EcsEntity ecs_lookup(
 
     while (ecs_iter_hasnext(&it)) {
         EcsTable *table = ecs_iter_next(&it);
-        uint32_t offset;
+        uint32_t column_index;
 
-        if ((offset = ecs_table_column_offset(table, EcsId_h)) == -1) {
+        if ((column_index = ecs_family_index_of(table->family, EcsId_h)) == -1) {
             continue;
         }
 
-        void *buffer = ecs_array_buffer(table->rows);
-        uint32_t count = ecs_array_count(table->rows);
-        uint32_t element_size = table->row_params.element_size;
-        void *row, *last = ECS_OFFSET(buffer, count * element_size);
+        EcsTableColumn *column = &table->columns[column_index + 1];
 
-        for (row = buffer; row < last; row = ECS_OFFSET(row, element_size)) {
-            EcsId *id_ptr = ECS_OFFSET(row, offset);
-            if (!strcmp(*id_ptr, id)) {
-                return *(EcsEntity*)row;
+        EcsId *buffer = ecs_array_buffer(column->data);
+        uint32_t i, count = ecs_array_count(column->data);
+
+        for (i = 0; i < count; i ++) {
+            if (!strcmp(buffer[i], id)) {
+                return *(EcsEntity*)ecs_array_get(
+                    table->columns[0].data, &handle_arr_params, i);
             }
         }
     }
@@ -677,7 +647,6 @@ void run_single_thread_stage(
         world->in_progress = true;
 
         for (i = 0; i < system_count; i ++) {
-            printf("run on frame => %s\n", ecs_id(world, buffer[i]));
             ecs_run(world, buffer[i], delta_time, NULL);
         }
 

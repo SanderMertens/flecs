@@ -127,7 +127,7 @@ EcsFamily ecs_family_from_handle(
     }
 
     EcsTable *table;
-    EcsArray *rows;
+    EcsTableColumn *columns;
     uint32_t index;
 
     if (!info) {
@@ -141,11 +141,11 @@ EcsFamily ecs_family_from_handle(
 
         EcsRow row = ecs_to_row(row_64);
         table = ecs_world_get_table(world, stage, row.family_id);
-        rows = table->rows;
+        columns = table->columns;
         index = row.index;
     } else {
         table = info->table;
-        rows = info->rows;
+        columns = info->columns;
         index = info->index;
     }
 
@@ -154,8 +154,8 @@ EcsFamily ecs_family_from_handle(
     EcsFamily family = 0;
 
     if (component == EcsFamilyComponent_h) {
-        EcsFamilyComponent *fe = ECS_OFFSET(ecs_table_get(
-            table, rows, index), sizeof(EcsEntity));
+        EcsArrayParams params = {.element_size = sizeof(EcsFamilyComponent)};
+        EcsFamilyComponent *fe = ecs_array_get(columns[1].data, &params, index);
         family = fe->resolved;
     } else {
         family = ecs_family_register(world, stage, entity, NULL);
@@ -496,4 +496,20 @@ EcsEntity ecs_new_entity(
     *id_data = id;
 
     return result;
+}
+
+int16_t ecs_family_index_of(
+    EcsArray *family,
+    EcsEntity component)
+{
+    EcsEntity *buf = ecs_array_buffer(family);
+    int i, count = ecs_array_count(family);
+    
+    for (i = 0; i < count; i ++) {
+        if (buf[i] == component) {
+            return i; 
+        }
+    }
+
+    return -1;
 }

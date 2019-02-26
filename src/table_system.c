@@ -187,7 +187,7 @@ void add_table(
 
     /* If the table is empty, add it to the inactive array, so it is skipped
      * when the system is evaluated */
-    if (ecs_array_count(table->rows)) {
+    if (ecs_table_count(table)) {
         table_data = ecs_array_add(
             &system_data->tables, &system_data->table_params);
     } else {
@@ -274,7 +274,7 @@ void add_table(
         if (!entity && column->kind != EcsFromId) {
             if (component) {
                 /* Retrieve offset for component */
-                table_data[i] = ecs_table_column_offset(table, component);
+                table_data[i] = ecs_family_index_of(table->family, component);
 
                 /* ecs_table_column_offset may return -1 if the component comes
                  * from a prefab. If so, the component will be resolved as a
@@ -414,33 +414,6 @@ void match_tables(
     }
 }
 
-/** Resolve references */
-static
-void resolve_refs(
-    EcsWorld *world,
-    EcsTableSystem *system_data,
-    uint32_t refs_index,
-    EcsRows *info)
-{
-    EcsArray *system_refs = system_data->refs;
-    EcsSystemRef *refs = ecs_array_get(
-        system_refs, &system_data->ref_params, refs_index - 1);
-    uint32_t i, count = ecs_array_count(system_data->base.columns);
-
-    for (i = 0; i < count; i ++) {
-        EcsSystemRef *ref = &refs[i];
-        EcsEntity entity = ref->entity;
-        
-        if (!entity) {
-            break;
-        }
-
-        info->refs_entity[i] = entity;
-        info->refs_data[i] = ecs_get_ptr(world, entity, ref->component);
-    }
-}
-
-
 /* -- Private functions -- */
 
 /** Match new table against system (table is created after system) */
@@ -536,8 +509,6 @@ void ecs_run_job(
     uint32_t start_index = job->start_index;
     uint32_t remaining = job->row_count;
     uint32_t column_count = ecs_array_count(system_data->base.columns);
-    void *refs_data[column_count];
-    EcsEntity refs_entity[column_count];
     int32_t *table_buffer = ecs_array_get(
         system_data->tables, &system_data->table_params, table_index);
     char *component_buffer = ecs_array_buffer(system_data->components);
@@ -548,35 +519,28 @@ void ecs_run_job(
     EcsRows info = {
         .world = thread ? (EcsWorld*)thread : world,
         .system = system,
-        .refs_data = refs_data,
-        .refs_entity = refs_entity,
+        .references = ecs_array_buffer(system_data->refs),
         .column_count = column_count,
-        .start_index = 0
+        .index_offset = 0
     };
 
     do {
         EcsTable *table = ecs_array_get(
             world->table_db, &table_arr_params, table_buffer[TABLE_INDEX]);
-        EcsArray *rows = table->rows;
-        void *start = ecs_array_get(rows, &table->row_params, start_index);
-        uint32_t count = ecs_array_count(rows);
-        uint32_t element_size = table->row_params.element_size;
-        uint32_t refs_index = table_buffer[REFS_INDEX];
+
+        EcsTableColumn *columns = table->columns;
+
+        uint32_t count = ecs_table_count(table);
 
         component_buffer_el = ECS_OFFSET(component_buffer,
             component_element_size * table_buffer[COMPONENTS_INDEX]);
 
-        info.element_size = element_size;
         info.columns = ECS_OFFSET(table_buffer, sizeof(uint32_t) * COLUMNS_INDEX);
         info.components = component_buffer_el;
-        info.first = start;
-
-        if (refs_index) {
-            resolve_refs(world, system_data, refs_index, &info);
-        }
+        info.table_columns = columns;
 
         if (remaining >= count) {
-            info.last = ECS_OFFSET(info.first, element_size * count);
+            info.limit = count;
             table_buffer = ECS_OFFSET(table_buffer, table_element_size);
             component_buffer_el = ECS_OFFSET(component_buffer,
                 table_buffer[COMPONENTS_INDEX] * component_element_size);
@@ -584,13 +548,13 @@ void ecs_run_job(
             remaining -= count;
 
         } else {
-            info.last = ECS_OFFSET(info.first, element_size * remaining);
+            info.limit = remaining;
             remaining = 0;
         }
 
         action(&info);
 
-        info.start_index += count;
+        info.index_offset += count;
 
         if (info.interrupted_by) break;
     } while (remaining);
@@ -760,8 +724,6 @@ EcsEntity ecs_run_w_filter(
     char *components = ecs_array_buffer(system_data->components);
     EcsFamily filter_id = 0;
     EcsEntity interrupted_by = 0;
-    void *refs_data[column_count];
-    EcsEntity refs_entity[column_count];
     EcsSystemAction action = system_data->base.action;
     bool offset_limit = offset | limit;
     bool limit_set = limit != 0;
@@ -770,11 +732,10 @@ EcsEntity ecs_run_w_filter(
         .world = world,
         .system = system,
         .param = param,
-        .refs_entity = refs_entity,
-        .refs_data = refs_data,
+        .references = ecs_array_buffer(system_data->refs),
         .column_count = column_count,
         .delta_time = system_delta_time,
-        .start_index = 0
+        .index_offset = 0
     };
 
     if (filter) {
@@ -785,6 +746,8 @@ EcsEntity ecs_run_w_filter(
     for (; table < table_last; table = ECS_OFFSET(table, tables_size)) {
         int32_t table_index = table[TABLE_INDEX];
         EcsTable *w_table = &world_tables[table_index];
+        EcsTableColumn *table_columns = w_table->columns;
+        uint32_t first = 0, count = ecs_table_count(w_table);
 
         if (filter_id) {
             if (!ecs_family_contains(
@@ -794,28 +757,23 @@ EcsEntity ecs_run_w_filter(
             }
         }
 
-        EcsArray *rows = w_table->rows;
-        uint32_t row_count = ecs_array_count(rows);
-        uint32_t row_size = w_table->row_params.element_size;
-        void *first = ecs_array_buffer(rows);
-
         if (offset_limit) {
             if (offset) {
-                if (offset > row_count) {
-                    offset -= row_count;
+                if (offset > count) {
+                    offset -= count;
                     continue;
                 } else {
-                    first = ECS_OFFSET(first, row_size * offset);
-                    row_count -= offset;
+                    first += offset;
+                    count -= offset;
                     offset = 0;
                 }
             }
 
             if (limit) {
-                if (limit > row_count) {
-                    limit -= row_count;
+                if (limit > count) {
+                    limit -= count;
                 } else {
-                    row_count = limit;
+                    count = limit;
                     limit = 0;
                 }
             } else if (limit_set) {
@@ -823,23 +781,15 @@ EcsEntity ecs_run_w_filter(
             }
         }
 
-        void *last = ECS_OFFSET(first, row_size * row_count);
-
-        int32_t refs_index = table[REFS_INDEX];
-        if (refs_index) {
-            resolve_refs(world, system_data, refs_index, &info);
-        }
-
-        info.element_size = row_size;
-        info.first = first;
-        info.last = last;
-        info.columns = ECS_OFFSET(table, sizeof(uint32_t) * COLUMNS_INDEX);
+        info.table_columns = table_columns;
         info.components = ECS_OFFSET(components,
             components_size * table[COMPONENTS_INDEX]);
+        info.offset = offset;
+        info.limit = count;
 
         action(&info);
 
-        info.start_index += row_count;
+        info.index_offset += count;
 
         if (info.interrupted_by) {
             interrupted_by = info.interrupted_by;

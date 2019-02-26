@@ -77,22 +77,29 @@ typedef enum EcsSystemKind {
     EcsOnSet,
 } EcsSystemKind;
 
+/** Reference to a component from another entity */
+typedef struct EcsReference {
+    EcsEntity entity;
+    EcsEntity component;
+} EcsReference;
+
 /** Data passed to system action callback, used for iterating entities */
 typedef struct EcsRows {
-    EcsEntity system;
-    EcsWorld *world;
-    int32_t *columns;
-    void *first;
-    void *last;
-    EcsEntity *refs_entity;
-    void **refs_data;
-    void *param;
-    EcsEntity *components;
-    EcsEntity interrupted_by;
-    uint32_t element_size;
-    uint32_t column_count;
-    uint32_t start_index;
-    float delta_time;
+    EcsWorld *world;     /* current world */
+    EcsEntity system;    /* handle to current system */
+
+    int16_t *columns;    /* indices mapping system params to columns and refs */
+    uint16_t column_count; /* Number of columns for system */
+    void *table_columns; /* opaque structure that contains table column data */
+    EcsReference *references; /* references to other entities */
+    EcsEntity *components;    /* system-table specific list of components */
+
+    void *param;         /* userdata passed to on-demand system */
+    float delta_time;    /* time elapsed since last frame */
+    uint32_t index_offset; /* number of rows processed by system in this frame */
+    uint32_t offset;     /* System should start iteration from offset */
+    uint32_t limit;      /* System should process limit rows */
+    EcsEntity interrupted_by; /* when set, system execution is interrupted */
 } EcsRows;
 
 /** System action callback type */

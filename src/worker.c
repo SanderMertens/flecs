@@ -185,7 +185,7 @@ void ecs_schedule_jobs(
         uint32_t table_index = *(uint32_t*)ecs_iter_next(&table_it);
         EcsTable *table = ecs_array_get(
             world->table_db, &table_arr_params, table_index);
-        total_rows += ecs_array_count(table->rows);
+        total_rows += ecs_array_count(table->columns[0].data);
     }
 
     if (total_rows < thread_count) {
@@ -207,7 +207,7 @@ void ecs_schedule_jobs(
         system_data->tables, &system_data->table_params, 0);
     EcsTable *table = ecs_array_get(
         world->table_db, &table_arr_params, table_index);
-    uint32_t table_row_count = ecs_array_count(table->rows);
+    uint32_t table_row_count = ecs_array_count(table->columns[0].data);
     uint32_t start_index = 0;
 
     EcsJob *job = NULL;
@@ -235,7 +235,7 @@ void ecs_schedule_jobs(
                 system_data->tables, &system_data->table_params, sys_table_index);
             table = ecs_array_get(
                 world->table_db, &table_arr_params, table_index);
-            table_row_count = ecs_array_count(table->rows);
+            table_row_count = ecs_array_count(table->columns[0].data);
             if (start_index > table_row_count) {
                 start_index -= table_row_count;
             } else {
