@@ -198,26 +198,6 @@ void clean_families(
 }
 
 static
-void deinit_row_system(
-    EcsRowSystem *data)
-{
-    ecs_array_free(data->components);
-}
-
-static
-void deinit_table_system(
-    EcsTableSystem *data)
-{
-    ecs_array_free(data->base.columns);
-    ecs_array_free(data->components);
-    ecs_array_free(data->tables);
-    ecs_array_free(data->inactive_tables);
-    if (data->jobs) ecs_array_free(data->jobs);
-    if (data->refs) ecs_array_free(data->refs);
-    data->base.enabled = false;
-}
-
-static
 void clean_tables(
     EcsWorld *world)
 {
@@ -229,15 +209,6 @@ void clean_tables(
 
         ecs_table_deinit(world, table);
     }
-
-    /* Free builtin systems */
-    EcsRowSystem *deinit_row_sys = ecs_get_ptr(
-        world, world->deinit_row_system, EcsRowSystem_h);
-    EcsRowSystem *deinit_table_sys = ecs_get_ptr(
-        world, world->deinit_table_system, EcsRowSystem_h);
-
-    deinit_row_system(deinit_row_sys);
-    deinit_row_system(deinit_table_sys);
 
     for (i = 0; i < count; i ++) {
         EcsTable *table = &buffer[i];

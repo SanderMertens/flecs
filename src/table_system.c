@@ -781,6 +781,7 @@ EcsEntity ecs_run_w_filter(
             }
         }
 
+        info.columns =  &table[COLUMNS_INDEX];
         info.table_columns = table_columns;
         info.components = ECS_OFFSET(components,
             components_size * table[COMPONENTS_INDEX]);
@@ -811,4 +812,19 @@ EcsEntity ecs_run(
     void *param)
 {
     return ecs_run_w_filter(world, system, delta_time, 0, 0, 0, param);
+}
+
+void* ecs_column(
+    EcsRows *rows,
+    uint32_t index)
+{
+    if (index > rows->column_count) {
+        return NULL;
+    }
+
+    uint32_t table_column = rows->columns[index];
+
+    EcsTableColumn *column = &((EcsTableColumn*)rows->table_columns)[table_column];
+
+    return ecs_array_buffer(column->data);
 }

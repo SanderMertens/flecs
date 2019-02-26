@@ -39,7 +39,7 @@ void copy_row(
         EcsEntity old_component = old_components[i_old];
 
         if (new_component == old_component) {
-            copy_column(&new_columns[i_new], new_index, &old_columns[i_old], old_index);
+            copy_column(&new_columns[i_new + 1], new_index, &old_columns[i_old + 1], old_index);
             i_new ++;
             i_old ++;
         } else if (new_component < old_component) {
@@ -749,8 +749,6 @@ EcsEntity ecs_new_component(
 
     *id_data = id;
     component_data->size = size;
-
-    printf(":: component %d of %d is %p\n", EcsComponent_h, result, component_data);
 
     return result;
 }

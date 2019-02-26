@@ -42,8 +42,6 @@ EcsResult ecs_table_init(
     for (i = 0; i < count; i ++) {
         EcsComponent *component = ecs_get_ptr(world, buf[i], EcsComponent_h);
 
-        printf("component %d of %d is %p\n", EcsComponent_h, buf[i], component);
-
         if (component) {
             if (component->size) {
                 /* Regular column data */

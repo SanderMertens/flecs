@@ -1069,6 +1069,11 @@ void* ecs_get_system_context(
 #define ecs_set_system_context(world, system, component, ...)\
   { component __v = __VA_ARGS__; ecs_set_system_context_ptr(world, system, component##_h, &__v); }
 
+/* Obtain a column from inside a system */
+REFLECS_EXPORT
+void* ecs_column(
+    EcsRows *rows,
+    uint32_t index);
 
 /* -- Error handling & error codes -- */
 
@@ -1242,38 +1247,12 @@ void ecs_iter_release(
     ecs_import(world, module, flags, &module##_h);\
     module##_DeclareHandles(module##_h);
 
-/** Convenience macro's for iterating entities */
-#define ecs_next(data, row) ECS_OFFSET(row, (data)->element_size)
-#define ecs_prev(data, row) ECS_OFFSET(row, -(data)->element_size)
-
-/** Obtain a system column from an entity */
-#define ecs_data(data, row, column) \
-  ((data)->columns[column] > 0 \
-    ? ECS_OFFSET(row, (data)->columns[column]) \
-    : ((data)->columns[column] == 0) \
-      ? NULL \
-      : data->refs_data[-((data)->columns[column]) - 1])
-
-#define ECS_ROW_ENTITY (-1)
-
-/* Obtain the entity handle from a row */
-#define ecs_entity(data, row, column) \
-  (((data)->columns[column] > 0 || column == ECS_ROW_ENTITY) \
-    ? (row ? *(EcsEntity*)row : (EcsEntity)0) \
-    : ((data)->columns[column] == 0) \
-      ? ((EcsEntity)0) \
-      : (data->refs_entity[-((data)->columns[column]) - 1]))
-
-/* Obtain the component handle from a row */
-#define ecs_component(rows, column) (rows->components[column])
-
-/** Utility macro's */
-#define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
-
 /** Utility macro for declaring handles by modules */
 #define EcsDeclareHandle(handles, component)\
     EcsEntity Ecs##component##_h = handles.component; (void)Ecs##component##_h
 
+/** Utility macro's */
+#define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 
 #ifdef __cplusplus
 }
