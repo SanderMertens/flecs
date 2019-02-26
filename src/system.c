@@ -258,7 +258,7 @@ EcsEntity ecs_new_system(
                          kind == EcsPostFrame || kind == EcsOnDemand ||
                          kind == EcsOnLoad || kind == EcsOnStore))
     {
-        result = ecs_new_table_system(world, id, kind, sig, action);
+        result = ecs_new_col_system(world, id, kind, sig, action);
     } else if (!needs_tables ||
         (kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet))
     {
@@ -276,7 +276,7 @@ void* ecs_set_system_context_ptr(
     EcsEntity component,
     void *value)
 {
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
     if (!system_data) {
         system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
     }
@@ -294,7 +294,7 @@ void* ecs_get_system_context(
     EcsWorld *world,
     EcsEntity system)
 {
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
     if (!system_data) {
         system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
     }
@@ -313,17 +313,17 @@ void ecs_enable(
     bool enabled)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    bool table_system = false;
+    bool col_system = false;
 
-    /* Try to get either TableSystem or RowSystem data */
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
+    /* Try to get either ColSystem or RowSystem data */
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
     if (!system_data) {
         system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
     } else {
-        table_system = true;
+        col_system = true;
     }
 
-    /* If entity is neither TableSystem nor RowSystem, it should be a family */
+    /* If entity is neither ColSystem nor RowSystem, it should be a family */
     if (!system_data) {
         EcsFamilyComponent *family_data = ecs_get_ptr(
             world, system, EcsFamilyComponent_h);
@@ -340,20 +340,20 @@ void ecs_enable(
             ecs_enable(world, buffer[i], enabled);
         }
     } else {
-        if (table_system) {
-            EcsTableSystem *table_system = (EcsTableSystem*)system_data;
+        if (col_system) {
+            EcsColSystem *col_system = (EcsColSystem*)system_data;
             if (enabled) {
                 if (!system_data->enabled) {
-                    if (ecs_array_count(table_system->tables)) {
+                    if (ecs_array_count(col_system->tables)) {
                         ecs_world_activate_system(
-                            world, system, table_system->base.kind, true);
+                            world, system, col_system->base.kind, true);
                     }
                 }
             } else {
                 if (system_data->enabled) {
-                    if (ecs_array_count(table_system->tables)) {
+                    if (ecs_array_count(col_system->tables)) {
                         ecs_world_activate_system(
-                            world, system, table_system->base.kind, false);
+                            world, system, col_system->base.kind, false);
                     }
                 }
             }
@@ -367,7 +367,7 @@ bool ecs_is_enabled(
     EcsWorld *world,
     EcsEntity system)
 {
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
     if (!system_data) {
         system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
     }
@@ -385,7 +385,7 @@ void ecs_set_period(
     float period)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
     if (system_data) {
         system_data->period = period;
     }

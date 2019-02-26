@@ -87,7 +87,7 @@ typedef struct EcsSystem {
     bool enabled;              /* Is system enabled or not */
 } EcsSystem;
 
-typedef struct EcsTableSystem {
+typedef struct EcsColSystem {
     EcsSystem base;
     EcsEntity entity;          /* Entity id of system, used for ordering */
     EcsArray *components;      /* Computed component list per matched table */
@@ -102,7 +102,7 @@ typedef struct EcsTableSystem {
     EcsFamily and_from_system; /* Used to auto-add components to system */
     float period;              /* Minimum period inbetween system invocations */
     float time_passed;         /* Time passed since last invocation */
-} EcsTableSystem;
+} EcsColSystem;
 
 typedef struct EcsRowSystem {
     EcsSystem base;
@@ -113,7 +113,7 @@ typedef struct EcsRowSystem {
 
 typedef struct EcsTableColumn {
     EcsArray *data;               /* Column data */
-    uint16_t size;         /* Column size (saves component lookups) */
+    uint16_t size;                /* Column size (saves component lookups) */
 } EcsTableColumn;
 
 typedef struct EcsTable {
@@ -150,7 +150,7 @@ typedef struct EcsStage {
 
 typedef struct EcsJob {
     EcsEntity system;             /* System handle */
-    EcsTableSystem *system_data;  /* System to run */
+    EcsColSystem *system_data;  /* System to run */
     uint32_t table_index;         /* Current SystemTable */
     uint32_t start_index;         /* Start index in row chunk */
     uint32_t row_count;           /* Total number of rows to process */
@@ -206,11 +206,9 @@ struct EcsWorld {
     uint32_t threads_running;     /* Number of threads running */
 
     EcsEntity last_handle;        /* Last issued handle */
-    EcsEntity deinit_table_system; /* Handle to internal deinit system */
-    EcsEntity deinit_row_system;  /* Handle to internal deinit system */
 
     EcsFamily component_family;   /* EcsComponent, EcsId */
-    EcsFamily table_system_family; /* EcsTableSystem, EcsId */
+    EcsFamily col_system_family;  /* EcsColSystem, EcsId */
     EcsFamily row_system_family;  /* EcsRowSystem, EcsId */
     EcsFamily family_family;      /* EcsFamily, EcsId */
     EcsFamily prefab_family;      /* EcsPrefab, EcsId */

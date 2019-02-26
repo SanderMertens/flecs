@@ -117,7 +117,7 @@ typedef void (*EcsModuleInitAction)(
 #define EcsFamilyComponent_h (2)
 #define EcsPrefab_h (3)
 #define EcsRowSystem_h (4)
-#define EcsTableSystem_h (5)
+#define EcsColSystem_h (5)
 #define EcsId_h (6)
 #define EcsHidden_h (7)
 #define EcsContainer_h (8)

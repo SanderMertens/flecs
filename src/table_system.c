@@ -10,7 +10,7 @@ const EcsArrayParams column_arr_params = {
 static
 void compute_and_families(
     EcsWorld *world,
-    EcsTableSystem *system_data)
+    EcsColSystem *system_data)
 {
     uint32_t i, column_count = ecs_array_count(system_data->base.columns);
     EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
@@ -111,7 +111,7 @@ bool components_contains_component(
 static
 EcsSystemRef* get_ref_data(
     EcsWorld *world,
-    EcsTableSystem *system_data,
+    EcsColSystem *system_data,
     int32_t *table_data)
 {
     EcsSystemRef *ref_data = NULL;
@@ -175,7 +175,7 @@ void add_table(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity system,
-    EcsTableSystem *system_data,
+    EcsColSystem *system_data,
     EcsTable *table)
 {
     int32_t *table_data;
@@ -332,7 +332,7 @@ bool match_table(
     EcsStage *stage,
     EcsTable *table,
     EcsEntity system,
-    EcsTableSystem *system_data)
+    EcsColSystem *system_data)
 {
     EcsFamily family, table_family;
     table_family = table->family_id;
@@ -409,7 +409,7 @@ void match_tables(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity system,
-    EcsTableSystem *system_data)
+    EcsColSystem *system_data)
 {
     EcsIter it = ecs_array_iter(world->table_db, &table_arr_params);
     while (ecs_iter_hasnext(&it)) {
@@ -429,7 +429,7 @@ EcsResult ecs_system_notify_create_table(
     EcsEntity system,
     EcsTable *table)
 {
-    EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
     if (!system_data) {
         return EcsError;
     }
@@ -450,7 +450,7 @@ void ecs_system_activate_table(
     bool active)
 {
     EcsArray *src_array, *dst_array;
-    EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
     EcsSystemKind kind = system_data->base.kind;
 
     uint32_t table_index = ecs_array_get_index(
@@ -506,7 +506,7 @@ void ecs_run_job(
     EcsJob *job)
 {
     EcsEntity system = job->system;
-    EcsTableSystem *system_data = job->system_data;
+    EcsColSystem *system_data = job->system_data;
     EcsSystemAction action = system_data->base.action;
     uint32_t table_element_size = system_data->table_params.element_size;
     uint32_t component_element_size =
@@ -569,7 +569,7 @@ void ecs_run_job(
 
 /* -- Private API -- */
 
-EcsEntity ecs_new_table_system(
+EcsEntity ecs_new_col_system(
     EcsWorld *world,
     const char *id,
     EcsSystemKind kind,
@@ -582,13 +582,13 @@ EcsEntity ecs_new_table_system(
     }
 
     EcsEntity result = ecs_new_w_family(
-        world, NULL, world->table_system_family);
+        world, NULL, world->col_system_family);
 
     EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
     *id_data = id;
 
-    EcsTableSystem *system_data = ecs_get_ptr(world, result, EcsTableSystem_h);
-    memset(system_data, 0, sizeof(EcsTableSystem));
+    EcsColSystem *system_data = ecs_get_ptr(world, result, EcsColSystem_h);
+    memset(system_data, 0, sizeof(EcsColSystem));
     system_data->base.action = action;
     system_data->base.enabled = true;
     system_data->base.signature = sig;
@@ -659,7 +659,7 @@ EcsEntity ecs_new_table_system(
 
 static
 bool should_run(
-    EcsTableSystem *system_data,
+    EcsColSystem *system_data,
     float period,
     float delta_time)
 {
@@ -691,7 +691,7 @@ EcsEntity ecs_run_w_filter(
     EcsEntity filter,
     void *param)
 {
-    EcsTableSystem *system_data = ecs_get_ptr(world, system, EcsTableSystem_h);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {

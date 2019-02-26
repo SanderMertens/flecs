@@ -208,7 +208,7 @@ void ecs_table_free(
 /* -- System API -- */
 
 /* Create new table system */
-EcsEntity ecs_new_table_system(
+EcsEntity ecs_new_col_system(
     EcsWorld *world,
     const char *id,
     EcsSystemKind kind,

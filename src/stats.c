@@ -37,7 +37,7 @@ void calculate_system_stats(
     EcsEntity *buffer = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
-        EcsTableSystem *sys = ecs_get_ptr(world, buffer[i], EcsTableSystem_h);
+        EcsColSystem *sys = ecs_get_ptr(world, buffer[i], EcsColSystem_h);
         ecs_array_memory(sys->base.columns, &column_arr_params, allocd, used);
         ecs_array_memory(sys->components, &handle_arr_params, allocd, used);
         ecs_array_memory(sys->inactive_tables, &sys->table_params, allocd, used);
@@ -180,23 +180,23 @@ void set_system_stats(
     sstats->active = active;
     sstats->is_hidden = ecs_has(world, system, EcsHidden_h);
 
-    EcsSystem *system_ptr = ecs_get_ptr(world, system, EcsTableSystem_h);
+    EcsSystem *system_ptr = ecs_get_ptr(world, system, EcsColSystem_h);
     if (system_ptr) {
-        EcsTableSystem *table_system = (EcsTableSystem*)system_ptr;
-        EcsArray *tables = table_system->tables;
+        EcsColSystem *col_system = (EcsColSystem*)system_ptr;
+        EcsArray *tables = col_system->tables;
         uint32_t i, count = ecs_array_count(tables);
 
         sstats->entities_matched = 0;
         for (i = 0; i < count; i ++) {
-            int32_t *index = ecs_array_get(tables, &table_system->table_params, i);
+            int32_t *index = ecs_array_get(tables, &col_system->table_params, i);
             EcsTable *table = ecs_array_get(
                 world->table_db, &table_arr_params, *index);
             sstats->entities_matched += ecs_table_count(table);
         }
 
-        sstats->period = table_system->period;
+        sstats->period = col_system->period;
         sstats->tables_matched = count + ecs_array_count(
-            table_system->inactive_tables);
+            col_system->inactive_tables);
     } else {
         system_ptr = ecs_get_ptr(world, system, EcsRowSystem_h);
         EcsRowSystem *row_system = (EcsRowSystem*)system_ptr;
@@ -263,7 +263,7 @@ int system_stats_arr_inactive(
     EcsEntity *handles = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
-        EcsTableSystem *data = ecs_get_ptr(world, handles[i], EcsTableSystem_h);
+        EcsColSystem *data = ecs_get_ptr(world, handles[i], EcsColSystem_h);
         EcsArray **stats_array = NULL;
 
         if (data->base.kind == EcsOnLoad) {
@@ -355,7 +355,7 @@ void ecs_get_stats(
 
         EcsFeatureStats feature = {0};
         for (i = 0; i < count; i ++) {
-            if (ecs_has(world, buffer[i], EcsTableSystem_h)) {
+            if (ecs_has(world, buffer[i], EcsColSystem_h)) {
                 feature.system_count ++;
                 if (ecs_is_enabled(world, buffer[i])) {
                     feature.systems_enabled ++;
@@ -410,7 +410,7 @@ void ecs_get_stats(
     get_memory_stats(world, stats);
 
     uint32_t system_memory =
-      table_sys_count * (sizeof(EcsTableSystem) + sizeof(EcsId)) +
+      table_sys_count * (sizeof(EcsColSystem) + sizeof(EcsId)) +
       row_sys_count * (sizeof(EcsRowSystem) + sizeof(EcsId));
     stats->memory.components.used -= system_memory;
     stats->memory.components.allocd -= system_memory;
