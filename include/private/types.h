@@ -98,7 +98,36 @@ typedef struct EcsSystem {
 } EcsSystem;
 
 /** A column system is a system that is ran periodically (default = every frame)
- * on all entities that match the system signature expression. */
+ * on all entities that match the system signature expression. Column systems
+ * are prematched with tables (archetypes) that match the system signature
+ * expression. Each time a column system is invoked, it iterates over the 
+ * matched list of tables (the 'tables' member). 
+ *
+ * For each table, the system stores a list of the components that were matched
+ * with the system. This list may differ from the component list of the table,
+ * when OR expressions or optional expressions are used.
+ * 
+ * A column system keeps track of tables that are empty. These tables are stored
+ * in the 'inactive_tables' array. This prevents the system from iterating over
+ * tables in the main loop that have no data.
+ * 
+ * For each table, a column system stores an index that translates between the
+ * a column in the system signature, and the matched table. This information is
+ * stored, alongside with an index that identifies the table, in the 'tables'
+ * member. This is an array of an array of integers, per table.
+ * 
+ * Additionally, the 'tables' member contains information on where a component
+ * should be fetched from. By default, components are fetched from an entity,
+ * but a system may specify that a component must be resolved from a container,
+ * or must be fetched from a prefab. In this case, the index to lookup a table
+ * column from system column contains a negative number, which identifies an
+ * element in the 'refs' array.
+ * 
+ * The 'refs' array contains elements of type 'EcsRef', and stores references
+ * to external entities. References can vary per table, but not per entity/row,
+ * as prefabs / containers are part of the entity family, which in turn 
+ * identifies the table in which the entity is stored.
+ * */
 typedef struct EcsColSystem {
     EcsSystem base;
     EcsEntity entity;          /* Entity id of system, used for ordering */
