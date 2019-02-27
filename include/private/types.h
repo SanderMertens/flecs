@@ -127,7 +127,14 @@ typedef struct EcsSystem {
  * to external entities. References can vary per table, but not per entity/row,
  * as prefabs / containers are part of the entity family, which in turn 
  * identifies the table in which the entity is stored.
- * */
+ * 
+ * The 'period' and 'time_passed' members are used for periodic systems. An
+ * application may specify that a system should only run at a specific interval, 
+ * like once per second. This interval is stored in the 'period' member. Each
+ * time the system is evaluated but not ran, the delta_time is added to the 
+ * time_passed member, until it exceeds 'period'. In that case, the system is
+ * ran, and 'time_passed' is decreased by 'period'. 
+ */
 typedef struct EcsColSystem {
     EcsSystem base;
     EcsEntity entity;          /* Entity id of system, used for ordering */
