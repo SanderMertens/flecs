@@ -171,7 +171,9 @@ typedef struct EcsTableColumn {
 } EcsTableColumn;
 
 /** A table is the Reflecs equivalent of an archetype. Tables store all entities
- * with a specific set of components. */
+ * with a specific set of components. Tables are automatically created when an
+ * entity has a set of components not previously observed before. When a new
+ * table is created, it is automatically matched with existing column systems */
 typedef struct EcsTable {
     EcsArray *family;             /* Reference to family_index entry */
     EcsTableColumn *columns;      /* Columns storing components of array */
