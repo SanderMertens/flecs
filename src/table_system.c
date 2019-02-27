@@ -8,33 +8,6 @@ const EcsArrayParams column_arr_params = {
 };
 
 static
-void compute_and_families(
-    EcsWorld *world,
-    EcsColSystem *system_data)
-{
-    uint32_t i, column_count = ecs_array_count(system_data->base.columns);
-    EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
-
-    for (i = 0; i < column_count; i ++) {
-        EcsSystemColumn *elem = &buffer[i];
-        EcsSystemExprElemKind elem_kind = elem->kind;
-        EcsSystemExprOperKind oper_kind = elem->oper_kind;
-
-        if (elem_kind == EcsFromEntity) {
-            if (oper_kind == EcsOperAnd) {
-                system_data->and_from_entity = ecs_family_add(
-                 world, NULL, system_data->and_from_entity, elem->is.component);
-            }
-        } else if (elem_kind == EcsFromSystem) {
-            if (oper_kind == EcsOperAnd) {
-                system_data->and_from_system = ecs_family_add(
-                 world, NULL, system_data->and_from_system, elem->is.component);
-            }
-        }
-    }
-}
-
-static
 EcsEntity components_contains(
     EcsWorld *world,
     EcsStage *stage,
@@ -342,7 +315,7 @@ bool match_table(
         return false;
     }
 
-    family = system_data->and_from_entity;
+    family = system_data->base.and_from_entity;
 
     if (family && !ecs_family_contains(
         world, stage, table_family, family, true, true))
@@ -411,9 +384,11 @@ void match_tables(
     EcsEntity system,
     EcsColSystem *system_data)
 {
-    EcsIter it = ecs_array_iter(world->table_db, &table_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsTable *table = ecs_iter_next(&it);
+    EcsTable *buffer = ecs_array_buffer(world->table_db);
+    uint32_t i, count = ecs_array_count(world->table_db);
+
+    for (i = 0; i < count; i ++) {
+        EcsTable *table = &buffer[i];
         if (match_table(world, stage, table, system, system_data)) {
             add_table(world, stage, system, system_data, table);
         }
@@ -423,22 +398,18 @@ void match_tables(
 /* -- Private functions -- */
 
 /** Match new table against system (table is created after system) */
-EcsResult ecs_system_notify_create_table(
+void ecs_col_system_notify_of_table(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity system,
     EcsTable *table)
 {
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
-    if (!system_data) {
-        return EcsError;
-    }
+    assert(system_data != NULL);
 
     if (match_table(world, stage, table, system, system_data)) {
         add_table(world, stage, system, system_data, table);
     }
-
-    return EcsOk;
 }
 
 /** Table activation happens when a table was or becomes empty. Deactivated
@@ -615,7 +586,8 @@ EcsEntity ecs_new_col_system(
         assert(0);
     }
 
-    compute_and_families(world, system_data);
+    ecs_system_compute_and_families(world, result, &system_data->base);
+
     match_tables(world, NULL, result, system_data);
 
     EcsEntity *elem = NULL;

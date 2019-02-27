@@ -121,7 +121,6 @@ typedef void (*EcsModuleInitAction)(
 #define EcsId_h (6)
 #define EcsHidden_h (7)
 #define EcsContainer_h (8)
-#define EcsRoot_h (9)
 
 
 /* -- World API -- */

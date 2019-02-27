@@ -207,6 +207,12 @@ void ecs_table_free(
 
 /* -- System API -- */
 
+/* Compute the AND family from the system columns */
+void ecs_system_compute_and_families(
+    EcsWorld *world,
+    EcsEntity system,
+    EcsSystem *system_data);
+
 /* Create new table system */
 EcsEntity ecs_new_col_system(
     EcsWorld *world,
@@ -215,12 +221,19 @@ EcsEntity ecs_new_col_system(
     const char *sig,
     EcsSystemAction action);
 
-/* Notify system of a new table, which initiates system-table matching */
-EcsResult ecs_system_notify_create_table(
+/* Notify column system of a new table, which initiates system-table matching */
+void ecs_col_system_notify_of_table(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity system,
     EcsTable *table);
+
+/* Notify row system of a new family, which initiates system-family matching */
+void ecs_row_system_notify_of_family(
+    EcsWorld *world,
+    EcsStage *stage,
+    EcsEntity system,
+    EcsFamily family);
 
 /* Activate table for system (happens if table goes from empty to not empty) */
 void ecs_system_activate_table(

@@ -11,10 +11,10 @@
 #define ECS_WORLD_INITIAL_TABLE_COUNT (2)
 #define ECS_WORLD_INITIAL_ENTITY_COUNT (2)
 #define ECS_WORLD_INITIAL_STAGING_COUNT (0)
-#define ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT (1)
+#define ECS_WORLD_INITIAL_COL_SYSTEM_COUNT (1)
 #define ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT (0)
-#define ECS_WORLD_INITIAL_INIT_SYSTEM_COUNT (0)
-#define ECS_WORLD_INITIAL_DEINIT_SYSTEM_COUNT (0)
+#define ECS_WORLD_INITIAL_ADD_SYSTEM_COUNT (0)
+#define ECS_WORLD_INITIAL_REMOVE_SYSTEM_COUNT (0)
 #define ECS_WORLD_INITIAL_SET_SYSTEM_COUNT (0)
 #define ECS_WORLD_INITIAL_PREFAB_COUNT (0)
 #define ECS_MAP_INITIAL_NODE_COUNT (4)
@@ -91,6 +91,7 @@ typedef struct EcsSystem {
     EcsArray *columns;         /* Column components */
     EcsFamily not_from_entity; /* Exclude components from entity */
     EcsFamily not_from_component; /* Exclude components from components */
+    EcsFamily and_from_entity; /* Which components are required from entity */
     EcsEntity ctx_handle;      /* User-defined context for system */
     EcsSystemKind kind;        /* Kind of system */
     float time_spent;          /* Time spent on running system */
@@ -146,7 +147,6 @@ typedef struct EcsColSystem {
     EcsArrayParams table_params; /* Parameters for tables array */
     EcsArrayParams component_params; /* Parameters for components array */
     EcsArrayParams ref_params; /* Parameters for tables array */
-    EcsFamily and_from_entity; /* Used to match init / deinit notifications */
     EcsFamily and_from_system; /* Used to auto-add components to system */
     float period;              /* Minimum period inbetween system invocations */
     float time_passed;         /* Time passed since last invocation */
@@ -264,9 +264,9 @@ struct EcsWorld {
 
     /* -- Row systems -- */
 
-    EcsMap *add_systems;          /* Systems invoked on ecs_stage_add */
-    EcsMap *remove_systems;       /* Systems invoked on ecs_stage_remove */
-    EcsMap *set_systems;          /* Systems invoked on ecs_set */
+    EcsArray *add_systems;        /* Systems invoked on ecs_stage_add */
+    EcsArray *remove_systems;     /* Systems invoked on ecs_stage_remove */
+    EcsArray *set_systems;        /* Systems invoked on ecs_set */
 
 
     /* -- Tasks -- */
@@ -282,7 +282,9 @@ struct EcsWorld {
     EcsMap *family_index;         /* References to component families */
     EcsMap *family_handles;       /* Index to families created by API */
     EcsMap *prefab_index;         /* Index to find prefabs in families */
-    EcsMap *family_row_index;     /* Index to find row systems for family */
+    EcsMap *family_sys_add_index; /* Index to find add row systems for family */
+    EcsMap *family_sys_remove_index; /* Index to find remove row systems for family */
+    EcsMap *family_sys_set_index; /* Index to find set row systems for family */
 
 
     /* -- Staging -- */

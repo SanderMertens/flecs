@@ -71,6 +71,21 @@ uint32_t hash_handle_array(
 }
 
 static
+void notify_create_family(
+    EcsWorld *world,
+    EcsStage *stage,
+    EcsArray *systems,
+    EcsFamily family)
+{
+    EcsEntity *buffer = ecs_array_buffer(systems);
+    uint32_t i, count = ecs_array_count(systems);
+
+    for (i = 0; i < count; i ++) {
+        ecs_row_system_notify_of_family(world, stage, buffer[i], family);
+    }
+}
+
+static
 EcsFamily register_family_from_buffer(
     EcsWorld *world,
     EcsStage *stage,
@@ -92,6 +107,12 @@ EcsFamily register_family_from_buffer(
     if (!new_array) {
         new_array = ecs_array_new_from_buffer(&handle_arr_params, count, buf);
         ecs_map_set(family_index, new_id,  new_array);
+
+        if (!world->in_progress) {
+            notify_create_family(world, stage, world->add_systems, new_id);
+            notify_create_family(world, stage, world->remove_systems, new_id);
+            notify_create_family(world, stage, world->set_systems, new_id);
+        }
     }
 
     return new_id;

@@ -132,14 +132,16 @@ void notify_create_table(
     EcsArray *systems,
     EcsTable *table)
 {
-    EcsIter it = ecs_array_iter(systems, &handle_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsEntity system = *(EcsEntity*)ecs_iter_next(&it);
-        ecs_system_notify_create_table(world, stage, system, table);
+    EcsEntity *buffer = ecs_array_buffer(systems);
+    uint32_t i, count = ecs_array_count(systems);
+
+    for (i = 0; i < count; i ++) {
+        ecs_col_system_notify_of_table(world, stage, buffer[i], table);
     }
 }
 
-/** Create a new table and register it with the world and systems */
+/** Create a new table and register it with the world and systems. A table in
+ * reflecs is equivalent to an archetype */
 static
 EcsTable* create_table(
     EcsWorld *world,
@@ -149,14 +151,21 @@ EcsTable* create_table(
     EcsArray **table_db;
     EcsMap *table_index;
 
+    /* Depending on whether the world is in progress or not, add table to the
+     * main stage or the temporary (thread specific) stage */
     if (world->in_progress) {
+        /* If the world is in progress, the table will be created initially in
+         * the staging area, and merged with the main stage after the world has
+         * finished processing all systems. */
         table_db = &stage->table_db_stage;
         table_index = stage->table_stage;
     } else {
+        /* If not progressing, just use the table array from the main stage */
         table_db = &world->table_db;
         table_index = world->table_index;
     }
 
+    /* Add and initialize table */
     EcsTable *result = ecs_array_add(table_db, &table_arr_params);
     result->family_id = family_id;
 
@@ -167,8 +176,13 @@ EcsTable* create_table(
     uint32_t index = ecs_array_get_index(*table_db, &table_arr_params, result);
     ecs_map_set64(table_index, family_id, index + 1);
 
+    /* Notify all column systems of a new table. Only notify for tables that are
+     * added/merged to the main stage, as this could otherwise introduce race
+     * conditions between threads. 
+     * 
+     * Notifying systems is necessary, because column systems are prematched
+     * with tables, so this doesn't need to happen in the main loop. */
     if (!world->in_progress) {
-        /* Only notify systems of tables that aren't staged */
         notify_create_table(world, stage, world->pre_frame_systems, result);
         notify_create_table(world, stage, world->post_frame_systems, result);
         notify_create_table(world, stage, world->on_load_systems, result);
@@ -206,7 +220,6 @@ void clean_tables(
 
     for (i = count - 1; i >= 0; i --) {
         EcsTable *table = &buffer[i];
-
         ecs_table_deinit(world, table);
     }
 
@@ -424,32 +437,39 @@ EcsWorld *ecs_init(void) {
     world->table_db = ecs_array_new(
         &table_arr_params, ECS_WORLD_INITIAL_TABLE_COUNT);
     world->on_frame_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+        &handle_arr_params, ECS_WORLD_INITIAL_COL_SYSTEM_COUNT);
     world->pre_frame_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+        &handle_arr_params, ECS_WORLD_INITIAL_COL_SYSTEM_COUNT);
     world->post_frame_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+        &handle_arr_params, ECS_WORLD_INITIAL_COL_SYSTEM_COUNT);
     world->on_load_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+        &handle_arr_params, ECS_WORLD_INITIAL_COL_SYSTEM_COUNT);
     world->on_store_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+        &handle_arr_params, ECS_WORLD_INITIAL_COL_SYSTEM_COUNT);
     world->inactive_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+        &handle_arr_params, ECS_WORLD_INITIAL_COL_SYSTEM_COUNT);
     world->on_demand_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+        &handle_arr_params, ECS_WORLD_INITIAL_COL_SYSTEM_COUNT);
 
-    world->add_systems = ecs_map_new(ECS_WORLD_INITIAL_INIT_SYSTEM_COUNT);
-    world->remove_systems = ecs_map_new(ECS_WORLD_INITIAL_DEINIT_SYSTEM_COUNT);
-    world->set_systems = ecs_map_new(ECS_WORLD_INITIAL_SET_SYSTEM_COUNT);
+    world->add_systems = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_ADD_SYSTEM_COUNT);
+    world->remove_systems = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_REMOVE_SYSTEM_COUNT);
+    world->set_systems = ecs_array_new(
+        &handle_arr_params, ECS_WORLD_INITIAL_SET_SYSTEM_COUNT);
     world->tasks = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+        &handle_arr_params, ECS_WORLD_INITIAL_COL_SYSTEM_COUNT);
     world->fini_tasks = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+        &handle_arr_params, ECS_WORLD_INITIAL_COL_SYSTEM_COUNT);
 
     world->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
     world->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
     world->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
     world->family_handles = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
+    world->family_sys_add_index = ecs_map_new(ECS_WORLD_INITIAL_ADD_SYSTEM_COUNT);
+    world->family_sys_remove_index = ecs_map_new(ECS_WORLD_INITIAL_REMOVE_SYSTEM_COUNT);
+    world->family_sys_set_index = ecs_map_new(ECS_WORLD_INITIAL_SET_SYSTEM_COUNT);
+
     world->prefab_index = ecs_map_new(ECS_WORLD_INITIAL_PREFAB_COUNT);
 
     world->stage_db = NULL;
@@ -483,7 +503,6 @@ EcsWorld *ecs_init(void) {
     assert_func(new_builtin_component(world, sizeof(EcsId)) == EcsId_h);
     assert_func(new_builtin_component(world, 0) == EcsHidden_h);
     assert_func(new_builtin_component(world, 0) == EcsContainer_h);
-    assert_func(new_builtin_component(world, 0) == EcsRoot_h);
 
     add_builtin_id(world, EcsComponent_h, "EcsComponent");
     add_builtin_id(world, EcsFamilyComponent_h, "EcsFamilyComponent");
@@ -493,7 +512,6 @@ EcsWorld *ecs_init(void) {
     add_builtin_id(world, EcsId_h, "EcsId");
     add_builtin_id(world, EcsHidden_h, "EcsHidden");
     add_builtin_id(world, EcsContainer_h, "EcsContainer");
-    add_builtin_id(world, EcsRoot_h, "EcsRoot");
 
     world->component_family = get_builtin_family(world, EcsComponent_h);
     world->family_family = get_builtin_family(world, EcsFamilyComponent_h);
@@ -539,13 +557,17 @@ EcsResult ecs_fini(
     ecs_array_free(world->tasks);
     ecs_array_free(world->fini_tasks);
 
-    ecs_map_free(world->add_systems);
-    ecs_map_free(world->remove_systems);
-    ecs_map_free(world->set_systems);
+    ecs_array_free(world->add_systems);
+    ecs_array_free(world->remove_systems);
+    ecs_array_free(world->set_systems);
+
     ecs_map_free(world->entity_index);
     ecs_map_free(world->table_index);
     ecs_map_free(world->family_handles);
     ecs_map_free(world->prefab_index);
+    ecs_map_free(world->family_sys_add_index);
+    ecs_map_free(world->family_sys_remove_index);
+    ecs_map_free(world->family_sys_set_index);
 
     free(world);
 

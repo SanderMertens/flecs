@@ -3,6 +3,66 @@
 #include "include/private/reflecs.h"
 #include "include/util/time.h"
 
+static
+void match_family(
+    EcsWorld *world,
+    EcsStage *stage,
+    EcsEntity system,
+    EcsRowSystem *system_data,
+    EcsFamily family)
+{
+    /* Test if the components of the system are equal or a subset of the 
+     * components of the family */
+    EcsEntity match = ecs_family_contains(
+        world, stage, family, system_data->base.and_from_entity, true, false);
+
+    /* If there is a match, add the system to the family-row_system index */
+    if (match) {
+        EcsMap *index;
+        EcsSystemKind kind = system_data->base.kind;
+
+        if (kind == EcsOnAdd) {
+            index = world->family_sys_add_index;
+        } else if (kind == EcsOnRemove) {
+            index = world->family_sys_remove_index;
+        } else if (kind == EcsOnSet) {
+            index = world->family_sys_set_index;
+        }
+
+        EcsArray *systems = ecs_map_get(index, family);
+        if (!systems) {
+            systems = ecs_array_new(&handle_arr_params, 1);
+        }
+
+        EcsEntity *new_elem = ecs_array_add(&systems, &handle_arr_params);
+        *new_elem = system;
+
+        /* Always set the system entry, as array may have been realloc'd */
+        ecs_map_set(index, family, systems);
+    }
+}
+
+/* Match system against existing families to build the family-rowsys index */
+static
+void match_families(
+    EcsWorld *world,
+    EcsEntity system,
+    EcsRowSystem *system_data)
+{
+    EcsIter it = ecs_map_iter(world->family_index);
+
+    /* Iterating over a map is a bit slow, but this only happens when a new
+     * row system is created, which is very infrequent. */
+    while (ecs_iter_hasnext(&it)) {
+        uint64_t key; /* Only interested in the key, which is the family hash */
+        ecs_map_next(&it, &key);
+
+        EcsFamily family = key;
+        
+        match_family(world, NULL, system, system_data, family);
+    }
+}
+
 /** Create a new row system. A row system is a system executed on a single row,
  * typically as a result of a ADD, REMOVE or SET trigger.
  */
@@ -55,41 +115,69 @@ EcsEntity new_row_system(
         }
     }
 
-    EcsMap *index = NULL;
-    if (kind == EcsOnAdd) {
-        index = world->add_systems;
-    } else if (kind == EcsOnRemove) {
-        if (needs_tables) {
-            index = world->remove_systems;
+    EcsEntity *elem = NULL;
+
+    if (!needs_tables) {
+        if (kind == EcsOnFrame) {
+            elem = ecs_array_add(&world->tasks, &handle_arr_params);
+        } else if (kind == EcsOnRemove) {
+            elem = ecs_array_add(&world->fini_tasks, &handle_arr_params);
         }
-    } else if (kind == EcsOnSet) {
-        index = world->set_systems;
+    } else {
+        if (kind == EcsOnAdd) {
+            elem = ecs_array_add(&world->add_systems, &handle_arr_params);
+        } else if (kind == EcsOnRemove) {
+            elem = ecs_array_add(&world->remove_systems, &handle_arr_params);
+        } else if (kind == EcsOnSet) {
+            elem = ecs_array_add(&world->set_systems, &handle_arr_params);
+        }
     }
 
-    if (index) {
-        if (ecs_map_has(index, family_id, NULL)) {
-            ecs_abort(ECS_FAMILY_IN_USE, id);
-        }
-        assert(!ecs_map_has(index, family_id, NULL));
-        ecs_map_set64(index, family_id, result);
-    } else {
-        if (kind == EcsOnRemove) {
-            EcsEntity *system = ecs_array_add(
-                &world->fini_tasks, &handle_arr_params);
-            *system = result;
-        } else if (kind == EcsOnFrame) {
-            EcsEntity *system = ecs_array_add(
-                &world->tasks, &handle_arr_params);
-            *system = result;
-        } else {
-            assert(0);
-        }
+    if (elem) {
+        *elem = result;
     }
+
+    ecs_system_compute_and_families(world, result, &system_data->base);
+    match_families(world, result, system_data);
 
     return result;
 }
 
 /* -- Private API -- */
+
+void ecs_system_compute_and_families(
+    EcsWorld *world,
+    EcsEntity system,
+    EcsSystem *system_data)
+{
+    uint32_t i, column_count = ecs_array_count(system_data->columns);
+    EcsSystemColumn *buffer = ecs_array_buffer(system_data->columns);
+    EcsColSystem *col_system_data = NULL;
+
+    for (i = 0; i < column_count; i ++) {
+        EcsSystemColumn *elem = &buffer[i];
+        EcsSystemExprElemKind elem_kind = elem->kind;
+        EcsSystemExprOperKind oper_kind = elem->oper_kind;
+
+        if (elem_kind == EcsFromEntity) {
+            if (oper_kind == EcsOperAnd) {
+                system_data->and_from_entity = ecs_family_add(
+                 world, NULL, system_data->and_from_entity, elem->is.component);
+            }
+        } else if (elem_kind == EcsFromSystem) {
+            if (!col_system_data) {
+                col_system_data = ecs_get_ptr(world, system, EcsColSystem_h);
+                if (!col_system_data) {
+                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, NULL);
+                }
+            }
+            if (oper_kind == EcsOperAnd) {
+                col_system_data->and_from_system = ecs_family_add(
+                 world, NULL, col_system_data->and_from_system, elem->is.component);
+            }
+        }
+    }
+}
 
 /** Parse callback that adds component to the components array for a system */
 EcsResult ecs_parse_component_action(
@@ -194,6 +282,18 @@ void ecs_row_notify(
     };
 
     action(&rows);
+}
+
+/* Notify row system of a new family */
+void ecs_row_system_notify_of_family(
+    EcsWorld *world,
+    EcsStage *stage,
+    EcsEntity system,
+    EcsFamily family)
+{
+    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
+
+    match_family(world, stage, system, system_data, family);
 }
 
 /** Run a task. A task is a system that contains no columns that can be matched
