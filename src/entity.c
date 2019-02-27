@@ -633,6 +633,12 @@ EcsEntity ecs_new_w_count(
         notify_pre_merge(
             world, stage, table, table->columns, result, count, 
             family_id, world->family_sys_add_index);
+            
+    } else if (handles_out) {
+        int i;
+        for (i = 0; i < count; i ++) {
+            handles_out[i] = result + i;
+        }
     }
 
     return result;

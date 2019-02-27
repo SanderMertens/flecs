@@ -1074,6 +1074,7 @@ void* ecs_column(
     EcsRows *rows,
     uint32_t index);
 
+
 /* -- Error handling & error codes -- */
 
 /** Throw an error */

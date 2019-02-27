@@ -18,7 +18,7 @@ void match_family(
 
     /* If there is a match, add the system to the family-row_system index */
     if (match) {
-        EcsMap *index;
+        EcsMap *index = NULL;
         EcsSystemKind kind = system_data->base.kind;
 
         if (kind == EcsOnAdd) {
@@ -27,6 +27,8 @@ void match_family(
             index = world->family_sys_remove_index;
         } else if (kind == EcsOnSet) {
             index = world->family_sys_set_index;
+        } else {
+            ecs_abort(ECS_INVALID_PARAMETERS, NULL);
         }
 
         EcsArray *systems = ecs_map_get(index, family);
