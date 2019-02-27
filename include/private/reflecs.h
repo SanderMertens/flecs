@@ -29,7 +29,8 @@ bool ecs_notify(
     EcsFamily family_id,
     EcsTable *table,
     EcsTableColumn *table_columns,
-    int32_t row_index);
+    int32_t offset,
+    int32_t limit);
 
 /* -- World API -- */
 

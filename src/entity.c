@@ -234,7 +234,8 @@ bool notify_pre_merge(
     EcsStage *stage,
     EcsTable *table,
     EcsTableColumn *table_columns,
-    uint32_t index,
+    uint32_t offset,
+    uint32_t limit,
     EcsFamily to_init,
     EcsMap *systems)
 {
@@ -246,7 +247,7 @@ bool notify_pre_merge(
     world->in_progress = true;
 
     bool result = ecs_notify(
-        world, stage, systems, to_init, table, table_columns, index);
+        world, stage, systems, to_init, table, table_columns, offset, limit);
 
     world->in_progress = in_progress;
     if (result && !in_progress) {
@@ -262,7 +263,8 @@ bool notify_post_merge(
     EcsStage *stage,
     EcsTable *table,
     EcsTableColumn *table_columns,
-    uint32_t index,
+    uint32_t offset,
+    uint32_t limit,
     EcsFamily to_deinit)
 {
     if (world->in_progress) {
@@ -270,7 +272,8 @@ bool notify_post_merge(
     }
 
     return ecs_notify(
-      world, stage, world->family_sys_remove_index, to_deinit, table, table_columns, index);
+        world, stage, world->family_sys_remove_index, to_deinit, table, 
+        table_columns, offset, limit);
 }
 
 /** Commit an entity with a specified family to memory */
@@ -282,7 +285,8 @@ uint32_t commit_w_family(
     uint64_t old_row_64,
     EcsFamily family_id,
     EcsFamily to_add,
-    EcsFamily to_remove)
+    EcsFamily to_remove,
+    bool notify_on_add)
 {
     EcsTable *new_table, *old_table;
     EcsTableColumn *new_columns, *old_columns;
@@ -335,6 +339,7 @@ uint32_t commit_w_family(
         } else {
             new_index = ecs_table_insert(
                 world, new_table, new_table->columns, entity);
+
             new_columns = new_table->columns;
         }
     }
@@ -345,7 +350,8 @@ uint32_t commit_w_family(
                 old_table->family, old_columns, old_index);
         }
         if (to_remove) {
-            notify_post_merge(world, stage, old_table, old_columns, old_index, to_remove);
+            notify_post_merge(
+                world, stage, old_table, old_columns, old_index, 1, to_remove);
         }
         ecs_table_delete(world, old_table, old_index);
     }
@@ -354,9 +360,10 @@ uint32_t commit_w_family(
         new_row = (EcsRow){.family_id = family_id, .index = new_index};
         uint64_t row_64 = ecs_from_row(new_row);
         ecs_map_set64(entity_index, entity, row_64);
-        if (to_add) {
+
+        if (to_add && notify_on_add) {
             notify_pre_merge (
-              world, stage, new_table, new_columns, new_index, to_add, 
+              world, stage, new_table, new_columns, new_index, 1, to_add, 
               world->family_sys_add_index);
 
             copy_from_prefab(
@@ -384,7 +391,8 @@ bool ecs_notify_system(
     EcsFamily family_id,
     EcsTable *table,
     EcsTableColumn *table_columns,
-    int32_t row_index)  
+    int32_t offset,
+    int32_t limit)  
 {
     EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
     assert(system_data != NULL);
@@ -402,22 +410,14 @@ bool ecs_notify_system(
         columns[i] = ecs_family_index_of(table->family, buffer[i]) + 1;
     }
 
-    int32_t row = row_index;
-    if (row_index == -1) {
-        row = ecs_array_count(table_columns[0].data) - 1;
-        row_index = 0;
-    }
-
-    for (; row >= row_index; row --) {
-        ecs_row_notify(
-            world,
-            system,
-            system_data,
-            columns,
-            table_columns,
-            row,
-            row + 1);
-    }
+    ecs_row_notify(
+        world,
+        system,
+        system_data,
+        columns,
+        table_columns,
+        offset,
+        limit);
 
     return true;
 }
@@ -429,7 +429,8 @@ bool ecs_notify(
     EcsFamily family_id,
     EcsTable *table,
     EcsTableColumn *table_columns,
-    int32_t row_index)
+    int32_t offset,
+    int32_t limit)
 {
     EcsArray *systems = ecs_map_get(index, family_id);
     bool notified = false;
@@ -441,7 +442,7 @@ bool ecs_notify(
         for (i = 0; i < count; i ++) {
             notified |= ecs_notify_system(
                 world, stage, buffer[i], family_id, table, table_columns, 
-                row_index);
+                offset, limit);
         }
     } 
 
@@ -454,7 +455,7 @@ EcsEntity ecs_new_w_family(
     EcsFamily family_id)
 {
     EcsEntity entity = ++ world->last_handle;
-    commit_w_family(world, stage, entity, 0, family_id, family_id, 0);
+    commit_w_family(world, stage, entity, 0, family_id, family_id, 0, true);
     return entity;
 }
 
@@ -473,7 +474,7 @@ void ecs_merge_entity(
         world, stage, old_row.family_id, staged_row->family_id, to_remove);
 
     uint32_t new_index = commit_w_family(
-        world, stage, entity, old_row_64, family_id, 0, to_remove);
+        world, stage, entity, old_row_64, family_id, 0, to_remove, true);
 
     if (family_id && staged_id) {
         EcsTable *new_table = ecs_world_get_table(world, stage, family_id);
@@ -527,7 +528,7 @@ EcsResult ecs_commit(
     }
 
     return commit_w_family(
-        world, stage, entity, row_64, family_id, to_add, to_remove);
+        world, stage, entity, row_64, family_id, to_add, to_remove, true);
 }
 
 EcsEntity ecs_new(
@@ -538,7 +539,7 @@ EcsEntity ecs_new(
     EcsEntity entity = ++ world->last_handle;
     if (type) {
         EcsFamily family_id = ecs_family_from_handle(world, stage, type, NULL);
-        commit_w_family(world, stage, entity, 0, family_id, family_id, 0);
+        commit_w_family(world, stage, entity, 0, family_id, family_id, 0, true);
     }
 
     return entity;
@@ -556,7 +557,7 @@ EcsEntity ecs_clone(
         if (row64) {
             EcsRow row = ecs_to_row(row64);
             EcsFamily family_id = row.family_id;
-            commit_w_family(world, stage, result, 0, family_id, family_id, 0);
+            commit_w_family(world, stage, result, 0, family_id, family_id, 0, true);
 
             if (copy_value) {
                 EcsTable *from_table = ecs_world_get_table(world, stage, family_id);
@@ -588,7 +589,7 @@ EcsEntity ecs_clone(
                 /* A clone with value is equivalent to a set */
                 ecs_notify(
                     world, stage, world->family_sys_set_index, from_table->family_id, 
-                    to_table, to_columns, to_row.index);
+                    to_table, to_columns, to_row.index, 1);
             }
         }
     }
@@ -613,11 +614,25 @@ EcsEntity ecs_new_w_count(
 
         int i;
         for (i = result; i < (result + count); i ++) {
-            commit_w_family(world, stage, i, 0, family_id, family_id, 0);
+            /* We need to commit each entity individually in order to populate
+             * the entity index. Unfortunately this cannot be done in bulk, but
+             * fortunately this is a reasonably fast operation. 
+             * 
+             * Note how notify_on_add is set to false, which will cause any
+             * OnAdd row systems not to be executed as a result of the commit.
+             * That is something we *can* do more efficiently in bulk.
+             */
+            commit_w_family(world, stage, i, 0, family_id, family_id, 0, false);
+
             if (handles_out) {
                 handles_out[i - result] = i;
             }
         }
+
+        /* Now we can notify matching OnAdd row systems in bulk */
+        notify_pre_merge(
+            world, stage, table, table->columns, result, count, 
+            family_id, world->family_sys_add_index);
     }
 
     return result;
@@ -634,7 +649,7 @@ void ecs_delete(
         uint64_t row64;
         if (ecs_map_has(world->entity_index, entity, &row64)) {
             EcsRow row = ecs_to_row(row64);
-            commit_w_family(world, stage, entity, row64, 0, 0, row.family_id);
+            commit_w_family(world, stage, entity, row64, 0, 0, row.family_id, true);
             ecs_map_remove(world->entity_index, entity);
         }
     } else {
@@ -689,6 +704,7 @@ EcsEntity ecs_set_ptr(
         info.table,
         info.columns,
         info.index,
+        1,
         to_set,
         world->family_sys_set_index);
 
