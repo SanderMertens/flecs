@@ -337,7 +337,7 @@ char* ecs_type_tostr(
         }
 
         const char *str = NULL;
-        EcsId *id = ecs_get_ptr(world, h, tEcsId);
+        EcsId *id = ecs_get_ptr(world, h, EcsId);
         if (id) {
             str = *id;
         } else {
@@ -505,7 +505,7 @@ void ecs_dim(
     ecs_map_set_size(world->main_stage.entity_index, entity_count);
 }
 
-void ecs_dim_type(
+void _ecs_dim_type(
     EcsWorld *world,
     EcsType type,
     uint32_t entity_count)

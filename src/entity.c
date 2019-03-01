@@ -189,7 +189,7 @@ void copy_from_prefab(
                 void *ptr = get_row_ptr(
                     world, stage, table->type, columns, index, component);
                 if (ptr) {
-                    EcsComponent *component_data = ecs_get_ptr(
+                    EcsComponent *component_data = _ecs_get_ptr(
                         world, component, tEcsComponent);
                     assert(component_data != NULL);
                     memcpy(ptr, prefab_ptr, component_data->size);
@@ -365,7 +365,7 @@ bool ecs_notify_system(
     int32_t offset,
     int32_t limit)  
 {
-    EcsRowSystem *system_data = ecs_get_ptr(world, system, tEcsRowSystem);
+    EcsRowSystem *system_data = _ecs_get_ptr(world, system, tEcsRowSystem);
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {
@@ -516,7 +516,7 @@ EcsEntity ecs_clone(
     return result;
 }
 
-EcsEntity ecs_new(
+EcsEntity _ecs_new(
     EcsWorld *world,
     EcsType type)
 {
@@ -533,7 +533,7 @@ EcsEntity ecs_new(
     return entity;
 }
 
-EcsEntity ecs_new_w_count(
+EcsEntity _ecs_new_w_count(
     EcsWorld *world,
     EcsType type,
     uint32_t count,
@@ -646,7 +646,7 @@ EcsResult ecs_commit(
         world, stage, &info, type_id, to_add, to_remove);
 }
 
-EcsResult ecs_add(
+EcsResult _ecs_add(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type)
@@ -674,7 +674,7 @@ EcsResult ecs_add(
     return commit_w_type(world, stage, &info, dst_type, type, 0);
 }
 
-EcsResult ecs_remove(
+EcsResult _ecs_remove(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type)
@@ -702,7 +702,7 @@ EcsResult ecs_remove(
     return commit_w_type(world, stage, &info, dst_type, 0, type);
 }
 
-void* ecs_get_ptr(
+void* _ecs_get_ptr(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type)
@@ -715,7 +715,7 @@ void* ecs_get_ptr(
     return get_ptr(world, entity, component, false, true, &info);
 }
 
-EcsEntity ecs_set_ptr(
+EcsEntity _ecs_set_ptr(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type,
@@ -733,13 +733,13 @@ EcsEntity ecs_set_ptr(
 
     /* If no entity is specified, create one */
     if (!entity) {
-        entity = ecs_new(world, type);
+        entity = _ecs_new(world, type);
     }
 
     /* If component hasn't been added to entity yet, add it */
     int *dst = get_ptr(world, entity, component, true, false, &info);
     if (!dst) {
-        ecs_add(world, entity, type);
+        _ecs_add(world, entity, type);
         dst = get_ptr(world, entity, component, true, false, &info);
         assert(dst != NULL);
     }
@@ -787,7 +787,7 @@ bool ecs_has_any(
     return ecs_type_contains(world, stage, entity_type, type, false, false);
 }
 
-EcsEntity ecs_new_component(
+EcsEntity _ecs_new_component(
     EcsWorld *world,
     const char *id,
     size_t size)
@@ -799,7 +799,7 @@ EcsEntity ecs_new_component(
         return result;
     }
 
-    result = ecs_new(world, world->t_component);
+    result = _ecs_new(world, world->t_component);
     ecs_set(world, result, EcsComponent, {.size = size});
     ecs_set(world, result, EcsId, {id});
 
@@ -810,7 +810,7 @@ const char* ecs_id(
     EcsWorld *world,
     EcsEntity entity)
 {
-    EcsId *id = ecs_get_ptr(world, entity, tEcsId);
+    EcsId *id = ecs_get_ptr(world, entity, EcsId);
     if (id) {
         return *id;
     } else {

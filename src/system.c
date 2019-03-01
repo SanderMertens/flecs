@@ -82,11 +82,11 @@ EcsEntity new_row_system(
         return 0;
     }
 
-    EcsEntity result = ecs_new(world, world->t_row_system);
-    EcsId *id_data = ecs_get_ptr(world, result, tEcsId);
+    EcsEntity result = _ecs_new(world, world->t_row_system);
+    EcsId *id_data = ecs_get_ptr(world, result, EcsId);
     *id_data = id;
 
-    EcsRowSystem *system_data = ecs_get_ptr(world, result, tEcsRowSystem);
+    EcsRowSystem *system_data = ecs_get_ptr(world, result, EcsRowSystem);
     memset(system_data, 0, sizeof(EcsRowSystem));
     system_data->base.action = action;
     system_data->base.signature = sig;
@@ -168,7 +168,7 @@ void ecs_system_compute_and_families(
             }
         } else if (elem_kind == EcsFromSystem) {
             if (!col_system_data) {
-                col_system_data = ecs_get_ptr(world, system, tEcsColSystem);
+                col_system_data = ecs_get_ptr(world, system, EcsColSystem);
                 if (!col_system_data) {
                     ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, NULL);
                 }
@@ -293,7 +293,7 @@ void ecs_row_system_notify_of_type(
     EcsEntity system,
     EcsType type)
 {
-    EcsRowSystem *system_data = ecs_get_ptr(world, system, tEcsRowSystem);
+    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
 
     match_type(world, stage, system, system_data, type);
 }
@@ -306,7 +306,7 @@ void ecs_run_task(
     EcsEntity system,
     float delta_time)
 {
-    EcsRowSystem *system_data = ecs_get_ptr(world, system, tEcsRowSystem);
+    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {
@@ -381,9 +381,9 @@ void ecs_enable(
     bool col_system = false;
 
     /* Try to get either ColSystem or RowSystem data */
-    EcsSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     if (!system_data) {
-        system_data = ecs_get_ptr(world, system, tEcsRowSystem);
+        system_data = ecs_get_ptr(world, system, EcsRowSystem);
     } else {
         col_system = true;
     }
@@ -391,7 +391,7 @@ void ecs_enable(
     /* If entity is neither ColSystem nor RowSystem, it should be a type */
     if (!system_data) {
         EcsTypeComponent *type_data = ecs_get_ptr(
-            world, system, tEcsTypeComponent);
+            world, system, EcsTypeComponent);
 
         assert(type_data != NULL);
 
@@ -432,9 +432,9 @@ bool ecs_is_enabled(
     EcsWorld *world,
     EcsEntity system)
 {
-    EcsSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
+    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     if (!system_data) {
-        system_data = ecs_get_ptr(world, system, tEcsRowSystem);
+        system_data = ecs_get_ptr(world, system, EcsRowSystem);
     }
 
     if (system_data) {
@@ -450,7 +450,7 @@ void ecs_set_period(
     float period)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    EcsColSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     if (system_data) {
         system_data->period = period;
     }

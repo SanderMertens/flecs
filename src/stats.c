@@ -37,7 +37,7 @@ void calculate_system_stats(
     EcsEntity *buffer = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
-        EcsColSystem *sys = ecs_get_ptr(world, buffer[i], tEcsColSystem);
+        EcsColSystem *sys = ecs_get_ptr(world, buffer[i], EcsColSystem);
         ecs_array_memory(sys->base.columns, &column_arr_params, allocd, used);
         ecs_array_memory(sys->components, &handle_arr_params, allocd, used);
         ecs_array_memory(sys->inactive_tables, &sys->table_params, allocd, used);
@@ -179,7 +179,7 @@ void set_system_stats(
     EcsEntity system,
     bool active)
 {
-    EcsId *id = ecs_get_ptr(world, system, tEcsId);
+    EcsId *id = ecs_get_ptr(world, system, EcsId);
     EcsSystemStats *sstats = ecs_array_add(
         stats_array, &systemstats_arr_params);
 
@@ -189,7 +189,7 @@ void set_system_stats(
     sstats->active = active;
     sstats->is_hidden = ecs_has(world, system, tEcsHidden);
 
-    EcsSystem *system_ptr = ecs_get_ptr(world, system, tEcsColSystem);
+    EcsSystem *system_ptr = ecs_get_ptr(world, system, EcsColSystem);
     if (system_ptr) {
         EcsColSystem *col_system = (EcsColSystem*)system_ptr;
         EcsArray *tables = col_system->tables;
@@ -207,7 +207,7 @@ void set_system_stats(
         sstats->tables_matched = count + ecs_array_count(
             col_system->inactive_tables);
     } else {
-        system_ptr = ecs_get_ptr(world, system, tEcsRowSystem);
+        system_ptr = ecs_get_ptr(world, system, EcsRowSystem);
         sstats->entities_matched = 0;
         sstats->tables_matched = 0;
         sstats->period = 0;
@@ -270,7 +270,7 @@ int system_stats_arr_inactive(
     EcsEntity *handles = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
-        EcsColSystem *data = ecs_get_ptr(world, handles[i], tEcsColSystem);
+        EcsColSystem *data = ecs_get_ptr(world, handles[i], EcsColSystem);
         EcsArray **stats_array = NULL;
 
         if (data->base.kind == EcsOnLoad) {
@@ -342,7 +342,7 @@ void ecs_get_stats(
     EcsIter it = ecs_map_iter(world->type_handles);
     while (ecs_iter_hasnext(&it)) {
         EcsEntity h = ecs_map_next(&it, NULL);
-        EcsTypeComponent *data = ecs_get_ptr(world, h, tEcsTypeComponent);
+        EcsTypeComponent *data = ecs_get_ptr(world, h, EcsTypeComponent);
         EcsArray *type = ecs_map_get(world->main_stage.type_index, data->resolved);
         EcsEntity *buffer = ecs_array_buffer(type);
         uint32_t i, count = ecs_array_count(type);

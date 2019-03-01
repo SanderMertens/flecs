@@ -40,7 +40,7 @@ EcsResult ecs_table_init(
     table->columns[0].data = ecs_array_new(&handle_arr_params, ECS_TABLE_INITIAL_ROW_COUNT);
 
     for (i = 0; i < count; i ++) {
-        EcsComponent *component = ecs_get_ptr(world, buf[i], tEcsComponent);
+        EcsComponent *component = ecs_get_ptr(world, buf[i], EcsComponent);
 
         if (component) {
             if (component->size) {

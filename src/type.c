@@ -454,7 +454,7 @@ EcsType ecs_new_type(
         world->type_handles, type.type);
 
     if (type_entity) {
-        EcsId *id_ptr = ecs_get_ptr(world, type_entity, tEcsId);
+        EcsId *id_ptr = ecs_get_ptr(world, type_entity, EcsId);
 
         assert(id_ptr != NULL);
         if(!strcmp(*id_ptr, id)) {
@@ -463,7 +463,7 @@ EcsType ecs_new_type(
 
         return type_entity;
     } else {
-        result = ecs_new(world, world->t_type);
+        result = _ecs_new(world, world->t_type);
         ecs_set(world, result, EcsId, {id});
         ecs_set(world, result, EcsTypeComponent, {
             .type = type.type, .resolved = type.resolved
@@ -495,7 +495,7 @@ EcsEntity ecs_new_prefab(
     type.resolved = ecs_type_merge(
         world, NULL, world->t_prefab, type.resolved, 0);
 
-    result = ecs_new(world, type.resolved);
+    result = _ecs_new(world, type.resolved);
     ecs_set(world, result, EcsId, {id});
 
     return result;
@@ -516,7 +516,7 @@ EcsEntity ecs_new_entity(
         return 0;
     }
 
-    result = ecs_new(world, type.resolved);
+    result = _ecs_new(world, type.resolved);
     ecs_set(world, result, EcsId, {id});
 
     return result;

@@ -400,7 +400,7 @@ void ecs_col_system_notify_of_table(
     EcsEntity system,
     EcsTable *table)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     assert(system_data != NULL);
 
     if (match_table(world, table, system, system_data)) {
@@ -417,7 +417,7 @@ void ecs_system_activate_table(
     bool active)
 {
     EcsArray *src_array, *dst_array;
-    EcsColSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     EcsSystemKind kind = system_data->base.kind;
 
     uint32_t table_index = ecs_array_get_index(
@@ -548,13 +548,13 @@ EcsEntity ecs_new_col_system(
         assert(0);
     }
 
-    EcsEntity result = ecs_new(
+    EcsEntity result = _ecs_new(
         world, world->t_col_system);
 
-    EcsId *id_data = ecs_get_ptr(world, result, tEcsId);
+    EcsId *id_data = ecs_get_ptr(world, result, EcsId);
     *id_data = id;
 
-    EcsColSystem *system_data = ecs_get_ptr(world, result, tEcsColSystem);
+    EcsColSystem *system_data = ecs_get_ptr(world, result, EcsColSystem);
     memset(system_data, 0, sizeof(EcsColSystem));
     system_data->base.action = action;
     system_data->base.enabled = true;
@@ -615,7 +615,7 @@ EcsEntity ecs_new_col_system(
         EcsEntity *buffer = ecs_array_buffer(f);
         uint32_t i, count = ecs_array_count(f);
         for (i = 0; i < count; i ++) {
-            ecs_add(world, result, buffer[i]);
+            _ecs_add(world, result, buffer[i]);
         }
     }
 
@@ -658,7 +658,7 @@ EcsEntity ecs_run_w_filter(
     EcsEntity filter,
     void *param)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {

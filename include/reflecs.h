@@ -454,11 +454,14 @@ void ecs_dim(
  * @param entity_count The number of entities to preallocate.
  */
 REFLECS_EXPORT
-void ecs_dim_type(
+void _ecs_dim_type(
     EcsWorld *world,
     EcsType type,
     uint32_t entity_count);
 
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_dim_type(world, type, entity_count)\
+    _ecs_dim_type(world, t##type, entity_count)
 
 /* -- Entity API -- */
 
@@ -487,9 +490,13 @@ void ecs_dim_type(
  * @returns A handle to the new entity.
  */
 REFLECS_EXPORT
-EcsEntity ecs_new(
+EcsEntity _ecs_new(
     EcsWorld *world,
     EcsType type);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_new(world, type)\
+    _ecs_new(world, t##type)
 
 REFLECS_EXPORT
 EcsEntity ecs_new_entity(
@@ -508,11 +515,15 @@ EcsEntity ecs_new_entity(
  * @returns The handle to the first created entity.
  */
 REFLECS_EXPORT
-EcsEntity ecs_new_w_count(
+EcsEntity _ecs_new_w_count(
     EcsWorld *world,
     EcsType type,
     uint32_t count,
     EcsEntity *handles_out);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_new_w_count(world, type, count, handles_out)\
+    _ecs_new_w_count(world, t##type, count, handles_out)
 
 /** Create new entity with same components as specified entity.
  * This operation creates a new entity which has the same components as the
@@ -593,17 +604,25 @@ EcsResult ecs_commit(
 
 /** Add a type to an entity */
 REFLECS_EXPORT
-EcsResult ecs_add(
+EcsResult _ecs_add(
     EcsWorld *world,
     EcsEntity entity,
     EcsType component);
 
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_add(world, entity, type)\
+    _ecs_add(world, entity, t##type)
+
 /** Remove a type from an entity */
 REFLECS_EXPORT
-EcsResult ecs_remove(
+EcsResult _ecs_remove(
     EcsWorld *world,
     EcsEntity entity,
-    EcsType component);
+    EcsType type);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_remove(world, entity, type)\
+    _ecs_remove(world, entity, t##type)
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
@@ -627,13 +646,18 @@ EcsResult ecs_remove(
  * @returns A pointer to the data, or NULL of the component was not found.
  */
 REFLECS_EXPORT
-void* ecs_get_ptr(
+void* _ecs_get_ptr(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type);
 
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_get_ptr(world, entity, type)\
+    _ecs_get_ptr(world, entity, t##type)
+
+/* Convenienve macro for returning a value instead of a pointer */
 #define ecs_get(world, entity, type)\
-  (*(component*)ecs_get_ptr(world, entity, t##type))
+  (*(component*)_ecs_get_ptr(world, entity, t##type))
 
 /* Set value of component.
  * This function sets the value of a component on the specified entity. If the
@@ -653,15 +677,18 @@ void* ecs_get_ptr(
  * @param component The component to set.
  */
 REFLECS_EXPORT
-EcsEntity ecs_set_ptr(
+EcsEntity _ecs_set_ptr(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type,
     size_t size,
     void *ptr);
 
+#define ecs_set_ptr(world, entity, type, size, ptr)\
+    _ecs_set_ptr(world, entity, t##type, size, ptr)
+
 #define ecs_set(world, entity, type, ...)\
-    ecs_set_ptr(world, entity, t##type, sizeof(type), &(type)__VA_ARGS__);
+    _ecs_set_ptr(world, entity, t##type, sizeof(type), &(type)__VA_ARGS__);
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the
