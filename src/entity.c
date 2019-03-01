@@ -18,17 +18,17 @@ void copy_column(
 
 static
 void copy_row(
-    EcsArray *new_family,
+    EcsArray *new_type,
     EcsTableColumn *new_columns,
     uint32_t new_index,
-    EcsArray *old_family,
+    EcsArray *old_type,
     EcsTableColumn *old_columns,
     uint32_t old_index)
 {
-    uint16_t i_new, new_component_count = ecs_array_count(new_family);
-    uint16_t i_old = 0, old_component_count = ecs_array_count(old_family);
-    EcsEntity *new_components = ecs_array_buffer(new_family);
-    EcsEntity *old_components = ecs_array_buffer(old_family);
+    uint16_t i_new, new_component_count = ecs_array_count(new_type);
+    uint16_t i_old = 0, old_component_count = ecs_array_count(old_type);
+    EcsEntity *new_components = ecs_array_buffer(new_type);
+    EcsEntity *old_components = ecs_array_buffer(old_type);
 
     for (i_new = 0; i_new < new_component_count; ) {
         if (i_old == old_component_count) {
@@ -54,12 +54,12 @@ static
 void* get_row_ptr(
     EcsWorld *world,
     EcsStage *stage,
-    EcsArray *family,
+    EcsArray *type,
     EcsTableColumn *columns,
     uint32_t index,
     EcsEntity component)
 {
-    uint32_t column_index = ecs_type_index_of(family, component);
+    uint32_t column_index = ecs_type_index_of(type, component);
     if (column_index == -1) {
         return NULL;
     }
@@ -97,7 +97,7 @@ void* get_ptr(
             info->table = table;
             info->columns = columns;
             ptr = get_row_ptr(
-                world, stage, table->family, columns, row.index, component);
+                world, stage, table->type, columns, row.index, component);
         }
     }
 
@@ -117,7 +117,7 @@ void* get_ptr(
             info->table = table;
             info->columns = table->columns;
             ptr = get_row_ptr(
-                world, stage, table->family, table->columns, row.index, component);
+                world, stage, table->type, table->columns, row.index, component);
         }
 
         if (ptr) return ptr;
@@ -150,17 +150,17 @@ void copy_from_prefab(
     EcsType to_add)
 {
     EcsEntity prefab;
-    EcsType entity_family = type_id;
+    EcsType entity_type = type_id;
 
     if (world->in_progress) {
         uint64_t row64 = ecs_map_get64(stage->entity_index, entity);
         if (row64) {
             EcsRow row = ecs_to_row(row64);
-            entity_family = row.type_id;
+            entity_type = row.type_id;
         }
     }
 
-    while ((prefab = ecs_map_get64(world->prefab_index, entity_family))) {
+    while ((prefab = ecs_map_get64(world->prefab_index, entity_type))) {
         /* Prefabs are only resolved from the main stage. Prefabs created while
          * iterating cannot be resolved in the same iteration. */
         EcsRow row = ecs_to_row(ecs_map_get64(world->main_stage.entity_index, prefab));
@@ -168,14 +168,14 @@ void copy_from_prefab(
         EcsTable *prefab_table = ecs_world_get_table(
             world, stage, row.type_id);
 
-        EcsArray *add_family = ecs_type_get(world, stage, to_add);
-        EcsEntity *add_handles = ecs_array_buffer(add_family);
-        uint32_t i, add_count = ecs_array_count(add_family);
+        EcsArray *add_type = ecs_type_get(world, stage, to_add);
+        EcsEntity *add_handles = ecs_array_buffer(add_type);
+        uint32_t i, add_count = ecs_array_count(add_type);
 
         for (i = 0; i < add_count; i ++) {
             EcsEntity component = add_handles[i];
             void *prefab_ptr = get_row_ptr(
-                world, stage, prefab_table->family, prefab_table->columns,
+                world, stage, prefab_table->type, prefab_table->columns,
                 row.index, component);
 
             if (prefab_ptr) {
@@ -187,7 +187,7 @@ void copy_from_prefab(
                 }
 
                 void *ptr = get_row_ptr(
-                    world, stage, table->family, columns, index, component);
+                    world, stage, table->type, columns, index, component);
                 if (ptr) {
                     EcsComponent *component_data = ecs_get_ptr(
                         world, component, tEcsComponent);
@@ -198,7 +198,7 @@ void copy_from_prefab(
         }
 
         /* Recursively search through prefabs */
-        entity_family = row.type_id;
+        entity_type = row.type_id;
     }
 }
 
@@ -246,13 +246,13 @@ bool notify_post_merge(
     }
 
     return ecs_notify(
-        world, stage, world->family_sys_remove_index, to_deinit, table, 
+        world, stage, world->type_sys_remove_index, to_deinit, table, 
         table_columns, offset, limit);
 }
 
-/** Commit an entity with a specified family to memory */
+/** Commit an entity with a specified type to memory */
 static
-uint32_t commit_w_family(
+uint32_t commit_w_type(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntityInfo *info,
@@ -267,7 +267,7 @@ uint32_t commit_w_family(
     uint32_t new_index = -1, old_index;
     bool in_progress = world->in_progress;
     EcsEntity entity = info->entity;
-    EcsArray *old_family = NULL;
+    EcsArray *old_type = NULL;
 
     entity_index = stage->entity_index;
 
@@ -284,7 +284,7 @@ uint32_t commit_w_family(
             old_columns = old_table->columns;
         }
 
-        old_family = old_table->family;
+        old_type = old_table->type;
     }
 
     if (type_id) {
@@ -317,8 +317,8 @@ uint32_t commit_w_family(
 
     if (old_type_id) {
         if (type_id) {
-            copy_row(new_table->family, new_columns, new_index, 
-                old_family, old_columns, old_index);
+            copy_row(new_table->type, new_columns, new_index, 
+                old_type, old_columns, old_index);
         }
         if (to_remove) {
             notify_post_merge(
@@ -334,7 +334,7 @@ uint32_t commit_w_family(
         if (to_add) {
             notify_pre_merge (
                 world, stage, new_table, new_columns, new_index, 1, to_add, 
-                world->family_sys_add_index);
+                world->type_sys_add_index);
 
             copy_from_prefab(
                 world, stage, new_table, entity, new_index, type_id, to_add);
@@ -372,13 +372,13 @@ bool ecs_notify_system(
         return false;
     }
 
-    EcsArray *family = ecs_type_get(world, stage, system_data->base.and_from_entity);
-    uint32_t i, column_count = ecs_array_count(family);
+    EcsArray *type = ecs_type_get(world, stage, system_data->base.and_from_entity);
+    uint32_t i, column_count = ecs_array_count(type);
     EcsEntity *buffer = ecs_array_buffer(system_data->components);
     int32_t columns[column_count];
 
     for (i = 0; i < column_count; i ++) {
-        columns[i] = ecs_type_index_of(table->family, buffer[i]) + 1;
+        columns[i] = ecs_type_index_of(table->type, buffer[i]) + 1;
     }
 
     ecs_row_notify(
@@ -440,7 +440,7 @@ void ecs_merge_entity(
         .index = old_row.index
     };
 
-    uint32_t new_index = commit_w_family(
+    uint32_t new_index = commit_w_type(
         world, stage, &info, type_id, 0, to_remove);
 
     if (type_id && staged_id) {
@@ -451,8 +451,8 @@ void ecs_merge_entity(
         EcsTableColumn *staged_columns = ecs_map_get(
             stage->data_stage, staged_row->type_id);
 
-        copy_row( new_table->family, new_table->columns, new_index,
-                  staged_table->family, staged_columns, staged_row->index); 
+        copy_row( new_table->type, new_table->columns, new_index,
+                  staged_table->type, staged_columns, staged_row->index); 
     }
 }
 
@@ -476,7 +476,7 @@ EcsEntity ecs_clone(
                 .index = row.index
             };
 
-            commit_w_family(world, stage, &info, type_id, type_id, 0);
+            commit_w_type(world, stage, &info, type_id, type_id, 0);
 
             if (copy_value) {
                 EcsTable *from_table = ecs_world_get_table(world, stage, type_id);
@@ -502,12 +502,12 @@ EcsEntity ecs_clone(
                     to_row = ecs_to_row(ecs_map_get64(
                             world->main_stage.entity_index, result));
 
-                copy_row(to_table->family, to_columns, to_row.index,
-                    from_table->family, from_columns, row.index);
+                copy_row(to_table->type, to_columns, to_row.index,
+                    from_table->type, from_columns, row.index);
 
                 /* A clone with value is equivalent to a set */
                 ecs_notify(
-                    world, stage, world->family_sys_set_index, from_table->type_id, 
+                    world, stage, world->type_sys_set_index, from_table->type_id, 
                     to_table, to_columns, to_row.index, 1);
             }
         }
@@ -527,7 +527,7 @@ EcsEntity ecs_new(
         };
 
         EcsStage *stage = ecs_get_stage(&world);
-        commit_w_family(world, stage, &info, type, type, 0);
+        commit_w_type(world, stage, &info, type, type, 0);
     }
 
     return entity;
@@ -566,7 +566,7 @@ EcsEntity ecs_new_w_count(
         /* Now we can notify matching OnAdd row systems in bulk */
         notify_pre_merge(
             world, stage, table, table->columns, result, count, 
-            type, world->family_sys_add_index);
+            type, world->type_sys_add_index);
             
     } 
     
@@ -597,7 +597,7 @@ void ecs_delete(
                 .index = row.index
             };
 
-            commit_w_family(world, stage, &info, 0, 0, row.type_id);
+            commit_w_type(world, stage, &info, 0, 0, row.type_id);
             ecs_map_remove(world->main_stage.entity_index, entity);
         }
     } else {
@@ -642,7 +642,7 @@ EcsResult ecs_commit(
         .index = row.index
     };
 
-    return commit_w_family(
+    return commit_w_type(
         world, stage, &info, type_id, to_add, to_remove);
 }
 
@@ -654,7 +654,7 @@ EcsResult ecs_add(
     EcsStage *stage = ecs_get_stage(&world);
     EcsMap *entity_index = stage->entity_index;
 
-    EcsType family = 0;
+    EcsType dst_type = 0;
 
     EcsEntityInfo info = {.entity = entity};
 
@@ -666,12 +666,12 @@ EcsResult ecs_add(
         info.index = row.index;
         info.type_id = row.type_id;
         EcsArray *to_add = ecs_type_get(world, stage, type);
-        family = ecs_type_merge_arr(world, stage, info.table->family, to_add, NULL);
+        dst_type = ecs_type_merge_arr(world, stage, info.table->type, to_add, NULL);
     } else {
-        family = type;
+        dst_type = type;
     }
 
-    return commit_w_family(world, stage, &info, family, type, 0);
+    return commit_w_type(world, stage, &info, dst_type, type, 0);
 }
 
 EcsResult ecs_remove(
@@ -682,7 +682,7 @@ EcsResult ecs_remove(
     EcsStage *stage = ecs_get_stage(&world);
     EcsMap *entity_index = stage->entity_index;
 
-    EcsType family = 0;
+    EcsType dst_type = 0;
 
     EcsEntityInfo info = {.entity = entity};
 
@@ -692,13 +692,14 @@ EcsResult ecs_remove(
         info.table = ecs_world_get_table(world, stage, row.type_id);
         info.columns = info.table->columns;
         info.index = row.index;
+        info.type_id = row.type_id;
         EcsArray *to_remove = ecs_type_get(world, stage, type);
-        info.type_id = ecs_type_merge_arr(world, stage, info.table->family, NULL, to_remove);
+        dst_type = ecs_type_merge_arr(world, stage, info.table->type, NULL, to_remove);
     } else {
-        family = type;
+        dst_type = type;
     }
 
-    return commit_w_family(world, stage, &info, family, 0, type);
+    return commit_w_type(world, stage, &info, dst_type, 0, type);
 }
 
 void* ecs_get_ptr(
@@ -761,7 +762,7 @@ EcsEntity ecs_set_ptr(
         info.index,
         1,
         type,
-        world->family_sys_set_index);
+        world->type_sys_set_index);
 
     return entity;
 }
@@ -838,7 +839,7 @@ EcsEntity ecs_get_component(
     }
 
     EcsRow row = ecs_to_row(row64);
-    EcsArray *components = ecs_map_get(stage->family_index, row.type_id);
+    EcsArray *components = ecs_map_get(stage->type_index, row.type_id);
     EcsEntity *buffer = ecs_array_buffer(components);
 
     if (ecs_array_count(components) > index) {
@@ -860,7 +861,7 @@ EcsEntity ecs_type_to_entity(
     EcsWorld *world, 
     EcsType type_id)
 {
-    EcsArray *type = ecs_map_get(world->main_stage.family_index, type_id);
+    EcsArray *type = ecs_map_get(world->main_stage.type_index, type_id);
     if (!type) {
         ecs_abort(ECS_UNKNOWN_TYPE_ID, NULL);
     }

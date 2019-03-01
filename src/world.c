@@ -86,9 +86,9 @@ EcsTable* bootstrap_component_table(
 {
     EcsStage *stage = &world->main_stage;
     EcsTable *result = ecs_array_add(&stage->tables, &table_arr_params);
-    EcsArray *family = ecs_map_get(stage->family_index, world->t_component);
+    EcsArray *type = ecs_map_get(stage->type_index, world->t_component);
     result->type_id = world->t_component;
-    result->family = family;
+    result->type = type;
     result->frame_systems = NULL;
     result->columns = malloc(sizeof(EcsTableColumn) * 3);
     result->columns[0].data = ecs_array_new(&handle_arr_params, 8);
@@ -191,7 +191,7 @@ EcsTable* create_table(
 
 /* -- Private functions -- */
 
-/** Get pointer to table data from family id */
+/** Get pointer to table data from type id */
 EcsTable* ecs_world_get_table(
     EcsWorld *world,
     EcsStage *stage,
@@ -321,14 +321,14 @@ char* ecs_type_tostr(
     EcsStage *stage,
     EcsType type_id)
 {
-    EcsArray *family = ecs_type_get(world, stage, type_id);
+    EcsArray *type = ecs_type_get(world, stage, type_id);
     EcsArray *chbuf = ecs_array_new(&char_arr_params, 32);
     char *dst;
     uint32_t len;
     char buf[15];
 
-    EcsEntity *handles = ecs_array_buffer(family);
-    uint32_t i, count = ecs_array_count(family);
+    EcsEntity *handles = ecs_array_buffer(type);
+    uint32_t i, count = ecs_array_count(type);
 
     for (i = 0; i < count; i ++) {
         EcsEntity h = handles[i];
@@ -397,10 +397,10 @@ EcsWorld *ecs_init(void) {
     world->tasks = ecs_array_new(&handle_arr_params, 0);
     world->fini_tasks = ecs_array_new(&handle_arr_params, 0);
 
-    world->family_sys_add_index = ecs_map_new(0);
-    world->family_sys_remove_index = ecs_map_new(0);
-    world->family_sys_set_index = ecs_map_new(0);
-    world->family_handles = ecs_map_new(0);
+    world->type_sys_add_index = ecs_map_new(0);
+    world->type_sys_remove_index = ecs_map_new(0);
+    world->type_sys_set_index = ecs_map_new(0);
+    world->type_handles = ecs_map_new(0);
     world->prefab_index = ecs_map_new(0);
 
     world->worker_stages = NULL;
@@ -487,10 +487,10 @@ EcsResult ecs_fini(
     ecs_array_free(world->set_systems);
 
     ecs_map_free(world->prefab_index);
-    ecs_map_free(world->family_sys_add_index);
-    ecs_map_free(world->family_sys_remove_index);
-    ecs_map_free(world->family_sys_set_index);
-    ecs_map_free(world->family_handles);
+    ecs_map_free(world->type_sys_add_index);
+    ecs_map_free(world->type_sys_remove_index);
+    ecs_map_free(world->type_sys_set_index);
+    ecs_map_free(world->type_handles);
 
     free(world);
 
@@ -505,7 +505,7 @@ void ecs_dim(
     ecs_map_set_size(world->main_stage.entity_index, entity_count);
 }
 
-void ecs_dim_family(
+void ecs_dim_type(
     EcsWorld *world,
     EcsType type,
     uint32_t entity_count)
@@ -529,7 +529,7 @@ EcsEntity ecs_lookup(
         EcsTable *table = ecs_iter_next(&it);
         uint32_t column_index;
 
-        if ((column_index = ecs_type_index_of(table->family, eEcsId)) == -1) {
+        if ((column_index = ecs_type_index_of(table->type, eEcsId)) == -1) {
             continue;
         }
 

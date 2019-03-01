@@ -4,34 +4,34 @@
 #include "include/util/time.h"
 
 static
-void match_family(
+void match_type(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity system,
     EcsRowSystem *system_data,
-    EcsType family)
+    EcsType type)
 {
     /* Test if the components of the system are equal or a subset of the 
-     * components of the family */
+     * components of the type */
     EcsEntity match = ecs_type_contains(
-        world, stage, family, system_data->base.and_from_entity, true, false);
+        world, stage, type, system_data->base.and_from_entity, true, false);
 
-    /* If there is a match, add the system to the family-row_system index */
+    /* If there is a match, add the system to the type-row_system index */
     if (match) {
         EcsMap *index = NULL;
         EcsSystemKind kind = system_data->base.kind;
 
         if (kind == EcsOnAdd) {
-            index = world->family_sys_add_index;
+            index = world->type_sys_add_index;
         } else if (kind == EcsOnRemove) {
-            index = world->family_sys_remove_index;
+            index = world->type_sys_remove_index;
         } else if (kind == EcsOnSet) {
-            index = world->family_sys_set_index;
+            index = world->type_sys_set_index;
         } else {
             ecs_abort(ECS_INVALID_PARAMETERS, NULL);
         }
 
-        EcsArray *systems = ecs_map_get(index, family);
+        EcsArray *systems = ecs_map_get(index, type);
         if (!systems) {
             systems = ecs_array_new(&handle_arr_params, 1);
         }
@@ -40,28 +40,28 @@ void match_family(
         *new_elem = system;
 
         /* Always set the system entry, as array may have been realloc'd */
-        ecs_map_set(index, family, systems);
+        ecs_map_set(index, type, systems);
     }
 }
 
-/* Match system against existing families to build the family-rowsys index */
+/* Match system against existing families to build the type-rowsys index */
 static
 void match_families(
     EcsWorld *world,
     EcsEntity system,
     EcsRowSystem *system_data)
 {
-    EcsIter it = ecs_map_iter(world->main_stage.family_index);
+    EcsIter it = ecs_map_iter(world->main_stage.type_index);
 
     /* Iterating over a map is a bit slow, but this only happens when a new
      * row system is created, which is very infrequent. */
     while (ecs_iter_hasnext(&it)) {
-        uint64_t key; /* Only interested in the key, which is the family hash */
+        uint64_t key; /* Only interested in the key, which is the type hash */
         ecs_map_next(&it, &key);
 
-        EcsType family = key;
+        EcsType type = key;
         
-        match_family(world, NULL, system, system_data, family);
+        match_type(world, NULL, system, system_data, type);
     }
 }
 
@@ -216,11 +216,11 @@ EcsResult ecs_parse_component_action(
         elem->oper_kind = oper_kind;
         elem->is.component = component;
 
-    /* OR columns store a family id instead of a single component */
+    /* OR columns store a type id instead of a single component */
     } else if (oper_kind == EcsOperOr) {
         elem = ecs_array_last(system_data->columns, &column_arr_params);
         if (elem->oper_kind == EcsOperAnd) {
-            elem->is.family = ecs_type_add(
+            elem->is.type = ecs_type_add(
                 world, NULL, 0, elem->is.component);
         } else {
             if (elem->kind != elem_kind) {
@@ -229,8 +229,8 @@ EcsResult ecs_parse_component_action(
             }
         }
 
-        elem->is.family = ecs_type_add(
-            world, NULL, elem->is.family, component);
+        elem->is.type = ecs_type_add(
+            world, NULL, elem->is.type, component);
         elem->kind = elem_kind;
         elem->oper_kind = EcsOperOr;
 
@@ -286,16 +286,16 @@ void ecs_row_notify(
     action(&rows);
 }
 
-/* Notify row system of a new family */
-void ecs_row_system_notify_of_family(
+/* Notify row system of a new type */
+void ecs_row_system_notify_of_type(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity system,
-    EcsType family)
+    EcsType type)
 {
     EcsRowSystem *system_data = ecs_get_ptr(world, system, tEcsRowSystem);
 
-    match_family(world, stage, system, system_data, family);
+    match_type(world, stage, system, system_data, type);
 }
 
 /** Run a task. A task is a system that contains no columns that can be matched
@@ -388,20 +388,20 @@ void ecs_enable(
         col_system = true;
     }
 
-    /* If entity is neither ColSystem nor RowSystem, it should be a family */
+    /* If entity is neither ColSystem nor RowSystem, it should be a type */
     if (!system_data) {
-        EcsTypeComponent *family_data = ecs_get_ptr(
+        EcsTypeComponent *type_data = ecs_get_ptr(
             world, system, tEcsTypeComponent);
 
-        assert(family_data != NULL);
+        assert(type_data != NULL);
 
         EcsWorld *world_temp = world;
         EcsStage *stage = ecs_get_stage(&world_temp);
-        EcsArray *family = ecs_type_get(world, stage, family_data->family);
-        EcsEntity *buffer = ecs_array_buffer(family);
-        uint32_t i, count = ecs_array_count(family);
+        EcsArray *type = ecs_type_get(world, stage, type_data->type);
+        EcsEntity *buffer = ecs_array_buffer(type);
+        uint32_t i, count = ecs_array_count(type);
         for (i = 0; i < count; i ++) {
-            /* Enable/disable all systems in family */
+            /* Enable/disable all systems in type */
             ecs_enable(world, buffer[i], enabled);
         }
     } else {

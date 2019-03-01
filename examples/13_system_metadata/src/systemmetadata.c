@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     /* An EcsWorld contains all our entities, components and systems */
     EcsWorld *world = ecs_init();
 
-    /* Register components and family */
+    /* Register components and type */
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
     ECS_TYPE(world, Object, Position, Speed);

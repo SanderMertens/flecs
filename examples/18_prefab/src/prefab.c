@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
      * set component values that are not shared with the prefab.
      *
      * By adding both the prefab (which has the Position component) and the
-     * Position component in a family, entities that use this family
+     * Position component in a type, entities that use this type
      * automatically override the Position component.
      *
      * When a component is overridden, the value from the prefab is copied into
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 
     /* Recap: the entities we just created have two components, Position and
      * Speed. The Speed component is shared with the prefab. Each entity has its
-     * own private Position component, since the family overrides it. The
+     * own private Position component, since the type overrides it. The
      * Position value for each entity was initialized from the prefab. */
 
     /* Call ecs_progress */

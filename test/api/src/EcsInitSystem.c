@@ -108,7 +108,7 @@ void test_EcsInitSystem_tc_init_after_add_2(
     ecs_fini(world);
 }
 
-void test_EcsInitSystem_tc_init_after_add_family(
+void test_EcsInitSystem_tc_init_after_add_type(
     test_EcsInitSystem this)
 {
     EcsWorld *world = ecs_init();
@@ -116,7 +116,7 @@ void test_EcsInitSystem_tc_init_after_add_family(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, TestInit, EcsOnAdd, Bar);
 
     Context ctx = {0};
@@ -125,7 +125,7 @@ void test_EcsInitSystem_tc_init_after_add_family(
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_stage_add(world, e, MyFamily_h);
+    ecs_stage_add(world, e, MyType_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Bar_h));
@@ -374,7 +374,7 @@ void test_EcsInitSystem_tc_add_in_init_from_prefab(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_PREFAB(world, MyPrefab, Bar);
-    ECS_TYPE(world, MyFamily, Foo, MyPrefab);
+    ECS_TYPE(world, MyType, Foo, MyPrefab);
     ECS_SYSTEM(world, AddInInitPrefab, EcsOnAdd, Foo);
 
     ecs_set(world, MyPrefab_h, Bar, {20});
@@ -382,7 +382,7 @@ void test_EcsInitSystem_tc_add_in_init_from_prefab(
     HandleCtx ctx = {.h = Bar_h};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, MyFamily_h);
+    EcsEntity e = ecs_new(world, MyType_h);
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Bar_h));
@@ -461,13 +461,13 @@ void test_EcsInitSystem_tc_remove_in_init(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, RemoveInInit, EcsOnAdd, Foo, Bar);
 
     HandleCtx ctx = {.h = Bar_h};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, MyFamily_h);
+    EcsEntity e = ecs_new(world, MyType_h);
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -645,11 +645,11 @@ void test_EcsInitSystem_tc_deinit_after_remove_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, IntPtr);
-    ECS_TYPE(world, MyFamily, Foo, IntPtr);
+    ECS_TYPE(world, MyType, Foo, IntPtr);
     ECS_SYSTEM(world, RemoveInProgress, EcsOnFrame, Foo, IntPtr);
     ECS_SYSTEM(world, DeinitTest, EcsOnRemove, IntPtr);
 
-    EcsEntity e = ecs_new(world, MyFamily_h);
+    EcsEntity e = ecs_new(world, MyType_h);
     test_assert(e != 0);
 
     int counter = 1;
@@ -688,10 +688,10 @@ void test_EcsInitSystem_tc_init_2_components(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, InitTwo, EcsOnAdd, Bar, Foo);
 
-    EcsEntity e = ecs_new(world, MyFamily_h);
+    EcsEntity e = ecs_new(world, MyType_h);
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -752,13 +752,13 @@ void test_EcsInitSystem_tc_add_w_handle_param_2_components(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, IniTest, EcsOnAdd, Foo, Bar, ID.Bar);
 
     bool called = false;
     ecs_set_context(world, &called);
 
-    EcsEntity e = ecs_new(world, MyFamily_h);
+    EcsEntity e = ecs_new(world, MyType_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));

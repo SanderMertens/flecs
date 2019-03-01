@@ -28,7 +28,7 @@ bool ecs_notify(
 
 /* -- World API -- */
 
-/* Get (or create) table from family */
+/* Get (or create) table from type */
 EcsTable* ecs_world_get_table(
     EcsWorld *world,
     EcsStage *stage,
@@ -62,9 +62,9 @@ void ecs_stage_merge(
     EcsWorld *world,
     EcsStage *stage);
 
-/* -- Family utility API -- */
+/* -- Type utility API -- */
 
-/* Get family from entity handle (component, family, prefab) */
+/* Get type from entity handle (component, type, prefab) */
 EcsType ecs_type_from_handle(
     EcsWorld *world,
     EcsStage *stage,
@@ -96,15 +96,15 @@ EcsEntity ecs_type_contains(
     bool match_all,
     bool match_prefab);
 
-/* Test if family contains component */
+/* Test if type contains component */
 bool ecs_type_contains_component(
     EcsWorld *world,
     EcsStage *stage,
-    EcsType family,
+    EcsType type,
     EcsEntity component,
     bool match_prefab);
 
-/* Register new family from either a single component, an array of component
+/* Register new type from either a single component, an array of component
  * handles, or a combination */
 EcsType ecs_type_register(
     EcsWorld *world,
@@ -112,28 +112,28 @@ EcsType ecs_type_register(
     EcsEntity to_add,
     EcsArray *set);
 
-/* Add component to family */
+/* Add component to type */
 EcsType ecs_type_add(
     EcsWorld *world,
     EcsStage *stage,
-    EcsType family,
+    EcsType type,
     EcsEntity component);
 
-/* Get array with component handles from family */
+/* Get array with component handles from type */
 EcsArray* ecs_type_get(
     EcsWorld *world,
     EcsStage *stage,
     EcsType type_id);
 
-/* Convert family to string */
+/* Convert type to string */
 char* ecs_type_tostr(
     EcsWorld *world,
     EcsStage *stage,
     EcsType type_id);
 
-/* Get index for entity in family */
+/* Get index for entity in type */
 int16_t ecs_type_index_of(
-    EcsArray *family,
+    EcsArray *type,
     EcsEntity component);
 
 /* -- Table API -- */
@@ -148,7 +148,7 @@ EcsResult ecs_table_init(
 EcsResult ecs_table_init_w_size(
     EcsWorld *world,
     EcsTable *table,
-    EcsArray *family,
+    EcsArray *type,
     uint32_t size);
 
 /* Insert row into table (or stage) */
@@ -212,7 +212,7 @@ void ecs_table_free(
 
 /* -- System API -- */
 
-/* Compute the AND family from the system columns */
+/* Compute the AND type from the system columns */
 void ecs_system_compute_and_families(
     EcsWorld *world,
     EcsEntity system,
@@ -232,12 +232,12 @@ void ecs_col_system_notify_of_table(
     EcsEntity system,
     EcsTable *table);
 
-/* Notify row system of a new family, which initiates system-family matching */
-void ecs_row_system_notify_of_family(
+/* Notify row system of a new type, which initiates system-type matching */
+void ecs_row_system_notify_of_type(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity system,
-    EcsType family);
+    EcsType type);
 
 /* Activate table for system (happens if table goes from empty to not empty) */
 void ecs_system_activate_table(

@@ -28,9 +28,9 @@
 
 /* -- Builtin component types -- */
 
-/** Metadata of an explicitly created family (identified by an entity id) */
+/** Metadata of an explicitly created type (identified by an entity id) */
 typedef struct EcsTypeComponent {
-    EcsType family;    /* Preserved nested families */
+    EcsType type;    /* Preserved nested families */
     EcsType resolved;  /* Resolved nested families */
 } EcsTypeComponent;
 
@@ -69,7 +69,7 @@ typedef struct EcsSystemColumn {
     EcsSystemExprElemKind kind;       /* Element kind (Entity, Component) */
     EcsSystemExprOperKind oper_kind;  /* Operator kind (AND, OR, NOT) */
     union {
-        EcsType family;             /* Used for OR operator */
+        EcsType type;             /* Used for OR operator */
         EcsEntity component;          /* Used for AND operator */
     } is;
 } EcsSystemColumn;
@@ -121,7 +121,7 @@ typedef struct EcsSystem {
  * 
  * The 'refs' array contains elements of type 'EcsRef', and stores references
  * to external entities. References can vary per table, but not per entity/row,
- * as prefabs / containers are part of the entity family, which in turn 
+ * as prefabs / containers are part of the entity type, which in turn 
  * identifies the table in which the entity is stored.
  * 
  * The 'period' and 'time_passed' members are used for periodic systems. An
@@ -170,17 +170,17 @@ typedef struct EcsTableColumn {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
 typedef struct EcsTable {
-    EcsArray *family;             /* Reference to family_index entry */
+    EcsArray *type;             /* Reference to type_index entry */
     EcsTableColumn *columns;      /* Columns storing components of array */
     EcsArray *frame_systems;      /* Frame systems matched with table */
-    EcsType type_id;          /* Identifies table family in family_index */
+    EcsType type_id;          /* Identifies table type in type_index */
  } EcsTable;
  
 /** The EcsRow struct is a 64-bit value that describes in which table
  * (identified by a type_id) is stored, at which index. Entries in the 
  * world::entity_index are of type EcsRow. */
 typedef struct EcsRow {
-    EcsType type_id;          /* Identifies a family (and table) in world */
+    EcsType type_id;          /* Identifies a type (and table) in world */
     uint32_t index;               /* Index of the entity in its table */
 } EcsRow;
 
@@ -210,7 +210,7 @@ typedef struct EcsStage {
      * as the main stage */
     EcsMap *table_index;         /* Index for table stage */
     EcsArray *tables;            /* Tables created while >1 threads running */
-    EcsMap *family_index;        /* Families created while >1 threads running */
+    EcsMap *type_index;        /* Families created while >1 threads running */
 
     
     /* These occur only in
@@ -283,10 +283,10 @@ struct EcsWorld {
     /* -- Lookup Indices -- */
 
     EcsMap *prefab_index;         /* Index to find prefabs in families */
-    EcsMap *family_sys_add_index; /* Index to find add row systems for family */
-    EcsMap *family_sys_remove_index; /* Index to find remove row systems for family */
-    EcsMap *family_sys_set_index; /* Index to find set row systems for family */
-    EcsMap *family_handles;       /* Handles to named families */
+    EcsMap *type_sys_add_index; /* Index to find add row systems for type */
+    EcsMap *type_sys_remove_index; /* Index to find remove row systems for type */
+    EcsMap *type_sys_set_index; /* Index to find set row systems for type */
+    EcsMap *type_handles;       /* Handles to named families */
 
 
     /* -- Staging -- */

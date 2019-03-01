@@ -45,7 +45,7 @@ extern "C" {
 
 /* -- Supporting types -- */
 
-/** A hash of the component identifiers in a family. */
+/** A hash of the component identifiers in a type. */
 typedef uint32_t EcsType;
 
 /** Id component type */
@@ -423,7 +423,7 @@ void* ecs_get_context(
  * stands for the number of builtin components.
  *
  * Note that this operation does not allocate memory in tables. To preallocate
- * memory in a table, use ecs_dim_family. Correctly using these functions
+ * memory in a table, use ecs_dim_type. Correctly using these functions
  * prevents reflecs from doing dynamic memory allocations in the main loop.
  *
  * @time-complexity: O(1)
@@ -435,28 +435,28 @@ void ecs_dim(
     EcsWorld *world,
     uint32_t entity_count);
 
-/** Dimension a family for a specified number of entities.
- * This operation will preallocate memory for a family (table) for the
+/** Dimension a type for a specified number of entities.
+ * This operation will preallocate memory for a type (table) for the
  * specified number of entites. Specifying a number lower than the current
  * number of entities in the table will have no effect.
  *
- * If no table exists yet for this family (when no entities have been committed
- * for the family) it will be created, even if the entity_count is zero. This
+ * If no table exists yet for this type (when no entities have been committed
+ * for the type) it will be created, even if the entity_count is zero. This
  * operation can thus also be used to just preallocate empty tables.
  *
- * If the specified family is unknown, the behavior of this function is
- * unspecified. To ensure that the family exists, use ecs_type_get or
+ * If the specified type is unknown, the behavior of this function is
+ * unspecified. To ensure that the type exists, use ecs_type_get or
  * ECS_TYPE.
  *
  * @time-complexity: O(1)
  * @param world The world.
- * @param family Handle to the family, as obtained by ecs_type_get.
+ * @param type Handle to the type, as obtained by ecs_type_get.
  * @param entity_count The number of entities to preallocate.
  */
 REFLECS_EXPORT
-void ecs_dim_family(
+void ecs_dim_type(
     EcsWorld *world,
-    EcsType family,
+    EcsType type,
     uint32_t entity_count);
 
 
@@ -483,7 +483,7 @@ void ecs_dim_family(
  *
  * @time-complexity: O(1)
  * @param world The world to which to add the entity.
- * @param type Zero if no type, or handle to a component, family or prefab.
+ * @param type Zero if no type, or handle to a component, type or prefab.
  * @returns A handle to the new entity.
  */
 REFLECS_EXPORT
@@ -502,7 +502,7 @@ EcsEntity ecs_new_entity(
  * which is a more efficient alternative to calling ecs_new in a loop.
  *
  * @param world The world.
- * @param type Zero if no type, or handle to a component, family or prefab.
+ * @param type Zero if no type, or handle to a component, type or prefab.
  * @param count The number of entities to create.
  * @param handles_out An array which contains the handles of the new entities.
  * @returns The handle to the first created entity.
@@ -667,15 +667,15 @@ EcsEntity ecs_set_ptr(
  * This operation checks if the entity has the components associated with the
  * specified type. It accepts component handles, families and prefabs.
  *
- * For example, if an entity has component 'Foo' and a family has 'Foo, Bar'
- * invoking this function with the entity and family as type will return false
+ * For example, if an entity has component 'Foo' and a type has 'Foo, Bar'
+ * invoking this function with the entity and type as type will return false
  * because the entity does not have 'Bar'. Invoking the entity with the 'Bar'
- * component, or a family that contains only 'Bar' will return true.
+ * component, or a type that contains only 'Bar' will return true.
  *
  * @time-complexity: O(c)
  * @param world The world.
  * @param entity Handle to a entity.
- * @param type Handle to a component, family or prefab.
+ * @param type Handle to a component, type or prefab.
  * @returns true if entity has type, otherwise false.
  */
 REFLECS_EXPORT
@@ -688,14 +688,14 @@ bool ecs_has(
  * This operation checks if the entity has any of the components associated with
  * the specified type. It accepts component handles, families and prefabs.
  *
- * For example, if an entity has component 'Foo' and a family has 'Foo, Bar'
- * invoking this function with the entity and family as type will return true
+ * For example, if an entity has component 'Foo' and a type has 'Foo, Bar'
+ * invoking this function with the entity and type as type will return true
  * because the entity has one of the components.
  *
  * @time-complexity: O(c)
  * @param world The world.
  * @param entity Handle to a entity.
- * @param type Handle to a component, family or prefab.
+ * @param type Handle to a component, type or prefab.
  * @returns true if entity has one of the components, otherwise false.
  */
 REFLECS_EXPORT
@@ -735,7 +735,7 @@ EcsEntity ecs_get_component(
 
 /** Return the entity id.
  * This returns the string identifier of an entity, if the entity has the EcsId
- * component. By default, all component, family, system and prefab entities add
+ * component. By default, all component, type, system and prefab entities add
  * the EcsId component if they have been created with the ecs_new_* functions.
  *
  * If the entity does not contain the EcsId component, this function will return
@@ -800,17 +800,17 @@ EcsEntity ecs_new_component(
     size_t size);
 
 
-/* -- Family API -- */
+/* -- Type API -- */
 
-/** Get handle to family.
- * This operation obtains a handle to a family that can be used with
+/** Get handle to type.
+ * This operation obtains a handle to a type that can be used with
  * ecs_new. Predefining families has performance benefits over using
  * ecs_new, ecs_stage and ecs_commit separately. It also provides constant
  * creation time regardless of the number of components. This function will
- * internally create a table for the family.
+ * internally create a table for the type.
  *
- * If a family had been created for this set of components before with the same
- * identifier, the existing family is returned. If the family had been created
+ * If a type had been created for this set of components before with the same
+ * identifier, the existing type is returned. If the type had been created
  * with a different identifier, this function will fail.
  *
  * The ECS_TYPE macro wraps around this function.
@@ -818,7 +818,7 @@ EcsEntity ecs_new_component(
  * @time-complexity: O(c)
  * @param world The world.
  * @param components A comma-separated string with the component identifiers.
- * @returns Handle to the family, zero if failed.
+ * @returns Handle to the type, zero if failed.
  */
 REFLECS_EXPORT
 EcsType ecs_new_type(
@@ -848,8 +848,8 @@ EcsType ecs_new_type(
  * initialize entities, like this:
  *
  * ECS_PREFAB(world, MyPrefab, Foo);
- * ECS_TYPE(world, MyFamily, MyPrefab, Foo);
- * EcsEntity e = ecs_new(world, MyFamily);
+ * ECS_TYPE(world, MyType, MyPrefab, Foo);
+ * EcsEntity e = ecs_new(world, MyType);
  *
  * In this code, the entity will be created with the prefab and directly
  * override 'Foo', which will copy the value of 'Foo' from the prefab.
@@ -871,9 +871,9 @@ EcsEntity ecs_new_prefab(
 
 /** Get a type from an entity.
  * This function returns a type that can be added/removed to entities. If you
- * create a new component, family or prefab with the ecs_new_* function, you get
+ * create a new component, type or prefab with the ecs_new_* function, you get
  * an EcsEntity handle which provides access to builtin components associated
- * with the component, family or prefab.
+ * with the component, type or prefab.
  * 
  * To add a component to an entity, you first have to obtain its type. Types
  * uniquely identify sets of one or more components, and can be used with
@@ -1043,7 +1043,7 @@ bool ecs_is_enabled(
  * @param world The world.
  * @param system The system to run.
  * @param delta_time: The time passed since the last system invocation.
- * @param filter A component or family to filter matched entities.
+ * @param filter A component or type to filter matched entities.
  * @param param A user-defined parameter to pass to the system.
  * @returns handle to last evaluated entity if system was interrupted.
  */
@@ -1188,13 +1188,13 @@ void ecs_iter_release(
     assert (t##id != 0)
 
 /** Wrapper around ecs_new_type.
- * This macro provides a convenient way to register a family with the world.
+ * This macro provides a convenient way to register a type with the world.
  * It can be used like this:
  *
- * ECS_TYPE(world, MyFamily, ComponentA, ComponentB);
- * EcsEntity h = ecs_new(world, MyFamily_h);
+ * ECS_TYPE(world, MyType, ComponentA, ComponentB);
+ * EcsEntity h = ecs_new(world, MyType_h);
  *
- * Creating a family and using it with ecs_new is faster
+ * Creating a type and using it with ecs_new is faster
  * than calling ecs_new, ecs_add and ecs_commit separately. This method also
  * provides near-constant creation time for entities regardless of the number of
  * components, whereas using ecs_add and ecs_commit takes longer for larger

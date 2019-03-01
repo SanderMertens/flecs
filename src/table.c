@@ -26,14 +26,14 @@ EcsResult ecs_table_init(
     EcsTable *table)
 {
     bool prefab_set = false;
-    EcsArray *family = ecs_type_get(world, stage, table->type_id);
-    ecs_assert(family != NULL, ECS_INTERNAL_ERROR, "invalid family id in table");
+    EcsArray *type = ecs_type_get(world, stage, table->type_id);
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, "invalid type id in table");
     
     table->frame_systems = NULL;
-    table->family = family;
-    table->columns = calloc(sizeof(EcsTableColumn), ecs_array_count(family) + 1);
-    EcsEntity *buf = ecs_array_buffer(family);
-    uint32_t i, count = ecs_array_count(family);
+    table->type = type;
+    table->columns = calloc(sizeof(EcsTableColumn), ecs_array_count(type) + 1);
+    EcsEntity *buf = ecs_array_buffer(type);
+    uint32_t i, count = ecs_array_count(type);
 
     /* First column is reserved for storing entity id's */
     table->columns[0].size = sizeof(EcsEntity);
@@ -55,7 +55,7 @@ EcsResult ecs_table_init(
                 ecs_assert(prefab_set == false, ECS_MORE_THAN_ONE_PREFAB, ecs_id(world, buf[i]));
                 prefab_set = true;
 
-                /* Register family with prefab index for quick lookups */
+                /* Register type with prefab index for quick lookups */
                 ecs_map_set(world->prefab_index, table->type_id, buf[i]);
 
             } else if (!ecs_has(world, buf[i], tEcsContainer)) {
@@ -79,7 +79,7 @@ void ecs_table_free(
     EcsWorld *world,
     EcsTable *table)
 {
-    uint32_t i, column_count = ecs_array_count(table->family);
+    uint32_t i, column_count = ecs_array_count(table->type);
     
     for (i = 0; i < column_count + 1; i ++) {
         ecs_array_free(table->columns[i].data);
@@ -94,7 +94,7 @@ uint32_t ecs_table_insert(
     EcsTableColumn *columns,
     EcsEntity entity)
 {
-    uint32_t column_count = ecs_array_count(table->family);
+    uint32_t column_count = ecs_array_count(table->type);
 
     /* Fist add entity to column with entity ids */
     EcsEntity *e = ecs_array_add(&columns[0].data, &handle_arr_params);
@@ -139,7 +139,7 @@ void ecs_table_delete(
         EcsEntity to_move = entities[count];
         entities[index] = to_move;
 
-        uint32_t column_last = ecs_array_count(table->family) + 1;
+        uint32_t column_last = ecs_array_count(table->type) + 1;
         uint32_t i;
         for (i = 1; i < column_last; i ++) {
             EcsTableColumn *column = &columns[i];
@@ -168,7 +168,7 @@ uint32_t ecs_table_grow(
     uint32_t count,
     EcsEntity first_entity)
 {
-    uint32_t column_count = ecs_array_count(table->family);
+    uint32_t column_count = ecs_array_count(table->type);
 
     /* Fist add entity to column with entity ids */
     EcsEntity *e = ecs_array_addn(&columns[0].data, &handle_arr_params, count);
@@ -203,7 +203,7 @@ int16_t ecs_table_dim(
     uint32_t count)
 {
     EcsTableColumn *columns = table->columns;
-    uint32_t column_count = ecs_array_count(table->family);
+    uint32_t column_count = ecs_array_count(table->type);
 
     if (!ecs_array_set_size(&columns[0].data, &handle_arr_params, count)) {
         return -1;
@@ -229,7 +229,7 @@ uint64_t ecs_table_count(
 uint32_t ecs_table_row_size(
     EcsTable *table)
 {
-    uint32_t i, count = ecs_array_count(table->family);
+    uint32_t i, count = ecs_array_count(table->type);
     uint32_t size = 0;
 
     for (i = 0; i < count; i ++) {

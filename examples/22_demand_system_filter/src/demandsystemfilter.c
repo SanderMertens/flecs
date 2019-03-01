@@ -25,14 +25,14 @@ int main(int argc, char *argv[]) {
     ECS_TAG(world, IndexTag);
     ECS_TAG(world, Object);
 
-    /* Add both the tag and EcsComponent to an Index family which we'll use to
+    /* Add both the tag and EcsComponent to an Index type which we'll use to
      * create two entities that will subdivide our data. */
     ECS_TYPE(world, Index, IndexTag, EcsContainer);
 
     /* List all the entities with a Position component on demand */
     ECS_SYSTEM(world, ListEntities, EcsOnDemand, CONTAINER.IndexTag, Object);
 
-    /* Create 10 entities with Object family */
+    /* Create 10 entities with Object type */
     EcsEntity handles[10];
     ecs_new_w_count(world, Object_h, 10, handles);
 

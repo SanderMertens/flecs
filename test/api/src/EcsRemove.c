@@ -20,8 +20,8 @@ void test_EcsRemove_tc_remove_2_component(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
-    EcsEntity e = ecs_new(world, MyFamily_h);
+    ECS_TYPE(world, MyType, Foo, Bar);
+    EcsEntity e = ecs_new(world, MyType_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
@@ -38,8 +38,8 @@ void test_EcsRemove_tc_remove_component(
 {
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_TYPE(world, MyFamily, Foo);
-    EcsEntity e = ecs_new(world, MyFamily_h);
+    ECS_TYPE(world, MyType, Foo);
+    EcsEntity e = ecs_new(world, MyType_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     ecs_stage_remove(world, e, Foo_h);
@@ -55,8 +55,8 @@ void test_EcsRemove_tc_remove_2_component_from_3(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
-    ECS_TYPE(world, MyFamily, Foo, Bar, Hello);
-    EcsEntity e = ecs_new(world, MyFamily_h);
+    ECS_TYPE(world, MyType, Foo, Bar, Hello);
+    EcsEntity e = ecs_new(world, MyType_h);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Foo_h));
     test_assert(ecs_has(world, e, Bar_h));
@@ -76,8 +76,8 @@ void test_EcsRemove_tc_remove_component_from_2(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
-    EcsEntity e = ecs_new(world, MyFamily_h);
+    ECS_TYPE(world, MyType, Foo, Bar);
+    EcsEntity e = ecs_new(world, MyType_h);
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -165,12 +165,12 @@ void test_EcsRemove_tc_remove_prev_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, RemovePrev, EcsOnFrame, Foo, Bar);
 
-    EcsEntity e1 = ecs_new(world, MyFamily_h);
-    EcsEntity e2 = ecs_new(world, MyFamily_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyType_h);
+    EcsEntity e2 = ecs_new(world, MyType_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -220,12 +220,12 @@ void test_EcsRemove_tc_remove_cur_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, RemoveCurrent, EcsOnFrame, Foo, Bar);
 
-    EcsEntity e1 = ecs_new(world, MyFamily_h);
-    EcsEntity e2 = ecs_new(world, MyFamily_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyType_h);
+    EcsEntity e2 = ecs_new(world, MyType_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -275,12 +275,12 @@ void test_EcsRemove_tc_remove_next_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, RemoveNext, EcsOnFrame, Foo, Bar);
 
-    EcsEntity e1 = ecs_new(world, MyFamily_h);
-    EcsEntity e2 = ecs_new(world, MyFamily_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyType_h);
+    EcsEntity e2 = ecs_new(world, MyType_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -330,12 +330,12 @@ void test_EcsRemove_tc_remove_all_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, RemoveAll, EcsOnFrame, Foo, Bar);
 
-    EcsEntity e1 = ecs_new(world, MyFamily_h);
-    EcsEntity e2 = ecs_new(world, MyFamily_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyType_h);
+    EcsEntity e2 = ecs_new(world, MyType_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -398,12 +398,12 @@ void test_EcsRemove_tc_remove_add_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, RemoveAdd, EcsOnFrame, Foo, Bar);
 
-    EcsEntity e1 = ecs_new(world, MyFamily_h);
-    EcsEntity e2 = ecs_new(world, MyFamily_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyType_h);
+    EcsEntity e2 = ecs_new(world, MyType_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -480,12 +480,12 @@ void test_EcsRemove_tc_remove_2_add_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, Remove2Add, EcsOnFrame, Foo, Bar);
 
-    EcsEntity e1 = ecs_new(world, MyFamily_h);
-    EcsEntity e2 = ecs_new(world, MyFamily_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyType_h);
+    EcsEntity e2 = ecs_new(world, MyType_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);

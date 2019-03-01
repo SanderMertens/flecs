@@ -56,12 +56,12 @@ void test_EcsOnFrameSystem_tc_system_component(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -100,16 +100,16 @@ void test_EcsOnFrameSystem_tc_system_2_component(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
-    ECS_TYPE(world, Family1, Foo, Hello);
-    ECS_TYPE(world, Family2, Foo, Bar, Hello);
-    ECS_TYPE(world, Family3, Foo, Bar);
+    ECS_TYPE(world, Type1, Foo, Hello);
+    ECS_TYPE(world, Type2, Foo, Bar, Hello);
+    ECS_TYPE(world, Type3, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Hello);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, Family1_h);
-    EcsEntity e4 = ecs_new(world, Family2_h);
-    EcsEntity e5 = ecs_new(world, Family3_h);
+    EcsEntity e3 = ecs_new(world, Type1_h);
+    EcsEntity e4 = ecs_new(world, Type2_h);
+    EcsEntity e5 = ecs_new(world, Type3_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -164,13 +164,13 @@ void test_EcsOnFrameSystem_tc_system_prefab(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_PREFAB(world, MyPrefab, Foo);
-    ECS_TYPE(world, MyFamily, MyPrefab, Bar);
+    ECS_TYPE(world, MyType, MyPrefab, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
-    EcsEntity e4 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
+    EcsEntity e4 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -216,13 +216,13 @@ void test_EcsOnFrameSystem_tc_system_prefab_component(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_PREFAB(world, MyPrefab, Foo);
-    ECS_TYPE(world, MyFamily, MyPrefab, Bar);
+    ECS_TYPE(world, MyType, MyPrefab, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
-    EcsEntity e4 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
+    EcsEntity e4 = ecs_new(world, MyType_h);
     EcsEntity e5 = ecs_new(world, Hello_h);
 
     test_assert(e1 != 0);
@@ -271,14 +271,14 @@ void test_EcsOnFrameSystem_tc_system_1_component_1_not(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
-    ECS_TYPE(world, Family1, Foo, Hello);
-    ECS_TYPE(world, Family2, Foo, Bar);
+    ECS_TYPE(world, Type1, Foo, Hello);
+    ECS_TYPE(world, Type2, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, !Hello);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, Family1_h);
-    EcsEntity e4 = ecs_new(world, Family2_h);
+    EcsEntity e3 = ecs_new(world, Type1_h);
+    EcsEntity e4 = ecs_new(world, Type2_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -324,16 +324,16 @@ void test_EcsOnFrameSystem_tc_system_1_component_2_not(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_TYPE(world, Family1, Foo, Hello);
-    ECS_TYPE(world, Family2, Foo, Bar);
-    ECS_TYPE(world, Family3, Foo, World);
+    ECS_TYPE(world, Type1, Foo, Hello);
+    ECS_TYPE(world, Type2, Foo, Bar);
+    ECS_TYPE(world, Type3, Foo, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, !Hello, !Bar);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, Family1_h);
-    EcsEntity e4 = ecs_new(world, Family2_h);
-    EcsEntity e5 = ecs_new(world, Family3_h);
+    EcsEntity e3 = ecs_new(world, Type1_h);
+    EcsEntity e4 = ecs_new(world, Type2_h);
+    EcsEntity e5 = ecs_new(world, Type3_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -385,16 +385,16 @@ void test_EcsOnFrameSystem_tc_system_2_component_1_not(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_TYPE(world, Family1, Foo, Hello);
-    ECS_TYPE(world, Family2, Foo, Bar);
-    ECS_TYPE(world, Family3, Foo, Bar, World);
+    ECS_TYPE(world, Type1, Foo, Hello);
+    ECS_TYPE(world, Type2, Foo, Bar);
+    ECS_TYPE(world, Type3, Foo, Bar, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar, !Hello);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, Family1_h);
-    EcsEntity e4 = ecs_new(world, Family2_h);
-    EcsEntity e5 = ecs_new(world, Family3_h);
+    EcsEntity e3 = ecs_new(world, Type1_h);
+    EcsEntity e4 = ecs_new(world, Type2_h);
+    EcsEntity e5 = ecs_new(world, Type3_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -451,16 +451,16 @@ void test_EcsOnFrameSystem_tc_system_2_component_2_not(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_TYPE(world, Family1, Foo, Hello);
-    ECS_TYPE(world, Family2, Foo, Bar);
-    ECS_TYPE(world, Family3, Foo, Bar, World);
+    ECS_TYPE(world, Type1, Foo, Hello);
+    ECS_TYPE(world, Type2, Foo, Bar);
+    ECS_TYPE(world, Type3, Foo, Bar, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar, !Hello, !World);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, Family1_h);
-    EcsEntity e4 = ecs_new(world, Family2_h);
-    EcsEntity e5 = ecs_new(world, Family3_h);
+    EcsEntity e3 = ecs_new(world, Type1_h);
+    EcsEntity e4 = ecs_new(world, Type2_h);
+    EcsEntity e5 = ecs_new(world, Type3_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -514,16 +514,16 @@ void test_EcsOnFrameSystem_tc_system_1_component_1_or2(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_TYPE(world, Family1, Foo, Hello);
-    ECS_TYPE(world, Family2, Foo, Bar);
-    ECS_TYPE(world, Family3, Foo, World);
+    ECS_TYPE(world, Type1, Foo, Hello);
+    ECS_TYPE(world, Type2, Foo, Bar);
+    ECS_TYPE(world, Type3, Foo, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar|Hello);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, Family1_h);
-    EcsEntity e4 = ecs_new(world, Family2_h);
-    EcsEntity e5 = ecs_new(world, Family3_h);
+    EcsEntity e3 = ecs_new(world, Type1_h);
+    EcsEntity e4 = ecs_new(world, Type2_h);
+    EcsEntity e5 = ecs_new(world, Type3_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -581,19 +581,19 @@ void test_EcsOnFrameSystem_tc_system_1_component_2_or2(
     ECS_COMPONENT(world, World);
     ECS_COMPONENT(world, Bleep);
     ECS_COMPONENT(world, Bloop);
-    ECS_TYPE(world, Family1, Foo, Hello);
-    ECS_TYPE(world, Family2, Foo, Bloop);
-    ECS_TYPE(world, Family3, Foo, Bleep, World);
-    ECS_TYPE(world, Family4, Foo, Hello, Bloop);
-    ECS_TYPE(world, Family5, Bloop, Hello);
+    ECS_TYPE(world, Type1, Foo, Hello);
+    ECS_TYPE(world, Type2, Foo, Bloop);
+    ECS_TYPE(world, Type3, Foo, Bleep, World);
+    ECS_TYPE(world, Type4, Foo, Hello, Bloop);
+    ECS_TYPE(world, Type5, Bloop, Hello);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bleep|Bloop, Hello|World);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
-    EcsEntity e2 = ecs_new(world, Family1_h);
-    EcsEntity e3 = ecs_new(world, Family2_h);
-    EcsEntity e4 = ecs_new(world, Family3_h);
-    EcsEntity e5 = ecs_new(world, Family4_h);
-    EcsEntity e6 = ecs_new(world, Family5_h);
+    EcsEntity e2 = ecs_new(world, Type1_h);
+    EcsEntity e3 = ecs_new(world, Type2_h);
+    EcsEntity e4 = ecs_new(world, Type3_h);
+    EcsEntity e5 = ecs_new(world, Type4_h);
+    EcsEntity e6 = ecs_new(world, Type5_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -665,21 +665,21 @@ void test_EcsOnFrameSystem_tc_system_2_component_2_or3(
     ECS_COMPONENT(world, World);
     ECS_COMPONENT(world, Bleep);
     ECS_COMPONENT(world, Bloop);
-    ECS_TYPE(world, Family1, Foo, Hello);
-    ECS_TYPE(world, Family2, Foo, Bar);
-    ECS_TYPE(world, Family3, Foo, Bar, World);
-    ECS_TYPE(world, Family4, Foo, Bar, Bleep);
-    ECS_TYPE(world, Family5, Foo, Bar, Hello);
-    ECS_TYPE(world, Family6, Foo, Bar, Bloop);
+    ECS_TYPE(world, Type1, Foo, Hello);
+    ECS_TYPE(world, Type2, Foo, Bar);
+    ECS_TYPE(world, Type3, Foo, Bar, World);
+    ECS_TYPE(world, Type4, Foo, Bar, Bleep);
+    ECS_TYPE(world, Type5, Foo, Bar, Hello);
+    ECS_TYPE(world, Type6, Foo, Bar, Bloop);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar, Hello|World|Bleep);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
-    EcsEntity e2 = ecs_new(world, Family1_h);
-    EcsEntity e3 = ecs_new(world, Family2_h);
-    EcsEntity e4 = ecs_new(world, Family3_h);
-    EcsEntity e5 = ecs_new(world, Family4_h);
-    EcsEntity e6 = ecs_new(world, Family5_h);
-    EcsEntity e7 = ecs_new(world, Family6_h);
+    EcsEntity e2 = ecs_new(world, Type1_h);
+    EcsEntity e3 = ecs_new(world, Type2_h);
+    EcsEntity e4 = ecs_new(world, Type3_h);
+    EcsEntity e5 = ecs_new(world, Type4_h);
+    EcsEntity e6 = ecs_new(world, Type5_h);
+    EcsEntity e7 = ecs_new(world, Type6_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -765,16 +765,16 @@ void test_EcsOnFrameSystem_tc_system_1_component_or2_both_match(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_TYPE(world, Family1, Foo, Bar, Hello);
-    ECS_TYPE(world, Family2, Foo, Bar);
-    ECS_TYPE(world, Family3, Foo, Hello);
+    ECS_TYPE(world, Type1, Foo, Bar, Hello);
+    ECS_TYPE(world, Type2, Foo, Bar);
+    ECS_TYPE(world, Type3, Foo, Hello);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, Bar|Hello);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, Family1_h);
-    EcsEntity e4 = ecs_new(world, Family2_h);
-    EcsEntity e5 = ecs_new(world, Family3_h);
+    EcsEntity e3 = ecs_new(world, Type1_h);
+    EcsEntity e4 = ecs_new(world, Type2_h);
+    EcsEntity e5 = ecs_new(world, Type3_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -836,18 +836,18 @@ void test_EcsOnFrameSystem_tc_system_1_or2(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_TYPE(world, Family1, Foo);
-    ECS_TYPE(world, Family2, Foo, Hello);
-    ECS_TYPE(world, Family3, Foo, World);
-    ECS_TYPE(world, Family4, Hello);
-    ECS_TYPE(world, Family5, World);
+    ECS_TYPE(world, Type1, Foo);
+    ECS_TYPE(world, Type2, Foo, Hello);
+    ECS_TYPE(world, Type3, Foo, World);
+    ECS_TYPE(world, Type4, Hello);
+    ECS_TYPE(world, Type5, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Hello|World);
 
-    EcsEntity e1 = ecs_new(world, Family1_h);
-    EcsEntity e2 = ecs_new(world, Family2_h);
-    EcsEntity e3 = ecs_new(world, Family3_h);
-    EcsEntity e4 = ecs_new(world, Family4_h);
-    EcsEntity e5 = ecs_new(world, Family5_h);
+    EcsEntity e1 = ecs_new(world, Type1_h);
+    EcsEntity e2 = ecs_new(world, Type2_h);
+    EcsEntity e3 = ecs_new(world, Type3_h);
+    EcsEntity e4 = ecs_new(world, Type4_h);
+    EcsEntity e5 = ecs_new(world, Type5_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -904,19 +904,19 @@ void test_EcsOnFrameSystem_tc_system_2_or2(
     ECS_COMPONENT(world, World);
     ECS_COMPONENT(world, Bleep);
     ECS_COMPONENT(world, Bloop);
-    ECS_TYPE(world, Family1, Foo, Hello);
-    ECS_TYPE(world, Family2, Foo, Bloop);
-    ECS_TYPE(world, Family3, Foo, Bleep, World);
-    ECS_TYPE(world, Family4, Foo, Hello, Bloop);
-    ECS_TYPE(world, Family5, Bloop, Hello);
+    ECS_TYPE(world, Type1, Foo, Hello);
+    ECS_TYPE(world, Type2, Foo, Bloop);
+    ECS_TYPE(world, Type3, Foo, Bleep, World);
+    ECS_TYPE(world, Type4, Foo, Hello, Bloop);
+    ECS_TYPE(world, Type5, Bloop, Hello);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Bleep|Bloop, Hello|World);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
-    EcsEntity e2 = ecs_new(world, Family1_h);
-    EcsEntity e3 = ecs_new(world, Family2_h);
-    EcsEntity e4 = ecs_new(world, Family3_h);
-    EcsEntity e5 = ecs_new(world, Family4_h);
-    EcsEntity e6 = ecs_new(world, Family5_h);
+    EcsEntity e2 = ecs_new(world, Type1_h);
+    EcsEntity e3 = ecs_new(world, Type2_h);
+    EcsEntity e4 = ecs_new(world, Type3_h);
+    EcsEntity e5 = ecs_new(world, Type4_h);
+    EcsEntity e6 = ecs_new(world, Type5_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -985,10 +985,10 @@ void test_EcsOnFrameSystem_tc_system_1_from_container(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, Family1, EcsContainer, Bar);
+    ECS_TYPE(world, Type1, EcsContainer, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, CONTAINER.Bar);
 
-    EcsEntity e1 = ecs_new(world, Family1_h);
+    EcsEntity e1 = ecs_new(world, Type1_h);
     EcsEntity e2 = ecs_new(world, Foo_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
     EcsEntity e4 = ecs_new(world, Bar_h);
@@ -1036,10 +1036,10 @@ void test_EcsOnFrameSystem_tc_system_1_and_1_from_container(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, Family1, EcsContainer, Bar);
+    ECS_TYPE(world, Type1, EcsContainer, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, CONTAINER.Bar);
 
-    EcsEntity e1 = ecs_new(world, Family1_h);
+    EcsEntity e1 = ecs_new(world, Type1_h);
     EcsEntity e2 = ecs_new(world, Foo_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
     EcsEntity e4 = ecs_new(world, Bar_h);
@@ -1094,12 +1094,12 @@ void test_EcsOnFrameSystem_tc_system_2_from_container(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_TYPE(world, Family1, EcsContainer, Bar);
-    ECS_TYPE(world, Family2, EcsContainer, World);
+    ECS_TYPE(world, Type1, EcsContainer, Bar);
+    ECS_TYPE(world, Type2, EcsContainer, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, CONTAINER.Bar, CONTAINER.World);
 
-    EcsEntity e1 = ecs_new(world, Family1_h);
-    EcsEntity e2 = ecs_new(world, Family2_h);
+    EcsEntity e1 = ecs_new(world, Type1_h);
+    EcsEntity e2 = ecs_new(world, Type2_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
     EcsEntity e4 = ecs_new(world, Bar_h);
     EcsEntity e5 = ecs_new(world, Bar_h);
@@ -1180,12 +1180,12 @@ void test_EcsOnFrameSystem_tc_system_1_from_container_or2(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_TYPE(world, Family1, EcsContainer, Bar);
-    ECS_TYPE(world, Family2, EcsContainer, World);
+    ECS_TYPE(world, Type1, EcsContainer, Bar);
+    ECS_TYPE(world, Type2, EcsContainer, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, CONTAINER.Bar|CONTAINER.World);
 
-    EcsEntity e1 = ecs_new(world, Family1_h);
-    EcsEntity e2 = ecs_new(world, Family2_h);
+    EcsEntity e1 = ecs_new(world, Type1_h);
+    EcsEntity e2 = ecs_new(world, Type2_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
     EcsEntity e4 = ecs_new(world, Bar_h);
     EcsEntity e5 = ecs_new(world, Bar_h);
@@ -1253,18 +1253,18 @@ void test_EcsOnFrameSystem_tc_system_2_from_container_or2(
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
     ECS_COMPONENT(world, World);
-    ECS_TYPE(world, Family1, EcsContainer, Foo);
-    ECS_TYPE(world, Family2, EcsContainer, Bar);
-    ECS_TYPE(world, Family3, EcsContainer, Hello);
-    ECS_TYPE(world, Family4, EcsContainer, World);
+    ECS_TYPE(world, Type1, EcsContainer, Foo);
+    ECS_TYPE(world, Type2, EcsContainer, Bar);
+    ECS_TYPE(world, Type3, EcsContainer, Hello);
+    ECS_TYPE(world, Type4, EcsContainer, World);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame,
       CONTAINER.Foo|CONTAINER.Bar,
       CONTAINER.Hello|CONTAINER.World);
 
-    EcsEntity e1 = ecs_new(world, Family1_h);
-    EcsEntity e2 = ecs_new(world, Family2_h);
-    EcsEntity e3 = ecs_new(world, Family3_h);
-    EcsEntity e4 = ecs_new(world, Family4_h);
+    EcsEntity e1 = ecs_new(world, Type1_h);
+    EcsEntity e2 = ecs_new(world, Type2_h);
+    EcsEntity e3 = ecs_new(world, Type3_h);
+    EcsEntity e4 = ecs_new(world, Type4_h);
     EcsEntity e5 = ecs_new(world, Foo_h);
     EcsEntity e6 = ecs_new(world, Foo_h);
     EcsEntity e7 = ecs_new(world, Foo_h);
@@ -1334,10 +1334,10 @@ void test_EcsOnFrameSystem_tc_system_from_container_not(
     Context ctx = {0};
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
-    ECS_TYPE(world, Family1, EcsContainer, Foo);
+    ECS_TYPE(world, Type1, EcsContainer, Foo);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, !CONTAINER.Foo);
 
-    EcsEntity e1 = ecs_new(world, Family1_h);
+    EcsEntity e1 = ecs_new(world, Type1_h);
     EcsEntity e2 = ecs_new(world, Foo_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
     EcsEntity e4 = ecs_new(world, Foo_h);
@@ -1443,12 +1443,12 @@ void test_EcsOnFrameSystem_tc_system_2_from_container_not(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, Family1, EcsContainer, Foo);
-    ECS_TYPE(world, Family2, EcsContainer, Bar);
+    ECS_TYPE(world, Type1, EcsContainer, Foo);
+    ECS_TYPE(world, Type2, EcsContainer, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, !CONTAINER.Foo, !CONTAINER.Bar);
 
-    EcsEntity e1 = ecs_new(world, Family1_h);
-    EcsEntity e2 = ecs_new(world, Family2_h);
+    EcsEntity e1 = ecs_new(world, Type1_h);
+    EcsEntity e2 = ecs_new(world, Type2_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
     EcsEntity e4 = ecs_new(world, Foo_h);
     EcsEntity e5 = ecs_new(world, Foo_h);
@@ -1539,11 +1539,11 @@ void test_EcsOnFrameSystem_tc_system_1_optional_set(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, ?Bar);
 
-    EcsEntity e1 = ecs_new(world, MyFamily_h);
-    EcsEntity e2 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyType_h);
+    EcsEntity e2 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -1581,11 +1581,11 @@ void test_EcsOnFrameSystem_tc_system_1_optional_set_1_not_set(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, ?Bar, ?Hello);
 
-    EcsEntity e1 = ecs_new(world, MyFamily_h);
-    EcsEntity e2 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyType_h);
+    EcsEntity e2 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -1670,11 +1670,11 @@ void test_EcsOnFrameSystem_tc_system_2_optional_set(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
-    ECS_TYPE(world, MyFamily, Foo, Bar, Hello);
+    ECS_TYPE(world, MyType, Foo, Bar, Hello);
     ECS_SYSTEM(world, TestSystem, EcsOnFrame, Foo, ?Bar, ?Hello);
 
-    EcsEntity e1 = ecs_new(world, MyFamily_h);
-    EcsEntity e2 = ecs_new(world, MyFamily_h);
+    EcsEntity e1 = ecs_new(world, MyType_h);
+    EcsEntity e2 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -1830,12 +1830,12 @@ void test_EcsOnFrameSystem_tc_system_on_demand(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -1873,12 +1873,12 @@ void test_EcsOnFrameSystem_tc_system_on_demand_w_filter(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Bar_h);
-    EcsEntity e3 = ecs_new(world, MyFamily_h);
+    EcsEntity e3 = ecs_new(world, MyType_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2338,15 +2338,15 @@ void test_EcsOnFrameSystem_tc_system_limit_2_tables(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, Family, Foo, Bar);
+    ECS_TYPE(world, Type, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Foo_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
-    EcsEntity e4 = ecs_new(world, Family_h);
-    EcsEntity e5 = ecs_new(world, Family_h);
-    EcsEntity e6 = ecs_new(world, Family_h);
+    EcsEntity e4 = ecs_new(world, Type_h);
+    EcsEntity e5 = ecs_new(world, Type_h);
+    EcsEntity e6 = ecs_new(world, Type_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2391,15 +2391,15 @@ void test_EcsOnFrameSystem_tc_system_offset_2_tables(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, Family, Foo, Bar);
+    ECS_TYPE(world, Type, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Foo_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
-    EcsEntity e4 = ecs_new(world, Family_h);
-    EcsEntity e5 = ecs_new(world, Family_h);
-    EcsEntity e6 = ecs_new(world, Family_h);
+    EcsEntity e4 = ecs_new(world, Type_h);
+    EcsEntity e5 = ecs_new(world, Type_h);
+    EcsEntity e6 = ecs_new(world, Type_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2444,15 +2444,15 @@ void test_EcsOnFrameSystem_tc_system_offset_limit_2_tables(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, Family, Foo, Bar);
+    ECS_TYPE(world, Type, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Foo_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
-    EcsEntity e4 = ecs_new(world, Family_h);
-    EcsEntity e5 = ecs_new(world, Family_h);
-    EcsEntity e6 = ecs_new(world, Family_h);
+    EcsEntity e4 = ecs_new(world, Type_h);
+    EcsEntity e5 = ecs_new(world, Type_h);
+    EcsEntity e6 = ecs_new(world, Type_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2494,15 +2494,15 @@ void test_EcsOnFrameSystem_tc_system_limit_skip_table(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, Family, Foo, Bar);
+    ECS_TYPE(world, Type, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Foo_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
-    EcsEntity e4 = ecs_new(world, Family_h);
-    EcsEntity e5 = ecs_new(world, Family_h);
-    EcsEntity e6 = ecs_new(world, Family_h);
+    EcsEntity e4 = ecs_new(world, Type_h);
+    EcsEntity e5 = ecs_new(world, Type_h);
+    EcsEntity e6 = ecs_new(world, Type_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2544,15 +2544,15 @@ void test_EcsOnFrameSystem_tc_system_offset_limit_skip_table(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, Family, Foo, Bar);
+    ECS_TYPE(world, Type, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Foo_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
-    EcsEntity e4 = ecs_new(world, Family_h);
-    EcsEntity e5 = ecs_new(world, Family_h);
-    EcsEntity e6 = ecs_new(world, Family_h);
+    EcsEntity e4 = ecs_new(world, Type_h);
+    EcsEntity e5 = ecs_new(world, Type_h);
+    EcsEntity e6 = ecs_new(world, Type_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2591,15 +2591,15 @@ void test_EcsOnFrameSystem_tc_system_offset_skip_table(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, Family, Foo, Bar);
+    ECS_TYPE(world, Type, Foo, Bar);
     ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Foo_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
-    EcsEntity e4 = ecs_new(world, Family_h);
-    EcsEntity e5 = ecs_new(world, Family_h);
-    EcsEntity e6 = ecs_new(world, Family_h);
+    EcsEntity e4 = ecs_new(world, Type_h);
+    EcsEntity e5 = ecs_new(world, Type_h);
+    EcsEntity e6 = ecs_new(world, Type_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2642,19 +2642,19 @@ void test_EcsOnFrameSystem_tc_system_offset_limit_3_tables(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
-    ECS_TYPE(world, Family1, Foo, Bar);
-    ECS_TYPE(world, Family2, Foo, Bar, Hello);
+    ECS_TYPE(world, Type1, Foo, Bar);
+    ECS_TYPE(world, Type2, Foo, Bar, Hello);
     ECS_SYSTEM(world, TestSystem, EcsOnDemand, Foo);
 
     EcsEntity e1 = ecs_new(world, Foo_h);
     EcsEntity e2 = ecs_new(world, Foo_h);
     EcsEntity e3 = ecs_new(world, Foo_h);
-    EcsEntity e4 = ecs_new(world, Family1_h);
-    EcsEntity e5 = ecs_new(world, Family1_h);
-    EcsEntity e6 = ecs_new(world, Family1_h);
-    EcsEntity e7 = ecs_new(world, Family2_h);
-    EcsEntity e8 = ecs_new(world, Family2_h);
-    EcsEntity e9 = ecs_new(world, Family2_h);
+    EcsEntity e4 = ecs_new(world, Type1_h);
+    EcsEntity e5 = ecs_new(world, Type1_h);
+    EcsEntity e6 = ecs_new(world, Type1_h);
+    EcsEntity e7 = ecs_new(world, Type2_h);
+    EcsEntity e8 = ecs_new(world, Type2_h);
+    EcsEntity e9 = ecs_new(world, Type2_h);
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2704,7 +2704,7 @@ void test_EcsOnFrameSystem_tc_system_offset_limit_3_tables(
     ecs_fini(world);
 }
 
-void test_EcsOnFrameSystem_tc_system_w_same_or_family_as_table(
+void test_EcsOnFrameSystem_tc_system_w_same_or_type_as_table(
     test_EcsOnFrameSystem this)
 {
     Context ctx = {0};

@@ -97,7 +97,7 @@ const char* ecs_strerror(
     case ECS_NOT_A_COMPONENT:
         return "handle is not a component";
     case ecs_type_IN_USE:
-        return "family specified by system is already in use";
+        return "type specified by system is already in use";
     case ECS_INTERNAL_ERROR:
         return "internal error";
     case ECS_MORE_THAN_ONE_PREFAB:

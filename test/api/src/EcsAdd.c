@@ -160,7 +160,7 @@ void test_EcsAdd_tc_add_existing_component(
     ecs_fini(world);
 }
 
-void test_EcsAdd_tc_add_family(
+void test_EcsAdd_tc_add_type(
     test_EcsAdd this)
 {
     EcsWorld *world = ecs_init();
@@ -168,14 +168,14 @@ void test_EcsAdd_tc_add_family(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
 
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
 
-    ecs_stage_add(world, e, MyFamily_h);
+    ecs_stage_add(world, e, MyType_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -184,7 +184,7 @@ void test_EcsAdd_tc_add_family(
     ecs_fini(world);
 }
 
-void test_EcsAdd_tc_add_family_with_family(
+void test_EcsAdd_tc_add_type_with_type(
     test_EcsAdd this)
 {
     EcsWorld *world = ecs_init();
@@ -192,15 +192,15 @@ void test_EcsAdd_tc_add_family_with_family(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, Family1, Foo);
-    ECS_TYPE(world, Family2, Family1, Bar);
+    ECS_TYPE(world, Type1, Foo);
+    ECS_TYPE(world, Type2, Type1, Bar);
 
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
 
-    ecs_stage_add(world, e, Family2_h);
+    ecs_stage_add(world, e, Type2_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -209,7 +209,7 @@ void test_EcsAdd_tc_add_family_with_family(
     ecs_fini(world);
 }
 
-void test_EcsAdd_tc_add_family_overlapping_w_entity(
+void test_EcsAdd_tc_add_type_overlapping_w_entity(
     test_EcsAdd this)
 {
     EcsWorld *world = ecs_init();
@@ -217,7 +217,7 @@ void test_EcsAdd_tc_add_family_overlapping_w_entity(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_TYPE(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyType, Foo, Bar);
 
     EcsEntity e = ecs_new(world, Foo_h);
     test_assert(e != 0);
@@ -228,7 +228,7 @@ void test_EcsAdd_tc_add_family_overlapping_w_entity(
     test_assert(foo_ptr != NULL);
     foo_ptr->x = 10;
 
-    ecs_stage_add(world, e, MyFamily_h);
+    ecs_stage_add(world, e, MyType_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Foo_h));
@@ -250,16 +250,16 @@ void test_EcsAdd_tc_add_overlapping_families(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_COMPONENT(world, Hello);
-    ECS_TYPE(world, Family1, Foo, Bar);
-    ECS_TYPE(world, Family2, Bar, Hello);
+    ECS_TYPE(world, Type1, Foo, Bar);
+    ECS_TYPE(world, Type2, Bar, Hello);
 
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
     test_assert(!ecs_has(world, e, Foo_h));
     test_assert(!ecs_has(world, e, Bar_h));
 
-    ecs_stage_add(world, e, Family1_h);
-    ecs_stage_add(world, e, Family2_h);
+    ecs_stage_add(world, e, Type1_h);
+    ecs_stage_add(world, e, Type2_h);
     ecs_commit(world, e);
 
     test_assert(ecs_has(world, e, Foo_h));

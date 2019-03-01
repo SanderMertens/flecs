@@ -7,17 +7,17 @@ void merge_families(
     EcsWorld *world,
     EcsStage *stage)
 {
-    EcsIter it = ecs_map_iter(stage->family_index);
+    EcsIter it = ecs_map_iter(stage->type_index);
     while (ecs_iter_hasnext(&it)) {
         uint64_t type_id;
-        EcsArray *family = (void*)(uintptr_t)ecs_map_next(&it, &type_id);
+        EcsArray *type = (void*)(uintptr_t)ecs_map_next(&it, &type_id);
 
-        if (!ecs_map_has(world->main_stage.family_index, type_id, NULL)) {
-            ecs_map_set(world->main_stage.family_index, type_id, family);
+        if (!ecs_map_has(world->main_stage.type_index, type_id, NULL)) {
+            ecs_map_set(world->main_stage.type_index, type_id, type);
         }
     }
 
-    ecs_map_clear(stage->family_index);
+    ecs_map_clear(stage->type_index);
 }
 
 static
@@ -41,9 +41,9 @@ void merge_tables(
             uint32_t index = ecs_array_count(main_stage->tables) - 1;
             ecs_map_set(main_stage->table_index, type_id, index + 1);
 
-            /* Table might still refer to family in stage */
+            /* Table might still refer to type in stage */
             table = ecs_array_get(main_stage->tables, &table_arr_params, index);
-            table->family = ecs_type_get(world, NULL, type_id);
+            table->type = ecs_type_get(world, NULL, type_id);
         } else {
             ecs_table_deinit(world, table);
         }
@@ -97,13 +97,13 @@ static
 void clean_families(
     EcsStage *stage)
 {
-    EcsIter it = ecs_map_iter(stage->family_index);
+    EcsIter it = ecs_map_iter(stage->type_index);
     while (ecs_iter_hasnext(&it)) {
-        EcsArray *family = ecs_iter_next(&it);
-        ecs_array_free(family);
+        EcsArray *type = ecs_iter_next(&it);
+        ecs_array_free(type);
     }
 
-    ecs_map_free(stage->family_index);
+    ecs_map_free(stage->type_index);
 }
 
 static
@@ -143,7 +143,7 @@ void ecs_stage_init(
     if (is_temp_stage) {
         stage->table_index = world->main_stage.table_index;
         stage->tables = world->main_stage.tables;
-        stage->family_index = world->main_stage.family_index;
+        stage->type_index = world->main_stage.type_index;
     } else {
         stage->table_index = ecs_map_new(0);
         if (is_main_stage) {
@@ -151,7 +151,7 @@ void ecs_stage_init(
         } else {
             stage->tables = ecs_array_new(&table_arr_params, 0);
         }
-        stage->family_index = ecs_map_new(0);
+        stage->type_index = ecs_map_new(0);
     }
 
     if (!is_main_stage) {

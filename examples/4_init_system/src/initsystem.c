@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     /* Create 10 entities with the Position component. The component will be
      * automatically initialized by the InitPosition system.
      *
-     * Notice the _h suffix. Every component, system and family has a unique
+     * Notice the _h suffix. Every component, system and type has a unique
      * handle that must be used to refer to the entity. Variables with the _h
      * suffix contain these handles and are automatically declared. The suffix
      * ensures that there are no collisions with type- or function names. */

@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     /* Recap: the entities we just created have two components, Position and
      * Speed. The Speed component is shared with the prefab. Each entity has its
-     * own private Position component, since the family overrides it. The
+     * own private Position component, since the type overrides it. The
      * Position value for each entity was initialized from the Vehicle prefab.
      */
 
