@@ -51,7 +51,7 @@ void test_EcsPrefab_tc_prefab_family(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_PREFAB(world, MyPrefab, MyFamily);
 
     EcsEntity e1 = ecs_new(world, MyPrefab_h);
@@ -104,7 +104,7 @@ void test_EcsPrefab_tc_prefab_override_1_of_2(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_PREFAB(world, MyPrefab, MyFamily);
 
     Foo *foo_ptr = ecs_get_ptr(world, MyPrefab_h, Foo_h);
@@ -147,7 +147,7 @@ void test_EcsPrefab_tc_prefab_override_2_of_2(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_PREFAB(world, MyPrefab, MyFamily);
 
     Foo *foo_ptr = ecs_get_ptr(world, MyPrefab_h, Foo_h);
@@ -196,7 +196,7 @@ void test_EcsPrefab_tc_prefab_override_1_after_1(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_PREFAB(world, MyPrefab, MyFamily);
 
     ecs_set(world, MyPrefab_h, Foo, {.x = 10});
@@ -244,9 +244,9 @@ void test_EcsPrefab_tc_prefab_override_w_family(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_PREFAB(world, MyPrefab, MyFamily);
-    ECS_FAMILY(world, PrefabFamily, MyPrefab, Foo);
+    ECS_TYPE(world, PrefabFamily, MyPrefab, Foo);
 
     Foo *foo_ptr = ecs_get_ptr(world, MyPrefab_h, Foo_h);
     foo_ptr->x = 10;
@@ -282,9 +282,9 @@ void test_EcsPrefab_tc_prefab_override_2_w_family(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_PREFAB(world, MyPrefab, MyFamily);
-    ECS_FAMILY(world, PrefabFamily, MyPrefab, Foo, Bar);
+    ECS_TYPE(world, PrefabFamily, MyPrefab, Foo, Bar);
 
     Foo *foo_ptr = ecs_get_ptr(world, MyPrefab_h, Foo_h);
     foo_ptr->x = 10;
@@ -355,7 +355,7 @@ void test_EcsPrefab_tc_prefab_add_to_empty_entity(
     EcsWorld *world = ecs_init();
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_PREFAB(world, MyPrefab, MyFamily);
 
     EcsEntity e1 = ecs_new(world, 0);

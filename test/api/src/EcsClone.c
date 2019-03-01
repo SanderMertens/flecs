@@ -165,7 +165,7 @@ void test_EcsClone_tc_clone_2_component(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
 
     EcsEntity e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
@@ -197,7 +197,7 @@ void test_EcsClone_tc_clone_2_component_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, CloneTwoInProgress, EcsOnFrame, Foo);
 
     EcsEntity e = ecs_new(world, MyFamily_h);
@@ -224,7 +224,7 @@ void test_EcsClone_tc_clone_2_component_value(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
 
     EcsEntity e = ecs_new(world, MyFamily_h);
     test_assert(e != 0);
@@ -263,7 +263,7 @@ void test_EcsClone_tc_clone_2_component_value_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, CloneOneValueInProgress, EcsOnFrame, Foo);
 
     EcsEntity e = ecs_new(world, MyFamily_h);
@@ -313,7 +313,7 @@ void test_EcsClone_tc_clone_2_component_value_in_progress_override_w_set(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, CloneTwoValueOverrideInProgress, EcsOnFrame, Foo, Bar);
 
     EcsEntity e = ecs_new(world, MyFamily_h);

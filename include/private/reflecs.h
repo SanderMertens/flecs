@@ -7,12 +7,6 @@
 
 /* -- Entity API -- */
 
-/* Create new entity with family */
-EcsEntity ecs_new_w_family(
-    EcsWorld *world,
-    EcsStage *stage,
-    EcsFamily family_id);
-
 /* Merge entity with stage */
 void ecs_merge_entity(
     EcsWorld *world,
@@ -26,7 +20,7 @@ bool ecs_notify(
     EcsWorld *world,
     EcsStage *stage,
     EcsMap *systems,
-    EcsFamily family_id,
+    EcsType type_id,
     EcsTable *table,
     EcsTableColumn *table_columns,
     int32_t offset,
@@ -38,7 +32,7 @@ bool ecs_notify(
 EcsTable* ecs_world_get_table(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily family_id);
+    EcsType type_id);
 
 /* Activate system (move from inactive array to on_frame array or vice versa) */
 void ecs_world_activate_system(
@@ -69,66 +63,74 @@ void ecs_stage_merge(
 /* -- Family utility API -- */
 
 /* Get family from entity handle (component, family, prefab) */
-EcsFamily ecs_family_from_handle(
+EcsType ecs_type_from_handle(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity entity,
     EcsEntityInfo *info);
 
 /* Merge add/remove families */
-EcsFamily ecs_family_merge(
+EcsType ecs_type_merge(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily cur_id,
-    EcsFamily to_add_id,
-    EcsFamily to_remove_id);
+    EcsType cur_id,
+    EcsType to_add_id,
+    EcsType to_remove_id);
 
-/* Test if family_id_1 contains family_id_2 */
-EcsEntity ecs_family_contains(
+/* Merge add/remove families using arrays */
+EcsType ecs_type_merge_arr(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily family_id_1,
-    EcsFamily family_id_2,
+    EcsArray *arr_cur,
+    EcsArray *to_add,
+    EcsArray *to_del);
+
+/* Test if type_id_1 contains type_id_2 */
+EcsEntity ecs_type_contains(
+    EcsWorld *world,
+    EcsStage *stage,
+    EcsType type_id_1,
+    EcsType type_id_2,
     bool match_all,
     bool match_prefab);
 
 /* Test if family contains component */
-bool ecs_family_contains_component(
+bool ecs_type_contains_component(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily family,
+    EcsType family,
     EcsEntity component,
     bool match_prefab);
 
 /* Register new family from either a single component, an array of component
  * handles, or a combination */
-EcsFamily ecs_family_register(
+EcsType ecs_type_register(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity to_add,
     EcsArray *set);
 
 /* Add component to family */
-EcsFamily ecs_family_add(
+EcsType ecs_type_add(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily family,
+    EcsType family,
     EcsEntity component);
 
 /* Get array with component handles from family */
-EcsArray* ecs_family_get(
+EcsArray* ecs_type_get(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily family_id);
+    EcsType type_id);
 
 /* Convert family to string */
-char* ecs_family_tostr(
+char* ecs_type_tostr(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily family_id);
+    EcsType type_id);
 
 /* Get index for entity in family */
-int16_t ecs_family_index_of(
+int16_t ecs_type_index_of(
     EcsArray *family,
     EcsEntity component);
 
@@ -234,7 +236,7 @@ void ecs_row_system_notify_of_family(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity system,
-    EcsFamily family);
+    EcsType family);
 
 /* Activate table for system (happens if table goes from empty to not empty) */
 void ecs_system_activate_table(

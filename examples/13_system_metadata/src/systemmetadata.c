@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     /* Register components and family */
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
-    ECS_FAMILY(world, Object, Position, Speed);
+    ECS_TYPE(world, Object, Position, Speed);
 
     /* Register the Metadata system. */
     ECS_SYSTEM(world, Metadata, EcsOnFrame, Position, Speed);

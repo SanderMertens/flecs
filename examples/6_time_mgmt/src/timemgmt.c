@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Speed);
 
     /* Create a family that includes both Position and Move component */
-    ECS_FAMILY(world, Object, Position, Speed);
+    ECS_TYPE(world, Object, Position, Speed);
 
     /* Register the Move function as a system with the world.
      * - EcsOnFrame causes the sytem to be invoked when ecs_progress is called

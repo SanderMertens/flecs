@@ -11,12 +11,12 @@ static
 EcsEntity components_contains(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily table_family,
-    EcsFamily family,
+    EcsType table_family,
+    EcsType family,
     EcsEntity *entity_out,
     bool match_all)
 {
-    EcsArray *components = ecs_family_get(world, stage, table_family);
+    EcsArray *components = ecs_type_get(world, stage, table_family);
     assert(components != NULL);
 
     uint32_t i, count = ecs_array_count(components);
@@ -24,7 +24,7 @@ EcsEntity components_contains(
         EcsEntity h = *(EcsEntity*)ecs_array_get(
             components, &handle_arr_params, i);
 
-        if (ecs_has(world, h, EcsPrefab_h)) {
+        if (ecs_has(world, h, tEcsPrefab)) {
             return 0;
         }
 
@@ -32,8 +32,8 @@ EcsEntity components_contains(
         assert(row_64 != 0);
 
         EcsRow row = ecs_to_row(row_64);
-        EcsEntity component = ecs_family_contains(
-            world, stage, row.family_id, family, match_all, true);
+        EcsEntity component = ecs_type_contains(
+            world, stage, row.type_id, family, match_all, true);
         if (component != 0) {
             if (entity_out) *entity_out = h;
             return component;
@@ -47,11 +47,11 @@ static
 bool components_contains_component(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily table_family,
+    EcsType table_family,
     EcsEntity component,
     EcsEntity *entity_out)
 {
-    EcsArray *components = ecs_family_get(world, stage, table_family);
+    EcsArray *components = ecs_type_get(world, stage, table_family);
     assert(components != NULL);
 
     uint32_t i, count = ecs_array_count(components);
@@ -63,8 +63,8 @@ bool components_contains_component(
         assert(row_64 != 0);
 
         EcsRow row = ecs_to_row(row_64);
-        bool result = ecs_family_contains_component(
-            world, stage, row.family_id, component, true);
+        bool result = ecs_type_contains_component(
+            world, stage, row.type_id, component, true);
         if (result) {
             if (entity_out) *entity_out = h;
             return true;
@@ -110,15 +110,15 @@ static
 EcsEntity get_entity_for_component(
     EcsWorld *world,
     EcsEntity entity,
-    EcsFamily family_id,
+    EcsType type_id,
     EcsEntity component)
 {
     if (entity) {
         EcsRow row = ecs_to_row(ecs_map_get64(world->entity_index, entity));
-        family_id = row.family_id;
+        type_id = row.type_id;
     }
 
-    EcsArray *family = ecs_family_get(world, NULL, family_id);
+    EcsArray *family = ecs_type_get(world, NULL, type_id);
     EcsEntity *buffer = ecs_array_buffer(family);
     uint32_t i, count = ecs_array_count(family);
 
@@ -129,7 +129,7 @@ EcsEntity get_entity_for_component(
     }
 
     if (i == count) {
-        EcsEntity prefab = ecs_map_get64(world->prefab_index, family_id);
+        EcsEntity prefab = ecs_map_get64(world->prefab_index, type_id);
         if (prefab) {
             return get_entity_for_component(world, prefab, 0, component);
         }
@@ -153,7 +153,7 @@ void add_table(
 {
     int32_t *table_data;
     EcsSystemRef *ref_data = NULL;
-    EcsFamily table_family = table->family_id;
+    EcsType table_family = table->type_id;
     uint32_t i = COLUMNS_INDEX;
     uint32_t ref = 0;
     uint32_t column_count = ecs_array_count(system_data->base.columns);
@@ -198,14 +198,14 @@ void add_table(
             } else if (column->oper_kind == EcsOperOptional) {
                 component = column->is.component;
 
-                if (!ecs_family_contains_component(
+                if (!ecs_type_contains_component(
                     world, stage, table_family, component, true))
                 {
                     component = 0;
                 }
 
             } else if (column->oper_kind == EcsOperOr) {
-                component = ecs_family_contains(
+                component = ecs_type_contains(
                     world, stage, table_family, column->is.family, false, true);
             }
 
@@ -247,7 +247,7 @@ void add_table(
         if (!entity && column->kind != EcsFromId) {
             if (component) {
                 /* Retrieve offset for component */
-                table_data[i] = ecs_family_index_of(table->family, component);
+                table_data[i] = ecs_type_index_of(table->family, component);
 
                 /* If column is found, add one to the index, as column zero in
                  * a table is reserved for entity id's */
@@ -307,17 +307,17 @@ bool match_table(
     EcsEntity system,
     EcsColSystem *system_data)
 {
-    EcsFamily family, table_family;
-    table_family = table->family_id;
+    EcsType family, table_family;
+    table_family = table->type_id;
 
-    if (ecs_family_contains_component(world, stage, table_family, EcsPrefab_h, false)){
+    if (ecs_type_contains_component(world, stage, table_family, tEcsPrefab, false)){
         /* Never match prefabs */
         return false;
     }
 
     family = system_data->base.and_from_entity;
 
-    if (family && !ecs_family_contains(
+    if (family && !ecs_type_contains(
         world, stage, table_family, family, true, true))
     {
         return false;
@@ -344,7 +344,7 @@ bool match_table(
         } else if (oper_kind == EcsOperOr) {
             family = elem->is.family;
             if (elem_kind == EcsFromEntity) {
-                if (!ecs_family_contains(
+                if (!ecs_type_contains(
                     world, stage, table_family, family, false, true))
                 {
                     return false;
@@ -360,7 +360,7 @@ bool match_table(
     }
 
     family = system_data->base.not_from_entity;
-    if (family && ecs_family_contains(
+    if (family && ecs_type_contains(
         world, stage, table_family, family, false, true))
     {
         return false;
@@ -404,7 +404,7 @@ void ecs_col_system_notify_of_table(
     EcsEntity system,
     EcsTable *table)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
     assert(system_data != NULL);
 
     if (match_table(world, stage, table, system, system_data)) {
@@ -421,7 +421,7 @@ void ecs_system_activate_table(
     bool active)
 {
     EcsArray *src_array, *dst_array;
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
     EcsSystemKind kind = system_data->base.kind;
 
     uint32_t table_index = ecs_array_get_index(
@@ -552,13 +552,13 @@ EcsEntity ecs_new_col_system(
         assert(0);
     }
 
-    EcsEntity result = ecs_new_w_family(
-        world, NULL, world->col_system_family);
+    EcsEntity result = ecs_new(
+        world, world->t_col_system);
 
-    EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
+    EcsId *id_data = ecs_get_ptr(world, result, tEcsId);
     *id_data = id;
 
-    EcsColSystem *system_data = ecs_get_ptr(world, result, EcsColSystem_h);
+    EcsColSystem *system_data = ecs_get_ptr(world, result, tEcsColSystem);
     memset(system_data, 0, sizeof(EcsColSystem));
     system_data->base.action = action;
     system_data->base.enabled = true;
@@ -615,7 +615,7 @@ EcsEntity ecs_new_col_system(
     *elem = result;
 
     if (system_data->and_from_system) {
-        EcsArray *f = ecs_family_get(world, NULL, system_data->and_from_system);
+        EcsArray *f = ecs_type_get(world, NULL, system_data->and_from_system);
         EcsEntity *buffer = ecs_array_buffer(f);
         uint32_t i, count = ecs_array_count(f);
         for (i = 0; i < count; i ++) {
@@ -663,7 +663,7 @@ EcsEntity ecs_run_w_filter(
     EcsEntity filter,
     void *param)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {
@@ -701,7 +701,7 @@ EcsEntity ecs_run_w_filter(
     uint32_t column_count = ecs_array_count(system_data->base.columns);
     uint32_t components_size = system_data->component_params.element_size;
     char *components = ecs_array_buffer(system_data->components);
-    EcsFamily filter_id = 0;
+    EcsType filter_id = 0;
     EcsEntity interrupted_by = 0;
     EcsSystemAction action = system_data->base.action;
     bool offset_limit = offset | limit;
@@ -718,7 +718,7 @@ EcsEntity ecs_run_w_filter(
     };
 
     if (filter) {
-        filter_id = ecs_family_from_handle(real_world, stage, filter, NULL);
+        filter_id = ecs_type_from_handle(real_world, stage, filter, NULL);
     }
 
     int32_t *table = table_first;
@@ -729,8 +729,8 @@ EcsEntity ecs_run_w_filter(
         uint32_t first = 0, count = ecs_table_count(w_table);
 
         if (filter_id) {
-            if (!ecs_family_contains(
-                real_world, stage, w_table->family_id, filter_id, true, true))
+            if (!ecs_type_contains(
+                real_world, stage, w_table->type_id, filter_id, true, true))
             {
                 continue;
             }

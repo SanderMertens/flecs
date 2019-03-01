@@ -38,8 +38,8 @@ int main(int argc, char *argv[]) {
     ECS_PREFAB(world, PlanePrefab, Vehicle, Speed);
 
     /* Create two families that include prefabs and override Position. */
-    ECS_FAMILY(world, Car, CarPrefab, Position);
-    ECS_FAMILY(world, Plane, PlanePrefab, Position);
+    ECS_TYPE(world, Car, CarPrefab, Position);
+    ECS_TYPE(world, Plane, PlanePrefab, Position);
 
     /* Initialize Position once, which initializes both Car and Plane prefabs */
     ecs_set(world, Vehicle_h, Position, {0, 0});

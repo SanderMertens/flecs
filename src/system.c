@@ -9,11 +9,11 @@ void match_family(
     EcsStage *stage,
     EcsEntity system,
     EcsRowSystem *system_data,
-    EcsFamily family)
+    EcsType family)
 {
     /* Test if the components of the system are equal or a subset of the 
      * components of the family */
-    EcsEntity match = ecs_family_contains(
+    EcsEntity match = ecs_type_contains(
         world, stage, family, system_data->base.and_from_entity, true, false);
 
     /* If there is a match, add the system to the family-row_system index */
@@ -59,7 +59,7 @@ void match_families(
         uint64_t key; /* Only interested in the key, which is the family hash */
         ecs_map_next(&it, &key);
 
-        EcsFamily family = key;
+        EcsType family = key;
         
         match_family(world, NULL, system, system_data, family);
     }
@@ -82,11 +82,11 @@ EcsEntity new_row_system(
         return 0;
     }
 
-    EcsEntity result = ecs_new_w_family(world, NULL, world->row_system_family);
-    EcsId *id_data = ecs_get_ptr(world, result, EcsId_h);
+    EcsEntity result = ecs_new(world, world->t_row_system);
+    EcsId *id_data = ecs_get_ptr(world, result, tEcsId);
     *id_data = id;
 
-    EcsRowSystem *system_data = ecs_get_ptr(world, result, EcsRowSystem_h);
+    EcsRowSystem *system_data = ecs_get_ptr(world, result, tEcsRowSystem);
     memset(system_data, 0, sizeof(EcsRowSystem));
     system_data->base.action = action;
     system_data->base.signature = sig;
@@ -100,7 +100,7 @@ EcsEntity new_row_system(
         ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
     }
 
-    EcsFamily family_id = 0;
+    EcsType type_id = 0;
     uint32_t i, column_count = ecs_array_count(system_data->base.columns);
     EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
 
@@ -112,8 +112,8 @@ EcsEntity new_row_system(
         *h = column->is.component;
 
         if (column->kind != EcsFromId) {
-            family_id = ecs_family_add(
-                world, NULL, family_id, column->is.component);
+            type_id = ecs_type_add(
+                world, NULL, type_id, column->is.component);
         }
     }
 
@@ -163,18 +163,18 @@ void ecs_system_compute_and_families(
 
         if (elem_kind == EcsFromEntity) {
             if (oper_kind == EcsOperAnd) {
-                system_data->and_from_entity = ecs_family_add(
+                system_data->and_from_entity = ecs_type_add(
                  world, NULL, system_data->and_from_entity, elem->is.component);
             }
         } else if (elem_kind == EcsFromSystem) {
             if (!col_system_data) {
-                col_system_data = ecs_get_ptr(world, system, EcsColSystem_h);
+                col_system_data = ecs_get_ptr(world, system, tEcsColSystem);
                 if (!col_system_data) {
                     ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, NULL);
                 }
             }
             if (oper_kind == EcsOperAnd) {
-                col_system_data->and_from_system = ecs_family_add(
+                col_system_data->and_from_system = ecs_type_add(
                  world, NULL, col_system_data->and_from_system, elem->is.component);
             }
         }
@@ -220,7 +220,7 @@ EcsResult ecs_parse_component_action(
     } else if (oper_kind == EcsOperOr) {
         elem = ecs_array_last(system_data->columns, &column_arr_params);
         if (elem->oper_kind == EcsOperAnd) {
-            elem->is.family = ecs_family_add(
+            elem->is.family = ecs_type_add(
                 world, NULL, 0, elem->is.component);
         } else {
             if (elem->kind != elem_kind) {
@@ -229,14 +229,14 @@ EcsResult ecs_parse_component_action(
             }
         }
 
-        elem->is.family = ecs_family_add(
+        elem->is.family = ecs_type_add(
             world, NULL, elem->is.family, component);
         elem->kind = elem_kind;
         elem->oper_kind = EcsOperOr;
 
     /* A system stores two NOT familes; one for entities and one for components.
      * These can be quickly & efficiently used to exclude tables with
-     * ecs_family_contains. */
+     * ecs_type_contains. */
     } else if (oper_kind == EcsOperNot) {
         elem = ecs_array_add(&system_data->columns, &column_arr_params);
         elem->kind = EcsFromId; /* Just pass handle to system */
@@ -245,11 +245,11 @@ EcsResult ecs_parse_component_action(
 
         if (elem_kind == EcsFromEntity) {
             system_data->not_from_entity =
-                ecs_family_add(
+                ecs_type_add(
                     world, NULL, system_data->not_from_entity, component);
         } else {
             system_data->not_from_component =
-              ecs_family_add(
+              ecs_type_add(
                   world, NULL, system_data->not_from_component, component);
         }
     }
@@ -291,9 +291,9 @@ void ecs_row_system_notify_of_family(
     EcsWorld *world,
     EcsStage *stage,
     EcsEntity system,
-    EcsFamily family)
+    EcsType family)
 {
-    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
+    EcsRowSystem *system_data = ecs_get_ptr(world, system, tEcsRowSystem);
 
     match_family(world, stage, system, system_data, family);
 }
@@ -306,7 +306,7 @@ void ecs_run_task(
     EcsEntity system,
     float delta_time)
 {
-    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
+    EcsRowSystem *system_data = ecs_get_ptr(world, system, tEcsRowSystem);
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {
@@ -372,43 +372,6 @@ EcsEntity ecs_new_system(
     return result;
 }
 
-void* ecs_set_system_context_ptr(
-    EcsWorld *world,
-    EcsEntity system,
-    EcsEntity component,
-    void *value)
-{
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
-    if (!system_data) {
-        system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
-    }
-
-    system_data->ctx_handle = component;
-
-    ecs_set_ptr(world, system, component, value);
-    void *result = ecs_get_ptr(world, system, component);
-    assert(result != NULL);
-
-    return result;
-}
-
-void* ecs_get_system_context(
-    EcsWorld *world,
-    EcsEntity system)
-{
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
-    if (!system_data) {
-        system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
-    }
-
-    void *result = ecs_get_ptr(world, system, system_data->ctx_handle);
-    if (!result) {
-        ecs_abort(ECS_MISSING_SYSTEM_CONTEXT, 0);
-    }
-
-    return result;
-}
-
 void ecs_enable(
     EcsWorld *world,
     EcsEntity system,
@@ -418,23 +381,23 @@ void ecs_enable(
     bool col_system = false;
 
     /* Try to get either ColSystem or RowSystem data */
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
     if (!system_data) {
-        system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
+        system_data = ecs_get_ptr(world, system, tEcsRowSystem);
     } else {
         col_system = true;
     }
 
     /* If entity is neither ColSystem nor RowSystem, it should be a family */
     if (!system_data) {
-        EcsFamilyComponent *family_data = ecs_get_ptr(
-            world, system, EcsFamilyComponent_h);
+        EcsTypeComponent *family_data = ecs_get_ptr(
+            world, system, tEcsTypeComponent);
 
         assert(family_data != NULL);
 
         EcsWorld *world_temp = world;
         EcsStage *stage = ecs_get_stage(&world_temp);
-        EcsArray *family = ecs_family_get(world, stage, family_data->family);
+        EcsArray *family = ecs_type_get(world, stage, family_data->family);
         EcsEntity *buffer = ecs_array_buffer(family);
         uint32_t i, count = ecs_array_count(family);
         for (i = 0; i < count; i ++) {
@@ -469,9 +432,9 @@ bool ecs_is_enabled(
     EcsWorld *world,
     EcsEntity system)
 {
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
+    EcsSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
     if (!system_data) {
-        system_data = ecs_get_ptr(world, system, EcsRowSystem_h);
+        system_data = ecs_get_ptr(world, system, tEcsRowSystem);
     }
 
     if (system_data) {
@@ -487,7 +450,7 @@ void ecs_set_period(
     float period)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem_h);
+    EcsColSystem *system_data = ecs_get_ptr(world, system, tEcsColSystem);
     if (system_data) {
         system_data->period = period;
     }

@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
     /* Override all components from prefab in Unit family. The prefab is just
      * used here to provide default values for unit components. */
     ECS_PREFAB(world, UnitPrefab, Position, Health);
-    ECS_FAMILY(world, Unit, UnitPrefab, Position, Health);
+    ECS_TYPE(world, Unit, UnitPrefab, Position, Health);
     ecs_set(world, UnitPrefab_h, Position, {0, 0});
     ecs_set(world, UnitPrefab_h, Health, {100});
 

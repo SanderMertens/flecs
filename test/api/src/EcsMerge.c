@@ -167,7 +167,7 @@ void test_EcsMerge_tc_merge_add_existing(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, FooBar, Foo, Bar);
+    ECS_TYPE(world, FooBar, Foo, Bar);
     ECS_SYSTEM(world, MergeAdd, EcsOnFrame, Foo);
 
     EcsEntity e = ecs_new(world, FooBar_h);
@@ -293,7 +293,7 @@ void test_EcsMerge_tc_merge_remove(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, FooBar, Foo, Bar);
+    ECS_TYPE(world, FooBar, Foo, Bar);
     ECS_SYSTEM(world, MergeRemove, EcsOnFrame, Foo);
 
     EcsEntity e = ecs_new(world, FooBar_h);
@@ -345,7 +345,7 @@ void test_EcsMerge_tc_merge_remove_2(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, FooBar, Foo, Bar);
+    ECS_TYPE(world, FooBar, Foo, Bar);
     ECS_SYSTEM(world, MergeRemove2, EcsOnFrame, Foo);
 
     EcsEntity e = ecs_new(world, FooBar_h);
@@ -641,7 +641,7 @@ void test_EcsMerge_tc_merge_set_existing(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, FooBar, Foo, Bar);
+    ECS_TYPE(world, FooBar, Foo, Bar);
     ECS_SYSTEM(world, MergeSet, EcsOnFrame, Foo);
 
     EcsEntity e = ecs_new(world, FooBar_h);

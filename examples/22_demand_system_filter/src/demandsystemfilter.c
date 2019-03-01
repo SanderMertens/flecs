@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 
     /* Add both the tag and EcsComponent to an Index family which we'll use to
      * create two entities that will subdivide our data. */
-    ECS_FAMILY(world, Index, IndexTag, EcsContainer);
+    ECS_TYPE(world, Index, IndexTag, EcsContainer);
 
     /* List all the entities with a Position component on demand */
     ECS_SYSTEM(world, ListEntities, EcsOnDemand, CONTAINER.IndexTag, Object);

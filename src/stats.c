@@ -37,7 +37,7 @@ void calculate_system_stats(
     EcsEntity *buffer = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
-        EcsColSystem *sys = ecs_get_ptr(world, buffer[i], EcsColSystem_h);
+        EcsColSystem *sys = ecs_get_ptr(world, buffer[i], tEcsColSystem);
         ecs_array_memory(sys->base.columns, &column_arr_params, allocd, used);
         ecs_array_memory(sys->components, &handle_arr_params, allocd, used);
         ecs_array_memory(sys->inactive_tables, &sys->table_params, allocd, used);
@@ -173,7 +173,7 @@ void set_system_stats(
     EcsEntity system,
     bool active)
 {
-    EcsId *id = ecs_get_ptr(world, system, EcsId_h);
+    EcsId *id = ecs_get_ptr(world, system, tEcsId);
     EcsSystemStats *sstats = ecs_array_add(
         stats_array, &systemstats_arr_params);
 
@@ -181,9 +181,9 @@ void set_system_stats(
     sstats->id = *id;
     sstats->enabled = ecs_is_enabled(world, system);
     sstats->active = active;
-    sstats->is_hidden = ecs_has(world, system, EcsHidden_h);
+    sstats->is_hidden = ecs_has(world, system, tEcsHidden);
 
-    EcsSystem *system_ptr = ecs_get_ptr(world, system, EcsColSystem_h);
+    EcsSystem *system_ptr = ecs_get_ptr(world, system, tEcsColSystem);
     if (system_ptr) {
         EcsColSystem *col_system = (EcsColSystem*)system_ptr;
         EcsArray *tables = col_system->tables;
@@ -201,9 +201,7 @@ void set_system_stats(
         sstats->tables_matched = count + ecs_array_count(
             col_system->inactive_tables);
     } else {
-        system_ptr = ecs_get_ptr(world, system, EcsRowSystem_h);
-        EcsRowSystem *row_system = (EcsRowSystem*)system_ptr;
-        assert(row_system != NULL);
+        system_ptr = ecs_get_ptr(world, system, tEcsRowSystem);
         sstats->entities_matched = 0;
         sstats->tables_matched = 0;
         sstats->period = 0;
@@ -266,7 +264,7 @@ int system_stats_arr_inactive(
     EcsEntity *handles = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
-        EcsColSystem *data = ecs_get_ptr(world, handles[i], EcsColSystem_h);
+        EcsColSystem *data = ecs_get_ptr(world, handles[i], tEcsColSystem);
         EcsArray **stats_array = NULL;
 
         if (data->base.kind == EcsOnLoad) {
@@ -313,10 +311,10 @@ void ecs_get_stats(
         tstats->row_count = ecs_table_count(table);
         tstats->memory_used = tstats->row_count * row_size;
         tstats->memory_allocd = ecs_table_rows_dimensioned(table) * row_size;
-        tstats->columns = ecs_family_tostr(world, NULL, table->family_id);
+        tstats->columns = ecs_type_tostr(world, NULL, table->type_id);
 
         EcsEntity family_handle = ecs_map_get64(
-            world->family_handles, table->family_id);
+            world->family_handles, table->type_id);
         if (family_handle) {
             tstats->id = ecs_id(world, family_handle);
         } else {
@@ -338,20 +336,20 @@ void ecs_get_stats(
     EcsIter it = ecs_map_iter(world->family_handles);
     while (ecs_iter_hasnext(&it)) {
         EcsEntity h = ecs_map_next(&it, NULL);
-        EcsFamilyComponent *data = ecs_get_ptr(world, h, EcsFamilyComponent_h);
+        EcsTypeComponent *data = ecs_get_ptr(world, h, tEcsTypeComponent);
         EcsArray *family = ecs_map_get(world->family_index, data->resolved);
         EcsEntity *buffer = ecs_array_buffer(family);
         uint32_t i, count = ecs_array_count(family);
 
         EcsFeatureStats feature = {0};
         for (i = 0; i < count; i ++) {
-            if (ecs_has(world, buffer[i], EcsColSystem_h)) {
+            if (ecs_has(world, buffer[i], tEcsColSystem)) {
                 feature.system_count ++;
                 if (ecs_is_enabled(world, buffer[i])) {
                     feature.systems_enabled ++;
                 }
             }
-            if (ecs_has(world, buffer[i], EcsRowSystem_h)) {
+            if (ecs_has(world, buffer[i], tEcsRowSystem)) {
                 feature.system_count ++;
                 feature.systems_enabled ++;
             }
@@ -362,8 +360,8 @@ void ecs_get_stats(
                 &stats->features, &featurestats_arr_params);
             *elem = feature;
             elem->id = ecs_id(world, h);
-            elem->entities = ecs_family_tostr(world, NULL, data->family);
-            elem->is_hidden = ecs_has(world, h, EcsHidden_h);
+            elem->entities = ecs_type_tostr(world, NULL, data->family);
+            elem->is_hidden = ecs_has(world, h, tEcsHidden);
         }
     }
 
@@ -408,7 +406,7 @@ void ecs_get_stats(
     stats->memory.systems.allocd += system_memory;
 
     uint32_t family_memory = ecs_map_count(world->family_index) *
-      (sizeof(EcsFamilyComponent) + sizeof(EcsId));
+      (sizeof(EcsTypeComponent) + sizeof(EcsId));
     stats->memory.components.used -= family_memory;
     stats->memory.components.allocd -= family_memory;
     stats->memory.families.used += family_memory;

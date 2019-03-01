@@ -90,9 +90,13 @@ const char* ecs_strerror(
         return "missing system context";
     case ECS_UNKNOWN_COMPONENT_ID:
         return "unknown component id";
+    case ECS_UNKNOWN_TYPE_ID:
+        return "unknown type id";
+    case ECS_TYPE_NOT_AN_ENTITY:
+        return "type contains more than one entity";
     case ECS_NOT_A_COMPONENT:
         return "handle is not a component";
-    case ECS_FAMILY_IN_USE:
+    case ecs_type_IN_USE:
         return "family specified by system is already in use";
     case ECS_INTERNAL_ERROR:
         return "internal error";
@@ -100,6 +104,8 @@ const char* ecs_strerror(
         return "more than one prefab added to entity";
     case ECS_ENTITY_ALREADY_DEFINED:
         return "entity has already been defined";
+    case ECS_INVALID_COMPONENT_SIZE:
+        return "the specified size does not match the component";
     }
 
     return "unknown error code";

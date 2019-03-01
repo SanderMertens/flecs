@@ -61,8 +61,8 @@ int main(int argc, char *argv[]) {
      * When a component is overridden, the value from the prefab is copied into
      * the entity. This makes prefabs also a useful tool for initializing
      * entity values. */
-    ECS_FAMILY(world, Car, CarPrefab, Position);
-    ECS_FAMILY(world, Plane, PlanePrefab, Position);
+    ECS_TYPE(world, Car, CarPrefab, Position);
+    ECS_TYPE(world, Plane, PlanePrefab, Position);
 
     /* Initialize prefab position. Even though the Position will be overriden by
      * the entities, setting the value on the prefab will ensure that the

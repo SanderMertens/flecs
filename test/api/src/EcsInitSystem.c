@@ -116,7 +116,7 @@ void test_EcsInitSystem_tc_init_after_add_family(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, TestInit, EcsOnAdd, Bar);
 
     Context ctx = {0};
@@ -374,7 +374,7 @@ void test_EcsInitSystem_tc_add_in_init_from_prefab(
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
     ECS_PREFAB(world, MyPrefab, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, MyPrefab);
+    ECS_TYPE(world, MyFamily, Foo, MyPrefab);
     ECS_SYSTEM(world, AddInInitPrefab, EcsOnAdd, Foo);
 
     ecs_set(world, MyPrefab_h, Bar, {20});
@@ -461,7 +461,7 @@ void test_EcsInitSystem_tc_remove_in_init(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, RemoveInInit, EcsOnAdd, Foo, Bar);
 
     HandleCtx ctx = {.h = Bar_h};
@@ -645,7 +645,7 @@ void test_EcsInitSystem_tc_deinit_after_remove_in_progress(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, IntPtr);
-    ECS_FAMILY(world, MyFamily, Foo, IntPtr);
+    ECS_TYPE(world, MyFamily, Foo, IntPtr);
     ECS_SYSTEM(world, RemoveInProgress, EcsOnFrame, Foo, IntPtr);
     ECS_SYSTEM(world, DeinitTest, EcsOnRemove, IntPtr);
 
@@ -688,7 +688,7 @@ void test_EcsInitSystem_tc_init_2_components(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, InitTwo, EcsOnAdd, Bar, Foo);
 
     EcsEntity e = ecs_new(world, MyFamily_h);
@@ -752,7 +752,7 @@ void test_EcsInitSystem_tc_add_w_handle_param_2_components(
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, MyFamily, Foo, Bar);
+    ECS_TYPE(world, MyFamily, Foo, Bar);
     ECS_SYSTEM(world, IniTest, EcsOnAdd, Foo, Bar, ID.Bar);
 
     bool called = false;

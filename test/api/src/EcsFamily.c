@@ -5,14 +5,14 @@
 typedef int Foo;
 typedef int Bar;
 
-void test_EcsFamily_tc_family_nested_1(
-    test_EcsFamily this)
+void test_EcsType_tc_family_nested_1(
+    test_EcsType this)
 {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
-    ECS_FAMILY(world, BaseFamily, Foo);
-    ECS_FAMILY(world, SubFamily, BaseFamily);
+    ECS_TYPE(world, BaseFamily, Foo);
+    ECS_TYPE(world, SubFamily, BaseFamily);
 
     EcsEntity e = ecs_new(world, SubFamily_h);
     test_assert(e != 0);
@@ -21,16 +21,16 @@ void test_EcsFamily_tc_family_nested_1(
     ecs_fini(world);
 }
 
-void test_EcsFamily_tc_family_nested_2(
-    test_EcsFamily this)
+void test_EcsType_tc_family_nested_2(
+    test_EcsType this)
 {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, BaseFamily1, Foo);
-    ECS_FAMILY(world, BaseFamily2, Bar);
-    ECS_FAMILY(world, SubFamily, BaseFamily1, BaseFamily2);
+    ECS_TYPE(world, BaseFamily1, Foo);
+    ECS_TYPE(world, BaseFamily2, Bar);
+    ECS_TYPE(world, SubFamily, BaseFamily1, BaseFamily2);
 
     EcsEntity e = ecs_new(world, SubFamily_h);
     test_assert(e != 0);
@@ -40,15 +40,15 @@ void test_EcsFamily_tc_family_nested_2(
     ecs_fini(world);
 }
 
-void test_EcsFamily_tc_family_2_lvl_nested_1(
-    test_EcsFamily this)
+void test_EcsType_tc_family_2_lvl_nested_1(
+    test_EcsType this)
 {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
-    ECS_FAMILY(world, BaseFamily, Foo);
-    ECS_FAMILY(world, SubFamily, BaseFamily);
-    ECS_FAMILY(world, SubSubFamily, SubFamily);
+    ECS_TYPE(world, BaseFamily, Foo);
+    ECS_TYPE(world, SubFamily, BaseFamily);
+    ECS_TYPE(world, SubSubFamily, SubFamily);
 
     EcsEntity e = ecs_new(world, SubSubFamily_h);
     test_assert(e != 0);
@@ -57,17 +57,17 @@ void test_EcsFamily_tc_family_2_lvl_nested_1(
     ecs_fini(world);
 }
 
-void test_EcsFamily_tc_family_2_lvl_nested_2(
-    test_EcsFamily this)
+void test_EcsType_tc_family_2_lvl_nested_2(
+    test_EcsType this)
 {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
-    ECS_FAMILY(world, BaseFamily1, Foo);
-    ECS_FAMILY(world, BaseFamily2, Bar);
-    ECS_FAMILY(world, SubFamily, BaseFamily1, BaseFamily2);
-    ECS_FAMILY(world, SubSubFamily, SubFamily);
+    ECS_TYPE(world, BaseFamily1, Foo);
+    ECS_TYPE(world, BaseFamily2, Bar);
+    ECS_TYPE(world, SubFamily, BaseFamily1, BaseFamily2);
+    ECS_TYPE(world, SubSubFamily, SubFamily);
 
     EcsEntity e = ecs_new(world, SubSubFamily_h);
     test_assert(e != 0);
@@ -80,14 +80,14 @@ void test_EcsFamily_tc_family_2_lvl_nested_2(
 void TestSystem1(EcsRows *rows) { }
 void TestSystem2(EcsRows *rows) { }
 
-void test_EcsFamily_tc_family_of_systems_1(
-    test_EcsFamily this)
+void test_EcsType_tc_family_of_systems_1(
+    test_EcsType this)
 {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
-    ECS_FAMILY(world, Family, TestSystem1);
+    ECS_TYPE(world, Family, TestSystem1);
 
     test_assert(ecs_is_enabled(world, TestSystem1_h));
     ecs_enable(world, Family_h, false);
@@ -96,15 +96,15 @@ void test_EcsFamily_tc_family_of_systems_1(
     ecs_fini(world);
 }
 
-void test_EcsFamily_tc_family_of_systems_2(
-    test_EcsFamily this)
+void test_EcsType_tc_family_of_systems_2(
+    test_EcsType this)
 {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
     ECS_SYSTEM(world, TestSystem2, EcsOnFrame, Foo);
-    ECS_FAMILY(world, Family, TestSystem1, TestSystem2);
+    ECS_TYPE(world, Family, TestSystem1, TestSystem2);
 
     test_assert(ecs_is_enabled(world, TestSystem1_h));
     test_assert(ecs_is_enabled(world, TestSystem2_h));
@@ -115,15 +115,15 @@ void test_EcsFamily_tc_family_of_systems_2(
     ecs_fini(world);
 }
 
-void test_EcsFamily_tc_family_of_systems_1_nested(
-    test_EcsFamily this)
+void test_EcsType_tc_family_of_systems_1_nested(
+    test_EcsType this)
 {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
-    ECS_FAMILY(world, Family, TestSystem1);
-    ECS_FAMILY(world, SubFamily, Family);
+    ECS_TYPE(world, Family, TestSystem1);
+    ECS_TYPE(world, SubFamily, Family);
 
     test_assert(ecs_is_enabled(world, TestSystem1_h));
     ecs_enable(world, SubFamily_h, false);
@@ -132,16 +132,16 @@ void test_EcsFamily_tc_family_of_systems_1_nested(
     ecs_fini(world);
 }
 
-void test_EcsFamily_tc_family_of_systems_1_nested_2_lvl(
-    test_EcsFamily this)
+void test_EcsType_tc_family_of_systems_1_nested_2_lvl(
+    test_EcsType this)
 {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
-    ECS_FAMILY(world, Family, TestSystem1);
-    ECS_FAMILY(world, SubFamily, Family);
-    ECS_FAMILY(world, SubSubFamily, SubFamily);
+    ECS_TYPE(world, Family, TestSystem1);
+    ECS_TYPE(world, SubFamily, Family);
+    ECS_TYPE(world, SubSubFamily, SubFamily);
 
     test_assert(ecs_is_enabled(world, TestSystem1_h));
     ecs_enable(world, SubSubFamily_h, false);
@@ -150,17 +150,17 @@ void test_EcsFamily_tc_family_of_systems_1_nested_2_lvl(
     ecs_fini(world);
 }
 
-void test_EcsFamily_tc_family_of_systems_2_nested(
-    test_EcsFamily this)
+void test_EcsType_tc_family_of_systems_2_nested(
+    test_EcsType this)
 {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
     ECS_SYSTEM(world, TestSystem2, EcsOnFrame, Foo);
-    ECS_FAMILY(world, Family1, TestSystem1);
-    ECS_FAMILY(world, Family2, TestSystem2);
-    ECS_FAMILY(world, SubFamily, Family1, Family2);
+    ECS_TYPE(world, Family1, TestSystem1);
+    ECS_TYPE(world, Family2, TestSystem2);
+    ECS_TYPE(world, SubFamily, Family1, Family2);
 
     test_assert(ecs_is_enabled(world, TestSystem1_h));
     test_assert(ecs_is_enabled(world, TestSystem2_h));
@@ -171,19 +171,19 @@ void test_EcsFamily_tc_family_of_systems_2_nested(
     ecs_fini(world);
 }
 
-void test_EcsFamily_tc_family_of_systems_2_nested_2_lvl(
-    test_EcsFamily this)
+void test_EcsType_tc_family_of_systems_2_nested_2_lvl(
+    test_EcsType this)
 {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Foo);
     ECS_SYSTEM(world, TestSystem1, EcsOnFrame, Foo);
     ECS_SYSTEM(world, TestSystem2, EcsOnFrame, Foo);
-    ECS_FAMILY(world, Family1, TestSystem1);
-    ECS_FAMILY(world, Family2, TestSystem2);
-    ECS_FAMILY(world, SubFamily1, Family1);
-    ECS_FAMILY(world, SubFamily2, Family2);
-    ECS_FAMILY(world, SubSubFamily, SubFamily1, SubFamily2);
+    ECS_TYPE(world, Family1, TestSystem1);
+    ECS_TYPE(world, Family2, TestSystem2);
+    ECS_TYPE(world, SubFamily1, Family1);
+    ECS_TYPE(world, SubFamily2, Family2);
+    ECS_TYPE(world, SubSubFamily, SubFamily1, SubFamily2);
 
     test_assert(ecs_is_enabled(world, TestSystem1_h));
     test_assert(ecs_is_enabled(world, TestSystem2_h));

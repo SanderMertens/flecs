@@ -26,17 +26,13 @@
 #define ECS_THREAD_MAGIC (0x65637374)
 
 
-/** A hash of the component identifiers in a family. */
-typedef uint32_t EcsFamily;
-
-
 /* -- Builtin component types -- */
 
 /** Metadata of an explicitly created family (identified by an entity id) */
-typedef struct EcsFamilyComponent {
-    EcsFamily family;    /* Preserved nested families */
-    EcsFamily resolved;  /* Resolved nested families */
-} EcsFamilyComponent;
+typedef struct EcsTypeComponent {
+    EcsType family;    /* Preserved nested families */
+    EcsType resolved;  /* Resolved nested families */
+} EcsTypeComponent;
 
 /** Metadata of a component */
 typedef struct EcsComponent {
@@ -73,7 +69,7 @@ typedef struct EcsSystemColumn {
     EcsSystemExprElemKind kind;       /* Element kind (Entity, Component) */
     EcsSystemExprOperKind oper_kind;  /* Operator kind (AND, OR, NOT) */
     union {
-        EcsFamily family;             /* Used for OR operator */
+        EcsType family;             /* Used for OR operator */
         EcsEntity component;          /* Used for AND operator */
     } is;
 } EcsSystemColumn;
@@ -89,10 +85,9 @@ typedef struct EcsSystem {
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
     const char *signature;     /* Signature with which system was created */
     EcsArray *columns;         /* Column components */
-    EcsFamily not_from_entity; /* Exclude components from entity */
-    EcsFamily not_from_component; /* Exclude components from components */
-    EcsFamily and_from_entity; /* Which components are required from entity */
-    EcsEntity ctx_handle;      /* User-defined context for system */
+    EcsType not_from_entity; /* Exclude components from entity */
+    EcsType not_from_component; /* Exclude components from components */
+    EcsType and_from_entity; /* Which components are required from entity */
     EcsSystemKind kind;        /* Kind of system */
     float time_spent;          /* Time spent on running system */
     bool enabled;              /* Is system enabled or not */
@@ -147,7 +142,7 @@ typedef struct EcsColSystem {
     EcsArrayParams table_params; /* Parameters for tables array */
     EcsArrayParams component_params; /* Parameters for components array */
     EcsArrayParams ref_params; /* Parameters for tables array */
-    EcsFamily and_from_system; /* Used to auto-add components to system */
+    EcsType and_from_system; /* Used to auto-add components to system */
     float period;              /* Minimum period inbetween system invocations */
     float time_passed;         /* Time passed since last invocation */
 } EcsColSystem;
@@ -178,14 +173,14 @@ typedef struct EcsTable {
     EcsArray *family;             /* Reference to family_index entry */
     EcsTableColumn *columns;      /* Columns storing components of array */
     EcsArray *frame_systems;      /* Frame systems matched with table */
-    EcsFamily family_id;          /* Identifies table family in family_index */
+    EcsType type_id;          /* Identifies table family in family_index */
  } EcsTable;
  
 /** The EcsRow struct is a 64-bit value that describes in which table
- * (identified by a family_id) is stored, at which index. Entries in the 
+ * (identified by a type_id) is stored, at which index. Entries in the 
  * world::entity_index are of type EcsRow. */
 typedef struct EcsRow {
-    EcsFamily family_id;          /* Identifies a family (and table) in world */
+    EcsType type_id;          /* Identifies a family (and table) in world */
     uint32_t index;               /* Index of the entity in its table */
 } EcsRow;
 
@@ -193,7 +188,7 @@ typedef struct EcsRow {
  * related to an entity is only looked up once. */
 typedef struct EcsEntityInfo {
     EcsEntity entity;
-    EcsFamily family_id;
+    EcsType type_id;
     uint32_t index;
     EcsTable *table;
     EcsTableColumn *columns;
@@ -278,7 +273,7 @@ struct EcsWorld {
     /* -- Lookup Indices -- */
 
     EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
-    EcsMap *table_index;          /* Identifies a table by family_id */
+    EcsMap *table_index;          /* Identifies a table by type_id */
     EcsMap *family_index;         /* References to component families */
     EcsMap *family_handles;       /* Index to families created by API */
     EcsMap *prefab_index;         /* Index to find prefabs in families */
@@ -307,12 +302,11 @@ struct EcsWorld {
 
 
     /* -- Handles to builtin components families -- */
-
-    EcsFamily component_family;   /* EcsComponent, EcsId */
-    EcsFamily col_system_family;  /* EcsColSystem, EcsId */
-    EcsFamily row_system_family;  /* EcsRowSystem, EcsId */
-    EcsFamily family_family;      /* EcsFamily, EcsId */
-    EcsFamily prefab_family;      /* EcsPrefab, EcsId */
+    EcsType t_component;
+    EcsType t_type;
+    EcsType t_prefab;
+    EcsType t_row_system;
+    EcsType t_col_system;
 
 
     /* -- Time management -- */

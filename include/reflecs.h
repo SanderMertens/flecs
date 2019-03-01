@@ -45,6 +45,9 @@ extern "C" {
 
 /* -- Supporting types -- */
 
+/** A hash of the component identifiers in a family. */
+typedef uint32_t EcsType;
+
 /** Id component type */
 typedef const char *EcsId;
 
@@ -113,15 +116,32 @@ typedef void (*EcsModuleInitAction)(
     void *handles_out);
 
 /** Handles to builtin components */
-#define EcsComponent_h (1)
-#define EcsFamilyComponent_h (2)
-#define EcsPrefab_h (3)
-#define EcsRowSystem_h (4)
-#define EcsColSystem_h (5)
-#define EcsId_h (6)
-#define EcsHidden_h (7)
-#define EcsContainer_h (8)
+#define eEcsComponent (1)
+#define eEcsTypeComponent (2)
+#define eEcsPrefab (3)
+#define eEcsRowSystem (4)
+#define eEcsColSystem (5)
+#define eEcsId (6)
+#define eEcsHidden (7)
+#define eEcsContainer (8)
 
+extern EcsType tEcsComponent;
+extern EcsType tEcsTypeComponent;
+extern EcsType tEcsPrefab;
+extern EcsType tEcsRowSystem;
+extern EcsType tEcsColSystem;
+extern EcsType tEcsId;
+extern EcsType tEcsHidden;
+extern EcsType tEcsContainer;
+
+extern const char *ECS_COMPONENT_ID;
+extern const char *ECS_TYPE_COMPONENT_ID;
+extern const char *ECS_PREFAB_ID;
+extern const char *ECS_ROW_SYSTEM_ID;
+extern const char *ECS_COL_SYSTEM_ID;
+extern const char *ECS_ID_ID;
+extern const char *ECS_HIDDEN_ID;
+extern const char *ECS_CONTAINER_ID;
 
 /* -- World API -- */
 
@@ -195,7 +215,7 @@ void ecs_quit(
  *
  * ECS_IMPORT(world, EcsComponentsTransform 0);
  *
- * This macro automatically creates a variable called EcsComponentsTransform_h
+ * This macro automatically creates a variable called eEcsComponentsTransform
  * that is the struct with the handles for that component.
  *
  * @param world The world.
@@ -425,18 +445,18 @@ void ecs_dim(
  * operation can thus also be used to just preallocate empty tables.
  *
  * If the specified family is unknown, the behavior of this function is
- * unspecified. To ensure that the family exists, use ecs_family_get or
- * ECS_FAMILY.
+ * unspecified. To ensure that the family exists, use ecs_type_get or
+ * ECS_TYPE.
  *
  * @time-complexity: O(1)
  * @param world The world.
- * @param family Handle to the family, as obtained by ecs_family_get.
+ * @param family Handle to the family, as obtained by ecs_type_get.
  * @param entity_count The number of entities to preallocate.
  */
 REFLECS_EXPORT
 void ecs_dim_family(
     EcsWorld *world,
-    EcsEntity family,
+    EcsType family,
     uint32_t entity_count);
 
 
@@ -469,7 +489,7 @@ void ecs_dim_family(
 REFLECS_EXPORT
 EcsEntity ecs_new(
     EcsWorld *world,
-    EcsEntity type);
+    EcsType type);
 
 REFLECS_EXPORT
 EcsEntity ecs_new_entity(
@@ -490,7 +510,7 @@ EcsEntity ecs_new_entity(
 REFLECS_EXPORT
 EcsEntity ecs_new_w_count(
     EcsWorld *world,
-    EcsEntity type,
+    EcsType type,
     uint32_t count,
     EcsEntity *handles_out);
 
@@ -513,49 +533,6 @@ EcsEntity ecs_clone(
     EcsWorld *world,
     EcsEntity entity,
     bool copy_value);
-
-/** Create a new prefab entity.
- * Prefab entities allow entities to share a set of components. Components of
- * the prefab will appear on the specified entity when using any of the API
- * functions and ECS systems.
- *
- * A prefab is a regular entity, with the only difference that it has the
- * EcsPrefab component. That means that all the regular API functions like
- * ecs_get_ptr, ecs_stage_add, ecs_commit etc. can be used on prefabs.
- *
- * The ECS_PREFAB macro wraps around this function.
- *
- * Changing the value of one of the components on the prefab will change the
- * value for all entities that added the prefab, as components are stored only
- * once in memory. This makes prefabs also a memory-saving mechanism; there can
- * be many entities that reuse component records from the prefab.
- *
- * Entities can override components from a prefab by adding the component with
- * ecs_stage_add. When a component is overridden, its value will be copied from the
- * prefab. This technique can be combined with families to automatically
- * initialize entities, like this:
- *
- * ECS_PREFAB(world, MyPrefab, Foo);
- * ECS_FAMILY(world, MyFamily, MyPrefab, Foo);
- * EcsEntity e = ecs_new(world, MyFamily);
- *
- * In this code, the entity will be created with the prefab and directly
- * override 'Foo', which will copy the value of 'Foo' from the prefab.
- *
- * Prefabs are explicitly stored on the component list of an entity. This means
- * that two entities with the same set of components but a different prefab are
- * stored in different tables.
- *
- * Prefabs can be part of the component list of other prefabs. This allows for
- * creating hierarchies of prefabs, where the leaves are the most specialized.
- *
- * Only one prefab may be added to an entity.
- */
-REFLECS_EXPORT
-EcsEntity ecs_new_prefab(
-    EcsWorld *world,
-    const char *id,
-    const char *sig);
 
 /** Delete an existing entity.
  * Deleting an entity in most cases causes the data of another entity to be
@@ -664,14 +641,14 @@ REFLECS_EXPORT
 EcsResult ecs_add(
     EcsWorld *world,
     EcsEntity entity,
-    EcsEntity component);
+    EcsType component);
 
 /** Remove a single component from an entity */
 REFLECS_EXPORT
 EcsResult ecs_remove(
     EcsWorld *world,
     EcsEntity entity,
-    EcsEntity component);
+    EcsType component);
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
@@ -698,10 +675,10 @@ REFLECS_EXPORT
 void* ecs_get_ptr(
     EcsWorld *world,
     EcsEntity entity,
-    EcsEntity component);
+    EcsType type);
 
-#define ecs_get(world, entity, component)\
-  (*(component*)ecs_get_ptr(world, entity, component##_h))
+#define ecs_get(world, entity, type)\
+  (*(component*)ecs_get_ptr(world, entity, t##type))
 
 /* Set value of component.
  * This function sets the value of a component on the specified entity. If the
@@ -709,7 +686,7 @@ void* ecs_get_ptr(
  *
  * This function can be used like this:
  * Foo value = {.x = 10, .y = 20};
- * ecs_set_ptr(world, e, Foo_h, &value);
+ * ecs_set_ptr(world, e, tFoo, &value);
  *
  * This function is wrapped by the ecs_set convenience macro, which can be used
  * like this:
@@ -724,11 +701,12 @@ REFLECS_EXPORT
 EcsEntity ecs_set_ptr(
     EcsWorld *world,
     EcsEntity entity,
-    EcsEntity component,
+    EcsType type,
+    size_t size,
     void *ptr);
 
-#define ecs_set(world, entity, component, ...)\
-    ecs_set_ptr(world, entity, component##_h, &(component)__VA_ARGS__);
+#define ecs_set(world, entity, type, ...)\
+    ecs_set_ptr(world, entity, t##type, sizeof(type), &(type)__VA_ARGS__);
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the
@@ -749,7 +727,7 @@ REFLECS_EXPORT
 bool ecs_has(
     EcsWorld *world,
     EcsEntity entity,
-    EcsEntity type);
+    EcsType type);
 
 /** Check if entity has any of the components in the specified type.
  * This operation checks if the entity has any of the components associated with
@@ -769,7 +747,7 @@ REFLECS_EXPORT
 bool ecs_has_any(
     EcsWorld *world,
     EcsEntity entity,
-    EcsEntity type);
+    EcsType type);
 
 /** Return if the entity is valid.
  * This returns whether the provided entity handle is valid. An entity that has
@@ -782,6 +760,12 @@ bool ecs_has_any(
  */
 REFLECS_EXPORT
 bool ecs_empty(
+    EcsWorld *world,
+    EcsEntity entity);
+
+/** Get type of entity */
+REFLECS_EXPORT
+EcsType ecs_typeid(
     EcsWorld *world,
     EcsEntity entity);
 
@@ -874,7 +858,7 @@ EcsEntity ecs_new_component(
  * identifier, the existing family is returned. If the family had been created
  * with a different identifier, this function will fail.
  *
- * The ECS_FAMILY macro wraps around this function.
+ * The ECS_TYPE macro wraps around this function.
  *
  * @time-complexity: O(c)
  * @param world The world.
@@ -882,11 +866,85 @@ EcsEntity ecs_new_component(
  * @returns Handle to the family, zero if failed.
  */
 REFLECS_EXPORT
-EcsEntity ecs_new_family(
+EcsType ecs_new_type(
     EcsWorld *world,
     const char *id,
     const char *components);
 
+/** Create a new prefab entity.
+ * Prefab entities allow entities to share a set of components. Components of
+ * the prefab will appear on the specified entity when using any of the API
+ * functions and ECS systems.
+ *
+ * A prefab is a regular entity, with the only difference that it has the
+ * EcsPrefab component. That means that all the regular API functions like
+ * ecs_get_ptr, ecs_stage_add, ecs_commit etc. can be used on prefabs.
+ *
+ * The ECS_PREFAB macro wraps around this function.
+ *
+ * Changing the value of one of the components on the prefab will change the
+ * value for all entities that added the prefab, as components are stored only
+ * once in memory. This makes prefabs also a memory-saving mechanism; there can
+ * be many entities that reuse component records from the prefab.
+ *
+ * Entities can override components from a prefab by adding the component with
+ * ecs_stage_add. When a component is overridden, its value will be copied from the
+ * prefab. This technique can be combined with families to automatically
+ * initialize entities, like this:
+ *
+ * ECS_PREFAB(world, MyPrefab, Foo);
+ * ECS_TYPE(world, MyFamily, MyPrefab, Foo);
+ * EcsEntity e = ecs_new(world, MyFamily);
+ *
+ * In this code, the entity will be created with the prefab and directly
+ * override 'Foo', which will copy the value of 'Foo' from the prefab.
+ *
+ * Prefabs are explicitly stored on the component list of an entity. This means
+ * that two entities with the same set of components but a different prefab are
+ * stored in different tables.
+ *
+ * Prefabs can be part of the component list of other prefabs. This allows for
+ * creating hierarchies of prefabs, where the leaves are the most specialized.
+ *
+ * Only one prefab may be added to an entity.
+ */
+REFLECS_EXPORT
+EcsEntity ecs_new_prefab(
+    EcsWorld *world,
+    const char *id,
+    const char *sig);
+
+/** Get a type from an entity.
+ * This function returns a type that can be added/removed to entities. If you
+ * create a new component, family or prefab with the ecs_new_* function, you get
+ * an EcsEntity handle which provides access to builtin components associated
+ * with the component, family or prefab.
+ * 
+ * To add a component to an entity, you first have to obtain its type. Types
+ * uniquely identify sets of one or more components, and can be used with
+ * functions like ecs_add and ecs_remove.
+ * 
+ * You can only obtain types from entities that have EcsComponent, EcsPrefab,
+ * EcsTypeComponent or EcsContainer. These components are automatically added
+ * by the ecs_new_* functions, but can also be added manually.
+ * 
+ * The ECS_COMPONENT, ECS_TAG, ECS_TYPE or ECS_PREFAB macro's will auto-
+ * declare a variable containing the type called tFoo (where 'Foo' is the id
+ * provided to the macro).
+ */
+REFLECS_EXPORT
+EcsType ecs_entity_to_type(
+    EcsWorld *world,
+    EcsEntity entity);
+
+
+/** Get an entity from a type.
+ * This function is the reverse of ecs_entity_to_type. It only works for types
+ * that contain exactly one entity. */
+REFLECS_EXPORT
+EcsEntity ecs_type_to_entity(
+    EcsWorld *world,
+    EcsType entity);
 
 /* -- System API -- */
 
@@ -1051,22 +1109,6 @@ EcsEntity ecs_run_w_filter(
     EcsEntity filter,
     void *param);
 
-/** Set component on system for user-defined context */
-REFLECS_EXPORT
-void* ecs_set_system_context_ptr(
-    EcsWorld *world,
-    EcsEntity system,
-    EcsEntity component,
-    void *ptr);
-
-/** Get component from system for user-defined context */
-REFLECS_EXPORT
-void* ecs_get_system_context(
-    EcsWorld *world,
-    EcsEntity system);
-
-#define ecs_set_system_context(world, system, component, ...)\
-  { component __v = __VA_ARGS__; ecs_set_system_context_ptr(world, system, component##_h, &__v); }
 
 /* Obtain a column from inside a system */
 REFLECS_EXPORT
@@ -1122,12 +1164,15 @@ void _ecs_assert(
 #define ECS_INVALID_COMPONENT_ID (3)
 #define ECS_INVALID_COMPONENT_EXPRESSION (4)
 #define ECS_UNKNOWN_COMPONENT_ID (5)
-#define ECS_MISSING_SYSTEM_CONTEXT (6)
-#define ECS_NOT_A_COMPONENT (7)
-#define ECS_FAMILY_IN_USE (8)
-#define ECS_INTERNAL_ERROR (9)
-#define ECS_MORE_THAN_ONE_PREFAB (10)
-#define ECS_ENTITY_ALREADY_DEFINED (11)
+#define ECS_UNKNOWN_TYPE_ID (6)
+#define ECS_TYPE_NOT_AN_ENTITY (7)
+#define ECS_MISSING_SYSTEM_CONTEXT (8)
+#define ECS_NOT_A_COMPONENT (9)
+#define ecs_type_IN_USE (10)
+#define ECS_INTERNAL_ERROR (11)
+#define ECS_MORE_THAN_ONE_PREFAB (12)
+#define ECS_ENTITY_ALREADY_DEFINED (13)
+#define ECS_INVALID_COMPONENT_SIZE (14)
 
 /* -- Utility API -- */
 
@@ -1155,12 +1200,11 @@ void ecs_iter_release(
 
 /* -- Convenience macro's -- */
 
-/** Wrapper around ecs_new_entity.
- */ 
+/** Wrapper around ecs_new_entity. */ 
 #define ECS_ENTITY(world, id, ...)\
-    EcsEntity id##_h = ecs_new_entity(world, #id, #__VA_ARGS__);\
-    (void)id##_h;\
-    assert (id##_h != 0)
+    EcsEntity e##id = ecs_new_entity(world, #id, #__VA_ARGS__);\
+    (void)e##id##;\
+    assert (e##id## != 0)
 
 /** Wrapper around ecs_new_component.
  * This macro provides a convenient way to register components with a world. It
@@ -1170,18 +1214,60 @@ void ecs_iter_release(
  *
  * In this example, "Location" must be a valid C type name. After the macro,
  * the application will have access to a Location_h variable which holds the
- * handle to the new component.
- */
+ * handle to the new component. */
 #define ECS_COMPONENT(world, id) \
-    EcsEntity id##_h = ecs_new_component(world, #id, sizeof(id));\
-    (void)id##_h;\
-    assert (id##_h != 0)
+    EcsEntity e##id = ecs_new_component(world, #id, sizeof(id));\
+    assert (e##id != 0);\
+    EcsType t##id = ecs_entity_to_type(world, e##id);\
+    (void)e##id;\
+    (void)t##id;\
+    assert (t##id != 0)
 
 /** Same as component, but no size */
 #define ECS_TAG(world, id) \
-    EcsEntity id##_h = ecs_new_component(world, #id, 0);\
-    (void)id##_h;\
-    assert (id##_h != 0)
+    EcsEntity e##id = ecs_new_component(world, #id, 0);\
+    assert (e##id != 0);\
+    EcsType t##id = ecs_entity_to_type(world, e##id);\
+    (void)e##id;\
+    (void)t##id;\
+    assert (t##id != 0)
+
+/** Wrapper around ecs_new_type.
+ * This macro provides a convenient way to register a family with the world.
+ * It can be used like this:
+ *
+ * ECS_TYPE(world, MyFamily, ComponentA, ComponentB);
+ * EcsEntity h = ecs_new(world, MyFamily_h);
+ *
+ * Creating a family and using it with ecs_new is faster
+ * than calling ecs_new, ecs_stage_add and ecs_commit separately. This method also
+ * provides near-constant creation time for entities regardless of the number of
+ * components, whereas using ecs_stage_add and ecs_commit takes longer for larger
+ * numbers of components. */
+#define ECS_TYPE(world, id, ...) \
+    EcsEntity e##id = ecs_new_type(world, #id, #__VA_ARGS__);\
+    assert (e##id != 0);\
+    EcsType t##id = ecs_entity_to_type(world, e##id);\
+    (void)e##id;\
+    (void)t##id;\
+    assert (t##id != 0)
+
+/** Wrapper around ecs_new_prefab.
+ * This macro provides a convenient way to register a prefab with the world. It
+ * can be used like this:
+ *
+ * ECS_PREFAB(world, MyPrefab, ComponentA, ComponentB);
+ * EcsEntity h = ecs_new(world, MyPrefab_h);
+ *
+ * For more specifics, see description of ecs_new_prefab. */
+#define ECS_PREFAB(world, id, ...) \
+    EcsEntity e##id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
+    assert (e##id != 0);\
+    EcsType t##id = ecs_entity_to_type(world, e##id);\
+    (void)e##id;\
+    (void)t##id;\
+    assert (t##id != 0)
+
 
 /** Wrapper around ecs_new_system.
  * This macro provides a convenient way to register systems with a world. It can
@@ -1194,45 +1280,12 @@ void ecs_iter_release(
  * "Location, Speed".
  *
  * After the macro, the application will have access to a Move_h variable which
- * holds the handle to the new system.
- */
+ * holds the handle to the new system. */
 #define ECS_SYSTEM(world, id, kind, ...) \
     void id(EcsRows*);\
-    EcsEntity id##_h = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
-    (void)id##_h;\
-    assert (id##_h != 0)
-
-/** Wrapper around ecs_new_family.
- * This macro provides a convenient way to register a family with the world.
- * It can be used like this:
- *
- * ECS_FAMILY(world, MyFamily, ComponentA, ComponentB);
- * EcsEntity h = ecs_new(world, MyFamily_h);
- *
- * Creating a family and using it with ecs_new is faster
- * than calling ecs_new, ecs_stage_add and ecs_commit separately. This method also
- * provides near-constant creation time for entities regardless of the number of
- * components, whereas using ecs_stage_add and ecs_commit takes longer for larger
- * numbers of components.
- */
-#define ECS_FAMILY(world, id, ...) \
-    EcsEntity id##_h = ecs_new_family(world, #id, #__VA_ARGS__);\
-    (void)id##_h;\
-    assert (id##_h != 0)
-
-/** Wrapper around ecs_new_prefab.
- * This macro provides a convenient way to register a prefab with the world. It
- * can be used like this:
- *
- * ECS_PREFAB(world, MyPrefab, ComponentA, ComponentB);
- * EcsEntity h = ecs_new(world, MyPrefab_h);
- *
- * For more specifics, see description of ecs_new_prefab.
- */
-#define ECS_PREFAB(world, id, ...) \
-    EcsEntity id##_h = ecs_new_prefab(world, #id, #__VA_ARGS__);\
-    (void)id##_h;\
-    assert (id##_h != 0)
+    EcsEntity e##id = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
+    (void)e##id;\
+    assert (e##id != 0)
 
 /** Wrapper around ecs_load.
  * This macro provides a convenient way to load a module with the world. It can
@@ -1240,12 +1293,11 @@ void ecs_iter_release(
  *
  * ECS_IMPORT(world, EcsSystemsMovement, 0);
  *
- * ecs_enable(world, EcsSystemsMovement_h.Move);
- */
+ * ecs_enable(world, EcsSystemsMovement_h.Move); */
 #define ECS_IMPORT(world, module, flags) \
     module##Handles module##_h;\
-    ecs_import(world, module, flags, &module##_h);\
-    module##_DeclareHandles(module##_h);
+    ecs_import(world, module, flags, &e##module);\
+    module##_DeclareHandles(e##module);
 
 /** Utility macro for declaring handles by modules */
 #define EcsDeclareHandle(handles, component)\

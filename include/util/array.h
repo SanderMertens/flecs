@@ -87,6 +87,10 @@ uint32_t ecs_array_remove(
     void *elem);
 
 REFLECS_EXPORT
+void ecs_array_remove_last(
+    EcsArray *array);
+
+REFLECS_EXPORT
 uint32_t ecs_array_move_index(
     EcsArray **dst_array,
     EcsArray *src_array,

@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 
     /* Use Prefab+Family trick to automatically initialize Position */
     ECS_PREFAB(world, ObjectPrefab, Position);
-    ECS_FAMILY(world, Object, ObjectPrefab, Position);
+    ECS_TYPE(world, Object, ObjectPrefab, Position);
     ecs_set(world, ObjectPrefab_h, Position, {0, 0});
 
     /* List all the entities with a Position component. Instead of running the

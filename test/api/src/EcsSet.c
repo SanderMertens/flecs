@@ -467,7 +467,7 @@ void test_EcsSet_tc_set_add_remove_in_progress(
     ECS_COMPONENT(world, int8_t);
     ECS_COMPONENT(world, int16_t);
     ECS_COMPONENT(world, int32_t);
-    ECS_FAMILY(world, int8_16, int8_t, int16_t);
+    ECS_TYPE(world, int8_16, int8_t, int16_t);
     ECS_SYSTEM(world, SetAddRemove, EcsOnFrame, int8_t);
 
     EcsEntity e1 = ecs_new(world, int8_16_h);
@@ -524,7 +524,7 @@ void test_EcsSet_tc_set_remove_in_progress(
     ECS_COMPONENT(world, int8_t);
     ECS_COMPONENT(world, int16_t);
     ECS_COMPONENT(world, int32_t);
-    ECS_FAMILY(world, int8_16, int8_t, int16_t);
+    ECS_TYPE(world, int8_16, int8_t, int16_t);
     ECS_SYSTEM(world, SetRemove, EcsOnFrame, int8_t);
 
     EcsEntity e1 = ecs_new(world, int8_16_h);

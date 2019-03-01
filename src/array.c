@@ -165,6 +165,12 @@ uint32_t ecs_array_remove(
     return count;
 }
 
+void ecs_array_remove_last(
+    EcsArray *array)
+{
+    if (array->count) array->count --;
+}
+
 uint32_t ecs_array_remove_index(
     EcsArray *array,
     const EcsArrayParams *params,
