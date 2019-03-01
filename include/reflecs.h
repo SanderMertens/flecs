@@ -134,6 +134,9 @@ extern EcsType tEcsId;
 extern EcsType tEcsHidden;
 extern EcsType tEcsContainer;
 
+/* This allows passing 0 as type to functions that accept types */
+#define t0 (0)
+
 extern const char *ECS_COMPONENT_ID;
 extern const char *ECS_TYPE_COMPONENT_ID;
 extern const char *ECS_PREFAB_ID;
