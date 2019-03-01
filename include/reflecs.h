@@ -247,8 +247,8 @@ void ecs_import(
  * - ecs_new_w_count
  * - ecs_clone
  * - ecs_delete
- * - ecs_stage_add
- * - ecs_stage_remove
+ * - ecs_add
+ * - ecs_remove
  * - ecs_commit
  * - ecs_set
  *
@@ -475,7 +475,7 @@ void ecs_dim_family(
  * Component data is stored in tables, with one table for each combination of
  * components. An entity is stored in the table that matches its component list.
  * When components are added or removed from an entity, the entity is moved to
- * another table. See ecs_stage_add, ecs_stage and ecs_commit for more information.
+ * another table. See ecs_add, ecs_stage and ecs_commit for more information.
  *
  * Entities are accessed through handles instead of direct pointers. Certain
  * operations may move an entity in memory. Handles provide a safe mechanism for
@@ -558,51 +558,6 @@ void ecs_delete(
     EcsWorld *world,
     EcsEntity entity);
 
-/** Stage a component for adding.
- * Staging a component will register a component with an entity, but will not
- * yet commit the component to memory. Committing components to memory is an
- * expensive operation, and when adding multiple components this can add up.
- * Staging is relatively cheap, and is therefore the preferred way to add
- * multiple components to an entity at once.
- *
- * After all the components that are to be added are staged, they can be
- * committed to memory with ecs_commit.
- *
- * This operation does not check whether the component handle is valid. If an
- * invalid component handle is provided, the ecs_commit operation will fail.
- *
- * @time-complexity: O(1)
- * @param world The world.
- * @param entity Handle to the entity for which to stage the component.
- * @param component Handle to the component.
- * @returns EcsOk if succeeded, or EcsError if the operation failed.
- */
-REFLECS_EXPORT
-EcsResult ecs_stage_add(
-    EcsWorld *world,
-    EcsEntity entity,
-    EcsEntity component);
-
-/** Stage a component for removing.
- * This operation stages a remove for a component from an entity. The remove
- * will not yet be committed to memory. Similar to ecs_stage, this operation
- * requires calling ecs_commit to actually commit the changes to memory.
- *
- * The post condition for this operation is that the entity will not have
- * the component after invoking ecs_commit. If the entity does not have the
- * component when this operation is called, it is a no-op.
- *
- * @time-complexity: O(1)
- * @param world The world.
- * @param entity Handle to the entity from which to remove the component.
- * @param component The component to remove.
- */
-REFLECS_EXPORT
-EcsResult ecs_stage_remove(
-    EcsWorld *world,
-    EcsEntity entity,
-    EcsEntity component);
-
 /** Commit components to memory.
  * This operation commits all staged components to memory. If no components were
  * staged since creation of the entity or since the last ecs_commit, this
@@ -636,14 +591,14 @@ EcsResult ecs_commit(
     EcsWorld *world,
     EcsEntity entity);
 
-/** Add a single component to an entity */
+/** Add a type to an entity */
 REFLECS_EXPORT
 EcsResult ecs_add(
     EcsWorld *world,
     EcsEntity entity,
     EcsType component);
 
-/** Remove a single component from an entity */
+/** Remove a type from an entity */
 REFLECS_EXPORT
 EcsResult ecs_remove(
     EcsWorld *world,
@@ -817,7 +772,7 @@ EcsEntity ecs_lookup(
 /** Create a new component.
  * This operation creates a new component with a specified id and size. After
  * this operation is called, the component can be added to entities by using
- * the returned handle with ecs_stage or ecs_stage_add.
+ * the returned handle with ecs_add.
  *
  * Components represent the data of entities. An entity can be composed out of
  * zero or more components. Internally compoments are stored in tables that
@@ -878,7 +833,7 @@ EcsType ecs_new_type(
  *
  * A prefab is a regular entity, with the only difference that it has the
  * EcsPrefab component. That means that all the regular API functions like
- * ecs_get_ptr, ecs_stage_add, ecs_commit etc. can be used on prefabs.
+ * ecs_get_ptr, ecs_add, ecs_commit etc. can be used on prefabs.
  *
  * The ECS_PREFAB macro wraps around this function.
  *
@@ -888,7 +843,7 @@ EcsType ecs_new_type(
  * be many entities that reuse component records from the prefab.
  *
  * Entities can override components from a prefab by adding the component with
- * ecs_stage_add. When a component is overridden, its value will be copied from the
+ * ecs_add. When a component is overridden, its value will be copied from the
  * prefab. This technique can be combined with families to automatically
  * initialize entities, like this:
  *
@@ -1240,9 +1195,9 @@ void ecs_iter_release(
  * EcsEntity h = ecs_new(world, MyFamily_h);
  *
  * Creating a family and using it with ecs_new is faster
- * than calling ecs_new, ecs_stage_add and ecs_commit separately. This method also
+ * than calling ecs_new, ecs_add and ecs_commit separately. This method also
  * provides near-constant creation time for entities regardless of the number of
- * components, whereas using ecs_stage_add and ecs_commit takes longer for larger
+ * components, whereas using ecs_add and ecs_commit takes longer for larger
  * numbers of components. */
 #define ECS_TYPE(world, id, ...) \
     EcsEntity e##id = ecs_new_type(world, #id, #__VA_ARGS__);\

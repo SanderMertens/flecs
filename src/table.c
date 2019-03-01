@@ -151,7 +151,7 @@ void ecs_table_delete(
         EcsRow row;
         row.type_id = table->type_id;
         row.index = index;
-        ecs_map_set64(world->entity_index, to_move, ecs_from_row(row));
+        ecs_map_set64(world->main_stage.entity_index, to_move, ecs_from_row(row));
     }
 
     ecs_array_remove_last(entity_column);

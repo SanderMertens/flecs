@@ -20,7 +20,7 @@ void calculate_family_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    EcsIter it = ecs_map_iter(world->family_index);
+    EcsIter it = ecs_map_iter(world->main_stage.family_index);
     while (ecs_iter_hasnext(&it)) {
         EcsArray *family = ecs_iter_next(&it);
         ecs_array_memory(family, &handle_arr_params, allocd, used);
@@ -53,8 +53,8 @@ void calculate_table_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    EcsTable *buffer = ecs_array_buffer(world->table_db);
-    uint32_t i, count = ecs_array_count(world->table_db);
+    EcsTable *buffer = ecs_array_buffer(world->main_stage.tables);
+    uint32_t i, count = ecs_array_count(world->main_stage.tables);
     for (i = 0; i < count; i ++) {
         EcsTable *table = &buffer[i];
         ecs_array_memory(table->frame_systems, &handle_arr_params, allocd, used);
@@ -65,19 +65,29 @@ void calculate_table_stats(
 
 static
 void calculate_stage_stats(
+    EcsWorld *world,
     EcsStage *stage,
     uint32_t *allocd,
     uint32_t *used)
 {
-    ecs_map_memory(stage->add_stage, allocd, used);
-    ecs_map_memory(stage->remove_stage, allocd, used);
-    ecs_map_memory(stage->remove_merge, allocd, used);
-    ecs_array_memory(stage->delete_stage, &handle_arr_params, allocd, used);
-    ecs_map_memory(stage->entity_stage, allocd, used);
-    ecs_map_memory(stage->data_stage, allocd, used);
-    ecs_map_memory(stage->family_stage, allocd, used);
-    ecs_array_memory(stage->table_db_stage, &table_arr_params, allocd, used);
-    ecs_map_memory(stage->table_stage, allocd, used);
+    bool is_main_stage = stage == &world->main_stage;
+    bool is_temp_stage = stage == &world->temp_stage;
+
+    ecs_map_memory(stage->entity_index, allocd, used);
+
+    if (!is_temp_stage) {
+        ecs_array_memory(stage->tables, &table_arr_params, allocd, used);
+        ecs_map_memory(stage->table_index, allocd, used);
+        ecs_map_memory(stage->family_index, allocd, used);
+    }
+
+    if (!is_main_stage) {
+        ecs_map_memory(stage->add_stage, allocd, used);
+        ecs_map_memory(stage->remove_stage, allocd, used);
+        ecs_map_memory(stage->remove_merge, allocd, used);
+        ecs_array_memory(stage->delete_stage, &handle_arr_params, allocd, used);
+        ecs_map_memory(stage->data_stage, allocd, used);
+    }
 }
 
 static
@@ -86,11 +96,11 @@ void calculate_stages_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    EcsStage *buffer = ecs_array_buffer(world->stage_db);
-    uint32_t i, count = ecs_array_count(world->stage_db);
+    EcsStage *buffer = ecs_array_buffer(world->worker_stages);
+    uint32_t i, count = ecs_array_count(world->worker_stages);
     for (i = 0; i < count; i ++) {
         EcsStage *stage = &buffer[i];
-        calculate_stage_stats(stage, allocd, used);
+        calculate_stage_stats(world, stage, allocd, used);
     }
 }
 
@@ -100,8 +110,6 @@ void get_memory_stats(
     EcsWorldStats *stats)
 {
     EcsMemoryStats *memory = &stats->memory;
-
-    ecs_map_memory(world->entity_index, &memory->entities.allocd, &memory->entities.used);
 
     ecs_array_memory(world->add_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->set_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
@@ -128,19 +136,17 @@ void get_memory_stats(
     calculate_system_stats(world, world->inactive_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->on_demand_systems, &memory->systems.allocd, &memory->systems.used);
 
-    ecs_map_memory(world->family_index, &memory->families.allocd, &memory->families.used);
     ecs_map_memory(world->family_handles, &memory->families.allocd, &memory->families.used);
     ecs_map_memory(world->prefab_index, &memory->families.allocd, &memory->families.used);
     calculate_family_stats(world, &memory->families.allocd, &memory->families.used);
-
-    ecs_map_memory(world->table_index, &stats->memory.tables.allocd, &stats->memory.tables.used);
-    ecs_array_memory(world->table_db, &table_arr_params, &memory->tables.allocd, &memory->tables.used);
     calculate_table_stats(world, &memory->tables.allocd, &memory->tables.used);
 
-    ecs_array_memory(world->stage_db, &table_arr_params, &memory->stage.allocd, &memory->stage.used);
+    ecs_array_memory(world->worker_stages, &table_arr_params, &memory->stage.allocd, &memory->stage.used);
     memory->stage.allocd += sizeof(EcsStage);
     memory->stage.used += sizeof(EcsStage);
-    calculate_stage_stats(&world->stage, &memory->stage.allocd, &memory->stage.used);
+
+    calculate_stage_stats(world, &world->main_stage, &memory->stage.allocd, &memory->stage.used);
+    calculate_stage_stats(world, &world->temp_stage, &memory->stage.allocd, &memory->stage.used);
     calculate_stages_stats(world, &memory->stage.allocd, &memory->stage.used);
 
     ecs_array_memory(world->worker_threads, &table_arr_params, &memory->world.allocd, &memory->world.used);
@@ -193,7 +199,7 @@ void set_system_stats(
         for (i = 0; i < count; i ++) {
             int32_t *index = ecs_array_get(tables, &col_system->table_params, i);
             EcsTable *table = ecs_array_get(
-                world->table_db, &table_arr_params, *index);
+                world->main_stage.tables, &table_arr_params, *index);
             sstats->entities_matched += ecs_table_count(table);
         }
 
@@ -292,7 +298,7 @@ void ecs_get_stats(
     EcsWorldStats *stats)
 {
     uint32_t mem_used = 0, mem_allocd = 0;
-    stats->table_count = ecs_array_count(world->table_db);
+    stats->table_count = ecs_array_count(world->main_stage.tables);
 
     if (!stats->tables) {
         stats->tables = ecs_array_new(&tablestats_arr_params, stats->table_count);
@@ -300,8 +306,8 @@ void ecs_get_stats(
         ecs_array_clear(stats->tables);
     }
 
-    EcsTable *tables = ecs_array_buffer(world->table_db);
-    uint32_t i, count = ecs_array_count(world->table_db);
+    EcsTable *tables = ecs_array_buffer(world->main_stage.tables);
+    uint32_t i, count = ecs_array_count(world->main_stage.tables);
     for (i = 0; i < count; i ++) {
         EcsTable *table = &tables[i];
         EcsTableStats *tstats = ecs_array_add(
@@ -337,7 +343,7 @@ void ecs_get_stats(
     while (ecs_iter_hasnext(&it)) {
         EcsEntity h = ecs_map_next(&it, NULL);
         EcsTypeComponent *data = ecs_get_ptr(world, h, tEcsTypeComponent);
-        EcsArray *family = ecs_map_get(world->family_index, data->resolved);
+        EcsArray *family = ecs_map_get(world->main_stage.family_index, data->resolved);
         EcsEntity *buffer = ecs_array_buffer(family);
         uint32_t i, count = ecs_array_count(family);
 
@@ -405,14 +411,14 @@ void ecs_get_stats(
     stats->memory.systems.used += system_memory;
     stats->memory.systems.allocd += system_memory;
 
-    uint32_t family_memory = ecs_map_count(world->family_index) *
+    uint32_t family_memory = ecs_map_count(world->main_stage.family_index) *
       (sizeof(EcsTypeComponent) + sizeof(EcsId));
     stats->memory.components.used -= family_memory;
     stats->memory.components.allocd -= family_memory;
     stats->memory.families.used += family_memory;
     stats->memory.families.allocd += family_memory;
 
-    stats->entity_count = ecs_map_count(world->entity_index);
+    stats->entity_count = ecs_map_count(world->main_stage.entity_index);
     stats->tick_count = world->tick;
 
     if (world->tick) {

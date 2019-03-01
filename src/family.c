@@ -12,6 +12,7 @@ EcsResult add_family(
     void *data)
 {
     EcsTypeComponent *family = data;
+    EcsStage *stage = &world->main_stage;
 
     if (oper_kind != EcsOperAnd) {
         return EcsError;
@@ -30,18 +31,18 @@ EcsResult add_family(
         }
 
         EcsType type_id = ecs_type_register(
-            world, NULL, entity, NULL);
+            world, stage, entity, NULL);
         assert(type_id != 0);
 
         EcsType resolved_id = ecs_type_from_handle(
-            world, NULL, entity, NULL);
+            world, stage, entity, NULL);
         assert(resolved_id != 0);
 
         family->family = ecs_type_merge(
-            world, NULL, family->family, type_id, 0);
+            world, stage, family->family, type_id, 0);
 
         family->resolved = ecs_type_merge(
-            world, NULL, family->resolved, resolved_id, 0);
+            world, stage, family->resolved, resolved_id, 0);
     }
 
     return EcsOk;
@@ -95,12 +96,9 @@ EcsType register_family_from_buffer(
     EcsType new_id = hash_handle_array(buf, count);
     EcsMap *family_index;
 
-    if (world->in_progress && world->threads_running) {
-        assert(stage != NULL);
-        family_index = stage->family_stage;
-    } else {
-        family_index = world->family_index;
-    }
+    if (!stage) stage = &world->main_stage;
+
+    family_index = stage->family_index;
 
     EcsArray *new_array = ecs_map_get(family_index, new_id);
 
@@ -125,11 +123,11 @@ EcsArray* ecs_type_get(
     EcsStage *stage,
     EcsType type_id)
 {
-    EcsArray *result = ecs_map_get(world->family_index, type_id);
+    EcsArray *result = ecs_map_get(world->main_stage.family_index, type_id);
     if (!result) {
-        if (world->in_progress && world->threads_running) {
+        if (world->threads_running) {
             assert(stage != NULL);
-            result = ecs_map_get(stage->family_stage, type_id);
+            result = ecs_map_get(stage->family_index, type_id);
         }
     }
 
@@ -152,9 +150,9 @@ EcsType ecs_type_from_handle(
     uint32_t index;
 
     if (!info) {
-        uint64_t row_64 = ecs_map_get64(world->entity_index, entity);
+        uint64_t row_64 = ecs_map_get64(world->main_stage.entity_index, entity);
         if (!row_64 && world->in_progress) {
-            row_64 = ecs_map_get64(stage->entity_stage, entity);
+            row_64 = ecs_map_get64(stage->entity_index, entity);
             if (!row_64) {
                 return 0;
             }
@@ -459,7 +457,9 @@ EcsType ecs_new_type(
         EcsId *id_ptr = ecs_get_ptr(world, family_entity, tEcsId);
 
         assert(id_ptr != NULL);
-        assert_func(!strcmp(*id_ptr, id));
+        if(!strcmp(*id_ptr, id)) {
+            ecs_abort(ECS_ENTITY_ALREADY_DEFINED, id);
+        }
 
         return family_entity;
     } else {

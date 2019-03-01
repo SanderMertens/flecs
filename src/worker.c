@@ -97,12 +97,12 @@ void ecs_stop_threads(
     uint32_t i, count = ecs_array_count(world->worker_threads);
     for (i = 1; i < count; i ++) {
         pthread_join(buffer[i].thread, NULL);
-        ecs_stage_deinit(buffer[i].stage);
+        ecs_stage_deinit(world, buffer[i].stage);
     }
 
     ecs_array_free(world->worker_threads);
-    ecs_array_free(world->stage_db);
-    world->stage_db = NULL;
+    ecs_array_free(world->worker_stages);
+    world->worker_stages = NULL;
     world->worker_threads = NULL;
     world->quit_workers = false;
     world->threads_running = 0;
@@ -119,7 +119,7 @@ EcsResult start_threads(
     }
 
     world->worker_threads = ecs_array_new(&thread_arr_params, threads);
-    world->stage_db = ecs_array_new(&stage_arr_params, threads - 1);
+    world->worker_stages = ecs_array_new(&stage_arr_params, threads - 1);
 
     int i;
     for (i = 0; i < threads; i ++) {
@@ -132,8 +132,8 @@ EcsResult start_threads(
         thread->job_count = 0;
 
         if (i != 0) {
-            thread->stage = ecs_array_add(&world->stage_db, &stage_arr_params);
-            ecs_stage_init(thread->stage);
+            thread->stage = ecs_array_add(&world->worker_stages, &stage_arr_params);
+            ecs_stage_init(world, thread->stage);
             if (pthread_create(&thread->thread, NULL, ecs_worker, thread)) {
                 goto error;
             }
@@ -184,7 +184,7 @@ void ecs_schedule_jobs(
     while (ecs_iter_hasnext(&table_it)) {
         uint32_t table_index = *(uint32_t*)ecs_iter_next(&table_it);
         EcsTable *table = ecs_array_get(
-            world->table_db, &table_arr_params, table_index);
+            world->main_stage.tables, &table_arr_params, table_index);
         total_rows += ecs_array_count(table->columns[0].data);
     }
 
@@ -206,7 +206,7 @@ void ecs_schedule_jobs(
     uint32_t table_index = *(uint32_t*)ecs_array_get(
         system_data->tables, &system_data->table_params, 0);
     EcsTable *table = ecs_array_get(
-        world->table_db, &table_arr_params, table_index);
+        world->main_stage.tables, &table_arr_params, table_index);
     uint32_t table_row_count = ecs_array_count(table->columns[0].data);
     uint32_t start_index = 0;
 
@@ -234,7 +234,7 @@ void ecs_schedule_jobs(
             table_index = *(uint32_t*)ecs_array_get(
                 system_data->tables, &system_data->table_params, sys_table_index);
             table = ecs_array_get(
-                world->table_db, &table_arr_params, table_index);
+                world->main_stage.tables, &table_arr_params, table_index);
             table_row_count = ecs_array_count(table->columns[0].data);
             if (start_index > table_row_count) {
                 start_index -= table_row_count;

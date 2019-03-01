@@ -200,15 +200,27 @@ typedef struct EcsEntityInfo {
  * iterating. Additionally, worker threads have their own stage that lets them
  * mutate the state of entities without requiring locks. */
 typedef struct EcsStage {
-    EcsMap *add_stage;            /* Entities with components to add */
-    EcsMap *remove_stage;         /* Entities with components to remove */
-    EcsMap *remove_merge;         /* All removed components before merge */
-    EcsArray *delete_stage;       /* Deleted entities while in progress */
-    EcsMap *entity_stage;         /* Entities committed while in progress */
-    EcsMap *data_stage;           /* Arrays with staged component values */
-    EcsMap *family_stage;         /* Families created while >1 threads running*/
-    EcsArray *table_db_stage;     /* Tables created while >1 threads running */
-    EcsMap *table_stage;          /* Index for table stage */
+    /* If this is not main stage, 
+     * changes to the entity index 
+     * are buffered here */
+    EcsMap *entity_index;        /* Entity lookup table for (table, row) */
+
+    /* If this is not a thread
+     * stage, these are the same
+     * as the main stage */
+    EcsMap *table_index;         /* Index for table stage */
+    EcsArray *tables;            /* Tables created while >1 threads running */
+    EcsMap *family_index;        /* Families created while >1 threads running */
+
+    
+    /* These occur only in
+     * temporary stages, and
+     * not on the main stage */
+    EcsMap *data_stage;          /* Arrays with staged component values */
+    EcsMap *add_stage;           /* Entities with components to add */
+    EcsMap *remove_stage;        /* Entities with components to remove */
+    EcsMap *remove_merge;        /* All removed components before merge */
+    EcsArray *delete_stage;      /* Deleted entities while in progress */
 } EcsStage;
 
 /** A type describing a unit of work to be executed by a worker thread. */ 
@@ -242,9 +254,7 @@ struct EcsWorld {
     uint32_t magic;               /* Magic number to verify world pointer */
     float delta_time;           /* Time passed to or computed by ecs_progress */
     void *context;                /* Application context */
-
-    EcsArray *table_db;           /* All tables (archetypes) in the world */
-
+    
 
     /* -- Column systems -- */
 
@@ -272,20 +282,18 @@ struct EcsWorld {
 
     /* -- Lookup Indices -- */
 
-    EcsMap *entity_index;         /* Maps entity handle to EcsRow  */
-    EcsMap *table_index;          /* Identifies a table by type_id */
-    EcsMap *family_index;         /* References to component families */
-    EcsMap *family_handles;       /* Index to families created by API */
     EcsMap *prefab_index;         /* Index to find prefabs in families */
     EcsMap *family_sys_add_index; /* Index to find add row systems for family */
     EcsMap *family_sys_remove_index; /* Index to find remove row systems for family */
     EcsMap *family_sys_set_index; /* Index to find set row systems for family */
+    EcsMap *family_handles;       /* Handles to named families */
 
 
     /* -- Staging -- */
 
-    EcsStage stage;               /* Stage of main thread */
-    EcsArray *stage_db;           /* Stage storage (one for each worker) */
+    EcsStage main_stage;          /* Main storage */
+    EcsStage temp_stage;          /* Stage for when processing systems */
+    EcsArray *worker_stages;      /* Stages for worker threads */
 
 
     /* -- Multithreading -- */

@@ -49,10 +49,12 @@ EcsStage *ecs_get_stage(
 
 /* Initialize stage data structures */
 void ecs_stage_init(
+    EcsWorld *world,
     EcsStage *stage);
 
 /* Deinitialize stage */
 void ecs_stage_deinit(
+    EcsWorld *world,
     EcsStage *stage);
 
 /* Merge stage with main stage */
@@ -227,7 +229,6 @@ EcsEntity ecs_new_col_system(
 /* Notify column system of a new table, which initiates system-table matching */
 void ecs_col_system_notify_of_table(
     EcsWorld *world,
-    EcsStage *stage,
     EcsEntity system,
     EcsTable *table);
 

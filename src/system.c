@@ -51,7 +51,7 @@ void match_families(
     EcsEntity system,
     EcsRowSystem *system_data)
 {
-    EcsIter it = ecs_map_iter(world->family_index);
+    EcsIter it = ecs_map_iter(world->main_stage.family_index);
 
     /* Iterating over a map is a bit slow, but this only happens when a new
      * row system is created, which is very infrequent. */
