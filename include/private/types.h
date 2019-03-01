@@ -142,7 +142,7 @@ typedef struct EcsColSystem {
     EcsArrayParams table_params; /* Parameters for tables array */
     EcsArrayParams component_params; /* Parameters for components array */
     EcsArrayParams ref_params; /* Parameters for tables array */
-    EcsType and_from_system; /* Used to auto-add components to system */
+    EcsType and_from_system;   /* Used to auto-add components to system */
     float period;              /* Minimum period inbetween system invocations */
     float time_passed;         /* Time passed since last invocation */
 } EcsColSystem;
@@ -170,17 +170,17 @@ typedef struct EcsTableColumn {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
 typedef struct EcsTable {
-    EcsArray *type;             /* Reference to type_index entry */
+    EcsArray *type;               /* Reference to type_index entry */
     EcsTableColumn *columns;      /* Columns storing components of array */
     EcsArray *frame_systems;      /* Frame systems matched with table */
-    EcsType type_id;          /* Identifies table type in type_index */
+    EcsType type_id;              /* Identifies table type in type_index */
  } EcsTable;
  
 /** The EcsRow struct is a 64-bit value that describes in which table
  * (identified by a type_id) is stored, at which index. Entries in the 
  * world::entity_index are of type EcsRow. */
 typedef struct EcsRow {
-    EcsType type_id;          /* Identifies a type (and table) in world */
+    EcsType type_id;              /* Identifies a type (and table) in world */
     uint32_t index;               /* Index of the entity in its table */
 } EcsRow;
 
@@ -210,7 +210,7 @@ typedef struct EcsStage {
      * as the main stage */
     EcsMap *table_index;         /* Index for table stage */
     EcsArray *tables;            /* Tables created while >1 threads running */
-    EcsMap *type_index;        /* Families created while >1 threads running */
+    EcsMap *type_index;          /* Types created while >1 threads running */
 
     
     /* These occur only in
@@ -226,7 +226,7 @@ typedef struct EcsStage {
 /** A type describing a unit of work to be executed by a worker thread. */ 
 typedef struct EcsJob {
     EcsEntity system;             /* System handle */
-    EcsColSystem *system_data;  /* System to run */
+    EcsColSystem *system_data;    /* System to run */
     uint32_t table_index;         /* Current SystemTable */
     uint32_t start_index;         /* Start index in row chunk */
     uint32_t row_count;           /* Total number of rows to process */
@@ -282,11 +282,11 @@ struct EcsWorld {
 
     /* -- Lookup Indices -- */
 
-    EcsMap *prefab_index;         /* Index to find prefabs in families */
-    EcsMap *type_sys_add_index; /* Index to find add row systems for type */
-    EcsMap *type_sys_remove_index; /* Index to find remove row systems for type */
-    EcsMap *type_sys_set_index; /* Index to find set row systems for type */
-    EcsMap *type_handles;       /* Handles to named families */
+    EcsMap *prefab_index;          /* Index to find prefabs in families */
+    EcsMap *type_sys_add_index;    /* Index to find add row systems for type */
+    EcsMap *type_sys_remove_index; /* Index to find remove row systems for type*/
+    EcsMap *type_sys_set_index;    /* Index to find set row systems for type */
+    EcsMap *type_handles;          /* Handles to named families */
 
 
     /* -- Staging -- */
