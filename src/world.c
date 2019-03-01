@@ -512,7 +512,7 @@ void _ecs_dim_type(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     if (type) {
-        EcsTable *table = ecs_world_get_table(world, NULL, type);
+        EcsTable *table = ecs_world_get_table(world, &world->main_stage, type);
         if (table) {
             ecs_table_dim(table, entity_count);
         }

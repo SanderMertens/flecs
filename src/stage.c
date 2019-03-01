@@ -171,8 +171,8 @@ void ecs_stage_deinit(
     bool is_temp_stage = stage == &world->temp_stage;
 
     if (!is_temp_stage) {
-        clean_families(stage);
         clean_tables(world, stage);
+        clean_families(stage);
         ecs_map_free(stage->table_index);
     }
 
@@ -189,8 +189,15 @@ void ecs_stage_merge(
     EcsWorld *world,
     EcsStage *stage)
 {
-    merge_families(world, stage);
-    merge_tables(world, stage);
+    assert(stage != &world->main_stage);
+    
+    bool is_temp_stage = stage == &world->temp_stage;
+
+    if (!is_temp_stage) {
+        merge_families(world, stage);
+        merge_tables(world, stage);
+    }
+
     merge_deletes(world, stage);
     merge_commits(world, stage);
 }
