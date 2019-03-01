@@ -787,7 +787,7 @@ bool ecs_has_any(
     return ecs_type_contains(world, stage, entity_type, type, false, false);
 }
 
-EcsEntity _ecs_new_component(
+EcsEntity ecs_new_component(
     EcsWorld *world,
     const char *id,
     size_t size)
