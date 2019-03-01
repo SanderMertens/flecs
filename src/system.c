@@ -456,7 +456,7 @@ void ecs_set_period(
     }
 }
 
-void* ecs_column(
+void* _ecs_column(
     EcsRows *rows,
     uint32_t index)
 {

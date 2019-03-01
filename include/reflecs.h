@@ -1097,10 +1097,12 @@ EcsEntity ecs_run_w_filter(
 
 /* Obtain a column from inside a system */
 REFLECS_EXPORT
-void* ecs_column(
+void* _ecs_column(
     EcsRows *rows,
     uint32_t index);
 
+#define ecs_column(rows, type, index)\
+    ((type*)_ecs_column(rows, index))
 
 /* -- Error handling & error codes -- */
 
