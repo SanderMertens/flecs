@@ -106,6 +106,8 @@ const char* ecs_strerror(
         return "entity has already been defined";
     case ECS_INVALID_COMPONENT_SIZE:
         return "the specified size does not match the component";
+    case ECS_OUT_OF_MEMORY:
+        return "out of memory";
     }
 
     return "unknown error code";

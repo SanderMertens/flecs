@@ -170,6 +170,8 @@ void ecs_stage_deinit(
     bool is_main_stage = stage == &world->main_stage;
     bool is_temp_stage = stage == &world->temp_stage;
 
+    ecs_map_free(stage->entity_index);
+
     if (!is_temp_stage) {
         clean_tables(world, stage);
         clean_families(stage);

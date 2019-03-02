@@ -87,6 +87,7 @@ void alloc_buffer(
 {
     if (bucket_count) {
         map->buckets = calloc(bucket_count * sizeof(uint32_t), 1);
+        ecs_assert(map->buckets != NULL, ECS_OUT_OF_MEMORY, 0);
     } else {
         map->buckets = NULL;
     }

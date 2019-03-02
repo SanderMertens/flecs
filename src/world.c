@@ -377,6 +377,25 @@ EcsStage *ecs_get_stage(
     }
 }
 
+static
+void col_systems_deinit(
+    EcsWorld *world,
+    EcsArray *systems)
+{
+    uint32_t i, count = ecs_array_count(systems);
+    EcsEntity *buffer = ecs_array_buffer(systems);
+
+    for (i = 0; i < count; i ++) {
+        EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
+        ecs_array_free(ptr->base.columns);
+        ecs_array_free(ptr->components);
+        ecs_array_free(ptr->inactive_tables);
+        ecs_array_free(ptr->jobs);
+        ecs_array_free(ptr->tables);
+        ecs_array_free(ptr->refs);
+    }
+}
+
 /* -- Public functions -- */
 
 EcsWorld *ecs_init(void) {
@@ -467,6 +486,14 @@ EcsResult ecs_fini(
     if (world->worker_threads) {
         ecs_set_threads(world, 0);
     }
+
+    col_systems_deinit(world, world->on_frame_systems);
+    col_systems_deinit(world, world->pre_frame_systems);
+    col_systems_deinit(world, world->post_frame_systems);
+    col_systems_deinit(world, world->on_load_systems);
+    col_systems_deinit(world, world->on_store_systems);
+    col_systems_deinit(world, world->on_demand_systems);
+    col_systems_deinit(world, world->inactive_systems);
 
     ecs_stage_deinit(world, &world->main_stage);
     ecs_stage_deinit(world, &world->temp_stage);

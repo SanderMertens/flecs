@@ -1160,6 +1160,7 @@ void _ecs_assert(
 #define ECS_MORE_THAN_ONE_PREFAB (12)
 #define ECS_ENTITY_ALREADY_DEFINED (13)
 #define ECS_INVALID_COMPONENT_SIZE (14)
+#define ECS_OUT_OF_MEMORY (15)
 
 /* -- Utility API -- */
 

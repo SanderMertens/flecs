@@ -86,6 +86,8 @@ void ecs_table_free(
     }
 
     free(table->columns);
+
+    ecs_array_free(table->frame_systems);
 }
 
 uint32_t ecs_table_insert(
