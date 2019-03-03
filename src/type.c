@@ -378,9 +378,10 @@ EcsEntity ecs_type_contains(
             }
 
             if (prefab) {
+                /* TODO: fix prefabs
                 if (ecs_has(world, prefab, h2)) {
                     h1 = h2;
-                }
+                }*/
             }
 
             if (h1 != h2) {
@@ -422,7 +423,7 @@ bool ecs_type_contains_component(
     if (match_prefab) {
         EcsEntity prefab = ecs_map_get64(world->prefab_index, type_id);
         if (prefab) {
-            if (ecs_has(world, prefab, component)) {
+            if (_ecs_has(world, prefab, component)) {
                 return true;
             }
         }

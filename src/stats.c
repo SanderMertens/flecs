@@ -187,7 +187,7 @@ void set_system_stats(
     sstats->id = *id;
     sstats->enabled = ecs_is_enabled(world, system);
     sstats->active = active;
-    sstats->is_hidden = ecs_has(world, system, tEcsHidden);
+    sstats->is_hidden = ecs_has(world, system, EcsHidden);
 
     EcsSystem *system_ptr = ecs_get_ptr(world, system, EcsColSystem);
     if (system_ptr) {
@@ -349,13 +349,13 @@ void ecs_get_stats(
 
         EcsFeatureStats feature = {0};
         for (i = 0; i < count; i ++) {
-            if (ecs_has(world, buffer[i], tEcsColSystem)) {
+            if (ecs_has(world, buffer[i], EcsColSystem)) {
                 feature.system_count ++;
                 if (ecs_is_enabled(world, buffer[i])) {
                     feature.systems_enabled ++;
                 }
             }
-            if (ecs_has(world, buffer[i], tEcsRowSystem)) {
+            if (ecs_has(world, buffer[i], EcsRowSystem)) {
                 feature.system_count ++;
                 feature.systems_enabled ++;
             }
@@ -367,7 +367,7 @@ void ecs_get_stats(
             *elem = feature;
             elem->id = ecs_id(world, h);
             elem->entities = ecs_type_tostr(world, NULL, data->type);
-            elem->is_hidden = ecs_has(world, h, tEcsHidden);
+            elem->is_hidden = ecs_has(world, h, EcsHidden);
         }
     }
 

@@ -709,10 +709,14 @@ EcsEntity _ecs_set_ptr(
  * @returns true if entity has type, otherwise false.
  */
 REFLECS_EXPORT
-bool ecs_has(
+bool _ecs_has(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_has(world, entity, type)\
+    _ecs_has(world, entity, t##type)
 
 /** Check if entity has any of the components in the specified type.
  * This operation checks if the entity has any of the components associated with
@@ -729,10 +733,14 @@ bool ecs_has(
  * @returns true if entity has one of the components, otherwise false.
  */
 REFLECS_EXPORT
-bool ecs_has_any(
+bool _ecs_has_any(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type);
+
+#define ecs_has_any(world, entity, type)\
+    _ecs_has_any(world, entity, t##type)
+
 
 /** Return if the entity is valid.
  * This returns whether the provided entity handle is valid. An entity that has

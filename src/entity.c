@@ -767,7 +767,7 @@ EcsEntity _ecs_set_ptr(
     return entity;
 }
 
-bool ecs_has(
+bool _ecs_has(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type)
@@ -777,7 +777,7 @@ bool ecs_has(
     return ecs_type_contains(world, stage, entity_type, type, true, false);
 }
 
-bool ecs_has_any(
+bool _ecs_has_any(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type)
