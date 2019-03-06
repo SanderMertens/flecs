@@ -59,6 +59,22 @@
                 "type_to_nonempty_again",
                 "type_to_nonempty_overlap"
             ]
+        }, {
+            "id": "Remove",
+            "testcases": [
+                "zero",
+                "zero_from_nonzero",
+                "1_of_1",
+                "1_of_1_again",
+                "1_of_2",
+                "2_of_2",
+                "2_of_3",
+                "2_again",
+                "2_overlap",
+                "type_of_1_of_2",
+                "type_of_2_of_2",
+                "type_of_2_of_3"
+            ]
         }]
     }
 }

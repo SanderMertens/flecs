@@ -696,7 +696,8 @@ EcsResult _ecs_remove(
         EcsArray *to_remove = ecs_type_get(world, stage, type);
         dst_type = ecs_type_merge_arr(world, stage, info.table->type, NULL, to_remove);
     } else {
-        dst_type = type;
+        /* Nothing to remove */
+        return EcsOk;
     }
 
     return commit_w_type(world, stage, &info, dst_type, 0, type);
@@ -774,7 +775,7 @@ bool _ecs_has(
 {
     EcsStage *stage = ecs_get_stage(&world);
     EcsType entity_type = ecs_typeid(world, entity);
-    return ecs_type_contains(world, stage, entity_type, type, true, false);
+    return ecs_type_contains(world, stage, entity_type, type, true, false) != 0;
 }
 
 bool _ecs_has_any(

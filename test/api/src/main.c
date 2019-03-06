@@ -43,6 +43,20 @@ void Add_type_to_nonempty(void);
 void Add_type_to_nonempty_again(void);
 void Add_type_to_nonempty_overlap(void);
 
+// Testsuite 'Remove'
+void Remove_zero(void);
+void Remove_zero_from_nonzero(void);
+void Remove_1_of_1(void);
+void Remove_1_of_1_again(void);
+void Remove_1_of_2(void);
+void Remove_2_of_2(void);
+void Remove_2_of_3(void);
+void Remove_2_again(void);
+void Remove_2_overlap(void);
+void Remove_type_of_1_of_2(void);
+void Remove_type_of_2_of_2(void);
+void Remove_type_of_2_of_3(void);
+
 static bake_test_suite suites[] = {
     {
         .id = "New",
@@ -209,10 +223,64 @@ static bake_test_suite suites[] = {
                 .function = Add_type_to_nonempty_overlap
             }
         }
+    },
+    {
+        .id = "Remove",
+        .testcase_count = 12,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "zero",
+                .function = Remove_zero
+            },
+            {
+                .id = "zero_from_nonzero",
+                .function = Remove_zero_from_nonzero
+            },
+            {
+                .id = "1_of_1",
+                .function = Remove_1_of_1
+            },
+            {
+                .id = "1_of_1_again",
+                .function = Remove_1_of_1_again
+            },
+            {
+                .id = "1_of_2",
+                .function = Remove_1_of_2
+            },
+            {
+                .id = "2_of_2",
+                .function = Remove_2_of_2
+            },
+            {
+                .id = "2_of_3",
+                .function = Remove_2_of_3
+            },
+            {
+                .id = "2_again",
+                .function = Remove_2_again
+            },
+            {
+                .id = "2_overlap",
+                .function = Remove_2_overlap
+            },
+            {
+                .id = "type_of_1_of_2",
+                .function = Remove_type_of_1_of_2
+            },
+            {
+                .id = "type_of_2_of_2",
+                .function = Remove_type_of_2_of_2
+            },
+            {
+                .id = "type_of_2_of_3",
+                .function = Remove_type_of_2_of_3
+            }
+        }
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 3);
+    return bake_test_run("api", argc, argv, suites, 4);
 }
