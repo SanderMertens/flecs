@@ -1,9 +1,59 @@
 {
-    "id": "test",
-    "type": "package",
+    "id": "collections",
+    "type": "application",
     "value": {
+        "author": "Sander Mertens",
+        "description": "Test project for reflecs",
         "public": false,
-        "use": ["reflecs", "corto.test"]
+        "use": [
+            "reflecs"
+        ]
     },
-    "corto": { }
+    "test": {
+        "testsuites": [{
+            "id": "Array",
+            "testcases": [
+                "free_empty",
+                "count",
+                "count_empty",
+                "get",
+                "get_first",
+                "get_last",
+                "get_empty",
+                "get_out_of_bound",
+                "add_empty",
+                "add_resize",
+                "iter",
+                "iter_empty",
+                "remove",
+                "remove_first",
+                "remove_last",
+                "remove_empty",
+                "remove_all",
+                "remove_out_of_bound",
+                "sort_rnd",
+                "sort_sorted",
+                "sort_empty"
+            ]
+        }, {
+            "id": "Map",
+            "testcases": [
+                "count",
+                "count_empty",
+                "set_overwrite",
+                "set_rehash",
+                "set_zero_buckets",
+                "get",
+                "get_all",
+                "get_empty",
+                "get_unknown",
+                "iter",
+                "iter_empty",
+                "iter_zero_buckets",
+                "remove",
+                "remove_empty",
+                "remove_unknown"
+            ]
+        }]
+    }
 }

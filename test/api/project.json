@@ -1,9 +1,64 @@
 {
-    "id": "test",
-    "type": "package",
+    "id": "api",
+    "type": "application",
     "value": {
+        "author": "Sander Mertens",
+        "description": "Test project for reflecs",
         "public": false,
-        "use": ["reflecs", "corto.test"]
+        "use": [
+            "reflecs"
+        ]
     },
-    "corto": { }
+    "test": {
+        "testsuites": [{
+            "id": "New",
+            "testcases": [
+                "empty",
+                "component",
+                "type",
+                "type_of_2",
+                "type_w_type",
+                "type_w_2_types",
+                "type_mixed"
+            ]
+        }, {
+            "id": "New_w_Count",
+            "testcases": [
+                "empty",
+                "empty_w_handles",
+                "nonempty_w_handles",
+                "component",
+                "type",
+                "type_of_2",
+                "type_w_type",
+                "type_w_2_types",
+                "type_mixed"
+            ]
+        }, {
+            "id": "Add",
+            "testcases": [
+                "zero",
+                "component",
+                "component_again",
+                "2_components",
+                "2_components_again",
+                "2_components_overlap",
+                "type",
+                "type_of_2",
+                "type_w_type",
+                "type_w_2_types",
+                "type_mixed",
+                "type_again",
+                "type_overlap",
+                "type_again_component",
+                "type_overlap_component",
+                "component_to_nonempty",
+                "component_to_nonempty_again",
+                "component_to_nonempty_overlap",
+                "type_to_nonempty",
+                "type_to_nonempty_again",
+                "type_to_nonempty_overlap"
+            ]
+        }]
+    }
 }

@@ -14,31 +14,28 @@
  * dependencies will automatically show up in this file. Include bake_config.h
  * in your main project file. Do not edit! */
 
-#ifndef TEST_BAKE_CONFIG_H
-#define TEST_BAKE_CONFIG_H
+#ifndef API_BAKE_CONFIG_H
+#define API_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
 #include <reflecs>
-#include <corto.test>
-#include <corto>
-#include <corto.test.c>
-#include <corto.c>
 #include <bake.util>
+#include <bake.test>
 
 /* Headers of private dependencies */
-#ifdef TEST_IMPL
+#ifdef API_IMPL
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#if TEST_IMPL && defined _MSC_VER
-#define TEST_EXPORT __declspec(dllexport)
-#elif TEST_IMPL
-#define TEST_EXPORT __attribute__((__visibility__("default")))
+#if API_IMPL && defined _MSC_VER
+#define API_EXPORT __declspec(dllexport)
+#elif API_IMPL
+#define API_EXPORT __attribute__((__visibility__("default")))
 #elif defined _MSC_VER
-#define TEST_EXPORT __declspec(dllimport)
+#define API_EXPORT __declspec(dllimport)
 #else
-#define TEST_EXPORT
+#define API_EXPORT
 #endif
 
 #endif

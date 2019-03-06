@@ -823,7 +823,7 @@ bool ecs_empty(
     EcsEntity entity)
 {
     uint64_t row64 = ecs_map_get64(world->main_stage.entity_index, entity);
-    return row64 != 0;
+    return row64 == 0;
 }
 
 EcsEntity ecs_get_component(
