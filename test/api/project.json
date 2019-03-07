@@ -116,7 +116,27 @@
                 "set_empty",
                 "set_nonempty",
                 "set_non_empty_override",
-                "set_again"
+                "set_again",
+                "set_2",
+                "add_set",
+                "set_add",
+                "set_add_other",
+                "set_remove",
+                "set_remove_other",
+                "set_remove_twice",
+                "set_and_new"
+            ]
+        }, {
+            "id": "Clone",
+            "testcases": [
+                "empty",
+                "empty_w_value",
+                "1_component",
+                "2_component",
+                "1_component_w_value",
+                "2_component_w_value",
+                "3_component",
+                "3_component_w_value"
             ]
         }]
     }

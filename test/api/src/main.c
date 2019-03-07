@@ -93,6 +93,24 @@ void Set_set_empty(void);
 void Set_set_nonempty(void);
 void Set_set_non_empty_override(void);
 void Set_set_again(void);
+void Set_set_2(void);
+void Set_add_set(void);
+void Set_set_add(void);
+void Set_set_add_other(void);
+void Set_set_remove(void);
+void Set_set_remove_other(void);
+void Set_set_remove_twice(void);
+void Set_set_and_new(void);
+
+// Testsuite 'Clone'
+void Clone_empty(void);
+void Clone_empty_w_value(void);
+void Clone_1_component(void);
+void Clone_2_component(void);
+void Clone_1_component_w_value(void);
+void Clone_2_component_w_value(void);
+void Clone_3_component(void);
+void Clone_3_component_w_value(void);
 
 static bake_test_suite suites[] = {
     {
@@ -437,7 +455,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Set",
-        .testcase_count = 4,
+        .testcase_count = 12,
         .testcases = (bake_test_case[]){
             {
                 .id = "set_empty",
@@ -454,6 +472,76 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_again",
                 .function = Set_set_again
+            },
+            {
+                .id = "set_2",
+                .function = Set_set_2
+            },
+            {
+                .id = "add_set",
+                .function = Set_add_set
+            },
+            {
+                .id = "set_add",
+                .function = Set_set_add
+            },
+            {
+                .id = "set_add_other",
+                .function = Set_set_add_other
+            },
+            {
+                .id = "set_remove",
+                .function = Set_set_remove
+            },
+            {
+                .id = "set_remove_other",
+                .function = Set_set_remove_other
+            },
+            {
+                .id = "set_remove_twice",
+                .function = Set_set_remove_twice
+            },
+            {
+                .id = "set_and_new",
+                .function = Set_set_and_new
+            }
+        }
+    },
+    {
+        .id = "Clone",
+        .testcase_count = 8,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "empty",
+                .function = Clone_empty
+            },
+            {
+                .id = "empty_w_value",
+                .function = Clone_empty_w_value
+            },
+            {
+                .id = "1_component",
+                .function = Clone_1_component
+            },
+            {
+                .id = "2_component",
+                .function = Clone_2_component
+            },
+            {
+                .id = "1_component_w_value",
+                .function = Clone_1_component_w_value
+            },
+            {
+                .id = "2_component_w_value",
+                .function = Clone_2_component_w_value
+            },
+            {
+                .id = "3_component",
+                .function = Clone_3_component
+            },
+            {
+                .id = "3_component_w_value",
+                .function = Clone_3_component_w_value
             }
         }
     }
@@ -461,5 +549,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 7);
+    return bake_test_run("api", argc, argv, suites, 8);
 }

@@ -471,7 +471,7 @@ EcsEntity ecs_clone(
             EcsRow row = ecs_to_row(row64);
             EcsType type_id = row.type_id;
             EcsEntityInfo info = {
-                .entity = entity,
+                .entity = result,
                 .type_id = 0,
                 .index = row.index
             };
@@ -790,7 +790,7 @@ bool _ecs_has_any(
     if (!type) {
         return true;
     }
-    
+
     EcsStage *stage = ecs_get_stage(&world);
     EcsType entity_type = ecs_typeid(world, entity);
     return ecs_type_contains(world, stage, entity_type, type, false, false);
