@@ -1,17 +1,5 @@
 #include <include/api.h>
 
-typedef struct Position {
-    float x;
-    float y;
-} Position;
-
-typedef struct Velocity {
-    float x;
-    float y;
-} Velocity;
-
-typedef float Mass;
-
 void Add_zero() {
     EcsWorld *world = ecs_init();
 

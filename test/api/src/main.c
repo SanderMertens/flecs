@@ -112,6 +112,29 @@ void Clone_2_component_w_value(void);
 void Clone_3_component(void);
 void Clone_3_component_w_value(void);
 
+// Testsuite 'SystemOnAdd'
+void SystemOnAdd_new_match_1_of_1(void);
+void SystemOnAdd_new_match_1_of_2(void);
+void SystemOnAdd_new_no_match_1(void);
+void SystemOnAdd_new_no_match_2_of_1(void);
+void SystemOnAdd_new_no_match_2_of_3(void);
+void SystemOnAdd_add_match_1_of_1(void);
+void SystemOnAdd_add_match_1_of_2(void);
+void SystemOnAdd_add_match_2_of_2(void);
+void SystemOnAdd_add_match_2_of_3(void);
+void SystemOnAdd_add_no_match_1(void);
+void SystemOnAdd_add_no_match_2_of_1(void);
+void SystemOnAdd_add_no_match_2_of_3(void);
+void SystemOnAdd_set_match_1_of_1(void);
+void SystemOnAdd_set_no_match_1(void);
+void SystemOnAdd_clone_match_1_of_1(void);
+void SystemOnAdd_clone_match_1_of_2(void);
+void SystemOnAdd_clone_match_2_of_2(void);
+void SystemOnAdd_clone_match_2_of_3(void);
+void SystemOnAdd_add_again_1(void);
+void SystemOnAdd_set_again_1(void);
+void SystemOnAdd_add_again_2(void);
+
 static bake_test_suite suites[] = {
     {
         .id = "New",
@@ -544,10 +567,100 @@ static bake_test_suite suites[] = {
                 .function = Clone_3_component_w_value
             }
         }
+    },
+    {
+        .id = "SystemOnAdd",
+        .testcase_count = 21,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "new_match_1_of_1",
+                .function = SystemOnAdd_new_match_1_of_1
+            },
+            {
+                .id = "new_match_1_of_2",
+                .function = SystemOnAdd_new_match_1_of_2
+            },
+            {
+                .id = "new_no_match_1",
+                .function = SystemOnAdd_new_no_match_1
+            },
+            {
+                .id = "new_no_match_2_of_1",
+                .function = SystemOnAdd_new_no_match_2_of_1
+            },
+            {
+                .id = "new_no_match_2_of_3",
+                .function = SystemOnAdd_new_no_match_2_of_3
+            },
+            {
+                .id = "add_match_1_of_1",
+                .function = SystemOnAdd_add_match_1_of_1
+            },
+            {
+                .id = "add_match_1_of_2",
+                .function = SystemOnAdd_add_match_1_of_2
+            },
+            {
+                .id = "add_match_2_of_2",
+                .function = SystemOnAdd_add_match_2_of_2
+            },
+            {
+                .id = "add_match_2_of_3",
+                .function = SystemOnAdd_add_match_2_of_3
+            },
+            {
+                .id = "add_no_match_1",
+                .function = SystemOnAdd_add_no_match_1
+            },
+            {
+                .id = "add_no_match_2_of_1",
+                .function = SystemOnAdd_add_no_match_2_of_1
+            },
+            {
+                .id = "add_no_match_2_of_3",
+                .function = SystemOnAdd_add_no_match_2_of_3
+            },
+            {
+                .id = "set_match_1_of_1",
+                .function = SystemOnAdd_set_match_1_of_1
+            },
+            {
+                .id = "set_no_match_1",
+                .function = SystemOnAdd_set_no_match_1
+            },
+            {
+                .id = "clone_match_1_of_1",
+                .function = SystemOnAdd_clone_match_1_of_1
+            },
+            {
+                .id = "clone_match_1_of_2",
+                .function = SystemOnAdd_clone_match_1_of_2
+            },
+            {
+                .id = "clone_match_2_of_2",
+                .function = SystemOnAdd_clone_match_2_of_2
+            },
+            {
+                .id = "clone_match_2_of_3",
+                .function = SystemOnAdd_clone_match_2_of_3
+            },
+            {
+                .id = "add_again_1",
+                .function = SystemOnAdd_add_again_1
+            },
+            {
+                .id = "set_again_1",
+                .function = SystemOnAdd_set_again_1
+            },
+            {
+                .id = "add_again_2",
+                .function = SystemOnAdd_add_again_2
+            }
+        }
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 8);
+    return bake_test_run("api", argc, argv, suites, 9);
 }

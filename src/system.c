@@ -464,7 +464,7 @@ void* _ecs_column(
         return NULL;
     }
 
-    uint32_t table_column;
+    int32_t table_column;
 
     if (index == 0) {
         table_column = 0;
@@ -472,7 +472,32 @@ void* _ecs_column(
         table_column = rows->columns[index - 1];
     }
 
+    if (table_column < 0) {
+        return NULL;
+    }
+
     EcsTableColumn *column = &((EcsTableColumn*)rows->table_columns)[table_column];
 
     return ecs_array_buffer(column->data);
+}
+
+EcsEntity ecs_column_source(
+    EcsRows *rows,
+    uint32_t index)
+{
+    if (index > rows->column_count) {
+        return 0;
+    }
+
+    if (index == 0) {
+        return 0;
+    } else {
+        int32_t table_column = rows->columns[index - 1];
+        if (table_column > 0) {
+            return 0;
+        }
+
+        EcsReference *ref = &rows->references[-table_column - 1];
+        return ref->entity;
+    }
 }

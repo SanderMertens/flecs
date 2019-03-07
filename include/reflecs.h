@@ -1112,6 +1112,12 @@ void* _ecs_column(
 #define ecs_column(rows, type, index)\
     ((type*)_ecs_column(rows, index))
 
+/* Obtain the source of a column from inside a system */
+REFLECS_EXPORT
+EcsEntity ecs_column_source(
+    EcsRows *rows,
+    uint32_t index);
+
 /* -- Error handling & error codes -- */
 
 /** Throw an error */
