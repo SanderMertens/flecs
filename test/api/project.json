@@ -73,7 +73,50 @@
                 "2_overlap",
                 "type_of_1_of_2",
                 "type_of_2_of_2",
-                "type_of_2_of_3"
+                "type_of_2_of_3",
+                "1_from_empty",
+                "type_from_empty"
+            ]
+        }, {
+            "id": "Has",
+            "testcases": [
+                "zero",
+                "zero_from_nonzero",
+                "1_of_0",
+                "1_of_1",
+                "1_of_2",
+                "2_of_0",
+                "2_of_2",
+                "3_of_2",
+                "2_of_1",
+                "1_of_empty",
+                "any_of_1_of_1",
+                "any_of_1_of_2",
+                "any_of_2_of_3",
+                "any_of_3_of_2",
+                "any_of_2_of_1",
+                "any_of_1_of_0",
+                "any_2_of_2_disjunct"
+            ]
+        }, {
+            "id": "Delete",
+            "testcases": [
+                "delete_1",
+                "delete_1_again",
+                "delete_empty",
+                "delete_nonexist",
+                "delete_1st_of_3",
+                "delete_2nd_of_3",
+                "delete_2_of_3",
+                "delete_3_of_3"
+            ]
+        }, {
+            "id": "Set",
+            "testcases": [
+                "set_empty",
+                "set_nonempty",
+                "set_non_empty_override",
+                "set_again"
             ]
         }]
     }

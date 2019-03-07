@@ -773,6 +773,10 @@ bool _ecs_has(
     EcsEntity entity,
     EcsType type)
 {
+    if (!type) {
+        return true;
+    }
+
     EcsStage *stage = ecs_get_stage(&world);
     EcsType entity_type = ecs_typeid(world, entity);
     return ecs_type_contains(world, stage, entity_type, type, true, false) != 0;
@@ -783,6 +787,10 @@ bool _ecs_has_any(
     EcsEntity entity,
     EcsType type)
 {
+    if (!type) {
+        return true;
+    }
+    
     EcsStage *stage = ecs_get_stage(&world);
     EcsType entity_type = ecs_typeid(world, entity);
     return ecs_type_contains(world, stage, entity_type, type, false, false);

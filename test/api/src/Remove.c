@@ -228,3 +228,32 @@ void Remove_type_of_2_of_3() {
     
     ecs_fini(world);
 }
+
+void Remove_1_from_empty() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    EcsEntity e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    
+    ecs_fini(world);
+}
+
+void Remove_type_from_empty() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TYPE(world, Type, Position);
+
+    EcsEntity e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    ecs_remove(world, e, Type);
+    test_assert(!ecs_has(world, e, Position));
+    
+    ecs_fini(world);
+}

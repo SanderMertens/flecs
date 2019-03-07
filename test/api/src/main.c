@@ -56,6 +56,43 @@ void Remove_2_overlap(void);
 void Remove_type_of_1_of_2(void);
 void Remove_type_of_2_of_2(void);
 void Remove_type_of_2_of_3(void);
+void Remove_1_from_empty(void);
+void Remove_type_from_empty(void);
+
+// Testsuite 'Has'
+void Has_zero(void);
+void Has_zero_from_nonzero(void);
+void Has_1_of_0(void);
+void Has_1_of_1(void);
+void Has_1_of_2(void);
+void Has_2_of_0(void);
+void Has_2_of_2(void);
+void Has_3_of_2(void);
+void Has_2_of_1(void);
+void Has_1_of_empty(void);
+void Has_any_of_1_of_1(void);
+void Has_any_of_1_of_2(void);
+void Has_any_of_2_of_3(void);
+void Has_any_of_3_of_2(void);
+void Has_any_of_2_of_1(void);
+void Has_any_of_1_of_0(void);
+void Has_any_2_of_2_disjunct(void);
+
+// Testsuite 'Delete'
+void Delete_delete_1(void);
+void Delete_delete_1_again(void);
+void Delete_delete_empty(void);
+void Delete_delete_nonexist(void);
+void Delete_delete_1st_of_3(void);
+void Delete_delete_2nd_of_3(void);
+void Delete_delete_2_of_3(void);
+void Delete_delete_3_of_3(void);
+
+// Testsuite 'Set'
+void Set_set_empty(void);
+void Set_set_nonempty(void);
+void Set_set_non_empty_override(void);
+void Set_set_again(void);
 
 static bake_test_suite suites[] = {
     {
@@ -226,7 +263,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Remove",
-        .testcase_count = 12,
+        .testcase_count = 14,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -275,6 +312,148 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_of_2_of_3",
                 .function = Remove_type_of_2_of_3
+            },
+            {
+                .id = "1_from_empty",
+                .function = Remove_1_from_empty
+            },
+            {
+                .id = "type_from_empty",
+                .function = Remove_type_from_empty
+            }
+        }
+    },
+    {
+        .id = "Has",
+        .testcase_count = 17,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "zero",
+                .function = Has_zero
+            },
+            {
+                .id = "zero_from_nonzero",
+                .function = Has_zero_from_nonzero
+            },
+            {
+                .id = "1_of_0",
+                .function = Has_1_of_0
+            },
+            {
+                .id = "1_of_1",
+                .function = Has_1_of_1
+            },
+            {
+                .id = "1_of_2",
+                .function = Has_1_of_2
+            },
+            {
+                .id = "2_of_0",
+                .function = Has_2_of_0
+            },
+            {
+                .id = "2_of_2",
+                .function = Has_2_of_2
+            },
+            {
+                .id = "3_of_2",
+                .function = Has_3_of_2
+            },
+            {
+                .id = "2_of_1",
+                .function = Has_2_of_1
+            },
+            {
+                .id = "1_of_empty",
+                .function = Has_1_of_empty
+            },
+            {
+                .id = "any_of_1_of_1",
+                .function = Has_any_of_1_of_1
+            },
+            {
+                .id = "any_of_1_of_2",
+                .function = Has_any_of_1_of_2
+            },
+            {
+                .id = "any_of_2_of_3",
+                .function = Has_any_of_2_of_3
+            },
+            {
+                .id = "any_of_3_of_2",
+                .function = Has_any_of_3_of_2
+            },
+            {
+                .id = "any_of_2_of_1",
+                .function = Has_any_of_2_of_1
+            },
+            {
+                .id = "any_of_1_of_0",
+                .function = Has_any_of_1_of_0
+            },
+            {
+                .id = "any_2_of_2_disjunct",
+                .function = Has_any_2_of_2_disjunct
+            }
+        }
+    },
+    {
+        .id = "Delete",
+        .testcase_count = 8,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "delete_1",
+                .function = Delete_delete_1
+            },
+            {
+                .id = "delete_1_again",
+                .function = Delete_delete_1_again
+            },
+            {
+                .id = "delete_empty",
+                .function = Delete_delete_empty
+            },
+            {
+                .id = "delete_nonexist",
+                .function = Delete_delete_nonexist
+            },
+            {
+                .id = "delete_1st_of_3",
+                .function = Delete_delete_1st_of_3
+            },
+            {
+                .id = "delete_2nd_of_3",
+                .function = Delete_delete_2nd_of_3
+            },
+            {
+                .id = "delete_2_of_3",
+                .function = Delete_delete_2_of_3
+            },
+            {
+                .id = "delete_3_of_3",
+                .function = Delete_delete_3_of_3
+            }
+        }
+    },
+    {
+        .id = "Set",
+        .testcase_count = 4,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "set_empty",
+                .function = Set_set_empty
+            },
+            {
+                .id = "set_nonempty",
+                .function = Set_set_nonempty
+            },
+            {
+                .id = "set_non_empty_override",
+                .function = Set_set_non_empty_override
+            },
+            {
+                .id = "set_again",
+                .function = Set_set_again
             }
         }
     }
@@ -282,5 +461,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 4);
+    return bake_test_run("api", argc, argv, suites, 7);
 }

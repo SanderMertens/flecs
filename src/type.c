@@ -341,9 +341,11 @@ EcsEntity ecs_type_contains(
     bool match_all,
     bool match_prefab)
 {
-    if (!type_id_1 || !type_id_2) {
+    if (!type_id_1) {
         return 0;
     }
+
+    assert(type_id_2 != 0);
 
     EcsArray *f_1 = ecs_type_get(world, stage, type_id_1);
     EcsArray *f_2 = ecs_type_get(world, stage, type_id_2);
