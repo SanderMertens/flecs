@@ -264,7 +264,7 @@ uint32_t commit_w_type(
     EcsTableColumn *new_columns, *old_columns;
     EcsMap *entity_index;
     EcsType old_type_id = 0;
-    uint32_t new_index = -1, old_index;
+    uint32_t new_index = -1, old_index = -1;
     bool in_progress = world->in_progress;
     EcsEntity entity = info->entity;
     EcsArray *old_type = NULL;
@@ -320,10 +320,15 @@ uint32_t commit_w_type(
             copy_row(new_table->type, new_columns, new_index, 
                 old_type, old_columns, old_index);
         }
-        if (to_remove) {
-            notify_post_merge(
-                world, stage, old_table, old_columns, old_index, 1, to_remove);
-        }
+    }
+
+    if (to_remove) {
+        ecs_assert(old_index != -1, ECS_INTERNAL_ERROR, NULL);
+        notify_post_merge(
+            world, stage, old_table, old_columns, old_index, 1, to_remove);
+    }
+
+    if (old_type_id) {
         ecs_table_delete(world, old_table, old_index);
     }
 
@@ -565,9 +570,8 @@ EcsEntity _ecs_new_w_count(
 
         /* Now we can notify matching OnAdd row systems in bulk */
         notify_pre_merge(
-            world, stage, table, table->columns, result, count, 
+            world, stage, table, table->columns, row - count, count, 
             type, world->type_sys_add_index);
-            
     } 
     
     if (handles_out) {
@@ -594,10 +598,12 @@ void ecs_delete(
             EcsEntityInfo info = {
                 .entity = entity,
                 .type_id = row.type_id,
-                .index = row.index
+                .index = row.index,
+                .table = ecs_world_get_table(world, stage, row.type_id)
             };
 
             commit_w_type(world, stage, &info, 0, 0, row.type_id);
+
             ecs_map_remove(world->main_stage.entity_index, entity);
         }
     } else {
