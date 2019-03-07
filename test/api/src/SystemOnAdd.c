@@ -1,6 +1,6 @@
 #include <include/api.h>
 
-void InitP(EcsRows *rows) {
+void Init(EcsRows *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column(rows, Velocity, 2);
 
@@ -22,7 +22,7 @@ void SystemOnAdd_new_match_1_of_1() {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -51,7 +51,7 @@ void SystemOnAdd_new_match_1_of_2() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -79,7 +79,7 @@ void SystemOnAdd_new_no_match_1() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -97,7 +97,7 @@ void SystemOnAdd_new_no_match_2_of_1() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position, Velocity);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position, Velocity);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -118,7 +118,7 @@ void SystemOnAdd_new_no_match_2_of_3() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
     ECS_TYPE(world, Type, Position, Velocity, Mass);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position, Rotation);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position, Rotation);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -135,7 +135,7 @@ void SystemOnAdd_add_match_1_of_1() {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -168,7 +168,7 @@ void SystemOnAdd_add_match_1_of_2() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -201,7 +201,7 @@ void SystemOnAdd_add_match_2_of_2() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position, Velocity);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position, Velocity);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -237,7 +237,7 @@ void SystemOnAdd_add_match_2_of_3() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity, Mass);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position, Velocity);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position, Velocity);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -271,7 +271,7 @@ void SystemOnAdd_add_no_match_1() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Velocity);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Velocity);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -294,7 +294,7 @@ void SystemOnAdd_add_no_match_2_of_1() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Velocity, Mass);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Velocity, Mass);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -319,7 +319,7 @@ void SystemOnAdd_add_no_match_2_of_3() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
     ECS_TYPE(world, Type, Position, Velocity, Mass);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position, Rotation);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position, Rotation);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -340,7 +340,7 @@ void SystemOnAdd_set_match_1_of_1() {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -372,7 +372,7 @@ void SystemOnAdd_set_no_match_1() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Velocity);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Velocity);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -393,7 +393,7 @@ void SystemOnAdd_clone_match_1_of_1() {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     EcsEntity e_1 = ecs_new(world, Position);
     test_assert(e_1 != 0);
@@ -424,7 +424,7 @@ void SystemOnAdd_clone_match_1_of_2() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     EcsEntity e_1 = ecs_new(world, Type);
     test_assert(e_1 != 0);
@@ -455,7 +455,7 @@ void SystemOnAdd_clone_match_2_of_2() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position, Velocity);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position, Velocity);
 
     EcsEntity e_1 = ecs_new(world, Type);
     test_assert(e_1 != 0);
@@ -493,7 +493,7 @@ void SystemOnAdd_clone_match_2_of_3() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity, Mass);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position, Velocity);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position, Velocity);
 
     EcsEntity e_1 = ecs_new(world, Type);
     test_assert(e_1 != 0);
@@ -528,7 +528,7 @@ void SystemOnAdd_add_again_1() {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -549,7 +549,7 @@ void SystemOnAdd_set_again_1() {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -572,7 +572,7 @@ void SystemOnAdd_add_again_2() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, InitP, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -585,6 +585,35 @@ void SystemOnAdd_add_again_2() {
     ecs_add(world, e, Type);
 
     test_int(ctx.count, 0);
+
+    ecs_fini(world);
+}
+
+void SystemOnAdd_new_w_count_match_1_of_1() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    EcsEntity e = ecs_new_w_count(world, Position, 3, NULL);
+    test_assert(e != 0);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.e[1], e + 1);
+    test_int(ctx.e[2], e + 2);
+    test_int(ctx.c[0], ePosition);
+    test_int(ctx.s[0], 0);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }

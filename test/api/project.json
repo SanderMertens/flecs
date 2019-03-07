@@ -75,7 +75,8 @@
                 "type_of_2_of_2",
                 "type_of_2_of_3",
                 "1_from_empty",
-                "type_from_empty"
+                "type_from_empty",
+                "not_added"
             ]
         }, {
             "id": "Has",
@@ -131,6 +132,8 @@
             "testcases": [
                 "empty",
                 "empty_w_value",
+                "null",
+                "null_w_value",
                 "1_component",
                 "2_component",
                 "1_component_w_value",
@@ -146,6 +149,7 @@
                 "new_no_match_1",
                 "new_no_match_2_of_1",
                 "new_no_match_2_of_3",
+                "new_w_count_match_1_of_1",
                 "add_match_1_of_1",
                 "add_match_1_of_2",
                 "add_match_2_of_2",
@@ -162,6 +166,24 @@
                 "add_again_1",
                 "set_again_1",
                 "add_again_2"
+            ]
+        }, {
+            "id": "SystemOnRemove",
+            "testcases": [
+                "remove_match_1_of_1",
+                "remove_match_1_of_2",
+                "remove_match_2_of_2",
+                "remove_match_2_of_3",
+                "remove_no_match_1",
+                "remove_no_match_2_of_1",
+                "remove_no_match_2_of_3",
+                "delete_match_1_of_1",
+                "delete_match_1_of_2",
+                "delete_match_2_of_2",
+                "delete_match_2_of_3",
+                "delete_no_match_1",
+                "delete_no_match_2_of_1",
+                "delete_no_match_2_of_3"
             ]
         }]
     }

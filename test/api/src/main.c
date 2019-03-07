@@ -58,6 +58,7 @@ void Remove_type_of_2_of_2(void);
 void Remove_type_of_2_of_3(void);
 void Remove_1_from_empty(void);
 void Remove_type_from_empty(void);
+void Remove_not_added(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -105,6 +106,8 @@ void Set_set_and_new(void);
 // Testsuite 'Clone'
 void Clone_empty(void);
 void Clone_empty_w_value(void);
+void Clone_null(void);
+void Clone_null_w_value(void);
 void Clone_1_component(void);
 void Clone_2_component(void);
 void Clone_1_component_w_value(void);
@@ -118,6 +121,7 @@ void SystemOnAdd_new_match_1_of_2(void);
 void SystemOnAdd_new_no_match_1(void);
 void SystemOnAdd_new_no_match_2_of_1(void);
 void SystemOnAdd_new_no_match_2_of_3(void);
+void SystemOnAdd_new_w_count_match_1_of_1(void);
 void SystemOnAdd_add_match_1_of_1(void);
 void SystemOnAdd_add_match_1_of_2(void);
 void SystemOnAdd_add_match_2_of_2(void);
@@ -134,6 +138,22 @@ void SystemOnAdd_clone_match_2_of_3(void);
 void SystemOnAdd_add_again_1(void);
 void SystemOnAdd_set_again_1(void);
 void SystemOnAdd_add_again_2(void);
+
+// Testsuite 'SystemOnRemove'
+void SystemOnRemove_remove_match_1_of_1(void);
+void SystemOnRemove_remove_match_1_of_2(void);
+void SystemOnRemove_remove_match_2_of_2(void);
+void SystemOnRemove_remove_match_2_of_3(void);
+void SystemOnRemove_remove_no_match_1(void);
+void SystemOnRemove_remove_no_match_2_of_1(void);
+void SystemOnRemove_remove_no_match_2_of_3(void);
+void SystemOnRemove_delete_match_1_of_1(void);
+void SystemOnRemove_delete_match_1_of_2(void);
+void SystemOnRemove_delete_match_2_of_2(void);
+void SystemOnRemove_delete_match_2_of_3(void);
+void SystemOnRemove_delete_no_match_1(void);
+void SystemOnRemove_delete_no_match_2_of_1(void);
+void SystemOnRemove_delete_no_match_2_of_3(void);
 
 static bake_test_suite suites[] = {
     {
@@ -304,7 +324,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Remove",
-        .testcase_count = 14,
+        .testcase_count = 15,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -361,6 +381,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_from_empty",
                 .function = Remove_type_from_empty
+            },
+            {
+                .id = "not_added",
+                .function = Remove_not_added
             }
         }
     },
@@ -532,7 +556,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Clone",
-        .testcase_count = 8,
+        .testcase_count = 10,
         .testcases = (bake_test_case[]){
             {
                 .id = "empty",
@@ -541,6 +565,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "empty_w_value",
                 .function = Clone_empty_w_value
+            },
+            {
+                .id = "null",
+                .function = Clone_null
+            },
+            {
+                .id = "null_w_value",
+                .function = Clone_null_w_value
             },
             {
                 .id = "1_component",
@@ -570,7 +602,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 21,
+        .testcase_count = 22,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -591,6 +623,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "new_no_match_2_of_3",
                 .function = SystemOnAdd_new_no_match_2_of_3
+            },
+            {
+                .id = "new_w_count_match_1_of_1",
+                .function = SystemOnAdd_new_w_count_match_1_of_1
             },
             {
                 .id = "add_match_1_of_1",
@@ -657,10 +693,72 @@ static bake_test_suite suites[] = {
                 .function = SystemOnAdd_add_again_2
             }
         }
+    },
+    {
+        .id = "SystemOnRemove",
+        .testcase_count = 14,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "remove_match_1_of_1",
+                .function = SystemOnRemove_remove_match_1_of_1
+            },
+            {
+                .id = "remove_match_1_of_2",
+                .function = SystemOnRemove_remove_match_1_of_2
+            },
+            {
+                .id = "remove_match_2_of_2",
+                .function = SystemOnRemove_remove_match_2_of_2
+            },
+            {
+                .id = "remove_match_2_of_3",
+                .function = SystemOnRemove_remove_match_2_of_3
+            },
+            {
+                .id = "remove_no_match_1",
+                .function = SystemOnRemove_remove_no_match_1
+            },
+            {
+                .id = "remove_no_match_2_of_1",
+                .function = SystemOnRemove_remove_no_match_2_of_1
+            },
+            {
+                .id = "remove_no_match_2_of_3",
+                .function = SystemOnRemove_remove_no_match_2_of_3
+            },
+            {
+                .id = "delete_match_1_of_1",
+                .function = SystemOnRemove_delete_match_1_of_1
+            },
+            {
+                .id = "delete_match_1_of_2",
+                .function = SystemOnRemove_delete_match_1_of_2
+            },
+            {
+                .id = "delete_match_2_of_2",
+                .function = SystemOnRemove_delete_match_2_of_2
+            },
+            {
+                .id = "delete_match_2_of_3",
+                .function = SystemOnRemove_delete_match_2_of_3
+            },
+            {
+                .id = "delete_no_match_1",
+                .function = SystemOnRemove_delete_no_match_1
+            },
+            {
+                .id = "delete_no_match_2_of_1",
+                .function = SystemOnRemove_delete_no_match_2_of_1
+            },
+            {
+                .id = "delete_no_match_2_of_3",
+                .function = SystemOnRemove_delete_no_match_2_of_3
+            }
+        }
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 9);
+    return bake_test_run("api", argc, argv, suites, 10);
 }

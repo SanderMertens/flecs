@@ -245,3 +245,19 @@ void Remove_type_from_empty() {
     
     ecs_fini(world);
 }
+
+void Remove_not_added() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    EcsEntity e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_remove(world, e, Velocity);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}

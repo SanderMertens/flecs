@@ -32,6 +32,28 @@ void Clone_empty_w_value() {
     ecs_fini(world);
 }
 
+void Clone_null() {
+    EcsWorld *world = ecs_init();
+
+    EcsEntity e = ecs_clone(world, 0, false);
+    test_assert(e != 0);
+
+    test_assert(ecs_empty(world, e));
+
+    ecs_fini(world);
+}
+
+void Clone_null_w_value() {
+    EcsWorld *world = ecs_init();
+
+    EcsEntity e = ecs_clone(world, 0, true);
+    test_assert(e != 0);
+
+    test_assert(ecs_empty(world, e));
+
+    ecs_fini(world);
+}
+
 void Clone_1_component() {
     EcsWorld *world = ecs_init();
 
