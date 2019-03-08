@@ -8,6 +8,10 @@ void New_type_of_2(void);
 void New_type_w_type(void);
 void New_type_w_2_types(void);
 void New_type_mixed(void);
+void New_tag(void);
+void New_type_w_tag(void);
+void New_type_w_2_tags(void);
+void New_type_w_tag_mixed(void);
 
 // Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
@@ -19,6 +23,10 @@ void New_w_Count_type_of_2(void);
 void New_w_Count_type_w_type(void);
 void New_w_Count_type_w_2_types(void);
 void New_w_Count_type_mixed(void);
+void New_w_Count_tag(void);
+void New_w_Count_type_w_tag(void);
+void New_w_Count_type_w_2_tags(void);
+void New_w_Count_type_w_tag_mixed(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -42,6 +50,10 @@ void Add_component_to_nonempty_overlap(void);
 void Add_type_to_nonempty(void);
 void Add_type_to_nonempty_again(void);
 void Add_type_to_nonempty_overlap(void);
+void Add_tag(void);
+void Add_type_w_tag(void);
+void Add_type_w_2_tags(void);
+void Add_type_w_tag_mixed(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -114,6 +126,10 @@ void Clone_1_component_w_value(void);
 void Clone_2_component_w_value(void);
 void Clone_3_component(void);
 void Clone_3_component_w_value(void);
+void Clone_tag(void);
+void Clone_tag_w_value(void);
+void Clone_1_tag_1_component(void);
+void Clone_1_tag_1_component_w_value(void);
 
 // Testsuite 'SystemOnAdd'
 void SystemOnAdd_new_match_1_of_1(void);
@@ -167,7 +183,7 @@ void SystemOnFrame_2_type_2_and_2_not(void);
 static bake_test_suite suites[] = {
     {
         .id = "New",
-        .testcase_count = 7,
+        .testcase_count = 11,
         .testcases = (bake_test_case[]){
             {
                 .id = "empty",
@@ -196,12 +212,28 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_mixed",
                 .function = New_type_mixed
+            },
+            {
+                .id = "tag",
+                .function = New_tag
+            },
+            {
+                .id = "type_w_tag",
+                .function = New_type_w_tag
+            },
+            {
+                .id = "type_w_2_tags",
+                .function = New_type_w_2_tags
+            },
+            {
+                .id = "type_w_tag_mixed",
+                .function = New_type_w_tag_mixed
             }
         }
     },
     {
         .id = "New_w_Count",
-        .testcase_count = 9,
+        .testcase_count = 13,
         .testcases = (bake_test_case[]){
             {
                 .id = "empty",
@@ -238,12 +270,28 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_mixed",
                 .function = New_w_Count_type_mixed
+            },
+            {
+                .id = "tag",
+                .function = New_w_Count_tag
+            },
+            {
+                .id = "type_w_tag",
+                .function = New_w_Count_type_w_tag
+            },
+            {
+                .id = "type_w_2_tags",
+                .function = New_w_Count_type_w_2_tags
+            },
+            {
+                .id = "type_w_tag_mixed",
+                .function = New_w_Count_type_w_tag_mixed
             }
         }
     },
     {
         .id = "Add",
-        .testcase_count = 21,
+        .testcase_count = 25,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -328,6 +376,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_to_nonempty_overlap",
                 .function = Add_type_to_nonempty_overlap
+            },
+            {
+                .id = "tag",
+                .function = Add_tag
+            },
+            {
+                .id = "type_w_tag",
+                .function = Add_type_w_tag
+            },
+            {
+                .id = "type_w_2_tags",
+                .function = Add_type_w_2_tags
+            },
+            {
+                .id = "type_w_tag_mixed",
+                .function = Add_type_w_tag_mixed
             }
         }
     },
@@ -565,7 +629,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Clone",
-        .testcase_count = 10,
+        .testcase_count = 14,
         .testcases = (bake_test_case[]){
             {
                 .id = "empty",
@@ -606,6 +670,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "3_component_w_value",
                 .function = Clone_3_component_w_value
+            },
+            {
+                .id = "tag",
+                .function = Clone_tag
+            },
+            {
+                .id = "tag_w_value",
+                .function = Clone_tag_w_value
+            },
+            {
+                .id = "1_tag_1_component",
+                .function = Clone_1_tag_1_component
+            },
+            {
+                .id = "1_tag_1_component_w_value",
+                .function = Clone_1_tag_1_component_w_value
             }
         }
     },

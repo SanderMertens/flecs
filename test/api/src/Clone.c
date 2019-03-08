@@ -270,3 +270,88 @@ void Clone_3_component_w_value() {
 
     ecs_fini(world);
 }
+
+void Clone_tag() {
+    EcsWorld *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    EcsEntity e_1 = ecs_new(world, Tag);
+    test_assert(e_1 != 0);
+
+    EcsEntity e_2 = ecs_clone(world, e_1, false);
+    test_assert(e_2 != 0);
+    test_assert(e_1 != e_2);
+
+    test_assert(ecs_has(world, e_1, Tag));
+    test_assert(ecs_has(world, e_2, Tag));
+
+    ecs_fini(world);
+}
+
+void Clone_tag_w_value() {
+    EcsWorld *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    EcsEntity e_1 = ecs_new(world, Tag);
+    test_assert(e_1 != 0);
+
+    EcsEntity e_2 = ecs_clone(world, e_1, true);
+    test_assert(e_2 != 0);
+    test_assert(e_1 != e_2);
+
+    test_assert(ecs_has(world, e_1, Tag));
+    test_assert(ecs_has(world, e_2, Tag));
+
+    ecs_fini(world);
+}
+
+void Clone_1_tag_1_component() {
+    EcsWorld *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, e_1, Position, Tag);
+
+    ecs_set(world, e_1, Position, {10, 20});
+
+    EcsEntity e_2 = ecs_clone(world, e_1, false);
+    test_assert(e_2 != 0);
+    test_assert(e_1 != e_2);
+
+    test_assert(ecs_has(world, e_1, Tag));
+    test_assert(ecs_has(world, e_2, Tag));
+
+    test_assert(ecs_has(world, e_1, Position));
+    test_assert(ecs_has(world, e_2, Position));
+
+    ecs_fini(world);
+}
+
+void Clone_1_tag_1_component_w_value() {
+    EcsWorld *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, e_1, Position, Tag);
+
+    ecs_set(world, e_1, Position, {10, 20});
+
+    EcsEntity e_2 = ecs_clone(world, e_1, true);
+    test_assert(e_2 != 0);
+    test_assert(e_1 != e_2);
+
+    test_assert(ecs_has(world, e_1, Tag));
+    test_assert(ecs_has(world, e_2, Tag));
+
+    test_assert(ecs_has(world, e_1, Position));
+    test_assert(ecs_has(world, e_2, Position));
+
+    Position *p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

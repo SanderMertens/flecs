@@ -19,7 +19,11 @@
                 "type_of_2",
                 "type_w_type",
                 "type_w_2_types",
-                "type_mixed"
+                "type_mixed",
+                "tag",
+                "type_w_tag",
+                "type_w_2_tags",
+                "type_w_tag_mixed"
             ]
         }, {
             "id": "New_w_Count",
@@ -32,7 +36,11 @@
                 "type_of_2",
                 "type_w_type",
                 "type_w_2_types",
-                "type_mixed"
+                "type_mixed",
+                "tag",
+                "type_w_tag",
+                "type_w_2_tags",
+                "type_w_tag_mixed"
             ]
         }, {
             "id": "Add",
@@ -57,7 +65,11 @@
                 "component_to_nonempty_overlap",
                 "type_to_nonempty",
                 "type_to_nonempty_again",
-                "type_to_nonempty_overlap"
+                "type_to_nonempty_overlap",
+                "tag",
+                "type_w_tag",
+                "type_w_2_tags",
+                "type_w_tag_mixed"
             ]
         }, {
             "id": "Remove",
@@ -139,7 +151,11 @@
                 "1_component_w_value",
                 "2_component_w_value",
                 "3_component",
-                "3_component_w_value"
+                "3_component_w_value",
+                "tag",
+                "tag_w_value",
+                "1_tag_1_component",
+                "1_tag_1_component_w_value"
             ]
         }, {
             "id": "SystemOnAdd",

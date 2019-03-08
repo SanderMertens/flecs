@@ -28,9 +28,9 @@ void SystemOnFrame_1_type_1_component() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, _1, Position);
-    ECS_ENTITY(world, _2, Position);
-    ECS_ENTITY(world, _3, Position);
+    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e_3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, Position);
 
@@ -76,9 +76,9 @@ void SystemOnFrame_1_type_3_component() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, _1, Position, Velocity, Mass);
-    ECS_ENTITY(world, _2, Position, Velocity, Mass);
-    ECS_ENTITY(world, _3, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_1, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_2, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_3, Position, Velocity, Mass);
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, Mass);
 
@@ -157,9 +157,9 @@ void SystemOnFrame_3_type_1_component() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, _1, Position);
-    ECS_ENTITY(world, _2, Position, Velocity);
-    ECS_ENTITY(world, _3, Position, Mass);
+    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e_2, Position, Velocity);
+    ECS_ENTITY(world, e_3, Position, Mass);
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, Position);
 
@@ -206,9 +206,9 @@ void SystemOnFrame_2_type_3_component() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, _1, Position, Velocity, Mass);
-    ECS_ENTITY(world, _2, Position, Velocity, Mass);
-    ECS_ENTITY(world, _3, Position, Velocity, Mass, Rotation);
+    ECS_ENTITY(world, e_1, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_2, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_3, Position, Velocity, Mass, Rotation);
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, Mass);
 
@@ -286,9 +286,9 @@ void SystemOnFrame_2_type_1_and_1_not() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, _1, Position);
-    ECS_ENTITY(world, _2, Position);
-    ECS_ENTITY(world, _3, Position, Velocity);
+    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e_3, Position, Velocity);
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, Position, !Velocity);
 
@@ -330,9 +330,9 @@ void SystemOnFrame_2_type_2_and_1_not() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, _1, Position, Velocity);
-    ECS_ENTITY(world, _2, Position, Velocity);
-    ECS_ENTITY(world, _3, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_1, Position, Velocity);
+    ECS_ENTITY(world, e_2, Position, Velocity);
+    ECS_ENTITY(world, e_3, Position, Velocity, Mass);
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, !Mass);
 
@@ -387,9 +387,9 @@ void SystemOnFrame_2_type_2_and_2_not() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, _1, Position, Velocity);
-    ECS_ENTITY(world, _2, Position, Velocity, Rotation);
-    ECS_ENTITY(world, _3, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_1, Position, Velocity);
+    ECS_ENTITY(world, e_2, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e_3, Position, Velocity, Mass);
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, !Mass, !Rotation);
 
