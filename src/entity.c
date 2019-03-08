@@ -189,8 +189,8 @@ void copy_from_prefab(
                 void *ptr = get_row_ptr(
                     world, stage, table->type, columns, index, component);
                 if (ptr) {
-                    EcsComponent *component_data = _ecs_get_ptr(
-                        world, component, tEcsComponent);
+                    EcsComponent *component_data = ecs_get_ptr(
+                        world, component, EcsComponent);
                     assert(component_data != NULL);
                     memcpy(ptr, prefab_ptr, component_data->size);
                 }
@@ -370,7 +370,7 @@ bool ecs_notify_system(
     int32_t offset,
     int32_t limit)  
 {
-    EcsRowSystem *system_data = _ecs_get_ptr(world, system, tEcsRowSystem);
+    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {
@@ -754,7 +754,7 @@ EcsEntity _ecs_set_ptr(
 #ifndef NDEBUG
     EcsEntityInfo cinfo = {0};
     EcsComponent *cdata = get_ptr(
-        world, component, eEcsComponent, false, false, &cinfo);
+        world, component, EEcsComponent, false, false, &cinfo);
     ecs_assert(cdata->size == size, ECS_INVALID_COMPONENT_SIZE, NULL);
 #endif
 

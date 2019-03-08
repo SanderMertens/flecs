@@ -116,26 +116,26 @@ typedef void (*EcsModuleInitAction)(
     void *handles_out);
 
 /** Handles to builtin components */
-#define eEcsComponent (1)
-#define eEcsTypeComponent (2)
-#define eEcsPrefab (3)
-#define eEcsRowSystem (4)
-#define eEcsColSystem (5)
-#define eEcsId (6)
-#define eEcsHidden (7)
-#define eEcsContainer (8)
+#define EEcsComponent (1)
+#define EEcsTypeComponent (2)
+#define EEcsPrefab (3)
+#define EEcsRowSystem (4)
+#define EEcsColSystem (5)
+#define EEcsId (6)
+#define EEcsHidden (7)
+#define EEcsContainer (8)
 
-extern EcsType tEcsComponent;
-extern EcsType tEcsTypeComponent;
-extern EcsType tEcsPrefab;
-extern EcsType tEcsRowSystem;
-extern EcsType tEcsColSystem;
-extern EcsType tEcsId;
-extern EcsType tEcsHidden;
-extern EcsType tEcsContainer;
+extern EcsType TEcsComponent;
+extern EcsType TEcsTypeComponent;
+extern EcsType TEcsPrefab;
+extern EcsType TEcsRowSystem;
+extern EcsType TEcsColSystem;
+extern EcsType TEcsId;
+extern EcsType TEcsHidden;
+extern EcsType TEcsContainer;
 
 /* This allows passing 0 as type to functions that accept types */
-#define t0 (0)
+#define T0 (0)
 
 extern const char *ECS_COMPONENT_ID;
 extern const char *ECS_TYPE_COMPONENT_ID;
@@ -464,7 +464,7 @@ void _ecs_dim_type(
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_dim_type(world, type, entity_count)\
-    _ecs_dim_type(world, t##type, entity_count)
+    _ecs_dim_type(world, T##type, entity_count)
 
 /* -- Entity API -- */
 
@@ -499,7 +499,7 @@ EcsEntity _ecs_new(
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_new(world, type)\
-    _ecs_new(world, t##type)
+    _ecs_new(world, T##type)
 
 REFLECS_EXPORT
 EcsEntity ecs_new_entity(
@@ -526,7 +526,7 @@ EcsEntity _ecs_new_w_count(
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_new_w_count(world, type, count, handles_out)\
-    _ecs_new_w_count(world, t##type, count, handles_out)
+    _ecs_new_w_count(world, T##type, count, handles_out)
 
 /** Create new entity with same components as specified entity.
  * This operation creates a new entity which has the same components as the
@@ -614,7 +614,7 @@ EcsResult _ecs_add(
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_add(world, entity, type)\
-    _ecs_add(world, entity, t##type)
+    _ecs_add(world, entity, T##type)
 
 /** Remove a type from an entity */
 REFLECS_EXPORT
@@ -625,7 +625,7 @@ EcsResult _ecs_remove(
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_remove(world, entity, type)\
-    _ecs_remove(world, entity, t##type)
+    _ecs_remove(world, entity, T##type)
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
@@ -656,11 +656,11 @@ void* _ecs_get_ptr(
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_get_ptr(world, entity, type)\
-    _ecs_get_ptr(world, entity, t##type)
+    _ecs_get_ptr(world, entity, T##type)
 
 /* Convenienve macro for returning a value instead of a pointer */
 #define ecs_get(world, entity, type)\
-  (*(component*)_ecs_get_ptr(world, entity, t##type))
+  (*(component*)_ecs_get_ptr(world, entity, T##type))
 
 /* Set value of component.
  * This function sets the value of a component on the specified entity. If the
@@ -688,10 +688,10 @@ EcsEntity _ecs_set_ptr(
     void *ptr);
 
 #define ecs_set_ptr(world, entity, type, size, ptr)\
-    _ecs_set_ptr(world, entity, t##type, size, ptr)
+    _ecs_set_ptr(world, entity, T##type, size, ptr)
 
 #define ecs_set(world, entity, type, ...)\
-    _ecs_set_ptr(world, entity, t##type, sizeof(type), &(type)__VA_ARGS__);
+    _ecs_set_ptr(world, entity, T##type, sizeof(type), &(type)__VA_ARGS__);
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the
@@ -716,7 +716,7 @@ bool _ecs_has(
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_has(world, entity, type)\
-    _ecs_has(world, entity, t##type)
+    _ecs_has(world, entity, T##type)
 
 /** Check if entity has any of the components in the specified type.
  * This operation checks if the entity has any of the components associated with
@@ -739,7 +739,7 @@ bool _ecs_has_any(
     EcsType type);
 
 #define ecs_has_any(world, entity, type)\
-    _ecs_has_any(world, entity, t##type)
+    _ecs_has_any(world, entity, T##type)
 
 
 /** Return if the entity is valid.
@@ -1218,21 +1218,21 @@ void ecs_iter_release(
  * the application will have access to a Location_h variable which holds the
  * handle to the new component. */
 #define ECS_COMPONENT(world, id) \
-    EcsEntity e##id = ecs_new_component(world, #id, sizeof(id));\
-    assert (e##id != 0);\
-    EcsType t##id = ecs_entity_to_type(world, e##id);\
-    (void)e##id;\
-    (void)t##id;\
-    assert (t##id != 0)
+    EcsEntity E##id = ecs_new_component(world, #id, sizeof(id));\
+    assert (E##id != 0);\
+    EcsType T##id = ecs_entity_to_type(world, E##id);\
+    (void)E##id;\
+    (void)T##id;\
+    assert (T##id != 0)
 
 /** Same as component, but no size */
 #define ECS_TAG(world, id) \
-    EcsEntity e##id = ecs_new_component(world, #id, 0);\
-    assert (e##id != 0);\
-    EcsType t##id = ecs_entity_to_type(world, e##id);\
-    (void)e##id;\
-    (void)t##id;\
-    assert (t##id != 0)
+    EcsEntity E##id = ecs_new_component(world, #id, 0);\
+    assert (E##id != 0);\
+    EcsType T##id = ecs_entity_to_type(world, E##id);\
+    (void)E##id;\
+    (void)T##id;\
+    assert (T##id != 0)
 
 /** Wrapper around ecs_new_type.
  * This macro provides a convenient way to register a type with the world.
@@ -1247,12 +1247,12 @@ void ecs_iter_release(
  * components, whereas using ecs_add and ecs_commit takes longer for larger
  * numbers of components. */
 #define ECS_TYPE(world, id, ...) \
-    EcsEntity e##id = ecs_new_type(world, #id, #__VA_ARGS__);\
-    assert (e##id != 0);\
-    EcsType t##id = ecs_entity_to_type(world, e##id);\
-    (void)e##id;\
-    (void)t##id;\
-    assert (t##id != 0)
+    EcsEntity E##id = ecs_new_type(world, #id, #__VA_ARGS__);\
+    assert (E##id != 0);\
+    EcsType T##id = ecs_entity_to_type(world, E##id);\
+    (void)E##id;\
+    (void)T##id;\
+    assert (T##id != 0)
 
 /** Wrapper around ecs_new_prefab.
  * This macro provides a convenient way to register a prefab with the world. It
@@ -1263,12 +1263,12 @@ void ecs_iter_release(
  *
  * For more specifics, see description of ecs_new_prefab. */
 #define ECS_PREFAB(world, id, ...) \
-    EcsEntity e##id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
-    assert (e##id != 0);\
-    EcsType t##id = ecs_entity_to_type(world, e##id);\
-    (void)e##id;\
-    (void)t##id;\
-    assert (t##id != 0)
+    EcsEntity E##id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
+    assert (E##id != 0);\
+    EcsType T##id = ecs_entity_to_type(world, E##id);\
+    (void)E##id;\
+    (void)T##id;\
+    assert (T##id != 0)
 
 
 /** Wrapper around ecs_new_system.
@@ -1285,9 +1285,9 @@ void ecs_iter_release(
  * holds the handle to the new system. */
 #define ECS_SYSTEM(world, id, kind, ...) \
     void id(EcsRows*);\
-    EcsEntity e##id = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
-    (void)e##id;\
-    assert (e##id != 0)
+    EcsEntity E##id = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
+    (void)E##id;\
+    assert (E##id != 0)
 
 /** Wrapper around ecs_load.
  * This macro provides a convenient way to load a module with the world. It can

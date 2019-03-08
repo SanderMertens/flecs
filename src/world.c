@@ -27,14 +27,14 @@ const EcsArrayParams char_arr_params = {
 
 /* -- Global variables -- */
 
-EcsType tEcsComponent;
-EcsType tEcsTypeComponent;
-EcsType tEcsPrefab;
-EcsType tEcsRowSystem;
-EcsType tEcsColSystem;
-EcsType tEcsId;
-EcsType tEcsHidden;
-EcsType tEcsContainer;
+EcsType TEcsComponent;
+EcsType TEcsTypeComponent;
+EcsType TEcsPrefab;
+EcsType TEcsRowSystem;
+EcsType TEcsColSystem;
+EcsType TEcsId;
+EcsType TEcsHidden;
+EcsType TEcsContainer;
 
 const char *ECS_COMPONENT_ID =      "EcsComponent";
 const char *ECS_TYPE_COMPONENT_ID = "EcsTypeComponent";
@@ -61,20 +61,20 @@ void bootstrap_types(
     EcsWorld *world)
 {
     EcsStage *stage = &world->main_stage;
-    tEcsComponent = ecs_type_register(world, stage, eEcsComponent, NULL);
-    tEcsTypeComponent = ecs_type_register(world, stage, eEcsTypeComponent, NULL);
-    tEcsPrefab = ecs_type_register(world, stage, eEcsPrefab, NULL);
-    tEcsRowSystem = ecs_type_register(world, stage, eEcsRowSystem, NULL);
-    tEcsColSystem = ecs_type_register(world, stage, eEcsColSystem, NULL);
-    tEcsId = ecs_type_register(world, stage, eEcsId, NULL);
-    tEcsHidden = ecs_type_register(world, stage, eEcsHidden, NULL);
-    tEcsContainer = ecs_type_register(world, stage, eEcsContainer, NULL);    
+    TEcsComponent = ecs_type_register(world, stage, EEcsComponent, NULL);
+    TEcsTypeComponent = ecs_type_register(world, stage, EEcsTypeComponent, NULL);
+    TEcsPrefab = ecs_type_register(world, stage, EEcsPrefab, NULL);
+    TEcsRowSystem = ecs_type_register(world, stage, EEcsRowSystem, NULL);
+    TEcsColSystem = ecs_type_register(world, stage, EEcsColSystem, NULL);
+    TEcsId = ecs_type_register(world, stage, EEcsId, NULL);
+    TEcsHidden = ecs_type_register(world, stage, EEcsHidden, NULL);
+    TEcsContainer = ecs_type_register(world, stage, EEcsContainer, NULL);    
 
-    world->t_component = ecs_type_merge(world, stage, tEcsComponent, tEcsId, 0);
-    world->t_type = ecs_type_merge(world, stage, tEcsTypeComponent, tEcsId, 0);
-    world->t_prefab = ecs_type_merge(world, stage, tEcsPrefab, tEcsId, 0);
-    world->t_row_system = ecs_type_merge(world, stage, tEcsRowSystem, tEcsId, 0);
-    world->t_col_system = ecs_type_merge(world, stage, tEcsColSystem, tEcsId, 0);
+    world->t_component = ecs_type_merge(world, stage, TEcsComponent, TEcsId, 0);
+    world->t_type = ecs_type_merge(world, stage, TEcsTypeComponent, TEcsId, 0);
+    world->t_prefab = ecs_type_merge(world, stage, TEcsPrefab, TEcsId, 0);
+    world->t_row_system = ecs_type_merge(world, stage, TEcsRowSystem, TEcsId, 0);
+    world->t_col_system = ecs_type_merge(world, stage, TEcsColSystem, TEcsId, 0);
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -454,16 +454,16 @@ EcsWorld *ecs_init(void) {
     assert(table != NULL);
 
     /* Create records for internal components */
-    bootstrap_component(world, table, eEcsComponent, ECS_COMPONENT_ID, sizeof(EcsComponent));
-    bootstrap_component(world, table, eEcsTypeComponent, ECS_TYPE_COMPONENT_ID, sizeof(EcsTypeComponent));
-    bootstrap_component(world, table, eEcsPrefab, ECS_PREFAB_ID, 0);
-    bootstrap_component(world, table, eEcsRowSystem, ECS_ROW_SYSTEM_ID, sizeof(EcsRowSystem));
-    bootstrap_component(world, table, eEcsColSystem, ECS_COL_SYSTEM_ID, sizeof(EcsColSystem));
-    bootstrap_component(world, table, eEcsId, ECS_ID_ID, sizeof(EcsId));
-    bootstrap_component(world, table, eEcsHidden, ECS_ID_ID, 0);
-    bootstrap_component(world, table, eEcsContainer, ECS_CONTAINER_ID, 0);
+    bootstrap_component(world, table, EEcsComponent, ECS_COMPONENT_ID, sizeof(EcsComponent));
+    bootstrap_component(world, table, EEcsTypeComponent, ECS_TYPE_COMPONENT_ID, sizeof(EcsTypeComponent));
+    bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_ID, 0);
+    bootstrap_component(world, table, EEcsRowSystem, ECS_ROW_SYSTEM_ID, sizeof(EcsRowSystem));
+    bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_ID, sizeof(EcsColSystem));
+    bootstrap_component(world, table, EEcsId, ECS_ID_ID, sizeof(EcsId));
+    bootstrap_component(world, table, EEcsHidden, ECS_ID_ID, 0);
+    bootstrap_component(world, table, EEcsContainer, ECS_CONTAINER_ID, 0);
 
-    world->last_handle = eEcsContainer + 1;
+    world->last_handle = EEcsContainer + 1;
 
     return world;
 }
@@ -556,7 +556,7 @@ EcsEntity ecs_lookup(
         EcsTable *table = ecs_iter_next(&it);
         uint32_t column_index;
 
-        if ((column_index = ecs_type_index_of(table->type, eEcsId)) == -1) {
+        if ((column_index = ecs_type_index_of(table->type, EEcsId)) == -1) {
             continue;
         }
 

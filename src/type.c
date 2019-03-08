@@ -172,7 +172,7 @@ EcsType ecs_type_from_handle(
     EcsEntity component = components[0];
     EcsType type = 0;
 
-    if (component == eEcsTypeComponent) {
+    if (component == EEcsTypeComponent) {
         EcsArrayParams params = {.element_size = sizeof(EcsTypeComponent)};
         EcsTypeComponent *fe = ecs_array_get(columns[1].data, &params, index);
         type = fe->resolved;
