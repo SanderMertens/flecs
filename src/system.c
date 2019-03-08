@@ -493,7 +493,7 @@ EcsEntity ecs_column_source(
         return 0;
     } else {
         int32_t table_column = rows->columns[index - 1];
-        if (table_column > 0) {
+        if (table_column >= 0) {
             return 0;
         }
 

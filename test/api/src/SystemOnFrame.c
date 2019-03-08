@@ -279,3 +279,150 @@ void SystemOnFrame_2_type_3_component() {
 
     ecs_fini(world);
 }
+
+void SystemOnFrame_2_type_1_and_1_not() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, _1, Position);
+    ECS_ENTITY(world, _2, Position);
+    ECS_ENTITY(world, _3, Position, Velocity);
+
+    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, !Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eIter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.c[0], ePosition);
+    test_int(ctx.s[0], 0);
+    test_int(ctx.c[1], eVelocity);
+    test_int(ctx.s[1], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_2_type_2_and_1_not() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, _1, Position, Velocity);
+    ECS_ENTITY(world, _2, Position, Velocity);
+    ECS_ENTITY(world, _3, Position, Velocity, Mass);
+
+    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, !Mass);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eIter);
+    test_int(ctx.column_count, 3);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.c[0], ePosition);
+    test_int(ctx.s[0], 0);
+    test_int(ctx.c[1], eVelocity);
+    test_int(ctx.s[1], 0);
+    test_int(ctx.c[2], eMass);
+    test_int(ctx.s[2], 0);
+    
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 30);
+    test_int(v->y, 40);
+
+    v = ecs_get_ptr(world, e_2, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 30);
+    test_int(v->y, 40);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_2_type_2_and_2_not() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, _1, Position, Velocity);
+    ECS_ENTITY(world, _2, Position, Velocity, Rotation);
+    ECS_ENTITY(world, _3, Position, Velocity, Mass);
+
+    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, !Mass, !Rotation);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eIter);
+    test_int(ctx.column_count, 4);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.c[0], ePosition);
+    test_int(ctx.s[0], 0);
+    test_int(ctx.c[1], eVelocity);
+    test_int(ctx.s[1], 0);
+    test_int(ctx.c[2], eMass);
+    test_int(ctx.s[2], 0);
+    test_int(ctx.c[3], eRotation);
+    test_int(ctx.s[3], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 30);
+    test_int(v->y, 40);
+
+    ecs_fini(world);
+}

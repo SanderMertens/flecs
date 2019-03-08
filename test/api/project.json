@@ -191,7 +191,10 @@
                 "1_type_1_component",
                 "1_type_3_component",
                 "3_type_1_component",
-                "2_type_3_component"
+                "2_type_3_component",
+                "2_type_1_and_1_not",
+                "2_type_2_and_1_not",
+                "2_type_2_and_2_not"
             ]
         }]
     }
