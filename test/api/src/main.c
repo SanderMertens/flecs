@@ -181,6 +181,16 @@ void SystemOnFrame_2_type_1_component_1_tag(void);
 void SystemOnFrame_2_type_1_and_1_not(void);
 void SystemOnFrame_2_type_2_and_1_not(void);
 void SystemOnFrame_2_type_2_and_2_not(void);
+void SystemOnFrame_4_type_1_and_1_or(void);
+void SystemOnFrame_4_type_1_and_1_or_of_3(void);
+void SystemOnFrame_1_type_1_and_1_or(void);
+
+// Testsuite 'Internals'
+void Internals_deactivate_table(void);
+void Internals_activate_table(void);
+void Internals_activate_deactivate_table(void);
+void Internals_activate_deactivate_reactive(void);
+void Internals_activate_deactivate_activate_other(void);
 
 static bake_test_suite suites[] = {
     {
@@ -849,7 +859,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 9,
+        .testcase_count = 12,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -886,6 +896,44 @@ static bake_test_suite suites[] = {
             {
                 .id = "2_type_2_and_2_not",
                 .function = SystemOnFrame_2_type_2_and_2_not
+            },
+            {
+                .id = "4_type_1_and_1_or",
+                .function = SystemOnFrame_4_type_1_and_1_or
+            },
+            {
+                .id = "4_type_1_and_1_or_of_3",
+                .function = SystemOnFrame_4_type_1_and_1_or_of_3
+            },
+            {
+                .id = "1_type_1_and_1_or",
+                .function = SystemOnFrame_1_type_1_and_1_or
+            }
+        }
+    },
+    {
+        .id = "Internals",
+        .testcase_count = 5,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "deactivate_table",
+                .function = Internals_deactivate_table
+            },
+            {
+                .id = "activate_table",
+                .function = Internals_activate_table
+            },
+            {
+                .id = "activate_deactivate_table",
+                .function = Internals_activate_deactivate_table
+            },
+            {
+                .id = "activate_deactivate_reactive",
+                .function = Internals_activate_deactivate_reactive
+            },
+            {
+                .id = "activate_deactivate_activate_other",
+                .function = Internals_activate_deactivate_activate_other
             }
         }
     }
@@ -893,5 +941,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 11);
+    return bake_test_run("api", argc, argv, suites, 12);
 }

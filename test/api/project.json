@@ -212,7 +212,19 @@
                 "2_type_1_component_1_tag",
                 "2_type_1_and_1_not",
                 "2_type_2_and_1_not",
-                "2_type_2_and_2_not"
+                "2_type_2_and_2_not",
+                "4_type_1_and_1_or",
+                "4_type_1_and_1_or_of_3",
+                "1_type_1_and_1_or"
+            ]
+        }, {
+            "id": "Internals",
+            "testcases": [
+                "deactivate_table",
+                "activate_table",
+                "activate_deactivate_table",
+                "activate_deactivate_reactive",
+                "activate_deactivate_activate_other"
             ]
         }]
     }

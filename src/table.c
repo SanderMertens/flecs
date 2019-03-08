@@ -116,6 +116,7 @@ uint32_t ecs_table_insert(
     }
 
     uint32_t index = ecs_array_count(columns[0].data) - 1;
+
     if (!world->in_progress && !index) {
         activate_table(world, table, true);
     }
@@ -158,7 +159,7 @@ void ecs_table_delete(
 
     ecs_array_remove_last(entity_column);
 
-    if (!world->in_progress && count) {
+    if (!world->in_progress && !count) {
         activate_table(world, table, false);
     }
 }
