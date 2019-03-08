@@ -184,6 +184,9 @@ void SystemOnFrame_2_type_2_and_2_not(void);
 void SystemOnFrame_4_type_1_and_1_or(void);
 void SystemOnFrame_4_type_1_and_1_or_of_3(void);
 void SystemOnFrame_1_type_1_and_1_or(void);
+void SystemOnFrame_2_type_1_and_1_optional(void);
+void SystemOnFrame_2_type_2_and_1_optional(void);
+void SystemOnFrame_6_type_1_and_2_optional(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -859,7 +862,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 12,
+        .testcase_count = 15,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -908,6 +911,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "1_type_1_and_1_or",
                 .function = SystemOnFrame_1_type_1_and_1_or
+            },
+            {
+                .id = "2_type_1_and_1_optional",
+                .function = SystemOnFrame_2_type_1_and_1_optional
+            },
+            {
+                .id = "2_type_2_and_1_optional",
+                .function = SystemOnFrame_2_type_2_and_1_optional
+            },
+            {
+                .id = "6_type_1_and_2_optional",
+                .function = SystemOnFrame_6_type_1_and_2_optional
             }
         }
     },

@@ -194,13 +194,6 @@ void add_table(
                 component = column->is.component;
             } else if (column->oper_kind == EcsOperOptional) {
                 component = column->is.component;
-
-                if (!ecs_type_contains_component(
-                    world, &world->main_stage, table_type, component, true))
-                {
-                    component = 0;
-                }
-
             } else if (column->oper_kind == EcsOperOr) {
                 component = ecs_type_contains(
                     world, &world->main_stage, table_type, column->is.type, 
@@ -255,6 +248,7 @@ void add_table(
                      * zero, so that a system won't try to access the data */
                     EcsComponent *data = ecs_get_ptr(
                         world, component, EcsComponent);
+
                     if (!data->size) {
                         table_data[i] = 0;
                     }
@@ -265,6 +259,15 @@ void add_table(
                  * reference (see below) */
             } else {
                 /* Columns with a NOT expression have no data */
+                table_data[i] = 0;
+            }
+        }
+
+        if (column->oper_kind == EcsOperOptional) {
+            /* If table doesn't have the field, mark it as no data */
+            if (!ecs_type_contains_component(
+                world, &world->main_stage, table_type, component, true))
+            {
                 table_data[i] = 0;
             }
         }
@@ -299,7 +302,7 @@ void add_table(
     }
 
     /* Register system with the table */
-    EcsEntity *h = ecs_array_add(&table->frame_systems, &handle_arr_params);;
+    EcsEntity *h = ecs_array_add(&table->frame_systems, &handle_arr_params);
     if (h) *h = system;
 }
 

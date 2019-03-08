@@ -37,8 +37,8 @@ void SystemOnAdd_new_match_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
@@ -68,8 +68,8 @@ void SystemOnAdd_new_match_1_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
@@ -158,8 +158,8 @@ void SystemOnAdd_add_match_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
@@ -193,8 +193,8 @@ void SystemOnAdd_add_match_1_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
@@ -228,10 +228,10 @@ void SystemOnAdd_add_match_2_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
-    test_int(ctx.c[1], eVelocity);
-    test_int(ctx.s[1], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], eVelocity);
+    test_int(ctx.s[0][1], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
@@ -266,10 +266,10 @@ void SystemOnAdd_add_match_2_of_3() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
-    test_int(ctx.c[1], eVelocity);
-    test_int(ctx.s[1], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], eVelocity);
+    test_int(ctx.s[0][1], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
@@ -371,8 +371,8 @@ void SystemOnAdd_set_match_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 1);
@@ -424,8 +424,8 @@ void SystemOnAdd_clone_match_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_2);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e_2, Position);
     test_int(p->x, 10);
@@ -457,8 +457,8 @@ void SystemOnAdd_clone_match_1_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_2);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e_2, Position);
     test_int(p->x, 10);
@@ -490,10 +490,10 @@ void SystemOnAdd_clone_match_2_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_2);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
-    test_int(ctx.c[1], eVelocity);
-    test_int(ctx.s[1], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], eVelocity);
+    test_int(ctx.s[0][1], 0);
 
     Position *p = ecs_get_ptr(world, e_2, Position);
     test_int(p->x, 10);
@@ -530,10 +530,10 @@ void SystemOnAdd_clone_match_2_of_3() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_2);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
-    test_int(ctx.c[1], eVelocity);
-    test_int(ctx.s[1], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], eVelocity);
+    test_int(ctx.s[0][1], 0);
 
     Position *p = ecs_get_ptr(world, e_2, Position);
     test_int(p->x, 10);
@@ -632,8 +632,8 @@ void SystemOnAdd_new_w_count_match_1_of_1() {
     test_int(ctx.e[0], e);
     test_int(ctx.e[1], e + 1);
     test_int(ctx.e[2], e + 2);
-    test_int(ctx.c[0], ePosition);
-    test_int(ctx.s[0], 0);
+    test_int(ctx.c[0][0], ePosition);
+    test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);

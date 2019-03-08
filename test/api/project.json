@@ -215,7 +215,10 @@
                 "2_type_2_and_2_not",
                 "4_type_1_and_1_or",
                 "4_type_1_and_1_or_of_3",
-                "1_type_1_and_1_or"
+                "1_type_1_and_1_or",
+                "2_type_1_and_1_optional",
+                "2_type_2_and_1_optional",
+                "6_type_1_and_2_optional"
             ]
         }, {
             "id": "Internals",
