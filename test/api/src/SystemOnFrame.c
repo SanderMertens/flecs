@@ -280,6 +280,99 @@ void SystemOnFrame_2_type_3_component() {
     ecs_fini(world);
 }
 
+void SystemOnFrame_1_type_1_component_1_tag() {
+    EcsWorld *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e_1, Position, Tag);
+    ECS_ENTITY(world, e_2, Position, Tag);
+    ECS_ENTITY(world, e_3, Position, Tag);
+
+    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Tag);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eIter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[2], e_3);
+    test_int(ctx.c[0], ePosition);
+    test_int(ctx.s[0], 0);
+    test_int(ctx.c[1], eTag);
+    test_int(ctx.s[1], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_ptr(world, e_3, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_2_type_1_component_1_tag() {
+    EcsWorld *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e_1, Position, Tag);
+    ECS_ENTITY(world, e_2, Position, Tag);
+    ECS_ENTITY(world, e_3, Position);
+
+    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Tag);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eIter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.c[0], ePosition);
+    test_int(ctx.s[0], 0);
+    test_int(ctx.c[1], eTag);
+    test_int(ctx.s[1], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+
 void SystemOnFrame_2_type_1_and_1_not() {
     EcsWorld *world = ecs_init();
 

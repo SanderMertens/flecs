@@ -176,6 +176,8 @@ void SystemOnFrame_1_type_1_component(void);
 void SystemOnFrame_1_type_3_component(void);
 void SystemOnFrame_3_type_1_component(void);
 void SystemOnFrame_2_type_3_component(void);
+void SystemOnFrame_1_type_1_component_1_tag(void);
+void SystemOnFrame_2_type_1_component_1_tag(void);
 void SystemOnFrame_2_type_1_and_1_not(void);
 void SystemOnFrame_2_type_2_and_1_not(void);
 void SystemOnFrame_2_type_2_and_2_not(void);
@@ -847,7 +849,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 7,
+        .testcase_count = 9,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -864,6 +866,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "2_type_3_component",
                 .function = SystemOnFrame_2_type_3_component
+            },
+            {
+                .id = "1_type_1_component_1_tag",
+                .function = SystemOnFrame_1_type_1_component_1_tag
+            },
+            {
+                .id = "2_type_1_component_1_tag",
+                .function = SystemOnFrame_2_type_1_component_1_tag
             },
             {
                 .id = "2_type_1_and_1_not",

@@ -250,6 +250,14 @@ void add_table(
                  * a table is reserved for entity id's */
                 if (table_data[i] != -1) {
                     table_data[i] ++;
+
+                    /* Check if component is a tag. If it is, set table_data to
+                     * zero, so that a system won't try to access the data */
+                    EcsComponent *data = ecs_get_ptr(
+                        world, component, EcsComponent);
+                    if (!data->size) {
+                        table_data[i] = 0;
+                    }
                 }
                 
                 /* ecs_table_column_offset may return -1 if the component comes
