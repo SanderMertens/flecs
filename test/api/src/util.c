@@ -8,10 +8,11 @@ void ProbeSystem(
         return;
     }
 
-    ctx->count = rows->limit;
+    ctx->system = rows->system;
     ctx->offset = rows->offset;
     ctx->column_count = rows->column_count;
     ctx->param = rows->param;
+    ctx->invoked ++;
 
     int i;
     for (i = 0; i < ctx->column_count; i ++) {
@@ -21,6 +22,8 @@ void ProbeSystem(
 
     EcsEntity *e = ecs_column(rows, EcsEntity, 0);
     for (i = rows->offset; i < (rows->offset + rows->limit); i ++) {
-        ctx->e[i - rows->offset] = e[i];
+        ctx->e[i - rows->offset + ctx->count] = e[i];
     }
+
+    ctx->count += rows->limit;
 }

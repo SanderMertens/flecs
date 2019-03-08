@@ -12,9 +12,11 @@ extern "C" {
 #define MAX_ENTITIES (64)
 
 typedef struct SysTestData {
+    EcsEntity system;
     uint32_t offset;
     uint32_t count;
     uint32_t column_count;
+    uint32_t invoked;
     EcsEntity e[MAX_ENTITIES];
     EcsEntity c[MAX_SYS_COLUMNS];
     EcsEntity s[MAX_SYS_COLUMNS];

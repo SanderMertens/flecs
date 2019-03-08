@@ -185,6 +185,14 @@
                 "delete_no_match_2_of_1",
                 "delete_no_match_2_of_3"
             ]
+        }, {
+            "id": "SystemOnFrame",
+            "testcases": [
+                "1_type_1_component",
+                "1_type_3_component",
+                "3_type_1_component",
+                "2_type_3_component"
+            ]
         }]
     }
 }

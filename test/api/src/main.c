@@ -155,6 +155,12 @@ void SystemOnRemove_delete_no_match_1(void);
 void SystemOnRemove_delete_no_match_2_of_1(void);
 void SystemOnRemove_delete_no_match_2_of_3(void);
 
+// Testsuite 'SystemOnFrame'
+void SystemOnFrame_1_type_1_component(void);
+void SystemOnFrame_1_type_3_component(void);
+void SystemOnFrame_3_type_1_component(void);
+void SystemOnFrame_2_type_3_component(void);
+
 static bake_test_suite suites[] = {
     {
         .id = "New",
@@ -755,10 +761,32 @@ static bake_test_suite suites[] = {
                 .function = SystemOnRemove_delete_no_match_2_of_3
             }
         }
+    },
+    {
+        .id = "SystemOnFrame",
+        .testcase_count = 4,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "1_type_1_component",
+                .function = SystemOnFrame_1_type_1_component
+            },
+            {
+                .id = "1_type_3_component",
+                .function = SystemOnFrame_1_type_3_component
+            },
+            {
+                .id = "3_type_1_component",
+                .function = SystemOnFrame_3_type_1_component
+            },
+            {
+                .id = "2_type_3_component",
+                .function = SystemOnFrame_2_type_3_component
+            }
+        }
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 10);
+    return bake_test_run("api", argc, argv, suites, 11);
 }

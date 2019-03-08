@@ -1205,8 +1205,8 @@ void ecs_iter_release(
 /** Wrapper around ecs_new_entity. */ 
 #define ECS_ENTITY(world, id, ...)\
     EcsEntity e##id = ecs_new_entity(world, #id, #__VA_ARGS__);\
-    (void)e##id##;\
-    assert (e##id## != 0)
+    (void)e##id;\
+    assert (e##id != 0)
 
 /** Wrapper around ecs_new_component.
  * This macro provides a convenient way to register components with a world. It

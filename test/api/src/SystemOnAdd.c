@@ -31,6 +31,8 @@ void SystemOnAdd_new_match_1_of_1() {
     test_assert(e != 0);
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -60,6 +62,8 @@ void SystemOnAdd_new_match_1_of_2() {
     test_assert(e != 0);
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -148,6 +152,8 @@ void SystemOnAdd_add_match_1_of_1() {
     ecs_add(world, e, Position);
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -181,6 +187,8 @@ void SystemOnAdd_add_match_1_of_2() {
     ecs_add(world, e, Type);
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -214,6 +222,8 @@ void SystemOnAdd_add_match_2_of_2() {
     ecs_add(world, e, Type);
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -250,6 +260,8 @@ void SystemOnAdd_add_match_2_of_3() {
     ecs_add(world, e, Type);
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -353,6 +365,8 @@ void SystemOnAdd_set_match_1_of_1() {
     ecs_set(world, e, Position, {1, 2});
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -404,6 +418,8 @@ void SystemOnAdd_clone_match_1_of_1() {
     EcsEntity e_2 = ecs_clone(world, e_1, false);
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -435,6 +451,8 @@ void SystemOnAdd_clone_match_1_of_2() {
     EcsEntity e_2 = ecs_clone(world, e_1, false);
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -466,6 +484,8 @@ void SystemOnAdd_clone_match_2_of_2() {
     EcsEntity e_2 = ecs_clone(world, e_1, false);
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -504,6 +524,8 @@ void SystemOnAdd_clone_match_2_of_3() {
     EcsEntity e_2 = ecs_clone(world, e_1, false);
 
     test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -602,6 +624,8 @@ void SystemOnAdd_new_w_count_match_1_of_1() {
     test_assert(e != 0);
 
     test_int(ctx.count, 3);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, eInit);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
