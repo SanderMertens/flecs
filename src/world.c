@@ -519,6 +519,8 @@ EcsResult ecs_fini(
     ecs_map_free(world->type_sys_set_index);
     ecs_map_free(world->type_handles);
 
+    world->magic = 0;
+
     free(world);
 
     return EcsOk;

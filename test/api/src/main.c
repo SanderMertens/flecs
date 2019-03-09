@@ -213,12 +213,24 @@ void Container_adopt_2_orphan_1(void);
 
 // Testsuite 'Run'
 void Run_run(void);
+void Run_run_w_param(void);
+void Run_run_no_match(void);
 void Run_run_w_offset(void);
-void Run_run_w_limit(void);
-void Run_run_w_offset_limit(void);
+void Run_run_w_offset_skip_1_archetype(void);
+void Run_run_w_offset_skip_1_archetype_plus_one(void);
+void Run_run_w_offset_skip_2_archetypes(void);
+void Run_run_w_limit_skip_1_archetype(void);
+void Run_run_w_limit_skip_1_archetype_minus_one(void);
+void Run_run_w_limit_skip_2_archetypes(void);
+void Run_run_w_offset_1_limit_max(void);
+void Run_run_w_offset_1_limit_minus_1(void);
+void Run_run_w_offset_2_type_limit_max(void);
+void Run_run_w_offset_2_type_limit_minus_1(void);
+void Run_run_w_limit_1_all_offsets(void);
+void Run_run_w_offset_out_of_bounds(void);
+void Run_run_w_limit_out_of_bounds(void);
 void Run_run_w_type_filter(void);
 void Run_run_w_type_filter_of_2(void);
-void Run_run_w_param(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -1038,23 +1050,75 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Run",
-        .testcase_count = 7,
+        .testcase_count = 19,
         .testcases = (bake_test_case[]){
             {
                 .id = "run",
                 .function = Run_run
             },
             {
+                .id = "run_w_param",
+                .function = Run_run_w_param
+            },
+            {
+                .id = "run_no_match",
+                .function = Run_run_no_match
+            },
+            {
                 .id = "run_w_offset",
                 .function = Run_run_w_offset
             },
             {
-                .id = "run_w_limit",
-                .function = Run_run_w_limit
+                .id = "run_w_offset_skip_1_archetype",
+                .function = Run_run_w_offset_skip_1_archetype
             },
             {
-                .id = "run_w_offset_limit",
-                .function = Run_run_w_offset_limit
+                .id = "run_w_offset_skip_1_archetype_plus_one",
+                .function = Run_run_w_offset_skip_1_archetype_plus_one
+            },
+            {
+                .id = "run_w_offset_skip_2_archetypes",
+                .function = Run_run_w_offset_skip_2_archetypes
+            },
+            {
+                .id = "run_w_limit_skip_1_archetype",
+                .function = Run_run_w_limit_skip_1_archetype
+            },
+            {
+                .id = "run_w_limit_skip_1_archetype_minus_one",
+                .function = Run_run_w_limit_skip_1_archetype_minus_one
+            },
+            {
+                .id = "run_w_limit_skip_2_archetypes",
+                .function = Run_run_w_limit_skip_2_archetypes
+            },
+            {
+                .id = "run_w_offset_1_limit_max",
+                .function = Run_run_w_offset_1_limit_max
+            },
+            {
+                .id = "run_w_offset_1_limit_minus_1",
+                .function = Run_run_w_offset_1_limit_minus_1
+            },
+            {
+                .id = "run_w_offset_2_type_limit_max",
+                .function = Run_run_w_offset_2_type_limit_max
+            },
+            {
+                .id = "run_w_offset_2_type_limit_minus_1",
+                .function = Run_run_w_offset_2_type_limit_minus_1
+            },
+            {
+                .id = "run_w_limit_1_all_offsets",
+                .function = Run_run_w_limit_1_all_offsets
+            },
+            {
+                .id = "run_w_offset_out_of_bounds",
+                .function = Run_run_w_offset_out_of_bounds
+            },
+            {
+                .id = "run_w_limit_out_of_bounds",
+                .function = Run_run_w_limit_out_of_bounds
             },
             {
                 .id = "run_w_type_filter",
@@ -1063,10 +1127,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "run_w_type_filter_of_2",
                 .function = Run_run_w_type_filter_of_2
-            },
-            {
-                .id = "run_w_param",
-                .function = Run_run_w_param
             }
         }
     },

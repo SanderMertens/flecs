@@ -246,12 +246,24 @@
             "id": "Run",
             "testcases": [
                 "run",
+                "run_w_param",
+                "run_no_match",
                 "run_w_offset",
-                "run_w_limit",
-                "run_w_offset_limit",
+                "run_w_offset_skip_1_archetype",
+                "run_w_offset_skip_1_archetype_plus_one",
+                "run_w_offset_skip_2_archetypes",
+                "run_w_limit_skip_1_archetype",
+                "run_w_limit_skip_1_archetype_minus_one",
+                "run_w_limit_skip_2_archetypes",
+                "run_w_offset_1_limit_max",
+                "run_w_offset_1_limit_minus_1",
+                "run_w_offset_2_type_limit_max",
+                "run_w_offset_2_type_limit_minus_1",
+                "run_w_limit_1_all_offsets",
+                "run_w_offset_out_of_bounds",
+                "run_w_limit_out_of_bounds",
                 "run_w_type_filter",
-                "run_w_type_filter_of_2",
-                "run_w_param"
+                "run_w_type_filter_of_2"
             ]
         }, {
             "id": "Internals",

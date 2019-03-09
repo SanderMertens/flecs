@@ -660,13 +660,13 @@ bool should_run(
     return true;
 }
 
-EcsEntity ecs_run_w_filter(
+EcsEntity _ecs_run_w_filter(
     EcsWorld *world,
     EcsEntity system,
     float delta_time,
     uint32_t offset,
     uint32_t limit,
-    EcsEntity filter,
+    EcsType filter,
     void *param)
 {
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
@@ -707,10 +707,9 @@ EcsEntity ecs_run_w_filter(
     uint32_t column_count = ecs_array_count(system_data->base.columns);
     uint32_t components_size = system_data->component_params.element_size;
     char *components = ecs_array_buffer(system_data->components);
-    EcsType filter_id = 0;
     EcsEntity interrupted_by = 0;
     EcsSystemAction action = system_data->base.action;
-    bool offset_limit = offset | limit;
+    bool offset_limit = (offset | limit) != 0;
     bool limit_set = limit != 0;
 
     EcsRows info = {
@@ -723,10 +722,6 @@ EcsEntity ecs_run_w_filter(
         .index_offset = 0
     };
 
-    if (filter) {
-        filter_id = ecs_type_from_handle(real_world, stage, filter, NULL);
-    }
-
     int32_t *table = table_first;
     for (; table < table_last; table = ECS_OFFSET(table, tables_size)) {
         int32_t table_index = table[TABLE_INDEX];
@@ -734,9 +729,9 @@ EcsEntity ecs_run_w_filter(
         EcsTableColumn *table_columns = w_table->columns;
         uint32_t first = 0, count = ecs_table_count(w_table);
 
-        if (filter_id) {
+        if (filter) {
             if (!ecs_type_contains(
-                real_world, stage, w_table->type_id, filter_id, true, true))
+                real_world, stage, w_table->type_id, filter, true, true))
             {
                 continue;
             }
@@ -766,11 +761,15 @@ EcsEntity ecs_run_w_filter(
             }
         }
 
+        if (!count) {
+            continue;
+        }
+
         info.columns =  &table[COLUMNS_INDEX];
         info.table_columns = table_columns;
         info.components = ECS_OFFSET(components,
             components_size * table[COMPONENTS_INDEX]);
-        info.offset = offset;
+        info.offset = first;
         info.limit = count;
 
         action(&info);

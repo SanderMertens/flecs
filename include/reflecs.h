@@ -1181,16 +1181,19 @@ EcsEntity ecs_run(
     float delta_time,
     void *param);
 
+/** Run system with offset/limit and type filter */
 REFLECS_EXPORT
-EcsEntity ecs_run_w_filter(
+EcsEntity _ecs_run_w_filter(
     EcsWorld *world,
     EcsEntity system,
     float delta_time,
     uint32_t offset,
     uint32_t limit,
-    EcsEntity filter,
+    EcsType filter,
     void *param);
 
+#define ecs_run_w_filter(world, system, delta_time, offset, limit, type, param)\
+    _ecs_run_w_filter(world, system, delta_time, offset, limit, T##type, param)
 
 /* Obtain a column from inside a system */
 REFLECS_EXPORT
