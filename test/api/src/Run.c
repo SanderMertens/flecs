@@ -906,7 +906,7 @@ void Run_run_w_limit_out_of_bounds() {
     ecs_fini(world);
 }
 
-void Run_run_w_type_filter() {
+void Run_run_w_component_filter() {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1019,6 +1019,73 @@ void Run_run_w_type_filter_of_2() {
     ecs_fini(world);
 }
 
+void Run_run_w_container_filter() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_TYPE(world, Type, Mass, Rotation);
+
+    ECS_ENTITY(world, e_1, Position, Velocity);
+    ECS_ENTITY(world, e_2, Position, Velocity);
+    ECS_ENTITY(world, e_3, Position, Velocity);
+    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_6, Position, Velocity, Mass, Rotation);
+    ECS_ENTITY(world, e_7, Position);
+
+    ECS_SYSTEM(world, Iter, EcsManual, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    /* Create a parent entity */
+    EcsEntity parent = ecs_new(world, 0);
+
+    /* Adopt child entities */
+    ecs_adopt(world, parent, e_1);
+    ecs_adopt(world, parent, e_4);
+    ecs_adopt(world, parent, e_6);
+    ecs_adopt(world, parent, e_7);
+
+    /* Get type from parent to use as filter */
+    EcsType TParent = ecs_type_from_entity(world, parent);
+
+    /* Ensure system is not run by ecs_progress */
+    ecs_progress(world, 1);
+    test_int(ctx.invoked, 0);
+
+    test_int( ecs_run_w_filter(world, EIter, 1.0, 0, 0, Parent, NULL), 0);
+
+    test_int(ctx.count, 4);
+    test_int(ctx.invoked, 4);
+    test_int(ctx.system, EIter);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_6);
+    test_int(ctx.e[1], e_7);
+    test_int(ctx.e[2], e_1);
+    test_int(ctx.e[3], e_4);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], EPosition);
+        test_int(ctx.s[i][0], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);       
+    }
+
+    ecs_fini(world);
+}
+
 void Run_run_no_match() {
     EcsWorld *world = ecs_init();
 
@@ -1043,4 +1110,3 @@ void Run_run_no_match() {
 
     ecs_fini(world);
 }
-

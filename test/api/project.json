@@ -262,8 +262,9 @@
                 "run_w_limit_1_all_offsets",
                 "run_w_offset_out_of_bounds",
                 "run_w_limit_out_of_bounds",
-                "run_w_type_filter",
-                "run_w_type_filter_of_2"
+                "run_w_component_filter",
+                "run_w_type_filter_of_2",
+                "run_w_container_filter"
             ]
         }, {
             "id": "Internals",

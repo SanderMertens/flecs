@@ -229,8 +229,9 @@ void Run_run_w_offset_2_type_limit_minus_1(void);
 void Run_run_w_limit_1_all_offsets(void);
 void Run_run_w_offset_out_of_bounds(void);
 void Run_run_w_limit_out_of_bounds(void);
-void Run_run_w_type_filter(void);
+void Run_run_w_component_filter(void);
 void Run_run_w_type_filter_of_2(void);
+void Run_run_w_container_filter(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -1050,7 +1051,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Run",
-        .testcase_count = 19,
+        .testcase_count = 20,
         .testcases = (bake_test_case[]){
             {
                 .id = "run",
@@ -1121,12 +1122,16 @@ static bake_test_suite suites[] = {
                 .function = Run_run_w_limit_out_of_bounds
             },
             {
-                .id = "run_w_type_filter",
-                .function = Run_run_w_type_filter
+                .id = "run_w_component_filter",
+                .function = Run_run_w_component_filter
             },
             {
                 .id = "run_w_type_filter_of_2",
                 .function = Run_run_w_type_filter_of_2
+            },
+            {
+                .id = "run_w_container_filter",
+                .function = Run_run_w_container_filter
             }
         }
     },
