@@ -30,9 +30,9 @@ int main(int argc, char *argv[]) {
     ecs_set(world, ObjectPrefab_h, Position, {0, 0});
 
     /* List all the entities with a Position component. Instead of running the
-     * system every frame, EcsOnDemand requires a user to explicitly invoke the
+     * system every frame, EcsManual requires a user to explicitly invoke the
      * system with ecs_run. */
-    ECS_SYSTEM(world, ListEntities, EcsOnDemand, Position);
+    ECS_SYSTEM(world, ListEntities, EcsManual, Position);
 
     /* Create 10 entities with Object type */
     ecs_new_w_count(world, Object_h, 10, NULL);

@@ -72,7 +72,7 @@ typedef enum EcsSystemKind {
     EcsOnStore,
 
     /* On demand systems */
-    EcsOnDemand,
+    EcsManual,
 
     /* Reactive systems */
     EcsOnAdd,
@@ -949,7 +949,7 @@ EcsEntity ecs_type_to_entity(
  * - EcsOnFrame: the system is invoked when ecs_progress is called.
  * - EcsOnAdd: the system is invoked when a component is committed to memory.
  * - EcsOnRemove: the system is invoked when a component is removed from memory.
- * - EcsOnDemand: the system is only invoked on demand (ecs_run)
+ * - EcsManual: the system is only invoked on demand (ecs_run)
  *
  * The signature of the system is a string formatted as a comma separated list
  * of component identifiers. For example, a system that wants to receive the

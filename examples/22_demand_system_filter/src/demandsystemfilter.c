@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     ECS_TYPE(world, Index, IndexTag, EcsContainer);
 
     /* List all the entities with a Position component on demand */
-    ECS_SYSTEM(world, ListEntities, EcsOnDemand, CONTAINER.IndexTag, Object);
+    ECS_SYSTEM(world, ListEntities, EcsManual, CONTAINER.IndexTag, Object);
 
     /* Create 10 entities with Object type */
     EcsEntity handles[10];

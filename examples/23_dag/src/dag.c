@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
      * We can get access to the platoon entity with ecs_source in the system
      * callback, which gives us the entity on which the Platoon component was
      * found, which in this case is the platoon to which the unit belongs. */
-    ECS_SYSTEM(world, ListUnits, EcsOnDemand, CONTAINER.Platoon, Position, Health);
+    ECS_SYSTEM(world, ListUnits, EcsManual, CONTAINER.Platoon, Position, Health);
 
     /* On-demand system that lists all platoons. This system selects all
      * entities that have the "Platoon" tag. In addition, it references the
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
      * Additionally, the ListUnits handle is passed to the system, so it can
      * invoke the ListUnits on-demand system to list the entities that match
      * with the platoon. */
-    ECS_SYSTEM(world, ListPlatoons, EcsOnDemand, CONTAINER.Player, CONTAINER.Region, Platoon, ID.ListUnits);
+    ECS_SYSTEM(world, ListPlatoons, EcsManual, CONTAINER.Player, CONTAINER.Region, Platoon, ID.ListUnits);
 
     /* Create players, platoons and regions */
     EcsEntity player1 = create(world, 0, "Player 1", Player_h);

@@ -459,7 +459,7 @@ void ecs_system_activate_table(
 
     if (active) {
         uint32_t dst_count = ecs_array_count(dst_array);
-        if (kind != EcsOnDemand) {
+        if (kind != EcsManual) {
             if (dst_count == 1 && system_data->base.enabled) {
                 ecs_world_activate_system(
                     world, system, kind, true);
@@ -467,7 +467,7 @@ void ecs_system_activate_table(
         }
         system_data->tables = dst_array;
     } else {
-        if (kind != EcsOnDemand) {
+        if (kind != EcsManual) {
             if (src_count == 0) {
                 ecs_world_activate_system(
                     world, system, kind, false);
@@ -599,7 +599,7 @@ EcsEntity ecs_new_col_system(
 
     EcsEntity *elem = NULL;
 
-    if (kind == EcsOnDemand) {
+    if (kind == EcsManual) {
         elem = ecs_array_add(&world->on_demand_systems, &handle_arr_params);
     } else if (!ecs_array_count(system_data->tables)) {
         elem = ecs_array_add(&world->inactive_systems, &handle_arr_params);

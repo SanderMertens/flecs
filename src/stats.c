@@ -283,7 +283,7 @@ int system_stats_arr_inactive(
             stats_array = &stats->post_frame_systems;
         } else if (data->base.kind == EcsOnStore) {
             stats_array = &stats->on_store_systems;
-        } else if (data->base.kind == EcsOnDemand) {
+        } else if (data->base.kind == EcsManual) {
             stats_array = &stats->on_demand_systems;
         }
 

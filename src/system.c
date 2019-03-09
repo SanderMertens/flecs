@@ -357,7 +357,7 @@ EcsEntity ecs_new_system(
     }
 
     if (needs_tables && (kind == EcsOnFrame || kind == EcsPreFrame ||
-                         kind == EcsPostFrame || kind == EcsOnDemand ||
+                         kind == EcsPostFrame || kind == EcsManual ||
                          kind == EcsOnLoad || kind == EcsOnStore))
     {
         result = ecs_new_col_system(world, id, kind, sig, action);
