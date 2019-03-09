@@ -27,7 +27,7 @@ EcsResult ecs_table_init(
 {
     bool prefab_set = false;
     EcsArray *type = ecs_type_get(world, stage, table->type_id);
-    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, "invalid type id in table");
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, "invalid type id of table");
     
     table->frame_systems = NULL;
     table->type = type;

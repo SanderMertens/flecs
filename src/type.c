@@ -145,9 +145,11 @@ EcsType ecs_type_from_handle(
         return 0;
     }
 
-    EcsTable *table;
-    EcsTableColumn *columns;
-    uint32_t index;
+    EcsTable *table = NULL;
+    EcsTableColumn *columns = NULL;
+    uint32_t index = 0;
+    EcsEntity component = 0;
+    EcsType type = 0;
 
     if (!info) {
         uint64_t row_64 = ecs_map_get64(world->main_stage.entity_index, entity);
@@ -159,18 +161,21 @@ EcsType ecs_type_from_handle(
         }
 
         EcsRow row = ecs_to_row(row_64);
-        table = ecs_world_get_table(world, stage, row.type_id);
-        columns = table->columns;
-        index = row.index;
+        if (row.type_id) {
+            table = ecs_world_get_table(world, stage, row.type_id);
+            columns = table->columns;
+            index = row.index;
+        }
     } else {
         table = info->table;
         columns = info->columns;
         index = info->index;
     }
 
-    EcsEntity *components = ecs_array_buffer(table->type);
-    EcsEntity component = components[0];
-    EcsType type = 0;
+    if (table) {
+        EcsEntity *components = ecs_array_buffer(table->type);
+        component = components[0];
+    }
 
     if (component == EEcsTypeComponent) {
         EcsArrayParams params = {.element_size = sizeof(EcsTypeComponent)};
@@ -543,4 +548,14 @@ int16_t ecs_type_index_of(
     }
 
     return -1;
+}
+
+EcsType _ecs_merge_type(
+    EcsWorld *world,
+    EcsType type,
+    EcsType type_add,
+    EcsType type_remove)
+{
+    EcsStage *stage = ecs_get_stage(&world);
+    return ecs_type_merge(world, stage, type, type_add, type_remove);
 }

@@ -221,6 +221,39 @@
                 "6_type_1_and_2_optional"
             ]
         }, {
+            "id": "Container",
+            "testcases": [
+                "child",
+                "child_w_id",
+                "child_w_component",
+                "child_w_type",
+                "contains_w_empty_parent",
+                "contains_w_child_as_parent",
+                "contains_w_0_as_child",
+                "contains_w_0_as_parent",
+                "contains_w_0_for_both",
+                "adopt",
+                "adopt_again",
+                "adopt_twice",
+                "orphan_empty",
+                "orphan",
+                "orphan_again",
+                "orphan_twice",
+                "adopt_orphan",
+                "adopt_2_orphan_1"
+            ]
+        }, {
+            "id": "Run",
+            "testcases": [
+                "run",
+                "run_w_offset",
+                "run_w_limit",
+                "run_w_offset_limit",
+                "run_w_type_filter",
+                "run_w_type_filter_of_2",
+                "run_w_param"
+            ]
+        }, {
             "id": "Internals",
             "testcases": [
                 "deactivate_table",

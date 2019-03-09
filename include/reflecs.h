@@ -125,25 +125,55 @@ typedef void (*EcsModuleInitAction)(
 #define EEcsHidden (7)
 #define EEcsContainer (8)
 
+REFLECS_EXPORT
 extern EcsType TEcsComponent;
+
+REFLECS_EXPORT
 extern EcsType TEcsTypeComponent;
+
+REFLECS_EXPORT
 extern EcsType TEcsPrefab;
+
+REFLECS_EXPORT
 extern EcsType TEcsRowSystem;
+
+REFLECS_EXPORT
 extern EcsType TEcsColSystem;
+
+REFLECS_EXPORT
 extern EcsType TEcsId;
+
+REFLECS_EXPORT
 extern EcsType TEcsHidden;
+
+REFLECS_EXPORT
 extern EcsType TEcsContainer;
 
 /* This allows passing 0 as type to functions that accept types */
 #define T0 (0)
 
+REFLECS_EXPORT
 extern const char *ECS_COMPONENT_ID;
+
+REFLECS_EXPORT
 extern const char *ECS_TYPE_COMPONENT_ID;
+
+REFLECS_EXPORT
 extern const char *ECS_PREFAB_ID;
+
+REFLECS_EXPORT
 extern const char *ECS_ROW_SYSTEM_ID;
+
+REFLECS_EXPORT
 extern const char *ECS_COL_SYSTEM_ID;
+
+REFLECS_EXPORT
 extern const char *ECS_ID_ID;
+
+REFLECS_EXPORT
 extern const char *ECS_HIDDEN_ID;
+
+REFLECS_EXPORT
 extern const char *ECS_CONTAINER_ID;
 
 /* -- World API -- */
@@ -501,6 +531,29 @@ EcsEntity _ecs_new(
 #define ecs_new(world, type)\
     _ecs_new(world, T##type)
 
+/** Create a new child entity.
+ * Child entities are equivalent to normal entities, but can additionally be 
+ * created with a container entity. Container entities allow for the creation of
+ * entity hierarchies.
+ * 
+ * This function is equivalent to calling ecs_new with a type that combines both
+ * the type specified in this function and the type id for the container.
+ * 
+ * If the provided parent entity does not have the 'EcsContainer' component, it
+ * will be added automatically.
+ */
+REFLECS_EXPORT
+EcsEntity _ecs_new_child(
+    EcsWorld *world,
+    EcsEntity parent,
+    const char *name,
+    EcsType type);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_new_child(world, parent, name, type)\
+    _ecs_new_child(world, parent, name, T##type)
+
+/** Convenience function to create an entity with id and component expression */
 REFLECS_EXPORT
 EcsEntity ecs_new_entity(
     EcsWorld *world,
@@ -627,6 +680,20 @@ EcsResult _ecs_remove(
 #define ecs_remove(world, entity, type)\
     _ecs_remove(world, entity, T##type)
 
+/** Adopt a child entity by a parent */
+REFLECS_EXPORT
+EcsResult ecs_adopt(
+    EcsWorld *world,
+    EcsEntity parent,
+    EcsEntity child);
+
+/** Orphan a child by a parent */
+REFLECS_EXPORT
+EcsResult ecs_orphan(
+    EcsWorld *world,
+    EcsEntity parent,
+    EcsEntity child);
+
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
  * component was not added for the specified entity, the operation will return
@@ -740,6 +807,13 @@ bool _ecs_has_any(
 
 #define ecs_has_any(world, entity, type)\
     _ecs_has_any(world, entity, T##type)
+
+/** Check if parent entity contains child entity */
+REFLECS_EXPORT
+bool ecs_contains(
+    EcsWorld *world,
+    EcsEntity parent,
+    EcsEntity child);
 
 
 /** Return if the entity is valid.
@@ -907,6 +981,9 @@ EcsEntity ecs_new_prefab(
     const char *id,
     const char *sig);
 
+
+/* -- Type API -- */
+
 /** Get a type from an entity.
  * This function returns a type that can be added/removed to entities. If you
  * create a new component, type or prefab with the ecs_new_* function, you get
@@ -926,18 +1003,30 @@ EcsEntity ecs_new_prefab(
  * provided to the macro).
  */
 REFLECS_EXPORT
-EcsType ecs_entity_to_type(
+EcsType ecs_type_from_entity(
     EcsWorld *world,
     EcsEntity entity);
 
 
 /** Get an entity from a type.
- * This function is the reverse of ecs_entity_to_type. It only works for types
+ * This function is the reverse of ecs_type_from_entity. It only works for types
  * that contain exactly one entity. */
 REFLECS_EXPORT
-EcsEntity ecs_type_to_entity(
+EcsEntity ecs_entity_from_type(
     EcsWorld *world,
     EcsType entity);
+
+
+/** Merge two types. */
+REFLECS_EXPORT
+EcsType _ecs_merge_type(
+    EcsWorld *world,
+    EcsType type,
+    EcsType type_add,
+    EcsType type_remove);
+
+#define ecs_merge_type(world, type, type_add, type_remove)\
+    _ecs_merge_type(world, T##type, T##type_add, T##type_remove)
 
 /* -- System API -- */
 
@@ -1220,7 +1309,7 @@ void ecs_iter_release(
 #define ECS_COMPONENT(world, id) \
     EcsEntity E##id = ecs_new_component(world, #id, sizeof(id));\
     assert (E##id != 0);\
-    EcsType T##id = ecs_entity_to_type(world, E##id);\
+    EcsType T##id = ecs_type_from_entity(world, E##id);\
     (void)E##id;\
     (void)T##id;\
     assert (T##id != 0)
@@ -1229,7 +1318,7 @@ void ecs_iter_release(
 #define ECS_TAG(world, id) \
     EcsEntity E##id = ecs_new_component(world, #id, 0);\
     assert (E##id != 0);\
-    EcsType T##id = ecs_entity_to_type(world, E##id);\
+    EcsType T##id = ecs_type_from_entity(world, E##id);\
     (void)E##id;\
     (void)T##id;\
     assert (T##id != 0)
@@ -1249,7 +1338,7 @@ void ecs_iter_release(
 #define ECS_TYPE(world, id, ...) \
     EcsEntity E##id = ecs_new_type(world, #id, #__VA_ARGS__);\
     assert (E##id != 0);\
-    EcsType T##id = ecs_entity_to_type(world, E##id);\
+    EcsType T##id = ecs_type_from_entity(world, E##id);\
     (void)E##id;\
     (void)T##id;\
     assert (T##id != 0)
@@ -1265,7 +1354,7 @@ void ecs_iter_release(
 #define ECS_PREFAB(world, id, ...) \
     EcsEntity E##id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
     assert (E##id != 0);\
-    EcsType T##id = ecs_entity_to_type(world, E##id);\
+    EcsType T##id = ecs_type_from_entity(world, E##id);\
     (void)E##id;\
     (void)T##id;\
     assert (T##id != 0)

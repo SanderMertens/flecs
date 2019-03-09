@@ -538,6 +538,35 @@ EcsEntity _ecs_new(
     return entity;
 }
 
+EcsEntity _ecs_new_child(
+    EcsWorld *world,
+    EcsEntity parent,
+    const char *name,
+    EcsType type)
+{
+    EcsType TFullType = type;
+    
+    if (parent) {
+        if (!ecs_has(world, parent, EcsContainer)) {
+            ecs_add(world, parent, EcsContainer);
+        }
+        EcsType TParentType = ecs_type_from_entity(world, parent);
+        TFullType = ecs_merge_type(world, FullType, ParentType, 0);
+    }
+
+    if (name) {
+        TFullType = ecs_merge_type(world, FullType, EcsId, 0);
+    }
+
+    EcsEntity result = ecs_new(world, FullType);
+
+    if (name) {
+        ecs_set(world, result, EcsId, {name});
+    }
+
+    return result;
+}
+
 EcsEntity _ecs_new_w_count(
     EcsWorld *world,
     EcsType type,
@@ -709,6 +738,30 @@ EcsResult _ecs_remove(
     return commit_w_type(world, stage, &info, dst_type, 0, type);
 }
 
+EcsResult ecs_adopt(
+    EcsWorld *world,
+    EcsEntity parent,
+    EcsEntity child)
+{    
+    if (!ecs_has(world, parent, EcsContainer)) {
+        ecs_add(world, parent, EcsContainer);
+    }
+
+    EcsType TParentType = ecs_type_from_entity(world, parent);
+
+    return ecs_add(world, child, ParentType);
+}
+
+EcsResult ecs_orphan(
+    EcsWorld *world,
+    EcsEntity parent,
+    EcsEntity child)
+{
+    EcsType TParentType = ecs_type_from_entity(world, parent);
+
+    return ecs_remove(world, child, ParentType);    
+}
+
 void* _ecs_get_ptr(
     EcsWorld *world,
     EcsEntity entity,
@@ -717,7 +770,7 @@ void* _ecs_get_ptr(
     EcsEntityInfo info;
 
     /* Get only accepts types that hold a single component */
-    EcsEntity component = ecs_type_to_entity(world, type);
+    EcsEntity component = ecs_entity_from_type(world, type);
 
     return get_ptr(world, entity, component, false, true, &info);
 }
@@ -736,7 +789,7 @@ EcsEntity _ecs_set_ptr(
     ecs_assert(src != NULL, ECS_INVALID_PARAMETERS, NULL);
 
     /* Set only accepts types that hold a single component */
-    EcsEntity component = ecs_type_to_entity(world, type);
+    EcsEntity component = ecs_entity_from_type(world, type);
 
     /* If no entity is specified, create one */
     if (!entity) {
@@ -802,6 +855,19 @@ bool _ecs_has_any(
     return ecs_type_contains(world, stage, entity_type, type, false, false);
 }
 
+bool ecs_contains(
+    EcsWorld *world,
+    EcsEntity parent,
+    EcsEntity child)
+{
+    if (!parent || !child) {
+        return false;
+    }
+
+    EcsType TParent = ecs_type_from_entity(world, parent);
+    return ecs_has(world, child, Parent);
+}
+
 EcsEntity ecs_new_component(
     EcsWorld *world,
     const char *id,
@@ -864,7 +930,7 @@ EcsEntity ecs_get_component(
     }
 }
 
-EcsType ecs_entity_to_type(
+EcsType ecs_type_from_entity(
     EcsWorld *world,
     EcsEntity entity)
 {
@@ -872,7 +938,7 @@ EcsType ecs_entity_to_type(
     return ecs_type_from_handle(world, stage, entity, NULL);
 }
 
-EcsEntity ecs_type_to_entity(
+EcsEntity ecs_entity_from_type(
     EcsWorld *world, 
     EcsType type_id)
 {

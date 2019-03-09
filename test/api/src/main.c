@@ -191,6 +191,35 @@ void SystemOnFrame_2_type_1_and_1_optional(void);
 void SystemOnFrame_2_type_2_and_1_optional(void);
 void SystemOnFrame_6_type_1_and_2_optional(void);
 
+// Testsuite 'Container'
+void Container_child(void);
+void Container_child_w_id(void);
+void Container_child_w_component(void);
+void Container_child_w_type(void);
+void Container_contains_w_empty_parent(void);
+void Container_contains_w_child_as_parent(void);
+void Container_contains_w_0_as_child(void);
+void Container_contains_w_0_as_parent(void);
+void Container_contains_w_0_for_both(void);
+void Container_adopt(void);
+void Container_adopt_again(void);
+void Container_adopt_twice(void);
+void Container_orphan_empty(void);
+void Container_orphan(void);
+void Container_orphan_again(void);
+void Container_orphan_twice(void);
+void Container_adopt_orphan(void);
+void Container_adopt_2_orphan_1(void);
+
+// Testsuite 'Run'
+void Run_run(void);
+void Run_run_w_offset(void);
+void Run_run_w_limit(void);
+void Run_run_w_offset_limit(void);
+void Run_run_w_type_filter(void);
+void Run_run_w_type_filter_of_2(void);
+void Run_run_w_param(void);
+
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
 void Internals_activate_table(void);
@@ -930,6 +959,118 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "Container",
+        .testcase_count = 18,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "child",
+                .function = Container_child
+            },
+            {
+                .id = "child_w_id",
+                .function = Container_child_w_id
+            },
+            {
+                .id = "child_w_component",
+                .function = Container_child_w_component
+            },
+            {
+                .id = "child_w_type",
+                .function = Container_child_w_type
+            },
+            {
+                .id = "contains_w_empty_parent",
+                .function = Container_contains_w_empty_parent
+            },
+            {
+                .id = "contains_w_child_as_parent",
+                .function = Container_contains_w_child_as_parent
+            },
+            {
+                .id = "contains_w_0_as_child",
+                .function = Container_contains_w_0_as_child
+            },
+            {
+                .id = "contains_w_0_as_parent",
+                .function = Container_contains_w_0_as_parent
+            },
+            {
+                .id = "contains_w_0_for_both",
+                .function = Container_contains_w_0_for_both
+            },
+            {
+                .id = "adopt",
+                .function = Container_adopt
+            },
+            {
+                .id = "adopt_again",
+                .function = Container_adopt_again
+            },
+            {
+                .id = "adopt_twice",
+                .function = Container_adopt_twice
+            },
+            {
+                .id = "orphan_empty",
+                .function = Container_orphan_empty
+            },
+            {
+                .id = "orphan",
+                .function = Container_orphan
+            },
+            {
+                .id = "orphan_again",
+                .function = Container_orphan_again
+            },
+            {
+                .id = "orphan_twice",
+                .function = Container_orphan_twice
+            },
+            {
+                .id = "adopt_orphan",
+                .function = Container_adopt_orphan
+            },
+            {
+                .id = "adopt_2_orphan_1",
+                .function = Container_adopt_2_orphan_1
+            }
+        }
+    },
+    {
+        .id = "Run",
+        .testcase_count = 7,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "run",
+                .function = Run_run
+            },
+            {
+                .id = "run_w_offset",
+                .function = Run_run_w_offset
+            },
+            {
+                .id = "run_w_limit",
+                .function = Run_run_w_limit
+            },
+            {
+                .id = "run_w_offset_limit",
+                .function = Run_run_w_offset_limit
+            },
+            {
+                .id = "run_w_type_filter",
+                .function = Run_run_w_type_filter
+            },
+            {
+                .id = "run_w_type_filter_of_2",
+                .function = Run_run_w_type_filter_of_2
+            },
+            {
+                .id = "run_w_param",
+                .function = Run_run_w_param
+            }
+        }
+    },
+    {
         .id = "Internals",
         .testcase_count = 5,
         .testcases = (bake_test_case[]){
@@ -959,5 +1100,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 12);
+    return bake_test_run("api", argc, argv, suites, 14);
 }
