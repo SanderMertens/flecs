@@ -217,8 +217,6 @@ typedef struct EcsStage {
      * temporary stages, and
      * not on the main stage */
     EcsMap *data_stage;          /* Arrays with staged component values */
-    EcsMap *add_stage;           /* Entities with components to add */
-    EcsMap *remove_stage;        /* Entities with components to remove */
     EcsMap *remove_merge;        /* All removed components before merge */
     EcsArray *delete_stage;      /* Deleted entities while in progress */
 } EcsStage;

@@ -87,8 +87,6 @@ void merge_commits(
     }
 
     ecs_map_clear(stage->entity_index);
-    ecs_map_clear(stage->add_stage);
-    ecs_map_clear(stage->remove_stage);
     ecs_map_clear(stage->remove_merge);
     ecs_map_clear(stage->data_stage);
 }
@@ -156,8 +154,6 @@ void ecs_stage_init(
 
     if (!is_main_stage) {
         stage->data_stage = ecs_map_new(0);
-        stage->add_stage = ecs_map_new(0);
-        stage->remove_stage = ecs_map_new(0);
         stage->remove_merge = ecs_map_new(0);
         stage->delete_stage = ecs_array_new(&handle_arr_params, 0);
     }
@@ -180,8 +176,6 @@ void ecs_stage_deinit(
 
     if (!is_main_stage) {
         ecs_map_free(stage->data_stage);
-        ecs_map_free(stage->add_stage);
-        ecs_map_free(stage->remove_stage);
         ecs_map_free(stage->remove_merge);
         ecs_array_free(stage->delete_stage);
     }

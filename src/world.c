@@ -158,7 +158,17 @@ EcsTable* create_table(
     EcsType type_id)
 {
     /* Add and initialize table */
+    bool is_main_table_array = stage->tables == world->main_stage.tables;
     EcsTable *result = ecs_array_add(&stage->tables, &table_arr_params);
+
+
+    /* The tables array is shared between the main stage and temp stage. Make
+     * sure to update the array pointer in both stages. */
+    if (is_main_table_array) {
+        world->main_stage.tables = stage->tables;
+        world->temp_stage.tables = stage->tables;
+    }
+    
     result->type_id = type_id;
 
     if (ecs_table_init(world, stage, result) != EcsOk) {

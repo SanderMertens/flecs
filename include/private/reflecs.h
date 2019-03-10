@@ -144,6 +144,12 @@ EcsResult ecs_table_init(
     EcsStage *stage,
     EcsTable *table);
 
+/* Allocate a set of columns for a type */
+EcsTableColumn *ecs_table_get_columns(
+    EcsWorld *world,
+    EcsStage *stage,
+    EcsArray *type);
+
 /* Initialize table with component size (used during bootstrap) */
 EcsResult ecs_table_init_w_size(
     EcsWorld *world,

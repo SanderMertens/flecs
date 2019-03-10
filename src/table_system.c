@@ -703,7 +703,6 @@ EcsEntity _ecs_run_w_filter(
         ut_time_get(&time_start);
     }
 
-    EcsTable *world_tables = ecs_array_buffer(real_world->main_stage.tables);
     uint32_t column_count = ecs_array_count(system_data->base.columns);
     uint32_t components_size = system_data->component_params.element_size;
     char *components = ecs_array_buffer(system_data->components);
@@ -725,6 +724,10 @@ EcsEntity _ecs_run_w_filter(
     int32_t *table = table_first;
     for (; table < table_last; table = ECS_OFFSET(table, tables_size)) {
         int32_t table_index = table[TABLE_INDEX];
+
+        /* A system may introduce a new table if in the main thread. Make sure
+         * world_tables points to the valid memory */
+        EcsTable *world_tables = ecs_array_buffer(world->main_stage.tables);
         EcsTable *w_table = &world_tables[table_index];
         EcsTableColumn *table_columns = w_table->columns;
         uint32_t first = 0, count = ecs_table_count(w_table);

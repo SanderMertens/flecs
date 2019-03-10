@@ -282,7 +282,6 @@ void ecs_import(
  * - ecs_delete
  * - ecs_add
  * - ecs_remove
- * - ecs_commit
  * - ecs_set
  *
  * By default, staged data is merged each time ecs_progress has evaluated all
@@ -511,7 +510,7 @@ void _ecs_dim_type(
  * Component data is stored in tables, with one table for each combination of
  * components. An entity is stored in the table that matches its component list.
  * When components are added or removed from an entity, the entity is moved to
- * another table. See ecs_add, ecs_stage and ecs_commit for more information.
+ * another table.
  *
  * Entities are accessed through handles instead of direct pointers. Certain
  * operations may move an entity in memory. Handles provide a safe mechanism for
@@ -622,39 +621,6 @@ EcsEntity ecs_clone(
  */
 REFLECS_EXPORT
 void ecs_delete(
-    EcsWorld *world,
-    EcsEntity entity);
-
-/** Commit components to memory.
- * This operation commits all staged components to memory. If no components were
- * staged since creation of the entity or since the last ecs_commit, this
- * operation is a no-op. Detection of this scenario is very fast.
- *
- * This operation uses the list of components for this entity to determine which
- * table it should be inserted in. Each active combination of components will
- * have its own table in memory. If this operation commits a new combination,
- * a new table will be created as part of the commit.
- *
- * Once a table is either found or created, a new row is inserted for the
- * specified entity. If the entity was already committed to another table, the
- * entity is moved from that table to the new table. This will likely cause the
- * moving of another entity in the old table, to prevent fragmentation.
- *
- * Matching EcsOnAdd and EcsOnRemove systems will be ran as part of the commit
- * if one or more added / removed components matches their signature. Thus, if
- * a EcsOnAdd system is registered for component A and B, and an entity already
- * had A but is now also committing B, the system will be invoked. A quadratic
- * loop is required to determine for which components init / deinit systems have
- * to be invoked. This comparison will be skipped if there are no init / deinit
- * systems on the new / old table.
- *
- * @time-complexity: O(2 * r + c)
- * @param world The world.
- * @param entity The entity to commit.
- * @returns EcsOk if succeeded, or EcsError if the operation failed.
- */
-REFLECS_EXPORT
-EcsResult ecs_commit(
     EcsWorld *world,
     EcsEntity entity);
 
@@ -916,8 +882,8 @@ EcsEntity ecs_new_component(
 
 /** Get handle to type.
  * This operation obtains a handle to a type that can be used with
- * ecs_new. Predefining families has performance benefits over using
- * ecs_new, ecs_stage and ecs_commit separately. It also provides constant
+ * ecs_new. Predefining types has performance benefits over using
+ * ecs_add/ecs_remove multiple times, as it provides constant
  * creation time regardless of the number of components. This function will
  * internally create a table for the type.
  *
@@ -944,8 +910,7 @@ EcsType ecs_new_type(
  * functions and ECS systems.
  *
  * A prefab is a regular entity, with the only difference that it has the
- * EcsPrefab component. That means that all the regular API functions like
- * ecs_get_ptr, ecs_add, ecs_commit etc. can be used on prefabs.
+ * EcsPrefab component.
  *
  * The ECS_PREFAB macro wraps around this function.
  *
@@ -1333,11 +1298,8 @@ void ecs_iter_release(
  * ECS_TYPE(world, MyType, ComponentA, ComponentB);
  * EcsEntity h = ecs_new(world, MyType_h);
  *
- * Creating a type and using it with ecs_new is faster
- * than calling ecs_new, ecs_add and ecs_commit separately. This method also
- * provides near-constant creation time for entities regardless of the number of
- * components, whereas using ecs_add and ecs_commit takes longer for larger
- * numbers of components. */
+ * Creating a type and using it with ecs_new/ecs_add is faster
+ * than calling ecs_add multiple types. */
 #define ECS_TYPE(world, id, ...) \
     EcsEntity E##id = ecs_new_type(world, #id, #__VA_ARGS__);\
     assert (E##id != 0);\

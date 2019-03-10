@@ -20,24 +20,18 @@ void activate_table(
 
 /* -- Private functions -- */
 
-EcsResult ecs_table_init(
+EcsTableColumn *ecs_table_get_columns(
     EcsWorld *world,
     EcsStage *stage,
-    EcsTable *table)
+    EcsArray *type)
 {
-    bool prefab_set = false;
-    EcsArray *type = ecs_type_get(world, stage, table->type_id);
-    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, "invalid type id of table");
-    
-    table->frame_systems = NULL;
-    table->type = type;
-    table->columns = calloc(sizeof(EcsTableColumn), ecs_array_count(type) + 1);
+    EcsTableColumn *result = calloc(sizeof(EcsTableColumn), ecs_array_count(type) + 1);
     EcsEntity *buf = ecs_array_buffer(type);
     uint32_t i, count = ecs_array_count(type);
 
     /* First column is reserved for storing entity id's */
-    table->columns[0].size = sizeof(EcsEntity);
-    table->columns[0].data = ecs_array_new(&handle_arr_params, ECS_TABLE_INITIAL_ROW_COUNT);
+    result[0].size = sizeof(EcsEntity);
+    result[0].data = NULL;
 
     for (i = 0; i < count; i ++) {
         EcsComponent *component = ecs_get_ptr(world, buf[i], EcsComponent);
@@ -45,21 +39,45 @@ EcsResult ecs_table_init(
         if (component) {
             if (component->size) {
                 /* Regular column data */
-                EcsArrayParams param = {.element_size = component->size};
-                table->columns[i + 1].size = component->size;
-                table->columns[i + 1].data = ecs_array_new(&param, ECS_TABLE_INITIAL_ROW_COUNT);
+                result[i + 1].size = component->size;
             }
-        } else {
-            if (ecs_has(world, buf[i], EcsPrefab)) {
-                /* Tables can contain at most one prefab */
-                ecs_assert(prefab_set == false, ECS_MORE_THAN_ONE_PREFAB, ecs_id(world, buf[i]));
-                prefab_set = true;
+        }
+    }
 
-                /* Register type with prefab index for quick lookups */
-                ecs_map_set(world->prefab_index, table->type_id, buf[i]);
+    return result;
+}
 
-            } else if (!ecs_has(world, buf[i], EcsContainer)) {
-                ecs_assert(0, ECS_INVALID_HANDLE, NULL);
+EcsResult ecs_table_init(
+    EcsWorld *world,
+    EcsStage *stage,
+    EcsTable *table)
+{
+    EcsArray *type = ecs_type_get(world, stage, table->type_id);
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, "invalid type id of table");
+    bool prefab_set = false;
+
+    table->frame_systems = NULL;
+    table->type = type;
+    table->columns = ecs_table_get_columns(world, stage, type);
+
+    if (stage == &world->main_stage) {
+        EcsEntity *buf = ecs_array_buffer(type);
+        uint32_t i, count = ecs_array_count(type);
+
+        for (i = 0; i < count; i ++) {
+            /* Only if creating columns in the main stage, register prefab */
+            if (!ecs_has(world, buf[i], EcsComponent)) {
+                if (ecs_has(world, buf[i], EcsPrefab)) {
+                    /* Tables can contain at most one prefab */
+                    ecs_assert(prefab_set == false, ECS_MORE_THAN_ONE_PREFAB, ecs_id(world, buf[i]));
+                    prefab_set = true;
+
+                    /* Register type with prefab index for quick lookups */
+                    ecs_map_set(world->prefab_index, table->type_id, buf[i]);
+
+                } else if (!ecs_has(world, buf[i], EcsContainer)) {
+                    ecs_assert(0, ECS_INVALID_HANDLE, NULL);
+                }
             }
         }
     }
@@ -109,9 +127,12 @@ uint32_t ecs_table_insert(
     /* Add elements to each column array */
     uint32_t i;
     for (i = 1; i < column_count + 1; i ++) {
-        EcsArrayParams params = {.element_size = columns[i].size};
-        if (!ecs_array_add(&columns[i].data, &params)) {
-            return -1;
+        uint32_t size = columns[i].size;
+        if (size) {
+            EcsArrayParams params = {.element_size = size};
+            if (!ecs_array_add(&columns[i].data, &params)) {
+                return -1;
+            }
         }
     }
 
@@ -132,9 +153,13 @@ void ecs_table_delete(
 {
     EcsTableColumn *columns = table->columns;
     EcsArray *entity_column = columns[0].data;
-    int32_t count = ecs_array_count(entity_column) - 1;
+    uint32_t count = ecs_array_count(entity_column);
 
-    assert(index <= count);
+    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
+
+    count --;
+    
+    ecs_assert(index <= count, ECS_INTERNAL_ERROR, NULL);
 
     if (index != count) {
         /* Move last entity in array to index */

@@ -233,6 +233,47 @@ void Run_run_w_component_filter(void);
 void Run_run_w_type_filter_of_2(void);
 void Run_run_w_container_filter(void);
 
+// Testsuite 'SingleThreadStaging'
+void SingleThreadStaging_new_empty(void);
+void SingleThreadStaging_new_w_component(void);
+void SingleThreadStaging_new_w_type_of_2(void);
+void SingleThreadStaging_add_to_current(void);
+void SingleThreadStaging_2_add_to_current(void);
+void SingleThreadStaging_add_to_new_empty(void);
+void SingleThreadStaging_2_add_to_new_empty(void);
+void SingleThreadStaging_remove_from_current(void);
+void SingleThreadStaging_remove_2_from_current(void);
+void SingleThreadStaging_add_remove_same_to_current(void);
+void SingleThreadStaging_add_remove_same_existing_to_current(void);
+void SingleThreadStaging_remove_add_same_to_current(void);
+void SingleThreadStaging_remove_add_same_existing_to_current(void);
+void SingleThreadStaging_add_remove_2_same_to_current(void);
+void SingleThreadStaging_add_remove_2_same_existing_to_current(void);
+void SingleThreadStaging_remove_add_2_same_to_current(void);
+void SingleThreadStaging_remove_add_2_same_existing_to_current(void);
+void SingleThreadStaging_add_remove_same_to_new_empty(void);
+void SingleThreadStaging_add_remove_2_same_to_new_empty(void);
+void SingleThreadStaging_add_remove_same_to_new_w_component(void);
+void SingleThreadStaging_add_remove_different_to_current(void);
+void SingleThreadStaging_2_add_1_remove_to_current(void);
+void SingleThreadStaging_2_add_1_remove_to_new_empty(void);
+void SingleThreadStaging_1_add_2_remove_to_current(void);
+void SingleThreadStaging_new_for_current_archetype(void);
+void SingleThreadStaging_delete_current(void);
+void SingleThreadStaging_delete_even(void);
+void SingleThreadStaging_delete_new_empty(void);
+void SingleThreadStaging_delete_new_w_component(void);
+void SingleThreadStaging_set_current(void);
+void SingleThreadStaging_set_new_empty(void);
+void SingleThreadStaging_set_new_w_component(void);
+void SingleThreadStaging_set_new_after_add(void);
+void SingleThreadStaging_remove_after_set(void);
+void SingleThreadStaging_delete_after_set(void);
+void SingleThreadStaging_get_after_add(void);
+void SingleThreadStaging_get_after_2_add(void);
+void SingleThreadStaging_get_after_set(void);
+void SingleThreadStaging_get_after_2_set(void);
+
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
 void Internals_activate_table(void);
@@ -1136,6 +1177,168 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "SingleThreadStaging",
+        .testcase_count = 39,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "new_empty",
+                .function = SingleThreadStaging_new_empty
+            },
+            {
+                .id = "new_w_component",
+                .function = SingleThreadStaging_new_w_component
+            },
+            {
+                .id = "new_w_type_of_2",
+                .function = SingleThreadStaging_new_w_type_of_2
+            },
+            {
+                .id = "add_to_current",
+                .function = SingleThreadStaging_add_to_current
+            },
+            {
+                .id = "2_add_to_current",
+                .function = SingleThreadStaging_2_add_to_current
+            },
+            {
+                .id = "add_to_new_empty",
+                .function = SingleThreadStaging_add_to_new_empty
+            },
+            {
+                .id = "2_add_to_new_empty",
+                .function = SingleThreadStaging_2_add_to_new_empty
+            },
+            {
+                .id = "remove_from_current",
+                .function = SingleThreadStaging_remove_from_current
+            },
+            {
+                .id = "remove_2_from_current",
+                .function = SingleThreadStaging_remove_2_from_current
+            },
+            {
+                .id = "add_remove_same_to_current",
+                .function = SingleThreadStaging_add_remove_same_to_current
+            },
+            {
+                .id = "add_remove_same_existing_to_current",
+                .function = SingleThreadStaging_add_remove_same_existing_to_current
+            },
+            {
+                .id = "remove_add_same_to_current",
+                .function = SingleThreadStaging_remove_add_same_to_current
+            },
+            {
+                .id = "remove_add_same_existing_to_current",
+                .function = SingleThreadStaging_remove_add_same_existing_to_current
+            },
+            {
+                .id = "add_remove_2_same_to_current",
+                .function = SingleThreadStaging_add_remove_2_same_to_current
+            },
+            {
+                .id = "add_remove_2_same_existing_to_current",
+                .function = SingleThreadStaging_add_remove_2_same_existing_to_current
+            },
+            {
+                .id = "remove_add_2_same_to_current",
+                .function = SingleThreadStaging_remove_add_2_same_to_current
+            },
+            {
+                .id = "remove_add_2_same_existing_to_current",
+                .function = SingleThreadStaging_remove_add_2_same_existing_to_current
+            },
+            {
+                .id = "add_remove_same_to_new_empty",
+                .function = SingleThreadStaging_add_remove_same_to_new_empty
+            },
+            {
+                .id = "add_remove_2_same_to_new_empty",
+                .function = SingleThreadStaging_add_remove_2_same_to_new_empty
+            },
+            {
+                .id = "add_remove_same_to_new_w_component",
+                .function = SingleThreadStaging_add_remove_same_to_new_w_component
+            },
+            {
+                .id = "add_remove_different_to_current",
+                .function = SingleThreadStaging_add_remove_different_to_current
+            },
+            {
+                .id = "2_add_1_remove_to_current",
+                .function = SingleThreadStaging_2_add_1_remove_to_current
+            },
+            {
+                .id = "2_add_1_remove_to_new_empty",
+                .function = SingleThreadStaging_2_add_1_remove_to_new_empty
+            },
+            {
+                .id = "1_add_2_remove_to_current",
+                .function = SingleThreadStaging_1_add_2_remove_to_current
+            },
+            {
+                .id = "new_for_current_archetype",
+                .function = SingleThreadStaging_new_for_current_archetype
+            },
+            {
+                .id = "delete_current",
+                .function = SingleThreadStaging_delete_current
+            },
+            {
+                .id = "delete_even",
+                .function = SingleThreadStaging_delete_even
+            },
+            {
+                .id = "delete_new_empty",
+                .function = SingleThreadStaging_delete_new_empty
+            },
+            {
+                .id = "delete_new_w_component",
+                .function = SingleThreadStaging_delete_new_w_component
+            },
+            {
+                .id = "set_current",
+                .function = SingleThreadStaging_set_current
+            },
+            {
+                .id = "set_new_empty",
+                .function = SingleThreadStaging_set_new_empty
+            },
+            {
+                .id = "set_new_w_component",
+                .function = SingleThreadStaging_set_new_w_component
+            },
+            {
+                .id = "set_new_after_add",
+                .function = SingleThreadStaging_set_new_after_add
+            },
+            {
+                .id = "remove_after_set",
+                .function = SingleThreadStaging_remove_after_set
+            },
+            {
+                .id = "delete_after_set",
+                .function = SingleThreadStaging_delete_after_set
+            },
+            {
+                .id = "get_after_add",
+                .function = SingleThreadStaging_get_after_add
+            },
+            {
+                .id = "get_after_2_add",
+                .function = SingleThreadStaging_get_after_2_add
+            },
+            {
+                .id = "get_after_set",
+                .function = SingleThreadStaging_get_after_set
+            },
+            {
+                .id = "get_after_2_set",
+                .function = SingleThreadStaging_get_after_2_set
+            }
+        }
+    },
+    {
         .id = "Internals",
         .testcase_count = 5,
         .testcases = (bake_test_case[]){
@@ -1165,5 +1368,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 14);
+    return bake_test_run("api", argc, argv, suites, 15);
 }
