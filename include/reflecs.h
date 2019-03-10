@@ -693,7 +693,7 @@ void* _ecs_get_ptr(
 
 /* Convenienve macro for returning a value instead of a pointer */
 #define ecs_get(world, entity, type)\
-  (*(component*)_ecs_get_ptr(world, entity, T##type))
+  (*(type*)_ecs_get_ptr(world, entity, T##type))
 
 /* Set value of component.
  * This function sets the value of a component on the specified entity. If the

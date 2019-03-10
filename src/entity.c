@@ -275,6 +275,23 @@ uint32_t commit_w_type(
 
     entity_index = stage->entity_index;
 
+    /* Always update remove_merge stage when in progress. It is possible (and
+     * likely) that when a component is removed, it hasn't been added in the
+     * same iteration. As a result, the staged entity index does not know about
+     * the component to remove, and thus the staged type_id of the entity when
+     * merged with the to_remove type id results in the same type id. This would
+     * ordinarily cause the commit action to be skipped, but when in progress,
+     * we need to keep track of the remove so that it is removed from the main
+     * stage once the merge takes place. */
+    if (in_progress) {
+        /* Update remove type. Add to_remove, and subtract to_add. */
+        EcsType remove_type = ecs_map_get64(stage->remove_merge, entity);
+
+        remove_type = ecs_type_merge(
+            world, stage, remove_type, to_remove, to_add);
+        ecs_map_set64(stage->remove_merge, entity, remove_type);
+    }
+
     if ((old_table = info->table)) {
         old_type_id = info->type_id;
         if (old_type_id == type_id) {
@@ -328,8 +345,7 @@ uint32_t commit_w_type(
     }
 
     if (!in_progress) {
-        if (to_remove) {
-            ecs_assert(old_index != -1, ECS_INTERNAL_ERROR, NULL);
+        if (to_remove && old_index != -1) {
             notify_post_merge(
                 world, stage, old_table, old_columns, old_index, 1, to_remove);
         }
@@ -337,12 +353,6 @@ uint32_t commit_w_type(
         if (old_type_id) {
             ecs_table_delete(world, old_table, old_index);
         }
-    } else {
-        /* Update remove type. Add to_remove, and subtract to_add. */
-        EcsType remove_type = ecs_map_get64(stage->remove_merge, entity);
-        remove_type = ecs_type_merge(
-            world, stage, remove_type, to_remove, to_add);
-        ecs_map_set64(stage->remove_merge, entity, remove_type);
     }
 
     if (type_id) {
@@ -465,8 +475,6 @@ void ecs_merge_entity(
         .type_id = old_row.type_id,
         .index = old_row.index
     };
-
-    printf("old type id = %u\n", old_row.type_id);
 
     uint32_t new_index = commit_w_type(
         world, &world->main_stage, &info, type_id, 0, to_remove);
