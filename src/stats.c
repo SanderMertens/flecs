@@ -83,7 +83,6 @@ void calculate_stage_stats(
 
     if (!is_main_stage) {
         ecs_map_memory(stage->remove_merge, allocd, used);
-        ecs_array_memory(stage->delete_stage, &handle_arr_params, allocd, used);
         ecs_map_memory(stage->data_stage, allocd, used);
     }
 }

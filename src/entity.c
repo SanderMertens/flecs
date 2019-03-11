@@ -101,8 +101,21 @@ void* get_ptr(
             info->table = table;
             info->columns = columns;
             ptr = get_row_ptr(
-                world, stage, table->type, columns, row.index, component);
+                world, stage, table->type, columns, row.index, component);  
         }
+
+        if (!ptr) {
+            /* If component is in to remove type, it has been removed while in
+             * progress. Return NULL if so. */
+            EcsType to_remove = ecs_map_get64(stage->remove_merge, entity);
+            if (to_remove) {
+                if (ecs_type_contains_component(
+                    world, stage, to_remove, component, false)) 
+                {
+                    return NULL;
+                }
+            }
+        } 
     }
 
     if (ptr) return ptr;
@@ -667,8 +680,18 @@ void ecs_delete(
             ecs_map_remove(world->main_stage.entity_index, entity);
         }
     } else {
-        EcsEntity *h = ecs_array_add(&stage->delete_stage, &handle_arr_params);
-        *h = entity;
+        /* Mark components of the entity in the main stage as removed. This will
+         * ensure that subsequent calls to ecs_has, ecs_get and ecs_empty will
+         * behave consistently with the delete. */
+        uint64_t row64 = ecs_map_get64(world->main_stage.entity_index, entity);
+        if (row64) {
+            EcsRow row = ecs_to_row(row64);
+            ecs_map_set64(stage->remove_merge, entity, row.type_id);
+        }
+
+        /* Remove the entity from the staged index. Any added components while
+         * in progress will be discarded as a result. */
+        ecs_map_set64(stage->entity_index, entity, 0);
     }
 }
 
@@ -894,14 +917,24 @@ bool ecs_empty(
     EcsWorld *world,
     EcsEntity entity)
 {
-    uint64_t row64 = ecs_map_get64(world->main_stage.entity_index, entity);
+    uint64_t cur64 = ecs_map_get64(world->main_stage.entity_index, entity);
 
-    if (!row64 && world->in_progress) {
+    if (world->in_progress) {
         EcsStage *stage = ecs_get_stage(&world);
-        row64 = ecs_map_get64(stage->entity_index, entity);
-    }
 
-    return row64 == 0;
+        uint64_t to_add64 = ecs_map_get64(stage->entity_index, entity);
+        uint64_t to_remove64 = ecs_map_get64(stage->remove_merge, entity);
+
+        EcsRow cur = ecs_to_row(cur64);
+        EcsRow to_add = ecs_to_row(to_add64);
+        EcsRow to_remove = ecs_to_row(to_remove64);
+        EcsType result = ecs_type_merge(world, stage, 
+            cur.type_id, to_add.type_id, to_remove.type_id);
+
+        return result == 0;   
+    } else {
+        return cur64 == 0;
+    }
 }
 
 EcsEntity ecs_get_component(

@@ -218,7 +218,6 @@ typedef struct EcsStage {
      * not on the main stage */
     EcsMap *data_stage;          /* Arrays with staged component values */
     EcsMap *remove_merge;        /* All removed components before merge */
-    EcsArray *delete_stage;      /* Deleted entities while in progress */
 } EcsStage;
 
 /** A type describing a unit of work to be executed by a worker thread. */ 

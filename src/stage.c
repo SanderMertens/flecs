@@ -54,19 +54,6 @@ void merge_tables(
 }
 
 static
-void merge_deletes(
-    EcsWorld *world,
-    EcsStage *stage)
-{
-    EcsEntity *buffer = ecs_array_buffer(stage->delete_stage);
-    uint32_t i, count = ecs_array_count(stage->delete_stage);
-    for (i = 0; i < count; i ++) {
-        ecs_delete(world, buffer[i]);
-    }
-    ecs_array_clear(stage->delete_stage);
-}
-
-static
 void merge_commits(
     EcsWorld *world,
     EcsStage *stage)
@@ -155,7 +142,6 @@ void ecs_stage_init(
     if (!is_main_stage) {
         stage->data_stage = ecs_map_new(0);
         stage->remove_merge = ecs_map_new(0);
-        stage->delete_stage = ecs_array_new(&handle_arr_params, 0);
     }
 }
 
@@ -177,7 +163,6 @@ void ecs_stage_deinit(
     if (!is_main_stage) {
         ecs_map_free(stage->data_stage);
         ecs_map_free(stage->remove_merge);
-        ecs_array_free(stage->delete_stage);
     }
 }
 
@@ -194,6 +179,5 @@ void ecs_stage_merge(
         merge_tables(world, stage);
     }
 
-    merge_deletes(world, stage);
     merge_commits(world, stage);
 }

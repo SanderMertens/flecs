@@ -268,13 +268,10 @@ void SingleThreadStaging_delete_new_w_component(void);
 void SingleThreadStaging_set_current(void);
 void SingleThreadStaging_set_new_empty(void);
 void SingleThreadStaging_set_new_w_component(void);
+void SingleThreadStaging_set_existing_new_w_component(void);
 void SingleThreadStaging_set_new_after_add(void);
 void SingleThreadStaging_remove_after_set(void);
 void SingleThreadStaging_delete_after_set(void);
-void SingleThreadStaging_get_after_add(void);
-void SingleThreadStaging_get_after_2_add(void);
-void SingleThreadStaging_get_after_set(void);
-void SingleThreadStaging_get_after_2_set(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -1180,7 +1177,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 41,
+        .testcase_count = 38,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -1319,6 +1316,10 @@ static bake_test_suite suites[] = {
                 .function = SingleThreadStaging_set_new_w_component
             },
             {
+                .id = "set_existing_new_w_component",
+                .function = SingleThreadStaging_set_existing_new_w_component
+            },
+            {
                 .id = "set_new_after_add",
                 .function = SingleThreadStaging_set_new_after_add
             },
@@ -1329,22 +1330,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "delete_after_set",
                 .function = SingleThreadStaging_delete_after_set
-            },
-            {
-                .id = "get_after_add",
-                .function = SingleThreadStaging_get_after_add
-            },
-            {
-                .id = "get_after_2_add",
-                .function = SingleThreadStaging_get_after_2_add
-            },
-            {
-                .id = "get_after_set",
-                .function = SingleThreadStaging_get_after_set
-            },
-            {
-                .id = "get_after_2_set",
-                .function = SingleThreadStaging_get_after_2_set
             }
         }
     },

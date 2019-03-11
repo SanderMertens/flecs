@@ -303,13 +303,10 @@
                 "set_current",
                 "set_new_empty",
                 "set_new_w_component",
+                "set_existing_new_w_component",
                 "set_new_after_add",
                 "remove_after_set",
-                "delete_after_set",
-                "get_after_add",
-                "get_after_2_add",
-                "get_after_set",
-                "get_after_2_set"
+                "delete_after_set"
             ]
         }, {
             "id": "Internals",
