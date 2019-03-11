@@ -1,7 +1,7 @@
 #ifndef REFLECS_MAP_H
 #define REFLECS_MAP_H
 
-#include <reflecs>
+#include <include/reflecs.h>
 
 #ifdef __cplusplus
 extern "C" {

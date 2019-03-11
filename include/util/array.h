@@ -1,7 +1,7 @@
 #ifndef REFLECS_ARRAY_H
 #define REFLECS_ARRAY_H
 
-#include <reflecs>
+#include <include/reflecs.h>
 
 #ifdef __cplusplus
 extern "C" {

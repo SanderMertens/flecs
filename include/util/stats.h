@@ -1,7 +1,7 @@
 #ifndef REFLECS_STATS_H
 #define REFLECS_STATS_H
 
-#include <reflecs>
+#include <include/reflecs.h>
 #include "array.h"
 
 #ifdef __cplusplus
