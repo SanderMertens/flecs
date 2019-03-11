@@ -30,7 +30,7 @@ Check out the [examples](https://github.com/SanderMertens/reflecs/tree/master/ex
   * [component](#component)
   * [system](#system)
   * [identifier](#identifier)
-  * [family](#family)
+  * [type](#type)
   * [feature](#feature)
   * [tag](#tag)
   * [container](#container)
@@ -112,11 +112,12 @@ typedef struct Position {
 typedef int32_t Speed;
 
 void Move(EcsRows *rows) {
-    for (void *row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Position *p = ecs_data(rows, row, 0);
-        Speed *s = ecs_data(rows, row, 1);
-        p->x += *s * rows->delta_time;
-        p->y += *s * rows->delta_time;
+    Position *p = ecs_column(rows, Position, 1);
+    Speed *s = ecs_column(rows, Speed, 2);
+    
+    for (int i = 0; i < rows->limit; i ++) {
+        p[i].x += s[i] * rows->delta_time;
+        p[i].y += s[i] * rows->delta_time;
     }
 }
 
@@ -126,11 +127,11 @@ int main(int argc, char *argv[]) {
     /* Register components and systems */
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
-    ECS_FAMILY(world, Movable, Position, Speed);
+    ECS_TYPE(world, Movable, Position, Speed);
     ECS_SYSTEM(world, Move, EcsOnFrame, Position, Speed);
 
     /* Create entity with Movable family */
-    ecs_new(world, Movable_h);
+    ecs_new(world, Movable);
 
     /* Limit application to 100 FPS */
     ecs_set_target_fps(world, 100);
@@ -171,10 +172,10 @@ typedef struct Point {
 ECS_COMPONENT(world, Point);
 ```
 
-The macro will define a `Point_h` variable, which can be used to add the component to an entity with the `ecs_add` function:
+After this macro, you are able to add the `Point` component using `ecs_add`:
 
 ```c
-ecs_add(world, e, Point_h);
+ecs_add(world, e, Point);
 ```
 
 Additionally, the component can be added and initialized with the `ecs_set` function:
@@ -209,8 +210,6 @@ Systems can be enabled / disabled. By default a system is enabled. To enable or 
 ecs_enable(world, LogPoints_h, false);
 ```
 
-Reflecs systems are stored as entities internally, which is why handles to systems are of the `EcsEntity` type.
-
 ### Identifier
 Entities in reflecs may have an optional string-based identifier. An identifier can be added to an entity by setting the `EcsId` component, like this:
 
@@ -224,6 +223,12 @@ After a string identifier is added, the entity can be looked up like this:
 EcsEntity e = ecs_lookup(world, "MyEntity");
 ```
 
+Additionally, applications can define entities with the `ECS_ENTITY` macro, which automatically sets the entity id:
+
+```c
+ECS_ENTITY(world, MyEntity, Point);
+```
+
 Components, systems, tasks, families and prefabs automatically register the `EcsId` component when they are created, and can thus be looked up with `ecs_lookup`.
 
 ### Task
@@ -233,28 +238,42 @@ A task is a system that has no interest expression. Tasks are run once every fra
 ECS_SYSTEM(world, MyTask, EcsOnFrame, 0);
 ```
 
-### Family
-A family is a group of `1..n` entities. Since components and systems are stored as entities by reflecs, families can also be used to group components and systems. Typical uses for familes are:
+### Type
+A type identifies a collection of `1..n` entities. In reflecs, components and systems are assigned unique identifiers from the same pool as entities, and therefore a type may contain identifiers to entities, components and systems. Typical usecases for types are:
 
 - Group components so that they can be added to an entity with a single `ecs_add` call
 - Group systems so that they can be enabled or disabled with a single `ecs_enable` call
 
-To define a family, you can use the `ECS_FAMILY` macro, which wraps the `ecs_new_family` function:
+To define a type, you can use the `ECS_TYPE` macro, which wraps the `ecs_new_type` function:
 
 ```c
-ECS_FAMILY(world, Circle, EcsCircle, EcsPosition2D);
+ECS_TYPE(world, Circle, EcsCircle, EcsPosition2D);
 ```
 
-This defines a family called `Circle` that contains `EcsCircle` and `EcsPosition2D`. The macro will define the `Circle_h` variable, which the application can use to refer to the family:
+This defines a type called `Circle` that contains `EcsCircle` and `EcsPosition2D`. After this macro, you can use the `Circle` type with functions like `ecs_add` and `ecs_remove`:
 
 ```c
-ecs_add(world, e, Circle_h);
+ecs_add(world, e, Circle);
 ```
-
-Reflecs families are stored as entities internally, which is why handles to families are of the `EcsEntity` type.
 
 ### Feature
-A feature is a family that contains solely out of systems. To create features, use the `ECS_FAMILY` macro or `ecs_new_family` function.
+A feature is a type that contains solely out of systems. To create features, use the `ECS_TYPE` macro or `ecs_new_type` function. This can be used to enable/disable multiple systems with a single API call, like so:
+
+```c
+ECS_TYPE(world, MyFeature, SystemA, SystemB);
+
+ecs_enable(World, MyFeature, true);
+```
+
+A useful property of features (types) is that they can be nested, like so:
+
+```c
+ECS_TYPE(world, MyNestedFeatureA, SystemA, SystemB);
+ECS_TYPE(world, MyNestedFeatureB, SystemC);
+ECS_TYPE(world, MyFeature, MyNestedFeatureA, MyNestedFeatureB);
+
+ecs_enable(World, MyFeature, true);
+```
 
 ### Tag
 A tag is a component that does not contain any data. Internally it is represented as a component with data-size 0. Tags can be useful for subdividing entities into categories, without adding any data. A tag can be defined with the `ECS_TAG` macro:
@@ -268,23 +287,35 @@ The macro will define the `MyTag_h` variable, which an application can then use 
 ecs_add(world, e, MyTag_h);
 ```
 
-Tags, like components, are stored as entities internally which is why handles to tags are of the `EcsEntity` type.
-
 ### Container
-A container is an entity that can contain other entities. Since components are stored as entities in reflecs, and components can be added with the `ecs_add` function, it is similarly possible to add entities to entities with the `ecs_add` function. The only restriction is that the entity that is to be added must be a "container". To turn an entity in a container, add the builtin `EcsContainer` component, like so:
+A container is an entity that can contain other entities. There are several methods to add a child entity to a container entity. The easiest way is with the `ecs_new_child` function:
 
-```c
-// equivalent to calling ecs_new(world, 0) + ecs_add(world, my_container, EcsContainer_h)
-EcsEntity my_container = ecs_new(world, EcsContainer_h);
+```
+EcsEntity parent = ecs_new(world, 0);
+EcsEntity child = ecs_new_child(world, parent, "MyChild", 0);
 ```
 
-This entity can now be used like a component:
+Alternatively, you can add an entity to a parent entity after its creation using `ecs_adopt`:
 
 ```c
-ecs_new(world, e, my_container);
+EcsEntity parent = ecs_new(world, 0);
+EcsEntity child = ecs_new(world, 0);
+ecs_adopt(world, parent, child);
 ```
 
-The above code constructs a hierarchy with a parent ("my_container") and a child ("e"). For an example of how to walk over this hierarchy, see the `dag` example in the examples directory.
+With the `ecs_contains` function you can check whether an entity contains another entity:
+
+```c
+if (ecs_contains(world, parent, child)0 {
+    printf("entity %u is a child of %u\n", child, parent);
+}
+```
+
+Systems can request components from containers. If a system requests component `EcsPosition2D` from a container, but an entity does not have a container, or the container does not have `EcsPosition2D`, the system will not match the entity. This system definition shows an example of how a system can access container components:
+
+```c
+ECS_SYSTEM(world, MySystem, EcsOnFrame, CONTAINER.Foo, Bar);
+```
 
 ### Prefab
 Prefabs are a special kind of entity that enable applications to reuse components values across entities. To create a prefab, you can use the `ECS_PREFAB` macro, or `ecs_new_prefab` function:
@@ -293,17 +324,17 @@ Prefabs are a special kind of entity that enable applications to reuse component
 ECS_PREFAB(world, CirclePrefab, EcsCircle, EcsPosition2D);
 ```
 
-This defines a prefab with the `EcsCircle` and `EcsPosition2D` components. The macro will declare a `Circle_h` variable, which can be used by the application to refer to the prefab. We can now add this prefab to regular entities:
+This defines a prefab with the `EcsCircle` and `EcsPosition2D` components. We can now add this prefab to regular entities:
 
 ```c
-EcsEntity e1 = ecs_new(world, CirclePrefab_h);
-EcsEntity e2 = ecs_new(world, CirclePrefab_h);
+EcsEntity e1 = ecs_new(world, CirclePrefab);
+EcsEntity e2 = ecs_new(world, CirclePrefab);
 ```
 
-This will make the `EcsCircle` and `EcsPosition2D` components available on entities `e1` and `e2`, similar to a family. In contrast to familes, component values of `EcsCircle` and `EcsPosition2D` are now shared between entities, and stored only once in memory. Since a prefab can be used as a regular entity, we can change the value of a prefab component with the `ecs_set` function:
+This will make the `EcsCircle` and `EcsPosition2D` components available on entities `e1` and `e2`, similar to a family. In contrast to types, component values of `EcsCircle` and `EcsPosition2D` are now shared between entities, and stored only once in memory. Since a prefab can be used as a regular entity, we can change the value of a prefab component with the `ecs_set` function:
 
 ```c
-ecs_set(world, CirclePrefab_h, EcsCircle, {.radius = 10});
+ecs_set(world, CirclePrefab, EcsCircle, {.radius = 10});
 ```
 
 This will change the value of `EcsCircle` across all entities that have the prefab. Entities can override component values from a prefab, by either adding or setting a component on themselves, using `ecs_add` or `ecs_set`. When a component is added using `ecs_add`, it will be initialized with the component value of the prefab.
