@@ -70,7 +70,7 @@ typedef struct EcsSystemColumn {
     EcsSystemExprOperKind oper_kind;  /* Operator kind (AND, OR, NOT) */
     union {
         EcsType type;             /* Used for OR operator */
-        EcsEntity component;          /* Used for AND operator */
+        EcsEntity component;      /* Used for AND operator */
     } is;
 } EcsSystemColumn;
 

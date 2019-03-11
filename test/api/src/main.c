@@ -185,6 +185,7 @@ void SystemOnSet_set_new(void);
 void SystemOnSet_set_again(void);
 void SystemOnSet_clone(void);
 void SystemOnSet_clone_w_value(void);
+void SystemOnSet_set_w_optional(void);
 
 // Testsuite 'SystemOnFrame'
 void SystemOnFrame_1_type_1_component(void);
@@ -968,7 +969,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 5,
+        .testcase_count = 6,
         .testcases = (bake_test_case[]){
             {
                 .id = "set",
@@ -989,6 +990,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "clone_w_value",
                 .function = SystemOnSet_clone_w_value
+            },
+            {
+                .id = "set_w_optional",
+                .function = SystemOnSet_set_w_optional
             }
         }
     },

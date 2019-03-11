@@ -208,7 +208,8 @@
                 "set_new",
                 "set_again",
                 "clone",
-                "clone_w_value"
+                "clone_w_value",
+                "set_w_optional"
             ]
         }, {
             "id": "SystemOnFrame",

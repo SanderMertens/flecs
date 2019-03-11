@@ -1,5 +1,10 @@
-/* This file is generated. To add/remove testcases modify the 'project.json' of
- * the test project. Any change to this code is lost after (re)building. */
+
+/* A friendly warning from bake.test
+ * ----------------------------------------------------------------------------
+ * This file is generated. To add/remove testcases modify the 'project.json' of
+ * the test project. ANY CHANGE TO THIS FILE IS LOST AFTER (RE)BUILDING!
+ * ----------------------------------------------------------------------------
+ */
 
 #include <include/collections.h>
 

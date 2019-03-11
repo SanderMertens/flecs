@@ -415,13 +415,12 @@ bool ecs_notify_system(
         return false;
     }
 
-    EcsArray *type = ecs_type_get(world, stage, system_data->base.and_from_entity);
-    uint32_t i, column_count = ecs_array_count(type);
-    EcsEntity *buffer = ecs_array_buffer(system_data->components);
+    uint32_t i, column_count = ecs_array_count(system_data->base.columns);
+    EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
     int32_t columns[column_count];
 
     for (i = 0; i < column_count; i ++) {
-        columns[i] = ecs_type_index_of(table->type, buffer[i]) + 1;
+        columns[i] = ecs_type_index_of(table->type, buffer[i].is.component) + 1;
     }
 
     ecs_row_notify(
