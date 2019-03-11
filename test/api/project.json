@@ -249,7 +249,9 @@
                 "2_column_1_from_container",
                 "3_column_2_from_container",
                 "3_column_2_from_different_container",
-                "2_column_1_from_container_w_not"
+                "2_column_1_from_container_w_not",
+                "3_column_1_from_comtainer_1_from_container_w_not",
+                "2_column_1_from_container_w_or"
             ]
         }, {
             "id": "Run",
