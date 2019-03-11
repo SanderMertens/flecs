@@ -290,12 +290,12 @@ ecs_add(world, e, MyTag_h);
 ### Container
 A container is an entity that can contain other entities. There are several methods to add a child entity to a container entity. The easiest way is with the `ecs_new_child` function:
 
-```
+```c
 EcsEntity parent = ecs_new(world, 0);
 EcsEntity child = ecs_new_child(world, parent, "MyChild", 0);
 ```
 
-Alternatively, you can add an entity to a parent entity after its creation using `ecs_adopt`:
+Alternatively, you can add an entity to a container entity after its creation using `ecs_adopt`:
 
 ```c
 EcsEntity parent = ecs_new(world, 0);
@@ -306,7 +306,7 @@ ecs_adopt(world, parent, child);
 With the `ecs_contains` function you can check whether an entity contains another entity:
 
 ```c
-if (ecs_contains(world, parent, child)0 {
+if (ecs_contains(world, parent, child) {
     printf("entity %u is a child of %u\n", child, parent);
 }
 ```
