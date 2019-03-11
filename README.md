@@ -193,13 +193,13 @@ A system is logic (a function) that is executed for every entity that has a set 
 ECS_SYSTEM(world, LogPoints, EcsOnFrame, Point);
 ```
 
-In this statement, `LogPoints` refers to a C function that will be associated with the system. `EcsOnFrame` identifies the stage in which the system is executed. The `{Point}` identifies the component interest expression. After the macro, an application can use the `LogPoints_h` variable to refer to the system. The system is implemented as a regular C function, like this:
+In this statement, `LogPoints` refers to a C function that will be associated with the system. `EcsOnFrame` identifies the stage in which the system is executed. The `Point` identifies the component interest expression. The system is implemented as a regular C function, like this:
 
 ```c
 void LogPoints(EcsRows *rows) {
-    for (void *row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        Point *p = ecs_data(rows, row, 0);
-        printf("Log point (%d, %d)\n", p->x, p->y);
+    Point *p = ecs_column(rows, Point, 1);
+    for (int i = 0; i < rows->limit; i ++) {
+        printf("Log point (%d, %d)\n", p[i].x, p[i].y);
     }
 }
 ```
@@ -207,7 +207,7 @@ void LogPoints(EcsRows *rows) {
 Systems can be enabled / disabled. By default a system is enabled. To enable or disable a system, you can use the `ecs_enable` function:
 
 ```c
-ecs_enable(world, LogPoints_h, false);
+ecs_enable(world, LogPoints, false);
 ```
 
 ### Identifier
@@ -223,7 +223,7 @@ After a string identifier is added, the entity can be looked up like this:
 EcsEntity e = ecs_lookup(world, "MyEntity");
 ```
 
-Additionally, applications can define entities with the `ECS_ENTITY` macro, which automatically sets the entity id:
+Additionally, applications can define entities with the `ECS_ENTITY` macro, which automatically adds `EcsId` and initializes it with the provided name:
 
 ```c
 ECS_ENTITY(world, MyEntity, Point);
