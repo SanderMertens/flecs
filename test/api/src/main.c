@@ -233,6 +233,10 @@ void System_w_FromContainer_2_column_1_from_container_w_not(void);
 void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not(void);
 void System_w_FromContainer_2_column_1_from_container_w_or(void);
 
+// Testsuite 'System_w_FromId'
+void System_w_FromId_2_column_1_from_id(void);
+void System_w_FromId_3_column_2_from_id(void);
+
 // Testsuite 'Run'
 void Run_run(void);
 void Run_run_w_param(void);
@@ -1176,6 +1180,20 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "System_w_FromId",
+        .testcase_count = 2,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "2_column_1_from_id",
+                .function = System_w_FromId_2_column_1_from_id
+            },
+            {
+                .id = "3_column_2_from_id",
+                .function = System_w_FromId_3_column_2_from_id
+            }
+        }
+    },
+    {
         .id = "Run",
         .testcase_count = 20,
         .testcases = (bake_test_case[]){
@@ -1449,5 +1467,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 17);
+    return bake_test_run("api", argc, argv, suites, 18);
 }
