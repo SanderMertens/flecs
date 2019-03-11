@@ -1,5 +1,10 @@
-/* This file is generated. To add/remove testcases modify the 'project.json' of
- * the test project. Any change to this code is lost after (re)building. */
+
+/* A friendly warning from bake.test
+ * ----------------------------------------------------------------------------
+ * This file is generated. To add/remove testcases modify the 'project.json' of
+ * the test project. ANY CHANGE TO THIS FILE IS LOST AFTER (RE)BUILDING!
+ * ----------------------------------------------------------------------------
+ */
 
 #include <include/api.h>
 
@@ -173,6 +178,13 @@ void SystemOnRemove_delete_match_2_of_3(void);
 void SystemOnRemove_delete_no_match_1(void);
 void SystemOnRemove_delete_no_match_2_of_1(void);
 void SystemOnRemove_delete_no_match_2_of_3(void);
+
+// Testsuite 'SystemOnSet'
+void SystemOnSet_set(void);
+void SystemOnSet_set_new(void);
+void SystemOnSet_set_again(void);
+void SystemOnSet_clone(void);
+void SystemOnSet_clone_w_value(void);
 
 // Testsuite 'SystemOnFrame'
 void SystemOnFrame_1_type_1_component(void);
@@ -955,6 +967,32 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "SystemOnSet",
+        .testcase_count = 5,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "set",
+                .function = SystemOnSet_set
+            },
+            {
+                .id = "set_new",
+                .function = SystemOnSet_set_new
+            },
+            {
+                .id = "set_again",
+                .function = SystemOnSet_set_again
+            },
+            {
+                .id = "clone",
+                .function = SystemOnSet_clone
+            },
+            {
+                .id = "clone_w_value",
+                .function = SystemOnSet_clone_w_value
+            }
+        }
+    },
+    {
         .id = "SystemOnFrame",
         .testcase_count = 15,
         .testcases = (bake_test_case[]){
@@ -1406,5 +1444,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 16);
+    return bake_test_run("api", argc, argv, suites, 17);
 }

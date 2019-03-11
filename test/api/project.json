@@ -202,6 +202,15 @@
                 "delete_no_match_2_of_3"
             ]
         }, {
+            "id": "SystemOnSet",
+            "testcases": [
+                "set",
+                "set_new",
+                "set_again",
+                "clone",
+                "clone_w_value"
+            ]
+        }, {
             "id": "SystemOnFrame",
             "testcases": [
                 "1_type_1_component",
