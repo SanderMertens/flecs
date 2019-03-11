@@ -83,7 +83,7 @@ typedef enum EcsSystemKind {
 /** Reference to a component from another entity */
 typedef struct EcsReference {
     EcsEntity entity;
-    EcsEntity component;
+    EcsType component;
 } EcsReference;
 
 /** Data passed to system action callback, used for iterating entities */
@@ -1168,6 +1168,15 @@ void* _ecs_column(
 
 #define ecs_column(rows, type, index)\
     ((type*)_ecs_column(rows, index))
+
+/* Obtain a reference to a shared component */
+REFLECS_EXPORT
+void* _ecs_shared(
+    EcsRows *rows,
+    uint32_t index);
+
+#define ecs_shared(rows, type, index)\
+    ((type*)_ecs_shared(rows, index))
 
 /* Obtain the source of a column from inside a system */
 REFLECS_EXPORT

@@ -481,6 +481,29 @@ void* _ecs_column(
     return ecs_array_buffer(column->data);
 }
 
+void* _ecs_shared(
+    EcsRows *rows,
+    uint32_t index)
+{
+    if (index > rows->column_count) {
+        return NULL;
+    }
+
+    int32_t table_column;
+
+    if (index == 0) {
+        return 0;
+    } else {
+        table_column = rows->columns[index - 1];
+        if (table_column >= 0) {
+            return 0;
+        }
+        
+        EcsReference *ref = &rows->references[-table_column - 1];
+        return _ecs_get_ptr(rows->world, ref->entity, ref->component);
+    }
+}
+
 EcsEntity ecs_column_source(
     EcsRows *rows,
     uint32_t index)

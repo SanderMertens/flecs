@@ -284,7 +284,7 @@ void add_table(
             ref_data[ref].entity = get_entity_for_component(
                 world, entity, table_type, component);
 
-            ref_data[ref].component = component;
+            ref_data[ref].component = ecs_type_from_entity(world, component);
             ref ++;
 
             /* Negative number indicates ref instead of offset to ecs_data */
@@ -715,7 +715,6 @@ EcsEntity _ecs_run_w_filter(
         .world = world,
         .system = system,
         .param = param,
-        .references = ecs_array_buffer(system_data->refs),
         .column_count = column_count,
         .delta_time = system_delta_time,
         .index_offset = 0
@@ -766,6 +765,14 @@ EcsEntity _ecs_run_w_filter(
 
         if (!count) {
             continue;
+        }
+
+        uint32_t ref_index = table[REFS_INDEX];
+        if (ref_index) {
+            info.references = ecs_array_get(
+                system_data->refs, &system_data->ref_params, ref_index - 1);
+        } else {
+            info.references = NULL;
         }
 
         info.columns =  &table[COLUMNS_INDEX];

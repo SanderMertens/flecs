@@ -243,6 +243,15 @@
                 "adopt_2_orphan_1"
             ]
         }, {
+            "id": "System_w_FromContainer",
+            "testcases": [
+                "1_column_from_container",
+                "2_column_1_from_container",
+                "3_column_2_from_container",
+                "3_column_2_from_different_container",
+                "2_column_1_from_container_w_not"
+            ]
+        }, {
             "id": "Run",
             "testcases": [
                 "run",

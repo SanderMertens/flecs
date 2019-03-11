@@ -211,6 +211,13 @@ void Container_orphan_twice(void);
 void Container_adopt_orphan(void);
 void Container_adopt_2_orphan_1(void);
 
+// Testsuite 'System_w_FromContainer'
+void System_w_FromContainer_1_column_from_container(void);
+void System_w_FromContainer_2_column_1_from_container(void);
+void System_w_FromContainer_3_column_2_from_container(void);
+void System_w_FromContainer_3_column_2_from_different_container(void);
+void System_w_FromContainer_2_column_1_from_container_w_not(void);
+
 // Testsuite 'Run'
 void Run_run(void);
 void Run_run_w_param(void);
@@ -1090,6 +1097,32 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "System_w_FromContainer",
+        .testcase_count = 5,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "1_column_from_container",
+                .function = System_w_FromContainer_1_column_from_container
+            },
+            {
+                .id = "2_column_1_from_container",
+                .function = System_w_FromContainer_2_column_1_from_container
+            },
+            {
+                .id = "3_column_2_from_container",
+                .function = System_w_FromContainer_3_column_2_from_container
+            },
+            {
+                .id = "3_column_2_from_different_container",
+                .function = System_w_FromContainer_3_column_2_from_different_container
+            },
+            {
+                .id = "2_column_1_from_container_w_not",
+                .function = System_w_FromContainer_2_column_1_from_container_w_not
+            }
+        }
+    },
+    {
         .id = "Run",
         .testcase_count = 20,
         .testcases = (bake_test_case[]){
@@ -1363,5 +1396,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 15);
+    return bake_test_run("api", argc, argv, suites, 16);
 }

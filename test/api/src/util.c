@@ -16,7 +16,7 @@ void ProbeSystem(
     int i;
     for (i = 0; i < ctx->column_count; i ++) {
         ctx->c[ctx->invoked][i] = rows->components[i];
-        ctx->s[ctx->invoked][i] = ecs_column_source(rows, i);
+        ctx->s[ctx->invoked][i] = ecs_column_source(rows, i + 1);
     }
 
     EcsEntity *e = ecs_column(rows, EcsEntity, 0);
