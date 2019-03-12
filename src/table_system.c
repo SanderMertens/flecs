@@ -524,7 +524,7 @@ void ecs_run_job(
         info.table_columns = columns;
 
         if (remaining >= count) {
-            info.limit = count;
+            info.count = count;
             table_buffer = ECS_OFFSET(table_buffer, table_element_size);
             component_buffer_el = ECS_OFFSET(component_buffer,
                 table_buffer[COMPONENTS_INDEX] * component_element_size);
@@ -532,7 +532,7 @@ void ecs_run_job(
             remaining -= count;
 
         } else {
-            info.limit = remaining;
+            info.count = remaining;
             remaining = 0;
         }
 
@@ -779,8 +779,9 @@ EcsEntity _ecs_run_w_filter(
         info.table_columns = table_columns;
         info.components = ECS_OFFSET(components,
             components_size * table[COMPONENTS_INDEX]);
-        info.offset = first;
-        info.limit = count;
+        info.begin = first;
+        info.count = count;
+        info.end = first + count;
 
         action(&info);
 

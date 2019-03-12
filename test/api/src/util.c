@@ -9,7 +9,7 @@ void ProbeSystem(
     }
 
     ctx->system = rows->system;
-    ctx->offset = rows->offset;
+    ctx->offset = rows->begin;
     ctx->column_count = rows->column_count;
     ctx->param = rows->param;
 
@@ -20,11 +20,11 @@ void ProbeSystem(
     }
 
     EcsEntity *e = ecs_column(rows, EcsEntity, 0);
-    for (i = rows->offset; i < (rows->offset + rows->limit); i ++) {
-        ctx->e[i - rows->offset + ctx->count] = e[i];
+    for (i = rows->begin; i < rows->end; i ++) {
+        ctx->e[i - rows->begin + ctx->count] = e[i];
     }
 
     ctx->invoked ++;
 
-    ctx->count += rows->limit;
+    ctx->count += rows->count;
 }

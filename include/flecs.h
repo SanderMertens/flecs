@@ -108,8 +108,9 @@ typedef struct EcsRows {
     void *param;         /* userdata passed to on-demand system */
     float delta_time;    /* time elapsed since last frame */
     uint32_t index_offset; /* number of rows processed by system in this frame */
-    uint32_t offset;     /* System should start iteration from offset */
-    uint32_t limit;      /* System should process limit rows */
+    uint32_t count;      /* System should process count rows */
+    uint32_t begin;     /* System should start iteration from begin */
+    uint32_t end;        /* Convenience variable that holds begin + count */
     EcsEntity interrupted_by; /* when set, system execution is interrupted */
 } EcsRows;
 

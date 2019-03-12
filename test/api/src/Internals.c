@@ -9,7 +9,7 @@ void Iter(EcsRows *rows) {
     ProbeSystem(rows);
 
     int i;
-    for (i = rows->offset; i < (rows->offset + rows->limit); i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 

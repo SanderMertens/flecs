@@ -283,8 +283,9 @@ void ecs_row_notify(
         .table_columns = table_columns,
         .components = ecs_array_buffer(system_data->components),
         .index_offset = 0,
-        .offset = offset,
-        .limit = limit
+        .begin = offset,
+        .end = offset + limit,
+        .count = limit
     };
 
     action(&rows);

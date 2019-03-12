@@ -14,7 +14,7 @@ void Iter(EcsRows *rows) {
     }
 
     int i;
-    for (i = rows->offset; i < (rows->offset + rows->limit); i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         p[i].x = 10 * m;
         p[i].y = 20 * m;
 
@@ -173,7 +173,7 @@ void Iter_2_shared(EcsRows *rows) {
     }
 
     int i;
-    for (i = rows->offset; i < (rows->offset + rows->limit); i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         if (p) {
             p[i].x = 10 * m + r;
             p[i].y = 20 * m + r;

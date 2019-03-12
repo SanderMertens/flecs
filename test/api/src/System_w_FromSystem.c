@@ -3,7 +3,7 @@
 void InitVelocity(EcsRows *rows) {
     Velocity *v = ecs_column(rows, Velocity, 1);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         v[i].x = 10;
         v[i].y = 20;
     }
@@ -12,7 +12,7 @@ void InitVelocity(EcsRows *rows) {
 void InitMass(EcsRows *rows) {
     Mass *m = ecs_column(rows, Mass, 1);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         m[i] = 3;
     }
 }
@@ -25,7 +25,7 @@ void Iter(EcsRows *rows) {
     ProbeSystem(rows);
 
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         p[i].x += v->x;
         p[i].y += v->y;
 

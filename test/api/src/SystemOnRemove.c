@@ -8,7 +8,7 @@ void Deinit(EcsRows *rows) {
 
     /* Write to validate columns point to valid memory */
     int i;
-    for (i = rows->offset; i < (rows->offset + rows->limit); i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         p[i].x = 0;
         p[i].y = 0;
 

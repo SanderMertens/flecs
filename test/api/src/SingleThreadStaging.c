@@ -12,7 +12,7 @@ static
 void NewEmpty(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         ctx->new_entities[ctx->entity_count] = ecs_new(rows->world, 0);
         ctx->entity_count ++;
     }
@@ -49,7 +49,7 @@ static
 void New_w_component(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = _ecs_new(rows->world, ctx->component);
         ctx->new_entities[ctx->entity_count] = e;
 
@@ -122,7 +122,7 @@ static
 void Add_to_new_empty(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = ecs_new(rows->world, 0);
         if (ctx->component) {
             _ecs_add(rows->world, e, ctx->component);
@@ -205,7 +205,7 @@ static
 void Add_remove_same_from_new(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = ecs_new(rows->world, 0);
 
         test_assert( ecs_empty(rows->world, e));
@@ -293,7 +293,7 @@ static
 void Add_remove_same_from_new_w_component(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = _ecs_new(rows->world, ctx->component);
         test_assert( _ecs_has(rows->world, e, ctx->component));
         test_assert( _ecs_get_ptr(rows->world, e, ctx->component) != NULL);
@@ -347,7 +347,7 @@ static
 void Add_remove_different_from_new_empty(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = ecs_new(rows->world, 0);
 
         if (ctx->component_3) {
@@ -439,7 +439,7 @@ void Clone_current(EcsRows *rows) {
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         ctx->new_entities[ctx->entity_count] = ecs_clone(rows->world, entities[i], false);
         ctx->entity_count ++;
     }
@@ -485,7 +485,7 @@ void Clone_current_w_value(EcsRows *rows) {
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         ctx->new_entities[ctx->entity_count] = ecs_clone(rows->world, entities[i], true);
         ctx->entity_count ++;
     }
@@ -549,7 +549,7 @@ void Add_to_current(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         if (ctx->component) {
             _ecs_add(rows->world, entities[i], ctx->component);
 
@@ -643,7 +643,7 @@ void Remove_from_current(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         if (ctx->component) {
             _ecs_remove(rows->world, entities[i], ctx->component);
             test_assert( !_ecs_has(rows->world, entities[i], ctx->component));
@@ -748,7 +748,7 @@ void Add_remove_same_from_current(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         if (ctx->component) {
             _ecs_add(rows->world, entities[i], ctx->component);
             test_assert( _ecs_has(rows->world, entities[i], ctx->component));
@@ -858,7 +858,7 @@ void Remove_add_same_from_current(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         if (ctx->component) {
             _ecs_remove(rows->world, entities[i], ctx->component);
             test_assert( !_ecs_has(rows->world, entities[i], ctx->component));
@@ -1138,7 +1138,7 @@ void Add_remove_different_from_current(EcsRows *rows) {
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         if (ctx->component_3) {
             _ecs_add(rows->world, entities[i], ctx->component_3);
             test_assert( _ecs_has(rows->world, entities[i], ctx->component_3));
@@ -1254,7 +1254,7 @@ void Add_1_remove_2_different_from_current(EcsRows *rows) {
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         if (ctx->component) {
             _ecs_add(rows->world, entities[i], ctx->component);
             test_assert( _ecs_has(rows->world, entities[i], ctx->component)); 
@@ -1325,7 +1325,7 @@ void Delete_current(EcsRows *rows) {
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         ecs_delete(rows->world, entities[i]);
         test_assert( ecs_empty(rows->world, entities[i]));
         ctx->entity_count ++;
@@ -1362,7 +1362,7 @@ void Delete_even(EcsRows *rows) {
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         if (!(entities[i] % 2)) {
             ecs_delete(rows->world, entities[i]);
             test_assert( ecs_empty(rows->world, entities[i]));
@@ -1442,7 +1442,7 @@ static
 void Delete_new_empty(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = ecs_new(rows->world, 0);
         ecs_delete(rows->world, e);
         test_assert( ecs_empty(rows->world, e));
@@ -1483,7 +1483,7 @@ static
 void Delete_new_w_component(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = _ecs_new(rows->world, ctx->component);
         test_assert( !ecs_empty(rows->world, e));
 
@@ -1530,7 +1530,7 @@ void Set_current(EcsRows *rows) {
     EcsType TRotation = ctx->component;
 
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         ecs_set(rows->world, entities[i], Rotation, {10 + entities[i]});
         test_assert( ecs_has(rows->world, entities[i], Rotation));
         test_assert( ecs_get_ptr(rows->world, entities[i], Rotation) != NULL);
@@ -1593,7 +1593,7 @@ void Set_new_empty(EcsRows *rows) {
     EcsType TRotation = ctx->component;
 
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = ecs_new(rows->world, 0);
         test_assert( ecs_empty(rows->world, e));
 
@@ -1654,7 +1654,7 @@ void Set_new_w_component(EcsRows *rows) {
     EcsType TRotation = ctx->component_2;
 
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = ecs_new(rows->world, Position);
         test_assert( ecs_has(rows->world, e, Position));
 
@@ -1716,7 +1716,7 @@ void Set_existing_new_w_component(EcsRows *rows) {
     EcsType TPosition = ctx->component;
 
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = ecs_new(rows->world, Position);
         test_assert( ecs_has(rows->world, e, Position));
 
@@ -1775,7 +1775,7 @@ void Set_new_after_add(EcsRows *rows) {
     EcsType TPosition = ctx->component;
 
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = ecs_new(rows->world, 0);
         test_assert( ecs_empty(rows->world, e));
 
@@ -1837,7 +1837,7 @@ void Remove_after_set(EcsRows *rows) {
     EcsType TPosition = ctx->component;
 
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = ecs_new(rows->world, 0);
         test_assert( ecs_empty(rows->world, e));
 
@@ -1901,7 +1901,7 @@ void Delete_after_set(EcsRows *rows) {
     EcsType TPosition = ctx->component;
 
     int i;
-    for (i = 0; i < rows->limit; i ++) {
+    for (i = rows->begin; i < rows->end; i ++) {
         EcsEntity e = ecs_new(rows->world, 0);
         test_assert( ecs_empty(rows->world, e));
 
