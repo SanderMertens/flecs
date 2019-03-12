@@ -1,4 +1,4 @@
-![marty-mcfly](https://user-images.githubusercontent.com/9919222/54174018-9bdc9b80-4441-11e9-8511-c7dfa74ad7ff.png)
+![marty-mcfly](https://user-images.githubusercontent.com/9919222/54174056-cdedfd80-4441-11e9-8b71-9403fdd8e9e6.png)
 
 Flecs is a Fast and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)) framework. Flecs packs as much punch as possible into a small library with a tiny API and zero dependencies. Here are some of the things it can do:
 
