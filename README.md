@@ -2,7 +2,7 @@
 
 Flecs is a Fast and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)) framework. Flecs packs as much punch as possible into a small library with a tiny API and zero dependencies. Here are some of the things it can do:
 
-- Distribute load across multiple threads
+- Process entites on multiple threads with a lock-free, zero-overhead staging architecture
 - Organize components & systems in modules
 - Report runtime statistics on memory usage, performance and more
 - Run systems every frame, periodically, on demand or on change events
@@ -12,7 +12,7 @@ Additionally, flecs has a flexible engine that lets you do many things, like:
 - Share components across entities with prefabs
 - Use expressive system expressions with AND, OR, NOT and optional operators
 - Create hierarchies, indexes and DAGs with container entities
-- Add/remove components and create/delete entities while iterating, and even from multiple threads
+- Add/remove components and create/delete entities whenever, wherever
 
 Check out the [examples](https://github.com/SanderMertens/flecs/tree/master/examples) and [documentation](https://github.com/SanderMertens/flecs/blob/master/include/flecs.h) to learn more!
 
