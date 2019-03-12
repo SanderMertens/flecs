@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     /* The above code is straightforward- it adds the Position component to the
      * new (empty) entity. Something you might've noticed is that we store
      * component handles (Position_h) and entity handles (e) with the same
-     * datatype (EcsEntity). This is because under the hood, reflecs stores
+     * datatype (EcsEntity). This is because under the hood, flecs stores
      * components also as entities.
      *
      * What then, allows a component to be added to an entity? Component

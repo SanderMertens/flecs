@@ -2,6 +2,6 @@
     "id":"prefab",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

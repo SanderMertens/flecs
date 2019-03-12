@@ -24,17 +24,17 @@ int main(int argc, char *argv[]) {
     /* Register the Position type as a component with the world */
     ECS_COMPONENT(world, Position);
 
-    /* Use Prefab+Family trick to automatically initialize Position */
+    /* Use Prefab+Type trick to automatically initialize Position */
     ECS_PREFAB(world, ObjectPrefab, Position);
-    ECS_FAMILY(world, Object, ObjectPrefab, Position);
+    ECS_TYPE(world, Object, ObjectPrefab, Position);
     ecs_set(world, ObjectPrefab_h, Position, {0, 0});
 
     /* List all the entities with a Position component. Instead of running the
-     * system every frame, EcsOnDemand requires a user to explicitly invoke the
+     * system every frame, EcsManual requires a user to explicitly invoke the
      * system with ecs_run. */
-    ECS_SYSTEM(world, ListEntities, EcsOnDemand, Position);
+    ECS_SYSTEM(world, ListEntities, EcsManual, Position);
 
-    /* Create 10 entities with Object family */
+    /* Create 10 entities with Object type */
     ecs_new_w_count(world, Object_h, 10, NULL);
 
     /* List entities with on demand system */

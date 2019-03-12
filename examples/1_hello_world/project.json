@@ -2,6 +2,6 @@
     "id":"helloworld",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

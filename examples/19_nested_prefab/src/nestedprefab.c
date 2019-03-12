@@ -38,8 +38,8 @@ int main(int argc, char *argv[]) {
     ECS_PREFAB(world, PlanePrefab, Vehicle, Speed);
 
     /* Create two families that include prefabs and override Position. */
-    ECS_FAMILY(world, Car, CarPrefab, Position);
-    ECS_FAMILY(world, Plane, PlanePrefab, Position);
+    ECS_TYPE(world, Car, CarPrefab, Position);
+    ECS_TYPE(world, Plane, PlanePrefab, Position);
 
     /* Initialize Position once, which initializes both Car and Plane prefabs */
     ecs_set(world, Vehicle_h, Position, {0, 0});
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     /* Recap: the entities we just created have two components, Position and
      * Speed. The Speed component is shared with the prefab. Each entity has its
-     * own private Position component, since the family overrides it. The
+     * own private Position component, since the type overrides it. The
      * Position value for each entity was initialized from the Vehicle prefab.
      */
 

@@ -1,73 +1,65 @@
 
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
+#include <string.h>
 
 static
-void process_families(
+void merge_families(
     EcsWorld *world,
     EcsStage *stage)
 {
-    EcsIter it = ecs_map_iter(stage->family_stage);
+    EcsIter it = ecs_map_iter(stage->type_index);
     while (ecs_iter_hasnext(&it)) {
-        uint64_t family_id;
-        EcsArray *family = (void*)(uintptr_t)ecs_map_next(&it, &family_id);
+        uint64_t type_id;
+        EcsArray *type = (void*)(uintptr_t)ecs_map_next(&it, &type_id);
 
-        if (!ecs_map_has(world->family_index, family_id, NULL)) {
-            ecs_map_set(world->family_index, family_id, family);
+        if (!ecs_map_has(world->main_stage.type_index, type_id, NULL)) {
+            ecs_map_set(world->main_stage.type_index, type_id, type);
         }
     }
 
-    ecs_map_clear(stage->family_stage);
+    ecs_map_clear(stage->type_index);
 }
 
 static
-void process_tables(
+void merge_tables(
     EcsWorld *world,
     EcsStage *stage)
 {
-    EcsTable *buffer = ecs_array_buffer(stage->table_db_stage);
-    uint32_t i, count = ecs_array_count(stage->table_db_stage);
+    EcsTable *buffer = ecs_array_buffer(stage->tables);
+    uint32_t i, count = ecs_array_count(stage->tables);
+
+    EcsStage *main_stage = &world->main_stage;
+
     for (i = 0; i < count; i ++) {
         EcsTable *table = &buffer[i];
-        EcsFamily family_id = table->family_id;
-        if (!ecs_map_has(world->table_index, family_id, NULL)) {
-            EcsTable *dst = ecs_array_add(&world->table_db, &table_arr_params);
+        EcsType type_id = table->type_id;
+        if (!ecs_map_has(main_stage->table_index, type_id, NULL)) {
+            EcsTable *dst = ecs_array_add(&main_stage->tables, &table_arr_params);
 
             *dst = *table;
 
-            uint32_t index = ecs_array_count(world->table_db) - 1;
-            ecs_map_set(world->table_index, family_id, index + 1);
+            uint32_t index = ecs_array_count(main_stage->tables) - 1;
+            ecs_map_set(main_stage->table_index, type_id, index + 1);
 
-            /* Table might still refer to family in stage */
-            table = ecs_array_get(world->table_db, &table_arr_params, index);
-            table->family = ecs_family_get(world, NULL, family_id);
+            /* Table might still refer to type in stage */
+            table = ecs_array_get(main_stage->tables, &table_arr_params, index);
+            table->type = ecs_type_get(world, NULL, type_id);
         } else {
             ecs_table_deinit(world, table);
         }
     }
 
-    ecs_array_clear(stage->table_db_stage);
-    ecs_map_clear(stage->table_stage);
+    ecs_array_clear(stage->tables);
+    ecs_map_clear(stage->table_index);
 }
 
 static
-void process_to_delete(
+void merge_commits(
     EcsWorld *world,
     EcsStage *stage)
 {
-    EcsEntity *buffer = ecs_array_buffer(stage->delete_stage);
-    uint32_t i, count = ecs_array_count(stage->delete_stage);
-    for (i = 0; i < count; i ++) {
-        ecs_delete(world, buffer[i]);
-    }
-    ecs_array_clear(stage->delete_stage);
-}
+    EcsIter it = ecs_map_iter(stage->entity_index);
 
-static
-void process_to_commit(
-    EcsWorld *world,
-    EcsStage *stage)
-{
-    EcsIter it = ecs_map_iter(stage->entity_stage);
     while (ecs_iter_hasnext(&it)) {
         EcsEntity entity;
         uint64_t row64 = ecs_map_next(&it, &entity);
@@ -81,134 +73,111 @@ void process_to_commit(
         ecs_array_free(stage);
     }
 
-    ecs_map_clear(stage->entity_stage);
-    ecs_map_clear(stage->add_stage);
-    ecs_map_clear(stage->remove_stage);
+    ecs_map_clear(stage->entity_index);
     ecs_map_clear(stage->remove_merge);
     ecs_map_clear(stage->data_stage);
 }
 
-/** Stage components for adding or removing from an entity */
 static
-EcsResult stage_components(
-    EcsWorld *world,
-    EcsStage *stage,
-    EcsEntity entity,
-    EcsEntity component,
-    EcsMap *stage_index)
+void clean_families(
+    EcsStage *stage)
 {
-    EcsFamily family_id;
-
-    family_id = ecs_map_get64(stage_index, entity);
-    EcsFamily resolved_family = ecs_family_from_handle(
-        world, stage, component, NULL);
-    
-    ecs_assert(resolved_family != 0, ECS_NOT_A_COMPONENT, NULL);
-
-    EcsFamily new_family_id;
-    if (family_id) {
-        new_family_id = ecs_family_merge(
-            world, stage, family_id, resolved_family, 0);
-    } else {
-        new_family_id = resolved_family;
+    EcsIter it = ecs_map_iter(stage->type_index);
+    while (ecs_iter_hasnext(&it)) {
+        EcsArray *type = ecs_iter_next(&it);
+        ecs_array_free(type);
     }
 
-    assert(new_family_id != 0);
+    ecs_map_free(stage->type_index);
+}
 
-    if (family_id != new_family_id) {
-        ecs_map_set64(stage_index, entity, new_family_id);
+static
+void clean_tables(
+    EcsWorld *world,
+    EcsStage *stage)
+{
+    EcsTable *buffer = ecs_array_buffer(stage->tables);
+    int32_t i, count = ecs_array_count(stage->tables);
+
+    for (i = count - 1; i >= 0; i --) {
+        EcsTable *table = &buffer[i];
+        ecs_table_deinit(world, table);
     }
 
-    return EcsOk;
+    for (i = 0; i < count; i ++) {
+        EcsTable *table = &buffer[i];
+        ecs_table_free(world, table);
+    }
+
+    ecs_array_free(stage->tables);
 }
 
 /* -- Private functions -- */
 
 void ecs_stage_init(
+    EcsWorld *world,
     EcsStage *stage)
 {
-    stage->add_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    stage->remove_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    stage->remove_merge = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    stage->entity_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    stage->delete_stage = ecs_array_new(&handle_arr_params, 0);
-    stage->data_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    stage->family_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
-    stage->table_db_stage = ecs_array_new(&table_arr_params, 0);
-    stage->table_stage = ecs_map_new(ECS_WORLD_INITIAL_STAGING_COUNT);
+    bool is_main_stage = stage == &world->main_stage;
+    bool is_temp_stage = stage == &world->temp_stage;
+
+    memset(stage, 0, sizeof(EcsStage));
+
+    stage->entity_index = ecs_map_new(0);
+
+    if (is_temp_stage) {
+        stage->table_index = world->main_stage.table_index;
+        stage->tables = world->main_stage.tables;
+        stage->type_index = world->main_stage.type_index;
+    } else {
+        stage->table_index = ecs_map_new(0);
+        if (is_main_stage) {
+            stage->tables = ecs_array_new(&table_arr_params, 8);
+        } else {
+            stage->tables = ecs_array_new(&table_arr_params, 0);
+        }
+        stage->type_index = ecs_map_new(0);
+    }
+
+    if (!is_main_stage) {
+        stage->data_stage = ecs_map_new(0);
+        stage->remove_merge = ecs_map_new(0);
+    }
 }
 
 void ecs_stage_deinit(
+    EcsWorld *world,
     EcsStage *stage)
 {
-    ecs_map_free(stage->add_stage);
-    ecs_map_free(stage->remove_stage);
-    ecs_map_free(stage->remove_merge);
-    ecs_map_free(stage->entity_stage);
-    ecs_array_free(stage->delete_stage);
-    ecs_map_free(stage->data_stage);
-    ecs_map_free(stage->family_stage);
+    bool is_main_stage = stage == &world->main_stage;
+    bool is_temp_stage = stage == &world->temp_stage;
+
+    ecs_map_free(stage->entity_index);
+
+    if (!is_temp_stage) {
+        clean_tables(world, stage);
+        clean_families(stage);
+        ecs_map_free(stage->table_index);
+    }
+
+    if (!is_main_stage) {
+        ecs_map_free(stage->data_stage);
+        ecs_map_free(stage->remove_merge);
+    }
 }
 
 void ecs_stage_merge(
     EcsWorld *world,
     EcsStage *stage)
 {
-    process_families(world, stage);
-    process_tables(world, stage);
-    process_to_delete(world, stage);
-    process_to_commit(world, stage);
-}
+    assert(stage != &world->main_stage);
+    
+    bool is_temp_stage = stage == &world->temp_stage;
 
-/* -- Public API -- */
-
-EcsResult ecs_stage_add(
-    EcsWorld *world,
-    EcsEntity entity,
-    EcsEntity component)
-{
-    EcsStage *stage = ecs_get_stage(&world);
-    return stage_components(world, stage, entity, component, stage->add_stage);
-}
-
-EcsResult ecs_stage_remove(
-    EcsWorld *world,
-    EcsEntity entity,
-    EcsEntity component)
-{
-    EcsStage *stage = ecs_get_stage(&world);
-    return stage_components(
-        world, stage, entity, component, stage->remove_stage);
-}
-
-EcsResult ecs_add(
-    EcsWorld *world,
-    EcsEntity entity,
-    EcsEntity component)
-{
-    if (ecs_stage_add(world, entity, component)) {
-        return EcsError;
+    if (!is_temp_stage) {
+        merge_families(world, stage);
+        merge_tables(world, stage);
     }
 
-    if (ecs_commit(world, entity)) {
-        return EcsError;
-    }
-
-    return EcsOk;
-}
-
-EcsResult ecs_remove(
-    EcsWorld *world,
-    EcsEntity entity,
-    EcsEntity component)
-{
-    if (ecs_stage_remove(world, entity, component)) {
-        return EcsError;
-    }
-
-    if (ecs_commit(world, entity)) {
-        return EcsError;
-    }
-
-    return EcsOk;
+    merge_commits(world, stage);
 }

@@ -3,7 +3,10 @@
 #include <assert.h>
 #include "include/util/time.h"
 #include "include/util/stats.h"
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
+
+
+/* -- Global array parameters -- */
 
 const EcsArrayParams table_arr_params = {
     .element_size = sizeof(EcsTable)
@@ -21,6 +24,28 @@ const EcsArrayParams char_arr_params = {
     .element_size = sizeof(char)
 };
 
+
+/* -- Global variables -- */
+
+EcsType TEcsComponent;
+EcsType TEcsTypeComponent;
+EcsType TEcsPrefab;
+EcsType TEcsRowSystem;
+EcsType TEcsColSystem;
+EcsType TEcsId;
+EcsType TEcsHidden;
+EcsType TEcsContainer;
+
+const char *ECS_COMPONENT_ID =      "EcsComponent";
+const char *ECS_TYPE_COMPONENT_ID = "EcsTypeComponent";
+const char *ECS_PREFAB_ID =         "EcsPrefab";
+const char *ECS_ROW_SYSTEM_ID =     "EcsRowSystem";
+const char *ECS_COL_SYSTEM_ID =     "EcsColSystem";
+const char *ECS_ID_ID =             "EcsId";
+const char *ECS_HIDDEN_ID =         "EcsHidden";
+const char *ECS_CONTAINER_ID =      "EcsContainer";
+
+
 /** Comparator function for handles */
 static
 int compare_handle(
@@ -30,90 +55,83 @@ int compare_handle(
     return *(EcsEntity*)p1 - *(EcsEntity*)p2;
 }
 
+/** Bootstrap builtin component types and commonly used types */
+static
+void bootstrap_types(
+    EcsWorld *world)
+{
+    EcsStage *stage = &world->main_stage;
+    TEcsComponent = ecs_type_register(world, stage, EEcsComponent, NULL);
+    TEcsTypeComponent = ecs_type_register(world, stage, EEcsTypeComponent, NULL);
+    TEcsPrefab = ecs_type_register(world, stage, EEcsPrefab, NULL);
+    TEcsRowSystem = ecs_type_register(world, stage, EEcsRowSystem, NULL);
+    TEcsColSystem = ecs_type_register(world, stage, EEcsColSystem, NULL);
+    TEcsId = ecs_type_register(world, stage, EEcsId, NULL);
+    TEcsHidden = ecs_type_register(world, stage, EEcsHidden, NULL);
+    TEcsContainer = ecs_type_register(world, stage, EEcsContainer, NULL);    
+
+    world->t_component = ecs_type_merge(world, stage, TEcsComponent, TEcsId, 0);
+    world->t_type = ecs_type_merge(world, stage, TEcsTypeComponent, TEcsId, 0);
+    world->t_prefab = ecs_type_merge(world, stage, TEcsPrefab, TEcsId, 0);
+    world->t_row_system = ecs_type_merge(world, stage, TEcsRowSystem, TEcsId, 0);
+    world->t_col_system = ecs_type_merge(world, stage, TEcsColSystem, TEcsId, 0);
+}
+
 /** Initialize component table. This table is manually constructed to bootstrap
- * reflecs. After this function has been called, the builtin components can be
+ * flecs. After this function has been called, the builtin components can be
  * created. */
 static
-void bootstrap_component_table(
-    EcsWorld *world,
-    uint64_t family_id)
+EcsTable* bootstrap_component_table(
+    EcsWorld *world)
 {
-    EcsTable *result = ecs_array_add(&world->table_db, &table_arr_params);
-    EcsArray *family = ecs_family_get(world, NULL, family_id);
-    result->family_id = family_id;
-    ecs_table_init_w_size(world, result, family, sizeof(EcsComponent));
-    result->columns = malloc(sizeof(uint16_t));
-    result->columns[0] = sizeof(EcsComponent);
-    uint32_t table_index = ecs_array_get_index(
-        world->table_db, &table_arr_params, result);
-    ecs_map_set64(world->table_index, family_id, table_index + 1);
+    EcsStage *stage = &world->main_stage;
+    EcsTable *result = ecs_array_add(&stage->tables, &table_arr_params);
+    EcsArray *type = ecs_map_get(stage->type_index, world->t_component);
+    result->type_id = world->t_component;
+    result->type = type;
+    result->frame_systems = NULL;
+    result->columns = malloc(sizeof(EcsTableColumn) * 3);
+    result->columns[0].data = ecs_array_new(&handle_arr_params, 8);
+    result->columns[0].size = sizeof(EcsEntity);
+    result->columns[1].data = ecs_array_new(&handle_arr_params, 8);
+    result->columns[1].size = sizeof(EcsComponent);
+    result->columns[2].data = ecs_array_new(&handle_arr_params, 8);
+    result->columns[2].size = sizeof(EcsId);
+
+    uint32_t index = ecs_array_get_index(
+        stage->tables, &table_arr_params, result);
+
+    ecs_assert(index == 0, ECS_INTERNAL_ERROR, "first table index must be 0");
+
+    ecs_map_set64(stage->table_index, world->t_component, 1);
+
+    return result;
 }
 
 /** Bootstrap the EcsComponent component */
 static
 void bootstrap_component(
-    EcsWorld *world)
-{
-    EcsEntity handle = ecs_new(world, 0);
-    assert (handle == EcsComponent_h);
-
-    EcsFamily family_id = ecs_family_register(world, NULL, handle, NULL);
-    ecs_map_set(world->stage.add_stage, handle, family_id);
-
-    bootstrap_component_table(world, family_id);
-
-    assert_func (ecs_commit(world, EcsComponent_h) == EcsOk);
-
-    EcsComponent *type_data = ecs_get_ptr(world, handle, handle);
-
-    assert(type_data != NULL);
-
-    type_data->size = sizeof(EcsComponent);
-}
-
-/** Generic function for initializing built-in components */
-static
-EcsEntity new_builtin_component(
     EcsWorld *world,
+    EcsTable *table,
+    EcsEntity entity,
+    const char *id,
     size_t size)
 {
-    EcsEntity handle = ecs_new(world, 0);
-    ecs_stage_add(world, handle, EcsComponent_h);
-    ecs_commit(world, handle);
-    EcsComponent *component_data = ecs_get_ptr(world, handle, EcsComponent_h);
+    EcsStage *stage = &world->main_stage;
 
-    assert(component_data != NULL);
+    /* Insert row into table to store EcsComponent itself */
+    int32_t index = ecs_table_insert(world, table, table->columns, entity);
 
-    component_data->size = size;
+    /* Create record in entity index */
+    EcsRow row = {.type_id = world->t_component, .index = index};
+    ecs_map_set(stage->entity_index, entity, ecs_from_row(row));
 
-    return handle;
-}
-
-/** Generic function to add identifier to builtin entities */
-static
-void add_builtin_id(
-    EcsWorld *world,
-    EcsEntity handle,
-    const char *id)
-{
-    ecs_stage_add(world, handle, EcsId_h);
-    ecs_commit(world, handle);
-    EcsId *id_data = ecs_get_ptr(world, handle, EcsId_h);
-
-    assert(id_data != NULL);
-
-    *id_data = (char*)id;
-}
-
-/** Obtain family id for specified component + EcsId */
-static
-EcsFamily get_builtin_family(
-    EcsWorld *world,
-    EcsEntity component)
-{
-    EcsFamily family = ecs_family_register(world, NULL, component, NULL);
-    EcsArray *family_array = ecs_family_get(world, NULL, family);
-    return ecs_family_register(world, NULL, EcsId_h, family_array);
+    /* Set size and id */
+    EcsComponent *component_data = ecs_array_buffer(table->columns[1].data);
+    EcsId *id_data = ecs_array_buffer(table->columns[2].data);
+    
+    component_data[index].size = size;
+    id_data[index] = id;
 }
 
 static
@@ -123,43 +141,50 @@ void notify_create_table(
     EcsArray *systems,
     EcsTable *table)
 {
-    EcsIter it = ecs_array_iter(systems, &handle_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        EcsEntity system = *(EcsEntity*)ecs_iter_next(&it);
-        ecs_system_notify_create_table(world, stage, system, table);
+    EcsEntity *buffer = ecs_array_buffer(systems);
+    uint32_t i, count = ecs_array_count(systems);
+
+    for (i = 0; i < count; i ++) {
+        ecs_col_system_notify_of_table(world, buffer[i], table);
     }
 }
 
-/** Create a new table and register it with the world and systems */
+/** Create a new table and register it with the world and systems. A table in
+ * flecs is equivalent to an archetype */
 static
 EcsTable* create_table(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily family_id)
+    EcsType type_id)
 {
-    EcsArray **table_db;
-    EcsMap *table_index;
+    /* Add and initialize table */
+    bool is_main_table_array = stage->tables == world->main_stage.tables;
+    EcsTable *result = ecs_array_add(&stage->tables, &table_arr_params);
 
-    if (world->in_progress) {
-        table_db = &stage->table_db_stage;
-        table_index = stage->table_stage;
-    } else {
-        table_db = &world->table_db;
-        table_index = world->table_index;
+
+    /* The tables array is shared between the main stage and temp stage. Make
+     * sure to update the array pointer in both stages. */
+    if (is_main_table_array) {
+        world->main_stage.tables = stage->tables;
+        world->temp_stage.tables = stage->tables;
     }
-
-    EcsTable *result = ecs_array_add(table_db, &table_arr_params);
-    result->family_id = family_id;
+    
+    result->type_id = type_id;
 
     if (ecs_table_init(world, stage, result) != EcsOk) {
         return NULL;
     }
 
-    uint32_t index = ecs_array_get_index(*table_db, &table_arr_params, result);
-    ecs_map_set64(table_index, family_id, index + 1);
+    uint32_t index = ecs_array_get_index(stage->tables, &table_arr_params, result);
+    ecs_map_set64(stage->table_index, type_id, index + 1);
 
+    /* Notify all column systems of a new table. Only notify for tables that are
+     * added/merged to the main stage, as this could otherwise introduce race
+     * conditions between threads. 
+     * 
+     * Notifying systems is necessary, because column systems are prematched
+     * with tables, so this doesn't need to happen in the main loop. */
     if (!world->in_progress) {
-        /* Only notify systems of tables that aren't staged */
         notify_create_table(world, stage, world->pre_frame_systems, result);
         notify_create_table(world, stage, world->post_frame_systems, result);
         notify_create_table(world, stage, world->on_load_systems, result);
@@ -174,131 +199,31 @@ EcsTable* create_table(
     return result;
 }
 
-
-static
-void clean_families(
-    EcsWorld *world)
-{
-    EcsIter it = ecs_map_iter(world->family_index);
-    while (ecs_iter_hasnext(&it)) {
-        EcsArray *family = ecs_iter_next(&it);
-        ecs_array_free(family);
-    }
-
-    ecs_map_free(world->family_index);
-}
-
-static
-void deinit_row_system(
-    EcsRowSystem *data)
-{
-    ecs_array_free(data->components);
-}
-
-static
-void deinit_table_system(
-    EcsTableSystem *data)
-{
-    ecs_array_free(data->base.columns);
-    ecs_array_free(data->components);
-    ecs_array_free(data->tables);
-    ecs_array_free(data->inactive_tables);
-    if (data->jobs) ecs_array_free(data->jobs);
-    if (data->refs) ecs_array_free(data->refs);
-    data->base.enabled = false;
-}
-
-static
-void clean_tables(
-    EcsWorld *world)
-{
-    EcsTable *buffer = ecs_array_buffer(world->table_db);
-    int32_t i, count = ecs_array_count(world->table_db);
-
-    for (i = count - 1; i >= 0; i --) {
-        EcsTable *table = &buffer[i];
-
-        ecs_table_deinit(world, table);
-    }
-
-    /* Free builtin systems */
-    EcsRowSystem *deinit_row_sys = ecs_get_ptr(
-        world, world->deinit_row_system, EcsRowSystem_h);
-    EcsRowSystem *deinit_table_sys = ecs_get_ptr(
-        world, world->deinit_table_system, EcsRowSystem_h);
-
-    deinit_row_system(deinit_row_sys);
-    deinit_row_system(deinit_table_sys);
-
-    for (i = 0; i < count; i ++) {
-        EcsTable *table = &buffer[i];
-        ecs_table_free(world, table);
-    }
-
-    ecs_array_free(world->table_db);
-}
-
-/** Cleanup resources allocated by table systems */
-static
-void remove_systems(
-    EcsRows *rows)
-{
-    void *row;
-    EcsEntity component = rows->components[0];
-
-    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsEntity entity = ecs_entity(rows, row, 0);
-        if (entity != rows->world->deinit_table_system &&
-            entity != rows->world->deinit_row_system)
-        {
-            void *data = ecs_data(rows, row, 0);
-            if (component == EcsTableSystem_h) {
-                deinit_table_system(data);
-            } else {
-                deinit_row_system(data);
-            }
-        }
-    }
-}
-
 /* -- Private functions -- */
 
-void _assert_func(
-    bool cond,
-    const char *cond_str,
-    const char *file,
-    uint32_t line,
-    const char *func)
-{
-    if (!cond) {
-        fprintf(stderr, "Assertion failed: %s, file: %s, line: %d, func: %s\n",
-            cond_str, file, line, func);
-        assert(0);
-    }
-}
-
-/** Get pointer to table data from family id */
+/** Get pointer to table data from type id */
 EcsTable* ecs_world_get_table(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily family_id)
+    EcsType type_id)
 {
-    uint32_t table_index = ecs_map_get64(world->table_index, family_id);
+    EcsStage *main_stage = &world->main_stage;
+    uint32_t table_index = ecs_map_get64(main_stage->table_index, type_id);
 
     if (!table_index && world->in_progress) {
         assert(stage != NULL);
-        table_index = ecs_map_get64(stage->table_stage, family_id);
+        table_index = ecs_map_get64(stage->table_index, type_id);
         if (table_index) {
             return ecs_array_get(
-                stage->table_db_stage, &table_arr_params, table_index - 1);
+                stage->tables, &table_arr_params, table_index - 1);
         }
     }
 
     if (table_index) {
         return ecs_array_get(
-            world->table_db, &table_arr_params, table_index - 1);
+            main_stage->tables, &table_arr_params, table_index - 1);
     } else {
-        return create_table(world, stage, family_id);
+        return create_table(world, stage, type_id);
     }
 
     return NULL;
@@ -319,7 +244,7 @@ EcsArray** frame_system_array(
         return &world->on_load_systems;
     } else if (kind == EcsOnStore) {
         return &world->on_store_systems;
-    } else if (kind == EcsOnDemand) {
+    } else if (kind == EcsManual) {
         return &world->on_demand_systems;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, 0);
@@ -401,19 +326,19 @@ uint64_t ecs_from_row(
     return u.value;
 }
 
-char* ecs_family_tostr(
+char* ecs_type_tostr(
     EcsWorld *world,
     EcsStage *stage,
-    EcsFamily family_id)
+    EcsType type_id)
 {
-    EcsArray *family = ecs_family_get(world, stage, family_id);
+    EcsArray *type = ecs_type_get(world, stage, type_id);
     EcsArray *chbuf = ecs_array_new(&char_arr_params, 32);
     char *dst;
     uint32_t len;
     char buf[15];
 
-    EcsEntity *handles = ecs_array_buffer(family);
-    uint32_t i, count = ecs_array_count(family);
+    EcsEntity *handles = ecs_array_buffer(type);
+    uint32_t i, count = ecs_array_count(type);
 
     for (i = 0; i < count; i ++) {
         EcsEntity h = handles[i];
@@ -422,7 +347,7 @@ char* ecs_family_tostr(
         }
 
         const char *str = NULL;
-        EcsId *id = ecs_get_ptr(world, h, EcsId_h);
+        EcsId *id = ecs_get_ptr(world, h, EcsId);
         if (id) {
             str = *id;
         } else {
@@ -446,7 +371,11 @@ EcsStage *ecs_get_stage(
 {
     EcsWorld *world = *world_ptr;
     if (world->magic == ECS_WORLD_MAGIC) {
-        return &world->stage;
+        if (world->in_progress) {
+            return &world->temp_stage;
+        } else {
+            return &world->main_stage;
+        }
     } else if (world->magic == ECS_THREAD_MAGIC) {
         EcsThread *thread = (EcsThread*)world;
         *world_ptr = thread->world;
@@ -458,44 +387,52 @@ EcsStage *ecs_get_stage(
     }
 }
 
+static
+void col_systems_deinit(
+    EcsWorld *world,
+    EcsArray *systems)
+{
+    uint32_t i, count = ecs_array_count(systems);
+    EcsEntity *buffer = ecs_array_buffer(systems);
+
+    for (i = 0; i < count; i ++) {
+        EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
+        ecs_array_free(ptr->base.columns);
+        ecs_array_free(ptr->components);
+        ecs_array_free(ptr->inactive_tables);
+        ecs_array_free(ptr->jobs);
+        ecs_array_free(ptr->tables);
+        ecs_array_free(ptr->refs);
+    }
+}
+
 /* -- Public functions -- */
 
 EcsWorld *ecs_init(void) {
     EcsWorld *world = malloc(sizeof(EcsWorld));
     world->magic = ECS_WORLD_MAGIC;
 
-    world->table_db = ecs_array_new(
-        &table_arr_params, ECS_WORLD_INITIAL_TABLE_COUNT);
-    world->on_frame_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
-    world->pre_frame_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
-    world->post_frame_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
-    world->on_load_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
-    world->on_store_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
-    world->inactive_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
-    world->on_demand_systems = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+    world->on_frame_systems = ecs_array_new(&handle_arr_params, 0);
+    world->pre_frame_systems = ecs_array_new(&handle_arr_params, 0);
+    world->post_frame_systems = ecs_array_new(&handle_arr_params, 0);
+    world->on_load_systems = ecs_array_new(&handle_arr_params, 0);
+    world->on_store_systems = ecs_array_new( &handle_arr_params, 0);
+    world->inactive_systems = ecs_array_new(&handle_arr_params, 0);
+    world->on_demand_systems = ecs_array_new(&handle_arr_params, 0);
 
-    world->add_systems = ecs_map_new(ECS_WORLD_INITIAL_INIT_SYSTEM_COUNT);
-    world->remove_systems = ecs_map_new(ECS_WORLD_INITIAL_DEINIT_SYSTEM_COUNT);
-    world->set_systems = ecs_map_new(ECS_WORLD_INITIAL_SET_SYSTEM_COUNT);
-    world->tasks = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
-    world->fini_tasks = ecs_array_new(
-        &handle_arr_params, ECS_WORLD_INITIAL_PERIODIC_SYSTEM_COUNT);
+    world->add_systems = ecs_array_new(&handle_arr_params, 0);
+    world->remove_systems = ecs_array_new(&handle_arr_params, 0);
+    world->set_systems = ecs_array_new(&handle_arr_params, 0);
+    world->tasks = ecs_array_new(&handle_arr_params, 0);
+    world->fini_tasks = ecs_array_new(&handle_arr_params, 0);
 
-    world->entity_index = ecs_map_new(ECS_WORLD_INITIAL_ENTITY_COUNT);
-    world->table_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
-    world->family_index = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
-    world->family_handles = ecs_map_new(ECS_WORLD_INITIAL_TABLE_COUNT * 2);
-    world->prefab_index = ecs_map_new(ECS_WORLD_INITIAL_PREFAB_COUNT);
+    world->type_sys_add_index = ecs_map_new(0);
+    world->type_sys_remove_index = ecs_map_new(0);
+    world->type_sys_set_index = ecs_map_new(0);
+    world->type_handles = ecs_map_new(0);
+    world->prefab_index = ecs_map_new(0);
 
-    world->stage_db = NULL;
+    world->worker_stages = NULL;
     world->worker_threads = NULL;
     world->jobs_finished = 0;
     world->threads_running = 0;
@@ -516,49 +453,27 @@ EcsWorld *ecs_init(void) {
     world->fps_sleep = 0;
     world->tick = 0;
 
-    ecs_stage_init(&world->stage);
+    ecs_stage_init(world, &world->main_stage);
+    ecs_stage_init(world, &world->temp_stage);
 
-    bootstrap_component(world);
-    assert_func(new_builtin_component(world, sizeof(EcsFamilyComponent)) == EcsFamilyComponent_h);
-    assert_func(new_builtin_component(world, 0) == EcsPrefab_h);
-    assert_func(new_builtin_component(world, sizeof(EcsRowSystem)) == EcsRowSystem_h);
-    assert_func(new_builtin_component(world, sizeof(EcsTableSystem)) == EcsTableSystem_h);
-    assert_func(new_builtin_component(world, sizeof(EcsId)) == EcsId_h);
-    assert_func(new_builtin_component(world, 0) == EcsHidden_h);
-    assert_func(new_builtin_component(world, 0) == EcsContainer_h);
-    assert_func(new_builtin_component(world, 0) == EcsRoot_h);
+    /* Initialize families for builtin types */
+    bootstrap_types(world);
 
-    add_builtin_id(world, EcsComponent_h, "EcsComponent");
-    add_builtin_id(world, EcsFamilyComponent_h, "EcsFamilyComponent");
-    add_builtin_id(world, EcsPrefab_h, "EcsPrefab");
-    add_builtin_id(world, EcsRowSystem_h, "EcsRowSystem");
-    add_builtin_id(world, EcsTableSystem_h, "EcsTableSystem");
-    add_builtin_id(world, EcsId_h, "EcsId");
-    add_builtin_id(world, EcsHidden_h, "EcsHidden");
-    add_builtin_id(world, EcsContainer_h, "EcsContainer");
-    add_builtin_id(world, EcsRoot_h, "EcsRoot");
+    /* Create table that will hold components (EcsComponent, EcsId) */
+    EcsTable *table = bootstrap_component_table(world);
+    assert(table != NULL);
 
-    world->component_family = get_builtin_family(world, EcsComponent_h);
-    world->family_family = get_builtin_family(world, EcsFamilyComponent_h);
-    world->prefab_family = get_builtin_family(world, EcsPrefab_h);
-    world->row_system_family = get_builtin_family(world, EcsRowSystem_h);
-    world->table_system_family = get_builtin_family(world, EcsTableSystem_h);
+    /* Create records for internal components */
+    bootstrap_component(world, table, EEcsComponent, ECS_COMPONENT_ID, sizeof(EcsComponent));
+    bootstrap_component(world, table, EEcsTypeComponent, ECS_TYPE_COMPONENT_ID, sizeof(EcsTypeComponent));
+    bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_ID, 0);
+    bootstrap_component(world, table, EEcsRowSystem, ECS_ROW_SYSTEM_ID, sizeof(EcsRowSystem));
+    bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_ID, sizeof(EcsColSystem));
+    bootstrap_component(world, table, EEcsId, ECS_ID_ID, sizeof(EcsId));
+    bootstrap_component(world, table, EEcsHidden, ECS_ID_ID, 0);
+    bootstrap_component(world, table, EEcsContainer, ECS_CONTAINER_ID, 0);
 
-    world->deinit_row_system = ecs_new_system(
-        world, "EcsDeinitRowSystem", EcsOnRemove,
-               "EcsRowSystem", remove_systems);
-    assert(world->deinit_row_system != 0);
-
-    world->deinit_table_system = ecs_new_system(
-        world, "EcsDeinitTableSystem", EcsOnRemove,
-               "EcsTableSystem", remove_systems);
-    assert(world->deinit_table_system != 0);
-
-    ecs_stage_add(world, world->deinit_row_system, EcsHidden_h);
-    ecs_commit(world, world->deinit_row_system);
-
-    ecs_stage_add(world, world->deinit_table_system, EcsHidden_h);
-    ecs_commit(world, world->deinit_table_system);
+    world->last_handle = EEcsContainer + 1;
 
     return world;
 }
@@ -582,10 +497,16 @@ EcsResult ecs_fini(
         ecs_set_threads(world, 0);
     }
 
-    clean_tables(world);
-    clean_families(world);
+    col_systems_deinit(world, world->on_frame_systems);
+    col_systems_deinit(world, world->pre_frame_systems);
+    col_systems_deinit(world, world->post_frame_systems);
+    col_systems_deinit(world, world->on_load_systems);
+    col_systems_deinit(world, world->on_store_systems);
+    col_systems_deinit(world, world->on_demand_systems);
+    col_systems_deinit(world, world->inactive_systems);
 
-    ecs_stage_deinit(&world->stage);
+    ecs_stage_deinit(world, &world->main_stage);
+    ecs_stage_deinit(world, &world->temp_stage);
 
     ecs_array_free(world->on_frame_systems);
     ecs_array_free(world->pre_frame_systems);
@@ -598,13 +519,17 @@ EcsResult ecs_fini(
     ecs_array_free(world->tasks);
     ecs_array_free(world->fini_tasks);
 
-    ecs_map_free(world->add_systems);
-    ecs_map_free(world->remove_systems);
-    ecs_map_free(world->set_systems);
-    ecs_map_free(world->entity_index);
-    ecs_map_free(world->table_index);
-    ecs_map_free(world->family_handles);
+    ecs_array_free(world->add_systems);
+    ecs_array_free(world->remove_systems);
+    ecs_array_free(world->set_systems);
+
     ecs_map_free(world->prefab_index);
+    ecs_map_free(world->type_sys_add_index);
+    ecs_map_free(world->type_sys_remove_index);
+    ecs_map_free(world->type_sys_set_index);
+    ecs_map_free(world->type_handles);
+
+    world->magic = 0;
 
     free(world);
 
@@ -616,20 +541,19 @@ void ecs_dim(
     uint32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    ecs_map_set_size(world->entity_index, entity_count);
+    ecs_map_set_size(world->main_stage.entity_index, entity_count);
 }
 
-void ecs_dim_family(
+void _ecs_dim_type(
     EcsWorld *world,
-    EcsEntity type,
+    EcsType type,
     uint32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     if (type) {
-        EcsFamily family_id = ecs_family_from_handle(world, NULL, type, NULL);
-        EcsTable *table = ecs_world_get_table(world, NULL, family_id);
+        EcsTable *table = ecs_world_get_table(world, &world->main_stage, type);
         if (table) {
-            ecs_array_set_size(&table->rows, &table->row_params, entity_count);
+            ecs_table_dim(table, entity_count);
         }
     }
 }
@@ -638,25 +562,25 @@ EcsEntity ecs_lookup(
     EcsWorld *world,
     const char *id)
 {
-    EcsIter it = ecs_array_iter(world->table_db, &table_arr_params);
+    EcsIter it = ecs_array_iter(world->main_stage.tables, &table_arr_params);
 
     while (ecs_iter_hasnext(&it)) {
         EcsTable *table = ecs_iter_next(&it);
-        uint32_t offset;
+        uint32_t column_index;
 
-        if ((offset = ecs_table_column_offset(table, EcsId_h)) == -1) {
+        if ((column_index = ecs_type_index_of(table->type, EEcsId)) == -1) {
             continue;
         }
 
-        void *buffer = ecs_array_buffer(table->rows);
-        uint32_t count = ecs_array_count(table->rows);
-        uint32_t element_size = table->row_params.element_size;
-        void *row, *last = ECS_OFFSET(buffer, count * element_size);
+        EcsTableColumn *column = &table->columns[column_index + 1];
 
-        for (row = buffer; row < last; row = ECS_OFFSET(row, element_size)) {
-            EcsId *id_ptr = ECS_OFFSET(row, offset);
-            if (!strcmp(*id_ptr, id)) {
-                return *(EcsEntity*)row;
+        EcsId *buffer = ecs_array_buffer(column->data);
+        uint32_t i, count = ecs_array_count(column->data);
+
+        for (i = 0; i < count; i ++) {
+            if (!strcmp(buffer[i], id)) {
+                return *(EcsEntity*)ecs_array_get(
+                    table->columns[0].data, &handle_arr_params, i);
             }
         }
     }
@@ -677,7 +601,6 @@ void run_single_thread_stage(
         world->in_progress = true;
 
         for (i = 0; i < system_count; i ++) {
-            printf("run on frame => %s\n", ecs_id(world, buffer[i]));
             ecs_run(world, buffer[i], delta_time, NULL);
         }
 
@@ -848,10 +771,10 @@ void ecs_merge(
 
     world->is_merging = true;
 
-    ecs_stage_merge(world, &world->stage);
+    ecs_stage_merge(world, &world->temp_stage);
 
-    uint32_t i, count = ecs_array_count(world->stage_db);
-    EcsStage *buffer = ecs_array_buffer(world->stage_db);
+    uint32_t i, count = ecs_array_count(world->worker_stages);
+    EcsStage *buffer = ecs_array_buffer(world->worker_stages);
     for (i = 0; i < count; i ++) {
         ecs_stage_merge(world, &buffer[i]);
     }

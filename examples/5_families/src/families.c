@@ -41,8 +41,8 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
 
-    /* Create a family that includes both Position and Move component */
-    ECS_FAMILY(world, Object, Position, Speed);
+    /* Create a type that includes both Position and Move component */
+    ECS_TYPE(world, Object, Position, Speed);
 
     /* Register the Move function as a system with the world.
      * - EcsOnFrame causes the sytem to be invoked when ecs_progress is called
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
      * - The system will match every entity that adds Position and Speed */
     ECS_SYSTEM(world, InitObject, EcsOnAdd, Position, Speed);
 
-    /* Create a new entity with the Object family */
+    /* Create a new entity with the Object type */
     ecs_new(world, Object_h);
 
     /* Call ecs_progress 10 times. */

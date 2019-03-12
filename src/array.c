@@ -14,7 +14,9 @@ EcsArray* resize(
     EcsArray *array,
     uint32_t size)
 {
-    return realloc(array, sizeof(EcsArray) + size);
+    EcsArray *result = realloc(array, sizeof(EcsArray) + size);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, 0);
+    return result;
 }
 
 /** Iterator hasnext callback */
@@ -163,6 +165,12 @@ uint32_t ecs_array_remove(
     array->count = count;
 
     return count;
+}
+
+void ecs_array_remove_last(
+    EcsArray *array)
+{
+    if (array->count) array->count --;
 }
 
 uint32_t ecs_array_remove_index(

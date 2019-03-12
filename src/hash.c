@@ -42,7 +42,7 @@ on 1 byte), but shoehorning those bytes into integers efficiently is messy.
 # include <endian.h>    /* attempt to define endianness */
 #endif
 
-#include <reflecs>
+#include <include/flecs.h>
 
 /*
  * My best guess at if you are big-endian or little-endian.  This may

@@ -35,15 +35,15 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
 
-    /* Register family with Position and Speed */
-    ECS_FAMILY(world, Object, Position, Speed);
+    /* Register type with Position and Speed */
+    ECS_TYPE(world, Object, Position, Speed);
 
     /* Register the Move and Drag functions as a systems with the world.*/
     ECS_SYSTEM(world, Move, EcsOnFrame, Position, Speed);
     ECS_SYSTEM(world, Drag, EcsOnFrame, Speed);
 
-    /* Register a feature (family of systems) */
-    ECS_FAMILY(world, Movement, Move, Drag);
+    /* Register a feature (type of systems) */
+    ECS_TYPE(world, Movement, Move, Drag);
 
     /* Create entity, add & initialize Position */
     EcsEntity e = ecs_set(world, 0, Position, {0, 0});

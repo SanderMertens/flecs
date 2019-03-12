@@ -2,6 +2,6 @@
     "id":"initsystem",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

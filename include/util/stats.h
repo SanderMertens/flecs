@@ -1,7 +1,7 @@
-#ifndef REFLECS_STATS_H
-#define REFLECS_STATS_H
+#ifndef FLECS_STATS_H
+#define FLECS_STATS_H
 
-#include <reflecs>
+#include <include/flecs.h>
 #include "array.h"
 
 #ifdef __cplusplus
@@ -79,22 +79,22 @@ typedef struct EcsWorldStats {
     bool system_profiling;
 } EcsWorldStats;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_get_stats(
     EcsWorld *world,
     EcsWorldStats *stats);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_free_stats(
     EcsWorld *world,
     EcsWorldStats *stats);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_measure_frame_time(
     EcsWorld *world,
     bool enable);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_measure_system_time(
     EcsWorld *world,
     bool enable);

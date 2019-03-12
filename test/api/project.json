@@ -1,9 +1,377 @@
 {
-    "id": "test",
-    "type": "package",
+    "id": "api",
+    "type": "application",
     "value": {
+        "author": "Sander Mertens",
+        "description": "Test project for flecs",
         "public": false,
-        "use": ["reflecs", "corto.test"]
+        "use": [
+            "flecs"
+        ]
     },
-    "corto": { }
+    "test": {
+        "testsuites": [{
+            "id": "New",
+            "testcases": [
+                "empty",
+                "component",
+                "type",
+                "type_of_2",
+                "type_w_type",
+                "type_w_2_types",
+                "type_mixed",
+                "tag",
+                "type_w_tag",
+                "type_w_2_tags",
+                "type_w_tag_mixed"
+            ]
+        }, {
+            "id": "New_w_Count",
+            "testcases": [
+                "empty",
+                "empty_w_handles",
+                "nonempty_w_handles",
+                "component",
+                "type",
+                "type_of_2",
+                "type_w_type",
+                "type_w_2_types",
+                "type_mixed",
+                "tag",
+                "type_w_tag",
+                "type_w_2_tags",
+                "type_w_tag_mixed"
+            ]
+        }, {
+            "id": "Add",
+            "testcases": [
+                "zero",
+                "component",
+                "component_again",
+                "2_components",
+                "2_components_again",
+                "2_components_overlap",
+                "type",
+                "type_of_2",
+                "type_w_type",
+                "type_w_2_types",
+                "type_mixed",
+                "type_again",
+                "type_overlap",
+                "type_again_component",
+                "type_overlap_component",
+                "component_to_nonempty",
+                "component_to_nonempty_again",
+                "component_to_nonempty_overlap",
+                "type_to_nonempty",
+                "type_to_nonempty_again",
+                "type_to_nonempty_overlap",
+                "tag",
+                "type_w_tag",
+                "type_w_2_tags",
+                "type_w_tag_mixed"
+            ]
+        }, {
+            "id": "Remove",
+            "testcases": [
+                "zero",
+                "zero_from_nonzero",
+                "1_of_1",
+                "1_of_1_again",
+                "1_of_2",
+                "2_of_2",
+                "2_of_3",
+                "2_again",
+                "2_overlap",
+                "type_of_1_of_2",
+                "type_of_2_of_2",
+                "type_of_2_of_3",
+                "1_from_empty",
+                "type_from_empty",
+                "not_added"
+            ]
+        }, {
+            "id": "Has",
+            "testcases": [
+                "zero",
+                "zero_from_nonzero",
+                "1_of_0",
+                "1_of_1",
+                "1_of_2",
+                "2_of_0",
+                "2_of_2",
+                "3_of_2",
+                "2_of_1",
+                "1_of_empty",
+                "any_of_1_of_1",
+                "any_of_1_of_2",
+                "any_of_2_of_3",
+                "any_of_3_of_2",
+                "any_of_2_of_1",
+                "any_of_1_of_0",
+                "any_2_of_2_disjunct"
+            ]
+        }, {
+            "id": "Delete",
+            "testcases": [
+                "delete_1",
+                "delete_1_again",
+                "delete_empty",
+                "delete_nonexist",
+                "delete_1st_of_3",
+                "delete_2nd_of_3",
+                "delete_2_of_3",
+                "delete_3_of_3"
+            ]
+        }, {
+            "id": "Set",
+            "testcases": [
+                "set_empty",
+                "set_nonempty",
+                "set_non_empty_override",
+                "set_again",
+                "set_2",
+                "add_set",
+                "set_add",
+                "set_add_other",
+                "set_remove",
+                "set_remove_other",
+                "set_remove_twice",
+                "set_and_new"
+            ]
+        }, {
+            "id": "Clone",
+            "testcases": [
+                "empty",
+                "empty_w_value",
+                "null",
+                "null_w_value",
+                "1_component",
+                "2_component",
+                "1_component_w_value",
+                "2_component_w_value",
+                "3_component",
+                "3_component_w_value",
+                "tag",
+                "tag_w_value",
+                "1_tag_1_component",
+                "1_tag_1_component_w_value"
+            ]
+        }, {
+            "id": "SystemOnAdd",
+            "testcases": [
+                "new_match_1_of_1",
+                "new_match_1_of_2",
+                "new_no_match_1",
+                "new_no_match_2_of_1",
+                "new_no_match_2_of_3",
+                "new_w_count_match_1_of_1",
+                "add_match_1_of_1",
+                "add_match_1_of_2",
+                "add_match_2_of_2",
+                "add_match_2_of_3",
+                "add_no_match_1",
+                "add_no_match_2_of_1",
+                "add_no_match_2_of_3",
+                "set_match_1_of_1",
+                "set_no_match_1",
+                "clone_match_1_of_1",
+                "clone_match_1_of_2",
+                "clone_match_2_of_2",
+                "clone_match_2_of_3",
+                "add_again_1",
+                "set_again_1",
+                "add_again_2"
+            ]
+        }, {
+            "id": "SystemOnRemove",
+            "testcases": [
+                "remove_match_1_of_1",
+                "remove_match_1_of_2",
+                "remove_match_2_of_2",
+                "remove_match_2_of_3",
+                "remove_no_match_1",
+                "remove_no_match_2_of_1",
+                "remove_no_match_2_of_3",
+                "delete_match_1_of_1",
+                "delete_match_1_of_2",
+                "delete_match_2_of_2",
+                "delete_match_2_of_3",
+                "delete_no_match_1",
+                "delete_no_match_2_of_1",
+                "delete_no_match_2_of_3"
+            ]
+        }, {
+            "id": "SystemOnSet",
+            "testcases": [
+                "set",
+                "set_new",
+                "set_again",
+                "clone",
+                "clone_w_value",
+                "set_w_optional",
+                "set_and_add_system"
+            ]
+        }, {
+            "id": "SystemOnFrame",
+            "testcases": [
+                "1_type_1_component",
+                "1_type_3_component",
+                "3_type_1_component",
+                "2_type_3_component",
+                "1_type_1_component_1_tag",
+                "2_type_1_component_1_tag",
+                "2_type_1_and_1_not",
+                "2_type_2_and_1_not",
+                "2_type_2_and_2_not",
+                "4_type_1_and_1_or",
+                "4_type_1_and_1_or_of_3",
+                "1_type_1_and_1_or",
+                "2_type_1_and_1_optional",
+                "2_type_2_and_1_optional",
+                "6_type_1_and_2_optional"
+            ]
+        }, {
+            "id": "Container",
+            "testcases": [
+                "child",
+                "child_w_id",
+                "child_w_component",
+                "child_w_type",
+                "contains_w_empty_parent",
+                "contains_w_child_as_parent",
+                "contains_w_0_as_child",
+                "contains_w_0_as_parent",
+                "contains_w_0_for_both",
+                "adopt",
+                "adopt_again",
+                "adopt_twice",
+                "orphan_empty",
+                "orphan",
+                "orphan_again",
+                "orphan_twice",
+                "adopt_orphan",
+                "adopt_2_orphan_1",
+                "get_ptr_container"
+            ]
+        }, {
+            "id": "Prefab",
+            "testcases": [
+                "new_w_prefab",
+                "new_w_count_prefab",
+                "new_w_type_w_prefab",
+                "add_prefab",
+                "add_type_w_prefab",
+                "remove_prefab_after_new",
+                "remove_prefab_after_add",
+                "override_component",
+                "override_remove_component",
+                "override_2_of_3_components_1_self",
+                "new_type_w_1_override",
+                "new_type_w_2_overrides",
+                "add_type_w_1_overrides",
+                "add_type_w_2_overrides",
+                "get_ptr_prefab"
+            ]
+        }, {
+            "id": "System_w_FromContainer",
+            "testcases": [
+                "1_column_from_container",
+                "2_column_1_from_container",
+                "3_column_2_from_container",
+                "3_column_2_from_different_container",
+                "2_column_1_from_container_w_not",
+                "3_column_1_from_comtainer_1_from_container_w_not",
+                "2_column_1_from_container_w_or"
+            ]
+        }, {
+            "id": "System_w_FromId",
+            "testcases": [
+                "2_column_1_from_id",
+                "3_column_2_from_id"
+            ]
+        }, {
+            "id": "System_w_FromSystem",
+            "testcases": [
+                "2_column_1_from_system",
+                "3_column_2_from_system",
+                "2_column_1_from_system_w_add"
+            ]
+        }, {
+            "id": "Run",
+            "testcases": [
+                "run",
+                "run_w_param",
+                "run_no_match",
+                "run_w_offset",
+                "run_w_offset_skip_1_archetype",
+                "run_w_offset_skip_1_archetype_plus_one",
+                "run_w_offset_skip_2_archetypes",
+                "run_w_limit_skip_1_archetype",
+                "run_w_limit_skip_1_archetype_minus_one",
+                "run_w_limit_skip_2_archetypes",
+                "run_w_offset_1_limit_max",
+                "run_w_offset_1_limit_minus_1",
+                "run_w_offset_2_type_limit_max",
+                "run_w_offset_2_type_limit_minus_1",
+                "run_w_limit_1_all_offsets",
+                "run_w_offset_out_of_bounds",
+                "run_w_limit_out_of_bounds",
+                "run_w_component_filter",
+                "run_w_type_filter_of_2",
+                "run_w_container_filter"
+            ]
+        }, {
+            "id": "SingleThreadStaging",
+            "testcases": [
+                "new_empty",
+                "new_w_component",
+                "new_w_type_of_2",
+                "add_to_new_empty",
+                "2_add_to_new_empty",
+                "add_remove_same_to_new_empty",
+                "add_remove_2_same_to_new_empty",
+                "add_remove_same_to_new_w_component",
+                "2_add_1_remove_to_new_empty",
+                "2_add_1_remove_same_to_new_empty",
+                "clone",
+                "clone_w_value",
+                "add_to_current",
+                "2_add_to_current",
+                "remove_from_current",
+                "remove_2_from_current",
+                "add_remove_same_to_current",
+                "add_remove_same_existing_to_current",
+                "remove_add_same_to_current",
+                "remove_add_same_existing_to_current",
+                "add_remove_2_same_to_current",
+                "add_remove_2_same_existing_to_current",
+                "remove_add_2_same_to_current",
+                "remove_add_2_same_existing_to_current",
+                "add_remove_different_to_current",
+                "2_add_1_remove_to_current",
+                "1_add_2_remove_to_current",
+                "delete_current",
+                "delete_even",
+                "delete_new_empty",
+                "delete_new_w_component",
+                "set_current",
+                "set_new_empty",
+                "set_new_w_component",
+                "set_existing_new_w_component",
+                "set_new_after_add",
+                "remove_after_set",
+                "delete_after_set"
+            ]
+        }, {
+            "id": "Internals",
+            "testcases": [
+                "deactivate_table",
+                "activate_table",
+                "activate_deactivate_table",
+                "activate_deactivate_reactive",
+                "activate_deactivate_activate_other"
+            ]
+        }]
+    }
 }

@@ -1,7 +1,7 @@
-#ifndef REFLECS_ARRAY_H
-#define REFLECS_ARRAY_H
+#ifndef FLECS_ARRAY_H
+#define FLECS_ARRAY_H
 
-#include <reflecs>
+#include <include/flecs.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,102 +33,106 @@ typedef struct EcsArrayIter {
     uint32_t index;
 } EcsArrayIter;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsArray* ecs_array_new(
     const EcsArrayParams *params,
     uint32_t size);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsArray* ecs_array_new_from_buffer(
     const EcsArrayParams *params,
     uint32_t size,
     void *buffer);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_array_free(
     EcsArray *array);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_array_clear(
     EcsArray *array);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void* ecs_array_add(
     EcsArray **array_inout,
     const EcsArrayParams *params);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void* ecs_array_addn(
     EcsArray **array_inout,
     const EcsArrayParams *params,
     uint32_t count);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void* ecs_array_get(
     EcsArray *array,
     const EcsArrayParams *params,
     uint32_t index);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 uint32_t ecs_array_get_index(
     EcsArray *array,
     const EcsArrayParams *params,
     void *elem);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void* ecs_array_last(
     EcsArray *array,
     const EcsArrayParams *params);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 uint32_t ecs_array_remove(
     EcsArray *array,
     const EcsArrayParams *params,
     void *elem);
 
-REFLECS_EXPORT
+FLECS_EXPORT
+void ecs_array_remove_last(
+    EcsArray *array);
+
+FLECS_EXPORT
 uint32_t ecs_array_move_index(
     EcsArray **dst_array,
     EcsArray *src_array,
     const EcsArrayParams *params,
     uint32_t index);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 uint32_t ecs_array_remove_index(
     EcsArray *array,
     const EcsArrayParams *params,
     uint32_t index);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_array_reclaim(
     EcsArray **array,
     const EcsArrayParams *params);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 uint32_t ecs_array_set_size(
     EcsArray **array,
     const EcsArrayParams *params,
     uint32_t size);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 uint32_t ecs_array_set_count(
     EcsArray **array,
     const EcsArrayParams *params,
     uint32_t size);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 uint32_t ecs_array_count(
     EcsArray *array);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 uint32_t ecs_array_size(
     EcsArray *array);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void* ecs_array_buffer(
     EcsArray *array);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsIter _ecs_array_iter(
     EcsArray *array,
     const EcsArrayParams *params,
@@ -137,13 +141,13 @@ EcsIter _ecs_array_iter(
 #define ecs_array_iter(me, params)\
     _ecs_array_iter(me, params, alloca(sizeof(EcsArrayIter)))
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_array_sort(
     EcsArray *array,
     const EcsArrayParams *params,
     EcsComparator compare_action);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_array_memory(
     EcsArray *array,
     const EcsArrayParams *params,

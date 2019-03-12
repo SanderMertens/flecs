@@ -18,7 +18,7 @@
 #define DISABLESYSTEM_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
-#include <reflecs>
+#include <flecs>
 
 /* Headers of private dependencies */
 #ifdef DISABLESYSTEM_IMPL

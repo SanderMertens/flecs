@@ -2,6 +2,6 @@
     "id":"features",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

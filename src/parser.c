@@ -1,6 +1,6 @@
 #include <ctype.h>
 #include <string.h>
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
 
 /** Skip spaces when parsing signature */
 static
