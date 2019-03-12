@@ -1193,6 +1193,13 @@ EcsEntity ecs_column_source(
     EcsRows *rows,
     uint32_t index);
 
+
+/* Obtain the type of a column from inside a system */
+FLECS_EXPORT
+EcsEntity ecs_column_type(
+    EcsRows *rows,
+    uint32_t index);
+
 /* -- Error handling & error codes -- */
 
 /** Throw an error */

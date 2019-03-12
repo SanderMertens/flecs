@@ -288,7 +288,8 @@
             "id": "System_w_FromId",
             "testcases": [
                 "2_column_1_from_id",
-                "3_column_2_from_id"
+                "3_column_2_from_id",
+                "column_type"
             ]
         }, {
             "id": "System_w_FromSystem",

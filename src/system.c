@@ -529,3 +529,15 @@ EcsEntity ecs_column_source(
         return ref->entity;
     }
 }
+
+EcsEntity ecs_column_type(
+    EcsRows *rows,
+    uint32_t index)
+{
+    if (index == 0) {
+        return 0;
+    } else {
+        EcsEntity component = rows->components[index - 1];
+        return ecs_type_from_entity(rows->world, component);
+    }
+}

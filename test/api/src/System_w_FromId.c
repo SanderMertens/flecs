@@ -71,3 +71,30 @@ void System_w_FromId_3_column_2_from_id() {
     test_int(ctx.c[0][2], ERotation);
     test_int(ctx.s[0][2], 0);    
 }
+
+static
+void CheckColumnType(EcsRows *rows) {
+    EcsType TPosition = ecs_column_type(rows, 2);
+    test_assert(TPosition == ecs_column_type(rows, 1));
+
+    ProbeSystem(rows);
+}
+
+void System_w_FromId_column_type() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_SYSTEM(world, CheckColumnType, EcsOnFrame, Position, ID.Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_new(world, Position);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+}

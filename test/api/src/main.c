@@ -255,6 +255,7 @@ void System_w_FromContainer_2_column_1_from_container_w_or(void);
 // Testsuite 'System_w_FromId'
 void System_w_FromId_2_column_1_from_id(void);
 void System_w_FromId_3_column_2_from_id(void);
+void System_w_FromId_column_type(void);
 
 // Testsuite 'System_w_FromSystem'
 void System_w_FromSystem_2_column_1_from_system(void);
@@ -1281,7 +1282,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "System_w_FromId",
-        .testcase_count = 2,
+        .testcase_count = 3,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_column_1_from_id",
@@ -1290,6 +1291,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "3_column_2_from_id",
                 .function = System_w_FromId_3_column_2_from_id
+            },
+            {
+                .id = "column_type",
+                .function = System_w_FromId_column_type
             }
         }
     },
