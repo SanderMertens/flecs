@@ -1,5 +1,5 @@
 # flecs
-Flecs is an entity component system implemented in C99. It's design goal is to
+Flecs is a Fast, Lightweight ECS (entity component system) implemented in C99. Its design goal is to
 pack as much punch as possible into a small library with a minimal API and zero
 dependencies. Here are some of its features:
 
