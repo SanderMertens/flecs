@@ -13,6 +13,7 @@ Additionally, flecs has a flexible engine that lets you do many things, like:
 - Use expressive system expressions with AND, OR, NOT and optional operators
 - Create hierarchies, indexes and DAGs with container entities
 - Add/remove components and create/delete entities whenever, wherever
+- Add components to ANYTHING. Entities? Check. Systems? Check. Components? N.. wait. Check!
 
 Check out the [examples](https://github.com/SanderMertens/flecs/tree/master/examples) and [documentation](https://github.com/SanderMertens/flecs/blob/master/include/flecs.h) to learn more!
 
