@@ -1,6 +1,6 @@
-![marty-mcfly](https://user-images.githubusercontent.com/9919222/54174056-cdedfd80-4441-11e9-8b71-9403fdd8e9e6.png)
+![flecs](https://user-images.githubusercontent.com/9919222/54174056-cdedfd80-4441-11e9-8b71-9403fdd8e9e6.png)
 
-Flecs is a Fast and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)). Flecs packs as much punch as possible into a small library with a tiny API and zero dependencies. Here are some of the things it can do:
+Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)). Flecs packs as much punch as possible into a small library with a tiny API and zero dependencies. Here are some of the things it can do:
 
 - Process entites on multiple threads with a lock-free, zero-overhead staging architecture
 - Organize components & systems in modules
