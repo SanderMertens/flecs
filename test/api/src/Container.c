@@ -295,5 +295,18 @@ void Container_adopt_2_orphan_1() {
 }
 
 void Container_get_ptr_container() {
-    // Implement testcase
+    EcsWorld *world = ecs_init();
+
+    EcsEntity parent = ecs_new(world, 0);
+    EcsEntity child = ecs_new_child(world, parent, NULL, 0);
+
+    test_assert( ecs_contains(world, parent, child));
+    test_assert( ecs_has(world, parent, EcsContainer));
+
+    EcsType Tparent = ecs_type_from_entity(world, parent);
+    test_assert(Tparent != 0);
+    test_assert( ecs_has(world, child, parent));
+    test_assert( ecs_get_ptr(world, child, parent) == NULL);
+
+    ecs_fini(world);
 }
