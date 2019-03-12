@@ -294,8 +294,7 @@
             "id": "System_w_FromSystem",
             "testcases": [
                 "2_column_1_from_system",
-                "3_column_2_from_system",
-                "2_column_1_from_system_w_add"
+                "3_column_2_from_system"
             ]
         }, {
             "id": "Run",

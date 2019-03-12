@@ -175,7 +175,11 @@ void ecs_system_compute_and_families(
             }
             if (oper_kind == EcsOperAnd) {
                 col_system_data->and_from_system = ecs_type_add(
-                 world, NULL, col_system_data->and_from_system, elem->is.component);
+                  world, NULL, col_system_data->and_from_system, elem->is.component);
+                
+                /* Add component to system */
+                EcsType type = ecs_type_from_entity(world, elem->is.component);
+                _ecs_add(world, system, type);
             }
         }
     }
