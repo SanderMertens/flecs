@@ -530,7 +530,7 @@ EcsEntity ecs_column_source(
     }
 }
 
-EcsEntity ecs_column_type(
+EcsType ecs_column_type(
     EcsRows *rows,
     uint32_t index)
 {
@@ -540,4 +540,15 @@ EcsEntity ecs_column_type(
         EcsEntity component = rows->components[index - 1];
         return ecs_type_from_entity(rows->world, component);
     }
+}
+
+EcsEntity ecs_column_component(
+    EcsRows *rows,
+    uint32_t index)
+{
+    if (index == 0) {
+        return 0;
+    } else {
+        return rows->components[index - 1];
+    }  
 }

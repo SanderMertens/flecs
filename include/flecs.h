@@ -135,55 +135,29 @@ typedef void (*EcsModuleInitAction)(
 #define EEcsContainer (8)
 
 FLECS_EXPORT
-extern EcsType TEcsComponent;
-
-FLECS_EXPORT
-extern EcsType TEcsTypeComponent;
-
-FLECS_EXPORT
-extern EcsType TEcsPrefab;
-
-FLECS_EXPORT
-extern EcsType TEcsRowSystem;
-
-FLECS_EXPORT
-extern EcsType TEcsColSystem;
-
-FLECS_EXPORT
-extern EcsType TEcsId;
-
-FLECS_EXPORT
-extern EcsType TEcsHidden;
-
-FLECS_EXPORT
-extern EcsType TEcsContainer;
+extern EcsType 
+    TEcsComponent,
+    TEcsTypeComponent,
+    TEcsPrefab,
+    TEcsRowSystem,
+    TEcsColSystem,
+    TEcsId,
+    TEcsHidden,
+    TEcsContainer;
 
 /* This allows passing 0 as type to functions that accept types */
 #define T0 (0)
 
 FLECS_EXPORT
-extern const char *ECS_COMPONENT_ID;
-
-FLECS_EXPORT
-extern const char *ECS_TYPE_COMPONENT_ID;
-
-FLECS_EXPORT
-extern const char *ECS_PREFAB_ID;
-
-FLECS_EXPORT
-extern const char *ECS_ROW_SYSTEM_ID;
-
-FLECS_EXPORT
-extern const char *ECS_COL_SYSTEM_ID;
-
-FLECS_EXPORT
-extern const char *ECS_ID_ID;
-
-FLECS_EXPORT
-extern const char *ECS_HIDDEN_ID;
-
-FLECS_EXPORT
-extern const char *ECS_CONTAINER_ID;
+extern const char 
+    *ECS_COMPONENT_ID,
+    *ECS_TYPE_COMPONENT_ID,
+    *ECS_PREFAB_ID,
+    *ECS_ROW_SYSTEM_ID,
+    *ECS_COL_SYSTEM_ID,
+    *ECS_ID_ID,
+    *ECS_HIDDEN_ID,
+    *ECS_CONTAINER_ID;
 
 /* -- World API -- */
 
@@ -1187,16 +1161,75 @@ void* _ecs_shared(
 #define ecs_shared(rows, type, index)\
     ((type*)_ecs_shared(rows, index))
 
-/* Obtain the source of a column from inside a system */
+/** Obtain the source of a column from inside a system.
+ * This operation lets you obtain the entity from which the column data was
+ * resolved. In most cases a component will come from the entities being
+ * iterated over, but when using prefabs or containers, the component can be
+ * shared between entities. For shared components, this function will return the
+ * original entity on which the component is stored.
+ * 
+ * If a column is specified for which the component is stored on the entities
+ * being iterated over, the operation will return 0, as the entity id in that
+ * case depends on the row, not on the column. To obtain the entity ids for a
+ * row, a system should access the entity column (column zero) like this:
+ * 
+ * EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
+ * 
+ * @param rows Pointer to the rows object passed into the system callback.
+ * @param index An index identifying the column for which to obtain the component.
+ * @return The source entity for the column. 
+ */
 FLECS_EXPORT
 EcsEntity ecs_column_source(
     EcsRows *rows,
     uint32_t index);
 
-
-/* Obtain the type of a column from inside a system */
+/** Obtain the component for a column inside a system.
+ * This operation obtains the component handle for a column in the system. This
+ * function wraps around the 'components' array in the EcsRows type.
+ * 
+ * Note that since component identifiers are obtained from the same pool as
+ * regular entities, the return type of this function is EcsEntity.
+ * 
+ * When a system contains an argument that is prefixed with 'ID', the resolved
+ * entity will be accessible through this function as well.
+ * 
+ * Column indices for system arguments start from 1, where 0 is reserved for a
+ * column that contains entity identifiers. Passing 0 to this function for the
+ * column index will return 0.
+ * 
+ * @param rows Pointer to the rows object passed into the system callback.
+ * @param index An index identifying the column for which to obtain the component.
+ * @return The component for the specified column, or 0 if failed.
+ */
 FLECS_EXPORT
-EcsEntity ecs_column_type(
+EcsEntity ecs_column_component(
+    EcsRows *rows,
+    uint32_t index);
+
+/** Obtain the type of a column from inside a system. 
+ * This operation is equivalent to ecs_column_component, except that it returns
+ * a type, instead of an entity handle. Invoking this function is the same as
+ * doing:
+ * 
+ * ecs_type_from_entity( ecs_column_component(rows, index));
+ * 
+ * To use the result of this operation with functions like ecs_new, ecs_add and 
+ * ecs_set, make sure to name the variable in which you store the result of this
+ * function T<typename>. For example, for a type called Position, you should do:
+ * 
+ * EcsType TPosition = ecs_column_type(rows, 1);
+ * 
+ * This ensures that you can use functions like ecs_set like this:
+ * 
+ * ecs_set(world, e, Position, {10, 20});
+ * 
+ * @param rows Pointer to the rows object passed into the system callback.
+ * @param index An index identifying the column for which to obtain the component.
+ * @return The type for the specified column, or 0 if failed.
+ */ 
+FLECS_EXPORT
+EcsType ecs_column_type(
     EcsRows *rows,
     uint32_t index);
 
