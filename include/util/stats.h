@@ -1,7 +1,7 @@
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
-#include <include/flecs.h>
+#include "../flecs.h"
 #include "array.h"
 
 #ifdef __cplusplus

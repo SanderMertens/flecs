@@ -6,7 +6,7 @@
 #ifndef FLECS_TIME_H_
 #define FLECS_TIME_H_
 
-#include <include/flecs.h>
+#include "../flecs.h"
 
 #ifdef __cplusplus
 extern "C" {

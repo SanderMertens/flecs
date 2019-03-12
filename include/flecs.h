@@ -34,6 +34,25 @@
 
 #define ECS_HANDLE_NIL (0)
 
+/** Function return values */
+typedef enum EcsResult {
+    EcsOk,
+    EcsError
+} EcsResult;
+
+/* The flecs world object */
+typedef struct EcsWorld EcsWorld;
+
+/** A handle identifies an entity */
+typedef uint64_t EcsEntity;
+
+/* Utility headers */
+#include "util/iter.h"
+#include "util/array.h"
+#include "util/map.h"
+#include "util/stats.h"
+#include "util/time.h"
+
 /** -- Builtin module flags -- */
 #define ECS_2D (1)
 #define ECS_3D (2)
@@ -50,17 +69,6 @@ typedef uint32_t EcsType;
 
 /** Id component type */
 typedef const char *EcsId;
-
-typedef struct EcsWorld EcsWorld;
-
-/** A handle identifies an entity */
-typedef uint64_t EcsEntity;
-
-/** Function return values */
-typedef enum EcsResult {
-    EcsOk,
-    EcsError
-} EcsResult;
 
 /** System kinds determine when and how systems are ran */
 typedef enum EcsSystemKind {
@@ -1241,30 +1249,6 @@ void _ecs_assert(
 #define ECS_ENTITY_ALREADY_DEFINED (13)
 #define ECS_INVALID_COMPONENT_SIZE (14)
 #define ECS_OUT_OF_MEMORY (15)
-
-/* -- Utility API -- */
-
-typedef struct EcsIter EcsIter;
-struct EcsIter {
-    void *ctx;
-    void *data;
-    bool (*hasnext)(EcsIter*);
-    void* (*next)(EcsIter*);
-    void (*release)(EcsIter*);
-};
-
-FLECS_EXPORT
-bool ecs_iter_hasnext(
-    EcsIter* iter);
-
-FLECS_EXPORT
-void* ecs_iter_next(
-    EcsIter* iter);
-
-FLECS_EXPORT
-void ecs_iter_release(
-    EcsIter* iter);
-
 
 /* -- Convenience macro's -- */
 

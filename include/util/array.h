@@ -1,7 +1,7 @@
 #ifndef FLECS_ARRAY_H
 #define FLECS_ARRAY_H
 
-#include <include/flecs.h>
+#include "../flecs.h"
 
 #ifdef __cplusplus
 extern "C" {

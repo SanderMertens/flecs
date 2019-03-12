@@ -35,7 +35,7 @@ Check out the [examples](https://github.com/SanderMertens/flecs/tree/master/exam
   * [module](#module)
 
 ## Building
-You can build flecs with either [Bake](https://github.com/SanderMertens/bake) or CMake. If you just want to build the reflecs shared library, CMake wil get you there. If you want to use reflecs modules, you'll need Bake (for now).
+You can build flecs with either [Bake](https://github.com/SanderMertens/bake) or CMake. If you just want to build the flecs shared library, CMake wil get you there. If you want to use flecs modules, you'll need Bake (for now).
 
 ### CMake
 ```
