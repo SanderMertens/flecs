@@ -1,6 +1,6 @@
-![flecs](https://user-images.githubusercontent.com/9919222/54174056-cdedfd80-4441-11e9-8b71-9403fdd8e9e6.png)
+![flecs](https://user-images.githubusercontent.com/9919222/54175082-b107f900-4446-11e9-9cbc-91c096f7c0b1.png)
 
-Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)). Flecs packs as much punch as possible into a small library with a tiny API and zero dependencies. Here are some of the things it can do:
+Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)). Flecs packs as much punch as possible into a small library with a tiny C99 API and zero dependencies. Here are some of the things it can do:
 
 - Process entites on multiple threads with a lock-free, zero-overhead staging architecture
 - Organize components & systems in modules
@@ -13,6 +13,7 @@ Additionally, flecs has a flexible engine that lets you do many things, like:
 - Use expressive system expressions with AND, OR, NOT and optional operators
 - Create hierarchies, indexes and DAGs with container entities
 - Add/remove components and create/delete entities whenever, wherever
+- Add components to ANYTHING. Entities? Check. Systems? Check. Components? N.. wait. Check!
 
 Check out the [examples](https://github.com/SanderMertens/flecs/tree/master/examples) and [documentation](https://github.com/SanderMertens/flecs/blob/master/include/flecs.h) to learn more!
 
