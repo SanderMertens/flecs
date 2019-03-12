@@ -363,6 +363,11 @@
                 "delete_after_set"
             ]
         }, {
+            "id": "Modules",
+            "testcases": [
+                "simple_module"
+            ]
+        }, {
             "id": "Internals",
             "testcases": [
                 "deactivate_table",

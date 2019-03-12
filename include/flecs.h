@@ -1360,13 +1360,36 @@ void ecs_iter_release(
  *
  * ecs_enable(world, EcsSystemsMovement_h.Move); */
 #define ECS_IMPORT(world, module, flags) \
-    module##Handles module##_h;\
-    ecs_import(world, module, flags, &e##module);\
-    module##_DeclareHandles(e##module);
+    module##Handles M##module;\
+    ecs_import(world, module, flags, &M##module);\
+    module##_ImportHandles(M##module)
+
+/** Utility macro for declaring a component inside a handles type */
+#define ECS_DECLARE_COMPONENT(component)\
+    EcsEntity E##component;\
+    EcsType T##component
+
+/** Utility macro for declaring a system inside a handles type */
+#define ECS_DECLARE_SYSTEM(system)\
+    EcsEntity E##system
+
+/** Utility macro for setting a component in a module function */
+#define ECS_SET_COMPONENT(handles, component)\
+    handles->E##component = E##component;\
+    handles->T##component = T##component
+
+/** Utility macro for setting a system in a module function */
+#define ECS_SET_SYSTEM(handles, system)\
+    handles->E##system = E##system
 
 /** Utility macro for declaring handles by modules */
-#define EcsDeclareHandle(handles, component)\
-    EcsEntity Ecs##component##_h = handles.component; (void)Ecs##component##_h
+#define ECS_IMPORT_COMPONENT(handles, component)\
+    EcsEntity E##component = handles.E##component; (void)E##component;\
+    EcsType T##component = handles.T##component; (void)T##component
+
+/** Utility macro for declaring handles by modules */
+#define ECS_IMPORT_SYSTEM(handles, system)\
+    EcsEntity E##system = handles.E##system; (void)E##system
 
 /** Utility macro's */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))

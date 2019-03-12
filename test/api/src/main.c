@@ -322,6 +322,9 @@ void SingleThreadStaging_set_new_after_add(void);
 void SingleThreadStaging_remove_after_set(void);
 void SingleThreadStaging_delete_after_set(void);
 
+// Testsuite 'Modules'
+void Modules_simple_module(void);
+
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
 void Internals_activate_table(void);
@@ -1549,6 +1552,16 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "Modules",
+        .testcase_count = 1,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "simple_module",
+                .function = Modules_simple_module
+            }
+        }
+    },
+    {
         .id = "Internals",
         .testcase_count = 5,
         .testcases = (bake_test_case[]){
@@ -1578,5 +1591,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 20);
+    return bake_test_run("api", argc, argv, suites, 21);
 }
