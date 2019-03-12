@@ -3,7 +3,7 @@
 Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)). Flecs packs as much punch as possible into a small library with a tiny C99 API and zero dependencies. Here are some of the things it can do:
 
 - Process entites on multiple threads with a lock-free, zero-overhead staging architecture
-- Organize components & systems in modules
+- Organize components & systems in reusable, library-friendly modules
 - Report runtime statistics on memory usage, performance and more
 - Run systems every frame, periodically, on demand or on change events
 
