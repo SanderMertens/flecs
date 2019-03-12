@@ -127,14 +127,11 @@ int main(int argc, char *argv[]) {
     /* Register components and systems */
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
-    ECS_TYPE(world, Movable, Position, Speed);
     ECS_SYSTEM(world, Move, EcsOnFrame, Position, Speed);
+    ECS_ENTITY(world, MyEntity, Position, Speed);
 
-    /* Create entity with Movable family */
-    ecs_new(world, Movable);
-
-    /* Limit application to 100 FPS */
-    ecs_set_target_fps(world, 100);
+    /* Limit application to 60 FPS */
+    ecs_set_target_fps(world, 60);
 
     /* Progress world in main loop (invokes Move system) */
     while (ecs_progress(world, 0));
