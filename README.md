@@ -36,16 +36,26 @@ Check out the [examples](https://github.com/SanderMertens/flecs/tree/master/exam
   
 
 ## Building
-To build flecs, you need to install bake which is currently only supported on
-Linux and macOS. See the bake README for installation instructions:
+You can build flecs with either [Bake](https://github.com/SanderMertens/bake) or CMake. If you just want to build the reflecs shared library, CMake wil get you there. If you want to use reflecs modules, you'll need Bake (for now).
 
-https://github.com/SanderMertens/bake/blob/master/README.md
-
-Then to clone, build and install flecs, do:
-
+### CMake
 ```
-bake clone SanderMertens/flecs
+git clone https://github.com/SanderMertens/flecs
+cd flecs
+mkdir build
+cd build
+cmake ..
+make
 ```
+
+### Bake
+```
+git clone https://github.com/SanderMertens/bake
+make -C bake/build-$(uname)
+bake/bake setup
+bake clone https://github.com/SanderMertens/flecs
+```
+Note that bake may ask for your password to install a single shell script to `/usr/local`. It is highly recommended you do this, as it makes everything much easier, but if you'd rather not, make sure to follow the instructions in the bake setup to setup the environment before calling bake!
 
 ## Getting started
 To create a new flecs application, first create a new project:
