@@ -1,22 +1,17 @@
 # flecs
-Flecs is a Fast, Lightweight ECS (entity component system) implemented in C99. Its design goal is to
-pack as much punch as possible into a small library with a minimal API and zero
-dependencies. Here are some of its features:
+Flecs is a Fast and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)) framework. Flecs packs as much punch as possible into a small library with a tiny API and zero dependencies. Here are some of the things it can do:
 
-- A multi-threaded job scheduler
-- A module system for organizing components and systems in large projects
-- An growing list of reusable modules, including an [SDL renderer](https://github.com/SanderMertens/flecs-systems-sdl2), [2D physics engine](https://github.com/SanderMertens/flecs-systems-physics) and [web dashboard](https://github.com/SanderMertens/flecs-systems-admin)
-- An API for obtaining runtime statistics on performance and memory usage
-- Automatic and manual time management
-- Periodic, reactive and on-demand systems
+- Distribute load across multiple threads
+- Organize components & systems in modules
+- Report runtime statistics on memory usage, performance and more
+- Run systems every frame, periodically, on demand or on change events
 
-In addition, flecs has a flexible architecture with many features that let you
-write powerful applications with just a few lines of code:
+Additionally, flecs has a flexible engine that lets you do many things, like:
 
-- Prefabs let you create components in memory once, and reuse it across many entities
-- Expressive system signatures, with AND, OR, NOT and optional operators
-- Use entities as components to create hierarchies, indexes and DAGs
-- Create/delete entities and add/remove components while iterating in a system
+- Share components across entities with prefabs
+- Use expressive system expressions with AND, OR, NOT and optional operators
+- Create hierarchies, indexes and DAGs with container entities
+- Add/remove components and create/delete entities while iterating, and even from multiple threads
 
 Check out the [examples](https://github.com/SanderMertens/flecs/tree/master/examples) and [documentation](https://github.com/SanderMertens/flecs/blob/master/include/flecs.h) to learn more!
 
