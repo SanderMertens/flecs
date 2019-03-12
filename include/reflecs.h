@@ -1326,10 +1326,10 @@ void ecs_iter_release(
  *
  * For more specifics, see description of ecs_new_prefab. */
 #define ECS_PREFAB(world, id, ...) \
-    EcsEntity E##id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
-    assert (E##id != 0);\
-    EcsType T##id = ecs_type_from_entity(world, E##id);\
-    (void)E##id;\
+    EcsEntity id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
+    assert (id != 0);\
+    EcsType T##id = ecs_type_from_entity(world, id);\
+    (void)id;\
     (void)T##id;\
     assert (T##id != 0)
 

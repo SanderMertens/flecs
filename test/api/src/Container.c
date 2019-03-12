@@ -294,3 +294,6 @@ void Container_adopt_2_orphan_1() {
     ecs_fini(world);
 }
 
+void Container_get_ptr_container() {
+    // Implement testcase
+}

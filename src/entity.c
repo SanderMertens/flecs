@@ -71,7 +71,12 @@ void* get_row_ptr(
     EcsTableColumn *column = &columns[column_index + 1];
     EcsArrayParams param = {.element_size = column->size};
 
-    return ecs_array_get(column->data, &param, index);
+    if (param.element_size) {
+        ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
+        return ecs_array_get(column->data, &param, index);
+    } else {
+        return NULL;
+    }
 }
 
 static
@@ -149,7 +154,11 @@ void* get_ptr(
     }
 
     if (prefab) {
-        return get_ptr(world, prefab, component, staged_only, true, info);
+        if (component != EEcsId && component != EEcsPrefab) {
+            return get_ptr(world, prefab, component, staged_only, true, info);
+        } else {
+            return NULL;
+        }
     } else {
         return NULL;
     }
@@ -851,7 +860,7 @@ bool _ecs_has(
 
     EcsStage *stage = ecs_get_stage(&world);
     EcsType entity_type = ecs_typeid(world, entity);
-    return ecs_type_contains(world, stage, entity_type, type, true, false) != 0;
+    return ecs_type_contains(world, stage, entity_type, type, true, true) != 0;
 }
 
 bool _ecs_has_any(
@@ -865,7 +874,7 @@ bool _ecs_has_any(
 
     EcsStage *stage = ecs_get_stage(&world);
     EcsType entity_type = ecs_typeid(world, entity);
-    return ecs_type_contains(world, stage, entity_type, type, false, false);
+    return ecs_type_contains(world, stage, entity_type, type, false, true);
 }
 
 bool ecs_contains(

@@ -186,6 +186,7 @@ void SystemOnSet_set_again(void);
 void SystemOnSet_clone(void);
 void SystemOnSet_clone_w_value(void);
 void SystemOnSet_set_w_optional(void);
+void SystemOnSet_set_and_add_system(void);
 
 // Testsuite 'SystemOnFrame'
 void SystemOnFrame_1_type_1_component(void);
@@ -223,6 +224,24 @@ void Container_orphan_again(void);
 void Container_orphan_twice(void);
 void Container_adopt_orphan(void);
 void Container_adopt_2_orphan_1(void);
+void Container_get_ptr_container(void);
+
+// Testsuite 'Prefab'
+void Prefab_new_w_prefab(void);
+void Prefab_new_w_count_prefab(void);
+void Prefab_new_w_type_w_prefab(void);
+void Prefab_add_prefab(void);
+void Prefab_add_type_w_prefab(void);
+void Prefab_remove_prefab_after_new(void);
+void Prefab_remove_prefab_after_add(void);
+void Prefab_override_component(void);
+void Prefab_override_remove_component(void);
+void Prefab_override_2_of_3_components_1_self(void);
+void Prefab_new_type_w_1_override(void);
+void Prefab_new_type_w_2_overrides(void);
+void Prefab_add_type_w_1_overrides(void);
+void Prefab_add_type_w_2_overrides(void);
+void Prefab_get_ptr_prefab(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -236,6 +255,11 @@ void System_w_FromContainer_2_column_1_from_container_w_or(void);
 // Testsuite 'System_w_FromId'
 void System_w_FromId_2_column_1_from_id(void);
 void System_w_FromId_3_column_2_from_id(void);
+
+// Testsuite 'System_w_FromSystem'
+void System_w_FromSystem_2_column_1_from_system(void);
+void System_w_FromSystem_3_column_2_from_system(void);
+void System_w_FromSystem_2_column_1_from_system_w_add(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -973,7 +997,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 6,
+        .testcase_count = 7,
         .testcases = (bake_test_case[]){
             {
                 .id = "set",
@@ -998,6 +1022,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_w_optional",
                 .function = SystemOnSet_set_w_optional
+            },
+            {
+                .id = "set_and_add_system",
+                .function = SystemOnSet_set_and_add_system
             }
         }
     },
@@ -1069,7 +1097,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Container",
-        .testcase_count = 18,
+        .testcase_count = 19,
         .testcases = (bake_test_case[]){
             {
                 .id = "child",
@@ -1142,6 +1170,76 @@ static bake_test_suite suites[] = {
             {
                 .id = "adopt_2_orphan_1",
                 .function = Container_adopt_2_orphan_1
+            },
+            {
+                .id = "get_ptr_container",
+                .function = Container_get_ptr_container
+            }
+        }
+    },
+    {
+        .id = "Prefab",
+        .testcase_count = 15,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "new_w_prefab",
+                .function = Prefab_new_w_prefab
+            },
+            {
+                .id = "new_w_count_prefab",
+                .function = Prefab_new_w_count_prefab
+            },
+            {
+                .id = "new_w_type_w_prefab",
+                .function = Prefab_new_w_type_w_prefab
+            },
+            {
+                .id = "add_prefab",
+                .function = Prefab_add_prefab
+            },
+            {
+                .id = "add_type_w_prefab",
+                .function = Prefab_add_type_w_prefab
+            },
+            {
+                .id = "remove_prefab_after_new",
+                .function = Prefab_remove_prefab_after_new
+            },
+            {
+                .id = "remove_prefab_after_add",
+                .function = Prefab_remove_prefab_after_add
+            },
+            {
+                .id = "override_component",
+                .function = Prefab_override_component
+            },
+            {
+                .id = "override_remove_component",
+                .function = Prefab_override_remove_component
+            },
+            {
+                .id = "override_2_of_3_components_1_self",
+                .function = Prefab_override_2_of_3_components_1_self
+            },
+            {
+                .id = "new_type_w_1_override",
+                .function = Prefab_new_type_w_1_override
+            },
+            {
+                .id = "new_type_w_2_overrides",
+                .function = Prefab_new_type_w_2_overrides
+            },
+            {
+                .id = "add_type_w_1_overrides",
+                .function = Prefab_add_type_w_1_overrides
+            },
+            {
+                .id = "add_type_w_2_overrides",
+                .function = Prefab_add_type_w_2_overrides
+            },
+            {
+                .id = "get_ptr_prefab",
+                .function = Prefab_get_ptr_prefab
             }
         }
     },
@@ -1190,6 +1288,24 @@ static bake_test_suite suites[] = {
             {
                 .id = "3_column_2_from_id",
                 .function = System_w_FromId_3_column_2_from_id
+            }
+        }
+    },
+    {
+        .id = "System_w_FromSystem",
+        .testcase_count = 3,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "2_column_1_from_system",
+                .function = System_w_FromSystem_2_column_1_from_system
+            },
+            {
+                .id = "3_column_2_from_system",
+                .function = System_w_FromSystem_3_column_2_from_system
+            },
+            {
+                .id = "2_column_1_from_system_w_add",
+                .function = System_w_FromSystem_2_column_1_from_system_w_add
             }
         }
     },
@@ -1467,5 +1583,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 18);
+    return bake_test_run("api", argc, argv, suites, 20);
 }

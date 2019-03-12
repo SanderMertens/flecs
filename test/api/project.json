@@ -209,7 +209,8 @@
                 "set_again",
                 "clone",
                 "clone_w_value",
-                "set_w_optional"
+                "set_w_optional",
+                "set_and_add_system"
             ]
         }, {
             "id": "SystemOnFrame",
@@ -250,7 +251,27 @@
                 "orphan_again",
                 "orphan_twice",
                 "adopt_orphan",
-                "adopt_2_orphan_1"
+                "adopt_2_orphan_1",
+                "get_ptr_container"
+            ]
+        }, {
+            "id": "Prefab",
+            "testcases": [
+                "new_w_prefab",
+                "new_w_count_prefab",
+                "new_w_type_w_prefab",
+                "add_prefab",
+                "add_type_w_prefab",
+                "remove_prefab_after_new",
+                "remove_prefab_after_add",
+                "override_component",
+                "override_remove_component",
+                "override_2_of_3_components_1_self",
+                "new_type_w_1_override",
+                "new_type_w_2_overrides",
+                "add_type_w_1_overrides",
+                "add_type_w_2_overrides",
+                "get_ptr_prefab"
             ]
         }, {
             "id": "System_w_FromContainer",
@@ -269,7 +290,14 @@
                 "2_column_1_from_id",
                 "3_column_2_from_id"
             ]
-        },{
+        }, {
+            "id": "System_w_FromSystem",
+            "testcases": [
+                "2_column_1_from_system",
+                "3_column_2_from_system",
+                "2_column_1_from_system_w_add"
+            ]
+        }, {
             "id": "Run",
             "testcases": [
                 "run",

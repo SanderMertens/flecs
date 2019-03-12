@@ -389,10 +389,12 @@ EcsEntity ecs_type_contains(
             }
 
             if (prefab) {
-                /* TODO: fix prefabs
-                if (ecs_has(world, prefab, h2)) {
-                    h1 = h2;
-                }*/
+                if (h2 != EEcsId && h2 != EEcsPrefab) {
+                    EcsType type = ecs_type_from_entity(world, h2);
+                    if (_ecs_has(world, prefab, type)) {
+                        h1 = h2;
+                    }
+                }
             }
 
             if (h1 != h2) {
