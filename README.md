@@ -64,30 +64,13 @@ Note that bake may ask for your password to install a single shell script to `/u
 To create a new flecs application, first create a new project:
 
 ```
-bake init app
+bake new my_app -t flecs
 ```
 
-To add flecs as a dependency to your application, modify the `project.json` so
-that it looks like this:
-
-```json
-{
-    "id":"app",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}
-```
-
-You can now use the flecs API in your source code. If you get compiler errors for 
-missing definitions, make sure that your project includes the (generated) file 
-`bake_config.h`, as it contains the include statements for your dependencies.
-
-To run the project, do:
+You now have a project which contains a simple reflecs application! To run the project, do:
 
 ```
-bake run app
+bake run my_app
 ```
 
 ## Modules
@@ -132,7 +115,7 @@ void Move(EcsRows *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Speed *s = ecs_column(rows, Speed, 2);
     
-    for (int i = 0; i < rows->limit; i ++) {
+    for (int i = rows->begin; i < rows->end; i ++) {
         p[i].x += s[i] * rows->delta_time;
         p[i].y += s[i] * rows->delta_time;
     }
