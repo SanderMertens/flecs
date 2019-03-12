@@ -3,7 +3,7 @@
 #include <assert.h>
 #include "include/util/time.h"
 #include "include/util/stats.h"
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
 
 
 /* -- Global array parameters -- */
@@ -78,7 +78,7 @@ void bootstrap_types(
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
- * reflecs. After this function has been called, the builtin components can be
+ * flecs. After this function has been called, the builtin components can be
  * created. */
 static
 EcsTable* bootstrap_component_table(
@@ -150,7 +150,7 @@ void notify_create_table(
 }
 
 /** Create a new table and register it with the world and systems. A table in
- * reflecs is equivalent to an archetype */
+ * flecs is equivalent to an archetype */
 static
 EcsTable* create_table(
     EcsWorld *world,

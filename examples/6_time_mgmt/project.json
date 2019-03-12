@@ -2,6 +2,6 @@
     "id":"timemgmt",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

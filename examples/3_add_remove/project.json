@@ -2,6 +2,6 @@
     "id":"addremove",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

@@ -1,6 +1,6 @@
 #include <string.h>
 #include <assert.h>
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
 
 /** Parse callback that adds type to type identifier for ecs_new_type */
 static

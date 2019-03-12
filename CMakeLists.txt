@@ -1,9 +1,9 @@
 cmake_minimum_required (VERSION 2.6)
 
-project (reflecs)
+project (flecs)
 
-file(GLOB reflecs_SRC "src/*.c")
+file(GLOB flecs_SRC "src/*.c")
 
 include_directories(".")
 
-add_library(reflecs SHARED ${reflecs_SRC})
+add_library(flecs SHARED ${flecs_SRC})

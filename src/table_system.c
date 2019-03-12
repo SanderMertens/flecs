@@ -1,6 +1,6 @@
 #include <string.h>
 #include <assert.h>
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
 #include "include/util/time.h"
 
 const EcsArrayParams column_arr_params = {

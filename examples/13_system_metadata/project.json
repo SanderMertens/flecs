@@ -2,6 +2,6 @@
     "id":"systemmetadata",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

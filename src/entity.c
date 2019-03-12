@@ -1,7 +1,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdarg.h>
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
 
 static
 void copy_column(

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include "include/private/types.h"
 
-#define REFLECS_LOAD_FACTOR (3.0f / 4.0f)
+#define FLECS_LOAD_FACTOR (3.0f / 4.0f)
 
 typedef struct EcsMapNode {
     uint64_t key;           /* Key */
@@ -294,13 +294,13 @@ void resize_map(
 EcsMap* ecs_map_new(
     uint32_t size)
 {
-    return alloc_map((float)size / REFLECS_LOAD_FACTOR);
+    return alloc_map((float)size / FLECS_LOAD_FACTOR);
 }
 
 void ecs_map_clear(
     EcsMap *map)
 {
-    uint32_t target_size = (float)map->count / REFLECS_LOAD_FACTOR;
+    uint32_t target_size = (float)map->count / FLECS_LOAD_FACTOR;
 
     if (target_size < map->min) {
         target_size = map->min;
@@ -354,7 +354,7 @@ void ecs_map_set64(
         }
     }
 
-    if ((float)map->count / (float)bucket_count > REFLECS_LOAD_FACTOR) {
+    if ((float)map->count / (float)bucket_count > FLECS_LOAD_FACTOR) {
         resize_map(map, bucket_count * 2);
     }
 }
@@ -459,7 +459,7 @@ uint32_t ecs_map_set_size(
     uint32_t size)
 {
     uint32_t result = ecs_array_set_size(&map->nodes, &node_arr_params, size);
-    resize_map(map, size / REFLECS_LOAD_FACTOR);
+    resize_map(map, size / FLECS_LOAD_FACTOR);
     return result;
 }
 

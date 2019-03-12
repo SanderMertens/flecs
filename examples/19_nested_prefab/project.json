@@ -2,6 +2,6 @@
     "id":"nestedprefab",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

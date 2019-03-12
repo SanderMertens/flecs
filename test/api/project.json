@@ -3,10 +3,10 @@
     "type": "application",
     "value": {
         "author": "Sander Mertens",
-        "description": "Test project for reflecs",
+        "description": "Test project for flecs",
         "public": false,
         "use": [
-            "reflecs"
+            "flecs"
         ]
     },
     "test": {

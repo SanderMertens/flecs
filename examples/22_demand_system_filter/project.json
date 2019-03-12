@@ -2,6 +2,6 @@
     "id":"demandsystemfilter",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

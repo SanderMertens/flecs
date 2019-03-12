@@ -18,7 +18,7 @@
 #define API_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
-#include <reflecs>
+#include <flecs>
 #include <bake.util>
 #include <bake.test>
 

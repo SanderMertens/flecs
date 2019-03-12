@@ -1,10 +1,10 @@
-#ifndef REFLECS_TYPES_PRIVATE_H
-#define REFLECS_TYPES_PRIVATE_H
+#ifndef FLECS_TYPES_PRIVATE_H
+#define FLECS_TYPES_PRIVATE_H
 
 #include <stdlib.h>
 #include <pthread.h>
 
-#include "../reflecs.h"
+#include "../flecs.h"
 #include "../util/array.h"
 #include "../util/map.h"
 
@@ -165,7 +165,7 @@ typedef struct EcsTableColumn {
     uint16_t size;                /* Column size (saves component lookups) */
 } EcsTableColumn;
 
-/** A table is the Reflecs equivalent of an archetype. Tables store all entities
+/** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
@@ -195,7 +195,7 @@ typedef struct EcsEntityInfo {
 } EcsEntityInfo;
 
 /** A stage is a data structure in which delta's are stored until it is safe to
- * merge those delta's with the main world stage. A stage allows reflecs systems
+ * merge those delta's with the main world stage. A stage allows flecs systems
  * to arbitrarily add/remove/set components and create/delete entities while
  * iterating. Additionally, worker threads have their own stage that lets them
  * mutate the state of entities without requiring locks. */
@@ -232,7 +232,7 @@ typedef struct EcsJob {
 /** A type desribing a worker thread. When a system is invoked by a worker
  * thread, it receives a pointer to an EcsThread instead of a pointer to an 
  * EcsWorld (provided by the EcsRows type). When this EcsThread is passed down
- * into the reflecs API, the API functions are able to tell whether this is an
+ * into the flecs API, the API functions are able to tell whether this is an
  * EcsThread or an EcsWorld by looking at the 'magic' number. This allows the
  * API to transparently resolve the stage to which updates should be written,
  * without requiring different API calls when working in multi threaded mode. */

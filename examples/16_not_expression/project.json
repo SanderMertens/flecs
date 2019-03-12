@@ -2,6 +2,6 @@
     "id":"notexpression",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

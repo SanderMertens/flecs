@@ -1,6 +1,6 @@
 
-#ifndef REFLECS_H
-#define REFLECS_H
+#ifndef FLECS_H
+#define FLECS_H
 
 #include <stdint.h>
 #include <alloca.h>
@@ -125,55 +125,55 @@ typedef void (*EcsModuleInitAction)(
 #define EEcsHidden (7)
 #define EEcsContainer (8)
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern EcsType TEcsComponent;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern EcsType TEcsTypeComponent;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern EcsType TEcsPrefab;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern EcsType TEcsRowSystem;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern EcsType TEcsColSystem;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern EcsType TEcsId;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern EcsType TEcsHidden;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern EcsType TEcsContainer;
 
 /* This allows passing 0 as type to functions that accept types */
 #define T0 (0)
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern const char *ECS_COMPONENT_ID;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern const char *ECS_TYPE_COMPONENT_ID;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern const char *ECS_PREFAB_ID;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern const char *ECS_ROW_SYSTEM_ID;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern const char *ECS_COL_SYSTEM_ID;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern const char *ECS_ID_ID;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern const char *ECS_HIDDEN_ID;
 
-REFLECS_EXPORT
+FLECS_EXPORT
 extern const char *ECS_CONTAINER_ID;
 
 /* -- World API -- */
@@ -186,7 +186,7 @@ extern const char *ECS_CONTAINER_ID;
  * @time-complexity: O(1)
  * @returns A new world object
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsWorld* ecs_init(void);
 
 /** Delete a world.
@@ -196,7 +196,7 @@ EcsWorld* ecs_init(void);
  * @time-complexity: O(n)
  * @param world The world to delete.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsResult ecs_fini(
     EcsWorld *world);
 
@@ -207,12 +207,12 @@ EcsResult ecs_fini(
  * @time-complexity: O(1)
  * @param world The world to quit.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_quit(
     EcsWorld *world);
 
-/** Import a reflecs module.
- * Reflecs modules enable reusing components and systems across projects. To
+/** Import a flecs module.
+ * Flecs modules enable reusing components and systems across projects. To
  * use a module, a project needs to link with its library and include its header
  * file.
  *
@@ -229,7 +229,7 @@ void ecs_quit(
  * To link with its library:
  *   -lecs_components_transform
  *
- * To load the module with the reflecs API:
+ * To load the module with the flecs API:
  *   ecs_import(world, EcsComponentsTransform, 0, &handles);
  *
  * The declaration of handles:
@@ -237,7 +237,7 @@ void ecs_quit(
  *
  * These naming conventions are not enforced, and projects are free to use their
  * own conventions, though these are the conventions used by the modules
- * provided by reflecs.
+ * provided by flecs.
  *
  * The load function has an additional flags argument which is passed to the
  * module, and is intended to allow applications to select only features they
@@ -256,7 +256,7 @@ void ecs_quit(
  * @param flags A bitmask that specifies which parts of the module to load.
  * @param handles_out A struct with handles to the module components/systems.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_import(
     EcsWorld *world,
     EcsModuleInitAction module,
@@ -319,7 +319,7 @@ void ecs_import(
  * @param world The world to progress.
  * @param delta_time The time passed since the last frame.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 bool ecs_progress(
     EcsWorld *world,
     float delta_time);
@@ -340,7 +340,7 @@ bool ecs_progress(
  *
  * @param world The world.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_merge(
     EcsWorld *world);
 
@@ -359,7 +359,7 @@ void ecs_merge(
  * @param world The world.
  * @param auto_merge: When true, ecs_progress performs merging.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_set_automerge(
     EcsWorld *world,
     bool auto_merge);
@@ -380,7 +380,7 @@ void ecs_set_automerge(
  * @param threads: The number of threads.
  * @returns EcsOk if successful, or EcsError if failed.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsResult ecs_set_threads(
     EcsWorld *world,
     uint32_t threads);
@@ -399,20 +399,20 @@ EcsResult ecs_set_threads(
  * frame profiling if a target FPS is set.
  *
  * Note that ecs_progress only sleeps if there is time left in the frame. Both
- * time spent in reflecs as time spent outside of reflecs are taken into
+ * time spent in flecs as time spent outside of flecs are taken into
  * account.
  *
  * Setting a target FPS can be more efficient than letting the application do it
  * manually, as the feature can reuse clock measurements that are taken for
  * frame profiling as well as automatically measuring delta_time.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_set_target_fps(
     EcsWorld *world,
     float fps);
 
 /** Get last used delta time from world */
-REFLECS_EXPORT
+FLECS_EXPORT
 float ecs_get_delta_time(
     EcsWorld *world);
 
@@ -427,7 +427,7 @@ float ecs_get_delta_time(
  * @param world The world.
  * @param ctx A pointer to a user defined structure.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_set_context(
     EcsWorld *world,
     void *ctx);
@@ -440,7 +440,7 @@ void ecs_set_context(
  * @returns The context set with ecs_set_context. If no context was set, the
  *          function returns NULL.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void* ecs_get_context(
     EcsWorld *world);
 
@@ -449,20 +449,20 @@ void* ecs_get_context(
  * of entities. Specifying a number lower than the current number of entities in
  * the world will have no effect.
  *
- * When using this operation, note that reflecs uses entities for storing
+ * When using this operation, note that flecs uses entities for storing
  * systems, components and builtin components. For an exact calculation of
  * entities, do user_entity_count + component_count + system_count + 3. The 3
  * stands for the number of builtin components.
  *
  * Note that this operation does not allocate memory in tables. To preallocate
  * memory in a table, use ecs_dim_type. Correctly using these functions
- * prevents reflecs from doing dynamic memory allocations in the main loop.
+ * prevents flecs from doing dynamic memory allocations in the main loop.
  *
  * @time-complexity: O(1)
  * @param world The world.
  * @param entity_count The number of entities to preallocate.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_dim(
     EcsWorld *world,
     uint32_t entity_count);
@@ -485,7 +485,7 @@ void ecs_dim(
  * @param type Handle to the type, as obtained by ecs_type_get.
  * @param entity_count The number of entities to preallocate.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void _ecs_dim_type(
     EcsWorld *world,
     EcsType type,
@@ -521,7 +521,7 @@ void _ecs_dim_type(
  * @param type Zero if no type, or handle to a component, type or prefab.
  * @returns A handle to the new entity.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity _ecs_new(
     EcsWorld *world,
     EcsType type);
@@ -541,7 +541,7 @@ EcsEntity _ecs_new(
  * If the provided parent entity does not have the 'EcsContainer' component, it
  * will be added automatically.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity _ecs_new_child(
     EcsWorld *world,
     EcsEntity parent,
@@ -553,7 +553,7 @@ EcsEntity _ecs_new_child(
     _ecs_new_child(world, parent, name, T##type)
 
 /** Convenience function to create an entity with id and component expression */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity ecs_new_entity(
     EcsWorld *world,
     const char *id,
@@ -569,7 +569,7 @@ EcsEntity ecs_new_entity(
  * @param handles_out An array which contains the handles of the new entities.
  * @returns The handle to the first created entity.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity _ecs_new_w_count(
     EcsWorld *world,
     EcsType type,
@@ -594,7 +594,7 @@ EcsEntity _ecs_new_w_count(
  * @param copy_value Whether to copy the entity value.
  * @returns The handle to the new entity.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity ecs_clone(
     EcsWorld *world,
     EcsEntity entity,
@@ -619,13 +619,13 @@ EcsEntity ecs_clone(
  * @param world The world.
  * @param entity A handle to the entity to delete.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_delete(
     EcsWorld *world,
     EcsEntity entity);
 
 /** Add a type to an entity */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsResult _ecs_add(
     EcsWorld *world,
     EcsEntity entity,
@@ -636,7 +636,7 @@ EcsResult _ecs_add(
     _ecs_add(world, entity, T##type)
 
 /** Remove a type from an entity */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsResult _ecs_remove(
     EcsWorld *world,
     EcsEntity entity,
@@ -647,14 +647,14 @@ EcsResult _ecs_remove(
     _ecs_remove(world, entity, T##type)
 
 /** Adopt a child entity by a parent */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsResult ecs_adopt(
     EcsWorld *world,
     EcsEntity parent,
     EcsEntity child);
 
 /** Orphan a child by a parent */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsResult ecs_orphan(
     EcsWorld *world,
     EcsEntity parent,
@@ -681,7 +681,7 @@ EcsResult ecs_orphan(
  * @param component The component to retrieve the data for.
  * @returns A pointer to the data, or NULL of the component was not found.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void* _ecs_get_ptr(
     EcsWorld *world,
     EcsEntity entity,
@@ -712,7 +712,7 @@ void* _ecs_get_ptr(
  * @param entity The entity on which to set the component.
  * @param component The component to set.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity _ecs_set_ptr(
     EcsWorld *world,
     EcsEntity entity,
@@ -741,7 +741,7 @@ EcsEntity _ecs_set_ptr(
  * @param type Handle to a component, type or prefab.
  * @returns true if entity has type, otherwise false.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 bool _ecs_has(
     EcsWorld *world,
     EcsEntity entity,
@@ -765,7 +765,7 @@ bool _ecs_has(
  * @param type Handle to a component, type or prefab.
  * @returns true if entity has one of the components, otherwise false.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 bool _ecs_has_any(
     EcsWorld *world,
     EcsEntity entity,
@@ -775,7 +775,7 @@ bool _ecs_has_any(
     _ecs_has_any(world, entity, T##type)
 
 /** Check if parent entity contains child entity */
-REFLECS_EXPORT
+FLECS_EXPORT
 bool ecs_contains(
     EcsWorld *world,
     EcsEntity parent,
@@ -791,19 +791,19 @@ bool ecs_contains(
  * @param entity The entity handle.
  * @returns true if valid, false if not valid.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 bool ecs_empty(
     EcsWorld *world,
     EcsEntity entity);
 
 /** Get type of entity */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsType ecs_typeid(
     EcsWorld *world,
     EcsEntity entity);
 
 /** Get component from entity */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity ecs_get_component(
     EcsWorld *world,
     EcsEntity entity,
@@ -823,7 +823,7 @@ EcsEntity ecs_get_component(
  * @param entity The entity for which to resolve the id.
  * @returns The id of the entity.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 const char* ecs_id(
     EcsWorld *world,
     EcsEntity entity);
@@ -839,7 +839,7 @@ const char* ecs_id(
  * @param id The id to lookup.
  * @returns The entity handle if found, or ECS_HANDLE_NIL if not found.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity ecs_lookup(
     EcsWorld *world,
     const char *id);
@@ -871,7 +871,7 @@ EcsEntity ecs_lookup(
  * @param size The size of the component type (as obtained by sizeof).
  * @returns A handle to the new component, or ECS_HANDLE_NIL if failed.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity ecs_new_component(
     EcsWorld *world,
     const char *id,
@@ -898,7 +898,7 @@ EcsEntity ecs_new_component(
  * @param components A comma-separated string with the component identifiers.
  * @returns Handle to the type, zero if failed.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsType ecs_new_type(
     EcsWorld *world,
     const char *id,
@@ -940,7 +940,7 @@ EcsType ecs_new_type(
  *
  * Only one prefab may be added to an entity.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity ecs_new_prefab(
     EcsWorld *world,
     const char *id,
@@ -967,7 +967,7 @@ EcsEntity ecs_new_prefab(
  * declare a variable containing the type called tFoo (where 'Foo' is the id
  * provided to the macro).
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsType ecs_type_from_entity(
     EcsWorld *world,
     EcsEntity entity);
@@ -976,14 +976,14 @@ EcsType ecs_type_from_entity(
 /** Get an entity from a type.
  * This function is the reverse of ecs_type_from_entity. It only works for types
  * that contain exactly one entity. */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity ecs_entity_from_type(
     EcsWorld *world,
     EcsType entity);
 
 
 /** Merge two types. */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsType _ecs_merge_type(
     EcsWorld *world,
     EcsType type,
@@ -1029,7 +1029,7 @@ EcsType _ecs_merge_type(
  * @param action The action that is invoked for matching entities.
  * @returns A handle to the system.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity ecs_new_system(
     EcsWorld *world,
     const char *id,
@@ -1052,7 +1052,7 @@ EcsEntity ecs_new_system(
  * @param enabled true to enable the system, false to disable the system.
  * @returns EcsOk if succeeded, EcsError if the operation failed.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_enable(
     EcsWorld *world,
     EcsEntity system,
@@ -1079,7 +1079,7 @@ void ecs_enable(
  * @param system The system for which to set the period.
  * @param period The period.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_set_period(
     EcsWorld *world,
     EcsEntity system,
@@ -1096,7 +1096,7 @@ void ecs_set_period(
  * @param system The system to check.
  * @returns True if the system is enabled, false if the system is disabled.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 bool ecs_is_enabled(
     EcsWorld *world,
     EcsEntity system);
@@ -1139,7 +1139,7 @@ bool ecs_is_enabled(
  * @param param A user-defined parameter to pass to the system.
  * @returns handle to last evaluated entity if system was interrupted.
  */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity ecs_run(
     EcsWorld *world,
     EcsEntity system,
@@ -1147,7 +1147,7 @@ EcsEntity ecs_run(
     void *param);
 
 /** Run system with offset/limit and type filter */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity _ecs_run_w_filter(
     EcsWorld *world,
     EcsEntity system,
@@ -1161,7 +1161,7 @@ EcsEntity _ecs_run_w_filter(
     _ecs_run_w_filter(world, system, delta_time, offset, limit, T##type, param)
 
 /* Obtain a column from inside a system */
-REFLECS_EXPORT
+FLECS_EXPORT
 void* _ecs_column(
     EcsRows *rows,
     uint32_t index);
@@ -1170,7 +1170,7 @@ void* _ecs_column(
     ((type*)_ecs_column(rows, index))
 
 /* Obtain a reference to a shared component */
-REFLECS_EXPORT
+FLECS_EXPORT
 void* _ecs_shared(
     EcsRows *rows,
     uint32_t index);
@@ -1179,7 +1179,7 @@ void* _ecs_shared(
     ((type*)_ecs_shared(rows, index))
 
 /* Obtain the source of a column from inside a system */
-REFLECS_EXPORT
+FLECS_EXPORT
 EcsEntity ecs_column_source(
     EcsRows *rows,
     uint32_t index);
@@ -1187,26 +1187,26 @@ EcsEntity ecs_column_source(
 /* -- Error handling & error codes -- */
 
 /** Throw an error */
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_throw(
     uint32_t error_code,
     const char *param);
 
 /** Raise last error to terminal */
-REFLECS_EXPORT
+FLECS_EXPORT
 uint32_t ecs_raise(void);
 
 /** Catch last error */
-REFLECS_EXPORT
+FLECS_EXPORT
 uint32_t ecs_catch(void);
 
 /** Get description for error code */
-REFLECS_EXPORT
+FLECS_EXPORT
 const char* ecs_strerror(
     uint32_t error_code);
 
 /** Abort */
-REFLECS_EXPORT
+FLECS_EXPORT
 void _ecs_abort(
     uint32_t error_code,
     const char *param,
@@ -1214,7 +1214,7 @@ void _ecs_abort(
     uint32_t line);
 
 /** Assert */
-REFLECS_EXPORT
+FLECS_EXPORT
 void _ecs_assert(
     bool condition,
     uint32_t error_code,
@@ -1253,15 +1253,15 @@ struct EcsIter {
     void (*release)(EcsIter*);
 };
 
-REFLECS_EXPORT
+FLECS_EXPORT
 bool ecs_iter_hasnext(
     EcsIter* iter);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void* ecs_iter_next(
     EcsIter* iter);
 
-REFLECS_EXPORT
+FLECS_EXPORT
 void ecs_iter_release(
     EcsIter* iter);
 

@@ -2,6 +2,6 @@
     "id":"orexpression",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }

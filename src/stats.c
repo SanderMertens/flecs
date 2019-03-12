@@ -1,5 +1,5 @@
 #include "include/util/stats.h"
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
 #include <string.h>
 
 const EcsArrayParams tablestats_arr_params = {

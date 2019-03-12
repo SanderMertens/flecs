@@ -2,7 +2,7 @@
     "id": "randomplacement",
     "type": "application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     },
     "lang.c": {
         "lib": ["m"]

@@ -1,5 +1,5 @@
 
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
 #include <string.h>
 
 static

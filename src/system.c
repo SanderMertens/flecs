@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <string.h>
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
 #include "include/util/time.h"
 
 static
@@ -498,7 +498,7 @@ void* _ecs_shared(
         if (table_column >= 0) {
             return 0;
         }
-        
+
         EcsReference *ref = &rows->references[-table_column - 1];
         return _ecs_get_ptr(rows->world, ref->entity, ref->component);
     }

@@ -1,16 +1,16 @@
-# reflecs
-Reflecs is an entity component system implemented in C99. It's design goal is to
+# flecs
+Flecs is an entity component system implemented in C99. It's design goal is to
 pack as much punch as possible into a small library with a minimal API and zero
 dependencies. Here are some of its features:
 
 - A multi-threaded job scheduler
 - A module system for organizing components and systems in large projects
-- An growing list of reusable modules, including an [SDL renderer](https://github.com/SanderMertens/reflecs-systems-sdl2), [2D physics engine](https://github.com/SanderMertens/reflecs-systems-physics) and [web dashboard](https://github.com/SanderMertens/reflecs-systems-admin)
+- An growing list of reusable modules, including an [SDL renderer](https://github.com/SanderMertens/flecs-systems-sdl2), [2D physics engine](https://github.com/SanderMertens/flecs-systems-physics) and [web dashboard](https://github.com/SanderMertens/flecs-systems-admin)
 - An API for obtaining runtime statistics on performance and memory usage
 - Automatic and manual time management
 - Periodic, reactive and on-demand systems
 
-In addition, reflecs has a flexible architecture with many features that let you
+In addition, flecs has a flexible architecture with many features that let you
 write powerful applications with just a few lines of code:
 
 - Prefabs let you create components in memory once, and reuse it across many entities
@@ -18,7 +18,7 @@ write powerful applications with just a few lines of code:
 - Use entities as components to create hierarchies, indexes and DAGs
 - Create/delete entities and add/remove components while iterating in a system
 
-Check out the [examples](https://github.com/SanderMertens/reflecs/tree/master/examples) and [documentation](https://github.com/SanderMertens/reflecs/blob/master/include/reflecs.h) to learn more!
+Check out the [examples](https://github.com/SanderMertens/flecs/tree/master/examples) and [documentation](https://github.com/SanderMertens/flecs/blob/master/include/flecs.h) to learn more!
 
 ## Contents
 * [Building](#building)
@@ -39,25 +39,25 @@ Check out the [examples](https://github.com/SanderMertens/reflecs/tree/master/ex
   
 
 ## Building
-To build reflecs, you need to install bake which is currently only supported on
+To build flecs, you need to install bake which is currently only supported on
 Linux and macOS. See the bake README for installation instructions:
 
 https://github.com/SanderMertens/bake/blob/master/README.md
 
-Then to clone, build and install reflecs, do:
+Then to clone, build and install flecs, do:
 
 ```
-bake clone SanderMertens/reflecs
+bake clone SanderMertens/flecs
 ```
 
 ## Getting started
-To create a new reflecs application, first create a new project:
+To create a new flecs application, first create a new project:
 
 ```
 bake init app
 ```
 
-To add reflecs as a dependency to your application, modify the `project.json` so
+To add flecs as a dependency to your application, modify the `project.json` so
 that it looks like this:
 
 ```json
@@ -65,12 +65,12 @@ that it looks like this:
     "id":"app",
     "type":"application",
     "value": {
-        "use": ["reflecs"]
+        "use": ["flecs"]
     }
 }
 ```
 
-You can now use the reflecs API in your source code. If you get compiler errors for 
+You can now use the flecs API in your source code. If you get compiler errors for 
 missing definitions, make sure that your project includes the (generated) file 
 `bake_config.h`, as it contains the include statements for your dependencies.
 
@@ -81,27 +81,27 @@ bake run app
 ```
 
 ## Modules
-Reflecs has a growing ecosystem of modules. The following modules are currently
+Flecs has a growing ecosystem of modules. The following modules are currently
 available:
 
 Module      | Description      
 ------------|------------------
-[reflecs.components.transform](https://github.com/SanderMertens/reflecs-components-transform) | Components for positioning, rotating and scaling entities
-[reflecs.components.physics](https://github.com/SanderMertens/reflecs-components-physics) | Components for moving entities
-[reflecs.components.graphics](https://github.com/SanderMertens/reflecs-components-graphics) | Components for describing a drawing canvas and camera
-[reflecs.components.geometry](https://github.com/SanderMertens/reflecs-components-geometry) | Components for describing geometry
-[reflecs.components.input](https://github.com/SanderMertens/reflecs-components-input) | Components for describing keyboard and mouse input
-[reflecs.components.http](https://github.com/SanderMertens/reflecs-components-http) | Components for describing an HTTP server with endpoints
-[reflecs.systems.transform](https://github.com/SanderMertens/reflecs-systems-transform) | Compute transformation matrices from transform components
-[reflecs.systems.physics](https://github.com/SanderMertens/reflecs-systems-physics) | Simple 2D physics engine with limited 3D features
-[reflecs.systems.civetweb](https://github.com/SanderMertens/reflecs-systems-civetweb) | A civetweb-based implementation of components-http
-[reflecs.systems.admin](https://github.com/SanderMertens/reflecs-systems-admin) | A web-based dashboard for monitoring reflecs performance
-[reflecs.systems.sdl2](https://github.com/SanderMertens/reflecs-systems-sdl2) | An SDL2-based renderer
-[reflecs.math](https://github.com/SanderMertens/reflecs-math) | Matrix and vector math functions
-[reflecs.util](https://github.com/SanderMertens/reflecs-util) | Utility functions and datastructures
+[flecs.components.transform](https://github.com/SanderMertens/flecs-components-transform) | Components for positioning, rotating and scaling entities
+[flecs.components.physics](https://github.com/SanderMertens/flecs-components-physics) | Components for moving entities
+[flecs.components.graphics](https://github.com/SanderMertens/flecs-components-graphics) | Components for describing a drawing canvas and camera
+[flecs.components.geometry](https://github.com/SanderMertens/flecs-components-geometry) | Components for describing geometry
+[flecs.components.input](https://github.com/SanderMertens/flecs-components-input) | Components for describing keyboard and mouse input
+[flecs.components.http](https://github.com/SanderMertens/flecs-components-http) | Components for describing an HTTP server with endpoints
+[flecs.systems.transform](https://github.com/SanderMertens/flecs-systems-transform) | Compute transformation matrices from transform components
+[flecs.systems.physics](https://github.com/SanderMertens/flecs-systems-physics) | Simple 2D physics engine with limited 3D features
+[flecs.systems.civetweb](https://github.com/SanderMertens/flecs-systems-civetweb) | A civetweb-based implementation of components-http
+[flecs.systems.admin](https://github.com/SanderMertens/flecs-systems-admin) | A web-based dashboard for monitoring flecs performance
+[flecs.systems.sdl2](https://github.com/SanderMertens/flecs-systems-sdl2) | An SDL2-based renderer
+[flecs.math](https://github.com/SanderMertens/flecs-math) | Matrix and vector math functions
+[flecs.util](https://github.com/SanderMertens/flecs-util) | Utility functions and datastructures
 
 ## Example
-The following code shows a simple reflecs application:
+The following code shows a simple flecs application:
 
 ```c
 typedef struct Position {
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
 ```
 
 ## Concepts
-This section describes the high-level concepts used in reflecs, and how they are represented in the API. Rather than providing an exhaustive overview of the API behavior, this section is intended as an introduction to the different API features of reflecs.
+This section describes the high-level concepts used in flecs, and how they are represented in the API. Rather than providing an exhaustive overview of the API behavior, this section is intended as an introduction to the different API features of flecs.
 
 ### World
 A world is a container in which entities, components and systems can be stored and evaluated. An application can create any number of worlds. Data between worlds is not shared. If the application wants to share data between worlds, this has to be done manually. A world in ECS can be created with the `ecs_init` function:
@@ -154,14 +154,14 @@ EcsWorld *world = ecs_init();
 ```
 
 ### Entity
-An entity is an integer that uniquely identifies an "object" in a system. An entity may have `0..n` components, and each component can be added only once. Entities can be created in reflecs with the `ecs_new` function:
+An entity is an integer that uniquely identifies an "object" in a system. An entity may have `0..n` components, and each component can be added only once. Entities can be created in flecs with the `ecs_new` function:
 
 ```c
 EcsEntity e = ecs_new(world, 0);
 ```
 
 ### Component
-Components are datatypes that can be added to an entity. Any C datatype can be registered as a component within reflecs. To register a component, you can use the `ECS_COMPONENT` macro, which wraps around the `ecs_new_component` function:
+Components are datatypes that can be added to an entity. Any C datatype can be registered as a component within flecs. To register a component, you can use the `ECS_COMPONENT` macro, which wraps around the `ecs_new_component` function:
 
 ```c
 typedef struct Point {
@@ -184,10 +184,10 @@ Additionally, the component can be added and initialized with the `ecs_set` func
 ecs_set(world, e, Point, {.x = 10, .y = 20});
 ```
 
-Reflecs components are stored internally as entities, which is why handles to components are of the `EcsEntity` type.
+Flecs components are stored internally as entities, which is why handles to components are of the `EcsEntity` type.
 
 ### System
-A system is logic (a function) that is executed for every entity that has a set of components that match a system's interest. In reflecs, systems specify their interest, and when they should run. To define a system, you can use the `ECS_SYSTEM` macro, which wraps around the `ecs_new_system` function:
+A system is logic (a function) that is executed for every entity that has a set of components that match a system's interest. In flecs, systems specify their interest, and when they should run. To define a system, you can use the `ECS_SYSTEM` macro, which wraps around the `ecs_new_system` function:
 
 ```c
 ECS_SYSTEM(world, LogPoints, EcsOnFrame, Point);
@@ -211,7 +211,7 @@ ecs_enable(world, LogPoints, false);
 ```
 
 ### Identifier
-Entities in reflecs may have an optional string-based identifier. An identifier can be added to an entity by setting the `EcsId` component, like this:
+Entities in flecs may have an optional string-based identifier. An identifier can be added to an entity by setting the `EcsId` component, like this:
 
 ```c
 ecs_set(world, e, EcsId, {"MyEntity"});
@@ -239,7 +239,7 @@ ECS_SYSTEM(world, MyTask, EcsOnFrame, 0);
 ```
 
 ### Type
-A type identifies a collection of `1..n` entities. In reflecs, components and systems are assigned unique identifiers from the same pool as entities, and therefore a type may contain identifiers to entities, components and systems. Typical usecases for types are:
+A type identifies a collection of `1..n` entities. In flecs, components and systems are assigned unique identifiers from the same pool as entities, and therefore a type may contain identifiers to entities, components and systems. Typical usecases for types are:
 
 - Group components so that they can be added to an entity with a single `ecs_add` call
 - Group systems so that they can be enabled or disabled with a single `ecs_enable` call
@@ -348,6 +348,6 @@ ECS_IMPORT(world, EcsComponentsTransform, 0);
 
 This will invoke the `EcsComponentsTransform` function, which will define the entities / components / systems. Furthermore, the macro will declare the variables to the entity / component / system handles to the local scope, so that they can be accessed by the code. 
 
-In large code bases modules can be used to organize code and limit exposure of internal systems to other parts of the code. Modules may be implemented in separate shared libraries, or within the same project. The only requirements for using the `ECS_IMPORT` macro is that the name of the module (`EcsComponentsTransform`) can be resolved as a C function with the right type. For an example on how to implement modules, see the implementation of one of the reflecs modules (see above).
+In large code bases modules can be used to organize code and limit exposure of internal systems to other parts of the code. Modules may be implemented in separate shared libraries, or within the same project. The only requirements for using the `ECS_IMPORT` macro is that the name of the module (`EcsComponentsTransform`) can be resolved as a C function with the right type. For an example on how to implement modules, see the implementation of one of the flecs modules (see above).
 
 Modules can be imported multiple times without causing side effects.

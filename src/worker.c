@@ -1,4 +1,4 @@
-#include "include/private/reflecs.h"
+#include "include/private/flecs.h"
 #include <assert.h>
 #include <math.h>
 

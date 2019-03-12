@@ -1,7 +1,7 @@
-#ifndef REFLECS_PRIVATE_H
-#define REFLECS_PRIVATE_H
+#ifndef FLECS_PRIVATE_H
+#define FLECS_PRIVATE_H
 
-/* This file contains declarations to private reflecs functions */
+/* This file contains declarations to private flecs functions */
 
 #include "types.h"
 

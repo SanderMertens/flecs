@@ -14,26 +14,26 @@
  * dependencies will automatically show up in this file. Include bake_config.h
  * in your main project file. Do not edit! */
 
-#ifndef REFLECS_BAKE_CONFIG_H
-#define REFLECS_BAKE_CONFIG_H
+#ifndef FLECS_BAKE_CONFIG_H
+#define FLECS_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
 /* No dependencies */
 
 /* Headers of private dependencies */
-#ifdef REFLECS_IMPL
+#ifdef FLECS_IMPL
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#if REFLECS_IMPL && defined _MSC_VER
-#define REFLECS_EXPORT __declspec(dllexport)
-#elif REFLECS_IMPL
-#define REFLECS_EXPORT __attribute__((__visibility__("default")))
+#if FLECS_IMPL && defined _MSC_VER
+#define FLECS_EXPORT __declspec(dllexport)
+#elif FLECS_IMPL
+#define FLECS_EXPORT __attribute__((__visibility__("default")))
 #elif defined _MSC_VER
-#define REFLECS_EXPORT __declspec(dllimport)
+#define FLECS_EXPORT __declspec(dllimport)
 #else
-#define REFLECS_EXPORT
+#define FLECS_EXPORT
 #endif
 
 #endif
