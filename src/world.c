@@ -572,11 +572,11 @@ EcsEntity ecs_lookup(
             continue;
         }
 
-        EcsTableColumn *column = &table->columns[column_index + 1];
 
+        EcsTableColumn *column = &table->columns[column_index + 1];
         EcsId *buffer = ecs_array_buffer(column->data);
         uint32_t i, count = ecs_array_count(column->data);
-
+        
         for (i = 0; i < count; i ++) {
             if (!strcmp(buffer[i], id)) {
                 return *(EcsEntity*)ecs_array_get(

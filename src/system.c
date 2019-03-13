@@ -365,7 +365,7 @@ EcsEntity ecs_new_system(
         ecs_abort(ECS_INVALID_PARAMETERS, 0);
     }
 
-    EcsSystem *system_data = _ecs_get_ptr(world, result, TEcsColSystem);
+    EcsSystem *system_data = ecs_get_ptr(world, result, EcsColSystem);
     if (!system_data) {
         system_data = _ecs_get_ptr(world, result, TEcsRowSystem);
         if (!system_data) {

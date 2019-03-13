@@ -161,14 +161,15 @@ void ecs_table_delete(
     
     ecs_assert(index <= count, ECS_INTERNAL_ERROR, NULL);
 
+    uint32_t column_last = ecs_array_count(table->type) + 1;
+    uint32_t i;
+
     if (index != count) {
         /* Move last entity in array to index */
         EcsEntity *entities = ecs_array_buffer(entity_column);
         EcsEntity to_move = entities[count];
         entities[index] = to_move;
 
-        uint32_t column_last = ecs_array_count(table->type) + 1;
-        uint32_t i;
         for (i = 1; i < column_last; i ++) {
             EcsTableColumn *column = &columns[i];
             EcsArrayParams params = {.element_size = column->size};
@@ -180,9 +181,13 @@ void ecs_table_delete(
         row.type_id = table->type_id;
         row.index = index;
         ecs_map_set64(world->main_stage.entity_index, to_move, ecs_from_row(row));
-    }
+    } else {
+        ecs_array_remove_last(entity_column);
 
-    ecs_array_remove_last(entity_column);
+        for (i = 1; i < column_last; i ++) {
+            ecs_array_remove_last(columns[i].data);
+        }
+    }
 
     if (!world->in_progress && !count) {
         activate_table(world, table, false);
