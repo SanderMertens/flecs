@@ -50,7 +50,7 @@ void System_w_FromContainer_1_column_from_container() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -106,7 +106,7 @@ void System_w_FromContainer_2_column_1_from_container() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
@@ -214,7 +214,7 @@ void System_w_FromContainer_3_column_2_from_container() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter_2_shared);
+    test_int(ctx.system, Iter_2_shared);
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
@@ -285,7 +285,7 @@ void System_w_FromContainer_3_column_2_from_different_container() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter_2_shared);
+    test_int(ctx.system, Iter_2_shared);
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
@@ -347,7 +347,7 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
 
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -421,7 +421,7 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter_2_shared);
+    test_int(ctx.system, Iter_2_shared);
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
@@ -490,7 +490,7 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
 
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 4);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 

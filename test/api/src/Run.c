@@ -56,11 +56,11 @@ void Run_run() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run(world, EIter, 1.0, NULL), 0);
+    test_int( ecs_run(world, Iter, 1.0, NULL), 0);
 
     test_int(ctx.count, 6);
     test_int(ctx.invoked, 3);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -108,11 +108,11 @@ void Run_run_w_param() {
     test_int(ctx.invoked, 0);
 
     int param = 5;
-    test_int( ecs_run(world, EIter, 1.0, &param), 0);
+    test_int( ecs_run(world, Iter, 1.0, &param), 0);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 1);
     test_ptr(ctx.param, &param);
 
@@ -152,11 +152,11 @@ void Run_run_w_offset() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 2, 0, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 2, 0, 0, NULL), 0);
 
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 3);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -210,11 +210,11 @@ void Run_run_w_offset_skip_1_archetype() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 3, 0, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 3, 0, 0, NULL), 0);
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -267,11 +267,11 @@ void Run_run_w_offset_skip_1_archetype_plus_one() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 4, 0, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 4, 0, 0, NULL), 0);
 
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -323,11 +323,11 @@ void Run_run_w_offset_skip_2_archetypes() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 5, 0, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 5, 0, 0, NULL), 0);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -373,11 +373,11 @@ void Run_run_w_limit_skip_1_archetype() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 0, 5, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 5, 0, NULL), 0);
 
     test_int(ctx.count, 5);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -432,11 +432,11 @@ void Run_run_w_limit_skip_1_archetype_minus_one() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 0, 4, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 4, 0, NULL), 0);
 
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -490,11 +490,11 @@ void Run_run_w_limit_skip_2_archetypes() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 0, 3, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 3, 0, NULL), 0);
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -547,11 +547,11 @@ void Run_run_w_offset_1_limit_max() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 1, 5, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 1, 5, 0, NULL), 0);
 
     test_int(ctx.count, 5);
     test_int(ctx.invoked, 3);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -606,11 +606,11 @@ void Run_run_w_offset_1_limit_minus_1() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 1, 4, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 1, 4, 0, NULL), 0);
 
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -664,11 +664,11 @@ void Run_run_w_offset_2_type_limit_max() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 3, 3, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 3, 3, 0, NULL), 0);
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -721,11 +721,11 @@ void Run_run_w_offset_2_type_limit_minus_1() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 3, 2, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 3, 2, 0, NULL), 0);
 
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -778,16 +778,16 @@ void Run_run_w_limit_1_all_offsets() {
     test_int(ctx.invoked, 0);
 
     /* Process entities out of order so we can validate whether it is correct */
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 0, 1, 0, NULL), 0);
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 2, 1, 0, NULL), 0);
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 1, 1, 0, NULL), 0);
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 3, 1, 0, NULL), 0);
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 5, 1, 0, NULL), 0);
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 4, 1, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 1, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 2, 1, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 1, 1, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 3, 1, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 5, 1, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 4, 1, 0, NULL), 0);
 
     test_int(ctx.count, 6);
     test_int(ctx.invoked, 6);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -843,7 +843,7 @@ void Run_run_w_offset_out_of_bounds() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 6, 1, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 6, 1, 0, NULL), 0);
 
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 0);
@@ -876,11 +876,11 @@ void Run_run_w_limit_out_of_bounds() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 5, 2, 0, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 5, 2, 0, NULL), 0);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -931,11 +931,11 @@ void Run_run_w_component_filter() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 0, 0, Mass, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, Mass, NULL), 0);
 
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -989,11 +989,11 @@ void Run_run_w_type_filter_of_2() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 0, 0, Type, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, Type, NULL), 0);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -1058,11 +1058,11 @@ void Run_run_w_container_filter() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, EIter, 1.0, 0, 0, Parent, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, Parent, NULL), 0);
 
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 4);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -1103,7 +1103,7 @@ void Run_run_no_match() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run(world, EIter, 1.0, NULL), 0);
+    test_int( ecs_run(world, Iter, 1.0, NULL), 0);
 
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 0);

@@ -42,7 +42,7 @@ void SystemOnFrame_1_type_1_component() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -90,7 +90,7 @@ void SystemOnFrame_1_type_3_component() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
@@ -171,7 +171,7 @@ void SystemOnFrame_3_type_1_component() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 3);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -224,7 +224,7 @@ void SystemOnFrame_2_type_3_component() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
@@ -310,7 +310,7 @@ void SystemOnFrame_1_type_1_component_1_tag() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -359,7 +359,7 @@ void SystemOnFrame_2_type_1_component_1_tag() {
 
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -403,7 +403,7 @@ void SystemOnFrame_2_type_1_and_1_not() {
 
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -447,7 +447,7 @@ void SystemOnFrame_2_type_2_and_1_not() {
 
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
@@ -504,7 +504,7 @@ void SystemOnFrame_2_type_2_and_2_not() {
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 4);
     test_null(ctx.param);
 
@@ -558,7 +558,7 @@ void SystemOnFrame_4_type_1_and_1_or() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 3);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -647,7 +647,7 @@ void SystemOnFrame_4_type_1_and_1_or_of_3() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 3);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -730,7 +730,7 @@ void SystemOnFrame_1_type_1_and_1_or() {
 
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -754,7 +754,7 @@ void SystemOnFrame_1_type_1_and_1_or() {
 
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -787,7 +787,7 @@ void SystemOnFrame_2_type_1_and_1_optional() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -851,7 +851,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
@@ -931,7 +931,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
 
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 4);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 

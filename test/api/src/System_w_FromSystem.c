@@ -47,8 +47,8 @@ void System_w_FromSystem_2_column_1_from_system() {
     ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, Iter, EcsOnFrame, Position, SYSTEM.Velocity);
 
-    test_assert( ecs_has(world, EIter, Velocity));
-    Velocity *v = ecs_get_ptr(world, EIter, Velocity);
+    test_assert( ecs_has(world, Iter, Velocity));
+    Velocity *v = ecs_get_ptr(world, Iter, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 10);
     test_int(v->y, 20);
@@ -62,7 +62,7 @@ void System_w_FromSystem_2_column_1_from_system() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -70,7 +70,7 @@ void System_w_FromSystem_2_column_1_from_system() {
     test_int(ctx.c[0][0], EPosition);
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], EVelocity);
-    test_int(ctx.s[0][1], EIter);
+    test_int(ctx.s[0][1], Iter);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
@@ -96,14 +96,14 @@ void System_w_FromSystem_3_column_2_from_system() {
     ECS_SYSTEM(world, InitMass, EcsOnAdd, Mass);
     ECS_SYSTEM(world, Iter, EcsOnFrame, Position, SYSTEM.Velocity, SYSTEM.Mass);
 
-    test_assert( ecs_has(world, EIter, Velocity));
-    Velocity *v = ecs_get_ptr(world, EIter, Velocity);
+    test_assert( ecs_has(world, Iter, Velocity));
+    Velocity *v = ecs_get_ptr(world, Iter, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 10);
     test_int(v->y, 20);
 
-    test_assert( ecs_has(world, EIter, Mass));
-    Mass *m = ecs_get_ptr(world, EIter, Mass);
+    test_assert( ecs_has(world, Iter, Mass));
+    Mass *m = ecs_get_ptr(world, Iter, Mass);
     test_assert(m != NULL);
     test_int(*m, 3);
 
@@ -116,7 +116,7 @@ void System_w_FromSystem_3_column_2_from_system() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter);
+    test_int(ctx.system, Iter);
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
@@ -124,9 +124,9 @@ void System_w_FromSystem_3_column_2_from_system() {
     test_int(ctx.c[0][0], EPosition);
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], EVelocity);
-    test_int(ctx.s[0][1], EIter);
+    test_int(ctx.s[0][1], Iter);
     test_int(ctx.c[0][2], EMass);
-    test_int(ctx.s[0][2], EIter);
+    test_int(ctx.s[0][2], Iter);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
@@ -171,8 +171,8 @@ void System_w_FromSystem_2_column_1_from_system_on_add() {
     ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, Iter_reactive, EcsOnAdd, Position, SYSTEM.Velocity);
 
-    test_assert( ecs_has(world, EIter_reactive, Velocity));
-    Velocity *v = ecs_get_ptr(world, EIter_reactive, Velocity);
+    test_assert( ecs_has(world, Iter_reactive, Velocity));
+    Velocity *v = ecs_get_ptr(world, Iter_reactive, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 10);
     test_int(v->y, 20);
@@ -184,7 +184,7 @@ void System_w_FromSystem_2_column_1_from_system_on_add() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter_reactive);
+    test_int(ctx.system, Iter_reactive);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -192,7 +192,7 @@ void System_w_FromSystem_2_column_1_from_system_on_add() {
     test_int(ctx.c[0][0], EPosition);
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], EVelocity);
-    test_int(ctx.s[0][1], EIter_reactive);
+    test_int(ctx.s[0][1], Iter_reactive);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
@@ -211,8 +211,8 @@ void System_w_FromSystem_2_column_1_from_system_on_remove() {
     ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, Iter_reactive, EcsOnRemove, Position, SYSTEM.Velocity);
 
-    test_assert( ecs_has(world, EIter_reactive, Velocity));
-    Velocity *v = ecs_get_ptr(world, EIter_reactive, Velocity);
+    test_assert( ecs_has(world, Iter_reactive, Velocity));
+    Velocity *v = ecs_get_ptr(world, Iter_reactive, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 10);
     test_int(v->y, 20);
@@ -227,7 +227,7 @@ void System_w_FromSystem_2_column_1_from_system_on_remove() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter_reactive);
+    test_int(ctx.system, Iter_reactive);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -235,7 +235,7 @@ void System_w_FromSystem_2_column_1_from_system_on_remove() {
     test_int(ctx.c[0][0], EPosition);
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], EVelocity);
-    test_int(ctx.s[0][1], EIter_reactive);
+    test_int(ctx.s[0][1], Iter_reactive);
 
     ecs_fini(world);
 }
@@ -249,8 +249,8 @@ void System_w_FromSystem_2_column_1_from_system_on_set() {
     ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, Iter_reactive, EcsOnSet, Position, SYSTEM.Velocity);
 
-    test_assert( ecs_has(world, EIter_reactive, Velocity));
-    Velocity *v = ecs_get_ptr(world, EIter_reactive, Velocity);
+    test_assert( ecs_has(world, Iter_reactive, Velocity));
+    Velocity *v = ecs_get_ptr(world, Iter_reactive, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 10);
     test_int(v->y, 20);
@@ -262,7 +262,7 @@ void System_w_FromSystem_2_column_1_from_system_on_set() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EIter_reactive);
+    test_int(ctx.system, Iter_reactive);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -270,7 +270,7 @@ void System_w_FromSystem_2_column_1_from_system_on_set() {
     test_int(ctx.c[0][0], EPosition);
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], EVelocity);
-    test_int(ctx.s[0][1], EIter_reactive);
+    test_int(ctx.s[0][1], Iter_reactive);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);

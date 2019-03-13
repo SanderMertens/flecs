@@ -1379,10 +1379,10 @@ void _ecs_assert(
  * After the macro, the application will have access to a Move_h variable which
  * holds the handle to the new system. */
 #define ECS_SYSTEM(world, id, kind, ...) \
-    void id(EcsRows*);\
-    EcsEntity E##id = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
-    (void)E##id;\
-    assert (E##id != 0)
+    EcsEntity F##id = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
+    EcsEntity id = F##id;\
+    (void)id;\
+    assert (id != 0)
 
 /** Wrapper around ecs_load.
  * This macro provides a convenient way to load a module with the world. It can
@@ -1412,7 +1412,7 @@ void _ecs_assert(
 
 /** Utility macro for declaring a system inside a handles type */
 #define ECS_DECLARE_SYSTEM(system)\
-    EcsEntity E##system
+    EcsEntity system
 
 /** Utility macro for setting a component in a module function */
 #define ECS_SET_COMPONENT(handles, component)\
@@ -1421,7 +1421,7 @@ void _ecs_assert(
 
 /** Utility macro for setting a system in a module function */
 #define ECS_SET_SYSTEM(handles, system)\
-    handles->E##system = E##system
+    handles->system = system
 
 /** Utility macro for declaring handles by modules */
 #define ECS_IMPORT_COMPONENT(handles, component)\
@@ -1430,7 +1430,7 @@ void _ecs_assert(
 
 /** Utility macro for declaring handles by modules */
 #define ECS_IMPORT_SYSTEM(handles, system)\
-    EcsEntity E##system = handles.E##system; (void)E##system
+    EcsEntity system = handles.system; (void)system
 
 /** Utility macro's */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))

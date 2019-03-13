@@ -35,7 +35,7 @@ void SystemOnSet_set() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EOnSet);
+    test_int(ctx.system, OnSet);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -63,7 +63,7 @@ void SystemOnSet_set_new() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EOnSet);
+    test_int(ctx.system, OnSet);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -94,7 +94,7 @@ void SystemOnSet_set_again() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EOnSet);
+    test_int(ctx.system, OnSet);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -129,7 +129,7 @@ void SystemOnSet_clone() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EOnSet);
+    test_int(ctx.system, OnSet);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -165,7 +165,7 @@ void SystemOnSet_clone_w_value() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EOnSet);
+    test_int(ctx.system, OnSet);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -186,7 +186,7 @@ void SystemOnSet_clone_w_value() {
      * copied */
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EOnSet);
+    test_int(ctx.system, OnSet);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
@@ -223,7 +223,7 @@ void SystemOnSet_set_w_optional() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EOnSet);
+    test_int(ctx.system, OnSet);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -239,7 +239,7 @@ void SystemOnSet_set_w_optional() {
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, EOnSet);
+    test_int(ctx.system, OnSet);
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
@@ -322,7 +322,7 @@ void SystemOnSet_set_and_add_system() {
     
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
-    test_int(ctx.system, EOnSet_check_order);
+    test_int(ctx.system, OnSet_check_order);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
