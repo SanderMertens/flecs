@@ -17,7 +17,7 @@ Additionally, flecs has a flexible engine that lets you do many things, like:
 
 Check out the [examples](https://github.com/SanderMertens/flecs/tree/master/examples) and [documentation](https://github.com/SanderMertens/flecs/blob/master/include/flecs.h) to learn more.
 
-Oh, and we have [dashboards](https://github.com/SanderMertens/flecs-admin)!
+Oh, and we have [dashboards](https://github.com/SanderMertens/flecs-systems-admin)!
 
 ![dashboard](https://user-images.githubusercontent.com/9919222/54180572-309ec380-4459-11e9-9e48-1a08de57ff91.png)
 
