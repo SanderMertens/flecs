@@ -270,6 +270,7 @@ void ecs_row_notify(
     EcsEntity system,
     EcsRowSystem *system_data,
     int32_t *columns,
+    EcsReference *references,
     EcsTableColumn *table_columns,
     uint32_t offset,
     uint32_t limit);

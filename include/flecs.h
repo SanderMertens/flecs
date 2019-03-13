@@ -203,21 +203,6 @@ void ecs_quit(
  * so they can be accessed by the application. Note that if the module is loaded
  * in different worlds, the handles may not be the same.
  *
- * For a module with the name 'ecs.components.transform', the following
- * naming conventions are used:
- *
- * To include its include file:
- *   #include <ecs/components/transform/transform.h>
- *
- * To link with its library:
- *   -lecs_components_transform
- *
- * To load the module with the flecs API:
- *   ecs_import(world, EcsComponentsTransform, 0, &handles);
- *
- * The declaration of handles:
- *    EcsComponentsTransformHandles handles;
- *
  * These naming conventions are not enforced, and projects are free to use their
  * own conventions, though these are the conventions used by the modules
  * provided by flecs.
@@ -240,11 +225,13 @@ void ecs_quit(
  * @param handles_out A struct with handles to the module components/systems.
  */
 FLECS_EXPORT
-void ecs_import(
+EcsEntity ecs_import(
     EcsWorld *world,
     EcsModuleInitAction module,
+    const char *module_name,
     int flags,
-    void *handles_out);
+    void *handles_out,
+    size_t handles_size);
 
 /** Progress a world.
  * This operation progresses the world by running all systems that are both
@@ -678,6 +665,12 @@ void* _ecs_get_ptr(
 #define ecs_get(world, entity, type)\
   (*(type*)_ecs_get_ptr(world, entity, T##type))
 
+#define ecs_get_singleton(world, type)\
+    (*(type*)_ecs_get_ptr(world, 0, T##type))
+
+#define ecs_get_singleton_ptr(world, type)\
+    _ecs_get_ptr(world, 0, T##type)
+
 /* Set value of component.
  * This function sets the value of a component on the specified entity. If the
  * component does not yet exist, it will be added to the entity.
@@ -703,11 +696,24 @@ EcsEntity _ecs_set_ptr(
     size_t size,
     void *ptr);
 
-#define ecs_set_ptr(world, entity, type, size, ptr)\
-    _ecs_set_ptr(world, entity, T##type, size, ptr)
+FLECS_EXPORT
+EcsEntity _ecs_set_singleton_ptr(
+    EcsWorld *world,
+    EcsType type,
+    size_t size,
+    void *ptr);
+
+#define ecs_set_ptr(world, entity, type, ptr)\
+    _ecs_set_ptr(world, entity, T##type, sizeof(type), ptr)
 
 #define ecs_set(world, entity, type, ...)\
-    _ecs_set_ptr(world, entity, T##type, sizeof(type), &(type)__VA_ARGS__);
+    _ecs_set_ptr(world, entity, T##type, sizeof(type), &(type)__VA_ARGS__)
+
+#define ecs_set_singleton(world, type, ...)\
+    _ecs_set_singleton_ptr(world, T##type, sizeof(type), &(type)__VA_ARGS__)
+
+#define ecs_set_singleton_ptr(world, type, ptr)\
+    _ecs_set_singleton_ptr(world, T##type, sizeof(type), ptr)
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the
@@ -1290,6 +1296,7 @@ void _ecs_assert(
 #define ECS_ENTITY_ALREADY_DEFINED (13)
 #define ECS_INVALID_COMPONENT_SIZE (14)
 #define ECS_OUT_OF_MEMORY (15)
+#define ECS_MODULE_UNDEFINED (16)
 
 /* -- Convenience macro's -- */
 
@@ -1386,7 +1393,16 @@ void _ecs_assert(
  * ecs_enable(world, EcsSystemsMovement_h.Move); */
 #define ECS_IMPORT(world, module, flags) \
     module##Handles M##module;\
-    ecs_import(world, module, flags, &M##module);\
+    EcsEntity E##module = ecs_import(world, module, #module, flags, &M##module, sizeof(module##Handles));\
+    EcsType T##module = ecs_type_from_entity(world, E##module);\
+    module##_ImportHandles(M##module);\
+    (void)E##module;\
+    (void)T##module
+
+#define ECS_IMPORT_COLUMN(rows, module, column) \
+    module##Handles *M##module##_ptr = (module##Handles*)_ecs_shared(rows, column);\
+    ecs_assert(M##module##_ptr != NULL, ECS_MODULE_UNDEFINED, #module);\
+    module##Handles M##module = *M##module##_ptr;\
     module##_ImportHandles(M##module)
 
 /** Utility macro for declaring a component inside a handles type */

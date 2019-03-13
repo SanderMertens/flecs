@@ -470,7 +470,7 @@ EcsWorld *ecs_init(void) {
     bootstrap_component(world, table, EEcsRowSystem, ECS_ROW_SYSTEM_ID, sizeof(EcsRowSystem));
     bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_ID, sizeof(EcsColSystem));
     bootstrap_component(world, table, EEcsId, ECS_ID_ID, sizeof(EcsId));
-    bootstrap_component(world, table, EEcsHidden, ECS_ID_ID, 0);
+    bootstrap_component(world, table, EEcsHidden, ECS_HIDDEN_ID, 0);
     bootstrap_component(world, table, EEcsContainer, ECS_CONTAINER_ID, 0);
 
     world->last_handle = EEcsContainer + 1;
@@ -832,11 +832,23 @@ void ecs_set_context(
     world->context = context;
 }
 
-void ecs_import(
+EcsEntity ecs_import(
     EcsWorld *world,
     EcsModuleInitAction module,
+    const char *module_name,
     int flags,
-    void *handles)
+    void *handles_out,
+    size_t handles_size)
 {
-    module(world, flags, handles);
+    module(world, flags, handles_out);
+
+    /* Register component for module that contains handles */
+    EcsEntity e = ecs_new_component(world, module_name, handles_size);
+    EcsType t = ecs_type_from_entity(world, e);
+
+    /* Set module handles component on singleton */
+    _ecs_set_singleton_ptr(world, t, handles_size, handles_out);
+
+    return e;
 }
+

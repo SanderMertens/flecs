@@ -32,6 +32,12 @@ char* parse_complex_elem(
             ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
         }
         bptr ++;
+    } else if (bptr[0] == '$') {
+        *elem_kind = EcsFromSingleton;
+        if (!bptr[1]) {
+            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
+        }
+        bptr ++;
     }
 
     char *dot = strchr(bptr, '.');
@@ -173,7 +179,7 @@ EcsResult ecs_parse_component_expr(
             *bptr = ch;
             bptr ++;
 
-            if (ch == '.' || ch == '!' || ch == '?') {
+            if (ch == '.' || ch == '!' || ch == '?' || ch == '$') {
                 complex_expr = true;
             }
         }

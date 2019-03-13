@@ -85,7 +85,7 @@ const char* ecs_strerror(
     case ECS_INVALID_COMPONENT_ID:
         return "invalid component id";
     case ECS_INVALID_COMPONENT_EXPRESSION:
-        return "invalid component expression";
+        return "invalid component expression for system";
     case ECS_MISSING_SYSTEM_CONTEXT:
         return "missing system context";
     case ECS_UNKNOWN_COMPONENT_ID:
@@ -108,6 +108,8 @@ const char* ecs_strerror(
         return "the specified size does not match the component";
     case ECS_OUT_OF_MEMORY:
         return "out of memory";
+    case ECS_MODULE_UNDEFINED:
+        return "module is undefined";
     }
 
     return "unknown error code";

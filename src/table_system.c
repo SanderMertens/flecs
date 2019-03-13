@@ -230,6 +230,11 @@ void add_table(
             }
 
             entity = system;
+
+        /* Column that retrieves singleton components */
+        } else if (column->kind == EcsFromSingleton) {
+            component = column->is.component;
+            entity = 0;
         }
 
         /* This column does not retrieve data from a static entity (either
@@ -274,15 +279,19 @@ void add_table(
 
         /* If entity is set, or component is not found in table, add it as a ref
          * to data of a specific entity. */
-        if (entity || table_data[i] == -1) {
+        if (entity || table_data[i] == -1 || column->kind == EcsFromSingleton) {
             if (!ref_data) {
                 ref_data = get_ref_data(world, system_data, table_data);
             }
 
             /* Find the entity for the component. If the code gets here, this
              * function will return a prefab. */
-            ref_data[ref].entity = get_entity_for_component(
-                world, entity, table_type, component);
+            if (column->kind == EcsFromSingleton) {
+                ref_data[ref].entity = 0;
+            } else {
+                ref_data[ref].entity = get_entity_for_component(
+                    world, entity, table_type, component);
+            }
 
             ref_data[ref].component = ecs_type_from_entity(world, component);
             ref ++;
@@ -620,15 +629,6 @@ EcsEntity ecs_new_col_system(
     }
 
     *elem = result;
-
-    if (system_data->and_from_system) {
-        EcsArray *f = ecs_type_get(world, NULL, system_data->and_from_system);
-        EcsEntity *buffer = ecs_array_buffer(f);
-        uint32_t i, count = ecs_array_count(f);
-        for (i = 0; i < count; i ++) {
-            _ecs_add(world, result, buffer[i]);
-        }
-    }
 
     return result;
 }

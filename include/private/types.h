@@ -44,7 +44,8 @@ typedef enum EcsSystemExprElemKind {
     EcsFromEntity,          /* Get component from entity (default) */
     EcsFromContainer,       /* Get component from container */
     EcsFromSystem,          /* Get component from system */
-    EcsFromId               /* Get entity by id */
+    EcsFromId,              /* Get entity by id */
+    EcsFromSingleton        /* Get singleton component */
 } EcsSystemExprElemKind;
 
 /** Type describing an operator used in an signature of a system signature */
@@ -88,6 +89,7 @@ typedef struct EcsSystem {
     EcsType not_from_entity; /* Exclude components from entity */
     EcsType not_from_component; /* Exclude components from components */
     EcsType and_from_entity; /* Which components are required from entity */
+    EcsType and_from_system;   /* Used to auto-add components to system */
     EcsSystemKind kind;        /* Kind of system */
     float time_spent;          /* Time spent on running system */
     bool enabled;              /* Is system enabled or not */
@@ -142,7 +144,6 @@ typedef struct EcsColSystem {
     EcsArrayParams table_params; /* Parameters for tables array */
     EcsArrayParams component_params; /* Parameters for components array */
     EcsArrayParams ref_params; /* Parameters for tables array */
-    EcsType and_from_system;   /* Used to auto-add components to system */
     float period;              /* Minimum period inbetween system invocations */
     float time_passed;         /* Time passed since last invocation */
 } EcsColSystem;

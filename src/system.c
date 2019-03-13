@@ -154,7 +154,6 @@ void ecs_system_compute_and_families(
 {
     uint32_t i, column_count = ecs_array_count(system_data->columns);
     EcsSystemColumn *buffer = ecs_array_buffer(system_data->columns);
-    EcsColSystem *col_system_data = NULL;
 
     for (i = 0; i < column_count; i ++) {
         EcsSystemColumn *elem = &buffer[i];
@@ -167,19 +166,9 @@ void ecs_system_compute_and_families(
                  world, NULL, system_data->and_from_entity, elem->is.component);
             }
         } else if (elem_kind == EcsFromSystem) {
-            if (!col_system_data) {
-                col_system_data = ecs_get_ptr(world, system, EcsColSystem);
-                if (!col_system_data) {
-                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, NULL);
-                }
-            }
             if (oper_kind == EcsOperAnd) {
-                col_system_data->and_from_system = ecs_type_add(
-                  world, NULL, col_system_data->and_from_system, elem->is.component);
-                
-                /* Add component to system */
-                EcsType type = ecs_type_from_entity(world, elem->is.component);
-                _ecs_add(world, system, type);
+                system_data->and_from_system = ecs_type_add(
+                  world, NULL, system_data->and_from_system, elem->is.component);
             }
         }
     }
@@ -269,6 +258,7 @@ void ecs_row_notify(
     EcsEntity system,
     EcsRowSystem *system_data,
     int32_t *columns,
+    EcsReference *references,
     EcsTableColumn *table_columns,
     uint32_t offset,
     uint32_t limit)
@@ -280,6 +270,7 @@ void ecs_row_notify(
         .system = system,
         .columns = columns,
         .column_count = ecs_array_count(system_data->components),
+        .references = references,
         .table_columns = table_columns,
         .components = ecs_array_buffer(system_data->components),
         .index_offset = 0,
@@ -372,6 +363,25 @@ EcsEntity ecs_new_system(
         result = new_row_system(world, id, kind, needs_tables, sig, action);
     } else {
         ecs_abort(ECS_INVALID_PARAMETERS, 0);
+    }
+
+    EcsSystem *system_data = _ecs_get_ptr(world, result, TEcsColSystem);
+    if (!system_data) {
+        system_data = _ecs_get_ptr(world, result, TEcsRowSystem);
+        if (!system_data) {
+            ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        }
+    }
+
+    /* If system contains FromSystem params, add them tot the system */
+    if (system_data->and_from_system) {
+        EcsArray *f = ecs_type_get(world, NULL, system_data->and_from_system);
+        EcsEntity *buffer = ecs_array_buffer(f);
+        uint32_t i, count = ecs_array_count(f);
+        for (i = 0; i < count; i ++) {
+            EcsType type = ecs_type_from_entity(world, buffer[i]);
+            _ecs_add(world, result, type);
+        }
     }
 
     return result;

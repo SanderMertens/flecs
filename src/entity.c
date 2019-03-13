@@ -427,9 +427,18 @@ bool ecs_notify_system(
     uint32_t i, column_count = ecs_array_count(system_data->base.columns);
     EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
     int32_t columns[column_count];
+    EcsReference references[column_count];
+    uint32_t ref_id = 0;
 
     for (i = 0; i < column_count; i ++) {
-        columns[i] = ecs_type_index_of(table->type, buffer[i].is.component) + 1;
+        if (buffer[i].kind == EcsFromSystem) {
+            references[ref_id].entity = system;
+            references[ref_id].component = ecs_type_from_entity(world, buffer[i].is.component);
+            ref_id ++;
+            columns[i] = -ref_id;
+        } else {
+            columns[i] = ecs_type_index_of(table->type, buffer[i].is.component) + 1;
+        }
     }
 
     ecs_row_notify(
@@ -437,6 +446,7 @@ bool ecs_notify_system(
         system,
         system_data,
         columns,
+        references,
         table_columns,
         offset,
         limit);
@@ -797,26 +807,22 @@ void* _ecs_get_ptr(
     return get_ptr(world, entity, component, false, true, &info);
 }
 
-EcsEntity _ecs_set_ptr(
+static
+EcsEntity _ecs_set_ptr_intern(
     EcsWorld *world,
     EcsEntity entity,
     EcsType type,
     size_t size,
-    void *src)
+    void *ptr)
 {
     EcsEntityInfo info = {0};
 
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(type != 0, ECS_INVALID_PARAMETERS, NULL);
-    ecs_assert(src != NULL, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETERS, NULL);
 
     /* Set only accepts types that hold a single component */
     EcsEntity component = ecs_entity_from_type(world, type);
-
-    /* If no entity is specified, create one */
-    if (!entity) {
-        entity = _ecs_new(world, type);
-    }
 
     /* If component hasn't been added to entity yet, add it */
     int *dst = get_ptr(world, entity, component, true, false, &info);
@@ -833,7 +839,7 @@ EcsEntity _ecs_set_ptr(
     ecs_assert(cdata->size == size, ECS_INVALID_COMPONENT_SIZE, NULL);
 #endif
 
-    memcpy(dst, src, size);
+    memcpy(dst, ptr, size);
 
     EcsStage *stage = ecs_get_stage(&world);
     notify_pre_merge(
@@ -847,6 +853,30 @@ EcsEntity _ecs_set_ptr(
         world->type_sys_set_index);
 
     return entity;
+}
+
+EcsEntity _ecs_set_ptr(
+    EcsWorld *world,
+    EcsEntity entity,
+    EcsType type,
+    size_t size,
+    void *ptr)
+{
+    /* If no entity is specified, create one */
+    if (!entity) {
+        entity = _ecs_new(world, type);
+    }
+
+    return _ecs_set_ptr_intern(world, entity, type, size, ptr);
+}
+
+EcsEntity _ecs_set_singleton_ptr(
+    EcsWorld *world,
+    EcsType type,
+    size_t size,
+    void *ptr)
+{
+    return _ecs_set_ptr_intern(world, 0, type, size, ptr);
 }
 
 bool _ecs_has(

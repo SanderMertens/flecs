@@ -67,7 +67,7 @@ To create a new flecs application, first create a new project:
 bake new my_app -t flecs
 ```
 
-You now have a project which contains a simple reflecs application! To run the project, do:
+You now have a project which contains a simple flecs application! To run the project, do:
 
 ```
 bake run my_app
