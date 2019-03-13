@@ -140,6 +140,14 @@
                 "set_and_new"
             ]
         }, {
+            "id": "Singleton",
+            "testcases": [
+                "set",
+                "set_ptr",
+                "system_w_singleton",
+                "system_w_singleton_not_set"
+            ]
+        }, {
             "id": "Clone",
             "testcases": [
                 "empty",
@@ -295,7 +303,10 @@
             "id": "System_w_FromSystem",
             "testcases": [
                 "2_column_1_from_system",
-                "3_column_2_from_system"
+                "3_column_2_from_system",
+                "2_column_1_from_system_on_add",
+                "2_column_1_from_system_on_remove",
+                "2_column_1_from_system_on_set"
             ]
         }, {
             "id": "Run",
@@ -366,7 +377,8 @@
         }, {
             "id": "Modules",
             "testcases": [
-                "simple_module"
+                "simple_module",
+                "import_module_from_system"
             ]
         }, {
             "id": "Internals",

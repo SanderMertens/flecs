@@ -107,7 +107,7 @@ void SystemOnSet_set_again() {
     test_int(p->x, 11);
     test_int(p->y, 20);
 
-    ecs_set_ptr(world, e, Position, sizeof(Position), p);
+    ecs_set_ptr(world, e, Position, p);
 
     p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);

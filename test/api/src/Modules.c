@@ -41,3 +41,35 @@ void Modules_simple_module() {
     
     ecs_fini(world);
 }
+
+static
+void AddVtoP(EcsRows *rows) {
+    EcsEntity *entities = ecs_column(rows, EcsEntity, 0);    
+    
+    ECS_IMPORT_COLUMN(rows, SimpleModule, 2);
+
+    int i;
+    for (i = rows->begin; i < rows->end; i ++) {
+        ecs_add(rows->world, entities[i], Velocity);
+    }
+}
+
+void Modules_import_module_from_system() {
+    EcsWorld *world = ecs_init();
+
+    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_SYSTEM(world, AddVtoP, EcsOnFrame, Position, $SimpleModule);
+
+    void *module_ptr = ecs_get_singleton_ptr(world, SimpleModule);
+    test_assert(module_ptr != NULL);
+
+    EcsEntity e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e, Velocity));
+    
+    ecs_fini(world);
+}

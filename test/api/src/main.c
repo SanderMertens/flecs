@@ -123,6 +123,12 @@ void Set_set_remove_other(void);
 void Set_set_remove_twice(void);
 void Set_set_and_new(void);
 
+// Testsuite 'Singleton'
+void Singleton_set(void);
+void Singleton_set_ptr(void);
+void Singleton_system_w_singleton(void);
+void Singleton_system_w_singleton_not_set(void);
+
 // Testsuite 'Clone'
 void Clone_empty(void);
 void Clone_empty_w_value(void);
@@ -260,6 +266,9 @@ void System_w_FromId_column_type(void);
 // Testsuite 'System_w_FromSystem'
 void System_w_FromSystem_2_column_1_from_system(void);
 void System_w_FromSystem_3_column_2_from_system(void);
+void System_w_FromSystem_2_column_1_from_system_on_add(void);
+void System_w_FromSystem_2_column_1_from_system_on_remove(void);
+void System_w_FromSystem_2_column_1_from_system_on_set(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -325,6 +334,7 @@ void SingleThreadStaging_delete_after_set(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
+void Modules_import_module_from_system(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -777,6 +787,28 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_and_new",
                 .function = Set_set_and_new
+            }
+        }
+    },
+    {
+        .id = "Singleton",
+        .testcase_count = 4,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "set",
+                .function = Singleton_set
+            },
+            {
+                .id = "set_ptr",
+                .function = Singleton_set_ptr
+            },
+            {
+                .id = "system_w_singleton",
+                .function = Singleton_system_w_singleton
+            },
+            {
+                .id = "system_w_singleton_not_set",
+                .function = Singleton_system_w_singleton_not_set
             }
         }
     },
@@ -1300,7 +1332,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "System_w_FromSystem",
-        .testcase_count = 2,
+        .testcase_count = 5,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_column_1_from_system",
@@ -1309,6 +1341,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "3_column_2_from_system",
                 .function = System_w_FromSystem_3_column_2_from_system
+            },
+            {
+                .id = "2_column_1_from_system_on_add",
+                .function = System_w_FromSystem_2_column_1_from_system_on_add
+            },
+            {
+                .id = "2_column_1_from_system_on_remove",
+                .function = System_w_FromSystem_2_column_1_from_system_on_remove
+            },
+            {
+                .id = "2_column_1_from_system_on_set",
+                .function = System_w_FromSystem_2_column_1_from_system_on_set
             }
         }
     },
@@ -1558,11 +1602,15 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Modules",
-        .testcase_count = 1,
+        .testcase_count = 2,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_module",
                 .function = Modules_simple_module
+            },
+            {
+                .id = "import_module_from_system",
+                .function = Modules_import_module_from_system
             }
         }
     },
@@ -1596,5 +1644,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 21);
+    return bake_test_run("api", argc, argv, suites, 22);
 }

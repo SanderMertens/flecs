@@ -22,6 +22,8 @@ void Iter(EcsRows *rows) {
     Velocity *v = ecs_shared(rows, Velocity, 2);
     Mass *m = ecs_shared(rows, Mass, 3);
 
+    test_assert(v != NULL);
+
     ProbeSystem(rows);
 
     int i;
@@ -135,6 +137,145 @@ void System_w_FromSystem_3_column_2_from_system() {
 
     test_int(p->x, 26);
     test_int(p->y, 46);
+
+    ecs_fini(world);
+}
+
+void Iter_reactive(EcsRows *rows) {
+    Position *p = ecs_column(rows, Position, 1);
+    Velocity *v = ecs_shared(rows, Velocity, 2);
+    Mass *m = ecs_shared(rows, Mass, 3);
+
+    test_assert(v != NULL);
+
+    ProbeSystem(rows);
+
+    int i;
+    for (i = rows->begin; i < rows->end; i ++) {
+        p[i].x = v->x;
+        p[i].y = v->y;
+
+        if (m) {
+            p[i].x = *m;
+            p[i].y = *m;
+        }
+    }
+}
+
+void System_w_FromSystem_2_column_1_from_system_on_add() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
+    ECS_SYSTEM(world, Iter_reactive, EcsOnAdd, Position, SYSTEM.Velocity);
+
+    test_assert( ecs_has(world, EIter_reactive, Velocity));
+    Velocity *v = ecs_get_ptr(world, EIter_reactive, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 10);
+    test_int(v->y, 20);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    EcsEntity e = ecs_new(world, Position);
+    
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, EIter_reactive);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], EIter_reactive);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void System_w_FromSystem_2_column_1_from_system_on_remove() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
+    ECS_SYSTEM(world, Iter_reactive, EcsOnRemove, Position, SYSTEM.Velocity);
+
+    test_assert( ecs_has(world, EIter_reactive, Velocity));
+    Velocity *v = ecs_get_ptr(world, EIter_reactive, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 10);
+    test_int(v->y, 20);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    EcsEntity e = ecs_new(world, Position);
+    test_int(ctx.count, 0);
+
+    ecs_remove(world, e, Position);
+    
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, EIter_reactive);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], EIter_reactive);
+
+    ecs_fini(world);
+}
+
+void System_w_FromSystem_2_column_1_from_system_on_set() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
+    ECS_SYSTEM(world, Iter_reactive, EcsOnSet, Position, SYSTEM.Velocity);
+
+    test_assert( ecs_has(world, EIter_reactive, Velocity));
+    Velocity *v = ecs_get_ptr(world, EIter_reactive, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 10);
+    test_int(v->y, 20);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    EcsEntity e = ecs_set(world, 0, Position, {10, 20});
+    
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, EIter_reactive);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], EIter_reactive);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }
