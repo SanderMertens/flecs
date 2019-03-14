@@ -331,10 +331,19 @@ void SingleThreadStaging_set_existing_new_w_component(void);
 void SingleThreadStaging_set_new_after_add(void);
 void SingleThreadStaging_remove_after_set(void);
 void SingleThreadStaging_delete_after_set(void);
+void SingleThreadStaging_add_in_on_add(void);
+void SingleThreadStaging_remove_in_on_add(void);
+void SingleThreadStaging_add_in_on_remove(void);
+void SingleThreadStaging_remove_in_on_remove(void);
+void SingleThreadStaging_add_in_on_set(void);
+void SingleThreadStaging_remove_in_on_set(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
 void Modules_import_module_from_system(void);
+void Modules_import_from_on_add_system(void);
+void Modules_import_from_on_remove_system(void);
+void Modules_import_from_on_set_system(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -1444,7 +1453,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 38,
+        .testcase_count = 44,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -1597,12 +1606,36 @@ static bake_test_suite suites[] = {
             {
                 .id = "delete_after_set",
                 .function = SingleThreadStaging_delete_after_set
+            },
+            {
+                .id = "add_in_on_add",
+                .function = SingleThreadStaging_add_in_on_add
+            },
+            {
+                .id = "remove_in_on_add",
+                .function = SingleThreadStaging_remove_in_on_add
+            },
+            {
+                .id = "add_in_on_remove",
+                .function = SingleThreadStaging_add_in_on_remove
+            },
+            {
+                .id = "remove_in_on_remove",
+                .function = SingleThreadStaging_remove_in_on_remove
+            },
+            {
+                .id = "add_in_on_set",
+                .function = SingleThreadStaging_add_in_on_set
+            },
+            {
+                .id = "remove_in_on_set",
+                .function = SingleThreadStaging_remove_in_on_set
             }
         }
     },
     {
         .id = "Modules",
-        .testcase_count = 2,
+        .testcase_count = 5,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_module",
@@ -1611,6 +1644,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "import_module_from_system",
                 .function = Modules_import_module_from_system
+            },
+            {
+                .id = "import_from_on_add_system",
+                .function = Modules_import_from_on_add_system
+            },
+            {
+                .id = "import_from_on_remove_system",
+                .function = Modules_import_from_on_remove_system
+            },
+            {
+                .id = "import_from_on_set_system",
+                .function = Modules_import_from_on_set_system
             }
         }
     },

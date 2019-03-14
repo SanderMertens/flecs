@@ -1957,3 +1957,27 @@ void SingleThreadStaging_delete_after_set() {
 
     ecs_fini(world);
 }
+
+void SingleThreadStaging_add_in_on_add() {
+    // Implement testcase
+}
+
+void SingleThreadStaging_remove_in_on_add() {
+    // Implement testcase
+}
+
+void SingleThreadStaging_add_in_on_remove() {
+    // Implement testcase
+}
+
+void SingleThreadStaging_remove_in_on_remove() {
+    // Implement testcase
+}
+
+void SingleThreadStaging_add_in_on_set() {
+    // Implement testcase
+}
+
+void SingleThreadStaging_remove_in_on_set() {
+    // Implement testcase
+}

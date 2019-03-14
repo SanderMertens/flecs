@@ -372,13 +372,22 @@
                 "set_existing_new_w_component",
                 "set_new_after_add",
                 "remove_after_set",
-                "delete_after_set"
+                "delete_after_set",
+                "add_in_on_add",
+                "remove_in_on_add",
+                "add_in_on_remove",
+                "remove_in_on_remove",
+                "add_in_on_set",
+                "remove_in_on_set"
             ]
         }, {
             "id": "Modules",
             "testcases": [
                 "simple_module",
-                "import_module_from_system"
+                "import_module_from_system",
+                "import_from_on_add_system",
+                "import_from_on_remove_system",
+                "import_from_on_set_system"
             ]
         }, {
             "id": "Internals",

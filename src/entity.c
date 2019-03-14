@@ -438,13 +438,20 @@ bool ecs_notify_system(
     uint32_t ref_id = 0;
 
     for (i = 0; i < column_count; i ++) {
-        if (buffer[i].kind == EcsFromSystem) {
-            references[ref_id].entity = system;
-            references[ref_id].component = ecs_type_from_entity(world, buffer[i].is.component);
+        if (buffer[i].kind == EcsFromEntity) {
+            columns[i] = ecs_type_index_of(table->type, buffer[i].is.component) + 1;
+        } else {
+            if (buffer[i].kind == EcsFromSystem) {
+                references[ref_id].entity = system;
+            } else if (buffer[i].kind == EcsFromSingleton) {
+                references[ref_id].entity = 0;         
+            }
+            
+            references[ref_id].component = 
+                ecs_type_from_entity(world, buffer[i].is.component);
+
             ref_id ++;
             columns[i] = -ref_id;
-        } else {
-            columns[i] = ecs_type_index_of(table->type, buffer[i].is.component) + 1;
         }
     }
 
