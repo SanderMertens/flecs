@@ -373,12 +373,12 @@
                 "set_new_after_add",
                 "remove_after_set",
                 "delete_after_set",
-                "add_in_on_add",
-                "remove_in_on_add",
-                "add_in_on_remove",
-                "remove_in_on_remove",
-                "add_in_on_set",
-                "remove_in_on_set"
+                "add_to_current_in_on_add",
+                "remove_from_current_in_on_add",
+                "add_to_current_in_on_remove",
+                "remove_from_current_in_on_remove",
+                "add_to_current_in_on_set",
+                "remove_from_current_in_on_set"
             ]
         }, {
             "id": "Modules",

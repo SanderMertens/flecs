@@ -331,12 +331,12 @@ void SingleThreadStaging_set_existing_new_w_component(void);
 void SingleThreadStaging_set_new_after_add(void);
 void SingleThreadStaging_remove_after_set(void);
 void SingleThreadStaging_delete_after_set(void);
-void SingleThreadStaging_add_in_on_add(void);
-void SingleThreadStaging_remove_in_on_add(void);
-void SingleThreadStaging_add_in_on_remove(void);
-void SingleThreadStaging_remove_in_on_remove(void);
-void SingleThreadStaging_add_in_on_set(void);
-void SingleThreadStaging_remove_in_on_set(void);
+void SingleThreadStaging_add_to_current_in_on_add(void);
+void SingleThreadStaging_remove_from_current_in_on_add(void);
+void SingleThreadStaging_add_to_current_in_on_remove(void);
+void SingleThreadStaging_remove_from_current_in_on_remove(void);
+void SingleThreadStaging_add_to_current_in_on_set(void);
+void SingleThreadStaging_remove_from_current_in_on_set(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
@@ -1608,28 +1608,28 @@ static bake_test_suite suites[] = {
                 .function = SingleThreadStaging_delete_after_set
             },
             {
-                .id = "add_in_on_add",
-                .function = SingleThreadStaging_add_in_on_add
+                .id = "add_to_current_in_on_add",
+                .function = SingleThreadStaging_add_to_current_in_on_add
             },
             {
-                .id = "remove_in_on_add",
-                .function = SingleThreadStaging_remove_in_on_add
+                .id = "remove_from_current_in_on_add",
+                .function = SingleThreadStaging_remove_from_current_in_on_add
             },
             {
-                .id = "add_in_on_remove",
-                .function = SingleThreadStaging_add_in_on_remove
+                .id = "add_to_current_in_on_remove",
+                .function = SingleThreadStaging_add_to_current_in_on_remove
             },
             {
-                .id = "remove_in_on_remove",
-                .function = SingleThreadStaging_remove_in_on_remove
+                .id = "remove_from_current_in_on_remove",
+                .function = SingleThreadStaging_remove_from_current_in_on_remove
             },
             {
-                .id = "add_in_on_set",
-                .function = SingleThreadStaging_add_in_on_set
+                .id = "add_to_current_in_on_set",
+                .function = SingleThreadStaging_add_to_current_in_on_set
             },
             {
-                .id = "remove_in_on_set",
-                .function = SingleThreadStaging_remove_in_on_set
+                .id = "remove_from_current_in_on_set",
+                .function = SingleThreadStaging_remove_from_current_in_on_set
             }
         }
     },

@@ -278,9 +278,19 @@ bool notify_post_merge(
         return false;
     }
 
-    return ecs_notify(
+    world->in_progress = true;
+
+    bool result = ecs_notify(
         world, stage, world->type_sys_remove_index, to_deinit, table, 
         table_columns, offset, limit);
+
+    world->in_progress = false;
+
+    if (result && !world->is_merging) {
+        ecs_merge(world);
+    }
+
+    return result;
 }
 
 /** Commit an entity with a specified type to memory */
@@ -373,29 +383,9 @@ uint32_t commit_w_type(
             old_type, old_columns, old_index);
     }
 
-    if (!in_progress) {
-        if (to_remove && old_index != -1) {
-            notify_post_merge(
-                world, stage, old_table, old_columns, old_index, 1, to_remove);
-        }
-
-        if (old_type_id) {
-            ecs_table_delete(world, old_table, old_index);
-        }
-    }
-
     if (type_id) {
         EcsRow new_row = (EcsRow){.type_id = type_id, .index = new_index};
         ecs_map_set64(entity_index, entity, ecs_from_row(new_row));
-
-        if (to_add) {
-            notify_pre_merge (
-                world, stage, new_table, new_columns, new_index, 1, to_add, 
-                world->type_sys_add_index);
-
-            copy_from_prefab(
-                world, stage, new_table, entity, new_index, type_id, to_add);
-        }     
     } else {
         if (in_progress) {
             /* The entity must be kept in the stage index because otherwise the
@@ -406,6 +396,52 @@ uint32_t commit_w_type(
         }
     }
 
+    if (!in_progress) {
+        bool merged = false;
+
+        /* Invoke the OnRemove callbacks when there are components to remove,
+         * but only when not in progress. If we are currently in progress, the
+         * OnRemove handlers will be invoked during the merge at the end of the
+         * frame, to ensure that no data is cleaned up while we are still
+         * iterating. 
+         * 
+         * Note that this action is performanced *after* the entity index has
+         * been updated. An OnRemove action can itself contain operations that
+         * update the entity index, so we need to make sure the index is up to
+         * date before invoking the callback.
+         */
+        if (to_remove && old_index != -1) {
+            merged = notify_post_merge(
+                world, stage, old_table, old_columns, old_index, 1, to_remove);
+        }
+
+        /* After the cleanup code has been invoked we can finally remove the
+         * entity from the old table. If an OnRemove handler was invoked, it did
+         * already trigger a merge. Since the entity index was already updated
+         * to reflect the removed component, the merge will already have removed
+         * the entity from the table. In that case, we won't have to do it
+         * again. Additionally, if the entity was not stored in any table before
+         * this commit, we also don't need to perform the delete. */
+        if (!merged && old_type_id) {
+            ecs_table_delete(world, old_table, old_index);
+        }
+    }
+
+    /* After the entity has been created in the new table and the stage is
+     * consistent again with the entity index, execute the OnAdd actions. */
+    if (type_id) {
+        if (to_add) {
+            notify_pre_merge (
+                world, stage, new_table, new_columns, new_index, 1, to_add, 
+                world->type_sys_add_index);
+
+            copy_from_prefab(
+                world, stage, new_table, entity, new_index, type_id, to_add);
+        }     
+    }
+
+    /* This is a crude way to signal to the world that we need to redetermine
+     * the schedule for the worker threads */
     world->valid_schedule = false;
 
     return new_index;

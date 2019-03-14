@@ -1958,26 +1958,125 @@ void SingleThreadStaging_delete_after_set() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_add_in_on_add() {
+
+void SingleThreadStaging_add_to_current_in_on_add() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, Add_to_current, EcsOnAdd, Position);
+
+    IterData ctx = {.component = TVelocity};
+    ecs_set_context(world, &ctx);
+
+    /* Create entities from scratch so they don't have the EcsId component */
+    EcsEntity e_1 = ecs_new(world, Position);
+    EcsEntity e_2 = ecs_new(world, Position);
+    EcsEntity e_3 = ecs_new(world, Position);
+
+    test_assert( ecs_has(world, e_1, Position));
+    test_assert( ecs_has(world, e_2, Position));
+    test_assert( ecs_has(world, e_3, Position));
+
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_3, Velocity));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_remove_from_current_in_on_add() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_SYSTEM(world, Remove_from_current, EcsOnAdd, Position);
+
+    IterData ctx = {.component = TPosition};
+    ecs_set_context(world, &ctx);
+
+    /* Create entities from scratch so they don't have the EcsId component */
+    EcsEntity e_1 = ecs_new(world, Type);
+    EcsEntity e_2 = ecs_new(world, Type);
+    EcsEntity e_3 = ecs_new(world, Type);
+
+    test_assert( !ecs_has(world, e_1, Position));
+    test_assert( !ecs_has(world, e_2, Position));
+    test_assert( !ecs_has(world, e_3, Position));
+
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_3, Velocity));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_add_to_current_in_on_remove() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, Add_to_current, EcsOnRemove, Position);
+
+    IterData ctx = {.component = TVelocity};
+    ecs_set_context(world, &ctx);
+
+    /* Create entities from scratch so they don't have the EcsId component */
+    EcsEntity e_1 = ecs_new(world, Position);
+    EcsEntity e_2 = ecs_new(world, Position);
+    EcsEntity e_3 = ecs_new(world, Position);
+
+    ecs_remove(world, e_1, Position);
+    ecs_remove(world, e_2, Position);
+    ecs_remove(world, e_3, Position);
+
+    test_assert( !ecs_has(world, e_1, Position));
+    test_assert( !ecs_has(world, e_2, Position));
+    test_assert( !ecs_has(world, e_3, Position));
+
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_3, Velocity));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_remove_from_current_in_on_remove() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_SYSTEM(world, Remove_from_current, EcsOnRemove, Position);
+
+    IterData ctx = {.component = TVelocity};
+    ecs_set_context(world, &ctx);
+
+    /* Create entities from scratch so they don't have the EcsId component */
+    EcsEntity e_1 = ecs_new(world, Type);
+    EcsEntity e_2 = ecs_new(world, Type);
+    EcsEntity e_3 = ecs_new(world, Type);
+
+    ecs_remove(world, e_1, Position);
+    ecs_remove(world, e_2, Position);
+    ecs_remove(world, e_3, Position);
+
+    test_assert( !ecs_has(world, e_1, Position));
+    test_assert( !ecs_has(world, e_2, Position));
+    test_assert( !ecs_has(world, e_3, Position));
+
+    test_assert( !ecs_has(world, e_1, Velocity));
+    test_assert( !ecs_has(world, e_2, Velocity));
+    test_assert( !ecs_has(world, e_3, Velocity));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_add_to_current_in_on_set() {
     // Implement testcase
 }
 
-void SingleThreadStaging_remove_in_on_add() {
-    // Implement testcase
-}
-
-void SingleThreadStaging_add_in_on_remove() {
-    // Implement testcase
-}
-
-void SingleThreadStaging_remove_in_on_remove() {
-    // Implement testcase
-}
-
-void SingleThreadStaging_add_in_on_set() {
-    // Implement testcase
-}
-
-void SingleThreadStaging_remove_in_on_set() {
+void SingleThreadStaging_remove_from_current_in_on_set() {
     // Implement testcase
 }
