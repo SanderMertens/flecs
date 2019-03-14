@@ -110,6 +110,12 @@ const char* ecs_strerror(
         return "out of memory";
     case ECS_MODULE_UNDEFINED:
         return "module is undefined";
+    case ECS_COLUMN_INDEX_OUT_OF_RANGE:
+        return "column index out of range";
+    case ECS_COLUMN_IS_NOT_SHARED:
+        return "column is not shared";
+    case ECS_COLUMN_IS_SHARED:
+        return "column is shared";
     }
 
     return "unknown error code";

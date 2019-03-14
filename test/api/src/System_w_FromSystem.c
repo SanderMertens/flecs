@@ -20,9 +20,7 @@ void InitMass(EcsRows *rows) {
 void Iter(EcsRows *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_shared(rows, Velocity, 2);
-    Mass *m = ecs_shared(rows, Mass, 3);
-
-    test_assert(v != NULL);
+    Mass *m = ecs_shared_test(rows, Mass, 3);
 
     ProbeSystem(rows);
 
@@ -144,9 +142,7 @@ void System_w_FromSystem_3_column_2_from_system() {
 void Iter_reactive(EcsRows *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_shared(rows, Velocity, 2);
-    Mass *m = ecs_shared(rows, Mass, 3);
-
-    test_assert(v != NULL);
+    Mass *m = ecs_shared_test(rows, Mass, 3);
 
     ProbeSystem(rows);
 

@@ -1153,19 +1153,27 @@ EcsEntity _ecs_run_w_filter(
 FLECS_EXPORT
 void* _ecs_column(
     EcsRows *rows,
-    uint32_t index);
+    uint32_t index,
+    bool test);
 
 #define ecs_column(rows, type, index)\
-    ((type*)_ecs_column(rows, index))
+    ((type*)_ecs_column(rows, index, false))
+
+#define ecs_column_test(rows, type, index)\
+    ((type*)_ecs_column(rows, index, true))
 
 /* Obtain a reference to a shared component */
 FLECS_EXPORT
 void* _ecs_shared(
     EcsRows *rows,
-    uint32_t index);
+    uint32_t index,
+    bool test);
 
 #define ecs_shared(rows, type, index)\
-    ((type*)_ecs_shared(rows, index))
+    ((type*)_ecs_shared(rows, index, false))
+
+#define ecs_shared_test(rows, type, index)\
+    ((type*)_ecs_shared(rows, index, true))
 
 /** Obtain the source of a column from inside a system.
  * This operation lets you obtain the entity from which the column data was
@@ -1297,6 +1305,9 @@ void _ecs_assert(
 #define ECS_INVALID_COMPONENT_SIZE (14)
 #define ECS_OUT_OF_MEMORY (15)
 #define ECS_MODULE_UNDEFINED (16)
+#define ECS_COLUMN_INDEX_OUT_OF_RANGE (17)
+#define ECS_COLUMN_IS_NOT_SHARED (18)
+#define ECS_COLUMN_IS_SHARED (19)
 
 /* -- Convenience macro's -- */
 
@@ -1400,7 +1411,7 @@ void _ecs_assert(
     (void)T##module
 
 #define ECS_IMPORT_COLUMN(rows, module, column) \
-    module##Handles *M##module##_ptr = (module##Handles*)_ecs_shared(rows, column);\
+    module##Handles *M##module##_ptr = ecs_shared(rows, module##Handles, column);\
     ecs_assert(M##module##_ptr != NULL, ECS_MODULE_UNDEFINED, #module);\
     module##Handles M##module = *M##module##_ptr;\
     module##_ImportHandles(M##module)

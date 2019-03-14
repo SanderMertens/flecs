@@ -2,7 +2,7 @@
 
 void Init(EcsRows *rows) {
     Position *p = ecs_column(rows, Position, 1);
-    Velocity *v = ecs_column(rows, Velocity, 2);
+    Velocity *v = ecs_column_test(rows, Velocity, 2);
 
     ProbeSystem(rows);
 

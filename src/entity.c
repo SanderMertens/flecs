@@ -16,6 +16,10 @@ void copy_column(
         EcsArrayParams param = {.element_size = new_column->size};
         void *dst = ecs_array_get(new_column->data, &param, new_index);
         void *src = ecs_array_get(old_column->data, &param, old_index);
+            
+        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
+
         memcpy(dst, src, param.element_size);
     }
 }
@@ -33,6 +37,9 @@ void copy_row(
     uint16_t i_old = 0, old_component_count = ecs_array_count(old_type);
     EcsEntity *new_components = ecs_array_buffer(new_type);
     EcsEntity *old_components = ecs_array_buffer(old_type);
+
+    ecs_assert(old_columns->data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new_columns->data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     for (i_new = 0; i_new < new_component_count; ) {
         if (i_old == old_component_count) {

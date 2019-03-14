@@ -2,9 +2,9 @@
 
 static
 void Iter(EcsRows *rows) {
-    Mass *m_ptr = ecs_shared(rows, Mass, 1);
+    Mass *m_ptr = ecs_shared_test(rows, Mass, 1);
     Position *p = ecs_column(rows, Position, 2);
-    Velocity *v = ecs_column(rows, Velocity, 3);
+    Velocity *v = ecs_column_test(rows, Velocity, 3);
 
     ProbeSystem(rows);
 
@@ -41,6 +41,7 @@ void System_w_FromContainer_1_column_from_container() {
     EcsEntity parent = ecs_set(world, 0, Mass, {2});
     ecs_adopt(world, parent, e_1);
     ecs_adopt(world, parent, e_2);
+
     ecs_adopt(world, parent, e_3);
 
     SysTestData ctx = {0};
@@ -155,10 +156,10 @@ void System_w_FromContainer_2_column_1_from_container() {
 
 static
 void Iter_2_shared(EcsRows *rows) {
-    Mass *m_ptr = ecs_shared(rows, Mass, 1);
-    Rotation *r_ptr = ecs_shared(rows, Rotation, 2);
-    Position *p = ecs_column(rows, Position, 3);
-    Velocity *v = ecs_column(rows, Velocity, 4);
+    Mass *m_ptr = ecs_shared_test(rows, Mass, 1);
+    Rotation *r_ptr = ecs_shared_test(rows, Rotation, 2);
+    Position *p = ecs_column_test(rows, Position, 3);
+    Velocity *v = ecs_column_test(rows, Velocity, 4);
 
     ProbeSystem(rows);
 

@@ -840,14 +840,17 @@ EcsEntity ecs_import(
     void *handles_out,
     size_t handles_size)
 {
-    module(world, flags, handles_out);
+    EcsEntity e = ecs_lookup(world, module_name);
+    if (!e) {
+        module(world, flags, handles_out);
 
-    /* Register component for module that contains handles */
-    EcsEntity e = ecs_new_component(world, module_name, handles_size);
-    EcsType t = ecs_type_from_entity(world, e);
+        /* Register component for module that contains handles */
+        e = ecs_new_component(world, module_name, handles_size);
+        EcsType t = ecs_type_from_entity(world, e);
 
-    /* Set module handles component on singleton */
-    _ecs_set_singleton_ptr(world, t, handles_size, handles_out);
+        /* Set module handles component on singleton */
+        _ecs_set_singleton_ptr(world, t, handles_size, handles_out);
+    }
 
     return e;
 }

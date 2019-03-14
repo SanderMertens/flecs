@@ -473,9 +473,11 @@ void ecs_set_period(
 
 void* _ecs_column(
     EcsRows *rows,
-    uint32_t index)
+    uint32_t index,
+    bool test)
 {
     if (index > rows->column_count) {
+        ecs_assert(test, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return NULL;
     }
 
@@ -488,6 +490,7 @@ void* _ecs_column(
     }
 
     if (table_column < 0) {
+        ecs_assert(test, ECS_COLUMN_IS_SHARED, NULL);
         return NULL;
     }
 
@@ -498,12 +501,14 @@ void* _ecs_column(
 
 void* _ecs_shared(
     EcsRows *rows,
-    uint32_t index)
+    uint32_t index,
+    bool test)
 {
     if (index > rows->column_count) {
+        ecs_assert(test, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return NULL;
     }
-
+    
     int32_t table_column;
 
     if (index == 0) {
@@ -511,7 +516,8 @@ void* _ecs_shared(
     } else {
         table_column = rows->columns[index - 1];
         if (table_column >= 0) {
-            return 0;
+            ecs_assert(test, ECS_COLUMN_IS_NOT_SHARED, NULL);
+            return NULL;
         }
 
         EcsReference *ref = &rows->references[-table_column - 1];

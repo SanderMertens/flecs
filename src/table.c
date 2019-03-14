@@ -164,16 +164,17 @@ void ecs_table_delete(
     uint32_t column_last = ecs_array_count(table->type) + 1;
     uint32_t i;
 
-    if (index != count) {
+    if (index != count) {        
         /* Move last entity in array to index */
         EcsEntity *entities = ecs_array_buffer(entity_column);
         EcsEntity to_move = entities[count];
         entities[index] = to_move;
 
         for (i = 1; i < column_last; i ++) {
-            EcsTableColumn *column = &columns[i];
-            EcsArrayParams params = {.element_size = column->size};
-            ecs_array_remove_index(column->data, &params, index);
+            if (columns[i].size) {
+                EcsArrayParams params = {.element_size = columns[i].size};
+                ecs_array_remove_index(columns[i].data, &params, index);
+            }
         }
 
         /* Last entity in table is now moved to index of removed entity */
@@ -181,14 +182,33 @@ void ecs_table_delete(
         row.type_id = table->type_id;
         row.index = index;
         ecs_map_set64(world->main_stage.entity_index, to_move, ecs_from_row(row));
+
+        /* Decrease size of entity column */
+        ecs_array_remove_last(entity_column);
+
+    /* This was the last entity, free all columns */
+    } else if (!count) {
+        ecs_array_free(entity_column);
+        columns[0].data = NULL;
+
+        for (i = 1; i < column_last; i ++) {
+            if (columns[i].size) {
+                ecs_array_free(columns[i].data);
+                columns[i].data = NULL;
+            }
+        }
+
+    /* This is the last entity in the table, just decrease column counts */
     } else {
         ecs_array_remove_last(entity_column);
 
         for (i = 1; i < column_last; i ++) {
-            ecs_array_remove_last(columns[i].data);
+            if (columns[i].size) {
+                ecs_array_remove_last(columns[i].data);
+            }
         }
     }
-
+    
     if (!world->in_progress && !count) {
         activate_table(world, table, false);
     }

@@ -3,8 +3,8 @@
 static
 void Iter(EcsRows *rows) {
     Position *p = ecs_column(rows, Position, 1);
-    Velocity *v = ecs_column(rows, Velocity, 2);
-    Mass *m = ecs_column(rows, Mass, 3);
+    Velocity *v = ecs_column_test(rows, Velocity, 2);
+    Mass *m = ecs_column_test(rows, Mass, 3);
 
     ProbeSystem(rows);
 
