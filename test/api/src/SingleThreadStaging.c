@@ -2074,9 +2074,82 @@ void SingleThreadStaging_remove_from_current_in_on_remove() {
 }
 
 void SingleThreadStaging_add_to_current_in_on_set() {
-    // Implement testcase
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, Add_to_current, EcsOnSet, Position);
+
+    IterData ctx = {.component = TVelocity};
+    ecs_set_context(world, &ctx);
+
+    /* Create entities from scratch so they don't have the EcsId component */
+    EcsEntity e_1 = ecs_set(world, 0, Position, {10, 20});
+    EcsEntity e_2 = ecs_set(world, 0, Position, {11, 21});
+    EcsEntity e_3 = ecs_set(world, 0, Position, {12, 22});
+
+    test_assert( ecs_has(world, e_1, Position));
+    test_assert( ecs_has(world, e_2, Position));
+    test_assert( ecs_has(world, e_3, Position));
+
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_3, Velocity));
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_int(p->x, 11);
+    test_int(p->y, 21);
+
+    p = ecs_get_ptr(world, e_3, Position);
+    test_int(p->x, 12);
+    test_int(p->y, 22);
+
+    ecs_fini(world);
 }
 
 void SingleThreadStaging_remove_from_current_in_on_set() {
-    // Implement testcase
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
+
+    IterData ctx = {.component = TVelocity};
+    ecs_set_context(world, &ctx);
+
+    /* Create entities from scratch so they don't have the EcsId component */
+    EcsEntity e_1 = ecs_new(world, Type);
+    EcsEntity e_2 = ecs_new(world, Type);
+    EcsEntity e_3 = ecs_new(world, Type);
+
+    e_1 = ecs_set(world, e_1, Position, {10, 20});
+    e_2 = ecs_set(world, e_2, Position, {11, 21});
+    e_3 = ecs_set(world, e_3, Position, {12, 22});
+
+    test_assert( ecs_has(world, e_1, Position));
+    test_assert( ecs_has(world, e_2, Position));
+    test_assert( ecs_has(world, e_3, Position));
+
+    test_assert( !ecs_has(world, e_1, Velocity));
+    test_assert( !ecs_has(world, e_2, Velocity));
+    test_assert( !ecs_has(world, e_3, Velocity));
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_int(p->x, 11);
+    test_int(p->y, 21);
+
+    p = ecs_get_ptr(world, e_3, Position);
+    test_int(p->x, 12);
+    test_int(p->y, 22);
+
+    ecs_fini(world);
 }
