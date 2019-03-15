@@ -75,8 +75,9 @@ bool components_contains_component(
 /* Special indexes in table_data array */
 #define TABLE_INDEX (0)
 #define REFS_INDEX (1)
-#define COMPONENTS_INDEX (2)
-#define COLUMNS_INDEX (3)
+#define REFS_COUNT (2)
+#define COMPONENTS_INDEX (3)
+#define COLUMNS_INDEX (4)
 
 /* Get ref array for system table */
 static
@@ -95,7 +96,9 @@ EcsSystemRef* get_ref_data(
         ref_data = ecs_array_add(
             &system_data->refs, &system_data->ref_params);
         table_data[REFS_INDEX] = ecs_array_count(system_data->refs);
+        table_data[REFS_COUNT] = 1;
     } else {
+        table_data[REFS_COUNT] ++;
         ref_data = ecs_array_get(
             system_data->refs, &system_data->ref_params, table_data[1] - 1);
     }
@@ -577,7 +580,7 @@ EcsEntity ecs_new_col_system(
     system_data->base.columns = ecs_array_new(&column_arr_params, count);
     system_data->base.kind = kind;
 
-    system_data->table_params.element_size = sizeof(int32_t) * (count + 3);
+    system_data->table_params.element_size = sizeof(int32_t) * (count + COLUMNS_INDEX);
     system_data->ref_params.element_size = sizeof(EcsSystemRef) * count;
     system_data->component_params.element_size = sizeof(EcsEntity) * count;
     system_data->period = 0;
@@ -704,6 +707,7 @@ EcsEntity _ecs_run_w_filter(
     EcsSystemAction action = system_data->base.action;
     bool offset_limit = (offset | limit) != 0;
     bool limit_set = limit != 0;
+    void *ref_ptrs[column_count]; /* Use worst-case size for references */
 
     EcsRows info = {
         .world = world,
@@ -711,7 +715,8 @@ EcsEntity _ecs_run_w_filter(
         .param = param,
         .column_count = column_count,
         .delta_time = system_delta_time,
-        .index_offset = 0
+        .index_offset = 0,
+        .ref_ptrs = ref_ptrs
     };
 
     int32_t *table = table_first;
@@ -765,6 +770,13 @@ EcsEntity _ecs_run_w_filter(
         if (ref_index) {
             info.references = ecs_array_get(
                 system_data->refs, &system_data->ref_params, ref_index - 1);
+
+            /* Resolve references */
+            int i, count = table[REFS_COUNT];
+            for (i = 0; i < count; i ++) {
+                info.ref_ptrs[i] = _ecs_get_ptr(world, 
+                    info.references[i].entity, info.references[i].component);
+            }
         } else {
             info.references = NULL;
         }

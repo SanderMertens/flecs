@@ -103,6 +103,7 @@ typedef struct EcsRows {
     uint16_t column_count; /* Number of columns for system */
     void *table_columns; /* opaque structure that contains table column data */
     EcsReference *references; /* references to other entities */
+    void **ref_ptrs;          /* The resolved pointers to the references */
     EcsEntity *components;    /* system-table specific list of components */
 
     void *param;         /* userdata passed to on-demand system */
@@ -1174,6 +1175,34 @@ void* _ecs_shared(
 
 #define ecs_shared_test(rows, type, index)\
     ((type*)_ecs_shared(rows, index, true))
+
+/** Obtain a single field. 
+ * This is an alternative method to ecs_column to access data in a system, which
+ * accesses data from individual fields (one column per row). This method is
+ * slower than iterating over a column array, but has the added benefit that it
+ * automatically abstracts between shared components and owned components. 
+ * 
+ * This is particularly useful if a system is unaware whether a particular 
+ * column is from a prefab, as a system does not explicitly state in an argument
+ * expression whether prefabs should be matched with, thus it is possible that
+ * a system receives both shared and non-shared data for the same column.
+ * 
+ * When a system uses fields, these differences will be transparent, and it is
+ * therefore the method that provides the most flexibility with respect to the
+ * kind of data the system can accept.
+ */
+FLECS_EXPORT
+void *_ecs_field(
+    EcsRows *rows, 
+    uint32_t index, 
+    uint32_t column,
+    bool test);
+
+#define ecs_field(rows, type, index, column)\
+    ((type*)_ecs_field(rows, index, column, false))
+
+#define ecs_field_test(rows, type, index, column)\
+    ((type*)_ecs_field(rows, index, column, true))
 
 /** Obtain the source of a column from inside a system.
  * This operation lets you obtain the entity from which the column data was

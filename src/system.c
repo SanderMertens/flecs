@@ -568,3 +568,31 @@ EcsEntity ecs_column_component(
         return rows->components[index - 1];
     }  
 }
+
+void *_ecs_field(
+    EcsRows *rows, 
+    uint32_t index, 
+    uint32_t column,
+    bool test)
+{
+    if (index > rows->column_count) {
+        ecs_assert(test, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+        return NULL;
+    }
+
+    int32_t table_column;
+
+    if (column == 0) {
+        table_column = 0;
+    } else {
+        table_column = rows->columns[column - 1];
+    }
+
+    if (table_column < 0) {
+        return rows->ref_ptrs[-table_column - 1];
+    } else {
+        EcsTableColumn *column = &((EcsTableColumn*)rows->table_columns)[table_column];
+        void *buffer = ecs_array_buffer(column->data);
+        return ECS_OFFSET(buffer, column->size * index);
+    }
+}

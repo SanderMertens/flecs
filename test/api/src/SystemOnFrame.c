@@ -1004,3 +1004,63 @@ void SystemOnFrame_6_type_1_and_2_optional() {
 
     ecs_fini(world);
 }
+
+void Use_field(EcsRows *rows) {
+    int i;
+    for (i = rows->begin; i < rows->end; i ++) {
+        Position *p = ecs_field(rows, Position, i, 1);
+        Velocity *v = ecs_field(rows, Velocity, i, 2);
+
+        p->x += v->x;
+        p->y += v->y;
+    }
+}
+
+void SystemOnFrame_use_fields_2_owned() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, e_1, Position, Velocity);
+
+    ECS_SYSTEM(world, Use_field, EcsOnFrame, Position, Velocity);
+
+    ecs_set(world, e_1, Position, {1, 2});
+    ecs_set(world, e_1, Velocity, {10, 20});
+
+    ecs_progress(world, 1);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+    test_int(v->x, 10);
+    test_int(v->y, 20);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_use_fields_1_owned_1_shared() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, Use_field, EcsOnFrame, Position, CONTAINER.Velocity);
+
+    EcsEntity e_1 = ecs_set(world, 0, Position, {1, 2});
+    EcsEntity parent = ecs_set(world, 0, Velocity, {10, 20});
+    ecs_adopt(world, parent, e_1);
+
+    ecs_progress(world, 1);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    Velocity *v = ecs_get_ptr(world, parent, Velocity);
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+    test_int(v->x, 10);
+    test_int(v->y, 20);
+
+    ecs_fini(world);
+}
