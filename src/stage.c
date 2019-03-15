@@ -172,7 +172,7 @@ void ecs_stage_merge(
         merge_families(world, stage);
     }
     
-    merge_tables(world, stage);
-
     merge_commits(world, stage);
+
+    merge_tables(world, stage);
 }

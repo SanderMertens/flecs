@@ -394,7 +394,8 @@
                 "match_table_created_w_add_in_on_set",
                 "match_table_created_w_set_in_on_set",
                 "match_table_created_w_new_in_progress",
-                "match_table_created_w_new_in_on_set"
+                "match_table_created_w_new_in_on_set",
+                "merge_table_w_container_added_in_progress"
             ]
         }, {
             "id": "Modules",

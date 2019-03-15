@@ -2611,3 +2611,48 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set() {
 
     ecs_fini(world);
 }
+
+static
+void Create_container(EcsRows *rows) {
+    EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
+
+    ProbeSystem(rows);
+
+    int i;
+    for (i = rows->begin; i < rows->end; i ++) {
+        ecs_new_child(rows->world, entities[i], NULL, 0);
+    }
+}
+
+void SingleThreadStaging_merge_table_w_container_added_in_progress() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, Create_container, EcsOnFrame, Position);
+
+    /* Entity is not yet a container. Adding this entity to another entity would
+     * cause an error */
+    ECS_ENTITY(world, e_1, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    /* Entity will become a container. A child component is stored in a new
+     * archetype that includes e_1 in its component list. However, e_1 doesn't
+     * have the EcsContainer tag yet in the main stage. This test ensures that
+     * the table can be created. */
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Create_container);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}

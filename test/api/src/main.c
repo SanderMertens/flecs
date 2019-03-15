@@ -351,6 +351,7 @@ void SingleThreadStaging_match_table_created_w_add_in_on_set(void);
 void SingleThreadStaging_match_table_created_w_set_in_on_set(void);
 void SingleThreadStaging_match_table_created_w_new_in_progress(void);
 void SingleThreadStaging_match_table_created_w_new_in_on_set(void);
+void SingleThreadStaging_merge_table_w_container_added_in_progress(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
@@ -1476,7 +1477,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 55,
+        .testcase_count = 56,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -1697,6 +1698,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "match_table_created_w_new_in_on_set",
                 .function = SingleThreadStaging_match_table_created_w_new_in_on_set
+            },
+            {
+                .id = "merge_table_w_container_added_in_progress",
+                .function = SingleThreadStaging_merge_table_w_container_added_in_progress
             }
         }
     },
