@@ -76,10 +76,11 @@ void calculate_stage_stats(
     ecs_map_memory(stage->entity_index, allocd, used);
 
     if (!is_temp_stage) {
-        ecs_array_memory(stage->tables, &table_arr_params, allocd, used);
-        ecs_map_memory(stage->table_index, allocd, used);
         ecs_map_memory(stage->type_index, allocd, used);
     }
+    
+    ecs_array_memory(stage->tables, &table_arr_params, allocd, used);
+    ecs_map_memory(stage->table_index, allocd, used);
 
     if (!is_main_stage) {
         ecs_map_memory(stage->remove_merge, allocd, used);
@@ -142,7 +143,7 @@ void get_memory_stats(
     memory->stage.allocd += sizeof(EcsStage);
     memory->stage.used += sizeof(EcsStage);
 
-    calculate_stage_stats(world, &world->main_stage, &memory->stage.allocd, &memory->stage.used);
+    calculate_stage_stats(world, &world->main_stage, &memory->world.allocd, &memory->world.used);
     calculate_stage_stats(world, &world->temp_stage, &memory->stage.allocd, &memory->stage.used);
     calculate_stages_stats(world, &memory->stage.allocd, &memory->stage.used);
 

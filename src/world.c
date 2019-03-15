@@ -705,12 +705,12 @@ bool ecs_progress(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    bool measure_frame_time = world->measure_frame_time;
-    bool has_threads = ecs_array_count(world->worker_threads) != 0;
-
     /* Start measuring total frame time */
     delta_time = start_measure_frame(world, delta_time);
     world->delta_time = delta_time;
+
+    bool measure_frame_time = world->measure_frame_time;
+    bool has_threads = ecs_array_count(world->worker_threads) != 0;
 
     /* -- System execution starts here -- */
 
