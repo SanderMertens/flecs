@@ -375,10 +375,16 @@
                 "delete_after_set",
                 "add_to_current_in_on_add",
                 "remove_from_current_in_on_add",
-                "add_to_current_in_on_remove",
-                "remove_from_current_in_on_remove",
                 "add_to_current_in_on_set",
-                "remove_from_current_in_on_set"
+                "remove_from_current_in_on_set",
+                "remove_set_component_in_on_set",
+                "remove_added_component_in_on_add",
+                "remove_added_component_in_on_add_w_set",
+                "on_add_in_on_add",
+                "on_remove_in_on_add",
+                "on_set_in_on_add",
+                "on_add_in_on_frame",
+                "on_remove_in_on_frame"
             ]
         }, {
             "id": "Modules",
@@ -386,7 +392,6 @@
                 "simple_module",
                 "import_module_from_system",
                 "import_from_on_add_system",
-                "import_from_on_remove_system",
                 "import_from_on_set_system"
             ]
         }, {

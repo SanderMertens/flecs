@@ -91,24 +91,6 @@ void Modules_import_from_on_add_system() {
     ecs_fini(world);
 }
 
-void Modules_import_from_on_remove_system() {
-    EcsWorld *world = ecs_init();
-
-    ECS_IMPORT(world, SimpleModule, 0);
-    ECS_SYSTEM(world, AddVtoP, EcsOnRemove, Position, $SimpleModule);
-
-    void *module_ptr = ecs_get_singleton_ptr(world, SimpleModule);
-    test_assert(module_ptr != NULL);
-
-    EcsEntity e = ecs_new(world, Position);
-    test_assert(e != 0);
-    ecs_remove(world, e, Position);
-    test_assert( !ecs_has(world, e, Position));
-    test_assert( ecs_has(world, e, Velocity));
-    
-    ecs_fini(world);
-}
-
 void Modules_import_from_on_set_system() {
     EcsWorld *world = ecs_init();
 

@@ -333,16 +333,21 @@ void SingleThreadStaging_remove_after_set(void);
 void SingleThreadStaging_delete_after_set(void);
 void SingleThreadStaging_add_to_current_in_on_add(void);
 void SingleThreadStaging_remove_from_current_in_on_add(void);
-void SingleThreadStaging_add_to_current_in_on_remove(void);
-void SingleThreadStaging_remove_from_current_in_on_remove(void);
 void SingleThreadStaging_add_to_current_in_on_set(void);
 void SingleThreadStaging_remove_from_current_in_on_set(void);
+void SingleThreadStaging_remove_set_component_in_on_set(void);
+void SingleThreadStaging_remove_added_component_in_on_add(void);
+void SingleThreadStaging_remove_added_component_in_on_add_w_set(void);
+void SingleThreadStaging_on_add_in_on_add(void);
+void SingleThreadStaging_on_remove_in_on_add(void);
+void SingleThreadStaging_on_set_in_on_add(void);
+void SingleThreadStaging_on_add_in_on_frame(void);
+void SingleThreadStaging_on_remove_in_on_frame(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
 void Modules_import_module_from_system(void);
 void Modules_import_from_on_add_system(void);
-void Modules_import_from_on_remove_system(void);
 void Modules_import_from_on_set_system(void);
 
 // Testsuite 'Internals'
@@ -1453,7 +1458,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 44,
+        .testcase_count = 50,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -1616,26 +1621,50 @@ static bake_test_suite suites[] = {
                 .function = SingleThreadStaging_remove_from_current_in_on_add
             },
             {
-                .id = "add_to_current_in_on_remove",
-                .function = SingleThreadStaging_add_to_current_in_on_remove
-            },
-            {
-                .id = "remove_from_current_in_on_remove",
-                .function = SingleThreadStaging_remove_from_current_in_on_remove
-            },
-            {
                 .id = "add_to_current_in_on_set",
                 .function = SingleThreadStaging_add_to_current_in_on_set
             },
             {
                 .id = "remove_from_current_in_on_set",
                 .function = SingleThreadStaging_remove_from_current_in_on_set
+            },
+            {
+                .id = "remove_set_component_in_on_set",
+                .function = SingleThreadStaging_remove_set_component_in_on_set
+            },
+            {
+                .id = "remove_added_component_in_on_add",
+                .function = SingleThreadStaging_remove_added_component_in_on_add
+            },
+            {
+                .id = "remove_added_component_in_on_add_w_set",
+                .function = SingleThreadStaging_remove_added_component_in_on_add_w_set
+            },
+            {
+                .id = "on_add_in_on_add",
+                .function = SingleThreadStaging_on_add_in_on_add
+            },
+            {
+                .id = "on_remove_in_on_add",
+                .function = SingleThreadStaging_on_remove_in_on_add
+            },
+            {
+                .id = "on_set_in_on_add",
+                .function = SingleThreadStaging_on_set_in_on_add
+            },
+            {
+                .id = "on_add_in_on_frame",
+                .function = SingleThreadStaging_on_add_in_on_frame
+            },
+            {
+                .id = "on_remove_in_on_frame",
+                .function = SingleThreadStaging_on_remove_in_on_frame
             }
         }
     },
     {
         .id = "Modules",
-        .testcase_count = 5,
+        .testcase_count = 4,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_module",
@@ -1648,10 +1677,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "import_from_on_add_system",
                 .function = Modules_import_from_on_add_system
-            },
-            {
-                .id = "import_from_on_remove_system",
-                .function = Modules_import_from_on_remove_system
             },
             {
                 .id = "import_from_on_set_system",

@@ -116,6 +116,8 @@ const char* ecs_strerror(
         return "column is not shared";
     case ECS_COLUMN_IS_SHARED:
         return "column is shared";
+    case ECS_INVALID_WHILE_MERGING:
+        return "operation is invalid while merging";
     }
 
     return "unknown error code";

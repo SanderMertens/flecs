@@ -2012,67 +2012,6 @@ void SingleThreadStaging_remove_from_current_in_on_add() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_add_to_current_in_on_remove() {
-    EcsWorld *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Add_to_current, EcsOnRemove, Position);
-
-    IterData ctx = {.component = TVelocity};
-    ecs_set_context(world, &ctx);
-
-    /* Create entities from scratch so they don't have the EcsId component */
-    EcsEntity e_1 = ecs_new(world, Position);
-    EcsEntity e_2 = ecs_new(world, Position);
-    EcsEntity e_3 = ecs_new(world, Position);
-
-    ecs_remove(world, e_1, Position);
-    ecs_remove(world, e_2, Position);
-    ecs_remove(world, e_3, Position);
-
-    test_assert( !ecs_has(world, e_1, Position));
-    test_assert( !ecs_has(world, e_2, Position));
-    test_assert( !ecs_has(world, e_3, Position));
-
-    test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_2, Velocity));
-    test_assert( ecs_has(world, e_3, Velocity));
-
-    ecs_fini(world);
-}
-
-void SingleThreadStaging_remove_from_current_in_on_remove() {
-    EcsWorld *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Remove_from_current, EcsOnRemove, Position);
-
-    IterData ctx = {.component = TVelocity};
-    ecs_set_context(world, &ctx);
-
-    /* Create entities from scratch so they don't have the EcsId component */
-    EcsEntity e_1 = ecs_new(world, Type);
-    EcsEntity e_2 = ecs_new(world, Type);
-    EcsEntity e_3 = ecs_new(world, Type);
-
-    ecs_remove(world, e_1, Position);
-    ecs_remove(world, e_2, Position);
-    ecs_remove(world, e_3, Position);
-
-    test_assert( !ecs_has(world, e_1, Position));
-    test_assert( !ecs_has(world, e_2, Position));
-    test_assert( !ecs_has(world, e_3, Position));
-
-    test_assert( !ecs_has(world, e_1, Velocity));
-    test_assert( !ecs_has(world, e_2, Velocity));
-    test_assert( !ecs_has(world, e_3, Velocity));
-
-    ecs_fini(world);
-}
-
 void SingleThreadStaging_add_to_current_in_on_set() {
     EcsWorld *world = ecs_init();
 
@@ -2150,6 +2089,290 @@ void SingleThreadStaging_remove_from_current_in_on_set() {
     p = ecs_get_ptr(world, e_3, Position);
     test_int(p->x, 12);
     test_int(p->y, 22);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_remove_set_component_in_on_set() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
+
+    IterData ctx = {.component = TPosition};
+    ecs_set_context(world, &ctx);
+
+    /* Create entities from scratch so they don't have the EcsId component */
+    EcsEntity e_1 = ecs_new(world, Type);
+    EcsEntity e_2 = ecs_new(world, Type);
+    EcsEntity e_3 = ecs_new(world, Type);
+
+    e_1 = ecs_set(world, e_1, Position, {10, 20});
+    e_2 = ecs_set(world, e_2, Position, {11, 21});
+    e_3 = ecs_set(world, e_3, Position, {12, 22});
+
+    test_assert( !ecs_has(world, e_1, Position));
+    test_assert( !ecs_has(world, e_2, Position));
+    test_assert( !ecs_has(world, e_3, Position));
+
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_3, Velocity));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_remove_added_component_in_on_add() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_SYSTEM(world, Remove_from_current, EcsOnAdd, Position);
+
+    IterData ctx = {.component = TPosition};
+    ecs_set_context(world, &ctx);
+
+    /* Create entities from scratch so they don't have the EcsId component */
+    EcsEntity e_1 = ecs_new(world, Type);
+    EcsEntity e_2 = ecs_new(world, Type);
+    EcsEntity e_3 = ecs_new(world, Type);
+    
+    test_assert( !ecs_has(world, e_1, Position));
+    test_assert( !ecs_has(world, e_2, Position));
+    test_assert( !ecs_has(world, e_3, Position));
+
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_3, Velocity));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_remove_added_component_in_on_add_w_set() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_SYSTEM(world, Remove_from_current, EcsOnAdd, Position);
+
+    IterData ctx = {.component = TPosition};
+    ecs_set_context(world, &ctx);
+
+    EcsEntity e_1 = ecs_new(world, Velocity);
+    EcsEntity e_2 = ecs_new(world, Velocity);
+    EcsEntity e_3 = ecs_new(world, Velocity);
+
+    e_1 = ecs_set(world, e_1, Position, {10, 20});
+    e_2 = ecs_set(world, e_2, Position, {11, 21});
+    e_3 = ecs_set(world, e_3, Position, {12, 22});
+
+    test_assert( !ecs_has(world, e_1, Position));
+    test_assert( !ecs_has(world, e_2, Position));
+    test_assert( !ecs_has(world, e_3, Position));
+
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_3, Velocity));
+
+    ecs_fini(world);
+}
+
+void Add_3_to_current(EcsRows *rows) {
+    IterData *ctx = ecs_get_context(rows->world);
+    EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
+    int i;
+
+    for (i = rows->begin; i < rows->end; i ++) {
+        if (ctx->component_3) {
+            _ecs_add(rows->world, entities[i], ctx->component_3);
+
+            test_assert( !ecs_empty(rows->world, entities[i]));
+            test_assert( _ecs_has(rows->world, entities[i], ctx->component_3)); 
+            test_assert( _ecs_get_ptr(rows->world, entities[i], ctx->component_3) != NULL);           
+        }
+        ctx->entity_count ++;
+    }
+}
+
+void SingleThreadStaging_on_add_in_on_add() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_SYSTEM(world, Add_to_current, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Add_3_to_current, EcsOnAdd, Velocity);
+
+    IterData ctx = {.component = TVelocity, .component_3 = TMass};
+    ecs_set_context(world, &ctx);
+
+    EcsEntity e_1 = ecs_new(world, Position);
+    EcsEntity e_2 = ecs_new(world, Position);
+    EcsEntity e_3 = ecs_new(world, Position);
+
+    test_assert( ecs_has(world, e_1, Position));
+    test_assert( ecs_has(world, e_2, Position));
+    test_assert( ecs_has(world, e_3, Position));
+
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_3, Velocity));
+
+    test_assert( ecs_has(world, e_1, Mass));
+    test_assert( ecs_has(world, e_2, Mass));
+    test_assert( ecs_has(world, e_3, Mass));
+
+    ecs_fini(world);
+}
+
+static bool dummy_called = false;
+
+static
+void Dummy(EcsRows *rows) {
+    dummy_called = true;
+}
+
+void SingleThreadStaging_on_remove_in_on_add() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, Remove_from_current, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnRemove, Velocity);
+
+    IterData ctx = {.component = TVelocity};
+    ecs_set_context(world, &ctx);
+
+    EcsEntity e_1 = ecs_new(world, Type);
+    EcsEntity e_2 = ecs_new(world, Type);
+    EcsEntity e_3 = ecs_new(world, Type);
+
+    test_assert( ecs_has(world, e_1, Position));
+    test_assert( ecs_has(world, e_2, Position));
+    test_assert( ecs_has(world, e_3, Position));
+
+    test_assert( !ecs_has(world, e_1, Velocity));
+    test_assert( !ecs_has(world, e_2, Velocity));
+    test_assert( !ecs_has(world, e_3, Velocity));
+
+    test_assert(dummy_called);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_on_set_in_on_add() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Rotation);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_SYSTEM(world, Set_current, EcsOnAdd, Position);
+    ECS_SYSTEM(world, Add_3_to_current, EcsOnSet, Rotation);
+
+    IterData ctx = {.component = TRotation, .component_3 = TMass};
+    ecs_set_context(world, &ctx);
+
+    EcsEntity e_1 = ecs_new(world, Position);
+    EcsEntity e_2 = ecs_new(world, Position);
+    EcsEntity e_3 = ecs_new(world, Position);
+
+    test_assert( ecs_has(world, e_1, Position));
+    test_assert( ecs_has(world, e_2, Position));
+    test_assert( ecs_has(world, e_3, Position));
+
+    test_assert( ecs_has(world, e_1, Rotation));
+    test_assert( ecs_has(world, e_2, Rotation));
+    test_assert( ecs_has(world, e_3, Rotation));
+
+    test_assert( ecs_has(world, e_1, Mass));
+    test_assert( ecs_has(world, e_2, Mass));
+    test_assert( ecs_has(world, e_3, Mass));
+
+    Rotation *r = ecs_get_ptr(world, e_1, Rotation);
+    test_assert(r != NULL);
+    test_int(*r, 10 + e_1);
+
+    r = ecs_get_ptr(world, e_2, Rotation);
+    test_assert(r != NULL);
+    test_int(*r, 10 + e_2);
+
+    r = ecs_get_ptr(world, e_3, Rotation);
+    test_assert(r != NULL);
+    test_int(*r, 10 + e_3);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_on_add_in_on_frame() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_SYSTEM(world, Add_to_current, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Add_3_to_current, EcsOnAdd, Velocity);
+
+    IterData ctx = {.component = TVelocity, .component_3 = TMass};
+    ecs_set_context(world, &ctx);
+
+    EcsEntity e_1 = ecs_new(world, Position);
+    EcsEntity e_2 = ecs_new(world, Position);
+    EcsEntity e_3 = ecs_new(world, Position);
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e_1, Position));
+    test_assert( ecs_has(world, e_2, Position));
+    test_assert( ecs_has(world, e_3, Position));
+
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_3, Velocity));
+
+    test_assert( ecs_has(world, e_1, Mass));
+    test_assert( ecs_has(world, e_2, Mass));
+    test_assert( ecs_has(world, e_3, Mass));
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_on_remove_in_on_frame() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, Remove_from_current, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnRemove, Velocity);
+
+    IterData ctx = {.component = TVelocity};
+    ecs_set_context(world, &ctx);
+
+    EcsEntity e_1 = ecs_new(world, Type);
+    EcsEntity e_2 = ecs_new(world, Type);
+    EcsEntity e_3 = ecs_new(world, Type);
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e_1, Position));
+    test_assert( ecs_has(world, e_2, Position));
+    test_assert( ecs_has(world, e_3, Position));
+
+    test_assert( !ecs_has(world, e_1, Velocity));
+    test_assert( !ecs_has(world, e_2, Velocity));
+    test_assert( !ecs_has(world, e_3, Velocity));
+
+    test_assert(dummy_called);
 
     ecs_fini(world);
 }

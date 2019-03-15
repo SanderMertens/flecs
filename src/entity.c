@@ -278,17 +278,16 @@ bool notify_post_merge(
         return false;
     }
 
-    world->in_progress = true;
+    /* This will trigger asserts when operations are invoked during a merge that
+     * are not valid while merging. */
+    bool is_merging = world->is_merging;
+    world->is_merging = true;
 
     bool result = ecs_notify(
         world, stage, world->type_sys_remove_index, to_deinit, table, 
         table_columns, offset, limit);
 
-    world->in_progress = false;
-
-    if (result && !world->is_merging) {
-        ecs_merge(world);
-    }
+    world->is_merging = is_merging;
 
     return result;
 }
@@ -580,7 +579,12 @@ EcsEntity ecs_clone(
     EcsEntity entity,
     bool copy_value)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     EcsStage *stage = ecs_get_stage(&world);
+
+    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
+
     EcsEntity result = ++ world->last_handle;
     if (entity) {
         int64_t row64 = ecs_map_get64(world->main_stage.entity_index, entity);
@@ -637,13 +641,18 @@ EcsEntity _ecs_new(
     EcsWorld *world,
     EcsType type)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
+    EcsStage *stage = ecs_get_stage(&world);
+
+    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
+
     EcsEntity entity = ++ world->last_handle;
     if (type) {
         EcsEntityInfo info = {
             .entity = entity
         };
 
-        EcsStage *stage = ecs_get_stage(&world);
         commit_w_type(world, stage, &info, type, type, 0);
     }
 
@@ -656,6 +665,8 @@ EcsEntity _ecs_new_child(
     const char *name,
     EcsType type)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     EcsType TFullType = type;
     
     if (parent) {
@@ -685,9 +696,13 @@ EcsEntity _ecs_new_w_count(
     uint32_t count,
     EcsEntity *handles_out)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     EcsStage *stage = ecs_get_stage(&world);
     EcsEntity result = world->last_handle + 1;
     world->last_handle += count;
+    
+    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
 
     if (type) {
         EcsTable *table = ecs_world_get_table(world, stage, type);
@@ -729,6 +744,9 @@ void ecs_delete(
     EcsWorld *world,
     EcsEntity entity)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETERS, NULL);
+
     EcsStage *stage = ecs_get_stage(&world);
     bool in_progress = world->in_progress;
 
@@ -768,11 +786,12 @@ EcsResult _ecs_add(
     EcsEntity entity,
     EcsType type)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     EcsStage *stage = ecs_get_stage(&world);
+    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
+    
     EcsMap *entity_index = stage->entity_index;
-
     EcsType dst_type = 0;
-
     EcsEntityInfo info = {.entity = entity};
 
     uint64_t row_64 = ecs_map_get64(entity_index, entity);
@@ -796,15 +815,15 @@ EcsResult _ecs_remove(
     EcsEntity entity,
     EcsType type)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     EcsStage *stage = ecs_get_stage(&world);
+    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
+
     EcsMap *entity_index = stage->entity_index;
-
     EcsType dst_type = 0;
-
     EcsEntityInfo info = {.entity = entity};
 
     uint64_t row_64 = ecs_map_get64(entity_index, entity);
-
     if (row_64) {
         EcsRow row = ecs_to_row(row_64);
         info.table = ecs_world_get_table(world, stage, row.type_id);
@@ -825,6 +844,9 @@ EcsResult ecs_adopt(
     EcsEntity parent,
     EcsEntity child)
 {    
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
+
     if (!ecs_has(world, parent, EcsContainer)) {
         ecs_add(world, parent, EcsContainer);
     }
@@ -839,6 +861,8 @@ EcsResult ecs_orphan(
     EcsEntity parent,
     EcsEntity child)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     EcsType TParentType = ecs_type_from_entity(world, parent);
 
     return ecs_remove(world, child, ParentType);    
@@ -849,11 +873,13 @@ void* _ecs_get_ptr(
     EcsEntity entity,
     EcsType type)
 {
-    EcsEntityInfo info;
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
 
     /* Get only accepts types that hold a single component */
     EcsEntity component = ecs_entity_from_type(world, type);
 
+    EcsEntityInfo info;
     return get_ptr(world, entity, component, false, true, &info);
 }
 
@@ -865,11 +891,11 @@ EcsEntity _ecs_set_ptr_intern(
     size_t size,
     void *ptr)
 {
-    EcsEntityInfo info = {0};
-
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(type != 0, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETERS, NULL);
+    
+    EcsEntityInfo info = {0};
 
     /* Set only accepts types that hold a single component */
     EcsEntity component = ecs_entity_from_type(world, type);
@@ -879,7 +905,11 @@ EcsEntity _ecs_set_ptr_intern(
     if (!dst) {
         _ecs_add(world, entity, type);
         dst = get_ptr(world, entity, component, true, false, &info);
-        assert(dst != NULL);
+        if (!dst) {
+            /* It is possible that an OnAdd system removed the component before
+             * it could have been set */
+            return entity;
+        }
     }
 
 #ifndef NDEBUG
@@ -912,6 +942,9 @@ EcsEntity _ecs_set_ptr(
     size_t size,
     void *ptr)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     /* If no entity is specified, create one */
     if (!entity) {
         entity = _ecs_new(world, type);
@@ -934,6 +967,8 @@ bool _ecs_has(
     EcsEntity entity,
     EcsType type)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     if (!type) {
         return true;
     }
@@ -948,6 +983,8 @@ bool _ecs_has_any(
     EcsEntity entity,
     EcsType type)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     if (!type) {
         return true;
     }
@@ -962,6 +999,8 @@ bool ecs_contains(
     EcsEntity parent,
     EcsEntity child)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     if (!parent || !child) {
         return false;
     }
@@ -975,6 +1014,7 @@ EcsEntity ecs_new_component(
     const char *id,
     size_t size)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
 
     EcsEntity result = ecs_lookup(world, id);
@@ -1005,6 +1045,8 @@ bool ecs_empty(
     EcsWorld *world,
     EcsEntity entity)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     uint64_t cur64 = ecs_map_get64(world->main_stage.entity_index, entity);
 
     if (world->in_progress) {
@@ -1030,6 +1072,8 @@ EcsEntity ecs_get_component(
     EcsEntity entity,
     uint32_t index)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     EcsStage *stage = ecs_get_stage(&world);
     int64_t row64 = ecs_map_get64(stage->entity_index, entity);
 
@@ -1052,7 +1096,9 @@ EcsType ecs_type_from_entity(
     EcsWorld *world,
     EcsEntity entity)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     EcsStage *stage = ecs_get_stage(&world);
+
     return ecs_type_from_handle(world, stage, entity, NULL);
 }
 
@@ -1060,6 +1106,8 @@ EcsEntity ecs_entity_from_type(
     EcsWorld *world, 
     EcsType type_id)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
     EcsArray *type = ecs_map_get(world->main_stage.type_index, type_id);
     if (!type) {
         ecs_abort(ECS_UNKNOWN_TYPE_ID, NULL);
@@ -1077,6 +1125,7 @@ EcsType ecs_typeid(
     EcsWorld *world,
     EcsEntity entity)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     EcsStage *stage = ecs_get_stage(&world);
     int64_t row64 = ecs_map_get64(stage->entity_index, entity);
 

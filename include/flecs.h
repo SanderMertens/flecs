@@ -1308,6 +1308,7 @@ void _ecs_assert(
 #define ECS_COLUMN_INDEX_OUT_OF_RANGE (17)
 #define ECS_COLUMN_IS_NOT_SHARED (18)
 #define ECS_COLUMN_IS_SHARED (19)
+#define ECS_INVALID_WHILE_MERGING (20)
 
 /* -- Convenience macro's -- */
 
