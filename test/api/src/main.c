@@ -98,6 +98,7 @@ void Has_any_of_3_of_2(void);
 void Has_any_of_2_of_1(void);
 void Has_any_of_1_of_0(void);
 void Has_any_2_of_2_disjunct(void);
+void Has_has_in_progress(void);
 
 // Testsuite 'Delete'
 void Delete_delete_1(void);
@@ -272,6 +273,7 @@ void System_w_FromSystem_3_column_2_from_system(void);
 void System_w_FromSystem_2_column_1_from_system_on_add(void);
 void System_w_FromSystem_2_column_1_from_system_on_remove(void);
 void System_w_FromSystem_2_column_1_from_system_on_set(void);
+void System_w_FromSystem_auto_add_tag(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -649,7 +651,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Has",
-        .testcase_count = 17,
+        .testcase_count = 18,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -718,6 +720,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "any_2_of_2_disjunct",
                 .function = Has_any_2_of_2_disjunct
+            },
+            {
+                .id = "has_in_progress",
+                .function = Has_has_in_progress
             }
         }
     },
@@ -1365,7 +1371,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "System_w_FromSystem",
-        .testcase_count = 5,
+        .testcase_count = 6,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_column_1_from_system",
@@ -1386,6 +1392,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "2_column_1_from_system_on_set",
                 .function = System_w_FromSystem_2_column_1_from_system_on_set
+            },
+            {
+                .id = "auto_add_tag",
+                .function = System_w_FromSystem_auto_add_tag
             }
         }
     },

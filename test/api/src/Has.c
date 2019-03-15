@@ -250,3 +250,28 @@ void Has_any_2_of_2_disjunct() {
     
     ecs_fini(world);
 }
+
+void TestHas(EcsRows *rows) {
+    EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
+    EcsType TPosition = ecs_column_type(rows, 1);
+
+    int i;
+    for (i = rows->begin; i < rows->end; i ++) {
+        test_assert( ecs_has(rows->world, entities[i], Position));
+    }
+}
+
+void Has_has_in_progress() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, TestHas, EcsOnFrame, Position);
+
+    EcsEntity e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_progress(world, 1);
+    
+    ecs_fini(world);
+}

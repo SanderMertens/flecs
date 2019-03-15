@@ -275,3 +275,29 @@ void System_w_FromSystem_2_column_1_from_system_on_set() {
 
     ecs_fini(world);
 }
+
+void Dummy_1(EcsRows *rows) { }
+void Dummy_2(EcsRows *rows) { }
+void Dummy_3(EcsRows *rows) { }
+void Dummy_4(EcsRows *rows) { }
+void Dummy_5(EcsRows *rows) { }
+
+void System_w_FromSystem_auto_add_tag() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, Dummy_1, EcsOnFrame, Position, SYSTEM.EcsHidden);
+    ECS_SYSTEM(world, Dummy_2, EcsOnAdd, Position, SYSTEM.EcsHidden);
+    ECS_SYSTEM(world, Dummy_3, EcsOnRemove, Position, SYSTEM.EcsHidden);
+    ECS_SYSTEM(world, Dummy_4, EcsOnSet, Position, SYSTEM.EcsHidden);
+    ECS_SYSTEM(world, Dummy_5, EcsManual, Position, SYSTEM.EcsHidden);
+
+    test_assert( ecs_has(world, Dummy_1, EcsHidden));
+    test_assert( ecs_has(world, Dummy_2, EcsHidden));
+    test_assert( ecs_has(world, Dummy_3, EcsHidden));
+    test_assert( ecs_has(world, Dummy_4, EcsHidden));
+    test_assert( ecs_has(world, Dummy_5, EcsHidden));
+
+    ecs_fini(world);
+}

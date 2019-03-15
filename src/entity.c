@@ -1130,8 +1130,15 @@ EcsType ecs_typeid(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     EcsStage *stage = ecs_get_stage(&world);
     int64_t row64 = ecs_map_get64(stage->entity_index, entity);
-
     EcsRow row = ecs_to_row(row64);
+    EcsType result = row.type_id;
+
+    if (world->in_progress) {
+        int64_t main_row64 = ecs_map_get64(world->main_stage.entity_index, entity);
+        EcsType remove_type = ecs_map_get64(stage->remove_merge, entity);
+        EcsRow main_row = ecs_to_row(main_row64);
+        result = ecs_type_merge(world, stage, main_row.type_id, result, remove_type);
+    }
     
-    return row.type_id;
+    return result;
 }

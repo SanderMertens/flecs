@@ -109,7 +109,8 @@
                 "any_of_3_of_2",
                 "any_of_2_of_1",
                 "any_of_1_of_0",
-                "any_2_of_2_disjunct"
+                "any_2_of_2_disjunct",
+                "has_in_progress"
             ]
         }, {
             "id": "Delete",
@@ -311,7 +312,8 @@
                 "3_column_2_from_system",
                 "2_column_1_from_system_on_add",
                 "2_column_1_from_system_on_remove",
-                "2_column_1_from_system_on_set"
+                "2_column_1_from_system_on_set",
+                "auto_add_tag"
             ]
         }, {
             "id": "Run",
