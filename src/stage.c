@@ -33,20 +33,14 @@ void merge_tables(
     for (i = 0; i < count; i ++) {
         EcsTable *table = &buffer[i];
         EcsType type_id = table->type_id;
-        if (!ecs_map_has(main_stage->table_index, type_id, NULL)) {
-            EcsTable *dst = ecs_array_add(&main_stage->tables, &table_arr_params);
 
-            *dst = *table;
+        /* Ensure table exists in main stage */
+        EcsTable *main_table = ecs_world_get_table(
+            world, main_stage, type_id);
 
-            uint32_t index = ecs_array_count(main_stage->tables) - 1;
-            ecs_map_set(main_stage->table_index, type_id, index + 1);
+        ecs_assert(main_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            /* Table might still refer to type in stage */
-            table = ecs_array_get(main_stage->tables, &table_arr_params, index);
-            table->type = ecs_type_get(world, NULL, type_id);
-        } else {
-            ecs_table_deinit(world, table);
-        }
+        ecs_table_deinit(world, table);
     }
 
     ecs_array_clear(stage->tables);
@@ -126,17 +120,16 @@ void ecs_stage_init(
     stage->entity_index = ecs_map_new(0);
 
     if (is_temp_stage) {
-        stage->table_index = world->main_stage.table_index;
-        stage->tables = world->main_stage.tables;
         stage->type_index = world->main_stage.type_index;
     } else {
-        stage->table_index = ecs_map_new(0);
-        if (is_main_stage) {
-            stage->tables = ecs_array_new(&table_arr_params, 8);
-        } else {
-            stage->tables = ecs_array_new(&table_arr_params, 0);
-        }
         stage->type_index = ecs_map_new(0);
+    }
+
+    stage->table_index = ecs_map_new(0);
+    if (is_main_stage) {
+        stage->tables = ecs_array_new(&table_arr_params, 8);
+    } else {
+        stage->tables = ecs_array_new(&table_arr_params, 0);
     }
 
     if (!is_main_stage) {
@@ -154,10 +147,11 @@ void ecs_stage_deinit(
 
     ecs_map_free(stage->entity_index);
 
+    clean_tables(world, stage);
+    ecs_map_free(stage->table_index);
+
     if (!is_temp_stage) {
-        clean_tables(world, stage);
         clean_families(stage);
-        ecs_map_free(stage->table_index);
     }
 
     if (!is_main_stage) {
@@ -176,8 +170,9 @@ void ecs_stage_merge(
 
     if (!is_temp_stage) {
         merge_families(world, stage);
-        merge_tables(world, stage);
     }
+    
+    merge_tables(world, stage);
 
     merge_commits(world, stage);
 }

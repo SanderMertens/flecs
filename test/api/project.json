@@ -240,6 +240,11 @@
                 "6_type_1_and_2_optional"
             ]
         }, {
+            "id": "SystemManual",
+            "testcases": [
+                "1_type_1_component"
+            ]
+        }, {
             "id": "Container",
             "testcases": [
                 "child",
@@ -384,7 +389,12 @@
                 "on_remove_in_on_add",
                 "on_set_in_on_add",
                 "on_add_in_on_frame",
-                "on_remove_in_on_frame"
+                "on_remove_in_on_frame",
+                "match_table_created_in_progress",
+                "match_table_created_w_add_in_on_set",
+                "match_table_created_w_set_in_on_set",
+                "match_table_created_w_new_in_progress",
+                "match_table_created_w_new_in_on_set"
             ]
         }, {
             "id": "Modules",

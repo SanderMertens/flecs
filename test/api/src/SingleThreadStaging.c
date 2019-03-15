@@ -2376,3 +2376,238 @@ void SingleThreadStaging_on_remove_in_on_frame() {
 
     ecs_fini(world);
 }
+
+static
+void On_PV(EcsRows *rows) {
+    Position *p = ecs_column(rows, Position, 1);
+    Velocity *v = ecs_column(rows, Velocity, 2);
+
+    ProbeSystem(rows);
+
+    int i;
+    for (i = rows->begin; i < rows->end; i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
+}
+
+void SingleThreadStaging_match_table_created_in_progress() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_SYSTEM(world, Add_to_current, EcsOnFrame, Position, !Velocity);
+    ECS_SYSTEM(world, On_PV, EcsOnFrame, Position, Velocity);
+
+    IterData add_ctx = {.component = TVelocity};
+    ecs_set_context(world, &add_ctx);
+
+    EcsEntity e_1 = ecs_new(world, Position);
+    EcsEntity e_2 = ecs_new(world, Position);
+    EcsEntity e_3 = ecs_new(world, Position);
+
+    ecs_progress(world, 1);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, On_PV);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_2);
+    test_int(ctx.e[1], e_3);
+    test_int(ctx.e[2], e_1);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], 0);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_match_table_created_w_add_in_on_set() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_SYSTEM(world, Add_to_current, EcsOnSet, Position);
+    ECS_SYSTEM(world, On_PV, EcsOnFrame, Position, Velocity);
+
+    IterData add_ctx = {.component = TVelocity};
+    ecs_set_context(world, &add_ctx);
+
+    EcsEntity e_1 = ecs_set(world, 0, Position, {10, 20});
+    EcsEntity e_2 = ecs_set(world, 0, Position, {10, 20});
+    EcsEntity e_3 = ecs_set(world, 0, Position, {10, 20});
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, On_PV);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[2], e_3);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], 0);
+
+    ecs_fini(world);
+}
+
+static
+void Set_velocity(EcsRows *rows) {
+    EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
+
+    IterData *ctx = ecs_get_context(rows->world);
+    EcsType TVelocity = ctx->component;
+
+    int i;
+    for (i = rows->begin; i < rows->end; i ++) {
+        ecs_set(rows->world, entities[i], Velocity, {10, 20});
+    }
+}
+
+void SingleThreadStaging_match_table_created_w_set_in_on_set() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, Set_velocity, EcsOnSet, Position);
+    ECS_SYSTEM(world, On_PV, EcsOnFrame, Position, Velocity);
+
+    IterData add_ctx = {.component = TVelocity};
+    ecs_set_context(world, &add_ctx);
+
+    EcsEntity e_1 = ecs_set(world, 0, Position, {10, 20});
+    EcsEntity e_2 = ecs_set(world, 0, Position, {10, 20});
+    EcsEntity e_3 = ecs_set(world, 0, Position, {10, 20});
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, On_PV);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[2], e_3);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], 0);
+
+    ecs_fini(world);
+}
+
+static
+void Set_velocity_on_new(EcsRows *rows) {
+    IterData *ctx = ecs_get_context(rows->world);
+    EcsType TVelocity = ctx->component;
+
+    int i;
+    for (i = rows->begin; i < rows->end; i ++) {
+        ecs_set(rows->world, 0, Velocity, {10, 20});
+    }
+}
+
+static
+void On_V(EcsRows *rows) {
+    Velocity *v = ecs_column(rows, Velocity, 1);
+
+    ProbeSystem(rows);
+
+    int i;
+    for (i = rows->begin; i < rows->end; i ++) {
+        v[i].x = v[i].y;
+    }
+}
+
+void SingleThreadStaging_match_table_created_w_new_in_progress() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, Set_velocity_on_new, EcsOnFrame, Position);
+    ECS_SYSTEM(world, On_V, EcsOnFrame, Velocity);
+
+    IterData add_ctx = {.component = TVelocity};
+    ecs_set_context(world, &add_ctx);
+
+    ecs_set(world, 0, Position, {10, 20});
+
+    ecs_progress(world, 1);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+    ecs_enable(world, Set_velocity_on_new, false);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, On_V);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.c[0][0], EVelocity);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+
+void SingleThreadStaging_match_table_created_w_new_in_on_set() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, Set_velocity_on_new, EcsOnSet, Position);
+    ECS_SYSTEM(world, On_V, EcsOnFrame, Velocity);
+
+    IterData add_ctx = {.component = TVelocity};
+    ecs_set_context(world, &add_ctx);
+
+    ecs_set(world, 0, Position, {10, 20});
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+    ecs_enable(world, Set_velocity_on_new, false);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, On_V);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.c[0][0], EVelocity);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}

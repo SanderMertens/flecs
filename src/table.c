@@ -108,6 +108,20 @@ void ecs_table_free(
     ecs_array_free(table->frame_systems);
 }
 
+void ecs_table_register_system(
+    EcsWorld *world,
+    EcsTable *table,
+    EcsEntity system)
+{
+    /* Register system with the table */
+    EcsEntity *h = ecs_array_add(&table->frame_systems, &handle_arr_params);
+    if (h) *h = system;
+
+    if (ecs_array_count(table->columns[0].data)) {
+        activate_table(world, table, true);
+    }
+}
+
 uint32_t ecs_table_insert(
     EcsWorld *world,
     EcsTable *table,

@@ -155,15 +155,11 @@ void add_table(
     uint32_t ref = 0;
     uint32_t column_count = ecs_array_count(system_data->base.columns);
 
-    /* If the table is empty, add it to the inactive array, so it is skipped
-     * when the system is evaluated */
-    if (ecs_table_count(table)) {
-        table_data = ecs_array_add(
-            &system_data->tables, &system_data->table_params);
-    } else {
-        table_data = ecs_array_add(
-            &system_data->inactive_tables, &system_data->table_params);
-    }
+    /* Initially always add table to inactive group. If the system is registered
+     * with the table and the table is not empty, the table will send an
+     * activate signal to the system. */
+    table_data = ecs_array_add(
+        &system_data->inactive_tables, &system_data->table_params);
 
     /* Add element to array that contains components for this table. Tables
      * typically share the same component list, unless the system contains OR
@@ -310,9 +306,7 @@ void add_table(
         ref_data[ref].entity = 0;
     }
 
-    /* Register system with the table */
-    EcsEntity *h = ecs_array_add(&table->frame_systems, &handle_arr_params);
-    if (h) *h = system;
+    ecs_table_register_system(world, table, system);
 }
 
 /* Match table with system */

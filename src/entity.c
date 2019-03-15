@@ -259,6 +259,7 @@ bool notify_pre_merge(
     world->in_progress = in_progress;
     if (result && !in_progress) {
         ecs_merge(world);
+
     }
 
     return result;
@@ -349,6 +350,7 @@ uint32_t commit_w_type(
     if (type_id) {
         EcsArray *old_table_db = stage->tables;
         new_table = ecs_world_get_table(world, stage, type_id);
+
         if (old_table && old_table_db != stage->tables) {
             old_table = ecs_world_get_table(world, stage, info->type_id);
         }

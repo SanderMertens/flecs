@@ -157,6 +157,11 @@ EcsResult ecs_table_init_w_size(
     EcsArray *type,
     uint32_t size);
 
+void ecs_table_register_system(
+    EcsWorld *world,
+    EcsTable *table,
+    EcsEntity system);    
+
 /* Insert row into table (or stage) */
 uint32_t ecs_table_insert(
     EcsWorld *world,

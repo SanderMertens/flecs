@@ -211,6 +211,9 @@ void SystemOnFrame_2_type_1_and_1_optional(void);
 void SystemOnFrame_2_type_2_and_1_optional(void);
 void SystemOnFrame_6_type_1_and_2_optional(void);
 
+// Testsuite 'SystemManual'
+void SystemManual_1_type_1_component(void);
+
 // Testsuite 'Container'
 void Container_child(void);
 void Container_child_w_id(void);
@@ -343,6 +346,11 @@ void SingleThreadStaging_on_remove_in_on_add(void);
 void SingleThreadStaging_on_set_in_on_add(void);
 void SingleThreadStaging_on_add_in_on_frame(void);
 void SingleThreadStaging_on_remove_in_on_frame(void);
+void SingleThreadStaging_match_table_created_in_progress(void);
+void SingleThreadStaging_match_table_created_w_add_in_on_set(void);
+void SingleThreadStaging_match_table_created_w_set_in_on_set(void);
+void SingleThreadStaging_match_table_created_w_new_in_progress(void);
+void SingleThreadStaging_match_table_created_w_new_in_on_set(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
@@ -1145,6 +1153,16 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "SystemManual",
+        .testcase_count = 1,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "1_type_1_component",
+                .function = SystemManual_1_type_1_component
+            }
+        }
+    },
+    {
         .id = "Container",
         .testcase_count = 19,
         .testcases = (bake_test_case[]){
@@ -1458,7 +1476,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 50,
+        .testcase_count = 55,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -1659,6 +1677,26 @@ static bake_test_suite suites[] = {
             {
                 .id = "on_remove_in_on_frame",
                 .function = SingleThreadStaging_on_remove_in_on_frame
+            },
+            {
+                .id = "match_table_created_in_progress",
+                .function = SingleThreadStaging_match_table_created_in_progress
+            },
+            {
+                .id = "match_table_created_w_add_in_on_set",
+                .function = SingleThreadStaging_match_table_created_w_add_in_on_set
+            },
+            {
+                .id = "match_table_created_w_set_in_on_set",
+                .function = SingleThreadStaging_match_table_created_w_set_in_on_set
+            },
+            {
+                .id = "match_table_created_w_new_in_progress",
+                .function = SingleThreadStaging_match_table_created_w_new_in_progress
+            },
+            {
+                .id = "match_table_created_w_new_in_on_set",
+                .function = SingleThreadStaging_match_table_created_w_new_in_on_set
             }
         }
     },
@@ -1714,5 +1752,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 22);
+    return bake_test_run("api", argc, argv, suites, 23);
 }

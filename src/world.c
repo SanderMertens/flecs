@@ -137,7 +137,6 @@ void bootstrap_component(
 static
 void notify_create_table(
     EcsWorld *world,
-    EcsStage *stage,
     EcsArray *systems,
     EcsTable *table)
 {
@@ -149,6 +148,20 @@ void notify_create_table(
     }
 }
 
+static
+void notify_systems_of_table(
+    EcsWorld *world,
+    EcsTable *table)
+{
+    notify_create_table(world, world->pre_frame_systems, table);
+    notify_create_table(world, world->post_frame_systems, table);
+    notify_create_table(world, world->on_load_systems, table);
+    notify_create_table(world, world->on_store_systems, table);
+    notify_create_table(world, world->on_frame_systems, table);
+    notify_create_table(world, world->inactive_systems, table);
+    notify_create_table(world, world->on_demand_systems, table);
+}
+
 /** Create a new table and register it with the world and systems. A table in
  * flecs is equivalent to an archetype */
 static
@@ -158,16 +171,7 @@ EcsTable* create_table(
     EcsType type_id)
 {
     /* Add and initialize table */
-    bool is_main_table_array = stage->tables == world->main_stage.tables;
     EcsTable *result = ecs_array_add(&stage->tables, &table_arr_params);
-
-
-    /* The tables array is shared between the main stage and temp stage. Make
-     * sure to update the array pointer in both stages. */
-    if (is_main_table_array) {
-        world->main_stage.tables = stage->tables;
-        world->temp_stage.tables = stage->tables;
-    }
     
     result->type_id = type_id;
 
@@ -178,20 +182,8 @@ EcsTable* create_table(
     uint32_t index = ecs_array_get_index(stage->tables, &table_arr_params, result);
     ecs_map_set64(stage->table_index, type_id, index + 1);
 
-    /* Notify all column systems of a new table. Only notify for tables that are
-     * added/merged to the main stage, as this could otherwise introduce race
-     * conditions between threads. 
-     * 
-     * Notifying systems is necessary, because column systems are prematched
-     * with tables, so this doesn't need to happen in the main loop. */
-    if (!world->in_progress) {
-        notify_create_table(world, stage, world->pre_frame_systems, result);
-        notify_create_table(world, stage, world->post_frame_systems, result);
-        notify_create_table(world, stage, world->on_load_systems, result);
-        notify_create_table(world, stage, world->on_store_systems, result);
-        notify_create_table(world, stage, world->on_frame_systems, result);
-        notify_create_table(world, stage, world->inactive_systems, result);
-        notify_create_table(world, stage, world->on_demand_systems, result);
+    if (stage == &world->main_stage) {
+        notify_systems_of_table(world, result);
     }
 
     assert(result != NULL);
@@ -595,6 +587,7 @@ void run_single_thread_stage(
     float delta_time)
 {
     uint32_t i, system_count = ecs_array_count(systems);
+
     if (system_count) {
         EcsEntity *buffer = ecs_array_buffer(systems);
 
@@ -719,6 +712,8 @@ bool ecs_progress(
     delta_time = start_measure_frame(world, delta_time);
     world->delta_time = delta_time;
 
+    /* -- System execution starts here -- */
+
     run_single_thread_stage(world, world->on_load_systems, delta_time);
 
     if (has_threads) {
@@ -735,6 +730,8 @@ bool ecs_progress(
     run_tasks(world, delta_time);
 
     run_single_thread_stage(world, world->on_store_systems, delta_time);
+
+    /* -- System execution stops here -- */
 
     /* Profile system time & merge if systems were processed */
     if (world->in_progress) {
