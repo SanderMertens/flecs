@@ -1,0 +1,15 @@
+{
+    "id": "flecs.graphics",
+    "type": "template",
+    "value": {
+        "author": "Jane Doe",
+        "description": "Flecs graphics application",
+        "use": [
+            "flecs",
+            "flecs.components.transform",
+            "flecs.components.geometry",
+            "flecs.components.graphics",
+            "flecs.systems.sdl2"
+        ]
+    }
+}
