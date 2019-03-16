@@ -21,6 +21,8 @@ Oh, and we have [dashboards](https://github.com/SanderMertens/flecs-systems-admi
 
 ![dashboard](https://user-images.githubusercontent.com/9919222/54180572-309ec380-4459-11e9-9e48-1a08de57ff91.png)
 
+See [here](#getting-started-with-the-dashboard) for how to create an application with the dashboard.
+
 ## Contents
 * [Building](#building)
 * [Getting started](#getting-started)
@@ -72,6 +74,27 @@ You now have a project which contains a simple flecs application! To run the pro
 ```
 bake run my_app
 ```
+
+### Getting started with the dashboard
+To create an application that uses the flecs web dashboard, first install the `flecs-systems-admin` package:
+
+```
+bake clone SanderMertens/flecs-systems-admin
+```
+This clones and builds the `flecs.systems.admin` module, together with all its dependencies. Currently this is only possible out of the box with [bake](https://github.com/SanderMertens/bake). Future versions may also support modules with CMake.
+
+After cloning the packages, create a new project like so:
+
+```
+bake new my_app -t flecs.admin
+```
+This tells bake that you want to use the `flecs.admin` template as starting point for your application. After this command is finished, your application is ready to be executed:
+
+```
+bake run my_app
+```
+
+You can now navigate to http://localhost:9090 to see the dashboard. Any systems that you add to your application will now show up in the dashboard, and can be turned on/off.
 
 ## Modules
 
