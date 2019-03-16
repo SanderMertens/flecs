@@ -20,6 +20,9 @@ void ProbeSystem(
     }
 
     EcsEntity *e = ecs_column(rows, EcsEntity, 0);
+    test_assert(e != NULL);
+    test_assert(rows->entities != NULL);
+    test_assert(rows->entities == e);
     for (i = rows->begin; i < rows->end; i ++) {
         ctx->e[i - rows->begin + ctx->count] = e[i];
     }

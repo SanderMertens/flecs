@@ -105,6 +105,7 @@ typedef struct EcsRows {
     EcsReference *references; /* references to other entities */
     void **ref_ptrs;          /* The resolved pointers to the references */
     EcsEntity *components;    /* system-table specific list of components */
+    EcsEntity *entities;      /* Entity row */
 
     void *param;         /* userdata passed to on-demand system */
     float delta_time;    /* time elapsed since last frame */

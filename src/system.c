@@ -272,6 +272,7 @@ void ecs_row_notify(
         .column_count = ecs_array_count(system_data->components),
         .references = references,
         .table_columns = table_columns,
+        .entities = ecs_array_buffer(table_columns[0].data),
         .components = ecs_array_buffer(system_data->components),
         .index_offset = 0,
         .begin = offset,

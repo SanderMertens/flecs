@@ -788,7 +788,8 @@ EcsEntity _ecs_run_w_filter(
         info.begin = first;
         info.count = count;
         info.end = first + count;
-
+        info.entities = ecs_array_buffer(((EcsTableColumn*)info.table_columns)[0].data);
+        
         action(&info);
 
         info.index_offset += count;
