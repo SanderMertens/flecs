@@ -248,6 +248,16 @@
                 "1_type_1_component"
             ]
         }, {
+            "id": "Tasks",
+            "testcases": [
+                "no_components",
+                "one_tag",
+                "from_system",
+                "on_remove_no_components",
+                "on_remove_one_tag",
+                "on_remove_from_system"
+            ]
+        }, {
             "id": "Container",
             "testcases": [
                 "child",

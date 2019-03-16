@@ -217,6 +217,14 @@ void SystemOnFrame_use_fields_1_owned_1_shared(void);
 // Testsuite 'SystemManual'
 void SystemManual_1_type_1_component(void);
 
+// Testsuite 'Tasks'
+void Tasks_no_components(void);
+void Tasks_one_tag(void);
+void Tasks_from_system(void);
+void Tasks_on_remove_no_components(void);
+void Tasks_on_remove_one_tag(void);
+void Tasks_on_remove_from_system(void);
+
 // Testsuite 'Container'
 void Container_child(void);
 void Container_child_w_id(void);
@@ -1180,6 +1188,36 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "Tasks",
+        .testcase_count = 6,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "no_components",
+                .function = Tasks_no_components
+            },
+            {
+                .id = "one_tag",
+                .function = Tasks_one_tag
+            },
+            {
+                .id = "from_system",
+                .function = Tasks_from_system
+            },
+            {
+                .id = "on_remove_no_components",
+                .function = Tasks_on_remove_no_components
+            },
+            {
+                .id = "on_remove_one_tag",
+                .function = Tasks_on_remove_one_tag
+            },
+            {
+                .id = "on_remove_from_system",
+                .function = Tasks_on_remove_from_system
+            }
+        }
+    },
+    {
         .id = "Container",
         .testcase_count = 19,
         .testcases = (bake_test_case[]){
@@ -1777,5 +1815,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 23);
+    return bake_test_run("api", argc, argv, suites, 24);
 }

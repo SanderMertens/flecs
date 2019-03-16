@@ -238,7 +238,6 @@ void copy_from_prefab(
 static
 bool notify_pre_merge(
     EcsWorld *world,
-    EcsStage *stage,
     EcsTable *table,
     EcsTableColumn *table_columns,
     uint32_t offset,
@@ -254,7 +253,7 @@ bool notify_pre_merge(
     world->in_progress = true;
 
     bool result = ecs_notify(
-        world, stage, systems, to_init, table, table_columns, offset, limit);
+        world, systems, to_init, table, table_columns, offset, limit);
 
     world->in_progress = in_progress;
     if (result && !in_progress) {
@@ -268,7 +267,6 @@ bool notify_pre_merge(
 static
 bool notify_post_merge(
     EcsWorld *world,
-    EcsStage *stage,
     EcsTable *table,
     EcsTableColumn *table_columns,
     uint32_t offset,
@@ -285,7 +283,7 @@ bool notify_post_merge(
     world->is_merging = true;
 
     bool result = ecs_notify(
-        world, stage, world->type_sys_remove_index, to_deinit, table, 
+        world, world->type_sys_remove_index, to_deinit, table, 
         table_columns, offset, limit);
 
     world->is_merging = is_merging;
@@ -413,7 +411,7 @@ uint32_t commit_w_type(
          */
         if (to_remove && old_index != -1) {
             merged = notify_post_merge(
-                world, stage, old_table, old_columns, old_index, 1, to_remove);
+                world, old_table, old_columns, old_index, 1, to_remove);
         }
 
         /* After the cleanup code has been invoked we can finally remove the
@@ -433,7 +431,7 @@ uint32_t commit_w_type(
     if (type_id) {
         if (to_add) {
             notify_pre_merge (
-                world, stage, new_table, new_columns, new_index, 1, to_add, 
+                world, new_table, new_columns, new_index, 1, to_add, 
                 world->type_sys_add_index);
 
             copy_from_prefab(
@@ -451,63 +449,8 @@ uint32_t commit_w_type(
 
 /* -- Private functions -- */
 
-bool ecs_notify_system(
-    EcsWorld *world,
-    EcsStage *stage,
-    EcsEntity system,
-    EcsType type_id,
-    EcsTable *table,
-    EcsTableColumn *table_columns,
-    int32_t offset,
-    int32_t limit)  
-{
-    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
-    assert(system_data != NULL);
-
-    if (!system_data->base.enabled) {
-        return false;
-    }
-
-    uint32_t i, column_count = ecs_array_count(system_data->base.columns);
-    EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
-    int32_t columns[column_count];
-    EcsReference references[column_count];
-    uint32_t ref_id = 0;
-
-    for (i = 0; i < column_count; i ++) {
-        if (buffer[i].kind == EcsFromEntity) {
-            columns[i] = ecs_type_index_of(table->type, buffer[i].is.component) + 1;
-        } else {
-            if (buffer[i].kind == EcsFromSystem) {
-                references[ref_id].entity = system;
-            } else if (buffer[i].kind == EcsFromSingleton) {
-                references[ref_id].entity = 0;         
-            }
-            
-            references[ref_id].component = 
-                ecs_type_from_entity(world, buffer[i].is.component);
-
-            ref_id ++;
-            columns[i] = -ref_id;
-        }
-    }
-
-    ecs_row_notify(
-        world,
-        system,
-        system_data,
-        columns,
-        references,
-        table_columns,
-        offset,
-        limit);
-
-    return true;
-}
-
 bool ecs_notify(
     EcsWorld *world,
-    EcsStage *stage,
     EcsMap *index,
     EcsType type_id,
     EcsTable *table,
@@ -523,9 +466,8 @@ bool ecs_notify(
         uint32_t i, count = ecs_array_count(systems);
 
         for (i = 0; i < count; i ++) {
-            notified |= ecs_notify_system(
-                world, stage, buffer[i], type_id, table, table_columns, 
-                offset, limit);
+            notified |= ecs_notify_row_system(
+                world, buffer[i], table->type, table_columns, offset, limit);
         }
     } 
 
@@ -630,7 +572,7 @@ EcsEntity ecs_clone(
 
                 /* A clone with value is equivalent to a set */
                 ecs_notify(
-                    world, stage, world->type_sys_set_index, from_table->type_id, 
+                    world, world->type_sys_set_index, from_table->type_id, 
                     to_table, to_columns, to_row.index, 1);
             }
         }
@@ -728,7 +670,7 @@ EcsEntity _ecs_new_w_count(
 
         /* Now we can notify matching OnAdd row systems in bulk */
         notify_pre_merge(
-            world, stage, table, table->columns, row - count, count, 
+            world, table, table->columns, row - count, count, 
             type, world->type_sys_add_index);
     } 
     
@@ -923,15 +865,8 @@ EcsEntity _ecs_set_ptr_intern(
 
     memcpy(dst, ptr, size);
 
-    EcsStage *stage = ecs_get_stage(&world);
     notify_pre_merge(
-        world,
-        stage,
-        info.table,
-        info.columns,
-        info.index,
-        1,
-        type,
+        world, info.table, info.columns, info.index, 1, type,
         world->type_sys_set_index);
 
     return entity;

@@ -18,7 +18,6 @@ void ecs_merge_entity(
 /* Notify row system of entity (identified by row_index) */
 bool ecs_notify(
     EcsWorld *world,
-    EcsStage *stage,
     EcsMap *systems,
     EcsType type_id,
     EcsTable *table,
@@ -270,12 +269,10 @@ void ecs_run_task(
     float delta_time);
 
 /* Invoke row system */
-void ecs_row_notify(
+bool ecs_notify_row_system(
     EcsWorld *world,
     EcsEntity system,
-    EcsRowSystem *system_data,
-    int32_t *columns,
-    EcsReference *references,
+    EcsArray *type,
     EcsTableColumn *table_columns,
     uint32_t offset,
     uint32_t limit);

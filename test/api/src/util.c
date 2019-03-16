@@ -19,15 +19,16 @@ void ProbeSystem(
         ctx->s[ctx->invoked][i] = ecs_column_source(rows, i + 1);
     }
 
-    EcsEntity *e = ecs_column(rows, EcsEntity, 0);
-    test_assert(e != NULL);
-    test_assert(rows->entities != NULL);
-    test_assert(rows->entities == e);
-    for (i = rows->begin; i < rows->end; i ++) {
-        ctx->e[i - rows->begin + ctx->count] = e[i];
+    EcsEntity *e = ecs_column_test(rows, EcsEntity, 0);
+    if (e) {
+        test_assert(e != NULL);
+        test_assert(rows->entities != NULL);
+        test_assert(rows->entities == e);
+        for (i = rows->begin; i < rows->end; i ++) {
+            ctx->e[i - rows->begin + ctx->count] = e[i];
+        }
+        ctx->count += rows->count;
     }
 
     ctx->invoked ++;
-
-    ctx->count += rows->count;
 }

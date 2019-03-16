@@ -140,7 +140,10 @@ EcsEntity new_row_system(
     }
 
     ecs_system_compute_and_families(world, result, &system_data->base);
-    match_families(world, result, system_data);
+
+    if (needs_tables) {
+        match_families(world, result, system_data);
+    }
 
     return result;
 }
@@ -192,6 +195,9 @@ EcsResult ecs_parse_component_action(
          * components */
         if (strcmp(component_id, "0")) {
             ecs_abort(ECS_INVALID_COMPONENT_ID, component_id);
+        } else {
+            /* Don't add 0 component to signature */
+            return EcsOk;
         }
     }
 
@@ -253,17 +259,46 @@ error:
 }
 
 /** Run system on a single row */
-void ecs_row_notify(
+bool ecs_notify_row_system(
     EcsWorld *world,
     EcsEntity system,
-    EcsRowSystem *system_data,
-    int32_t *columns,
-    EcsReference *references,
+    EcsArray *type,
     EcsTableColumn *table_columns,
     uint32_t offset,
     uint32_t limit)
 {
+    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
+    assert(system_data != NULL);
+
+    if (!system_data->base.enabled) {
+        return false;
+    }
+
     EcsSystemAction action = system_data->base.action;
+
+    uint32_t i, column_count = ecs_array_count(system_data->base.columns);
+    EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
+    int32_t columns[column_count];
+    EcsReference references[column_count];
+    uint32_t ref_id = 0;
+
+    for (i = 0; i < column_count; i ++) {
+        if (buffer[i].kind == EcsFromEntity) {
+            columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
+        } else {
+            if (buffer[i].kind == EcsFromSystem) {
+                references[ref_id].entity = system;
+            } else if (buffer[i].kind == EcsFromSingleton) {
+                references[ref_id].entity = 0;         
+            }
+            
+            references[ref_id].component = 
+                ecs_type_from_entity(world, buffer[i].is.component);
+
+            ref_id ++;
+            columns[i] = -ref_id;
+        }
+    }
 
     EcsRows rows = {
         .world = world,
@@ -272,7 +307,6 @@ void ecs_row_notify(
         .column_count = ecs_array_count(system_data->components),
         .references = references,
         .table_columns = table_columns,
-        .entities = ecs_array_buffer(table_columns[0].data),
         .components = ecs_array_buffer(system_data->components),
         .index_offset = 0,
         .begin = offset,
@@ -280,7 +314,24 @@ void ecs_row_notify(
         .count = limit
     };
 
+    if (table_columns) {
+        rows.entities = ecs_array_buffer(table_columns[0].data);
+    }
+
     action(&rows);
+
+    return true;
+}
+
+/** Run a task. A task is a system that contains no columns that can be matched
+ * against a table. Examples of such columns are EcsFromSystem or EcsFromId.
+ * Tasks are ran once every frame. */
+void ecs_run_task(
+    EcsWorld *world,
+    EcsEntity system,
+    float delta_time)
+{
+    ecs_notify_row_system(world, system, NULL, NULL, 0, 1);
 }
 
 /* Notify row system of a new type */
@@ -293,42 +344,6 @@ void ecs_row_system_notify_of_type(
     EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
 
     match_type(world, stage, system, system_data, type);
-}
-
-/** Run a task. A task is a system that contains no columns that can be matched
- * against a table. Examples of such columns are EcsFromSystem or EcsFromId.
- * Tasks are ran once every frame. */
-void ecs_run_task(
-    EcsWorld *world,
-    EcsEntity system,
-    float delta_time)
-{
-    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
-    assert(system_data != NULL);
-
-    if (!system_data->base.enabled) {
-        return;
-    }
-
-    bool measure_time = world->measure_system_time;
-    struct timespec time_start;
-    if (measure_time) {
-        ut_time_get(&time_start);
-    }
-
-    EcsRows info = {
-        .world = world,
-        .system = system,
-        .delta_time = delta_time,
-        .column_count = ecs_array_count(system_data->components),
-        .components = ecs_array_buffer(system_data->components),
-    };
-
-    system_data->base.action(&info);
-
-    if (measure_time) {
-        system_data->base.time_spent += ut_time_measure(&time_start);
-    }
 }
 
 /* -- Public API -- */
@@ -487,11 +502,21 @@ void* _ecs_column(
     if (index == 0) {
         table_column = 0;
     } else {
+        if (!rows->columns) {
+            ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
+            return NULL;
+        }
+
         table_column = rows->columns[index - 1];
     }
 
     if (table_column < 0) {
         ecs_assert(test, ECS_COLUMN_IS_SHARED, NULL);
+        return NULL;
+    }
+
+    if (!rows->table_columns) {
+        ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
         return NULL;
     }
 
@@ -515,9 +540,19 @@ void* _ecs_shared(
     if (index == 0) {
         return 0;
     } else {
+        if (!rows->columns) {
+            ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
+            return NULL;
+        }
+
         table_column = rows->columns[index - 1];
         if (table_column >= 0) {
             ecs_assert(test, ECS_COLUMN_IS_NOT_SHARED, NULL);
+            return NULL;
+        }
+
+        if (!rows->references) {
+            ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
             return NULL;
         }
 
@@ -526,9 +561,10 @@ void* _ecs_shared(
     }
 }
 
-EcsEntity ecs_column_source(
+EcsEntity _ecs_column_source(
     EcsRows *rows,
-    uint32_t index)
+    uint32_t index,
+    bool test)
 {
     if (index > rows->column_count) {
         return 0;
@@ -537,35 +573,57 @@ EcsEntity ecs_column_source(
     if (index == 0) {
         return 0;
     } else {
+        if (!rows->columns) {
+            ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
+            return 0;
+        }
+
         int32_t table_column = rows->columns[index - 1];
         if (table_column >= 0) {
             return 0;
         }
+
+        ecs_assert(rows->references != NULL, ECS_INTERNAL_ERROR, NULL);
 
         EcsReference *ref = &rows->references[-table_column - 1];
         return ref->entity;
     }
 }
 
-EcsType ecs_column_type(
+EcsType _ecs_column_type(
     EcsRows *rows,
-    uint32_t index)
+    uint32_t index,
+    bool test)
 {
     if (index == 0) {
         return 0;
+    } else if (index > rows->column_count) {
+        return 0;
     } else {
+        if (!rows->components) {
+            ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
+            return 0;
+        }
+
         EcsEntity component = rows->components[index - 1];
         return ecs_type_from_entity(rows->world, component);
     }
 }
 
-EcsEntity ecs_column_component(
+EcsEntity _ecs_column_component(
     EcsRows *rows,
-    uint32_t index)
+    uint32_t index,
+    bool test)
 {
     if (index == 0) {
         return 0;
+    } else if (index > rows->column_count) {
+        return 0; 
     } else {
+        if (!rows->components) {
+            ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
+            return 0;
+        }
         return rows->components[index - 1];
     }  
 }
@@ -586,12 +644,15 @@ void *_ecs_field(
     if (column == 0) {
         table_column = 0;
     } else {
+        ecs_assert(rows->columns != NULL, ECS_INTERNAL_ERROR, NULL);
         table_column = rows->columns[column - 1];
     }
 
     if (table_column < 0) {
+        ecs_assert(rows->ref_ptrs != NULL, ECS_INTERNAL_ERROR, NULL);
         return rows->ref_ptrs[-table_column - 1];
     } else {
+        ecs_assert(rows->table_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         EcsTableColumn *column = &((EcsTableColumn*)rows->table_columns)[table_column];
         void *buffer = ecs_array_buffer(column->data);
         return ECS_OFFSET(buffer, column->size * index);
