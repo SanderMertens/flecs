@@ -285,6 +285,9 @@ void System_w_FromSystem_2_column_1_from_system_on_remove(void);
 void System_w_FromSystem_2_column_1_from_system_on_set(void);
 void System_w_FromSystem_auto_add_tag(void);
 
+// Testsuite 'System_w_FromEntity'
+void System_w_FromEntity_2_column_1_from_entity(void);
+
 // Testsuite 'Run'
 void Run_run(void);
 void Run_run_w_param(void);
@@ -1448,6 +1451,16 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "System_w_FromEntity",
+        .testcase_count = 1,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "2_column_1_from_entity",
+                .function = System_w_FromEntity_2_column_1_from_entity
+            }
+        }
+    },
+    {
         .id = "Run",
         .testcase_count = 20,
         .testcases = (bake_test_case[]){
@@ -1815,5 +1828,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 24);
+    return bake_test_run("api", argc, argv, suites, 25);
 }

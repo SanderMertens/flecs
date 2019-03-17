@@ -118,6 +118,8 @@ const char* ecs_strerror(
         return "column is shared";
     case ECS_INVALID_WHILE_MERGING:
         return "operation is invalid while merging";
+    case ECS_UNRESOLVED_IDENTIFIER:
+        return "unresolved identifier";
     }
 
     return "unknown error code";

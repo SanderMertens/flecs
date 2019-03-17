@@ -283,6 +283,7 @@ EcsResult ecs_parse_component_action(
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
     const char *component_id,
+    const char *source_id,
     void *data);
 
 /* -- Worker API -- */

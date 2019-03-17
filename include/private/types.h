@@ -41,11 +41,12 @@ typedef struct EcsComponent {
 
 /** Type that is used by systems to indicate where to fetch a component from */
 typedef enum EcsSystemExprElemKind {
-    EcsFromEntity,          /* Get component from entity (default) */
+    EcsFromSelf,            /* Get component from self (default) */
     EcsFromContainer,       /* Get component from container */
     EcsFromSystem,          /* Get component from system */
-    EcsFromId,              /* Get entity by id */
-    EcsFromSingleton        /* Get singleton component */
+    EcsFromId,              /* Get entity handle by id */
+    EcsFromSingleton,       /* Get singleton component */
+    EcsFromEntity           /* Get component from other entity */
 } EcsSystemExprElemKind;
 
 /** Type describing an operator used in an signature of a system signature */
@@ -63,6 +64,7 @@ typedef EcsResult (*ecs_parse_action)(
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
     const char *component,
+    const char *source,
     void *ctx);
 
 /** Type that describes a single column in the system signature */
@@ -73,6 +75,7 @@ typedef struct EcsSystemColumn {
         EcsType type;             /* Used for OR operator */
         EcsEntity component;      /* Used for AND operator */
     } is;
+    EcsEntity source;            /* Source entity (used with FromEntity) */
 } EcsSystemColumn;
 
 /** Type that stores a reference to components of external entities (prefabs) */
@@ -86,9 +89,9 @@ typedef struct EcsSystem {
     EcsSystemAction action;    /* Callback to be invoked for matching rows */
     const char *signature;     /* Signature with which system was created */
     EcsArray *columns;         /* Column components */
-    EcsType not_from_entity; /* Exclude components from entity */
+    EcsType not_from_entity;   /* Exclude components from entity */
     EcsType not_from_component; /* Exclude components from components */
-    EcsType and_from_entity; /* Which components are required from entity */
+    EcsType and_from_entity;   /* Which components are required from entity */
     EcsType and_from_system;   /* Used to auto-add components to system */
     EcsSystemKind kind;        /* Kind of system */
     float time_spent;          /* Time spent on running system */

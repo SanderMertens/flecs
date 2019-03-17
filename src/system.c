@@ -163,7 +163,7 @@ void ecs_system_compute_and_families(
         EcsSystemExprElemKind elem_kind = elem->kind;
         EcsSystemExprOperKind oper_kind = elem->oper_kind;
 
-        if (elem_kind == EcsFromEntity) {
+        if (elem_kind == EcsFromSelf) {
             if (oper_kind == EcsOperAnd) {
                 system_data->and_from_entity = ecs_type_add(
                  world, NULL, system_data->and_from_entity, elem->is.component);
@@ -183,6 +183,7 @@ EcsResult ecs_parse_component_action(
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
     const char *component_id,
+    const char *source_id,
     void *data)
 {
     EcsSystem *system_data = data;
@@ -215,6 +216,13 @@ EcsResult ecs_parse_component_action(
         elem->oper_kind = oper_kind;
         elem->is.component = component;
 
+        if (elem_kind == EcsFromEntity) {
+            elem->source = ecs_lookup(world, source_id);
+            if (!elem->source) {
+                ecs_abort(ECS_UNRESOLVED_IDENTIFIER, source_id);
+            }
+        }
+
     /* OR columns store a type id instead of a single component */
     } else if (oper_kind == EcsOperOr) {
         elem = ecs_array_last(system_data->columns, &column_arr_params);
@@ -242,7 +250,7 @@ EcsResult ecs_parse_component_action(
         elem->oper_kind = EcsOperNot;
         elem->is.component = component;
 
-        if (elem_kind == EcsFromEntity) {
+        if (elem_kind == EcsFromSelf) {
             system_data->not_from_entity =
                 ecs_type_add(
                     world, NULL, system_data->not_from_entity, component);
@@ -283,13 +291,15 @@ bool ecs_notify_row_system(
     uint32_t ref_id = 0;
 
     for (i = 0; i < column_count; i ++) {
-        if (buffer[i].kind == EcsFromEntity) {
+        if (buffer[i].kind == EcsFromSelf) {
             columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
         } else {
             if (buffer[i].kind == EcsFromSystem) {
                 references[ref_id].entity = system;
             } else if (buffer[i].kind == EcsFromSingleton) {
                 references[ref_id].entity = 0;         
+            } else if (buffer[i].kind == EcsFromEntity) {
+                references[ref_id].entity = buffer[i].source;
             }
             
             references[ref_id].component = 

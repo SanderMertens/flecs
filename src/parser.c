@@ -18,7 +18,8 @@ static
 char* parse_complex_elem(
     char *bptr,
     EcsSystemExprElemKind *elem_kind,
-    EcsSystemExprOperKind *oper_kind)
+    EcsSystemExprOperKind *oper_kind,
+    const char * *source)
 {
     if (bptr[0] == '!') {
         *oper_kind = EcsOperNot;
@@ -40,6 +41,8 @@ char* parse_complex_elem(
         bptr ++;
     }
 
+    *source = NULL;
+
     char *dot = strchr(bptr, '.');
     if (dot) {
         if (!strncmp(bptr, "CONTAINER", dot - bptr)) {
@@ -51,7 +54,8 @@ char* parse_complex_elem(
         } else if (!strncmp(bptr, "ID", dot - bptr)) {
             *elem_kind = EcsFromId;
         } else {
-            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
+            *elem_kind = EcsFromEntity;
+            *source = bptr;
         }
         bptr = dot + 1;
 
@@ -69,10 +73,11 @@ EcsResult has_tables(
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
     const char *component_id,
+    const char *source_id,
     void *data)
 {
     bool *needs_matching = data;
-    if (elem_kind == EcsFromEntity || elem_kind == EcsFromContainer) {
+    if (elem_kind == EcsFromSelf || elem_kind == EcsFromContainer) {
         *needs_matching = true;
     }
 
@@ -116,8 +121,9 @@ EcsResult ecs_parse_component_expr(
     const char *ptr;
     char ch, *bptr, *buffer = malloc(len + 1);
     bool complex_expr = false;
-    EcsSystemExprElemKind elem_kind = EcsFromEntity;
+    EcsSystemExprElemKind elem_kind = EcsFromSelf;
     EcsSystemExprOperKind oper_kind = EcsOperAnd;
+    const char *source;
 
     for (bptr = buffer, ch = sig[0], ptr = sig; ch; ptr++) {
         ptr = skip_space(ptr);
@@ -131,8 +137,10 @@ EcsResult ecs_parse_component_expr(
             *bptr = '\0';
             bptr = buffer;
 
+            source = NULL;
+
             if (complex_expr) {
-                bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind);
+                bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source);
                 if (!bptr) {
                     ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
                 }
@@ -149,7 +157,7 @@ EcsResult ecs_parse_component_expr(
                     ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
                 }
 
-                if (elem_kind != EcsFromEntity) {
+                if (elem_kind != EcsFromSelf) {
                     /* Cannot get 0 component from anything other than entity */
                     ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
                 }
@@ -157,12 +165,24 @@ EcsResult ecs_parse_component_expr(
                 elem_kind = EcsFromId;
             }
 
-            if (action(world, elem_kind, oper_kind, bptr, ctx) != EcsOk) {
+            char *source_id = NULL;
+            if (source) {
+                char *dot = strchr(source, '.');
+                source_id = malloc(dot - source + 1);
+                strncpy(source_id, source, dot - source);
+                source_id[dot - source] = '\0';
+            }
+
+            if (action(world, elem_kind, oper_kind, bptr, source_id, ctx) != EcsOk) {
                 ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
             }
 
+            if (source_id) {
+                free(source_id);
+            }
+
             complex_expr = false;
-            elem_kind = EcsFromEntity;
+            elem_kind = EcsFromSelf;
 
             if (ch == '|') {
                 if (elem_kind == EcsFromId) {

@@ -328,6 +328,11 @@
                 "auto_add_tag"
             ]
         }, {
+            "id": "System_w_FromEntity",
+            "testcases": [
+                "2_column_1_from_entity"
+            ]
+        },{
             "id": "Run",
             "testcases": [
                 "run",

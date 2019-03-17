@@ -188,7 +188,7 @@ void add_table(
         EcsEntity entity = 0, component = 0;
 
         /* Column that retrieves data from an entity */
-        if (column->kind == EcsFromEntity) {
+        if (column->kind == EcsFromSelf || column->kind == EcsFromEntity) {
             if (column->oper_kind == EcsOperAnd) {
                 component = column->is.component;
             } else if (column->oper_kind == EcsOperOptional) {
@@ -197,6 +197,10 @@ void add_table(
                 component = ecs_type_contains(
                     world, &world->main_stage, table_type, column->is.type, 
                     false, true);
+            }
+
+            if (column->kind == EcsFromEntity) {
+                entity = column->source;
             }
 
         /* Column that just passes a handle to the system (no data) */
@@ -287,6 +291,8 @@ void add_table(
              * function will return a prefab. */
             if (column->kind == EcsFromSingleton) {
                 ref_data[ref].entity = 0;
+            } else if (column->kind == EcsFromEntity) {
+                ref_data[ref].entity = entity;
             } else {
                 ref_data[ref].entity = get_entity_for_component(
                     world, entity, table_type, component);
@@ -347,7 +353,7 @@ bool match_table(
         EcsSystemExprOperKind oper_kind = elem->oper_kind;
 
         if (oper_kind == EcsOperAnd) {
-            if (elem_kind == EcsFromEntity) {
+            if (elem_kind == EcsFromSelf) {
                 /* Already validated */
             } else if (elem_kind == EcsFromContainer) {
                 if (!components_contains_component(
@@ -358,7 +364,7 @@ bool match_table(
             }
         } else if (oper_kind == EcsOperOr) {
             type = elem->is.type;
-            if (elem_kind == EcsFromEntity) {
+            if (elem_kind == EcsFromSelf) {
                 if (!ecs_type_contains(
                     world, &world->main_stage, table_type, type, false, true))
                 {

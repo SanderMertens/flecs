@@ -9,6 +9,7 @@ EcsResult add_type(
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
     const char *entity_id,
+    const char *source_id,
     void *data)
 {
     EcsTypeComponent *type = data;
@@ -21,7 +22,7 @@ EcsResult add_type(
     if (!strcmp(entity_id, "0")) {
         *type = (EcsTypeComponent){0, 0};
     } else {
-        if (elem_kind != EcsFromEntity) {
+        if (elem_kind != EcsFromSelf) {
             return EcsError;
         }
 
