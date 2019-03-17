@@ -644,7 +644,7 @@ void *_ecs_field(
     uint32_t column,
     bool test)
 {
-    if (index > rows->column_count) {
+    if (column > rows->column_count) {
         ecs_assert(test, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return NULL;
     }
