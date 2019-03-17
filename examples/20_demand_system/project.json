@@ -1,7 +1,0 @@
-{
-    "id":"demandsystem",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

@@ -1,7 +1,0 @@
-{
-    "id":"addremove",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

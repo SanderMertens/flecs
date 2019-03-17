@@ -1,7 +1,0 @@
-{
-    "id":"entityascomponent",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

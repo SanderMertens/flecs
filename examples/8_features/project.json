@@ -1,7 +1,0 @@
-{
-    "id":"features",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

@@ -1,7 +1,0 @@
-{
-    "id":"systemmetadata",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

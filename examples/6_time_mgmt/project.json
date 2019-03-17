@@ -1,7 +1,0 @@
-{
-    "id":"timemgmt",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

@@ -1,7 +1,0 @@
-{
-    "id":"worlduserdata",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

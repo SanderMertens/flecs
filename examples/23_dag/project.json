@@ -1,7 +1,0 @@
-{
-    "id":"dag",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

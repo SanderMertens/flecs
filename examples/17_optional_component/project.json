@@ -1,7 +1,0 @@
-{
-    "id":"optionalcomponent",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

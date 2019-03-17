@@ -1,7 +1,0 @@
-{
-    "id":"systemhandlecolumn",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

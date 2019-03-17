@@ -1,7 +1,0 @@
-{
-    "id":"prefab",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

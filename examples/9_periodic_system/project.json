@@ -1,7 +1,0 @@
-{
-    "id":"periodicsystem",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

@@ -1,7 +1,0 @@
-{
-    "id":"systemuserdata",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

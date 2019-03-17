@@ -1,7 +1,0 @@
-{
-    "id":"disablesystem",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

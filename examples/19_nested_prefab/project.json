@@ -1,7 +1,0 @@
-{
-    "id":"nestedprefab",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

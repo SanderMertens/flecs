@@ -1,7 +1,0 @@
-{
-    "id":"helloworld",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

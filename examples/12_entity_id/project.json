@@ -1,7 +1,0 @@
-{
-    "id":"entityid",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}

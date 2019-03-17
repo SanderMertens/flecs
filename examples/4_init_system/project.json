@@ -1,7 +1,0 @@
-{
-    "id":"initsystem",
-    "type":"application",
-    "value": {
-        "use": ["flecs"]
-    }
-}
