@@ -9,6 +9,7 @@
             "flecs.components.transform",
             "flecs.components.geometry",
             "flecs.components.graphics",
+            "flecs.components.input",
             "flecs.systems.sdl2"
         ]
     }
