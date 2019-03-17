@@ -256,12 +256,6 @@ void ecs_system_activate_table(
     EcsTable *table,
     bool active);
 
-/* Run a job (from a worker thread) */
-void ecs_run_job(
-    EcsWorld *world,
-    EcsThread *thread,
-    EcsJob *job);
-
 /* Run a task (periodic system that is not matched against any tables) */
 void ecs_run_task(
     EcsWorld *world,

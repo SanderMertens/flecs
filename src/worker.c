@@ -31,7 +31,8 @@ void* ecs_worker(void *arg) {
         pthread_mutex_unlock(&world->thread_mutex);
 
         for (i = 0; i < job_count; i ++) {
-            ecs_run_job(world, thread, jobs[i]);
+            ecs_run_w_filter(world, 
+                jobs[i]->system, world->delta_time, jobs[i]->offset, jobs[i]->limit, 0, NULL);
         }
 
         pthread_mutex_lock(&world->thread_mutex);
@@ -224,8 +225,8 @@ void ecs_schedule_jobs(
         job->system = system;
         job->system_data = system_data;
         job->table_index = sys_table_index;
-        job->start_index = start_index;
-        job->row_count = rows_per_job;
+        job->offset = start_index;
+        job->limit = rows_per_job;
 
         start_index += rows_per_job;
 
@@ -245,7 +246,7 @@ void ecs_schedule_jobs(
     }
 
     if (residual >= 0.9) {
-        job->row_count ++;
+        job->limit ++;
     }
 }
 
@@ -286,7 +287,7 @@ void ecs_run_jobs(
     uint32_t i, job_count = thread->job_count;
 
     for (i = 0; i < job_count; i ++) {
-        ecs_run_job(world, NULL, jobs[i]);
+        ecs_run_w_filter(world, jobs[i]->system, world->delta_time, jobs[i]->offset, jobs[i]->limit, 0, NULL);
     }
     thread->job_count = 0;
 
