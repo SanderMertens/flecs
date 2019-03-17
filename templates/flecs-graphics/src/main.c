@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     ECS_IMPORT(world, EcsComponentsInput, ECS_2D);
     ECS_IMPORT(world, EcsSystemsSdl2, ECS_2D);
 
-    /* Define entity for square and canvas (SDL window) */
+    /* Define entity for square */
     ECS_ENTITY(world, Square, EcsPosition2D, EcsSquare, EcsColor);
 
     /* Define system that moves the square on keyboard input */
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
     /* Initialize canvas */
     ecs_set(world, 0, EcsCanvas2D, {
-        .window = { .width = 800, .height = 600, }, .title = "Hello ${id}!" 
+        .window = { .width = 800, .height = 600 }, .title = "Hello ${id}!" 
     });
 
     /* Initialize square */
