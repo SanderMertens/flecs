@@ -297,7 +297,9 @@
                 "new_type_w_2_overrides",
                 "add_type_w_1_overrides",
                 "add_type_w_2_overrides",
-                "get_ptr_prefab"
+                "get_ptr_prefab",
+                "iterate_w_prefab_field",
+                "iterate_w_prefab_shared"
             ]
         }, {
             "id": "System_w_FromContainer",

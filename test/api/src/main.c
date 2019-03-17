@@ -262,6 +262,8 @@ void Prefab_new_type_w_2_overrides(void);
 void Prefab_add_type_w_1_overrides(void);
 void Prefab_add_type_w_2_overrides(void);
 void Prefab_get_ptr_prefab(void);
+void Prefab_iterate_w_prefab_field(void);
+void Prefab_iterate_w_prefab_shared(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -1304,7 +1306,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 15,
+        .testcase_count = 17,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -1365,6 +1367,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_ptr_prefab",
                 .function = Prefab_get_ptr_prefab
+            },
+            {
+                .id = "iterate_w_prefab_field",
+                .function = Prefab_iterate_w_prefab_field
+            },
+            {
+                .id = "iterate_w_prefab_shared",
+                .function = Prefab_iterate_w_prefab_shared
             }
         }
     },
