@@ -23,6 +23,17 @@ Oh, and we have [dashboards](https://github.com/SanderMertens/flecs-systems-admi
 
 See [here](#getting-started-with-the-dashboard) for how to create an application with the dashboard.
 
+## Built with flecs
+
+#### [ecs_graphics](https://github.com/SanderMertens/ecs_graphics)
+Basic rendering and user input. 
+
+#### [ecs_nbody](https://github.com/SanderMertens/ecs_nbody)
+An nbody simulation implementation that uses multithreading.
+
+#### [ecs_benchmark](https://github.com/SanderMertens/ecs_benchmark)
+ECS performance benchmark that tests various operations and iterations.
+
 ## Contents
 * [Building](#building)
 * [Getting started](#getting-started)
