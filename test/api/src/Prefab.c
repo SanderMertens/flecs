@@ -714,12 +714,18 @@ void Prefab_iterate_w_prefab_field() {
     test_int(ctx.c[0][1], EVelocity);
     test_int(ctx.s[0][1], Prefab);
 
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);    
+
     ecs_fini(world);
 }
 
 static
 void Prefab_w_shared(EcsRows *rows) {
     Velocity *v = ecs_shared(rows, Velocity, 2);
+    Mass *m = ecs_shared_test(rows, Mass, 3);
 
     test_assert(v != NULL);
 
@@ -729,6 +735,11 @@ void Prefab_w_shared(EcsRows *rows) {
         Position *p = ecs_field(rows, Position, i, 1);
         p->x += v->x;
         p->y += v->y;
+
+        if (m) {
+            p->x += *m;
+            p->y += *m;
+        }
     }
 }
 
@@ -763,6 +774,56 @@ void Prefab_iterate_w_prefab_shared() {
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], EVelocity);
     test_int(ctx.s[0][1], Prefab);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+void Prefab_match_entity_prefab_w_system_optional() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_PREFAB(world, Prefab, Velocity, Mass);
+    ECS_TYPE(world, Type, Prefab, Position);
+    ECS_SYSTEM(world, Prefab_w_shared, EcsOnFrame, Position, Velocity, ?Mass);
+
+    ecs_set(world, Prefab, Velocity, {1, 2});
+    ecs_set(world, Prefab, Mass, {3});
+
+    EcsEntity e_1 = ecs_new(world, Type);
+    test_assert(e_1 != 0);
+    ecs_set(world, e_1, Position, {0, 0});
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Prefab_w_shared);
+    test_int(ctx.column_count, 3);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], Prefab);
+    test_int(ctx.c[0][2], EMass);
+    test_int(ctx.s[0][2], Prefab);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 4);
+    test_int(p->y, 5);
 
     ecs_fini(world);
 }
