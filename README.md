@@ -23,7 +23,7 @@ Oh, and we have [dashboards](https://github.com/SanderMertens/flecs-systems-admi
 
 See [here](#getting-started-with-the-dashboard) for how to create an application with the dashboard.
 
-## Built with flecs
+## Flecs projects
 
 #### [ecs_graphics](https://github.com/SanderMertens/ecs_graphics)
 Basic rendering and user input. 
