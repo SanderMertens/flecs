@@ -29,7 +29,7 @@ See [here](#getting-started-with-the-dashboard) for how to create an application
 Basic rendering and user input. 
 
 #### [ecs_nbody](https://github.com/SanderMertens/ecs_nbody)
-An nbody simulation implementation that uses multithreading.
+An nbody simulation that uses flecs multithreading.
 
 #### [ecs_benchmark](https://github.com/SanderMertens/ecs_benchmark)
 ECS performance benchmark that tests various operations and iterations.
