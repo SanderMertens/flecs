@@ -26,7 +26,7 @@ See [here](#getting-started-with-the-dashboard) for how to create an application
 ## Contents
 * [Building](#building)
 * [Getting started](#getting-started)
-* [Built with reflecs](#built-with-reflecs)
+* [Built with flecs](#built-with-flecs)
 * [Modules](#modules)
 * [Example](#example)
 * [Concepts](#concepts)
@@ -97,7 +97,7 @@ bake run my_app
 
 You can now navigate to http://localhost:9090 to see the dashboard. Any systems that you add to your application will now show up in the dashboard, and can be turned on/off.
 
-## Built with reflecs
+## Built with flecs
 
 #### [ecs_graphics](https://github.com/SanderMertens/ecs_graphics)
 Basic rendering and user input. 
