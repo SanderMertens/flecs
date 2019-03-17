@@ -23,20 +23,10 @@ Oh, and we have [dashboards](https://github.com/SanderMertens/flecs-systems-admi
 
 See [here](#getting-started-with-the-dashboard) for how to create an application with the dashboard.
 
-## Flecs projects
-
-#### [ecs_graphics](https://github.com/SanderMertens/ecs_graphics)
-Basic rendering and user input. 
-
-#### [ecs_nbody](https://github.com/SanderMertens/ecs_nbody)
-An nbody simulation that uses flecs multithreading.
-
-#### [ecs_benchmark](https://github.com/SanderMertens/ecs_benchmark)
-ECS performance benchmark that tests various operations and iterations.
-
 ## Contents
 * [Building](#building)
 * [Getting started](#getting-started)
+* [Built with reflecs](#built-with-reflecs)
 * [Modules](#modules)
 * [Example](#example)
 * [Concepts](#concepts)
@@ -106,6 +96,17 @@ bake run my_app
 ```
 
 You can now navigate to http://localhost:9090 to see the dashboard. Any systems that you add to your application will now show up in the dashboard, and can be turned on/off.
+
+## Built with reflecs
+
+#### [ecs_graphics](https://github.com/SanderMertens/ecs_graphics)
+Basic rendering and user input. 
+
+#### [ecs_nbody](https://github.com/SanderMertens/ecs_nbody)
+An nbody simulation that uses flecs multithreading.
+
+#### [ecs_benchmark](https://github.com/SanderMertens/ecs_benchmark)
+ECS performance benchmark that tests various operations and iterations.
 
 ## Modules
 
