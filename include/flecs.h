@@ -1361,7 +1361,7 @@ void _ecs_assert(
 #define ECS_COLUMN_IS_SHARED (19)
 #define ECS_INVALID_WHILE_MERGING (20)
 #define ECS_UNRESOLVED_IDENTIFIER (21)
-
+#define ECS_OUT_OF_RANGE (22)
 /* -- Convenience macro's -- */
 
 /** Wrapper around ecs_new_entity. */ 

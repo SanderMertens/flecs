@@ -120,6 +120,8 @@ const char* ecs_strerror(
         return "operation is invalid while merging";
     case ECS_UNRESOLVED_IDENTIFIER:
         return "unresolved identifier";
+    case ECS_OUT_OF_RANGE:
+        return "index is out of range";
     }
 
     return "unknown error code";

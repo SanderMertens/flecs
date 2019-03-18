@@ -672,6 +672,11 @@ void *_ecs_field(
     } else {
         ecs_assert(rows->table_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         EcsTableColumn *column = &((EcsTableColumn*)rows->table_columns)[table_column];
+
+#ifndef NDEBUG
+        ecs_assert(index < ecs_array_count(column->data), ECS_OUT_OF_RANGE, 0);
+#endif
+
         void *buffer = ecs_array_buffer(column->data);
         return ECS_OFFSET(buffer, column->size * index);
     }
