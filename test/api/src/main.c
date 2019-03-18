@@ -267,6 +267,7 @@ void Prefab_iterate_w_prefab_field(void);
 void Prefab_iterate_w_prefab_shared(void);
 void Prefab_match_entity_prefab_w_system_optional(void);
 void Prefab_prefab_in_system_expr(void);
+void Prefab_dont_match_prefab(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -1313,7 +1314,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 19,
+        .testcase_count = 20,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -1390,6 +1391,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "prefab_in_system_expr",
                 .function = Prefab_prefab_in_system_expr
+            },
+            {
+                .id = "dont_match_prefab",
+                .function = Prefab_dont_match_prefab
             }
         }
     },

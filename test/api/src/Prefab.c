@@ -885,3 +885,26 @@ void Prefab_prefab_in_system_expr() {
 
     ecs_fini(world);
 }
+
+void Dummy(EcsRows *rows) {
+    ProbeSystem(rows);
+}
+
+void Prefab_dont_match_prefab() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_PREFAB(world, Prefab, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnFrame, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}

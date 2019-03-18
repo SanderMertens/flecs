@@ -302,7 +302,8 @@
                 "iterate_w_prefab_field",
                 "iterate_w_prefab_shared",
                 "match_entity_prefab_w_system_optional",
-                "prefab_in_system_expr"
+                "prefab_in_system_expr",
+                "dont_match_prefab"
             ]
         }, {
             "id": "System_w_FromContainer",
