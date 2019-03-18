@@ -96,11 +96,9 @@ EcsSystemRef* get_ref_data(
         ref_data = ecs_array_add(
             &system_data->refs, &system_data->ref_params);
         table_data[REFS_INDEX] = ecs_array_count(system_data->refs);
-        table_data[REFS_COUNT] = 1;
     } else {
-        table_data[REFS_COUNT] ++;
         ref_data = ecs_array_get(
-            system_data->refs, &system_data->ref_params, table_data[1] - 1);
+            system_data->refs, &system_data->ref_params, table_data[REFS_INDEX] - 1);
     }
 
     return ref_data;
@@ -283,26 +281,30 @@ void add_table(
         /* If entity is set, or component is not found in table, add it as a ref
          * to data of a specific entity. */
         if (entity || table_data[i] == -1 || column->kind == EcsFromSingleton) {
-            if (!ref_data) {
-                ref_data = get_ref_data(world, system_data, table_data);
+            if (ecs_has(world, component, EcsComponent)) {
+                if (!ref_data) {
+                    ref_data = get_ref_data(world, system_data, table_data);
+                    table_data[REFS_COUNT] = 0;
+                }
+
+                /* Find the entity for the component. If the code gets here, this
+                * function will return a prefab. */
+                if (column->kind == EcsFromSingleton) {
+                    ref_data[ref].entity = 0;
+                } else if (column->kind == EcsFromEntity) {
+                    ref_data[ref].entity = entity;
+                } else {
+                    ref_data[ref].entity = get_entity_for_component(
+                        world, entity, table_type, component);
+                }
+
+                ref_data[ref].component = ecs_type_from_entity(world, component);
+                ref ++;
+
+                /* Negative number indicates ref instead of offset to ecs_data */
+                table_data[i] = -ref;
+                table_data[REFS_COUNT] ++;
             }
-
-            /* Find the entity for the component. If the code gets here, this
-             * function will return a prefab. */
-            if (column->kind == EcsFromSingleton) {
-                ref_data[ref].entity = 0;
-            } else if (column->kind == EcsFromEntity) {
-                ref_data[ref].entity = entity;
-            } else {
-                ref_data[ref].entity = get_entity_for_component(
-                    world, entity, table_type, component);
-            }
-
-            ref_data[ref].component = ecs_type_from_entity(world, component);
-            ref ++;
-
-            /* Negative number indicates ref instead of offset to ecs_data */
-            table_data[i] = -ref;
         }
 
         /* component_data index is not offset by anything */
@@ -705,12 +707,14 @@ EcsEntity _ecs_run_w_filter(
         }
 
         uint32_t ref_index = table[REFS_INDEX];
+
         if (ref_index) {
             info.references = ecs_array_get(
                 system_data->refs, &system_data->ref_params, ref_index - 1);
 
             /* Resolve references */
             int i, count = table[REFS_COUNT];
+
             for (i = 0; i < count; i ++) {
                 info.ref_ptrs[i] = _ecs_get_ptr(world, 
                     info.references[i].entity, info.references[i].component);

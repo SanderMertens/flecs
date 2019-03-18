@@ -288,22 +288,26 @@ bool ecs_notify_row_system(
     EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
     int32_t columns[column_count];
     EcsReference references[column_count];
+    void* ref_ptrs[column_count];
     uint32_t ref_id = 0;
 
     for (i = 0; i < column_count; i ++) {
         if (buffer[i].kind == EcsFromSelf) {
             columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
         } else {
-            if (buffer[i].kind == EcsFromSystem) {
-                references[ref_id].entity = system;
-            } else if (buffer[i].kind == EcsFromSingleton) {
-                references[ref_id].entity = 0;         
-            } else if (buffer[i].kind == EcsFromEntity) {
-                references[ref_id].entity = buffer[i].source;
-            }
+            EcsEntity entity = 0;
+            EcsType component = ecs_type_from_entity(world, buffer[i].is.component);;
             
-            references[ref_id].component = 
-                ecs_type_from_entity(world, buffer[i].is.component);
+            if (buffer[i].kind == EcsFromSystem) {
+                entity = system;
+            } else if (buffer[i].kind == EcsFromSingleton) {
+                entity = 0;         
+            } else if (buffer[i].kind == EcsFromEntity) {
+                entity = buffer[i].source;
+            }
+
+            references[ref_id] = (EcsReference){.entity = entity, .component = component};
+            ref_ptrs[ref_id] = _ecs_get_ptr(world, entity, component);
 
             ref_id ++;
             columns[i] = -ref_id;
@@ -323,6 +327,11 @@ bool ecs_notify_row_system(
         .end = offset + limit,
         .count = limit
     };
+
+    if (ref_id) {
+        rows.references = references;
+        rows.ref_ptrs = ref_ptrs;
+    }
 
     if (table_columns) {
         rows.entities = ecs_array_buffer(table_columns[0].data);
@@ -566,8 +575,7 @@ void* _ecs_shared(
             return NULL;
         }
 
-        EcsReference *ref = &rows->references[-table_column - 1];
-        return _ecs_get_ptr(rows->world, ref->entity, ref->component);
+        return rows->ref_ptrs[-table_column - 1];
     }
 }
 
