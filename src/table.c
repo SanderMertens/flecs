@@ -79,9 +79,6 @@ EcsResult ecs_table_init(
 
                     /* Register type with prefab index for quick lookups */
                     ecs_map_set(world->prefab_index, table->type_id, buf[i]);
-
-                } else if (!ecs_has(world, buf[i], EcsContainer)) {
-                    ecs_assert(0, ECS_INVALID_HANDLE, NULL);
                 }
             }
         }
