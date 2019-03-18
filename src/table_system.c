@@ -255,7 +255,7 @@ void add_table(
                     EcsComponent *data = ecs_get_ptr(
                         world, component, EcsComponent);
 
-                    if (!data->size) {
+                    if (!data || !data->size) {
                         table_data[i] = 0;
                     }
                 }
