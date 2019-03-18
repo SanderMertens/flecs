@@ -239,6 +239,10 @@
                 "2_type_1_and_1_optional",
                 "2_type_2_and_1_optional",
                 "6_type_1_and_2_optional",
+                "ensure_optional_is_null_column",
+                "ensure_optional_is_null_shared",
+                "ensure_optional_is_null_field_owned",
+                "ensure_optional_is_null_field_shared",
                 "use_fields_2_owned",
                 "use_fields_1_owned_1_shared",
                 "match_2_systems_w_populated_table"

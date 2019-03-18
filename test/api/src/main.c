@@ -211,6 +211,10 @@ void SystemOnFrame_1_type_1_and_1_or(void);
 void SystemOnFrame_2_type_1_and_1_optional(void);
 void SystemOnFrame_2_type_2_and_1_optional(void);
 void SystemOnFrame_6_type_1_and_2_optional(void);
+void SystemOnFrame_ensure_optional_is_null_column(void);
+void SystemOnFrame_ensure_optional_is_null_shared(void);
+void SystemOnFrame_ensure_optional_is_null_field_owned(void);
+void SystemOnFrame_ensure_optional_is_null_field_shared(void);
 void SystemOnFrame_use_fields_2_owned(void);
 void SystemOnFrame_use_fields_1_owned_1_shared(void);
 void SystemOnFrame_match_2_systems_w_populated_table(void);
@@ -1114,7 +1118,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 18,
+        .testcase_count = 22,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -1175,6 +1179,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "6_type_1_and_2_optional",
                 .function = SystemOnFrame_6_type_1_and_2_optional
+            },
+            {
+                .id = "ensure_optional_is_null_column",
+                .function = SystemOnFrame_ensure_optional_is_null_column
+            },
+            {
+                .id = "ensure_optional_is_null_shared",
+                .function = SystemOnFrame_ensure_optional_is_null_shared
+            },
+            {
+                .id = "ensure_optional_is_null_field_owned",
+                .function = SystemOnFrame_ensure_optional_is_null_field_owned
+            },
+            {
+                .id = "ensure_optional_is_null_field_shared",
+                .function = SystemOnFrame_ensure_optional_is_null_field_shared
             },
             {
                 .id = "use_fields_2_owned",

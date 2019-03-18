@@ -122,6 +122,8 @@ const char* ecs_strerror(
         return "unresolved identifier";
     case ECS_OUT_OF_RANGE:
         return "index is out of range";
+    case ECS_COLUMN_IS_NOT_SET:
+        return "column is not set (use ecs_column_test for optional columns)";
     }
 
     return "unknown error code";

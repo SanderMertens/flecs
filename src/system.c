@@ -527,6 +527,10 @@ void* _ecs_column(
         }
 
         table_column = rows->columns[index - 1];
+        if (!table_column) {
+            ecs_assert(test, ECS_COLUMN_IS_NOT_SET, NULL);
+            return NULL;
+        }
     }
 
     if (table_column < 0) {
@@ -664,6 +668,10 @@ void *_ecs_field(
     } else {
         ecs_assert(rows->columns != NULL, ECS_INTERNAL_ERROR, NULL);
         table_column = rows->columns[column - 1];
+
+        if (!table_column) {
+            return NULL;
+        }
     }
 
     if (table_column < 0) {

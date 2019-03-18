@@ -1094,3 +1094,148 @@ void SystemOnFrame_match_2_systems_w_populated_table() {
 
     ecs_fini(world);
 }
+
+void TestOptional_w_column(EcsRows *rows) {
+    Position *p = ecs_column_test(rows, Position, 1);
+    Velocity *v = ecs_column_test(rows, Velocity, 2);
+
+    test_assert(p != NULL);
+    test_assert(v == NULL);
+
+    ProbeSystem(rows);
+}
+
+void TestOptional_w_shared(EcsRows *rows) {
+    Position *p = ecs_column_test(rows, Position, 1);
+    Velocity *v = ecs_shared_test(rows, Velocity, 2);
+
+    test_assert(p != NULL);
+    test_assert(v == NULL);
+
+    ProbeSystem(rows);
+}
+
+void TestOptional_w_field(EcsRows *rows) {
+    Position *p = ecs_column_test(rows, Position, 1);
+
+    test_assert(p != NULL);
+
+    ProbeSystem(rows);
+
+    for (int i = rows->begin; i < rows->end; i ++) {
+        Velocity *v = ecs_field(rows, Velocity, i, 2);
+        test_assert(v == NULL);
+    }
+}
+
+void SystemOnFrame_ensure_optional_is_null_column() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, TestOptional_w_column, EcsOnFrame, Position, ?Velocity);
+    
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], 0);
+
+    test_int(ctx.e[0], e);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_ensure_optional_is_null_shared() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnFrame, Position, ?CONTAINER.Velocity);
+    
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], 0);
+
+    test_int(ctx.e[0], e);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_ensure_optional_is_null_field_owned() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, TestOptional_w_field, EcsOnFrame, Position, ?Velocity);
+    
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], 0);
+
+    test_int(ctx.e[0], e);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_ensure_optional_is_null_field_shared() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, TestOptional_w_field, EcsOnFrame, Position, ?CONTAINER.Velocity);
+    
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.s[0][1], 0);
+
+    test_int(ctx.e[0], e);
+
+    ecs_fini(world);
+}
