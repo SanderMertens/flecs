@@ -105,17 +105,13 @@ Basic rendering and user input.
 #### [ecs_nbody](https://github.com/SanderMertens/ecs_nbody)
 An nbody simulation that uses flecs multithreading.
 
+#### [ecs_collisions](https://github.com/SanderMertens/ecs_collisions)
+A simple application demonstrating collision detection with flecs.
+
 #### [ecs_benchmark](https://github.com/SanderMertens/ecs_benchmark)
 ECS performance benchmark that tests various operations and iterations.
 
 ## Modules
-
-!! flecs modules are temporary not available because of a breaking API change !!
-Once flecs v1.0 is released these things won't happen anymore, but until then, please bear
-with us!
-
----
-
 Flecs has a growing ecosystem of modules. The following modules are currently
 available:
 
