@@ -1064,3 +1064,33 @@ void SystemOnFrame_use_fields_1_owned_1_shared() {
 
     ecs_fini(world);
 }
+
+static void Dummy_1(EcsRows *rows) { ProbeSystem(rows); }
+static void Dummy_2(EcsRows *rows) { ProbeSystem(rows); }
+
+void SystemOnFrame_match_2_systems_w_populated_table() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, Dummy_1, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Dummy_2, EcsOnFrame, Position);
+    
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.column_count, 1);
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.e[1], e);
+
+    ecs_fini(world);
+}

@@ -6,14 +6,19 @@ static
 void activate_table(
     EcsWorld *world,
     EcsTable *table,
+    EcsEntity system,
     bool activate)
 {
-    EcsArray *systems = table->frame_systems;
-    if (systems) {
-        EcsIter it = ecs_array_iter(systems, &handle_arr_params);
-        while (ecs_iter_hasnext(&it)) {
-            EcsEntity system = *(EcsEntity*)ecs_iter_next(&it);
-            ecs_system_activate_table(world, system, table, activate);
+    if (system) {
+        ecs_system_activate_table(world, system, table, activate);
+    } else {
+        EcsArray *systems = table->frame_systems;
+        if (systems) {
+            EcsIter it = ecs_array_iter(systems, &handle_arr_params);
+            while (ecs_iter_hasnext(&it)) {
+                system = *(EcsEntity*)ecs_iter_next(&it);
+                ecs_system_activate_table(world, system, table, activate);
+            }
         }
     }
 }
@@ -118,7 +123,7 @@ void ecs_table_register_system(
     if (h) *h = system;
 
     if (ecs_array_count(table->columns[0].data)) {
-        activate_table(world, table, true);
+        activate_table(world, table, system, true);
     }
 }
 
@@ -153,7 +158,7 @@ uint32_t ecs_table_insert(
     uint32_t index = ecs_array_count(columns[0].data) - 1;
 
     if (!world->in_progress && !index) {
-        activate_table(world, table, true);
+        activate_table(world, table, 0, true);
     }
 
     /* Return index of last added entity */
@@ -224,7 +229,7 @@ void ecs_table_delete(
     }
     
     if (!world->in_progress && !count) {
-        activate_table(world, table, false);
+        activate_table(world, table, 0, false);
     }
 }
 
@@ -258,7 +263,7 @@ uint32_t ecs_table_grow(
 
     uint32_t row_count = ecs_array_count(columns[0].data);
     if (!world->in_progress && row_count == count) {
-        activate_table(world, table, true);
+        activate_table(world, table, 0, true);
     }
 
     /* Return index of first added entity */

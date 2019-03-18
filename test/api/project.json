@@ -240,7 +240,8 @@
                 "2_type_2_and_1_optional",
                 "6_type_1_and_2_optional",
                 "use_fields_2_owned",
-                "use_fields_1_owned_1_shared"
+                "use_fields_1_owned_1_shared",
+                "match_2_systems_w_populated_table"
             ]
         }, {
             "id": "SystemManual",
@@ -299,8 +300,7 @@
                 "add_type_w_2_overrides",
                 "get_ptr_prefab",
                 "iterate_w_prefab_field",
-                "iterate_w_prefab_shared",
-                "match_entity_prefab_w_system_optional"
+                "iterate_w_prefab_shared"
             ]
         }, {
             "id": "System_w_FromContainer",

@@ -213,6 +213,7 @@ void SystemOnFrame_2_type_2_and_1_optional(void);
 void SystemOnFrame_6_type_1_and_2_optional(void);
 void SystemOnFrame_use_fields_2_owned(void);
 void SystemOnFrame_use_fields_1_owned_1_shared(void);
+void SystemOnFrame_match_2_systems_w_populated_table(void);
 
 // Testsuite 'SystemManual'
 void SystemManual_1_type_1_component(void);
@@ -264,7 +265,6 @@ void Prefab_add_type_w_2_overrides(void);
 void Prefab_get_ptr_prefab(void);
 void Prefab_iterate_w_prefab_field(void);
 void Prefab_iterate_w_prefab_shared(void);
-void Prefab_match_entity_prefab_w_system_optional(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -1111,7 +1111,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 17,
+        .testcase_count = 18,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -1180,6 +1180,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "use_fields_1_owned_1_shared",
                 .function = SystemOnFrame_use_fields_1_owned_1_shared
+            },
+            {
+                .id = "match_2_systems_w_populated_table",
+                .function = SystemOnFrame_match_2_systems_w_populated_table
             }
         }
     },
@@ -1307,7 +1311,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 18,
+        .testcase_count = 17,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -1376,10 +1380,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "iterate_w_prefab_shared",
                 .function = Prefab_iterate_w_prefab_shared
-            },
-            {
-                .id = "match_entity_prefab_w_system_optional",
-                .function = Prefab_match_entity_prefab_w_system_optional
             }
         }
     },
