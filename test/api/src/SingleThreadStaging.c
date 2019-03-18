@@ -2628,7 +2628,6 @@ void SingleThreadStaging_merge_table_w_container_added_in_progress() {
     EcsWorld *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
 
     ECS_SYSTEM(world, Create_container, EcsOnFrame, Position);
 
@@ -2653,6 +2652,92 @@ void SingleThreadStaging_merge_table_w_container_added_in_progress() {
 
     test_int(ctx.c[0][0], EPosition);
     test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_merge_table_w_container_added_on_set() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, Create_container, EcsOnSet, Position);
+
+    /* Entity is not yet a container. Adding this entity to another entity would
+     * cause an error */
+    ECS_ENTITY(world, e_1, 0);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_set(world, e_1, Position, {10, 20});
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Create_container);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+/* Hacky way to test if entities are properly merged by system */
+static EcsEntity g_child = 0;
+static EcsEntity g_parent = 0;
+
+static
+void Create_container_reverse(EcsRows *rows) {
+
+    ProbeSystem(rows);
+
+    int i;
+    for (i = rows->begin; i < rows->end; i ++) {
+        EcsEntity child = ecs_new(rows->world, 0);
+        EcsEntity parent = ecs_new(rows->world, 0);
+        test_assert(child != 0);
+        test_assert(parent != 0);
+
+        ecs_adopt(rows->world, parent, child);
+        test_assert( ecs_contains(rows->world, parent, child));
+
+        g_parent = parent;
+        g_child = child;
+    }
+}
+
+void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, Create_container_reverse, EcsOnSet, Position);
+
+    /* Entity is not yet a container. Adding this entity to another entity would
+     * cause an error */
+    ECS_ENTITY(world, e_1, 0);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_set(world, e_1, Position, {10, 20});
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Create_container_reverse);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.s[0][0], 0);
+
+    test_assert(g_parent != 0);
+    test_assert(g_child != 0);
+
+    test_assert( ecs_contains(world, g_parent, g_child));
+    test_assert( ecs_has(world, g_parent, EcsContainer));
 
     ecs_fini(world);
 }
