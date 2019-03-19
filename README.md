@@ -24,6 +24,9 @@ Oh, and we have [dashboards](https://github.com/SanderMertens/flecs-systems-admi
 See [here](#getting-started-with-the-dashboard) for how to create an application with the dashboard.
 
 ## Contents
+
+[![Join the chat at https://gitter.im/flecsdev/community](https://badges.gitter.im/flecsdev/community.svg)](https://gitter.im/flecsdev/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 * [Building](#building)
 * [Getting started](#getting-started)
 * [Built with flecs](#built-with-flecs)
