@@ -178,7 +178,8 @@ void copy_from_prefab(
     EcsStage *stage,
     EcsTable *table,
     EcsEntity entity,
-    uint32_t index,
+    uint32_t offset,
+    uint32_t limit,
     EcsType type_id,
     EcsType to_add)
 {
@@ -219,13 +220,18 @@ void copy_from_prefab(
                     columns = table->columns;
                 }
 
-                void *ptr = get_row_ptr(
-                    world, stage, table->type, columns, index, component);
-                if (ptr) {
-                    EcsComponent *component_data = ecs_get_ptr(
-                        world, component, EcsComponent);
-                    assert(component_data != NULL);
-                    memcpy(ptr, prefab_ptr, component_data->size);
+                uint32_t size = columns->size;
+
+                if (size) {
+                    void *ptr = get_row_ptr(
+                        world, stage, table->type, columns, offset, component);
+                    if (ptr) {
+                        int i;
+                        for (i = 0; i < limit; i ++) {
+                            memcpy(ptr, prefab_ptr, size);
+                            ptr = ECS_OFFSET(ptr, size);
+                        }
+                    }
                 }
             }
         }
@@ -435,7 +441,7 @@ uint32_t commit_w_type(
                 world->type_sys_add_index);
 
             copy_from_prefab(
-                world, stage, new_table, entity, new_index, type_id, to_add);
+                world, stage, new_table, entity, new_index, 1, type_id, to_add);
         }     
     }
 
@@ -657,21 +663,24 @@ EcsEntity _ecs_new_w_count(
         uint32_t cur_index_count = ecs_map_count(entity_index);
         ecs_map_set_size(entity_index, cur_index_count + count);
 
-        int i;
+        int i, cur_row = row;
         for (i = result; i < (result + count); i ++) {
             /* We need to commit each entity individually in order to populate
              * the entity index */
 
-            EcsRow new_row = (EcsRow){.type_id = type, .index = row};
+            EcsRow new_row = (EcsRow){.type_id = type, .index = cur_row};
             ecs_map_set64(entity_index, i, ecs_from_row(new_row));
 
-            row ++;
+            cur_row ++;
         }
 
         /* Now we can notify matching OnAdd row systems in bulk */
         notify_pre_merge(
-            world, table, table->columns, row - count, count, 
+            world, table, table->columns, row, count, 
             type, world->type_sys_add_index);
+        
+        /* Check if there are prefabs */
+        copy_from_prefab(world, stage, table, result, row, count, type, type);
     } 
     
     if (handles_out) {

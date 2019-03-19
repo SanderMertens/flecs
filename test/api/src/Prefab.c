@@ -908,3 +908,42 @@ void Prefab_dont_match_prefab() {
 
     ecs_fini(world);
 }
+
+void Prefab_new_w_count_w_override() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_PREFAB(world, Prefab, Position, Velocity);
+    ECS_TYPE(world, Type, Prefab, Velocity);
+
+    ecs_set(world, Prefab, Position, {10, 20});
+    ecs_set(world, Prefab, Velocity, {30, 40});
+
+    EcsEntity e_1 = ecs_new_w_count(world, Type, 100, NULL);
+    test_assert(e_1 != 0);
+
+    Position *prefab_p = ecs_get_ptr(world, Prefab, Position);
+    Velocity *prefab_v = ecs_get_ptr(world, Prefab, Velocity);
+
+    EcsEntity e;
+    for (e = e_1; e < (e_1 + 100); e ++) {
+        test_assert( ecs_has(world, e, Position));
+        test_assert( ecs_has(world, e, Velocity));
+        test_assert( ecs_has(world, e, Prefab));
+
+        Position *p = ecs_get_ptr(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_assert(p == prefab_p);
+
+        Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 30);
+        test_int(v->y, 40);
+        test_assert(v != prefab_v);
+    }
+
+    ecs_fini(world);
+}
