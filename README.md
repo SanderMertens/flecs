@@ -231,7 +231,7 @@ In this statement, `LogPoints` refers to a C function that will be associated wi
 ```c
 void LogPoints(EcsRows *rows) {
     Point *p = ecs_column(rows, Point, 1);
-    for (int i = 0; i < rows->limit; i ++) {
+    for (int i = 0; i < rows->count; i ++) {
         printf("Log point (%d, %d)\n", p[i].x, p[i].y);
     }
 }
