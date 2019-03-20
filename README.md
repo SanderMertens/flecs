@@ -1,3 +1,5 @@
+[![Join the chat at https://gitter.im/flecsdev/community](https://badges.gitter.im/flecsdev/community.svg)](https://gitter.im/flecsdev/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ![flecs](https://user-images.githubusercontent.com/9919222/54175082-b107f900-4446-11e9-9cbc-91c096f7c0b1.png)
 
 Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)). Flecs packs as much punch as possible into a small library with a tiny C99 API and zero dependencies. Here are some of the things it can do:
