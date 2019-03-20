@@ -49,7 +49,7 @@ void AddVtoP(EcsRows *rows) {
     ECS_IMPORT_COLUMN(rows, SimpleModule, 2);
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         ecs_add(rows->world, entities[i], Velocity);
     }
 }

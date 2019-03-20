@@ -38,7 +38,7 @@ void Iter_w_singleton(EcsRows *rows) {
 
     if (v_shared) {
         int i;
-        for (i = rows->begin; i < rows->end; i ++) {
+        for (i = 0; i < rows->count; i ++) {
             p[i].x += v_shared->x;
             p[i].y += v_shared->y;
         }

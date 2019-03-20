@@ -151,7 +151,7 @@ void Move(EcsRows *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Speed *s = ecs_column(rows, Speed, 2);
     
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = 0; i < rows->count; i ++) {
         p[i].x += s[i] * rows->delta_time;
         p[i].y += s[i] * rows->delta_time;
     }

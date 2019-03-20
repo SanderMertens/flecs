@@ -674,7 +674,7 @@ static
 void Prefab_w_field(EcsRows *rows) {
     ProbeSystem(rows);
 
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = 0; i < rows->count; i ++) {
         Position *p = ecs_field(rows, Position, i, 1);
         Velocity *v = ecs_field(rows, Velocity, i, 2);
         p->x += v->x;
@@ -731,7 +731,7 @@ void Prefab_w_shared(EcsRows *rows) {
 
     ProbeSystem(rows);
 
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = 0; i < rows->count; i ++) {
         Position *p = ecs_field(rows, Position, i, 1);
         p->x += v->x;
         p->y += v->y;

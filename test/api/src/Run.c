@@ -11,7 +11,7 @@ void Iter(EcsRows *rows) {
     ProbeSystem(rows);
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -1107,6 +1107,90 @@ void Run_run_no_match() {
 
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+typedef struct Param {
+    EcsEntity entity;
+    int count;
+} Param;
+
+static
+void TestSubset(EcsRows *rows) {
+    Param *param = rows->param;
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_assert(param->entity != rows->entities[i]);
+        param->count ++;
+    }    
+}
+
+static
+void TestAll(EcsRows *rows) {
+    Position *p = ecs_column(rows, Position, 1);
+    EcsEntity TestSubset = ecs_column_component(rows, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        Param param = {.entity = rows->entities[i], 0};
+        ecs_run_w_filter(rows->world, TestSubset, 1, rows->frame_offset + i + 1, 0, 0, &param);
+        p[i].x += param.count;
+    }
+}
+
+void Run_run_comb_10_entities_1_type() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, TestSubset, EcsManual, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
+
+    int i, ENTITIES = 10;
+
+    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES, NULL);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        ecs_set(world, start + i, Position, {1, 2});
+    }
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        Position *p = ecs_get_ptr(world, start + i, Position);
+        test_int(p->x, ENTITIES - i);
+    }
+
+    ecs_fini(world);
+}
+
+void Run_run_comb_10_entities_2_types() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, TestSubset, EcsManual, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
+
+    int i, ENTITIES = 10;
+
+    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        ecs_set(world, start + i, Position, {1, 2});
+    }
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        Position *p = ecs_get_ptr(world, start + i, Position);
+        test_int(p->x, ENTITIES - i);
+    }
 
     ecs_fini(world);
 }

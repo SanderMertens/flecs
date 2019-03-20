@@ -9,7 +9,7 @@ void Iter(EcsRows *rows) {
     ProbeSystem(rows);
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -1007,7 +1007,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
 
 void Use_field(EcsRows *rows) {
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         Position *p = ecs_field(rows, Position, i, 1);
         Velocity *v = ecs_field(rows, Velocity, i, 2);
 
@@ -1122,7 +1122,7 @@ void TestOptional_w_field(EcsRows *rows) {
 
     ProbeSystem(rows);
 
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = 0; i < rows->count; i ++) {
         Velocity *v = ecs_field(rows, Velocity, i, 2);
         test_assert(v == NULL);
     }

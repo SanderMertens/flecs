@@ -655,7 +655,7 @@ EcsEntity _ecs_run_w_filter(
         .param = param,
         .column_count = column_count,
         .delta_time = system_delta_time,
-        .index_offset = 0,
+        .frame_offset = offset,
         .ref_ptrs = ref_ptrs
     };
 
@@ -727,14 +727,16 @@ EcsEntity _ecs_run_w_filter(
         info.table_columns = table_columns;
         info.components = ECS_OFFSET(components,
             components_size * table[COMPONENTS_INDEX]);
-        info.begin = first;
+        info.offset = first;
         info.count = count;
-        info.end = first + count;
-        info.entities = ecs_array_buffer(((EcsTableColumn*)info.table_columns)[0].data);
+
+        EcsEntity *entity_buffer = 
+                ecs_array_buffer(((EcsTableColumn*)info.table_columns)[0].data);
+        info.entities = &entity_buffer[first];
         
         action(&info);
 
-        info.index_offset += count;
+        info.frame_offset += count;
 
         if (info.interrupted_by) {
             interrupted_by = info.interrupted_by;

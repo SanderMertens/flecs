@@ -7,7 +7,7 @@ void Init(EcsRows *rows) {
     ProbeSystem(rows);
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 

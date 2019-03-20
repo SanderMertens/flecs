@@ -6,7 +6,7 @@ void Task(EcsRows *rows) {
     ProbeSystem(rows);
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         if (p) {
             p->x = 0;
             p->y = 0;

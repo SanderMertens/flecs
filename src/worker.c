@@ -202,13 +202,6 @@ void ecs_schedule_jobs(
     int32_t rows_per_thread_i = rows_per_thread;
 
     table_it = ecs_array_iter(system_data->tables, &system_data->table_params);
-
-    uint32_t sys_table_index = 0;
-    uint32_t table_index = *(uint32_t*)ecs_array_get(
-        system_data->tables, &system_data->table_params, 0);
-    EcsTable *table = ecs_array_get(
-        world->main_stage.tables, &table_arr_params, table_index);
-    uint32_t table_row_count = ecs_array_count(table->columns[0].data);
     uint32_t start_index = 0;
 
     EcsJob *job = NULL;
@@ -224,25 +217,10 @@ void ecs_schedule_jobs(
 
         job->system = system;
         job->system_data = system_data;
-        job->table_index = sys_table_index;
         job->offset = start_index;
         job->limit = rows_per_job;
 
         start_index += rows_per_job;
-
-        while (start_index > table_row_count) {
-            sys_table_index ++;
-            table_index = *(uint32_t*)ecs_array_get(
-                system_data->tables, &system_data->table_params, sys_table_index);
-            table = ecs_array_get(
-                world->main_stage.tables, &table_arr_params, table_index);
-            table_row_count = ecs_array_count(table->columns[0].data);
-            if (start_index > table_row_count) {
-                start_index -= table_row_count;
-            } else {
-                start_index = 0;
-            }
-        }
     }
 
     if (residual >= 0.9) {

@@ -228,9 +228,8 @@ typedef struct EcsStage {
 typedef struct EcsJob {
     EcsEntity system;             /* System handle */
     EcsColSystem *system_data;    /* System to run */
-    uint32_t table_index;         /* Current SystemTable */
-    uint32_t offset;         /* Start index in row chunk */
-    uint32_t limit;           /* Total number of rows to process */
+    uint32_t offset;              /* Start index in row chunk */
+    uint32_t limit;               /* Total number of rows to process */
 } EcsJob;
 
 /** A type desribing a worker thread. When a system is invoked by a worker

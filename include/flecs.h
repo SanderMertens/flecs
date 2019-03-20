@@ -96,24 +96,24 @@ typedef struct EcsReference {
 
 /** Data passed to system action callback, used for iterating entities */
 typedef struct EcsRows {
-    EcsWorld *world;     /* current world */
-    EcsEntity system;    /* handle to current system */
+    EcsWorld *world;          /* Current world */
+    EcsEntity system;         /* Handle to current system */
 
-    int32_t *columns;    /* indices mapping system params to columns and refs */
-    uint16_t column_count; /* Number of columns for system */
-    void *table_columns; /* opaque structure that contains table column data */
-    EcsReference *references; /* references to other entities */
+    int32_t *columns;    /* Indices mapping system params to columns and refs */
+    uint16_t column_count;    /* Number of columns for system */
+    void *table_columns;  /* Opaque structure that contains table column data */
+    EcsReference *references; /* References to other entities */
     void **ref_ptrs;          /* The resolved pointers to the references */
-    EcsEntity *components;    /* system-table specific list of components */
+    EcsEntity *components;    /* System-table specific list of components */
     EcsEntity *entities;      /* Entity row */
 
-    void *param;         /* userdata passed to on-demand system */
-    float delta_time;    /* time elapsed since last frame */
-    uint32_t index_offset; /* number of rows processed by system in this frame */
-    uint32_t count;      /* System should process count rows */
-    uint32_t begin;     /* System should start iteration from begin */
-    uint32_t end;        /* Convenience variable that holds begin + count */
-    EcsEntity interrupted_by; /* when set, system execution is interrupted */
+    void *param;              /* Userdata passed to on-demand system */
+    float delta_time;         /* Time elapsed since last frame */
+    uint32_t frame_offset;    /* Offset relative to frame */
+    uint32_t offset;          /* Offset relative to current table */
+    uint32_t count;           /* Number of rows to process by system */
+
+    EcsEntity interrupted_by; /* When set, system execution is interrupted */
 } EcsRows;
 
 /** System action callback type */

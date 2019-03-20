@@ -8,7 +8,7 @@ void OnSet(EcsRows *rows) {
     ProbeSystem(rows);
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         p[i].x ++;
 
         if (v) {
@@ -279,7 +279,7 @@ void OnAdd_check_order(EcsRows *rows) {
     ProbeSystem(rows);
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         p[i].x = 1;
         p[i].y = 2;    
     }
@@ -297,7 +297,7 @@ void OnSet_check_order(EcsRows *rows) {
     test_assert(!set_called);
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         p[i].x ++;
     }
 

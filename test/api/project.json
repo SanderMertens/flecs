@@ -366,7 +366,9 @@
                 "run_w_limit_out_of_bounds",
                 "run_w_component_filter",
                 "run_w_type_filter_of_2",
-                "run_w_container_filter"
+                "run_w_container_filter",
+                "run_comb_10_entities_1_type",
+                "run_comb_10_entities_2_types"
             ]
         }, {
             "id": "MultiThread",
@@ -395,7 +397,12 @@
                 "3_thread_test_combs_100_entity",
                 "4_thread_test_combs_100_entity",
                 "5_thread_test_combs_100_entity",
-                "6_thread_test_combs_100_entity"
+                "6_thread_test_combs_100_entity",
+                "2_thread_test_combs_100_entity_2_types",
+                "3_thread_test_combs_100_entity_2_types",
+                "4_thread_test_combs_100_entity_2_types",
+                "5_thread_test_combs_100_entity_2_types",
+                "6_thread_test_combs_100_entity_2_types"
             ]
         },{
             "id": "SingleThreadStaging",

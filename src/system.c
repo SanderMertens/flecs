@@ -322,9 +322,8 @@ bool ecs_notify_row_system(
         .references = references,
         .table_columns = table_columns,
         .components = ecs_array_buffer(system_data->components),
-        .index_offset = 0,
-        .begin = offset,
-        .end = offset + limit,
+        .frame_offset = 0,
+        .offset = offset,
         .count = limit
     };
 
@@ -334,7 +333,8 @@ bool ecs_notify_row_system(
     }
 
     if (table_columns) {
-        rows.entities = ecs_array_buffer(table_columns[0].data);
+        EcsEntity *entities = ecs_array_buffer(table_columns[0].data);
+        rows.entities = &entities[rows.offset];
     }
 
     action(&rows);
@@ -544,8 +544,8 @@ void* _ecs_column(
     }
 
     EcsTableColumn *column = &((EcsTableColumn*)rows->table_columns)[table_column];
-
-    return ecs_array_buffer(column->data);
+    void *buffer = ecs_array_buffer(column->data);
+    return ECS_OFFSET(buffer, column->size * rows->offset);
 }
 
 void* _ecs_shared(
@@ -686,6 +686,6 @@ void *_ecs_field(
 #endif
 
         void *buffer = ecs_array_buffer(column->data);
-        return ECS_OFFSET(buffer, column->size * index);
+        return ECS_OFFSET(buffer, column->size * (index + rows->offset));
     }
 }

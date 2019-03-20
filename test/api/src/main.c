@@ -321,6 +321,8 @@ void Run_run_w_limit_out_of_bounds(void);
 void Run_run_w_component_filter(void);
 void Run_run_w_type_filter_of_2(void);
 void Run_run_w_container_filter(void);
+void Run_run_comb_10_entities_1_type(void);
+void Run_run_comb_10_entities_2_types(void);
 
 // Testsuite 'MultiThread'
 void MultiThread_2_thread_1_entity(void);
@@ -348,6 +350,11 @@ void MultiThread_3_thread_test_combs_100_entity(void);
 void MultiThread_4_thread_test_combs_100_entity(void);
 void MultiThread_5_thread_test_combs_100_entity(void);
 void MultiThread_6_thread_test_combs_100_entity(void);
+void MultiThread_2_thread_test_combs_100_entity_2_types(void);
+void MultiThread_3_thread_test_combs_100_entity_2_types(void);
+void MultiThread_4_thread_test_combs_100_entity_2_types(void);
+void MultiThread_5_thread_test_combs_100_entity_2_types(void);
+void MultiThread_6_thread_test_combs_100_entity_2_types(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_new_empty(void);
@@ -1551,7 +1558,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Run",
-        .testcase_count = 20,
+        .testcase_count = 22,
         .testcases = (bake_test_case[]){
             {
                 .id = "run",
@@ -1632,12 +1639,20 @@ static bake_test_suite suites[] = {
             {
                 .id = "run_w_container_filter",
                 .function = Run_run_w_container_filter
+            },
+            {
+                .id = "run_comb_10_entities_1_type",
+                .function = Run_run_comb_10_entities_1_type
+            },
+            {
+                .id = "run_comb_10_entities_2_types",
+                .function = Run_run_comb_10_entities_2_types
             }
         }
     },
     {
         .id = "MultiThread",
-        .testcase_count = 25,
+        .testcase_count = 30,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_thread_1_entity",
@@ -1738,6 +1753,26 @@ static bake_test_suite suites[] = {
             {
                 .id = "6_thread_test_combs_100_entity",
                 .function = MultiThread_6_thread_test_combs_100_entity
+            },
+            {
+                .id = "2_thread_test_combs_100_entity_2_types",
+                .function = MultiThread_2_thread_test_combs_100_entity_2_types
+            },
+            {
+                .id = "3_thread_test_combs_100_entity_2_types",
+                .function = MultiThread_3_thread_test_combs_100_entity_2_types
+            },
+            {
+                .id = "4_thread_test_combs_100_entity_2_types",
+                .function = MultiThread_4_thread_test_combs_100_entity_2_types
+            },
+            {
+                .id = "5_thread_test_combs_100_entity_2_types",
+                .function = MultiThread_5_thread_test_combs_100_entity_2_types
+            },
+            {
+                .id = "6_thread_test_combs_100_entity_2_types",
+                .function = MultiThread_6_thread_test_combs_100_entity_2_types
             }
         }
     },

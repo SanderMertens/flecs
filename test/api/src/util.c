@@ -9,7 +9,7 @@ void ProbeSystem(
     }
 
     ctx->system = rows->system;
-    ctx->offset = rows->begin;
+    ctx->offset = 0;
     ctx->column_count = rows->column_count;
     ctx->param = rows->param;
 
@@ -31,8 +31,9 @@ void ProbeSystem(
         test_assert(e != NULL);
         test_assert(rows->entities != NULL);
         test_assert(rows->entities == e);
-        for (i = rows->begin; i < rows->end; i ++) {
-            ctx->e[i - rows->begin + ctx->count] = e[i];
+        
+        for (i = 0; i < rows->count; i ++) {
+            ctx->e[i + ctx->count] = e[i];
 
             /* Make sure ecs_field works for all columns */
             int c;

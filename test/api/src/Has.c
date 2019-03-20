@@ -256,7 +256,7 @@ void TestHas(EcsRows *rows) {
     EcsType TPosition = ecs_column_type(rows, 1);
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         test_assert( ecs_has(rows->world, entities[i], Position));
     }
 }

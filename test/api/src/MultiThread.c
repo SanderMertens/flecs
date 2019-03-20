@@ -2,7 +2,7 @@
 
 void Progress(EcsRows *rows) {
     int row;
-    for (row = rows->begin; row < rows->end; row ++) {
+    for (row = 0; row < rows->count; row ++) {
         Position *foo = ecs_field(rows, Position, row, 1);
         foo->x ++;
     }
@@ -612,24 +612,26 @@ typedef struct Param {
     int count;
 } Param;
 
+static
 void TestSubset(EcsRows *rows) {
     Param *param = rows->param;
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         test_assert(param->entity != rows->entities[i]);
         param->count ++;
     }    
 }
 
+static
 void TestAll(EcsRows *rows) {
     Position *p = ecs_column(rows, Position, 1);
     EcsEntity TestSubset = ecs_column_component(rows, 2);
 
     int i;
-    for (i = rows->begin; i < rows->end; i ++) {
+    for (i = 0; i < rows->count; i ++) {
         Param param = {.entity = rows->entities[i], 0};
-        ecs_run_w_filter(rows->world, TestSubset, 1, rows->index_offset + i + 1, 0, 0, &param);
+        ecs_run_w_filter(rows->world, TestSubset, 1, rows->frame_offset + i + 1, 0, 0, &param);
         p[i].x += param.count;
     }
 }
@@ -774,6 +776,161 @@ void MultiThread_6_thread_test_combs_100_entity() {
     for (i = 0; i < ENTITIES; i ++) {
         Position *p = ecs_get_ptr(world, handles[i], Position);
         test_int(p->x, 100 - i);
+    }
+
+    ecs_fini(world);
+}
+
+void MultiThread_2_thread_test_combs_100_entity_2_types() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, TestSubset, EcsManual, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
+
+    int i, ENTITIES = 100, THREADS = 2;
+
+    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        ecs_set(world, start + i, Position, {1, 2});
+    }
+
+    ecs_set_threads(world, THREADS);
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        Position *p = ecs_get_ptr(world, start + i, Position);
+        test_int(p->x, ENTITIES - i);
+    }
+
+    ecs_fini(world);
+}
+
+void MultiThread_3_thread_test_combs_100_entity_2_types() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, TestSubset, EcsManual, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
+
+    int i, ENTITIES = 20, THREADS = 3;
+
+    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        ecs_set(world, start + i, Position, {1, 2});
+    }
+
+    ecs_set_threads(world, THREADS);
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        Position *p = ecs_get_ptr(world, start + i, Position);
+        test_int(p->x, ENTITIES - i);
+    }
+
+    ecs_fini(world);
+}
+
+void MultiThread_4_thread_test_combs_100_entity_2_types() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, TestSubset, EcsManual, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
+
+    int i, ENTITIES = 100, THREADS = 4;
+
+    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        ecs_set(world, start + i, Position, {1, 2});
+    }
+
+    ecs_set_threads(world, THREADS);
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        Position *p = ecs_get_ptr(world, start + i, Position);
+        test_int(p->x, ENTITIES - i);
+    }
+
+    ecs_fini(world);
+}
+
+void MultiThread_5_thread_test_combs_100_entity_2_types() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, TestSubset, EcsManual, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
+
+    int i, ENTITIES = 100, THREADS = 5;
+
+    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        ecs_set(world, start + i, Position, {1, 2});
+    }
+
+    ecs_set_threads(world, THREADS);
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        Position *p = ecs_get_ptr(world, start + i, Position);
+        test_int(p->x, ENTITIES - i);
+    }
+
+    ecs_fini(world);
+}
+
+void MultiThread_6_thread_test_combs_100_entity_2_types() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, TestSubset, EcsManual, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
+
+    int i, ENTITIES = 100, THREADS = 6;
+
+    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        ecs_set(world, start + i, Position, {1, 2});
+    }
+
+    ecs_set_threads(world, THREADS);
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        Position *p = ecs_get_ptr(world, start + i, Position);
+        test_int(p->x, ENTITIES - i);
     }
 
     ecs_fini(world);
