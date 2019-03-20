@@ -369,6 +369,30 @@
                 "run_w_container_filter"
             ]
         }, {
+            "id": "MultiThread",
+            "testcases": [
+                "2_thread_1_entity",
+                "2_thread_2_entity",
+                "2_thread_5_entity",
+                "2_thread_10_entity",
+                "3_thread_1_entity",
+                "3_thread_2_entity",
+                "3_thread_5_entity",
+                "3_thread_10_entity",
+                "4_thread_1_entity",
+                "4_thread_2_entity",
+                "4_thread_5_entity",
+                "4_thread_10_entity",
+                "5_thread_1_entity",
+                "5_thread_2_entity",
+                "5_thread_5_entity",
+                "5_thread_10_entity",
+                "6_thread_1_entity",
+                "6_thread_2_entity",
+                "6_thread_5_entity",
+                "6_thread_10_entity"
+            ]
+        },{
             "id": "SingleThreadStaging",
             "testcases": [
                 "new_empty",

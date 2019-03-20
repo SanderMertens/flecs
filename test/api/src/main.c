@@ -322,6 +322,28 @@ void Run_run_w_component_filter(void);
 void Run_run_w_type_filter_of_2(void);
 void Run_run_w_container_filter(void);
 
+// Testsuite 'MultiThread'
+void MultiThread_2_thread_1_entity(void);
+void MultiThread_2_thread_2_entity(void);
+void MultiThread_2_thread_5_entity(void);
+void MultiThread_2_thread_10_entity(void);
+void MultiThread_3_thread_1_entity(void);
+void MultiThread_3_thread_2_entity(void);
+void MultiThread_3_thread_5_entity(void);
+void MultiThread_3_thread_10_entity(void);
+void MultiThread_4_thread_1_entity(void);
+void MultiThread_4_thread_2_entity(void);
+void MultiThread_4_thread_5_entity(void);
+void MultiThread_4_thread_10_entity(void);
+void MultiThread_5_thread_1_entity(void);
+void MultiThread_5_thread_2_entity(void);
+void MultiThread_5_thread_5_entity(void);
+void MultiThread_5_thread_10_entity(void);
+void MultiThread_6_thread_1_entity(void);
+void MultiThread_6_thread_2_entity(void);
+void MultiThread_6_thread_5_entity(void);
+void MultiThread_6_thread_10_entity(void);
+
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_new_empty(void);
 void SingleThreadStaging_new_w_component(void);
@@ -1609,6 +1631,92 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "MultiThread",
+        .testcase_count = 20,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "2_thread_1_entity",
+                .function = MultiThread_2_thread_1_entity
+            },
+            {
+                .id = "2_thread_2_entity",
+                .function = MultiThread_2_thread_2_entity
+            },
+            {
+                .id = "2_thread_5_entity",
+                .function = MultiThread_2_thread_5_entity
+            },
+            {
+                .id = "2_thread_10_entity",
+                .function = MultiThread_2_thread_10_entity
+            },
+            {
+                .id = "3_thread_1_entity",
+                .function = MultiThread_3_thread_1_entity
+            },
+            {
+                .id = "3_thread_2_entity",
+                .function = MultiThread_3_thread_2_entity
+            },
+            {
+                .id = "3_thread_5_entity",
+                .function = MultiThread_3_thread_5_entity
+            },
+            {
+                .id = "3_thread_10_entity",
+                .function = MultiThread_3_thread_10_entity
+            },
+            {
+                .id = "4_thread_1_entity",
+                .function = MultiThread_4_thread_1_entity
+            },
+            {
+                .id = "4_thread_2_entity",
+                .function = MultiThread_4_thread_2_entity
+            },
+            {
+                .id = "4_thread_5_entity",
+                .function = MultiThread_4_thread_5_entity
+            },
+            {
+                .id = "4_thread_10_entity",
+                .function = MultiThread_4_thread_10_entity
+            },
+            {
+                .id = "5_thread_1_entity",
+                .function = MultiThread_5_thread_1_entity
+            },
+            {
+                .id = "5_thread_2_entity",
+                .function = MultiThread_5_thread_2_entity
+            },
+            {
+                .id = "5_thread_5_entity",
+                .function = MultiThread_5_thread_5_entity
+            },
+            {
+                .id = "5_thread_10_entity",
+                .function = MultiThread_5_thread_10_entity
+            },
+            {
+                .id = "6_thread_1_entity",
+                .function = MultiThread_6_thread_1_entity
+            },
+            {
+                .id = "6_thread_2_entity",
+                .function = MultiThread_6_thread_2_entity
+            },
+            {
+                .id = "6_thread_5_entity",
+                .function = MultiThread_6_thread_5_entity
+            },
+            {
+                .id = "6_thread_10_entity",
+                .function = MultiThread_6_thread_10_entity
+            }
+        }
+    },
+    {
         .id = "SingleThreadStaging",
         .testcase_count = 58,
         .testcases = (bake_test_case[]){
@@ -1898,5 +2006,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 25);
+    return bake_test_run("api", argc, argv, suites, 26);
 }
