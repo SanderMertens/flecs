@@ -273,6 +273,7 @@ void Prefab_match_entity_prefab_w_system_optional(void);
 void Prefab_prefab_in_system_expr(void);
 void Prefab_dont_match_prefab(void);
 void Prefab_new_w_count_w_override(void);
+void Prefab_override_2_components_different_size(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -1337,7 +1338,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 21,
+        .testcase_count = 22,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -1422,6 +1423,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "new_w_count_w_override",
                 .function = Prefab_new_w_count_w_override
+            },
+            {
+                .id = "override_2_components_different_size",
+                .function = Prefab_override_2_components_different_size
             }
         }
     },

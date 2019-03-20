@@ -308,7 +308,8 @@
                 "match_entity_prefab_w_system_optional",
                 "prefab_in_system_expr",
                 "dont_match_prefab",
-                "new_w_count_w_override"
+                "new_w_count_w_override",
+                "override_2_components_different_size"
             ]
         }, {
             "id": "System_w_FromContainer",

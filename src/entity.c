@@ -206,6 +206,8 @@ void copy_from_prefab(
         EcsEntity *add_handles = ecs_array_buffer(add_type);
         uint32_t i, add_count = ecs_array_count(add_type);
 
+        EcsTableColumn *columns = NULL;
+
         for (i = 0; i < add_count; i ++) {
             EcsEntity component = add_handles[i];
             void *prefab_ptr = get_row_ptr(
@@ -213,24 +215,25 @@ void copy_from_prefab(
                 row.index, component);
 
             if (prefab_ptr) {
-                EcsTableColumn *columns;
-                if (world->in_progress) {
-                    columns = ecs_map_get(stage->data_stage, type_id);
-                } else {
-                    columns = table->columns;
+                if (!columns) {
+                    if (world->in_progress) {
+                        columns = ecs_map_get(stage->data_stage, type_id);
+                    } else {
+                        columns = table->columns;
+                    }
                 }
 
-                uint32_t size = columns->size;
+                EcsArray *type_arr = ecs_type_get(world, stage, type_id);
+                uint32_t column_index = ecs_type_index_of(type_arr, component);
+                uint32_t size = columns[column_index + 1].size;
 
                 if (size) {
-                    void *ptr = get_row_ptr(
-                        world, stage, table->type, columns, offset, component);
-                    if (ptr) {
-                        int i;
-                        for (i = 0; i < limit; i ++) {
-                            memcpy(ptr, prefab_ptr, size);
-                            ptr = ECS_OFFSET(ptr, size);
-                        }
+                    void *buffer = ecs_array_buffer(columns[column_index + 1].data);
+                    void *ptr = ECS_OFFSET(buffer, offset * size);
+                    int i;
+                    for (i = 0; i < limit; i ++) {
+                        memcpy(ptr, prefab_ptr, size);
+                        ptr = ECS_OFFSET(ptr, size);
                     }
                 }
             }

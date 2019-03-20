@@ -38,6 +38,13 @@ typedef float Mass;
 
 typedef float Rotation;
 
+typedef struct Color {
+    float r;
+    float g;
+    float b;
+    float a;
+} Color;
+
 void ProbeSystem(EcsRows *rows);
 
 #ifdef __cplusplus

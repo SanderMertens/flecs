@@ -938,11 +938,65 @@ void Prefab_new_w_count_w_override() {
         test_int(p->y, 20);
         test_assert(p == prefab_p);
 
-        Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+        Velocity *v = ecs_get_ptr(world, e, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 30);
         test_int(v->y, 40);
         test_assert(v != prefab_v);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_override_2_components_different_size() {
+    EcsWorld *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Color);
+    ECS_PREFAB(world, Prefab, Position, Velocity, Color);
+    ECS_TYPE(world, Type, Prefab, Velocity, Color);
+
+    ecs_set(world, Prefab, Position, {10, 20});
+    ecs_set(world, Prefab, Velocity, {30, 40});
+    ecs_set(world, Prefab, Color, {1, 2, 3, 4});
+
+    EcsEntity e_1 = ecs_new_w_count(world, Type, 100, NULL);
+    test_assert(e_1 != 0);
+
+    Position *prefab_p = ecs_get_ptr(world, Prefab, Position);
+    Velocity *prefab_v = ecs_get_ptr(world, Prefab, Velocity);
+    Color *prefab_c = ecs_get_ptr(world, Prefab, Color);
+
+    test_assert(prefab_p != NULL);
+    test_assert(prefab_v != NULL);
+    test_assert(prefab_c != NULL);
+
+    EcsEntity e;
+    for (e = e_1; e < (e_1 + 100); e ++) {
+        test_assert( ecs_has(world, e, Position));
+        test_assert( ecs_has(world, e, Velocity));
+        test_assert( ecs_has(world, e, Prefab));
+
+        Position *p = ecs_get_ptr(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_assert(p == prefab_p);
+
+        Velocity *v = ecs_get_ptr(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 30);
+        test_int(v->y, 40);
+        test_assert(v != prefab_v);
+
+        Color *c = ecs_get_ptr(world, e, Color);
+        test_assert(c != NULL);
+        test_int(c->r, 1);
+        test_int(c->g, 2);
+        test_int(c->b, 3);
+        test_int(c->a, 4);        
+        test_assert(c != prefab_c);        
     }
 
     ecs_fini(world);
