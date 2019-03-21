@@ -31,8 +31,14 @@ void* ecs_worker(void *arg) {
         pthread_mutex_unlock(&world->thread_mutex);
 
         for (i = 0; i < job_count; i ++) {
-            ecs_run_w_filter(world, 
-                jobs[i]->system, world->delta_time, jobs[i]->offset, jobs[i]->limit, 0, NULL);
+            ecs_run_w_filter(
+                (EcsWorld*)thread, /* magic */
+                jobs[i]->system, 
+                world->delta_time, 
+                jobs[i]->offset, 
+                jobs[i]->limit, 
+                0, 
+                NULL);
         }
 
         pthread_mutex_lock(&world->thread_mutex);
@@ -265,7 +271,8 @@ void ecs_run_jobs(
     uint32_t i, job_count = thread->job_count;
 
     for (i = 0; i < job_count; i ++) {
-        ecs_run_w_filter(world, jobs[i]->system, world->delta_time, jobs[i]->offset, jobs[i]->limit, 0, NULL);
+        ecs_run_w_filter(
+            world, jobs[i]->system, world->delta_time, jobs[i]->offset, jobs[i]->limit, 0, NULL);
     }
     thread->job_count = 0;
 

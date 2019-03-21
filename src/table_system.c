@@ -606,14 +606,19 @@ EcsEntity _ecs_run_w_filter(
     EcsType filter,
     void *param)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    EcsWorld *real_world = world;
+
+    if (world->magic == ECS_THREAD_MAGIC) {
+        real_world = ((EcsThread*)world)->world; /* dispel the magic */
+    }
+
+    EcsColSystem *system_data = ecs_get_ptr(real_world, system, EcsColSystem);
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {
         return 0;
     }
 
-    EcsWorld *real_world = world;
     EcsStage *stage = ecs_get_stage(&real_world);
 
     float system_delta_time = delta_time + system_data->time_passed;
@@ -665,7 +670,7 @@ EcsEntity _ecs_run_w_filter(
 
         /* A system may introduce a new table if in the main thread. Make sure
          * world_tables points to the valid memory */
-        EcsTable *world_tables = ecs_array_buffer(world->main_stage.tables);
+        EcsTable *world_tables = ecs_array_buffer(real_world->main_stage.tables);
         EcsTable *w_table = &world_tables[table_index];
         EcsTableColumn *table_columns = w_table->columns;
         uint32_t first = 0, count = ecs_table_count(w_table);
@@ -716,7 +721,7 @@ EcsEntity _ecs_run_w_filter(
             int i, count = table[REFS_COUNT];
 
             for (i = 0; i < count; i ++) {
-                info.ref_ptrs[i] = _ecs_get_ptr(world, 
+                info.ref_ptrs[i] = _ecs_get_ptr(real_world, 
                     info.references[i].entity, info.references[i].component);
             }
         } else {

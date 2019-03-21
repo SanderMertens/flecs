@@ -89,6 +89,7 @@ void* get_row_ptr(
 static
 void* get_ptr(
     EcsWorld *world,
+    EcsStage *stage,
     EcsEntity entity,
     EcsEntity component,
     bool staged_only,
@@ -98,7 +99,6 @@ void* get_ptr(
     uint64_t row_64;
     EcsType type_id = 0, staged_id = 0;
     void *ptr = NULL;
-    EcsStage *stage = ecs_get_stage(&world);
 
     if (world->in_progress) {
         row_64 = ecs_map_get64(stage->entity_index, entity);
@@ -162,7 +162,7 @@ void* get_ptr(
 
     if (prefab) {
         if (component != EEcsId && component != EEcsPrefab) {
-            return get_ptr(world, prefab, component, staged_only, true, info);
+            return get_ptr(world, stage, prefab, component, staged_only, true, info);
         } else {
             return NULL;
         }
@@ -534,6 +534,7 @@ EcsEntity ecs_clone(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
 
+    EcsWorld *world_arg = world;
     EcsStage *stage = ecs_get_stage(&world);
 
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
@@ -581,7 +582,7 @@ EcsEntity ecs_clone(
 
                 /* A clone with value is equivalent to a set */
                 ecs_notify(
-                    world, world->type_sys_set_index, from_table->type_id, 
+                    world_arg, world->type_sys_set_index, from_table->type_id, 
                     to_table, to_columns, to_row.index, 1);
             }
         }
@@ -651,6 +652,7 @@ EcsEntity _ecs_new_w_count(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
 
+    EcsWorld *world_arg = world;
     EcsStage *stage = ecs_get_stage(&world);
     EcsEntity result = world->last_handle + 1;
     world->last_handle += count;
@@ -679,7 +681,7 @@ EcsEntity _ecs_new_w_count(
 
         /* Now we can notify matching OnAdd row systems in bulk */
         notify_pre_merge(
-            world, table, table->columns, row, count, 
+            world_arg, table, table->columns, row, count, 
             type, world->type_sys_add_index);
         
         /* Check if there are prefabs */
@@ -830,13 +832,14 @@ void* _ecs_get_ptr(
     EcsType type)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-
+    EcsWorld *world_arg = world;
+    EcsStage *stage = ecs_get_stage(&world);
 
     /* Get only accepts types that hold a single component */
-    EcsEntity component = ecs_entity_from_type(world, type);
+    EcsEntity component = ecs_entity_from_type(world_arg, type);
 
     EcsEntityInfo info;
-    return get_ptr(world, entity, component, false, true, &info);
+    return get_ptr(world, stage, entity, component, false, true, &info);
 }
 
 static
@@ -850,17 +853,19 @@ EcsEntity _ecs_set_ptr_intern(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(type != 0, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETERS, NULL);
-    
+    EcsWorld *world_arg = world;
+    EcsStage *stage = ecs_get_stage(&world);
+
     EcsEntityInfo info = {0};
 
     /* Set only accepts types that hold a single component */
-    EcsEntity component = ecs_entity_from_type(world, type);
+    EcsEntity component = ecs_entity_from_type(world_arg, type);
 
     /* If component hasn't been added to entity yet, add it */
-    int *dst = get_ptr(world, entity, component, true, false, &info);
+    int *dst = get_ptr(world, stage, entity, component, true, false, &info);
     if (!dst) {
-        _ecs_add(world, entity, type);
-        dst = get_ptr(world, entity, component, true, false, &info);
+        _ecs_add(world_arg, entity, type);
+        dst = get_ptr(world, stage, entity, component, true, false, &info);
         if (!dst) {
             /* It is possible that an OnAdd system removed the component before
              * it could have been set */
@@ -871,14 +876,14 @@ EcsEntity _ecs_set_ptr_intern(
 #ifndef NDEBUG
     EcsEntityInfo cinfo = {0};
     EcsComponent *cdata = get_ptr(
-        world, component, EEcsComponent, false, false, &cinfo);
+        world, stage, component, EEcsComponent, false, false, &cinfo);
     ecs_assert(cdata->size == size, ECS_INVALID_COMPONENT_SIZE, NULL);
 #endif
 
     memcpy(dst, ptr, size);
 
     notify_pre_merge(
-        world, info.table, info.columns, info.index, 1, type,
+        world_arg, info.table, info.columns, info.index, 1, type,
         world->type_sys_set_index);
 
     return entity;
@@ -922,8 +927,10 @@ bool _ecs_has(
         return true;
     }
 
+    EcsWorld *world_arg = world;
     EcsStage *stage = ecs_get_stage(&world);
-    EcsType entity_type = ecs_typeid(world, entity);
+    EcsType entity_type = ecs_typeid(world_arg, entity);
+
     return ecs_type_contains(world, stage, entity_type, type, true, true) != 0;
 }
 
@@ -938,8 +945,9 @@ bool _ecs_has_any(
         return true;
     }
 
+    EcsWorld *world_arg = world;
     EcsStage *stage = ecs_get_stage(&world);
-    EcsType entity_type = ecs_typeid(world, entity);
+    EcsType entity_type = ecs_typeid(world_arg, entity);
     return ecs_type_contains(world, stage, entity_type, type, false, true);
 }
 
@@ -995,12 +1003,11 @@ bool ecs_empty(
     EcsEntity entity)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    EcsStage *stage = ecs_get_stage(&world);
 
     uint64_t cur64 = ecs_map_get64(world->main_stage.entity_index, entity);
 
     if (world->in_progress) {
-        EcsStage *stage = ecs_get_stage(&world);
-
         uint64_t to_add64 = ecs_map_get64(stage->entity_index, entity);
         uint64_t to_remove64 = ecs_map_get64(stage->remove_merge, entity);
 
@@ -1056,10 +1063,15 @@ EcsEntity ecs_entity_from_type(
     EcsType type_id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    EcsStage *stage = ecs_get_stage(&world);
 
     EcsArray *type = ecs_map_get(world->main_stage.type_index, type_id);
     if (!type) {
-        ecs_abort(ECS_UNKNOWN_TYPE_ID, NULL);
+        if (world->in_progress) {
+            type = ecs_map_get(stage->type_index, type_id);
+        } else {
+            ecs_abort(ECS_UNKNOWN_TYPE_ID, NULL);
+        }
     }
 
     /* If array contains n entities, it cannot be reduced to a single entity */
@@ -1076,6 +1088,7 @@ EcsType ecs_typeid(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     EcsStage *stage = ecs_get_stage(&world);
+
     int64_t row64 = ecs_map_get64(stage->entity_index, entity);
     EcsRow row = ecs_to_row(row64);
     EcsType result = row.type_id;

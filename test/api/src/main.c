@@ -416,6 +416,13 @@ void SingleThreadStaging_merge_table_w_container_added_in_progress(void);
 void SingleThreadStaging_merge_table_w_container_added_on_set(void);
 void SingleThreadStaging_merge_table_w_container_added_on_set_reverse(void);
 
+// Testsuite 'MultiThreadStaging'
+void MultiThreadStaging_2_threads_add_to_current(void);
+void MultiThreadStaging_3_threads_add_to_current(void);
+void MultiThreadStaging_4_threads_add_to_current(void);
+void MultiThreadStaging_5_threads_add_to_current(void);
+void MultiThreadStaging_6_threads_add_to_current(void);
+
 // Testsuite 'Modules'
 void Modules_simple_module(void);
 void Modules_import_module_from_system(void);
@@ -2015,6 +2022,32 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "MultiThreadStaging",
+        .testcase_count = 5,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "2_threads_add_to_current",
+                .function = MultiThreadStaging_2_threads_add_to_current
+            },
+            {
+                .id = "3_threads_add_to_current",
+                .function = MultiThreadStaging_3_threads_add_to_current
+            },
+            {
+                .id = "4_threads_add_to_current",
+                .function = MultiThreadStaging_4_threads_add_to_current
+            },
+            {
+                .id = "5_threads_add_to_current",
+                .function = MultiThreadStaging_5_threads_add_to_current
+            },
+            {
+                .id = "6_threads_add_to_current",
+                .function = MultiThreadStaging_6_threads_add_to_current
+            }
+        }
+    },
+    {
         .id = "Modules",
         .testcase_count = 4,
         .testcases = (bake_test_case[]){
@@ -2066,5 +2099,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 26);
+    return bake_test_run("api", argc, argv, suites, 27);
 }

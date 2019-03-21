@@ -1,13 +1,5 @@
 #include <include/api.h>
 
-typedef struct IterData {
-    EcsType component;
-    EcsType component_2;
-    EcsType component_3;
-    EcsEntity new_entities[MAX_ENTITIES];
-    uint32_t entity_count;
-} IterData;
-
 static
 void NewEmpty(EcsRows *rows) {
     IterData *ctx = ecs_get_context(rows->world);

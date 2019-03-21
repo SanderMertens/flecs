@@ -467,6 +467,15 @@
                 "merge_table_w_container_added_on_set_reverse"
             ]
         }, {
+            "id": "MultiThreadStaging",
+            "testcases": [
+                "2_threads_add_to_current",
+                "3_threads_add_to_current",
+                "4_threads_add_to_current",
+                "5_threads_add_to_current",
+                "6_threads_add_to_current"
+            ]
+        }, {
             "id": "Modules",
             "testcases": [
                 "simple_module",
