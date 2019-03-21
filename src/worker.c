@@ -281,25 +281,27 @@ EcsResult ecs_set_threads(
     EcsWorld *world,
     uint32_t threads)
 {
-    if (ecs_array_count(world->worker_threads)) {
-        ecs_stop_threads(world);
-        pthread_cond_destroy(&world->thread_cond);
-        pthread_mutex_destroy(&world->thread_mutex);
-        pthread_cond_destroy(&world->job_cond);
-        pthread_mutex_destroy(&world->job_mutex);
-    }
-
-    if (threads > 1) {
-        pthread_cond_init(&world->thread_cond, NULL);
-        pthread_mutex_init(&world->thread_mutex, NULL);
-        pthread_cond_init(&world->job_cond, NULL);
-        pthread_mutex_init(&world->job_mutex, NULL);
-        if (start_threads(world, threads) != EcsOk) {
-            return EcsError;
+    if (!world->arg_threads) {
+        if (ecs_array_count(world->worker_threads)) {
+            ecs_stop_threads(world);
+            pthread_cond_destroy(&world->thread_cond);
+            pthread_mutex_destroy(&world->thread_mutex);
+            pthread_cond_destroy(&world->job_cond);
+            pthread_mutex_destroy(&world->job_mutex);
         }
-    }
 
-    world->valid_schedule = false;
+        if (threads > 1) {
+            pthread_cond_init(&world->thread_cond, NULL);
+            pthread_mutex_init(&world->thread_mutex, NULL);
+            pthread_cond_init(&world->job_cond, NULL);
+            pthread_mutex_init(&world->job_mutex, NULL);
+            if (start_threads(world, threads) != EcsOk) {
+                return EcsError;
+            }
+        }
+
+        world->valid_schedule = false;
+    }
 
     return EcsOk;
 }

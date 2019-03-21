@@ -3,7 +3,8 @@
     "type":"package",
     "value": {
         "author": "Sander Mertens",
-        "description": "Multithreaded Entity Component System written in C99"
+        "description": "Multithreaded Entity Component System written in C99",
+        "use": ["bake.util"]
     },
     "lang.c": {
         "cflags": ["-fvisibility=hidden"],

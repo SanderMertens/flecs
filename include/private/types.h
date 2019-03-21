@@ -310,6 +310,7 @@ struct EcsWorld {
 
 
     /* -- Handles to builtin components families -- */
+
     EcsType t_component;
     EcsType t_type;
     EcsType t_prefab;
@@ -325,6 +326,12 @@ struct EcsWorld {
     float system_time;            /* Time spent processing systems */
     float target_fps;             /* Target fps */
     float fps_sleep;              /* Sleep time to prevent fps overshoot */
+
+
+    /* -- Settings from command line arguments -- */
+
+    int arg_fps;
+    int arg_threads;
 
 
     /* -- World state -- */

@@ -398,6 +398,57 @@ void col_systems_deinit(
     }
 }
 
+/* Spoof EcsAdnin type (needed until we have proper reflection) */
+typedef uint16_t EcsAdmin;
+
+static
+void load_admin(
+    EcsWorld *world,
+    const char *exec,
+    uint16_t port)
+{
+#ifdef __BAKE__
+    ut_init(exec);
+    ut_load_init(NULL, NULL, NULL, NULL);
+
+    /* Find civetweb module & entry point */
+    EcsModuleInitAction civet_action = (EcsModuleInitAction)ut_load_proc(
+            "flecs.systems.civetweb", NULL, "EcsSystemsCivetweb");
+    if (!civet_action) {
+        ut_raise();
+        fprintf(stderr, "failed to load the flecs civetweb module\n");
+        return;
+    }
+
+    /* Find admin module & entry point */
+    EcsModuleInitAction admin_action = (EcsModuleInitAction)ut_load_proc(
+        "flecs.systems.admin", NULL, "EcsSystemsAdmin");
+    if (!admin_action) {
+        ut_raise();
+        fprintf(stderr, "failed to load the flecs admin module\n");
+        return;
+    }
+
+    /* Load both modules */
+    civet_action(world, 0, NULL);
+    admin_action(world, 0, NULL);
+
+    /* Enable monitoring */
+    ecs_measure_frame_time(world, true);
+    ecs_measure_system_time(world, true);
+
+    /* Create admin instance */
+    EcsEntity admin = ecs_lookup(world, "EcsAdmin");
+    EcsType TEcsAdmin = ecs_type_from_entity(world, admin);
+    ecs_set(world, 0, EcsAdmin, {port});
+
+    printf("admin is running in port %d\n", port);
+#else
+    fprintf(stderr, 
+        "sorry, loading the admin is only possible if flecs was built with bake :(");
+#endif
+}
+
 /* -- Public functions -- */
 
 EcsWorld *ecs_init(void) {
@@ -445,6 +496,9 @@ EcsWorld *ecs_init(void) {
     world->fps_sleep = 0;
     world->tick = 0;
 
+    world->arg_fps = 0;
+    world->arg_threads = 0;
+
     ecs_stage_init(world, &world->main_stage);
     ecs_stage_init(world, &world->temp_stage);
 
@@ -467,6 +521,59 @@ EcsWorld *ecs_init(void) {
 
     world->last_handle = EEcsContainer + 1;
 
+    return world;
+}
+
+#define ARG(short, long, action)\
+    if (i < argc) {\
+        if (argv[i][0] == '-') {\
+            if (argv[i][1] == '-') {\
+                if (long && !strcmp(&argv[i][2], long ? long : "")) {\
+                    action;\
+                    parsed = true;\
+                }\
+            } else {\
+                if (short && argv[i][1] == short) {\
+                    action;\
+                    parsed = true;\
+                }\
+            }\
+        }\
+    }
+
+EcsWorld* ecs_init_w_args(
+    int argc,
+    char *argv[])
+{
+    EcsWorld *world = ecs_init();
+
+    /* Parse arguments */
+    int i;
+    for (i = 1; i < argc; i ++) {
+        if (argv[i][0] == '-') {
+            bool parsed = false;
+            
+            ARG(0, "threads", 
+                world->arg_threads = atoi(argv[i + 1]); 
+                ecs_set_threads(world, world->arg_threads);
+                i ++;
+            );
+
+            ARG(0, "fps", 
+                ecs_set_target_fps(world, atoi(argv[i + 1]));
+                world->arg_fps = world->target_fps; 
+                i ++);
+
+            ARG(0, "admin", 
+                load_admin(world, argv[0], atoi(argv[i + 1]));
+                i ++);
+
+            /* Ignore arguments that were not parsed */
+        } else {
+            /* Ignore arguments that don't start with '-' */
+        }
+    }
+    
     return world;
 }
 
@@ -810,8 +917,11 @@ void ecs_set_target_fps(
     float fps)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    ecs_measure_frame_time(world, true);
-    world->target_fps = fps;
+
+    if (!world->arg_fps) {
+        ecs_measure_frame_time(world, true);
+        world->target_fps = fps;
+    }
 }
 
 void* ecs_get_context(

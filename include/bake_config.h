@@ -18,7 +18,7 @@
 #define FLECS_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
-/* No dependencies */
+#include <bake.util>
 
 /* Headers of private dependencies */
 #ifdef FLECS_IMPL
