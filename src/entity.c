@@ -254,17 +254,20 @@ bool notify_pre_merge(
     EcsType to_init,
     EcsMap *systems)
 {
-    if (world->is_merging) {
+    EcsWorld *real_world = world;
+    ecs_get_stage(&real_world);
+    
+    if (real_world->is_merging) {
         return false;
     }
 
-    bool in_progress = world->in_progress;
-    world->in_progress = true;
+    bool in_progress = real_world->in_progress;
+    real_world->in_progress = true;
 
     bool result = ecs_notify(
         world, systems, to_init, table, table_columns, offset, limit);
 
-    world->in_progress = in_progress;
+    real_world->in_progress = in_progress;
     if (result && !in_progress) {
         ecs_merge(world);
 
@@ -282,7 +285,7 @@ bool notify_post_merge(
     uint32_t limit,
     EcsType to_deinit)
 {
-    if (world->in_progress) {
+    if (world->magic != ECS_WORLD_MAGIC || world->in_progress) {
         return false;
     }
 
