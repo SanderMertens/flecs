@@ -269,13 +269,23 @@ error:
 /** Run system on a single row */
 bool ecs_notify_row_system(
     EcsWorld *world,
+    EcsStage *stage,
     EcsEntity system,
     EcsArray *type,
     EcsTableColumn *table_columns,
     uint32_t offset,
     uint32_t limit)
 {
-    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
+    EcsEntityInfo entity_info = {0};
+
+    EcsWorld *real_world = world;
+    if (world->magic == ECS_THREAD_MAGIC) {
+        real_world = ((EcsThread*)world)->world; /* dispel the magic */
+    }
+
+    EcsRowSystem *system_data = get_ptr(
+        real_world, &real_world->main_stage, system, EEcsRowSystem, false, true, &entity_info);
+    
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {
@@ -296,7 +306,7 @@ bool ecs_notify_row_system(
             columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
         } else {
             EcsEntity entity = 0;
-            EcsType component = ecs_type_from_entity(world, buffer[i].is.component);;
+            EcsEntity component = buffer[i].is.component;
             
             if (buffer[i].kind == EcsFromSystem) {
                 entity = system;
@@ -307,7 +317,7 @@ bool ecs_notify_row_system(
             }
 
             references[ref_id] = (EcsReference){.entity = entity, .component = component};
-            ref_ptrs[ref_id] = _ecs_get_ptr(world, entity, component);
+            ref_ptrs[ref_id] = get_ptr(real_world, &real_world->main_stage, entity, component, false, true, &entity_info);
 
             ref_id ++;
             columns[i] = -ref_id;
@@ -350,7 +360,8 @@ void ecs_run_task(
     EcsEntity system,
     float delta_time)
 {
-    ecs_notify_row_system(world, system, NULL, NULL, 0, 1);
+    EcsStage *stage = ecs_get_stage(&world);
+    ecs_notify_row_system(world, stage, system, NULL, NULL, 0, 1);
 }
 
 /* Notify row system of a new type */

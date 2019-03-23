@@ -73,7 +73,9 @@ void calculate_stage_stats(
     bool is_main_stage = stage == &world->main_stage;
     bool is_temp_stage = stage == &world->temp_stage;
 
-    ecs_map_memory(stage->entity_index, allocd, used);
+    if (!is_main_stage) {
+        ecs_map_memory(stage->entity_index, allocd, used);
+    }
 
     if (!is_temp_stage) {
         ecs_map_memory(stage->type_index, allocd, used);
@@ -146,6 +148,8 @@ void get_memory_stats(
     calculate_stage_stats(world, &world->main_stage, &memory->world.allocd, &memory->world.used);
     calculate_stage_stats(world, &world->temp_stage, &memory->stage.allocd, &memory->stage.used);
     calculate_stages_stats(world, &memory->stage.allocd, &memory->stage.used);
+
+    ecs_map_memory(world->main_stage.entity_index, &memory->entities.allocd, &memory->entities.used);
 
     ecs_array_memory(world->worker_threads, &table_arr_params, &memory->world.allocd, &memory->world.used);
     stats->memory.world.allocd += sizeof(EcsWorld) - sizeof(EcsStage);
@@ -422,6 +426,7 @@ void ecs_get_stats(
     if (world->tick) {
         stats->frame_time = world->frame_time;
         stats->system_time = world->system_time;
+        stats->merge_time = world->merge_time;
     } else {
         stats->frame_time = 0;
         stats->system_time = 0;

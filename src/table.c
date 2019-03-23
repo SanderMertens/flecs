@@ -39,7 +39,8 @@ EcsTableColumn *ecs_table_get_columns(
     result[0].data = NULL;
 
     for (i = 0; i < count; i ++) {
-        EcsComponent *component = ecs_get_ptr(world, buf[i], EcsComponent);
+        EcsEntityInfo info = {0};
+        EcsComponent *component = get_ptr(world, stage, buf[i], EEcsComponent, false, false, &info);
 
         if (component) {
             if (component->size) {

@@ -324,6 +324,7 @@ struct EcsWorld {
     struct timespec frame_start;  /* Starting timestamp of frame */
     float frame_time;             /* Time spent processing a frame */
     float system_time;            /* Time spent processing systems */
+    float merge_time;             /* Time spent on merging */
     float target_fps;             /* Target fps */
     float fps_sleep;              /* Sleep time to prevent fps overshoot */
 

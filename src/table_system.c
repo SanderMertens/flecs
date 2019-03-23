@@ -282,28 +282,32 @@ void add_table(
          * to data of a specific entity. */
         if (entity || table_data[i] == -1 || column->kind == EcsFromSingleton) {
             if (ecs_has(world, component, EcsComponent)) {
-                if (!ref_data) {
-                    ref_data = get_ref_data(world, system_data, table_data);
-                    table_data[REFS_COUNT] = 0;
+                EcsComponent *component_data = ecs_get_ptr(
+                        world, component, EcsComponent);
+                
+                if (component_data->size) {
+                    if (!ref_data) {
+                        ref_data = get_ref_data(world, system_data, table_data);
+                        table_data[REFS_COUNT] = 0;
+                    }
+
+                    /* Find the entity for the component */
+                    if (column->kind == EcsFromSingleton) {
+                        ref_data[ref].entity = 0;
+                    } else if (column->kind == EcsFromEntity) {
+                        ref_data[ref].entity = entity;
+                    } else {
+                        ref_data[ref].entity = get_entity_for_component(
+                            world, entity, table_type, component);
+                    }
+
+                    ref_data[ref].component = component;
+                    ref ++;
+
+                    /* Negative number indicates ref instead of offset to ecs_data */
+                    table_data[i] = -ref;
+                    table_data[REFS_COUNT] ++;
                 }
-
-                /* Find the entity for the component. If the code gets here, this
-                * function will return a prefab. */
-                if (column->kind == EcsFromSingleton) {
-                    ref_data[ref].entity = 0;
-                } else if (column->kind == EcsFromEntity) {
-                    ref_data[ref].entity = entity;
-                } else {
-                    ref_data[ref].entity = get_entity_for_component(
-                        world, entity, table_type, component);
-                }
-
-                ref_data[ref].component = ecs_type_from_entity(world, component);
-                ref ++;
-
-                /* Negative number indicates ref instead of offset to ecs_data */
-                table_data[i] = -ref;
-                table_data[REFS_COUNT] ++;
             }
         }
 
@@ -612,7 +616,8 @@ EcsEntity _ecs_run_w_filter(
         real_world = ((EcsThread*)world)->world; /* dispel the magic */
     }
 
-    EcsColSystem *system_data = ecs_get_ptr(real_world, system, EcsColSystem);
+    EcsEntityInfo entity_info = {0};
+    EcsColSystem *system_data = get_ptr(real_world, &real_world->main_stage, system, EEcsColSystem, false, false, &entity_info);
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {
@@ -721,8 +726,12 @@ EcsEntity _ecs_run_w_filter(
             int i, count = table[REFS_COUNT];
 
             for (i = 0; i < count; i ++) {
-                info.ref_ptrs[i] = _ecs_get_ptr(real_world, 
-                    info.references[i].entity, info.references[i].component);
+                EcsEntityInfo entity_info = {0};
+
+                info.ref_ptrs[i] = get_ptr(real_world, &real_world->main_stage,
+                    info.references[i].entity, info.references[i].component, false, true, &entity_info);
+
+                ecs_assert(info.ref_ptrs[i] != NULL, ECS_UNRESOLVED_REFERENCE, ecs_id(world, system));
             }
         } else {
             info.references = NULL;

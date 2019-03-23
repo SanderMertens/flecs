@@ -491,6 +491,7 @@ EcsWorld *ecs_init(void) {
 
     world->frame_start = (struct timespec){0, 0};
     world->frame_time = 0;
+    world->merge_time = 0;
     world->system_time = 0;
     world->target_fps = 0;
     world->fps_sleep = 0;
@@ -815,8 +816,8 @@ bool ecs_progress(
     /* Start measuring total frame time */
     delta_time = start_measure_frame(world, delta_time);
     world->delta_time = delta_time;
+    world->merge_time = 0;
 
-    bool measure_frame_time = world->measure_frame_time;
     bool has_threads = ecs_array_count(world->worker_threads) != 0;
 
     /* -- System execution starts here -- */
@@ -827,7 +828,6 @@ bool ecs_progress(
         run_multi_thread_stage(world, world->pre_frame_systems, delta_time);
         run_multi_thread_stage(world, world->on_frame_systems, delta_time);
         run_multi_thread_stage(world, world->post_frame_systems, delta_time);
-        world->valid_schedule = true;
     } else {
         run_single_thread_stage(world, world->pre_frame_systems, delta_time);
         run_single_thread_stage(world, world->on_frame_systems, delta_time);
@@ -840,17 +840,12 @@ bool ecs_progress(
 
     /* -- System execution stops here -- */
 
-    /* Profile system time & merge if systems were processed */
-    if (world->in_progress) {
-        if (measure_frame_time) {
-            struct timespec temp = world->frame_start;
-            world->system_time += ut_time_measure(&temp);
-        }
-
-        world->in_progress = false;
-    }
-
     stop_measure_frame(world, delta_time);
+
+    /* Time spent on systems is time spent on frame minus merge time */
+    world->system_time = world->frame_time - world->merge_time;
+
+    world->in_progress = false;
 
     return !world->should_quit;
 }
@@ -875,6 +870,9 @@ void ecs_merge(
 
     world->is_merging = true;
 
+    struct timespec t_start;
+    ut_time_get(&t_start);
+
     ecs_stage_merge(world, &world->temp_stage);
 
     uint32_t i, count = ecs_array_count(world->worker_stages);
@@ -882,6 +880,8 @@ void ecs_merge(
     for (i = 0; i < count; i ++) {
         ecs_stage_merge(world, &buffer[i]);
     }
+
+    world->merge_time += ut_time_measure(&t_start);
 
     world->is_merging = false;
 }

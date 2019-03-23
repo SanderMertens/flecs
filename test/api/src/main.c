@@ -422,6 +422,8 @@ void MultiThreadStaging_3_threads_add_to_current(void);
 void MultiThreadStaging_4_threads_add_to_current(void);
 void MultiThreadStaging_5_threads_add_to_current(void);
 void MultiThreadStaging_6_threads_add_to_current(void);
+void MultiThreadStaging_stress_create_delete_entity_random_components(void);
+void MultiThreadStaging_stress_set_entity_random_components(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
@@ -2023,7 +2025,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "MultiThreadStaging",
-        .testcase_count = 5,
+        .testcase_count = 7,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_threads_add_to_current",
@@ -2044,6 +2046,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "6_threads_add_to_current",
                 .function = MultiThreadStaging_6_threads_add_to_current
+            },
+            {
+                .id = "stress_create_delete_entity_random_components",
+                .function = MultiThreadStaging_stress_create_delete_entity_random_components
+            },
+            {
+                .id = "stress_set_entity_random_components",
+                .function = MultiThreadStaging_stress_set_entity_random_components
             }
         }
     },

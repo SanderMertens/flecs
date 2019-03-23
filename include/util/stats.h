@@ -61,6 +61,7 @@ typedef struct EcsWorldStats {
     uint32_t tick_count;
     float system_time;
     float frame_time;
+    float merge_time;
     EcsMemoryStats memory;
     EcsArray *features;
     EcsArray *on_load_systems;

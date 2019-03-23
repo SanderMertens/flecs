@@ -82,7 +82,7 @@ typedef enum EcsSystemKind {
 /** Reference to a component from another entity */
 typedef struct EcsReference {
     EcsEntity entity;
-    EcsType component;
+    EcsEntity component;
 } EcsReference;
 
 /** Data passed to system action callback, used for iterating entities */
@@ -1361,6 +1361,7 @@ void _ecs_assert(
 #define ECS_UNRESOLVED_IDENTIFIER (21)
 #define ECS_OUT_OF_RANGE (22)
 #define ECS_COLUMN_IS_NOT_SET (23)
+#define ECS_UNRESOLVED_REFERENCE (24)
 /* -- Convenience macro's -- */
 
 /** Wrapper around ecs_new_entity. */ 

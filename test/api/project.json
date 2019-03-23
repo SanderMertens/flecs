@@ -473,7 +473,9 @@
                 "3_threads_add_to_current",
                 "4_threads_add_to_current",
                 "5_threads_add_to_current",
-                "6_threads_add_to_current"
+                "6_threads_add_to_current",
+                "stress_create_delete_entity_random_components",
+                "stress_set_entity_random_components"
             ]
         }, {
             "id": "Modules",

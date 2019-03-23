@@ -300,7 +300,7 @@ EcsMap* ecs_map_new(
 void ecs_map_clear(
     EcsMap *map)
 {
-    uint32_t target_size = (float)map->count / FLECS_LOAD_FACTOR;
+    /*uint32_t target_size = (float)map->count / FLECS_LOAD_FACTOR;
 
     if (target_size < map->min) {
         target_size = map->min;
@@ -309,14 +309,11 @@ void ecs_map_clear(
     if (target_size < (float)map->bucket_count * 0.75) {
         free(map->buckets);
         alloc_buffer(map, target_size);
-    } else {
-        int i;
-        for (i = 0; i < map->bucket_count; i ++) {
-            map->buckets[i] = 0;
-        }
-    }
+    } else {*/
+        memset(map->buckets, 0, sizeof(int32_t) * map->bucket_count);
+    /*}*/
 
-    ecs_array_reclaim(&map->nodes, &node_arr_params);
+    //ecs_array_reclaim(&map->nodes, &node_arr_params);
     ecs_array_clear(map->nodes);
 
     map->count = 0;
