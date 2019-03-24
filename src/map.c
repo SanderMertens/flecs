@@ -101,6 +101,8 @@ EcsMap *alloc_map(
     uint32_t bucket_count)
 {
     EcsMap *result = malloc(sizeof(EcsMap));
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
     alloc_buffer(result, bucket_count);
     result->count = 0;
     result->min = bucket_count;

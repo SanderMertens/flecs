@@ -120,6 +120,8 @@ EcsResult ecs_parse_component_expr(
     size_t len = strlen(sig);
     const char *ptr;
     char ch, *bptr, *buffer = malloc(len + 1);
+    ecs_assert(buffer != NULL, ECS_OUT_OF_MEMORY, NULL);
+
     bool complex_expr = false;
     EcsSystemExprElemKind elem_kind = EcsFromSelf;
     EcsSystemExprOperKind oper_kind = EcsOperAnd;
@@ -169,6 +171,8 @@ EcsResult ecs_parse_component_expr(
             if (source) {
                 char *dot = strchr(source, '.');
                 source_id = malloc(dot - source + 1);
+                ecs_assert(source_id != NULL, ECS_OUT_OF_MEMORY, NULL);
+
                 strncpy(source_id, source, dot - source);
                 source_id[dot - source] = '\0';
             }

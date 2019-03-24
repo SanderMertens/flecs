@@ -31,6 +31,8 @@ EcsTableColumn *ecs_table_get_columns(
     EcsArray *type)
 {
     EcsTableColumn *result = calloc(sizeof(EcsTableColumn), ecs_array_count(type) + 1);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
     EcsEntity *buf = ecs_array_buffer(type);
     uint32_t i, count = ecs_array_count(type);
 

@@ -91,6 +91,8 @@ EcsTable* bootstrap_component_table(
     result->type = type;
     result->frame_systems = NULL;
     result->columns = malloc(sizeof(EcsTableColumn) * 3);
+    ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
+
     result->columns[0].data = ecs_array_new(&handle_arr_params, 8);
     result->columns[0].size = sizeof(EcsEntity);
     result->columns[1].data = ecs_array_new(&handle_arr_params, 8);
@@ -453,6 +455,8 @@ void load_admin(
 
 EcsWorld *ecs_init(void) {
     EcsWorld *world = malloc(sizeof(EcsWorld));
+    ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
+
     world->magic = ECS_WORLD_MAGIC;
 
     world->on_frame_systems = ecs_array_new(&handle_arr_params, 0);

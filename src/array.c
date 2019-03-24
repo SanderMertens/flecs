@@ -54,6 +54,8 @@ EcsArray* ecs_array_new(
     uint32_t size)
 {
     EcsArray *result = malloc(sizeof(EcsArray) + size * params->element_size);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
     result->count = 0;
     result->size = size;
     return result;
