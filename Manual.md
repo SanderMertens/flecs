@@ -1,5 +1,18 @@
 # Flecs Manual
 
+## Contents
+
+- [Design goals](#design-goals)
+  - [Portability](#portability)
+  - [Reusability](#reusability)
+  - [Clean interfaces](#clean-interfaces)
+  - [Performance](#performance)
+- [API design](#api-design)
+  - [Naming conventions](#naming-conventions)
+  - [Error handling](#error-handling)
+  - [Memory management](#memory-management)
+- [Good practices](#good-practices)
+
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
 
@@ -17,18 +30,20 @@ Flecs aims to provide clear and simple interfaces, by staying close to the core 
 Many Entity Component System frameworks put restrictions on the operations that can be performed while iterating over data, which makes APIs harder to use. In Flecs, there are no restrictions on which operations can be used.
 
 ### Performance
-Flecs has a design that is optimized for minimizing cache misses by loading only data in cache that is required by the application, while also storing data in arrays to ensure that an application makes optimal usage of cache lines. In many cases, applications can access raw arrays directly, wich is as fast as iterating a native array in C and, if the code permits it, lets applications be compiled with Single Instruction, Multiple Data (SIMD) instructions.
+Flecs has a design that is optimized for minimizing cache misses by loading only data in cache that is required by the application, while also storing data in arrays (AoS) to ensure that an application makes optimal usage of cache lines. In many cases, applications can access raw arrays directly, wich is as fast as iterating a native array in C and, if the code permits it, lets applications be compiled with Single Instruction, Multiple Data (SIMD) instructions.
 
 Furthermore, Flecs automatically optimizes performance where it can, by removing systems from the critical path if they are unused. This further improves reusability of code, as it lets applications import modules of which only a subset of the systems is used, without increasing overhead of the framework.
 
-## Naming conventions
+## API design
+
+### Naming conventions
 The Flecs API adheres to a set of well-defined naming conventions, to make it easier to read and write Flecs code. The basic naming conventions are illustrated in this code example:
 
 ```c
 // Component names ('Position') use CamelCase
 typedef struct Position {
     float x;
-    float y; // component members use snake_case
+    float y; // Component members ('y') use snake_case
 } Position;
 
 typedef struct Velocity {
@@ -38,7 +53,8 @@ typedef struct Velocity {
 
 // System names ('Move') use CamelCase. Supporting API types use snake_case_t
 void Move(ecs_rows_t rows) {
-    Position *p = ecs_column(rows, Position, 1); // API functions use snake_case
+    // API functions ('ecs_column') use snake_case
+    Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column(rows, Velocity, 2);
     
     for (int i = 0; i < rows->count; i ++) {
@@ -66,3 +82,150 @@ int main(int argc, char *argv[]) {
     return ecs_fini(world);
 }
 ```
+
+#### Handles
+The Flecs API creates and uses handles (integers) to refer to entities, systems and components. Most of the times these handles are transparently created and used by the API, but in some cases the API may need to access the handles directly, in which case it is useful to know their naming conventions.
+
+The Flecs API has entity handles (of type `ecs_entity_t`) and type handles (of type `ecs_type_t`). Entity handles are used to refer to a single entity. Systems and components (amongst others) obtain identifiers from the same id pool, thus handles to systems and components are also of type `ecs_entity_t`. Types are identifiers that uniquely identify a set of entities (or systems, components). Types are commonly used to add/remove one or more components to/from an entity, or enable/disable one or more systems at once.
+
+Type handles are automatically created by API macro's (like `ECS_COMPONENT`) and are always prefixed by a `T`. Functions like `ecs_new` or `ecs_add` are actually macro's which automatically add the `T` to the type that is being passed to the function. This automatically enforces the naming convention, and makes the API more readable.
+
+The following code example demonstrates the various handles and their naming conventions:
+
+```c
+ecs_world_t *world = ecs_init();
+
+// Declares an entity handle 'EPosition' and type handle 'TPosition'
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity); // Ditto for Velocity
+
+// Declares an entity handle 'Movable' and type handle 'TMovable'
+ECS_TYPE(world, Movable, Position, Velocity);
+
+// Declares an entity handle 'Move'
+ECS_SYSTEM(world, Move, EcsOnFrame, Position, Velocity);
+
+// ecs_new automatically adds the T to Movable so it receives the type handle
+ecs_entity_t e = ecs_new(world, Movable);
+
+// ecs_remove automatically adds the T to Position, so it receives the type handle
+ecs_remove(world, e, Position);
+
+// Print entity handle and type handle for Position
+printf("Position entity: %ld, Position type: %u\n", EPosition, TPosition);
+```
+
+### Error handling
+The API has been designed in a way where operations have no preconditions on the (ECS) state of the application. Instead, they only ensure that a post condition of an operation is fulfilled. In practice this means that an operation _cannot_ fail unless invalid input is provided (e.g. a `NULL` pointer as world parameter). Take for example this code example:
+
+```c
+ecs_add(world, e, Position);
+ecs_add(world, e, Position);
+```
+
+The `ecs_add` function has no precondition on the entity not having the component. The only thing that matters is that _after_ the operation is invoked, the entity has the `Position` component, which for both invocations is the case, thus the API will not throw an error. Another example:
+
+```c
+ecs_delete(world, e);
+ecs_delete(world, e);
+```
+
+The post condition of `ecs_delete` is that the provided entity is deleted. In both invocations this is the case, thus the second time the `ecs_delete` operation is invoked is not an error. Another, slightly more interesting example:
+
+```c
+ecs_delete(world, e);
+ecs_add(world, e, Position);
+```
+
+This, perhaps surprisingly, also does not result in an error. The reason is that entities in Flecs are never really deleted, they are only _emptied_. A deleted entity in Flecs is equivalent to an empty entity. Thus the post condition of `ecs_delete` is actually that the entity is empty. Adding `Position` subsequently to `e` is no different than adding `Position` to an empty entity, which is also not an error.
+
+This does not mean that the API cannot fail. It relies on mechanisms like memory allocation and thread creation amongst others which can fail. It is also possible that an application corrupts memory, or Flecs contains a bug, which can also result in errors. In any of these situations, Flecs is unable to fulfill the post condition of an operation **and will assert or abort**, resulting in the termination of the application. Let me repeat that:
+
+**Flecs will terminate your application when it encounters an error**.
+
+This is a very conscious decision: rather than relying on the application to check (or not check) the return code of an operation, and making a decision based on incomplete information, the API does the only sensible thing it can do, which is stop. Note that this will _never_ happen as a result of a regular operation, but is _always_ the result of Flecs being in a state from which it cannot (or does not know how to) recover. It should be noted that explicit checks (asserts) are disabled when Flecs is built in release mode.
+
+As a result of this API design, application code can be written declaratively and without error handling. Furthermore, return values of functions can actually be used to return useful information, which allows for a clean API, and results in concise code.
+
+### Memory Management
+The Flecs API has been designed to be ultra-simple and safe when it comes to managing memory (pointers):
+
+**The API _never_ assumes ownership of passed in pointers & _never_ requires freeing a returned pointer**. 
+
+This approach makes it unlikely for Flecs applications to run into memory corruption issues as a result of API misuse. There is only one exception to this rule, which is the creation / deletion of the world:
+
+```c
+ecs_world_t *world = ecs_init();
+
+ecs_fini(world);
+```
+
+This also means that the application is fully responsible for ensuring that if a component contains pointers, these pointers are kept valid, and are cleaned up. In some cases this is straightforward, if the memory outlives a component as is often the case with entity identifiers:
+
+```c
+ecs_set(world, e, EcsId, {"MyEntity"}); 
+```
+
+This sets the `EcsId` component on an entity which is used by Flecs to assign names to entities. The `"MyEntity"` string is a literal and will certainly outlive the lifespan of the component, as it is tied to the lifecycle of the process, therefore it is safe to assign it like this. It can subsequently be obtained with this function:
+
+```c
+const char *id = ecs_id(world, e);
+```
+
+This function returns the verbatim address that is stored in the `EcsId` component, and thus should not be freed.
+
+If memory is tied to the lifecycle of a component, applications can use `OnAdd` and `OnRemove` components to initialize and free the memory when components are added/removed. This example shows how to create two systems for a dynamic buffer that automatically allocate/free the memory for the dynamic buffer when it is added to an entity:
+
+```c
+typedef ecs_array_t *DynamicBuffer;
+
+ecs_array_params_t params = {.element_size = sizeof(int)};
+
+void InitDynamicBuffer(EcsRows *rows) {
+    DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
+    for (int i = rows->begin; i < rows->end; i ++) {
+        data[i] = ecs_array_new(&params, 0);
+    }
+}
+
+void DeinitDynamicBuffer(EcsRows *rows) {
+    DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
+    for (int i = rows->begin; i < rows->end; i ++) {
+        ecs_array_free(data[i]);
+    }
+}
+
+int main(int argc, char *argv[]) {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, DynamicBuffer);
+    ECS_SYSTEM(world, InitDynamicBuffer, EcsOnAdd, DynamicBuffer);
+    ECS_SYSTEM(world, DeinitDynamicBuffer, EcsOnRemove, DynamicBuffer);
+    
+    // This adds DynamicBuffer, and invokes the InitDynamicBuffer system
+    ecs_entity_t e = ecs_new(world, DynamicBuffer);
+    
+    // This removes DynamicBuffer, and invokes the DeinitDynamicBuffer system
+    ecs_delete(world, e);
+    
+    return ecs_fini(world);
+}
+```
+
+## Good Practices
+Flecs is an Entity Component System, and it is important to realize that ECS is probably quite different from how you are used to write code. Thus when you are just getting started with Flecs, you may run into some unforeseen problems, and you may wonder more than once how something is supposed to work. Additionally, Flecs also has its own set of rules and mechanisms that require getting used to. This section is not a comprehensive guide into writing code "the ECS way", but intends to provide a few helpful tips to guide you on the way.
+
+### Minimize the usage of ecs_get, ecs_set
+An ECS framework is only as efficient as the way it is used, and the most inefficient way of accomplishing something in an ECS framework is by extensively using `ecs_get` and `ecs_set`. This always requires the framework to do lookups in the set of components the entity has, which is quite slow. It also is an indication that code relies to much on individual entities, whereas in ECS it is more common practice to write code that operates on entity collections. The preferred way to do this in Flecs is with _systems_, which can access components directly, without requiring a lookup.
+
+### Write code in systems
+If you find yourself writing lots of code in the main loop of your application that is not executed in a system, it could be a sign of code smell. Logic in ECS runs best when it is part of a system. A system ensures that your code has a clear interface, which makes it easy to reuse the system in other applications. Flecs adds additional benefits to using systems like being able to automatically or manually (remotely!) enable/disable them, and schedule them to run on different threads.
+
+### Organize your code in modules
+For small applications it is fine to create a few systems in your main source file, but for larger projects you will want to organize your systems and components in modules. Flecs has a module system that lets you easily import systems and components that are defined in other files in your project, or even other libraries. Ideally, the main function of your application only consists of importing modules and the creation of entities.
+
+### Use types wherever possible
+The sooner you can let Flecs know what entities you will be setting on an entity, the better. Flecs can add/remove multiple components to/from your entity in a single `ecs_add` or `ecs_remove` call with types (see `ECS_TYPE`), and this is much more efficient than calling these operations for each individual component. It is even more efficient to specify a type with `ecs_new`, as Flecs can take advantage of the knowledge that the entity to which the component is going to be added is empty.
+
+### Create entities in bulk whenever possible
+It is much more efficient to create entities in bulk (using the `ecs_new_w_count` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
