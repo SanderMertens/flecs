@@ -20,6 +20,8 @@
   - [Create entities in bulk](#create-entities-in-bulk)
   - [Limit usage of ecs_lookup](#limit-usage-of-ecs_lookup)
   - [Use ecs_quit to signal that your application needs to exit](#use-ecs_quit-to-signal-that-your-application-needs-to-exit)
+  - [Update entities proportionally to delta_time](#update-entities-proportionally-to-delta-time)
+  - [Set a target FPS for applications](#set-a-target-fps-for-applications)
 
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
@@ -252,3 +254,9 @@ This will lookup the entity in advance, instead of every time the system is invo
 
 ### Use ecs_quit to signal that your application needs to exit
 You can use `ecs_progress` to control the flow of your application, by running it in a while loop, and making the result of the function the condition of the while loop. This will keep your application running until you call `ecs_quit`. Using this pattern provides a common approach to signalling your application needs to exit across modules.
+
+### Update entities proportionally to delta_time
+The Flecs API provides your systems with a `delta_time` variable in the `ecs_rows_t` type wich contains the time passed since the previous frame. This lets you update your entity values proportional to the time that has passed, and is a good idea when you want to decouple the speed at which your logic is running from the FPS of your appplication. You can let Flecs determine `delta_time` automatically, by specifying `0` to `ecs_progress`, or manually by providing a non-zero value to `ecs_progress`.
+
+### Set a target FPS for applications
+When you run `ecs_progress` in your main loop, you rarely want to run your application as fast as possible. It is good practice to set a target FPS (a good default is 60) so that your application does not consume all of your CPU bandwidth. When you set a target FPS with the `ecs_set_target_fps` function, the `ecs_progress` function will automatically insert sleeps to make sure your application runs at the specified FPS. It may run slower if not enough CPU bandwidth is available, but it will never run faster than that.
