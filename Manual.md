@@ -20,3 +20,49 @@ Many Entity Component System frameworks put restrictions on the operations that 
 Flecs has a design that is optimized for minimizing cache misses by loading only data in cache that is required by the application, while also storing data in arrays to ensure that an application makes optimal usage of cache lines. In many cases, applications can access raw arrays directly, wich is as fast as iterating a native array in C and, if the code permits it, lets applications be compiled with Single Instruction, Multiple Data (SIMD) instructions.
 
 Furthermore, Flecs automatically optimizes performance where it can, by removing systems from the critical path if they are unused. This further improves reusability of code, as it lets applications import modules of which only a subset of the systems is used, without increasing overhead of the framework.
+
+## Naming conventions
+The Flecs API adheres to a set of well-defined naming conventions, to make it easier to read and write Flecs code. The basic naming conventions are illustrated in this code example:
+
+```c
+// Component names ('Position') use CamelCase
+typedef struct Position {
+    float x;
+    float y; // component members use snake_case
+} Position;
+
+typedef struct Velocity {
+    float x;
+    float y;
+} Velocity;
+
+// System names ('Move') use CamelCase. Supporting API types use snake_case_t
+void Move(ecs_rows_t rows) {
+    Position *p = ecs_column(rows, Position, 1); // API functions use snake_case
+    Velocity *v = ecs_column(rows, Velocity, 2);
+    
+    for (int i = 0; i < rows->count; i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
+}
+
+int main(int argc, char *argv[]) {
+    ecs_world_t *world = ecs_init();
+    
+    // Declarative macro's use SCREAMING_SNAKE_CASE
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    // Enumeration constants ('EcsOnFrame') use CamelCase
+    ECS_SYSTEM(world, Move, EcsOnFrame, Position, Velocity);
+    
+    // Entity names use CamelCase
+    ECS_ENTITY(world, MyEntity, Position, Velocity);
+    
+    // Imperative macro's (function wrappers) use snake_case
+    ecs_set(world, MyEntity, Position, {10, 20});
+    
+    return ecs_fini(world);
+}
+```
