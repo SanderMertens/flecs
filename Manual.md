@@ -28,7 +28,7 @@ The Flecs API adheres to a set of well-defined naming conventions, to make it ea
 // Component names ('Position') use CamelCase
 typedef struct Position {
     float x;
-    float y; // component members use snake_case
+    float y; // Component members ('y') use snake_case
 } Position;
 
 typedef struct Velocity {
@@ -38,7 +38,8 @@ typedef struct Velocity {
 
 // System names ('Move') use CamelCase. Supporting API types use snake_case_t
 void Move(ecs_rows_t rows) {
-    Position *p = ecs_column(rows, Position, 1); // API functions use snake_case
+    // API functions ('ecs_column') use snake_case
+    Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column(rows, Velocity, 2);
     
     for (int i = 0; i < rows->count; i ++) {
@@ -65,4 +66,36 @@ int main(int argc, char *argv[]) {
     
     return ecs_fini(world);
 }
+```
+
+#### Handles
+The Flecs API creates and uses handles (integers) to refer to entities, systems and components. Most of the times these handles are transparently created and used by the API, but in some cases the API may need to access the handles directly, in which case it is useful to know their naming conventions.
+
+The Flecs API has entity handles (of type `ecs_entity_t`) and type handles (of type `ecs_type_t`). Entity handles are used to refer to a single entity. Systems and components (amongst others) obtain identifiers from the same id pool, thus handles to systems and components are also of type `ecs_entity_t`. Types are identifiers that uniquely identify a set of entities (or systems, components). Types are commonly used to add/remove one or more components to/from an entity, or enable/disable one or more systems at once.
+
+Type handles are automatically created by API macro's (like `ECS_COMPONENT`) and are always prefixed by a `T`. Functions like `ecs_new` or `ecs_add` are actually macro's which automatically add the `T` to the type that is being passed to the function. This automatically enforces the naming convention, and makes the API more readable.
+
+The following code example demonstrates the various handles and their naming conventions:
+
+```c
+ecs_world_t *world = ecs_init();
+
+// Declares an entity handle 'EPosition' and type handle 'TPosition'
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity); // Ditto for Velocity
+
+// Declares an entity handle 'Movable' and type handle 'TMovable'
+ECS_TYPE(world, Movable, Position, Velocity);
+
+// Declares an entity handle 'Move'
+ECS_SYSTEM(world, Move, EcsOnFrame, Position, Velocity);
+
+// ecs_new automatically adds the T to Movable so it receives the type handle
+ecs_entity_t e = ecs_new(world, Movable);
+
+// ecs_remove automatically adds the T to Position, so it receives the type handle
+ecs_remove(world, e, Position);
+
+// Print entity handle and type handle for Position
+printf("Position entity: %ld, Position type: %u\n", EPosition, TPosition);
 ```
