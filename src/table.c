@@ -4,7 +4,7 @@
 /** Notify systems that a table has changed its active state */
 static
 void activate_table(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     EcsEntity system,
     bool activate)
@@ -26,7 +26,7 @@ void activate_table(
 /* -- Private functions -- */
 
 EcsTableColumn *ecs_table_get_columns(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsArray *type)
 {
@@ -56,7 +56,7 @@ EcsTableColumn *ecs_table_get_columns(
 }
 
 EcsResult ecs_table_init(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsTable *table)
 {
@@ -91,7 +91,7 @@ EcsResult ecs_table_init(
 }
 
 void ecs_table_deinit(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table)
 {
     /*ecs_notify(world, NULL,
@@ -99,7 +99,7 @@ void ecs_table_deinit(
 }
 
 void ecs_table_free(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table)
 {
     uint32_t i, column_count = ecs_array_count(table->type);
@@ -114,7 +114,7 @@ void ecs_table_free(
 }
 
 void ecs_table_register_system(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     EcsEntity system)
 {
@@ -128,7 +128,7 @@ void ecs_table_register_system(
 }
 
 uint32_t ecs_table_insert(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     EcsTableColumn *columns,
     EcsEntity entity)
@@ -166,7 +166,7 @@ uint32_t ecs_table_insert(
 }
 
 void ecs_table_delete(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     uint32_t index)
 {
@@ -234,7 +234,7 @@ void ecs_table_delete(
 }
 
 uint32_t ecs_table_grow(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     EcsTableColumn *columns,
     uint32_t count,

@@ -5,7 +5,7 @@
 /** Parse callback that adds type to type identifier for ecs_new_type */
 static
 EcsResult add_type(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
     const char *entity_id,
@@ -74,7 +74,7 @@ uint32_t hash_handle_array(
 
 static
 void notify_create_type(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsArray *systems,
     EcsType type)
@@ -89,7 +89,7 @@ void notify_create_type(
 
 static
 EcsType register_type_from_buffer(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsEntity *buf,
     uint32_t count)
@@ -120,7 +120,7 @@ EcsType register_type_from_buffer(
 /* -- Private functions -- */
 
 EcsArray* ecs_type_get(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType type_id)
 {
@@ -137,7 +137,7 @@ EcsArray* ecs_type_get(
 
 /** Get type id from entity handle */
 EcsType ecs_type_from_handle(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsEntity entity,
     EcsEntityInfo *info)
@@ -194,7 +194,7 @@ EcsType ecs_type_from_handle(
 
 /** Register a new type, optionally extending from existing type */
 EcsType ecs_type_register(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsEntity to_add,
     EcsArray *set)
@@ -222,7 +222,7 @@ EcsType ecs_type_register(
 }
 
 EcsType ecs_type_add(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType type,
     EcsEntity component)
@@ -233,7 +233,7 @@ EcsType ecs_type_add(
 }
 
 EcsType ecs_type_merge_arr(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsArray *arr_cur,
     EcsArray *to_add,
@@ -306,7 +306,7 @@ EcsType ecs_type_merge_arr(
 
 /** O(n) algorithm to merge families */
 EcsType ecs_type_merge(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType cur_id,
     EcsType to_add_id,
@@ -340,7 +340,7 @@ EcsType ecs_type_merge(
 
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
 EcsEntity ecs_type_contains(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType type_id_1,
     EcsType type_id_2,
@@ -418,7 +418,7 @@ EcsEntity ecs_type_contains(
 }
 
 bool ecs_type_contains_component(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType type_id,
     EcsEntity component,
@@ -450,7 +450,7 @@ bool ecs_type_contains_component(
 /* -- Public API -- */
 
 EcsType ecs_new_type(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id,
     const char *sig)
 {
@@ -492,7 +492,7 @@ EcsType ecs_new_type(
 }
 
 EcsEntity ecs_new_prefab(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id,
     const char *sig)
 {
@@ -518,7 +518,7 @@ EcsEntity ecs_new_prefab(
 }
 
 EcsEntity ecs_new_entity(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id,
     const char *components)
 {
@@ -555,7 +555,7 @@ int16_t ecs_type_index_of(
 }
 
 EcsType _ecs_merge_type(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsType type,
     EcsType type_add,
     EcsType type_remove)

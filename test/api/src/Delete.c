@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void Delete_delete_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -16,7 +16,7 @@ void Delete_delete_1() {
 }
 
 void Delete_delete_1_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -33,7 +33,7 @@ void Delete_delete_1_again() {
 }
 
 void Delete_delete_empty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -47,7 +47,7 @@ void Delete_delete_empty() {
 }
 
 void Delete_delete_nonexist() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ecs_delete(world, 100);
     test_assert(ecs_empty(world, 100));
@@ -56,7 +56,7 @@ void Delete_delete_nonexist() {
 }
 
 void Delete_delete_1st_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -76,7 +76,7 @@ void Delete_delete_1st_of_3() {
 }
 
 void Delete_delete_2nd_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -96,7 +96,7 @@ void Delete_delete_2nd_of_3() {
 }
 
 void Delete_delete_3rd_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -116,7 +116,7 @@ void Delete_delete_3rd_of_3() {
 }
 
 void Delete_delete_2_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -137,7 +137,7 @@ void Delete_delete_2_of_3() {
 }
 
 void Delete_delete_3_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 

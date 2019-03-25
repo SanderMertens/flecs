@@ -2,7 +2,7 @@
 
 #define MOVE_SPEED (5)
 
-void MoveSquare(EcsRows *rows) {
+void MoveSquare(ecs_rows_t *rows) {
     EcsInput *input = ecs_column(rows, EcsInput, 1);
     EcsPosition2D *position = ecs_shared(rows, EcsPosition2D, 2);
 
@@ -16,7 +16,7 @@ void MoveSquare(EcsRows *rows) {
 }
 
 int main(int argc, char *argv[]) {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     ECS_IMPORT(world, EcsComponentsTransform, ECS_2D);
     ECS_IMPORT(world, EcsComponentsGeometry, ECS_2D);

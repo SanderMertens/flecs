@@ -16,7 +16,7 @@ const EcsArrayParams featurestats_arr_params = {
 
 static
 void calculate_type_stats(
-    EcsWorld *world,
+    ecs_world_t *world,
     uint32_t *allocd,
     uint32_t *used)
 {
@@ -29,7 +29,7 @@ void calculate_type_stats(
 
 static
 void calculate_system_stats(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsArray *systems,
     uint32_t *allocd,
     uint32_t *used)
@@ -49,7 +49,7 @@ void calculate_system_stats(
 
 static
 void calculate_table_stats(
-    EcsWorld *world,
+    ecs_world_t *world,
     uint32_t *allocd,
     uint32_t *used)
 {
@@ -65,7 +65,7 @@ void calculate_table_stats(
 
 static
 void calculate_stage_stats(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     uint32_t *allocd,
     uint32_t *used)
@@ -92,7 +92,7 @@ void calculate_stage_stats(
 
 static
 void calculate_stages_stats(
-    EcsWorld *world,
+    ecs_world_t *world,
     uint32_t *allocd,
     uint32_t *used)
 {
@@ -106,8 +106,8 @@ void calculate_stages_stats(
 
 static
 void get_memory_stats(
-    EcsWorld *world,
-    EcsWorldStats *stats)
+    ecs_world_t *world,
+    ecs_world_tStats *stats)
 {
     EcsMemoryStats *memory = &stats->memory;
 
@@ -152,8 +152,8 @@ void get_memory_stats(
     ecs_map_memory(world->main_stage.entity_index, &memory->entities.allocd, &memory->entities.used);
 
     ecs_array_memory(world->worker_threads, &table_arr_params, &memory->world.allocd, &memory->world.used);
-    stats->memory.world.allocd += sizeof(EcsWorld) - sizeof(EcsStage);
-    stats->memory.world.used += sizeof(EcsWorld) - sizeof(EcsStage);
+    stats->memory.world.allocd += sizeof(ecs_world_t) - sizeof(EcsStage);
+    stats->memory.world.used += sizeof(ecs_world_t) - sizeof(EcsStage);
 
     stats->memory.total.used =
       stats->memory.components.used +
@@ -176,7 +176,7 @@ void get_memory_stats(
 
 static
 void set_system_stats(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsArray **stats_array,
     EcsEntity system,
     bool active)
@@ -209,7 +209,7 @@ void set_system_stats(
         sstats->tables_matched = count + ecs_array_count(
             col_system->inactive_tables);
     } else {
-        system_ptr = ecs_get_ptr(world, system, EcsRowSystem);
+        system_ptr = ecs_get_ptr(world, system, ecs_rows_tystem);
         sstats->entities_matched = 0;
         sstats->tables_matched = 0;
         sstats->period = 0;
@@ -248,7 +248,7 @@ int compare_tablestats(
 
 static
 int system_stats_arr(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsArray **stats_array,
     EcsArray *systems)
 {
@@ -265,8 +265,8 @@ int system_stats_arr(
 
 static
 int system_stats_arr_inactive(
-    EcsWorld *world,
-    EcsWorldStats *stats)
+    ecs_world_t *world,
+    ecs_world_tStats *stats)
 {
     EcsArray *systems = world->inactive_systems;
     EcsEntity *handles = ecs_array_buffer(systems);
@@ -296,8 +296,8 @@ int system_stats_arr_inactive(
 }
 
 void ecs_get_stats(
-    EcsWorld *world,
-    EcsWorldStats *stats)
+    ecs_world_t *world,
+    ecs_world_tStats *stats)
 {
     uint32_t mem_used = 0, mem_allocd = 0;
     stats->table_count = ecs_array_count(world->main_stage.tables);
@@ -357,7 +357,7 @@ void ecs_get_stats(
                     feature.systems_enabled ++;
                 }
             }
-            if (ecs_has(world, buffer[i], EcsRowSystem)) {
+            if (ecs_has(world, buffer[i], ecs_rows_tystem)) {
                 feature.system_count ++;
                 feature.systems_enabled ++;
             }
@@ -407,7 +407,7 @@ void ecs_get_stats(
 
     uint32_t system_memory =
       table_sys_count * (sizeof(EcsColSystem) + sizeof(EcsId)) +
-      row_sys_count * (sizeof(EcsRowSystem) + sizeof(EcsId));
+      row_sys_count * (sizeof(ecs_rows_tystem) + sizeof(EcsId));
     stats->memory.components.used -= system_memory;
     stats->memory.components.allocd -= system_memory;
     stats->memory.systems.used += system_memory;
@@ -441,8 +441,8 @@ void ecs_get_stats(
 }
 
 void ecs_free_stats(
-    EcsWorld *world,
-    EcsWorldStats *stats)
+    ecs_world_t *world,
+    ecs_world_tStats *stats)
 {
     uint32_t i, count = ecs_array_count(stats->tables);
     EcsTableStats *tables = ecs_array_buffer(stats->tables);

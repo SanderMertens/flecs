@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void Singleton_set() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -16,7 +16,7 @@ void Singleton_set() {
 }
 
 void Singleton_set_ptr() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -32,7 +32,7 @@ void Singleton_set_ptr() {
     ecs_fini(world);
 }
 
-void Iter_w_singleton(EcsRows *rows) {
+void Iter_w_singleton(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v_shared = ecs_shared(rows, Velocity, 2);
 
@@ -46,7 +46,7 @@ void Iter_w_singleton(EcsRows *rows) {
 }
 
 void Singleton_system_w_singleton() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -67,7 +67,7 @@ void Singleton_system_w_singleton() {
 }
 
 void Singleton_system_w_singleton_not_set() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void New_w_Count_empty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity e = ecs_new_w_count(world, 0, 1000, NULL);
     test_assert(e != 0);
@@ -10,7 +10,7 @@ void New_w_Count_empty() {
 }
 
 void New_w_Count_empty_w_handles() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity handles[1000];
     EcsEntity e = ecs_new_w_count(world, 0, 1000, handles);
@@ -25,7 +25,7 @@ void New_w_Count_empty_w_handles() {
 }
 
 void New_w_Count_nonempty_w_handles() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -43,7 +43,7 @@ void New_w_Count_nonempty_w_handles() {
 }
 
 void New_w_Count_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -55,7 +55,7 @@ void New_w_Count_component() {
 }
 
 void New_w_Count_type() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, MyType, Position);
@@ -74,7 +74,7 @@ void New_w_Count_type() {
 }
 
 void New_w_Count_type_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -95,7 +95,7 @@ void New_w_Count_type_of_2() {
 }
 
 void New_w_Count_type_w_type() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type_1, Position);
@@ -115,7 +115,7 @@ void New_w_Count_type_w_type() {
 }
 
 void New_w_Count_type_w_2_types() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -138,7 +138,7 @@ void New_w_Count_type_w_2_types() {
 }
 
 void New_w_Count_type_mixed() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -160,7 +160,7 @@ void New_w_Count_type_mixed() {
 }
 
 void New_w_Count_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
 
@@ -178,7 +178,7 @@ void New_w_Count_tag() {
 }
 
 void New_w_Count_type_w_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
     ECS_TYPE(world, Type, Tag);
@@ -197,7 +197,7 @@ void New_w_Count_type_w_tag() {
 }
 
 void New_w_Count_type_w_2_tags() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag_1);
     ECS_TAG(world, Tag_2);
@@ -218,7 +218,7 @@ void New_w_Count_type_w_2_tags() {
 }
 
 void New_w_Count_type_w_tag_mixed() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag_1);
     ECS_TAG(world, Tag_2);

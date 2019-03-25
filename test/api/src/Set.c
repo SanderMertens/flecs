@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void Set_set_empty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -20,7 +20,7 @@ void Set_set_empty() {
 }
 
 void Set_set_nonempty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -41,7 +41,7 @@ void Set_set_nonempty() {
 }
 
 void Set_set_non_empty_override() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -60,7 +60,7 @@ void Set_set_non_empty_override() {
 }
 
 void Set_set_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -87,7 +87,7 @@ void Set_set_again() {
 }
 
 void Set_set_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -121,7 +121,7 @@ void Set_set_2() {
 }
 
 void Set_add_set() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -143,7 +143,7 @@ void Set_add_set() {
 }
 
 void Set_set_add() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -170,7 +170,7 @@ void Set_set_add() {
 }
 
 void Set_set_add_other() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -199,7 +199,7 @@ void Set_set_add_other() {
 }
 
 void Set_set_remove() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -224,7 +224,7 @@ void Set_set_remove() {
 }
 
 void Set_set_remove_other() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -254,7 +254,7 @@ void Set_set_remove_other() {
 }
 
 void Set_set_remove_twice() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -287,7 +287,7 @@ void Set_set_remove_twice() {
 }
 
 void Set_set_and_new() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 

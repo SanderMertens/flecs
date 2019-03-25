@@ -53,7 +53,7 @@ typedef struct Color {
     float a;
 } Color;
 
-void ProbeSystem(EcsRows *rows);
+void ProbeSystem(ecs_rows_t *rows);
 
 #ifdef __cplusplus
 }

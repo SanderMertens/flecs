@@ -147,7 +147,7 @@ typedef struct Position {
 
 typedef int32_t Speed;
 
-void Move(EcsRows *rows) {
+void Move(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Speed *s = ecs_column(rows, Speed, 2);
     
@@ -158,7 +158,7 @@ void Move(EcsRows *rows) {
 }
 
 int main(int argc, char *argv[]) {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     /* Register components and systems */
     ECS_COMPONENT(world, Position);
@@ -183,7 +183,7 @@ This section describes the high-level concepts used in flecs, and how they are r
 A world is a container in which entities, components and systems can be stored and evaluated. An application can create any number of worlds. Data between worlds is not shared. If the application wants to share data between worlds, this has to be done manually. A world in ECS can be created with the `ecs_init` function:
 
 ```c
-EcsWorld *world = ecs_init();
+ecs_world_t *world = ecs_init();
 ```
 
 ### Entity
@@ -229,7 +229,7 @@ ECS_SYSTEM(world, LogPoints, EcsOnFrame, Point);
 In this statement, `LogPoints` refers to a C function that will be associated with the system. `EcsOnFrame` identifies the stage in which the system is executed. The `Point` identifies the component interest expression. The system is implemented as a regular C function, like this:
 
 ```c
-void LogPoints(EcsRows *rows) {
+void LogPoints(ecs_rows_t *rows) {
     Point *p = ecs_column(rows, Point, 1);
     for (int i = 0; i < rows->count; i ++) {
         printf("Log point (%d, %d)\n", p[i].x, p[i].y);

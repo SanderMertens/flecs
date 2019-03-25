@@ -4,7 +4,7 @@
 
 static
 void merge_families(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage)
 {
     EcsIter it = ecs_map_iter(stage->type_index);
@@ -22,7 +22,7 @@ void merge_families(
 
 static
 void merge_tables(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage)
 {
     EcsTable *buffer = ecs_array_buffer(stage->tables);
@@ -49,7 +49,7 @@ void merge_tables(
 
 static
 void merge_commits(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage)
 {
     EcsIter it = ecs_map_iter(stage->entity_index);
@@ -87,7 +87,7 @@ void clean_families(
 
 static
 void clean_tables(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage)
 {
     EcsTable *buffer = ecs_array_buffer(stage->tables);
@@ -109,7 +109,7 @@ void clean_tables(
 /* -- Private functions -- */
 
 void ecs_stage_init(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage)
 {
     bool is_main_stage = stage == &world->main_stage;
@@ -139,7 +139,7 @@ void ecs_stage_init(
 }
 
 void ecs_stage_deinit(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage)
 {
     bool is_main_stage = stage == &world->main_stage;
@@ -161,7 +161,7 @@ void ecs_stage_deinit(
 }
 
 void ecs_stage_merge(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage)
 {
     assert(stage != &world->main_stage);

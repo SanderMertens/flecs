@@ -32,7 +32,7 @@ typedef enum EcsResult {
 } EcsResult;
 
 /* The flecs world object */
-typedef struct EcsWorld EcsWorld;
+typedef struct ecs_world_t ecs_world_t;
 
 /** A handle identifies an entity */
 typedef uint64_t EcsEntity;
@@ -86,8 +86,8 @@ typedef struct EcsReference {
 } EcsReference;
 
 /** Data passed to system action callback, used for iterating entities */
-typedef struct EcsRows {
-    EcsWorld *world;          /* Current world */
+typedef struct ecs_rows_t {
+    ecs_world_t *world;          /* Current world */
     EcsEntity system;         /* Handle to current system */
 
     int32_t *columns;    /* Indices mapping system params to columns and refs */
@@ -105,15 +105,15 @@ typedef struct EcsRows {
     uint32_t count;           /* Number of rows to process by system */
 
     EcsEntity interrupted_by; /* When set, system execution is interrupted */
-} EcsRows;
+} ecs_rows_t;
 
 /** System action callback type */
 typedef void (*EcsSystemAction)(
-    EcsRows *data);
+    ecs_rows_t *data);
 
 /** Initialization function signature of modules */
 typedef void (*EcsModuleInitAction)(
-    EcsWorld *world,
+    ecs_world_t *world,
     int flags,
     void *handles_out);
 
@@ -121,7 +121,7 @@ typedef void (*EcsModuleInitAction)(
 #define EEcsComponent (1)
 #define EEcsTypeComponent (2)
 #define EEcsPrefab (3)
-#define EEcsRowSystem (4)
+#define Eecs_rows_tystem (4)
 #define EEcsColSystem (5)
 #define EEcsId (6)
 #define EEcsHidden (7)
@@ -132,7 +132,7 @@ extern EcsType
     TEcsComponent,
     TEcsTypeComponent,
     TEcsPrefab,
-    TEcsRowSystem,
+    Tecs_rows_tystem,
     TEcsColSystem,
     TEcsId,
     TEcsHidden,
@@ -162,7 +162,7 @@ extern const char
  * @returns A new world object
  */
 FLECS_EXPORT
-EcsWorld* ecs_init(void);
+ecs_world_t* ecs_init(void);
 
 /** Create a new world with arguments.
  * Same as ecs_init, but allows passing in command line arguments. These can be
@@ -188,7 +188,7 @@ EcsWorld* ecs_init(void);
  * @returns A new world object
  */
 FLECS_EXPORT
-EcsWorld* ecs_init_w_args(
+ecs_world_t* ecs_init_w_args(
     int argc,
     char *argv[]);
 
@@ -200,7 +200,7 @@ EcsWorld* ecs_init_w_args(
  */
 FLECS_EXPORT
 EcsResult ecs_fini(
-    EcsWorld *world);
+    ecs_world_t *world);
 
 /** Signal exit
  * This operation signals that the application should quit. It will cause
@@ -210,7 +210,7 @@ EcsResult ecs_fini(
  */
 FLECS_EXPORT
 void ecs_quit(
-    EcsWorld *world);
+    ecs_world_t *world);
 
 /** Import a flecs module.
  * Flecs modules enable reusing components and systems across projects. To
@@ -244,7 +244,7 @@ void ecs_quit(
  */
 FLECS_EXPORT
 EcsEntity ecs_import(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsModuleInitAction module,
     const char *module_name,
     int flags,
@@ -308,7 +308,7 @@ EcsEntity ecs_import(
  */
 FLECS_EXPORT
 bool ecs_progress(
-    EcsWorld *world,
+    ecs_world_t *world,
     float delta_time);
 
 /** Merge staged data.
@@ -329,7 +329,7 @@ bool ecs_progress(
  */
 FLECS_EXPORT
 void ecs_merge(
-    EcsWorld *world);
+    ecs_world_t *world);
 
 /** Set whether the world should merge data each frame.
  * By default, ecs_progress merges data each frame. With this operation that
@@ -348,7 +348,7 @@ void ecs_merge(
  */
 FLECS_EXPORT
 void ecs_set_automerge(
-    EcsWorld *world,
+    ecs_world_t *world,
     bool auto_merge);
 
 /** Set number of worker threads.
@@ -368,7 +368,7 @@ void ecs_set_automerge(
  */
 FLECS_EXPORT
 EcsResult ecs_set_threads(
-    EcsWorld *world,
+    ecs_world_t *world,
     uint32_t threads);
 
 /** Set target frames per second (FPS) for application.
@@ -394,13 +394,13 @@ EcsResult ecs_set_threads(
  */
 FLECS_EXPORT
 void ecs_set_target_fps(
-    EcsWorld *world,
+    ecs_world_t *world,
     float fps);
 
 /** Get last used delta time from world */
 FLECS_EXPORT
 float ecs_get_delta_time(
-    EcsWorld *world);
+    ecs_world_t *world);
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
@@ -414,7 +414,7 @@ float ecs_get_delta_time(
  */
 FLECS_EXPORT
 void ecs_set_context(
-    EcsWorld *world,
+    ecs_world_t *world,
     void *ctx);
 
 /** Get the world context.
@@ -426,7 +426,7 @@ void ecs_set_context(
  */
 FLECS_EXPORT
 void* ecs_get_context(
-    EcsWorld *world);
+    ecs_world_t *world);
 
 /** Dimension the world for a specified number of entities.
  * This operation will preallocate memory in the world for the specified number
@@ -447,7 +447,7 @@ void* ecs_get_context(
  */
 FLECS_EXPORT
 void ecs_dim(
-    EcsWorld *world,
+    ecs_world_t *world,
     uint32_t entity_count);
 
 /** Dimension a type for a specified number of entities.
@@ -469,7 +469,7 @@ void ecs_dim(
  */
 FLECS_EXPORT
 void _ecs_dim_type(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsType type,
     uint32_t entity_count);
 
@@ -504,7 +504,7 @@ void _ecs_dim_type(
  */
 FLECS_EXPORT
 EcsEntity _ecs_new(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsType type);
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
@@ -524,7 +524,7 @@ EcsEntity _ecs_new(
  */
 FLECS_EXPORT
 EcsEntity _ecs_new_child(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity parent,
     const char *name,
     EcsType type);
@@ -536,7 +536,7 @@ EcsEntity _ecs_new_child(
 /** Convenience function to create an entity with id and component expression */
 FLECS_EXPORT
 EcsEntity ecs_new_entity(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id,
     const char *components);
 
@@ -552,7 +552,7 @@ EcsEntity ecs_new_entity(
  */
 FLECS_EXPORT
 EcsEntity _ecs_new_w_count(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsType type,
     uint32_t count,
     EcsEntity *handles_out);
@@ -577,7 +577,7 @@ EcsEntity _ecs_new_w_count(
  */
 FLECS_EXPORT
 EcsEntity ecs_clone(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity,
     bool copy_value);
 
@@ -601,13 +601,13 @@ EcsEntity ecs_clone(
  */
 FLECS_EXPORT
 void ecs_delete(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity);
 
 /** Add a type to an entity */
 FLECS_EXPORT
 EcsResult _ecs_add(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity,
     EcsType component);
 
@@ -618,7 +618,7 @@ EcsResult _ecs_add(
 /** Remove a type from an entity */
 FLECS_EXPORT
 EcsResult _ecs_remove(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity,
     EcsType type);
 
@@ -629,14 +629,14 @@ EcsResult _ecs_remove(
 /** Adopt a child entity by a parent */
 FLECS_EXPORT
 EcsResult ecs_adopt(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity parent,
     EcsEntity child);
 
 /** Orphan a child by a parent */
 FLECS_EXPORT
 EcsResult ecs_orphan(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity parent,
     EcsEntity child);
 
@@ -662,7 +662,7 @@ EcsResult ecs_orphan(
  */
 FLECS_EXPORT
 void* _ecs_get_ptr(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity,
     EcsType type);
 
@@ -699,7 +699,7 @@ void* _ecs_get_ptr(
  */
 FLECS_EXPORT
 EcsEntity _ecs_set_ptr(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity,
     EcsType type,
     size_t size,
@@ -707,7 +707,7 @@ EcsEntity _ecs_set_ptr(
 
 FLECS_EXPORT
 EcsEntity _ecs_set_singleton_ptr(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsType type,
     size_t size,
     void *ptr);
@@ -740,7 +740,7 @@ EcsEntity _ecs_set_singleton_ptr(
  */
 FLECS_EXPORT
 bool _ecs_has(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity,
     EcsType type);
 
@@ -763,7 +763,7 @@ bool _ecs_has(
  */
 FLECS_EXPORT
 bool _ecs_has_any(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity,
     EcsType type);
 
@@ -773,7 +773,7 @@ bool _ecs_has_any(
 /** Check if parent entity contains child entity */
 FLECS_EXPORT
 bool ecs_contains(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity parent,
     EcsEntity child);
 
@@ -789,19 +789,19 @@ bool ecs_contains(
  */
 FLECS_EXPORT
 bool ecs_empty(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity);
 
 /** Get type of entity */
 FLECS_EXPORT
 EcsType ecs_typeid(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity);
 
 /** Get component from entity */
 FLECS_EXPORT
 EcsEntity ecs_get_component(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity,
     uint32_t index);
 
@@ -821,7 +821,7 @@ EcsEntity ecs_get_component(
  */
 FLECS_EXPORT
 const char* ecs_id(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity);
 
 /** Lookup an entity by id.
@@ -836,7 +836,7 @@ const char* ecs_id(
  */
 FLECS_EXPORT
 EcsEntity ecs_lookup(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id);
 
 
@@ -867,7 +867,7 @@ EcsEntity ecs_lookup(
  */
 FLECS_EXPORT
 EcsEntity ecs_new_component(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id,
     size_t size);
 
@@ -893,7 +893,7 @@ EcsEntity ecs_new_component(
  */
 FLECS_EXPORT
 EcsType ecs_new_type(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id,
     const char *components);
 
@@ -935,7 +935,7 @@ EcsType ecs_new_type(
  */
 FLECS_EXPORT
 EcsEntity ecs_new_prefab(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id,
     const char *sig);
 
@@ -962,7 +962,7 @@ EcsEntity ecs_new_prefab(
  */
 FLECS_EXPORT
 EcsType ecs_type_from_entity(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity);
 
 
@@ -971,14 +971,14 @@ EcsType ecs_type_from_entity(
  * that contain exactly one entity. */
 FLECS_EXPORT
 EcsEntity ecs_entity_from_type(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsType entity);
 
 
 /** Merge two types. */
 FLECS_EXPORT
 EcsType _ecs_merge_type(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsType type,
     EcsType type_add,
     EcsType type_remove);
@@ -1023,7 +1023,7 @@ EcsType _ecs_merge_type(
  */
 FLECS_EXPORT
 EcsEntity ecs_new_system(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id,
     EcsSystemKind kind,
     const char *sig,
@@ -1045,7 +1045,7 @@ EcsEntity ecs_new_system(
  */
 FLECS_EXPORT
 void ecs_enable(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     bool enabled);
 
@@ -1072,7 +1072,7 @@ void ecs_enable(
  */
 FLECS_EXPORT
 void ecs_set_period(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     float period);
 
@@ -1088,7 +1088,7 @@ void ecs_set_period(
  */
 FLECS_EXPORT
 bool ecs_is_enabled(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system);
 
 /** Run a specific system manually.
@@ -1112,10 +1112,10 @@ bool ecs_is_enabled(
  *
  * An application may pass custom data to a system through the param parameter.
  * This data can be accessed by the system through the param member in the
- * EcsRows value that is passed to the system callback.
+ * ecs_rows_t value that is passed to the system callback.
  *
  * Any system may interrupt execution by setting the interrupted_by member in
- * the EcsRows value. This is particularly useful for on demand systems, where
+ * the ecs_rows_t value. This is particularly useful for on demand systems, where
  * the value of interrupted_by is returned by this operation. This, in
  * cominbation with the param argument lets applications use on demand systems
  * to lookup entities: once the entity has been found its handle is passed to
@@ -1130,7 +1130,7 @@ bool ecs_is_enabled(
  */
 FLECS_EXPORT
 EcsEntity ecs_run(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     float delta_time,
     void *param);
@@ -1138,7 +1138,7 @@ EcsEntity ecs_run(
 /** Run system with offset/limit and type filter */
 FLECS_EXPORT
 EcsEntity _ecs_run_w_filter(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     float delta_time,
     uint32_t offset,
@@ -1152,7 +1152,7 @@ EcsEntity _ecs_run_w_filter(
 /* Obtain a column from inside a system */
 FLECS_EXPORT
 void* _ecs_column(
-    EcsRows *rows,
+    ecs_rows_t *rows,
     uint32_t index,
     bool test);
 
@@ -1165,7 +1165,7 @@ void* _ecs_column(
 /* Obtain a reference to a shared component */
 FLECS_EXPORT
 void* _ecs_shared(
-    EcsRows *rows,
+    ecs_rows_t *rows,
     uint32_t index,
     bool test);
 
@@ -1192,7 +1192,7 @@ void* _ecs_shared(
  */
 FLECS_EXPORT
 void *_ecs_field(
-    EcsRows *rows, 
+    ecs_rows_t *rows, 
     uint32_t index, 
     uint32_t column,
     bool test);
@@ -1223,7 +1223,7 @@ void *_ecs_field(
  */
 FLECS_EXPORT
 EcsEntity _ecs_column_source(
-    EcsRows *rows,
+    ecs_rows_t *rows,
     uint32_t column,
     bool test);
 
@@ -1235,7 +1235,7 @@ EcsEntity _ecs_column_source(
 
 /** Obtain the component for a column inside a system.
  * This operation obtains the component handle for a column in the system. This
- * function wraps around the 'components' array in the EcsRows type.
+ * function wraps around the 'components' array in the ecs_rows_t type.
  * 
  * Note that since component identifiers are obtained from the same pool as
  * regular entities, the return type of this function is EcsEntity.
@@ -1253,7 +1253,7 @@ EcsEntity _ecs_column_source(
  */
 FLECS_EXPORT
 EcsEntity _ecs_column_component(
-    EcsRows *rows,
+    ecs_rows_t *rows,
     uint32_t column,
     bool test);
 
@@ -1286,7 +1286,7 @@ EcsEntity _ecs_column_component(
  */ 
 FLECS_EXPORT
 EcsType _ecs_column_type(
-    EcsRows *rows,
+    ecs_rows_t *rows,
     uint32_t column,
     bool test);
 

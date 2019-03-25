@@ -14,7 +14,7 @@ const EcsArrayParams job_arr_params = {
 static
 void* ecs_worker(void *arg) {
     EcsThread *thread = arg;
-    EcsWorld *world = thread->world;
+    ecs_world_t *world = thread->world;
     int i;
 
     pthread_mutex_lock(&world->thread_mutex);
@@ -32,7 +32,7 @@ void* ecs_worker(void *arg) {
 
         for (i = 0; i < job_count; i ++) {
             ecs_run_w_filter(
-                (EcsWorld*)thread, /* magic */
+                (ecs_world_t*)thread, /* magic */
                 jobs[i]->system, 
                 world->delta_time, 
                 jobs[i]->offset, 
@@ -60,7 +60,7 @@ void* ecs_worker(void *arg) {
 /** Wait until threads have started (busy loop) */
 static
 void wait_for_threads(
-    EcsWorld *world)
+    ecs_world_t *world)
 {
     uint32_t thread_count = ecs_array_count(world->worker_threads) - 1;
     bool wait = true;
@@ -77,7 +77,7 @@ void wait_for_threads(
 /** Wait until threads have finished processing their jobs */
 static
 void wait_for_jobs(
-    EcsWorld *world)
+    ecs_world_t *world)
 {
     uint32_t thread_count = ecs_array_count(world->worker_threads) - 1;
 
@@ -93,7 +93,7 @@ void wait_for_jobs(
 /** Stop worker threads */
 static
 void ecs_stop_threads(
-    EcsWorld *world)
+    ecs_world_t *world)
 {
     pthread_mutex_lock(&world->thread_mutex);
     world->quit_workers = true;
@@ -118,7 +118,7 @@ void ecs_stop_threads(
 /** Start worker threads, wait until they are running */
 static
 EcsResult start_threads(
-    EcsWorld *world,
+    ecs_world_t *world,
     uint32_t threads)
 {
     if (world->worker_threads) {
@@ -178,7 +178,7 @@ void create_jobs(
 
 /** Create a job per available thread for system */
 void ecs_schedule_jobs(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system)
 {
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
@@ -236,7 +236,7 @@ void ecs_schedule_jobs(
 
 /** Assign jobs to worker threads, signal workers */
 void ecs_prepare_jobs(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system)
 {
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
@@ -255,7 +255,7 @@ void ecs_prepare_jobs(
 }
 
 void ecs_run_jobs(
-    EcsWorld *world)
+    ecs_world_t *world)
 {
     /* Make sure threads are ready to accept jobs */
     wait_for_threads(world);
@@ -285,7 +285,7 @@ void ecs_run_jobs(
 /* -- Public functions -- */
 
 EcsResult ecs_set_threads(
-    EcsWorld *world,
+    ecs_world_t *world,
     uint32_t threads)
 {
     if (!world->arg_threads) {

@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void Has_zero() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -12,7 +12,7 @@ void Has_zero() {
 }
 
 void Has_zero_from_nonzero() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -25,7 +25,7 @@ void Has_zero_from_nonzero() {
 }
 
 void Has_1_of_0() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -38,7 +38,7 @@ void Has_1_of_0() {
 }
 
 void Has_2_of_0() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -54,7 +54,7 @@ void Has_2_of_0() {
 
 
 void Has_1_of_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -67,7 +67,7 @@ void Has_1_of_1() {
 }
 
 void Has_1_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -83,7 +83,7 @@ void Has_1_of_2() {
 }
 
 void Has_2_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -98,7 +98,7 @@ void Has_2_of_2() {
 }
 
 void Has_3_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -115,7 +115,7 @@ void Has_3_of_2() {
 }
 
 void Has_2_of_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -130,7 +130,7 @@ void Has_2_of_1() {
 }
 
 void Has_1_of_empty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -143,7 +143,7 @@ void Has_1_of_empty() {
 }
 
 void Has_any_of_1_of_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -156,7 +156,7 @@ void Has_any_of_1_of_1() {
 }
 
 void Has_any_of_1_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -171,7 +171,7 @@ void Has_any_of_1_of_2() {
 }
 
 void Has_any_of_2_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -188,7 +188,7 @@ void Has_any_of_2_of_3() {
 }
 
 void Has_any_of_3_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -205,7 +205,7 @@ void Has_any_of_3_of_2() {
 }
 
 void Has_any_of_2_of_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -221,7 +221,7 @@ void Has_any_of_2_of_1() {
 }
 
 void Has_any_of_1_of_0() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -234,7 +234,7 @@ void Has_any_of_1_of_0() {
 }
 
 void Has_any_2_of_2_disjunct() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -251,7 +251,7 @@ void Has_any_2_of_2_disjunct() {
     ecs_fini(world);
 }
 
-void TestHas(EcsRows *rows) {
+void TestHas(ecs_rows_t *rows) {
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     EcsType TPosition = ecs_column_type(rows, 1);
 
@@ -262,7 +262,7 @@ void TestHas(EcsRows *rows) {
 }
 
 void Has_has_in_progress() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, TestHas, EcsOnFrame, Position);

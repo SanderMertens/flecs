@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 static
-void Iter(EcsRows *rows) {
+void Iter(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
 
     ProbeSystem(rows);
@@ -14,7 +14,7 @@ void Iter(EcsRows *rows) {
 }
 
 void System_w_FromId_2_column_1_from_id() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -42,7 +42,7 @@ void System_w_FromId_2_column_1_from_id() {
 }
 
 void System_w_FromId_3_column_2_from_id() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -73,7 +73,7 @@ void System_w_FromId_3_column_2_from_id() {
 }
 
 static
-void CheckColumnType(EcsRows *rows) {
+void CheckColumnType(ecs_rows_t *rows) {
     EcsType TPosition = ecs_column_type(rows, 2);
     test_assert(TPosition == ecs_column_type(rows, 1));
 
@@ -81,7 +81,7 @@ void CheckColumnType(EcsRows *rows) {
 }
 
 void System_w_FromId_column_type() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

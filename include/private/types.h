@@ -60,7 +60,7 @@ typedef enum EcsSystemExprOperKind {
 
 /** Callback used by the system signature expression parser */
 typedef EcsResult (*ecs_parse_action)(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
     const char *component,
@@ -155,10 +155,10 @@ typedef struct EcsColSystem {
  * operation has been invoked. The system kind determines on what kind of
  * operation the row system is invoked. Example operations are ecs_add,
  * ecs_remove and ecs_set. */
-typedef struct EcsRowSystem {
+typedef struct ecs_rows_tystem {
     EcsSystem base;
     EcsArray *components;       /* Components in order of signature */
-} EcsRowSystem;
+} ecs_rows_tystem;
 
 
 /* -- Private types -- */
@@ -234,15 +234,15 @@ typedef struct EcsJob {
 
 /** A type desribing a worker thread. When a system is invoked by a worker
  * thread, it receives a pointer to an EcsThread instead of a pointer to an 
- * EcsWorld (provided by the EcsRows type). When this EcsThread is passed down
+ * ecs_world_t (provided by the ecs_rows_t type). When this EcsThread is passed down
  * into the flecs API, the API functions are able to tell whether this is an
- * EcsThread or an EcsWorld by looking at the 'magic' number. This allows the
+ * EcsThread or an ecs_world_t by looking at the 'magic' number. This allows the
  * API to transparently resolve the stage to which updates should be written,
  * without requiring different API calls when working in multi threaded mode. */
 typedef struct EcsThread {
     uint32_t magic;               /* Magic number to verify thread pointer */
     uint32_t job_count;           /* Number of jobs scheduled for thread */
-    EcsWorld *world;              /* Reference to world */
+    ecs_world_t *world;              /* Reference to world */
     EcsJob *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
     EcsStage *stage;              /* Stage for thread */
     pthread_t thread;             /* Thread handle */
@@ -250,7 +250,7 @@ typedef struct EcsThread {
 
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
-struct EcsWorld {
+struct ecs_world_t {
     uint32_t magic;               /* Magic number to verify world pointer */
     float delta_time;           /* Time passed to or computed by ecs_progress */
     void *context;                /* Application context */

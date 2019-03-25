@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void Add_zero() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -13,7 +13,7 @@ void Add_zero() {
 }
 
 void Add_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -27,7 +27,7 @@ void Add_component() {
 }
 
 void Add_component_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -44,7 +44,7 @@ void Add_component_again() {
 }
 
 void Add_2_components() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -64,7 +64,7 @@ void Add_2_components() {
 }
 
 void Add_2_components_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -86,7 +86,7 @@ void Add_2_components_again() {
 }
 
 void Add_2_components_overlap() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -111,7 +111,7 @@ void Add_2_components_overlap() {
 }
 
 void Add_type() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Position);
@@ -126,7 +126,7 @@ void Add_type() {
 }
 
 void Add_type_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -143,7 +143,7 @@ void Add_type_of_2() {
 }
 
 void Add_type_w_type() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type_1, Position);
@@ -159,7 +159,7 @@ void Add_type_w_type() {
 }
 
 void Add_type_w_2_types() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -178,7 +178,7 @@ void Add_type_w_2_types() {
 }
 
 void Add_type_mixed() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -196,7 +196,7 @@ void Add_type_mixed() {
 }
 
 void Add_type_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type_1, Position);
@@ -214,7 +214,7 @@ void Add_type_again() {
 }
 
 void Add_type_overlap() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -239,7 +239,7 @@ void Add_type_overlap() {
 }
 
 void Add_type_again_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Position);
@@ -257,7 +257,7 @@ void Add_type_again_component() {
 }
 
 void Add_type_overlap_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -277,7 +277,7 @@ void Add_type_overlap_component() {
 }
 
 void Add_component_to_nonempty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -294,7 +294,7 @@ void Add_component_to_nonempty() {
 }
 
 void Add_component_to_nonempty_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -309,7 +309,7 @@ void Add_component_to_nonempty_again() {
 }
 
 void Add_component_to_nonempty_overlap() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -328,7 +328,7 @@ void Add_component_to_nonempty_overlap() {
 }
 
 void Add_type_to_nonempty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -346,7 +346,7 @@ void Add_type_to_nonempty() {
 }
 
 void Add_type_to_nonempty_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -365,7 +365,7 @@ void Add_type_to_nonempty_again() {
 }
 
 void Add_type_to_nonempty_overlap() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -388,7 +388,7 @@ void Add_type_to_nonempty_overlap() {
 }
 
 void Add_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
 
@@ -402,7 +402,7 @@ void Add_tag() {
 }
 
 void Add_type_w_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
     ECS_TYPE(world, Type, Tag);
@@ -418,7 +418,7 @@ void Add_type_w_tag() {
 }
 
 void Add_type_w_2_tags() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag_1);
     ECS_TAG(world, Tag_2);
@@ -436,7 +436,7 @@ void Add_type_w_2_tags() {
 }
 
 void Add_type_w_tag_mixed() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag_1);
     ECS_TAG(world, Tag_2);

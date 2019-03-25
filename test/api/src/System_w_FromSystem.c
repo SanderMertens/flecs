@@ -1,6 +1,6 @@
 #include <include/api.h>
 
-void InitVelocity(EcsRows *rows) {
+void InitVelocity(ecs_rows_t *rows) {
     Velocity *v = ecs_column(rows, Velocity, 1);
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -9,7 +9,7 @@ void InitVelocity(EcsRows *rows) {
     }
 }
 
-void InitMass(EcsRows *rows) {
+void InitMass(ecs_rows_t *rows) {
     Mass *m = ecs_column(rows, Mass, 1);
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -17,7 +17,7 @@ void InitMass(EcsRows *rows) {
     }
 }
 
-void Iter(EcsRows *rows) {
+void Iter(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_shared(rows, Velocity, 2);
     Mass *m = ecs_shared_test(rows, Mass, 3);
@@ -37,7 +37,7 @@ void Iter(EcsRows *rows) {
 }
 
 void System_w_FromSystem_2_column_1_from_system() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -84,7 +84,7 @@ void System_w_FromSystem_2_column_1_from_system() {
 }
 
 void System_w_FromSystem_3_column_2_from_system() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -139,7 +139,7 @@ void System_w_FromSystem_3_column_2_from_system() {
     ecs_fini(world);
 }
 
-void Iter_reactive(EcsRows *rows) {
+void Iter_reactive(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_shared(rows, Velocity, 2);
     Mass *m = ecs_shared_test(rows, Mass, 3);
@@ -159,7 +159,7 @@ void Iter_reactive(EcsRows *rows) {
 }
 
 void System_w_FromSystem_2_column_1_from_system_on_add() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -199,7 +199,7 @@ void System_w_FromSystem_2_column_1_from_system_on_add() {
 }
 
 void System_w_FromSystem_2_column_1_from_system_on_remove() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -237,7 +237,7 @@ void System_w_FromSystem_2_column_1_from_system_on_remove() {
 }
 
 void System_w_FromSystem_2_column_1_from_system_on_set() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -276,14 +276,14 @@ void System_w_FromSystem_2_column_1_from_system_on_set() {
     ecs_fini(world);
 }
 
-void Dummy_1(EcsRows *rows) { }
-void Dummy_2(EcsRows *rows) { }
-void Dummy_3(EcsRows *rows) { }
-void Dummy_4(EcsRows *rows) { }
-void Dummy_5(EcsRows *rows) { }
+void Dummy_1(ecs_rows_t *rows) { }
+void Dummy_2(ecs_rows_t *rows) { }
+void Dummy_3(ecs_rows_t *rows) { }
+void Dummy_4(ecs_rows_t *rows) { }
+void Dummy_5(ecs_rows_t *rows) { }
 
 void System_w_FromSystem_auto_add_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 

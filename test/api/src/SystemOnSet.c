@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 static
-void OnSet(EcsRows *rows) {
+void OnSet(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column_test(rows, Velocity, 2);
 
@@ -19,7 +19,7 @@ void OnSet(EcsRows *rows) {
 }
 
 void SystemOnSet_set() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -50,7 +50,7 @@ void SystemOnSet_set() {
 }
 
 void SystemOnSet_set_new() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -78,7 +78,7 @@ void SystemOnSet_set_new() {
 }
 
 void SystemOnSet_set_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -116,7 +116,7 @@ void SystemOnSet_set_again() {
 }
 
 void SystemOnSet_clone() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -152,7 +152,7 @@ void SystemOnSet_clone() {
 }
 
 void SystemOnSet_clone_w_value() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -201,7 +201,7 @@ void SystemOnSet_clone_w_value() {
 }
 
 void SystemOnSet_set_w_optional() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -270,7 +270,7 @@ static bool add_called;
 static bool set_called;
 
 static
-void OnAdd_check_order(EcsRows *rows) {
+void OnAdd_check_order(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
 
     test_assert(!add_called);
@@ -288,7 +288,7 @@ void OnAdd_check_order(EcsRows *rows) {
 }
 
 static
-void OnSet_check_order(EcsRows *rows) {
+void OnSet_check_order(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
 
     ProbeSystem(rows);
@@ -305,7 +305,7 @@ void OnSet_check_order(EcsRows *rows) {
 }
 
 void SystemOnSet_set_and_add_system() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 

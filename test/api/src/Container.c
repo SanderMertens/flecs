@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void Container_child() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent = ecs_new(world, 0);
     EcsEntity child = ecs_new_child(world, parent, NULL, 0);
@@ -13,7 +13,7 @@ void Container_child() {
 }
 
 void Container_child_w_id() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent = ecs_new(world, 0);
     EcsEntity child = ecs_new_child(world, parent, "foo", 0);
@@ -26,7 +26,7 @@ void Container_child_w_id() {
 }
 
 void Container_child_w_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -42,7 +42,7 @@ void Container_child_w_component() {
 }
 
 void Container_child_w_type() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Position);
@@ -60,7 +60,7 @@ void Container_child_w_type() {
 }
 
 void Container_contains_w_empty_parent() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent = ecs_new(world, 0);
     EcsEntity child = ecs_new(world, 0);
@@ -72,7 +72,7 @@ void Container_contains_w_empty_parent() {
 }
 
 void Container_contains_w_child_as_parent() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity child = ecs_new(world, 0);
 
@@ -83,7 +83,7 @@ void Container_contains_w_child_as_parent() {
 }
 
 void Container_contains_w_0_as_child() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent = ecs_new(world, 0);
 
@@ -94,7 +94,7 @@ void Container_contains_w_0_as_child() {
 }
 
 void Container_contains_w_0_as_parent() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity child = ecs_new(world, 0);
 
@@ -105,7 +105,7 @@ void Container_contains_w_0_as_parent() {
 }
 
 void Container_contains_w_0_for_both() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     test_assert( !ecs_contains(world, 0, 0));
 
@@ -113,7 +113,7 @@ void Container_contains_w_0_for_both() {
 }
 
 void Container_adopt() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent = ecs_new(world, 0);
     EcsEntity child = ecs_new(world, 0);
@@ -127,7 +127,7 @@ void Container_adopt() {
 }
 
 void Container_adopt_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent = ecs_new(world, 0);
     EcsEntity child = ecs_new(world, 0);
@@ -144,7 +144,7 @@ void Container_adopt_again() {
 }
 
 void Container_adopt_twice() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent_1 = ecs_new(world, 0);
     EcsEntity child = ecs_new(world, 0);
@@ -164,7 +164,7 @@ void Container_adopt_twice() {
 }
 
 void Container_orphan_empty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent = ecs_new(world, 0);
     EcsEntity child = ecs_new(world, 0);
@@ -177,7 +177,7 @@ void Container_orphan_empty() {
 }
 
 void Container_orphan() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent = ecs_new(world, 0);
     EcsEntity child = ecs_new_child(world, parent, NULL, 0);
@@ -193,7 +193,7 @@ void Container_orphan() {
 }
 
 void Container_orphan_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent = ecs_new(world, 0);
     EcsEntity child = ecs_new_child(world, parent, NULL, 0);
@@ -213,7 +213,7 @@ void Container_orphan_again() {
 }
 
 void Container_orphan_twice() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent_1 = ecs_new(world, 0);
     EcsEntity parent_2 = ecs_new(world, 0);
@@ -244,7 +244,7 @@ void Container_orphan_twice() {
 }
 
 void Container_adopt_orphan() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent_1 = ecs_new(world, 0);
     EcsEntity parent_2 = ecs_new(world, 0);
@@ -272,7 +272,7 @@ void Container_adopt_orphan() {
 }
 
 void Container_adopt_2_orphan_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent_1 = ecs_new(world, 0);
     EcsEntity parent_2 = ecs_new(world, 0);
@@ -295,7 +295,7 @@ void Container_adopt_2_orphan_1() {
 }
 
 void Container_get_ptr_container() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity parent = ecs_new(world, 0);
     EcsEntity child = ecs_new_child(world, parent, NULL, 0);

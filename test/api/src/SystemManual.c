@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 static
-void Iter(EcsRows *rows) {
+void Iter(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column_test(rows, Velocity, 2);
     Mass *m = ecs_column_test(rows, Mass, 3);
@@ -25,7 +25,7 @@ void Iter(EcsRows *rows) {
 }
 
 void SystemManual_1_type_1_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, Iter, EcsManual, Position);

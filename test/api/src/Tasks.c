@@ -1,6 +1,6 @@
 #include <include/api.h>
 
-void Task(EcsRows *rows) {
+void Task(ecs_rows_t *rows) {
     Position *p = ecs_shared_test(rows, Position, 1);
     
     ProbeSystem(rows);
@@ -15,7 +15,7 @@ void Task(EcsRows *rows) {
 }
 
 void Tasks_no_components() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, Task, EcsOnFrame, 0);
 
@@ -32,7 +32,7 @@ void Tasks_no_components() {
 }
 
 void Tasks_one_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, Task, EcsOnFrame, SYSTEM.EcsHidden);
 
@@ -50,7 +50,7 @@ void Tasks_one_tag() {
 }
 
 void Tasks_from_system() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -70,7 +70,7 @@ void Tasks_from_system() {
 }
 
 void Tasks_on_remove_no_components() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, Task, EcsOnRemove, 0);
 
@@ -90,7 +90,7 @@ void Tasks_on_remove_no_components() {
 }
 
 void Tasks_on_remove_one_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, Task, EcsOnRemove, SYSTEM.EcsHidden);
 
@@ -111,7 +111,7 @@ void Tasks_on_remove_one_tag() {
 }
 
 void Tasks_on_remove_from_system() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 

@@ -1,6 +1,6 @@
 #include <include/api.h>
 
-void Deinit(EcsRows *rows) {
+void Deinit(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column_test(rows, Velocity, 2);
 
@@ -20,7 +20,7 @@ void Deinit(EcsRows *rows) {
 }
 
 void SystemOnRemove_remove_match_1_of_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, Deinit, EcsOnRemove, Position);
@@ -47,7 +47,7 @@ void SystemOnRemove_remove_match_1_of_1() {
 }
 
 void SystemOnRemove_remove_match_1_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -76,7 +76,7 @@ void SystemOnRemove_remove_match_1_of_2() {
 }
 
 void SystemOnRemove_remove_match_2_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -107,7 +107,7 @@ void SystemOnRemove_remove_match_2_of_2() {
 }
 
 void SystemOnRemove_remove_match_2_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -139,7 +139,7 @@ void SystemOnRemove_remove_match_2_of_3() {
 }
 
 void SystemOnRemove_remove_no_match_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -161,7 +161,7 @@ void SystemOnRemove_remove_no_match_1() {
 }
 
 void SystemOnRemove_remove_no_match_2_of_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -184,7 +184,7 @@ void SystemOnRemove_remove_no_match_2_of_1() {
 }
 
 void SystemOnRemove_remove_no_match_2_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -209,7 +209,7 @@ void SystemOnRemove_remove_no_match_2_of_3() {
 }
 
 void SystemOnRemove_delete_match_1_of_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, Deinit, EcsOnRemove, Position);
@@ -236,7 +236,7 @@ void SystemOnRemove_delete_match_1_of_1() {
 }
 
 void SystemOnRemove_delete_match_1_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -265,7 +265,7 @@ void SystemOnRemove_delete_match_1_of_2() {
 }
 
 void SystemOnRemove_delete_match_2_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -296,7 +296,7 @@ void SystemOnRemove_delete_match_2_of_2() {
 }
 
 void SystemOnRemove_delete_match_2_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -328,7 +328,7 @@ void SystemOnRemove_delete_match_2_of_3() {
 }
 
 void SystemOnRemove_delete_no_match_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -350,7 +350,7 @@ void SystemOnRemove_delete_no_match_1() {
 }
 
 void SystemOnRemove_delete_no_match_2_of_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -372,7 +372,7 @@ void SystemOnRemove_delete_no_match_2_of_1() {
 }
 
 void SystemOnRemove_delete_no_match_2_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

@@ -9,7 +9,7 @@
 
 /* Merge entity with stage */
 void ecs_merge_entity(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsEntity entity,
     EcsRow *staged_row);
@@ -17,7 +17,7 @@ void ecs_merge_entity(
 
 /* Notify row system of entity (identified by row_index) */
 bool ecs_notify(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsMap *systems,
     EcsType type_id,
@@ -30,23 +30,23 @@ bool ecs_notify(
 
 /* Get (or create) table from type */
 EcsTable* ecs_world_get_table(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType type_id);
 
 /* Activate system (move from inactive array to on_frame array or vice versa) */
 void ecs_world_activate_system(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     EcsSystemKind kind,
     bool active);
 
 /* Get current thread-specific stage */
 EcsStage *ecs_get_stage(
-    EcsWorld **world_ptr);
+    ecs_world_t **world_ptr);
 
 void* get_ptr(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsEntity entity,
     EcsEntity component,
@@ -58,31 +58,31 @@ void* get_ptr(
 
 /* Initialize stage data structures */
 void ecs_stage_init(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage);
 
 /* Deinitialize stage */
 void ecs_stage_deinit(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage);
 
 /* Merge stage with main stage */
 void ecs_stage_merge(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage);
 
 /* -- Type utility API -- */
 
 /* Get type from entity handle (component, type, prefab) */
 EcsType ecs_type_from_handle(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsEntity entity,
     EcsEntityInfo *info);
 
 /* Merge add/remove families */
 EcsType ecs_type_merge(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType cur_id,
     EcsType to_add_id,
@@ -90,7 +90,7 @@ EcsType ecs_type_merge(
 
 /* Merge add/remove families using arrays */
 EcsType ecs_type_merge_arr(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsArray *arr_cur,
     EcsArray *to_add,
@@ -98,7 +98,7 @@ EcsType ecs_type_merge_arr(
 
 /* Test if type_id_1 contains type_id_2 */
 EcsEntity ecs_type_contains(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType type_id_1,
     EcsType type_id_2,
@@ -107,7 +107,7 @@ EcsEntity ecs_type_contains(
 
 /* Test if type contains component */
 bool ecs_type_contains_component(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType type,
     EcsEntity component,
@@ -116,27 +116,27 @@ bool ecs_type_contains_component(
 /* Register new type from either a single component, an array of component
  * handles, or a combination */
 EcsType ecs_type_register(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsEntity to_add,
     EcsArray *set);
 
 /* Add component to type */
 EcsType ecs_type_add(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType type,
     EcsEntity component);
 
 /* Get array with component handles from type */
 EcsArray* ecs_type_get(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType type_id);
 
 /* Convert type to string */
 char* ecs_type_tostr(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsType type_id);
 
@@ -149,38 +149,38 @@ int16_t ecs_type_index_of(
 
 /* Initialize table */
 EcsResult ecs_table_init(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsTable *table);
 
 /* Allocate a set of columns for a type */
 EcsTableColumn *ecs_table_get_columns(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsArray *type);
 
 /* Initialize table with component size (used during bootstrap) */
 EcsResult ecs_table_init_w_size(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     EcsArray *type,
     uint32_t size);
 
 void ecs_table_register_system(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     EcsEntity system);    
 
 /* Insert row into table (or stage) */
 uint32_t ecs_table_insert(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     EcsTableColumn *columns,
     EcsEntity entity);
 
 /* Insert multiple rows into table (or stage) */
 uint32_t ecs_table_grow(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     EcsTableColumn *columns,
     uint32_t count,
@@ -205,7 +205,7 @@ uint32_t ecs_table_rows_dimensioned(
 
 /* Delete row from table */
 void ecs_table_delete(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     uint32_t index);
 
@@ -222,25 +222,25 @@ bool ecs_table_has_components(
 
 /* Deinitialize table. This invokes all matching on_remove systems */
 void ecs_table_deinit(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table);
 
 /* Free table */
 void ecs_table_free(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table);
 
 /* -- System API -- */
 
 /* Compute the AND type from the system columns */
 void ecs_system_compute_and_families(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     EcsSystem *system_data);
 
 /* Create new table system */
 EcsEntity ecs_new_col_system(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id,
     EcsSystemKind kind,
     const char *sig,
@@ -248,33 +248,33 @@ EcsEntity ecs_new_col_system(
 
 /* Notify column system of a new table, which initiates system-table matching */
 void ecs_col_system_notify_of_table(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     EcsTable *table);
 
 /* Notify row system of a new type, which initiates system-type matching */
 void ecs_row_system_notify_of_type(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsEntity system,
     EcsType type);
 
 /* Activate table for system (happens if table goes from empty to not empty) */
 void ecs_system_activate_table(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     EcsTable *table,
     bool active);
 
 /* Run a task (periodic system that is not matched against any tables) */
 void ecs_run_task(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     float delta_time);
 
 /* Invoke row system */
 bool ecs_notify_row_system(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsStage *stage,
     EcsEntity system,
     EcsArray *type,
@@ -284,7 +284,7 @@ bool ecs_notify_row_system(
 
 /* Callback for parse_component_expr that stores result as EcsSystemColumn's */
 EcsResult ecs_parse_component_action(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
     const char *component_id,
@@ -295,17 +295,17 @@ EcsResult ecs_parse_component_action(
 
 /* Compute schedule based on current number of entities matching system */
 void ecs_schedule_jobs(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system);
 
 /* Prepare jobs */
 void ecs_prepare_jobs(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system);
 
 /* Run jobs */
 void ecs_run_jobs(
-    EcsWorld *world);
+    ecs_world_t *world);
 
 /* -- Private utilities -- */
 
@@ -326,14 +326,14 @@ uint64_t ecs_from_row(
 
 /* Utility that parses system signature */
 EcsResult ecs_parse_component_expr(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *sig,
     ecs_parse_action action,
     void *ctx);
 
 /* Test whether signature has columns that must be retrieved from a table */
 bool ecs_needs_tables(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *signature);
 
 /* Count number of columns signature */

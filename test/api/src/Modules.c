@@ -12,7 +12,7 @@ typedef struct SimpleModuleHandles {
     ECS_IMPORT_COMPONENT(handles, Velocity);
 
 void SimpleModule(
-    EcsWorld *world, 
+    ecs_world_t *world, 
     int flags, 
     void *handles)
 {
@@ -28,7 +28,7 @@ void SimpleModule(
 /* -- End module code -- */
 
 void Modules_simple_module() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule, 0);
 
@@ -43,7 +43,7 @@ void Modules_simple_module() {
 }
 
 static
-void AddVtoP(EcsRows *rows) {
+void AddVtoP(ecs_rows_t *rows) {
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);    
     
     ECS_IMPORT_COLUMN(rows, SimpleModule, 2);
@@ -55,7 +55,7 @@ void AddVtoP(EcsRows *rows) {
 }
 
 void Modules_import_module_from_system() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule, 0);
     ECS_SYSTEM(world, AddVtoP, EcsOnFrame, Position, $SimpleModule);
@@ -75,7 +75,7 @@ void Modules_import_module_from_system() {
 }
 
 void Modules_import_from_on_add_system() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule, 0);
     ECS_SYSTEM(world, AddVtoP, EcsOnAdd, Position, $SimpleModule);
@@ -92,7 +92,7 @@ void Modules_import_from_on_add_system() {
 }
 
 void Modules_import_from_on_set_system() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule, 0);
     ECS_SYSTEM(world, AddVtoP, EcsOnSet, Position, $SimpleModule);

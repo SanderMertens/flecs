@@ -69,7 +69,7 @@ char* parse_complex_elem(
 
 static
 EcsResult has_tables(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
     const char *component_id,
@@ -88,7 +88,7 @@ EcsResult has_tables(
 
 /* Does expression require that a system matches with tables */
 bool ecs_needs_tables(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *signature)
 {
     bool needs_matching = false;
@@ -112,7 +112,7 @@ uint32_t ecs_columns_count(
 
 /** Parse component expression */
 EcsResult ecs_parse_component_expr(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *sig,
     ecs_parse_action action,
     void *ctx)

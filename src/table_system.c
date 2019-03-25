@@ -9,7 +9,7 @@ const EcsArrayParams column_arr_params = {
 
 static
 EcsEntity components_contains(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsType table_type,
     EcsType type,
     EcsEntity *entity_out,
@@ -44,7 +44,7 @@ EcsEntity components_contains(
 
 static
 bool components_contains_component(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsType table_type,
     EcsEntity component,
     EcsEntity *entity_out)
@@ -82,7 +82,7 @@ bool components_contains_component(
 /* Get ref array for system table */
 static
 EcsSystemRef* get_ref_data(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsColSystem *system_data,
     int32_t *table_data)
 {
@@ -107,7 +107,7 @@ EcsSystemRef* get_ref_data(
 /* Get actual entity on which specified component is stored */
 static
 EcsEntity get_entity_for_component(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity entity,
     EcsType type_id,
     EcsEntity component)
@@ -144,7 +144,7 @@ EcsEntity get_entity_for_component(
 /** Add table to system, compute offsets for system components in table rows */
 static
 void add_table(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     EcsColSystem *system_data,
     EcsTable *table)
@@ -327,7 +327,7 @@ void add_table(
 /* Match table with system */
 static
 bool match_table(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsTable *table,
     EcsEntity system,
     EcsColSystem *system_data)
@@ -406,7 +406,7 @@ bool match_table(
 /** Match existing tables against system (table is created before system) */
 static
 void match_tables(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     EcsColSystem *system_data)
 {
@@ -425,7 +425,7 @@ void match_tables(
 
 /** Match new table against system (table is created after system) */
 void ecs_col_system_notify_of_table(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     EcsTable *table)
 {
@@ -440,7 +440,7 @@ void ecs_col_system_notify_of_table(
 /** Table activation happens when a table was or becomes empty. Deactivated
  * tables are not considered by the system in the main loop. */
 void ecs_system_activate_table(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     EcsTable *table,
     bool active)
@@ -498,7 +498,7 @@ void ecs_system_activate_table(
 /* -- Private API -- */
 
 EcsEntity ecs_new_col_system(
-    EcsWorld *world,
+    ecs_world_t *world,
     const char *id,
     EcsSystemKind kind,
     const char *sig,
@@ -602,7 +602,7 @@ bool should_run(
 }
 
 EcsEntity _ecs_run_w_filter(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     float delta_time,
     uint32_t offset,
@@ -610,7 +610,7 @@ EcsEntity _ecs_run_w_filter(
     EcsType filter,
     void *param)
 {
-    EcsWorld *real_world = world;
+    ecs_world_t *real_world = world;
 
     if (world->magic == ECS_THREAD_MAGIC) {
         real_world = ((EcsThread*)world)->world; /* dispel the magic */
@@ -659,7 +659,7 @@ EcsEntity _ecs_run_w_filter(
     bool limit_set = limit != 0;
     void *ref_ptrs[column_count]; /* Use worst-case size for references */
 
-    EcsRows info = {
+    ecs_rows_t info = {
         .world = world,
         .system = system,
         .param = param,
@@ -766,7 +766,7 @@ EcsEntity _ecs_run_w_filter(
 }
 
 EcsEntity ecs_run(
-    EcsWorld *world,
+    ecs_world_t *world,
     EcsEntity system,
     float delta_time,
     void *param)

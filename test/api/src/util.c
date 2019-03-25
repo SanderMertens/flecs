@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void ProbeSystem(
-    EcsRows *rows) 
+    ecs_rows_t *rows) 
 {
     SysTestData *ctx = ecs_get_context(rows->world);
     if (!ctx) {

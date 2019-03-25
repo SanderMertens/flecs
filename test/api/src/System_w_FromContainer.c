@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 static
-void Iter(EcsRows *rows) {
+void Iter(ecs_rows_t *rows) {
     Mass *m_ptr = ecs_shared_test(rows, Mass, 1);
     Position *p = ecs_column(rows, Position, 2);
     Velocity *v = ecs_column_test(rows, Velocity, 3);
@@ -26,7 +26,7 @@ void Iter(EcsRows *rows) {
 }
 
 void System_w_FromContainer_1_column_from_container() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
@@ -82,7 +82,7 @@ void System_w_FromContainer_1_column_from_container() {
 }
 
 void System_w_FromContainer_2_column_1_from_container() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -155,7 +155,7 @@ void System_w_FromContainer_2_column_1_from_container() {
 }
 
 static
-void Iter_2_shared(EcsRows *rows) {
+void Iter_2_shared(ecs_rows_t *rows) {
     Mass *m_ptr = ecs_shared_test(rows, Mass, 1);
     Rotation *r_ptr = ecs_shared_test(rows, Rotation, 2);
     Position *p = ecs_column_test(rows, Position, 3);
@@ -188,7 +188,7 @@ void Iter_2_shared(EcsRows *rows) {
 }
 
 void System_w_FromContainer_3_column_2_from_container() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Rotation);
@@ -248,7 +248,7 @@ void System_w_FromContainer_3_column_2_from_container() {
 }
 
 void System_w_FromContainer_3_column_2_from_different_container() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Rotation);
@@ -319,7 +319,7 @@ void System_w_FromContainer_3_column_2_from_different_container() {
 }
 
 void System_w_FromContainer_2_column_1_from_container_w_not() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Rotation);
@@ -389,7 +389,7 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
 }
 
 void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Rotation);
@@ -455,7 +455,7 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
 }
 
 void System_w_FromContainer_2_column_1_from_container_w_or() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void New_empty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -11,7 +11,7 @@ void New_empty() {
 }
 
 void New_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -23,7 +23,7 @@ void New_component() {
 }
 
 void New_type() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Position);
@@ -36,7 +36,7 @@ void New_type() {
 }
 
 void New_type_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -50,7 +50,7 @@ void New_type_of_2() {
 }
 
 void New_type_w_type() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type_1, Position);
@@ -64,7 +64,7 @@ void New_type_w_type() {
 }
 
 void New_type_w_2_types() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -82,7 +82,7 @@ void New_type_w_2_types() {
 }
 
 void New_type_mixed() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -99,7 +99,7 @@ void New_type_mixed() {
 }
 
 void New_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
 
@@ -111,7 +111,7 @@ void New_tag() {
 }
 
 void New_type_w_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
 
@@ -125,7 +125,7 @@ void New_type_w_tag() {
 }
 
 void New_type_w_2_tags() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag_1);
     ECS_TAG(world, Tag_2);
@@ -141,7 +141,7 @@ void New_type_w_2_tags() {
 }
 
 void New_type_w_tag_mixed() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
     ECS_COMPONENT(world, Position);

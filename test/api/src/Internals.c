@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 static
-void Iter(EcsRows *rows) {
+void Iter(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column(rows, Velocity, 2);
     Mass *m = ecs_column(rows, Mass, 3);
@@ -25,7 +25,7 @@ void Iter(EcsRows *rows) {
 }
 
 void Internals_deactivate_table() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -45,7 +45,7 @@ void Internals_deactivate_table() {
 }
 
 void Internals_activate_table() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -61,7 +61,7 @@ void Internals_activate_table() {
 }
 
 void Internals_activate_deactivate_table() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -82,7 +82,7 @@ void Internals_activate_deactivate_table() {
 }
 
 void Internals_activate_deactivate_reactive() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -107,7 +107,7 @@ void Internals_activate_deactivate_reactive() {
 }
 
 void Internals_activate_deactivate_activate_other() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

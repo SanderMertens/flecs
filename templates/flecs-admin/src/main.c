@@ -1,7 +1,7 @@
 #include <include/${id base}.h>
 
 int main(int argc, char *argv[]) {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     /* Import admin and civetweb systems. The admin systems are implemented on
      * top of EcsComponentsHttp, which only defines HTTP components. To

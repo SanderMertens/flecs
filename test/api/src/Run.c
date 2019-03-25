@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 static
-void Iter(EcsRows *rows) {
+void Iter(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column_test(rows, Velocity, 2);
     Mass *m = ecs_column_test(rows, Mass, 3);
@@ -32,7 +32,7 @@ void Iter(EcsRows *rows) {
 }
 
 void Run_run() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -92,7 +92,7 @@ void Run_run() {
 }
 
 void Run_run_w_param() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -128,7 +128,7 @@ void Run_run_w_param() {
 }
 
 void Run_run_w_offset() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -186,7 +186,7 @@ void Run_run_w_offset() {
 }
 
 void Run_run_w_offset_skip_1_archetype() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -243,7 +243,7 @@ void Run_run_w_offset_skip_1_archetype() {
 }
 
 void Run_run_w_offset_skip_1_archetype_plus_one() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -299,7 +299,7 @@ void Run_run_w_offset_skip_1_archetype_plus_one() {
 }
 
 void Run_run_w_offset_skip_2_archetypes() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -349,7 +349,7 @@ void Run_run_w_offset_skip_2_archetypes() {
 }
 
 void Run_run_w_limit_skip_1_archetype() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -408,7 +408,7 @@ void Run_run_w_limit_skip_1_archetype() {
 }
 
 void Run_run_w_limit_skip_1_archetype_minus_one() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -466,7 +466,7 @@ void Run_run_w_limit_skip_1_archetype_minus_one() {
 }
 
 void Run_run_w_limit_skip_2_archetypes() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -523,7 +523,7 @@ void Run_run_w_limit_skip_2_archetypes() {
 }
 
 void Run_run_w_offset_1_limit_max() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -582,7 +582,7 @@ void Run_run_w_offset_1_limit_max() {
 }
 
 void Run_run_w_offset_1_limit_minus_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -640,7 +640,7 @@ void Run_run_w_offset_1_limit_minus_1() {
 }
 
 void Run_run_w_offset_2_type_limit_max() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -697,7 +697,7 @@ void Run_run_w_offset_2_type_limit_max() {
 }
 
 void Run_run_w_offset_2_type_limit_minus_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -753,7 +753,7 @@ void Run_run_w_offset_2_type_limit_minus_1() {
 }
 
 void Run_run_w_limit_1_all_offsets() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -819,7 +819,7 @@ void Run_run_w_limit_1_all_offsets() {
 }
 
 void Run_run_w_offset_out_of_bounds() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -852,7 +852,7 @@ void Run_run_w_offset_out_of_bounds() {
 }
 
 void Run_run_w_limit_out_of_bounds() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -907,7 +907,7 @@ void Run_run_w_limit_out_of_bounds() {
 }
 
 void Run_run_w_component_filter() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -963,7 +963,7 @@ void Run_run_w_component_filter() {
 }
 
 void Run_run_w_type_filter_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1020,7 +1020,7 @@ void Run_run_w_type_filter_of_2() {
 }
 
 void Run_run_w_container_filter() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1087,7 +1087,7 @@ void Run_run_w_container_filter() {
 }
 
 void Run_run_no_match() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1117,7 +1117,7 @@ typedef struct Param {
 } Param;
 
 static
-void TestSubset(EcsRows *rows) {
+void TestSubset(ecs_rows_t *rows) {
     Param *param = rows->param;
 
     int i;
@@ -1128,7 +1128,7 @@ void TestSubset(EcsRows *rows) {
 }
 
 static
-void TestAll(EcsRows *rows) {
+void TestAll(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     EcsEntity TestSubset = ecs_column_component(rows, 2);
 
@@ -1141,7 +1141,7 @@ void TestAll(EcsRows *rows) {
 }
 
 void Run_run_comb_10_entities_1_type() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -1167,7 +1167,7 @@ void Run_run_comb_10_entities_1_type() {
 }
 
 void Run_run_comb_10_entities_2_types() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

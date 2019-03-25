@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 static
-void Add_to_current(EcsRows *rows) {
+void Add_to_current(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
     int i;
@@ -27,7 +27,7 @@ void Add_to_current(EcsRows *rows) {
 }
 
 void MultiThreadStaging_2_threads_add_to_current() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -63,7 +63,7 @@ void MultiThreadStaging_2_threads_add_to_current() {
 }
 
 void MultiThreadStaging_3_threads_add_to_current() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -99,7 +99,7 @@ void MultiThreadStaging_3_threads_add_to_current() {
 }
 
 void MultiThreadStaging_4_threads_add_to_current() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -135,7 +135,7 @@ void MultiThreadStaging_4_threads_add_to_current() {
 }
 
 void MultiThreadStaging_5_threads_add_to_current() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -171,7 +171,7 @@ void MultiThreadStaging_5_threads_add_to_current() {
 }
 
 void MultiThreadStaging_6_threads_add_to_current() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -207,7 +207,7 @@ void MultiThreadStaging_6_threads_add_to_current() {
 }
 
 static
-void Delete_above_1000(EcsRows *rows) {
+void Delete_above_1000(ecs_rows_t *rows) {
     int i;
     for (i = 0; i < rows->count; i ++) {
         if ((i + rows->frame_offset) > 1000) {
@@ -217,7 +217,7 @@ void Delete_above_1000(EcsRows *rows) {
 }
 
 static
-void Add_random(EcsRows *rows) {
+void Add_random(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
 
@@ -251,7 +251,7 @@ void Add_random(EcsRows *rows) {
 }
 
 void MultiThreadStaging_stress_create_delete_entity_random_components() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -279,7 +279,7 @@ void MultiThreadStaging_stress_create_delete_entity_random_components() {
 }
 
 static
-void Set_velocity_callback(EcsRows *rows) {
+void Set_velocity_callback(ecs_rows_t *rows) {
     Velocity *v = ecs_column(rows, Velocity, 1);
 
     int i;
@@ -290,7 +290,7 @@ void Set_velocity_callback(EcsRows *rows) {
 }
 
 static
-void Set_random(EcsRows *rows) {
+void Set_random(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
 
@@ -336,7 +336,7 @@ void Set_random(EcsRows *rows) {
 }
 
 void MultiThreadStaging_stress_set_entity_random_components() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

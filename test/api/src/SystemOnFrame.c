@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 static
-void Iter(EcsRows *rows) {
+void Iter(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column_test(rows, Velocity, 2);
     Mass *m = ecs_column_test(rows, Mass, 3);
@@ -25,7 +25,7 @@ void Iter(EcsRows *rows) {
 }
 
 void SystemOnFrame_1_type_1_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -71,7 +71,7 @@ void SystemOnFrame_1_type_1_component() {
 }
 
 void SystemOnFrame_1_type_3_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -152,7 +152,7 @@ void SystemOnFrame_1_type_3_component() {
 }
 
 void SystemOnFrame_3_type_1_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -204,7 +204,7 @@ void SystemOnFrame_3_type_1_component() {
 }
 
 void SystemOnFrame_2_type_3_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -292,7 +292,7 @@ void SystemOnFrame_2_type_3_component() {
 }
 
 void SystemOnFrame_1_type_1_component_1_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
     ECS_COMPONENT(world, Position);
@@ -341,7 +341,7 @@ void SystemOnFrame_1_type_1_component_1_tag() {
 }
 
 void SystemOnFrame_2_type_1_component_1_tag() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
     ECS_COMPONENT(world, Position);
@@ -385,7 +385,7 @@ void SystemOnFrame_2_type_1_component_1_tag() {
 
 
 void SystemOnFrame_2_type_1_and_1_not() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -428,7 +428,7 @@ void SystemOnFrame_2_type_1_and_1_not() {
 }
 
 void SystemOnFrame_2_type_2_and_1_not() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -484,7 +484,7 @@ void SystemOnFrame_2_type_2_and_1_not() {
 }
 
 void SystemOnFrame_2_type_2_and_2_not() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -535,7 +535,7 @@ typedef Position Position_1;
 typedef Position Position_2;
 
 void SystemOnFrame_4_type_1_and_1_or() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Position_1);
@@ -623,7 +623,7 @@ void SystemOnFrame_4_type_1_and_1_or() {
 }
 
 void SystemOnFrame_4_type_1_and_1_or_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Position_1);
@@ -712,7 +712,7 @@ void SystemOnFrame_4_type_1_and_1_or_of_3() {
 }
 
 void SystemOnFrame_1_type_1_and_1_or() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Position_1);
@@ -769,7 +769,7 @@ void SystemOnFrame_1_type_1_and_1_or() {
 }
 
 void SystemOnFrame_2_type_1_and_1_optional() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -832,7 +832,7 @@ void SystemOnFrame_2_type_1_and_1_optional() {
 }
 
 void SystemOnFrame_2_type_2_and_1_optional() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -909,7 +909,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
 }
 
 void SystemOnFrame_6_type_1_and_2_optional() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1005,7 +1005,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
     ecs_fini(world);
 }
 
-void Use_field(EcsRows *rows) {
+void Use_field(ecs_rows_t *rows) {
     int i;
     for (i = 0; i < rows->count; i ++) {
         Position *p = ecs_field(rows, Position, i, 1);
@@ -1017,7 +1017,7 @@ void Use_field(EcsRows *rows) {
 }
 
 void SystemOnFrame_use_fields_2_owned() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1042,7 +1042,7 @@ void SystemOnFrame_use_fields_2_owned() {
 }
 
 void SystemOnFrame_use_fields_1_owned_1_shared() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1065,11 +1065,11 @@ void SystemOnFrame_use_fields_1_owned_1_shared() {
     ecs_fini(world);
 }
 
-static void Dummy_1(EcsRows *rows) { ProbeSystem(rows); }
-static void Dummy_2(EcsRows *rows) { ProbeSystem(rows); }
+static void Dummy_1(ecs_rows_t *rows) { ProbeSystem(rows); }
+static void Dummy_2(ecs_rows_t *rows) { ProbeSystem(rows); }
 
 void SystemOnFrame_match_2_systems_w_populated_table() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -1095,7 +1095,7 @@ void SystemOnFrame_match_2_systems_w_populated_table() {
     ecs_fini(world);
 }
 
-void TestOptional_w_column(EcsRows *rows) {
+void TestOptional_w_column(ecs_rows_t *rows) {
     Position *p = ecs_column_test(rows, Position, 1);
     Velocity *v = ecs_column_test(rows, Velocity, 2);
 
@@ -1105,7 +1105,7 @@ void TestOptional_w_column(EcsRows *rows) {
     ProbeSystem(rows);
 }
 
-void TestOptional_w_shared(EcsRows *rows) {
+void TestOptional_w_shared(ecs_rows_t *rows) {
     Position *p = ecs_column_test(rows, Position, 1);
     Velocity *v = ecs_shared_test(rows, Velocity, 2);
 
@@ -1115,7 +1115,7 @@ void TestOptional_w_shared(EcsRows *rows) {
     ProbeSystem(rows);
 }
 
-void TestOptional_w_field(EcsRows *rows) {
+void TestOptional_w_field(ecs_rows_t *rows) {
     Position *p = ecs_column_test(rows, Position, 1);
 
     test_assert(p != NULL);
@@ -1129,7 +1129,7 @@ void TestOptional_w_field(EcsRows *rows) {
 }
 
 void SystemOnFrame_ensure_optional_is_null_column() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1157,7 +1157,7 @@ void SystemOnFrame_ensure_optional_is_null_column() {
 }
 
 void SystemOnFrame_ensure_optional_is_null_shared() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1185,7 +1185,7 @@ void SystemOnFrame_ensure_optional_is_null_shared() {
 }
 
 void SystemOnFrame_ensure_optional_is_null_field_owned() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1213,7 +1213,7 @@ void SystemOnFrame_ensure_optional_is_null_field_owned() {
 }
 
 void SystemOnFrame_ensure_optional_is_null_field_shared() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

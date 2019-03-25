@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void Remove_zero() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     EcsEntity e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -13,7 +13,7 @@ void Remove_zero() {
 }
 
 void Remove_zero_from_nonzero() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -27,7 +27,7 @@ void Remove_zero_from_nonzero() {
 }
 
 void Remove_1_of_1() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -41,7 +41,7 @@ void Remove_1_of_1() {
 }
 
 void Remove_1_of_1_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -58,7 +58,7 @@ void Remove_1_of_1_again() {
 }
 
 void Remove_1_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -75,7 +75,7 @@ void Remove_1_of_2() {
 }
 
 void Remove_2_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -96,7 +96,7 @@ void Remove_2_of_2() {
 }
 
 void Remove_2_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -120,7 +120,7 @@ void Remove_2_of_3() {
 }
 
 void Remove_2_again() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -143,7 +143,7 @@ void Remove_2_again() {
 }
 
 void Remove_2_overlap() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -163,7 +163,7 @@ void Remove_2_overlap() {
 }
 
 void Remove_type_of_1_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -181,7 +181,7 @@ void Remove_type_of_1_of_2() {
 }
 
 void Remove_type_of_2_of_2() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -198,7 +198,7 @@ void Remove_type_of_2_of_2() {
 }
 
 void Remove_type_of_2_of_3() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -218,7 +218,7 @@ void Remove_type_of_2_of_3() {
 }
 
 void Remove_1_from_empty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -232,7 +232,7 @@ void Remove_1_from_empty() {
 }
 
 void Remove_type_from_empty() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Position);
@@ -247,7 +247,7 @@ void Remove_type_from_empty() {
 }
 
 void Remove_not_added() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

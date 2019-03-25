@@ -1,7 +1,7 @@
 #include <include/api.h>
 
 void Prefab_new_w_prefab() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -69,7 +69,7 @@ void Prefab_new_w_prefab() {
 }
 
 void Prefab_new_w_count_prefab() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -97,7 +97,7 @@ void Prefab_new_w_count_prefab() {
 }
 
 void Prefab_new_w_type_w_prefab() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -143,7 +143,7 @@ void Prefab_new_w_type_w_prefab() {
 }
 
 void Prefab_add_prefab() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -193,7 +193,7 @@ void Prefab_add_prefab() {
 }
 
 void Prefab_add_type_w_prefab() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -243,7 +243,7 @@ void Prefab_add_type_w_prefab() {
 }
 
 void Prefab_remove_prefab_after_new() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_PREFAB(world, Prefab, Position);
@@ -273,7 +273,7 @@ void Prefab_remove_prefab_after_new() {
 }
 
 void Prefab_remove_prefab_after_add() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_PREFAB(world, Prefab, Position);
@@ -305,7 +305,7 @@ void Prefab_remove_prefab_after_add() {
 }
 
 void Prefab_override_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_PREFAB(world, Prefab, Position);
@@ -341,7 +341,7 @@ void Prefab_override_component() {
 }
 
 void Prefab_override_remove_component() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_PREFAB(world, Prefab, Position);
@@ -385,7 +385,7 @@ void Prefab_override_remove_component() {
 }
 
 void Prefab_override_2_of_3_components_1_self() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -459,7 +459,7 @@ void Prefab_override_2_of_3_components_1_self() {
 }
 
 void Prefab_new_type_w_1_override() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -507,7 +507,7 @@ void Prefab_new_type_w_1_override() {
 }
 
 void Prefab_new_type_w_2_overrides() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -555,7 +555,7 @@ void Prefab_new_type_w_2_overrides() {
 }
 
 void Prefab_add_type_w_1_overrides() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -605,7 +605,7 @@ void Prefab_add_type_w_1_overrides() {
 }
 
 void Prefab_add_type_w_2_overrides() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -655,7 +655,7 @@ void Prefab_add_type_w_2_overrides() {
 }
 
 void Prefab_get_ptr_prefab() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_PREFAB(world, Prefab, Position);
@@ -671,7 +671,7 @@ void Prefab_get_ptr_prefab() {
 }
 
 static
-void Prefab_w_field(EcsRows *rows) {
+void Prefab_w_field(ecs_rows_t *rows) {
     ProbeSystem(rows);
 
     for (int i = 0; i < rows->count; i ++) {
@@ -683,7 +683,7 @@ void Prefab_w_field(EcsRows *rows) {
 }
 
 void Prefab_iterate_w_prefab_field() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -723,7 +723,7 @@ void Prefab_iterate_w_prefab_field() {
 }
 
 static
-void Prefab_w_shared(EcsRows *rows) {
+void Prefab_w_shared(ecs_rows_t *rows) {
     Velocity *v = ecs_shared(rows, Velocity, 2);
     Mass *m = ecs_shared_test(rows, Mass, 3);
 
@@ -744,7 +744,7 @@ void Prefab_w_shared(EcsRows *rows) {
 }
 
 void Prefab_iterate_w_prefab_shared() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -784,7 +784,7 @@ void Prefab_iterate_w_prefab_shared() {
 }
 
 void Prefab_match_entity_prefab_w_system_optional() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -829,7 +829,7 @@ void Prefab_match_entity_prefab_w_system_optional() {
 }
 
 void Prefab_prefab_in_system_expr() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -886,12 +886,12 @@ void Prefab_prefab_in_system_expr() {
     ecs_fini(world);
 }
 
-void Dummy(EcsRows *rows) {
+void Dummy(ecs_rows_t *rows) {
     ProbeSystem(rows);
 }
 
 void Prefab_dont_match_prefab() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
@@ -910,7 +910,7 @@ void Prefab_dont_match_prefab() {
 }
 
 void Prefab_new_w_count_w_override() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -949,7 +949,7 @@ void Prefab_new_w_count_w_override() {
 }
 
 void Prefab_override_2_components_different_size() {
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
