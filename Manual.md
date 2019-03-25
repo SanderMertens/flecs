@@ -1,5 +1,18 @@
 # Flecs Manual
 
+## Contents
+
+- [Design goals](#design-goals)
+  - [Portability](#portability)
+  - [Reusability](#reusability)
+  - [Clean interfaces](#clean-interfaces)
+  - [Performance](#performance)
+- [API design](#api-design)
+  - [Naming conventions](#naming-conventions)
+  - [Error handling](#error-handling)
+  - [Memory management](#memory-management)
+- [Good practices](#good-practices)
+
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
 
@@ -17,7 +30,7 @@ Flecs aims to provide clear and simple interfaces, by staying close to the core 
 Many Entity Component System frameworks put restrictions on the operations that can be performed while iterating over data, which makes APIs harder to use. In Flecs, there are no restrictions on which operations can be used.
 
 ### Performance
-Flecs has a design that is optimized for minimizing cache misses by loading only data in cache that is required by the application, while also storing data in arrays to ensure that an application makes optimal usage of cache lines. In many cases, applications can access raw arrays directly, wich is as fast as iterating a native array in C and, if the code permits it, lets applications be compiled with Single Instruction, Multiple Data (SIMD) instructions.
+Flecs has a design that is optimized for minimizing cache misses by loading only data in cache that is required by the application, while also storing data in arrays (AoS) to ensure that an application makes optimal usage of cache lines. In many cases, applications can access raw arrays directly, wich is as fast as iterating a native array in C and, if the code permits it, lets applications be compiled with Single Instruction, Multiple Data (SIMD) instructions.
 
 Furthermore, Flecs automatically optimizes performance where it can, by removing systems from the critical path if they are unused. This further improves reusability of code, as it lets applications import modules of which only a subset of the systems is used, without increasing overhead of the framework.
 
@@ -166,7 +179,7 @@ If memory is tied to the lifecycle of a component, applications can use `OnAdd` 
 ```c
 typedef ecs_array_t *DynamicBuffer;
 
-EcsArrayParams params = {.element_size = sizeof(int)};
+ecs_array_params_t params = {.element_size = sizeof(int)};
 
 void InitDynamicBuffer(EcsRows *rows) {
     DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
@@ -199,4 +212,20 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+## Good Practices
+Flecs is an Entity Component System, and it is important to realize that ECS is probably quite different from how you are used to write code. Thus when you are just getting started with Flecs, you may run into some unforeseen problems, and you may wonder more than once how something is supposed to work. Additionally, Flecs also has its own set of rules and mechanisms that require getting used to. This section is not a comprehensive guide into writing code "the ECS way", but intends to provide a few helpful tips to guide you on the way.
 
+### Minimize the usage of ecs_get, ecs_set
+An ECS framework is only as efficient as the way it is used, and the most inefficient way of accomplishing something in an ECS framework is by extensively using `ecs_get` and `ecs_set`. This always requires the framework to do lookups in the set of components the entity has, which is quite slow. It also is an indication that code relies to much on individual entities, whereas in ECS it is more common practice to write code that operates on entity collections. The preferred way to do this in Flecs is with _systems_, which can access components directly, without requiring a lookup.
+
+### Write code in systems
+If you find yourself writing lots of code in the main loop of your application that is not executed in a system, it could be a sign of code smell. Logic in ECS runs best when it is part of a system. A system ensures that your code has a clear interface, which makes it easy to reuse the system in other applications. Flecs adds additional benefits to using systems like being able to automatically or manually (remotely!) enable/disable them, and schedule them to run on different threads.
+
+### Organize your code in modules
+For small applications it is fine to create a few systems in your main source file, but for larger projects you will want to organize your systems and components in modules. Flecs has a module system that lets you easily import systems and components that are defined in other files in your project, or even other libraries. Ideally, the main function of your application only consists of importing modules and the creation of entities.
+
+### Use types wherever possible
+The sooner you can let Flecs know what entities you will be setting on an entity, the better. Flecs can add/remove multiple components to/from your entity in a single `ecs_add` or `ecs_remove` call with types (see `ECS_TYPE`), and this is much more efficient than calling these operations for each individual component. It is even more efficient to specify a type with `ecs_new`, as Flecs can take advantage of the knowledge that the entity to which the component is going to be added is empty.
+
+### Create entities in bulk whenever possible
+It is much more efficient to create entities in bulk (using the `ecs_new_w_count` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
