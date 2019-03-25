@@ -18,6 +18,8 @@
   - [Organize code in modules](#organize-code-in-modules)
   - [Use types where possible](#use-types-where-possible)
   - [Create entities in bulk](#create-entities-in-bulk)
+  - [Limit usage of ecs_lookup](#limit-usage-of-ecs_lookup)
+  - [Use ecs_quit to signal that your application needs to exit](#use-ecs_quit-to-signal-that-your-application-needs-to-exit)
 
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
