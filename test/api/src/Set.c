@@ -5,7 +5,7 @@ void Set_set_empty() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -25,7 +25,7 @@ void Set_set_nonempty() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     ecs_set(world, e, Velocity, {10, 20});
@@ -45,7 +45,7 @@ void Set_set_non_empty_override() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -64,7 +64,7 @@ void Set_set_again() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -92,7 +92,7 @@ void Set_set_2() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -125,7 +125,7 @@ void Set_add_set() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -147,7 +147,7 @@ void Set_set_add() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -175,7 +175,7 @@ void Set_set_add_other() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -203,7 +203,7 @@ void Set_set_remove() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -229,7 +229,7 @@ void Set_set_remove_other() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    EcsEntity e = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new(world, Velocity);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -258,7 +258,7 @@ void Set_set_remove_twice() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -291,7 +291,7 @@ void Set_set_and_new() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Position));

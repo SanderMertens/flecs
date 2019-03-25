@@ -32,7 +32,7 @@ void Modules_simple_module() {
 
     ECS_IMPORT(world, SimpleModule, 0);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
     
@@ -44,7 +44,7 @@ void Modules_simple_module() {
 
 static
 void AddVtoP(ecs_rows_t *rows) {
-    EcsEntity *entities = ecs_column(rows, EcsEntity, 0);    
+    ecs_entity_t *entities = ecs_column(rows, ecs_entity_t, 0);    
     
     ECS_IMPORT_COLUMN(rows, SimpleModule, 2);
 
@@ -63,7 +63,7 @@ void Modules_import_module_from_system() {
     void *module_ptr = ecs_get_singleton_ptr(world, SimpleModule);
     test_assert(module_ptr != NULL);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
@@ -83,7 +83,7 @@ void Modules_import_from_on_add_system() {
     void *module_ptr = ecs_get_singleton_ptr(world, SimpleModule);
     test_assert(module_ptr != NULL);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
     test_assert( ecs_has(world, e, Velocity));
@@ -100,7 +100,7 @@ void Modules_import_from_on_set_system() {
     void *module_ptr = ecs_get_singleton_ptr(world, SimpleModule);
     test_assert(module_ptr != NULL);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
     test_assert( !ecs_has(world, e, Velocity));

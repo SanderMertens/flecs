@@ -28,7 +28,7 @@ void SystemOnRemove_remove_match_1_of_1() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -57,7 +57,7 @@ void SystemOnRemove_remove_match_1_of_2() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -86,7 +86,7 @@ void SystemOnRemove_remove_match_2_of_2() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -118,7 +118,7 @@ void SystemOnRemove_remove_match_2_of_3() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -148,7 +148,7 @@ void SystemOnRemove_remove_no_match_1() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -171,7 +171,7 @@ void SystemOnRemove_remove_no_match_2_of_1() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -196,7 +196,7 @@ void SystemOnRemove_remove_no_match_2_of_3() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -217,7 +217,7 @@ void SystemOnRemove_delete_match_1_of_1() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -246,7 +246,7 @@ void SystemOnRemove_delete_match_1_of_2() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -275,7 +275,7 @@ void SystemOnRemove_delete_match_2_of_2() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -307,7 +307,7 @@ void SystemOnRemove_delete_match_2_of_3() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -337,7 +337,7 @@ void SystemOnRemove_delete_no_match_1() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new(world, Velocity);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -359,7 +359,7 @@ void SystemOnRemove_delete_no_match_2_of_1() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new(world, Velocity);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -384,7 +384,7 @@ void SystemOnRemove_delete_no_match_2_of_3() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);

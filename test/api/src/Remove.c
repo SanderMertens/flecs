@@ -3,7 +3,7 @@
 void Remove_zero() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_remove(world, e, 0);
@@ -17,7 +17,7 @@ void Remove_zero_from_nonzero() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     ecs_remove(world, e, 0);
@@ -31,7 +31,7 @@ void Remove_1_of_1() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -45,7 +45,7 @@ void Remove_1_of_1_again() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -64,7 +64,7 @@ void Remove_1_of_2() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -81,7 +81,7 @@ void Remove_2_of_2() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -103,7 +103,7 @@ void Remove_2_of_3() {
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity, Mass);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -126,7 +126,7 @@ void Remove_2_again() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -150,7 +150,7 @@ void Remove_2_overlap() {
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity, Mass);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -170,7 +170,7 @@ void Remove_type_of_1_of_2() {
     ECS_TYPE(world, Type_1, Position, Velocity);
     ECS_TYPE(world, Type_2, Position);
 
-    EcsEntity e = ecs_new(world, Type_1);
+    ecs_entity_t e = ecs_new(world, Type_1);
     test_assert(e != 0);
 
     ecs_remove(world, e, Type_2);
@@ -187,7 +187,7 @@ void Remove_type_of_2_of_2() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     ecs_remove(world, e, Type);
@@ -206,7 +206,7 @@ void Remove_type_of_2_of_3() {
     ECS_TYPE(world, Type_1, Position, Velocity, Mass);
     ECS_TYPE(world, Type_2, Position, Velocity);
 
-    EcsEntity e = ecs_new(world, Type_1);
+    ecs_entity_t e = ecs_new(world, Type_1);
     test_assert(e != 0);
 
     ecs_remove(world, e, Type_2);
@@ -222,7 +222,7 @@ void Remove_1_from_empty() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -237,7 +237,7 @@ void Remove_type_from_empty() {
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_remove(world, e, Type);
@@ -252,7 +252,7 @@ void Remove_not_added() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     ecs_remove(world, e, Velocity);

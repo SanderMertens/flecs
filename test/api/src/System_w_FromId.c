@@ -24,7 +24,7 @@ void System_w_FromId_2_column_1_from_id() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
 
     ecs_progress(world, 1);
     
@@ -53,7 +53,7 @@ void System_w_FromId_3_column_2_from_id() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
 
     ecs_progress(world, 1);
     
@@ -74,7 +74,7 @@ void System_w_FromId_3_column_2_from_id() {
 
 static
 void CheckColumnType(ecs_rows_t *rows) {
-    EcsType TPosition = ecs_column_type(rows, 2);
+    ecs_type_t TPosition = ecs_column_type(rows, 2);
     test_assert(TPosition == ecs_column_type(rows, 1));
 
     ProbeSystem(rows);

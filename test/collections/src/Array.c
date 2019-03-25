@@ -19,12 +19,12 @@ int compare_int(
 }
 
 static
-EcsArrayParams arr_params = {
+ecs_array_params_t arr_params = {
     .element_size = sizeof(int)
 };
 
-EcsArray* fill_array(
-    EcsArray *array)
+ecs_array_t* fill_array(
+    ecs_array_t *array)
 {
     int *elem;
     int i;
@@ -37,13 +37,13 @@ EcsArray* fill_array(
 }
 
 void Array_free_empty() {
-    EcsArray *array = ecs_array_new(&arr_params, 0);
+    ecs_array_t *array = ecs_array_new(&arr_params, 0);
     test_assert(array != NULL);
     ecs_array_free(array);
 }
 
 void Array_count() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     test_int(ecs_array_size(array), 4);
     test_int(ecs_array_count(array), 4);
@@ -51,14 +51,14 @@ void Array_count() {
 }
 
 void Array_count_empty() {
-    EcsArray *array = ecs_array_new(&arr_params, 0);
+    ecs_array_t *array = ecs_array_new(&arr_params, 0);
     test_assert(array != NULL);
     test_int(ecs_array_count(array), 0);
     ecs_array_free(array);
 }
 
 void Array_get() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     int *elem = ecs_array_get(array, &arr_params, 1);
     test_assert(elem != NULL);
@@ -67,7 +67,7 @@ void Array_get() {
 }
 
 void Array_get_first() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     int *elem = ecs_array_get(array, &arr_params, 0);
     test_assert(elem != NULL);
@@ -76,7 +76,7 @@ void Array_get_first() {
 }
 
 void Array_get_last() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     int *elem = ecs_array_get(array, &arr_params, 3);
     test_assert(elem != NULL);
@@ -85,14 +85,14 @@ void Array_get_last() {
 }
 
 void Array_get_empty() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     int *elem = ecs_array_get(array, &arr_params, 1);
     test_assert(elem == NULL);
     ecs_array_free(array);
 }
 
 void Array_get_out_of_bound() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     int *elem = ecs_array_get(array, &arr_params, 4);
     test_assert(elem == NULL);
@@ -100,7 +100,7 @@ void Array_get_out_of_bound() {
 }
 
 void Array_add_empty() {
-    EcsArray *array = ecs_array_new(&arr_params, 0);
+    ecs_array_t *array = ecs_array_new(&arr_params, 0);
     test_int(ecs_array_count(array), 0);
     test_int(ecs_array_size(array), 0);
 
@@ -111,7 +111,7 @@ void Array_add_empty() {
 }
 
 void Array_add_resize() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     int *elem = ecs_array_add(&array, &arr_params);
     *elem = 4;
@@ -127,7 +127,7 @@ void Array_add_resize() {
 }
 
 void Array_iter() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     EcsIter it = ecs_array_iter(array, &arr_params);
     int count = 0;
@@ -142,14 +142,14 @@ void Array_iter() {
 }
 
 void Array_iter_empty() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     EcsIter it = ecs_array_iter(array, &arr_params);
     test_assert(!ecs_iter_hasnext(&it));
     ecs_array_free(array);
 }
 
 void Array_remove() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 1));
     test_int(ecs_array_size(array), 4);
@@ -162,7 +162,7 @@ void Array_remove() {
 }
 
 void Array_remove_first() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 0));
     test_int(ecs_array_count(array), 3);
@@ -171,7 +171,7 @@ void Array_remove_first() {
 }
 
 void Array_remove_last() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 3));
     test_int(ecs_array_count(array), 3);
@@ -179,14 +179,14 @@ void Array_remove_last() {
 }
 
 void Array_remove_empty() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 0));
     ecs_array_free(array);
     test_assert(true);
 }
 
 void Array_remove_all() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 0));
     test_int(ecs_array_size(array), 4);
@@ -205,7 +205,7 @@ void Array_remove_all() {
 }
 
 void Array_remove_out_of_bound() {
-    EcsArray *array = ecs_array_new(&arr_params, 4);
+    ecs_array_t *array = ecs_array_new(&arr_params, 4);
     array = fill_array(array);
     ecs_array_remove(array, &arr_params, ecs_array_get(array, &arr_params, 4));
     ecs_array_free(array);
@@ -214,7 +214,7 @@ void Array_remove_out_of_bound() {
 
 void Array_sort_rnd() {
     int nums[] = {23, 16, 21, 13, 30, 5, 28, 31, 8, 19, 29, 12, 24, 14, 15, 1, 26, 18, 9, 25, 22, 0, 10, 3, 2, 17, 27, 20, 6, 11, 4, 7};
-    EcsArray *array = ecs_array_new(&arr_params, 0);
+    ecs_array_t *array = ecs_array_new(&arr_params, 0);
 
     int i, count = sizeof(nums) / sizeof(int);
     for (i = 0; i < count; i ++) {
@@ -239,7 +239,7 @@ void Array_sort_rnd() {
 
 void Array_sort_sorted() {
     int nums[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
-    EcsArray *array = ecs_array_new(&arr_params, 0);
+    ecs_array_t *array = ecs_array_new(&arr_params, 0);
 
     int i, count = sizeof(nums) / sizeof(int);
     for (i = 0; i < count; i ++) {
@@ -263,7 +263,7 @@ void Array_sort_sorted() {
 }
 
 void Array_sort_empty() {
-    EcsArray *array = ecs_array_new(&arr_params, 0);
+    ecs_array_t *array = ecs_array_new(&arr_params, 0);
     ecs_array_sort(array, &arr_params, compare_int);
     test_assert(true);
     ecs_array_free(array);

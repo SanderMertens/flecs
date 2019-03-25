@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-typedef struct EcsMap EcsMap;
+typedef struct ecs_map_t ecs_map_t;
 
 typedef struct EcsMapIter {
     uint32_t bucket_index;
@@ -15,39 +15,39 @@ typedef struct EcsMapIter {
 } EcsMapIter;
 
 FLECS_EXPORT
-EcsMap* ecs_map_new(
+ecs_map_t* ecs_map_new(
     uint32_t size);
 
 FLECS_EXPORT
 void ecs_map_free(
-    EcsMap *map);
+    ecs_map_t *map);
 
 FLECS_EXPORT
 void ecs_map_memory(
-    EcsMap *map,
+    ecs_map_t *map,
     uint32_t *total,
     uint32_t *used);
 
 FLECS_EXPORT
 uint32_t ecs_map_count(
-    EcsMap *map);
+    ecs_map_t *map);
 
 FLECS_EXPORT
 uint32_t ecs_map_set_size(
-    EcsMap *map,
+    ecs_map_t *map,
     uint32_t size);
 
 FLECS_EXPORT
 uint32_t ecs_map_bucket_count(
-    EcsMap *map);
+    ecs_map_t *map);
 
 FLECS_EXPORT
 void ecs_map_clear(
-    EcsMap *map);
+    ecs_map_t *map);
 
 FLECS_EXPORT
 void ecs_map_set64(
-    EcsMap *map,
+    ecs_map_t *map,
     uint64_t key_hash,
     uint64_t data);
 
@@ -56,7 +56,7 @@ void ecs_map_set64(
 
 FLECS_EXPORT
 uint64_t ecs_map_get64(
-    EcsMap *map,
+    ecs_map_t *map,
     uint64_t key_hash);
 
 #define ecs_map_get(map, key_hash) \
@@ -64,18 +64,18 @@ uint64_t ecs_map_get64(
 
 FLECS_EXPORT
 bool ecs_map_has(
-    EcsMap *map,
+    ecs_map_t *map,
     uint64_t key_hash,
     uint64_t *value_out);
 
 FLECS_EXPORT
-EcsResult ecs_map_remove(
-    EcsMap *map,
+int ecs_map_remove(
+    ecs_map_t *map,
     uint64_t key_hash);
 
 FLECS_EXPORT
 EcsIter _ecs_map_iter(
-    EcsMap *map,
+    ecs_map_t *map,
     EcsMapIter *iter_data);
 
 #define ecs_map_iter(me)\

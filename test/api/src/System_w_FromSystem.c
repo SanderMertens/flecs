@@ -54,7 +54,7 @@ void System_w_FromSystem_2_column_1_from_system() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
 
     ecs_progress(world, 1);
     
@@ -108,7 +108,7 @@ void System_w_FromSystem_3_column_2_from_system() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
 
     ecs_progress(world, 1);
     
@@ -176,7 +176,7 @@ void System_w_FromSystem_2_column_1_from_system_on_add() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -216,7 +216,7 @@ void System_w_FromSystem_2_column_1_from_system_on_remove() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.count, 0);
 
     ecs_remove(world, e, Position);
@@ -254,7 +254,7 @@ void System_w_FromSystem_2_column_1_from_system_on_set() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);

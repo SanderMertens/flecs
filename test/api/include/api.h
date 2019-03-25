@@ -13,22 +13,22 @@ extern "C" {
 #define MAX_INVOCATIONS (1024)
 
 typedef struct SysTestData {
-    EcsEntity system;
+    ecs_entity_t system;
     uint32_t offset;
     uint32_t count;
     uint32_t invoked;
     uint32_t column_count;
-    EcsEntity e[MAX_ENTITIES];
-    EcsEntity c[MAX_INVOCATIONS][MAX_SYS_COLUMNS];
-    EcsEntity s[MAX_INVOCATIONS][MAX_SYS_COLUMNS];
+    ecs_entity_t e[MAX_ENTITIES];
+    ecs_entity_t c[MAX_INVOCATIONS][MAX_SYS_COLUMNS];
+    ecs_entity_t s[MAX_INVOCATIONS][MAX_SYS_COLUMNS];
     void *param;
 } SysTestData;
 
 typedef struct IterData {
-    EcsType component;
-    EcsType component_2;
-    EcsType component_3;
-    EcsEntity new_entities[MAX_ENTITIES];
+    ecs_type_t component;
+    ecs_type_t component_2;
+    ecs_type_t component_3;
+    ecs_entity_t new_entities[MAX_ENTITIES];
     uint32_t entity_count;
 } IterData;
 

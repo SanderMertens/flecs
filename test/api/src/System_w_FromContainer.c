@@ -38,7 +38,7 @@ void System_w_FromContainer_1_column_from_container() {
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, CONTAINER.Mass, Position);
 
-    EcsEntity parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
     ecs_adopt(world, parent, e_1);
     ecs_adopt(world, parent, e_2);
 
@@ -95,7 +95,7 @@ void System_w_FromContainer_2_column_1_from_container() {
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, CONTAINER.Mass, Position, Velocity);
 
-    EcsEntity parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
     ecs_adopt(world, parent, e_1);
     ecs_adopt(world, parent, e_2);
     ecs_adopt(world, parent, e_3);
@@ -201,7 +201,7 @@ void System_w_FromContainer_3_column_2_from_container() {
 
     ECS_SYSTEM(world, Iter_2_shared, EcsOnFrame, CONTAINER.Mass, CONTAINER.Rotation, Position);
 
-    EcsEntity parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
     ecs_set(world, parent, Rotation, {3});
 
     ecs_adopt(world, parent, e_1);
@@ -263,8 +263,8 @@ void System_w_FromContainer_3_column_2_from_different_container() {
 
     ECS_SYSTEM(world, Iter_2_shared, EcsOnFrame, CONTAINER.Mass, CONTAINER.Rotation, Position);
 
-    EcsEntity parent_1 = ecs_set(world, 0, Mass, {2});
-    EcsEntity parent_2 = ecs_set(world, 0, Rotation, {3});
+    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
 
     ecs_adopt(world, parent_1, e_1);
     ecs_adopt(world, parent_2, e_1);
@@ -333,8 +333,8 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, !CONTAINER.Mass, Position);
 
-    EcsEntity parent_1 = ecs_set(world, 0, Mass, {2});
-    EcsEntity parent_2 = ecs_set(world, 0, Rotation, {3});
+    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
 
     ecs_adopt(world, parent_2, e_1);
     ecs_adopt(world, parent_2, e_2);
@@ -404,9 +404,9 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
 
     ECS_SYSTEM(world, Iter_2_shared, EcsOnFrame, !CONTAINER.Mass, CONTAINER.Rotation, Position);
 
-    EcsEntity parent_1 = ecs_set(world, 0, Mass, {2});
-    EcsEntity parent_2 = ecs_set(world, 0, Rotation, {3});
-    EcsEntity parent_3 = ecs_set(world, 0, Mass, {4});
+    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
+    ecs_entity_t parent_3 = ecs_set(world, 0, Mass, {4});
     ecs_set(world, parent_3, Rotation, {5});
 
     ecs_adopt(world, parent_2, e_1);
@@ -471,11 +471,11 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
 
     ECS_SYSTEM(world, Iter, EcsOnFrame, CONTAINER.Mass | CONTAINER.Rotation, Position);
 
-    EcsEntity parent_1 = ecs_set(world, 0, Mass, {2});
-    EcsEntity parent_2 = ecs_set(world, 0, Rotation, {3});
-    EcsEntity parent_3 = ecs_set(world, 0, Rotation, {4});
+    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
+    ecs_entity_t parent_3 = ecs_set(world, 0, Rotation, {4});
         ecs_set(world, parent_3, Mass, {5});
-    EcsEntity parent_4 = ecs_set(world, 0, Velocity, {10, 20});
+    ecs_entity_t parent_4 = ecs_set(world, 0, Velocity, {10, 20});
 
     ecs_adopt(world, parent_1, e_1);
     ecs_adopt(world, parent_2, e_2);

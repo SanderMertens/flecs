@@ -190,7 +190,7 @@ ecs_world_t *world = ecs_init();
 An entity is an integer that uniquely identifies an "object" in a system. An entity may have `0..n` components, and each component can be added only once. Entities can be created in flecs with the `ecs_new` function:
 
 ```c
-EcsEntity e = ecs_new(world, 0);
+ecs_entity_t e = ecs_new(world, 0);
 ```
 
 ### Component
@@ -217,7 +217,7 @@ Additionally, the component can be added and initialized with the `ecs_set` func
 ecs_set(world, e, Point, {.x = 10, .y = 20});
 ```
 
-Flecs components are stored internally as entities, which is why handles to components are of the `EcsEntity` type.
+Flecs components are stored internally as entities, which is why handles to components are of the `ecs_entity_t` type.
 
 ### System
 A system is logic (a function) that is executed for every entity that has a set of components that match a system's interest. In flecs, systems specify their interest, and when they should run. To define a system, you can use the `ECS_SYSTEM` macro, which wraps around the `ecs_new_system` function:
@@ -253,7 +253,7 @@ ecs_set(world, e, EcsId, {"MyEntity"});
 After a string identifier is added, the entity can be looked up like this:
 
 ```c
-EcsEntity e = ecs_lookup(world, "MyEntity");
+ecs_entity_t e = ecs_lookup(world, "MyEntity");
 ```
 
 Additionally, applications can define entities with the `ECS_ENTITY` macro, which automatically adds `EcsId` and initializes it with the provided name:
@@ -324,15 +324,15 @@ ecs_add(world, e, MyTag_h);
 A container is an entity that can contain other entities. There are several methods to add a child entity to a container entity. The easiest way is with the `ecs_new_child` function:
 
 ```c
-EcsEntity parent = ecs_new(world, 0);
-EcsEntity child = ecs_new_child(world, parent, "MyChild", 0);
+ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t child = ecs_new_child(world, parent, "MyChild", 0);
 ```
 
 Alternatively, you can add an entity to a container entity after its creation using `ecs_adopt`:
 
 ```c
-EcsEntity parent = ecs_new(world, 0);
-EcsEntity child = ecs_new(world, 0);
+ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t child = ecs_new(world, 0);
 ecs_adopt(world, parent, child);
 ```
 
@@ -360,8 +360,8 @@ ECS_PREFAB(world, CirclePrefab, EcsCircle, EcsPosition2D);
 This defines a prefab with the `EcsCircle` and `EcsPosition2D` components. We can now add this prefab to regular entities:
 
 ```c
-EcsEntity e1 = ecs_new(world, CirclePrefab);
-EcsEntity e2 = ecs_new(world, CirclePrefab);
+ecs_entity_t e1 = ecs_new(world, CirclePrefab);
+ecs_entity_t e2 = ecs_new(world, CirclePrefab);
 ```
 
 This will make the `EcsCircle` and `EcsPosition2D` components available on entities `e1` and `e2`, similar to a family. In contrast to types, component values of `EcsCircle` and `EcsPosition2D` are now shared between entities, and stored only once in memory. Since a prefab can be used as a regular entity, we can change the value of a prefab component with the `ecs_set` function:

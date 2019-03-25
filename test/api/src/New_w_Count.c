@@ -3,7 +3,7 @@
 void New_w_Count_empty() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity e = ecs_new_w_count(world, 0, 1000, NULL);
+    ecs_entity_t e = ecs_new_w_count(world, 0, 1000, NULL);
     test_assert(e != 0);
 
     ecs_fini(world);
@@ -12,8 +12,8 @@ void New_w_Count_empty() {
 void New_w_Count_empty_w_handles() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, 0, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, 0, 1000, handles);
     test_assert(e != 0);
 
     int i;
@@ -29,8 +29,8 @@ void New_w_Count_nonempty_w_handles() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, Position, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, Position, 1000, handles);
     test_assert(e != 0);
 
     int i;
@@ -47,7 +47,7 @@ void New_w_Count_component() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new_w_count(world, Position, 1000, NULL);
+    ecs_entity_t e = ecs_new_w_count(world, Position, 1000, NULL);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -60,8 +60,8 @@ void New_w_Count_type() {
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, MyType, Position);
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, MyType, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, MyType, 1000, handles);
     test_assert(e != 0);
 
     int i;
@@ -80,8 +80,8 @@ void New_w_Count_type_of_2() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, MyType, Position, Velocity);
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, MyType, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, MyType, 1000, handles);
     test_assert(e != 0);
 
     int i;
@@ -101,8 +101,8 @@ void New_w_Count_type_w_type() {
     ECS_TYPE(world, Type_1, Position);
     ECS_TYPE(world, Type_2, Type_1);
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, Type_2, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, Type_2, 1000, handles);
     test_assert(e != 0);
 
     int i;
@@ -123,8 +123,8 @@ void New_w_Count_type_w_2_types() {
     ECS_TYPE(world, Type_2, Velocity);
     ECS_TYPE(world, Type_3, Type_1, Type_2);
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, Type_3, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, Type_3, 1000, handles);
     test_assert(e != 0);
 
     int i;
@@ -145,8 +145,8 @@ void New_w_Count_type_mixed() {
     ECS_TYPE(world, Type_1, Position);
     ECS_TYPE(world, Type_2, Type_1, Velocity);
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, Type_2, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, Type_2, 1000, handles);
     test_assert(e != 0);
 
     int i;
@@ -164,8 +164,8 @@ void New_w_Count_tag() {
 
     ECS_TAG(world, Tag);
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, Tag, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, Tag, 1000, handles);
     test_assert(e != 0);
 
     int i;
@@ -183,8 +183,8 @@ void New_w_Count_type_w_tag() {
     ECS_TAG(world, Tag);
     ECS_TYPE(world, Type, Tag);
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, Type, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, Type, 1000, handles);
     test_assert(e != 0);
 
     int i;
@@ -203,8 +203,8 @@ void New_w_Count_type_w_2_tags() {
     ECS_TAG(world, Tag_2);
     ECS_TYPE(world, Type, Tag_1, Tag_2);
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, Type, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, Type, 1000, handles);
     test_assert(e != 0);
 
     int i;
@@ -225,8 +225,8 @@ void New_w_Count_type_w_tag_mixed() {
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Tag_1, Tag_2, Position);
 
-    EcsEntity handles[1000];
-    EcsEntity e = ecs_new_w_count(world, Type, 1000, handles);
+    ecs_entity_t handles[1000];
+    ecs_entity_t e = ecs_new_w_count(world, Type, 1000, handles);
     test_assert(e != 0);
 
     int i;

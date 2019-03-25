@@ -28,7 +28,7 @@ void SystemOnSet_set() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.count, 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -59,7 +59,7 @@ void SystemOnSet_set_new() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -87,7 +87,7 @@ void SystemOnSet_set_again() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.count, 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -125,7 +125,7 @@ void SystemOnSet_clone() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e_1 = ecs_set(world, 0, Position, {10, 20});
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -161,7 +161,7 @@ void SystemOnSet_clone_w_value() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e_1 = ecs_set(world, 0, Position, {10, 20});
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -180,7 +180,7 @@ void SystemOnSet_clone_w_value() {
 
     ctx = (SysTestData){0};
 
-    EcsEntity e_2 = ecs_clone(world, e_1, true);
+    ecs_entity_t e_2 = ecs_clone(world, e_1, true);
 
     /* OnSet function should not have been called, because value has not been 
      * copied */
@@ -214,8 +214,8 @@ void SystemOnSet_set_w_optional() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e_1 = ecs_new(world, Position);
-    EcsEntity e_2 = ecs_new(world, Position);
+    ecs_entity_t e_1 = ecs_new(world, Position);
+    ecs_entity_t e_2 = ecs_new(world, Position);
     ecs_add(world, e_2, Velocity);
     test_int(ctx.count, 0);
 
@@ -315,7 +315,7 @@ void SystemOnSet_set_and_add_system() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.count, 0);
 
     ecs_set(world, e, Position, {10, 20});

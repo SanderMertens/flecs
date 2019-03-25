@@ -10,7 +10,7 @@ struct elem { int hash; char *value; } elems[] = {
 
 static
 void fill_map(
-    EcsMap *map)
+    ecs_map_t *map)
 {
     int i, count = sizeof(elems) / sizeof(struct elem);
 
@@ -20,20 +20,20 @@ void fill_map(
 }
 
 void Map_count() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     fill_map(map);
     test_int(ecs_map_count(map), 4);
     ecs_map_free(map);
 }
 
 void Map_count_empty() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     test_int(ecs_map_count(map), 0);
     ecs_map_free(map);
 }
 
 void Map_set_overwrite() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     fill_map(map);
     ecs_map_set(map, 1, "foobar");
     char *value = ecs_map_get(map, 1);
@@ -42,7 +42,7 @@ void Map_set_overwrite() {
 }
 
 void Map_set_rehash() {
-    EcsMap *map = ecs_map_new(8);
+    ecs_map_t *map = ecs_map_new(8);
     fill_map(map);
 
     test_int(ecs_map_bucket_count(map), 10);
@@ -65,14 +65,14 @@ void Map_set_rehash() {
 }
 
 void Map_set_zero_buckets() {
-    EcsMap *map = ecs_map_new(0);
+    ecs_map_t *map = ecs_map_new(0);
     ecs_map_set(map, 1, "hello");
     test_int(ecs_map_count(map), 1);
     ecs_map_free(map);
 }
 
 void Map_get() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     fill_map(map);
     char *value = ecs_map_get(map, 1);
     test_str(value, "hello");
@@ -80,7 +80,7 @@ void Map_get() {
 }
 
 void Map_get_all() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     fill_map(map);
 
     char *value = ecs_map_get(map, 1);
@@ -99,14 +99,14 @@ void Map_get_all() {
 }
 
 void Map_get_empty() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     char *value = ecs_map_get(map, 1);
     test_assert(value == NULL);
     ecs_map_free(map);
 }
 
 void Map_get_unknown() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     fill_map(map);
     char *value = ecs_map_get(map, 5);
     test_assert(value == NULL);
@@ -114,7 +114,7 @@ void Map_get_unknown() {
 }
 
 void Map_iter() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     fill_map(map);
 
     EcsIter it = ecs_map_iter(map);
@@ -134,39 +134,39 @@ void Map_iter() {
 }
 
 void Map_iter_empty() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     EcsIter it = ecs_map_iter(map);
     test_assert(!ecs_iter_hasnext(&it));
     ecs_map_free(map);
 }
 
 void Map_iter_zero_buckets() {
-    EcsMap *map = ecs_map_new(0);
+    ecs_map_t *map = ecs_map_new(0);
     EcsIter it = ecs_map_iter(map);
     test_assert(!ecs_iter_hasnext(&it));
     ecs_map_free(map);
 }
 
 void Map_remove() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     fill_map(map);
-    test_assert(ecs_map_remove(map, 3) == EcsOk);
+    test_assert(ecs_map_remove(map, 3) == 0);
     test_assert(ecs_map_get(map, 3) == NULL);
     test_int(ecs_map_count(map), 3);
     ecs_map_free(map);
 }
 
 void Map_remove_empty() {
-    EcsMap *map = ecs_map_new(16);
-    test_assert(ecs_map_remove(map, 3) == EcsError);
+    ecs_map_t *map = ecs_map_new(16);
+    test_assert(ecs_map_remove(map, 3) == -1);
     test_int(ecs_map_count(map), 0);
     ecs_map_free(map);
 }
 
 void Map_remove_unknown() {
-    EcsMap *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16);
     fill_map(map);
-    test_assert(ecs_map_remove(map, 5) == EcsError);
+    test_assert(ecs_map_remove(map, 5) == -1);
     test_str(ecs_map_get(map, 1), "hello");
     test_str(ecs_map_get(map, 2), "world");
     test_str(ecs_map_get(map, 3), "foo");

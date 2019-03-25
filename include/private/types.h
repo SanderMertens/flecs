@@ -30,8 +30,8 @@
 
 /** Metadata of an explicitly created type (identified by an entity id) */
 typedef struct EcsTypeComponent {
-    EcsType type;    /* Preserved nested families */
-    EcsType resolved;  /* Resolved nested families */
+    ecs_type_t type;    /* Preserved nested families */
+    ecs_type_t resolved;  /* Resolved nested families */
 } EcsTypeComponent;
 
 /** Metadata of a component */
@@ -59,7 +59,7 @@ typedef enum EcsSystemExprOperKind {
 } EcsSystemExprOperKind;
 
 /** Callback used by the system signature expression parser */
-typedef EcsResult (*ecs_parse_action)(
+typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
@@ -68,31 +68,31 @@ typedef EcsResult (*ecs_parse_action)(
     void *ctx);
 
 /** Type that describes a single column in the system signature */
-typedef struct EcsSystemColumn {
+typedef struct ecs_system_column_t {
     EcsSystemExprElemKind kind;       /* Element kind (Entity, Component) */
     EcsSystemExprOperKind oper_kind;  /* Operator kind (AND, OR, NOT) */
     union {
-        EcsType type;             /* Used for OR operator */
-        EcsEntity component;      /* Used for AND operator */
+        ecs_type_t type;             /* Used for OR operator */
+        ecs_entity_t component;      /* Used for AND operator */
     } is;
-    EcsEntity source;            /* Source entity (used with FromEntity) */
-} EcsSystemColumn;
+    ecs_entity_t source;            /* Source entity (used with FromEntity) */
+} ecs_system_column_t;
 
 /** Type that stores a reference to components of external entities (prefabs) */
-typedef struct EcsSystemRef {
-    EcsEntity entity;
-    EcsEntity component;
-} EcsSystemRef;
+typedef struct ecs_system_ref_t {
+    ecs_entity_t entity;
+    ecs_entity_t component;
+} ecs_system_ref_t;
 
 /** Base type for a system */
 typedef struct EcsSystem {
-    EcsSystemAction action;    /* Callback to be invoked for matching rows */
+    ecs_system_action_t action;    /* Callback to be invoked for matching rows */
     const char *signature;     /* Signature with which system was created */
-    EcsArray *columns;         /* Column components */
-    EcsType not_from_entity;   /* Exclude components from entity */
-    EcsType not_from_component; /* Exclude components from components */
-    EcsType and_from_entity;   /* Which components are required from entity */
-    EcsType and_from_system;   /* Used to auto-add components to system */
+    ecs_array_t *columns;         /* Column components */
+    ecs_type_t not_from_entity;   /* Exclude components from entity */
+    ecs_type_t not_from_component; /* Exclude components from components */
+    ecs_type_t and_from_entity;   /* Which components are required from entity */
+    ecs_type_t and_from_system;   /* Used to auto-add components to system */
     EcsSystemKind kind;        /* Kind of system */
     float time_spent;          /* Time spent on running system */
     bool enabled;              /* Is system enabled or not */
@@ -138,15 +138,15 @@ typedef struct EcsSystem {
  */
 typedef struct EcsColSystem {
     EcsSystem base;
-    EcsEntity entity;          /* Entity id of system, used for ordering */
-    EcsArray *components;      /* Computed component list per matched table */
-    EcsArray *inactive_tables; /* Inactive tables */
-    EcsArray *jobs;            /* Jobs for this system */
-    EcsArray *tables;          /* Table index + refs index + column offsets */
-    EcsArray *refs;            /* Columns that point to other entities */
-    EcsArrayParams table_params; /* Parameters for tables array */
-    EcsArrayParams component_params; /* Parameters for components array */
-    EcsArrayParams ref_params; /* Parameters for tables array */
+    ecs_entity_t entity;          /* Entity id of system, used for ordering */
+    ecs_array_t *components;      /* Computed component list per matched table */
+    ecs_array_t *inactive_tables; /* Inactive tables */
+    ecs_array_t *jobs;            /* Jobs for this system */
+    ecs_array_t *tables;          /* Table index + refs index + column offsets */
+    ecs_array_t *refs;            /* Columns that point to other entities */
+    ecs_array_params_t table_params; /* Parameters for tables array */
+    ecs_array_params_t component_params; /* Parameters for components array */
+    ecs_array_params_t ref_params; /* Parameters for tables array */
     float period;              /* Minimum period inbetween system invocations */
     float time_passed;         /* Time passed since last invocation */
 } EcsColSystem;
@@ -155,98 +155,98 @@ typedef struct EcsColSystem {
  * operation has been invoked. The system kind determines on what kind of
  * operation the row system is invoked. Example operations are ecs_add,
  * ecs_remove and ecs_set. */
-typedef struct ecs_rows_tystem {
+typedef struct EcsRowSystem {
     EcsSystem base;
-    EcsArray *components;       /* Components in order of signature */
-} ecs_rows_tystem;
+    ecs_array_t *components;       /* Components in order of signature */
+} EcsRowSystem;
 
 
 /* -- Private types -- */
 
 /** A table column describes a single column in a table (archetype) */
-typedef struct EcsTableColumn {
-    EcsArray *data;               /* Column data */
+typedef struct ecs_table_column_t {
+    ecs_array_t *data;               /* Column data */
     uint16_t size;                /* Column size (saves component lookups) */
-} EcsTableColumn;
+} ecs_table_column_t;
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
-typedef struct EcsTable {
-    EcsArray *type;               /* Reference to type_index entry */
-    EcsTableColumn *columns;      /* Columns storing components of array */
-    EcsArray *frame_systems;      /* Frame systems matched with table */
-    EcsType type_id;              /* Identifies table type in type_index */
- } EcsTable;
+typedef struct ecs_table_t {
+    ecs_array_t *type;               /* Reference to type_index entry */
+    ecs_table_column_t *columns;      /* Columns storing components of array */
+    ecs_array_t *frame_systems;      /* Frame systems matched with table */
+    ecs_type_t type_id;              /* Identifies table type in type_index */
+ } ecs_table_t;
  
-/** The EcsRow struct is a 64-bit value that describes in which table
+/** The ecs_row_t struct is a 64-bit value that describes in which table
  * (identified by a type_id) is stored, at which index. Entries in the 
- * world::entity_index are of type EcsRow. */
-typedef struct EcsRow {
-    EcsType type_id;              /* Identifies a type (and table) in world */
+ * world::entity_index are of type ecs_row_t. */
+typedef struct ecs_row_t {
+    ecs_type_t type_id;              /* Identifies a type (and table) in world */
     uint32_t index;               /* Index of the entity in its table */
-} EcsRow;
+} ecs_row_t;
 
 /** Supporting type that internal functions pass around to ensure that data
  * related to an entity is only looked up once. */
-typedef struct EcsEntityInfo {
-    EcsEntity entity;
-    EcsType type_id;
+typedef struct ecs_entity_info_t {
+    ecs_entity_t entity;
+    ecs_type_t type_id;
     uint32_t index;
-    EcsTable *table;
-    EcsTableColumn *columns;
-} EcsEntityInfo;
+    ecs_table_t *table;
+    ecs_table_column_t *columns;
+} ecs_entity_info_t;
 
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
  * to arbitrarily add/remove/set components and create/delete entities while
  * iterating. Additionally, worker threads have their own stage that lets them
  * mutate the state of entities without requiring locks. */
-typedef struct EcsStage {
+typedef struct ecs_stage_t {
     /* If this is not main stage, 
      * changes to the entity index 
      * are buffered here */
-    EcsMap *entity_index;        /* Entity lookup table for (table, row) */
+    ecs_map_t *entity_index;        /* Entity lookup table for (table, row) */
 
     /* If this is not a thread
      * stage, these are the same
      * as the main stage */
-    EcsMap *table_index;         /* Index for table stage */
-    EcsArray *tables;            /* Tables created while >1 threads running */
-    EcsMap *type_index;          /* Types created while >1 threads running */
+    ecs_map_t *table_index;         /* Index for table stage */
+    ecs_array_t *tables;            /* Tables created while >1 threads running */
+    ecs_map_t *type_index;          /* Types created while >1 threads running */
 
     
     /* These occur only in
      * temporary stages, and
      * not on the main stage */
-    EcsMap *data_stage;          /* Arrays with staged component values */
-    EcsMap *remove_merge;        /* All removed components before merge */
-} EcsStage;
+    ecs_map_t *data_stage;          /* Arrays with staged component values */
+    ecs_map_t *remove_merge;        /* All removed components before merge */
+} ecs_stage_t;
 
 /** A type describing a unit of work to be executed by a worker thread. */ 
-typedef struct EcsJob {
-    EcsEntity system;             /* System handle */
+typedef struct ecs_job_t {
+    ecs_entity_t system;             /* System handle */
     EcsColSystem *system_data;    /* System to run */
     uint32_t offset;              /* Start index in row chunk */
     uint32_t limit;               /* Total number of rows to process */
-} EcsJob;
+} ecs_job_t;
 
 /** A type desribing a worker thread. When a system is invoked by a worker
- * thread, it receives a pointer to an EcsThread instead of a pointer to an 
- * ecs_world_t (provided by the ecs_rows_t type). When this EcsThread is passed down
+ * thread, it receives a pointer to an ecs_thread_t instead of a pointer to an 
+ * ecs_world_t (provided by the ecs_rows_t type). When this ecs_thread_t is passed down
  * into the flecs API, the API functions are able to tell whether this is an
- * EcsThread or an ecs_world_t by looking at the 'magic' number. This allows the
+ * ecs_thread_t or an ecs_world_t by looking at the 'magic' number. This allows the
  * API to transparently resolve the stage to which updates should be written,
  * without requiring different API calls when working in multi threaded mode. */
-typedef struct EcsThread {
+typedef struct ecs_thread_t {
     uint32_t magic;               /* Magic number to verify thread pointer */
     uint32_t job_count;           /* Number of jobs scheduled for thread */
     ecs_world_t *world;              /* Reference to world */
-    EcsJob *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
-    EcsStage *stage;              /* Stage for thread */
+    ecs_job_t *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
+    ecs_stage_t *stage;              /* Stage for thread */
     pthread_t thread;             /* Thread handle */
-} EcsThread;
+} ecs_thread_t;
 
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
@@ -258,47 +258,47 @@ struct ecs_world_t {
 
     /* -- Column systems -- */
 
-    EcsArray *on_load_systems;    /* Systems executed at start of frame */
-    EcsArray *pre_frame_systems;  /* Systems executed before frame systems */
-    EcsArray *on_frame_systems;   /* Frame systems */
-    EcsArray *post_frame_systems; /* Systems executed after frame systems */
-    EcsArray *on_store_systems;   /* Systems executed at end of frame */
-    EcsArray *on_demand_systems;  /* On demand systems */
-    EcsArray *inactive_systems;   /* Frame systems with empty tables */
+    ecs_array_t *on_load_systems;    /* Systems executed at start of frame */
+    ecs_array_t *pre_frame_systems;  /* Systems executed before frame systems */
+    ecs_array_t *on_frame_systems;   /* Frame systems */
+    ecs_array_t *post_frame_systems; /* Systems executed after frame systems */
+    ecs_array_t *on_store_systems;   /* Systems executed at end of frame */
+    ecs_array_t *on_demand_systems;  /* On demand systems */
+    ecs_array_t *inactive_systems;   /* Frame systems with empty tables */
 
 
     /* -- Row systems -- */
 
-    EcsArray *add_systems;        /* Systems invoked on ecs_stage_add */
-    EcsArray *remove_systems;     /* Systems invoked on ecs_stage_remove */
-    EcsArray *set_systems;        /* Systems invoked on ecs_set */
+    ecs_array_t *add_systems;        /* Systems invoked on ecs_stage_add */
+    ecs_array_t *remove_systems;     /* Systems invoked on ecs_stage_remove */
+    ecs_array_t *set_systems;        /* Systems invoked on ecs_set */
 
 
     /* -- Tasks -- */
 
-    EcsArray *tasks;              /* Periodic actions not invoked on entities */
-    EcsArray *fini_tasks;         /* Tasks to execute on ecs_fini */
+    ecs_array_t *tasks;              /* Periodic actions not invoked on entities */
+    ecs_array_t *fini_tasks;         /* Tasks to execute on ecs_fini */
 
 
     /* -- Lookup Indices -- */
 
-    EcsMap *prefab_index;          /* Index to find prefabs in families */
-    EcsMap *type_sys_add_index;    /* Index to find add row systems for type */
-    EcsMap *type_sys_remove_index; /* Index to find remove row systems for type*/
-    EcsMap *type_sys_set_index;    /* Index to find set row systems for type */
-    EcsMap *type_handles;          /* Handles to named families */
+    ecs_map_t *prefab_index;          /* Index to find prefabs in families */
+    ecs_map_t *type_sys_add_index;    /* Index to find add row systems for type */
+    ecs_map_t *type_sys_remove_index; /* Index to find remove row systems for type*/
+    ecs_map_t *type_sys_set_index;    /* Index to find set row systems for type */
+    ecs_map_t *type_handles;          /* Handles to named families */
 
 
     /* -- Staging -- */
 
-    EcsStage main_stage;          /* Main storage */
-    EcsStage temp_stage;          /* Stage for when processing systems */
-    EcsArray *worker_stages;      /* Stages for worker threads */
+    ecs_stage_t main_stage;          /* Main storage */
+    ecs_stage_t temp_stage;          /* Stage for when processing systems */
+    ecs_array_t *worker_stages;      /* Stages for worker threads */
 
 
     /* -- Multithreading -- */
 
-    EcsArray *worker_threads;     /* Worker threads */
+    ecs_array_t *worker_threads;     /* Worker threads */
     pthread_cond_t thread_cond;   /* Signal that worker threads can start */
     pthread_mutex_t thread_mutex; /* Mutex for thread condition */
     pthread_cond_t job_cond;      /* Signal that worker thread job is done */
@@ -306,16 +306,16 @@ struct ecs_world_t {
     uint32_t jobs_finished;       /* Number of jobs finished */
     uint32_t threads_running;     /* Number of threads running */
 
-    EcsEntity last_handle;        /* Last issued handle */
+    ecs_entity_t last_handle;        /* Last issued handle */
 
 
     /* -- Handles to builtin components families -- */
 
-    EcsType t_component;
-    EcsType t_type;
-    EcsType t_prefab;
-    EcsType t_row_system;
-    EcsType t_col_system;
+    ecs_type_t t_component;
+    ecs_type_t t_type;
+    ecs_type_t t_prefab;
+    ecs_type_t t_row_system;
+    ecs_type_t t_col_system;
 
 
     /* -- Time management -- */
@@ -349,12 +349,12 @@ struct ecs_world_t {
 
 
 /* Parameters for various array types */
-extern const EcsArrayParams handle_arr_params;
-extern const EcsArrayParams stage_arr_params;
-extern const EcsArrayParams table_arr_params;
-extern const EcsArrayParams thread_arr_params;
-extern const EcsArrayParams job_arr_params;
-extern const EcsArrayParams column_arr_params;
+extern const ecs_array_params_t handle_arr_params;
+extern const ecs_array_params_t stage_arr_params;
+extern const ecs_array_params_t table_arr_params;
+extern const ecs_array_params_t thread_arr_params;
+extern const ecs_array_params_t job_arr_params;
+extern const ecs_array_params_t column_arr_params;
 
 
 #endif

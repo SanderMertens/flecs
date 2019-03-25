@@ -8,38 +8,38 @@
 
 /* -- Global array parameters -- */
 
-const EcsArrayParams table_arr_params = {
-    .element_size = sizeof(EcsTable)
+const ecs_array_params_t table_arr_params = {
+    .element_size = sizeof(ecs_table_t)
 };
 
-const EcsArrayParams handle_arr_params = {
-    .element_size = sizeof(EcsEntity)
+const ecs_array_params_t handle_arr_params = {
+    .element_size = sizeof(ecs_entity_t)
 };
 
-const EcsArrayParams stage_arr_params = {
-    .element_size = sizeof(EcsStage)
+const ecs_array_params_t stage_arr_params = {
+    .element_size = sizeof(ecs_stage_t)
 };
 
-const EcsArrayParams char_arr_params = {
+const ecs_array_params_t char_arr_params = {
     .element_size = sizeof(char)
 };
 
 
 /* -- Global variables -- */
 
-EcsType TEcsComponent;
-EcsType TEcsTypeComponent;
-EcsType TEcsPrefab;
-EcsType Tecs_rows_tystem;
-EcsType TEcsColSystem;
-EcsType TEcsId;
-EcsType TEcsHidden;
-EcsType TEcsContainer;
+ecs_type_t TEcsComponent;
+ecs_type_t TEcsTypeComponent;
+ecs_type_t TEcsPrefab;
+ecs_type_t TEcsRowSystem;
+ecs_type_t TEcsColSystem;
+ecs_type_t TEcsId;
+ecs_type_t TEcsHidden;
+ecs_type_t TEcsContainer;
 
 const char *ECS_COMPONENT_ID =      "EcsComponent";
 const char *ECS_TYPE_COMPONENT_ID = "EcsTypeComponent";
 const char *ECS_PREFAB_ID =         "EcsPrefab";
-const char *ECS_ROW_SYSTEM_ID =     "ecs_rows_tystem";
+const char *ECS_ROW_SYSTEM_ID =     "EcsRowSystem";
 const char *ECS_COL_SYSTEM_ID =     "EcsColSystem";
 const char *ECS_ID_ID =             "EcsId";
 const char *ECS_HIDDEN_ID =         "EcsHidden";
@@ -52,7 +52,7 @@ int compare_handle(
     const void *p1,
     const void *p2)
 {
-    return *(EcsEntity*)p1 - *(EcsEntity*)p2;
+    return *(ecs_entity_t*)p1 - *(ecs_entity_t*)p2;
 }
 
 /** Bootstrap builtin component types and commonly used types */
@@ -60,11 +60,11 @@ static
 void bootstrap_types(
     ecs_world_t *world)
 {
-    EcsStage *stage = &world->main_stage;
+    ecs_stage_t *stage = &world->main_stage;
     TEcsComponent = ecs_type_register(world, stage, EEcsComponent, NULL);
     TEcsTypeComponent = ecs_type_register(world, stage, EEcsTypeComponent, NULL);
     TEcsPrefab = ecs_type_register(world, stage, EEcsPrefab, NULL);
-    Tecs_rows_tystem = ecs_type_register(world, stage, Eecs_rows_tystem, NULL);
+    TEcsRowSystem = ecs_type_register(world, stage, EEcsRowSystem, NULL);
     TEcsColSystem = ecs_type_register(world, stage, EEcsColSystem, NULL);
     TEcsId = ecs_type_register(world, stage, EEcsId, NULL);
     TEcsHidden = ecs_type_register(world, stage, EEcsHidden, NULL);
@@ -73,7 +73,7 @@ void bootstrap_types(
     world->t_component = ecs_type_merge(world, stage, TEcsComponent, TEcsId, 0);
     world->t_type = ecs_type_merge(world, stage, TEcsTypeComponent, TEcsId, 0);
     world->t_prefab = ecs_type_merge(world, stage, TEcsPrefab, TEcsId, 0);
-    world->t_row_system = ecs_type_merge(world, stage, Tecs_rows_tystem, TEcsId, 0);
+    world->t_row_system = ecs_type_merge(world, stage, TEcsRowSystem, TEcsId, 0);
     world->t_col_system = ecs_type_merge(world, stage, TEcsColSystem, TEcsId, 0);
 }
 
@@ -81,20 +81,20 @@ void bootstrap_types(
  * flecs. After this function has been called, the builtin components can be
  * created. */
 static
-EcsTable* bootstrap_component_table(
+ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    EcsStage *stage = &world->main_stage;
-    EcsTable *result = ecs_array_add(&stage->tables, &table_arr_params);
-    EcsArray *type = ecs_map_get(stage->type_index, world->t_component);
+    ecs_stage_t *stage = &world->main_stage;
+    ecs_table_t *result = ecs_array_add(&stage->tables, &table_arr_params);
+    ecs_array_t *type = ecs_map_get(stage->type_index, world->t_component);
     result->type_id = world->t_component;
     result->type = type;
     result->frame_systems = NULL;
-    result->columns = malloc(sizeof(EcsTableColumn) * 3);
+    result->columns = malloc(sizeof(ecs_table_column_t) * 3);
     ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->columns[0].data = ecs_array_new(&handle_arr_params, 8);
-    result->columns[0].size = sizeof(EcsEntity);
+    result->columns[0].size = sizeof(ecs_entity_t);
     result->columns[1].data = ecs_array_new(&handle_arr_params, 8);
     result->columns[1].size = sizeof(EcsComponent);
     result->columns[2].data = ecs_array_new(&handle_arr_params, 8);
@@ -114,18 +114,18 @@ EcsTable* bootstrap_component_table(
 static
 void bootstrap_component(
     ecs_world_t *world,
-    EcsTable *table,
-    EcsEntity entity,
+    ecs_table_t *table,
+    ecs_entity_t entity,
     const char *id,
     size_t size)
 {
-    EcsStage *stage = &world->main_stage;
+    ecs_stage_t *stage = &world->main_stage;
 
     /* Insert row into table to store EcsComponent itself */
     int32_t index = ecs_table_insert(world, table, table->columns, entity);
 
     /* Create record in entity index */
-    EcsRow row = {.type_id = world->t_component, .index = index};
+    ecs_row_t row = {.type_id = world->t_component, .index = index};
     ecs_map_set(stage->entity_index, entity, ecs_from_row(row));
 
     /* Set size and id */
@@ -139,10 +139,10 @@ void bootstrap_component(
 static
 void notify_create_table(
     ecs_world_t *world,
-    EcsArray *systems,
-    EcsTable *table)
+    ecs_array_t *systems,
+    ecs_table_t *table)
 {
-    EcsEntity *buffer = ecs_array_buffer(systems);
+    ecs_entity_t *buffer = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
 
     for (i = 0; i < count; i ++) {
@@ -153,7 +153,7 @@ void notify_create_table(
 static
 void notify_systems_of_table(
     ecs_world_t *world,
-    EcsTable *table)
+    ecs_table_t *table)
 {
     notify_create_table(world, world->pre_frame_systems, table);
     notify_create_table(world, world->post_frame_systems, table);
@@ -167,17 +167,17 @@ void notify_systems_of_table(
 /** Create a new table and register it with the world and systems. A table in
  * flecs is equivalent to an archetype */
 static
-EcsTable* create_table(
+ecs_table_t* create_table(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsType type_id)
+    ecs_stage_t *stage,
+    ecs_type_t type_id)
 {
     /* Add and initialize table */
-    EcsTable *result = ecs_array_add(&stage->tables, &table_arr_params);
+    ecs_table_t *result = ecs_array_add(&stage->tables, &table_arr_params);
     
     result->type_id = type_id;
 
-    if (ecs_table_init(world, stage, result) != EcsOk) {
+    if (ecs_table_init(world, stage, result) != 0) {
         return NULL;
     }
 
@@ -196,12 +196,12 @@ EcsTable* create_table(
 /* -- Private functions -- */
 
 /** Get pointer to table data from type id */
-EcsTable* ecs_world_get_table(
+ecs_table_t* ecs_world_get_table(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsType type_id)
+    ecs_stage_t *stage,
+    ecs_type_t type_id)
 {
-    EcsStage *main_stage = &world->main_stage;
+    ecs_stage_t *main_stage = &world->main_stage;
     uint32_t table_index = ecs_map_get64(main_stage->table_index, type_id);
 
     if (!table_index && world->in_progress) {
@@ -224,7 +224,7 @@ EcsTable* ecs_world_get_table(
 }
 
 static
-EcsArray** frame_system_array(
+ecs_array_t** frame_system_array(
     ecs_world_t *world,
     EcsSystemKind kind)
 {
@@ -257,11 +257,11 @@ EcsArray** frame_system_array(
  */
 void ecs_world_activate_system(
     ecs_world_t *world,
-    EcsEntity system,
+    ecs_entity_t system,
     EcsSystemKind kind,
     bool active)
 {
-    EcsArray *src_array, *dst_array;
+    ecs_array_t *src_array, *dst_array;
 
     if (active) {
         src_array = world->inactive_systems;
@@ -274,7 +274,7 @@ void ecs_world_activate_system(
     uint32_t count = ecs_array_count(src_array);
     int i;
     for (i = 0; i < count; i ++) {
-        EcsEntity *h = ecs_array_get(
+        ecs_entity_t *h = ecs_array_get(
             src_array, &handle_arr_params, i);
         if (*h == system) {
             break;
@@ -291,30 +291,30 @@ void ecs_world_activate_system(
     if (active) {
          *frame_system_array(world, kind) = dst_array;
          qsort(dst_array, ecs_array_count(dst_array) + 1,
-          sizeof(EcsEntity), compare_handle);
+          sizeof(ecs_entity_t), compare_handle);
     } else {
         world->inactive_systems = dst_array;
         qsort(src_array, ecs_array_count(src_array) + 1,
-          sizeof(EcsEntity), compare_handle);
+          sizeof(ecs_entity_t), compare_handle);
     }
 }
 
 union RowUnion {
-    EcsRow row;
+    ecs_row_t row;
     uint64_t value;
 };
 
-/** Utility to translate from uint64 to EcsRow */
-EcsRow ecs_to_row(
+/** Utility to translate from uint64 to ecs_row_t */
+ecs_row_t ecs_to_row(
     uint64_t value)
 {
     union RowUnion u = {.value = value};
     return u.row;
 }
 
-/** Utility to translate from EcsRow to uint64 */
+/** Utility to translate from ecs_row_t to uint64 */
 uint64_t ecs_from_row(
-    EcsRow row)
+    ecs_row_t row)
 {
     union RowUnion u = {.row = row};
     return u.value;
@@ -322,20 +322,20 @@ uint64_t ecs_from_row(
 
 char* ecs_type_tostr(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsType type_id)
+    ecs_stage_t *stage,
+    ecs_type_t type_id)
 {
-    EcsArray *type = ecs_type_get(world, stage, type_id);
-    EcsArray *chbuf = ecs_array_new(&char_arr_params, 32);
+    ecs_array_t *type = ecs_type_get(world, stage, type_id);
+    ecs_array_t *chbuf = ecs_array_new(&char_arr_params, 32);
     char *dst;
     uint32_t len;
     char buf[15];
 
-    EcsEntity *handles = ecs_array_buffer(type);
+    ecs_entity_t *handles = ecs_array_buffer(type);
     uint32_t i, count = ecs_array_count(type);
 
     for (i = 0; i < count; i ++) {
-        EcsEntity h = handles[i];
+        ecs_entity_t h = handles[i];
         if (i) {
             *(char*)ecs_array_add(&chbuf, &char_arr_params) = ',';
         }
@@ -360,7 +360,7 @@ char* ecs_type_tostr(
     return result;
 }
 
-EcsStage *ecs_get_stage(
+ecs_stage_t *ecs_get_stage(
     ecs_world_t **world_ptr)
 {
     ecs_world_t *world = *world_ptr;
@@ -371,7 +371,7 @@ EcsStage *ecs_get_stage(
             return &world->main_stage;
         }
     } else if (world->magic == ECS_THREAD_MAGIC) {
-        EcsThread *thread = (EcsThread*)world;
+        ecs_thread_t *thread = (ecs_thread_t*)world;
         *world_ptr = thread->world;
         return thread->stage;
     } else {
@@ -384,10 +384,10 @@ EcsStage *ecs_get_stage(
 static
 void col_systems_deinit(
     ecs_world_t *world,
-    EcsArray *systems)
+    ecs_array_t *systems)
 {
     uint32_t i, count = ecs_array_count(systems);
-    EcsEntity *buffer = ecs_array_buffer(systems);
+    ecs_entity_t *buffer = ecs_array_buffer(systems);
 
     for (i = 0; i < count; i ++) {
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
@@ -417,7 +417,7 @@ void load_admin(
     }
 
     /* Find civetweb module & entry point */
-    EcsModuleInitAction civet_action = (EcsModuleInitAction)ut_load_proc(
+    ecs_module_init_action_t civet_action = (ecs_module_init_action_t)ut_load_proc(
             "flecs.systems.civetweb", NULL, "EcsSystemsCivetweb");
     if (!civet_action) {
         ut_raise();
@@ -426,7 +426,7 @@ void load_admin(
     }
 
     /* Find admin module & entry point */
-    EcsModuleInitAction admin_action = (EcsModuleInitAction)ut_load_proc(
+    ecs_module_init_action_t admin_action = (ecs_module_init_action_t)ut_load_proc(
         "flecs.systems.admin", NULL, "EcsSystemsAdmin");
     if (!admin_action) {
         ut_raise();
@@ -443,8 +443,8 @@ void load_admin(
     ecs_measure_system_time(world, true);
 
     /* Create admin instance */
-    EcsEntity admin = ecs_lookup(world, "EcsAdmin");
-    EcsType TEcsAdmin = ecs_type_from_entity(world, admin);
+    ecs_entity_t admin = ecs_lookup(world, "EcsAdmin");
+    ecs_type_t TEcsAdmin = ecs_type_from_entity(world, admin);
     ecs_set(world, 0, EcsAdmin, {port});
 
     printf("admin is running in port %d\n", port);
@@ -514,14 +514,14 @@ ecs_world_t *ecs_init(void) {
     bootstrap_types(world);
 
     /* Create table that will hold components (EcsComponent, EcsId) */
-    EcsTable *table = bootstrap_component_table(world);
+    ecs_table_t *table = bootstrap_component_table(world);
     assert(table != NULL);
 
     /* Create records for internal components */
     bootstrap_component(world, table, EEcsComponent, ECS_COMPONENT_ID, sizeof(EcsComponent));
     bootstrap_component(world, table, EEcsTypeComponent, ECS_TYPE_COMPONENT_ID, sizeof(EcsTypeComponent));
     bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_ID, 0);
-    bootstrap_component(world, table, Eecs_rows_tystem, ECS_ROW_SYSTEM_ID, sizeof(ecs_rows_tystem));
+    bootstrap_component(world, table, EEcsRowSystem, ECS_ROW_SYSTEM_ID, sizeof(EcsRowSystem));
     bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_ID, sizeof(EcsColSystem));
     bootstrap_component(world, table, EEcsId, ECS_ID_ID, sizeof(EcsId));
     bootstrap_component(world, table, EEcsHidden, ECS_HIDDEN_ID, 0);
@@ -585,7 +585,7 @@ ecs_world_t* ecs_init_w_args(
     return world;
 }
 
-EcsResult ecs_fini(
+int ecs_fini(
     ecs_world_t *world)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
@@ -594,7 +594,7 @@ EcsResult ecs_fini(
 
     uint32_t i, system_count = ecs_array_count(world->fini_tasks);
     if (system_count) {
-        EcsEntity *buffer = ecs_array_buffer(world->fini_tasks);
+        ecs_entity_t *buffer = ecs_array_buffer(world->fini_tasks);
         for (i = 0; i < system_count; i ++) {
             ecs_run_task(world, buffer[i], 0);
         }
@@ -640,7 +640,7 @@ EcsResult ecs_fini(
 
     free(world);
 
-    return EcsOk;
+    return 0;
 }
 
 void ecs_dim(
@@ -653,26 +653,26 @@ void ecs_dim(
 
 void _ecs_dim_type(
     ecs_world_t *world,
-    EcsType type,
+    ecs_type_t type,
     uint32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     if (type) {
-        EcsTable *table = ecs_world_get_table(world, &world->main_stage, type);
+        ecs_table_t *table = ecs_world_get_table(world, &world->main_stage, type);
         if (table) {
             ecs_table_dim(table, entity_count);
         }
     }
 }
 
-EcsEntity ecs_lookup(
+ecs_entity_t ecs_lookup(
     ecs_world_t *world,
     const char *id)
 {
     EcsIter it = ecs_array_iter(world->main_stage.tables, &table_arr_params);
 
     while (ecs_iter_hasnext(&it)) {
-        EcsTable *table = ecs_iter_next(&it);
+        ecs_table_t *table = ecs_iter_next(&it);
         uint32_t column_index;
 
         if ((column_index = ecs_type_index_of(table->type, EEcsId)) == -1) {
@@ -680,13 +680,13 @@ EcsEntity ecs_lookup(
         }
 
 
-        EcsTableColumn *column = &table->columns[column_index + 1];
+        ecs_table_column_t *column = &table->columns[column_index + 1];
         EcsId *buffer = ecs_array_buffer(column->data);
         uint32_t i, count = ecs_array_count(column->data);
         
         for (i = 0; i < count; i ++) {
             if (!strcmp(buffer[i], id)) {
-                return *(EcsEntity*)ecs_array_get(
+                return *(ecs_entity_t*)ecs_array_get(
                     table->columns[0].data, &handle_arr_params, i);
             }
         }
@@ -698,13 +698,13 @@ EcsEntity ecs_lookup(
 static
 void run_single_thread_stage(
     ecs_world_t *world,
-    EcsArray *systems,
+    ecs_array_t *systems,
     float delta_time)
 {
     uint32_t i, system_count = ecs_array_count(systems);
 
     if (system_count) {
-        EcsEntity *buffer = ecs_array_buffer(systems);
+        ecs_entity_t *buffer = ecs_array_buffer(systems);
 
         world->in_progress = true;
 
@@ -723,14 +723,14 @@ void run_single_thread_stage(
 static
 void run_multi_thread_stage(
     ecs_world_t *world,
-    EcsArray *systems,
+    ecs_array_t *systems,
     float delta_time)
 {
     /* Run periodic table systems */
     uint32_t i, system_count = ecs_array_count(systems);
     if (system_count) {
         bool valid_schedule = world->valid_schedule;
-        EcsEntity *buffer = ecs_array_buffer(systems);
+        ecs_entity_t *buffer = ecs_array_buffer(systems);
 
         world->in_progress = true;
 
@@ -760,7 +760,7 @@ void run_tasks(
     if (system_count) {
         world->in_progress = true;
 
-        EcsEntity *buffer = ecs_array_buffer(world->tasks);
+        ecs_entity_t *buffer = ecs_array_buffer(world->tasks);
         for (i = 0; i < system_count; i ++) {
             ecs_run_task(world, buffer[i], delta_time);
         }
@@ -883,7 +883,7 @@ void ecs_merge(
     ecs_stage_merge(world, &world->temp_stage);
 
     uint32_t i, count = ecs_array_count(world->worker_stages);
-    EcsStage *buffer = ecs_array_buffer(world->worker_stages);
+    ecs_stage_t *buffer = ecs_array_buffer(world->worker_stages);
     for (i = 0; i < count; i ++) {
         ecs_stage_merge(world, &buffer[i]);
     }
@@ -946,21 +946,21 @@ void ecs_set_context(
     world->context = context;
 }
 
-EcsEntity ecs_import(
+ecs_entity_t ecs_import(
     ecs_world_t *world,
-    EcsModuleInitAction module,
+    ecs_module_init_action_t module,
     const char *module_name,
     int flags,
     void *handles_out,
     size_t handles_size)
 {
-    EcsEntity e = ecs_lookup(world, module_name);
+    ecs_entity_t e = ecs_lookup(world, module_name);
     if (!e) {
         module(world, flags, handles_out);
 
         /* Register component for module that contains handles */
         e = ecs_new_component(world, module_name, handles_size);
-        EcsType t = ecs_type_from_entity(world, e);
+        ecs_type_t t = ecs_type_from_entity(world, e);
 
         /* Set module handles component on singleton */
         _ecs_set_singleton_ptr(world, t, handles_size, handles_out);

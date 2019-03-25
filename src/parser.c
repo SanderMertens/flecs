@@ -68,7 +68,7 @@ char* parse_complex_elem(
 }
 
 static
-EcsResult has_tables(
+int has_tables(
     ecs_world_t *world,
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
@@ -81,7 +81,7 @@ EcsResult has_tables(
         *needs_matching = true;
     }
 
-    return EcsOk;
+    return 0;
 }
 
 /* -- Private functions -- */
@@ -111,10 +111,10 @@ uint32_t ecs_columns_count(
 }
 
 /** Parse component expression */
-EcsResult ecs_parse_component_expr(
+int ecs_parse_component_expr(
     ecs_world_t *world,
     const char *sig,
-    ecs_parse_action action,
+    ecs_parse_action_t action,
     void *ctx)
 {
     size_t len = strlen(sig);
@@ -177,7 +177,7 @@ EcsResult ecs_parse_component_expr(
                 source_id[dot - source] = '\0';
             }
 
-            if (action(world, elem_kind, oper_kind, bptr, source_id, ctx) != EcsOk) {
+            if (action(world, elem_kind, oper_kind, bptr, source_id, ctx) != 0) {
                 ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
             }
 
@@ -210,5 +210,5 @@ EcsResult ecs_parse_component_expr(
     }
 
     free(buffer);
-    return EcsOk;
+    return 0;
 }

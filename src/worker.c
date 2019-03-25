@@ -2,18 +2,18 @@
 #include <assert.h>
 #include <math.h>
 
-const EcsArrayParams thread_arr_params = {
-    .element_size = sizeof(EcsThread)
+const ecs_array_params_t thread_arr_params = {
+    .element_size = sizeof(ecs_thread_t)
 };
 
-const EcsArrayParams job_arr_params = {
-    .element_size = sizeof(EcsJob)
+const ecs_array_params_t job_arr_params = {
+    .element_size = sizeof(ecs_job_t)
 };
 
 /** Worker thread code. Processes a job for one system */
 static
 void* ecs_worker(void *arg) {
-    EcsThread *thread = arg;
+    ecs_thread_t *thread = arg;
     ecs_world_t *world = thread->world;
     int i;
 
@@ -26,7 +26,7 @@ void* ecs_worker(void *arg) {
             break;
         }
 
-        EcsJob **jobs = thread->jobs;
+        ecs_job_t **jobs = thread->jobs;
         uint32_t job_count = thread->job_count;
         pthread_mutex_unlock(&world->thread_mutex);
 
@@ -100,7 +100,7 @@ void ecs_stop_threads(
     pthread_cond_broadcast(&world->thread_cond);
     pthread_mutex_unlock(&world->thread_mutex);
 
-    EcsThread *buffer = ecs_array_buffer(world->worker_threads);
+    ecs_thread_t *buffer = ecs_array_buffer(world->worker_threads);
     uint32_t i, count = ecs_array_count(world->worker_threads);
     for (i = 1; i < count; i ++) {
         pthread_join(buffer[i].thread, NULL);
@@ -117,12 +117,12 @@ void ecs_stop_threads(
 
 /** Start worker threads, wait until they are running */
 static
-EcsResult start_threads(
+int start_threads(
     ecs_world_t *world,
     uint32_t threads)
 {
     if (world->worker_threads) {
-        return EcsError;
+        return -1;
     }
 
     world->worker_threads = ecs_array_new(&thread_arr_params, threads);
@@ -130,7 +130,7 @@ EcsResult start_threads(
 
     int i;
     for (i = 0; i < threads; i ++) {
-        EcsThread *thread =
+        ecs_thread_t *thread =
             ecs_array_add(&world->worker_threads, &thread_arr_params);
 
         thread->magic = ECS_THREAD_MAGIC;
@@ -149,10 +149,10 @@ EcsResult start_threads(
         }
     }
 
-    return EcsOk;
+    return 0;
 error:
     ecs_stop_threads(world);
-    return EcsError;
+    return -1;
 }
 
 /** Create jobs for system */
@@ -179,7 +179,7 @@ void create_jobs(
 /** Create a job per available thread for system */
 void ecs_schedule_jobs(
     ecs_world_t *world,
-    EcsEntity system)
+    ecs_entity_t system)
 {
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     uint32_t thread_count = ecs_array_count(world->worker_threads);
@@ -190,7 +190,7 @@ void ecs_schedule_jobs(
 
     while (ecs_iter_hasnext(&table_it)) {
         uint32_t table_index = *(uint32_t*)ecs_iter_next(&table_it);
-        EcsTable *table = ecs_array_get(
+        ecs_table_t *table = ecs_array_get(
             world->main_stage.tables, &table_arr_params, table_index);
         total_rows += ecs_array_count(table->columns[0].data);
     }
@@ -210,7 +210,7 @@ void ecs_schedule_jobs(
     table_it = ecs_array_iter(system_data->tables, &system_data->table_params);
     uint32_t start_index = 0;
 
-    EcsJob *job = NULL;
+    ecs_job_t *job = NULL;
     uint32_t i;
     for (i = 0; i < thread_count; i ++) {
         job = ecs_array_get(system_data->jobs, &job_arr_params, i);
@@ -237,17 +237,17 @@ void ecs_schedule_jobs(
 /** Assign jobs to worker threads, signal workers */
 void ecs_prepare_jobs(
     ecs_world_t *world,
-    EcsEntity system)
+    ecs_entity_t system)
 {
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
-    EcsArray *threads = world->worker_threads;
-    EcsArray *jobs = system_data->jobs;
+    ecs_array_t *threads = world->worker_threads;
+    ecs_array_t *jobs = system_data->jobs;
     int i;
 
     uint32_t thread_count = ecs_array_count(jobs);
 
     for (i = 0; i < thread_count; i++) {
-        EcsThread *thr = ecs_array_get(threads, &thread_arr_params, i);
+        ecs_thread_t *thr = ecs_array_get(threads, &thread_arr_params, i);
         uint32_t job_count = thr->job_count;
         thr->jobs[job_count] = ecs_array_get(jobs, &job_arr_params, i);
         thr->job_count = job_count + 1;
@@ -266,8 +266,8 @@ void ecs_run_jobs(
     pthread_mutex_unlock(&world->thread_mutex);
 
     /* Run job for thread 0 in main thread */
-    EcsThread *thread = ecs_array_buffer(world->worker_threads);
-    EcsJob **jobs = thread->jobs;
+    ecs_thread_t *thread = ecs_array_buffer(world->worker_threads);
+    ecs_job_t **jobs = thread->jobs;
     uint32_t i, job_count = thread->job_count;
 
     for (i = 0; i < job_count; i ++) {
@@ -284,7 +284,7 @@ void ecs_run_jobs(
 
 /* -- Public functions -- */
 
-EcsResult ecs_set_threads(
+int ecs_set_threads(
     ecs_world_t *world,
     uint32_t threads)
 {
@@ -302,13 +302,13 @@ EcsResult ecs_set_threads(
             pthread_mutex_init(&world->thread_mutex, NULL);
             pthread_cond_init(&world->job_cond, NULL);
             pthread_mutex_init(&world->job_mutex, NULL);
-            if (start_threads(world, threads) != EcsOk) {
-                return EcsError;
+            if (start_threads(world, threads) != 0) {
+                return -1;
             }
         }
 
         world->valid_schedule = false;
     }
 
-    return EcsOk;
+    return 0;
 }

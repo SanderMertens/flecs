@@ -3,7 +3,7 @@
 static
 void Add_to_current(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
-    EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
+    ecs_entity_t *entities = ecs_column(rows, ecs_entity_t, 0);
     int i;
     for (i = 0; i < rows->count; i ++) {
         if (ctx->component) {
@@ -39,8 +39,8 @@ void MultiThreadStaging_2_threads_add_to_current() {
     IterData ctx = {.component = TRotation};
     ecs_set_context(world, &ctx);
 
-    EcsEntity start_1 = ecs_new_w_count(world, Position, 500, NULL);
-    EcsEntity start_2 = ecs_new_w_count(world, Type, 500, NULL);
+    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 500, NULL);
+    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 500, NULL);
 
     ecs_set_threads(world, 2);
 
@@ -75,8 +75,8 @@ void MultiThreadStaging_3_threads_add_to_current() {
     IterData ctx = {.component = TRotation};
     ecs_set_context(world, &ctx);
 
-    EcsEntity start_1 = ecs_new_w_count(world, Position, 500, NULL);
-    EcsEntity start_2 = ecs_new_w_count(world, Type, 500, NULL);
+    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 500, NULL);
+    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 500, NULL);
 
     ecs_set_threads(world, 3);
 
@@ -111,8 +111,8 @@ void MultiThreadStaging_4_threads_add_to_current() {
     IterData ctx = {.component = TRotation};
     ecs_set_context(world, &ctx);
 
-    EcsEntity start_1 = ecs_new_w_count(world, Position, 500, NULL);
-    EcsEntity start_2 = ecs_new_w_count(world, Type, 500, NULL);
+    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 500, NULL);
+    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 500, NULL);
 
     ecs_set_threads(world, 4);
 
@@ -147,8 +147,8 @@ void MultiThreadStaging_5_threads_add_to_current() {
     IterData ctx = {.component = TRotation};
     ecs_set_context(world, &ctx);
 
-    EcsEntity start_1 = ecs_new_w_count(world, Position, 500, NULL);
-    EcsEntity start_2 = ecs_new_w_count(world, Type, 500, NULL);
+    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 500, NULL);
+    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 500, NULL);
 
     ecs_set_threads(world, 5);
 
@@ -183,8 +183,8 @@ void MultiThreadStaging_6_threads_add_to_current() {
     IterData ctx = {.component = TRotation};
     ecs_set_context(world, &ctx);
 
-    EcsEntity start_1 = ecs_new_w_count(world, Position, 500, NULL);
-    EcsEntity start_2 = ecs_new_w_count(world, Type, 500, NULL);
+    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 500, NULL);
+    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 500, NULL);
 
     ecs_set_threads(world, 6);
 
@@ -219,12 +219,12 @@ void Delete_above_1000(ecs_rows_t *rows) {
 static
 void Add_random(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
-    EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
+    ecs_entity_t *entities = ecs_column(rows, ecs_entity_t, 0);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
         if (rand() % 2) {
-            EcsEntity e = _ecs_new(rows->world, ctx->component);
+            ecs_entity_t e = _ecs_new(rows->world, ctx->component);
             test_assert( !ecs_empty(rows->world, e));
             test_assert( _ecs_has(rows->world, e, ctx->component));
             test_assert( _ecs_get_ptr(rows->world, e, ctx->component) != NULL);
@@ -292,16 +292,16 @@ void Set_velocity_callback(ecs_rows_t *rows) {
 static
 void Set_random(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
-    EcsEntity *entities = ecs_column(rows, EcsEntity, 0);
+    ecs_entity_t *entities = ecs_column(rows, ecs_entity_t, 0);
 
-    EcsType TPosition = ctx->component;
-    EcsType TVelocity = ctx->component_2;
-    EcsType TRotation = ctx->component_3;
+    ecs_type_t TPosition = ctx->component;
+    ecs_type_t TVelocity = ctx->component_2;
+    ecs_type_t TRotation = ctx->component_3;
 
     int i;
     for (i = 0; i < rows->count; i ++) {
         if (rand() % 2) {
-            EcsEntity e = ecs_set(rows->world, 0, Position, {10, 20});
+            ecs_entity_t e = ecs_set(rows->world, 0, Position, {10, 20});
             test_assert( !ecs_empty(rows->world, e));
             test_assert( ecs_has(rows->world, e, Position));
             Position *p = ecs_get_ptr(rows->world, e, Position);
@@ -356,6 +356,7 @@ void MultiThreadStaging_stress_set_entity_random_components() {
 
     int i;
     for (i = 0; i < 1000; i ++) {
+        printf("progress..\n");
         ecs_progress(world, 1);
     }
 

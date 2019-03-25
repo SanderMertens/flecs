@@ -1043,7 +1043,7 @@ void Run_run_w_container_filter() {
     ecs_set_context(world, &ctx);
 
     /* Create a parent entity */
-    EcsEntity parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
 
     /* Adopt child entities */
     ecs_adopt(world, parent, e_1);
@@ -1052,7 +1052,7 @@ void Run_run_w_container_filter() {
     ecs_adopt(world, parent, e_7);
 
     /* Get type from parent to use as filter */
-    EcsType TParent = ecs_type_from_entity(world, parent);
+    ecs_type_t TParent = ecs_type_from_entity(world, parent);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -1112,7 +1112,7 @@ void Run_run_no_match() {
 }
 
 typedef struct Param {
-    EcsEntity entity;
+    ecs_entity_t entity;
     int count;
 } Param;
 
@@ -1130,7 +1130,7 @@ void TestSubset(ecs_rows_t *rows) {
 static
 void TestAll(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
-    EcsEntity TestSubset = ecs_column_component(rows, 2);
+    ecs_entity_t TestSubset = ecs_column_component(rows, 2);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -1150,7 +1150,7 @@ void Run_run_comb_10_entities_1_type() {
 
     int i, ENTITIES = 10;
 
-    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES, NULL);
+    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES, NULL);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, start + i, Position, {1, 2});
@@ -1178,7 +1178,7 @@ void Run_run_comb_10_entities_2_types() {
 
     int i, ENTITIES = 10;
 
-    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
     ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
 
     for (i = 0; i < ENTITIES; i ++) {

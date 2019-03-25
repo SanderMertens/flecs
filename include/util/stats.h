@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 typedef struct EcsSystemStats {
-    EcsEntity handle;
+    ecs_entity_t handle;
     const char *id;
     const char *signature;
     uint32_t tables_matched;
@@ -63,19 +63,19 @@ typedef struct ecs_world_tStats {
     float frame_time;
     float merge_time;
     EcsMemoryStats memory;
-    EcsArray *features;
-    EcsArray *on_load_systems;
-    EcsArray *pre_frame_systems;
-    EcsArray *on_frame_systems;
-    EcsArray *post_frame_systems;
-    EcsArray *on_store_systems;
-    EcsArray *task_systems;
-    EcsArray *inactive_systems;
-    EcsArray *on_demand_systems;
-    EcsArray *on_add_systems;
-    EcsArray *on_remove_systems;
-    EcsArray *on_set_systems;
-    EcsArray *tables;
+    ecs_array_t *features;
+    ecs_array_t *on_load_systems;
+    ecs_array_t *pre_frame_systems;
+    ecs_array_t *on_frame_systems;
+    ecs_array_t *post_frame_systems;
+    ecs_array_t *on_store_systems;
+    ecs_array_t *task_systems;
+    ecs_array_t *inactive_systems;
+    ecs_array_t *on_demand_systems;
+    ecs_array_t *on_add_systems;
+    ecs_array_t *on_remove_systems;
+    ecs_array_t *on_set_systems;
+    ecs_array_t *tables;
     bool frame_profiling;
     bool system_profiling;
 } ecs_world_tStats;

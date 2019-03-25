@@ -7,21 +7,21 @@
 extern "C" {
 #endif
 
-typedef struct EcsArray EcsArray;
-typedef struct EcsArrayParams EcsArrayParams;
+typedef struct ecs_array_t ecs_array_t;
+typedef struct ecs_array_params_t ecs_array_params_t;
 
 typedef int (*EcsComparator)(
     const void* p1,
     const void *p2);
 
 typedef void (*EcsMove)(
-    EcsArray *array,
-    const EcsArrayParams *params,
+    ecs_array_t *array,
+    const ecs_array_params_t *params,
     void *to,
     void *from,
     void *ctx);
 
-struct EcsArrayParams {
+struct ecs_array_params_t {
     EcsMove move_action; /* Invoked when moving elements */
     void *move_ctx;
     void *ctx;
@@ -29,113 +29,113 @@ struct EcsArrayParams {
 };
 
 typedef struct EcsArrayIter {
-    EcsArrayParams *params;
+    ecs_array_params_t *params;
     uint32_t index;
 } EcsArrayIter;
 
 FLECS_EXPORT
-EcsArray* ecs_array_new(
-    const EcsArrayParams *params,
+ecs_array_t* ecs_array_new(
+    const ecs_array_params_t *params,
     uint32_t size);
 
 FLECS_EXPORT
-EcsArray* ecs_array_new_from_buffer(
-    const EcsArrayParams *params,
+ecs_array_t* ecs_array_new_from_buffer(
+    const ecs_array_params_t *params,
     uint32_t size,
     void *buffer);
 
 FLECS_EXPORT
 void ecs_array_free(
-    EcsArray *array);
+    ecs_array_t *array);
 
 FLECS_EXPORT
 void ecs_array_clear(
-    EcsArray *array);
+    ecs_array_t *array);
 
 FLECS_EXPORT
 void* ecs_array_add(
-    EcsArray **array_inout,
-    const EcsArrayParams *params);
+    ecs_array_t **array_inout,
+    const ecs_array_params_t *params);
 
 FLECS_EXPORT
 void* ecs_array_addn(
-    EcsArray **array_inout,
-    const EcsArrayParams *params,
+    ecs_array_t **array_inout,
+    const ecs_array_params_t *params,
     uint32_t count);
 
 FLECS_EXPORT
 void* ecs_array_get(
-    EcsArray *array,
-    const EcsArrayParams *params,
+    ecs_array_t *array,
+    const ecs_array_params_t *params,
     uint32_t index);
 
 FLECS_EXPORT
 uint32_t ecs_array_get_index(
-    EcsArray *array,
-    const EcsArrayParams *params,
+    ecs_array_t *array,
+    const ecs_array_params_t *params,
     void *elem);
 
 FLECS_EXPORT
 void* ecs_array_last(
-    EcsArray *array,
-    const EcsArrayParams *params);
+    ecs_array_t *array,
+    const ecs_array_params_t *params);
 
 FLECS_EXPORT
 uint32_t ecs_array_remove(
-    EcsArray *array,
-    const EcsArrayParams *params,
+    ecs_array_t *array,
+    const ecs_array_params_t *params,
     void *elem);
 
 FLECS_EXPORT
 void ecs_array_remove_last(
-    EcsArray *array);
+    ecs_array_t *array);
 
 FLECS_EXPORT
 uint32_t ecs_array_move_index(
-    EcsArray **dst_array,
-    EcsArray *src_array,
-    const EcsArrayParams *params,
+    ecs_array_t **dst_array,
+    ecs_array_t *src_array,
+    const ecs_array_params_t *params,
     uint32_t index);
 
 FLECS_EXPORT
 uint32_t ecs_array_remove_index(
-    EcsArray *array,
-    const EcsArrayParams *params,
+    ecs_array_t *array,
+    const ecs_array_params_t *params,
     uint32_t index);
 
 FLECS_EXPORT
 void ecs_array_reclaim(
-    EcsArray **array,
-    const EcsArrayParams *params);
+    ecs_array_t **array,
+    const ecs_array_params_t *params);
 
 FLECS_EXPORT
 uint32_t ecs_array_set_size(
-    EcsArray **array,
-    const EcsArrayParams *params,
+    ecs_array_t **array,
+    const ecs_array_params_t *params,
     uint32_t size);
 
 FLECS_EXPORT
 uint32_t ecs_array_set_count(
-    EcsArray **array,
-    const EcsArrayParams *params,
+    ecs_array_t **array,
+    const ecs_array_params_t *params,
     uint32_t size);
 
 FLECS_EXPORT
 uint32_t ecs_array_count(
-    EcsArray *array);
+    ecs_array_t *array);
 
 FLECS_EXPORT
 uint32_t ecs_array_size(
-    EcsArray *array);
+    ecs_array_t *array);
 
 FLECS_EXPORT
 void* ecs_array_buffer(
-    EcsArray *array);
+    ecs_array_t *array);
 
 FLECS_EXPORT
 EcsIter _ecs_array_iter(
-    EcsArray *array,
-    const EcsArrayParams *params,
+    ecs_array_t *array,
+    const ecs_array_params_t *params,
     EcsArrayIter *iter_data);
 
 #define ecs_array_iter(me, params)\
@@ -143,14 +143,14 @@ EcsIter _ecs_array_iter(
 
 FLECS_EXPORT
 void ecs_array_sort(
-    EcsArray *array,
-    const EcsArrayParams *params,
+    ecs_array_t *array,
+    const ecs_array_params_t *params,
     EcsComparator compare_action);
 
 FLECS_EXPORT
 void ecs_array_memory(
-    EcsArray *array,
-    const EcsArrayParams *params,
+    ecs_array_t *array,
+    const ecs_array_params_t *params,
     uint32_t *allocd,
     uint32_t *used);
 

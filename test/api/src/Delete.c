@@ -5,7 +5,7 @@ void Delete_delete_1() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     ecs_delete(world, e);
@@ -20,7 +20,7 @@ void Delete_delete_1_again() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     ecs_delete(world, e);
@@ -37,7 +37,7 @@ void Delete_delete_empty() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_delete(world, e);
@@ -60,9 +60,9 @@ void Delete_delete_1st_of_3() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e1 = ecs_new(world, Position);
-    EcsEntity e2 = ecs_new(world, Position);
-    EcsEntity e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
     test_assert(e1 != 0);
     test_assert(e2 != 0);
     test_assert(e3 != 0);
@@ -80,9 +80,9 @@ void Delete_delete_2nd_of_3() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e1 = ecs_new(world, Position);
-    EcsEntity e2 = ecs_new(world, Position);
-    EcsEntity e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
     test_assert(e1 != 0);
     test_assert(e2 != 0);
     test_assert(e3 != 0);
@@ -100,9 +100,9 @@ void Delete_delete_3rd_of_3() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e1 = ecs_new(world, Position);
-    EcsEntity e2 = ecs_new(world, Position);
-    EcsEntity e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
     test_assert(e1 != 0);
     test_assert(e2 != 0);
     test_assert(e3 != 0);
@@ -120,9 +120,9 @@ void Delete_delete_2_of_3() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e1 = ecs_new(world, Position);
-    EcsEntity e2 = ecs_new(world, Position);
-    EcsEntity e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
     test_assert(e1 != 0);
     test_assert(e2 != 0);
     test_assert(e3 != 0);
@@ -141,9 +141,9 @@ void Delete_delete_3_of_3() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e1 = ecs_new(world, Position);
-    EcsEntity e2 = ecs_new(world, Position);
-    EcsEntity e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
     test_assert(e1 != 0);
     test_assert(e2 != 0);
     test_assert(e3 != 0);

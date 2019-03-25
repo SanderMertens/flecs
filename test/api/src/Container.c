@@ -3,8 +3,8 @@
 void Container_child() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new_child(world, parent, NULL, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_child(world, parent, NULL, 0);
 
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
@@ -15,8 +15,8 @@ void Container_child() {
 void Container_child_w_id() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new_child(world, parent, "foo", 0);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_child(world, parent, "foo", 0);
 
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
@@ -30,8 +30,8 @@ void Container_child_w_component() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new_child(world, parent, "foo", Position);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_child(world, parent, "foo", Position);
 
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
@@ -47,8 +47,8 @@ void Container_child_w_type() {
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Position);
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new_child(world, parent, "foo", Type);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_child(world, parent, "foo", Type);
 
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
@@ -62,8 +62,8 @@ void Container_child_w_type() {
 void Container_contains_w_empty_parent() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new(world, 0);
 
     test_assert( !ecs_contains(world, parent, child));
     test_assert( !ecs_has(world, parent, EcsContainer));
@@ -74,7 +74,7 @@ void Container_contains_w_empty_parent() {
 void Container_contains_w_child_as_parent() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity child = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new(world, 0);
 
     test_assert( !ecs_contains(world, child, child));
     test_assert( !ecs_has(world, child, EcsContainer));
@@ -85,7 +85,7 @@ void Container_contains_w_child_as_parent() {
 void Container_contains_w_0_as_child() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
 
     test_assert( !ecs_contains(world, parent, 0));
     test_assert( !ecs_has(world, parent, EcsContainer));
@@ -96,7 +96,7 @@ void Container_contains_w_0_as_child() {
 void Container_contains_w_0_as_parent() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity child = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new(world, 0);
 
     test_assert( !ecs_contains(world, 0, child));
     test_assert( !ecs_has(world, child, EcsContainer));
@@ -115,8 +115,8 @@ void Container_contains_w_0_for_both() {
 void Container_adopt() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new(world, 0);
 
     ecs_adopt(world, parent, child);
 
@@ -129,8 +129,8 @@ void Container_adopt() {
 void Container_adopt_again() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new(world, 0);
 
     ecs_adopt(world, parent, child);
     test_assert( ecs_contains(world, parent, child));
@@ -146,14 +146,14 @@ void Container_adopt_again() {
 void Container_adopt_twice() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent_1 = ecs_new(world, 0);
-    EcsEntity child = ecs_new(world, 0);
+    ecs_entity_t parent_1 = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new(world, 0);
 
     ecs_adopt(world, parent_1, child);
     test_assert( ecs_contains(world, parent_1, child));
     test_assert( ecs_has(world, parent_1, EcsContainer));
 
-    EcsEntity parent_2 = ecs_new(world, 0);
+    ecs_entity_t parent_2 = ecs_new(world, 0);
 
     ecs_adopt(world, parent_2, child);
     test_assert( ecs_contains(world, parent_1, child));
@@ -166,8 +166,8 @@ void Container_adopt_twice() {
 void Container_orphan_empty() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new(world, 0);
 
     ecs_orphan(world, parent, child);
     test_assert( !ecs_contains(world, parent, child));
@@ -179,8 +179,8 @@ void Container_orphan_empty() {
 void Container_orphan() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new_child(world, parent, NULL, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_child(world, parent, NULL, 0);
 
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
@@ -195,8 +195,8 @@ void Container_orphan() {
 void Container_orphan_again() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new_child(world, parent, NULL, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_child(world, parent, NULL, 0);
 
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
@@ -215,9 +215,9 @@ void Container_orphan_again() {
 void Container_orphan_twice() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent_1 = ecs_new(world, 0);
-    EcsEntity parent_2 = ecs_new(world, 0);
-    EcsEntity child = ecs_new_child(world, parent_1, NULL, 0);
+    ecs_entity_t parent_1 = ecs_new(world, 0);
+    ecs_entity_t parent_2 = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_child(world, parent_1, NULL, 0);
 
     test_assert( ecs_contains(world, parent_1, child));
     test_assert( ecs_has(world, parent_1, EcsContainer));
@@ -246,9 +246,9 @@ void Container_orphan_twice() {
 void Container_adopt_orphan() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent_1 = ecs_new(world, 0);
-    EcsEntity parent_2 = ecs_new(world, 0);
-    EcsEntity child = ecs_new(world, 0);
+    ecs_entity_t parent_1 = ecs_new(world, 0);
+    ecs_entity_t parent_2 = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new(world, 0);
 
     ecs_adopt(world, parent_1, child);
     test_assert( ecs_contains(world, parent_1, child));
@@ -274,9 +274,9 @@ void Container_adopt_orphan() {
 void Container_adopt_2_orphan_1() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent_1 = ecs_new(world, 0);
-    EcsEntity parent_2 = ecs_new(world, 0);
-    EcsEntity child = ecs_new(world, 0);
+    ecs_entity_t parent_1 = ecs_new(world, 0);
+    ecs_entity_t parent_2 = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new(world, 0);
 
     ecs_adopt(world, parent_1, child);
     test_assert( ecs_contains(world, parent_1, child));
@@ -297,13 +297,13 @@ void Container_adopt_2_orphan_1() {
 void Container_get_ptr_container() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity parent = ecs_new(world, 0);
-    EcsEntity child = ecs_new_child(world, parent, NULL, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_child(world, parent, NULL, 0);
 
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
 
-    EcsType Tparent = ecs_type_from_entity(world, parent);
+    ecs_type_t Tparent = ecs_type_from_entity(world, parent);
     test_assert(Tparent != 0);
     test_assert( ecs_has(world, child, parent));
     test_assert( ecs_get_ptr(world, child, parent) == NULL);

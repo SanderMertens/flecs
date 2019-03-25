@@ -14,7 +14,7 @@ void MultiThread_2_thread_10_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 10, THREADS = 2;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -44,7 +44,7 @@ void MultiThread_2_thread_1_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 1, THREADS = 2;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -74,7 +74,7 @@ void MultiThread_2_thread_2_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 2, THREADS = 2;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -104,7 +104,7 @@ void MultiThread_2_thread_5_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 5, THREADS = 2;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -134,7 +134,7 @@ void MultiThread_3_thread_10_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 10, THREADS = 3;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -164,7 +164,7 @@ void MultiThread_3_thread_1_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 1, THREADS = 3;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -194,7 +194,7 @@ void MultiThread_3_thread_2_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 2, THREADS = 3;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -224,7 +224,7 @@ void MultiThread_3_thread_5_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 5, THREADS = 3;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -254,7 +254,7 @@ void MultiThread_4_thread_10_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 10, THREADS = 4;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -284,7 +284,7 @@ void MultiThread_4_thread_1_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 1, THREADS = 4;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -314,7 +314,7 @@ void MultiThread_4_thread_2_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 2, THREADS = 4;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -344,7 +344,7 @@ void MultiThread_4_thread_5_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 5, THREADS = 4;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -374,7 +374,7 @@ void MultiThread_5_thread_10_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 10, THREADS = 5;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -404,7 +404,7 @@ void MultiThread_5_thread_1_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 1, THREADS = 5;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -434,7 +434,7 @@ void MultiThread_5_thread_2_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 2, THREADS = 5;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -464,7 +464,7 @@ void MultiThread_5_thread_5_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 5, THREADS = 5;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -494,7 +494,7 @@ void MultiThread_6_thread_10_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 10, THREADS = 6;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -524,7 +524,7 @@ void MultiThread_6_thread_1_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 1, THREADS = 6;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -554,7 +554,7 @@ void MultiThread_6_thread_2_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 2, THREADS = 6;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -584,7 +584,7 @@ void MultiThread_6_thread_5_entity() {
     ECS_SYSTEM(world, Progress, EcsOnFrame, Position);
 
     int i, ENTITIES = 5, THREADS = 6;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     for (i = 0; i < ENTITIES; i ++) {
         handles[i] = ecs_new(world, Position);
@@ -608,7 +608,7 @@ void MultiThread_6_thread_5_entity() {
 }
 
 typedef struct Param {
-    EcsEntity entity;
+    ecs_entity_t entity;
     int count;
 } Param;
 
@@ -626,7 +626,7 @@ void TestSubset(ecs_rows_t *rows) {
 static
 void TestAll(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
-    EcsEntity TestSubset = ecs_column_component(rows, 2);
+    ecs_entity_t TestSubset = ecs_column_component(rows, 2);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -645,7 +645,7 @@ void MultiThread_2_thread_test_combs_100_entity() {
     ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
 
     int i, ENTITIES = 100, THREADS = 2;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     ecs_new_w_count(world, Position, ENTITIES, handles);
 
@@ -674,7 +674,7 @@ void MultiThread_3_thread_test_combs_100_entity() {
     ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
 
     int i, ENTITIES = 100, THREADS = 3;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     ecs_new_w_count(world, Position, ENTITIES, handles);
 
@@ -703,7 +703,7 @@ void MultiThread_4_thread_test_combs_100_entity() {
     ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
 
     int i, ENTITIES = 100, THREADS = 4;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     ecs_new_w_count(world, Position, ENTITIES, handles);
 
@@ -732,7 +732,7 @@ void MultiThread_5_thread_test_combs_100_entity() {
     ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
 
     int i, ENTITIES = 100, THREADS = 5;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     ecs_new_w_count(world, Position, ENTITIES, handles);
 
@@ -761,7 +761,7 @@ void MultiThread_6_thread_test_combs_100_entity() {
     ECS_SYSTEM(world, TestAll, EcsOnFrame, Position, ID.TestSubset);
 
     int i, ENTITIES = 100, THREADS = 6;
-    EcsEntity handles[ENTITIES];
+    ecs_entity_t handles[ENTITIES];
 
     ecs_new_w_count(world, Position, ENTITIES, handles);
 
@@ -793,7 +793,7 @@ void MultiThread_2_thread_test_combs_100_entity_2_types() {
 
     int i, ENTITIES = 100, THREADS = 2;
 
-    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
     ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -824,7 +824,7 @@ void MultiThread_3_thread_test_combs_100_entity_2_types() {
 
     int i, ENTITIES = 20, THREADS = 3;
 
-    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
     ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -855,7 +855,7 @@ void MultiThread_4_thread_test_combs_100_entity_2_types() {
 
     int i, ENTITIES = 100, THREADS = 4;
 
-    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
     ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -886,7 +886,7 @@ void MultiThread_5_thread_test_combs_100_entity_2_types() {
 
     int i, ENTITIES = 100, THREADS = 5;
 
-    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
     ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -917,7 +917,7 @@ void MultiThread_6_thread_test_combs_100_entity_2_types() {
 
     int i, ENTITIES = 100, THREADS = 6;
 
-    EcsEntity start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
+    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
     ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
 
     for (i = 0; i < ENTITIES; i ++) {

@@ -54,7 +54,7 @@ void Singleton_system_w_singleton() {
 
     ecs_set_singleton(world, Velocity, {1, 2});
 
-    EcsEntity e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
 
     ecs_progress(world, 1);
 
@@ -73,7 +73,7 @@ void Singleton_system_w_singleton_not_set() {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, Iter_w_singleton, EcsOnFrame, Position, $Velocity);
 
-    EcsEntity e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
 
     ecs_progress(world, 1);
 

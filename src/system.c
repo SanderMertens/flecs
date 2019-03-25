@@ -6,19 +6,19 @@
 static
 void match_type(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsEntity system,
-    ecs_rows_tystem *system_data,
-    EcsType type)
+    ecs_stage_t *stage,
+    ecs_entity_t system,
+    EcsRowSystem *system_data,
+    ecs_type_t type)
 {
     /* Test if the components of the system are equal or a subset of the 
      * components of the type */
-    EcsEntity match = ecs_type_contains(
+    ecs_entity_t match = ecs_type_contains(
         world, stage, type, system_data->base.and_from_entity, true, false);
 
     /* If there is a match, add the system to the type-row_system index */
     if (match) {
-        EcsMap *index = NULL;
+        ecs_map_t *index = NULL;
         EcsSystemKind kind = system_data->base.kind;
 
         if (kind == EcsOnAdd) {
@@ -31,12 +31,12 @@ void match_type(
             ecs_abort(ECS_INVALID_PARAMETERS, NULL);
         }
 
-        EcsArray *systems = ecs_map_get(index, type);
+        ecs_array_t *systems = ecs_map_get(index, type);
         if (!systems) {
             systems = ecs_array_new(&handle_arr_params, 1);
         }
 
-        EcsEntity *new_elem = ecs_array_add(&systems, &handle_arr_params);
+        ecs_entity_t *new_elem = ecs_array_add(&systems, &handle_arr_params);
         *new_elem = system;
 
         /* Always set the system entry, as array may have been realloc'd */
@@ -48,8 +48,8 @@ void match_type(
 static
 void match_families(
     ecs_world_t *world,
-    EcsEntity system,
-    ecs_rows_tystem *system_data)
+    ecs_entity_t system,
+    EcsRowSystem *system_data)
 {
     EcsIter it = ecs_map_iter(world->main_stage.type_index);
 
@@ -59,7 +59,7 @@ void match_families(
         uint64_t key; /* Only interested in the key, which is the type hash */
         ecs_map_next(&it, &key);
 
-        EcsType type = key;
+        ecs_type_t type = key;
         
         match_type(world, NULL, system, system_data, type);
     }
@@ -69,25 +69,25 @@ void match_families(
  * typically as a result of a ADD, REMOVE or SET trigger.
  */
 static
-EcsEntity new_row_system(
+ecs_entity_t new_row_system(
     ecs_world_t *world,
     const char *id,
     EcsSystemKind kind,
     bool needs_tables,
     const char *sig,
-    EcsSystemAction action)
+    ecs_system_action_t action)
 {
     uint32_t count = ecs_columns_count(sig);
     if (!count) {
         return 0;
     }
 
-    EcsEntity result = _ecs_new(world, world->t_row_system);
+    ecs_entity_t result = _ecs_new(world, world->t_row_system);
     EcsId *id_data = ecs_get_ptr(world, result, EcsId);
     *id_data = id;
 
-    ecs_rows_tystem *system_data = ecs_get_ptr(world, result, ecs_rows_tystem);
-    memset(system_data, 0, sizeof(ecs_rows_tystem));
+    EcsRowSystem *system_data = ecs_get_ptr(world, result, EcsRowSystem);
+    memset(system_data, 0, sizeof(EcsRowSystem));
     system_data->base.action = action;
     system_data->base.signature = sig;
     system_data->base.enabled = true;
@@ -95,20 +95,20 @@ EcsEntity new_row_system(
     system_data->components = ecs_array_new(&handle_arr_params, count);
 
     if (ecs_parse_component_expr(
-        world, sig, ecs_parse_component_action, system_data) != EcsOk)
+        world, sig, ecs_parse_component_action, system_data) != 0)
     {
         ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
     }
 
-    EcsType type_id = 0;
+    ecs_type_t type_id = 0;
     uint32_t i, column_count = ecs_array_count(system_data->base.columns);
-    EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
+    ecs_system_column_t *buffer = ecs_array_buffer(system_data->base.columns);
 
     for (i = 0; i < column_count; i ++) {
-        EcsEntity *h = ecs_array_add(
+        ecs_entity_t *h = ecs_array_add(
             &system_data->components, &handle_arr_params);
 
-        EcsSystemColumn *column = &buffer[i];
+        ecs_system_column_t *column = &buffer[i];
         *h = column->is.component;
 
         if (column->kind != EcsFromId) {
@@ -117,7 +117,7 @@ EcsEntity new_row_system(
         }
     }
 
-    EcsEntity *elem = NULL;
+    ecs_entity_t *elem = NULL;
 
     if (!needs_tables) {
         if (kind == EcsOnFrame) {
@@ -152,14 +152,14 @@ EcsEntity new_row_system(
 
 void ecs_system_compute_and_families(
     ecs_world_t *world,
-    EcsEntity system,
+    ecs_entity_t system,
     EcsSystem *system_data)
 {
     uint32_t i, column_count = ecs_array_count(system_data->columns);
-    EcsSystemColumn *buffer = ecs_array_buffer(system_data->columns);
+    ecs_system_column_t *buffer = ecs_array_buffer(system_data->columns);
 
     for (i = 0; i < column_count; i ++) {
-        EcsSystemColumn *elem = &buffer[i];
+        ecs_system_column_t *elem = &buffer[i];
         EcsSystemExprElemKind elem_kind = elem->kind;
         EcsSystemExprOperKind oper_kind = elem->oper_kind;
 
@@ -178,7 +178,7 @@ void ecs_system_compute_and_families(
 }
 
 /** Parse callback that adds component to the components array for a system */
-EcsResult ecs_parse_component_action(
+int ecs_parse_component_action(
     ecs_world_t *world,
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
@@ -187,10 +187,10 @@ EcsResult ecs_parse_component_action(
     void *data)
 {
     EcsSystem *system_data = data;
-    EcsSystemColumn *elem;
+    ecs_system_column_t *elem;
 
     /* Lookup component handly by string identifier */
-    EcsEntity component = ecs_lookup(world, component_id);
+    ecs_entity_t component = ecs_lookup(world, component_id);
     if (!component) {
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
@@ -198,7 +198,7 @@ EcsResult ecs_parse_component_action(
             ecs_abort(ECS_INVALID_COMPONENT_ID, component_id);
         } else {
             /* Don't add 0 component to signature */
-            return EcsOk;
+            return 0;
         }
     }
 
@@ -261,30 +261,30 @@ EcsResult ecs_parse_component_action(
         }
     }
 
-    return EcsOk;
+    return 0;
 error:
-    return EcsError;
+    return -1;
 }
 
 /** Run system on a single row */
 bool ecs_notify_row_system(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsEntity system,
-    EcsArray *type,
-    EcsTableColumn *table_columns,
+    ecs_stage_t *stage,
+    ecs_entity_t system,
+    ecs_array_t *type,
+    ecs_table_column_t *table_columns,
     uint32_t offset,
     uint32_t limit)
 {
-    EcsEntityInfo entity_info = {0};
+    ecs_entity_info_t entity_info = {0};
 
     ecs_world_t *real_world = world;
     if (world->magic == ECS_THREAD_MAGIC) {
-        real_world = ((EcsThread*)world)->world; /* dispel the magic */
+        real_world = ((ecs_thread_t*)world)->world; /* dispel the magic */
     }
 
-    ecs_rows_tystem *system_data = get_ptr(
-        real_world, &real_world->main_stage, system, Eecs_rows_tystem, false, true, &entity_info);
+    EcsRowSystem *system_data = get_ptr(
+        real_world, &real_world->main_stage, system, EEcsRowSystem, false, true, &entity_info);
     
     assert(system_data != NULL);
 
@@ -292,12 +292,12 @@ bool ecs_notify_row_system(
         return false;
     }
 
-    EcsSystemAction action = system_data->base.action;
+    ecs_system_action_t action = system_data->base.action;
 
     uint32_t i, column_count = ecs_array_count(system_data->base.columns);
-    EcsSystemColumn *buffer = ecs_array_buffer(system_data->base.columns);
+    ecs_system_column_t *buffer = ecs_array_buffer(system_data->base.columns);
     int32_t columns[column_count];
-    EcsReference references[column_count];
+    ecs_reference_t references[column_count];
     void* ref_ptrs[column_count];
     uint32_t ref_id = 0;
 
@@ -305,8 +305,8 @@ bool ecs_notify_row_system(
         if (buffer[i].kind == EcsFromSelf) {
             columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
         } else {
-            EcsEntity entity = 0;
-            EcsEntity component = buffer[i].is.component;
+            ecs_entity_t entity = 0;
+            ecs_entity_t component = buffer[i].is.component;
             
             if (buffer[i].kind == EcsFromSystem) {
                 entity = system;
@@ -316,7 +316,7 @@ bool ecs_notify_row_system(
                 entity = buffer[i].source;
             }
 
-            references[ref_id] = (EcsReference){.entity = entity, .component = component};
+            references[ref_id] = (ecs_reference_t){.entity = entity, .component = component};
             ref_ptrs[ref_id] = get_ptr(real_world, &real_world->main_stage, entity, component, false, true, &entity_info);
 
             ref_id ++;
@@ -343,7 +343,7 @@ bool ecs_notify_row_system(
     }
 
     if (table_columns) {
-        EcsEntity *entities = ecs_array_buffer(table_columns[0].data);
+        ecs_entity_t *entities = ecs_array_buffer(table_columns[0].data);
         rows.entities = &entities[rows.offset];
     }
 
@@ -357,35 +357,35 @@ bool ecs_notify_row_system(
  * Tasks are ran once every frame. */
 void ecs_run_task(
     ecs_world_t *world,
-    EcsEntity system,
+    ecs_entity_t system,
     float delta_time)
 {
-    EcsStage *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_notify_row_system(world, stage, system, NULL, NULL, 0, 1);
 }
 
 /* Notify row system of a new type */
 void ecs_row_system_notify_of_type(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsEntity system,
-    EcsType type)
+    ecs_stage_t *stage,
+    ecs_entity_t system,
+    ecs_type_t type)
 {
-    ecs_rows_tystem *system_data = ecs_get_ptr(world, system, ecs_rows_tystem);
+    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
 
     match_type(world, stage, system, system_data, type);
 }
 
 /* -- Public API -- */
 
-EcsEntity ecs_new_system(
+ecs_entity_t ecs_new_system(
     ecs_world_t *world,
     const char *id,
     EcsSystemKind kind,
     const char *sig,
-    EcsSystemAction action)
+    ecs_system_action_t action)
 {
-    EcsEntity result = ecs_lookup(world, id);
+    ecs_entity_t result = ecs_lookup(world, id);
     if (result) {
         return result;
     }
@@ -413,7 +413,7 @@ EcsEntity ecs_new_system(
 
     EcsSystem *system_data = ecs_get_ptr(world, result, EcsColSystem);
     if (!system_data) {
-        system_data = _ecs_get_ptr(world, result, Tecs_rows_tystem);
+        system_data = _ecs_get_ptr(world, result, TEcsRowSystem);
         if (!system_data) {
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
         }
@@ -421,11 +421,11 @@ EcsEntity ecs_new_system(
 
     /* If system contains FromSystem params, add them tot the system */
     if (system_data->and_from_system) {
-        EcsArray *f = ecs_type_get(world, NULL, system_data->and_from_system);
-        EcsEntity *buffer = ecs_array_buffer(f);
+        ecs_array_t *f = ecs_type_get(world, NULL, system_data->and_from_system);
+        ecs_entity_t *buffer = ecs_array_buffer(f);
         uint32_t i, count = ecs_array_count(f);
         for (i = 0; i < count; i ++) {
-            EcsType type = ecs_type_from_entity(world, buffer[i]);
+            ecs_type_t type = ecs_type_from_entity(world, buffer[i]);
             _ecs_add(world, result, type);
         }
     }
@@ -435,7 +435,7 @@ EcsEntity ecs_new_system(
 
 void ecs_enable(
     ecs_world_t *world,
-    EcsEntity system,
+    ecs_entity_t system,
     bool enabled)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
@@ -444,7 +444,7 @@ void ecs_enable(
     /* Try to get either ColSystem or RowSystem data */
     EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     if (!system_data) {
-        system_data = ecs_get_ptr(world, system, ecs_rows_tystem);
+        system_data = ecs_get_ptr(world, system, EcsRowSystem);
     } else {
         col_system = true;
     }
@@ -457,9 +457,9 @@ void ecs_enable(
         assert(type_data != NULL);
 
         ecs_world_t *world_temp = world;
-        EcsStage *stage = ecs_get_stage(&world_temp);
-        EcsArray *type = ecs_type_get(world, stage, type_data->type);
-        EcsEntity *buffer = ecs_array_buffer(type);
+        ecs_stage_t *stage = ecs_get_stage(&world_temp);
+        ecs_array_t *type = ecs_type_get(world, stage, type_data->type);
+        ecs_entity_t *buffer = ecs_array_buffer(type);
         uint32_t i, count = ecs_array_count(type);
         for (i = 0; i < count; i ++) {
             /* Enable/disable all systems in type */
@@ -491,11 +491,11 @@ void ecs_enable(
 
 bool ecs_is_enabled(
     ecs_world_t *world,
-    EcsEntity system)
+    ecs_entity_t system)
 {
     EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     if (!system_data) {
-        system_data = ecs_get_ptr(world, system, ecs_rows_tystem);
+        system_data = ecs_get_ptr(world, system, EcsRowSystem);
     }
 
     if (system_data) {
@@ -507,7 +507,7 @@ bool ecs_is_enabled(
 
 void ecs_set_period(
     ecs_world_t *world,
-    EcsEntity system,
+    ecs_entity_t system,
     float period)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
@@ -554,7 +554,7 @@ void* _ecs_column(
         return NULL;
     }
 
-    EcsTableColumn *column = &((EcsTableColumn*)rows->table_columns)[table_column];
+    ecs_table_column_t *column = &((ecs_table_column_t*)rows->table_columns)[table_column];
     void *buffer = ecs_array_buffer(column->data);
     return ECS_OFFSET(buffer, column->size * rows->offset);
 }
@@ -594,7 +594,7 @@ void* _ecs_shared(
     }
 }
 
-EcsEntity _ecs_column_source(
+ecs_entity_t _ecs_column_source(
     ecs_rows_t *rows,
     uint32_t index,
     bool test)
@@ -618,12 +618,12 @@ EcsEntity _ecs_column_source(
 
         ecs_assert(rows->references != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        EcsReference *ref = &rows->references[-table_column - 1];
+        ecs_reference_t *ref = &rows->references[-table_column - 1];
         return ref->entity;
     }
 }
 
-EcsType _ecs_column_type(
+ecs_type_t _ecs_column_type(
     ecs_rows_t *rows,
     uint32_t index,
     bool test)
@@ -638,12 +638,12 @@ EcsType _ecs_column_type(
             return 0;
         }
 
-        EcsEntity component = rows->components[index - 1];
+        ecs_entity_t component = rows->components[index - 1];
         return ecs_type_from_entity(rows->world, component);
     }
 }
 
-EcsEntity _ecs_column_component(
+ecs_entity_t _ecs_column_component(
     ecs_rows_t *rows,
     uint32_t index,
     bool test)
@@ -690,7 +690,7 @@ void *_ecs_field(
         return rows->ref_ptrs[-table_column - 1];
     } else {
         ecs_assert(rows->table_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-        EcsTableColumn *column = &((EcsTableColumn*)rows->table_columns)[table_column];
+        ecs_table_column_t *column = &((ecs_table_column_t*)rows->table_columns)[table_column];
 
 #ifndef NDEBUG
         ecs_assert(index < ecs_array_count(column->data), ECS_OUT_OF_RANGE, 0);

@@ -3,7 +3,7 @@
 void Add_zero() {
     ecs_world_t *world = ecs_init();
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, 0);
@@ -17,7 +17,7 @@ void Add_component() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -31,7 +31,7 @@ void Add_component_again() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -49,7 +49,7 @@ void Add_2_components() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -69,7 +69,7 @@ void Add_2_components_again() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -92,7 +92,7 @@ void Add_2_components_overlap() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -116,7 +116,7 @@ void Add_type() {
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Type);
@@ -132,7 +132,7 @@ void Add_type_of_2() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Type);
@@ -149,7 +149,7 @@ void Add_type_w_type() {
     ECS_TYPE(world, Type_1, Position);
     ECS_TYPE(world, Type_2, Type_1);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Type_2);
@@ -167,7 +167,7 @@ void Add_type_w_2_types() {
     ECS_TYPE(world, Type_2, Velocity);
     ECS_TYPE(world, Type_3, Type_1, Type_2);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Type_3);
@@ -185,7 +185,7 @@ void Add_type_mixed() {
     ECS_TYPE(world, Type_1, Position);
     ECS_TYPE(world, Type_2, Type_1, Velocity);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Type_2);
@@ -201,7 +201,7 @@ void Add_type_again() {
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type_1, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Type_1);
@@ -222,7 +222,7 @@ void Add_type_overlap() {
     ECS_TYPE(world, Type_1, Position, Velocity);
     ECS_TYPE(world, Type_2, Velocity, Mass);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Type_1);
@@ -244,7 +244,7 @@ void Add_type_again_component() {
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -263,7 +263,7 @@ void Add_type_overlap_component() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -282,7 +282,7 @@ void Add_component_to_nonempty() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -298,7 +298,7 @@ void Add_component_to_nonempty_again() {
 
     ECS_COMPONENT(world, Position);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -315,7 +315,7 @@ void Add_component_to_nonempty_overlap() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -334,7 +334,7 @@ void Add_type_to_nonempty() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    EcsEntity e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -352,7 +352,7 @@ void Add_type_to_nonempty_again() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    EcsEntity e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -373,7 +373,7 @@ void Add_type_to_nonempty_overlap() {
     ECS_TYPE(world, Type_1, Position, Velocity);
     ECS_TYPE(world, Type_2, Velocity, Mass);
 
-    EcsEntity e = ecs_new(world, Type_1);
+    ecs_entity_t e = ecs_new(world, Type_1);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -392,7 +392,7 @@ void Add_tag() {
 
     ECS_TAG(world, Tag);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Tag);
@@ -407,7 +407,7 @@ void Add_type_w_tag() {
     ECS_TAG(world, Tag);
     ECS_TYPE(world, Type, Tag);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Type);
@@ -424,7 +424,7 @@ void Add_type_w_2_tags() {
     ECS_TAG(world, Tag_2);
     ECS_TYPE(world, Type, Tag_1, Tag_2);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Type);
@@ -443,7 +443,7 @@ void Add_type_w_tag_mixed() {
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Tag_1, Tag_2, Position);
 
-    EcsEntity e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
     ecs_add(world, e, Type);

@@ -4,7 +4,7 @@
 
 /** Parse callback that adds type to type identifier for ecs_new_type */
 static
-EcsResult add_type(
+int add_type(
     ecs_world_t *world,
     EcsSystemExprElemKind elem_kind,
     EcsSystemExprOperKind oper_kind,
@@ -13,29 +13,29 @@ EcsResult add_type(
     void *data)
 {
     EcsTypeComponent *type = data;
-    EcsStage *stage = &world->main_stage;
+    ecs_stage_t *stage = &world->main_stage;
 
     if (oper_kind != EcsOperAnd) {
-        return EcsError;
+        return -1;
     }
 
     if (!strcmp(entity_id, "0")) {
         *type = (EcsTypeComponent){0, 0};
     } else {
         if (elem_kind != EcsFromSelf) {
-            return EcsError;
+            return -1;
         }
 
-        EcsEntity entity = ecs_lookup(world, entity_id);
+        ecs_entity_t entity = ecs_lookup(world, entity_id);
         if (!entity) {
-            return EcsError;
+            return -1;
         }
 
-        EcsType type_id = ecs_type_register(
+        ecs_type_t type_id = ecs_type_register(
             world, stage, entity, NULL);
         assert(type_id != 0);
 
-        EcsType resolved_id = ecs_type_from_handle(
+        ecs_type_t resolved_id = ecs_type_from_handle(
             world, stage, entity, NULL);
         assert(resolved_id != 0);
 
@@ -46,7 +46,7 @@ EcsResult add_type(
             world, stage, type->resolved, resolved_id, 0);
     }
 
-    return EcsOk;
+    return 0;
 }
 
 /** Comparator function for handles */
@@ -55,19 +55,19 @@ int compare_handle(
     const void *p1,
     const void *p2)
 {
-    return *(EcsEntity*)p1 - *(EcsEntity*)p2;
+    return *(ecs_entity_t*)p1 - *(ecs_entity_t*)p2;
 }
 
 /** Hash array of handles */
 static
 uint32_t hash_handle_array(
-    EcsEntity* array,
+    ecs_entity_t* array,
     uint32_t count)
 {
     uint32_t hash = 0;
     int i;
     for (i = 0; i < count; i ++) {
-        ecs_hash(&array[i], sizeof(EcsEntity), &hash);
+        ecs_hash(&array[i], sizeof(ecs_entity_t), &hash);
     }
     return hash;
 }
@@ -75,11 +75,11 @@ uint32_t hash_handle_array(
 static
 void notify_create_type(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsArray *systems,
-    EcsType type)
+    ecs_stage_t *stage,
+    ecs_array_t *systems,
+    ecs_type_t type)
 {
-    EcsEntity *buffer = ecs_array_buffer(systems);
+    ecs_entity_t *buffer = ecs_array_buffer(systems);
     uint32_t i, count = ecs_array_count(systems);
 
     for (i = 0; i < count; i ++) {
@@ -88,20 +88,20 @@ void notify_create_type(
 }
 
 static
-EcsType register_type_from_buffer(
+ecs_type_t register_type_from_buffer(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsEntity *buf,
+    ecs_stage_t *stage,
+    ecs_entity_t *buf,
     uint32_t count)
 {
-    EcsType new_id = hash_handle_array(buf, count);
-    EcsMap *type_index;
+    ecs_type_t new_id = hash_handle_array(buf, count);
+    ecs_map_t *type_index;
 
     if (!stage) stage = &world->main_stage;
 
     type_index = stage->type_index;
 
-    EcsArray *new_array = ecs_map_get(type_index, new_id);
+    ecs_array_t *new_array = ecs_map_get(type_index, new_id);
 
     if (!new_array) {
         new_array = ecs_array_new_from_buffer(&handle_arr_params, count, buf);
@@ -119,12 +119,12 @@ EcsType register_type_from_buffer(
 
 /* -- Private functions -- */
 
-EcsArray* ecs_type_get(
+ecs_array_t* ecs_type_get(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsType type_id)
+    ecs_stage_t *stage,
+    ecs_type_t type_id)
 {
-    EcsArray *result = ecs_map_get(world->main_stage.type_index, type_id);
+    ecs_array_t *result = ecs_map_get(world->main_stage.type_index, type_id);
     if (!result) {
         if (world->threads_running) {
             assert(stage != NULL);
@@ -136,21 +136,21 @@ EcsArray* ecs_type_get(
 }
 
 /** Get type id from entity handle */
-EcsType ecs_type_from_handle(
+ecs_type_t ecs_type_from_handle(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsEntity entity,
-    EcsEntityInfo *info)
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_info_t *info)
 {
     if (entity == 0) {
         return 0;
     }
 
-    EcsTable *table = NULL;
-    EcsTableColumn *columns = NULL;
+    ecs_table_t *table = NULL;
+    ecs_table_column_t *columns = NULL;
     uint32_t index = 0;
-    EcsEntity component = 0;
-    EcsType type = 0;
+    ecs_entity_t component = 0;
+    ecs_type_t type = 0;
 
     if (!info) {
         uint64_t row_64 = ecs_map_get64(world->main_stage.entity_index, entity);
@@ -161,7 +161,7 @@ EcsType ecs_type_from_handle(
             }
         }
 
-        EcsRow row = ecs_to_row(row_64);
+        ecs_row_t row = ecs_to_row(row_64);
         if (row.type_id) {
             table = ecs_world_get_table(world, stage, row.type_id);
             columns = table->columns;
@@ -174,12 +174,12 @@ EcsType ecs_type_from_handle(
     }
 
     if (table) {
-        EcsEntity *components = ecs_array_buffer(table->type);
+        ecs_entity_t *components = ecs_array_buffer(table->type);
         component = components[0];
     }
 
     if (component == EEcsTypeComponent) {
-        EcsArrayParams params = {.element_size = sizeof(EcsTypeComponent)};
+        ecs_array_params_t params = {.element_size = sizeof(EcsTypeComponent)};
         EcsTypeComponent *fe = ecs_array_get(columns[1].data, &params, index);
         type = fe->resolved;
     } else {
@@ -193,23 +193,23 @@ EcsType ecs_type_from_handle(
 
 
 /** Register a new type, optionally extending from existing type */
-EcsType ecs_type_register(
+ecs_type_t ecs_type_register(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsEntity to_add,
-    EcsArray *set)
+    ecs_stage_t *stage,
+    ecs_entity_t to_add,
+    ecs_array_t *set)
 {
     uint32_t count = ecs_array_count(set);
-    EcsEntity new_set[count + 1];
+    ecs_entity_t new_set[count + 1];
     void *new_buffer = new_set;
 
     if (to_add) {
         void *buffer = ecs_array_buffer(set);
         if (count) {
-            memcpy(new_set, buffer, sizeof(EcsEntity) * count);
+            memcpy(new_set, buffer, sizeof(ecs_entity_t) * count);
         }
         new_set[count] = to_add;
-        qsort(new_set, count + 1, sizeof(EcsEntity), compare_handle);
+        qsort(new_set, count + 1, sizeof(ecs_entity_t), compare_handle);
         count ++;
     } else if (set) {
         void *buffer = ecs_array_buffer(set);
@@ -221,26 +221,26 @@ EcsType ecs_type_register(
     return register_type_from_buffer(world, stage, new_buffer, count);
 }
 
-EcsType ecs_type_add(
+ecs_type_t ecs_type_add(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsType type,
-    EcsEntity component)
+    ecs_stage_t *stage,
+    ecs_type_t type,
+    ecs_entity_t component)
 {
-    EcsArray *array = ecs_type_get(world, stage, type);
+    ecs_array_t *array = ecs_type_get(world, stage, type);
     assert(!type || array != NULL);
     return ecs_type_register(world, stage, component, array);
 }
 
-EcsType ecs_type_merge_arr(
+ecs_type_t ecs_type_merge_arr(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsArray *arr_cur,
-    EcsArray *to_add,
-    EcsArray *to_del)
+    ecs_stage_t *stage,
+    ecs_array_t *arr_cur,
+    ecs_array_t *to_add,
+    ecs_array_t *to_del)
 {
-    EcsEntity *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
-    EcsEntity cur = 0, add = 0, del = 0;
+    ecs_entity_t *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
+    ecs_entity_t cur = 0, add = 0, del = 0;
     uint32_t i_cur = 0, i_add = 0, i_del = 0;
     uint32_t cur_count = 0, add_count = 0, del_count = 0;
 
@@ -262,7 +262,7 @@ EcsType ecs_type_merge_arr(
         add = buf_add[0];
     }
 
-        EcsEntity buf_new[cur_count + add_count];
+        ecs_entity_t buf_new[cur_count + add_count];
     uint32_t new_count = 0;
 
     do {
@@ -305,12 +305,12 @@ EcsType ecs_type_merge_arr(
 }
 
 /** O(n) algorithm to merge families */
-EcsType ecs_type_merge(
+ecs_type_t ecs_type_merge(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsType cur_id,
-    EcsType to_add_id,
-    EcsType to_remove_id)
+    ecs_stage_t *stage,
+    ecs_type_t cur_id,
+    ecs_type_t to_add_id,
+    ecs_type_t to_remove_id)
 {
     if (!to_remove_id) {
         if (cur_id && !to_add_id) {
@@ -324,8 +324,8 @@ EcsType ecs_type_merge(
         return to_add_id;
     }
 
-    EcsArray *arr_cur = ecs_type_get(world, stage, cur_id);
-    EcsArray *to_add = NULL, *to_del = NULL;
+    ecs_array_t *arr_cur = ecs_type_get(world, stage, cur_id);
+    ecs_array_t *to_add = NULL, *to_del = NULL;
 
     if (to_remove_id) {
         to_del = ecs_type_get(world, stage, to_remove_id);
@@ -339,11 +339,11 @@ EcsType ecs_type_merge(
 }
 
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
-EcsEntity ecs_type_contains(
+ecs_entity_t ecs_type_contains(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsType type_id_1,
-    EcsType type_id_2,
+    ecs_stage_t *stage,
+    ecs_type_t type_id_1,
+    ecs_type_t type_id_2,
     bool match_all,
     bool match_prefab)
 {
@@ -353,22 +353,22 @@ EcsEntity ecs_type_contains(
 
     assert(type_id_2 != 0);
 
-    EcsArray *f_1 = ecs_type_get(world, stage, type_id_1);
-    EcsArray *f_2 = ecs_type_get(world, stage, type_id_2);
+    ecs_array_t *f_1 = ecs_type_get(world, stage, type_id_1);
+    ecs_array_t *f_2 = ecs_type_get(world, stage, type_id_2);
 
     assert(f_1 && f_2);
 
     if (type_id_1 == type_id_2) {
-        return *(EcsEntity*)ecs_array_get(f_1, &handle_arr_params, 0);
+        return *(ecs_entity_t*)ecs_array_get(f_1, &handle_arr_params, 0);
     }
 
     uint32_t i_2, i_1 = 0;
-    EcsEntity *h2p, *h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
-    EcsEntity h1 = 0, prefab = 0;
+    ecs_entity_t *h2p, *h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
+    ecs_entity_t h1 = 0, prefab = 0;
     bool prefab_searched = false;
 
     for (i_2 = 0; (h2p = ecs_array_get(f_2, &handle_arr_params, i_2)); i_2 ++) {
-        EcsEntity h2 = *h2p;
+        ecs_entity_t h2 = *h2p;
 
         if (!h1p) {
             return 0;
@@ -391,7 +391,7 @@ EcsEntity ecs_type_contains(
 
             if (prefab) {
                 if (h2 != EEcsId && h2 != EEcsPrefab) {
-                    EcsType type = ecs_type_from_entity(world, h2);
+                    ecs_type_t type = ecs_type_from_entity(world, h2);
                     if (_ecs_has(world, prefab, type)) {
                         h1 = h2;
                     }
@@ -419,13 +419,13 @@ EcsEntity ecs_type_contains(
 
 bool ecs_type_contains_component(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsType type_id,
-    EcsEntity component,
+    ecs_stage_t *stage,
+    ecs_type_t type_id,
+    ecs_entity_t component,
     bool match_prefab)
 {
-    EcsArray *type = ecs_type_get(world, stage, type_id);
-    EcsEntity *buffer = ecs_array_buffer(type);
+    ecs_array_t *type = ecs_type_get(world, stage, type_id);
+    ecs_entity_t *buffer = ecs_array_buffer(type);
     uint32_t i, count = ecs_array_count(type);
 
     for (i = 0; i < count; i++) {
@@ -435,9 +435,9 @@ bool ecs_type_contains_component(
     }
 
     if (match_prefab) {
-        EcsEntity prefab = ecs_map_get64(world->prefab_index, type_id);
+        ecs_entity_t prefab = ecs_map_get64(world->prefab_index, type_id);
         if (prefab) {
-            EcsType component_type = ecs_type_from_entity(world, component);
+            ecs_type_t component_type = ecs_type_from_entity(world, component);
             if (_ecs_has(world, prefab, component_type)) {
                 return true;
             }
@@ -449,7 +449,7 @@ bool ecs_type_contains_component(
 
 /* -- Public API -- */
 
-EcsType ecs_new_type(
+ecs_type_t ecs_new_type(
     ecs_world_t *world,
     const char *id,
     const char *sig)
@@ -457,16 +457,16 @@ EcsType ecs_new_type(
     assert(world->magic == ECS_WORLD_MAGIC);
     EcsTypeComponent type = {0};
 
-    EcsEntity result = ecs_lookup(world, id);
+    ecs_entity_t result = ecs_lookup(world, id);
     if (result) {
         return result;
     }
 
-    if (ecs_parse_component_expr(world, sig, add_type, &type) != EcsOk) {
+    if (ecs_parse_component_expr(world, sig, add_type, &type) != 0) {
         return 0;
     }
 
-    EcsEntity type_entity = ecs_map_get64(
+    ecs_entity_t type_entity = ecs_map_get64(
         world->type_handles, type.type);
 
     if (type_entity) {
@@ -491,7 +491,7 @@ EcsType ecs_new_type(
     }
 }
 
-EcsEntity ecs_new_prefab(
+ecs_entity_t ecs_new_prefab(
     ecs_world_t *world,
     const char *id,
     const char *sig)
@@ -499,12 +499,12 @@ EcsEntity ecs_new_prefab(
     assert(world->magic == ECS_WORLD_MAGIC);
     EcsTypeComponent type = {0};
 
-    EcsEntity result = ecs_lookup(world, id);
+    ecs_entity_t result = ecs_lookup(world, id);
     if (result) {
         return result;
     }
 
-    if (ecs_parse_component_expr(world, sig, add_type, &type) != EcsOk) {
+    if (ecs_parse_component_expr(world, sig, add_type, &type) != 0) {
         return 0;
     }
 
@@ -517,7 +517,7 @@ EcsEntity ecs_new_prefab(
     return result;
 }
 
-EcsEntity ecs_new_entity(
+ecs_entity_t ecs_new_entity(
     ecs_world_t *world,
     const char *id,
     const char *components)
@@ -525,10 +525,10 @@ EcsEntity ecs_new_entity(
     assert(world->magic == ECS_WORLD_MAGIC);
     EcsTypeComponent type = {0};
 
-    EcsEntity result = ecs_lookup(world, id);
+    ecs_entity_t result = ecs_lookup(world, id);
     ecs_assert(!result, ECS_ENTITY_ALREADY_DEFINED, id);
 
-    if (ecs_parse_component_expr(world, components, add_type, &type) != EcsOk) {
+    if (ecs_parse_component_expr(world, components, add_type, &type) != 0) {
         return 0;
     }
 
@@ -539,10 +539,10 @@ EcsEntity ecs_new_entity(
 }
 
 int16_t ecs_type_index_of(
-    EcsArray *type,
-    EcsEntity component)
+    ecs_array_t *type,
+    ecs_entity_t component)
 {
-    EcsEntity *buf = ecs_array_buffer(type);
+    ecs_entity_t *buf = ecs_array_buffer(type);
     int i, count = ecs_array_count(type);
     
     for (i = 0; i < count; i ++) {
@@ -554,12 +554,12 @@ int16_t ecs_type_index_of(
     return -1;
 }
 
-EcsType _ecs_merge_type(
+ecs_type_t _ecs_merge_type(
     ecs_world_t *world,
-    EcsType type,
-    EcsType type_add,
-    EcsType type_remove)
+    ecs_type_t type,
+    ecs_type_t type_add,
+    ecs_type_t type_remove)
 {
-    EcsStage *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_get_stage(&world);
     return ecs_type_merge(world, stage, type, type_add, type_remove);
 }

@@ -5,18 +5,18 @@
 static
 void activate_table(
     ecs_world_t *world,
-    EcsTable *table,
-    EcsEntity system,
+    ecs_table_t *table,
+    ecs_entity_t system,
     bool activate)
 {
     if (system) {
         ecs_system_activate_table(world, system, table, activate);
     } else {
-        EcsArray *systems = table->frame_systems;
+        ecs_array_t *systems = table->frame_systems;
         if (systems) {
             EcsIter it = ecs_array_iter(systems, &handle_arr_params);
             while (ecs_iter_hasnext(&it)) {
-                system = *(EcsEntity*)ecs_iter_next(&it);
+                system = *(ecs_entity_t*)ecs_iter_next(&it);
                 ecs_system_activate_table(world, system, table, activate);
             }
         }
@@ -25,23 +25,23 @@ void activate_table(
 
 /* -- Private functions -- */
 
-EcsTableColumn *ecs_table_get_columns(
+ecs_table_column_t *ecs_table_get_columns(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsArray *type)
+    ecs_stage_t *stage,
+    ecs_array_t *type)
 {
-    EcsTableColumn *result = calloc(sizeof(EcsTableColumn), ecs_array_count(type) + 1);
+    ecs_table_column_t *result = calloc(sizeof(ecs_table_column_t), ecs_array_count(type) + 1);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    EcsEntity *buf = ecs_array_buffer(type);
+    ecs_entity_t *buf = ecs_array_buffer(type);
     uint32_t i, count = ecs_array_count(type);
 
     /* First column is reserved for storing entity id's */
-    result[0].size = sizeof(EcsEntity);
+    result[0].size = sizeof(ecs_entity_t);
     result[0].data = NULL;
 
     for (i = 0; i < count; i ++) {
-        EcsEntityInfo info = {0};
+        ecs_entity_info_t info = {0};
         EcsComponent *component = get_ptr(world, stage, buf[i], EEcsComponent, false, false, &info);
 
         if (component) {
@@ -55,12 +55,12 @@ EcsTableColumn *ecs_table_get_columns(
     return result;
 }
 
-EcsResult ecs_table_init(
+int ecs_table_init(
     ecs_world_t *world,
-    EcsStage *stage,
-    EcsTable *table)
+    ecs_stage_t *stage,
+    ecs_table_t *table)
 {
-    EcsArray *type = ecs_type_get(world, stage, table->type_id);
+    ecs_array_t *type = ecs_type_get(world, stage, table->type_id);
     ecs_assert(type != NULL, ECS_INTERNAL_ERROR, "invalid type id of table");
     bool prefab_set = false;
 
@@ -69,7 +69,7 @@ EcsResult ecs_table_init(
     table->columns = ecs_table_get_columns(world, stage, type);
 
     if (stage == &world->main_stage) {
-        EcsEntity *buf = ecs_array_buffer(type);
+        ecs_entity_t *buf = ecs_array_buffer(type);
         uint32_t i, count = ecs_array_count(type);
 
         for (i = 0; i < count; i ++) {
@@ -87,12 +87,12 @@ EcsResult ecs_table_init(
         }
     }
 
-    return EcsOk;
+    return 0;
 }
 
 void ecs_table_deinit(
     ecs_world_t *world,
-    EcsTable *table)
+    ecs_table_t *table)
 {
     /*ecs_notify(world, NULL,
         world->remove_systems, table->type_id, table, table->rows, -1);*/
@@ -100,7 +100,7 @@ void ecs_table_deinit(
 
 void ecs_table_free(
     ecs_world_t *world,
-    EcsTable *table)
+    ecs_table_t *table)
 {
     uint32_t i, column_count = ecs_array_count(table->type);
     
@@ -115,11 +115,11 @@ void ecs_table_free(
 
 void ecs_table_register_system(
     ecs_world_t *world,
-    EcsTable *table,
-    EcsEntity system)
+    ecs_table_t *table,
+    ecs_entity_t system)
 {
     /* Register system with the table */
-    EcsEntity *h = ecs_array_add(&table->frame_systems, &handle_arr_params);
+    ecs_entity_t *h = ecs_array_add(&table->frame_systems, &handle_arr_params);
     if (h) *h = system;
 
     if (ecs_array_count(table->columns[0].data)) {
@@ -129,14 +129,14 @@ void ecs_table_register_system(
 
 uint32_t ecs_table_insert(
     ecs_world_t *world,
-    EcsTable *table,
-    EcsTableColumn *columns,
-    EcsEntity entity)
+    ecs_table_t *table,
+    ecs_table_column_t *columns,
+    ecs_entity_t entity)
 {
     uint32_t column_count = ecs_array_count(table->type);
 
     /* Fist add entity to column with entity ids */
-    EcsEntity *e = ecs_array_add(&columns[0].data, &handle_arr_params);
+    ecs_entity_t *e = ecs_array_add(&columns[0].data, &handle_arr_params);
     if (!e) {
         return -1;
     }
@@ -148,7 +148,7 @@ uint32_t ecs_table_insert(
     for (i = 1; i < column_count + 1; i ++) {
         uint32_t size = columns[i].size;
         if (size) {
-            EcsArrayParams params = {.element_size = size};
+            ecs_array_params_t params = {.element_size = size};
             if (!ecs_array_add(&columns[i].data, &params)) {
                 return -1;
             }
@@ -167,11 +167,11 @@ uint32_t ecs_table_insert(
 
 void ecs_table_delete(
     ecs_world_t *world,
-    EcsTable *table,
+    ecs_table_t *table,
     uint32_t index)
 {
-    EcsTableColumn *columns = table->columns;
-    EcsArray *entity_column = columns[0].data;
+    ecs_table_column_t *columns = table->columns;
+    ecs_array_t *entity_column = columns[0].data;
     uint32_t count = ecs_array_count(entity_column);
 
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
@@ -185,19 +185,19 @@ void ecs_table_delete(
 
     if (index != count) {        
         /* Move last entity in array to index */
-        EcsEntity *entities = ecs_array_buffer(entity_column);
-        EcsEntity to_move = entities[count];
+        ecs_entity_t *entities = ecs_array_buffer(entity_column);
+        ecs_entity_t to_move = entities[count];
         entities[index] = to_move;
 
         for (i = 1; i < column_last; i ++) {
             if (columns[i].size) {
-                EcsArrayParams params = {.element_size = columns[i].size};
+                ecs_array_params_t params = {.element_size = columns[i].size};
                 ecs_array_remove_index(columns[i].data, &params, index);
             }
         }
 
         /* Last entity in table is now moved to index of removed entity */
-        EcsRow row;
+        ecs_row_t row;
         row.type_id = table->type_id;
         row.index = index;
         ecs_map_set64(world->main_stage.entity_index, to_move, ecs_from_row(row));
@@ -235,15 +235,15 @@ void ecs_table_delete(
 
 uint32_t ecs_table_grow(
     ecs_world_t *world,
-    EcsTable *table,
-    EcsTableColumn *columns,
+    ecs_table_t *table,
+    ecs_table_column_t *columns,
     uint32_t count,
-    EcsEntity first_entity)
+    ecs_entity_t first_entity)
 {
     uint32_t column_count = ecs_array_count(table->type);
 
     /* Fist add entity to column with entity ids */
-    EcsEntity *e = ecs_array_addn(&columns[0].data, &handle_arr_params, count);
+    ecs_entity_t *e = ecs_array_addn(&columns[0].data, &handle_arr_params, count);
     if (!e) {
         return -1;
     }
@@ -255,7 +255,7 @@ uint32_t ecs_table_grow(
 
     /* Add elements to each column array */
     for (i = 1; i < column_count + 1; i ++) {
-        EcsArrayParams params = {.element_size = columns[i].size};
+        ecs_array_params_t params = {.element_size = columns[i].size};
         if (!ecs_array_addn(&columns[i].data, &params, count)) {
             return -1;
         }
@@ -271,10 +271,10 @@ uint32_t ecs_table_grow(
 }
 
 int16_t ecs_table_dim(
-    EcsTable *table,
+    ecs_table_t *table,
     uint32_t count)
 {
-    EcsTableColumn *columns = table->columns;
+    ecs_table_column_t *columns = table->columns;
     uint32_t column_count = ecs_array_count(table->type);
 
     if (!ecs_array_set_size(&columns[0].data, &handle_arr_params, count)) {
@@ -283,7 +283,7 @@ int16_t ecs_table_dim(
 
     uint32_t i;
     for (i = 1; i < column_count + 1; i ++) {
-        EcsArrayParams params = {.element_size = columns[i].size};
+        ecs_array_params_t params = {.element_size = columns[i].size};
         if (!ecs_array_set_size(&columns[i].data, &params, count)) {
             return -1;
         }
@@ -293,13 +293,13 @@ int16_t ecs_table_dim(
 }
 
 uint64_t ecs_table_count(
-    EcsTable *table)
+    ecs_table_t *table)
 {
     return ecs_array_count(table->columns[0].data);
 }
 
 uint32_t ecs_table_row_size(
-    EcsTable *table)
+    ecs_table_t *table)
 {
     uint32_t i, count = ecs_array_count(table->type);
     uint32_t size = 0;
@@ -312,7 +312,7 @@ uint32_t ecs_table_row_size(
 }
 
 uint32_t ecs_table_rows_dimensioned(
-    EcsTable *table)
+    ecs_table_t *table)
 {
     return ecs_array_size(table->columns[0].data);
 }
