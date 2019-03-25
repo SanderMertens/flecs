@@ -359,7 +359,7 @@ void ecs_set_automerge(
  * @returns 0 if successful, or -1 if failed.
  */
 FLECS_EXPORT
-int ecs_set_threads(
+void ecs_set_threads(
     ecs_world_t *world,
     uint32_t threads);
 
@@ -592,13 +592,13 @@ ecs_entity_t ecs_clone(
  * @param entity A handle to the entity to delete.
  */
 FLECS_EXPORT
-int ecs_delete(
+void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Add a type to an entity */
 FLECS_EXPORT
-int _ecs_add(
+void _ecs_add(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t component);
@@ -609,7 +609,7 @@ int _ecs_add(
 
 /** Remove a type from an entity */
 FLECS_EXPORT
-int _ecs_remove(
+void _ecs_remove(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type);
@@ -620,14 +620,14 @@ int _ecs_remove(
 
 /** Adopt a child entity by a parent */
 FLECS_EXPORT
-int ecs_adopt(
+void ecs_adopt(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child);
 
 /** Orphan a child by a parent */
 FLECS_EXPORT
-int ecs_orphan(
+void ecs_orphan(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child);
@@ -786,7 +786,7 @@ bool ecs_empty(
 
 /** Get type of entity */
 FLECS_EXPORT
-ecs_type_t ecs_typeid(
+ecs_type_t ecs_get_type(
     ecs_world_t *world,
     ecs_entity_t entity);
 
@@ -1290,20 +1290,6 @@ ecs_type_t _ecs_column_type(
 
 /* -- Error handling & error codes -- */
 
-/** Throw an error */
-FLECS_EXPORT
-void ecs_throw(
-    uint32_t error_code,
-    const char *param);
-
-/** Raise last error to terminal */
-FLECS_EXPORT
-uint32_t ecs_raise(void);
-
-/** Catch last error */
-FLECS_EXPORT
-uint32_t ecs_catch(void);
-
 /** Get description for error code */
 FLECS_EXPORT
 const char* ecs_strerror(
@@ -1354,6 +1340,8 @@ void _ecs_assert(
 #define ECS_OUT_OF_RANGE (22)
 #define ECS_COLUMN_IS_NOT_SET (23)
 #define ECS_UNRESOLVED_REFERENCE (24)
+#define ECS_THREAD_ERROR (25)
+
 /* -- Convenience macro's -- */
 
 /** Wrapper around ecs_new_entity. */ 
@@ -1381,10 +1369,10 @@ void _ecs_assert(
 
 /** Same as component, but no size */
 #define ECS_TAG(world, id) \
-    ecs_entity_t E##id = ecs_new_component(world, #id, 0);\
-    assert (E##id != 0);\
-    ecs_type_t T##id = ecs_type_from_entity(world, E##id);\
-    (void)E##id;\
+    ecs_entity_t id = ecs_new_component(world, #id, 0);\
+    assert (id != 0);\
+    ecs_type_t T##id = ecs_type_from_entity(world, id);\
+    (void)id;\
     (void)T##id;\
     assert (T##id != 0)
 
@@ -1398,10 +1386,10 @@ void _ecs_assert(
  * Creating a type and using it with ecs_new/ecs_add is faster
  * than calling ecs_add multiple types. */
 #define ECS_TYPE(world, id, ...) \
-    ecs_entity_t E##id = ecs_new_type(world, #id, #__VA_ARGS__);\
-    assert (E##id != 0);\
-    ecs_type_t T##id = ecs_type_from_entity(world, E##id);\
-    (void)E##id;\
+    ecs_entity_t id = ecs_new_type(world, #id, #__VA_ARGS__);\
+    assert (id != 0);\
+    ecs_type_t T##id = ecs_type_from_entity(world, id);\
+    (void)id;\
     (void)T##id;\
     assert (T##id != 0)
 

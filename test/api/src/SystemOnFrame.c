@@ -319,7 +319,7 @@ void SystemOnFrame_1_type_1_component_1_tag() {
     test_int(ctx.e[2], e_3);
     test_int(ctx.c[0][0], EPosition);
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ETag);
+    test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -367,7 +367,7 @@ void SystemOnFrame_2_type_1_component_1_tag() {
     test_int(ctx.e[1], e_2);
     test_int(ctx.c[0][0], EPosition);
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ETag);
+    test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);

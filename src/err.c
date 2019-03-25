@@ -1,44 +1,6 @@
 
 #include "include/private/types.h"
 
-static uint32_t last_error_code;
-static const char *last_param;
-
-void ecs_throw(
-    uint32_t error_code,
-    const char *param)
-{
-    last_error_code = error_code;
-    last_param = param;
-}
-
-uint32_t ecs_raise(void)
-{
-    uint32_t code = last_error_code;
-
-    if (last_error_code) {
-        if (last_param) {
-            fprintf(stderr, "error: %s (%s)\n",
-                ecs_strerror(last_error_code), last_param);
-        } else {
-            fprintf(stderr, "error: %s\n", ecs_strerror(last_error_code));
-        }
-
-        last_error_code = 0;
-        last_param = NULL;
-    }
-
-    return code;
-}
-
-uint32_t ecs_catch(void)
-{
-    uint32_t code = last_error_code;
-    last_error_code = 0;
-    last_param = NULL;
-    return code;
-}
-
 void _ecs_abort(
     uint32_t error_code,
     const char *param,
@@ -126,6 +88,8 @@ const char* ecs_strerror(
         return "column is not set (use ecs_column_test for optional columns)";
     case ECS_UNRESOLVED_REFERENCE:
         return "unresolved reference for system";
+    case ECS_THREAD_ERROR:
+        return "failed to create thread";
     }
 
     return "unknown error code";

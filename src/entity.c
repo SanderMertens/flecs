@@ -705,7 +705,7 @@ ecs_entity_t _ecs_new_w_count(
     return result;
 }
 
-int ecs_delete(
+void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
@@ -744,11 +744,9 @@ int ecs_delete(
          * in progress will be discarded as a result. */
         ecs_map_set64(stage->entity_index, entity, 0);
     }
-
-    return 0;
 }
 
-int _ecs_add(
+void _ecs_add(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type)
@@ -774,10 +772,10 @@ int _ecs_add(
         dst_type = type;
     }
 
-    return commit_w_type(world, stage, &info, dst_type, type, 0);
+    commit_w_type(world, stage, &info, dst_type, type, 0);
 }
 
-int _ecs_remove(
+void _ecs_remove(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type)
@@ -800,13 +798,13 @@ int _ecs_remove(
         ecs_array_t *to_remove = ecs_type_get(world, stage, type);
         dst_type = ecs_type_merge_arr(world, stage, info.table->type, NULL, to_remove);
     } else if (!world->in_progress) {
-        return 0;
+        return;
     }
 
-    return commit_w_type(world, stage, &info, dst_type, 0, type);
+    commit_w_type(world, stage, &info, dst_type, 0, type);
 }
 
-int ecs_adopt(
+void ecs_adopt(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child)
@@ -820,10 +818,10 @@ int ecs_adopt(
 
     ecs_type_t TParentType = ecs_type_from_entity(world, parent);
 
-    return ecs_add(world, child, ParentType);
+    ecs_add(world, child, ParentType);
 }
 
-int ecs_orphan(
+void ecs_orphan(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child)
@@ -832,7 +830,7 @@ int ecs_orphan(
 
     ecs_type_t TParentType = ecs_type_from_entity(world, parent);
 
-    return ecs_remove(world, child, ParentType);    
+    ecs_remove(world, child, ParentType);    
 }
 
 void* _ecs_get_ptr(
@@ -938,7 +936,7 @@ bool _ecs_has(
 
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_type_t entity_type = ecs_typeid(world_arg, entity);
+    ecs_type_t entity_type = ecs_get_type(world_arg, entity);
 
     return ecs_type_contains(world, stage, entity_type, type, true, true) != 0;
 }
@@ -956,7 +954,7 @@ bool _ecs_has_any(
 
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_type_t entity_type = ecs_typeid(world_arg, entity);
+    ecs_type_t entity_type = ecs_get_type(world_arg, entity);
     return ecs_type_contains(world, stage, entity_type, type, false, true);
 }
 
@@ -1091,7 +1089,7 @@ ecs_entity_t ecs_entity_from_type(
     return ((ecs_entity_t*)ecs_array_buffer(type))[0];
 }
 
-ecs_type_t ecs_typeid(
+ecs_type_t ecs_get_type(
     ecs_world_t *world,
     ecs_entity_t entity)
 {

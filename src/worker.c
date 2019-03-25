@@ -116,14 +116,11 @@ void ecs_stop_threads(
 }
 
 /** Start worker threads, wait until they are running */
-static
-int start_threads(
+void start_threads(
     ecs_world_t *world,
     uint32_t threads)
 {
-    if (world->worker_threads) {
-        return -1;
-    }
+    ecs_assert(world->worker_threads == NULL, ECS_INTERNAL_ERROR, NULL);
 
     world->worker_threads = ecs_array_new(&thread_arr_params, threads);
     world->worker_stages = ecs_array_new(&stage_arr_params, threads - 1);
@@ -142,17 +139,12 @@ int start_threads(
             thread->stage = ecs_array_add(&world->worker_stages, &stage_arr_params);
             ecs_stage_init(world, thread->stage);
             if (pthread_create(&thread->thread, NULL, ecs_worker, thread)) {
-                goto error;
+                ecs_abort(ECS_THREAD_ERROR, NULL);
             }
         } else {
             thread->stage = NULL;
         }
     }
-
-    return 0;
-error:
-    ecs_stop_threads(world);
-    return -1;
 }
 
 /** Create jobs for system */
@@ -284,7 +276,7 @@ void ecs_run_jobs(
 
 /* -- Public functions -- */
 
-int ecs_set_threads(
+void ecs_set_threads(
     ecs_world_t *world,
     uint32_t threads)
 {
@@ -302,13 +294,9 @@ int ecs_set_threads(
             pthread_mutex_init(&world->thread_mutex, NULL);
             pthread_cond_init(&world->job_cond, NULL);
             pthread_mutex_init(&world->job_mutex, NULL);
-            if (start_threads(world, threads) != 0) {
-                return -1;
-            }
+            start_threads(world, threads);
         }
 
         world->valid_schedule = false;
     }
-
-    return 0;
 }
