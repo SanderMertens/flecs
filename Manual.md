@@ -58,7 +58,7 @@ typedef struct Velocity {
 } Velocity;
 
 // System names ('Move') use CamelCase. Supporting API types use snake_case_t
-void Move(ecs_rows_t rows) {
+void Move(ecs_rows_t *rows) {
     // API functions ('ecs_column') use snake_case
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column(rows, Velocity, 2);
@@ -187,14 +187,14 @@ typedef ecs_array_t *DynamicBuffer;
 
 ecs_array_params_t params = {.element_size = sizeof(int)};
 
-void InitDynamicBuffer(EcsRows *rows) {
+void InitDynamicBuffer(ecs_rows_t *rows) {
     DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
     for (int i = rows->begin; i < rows->end; i ++) {
         data[i] = ecs_array_new(&params, 0);
     }
 }
 
-void DeinitDynamicBuffer(EcsRows *rows) {
+void DeinitDynamicBuffer(ecs_rows_t *rows) {
     DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
     for (int i = rows->begin; i < rows->end; i ++) {
         ecs_array_free(data[i]);
