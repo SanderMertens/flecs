@@ -12,6 +12,12 @@
   - [Error handling](#error-handling)
   - [Memory management](#memory-management)
 - [Good practices](#good-practices)
+  - [Minimize usage of ecs_get, ecs_set](#minimize-the-usage-of-ecs_get-ecs_set)
+  - [Never compare types with anything](#never-compare-entity-types-with-anything)
+  - [Write logic in systems](#write-logic-in-systems)
+  - [Organize code in modules](#organize-code-in-modules)
+  - [Use types where possible](#use-types-where-possible)
+  - [Create entities in bulk](#create-entities-in-bulk)
 
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
@@ -221,14 +227,14 @@ An ECS framework is only as efficient as the way it is used, and the most ineffi
 ### Never compare entity types with anything
 The type (of type `ecs_type_t`) of an entity is a handle that uniquely identifies the components an entity has. Even though the API provides a function to get the type of a specific entity (`ecs_get_type`) it is big code smell to compare this type with anything other than for debugging. In ECS applications the type of an entity may change any moment, and directly comparing the entity type is almost guaranteed to break at some point. Instead, use `ecs_has` if you want to check whether an entity has a component (or set of components, by providing a type to `ecs_has`).
 
-### Write code in systems
+### Write logic in systems
 If you find yourself writing lots of code in the main loop of your application that is not executed in a system, it could be a sign of code smell. Logic in ECS runs best when it is part of a system. A system ensures that your code has a clear interface, which makes it easy to reuse the system in other applications. Flecs adds additional benefits to using systems like being able to automatically or manually (remotely!) enable/disable them, and schedule them to run on different threads.
 
-### Organize your code in modules
+### Organize code in modules
 For small applications it is fine to create a few systems in your main source file, but for larger projects you will want to organize your systems and components in modules. Flecs has a module system that lets you easily import systems and components that are defined in other files in your project, or even other libraries. Ideally, the main function of your application only consists of importing modules and the creation of entities.
 
-### Use types wherever possible
+### Use types where possible
 The sooner you can let Flecs know what entities you will be setting on an entity, the better. Flecs can add/remove multiple components to/from your entity in a single `ecs_add` or `ecs_remove` call with types (see `ECS_TYPE`), and this is much more efficient than calling these operations for each individual component. It is even more efficient to specify a type with `ecs_new`, as Flecs can take advantage of the knowledge that the entity to which the component is going to be added is empty.
 
-### Create entities in bulk whenever possible
+### Create entities in bulk
 It is much more efficient to create entities in bulk (using the `ecs_new_w_count` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
