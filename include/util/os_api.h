@@ -163,9 +163,11 @@ void ecs_set_os_api_defaults(void);
 #ifdef _MSC_VER
 /* TODO */
 #define ecs_os_alloca(type) _alloca(sizeof(type))
+#define ecs_os_declare_vla(type, name, count) type* name = _alloca(sizeof(type) * (count))
 #else
 /* TODO */
 #define ecs_os_alloca(type) alloca(sizeof(type))
+#define ecs_os_declare_vla(type, name, count) type name[(count)]
 #endif
 
 #endif
