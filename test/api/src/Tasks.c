@@ -64,7 +64,7 @@ void Tasks_from_system() {
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 1);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
 
     ecs_fini(world);
 }
@@ -130,5 +130,5 @@ void Tasks_on_remove_from_system() {
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 1);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
 }

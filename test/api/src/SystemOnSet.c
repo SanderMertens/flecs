@@ -40,7 +40,7 @@ void SystemOnSet_set() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
@@ -68,7 +68,7 @@ void SystemOnSet_set_new() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
@@ -99,7 +99,7 @@ void SystemOnSet_set_again() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
@@ -134,7 +134,7 @@ void SystemOnSet_clone() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -170,7 +170,7 @@ void SystemOnSet_clone_w_value() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -191,7 +191,7 @@ void SystemOnSet_clone_w_value() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_2);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     p = ecs_get_ptr(world, e_2, Position);
@@ -228,9 +228,9 @@ void SystemOnSet_set_w_optional() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
 
@@ -244,9 +244,9 @@ void SystemOnSet_set_w_optional() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_2);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], EVelocity);
+    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -328,9 +328,9 @@ void SystemOnSet_set_and_add_system() {
 
     test_int(ctx.e[0], e);
     test_int(ctx.e[1], e);
-    test_int(ctx.c[0][0], EPosition);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[1][0], EPosition);
+    test_int(ctx.c[1][0], ecs_to_entity(Position));
     test_int(ctx.s[1][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);

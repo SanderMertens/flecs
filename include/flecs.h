@@ -886,7 +886,7 @@ ecs_entity_t ecs_new_component(
  * @returns Handle to the type, zero if failed.
  */
 FLECS_EXPORT
-ecs_type_t ecs_new_type(
+ecs_entity_t ecs_new_type(
     ecs_world_t *world,
     const char *id,
     const char *components);
@@ -1264,13 +1264,13 @@ ecs_entity_t _ecs_column_entity(
  * 
  * ecs_type_from_entity( ecs_column_entity(rows, index));
  * 
- * To use the result of this operation with functions like ecs_new, ecs_add and 
- * ecs_set, make sure to name the variable in which you store the result of this
- * function T<typename>. For example, for a type called Position, you should do:
+ * This function is wrapped in the following convenience macro which ensures
+ * that the type variable is named so it can be used with functions like ecs_add
+ * and ecs_set:
  * 
- * ecs_type_t TPosition = ecs_column_type(rows, 1);
+ * ECS_COLUMN_COMPONENT(rows, Position, 1);
  * 
- * This ensures that you can use functions like ecs_set like this:
+ * After this macro you can invoke functions like ecs_set as you normally would:
  * 
  * ecs_set(world, e, Position, {10, 20});
  * 
@@ -1289,6 +1289,7 @@ ecs_type_t _ecs_column_type(
 
 #define ecs_column_type_test(rows, column)\
         _ecs_column_type(rows, column, true)
+
 
 /* -- Error handling & error codes -- */
 
@@ -1344,7 +1345,25 @@ void _ecs_assert(
 #define ECS_UNRESOLVED_REFERENCE (24)
 #define ECS_THREAD_ERROR (25)
 
-/* -- Convenience macro's -- */
+
+/* -- Convenience macro's for wrapping around generated types and entities -- */
+
+/** Translate C type to entity variable */
+#define ecs_to_entity(type) E##type
+
+/** Translate C type to type variable */
+#define ecs_to_type(type) T##type
+
+/** Declare type variable */
+#define ECS_TYPE_VAR(type)\
+    ecs_type_t ecs_to_type(type)
+
+/** Declare entity variable */
+#define ECS_ENTITY_VAR(type)\
+    ecs_entity_t ecs_to_entity(type)
+
+
+/* -- Convenience macro's for declaring Flecs objects -- */
 
 /** Wrapper around ecs_new_entity. */ 
 #define ECS_ENTITY(world, id, ...)\
@@ -1362,21 +1381,17 @@ void _ecs_assert(
  * the application will have access to a Location_h variable which holds the
  * handle to the new component. */
 #define ECS_COMPONENT(world, id) \
-    ecs_entity_t E##id = ecs_new_component(world, #id, sizeof(id));\
-    assert (E##id != 0);\
-    ecs_type_t T##id = ecs_type_from_entity(world, E##id);\
-    (void)E##id;\
-    (void)T##id;\
-    assert (T##id != 0)
+    ECS_ENTITY_VAR(id) = ecs_new_component(world, #id, sizeof(id));\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_to_entity(id));\
+    (void)ecs_to_entity(id);\
+    (void)ecs_to_type(id);\
 
 /** Same as component, but no size */
 #define ECS_TAG(world, id) \
     ecs_entity_t id = ecs_new_component(world, #id, 0);\
-    assert (id != 0);\
-    ecs_type_t T##id = ecs_type_from_entity(world, id);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    (void)T##id;\
-    assert (T##id != 0)
+    (void)ecs_to_type(id);\
 
 /** Wrapper around ecs_new_type.
  * This macro provides a convenient way to register a type with the world.
@@ -1389,11 +1404,9 @@ void _ecs_assert(
  * than calling ecs_add multiple types. */
 #define ECS_TYPE(world, id, ...) \
     ecs_entity_t id = ecs_new_type(world, #id, #__VA_ARGS__);\
-    assert (id != 0);\
-    ecs_type_t T##id = ecs_type_from_entity(world, id);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    (void)T##id;\
-    assert (T##id != 0)
+    (void)ecs_to_type(id);\
 
 /** Wrapper around ecs_new_prefab.
  * This macro provides a convenient way to register a prefab with the world. It
@@ -1405,12 +1418,9 @@ void _ecs_assert(
  * For more specifics, see description of ecs_new_prefab. */
 #define ECS_PREFAB(world, id, ...) \
     ecs_entity_t id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
-    assert (id != 0);\
-    ecs_type_t T##id = ecs_type_from_entity(world, id);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    (void)T##id;\
-    assert (T##id != 0)
-
+    (void)ecs_to_type(id);\
 
 /** Wrapper around ecs_new_system.
  * This macro provides a convenient way to register systems with a world. It can
@@ -1427,8 +1437,9 @@ void _ecs_assert(
 #define ECS_SYSTEM(world, id, kind, ...) \
     ecs_entity_t F##id = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
     ecs_entity_t id = F##id;\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    assert (id != 0)
+    (void)ecs_to_type(id);
 
 /** Wrapper around ecs_load.
  * This macro provides a convenient way to load a module with the world. It can
@@ -1437,48 +1448,86 @@ void _ecs_assert(
  * ECS_IMPORT(world, EcsSystemsMovement, 0);
  *
  * ecs_enable(world, EcsSystemsMovement_h.Move); */
-#define ECS_IMPORT(world, module, flags) \
-    module##Handles M##module;\
-    ecs_entity_t E##module = ecs_import(world, module, #module, flags, &M##module, sizeof(module##Handles));\
-    ecs_type_t T##module = ecs_type_from_entity(world, E##module);\
-    module##_ImportHandles(M##module);\
-    (void)E##module;\
-    (void)T##module
+#define ECS_IMPORT(world, id, flags) \
+    id##Handles M##id;\
+    ECS_ENTITY_VAR(id) = ecs_import(world, id, #id, flags, &M##id, sizeof(id##Handles));\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_to_entity(id));\
+    id##_ImportHandles(M##id);\
+    (void)ecs_to_entity(id);\
+    (void)ecs_to_type(id);\
 
+
+/* -- Utilities for importing handles from within systems -- */
+
+#define ECS_COLUMN(rows, type, id, column)\
+    type *id = ecs_column(rows, type, column)
+
+#define ECS_COLUMN_TEST(rows, type, id, column)\
+    type *id = ecs_column_test(rows, type, column)
+
+#define ECS_SHARED(rows, type, id, column)\
+    type *id = ecs_shared(rows, type, column)
+
+#define ECS_SHARED_TEST(rows, type, id, column)\
+    type *id = ecs_shared_test(rows, type, column)
+
+#define ECS_COLUMN_COMPONENT(rows, id, column)\
+    ECS_ENTITY_VAR(id) = ecs_column_entity(rows, column);\
+    ECS_TYPE_VAR(id) = ecs_column_type(rows, column);\
+    (void)ecs_to_entity(id);\
+    (void)ecs_to_type(id)
+
+#define ECS_COLUMN_ENTITY(rows, id, column)\
+    ecs_entity_t id = ecs_column_entity(rows, column);\
+    ECS_TYPE_VAR(id) = ecs_column_type(rows, column);\
+    (void)ecs_to_entity(id);\
+    (void)ecs_to_type(id)
+
+
+/* -- Module convenience macro's -- */
+
+/** Utility macro for declaring a component inside a handles type */
+#define ECS_DECLARE_COMPONENT(type)\
+    ECS_ENTITY_VAR(type);\
+    ECS_TYPE_VAR(type)
+
+/** Utility macro for declaring a system inside a handles type */
+#define ECS_DECLARE_ENTITY(entity)\
+    ecs_entity_t entity;\
+    ECS_TYPE_VAR(entity)
+
+/** Utility macro for setting a component in a module function */
+#define ECS_SET_COMPONENT(handles, type)\
+    if (handles) handles->ecs_to_entity(type) = ecs_to_entity(type);\
+    if (handles) handles->ecs_to_type(type) = ecs_to_type(type)
+
+/** Utility macro for setting a system in a module function */
+#define ECS_SET_ENTITY(handles, entity)\
+    if (handles) handles->entity = entity;\
+    if (handles) handles->ecs_to_type(entity) = ecs_to_type(entity)
+
+/** Utility macro for declaring handles by modules */
+#define ECS_IMPORT_COMPONENT(handles, type)\
+    ECS_ENTITY_VAR(type) = handles.ecs_to_entity(type); (void)ecs_to_entity(type);\
+    ECS_TYPE_VAR(type) = handles.ecs_to_type(type); (void)ecs_to_type(type)
+
+/** Utility macro for declaring handles by modules */
+#define ECS_IMPORT_ENTITY(handles, entity)\
+    ecs_entity_t entity = handles.entity;\
+    ECS_TYPE_VAR(entity) = handles.ecs_to_type(type); (void)ecs_to_type(type)
+
+
+/** Utility macro for importing all handles for a module from a system column */
 #define ECS_IMPORT_COLUMN(rows, module, column) \
     module##Handles *M##module##_ptr = ecs_shared(rows, module##Handles, column);\
     ecs_assert(M##module##_ptr != NULL, ECS_MODULE_UNDEFINED, #module);\
     module##Handles M##module = *M##module##_ptr;\
     module##_ImportHandles(M##module)
 
-/** Utility macro for declaring a component inside a handles type */
-#define ECS_DECLARE_COMPONENT(component)\
-    ecs_entity_t E##component;\
-    ecs_type_t T##component
 
-/** Utility macro for declaring a system inside a handles type */
-#define ECS_DECLARE_SYSTEM(system)\
-    ecs_entity_t system
+/* -- Misc macro's -- */
 
-/** Utility macro for setting a component in a module function */
-#define ECS_SET_COMPONENT(handles, component)\
-    if (handles) handles->E##component = E##component;\
-    if (handles) handles->T##component = T##component
-
-/** Utility macro for setting a system in a module function */
-#define ECS_SET_SYSTEM(handles, system)\
-    if (handles) handles->system = system
-
-/** Utility macro for declaring handles by modules */
-#define ECS_IMPORT_COMPONENT(handles, component)\
-    ecs_entity_t E##component = handles.E##component; (void)E##component;\
-    ecs_type_t T##component = handles.T##component; (void)T##component
-
-/** Utility macro for declaring handles by modules */
-#define ECS_IMPORT_SYSTEM(handles, system)\
-    ecs_entity_t system = handles.system; (void)system
-
-/** Utility macro's */
+/** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 
 #ifdef __cplusplus

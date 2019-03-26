@@ -58,9 +58,9 @@ void System_w_FromContainer_1_column_from_container() {
     test_int(ctx.e[0], e_1);
     test_int(ctx.e[1], e_2);
     test_int(ctx.e[2], e_3);
-    test_int(ctx.c[0][0], EMass);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], EPosition);
+    test_int(ctx.c[0][1], ecs_to_entity(Position));
     test_int(ctx.s[0][1], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -114,11 +114,11 @@ void System_w_FromContainer_2_column_1_from_container() {
     test_int(ctx.e[0], e_1);
     test_int(ctx.e[1], e_2);
     test_int(ctx.e[2], e_3);
-    test_int(ctx.c[0][0], EMass);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], EPosition);
+    test_int(ctx.c[0][1], ecs_to_entity(Position));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], EVelocity);
+    test_int(ctx.c[0][2], ecs_to_entity(Velocity));
     test_int(ctx.s[0][2], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -222,11 +222,11 @@ void System_w_FromContainer_3_column_2_from_container() {
     test_int(ctx.e[0], e_1);
     test_int(ctx.e[1], e_2);
     test_int(ctx.e[2], e_4);
-    test_int(ctx.c[0][0], EMass);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ERotation);
+    test_int(ctx.c[0][1], ecs_to_entity(Rotation));
     test_int(ctx.s[0][1], parent);
-    test_int(ctx.c[0][2], EPosition);
+    test_int(ctx.c[0][2], ecs_to_entity(Position));
     test_int(ctx.s[0][2], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -293,11 +293,11 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     test_int(ctx.e[0], e_1);
     test_int(ctx.e[1], e_2);
     test_int(ctx.e[2], e_3);
-    test_int(ctx.c[0][0], EMass);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
     test_int(ctx.s[0][0], parent_1);
-    test_int(ctx.c[0][1], ERotation);
+    test_int(ctx.c[0][1], ecs_to_entity(Rotation));
     test_int(ctx.s[0][1], parent_2);
-    test_int(ctx.c[0][2], EPosition);
+    test_int(ctx.c[0][2], ecs_to_entity(Position));
     test_int(ctx.s[0][2], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -356,13 +356,13 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     test_int(ctx.e[1], e_1);
     test_int(ctx.e[2], e_2);
     test_int(ctx.e[3], e_3);
-    test_int(ctx.c[0][0], EMass);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], EPosition);
+    test_int(ctx.c[0][1], ecs_to_entity(Position));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[1][0], EMass);
+    test_int(ctx.c[1][0], ecs_to_entity(Mass));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], EPosition);
+    test_int(ctx.c[1][1], ecs_to_entity(Position));
     test_int(ctx.s[1][1], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -429,11 +429,11 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     test_int(ctx.e[0], e_1);
     test_int(ctx.e[1], e_2);
     test_int(ctx.e[2], e_3);
-    test_int(ctx.c[0][0], EMass);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ERotation);
+    test_int(ctx.c[0][1], ecs_to_entity(Rotation));
     test_int(ctx.s[0][1], parent_2);
-    test_int(ctx.c[0][2], EPosition);
+    test_int(ctx.c[0][2], ecs_to_entity(Position));
     test_int(ctx.s[0][2], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -499,21 +499,21 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     test_int(ctx.e[1], e_2);
     test_int(ctx.e[2], e_3);
     test_int(ctx.e[3], e_5);
-    test_int(ctx.c[0][0], EMass);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
     test_int(ctx.s[0][0], parent_1);
-    test_int(ctx.c[0][1], EPosition);
+    test_int(ctx.c[0][1], ecs_to_entity(Position));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[1][0], ERotation);
+    test_int(ctx.c[1][0], ecs_to_entity(Rotation));
     test_int(ctx.s[1][0], parent_2);
-    test_int(ctx.c[1][1], EPosition);
+    test_int(ctx.c[1][1], ecs_to_entity(Position));
     test_int(ctx.s[2][1], 0);
-    test_int(ctx.c[2][0], ERotation);
+    test_int(ctx.c[2][0], ecs_to_entity(Rotation));
     test_int(ctx.s[2][0], parent_3);
-    test_int(ctx.c[2][1], EPosition);
+    test_int(ctx.c[2][1], ecs_to_entity(Position));
     test_int(ctx.s[2][1], 0);
-    test_int(ctx.c[3][0], ERotation);
+    test_int(ctx.c[3][0], ecs_to_entity(Rotation));
     test_int(ctx.s[3][0], parent_2);
-    test_int(ctx.c[3][1], EPosition);
+    test_int(ctx.c[3][1], ecs_to_entity(Position));
     test_int(ctx.s[3][1], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);

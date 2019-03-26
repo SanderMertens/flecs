@@ -449,7 +449,7 @@ bool ecs_type_contains_component(
 
 /* -- Public API -- */
 
-ecs_type_t ecs_new_type(
+ecs_entity_t ecs_new_type(
     ecs_world_t *world,
     const char *id,
     const char *sig)

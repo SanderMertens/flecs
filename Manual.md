@@ -100,14 +100,14 @@ The Flecs API creates and uses handles (integers) to refer to entities, systems 
 
 The Flecs API has entity handles (of type `ecs_entity_t`) and type handles (of type `ecs_type_t`). Entity handles are used to refer to a single entity. Systems and components (amongst others) obtain identifiers from the same id pool, thus handles to systems and components are also of type `ecs_entity_t`. Types are identifiers that uniquely identify a set of entities (or systems, components). Types are commonly used to add/remove one or more components to/from an entity, or enable/disable one or more systems at once.
 
-Type handles are automatically created by API macro's (like `ECS_COMPONENT`) and are always prefixed by a `T`. Functions like `ecs_new` or `ecs_add` are actually macro's which automatically add the `T` to the type that is being passed to the function. This automatically enforces the naming convention, and makes the API more readable.
+Type handles are automatically created by API macro's like `ECS_COMPONENT`, `ECS_TYPE` and `ECS_PREFAB`. To obtain a handle to a type, use the `ecs_to_type` function and provide as argument the identifier of the component or entity. 
 
 The following code example demonstrates the various handles and their naming conventions:
 
 ```c
 ecs_world_t *world = ecs_init();
 
-// Declares an entity handle 'EPosition' and type handle 'TPosition'
+// Declares an entity handle 'ecs_to_entity(Position)' and type handle 'ecs_to_type(Position)'
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity); // Ditto for Velocity
 
@@ -124,7 +124,7 @@ ecs_entity_t e = ecs_new(world, Movable);
 ecs_remove(world, e, Position);
 
 // Print entity handle and type handle for Position
-printf("Position entity: %ld, Position type: %u\n", EPosition, TPosition);
+printf("Position entity: %ld, Position type: %u\n", ecs_to_entity(Position), ecs_to_type(Position));
 ```
 
 ### Error handling

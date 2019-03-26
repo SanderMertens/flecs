@@ -50,9 +50,9 @@ void System_w_FromEntity_2_column_1_from_entity() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_2);
-    test_int(ctx.c[0][0], EMass);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
     test_int(ctx.s[0][0], e_1);
-    test_int(ctx.c[0][1], EPosition);
+    test_int(ctx.c[0][1], ecs_to_entity(Position));
     test_int(ctx.s[0][1], 0);
 
     Position *p = ecs_get_ptr(world, e_2, Position);
