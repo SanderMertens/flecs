@@ -29,7 +29,7 @@ install:
   - git clone https://github.com/SanderMertens/bake
   - make -C bake/build-$(uname)
   - bake/bake setup
-  - bake
+  - bake --trace
 
 script:
   - bake run test/api
