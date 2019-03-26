@@ -70,7 +70,7 @@ typedef enum EcsSystemKind {
     /* Reactive systems */
     EcsOnAdd,
     EcsOnRemove,
-    EcsOnSet,
+    EcsOnSet
 } EcsSystemKind;
 
 /** Reference to a component from another entity */
@@ -709,11 +709,16 @@ ecs_entity_t _ecs_set_singleton_ptr(
 #define ecs_set_ptr(world, entity, type, ptr)\
     _ecs_set_ptr(world, entity, T##type, sizeof(type), ptr)
 
+
+#ifndef __BAKE_LEGACY__
+
 #define ecs_set(world, entity, type, ...)\
     _ecs_set_ptr(world, entity, T##type, sizeof(type), &(type)__VA_ARGS__)
 
 #define ecs_set_singleton(world, type, ...)\
     _ecs_set_singleton_ptr(world, T##type, sizeof(type), &(type)__VA_ARGS__)
+
+#endif
 
 #define ecs_set_singleton_ptr(world, type, ptr)\
     _ecs_set_singleton_ptr(world, T##type, sizeof(type), ptr)
@@ -1365,6 +1370,8 @@ void _ecs_assert(
 
 /* -- Convenience macro's for declaring Flecs objects -- */
 
+#ifndef BAKE_LEGACY
+
 /** Wrapper around ecs_new_entity. */ 
 #define ECS_ENTITY(world, id, ...)\
     ecs_entity_t id = ecs_new_entity(world, #id, #__VA_ARGS__);\
@@ -1456,6 +1463,7 @@ void _ecs_assert(
     (void)ecs_to_entity(id);\
     (void)ecs_to_type(id);\
 
+#endif
 
 /* -- Utilities for importing handles from within systems -- */
 
