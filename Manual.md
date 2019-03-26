@@ -96,36 +96,23 @@ int main(int argc, char *argv[]) {
 ```
 
 #### Handles
-The Flecs API creates and uses handles (integers) to refer to entities, systems and components. Most of the times these handles are transparently created and used by the API, but in some cases the API may need to access the handles directly, in which case it is useful to know their naming conventions.
+The Flecs API creates and uses handles (integers) to refer to entities, systems and components. Most of the times these handles are transparently created and used by the API, and most code can be written without explicitly being aware of how they are managed. However, in some cases the API may need to access the handles directly, in which case it is useful to know their conventions.
 
-The Flecs API has entity handles (of type `ecs_entity_t`) and type handles (of type `ecs_type_t`). Entity handles are used to refer to a single entity. Systems and components (amongst others) obtain identifiers from the same id pool, thus handles to systems and components are also of type `ecs_entity_t`. Types are identifiers that uniquely identify a set of entities (or systems, components). Types are commonly used to add/remove one or more components to/from an entity, or enable/disable one or more systems at once.
+The Flecs API has entity handles (of type `ecs_entity_t`) and type handles (of type `ecs_type_t`). Entity handles are used to refer to a single entity. Systems and components (amongst others) obtain identifiers from the same id pool as entities, thus handles to systems and components are also of type `ecs_entity_t`. Types are identifiers that uniquely identify a set of entities (or systems, components). Types are commonly used to add/remove one or more components to/from an entity, or enable/disable one or more systems at once.
 
-Type handles are automatically created by API macro's like `ECS_COMPONENT`, `ECS_TYPE` and `ECS_PREFAB`. To obtain a handle to a type, use the `ecs_to_type` function and provide as argument the identifier of the component or entity. 
-
-The following code example demonstrates the various handles and their naming conventions:
+Type handles are automatically created by API macro's like `ECS_COMPONENT`, `ECS_TYPE` and `ECS_PREFAB`. To obtain a handle to a type, use the `ecs_to_type` function and provide as argument the identifier of the component or entity. Entity handles in most cases have the same identifier that is provided to the macro. For example:
 
 ```c
-ecs_world_t *world = ecs_init();
-
-// Declares an entity handle 'ecs_to_entity(Position)' and type handle 'ecs_to_type(Position)'
-ECS_COMPONENT(world, Position);
-ECS_COMPONENT(world, Velocity); // Ditto for Velocity
-
-// Declares an entity handle 'Movable' and type handle 'TMovable'
-ECS_TYPE(world, Movable, Position, Velocity);
-
-// Declares an entity handle 'Move'
-ECS_SYSTEM(world, Move, EcsOnFrame, Position, Velocity);
-
-// ecs_new automatically adds the T to Movable so it receives the type handle
-ecs_entity_t e = ecs_new(world, Movable);
-
-// ecs_remove automatically adds the T to Position, so it receives the type handle
-ecs_remove(world, e, Position);
-
-// Print entity handle and type handle for Position
-printf("Position entity: %ld, Position type: %u\n", ecs_to_entity(Position), ecs_to_type(Position));
+ECS_TYPE(world, MyType, Position);
 ```
+
+This statement makes the entity handle available as `MyType`. To access the type handle directly, use `ecs_to_type(MyType)`. There is one exception to this rule, which is components. Entity handles of components are prefixed, so that the names do not collide with the component type name. To obtain the entity handle of a component, use the `ecs_to_entity` function. For example:
+
+```c
+ECS_COMPONENT(world, Position);
+```
+
+This statement makes the entity handle available through `ecs_entity_of`, and the type handle as `ecs_type_of`.
 
 ### Error handling
 The API has been designed in a way where operations have no preconditions on the (ECS) state of the application. Instead, they only ensure that a post condition of an operation is fulfilled. In practice this means that an operation _cannot_ fail unless invalid input is provided (e.g. a `NULL` pointer as world parameter). Take for example this code example:
