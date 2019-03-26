@@ -1370,7 +1370,7 @@ void _ecs_assert(
 
 /* -- Convenience macro's for declaring Flecs objects -- */
 
-#ifndef BAKE_LEGACY
+#ifndef __BAKE_LEGACY__
 
 /** Wrapper around ecs_new_entity. */ 
 #define ECS_ENTITY(world, id, ...)\
@@ -1448,6 +1448,8 @@ void _ecs_assert(
     (void)id;\
     (void)ecs_to_type(id);
 
+#endif
+
 /** Wrapper around ecs_load.
  * This macro provides a convenient way to load a module with the world. It can
  * be used like this:
@@ -1462,8 +1464,6 @@ void _ecs_assert(
     id##_ImportHandles(M##id);\
     (void)ecs_to_entity(id);\
     (void)ecs_to_type(id);\
-
-#endif
 
 /* -- Utilities for importing handles from within systems -- */
 
