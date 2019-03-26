@@ -12,6 +12,18 @@
   - [Error handling](#error-handling)
   - [Memory management](#memory-management)
 - [Good practices](#good-practices)
+  - [Minimize usage of ecs_get, ecs_set](#minimize-the-usage-of-ecs_get-ecs_set)
+  - [Never compare types with anything](#never-compare-entity-types-with-anything)
+  - [Write logic in systems](#write-logic-in-systems)
+  - [Organize code in modules](#organize-code-in-modules)
+  - [Use types where possible](#use-types-where-possible)
+  - [Create entities in bulk](#create-entities-in-bulk)
+  - [Limit usage of ecs_lookup](#limit-usage-of-ecs_lookup)
+  - [Use ecs_quit to signal that your application needs to exit](#use-ecs_quit-to-signal-that-your-application-needs-to-exit)
+  - [Update components proportionally to delta_time](#update-components-proportionally-to-delta-time)
+  - [Set a target FPS for applications](#set-a-target-fps-for-applications)
+  - [Never store pointers to components](#never-store-pointers-to-components)
+  - [
 
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
@@ -52,7 +64,7 @@ typedef struct Velocity {
 } Velocity;
 
 // System names ('Move') use CamelCase. Supporting API types use snake_case_t
-void Move(ecs_rows_t rows) {
+void Move(ecs_rows_t *rows) {
     // API functions ('ecs_column') use snake_case
     Position *p = ecs_column(rows, Position, 1);
     Velocity *v = ecs_column(rows, Velocity, 2);
@@ -181,14 +193,14 @@ typedef ecs_array_t *DynamicBuffer;
 
 ecs_array_params_t params = {.element_size = sizeof(int)};
 
-void InitDynamicBuffer(EcsRows *rows) {
+void InitDynamicBuffer(ecs_rows_t *rows) {
     DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
     for (int i = rows->begin; i < rows->end; i ++) {
         data[i] = ecs_array_new(&params, 0);
     }
 }
 
-void DeinitDynamicBuffer(EcsRows *rows) {
+void DeinitDynamicBuffer(ecs_rows_t *rows) {
     DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
     for (int i = rows->begin; i < rows->end; i ++) {
         ecs_array_free(data[i]);
@@ -218,14 +230,38 @@ Flecs is an Entity Component System, and it is important to realize that ECS is 
 ### Minimize the usage of ecs_get, ecs_set
 An ECS framework is only as efficient as the way it is used, and the most inefficient way of accomplishing something in an ECS framework is by extensively using `ecs_get` and `ecs_set`. This always requires the framework to do lookups in the set of components the entity has, which is quite slow. It also is an indication that code relies to much on individual entities, whereas in ECS it is more common practice to write code that operates on entity collections. The preferred way to do this in Flecs is with _systems_, which can access components directly, without requiring a lookup.
 
-### Write code in systems
+### Never compare entity types with anything
+The type (of type `ecs_type_t`) of an entity is a handle that uniquely identifies the components an entity has. Even though the API provides a function to get the type of a specific entity (`ecs_get_type`) it is big code smell to compare this type for anything other than for debugging. In ECS applications the type of an entity may change any moment, and directly comparing the entity type is almost guaranteed to break at some point. Instead, use `ecs_has` if you want to check whether an entity has a component (or set of components, by providing a type to `ecs_has`).
+
+### Write logic in systems
 If you find yourself writing lots of code in the main loop of your application that is not executed in a system, it could be a sign of code smell. Logic in ECS runs best when it is part of a system. A system ensures that your code has a clear interface, which makes it easy to reuse the system in other applications. Flecs adds additional benefits to using systems like being able to automatically or manually (remotely!) enable/disable them, and schedule them to run on different threads.
 
-### Organize your code in modules
+### Organize code in modules
 For small applications it is fine to create a few systems in your main source file, but for larger projects you will want to organize your systems and components in modules. Flecs has a module system that lets you easily import systems and components that are defined in other files in your project, or even other libraries. Ideally, the main function of your application only consists of importing modules and the creation of entities.
 
-### Use types wherever possible
+### Use types where possible
 The sooner you can let Flecs know what entities you will be setting on an entity, the better. Flecs can add/remove multiple components to/from your entity in a single `ecs_add` or `ecs_remove` call with types (see `ECS_TYPE`), and this is much more efficient than calling these operations for each individual component. It is even more efficient to specify a type with `ecs_new`, as Flecs can take advantage of the knowledge that the entity to which the component is going to be added is empty.
 
-### Create entities in bulk whenever possible
+### Create entities in bulk
 It is much more efficient to create entities in bulk (using the `ecs_new_w_count` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
+
+### Limit usage of ecs_lookup
+You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsId` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `ID` modifier, like so:
+
+```c
+ECS_SYSTEM(world, MySystem, EcsOnFrame, Position, ID.MyEntity);
+```
+
+This will lookup the entity in advance, instead of every time the system is invoked. Obtaining the entity from within the system can be done with the `ecs_column_entity` function.
+
+### Use ecs_quit to signal that your application needs to exit
+You can use `ecs_progress` to control the flow of your application, by running it in a while loop, and making the result of the function the condition of the while loop. This will keep your application running until you call `ecs_quit`. Using this pattern provides a common approach to signalling your application needs to exit across modules.
+
+### Update components proportionally to delta_time
+The Flecs API provides your systems with a `delta_time` variable in the `ecs_rows_t` type wich contains the time passed since the previous frame. This lets you update your entity values proportional to the time that has passed, and is a good idea when you want to decouple the speed at which your logic is running from the FPS of your appplication. You can let Flecs determine `delta_time` automatically, by specifying `0` to `ecs_progress`, or manually by providing a non-zero value to `ecs_progress`.
+
+### Set a target FPS for applications
+When you run `ecs_progress` in your main loop, you rarely want to run your application as fast as possible. It is good practice to set a target FPS (a good default is 60) so that your application does not consume all of your CPU bandwidth. When you set a target FPS with the `ecs_set_target_fps` function, the `ecs_progress` function will automatically insert sleeps to make sure your application runs at the specified FPS. It may run slower if not enough CPU bandwidth is available, but it will never run faster than that.
+
+### Never store pointers to components
+In ECS frameworks, adding, removing, creating or deleting entities may cause memory to move around. This is it is not safe to store pointers to component values. Functions like `ecs_get_ptr` return a pointer which is guaranteed to remain valid until one of the aforementioned operations happens.
