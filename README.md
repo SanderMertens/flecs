@@ -79,25 +79,25 @@ bake run my_app
 ```
 
 ### Getting started with the dashboard
-To create an application that uses the flecs web dashboard, first install the `flecs-systems-admin` package:
+To create an application that uses the flecs web dashboard, first install the `admin` and `civetweb` modules:
 
 ```
 bake clone SanderMertens/flecs-systems-admin
+bake clone SanderMertens/flecs-systems-civetweb
 ```
-This clones and builds the `flecs.systems.admin` module, together with all its dependencies. Currently this is only possible out of the box with [bake](https://github.com/SanderMertens/bake). Future versions may also support modules with CMake.
+Currently this is only possible out of the box with [bake](https://github.com/SanderMertens/bake). Future versions may also support modules with CMake.
 
 After cloning the packages, create a new project like so:
 
 ```
-bake new my_app -t flecs.admin
+bake new my_app -t flecs
 ```
-This tells bake that you want to use the `flecs.admin` template as starting point for your application. After this command is finished, your application is ready to be executed:
+This creates a new flecs application. To now run your application with the dashboard, run it like this:
 
 ```
-bake run my_app
+bake run my_app -a --admin 9090
 ```
-
-You can now navigate to http://localhost:9090 to see the dashboard. Any systems that you add to your application will now show up in the dashboard, and can be turned on/off.
+This runs the application, and passes `--admin 9090` as its arguments. You can now navigate to http://localhost:9090 to see the dashboard. Any systems that you add to your application will now show up in the dashboard, and can be turned on/off.
 
 ## Built with flecs
 
