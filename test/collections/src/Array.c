@@ -36,6 +36,10 @@ ecs_array_t* fill_array(
     return array;
 }
 
+void Array_setup() {
+    ecs_set_os_api_defaults();
+}
+
 void Array_free_empty() {
     ecs_array_t *array = ecs_array_new(&arr_params, 0);
     test_assert(array != NULL);

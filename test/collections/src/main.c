@@ -9,6 +9,7 @@
 #include <include/collections.h>
 
 // Testsuite 'Array'
+void Array_setup(void);
 void Array_free_empty(void);
 void Array_count(void);
 void Array_count_empty(void);
@@ -32,6 +33,7 @@ void Array_sort_sorted(void);
 void Array_sort_empty(void);
 
 // Testsuite 'Map'
+void Map_setup(void);
 void Map_count(void);
 void Map_count_empty(void);
 void Map_set_overwrite(void);
@@ -52,6 +54,7 @@ static bake_test_suite suites[] = {
     {
         .id = "Array",
         .testcase_count = 21,
+        .setup = Array_setup,
         .testcases = (bake_test_case[]){
             {
                 .id = "free_empty",
@@ -142,6 +145,7 @@ static bake_test_suite suites[] = {
     {
         .id = "Map",
         .testcase_count = 15,
+        .setup = Map_setup,
         .testcases = (bake_test_case[]){
             {
                 .id = "count",

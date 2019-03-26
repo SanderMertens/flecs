@@ -19,6 +19,10 @@ void fill_map(
     }
 }
 
+void Map_setup() {
+    ecs_set_os_api_defaults();
+}
+
 void Map_count() {
     ecs_map_t *map = ecs_map_new(16);
     fill_map(map);
@@ -174,3 +178,4 @@ void Map_remove_unknown() {
     test_int(ecs_map_count(map), 4);
     ecs_map_free(map);
 }
+

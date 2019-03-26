@@ -12,6 +12,7 @@
     "test": {
         "testsuites": [{
             "id": "Array",
+            "setup": true,
             "testcases": [
                 "free_empty",
                 "count",
@@ -37,6 +38,7 @@
             ]
         }, {
             "id": "Map",
+            "setup": true,
             "testcases": [
                 "count",
                 "count_empty",
