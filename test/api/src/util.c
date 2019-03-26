@@ -22,7 +22,7 @@ void ProbeSystem(
         ecs_type_t t = ecs_column_type(rows, i + 1);
         test_assert(t != 0);
 
-        ecs_entity_t e = ecs_column_component(rows, i + 1);
+        ecs_entity_t e = ecs_column_entity(rows, i + 1);
         test_assert(e != 0);
     }
 

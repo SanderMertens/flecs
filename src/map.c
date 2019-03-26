@@ -86,7 +86,7 @@ void alloc_buffer(
     uint32_t bucket_count)
 {
     if (bucket_count) {
-        map->buckets = calloc(bucket_count * sizeof(uint32_t), 1);
+        map->buckets = ecs_os_calloc(bucket_count * sizeof(uint32_t), 1);
         ecs_assert(map->buckets != NULL, ECS_OUT_OF_MEMORY, 0);
     } else {
         map->buckets = NULL;
@@ -100,7 +100,7 @@ static
 ecs_map_t *alloc_map(
     uint32_t bucket_count)
 {
-    ecs_map_t *result = malloc(sizeof(ecs_map_t));
+    ecs_map_t *result = ecs_os_malloc(sizeof(ecs_map_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     alloc_buffer(result, bucket_count);
@@ -287,7 +287,7 @@ void resize_map(
         }
     }
 
-    free(old_buckets);
+    ecs_os_free(old_buckets);
 }
 
 
@@ -302,20 +302,20 @@ ecs_map_t* ecs_map_new(
 void ecs_map_clear(
     ecs_map_t *map)
 {
-    /*uint32_t target_size = (float)map->count / FLECS_LOAD_FACTOR;
+    uint32_t target_size = (float)map->count / FLECS_LOAD_FACTOR;
 
     if (target_size < map->min) {
         target_size = map->min;
     }
 
     if (target_size < (float)map->bucket_count * 0.75) {
-        free(map->buckets);
+        ecs_os_free(map->buckets);
         alloc_buffer(map, target_size);
-    } else {*/
+    } else {
         memset(map->buckets, 0, sizeof(int32_t) * map->bucket_count);
-    /*}*/
+    }
 
-    //ecs_array_reclaim(&map->nodes, &node_arr_params);
+    ecs_array_reclaim(&map->nodes, &node_arr_params);
     ecs_array_clear(map->nodes);
 
     map->count = 0;
@@ -325,8 +325,8 @@ void ecs_map_free(
     ecs_map_t *map)
 {
     ecs_array_free(map->nodes);
-    free(map->buckets);
-    free(map);
+    ecs_os_free(map->buckets);
+    ecs_os_free(map);
 }
 
 void ecs_map_set64(

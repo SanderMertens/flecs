@@ -1130,7 +1130,7 @@ void TestSubset(ecs_rows_t *rows) {
 static
 void TestAll(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);
-    ecs_entity_t TestSubset = ecs_column_component(rows, 2);
+    ecs_entity_t TestSubset = ecs_column_entity(rows, 2);
 
     int i;
     for (i = 0; i < rows->count; i ++) {

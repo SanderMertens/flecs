@@ -145,8 +145,7 @@
             "testcases": [
                 "set",
                 "set_ptr",
-                "system_w_singleton",
-                "system_w_singleton_not_set"
+                "system_w_singleton"
             ]
         }, {
             "id": "Clone",

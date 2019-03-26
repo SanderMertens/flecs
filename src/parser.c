@@ -119,7 +119,7 @@ int ecs_parse_component_expr(
 {
     size_t len = strlen(sig);
     const char *ptr;
-    char ch, *bptr, *buffer = malloc(len + 1);
+    char ch, *bptr, *buffer = ecs_os_malloc(len + 1);
     ecs_assert(buffer != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     bool complex_expr = false;
@@ -170,7 +170,7 @@ int ecs_parse_component_expr(
             char *source_id = NULL;
             if (source) {
                 char *dot = strchr(source, '.');
-                source_id = malloc(dot - source + 1);
+                source_id = ecs_os_malloc(dot - source + 1);
                 ecs_assert(source_id != NULL, ECS_OUT_OF_MEMORY, NULL);
 
                 strncpy(source_id, source, dot - source);
@@ -182,7 +182,7 @@ int ecs_parse_component_expr(
             }
 
             if (source_id) {
-                free(source_id);
+                ecs_os_free(source_id);
             }
 
             complex_expr = false;
@@ -209,6 +209,6 @@ int ecs_parse_component_expr(
         }
     }
 
-    free(buffer);
+    ecs_os_free(buffer);
     return 0;
 }

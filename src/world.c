@@ -90,7 +90,7 @@ ecs_table_t* bootstrap_component_table(
     result->type_id = world->t_component;
     result->type = type;
     result->frame_systems = NULL;
-    result->columns = malloc(sizeof(ecs_table_column_t) * 3);
+    result->columns = ecs_os_malloc(sizeof(ecs_table_column_t) * 3);
     ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->columns[0].data = ecs_array_new(&handle_arr_params, 8);
@@ -457,7 +457,9 @@ void load_admin(
 /* -- Public functions -- */
 
 ecs_world_t *ecs_init(void) {
-    ecs_world_t *world = malloc(sizeof(ecs_world_t));
+    ecs_set_os_api_defaults();
+
+    ecs_world_t *world = ecs_os_malloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     world->magic = ECS_WORLD_MAGIC;
@@ -638,7 +640,7 @@ int ecs_fini(
 
     world->magic = 0;
 
-    free(world);
+    ecs_os_free(world);
 
     return 0;
 }

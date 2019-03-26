@@ -30,11 +30,13 @@ typedef struct ecs_world_t ecs_world_t;
 typedef uint64_t ecs_entity_t;
 
 /* Utility headers */
+#include "util/os_api.h"
 #include "util/iter.h"
 #include "util/array.h"
 #include "util/map.h"
 #include "util/stats.h"
 #include "util/time.h"
+#include "util/os_api.h"
 
 /** -- Builtin module flags -- */
 #define ECS_2D (1)
@@ -1244,23 +1246,23 @@ ecs_entity_t _ecs_column_source(
  * @return The component for the specified column, or 0 if failed.
  */
 FLECS_EXPORT
-ecs_entity_t _ecs_column_component(
+ecs_entity_t _ecs_column_entity(
     ecs_rows_t *rows,
     uint32_t column,
     bool test);
 
-#define ecs_column_component(rows, column)\
-        _ecs_column_component(rows, column, false)
+#define ecs_column_entity(rows, column)\
+        _ecs_column_entity(rows, column, false)
 
-#define ecs_column_component_test(rows, column)\
-        _ecs_column_component(rows, column, true)
+#define ecs_column_entity_test(rows, column)\
+        _ecs_column_entity(rows, column, true)
 
 /** Obtain the type of a column from inside a system. 
- * This operation is equivalent to ecs_column_component, except that it returns
+ * This operation is equivalent to ecs_column_entity, except that it returns
  * a type, instead of an entity handle. Invoking this function is the same as
  * doing:
  * 
- * ecs_type_from_entity( ecs_column_component(rows, index));
+ * ecs_type_from_entity( ecs_column_entity(rows, index));
  * 
  * To use the result of this operation with functions like ecs_new, ecs_add and 
  * ecs_set, make sure to name the variable in which you store the result of this

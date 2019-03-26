@@ -65,22 +65,3 @@ void Singleton_system_w_singleton() {
     
     ecs_fini(world);
 }
-
-void Singleton_system_w_singleton_not_set() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Iter_w_singleton, EcsOnFrame, Position, $Velocity);
-
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
-
-    ecs_progress(world, 1);
-
-    Position *p = ecs_get_ptr(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-    
-    ecs_fini(world);
-}

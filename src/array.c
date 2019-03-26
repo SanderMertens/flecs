@@ -14,7 +14,7 @@ ecs_array_t* resize(
     ecs_array_t *array,
     uint32_t size)
 {
-    ecs_array_t *result = realloc(array, sizeof(ecs_array_t) + size);
+    ecs_array_t *result = ecs_os_realloc(array, sizeof(ecs_array_t) + size);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, 0);
     return result;
 }
@@ -53,7 +53,7 @@ ecs_array_t* ecs_array_new(
     const ecs_array_params_t *params,
     uint32_t size)
 {
-    ecs_array_t *result = malloc(sizeof(ecs_array_t) + size * params->element_size);
+    ecs_array_t *result = ecs_os_malloc(sizeof(ecs_array_t) + size * params->element_size);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->count = 0;
@@ -76,7 +76,7 @@ ecs_array_t* ecs_array_new_from_buffer(
 void ecs_array_free(
     ecs_array_t *array)
 {
-    free(array);
+    ecs_os_free(array);
 }
 
 void ecs_array_clear(

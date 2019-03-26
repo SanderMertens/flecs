@@ -447,13 +447,13 @@ void ecs_free_stats(
     uint32_t i, count = ecs_array_count(stats->tables);
     EcsTableStats *tables = ecs_array_buffer(stats->tables);
     for (i = 0; i < count; i ++) {
-        free(tables[i].columns);
+        ecs_os_free(tables[i].columns);
     }
 
     EcsFeatureStats *entities = ecs_array_buffer(stats->features);
     count = ecs_array_count(stats->features);
     for (i = 0; i < count; i ++) {
-        free(entities[i].entities);
+        ecs_os_free(entities[i].entities);
     }
 
     ecs_array_free(stats->tables);

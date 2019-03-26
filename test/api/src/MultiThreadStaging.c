@@ -209,6 +209,7 @@ void MultiThreadStaging_6_threads_add_to_current() {
 static
 void Delete_above_1000(ecs_rows_t *rows) {
     int i;
+
     for (i = 0; i < rows->count; i ++) {
         if ((i + rows->frame_offset) > 1000) {
             ecs_delete(rows->world, rows->entities[i]);
@@ -345,6 +346,7 @@ void MultiThreadStaging_stress_set_entity_random_components() {
 
     ECS_SYSTEM(world, Set_random, EcsOnFrame, Position);
     ECS_SYSTEM(world, Set_velocity_callback, EcsOnSet, Velocity);
+    ECS_SYSTEM(world, Delete_above_1000, EcsPostFrame, Position);
 
     IterData ctx = {.component = TPosition, .component_2 = TVelocity, .component_3 = TRotation};
     ecs_set_context(world, &ctx);
@@ -356,7 +358,6 @@ void MultiThreadStaging_stress_set_entity_random_components() {
 
     int i;
     for (i = 0; i < 1000; i ++) {
-        printf("progress..\n");
         ecs_progress(world, 1);
     }
 

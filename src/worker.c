@@ -17,18 +17,18 @@ void* ecs_worker(void *arg) {
     ecs_world_t *world = thread->world;
     int i;
 
-    pthread_mutex_lock(&world->thread_mutex);
+    ecs_os_mutex_lock(world->thread_mutex);
     world->threads_running ++;
 
     while (!world->quit_workers) {
-        pthread_cond_wait(&world->thread_cond, &world->thread_mutex);
+        ecs_os_cond_wait(world->thread_cond, world->thread_mutex);
         if (world->quit_workers) {
             break;
         }
 
         ecs_job_t **jobs = thread->jobs;
         uint32_t job_count = thread->job_count;
-        pthread_mutex_unlock(&world->thread_mutex);
+        ecs_os_mutex_unlock(world->thread_mutex);
 
         for (i = 0; i < job_count; i ++) {
             ecs_run_w_filter(
@@ -41,18 +41,18 @@ void* ecs_worker(void *arg) {
                 NULL);
         }
 
-        pthread_mutex_lock(&world->thread_mutex);
+        ecs_os_mutex_lock(world->thread_mutex);
         thread->job_count = 0;
 
-        pthread_mutex_lock(&world->job_mutex);
+        ecs_os_mutex_lock(world->job_mutex);
         world->jobs_finished ++;
         if (world->jobs_finished == world->threads_running) {
-            pthread_cond_signal(&world->job_cond);
+            ecs_os_cond_signal(world->job_cond);
         }
-        pthread_mutex_unlock(&world->job_mutex);
+        ecs_os_mutex_unlock(world->job_mutex);
     }
 
-    pthread_mutex_unlock(&world->thread_mutex);
+    ecs_os_mutex_unlock(world->thread_mutex);
 
     return NULL;
 }
@@ -66,11 +66,11 @@ void wait_for_threads(
     bool wait = true;
 
     do {
-        pthread_mutex_lock(&world->thread_mutex);
+        ecs_os_mutex_lock(world->thread_mutex);
         if (world->threads_running == thread_count) {
             wait = false;
         }
-        pthread_mutex_unlock(&world->thread_mutex);
+        ecs_os_mutex_unlock(world->thread_mutex);
     } while (wait);
 }
 
@@ -81,13 +81,13 @@ void wait_for_jobs(
 {
     uint32_t thread_count = ecs_array_count(world->worker_threads) - 1;
 
-    pthread_mutex_lock(&world->job_mutex);
+    ecs_os_mutex_lock(world->job_mutex);
     if (world->jobs_finished != thread_count) {
         do {
-            pthread_cond_wait(&world->job_cond, &world->job_mutex);
+            ecs_os_cond_wait(world->job_cond, world->job_mutex);
         } while (world->jobs_finished != thread_count);
     }
-    pthread_mutex_unlock(&world->job_mutex);
+    ecs_os_mutex_unlock(world->job_mutex);
 }
 
 /** Stop worker threads */
@@ -95,15 +95,15 @@ static
 void ecs_stop_threads(
     ecs_world_t *world)
 {
-    pthread_mutex_lock(&world->thread_mutex);
+    ecs_os_mutex_lock(world->thread_mutex);
     world->quit_workers = true;
-    pthread_cond_broadcast(&world->thread_cond);
-    pthread_mutex_unlock(&world->thread_mutex);
+    ecs_os_cond_broadcast(world->thread_cond);
+    ecs_os_mutex_unlock(world->thread_mutex);
 
     ecs_thread_t *buffer = ecs_array_buffer(world->worker_threads);
     uint32_t i, count = ecs_array_count(world->worker_threads);
     for (i = 1; i < count; i ++) {
-        pthread_join(buffer[i].thread, NULL);
+        ecs_os_thread_join(buffer[i].thread);
         ecs_stage_deinit(world, buffer[i].stage);
     }
 
@@ -138,7 +138,8 @@ void start_threads(
         if (i != 0) {
             thread->stage = ecs_array_add(&world->worker_stages, &stage_arr_params);
             ecs_stage_init(world, thread->stage);
-            if (pthread_create(&thread->thread, NULL, ecs_worker, thread)) {
+            thread->thread = ecs_os_thread_new(ecs_worker, thread);
+            if (!thread->thread) {
                 ecs_abort(ECS_THREAD_ERROR, NULL);
             }
         } else {
@@ -252,10 +253,10 @@ void ecs_run_jobs(
     /* Make sure threads are ready to accept jobs */
     wait_for_threads(world);
 
-    pthread_mutex_lock(&world->thread_mutex);
+    ecs_os_mutex_lock(world->thread_mutex);
     world->jobs_finished = 0;
-    pthread_cond_broadcast(&world->thread_cond);
-    pthread_mutex_unlock(&world->thread_mutex);
+    ecs_os_cond_broadcast(world->thread_cond);
+    ecs_os_mutex_unlock(world->thread_mutex);
 
     /* Run job for thread 0 in main thread */
     ecs_thread_t *thread = ecs_array_buffer(world->worker_threads);
@@ -283,17 +284,17 @@ void ecs_set_threads(
     if (!world->arg_threads) {
         if (ecs_array_count(world->worker_threads)) {
             ecs_stop_threads(world);
-            pthread_cond_destroy(&world->thread_cond);
-            pthread_mutex_destroy(&world->thread_mutex);
-            pthread_cond_destroy(&world->job_cond);
-            pthread_mutex_destroy(&world->job_mutex);
+            ecs_os_cond_free(world->thread_cond);
+            ecs_os_mutex_free(world->thread_mutex);
+            ecs_os_cond_free(world->job_cond);
+            ecs_os_mutex_free(world->job_mutex);
         }
 
         if (threads > 1) {
-            pthread_cond_init(&world->thread_cond, NULL);
-            pthread_mutex_init(&world->thread_mutex, NULL);
-            pthread_cond_init(&world->job_cond, NULL);
-            pthread_mutex_init(&world->job_mutex, NULL);
+            world->thread_cond = ecs_os_cond_new();
+            world->thread_mutex = ecs_os_mutex_new();
+            world->job_cond = ecs_os_cond_new();
+            world->job_mutex = ecs_os_mutex_new();
             start_threads(world, threads);
         }
 

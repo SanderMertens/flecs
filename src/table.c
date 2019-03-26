@@ -30,7 +30,7 @@ ecs_table_column_t *ecs_table_get_columns(
     ecs_stage_t *stage,
     ecs_array_t *type)
 {
-    ecs_table_column_t *result = calloc(sizeof(ecs_table_column_t), ecs_array_count(type) + 1);
+    ecs_table_column_t *result = ecs_os_calloc(sizeof(ecs_table_column_t), ecs_array_count(type) + 1);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     ecs_entity_t *buf = ecs_array_buffer(type);
@@ -108,7 +108,7 @@ void ecs_table_free(
         ecs_array_free(table->columns[i].data);
     }
 
-    free(table->columns);
+    ecs_os_free(table->columns);
 
     ecs_array_free(table->frame_systems);
 }

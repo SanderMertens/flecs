@@ -128,7 +128,6 @@ void Set_set_and_new(void);
 void Singleton_set(void);
 void Singleton_set_ptr(void);
 void Singleton_system_w_singleton(void);
-void Singleton_system_w_singleton_not_set(void);
 
 // Testsuite 'Clone'
 void Clone_empty(void);
@@ -891,7 +890,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Singleton",
-        .testcase_count = 4,
+        .testcase_count = 3,
         .testcases = (bake_test_case[]){
             {
                 .id = "set",
@@ -904,10 +903,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "system_w_singleton",
                 .function = Singleton_system_w_singleton
-            },
-            {
-                .id = "system_w_singleton_not_set",
-                .function = Singleton_system_w_singleton_not_set
             }
         }
     },

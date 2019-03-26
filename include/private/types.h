@@ -245,7 +245,7 @@ typedef struct ecs_thread_t {
     ecs_world_t *world;              /* Reference to world */
     ecs_job_t *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
     ecs_stage_t *stage;              /* Stage for thread */
-    pthread_t thread;             /* Thread handle */
+    ecs_os_thread_t thread;          /* Thread handle */
 } ecs_thread_t;
 
 /** The world stores and manages all ECS data. An application can have more than
@@ -299,12 +299,12 @@ struct ecs_world_t {
     /* -- Multithreading -- */
 
     ecs_array_t *worker_threads;     /* Worker threads */
-    pthread_cond_t thread_cond;   /* Signal that worker threads can start */
-    pthread_mutex_t thread_mutex; /* Mutex for thread condition */
-    pthread_cond_t job_cond;      /* Signal that worker thread job is done */
-    pthread_mutex_t job_mutex;    /* Mutex for protecting job counter */
-    uint32_t jobs_finished;       /* Number of jobs finished */
-    uint32_t threads_running;     /* Number of threads running */
+    ecs_os_cond_t thread_cond;       /* Signal that worker threads can start */
+    ecs_os_mutex_t thread_mutex;     /* Mutex for thread condition */
+    ecs_os_cond_t job_cond;          /* Signal that worker thread job is done */
+    ecs_os_mutex_t job_mutex;        /* Mutex for protecting job counter */
+    uint32_t jobs_finished;          /* Number of jobs finished */
+    uint32_t threads_running;        /* Number of threads running */
 
     ecs_entity_t last_handle;        /* Last issued handle */
 

@@ -13,7 +13,7 @@ void _ecs_abort(
     } else {
         fprintf(stderr, "abort %s:%d: %s\n", file, line, ecs_strerror(error_code));
     }
-    abort();
+    ecs_os_abort();
 }
 
 void _ecs_assert(
@@ -32,7 +32,7 @@ void _ecs_assert(
             fprintf(stderr, "assert(%s) %s:%d: %s\n",
                 condition_str, file, line, ecs_strerror(error_code));
         }
-        abort();
+        ecs_os_abort();
     }
 }
 

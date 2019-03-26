@@ -643,7 +643,7 @@ ecs_type_t _ecs_column_type(
     }
 }
 
-ecs_entity_t _ecs_column_component(
+ecs_entity_t _ecs_column_entity(
     ecs_rows_t *rows,
     uint32_t index,
     bool test)
