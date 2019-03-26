@@ -2,7 +2,6 @@
 #define FLECS_TYPES_PRIVATE_H
 
 #include <stdlib.h>
-#include <pthread.h>
 
 #include "../flecs.h"
 #include "../util/array.h"
