@@ -33,6 +33,5 @@ install:
 
 script:
   - bake run test/api
-  - bake run test/api --cfg release
 
   
