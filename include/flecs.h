@@ -1509,13 +1509,16 @@ void _ecs_assert(
 /** Utility macro for declaring handles by modules */
 #define ECS_IMPORT_COMPONENT(handles, type)\
     ECS_ENTITY_VAR(type) = handles.ecs_to_entity(type); (void)ecs_to_entity(type);\
-    ECS_TYPE_VAR(type) = handles.ecs_to_type(type); (void)ecs_to_type(type)
+    ECS_TYPE_VAR(type) = handles.ecs_to_type(type); (void)ecs_to_type(type);\
+    (void)ecs_to_entity(type);\
+    (void)ecs_to_type(type)
 
 /** Utility macro for declaring handles by modules */
 #define ECS_IMPORT_ENTITY(handles, entity)\
     ecs_entity_t entity = handles.entity;\
-    ECS_TYPE_VAR(entity) = handles.ecs_to_type(type); (void)ecs_to_type(type)
-
+    ECS_TYPE_VAR(entity) = handles.ecs_to_type(entity); (void)ecs_to_type(entity);\
+    (void)entity;\
+    (void)ecs_to_type(entity)
 
 /** Utility macro for importing all handles for a module from a system column */
 #define ECS_IMPORT_COLUMN(rows, module, column) \
