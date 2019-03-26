@@ -139,7 +139,7 @@ EcsIter _ecs_array_iter(
     EcsArrayIter *iter_data);
 
 #define ecs_array_iter(me, params)\
-    _ecs_array_iter(me, params, alloca(sizeof(EcsArrayIter)))
+    _ecs_array_iter(me, params, ecs_os_alloca(EcsArrayIter))
 
 FLECS_EXPORT
 void ecs_array_sort(
