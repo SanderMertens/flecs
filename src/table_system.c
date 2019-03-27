@@ -657,7 +657,7 @@ ecs_entity_t _ecs_run_w_filter(
     ecs_system_action_t action = system_data->base.action;
     bool offset_limit = (offset | limit) != 0;
     bool limit_set = limit != 0;
-    void *ref_ptrs[column_count]; /* Use worst-case size for references */
+    ecs_os_declare_vla(void*, ref_ptrs, column_count); /* Use worst-case size for references */
 
     ecs_rows_t info = {
         .world = world,

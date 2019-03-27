@@ -18,8 +18,10 @@
 #define FLECS_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
+//FIXME: this should be generated for making `CMake` friendly
+#ifdef __BAKE__
 #include <bake.util>
-
+#endif
 /* Headers of private dependencies */
 #ifdef FLECS_IMPL
 /* No dependencies */

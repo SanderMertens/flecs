@@ -79,7 +79,7 @@ EcsIter _ecs_map_iter(
     EcsMapIter *iter_data);
 
 #define ecs_map_iter(me)\
-    _ecs_map_iter(me, alloca(sizeof(EcsMapIter)))
+    _ecs_map_iter(me, ecs_os_alloca(EcsMapIter))
 
 FLECS_EXPORT
 uint64_t ecs_map_next(

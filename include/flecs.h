@@ -3,7 +3,6 @@
 #define FLECS_H
 
 #include <stdint.h>
-#include <alloca.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>

@@ -1,9 +1,11 @@
 cmake_minimum_required (VERSION 2.6)
 
-project (flecs)
+project (flecs C)
 
 file(GLOB flecs_SRC "src/*.c")
 
 include_directories(".")
+
+add_compile_definitions(FLECS_IMPL)
 
 add_library(flecs SHARED ${flecs_SRC})
