@@ -505,6 +505,8 @@ ecs_world_t *ecs_init(void) {
     world->fps_sleep = 0;
     world->tick = 0;
 
+    world->context = NULL;
+
     world->arg_fps = 0;
     world->arg_threads = 0;
 
