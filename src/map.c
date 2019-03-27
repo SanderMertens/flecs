@@ -63,6 +63,8 @@ void move_node(
     uint32_t node = ecs_array_get_index(array, &node_arr_params, to) + 1;
     uint32_t prev = node_p->prev;
     uint32_t next = node_p->next;
+    (void)params;
+    (void)from;
 
     if (prev) {
         EcsMapNode *prev_p = node_from_index(array, prev);
@@ -116,7 +118,7 @@ uint32_t next_bucket(
     ecs_map_t *map,
     uint32_t start_index)
 {
-    int i;
+    size_t i;
     for (i = start_index; i < map->bucket_count; i ++) {
         if (map->buckets[i]) {
             break;

@@ -76,6 +76,11 @@ int has_tables(
     const char *source_id,
     void *data)
 {
+    (void)world;
+    (void)oper_kind;
+    (void)component_id;
+    (void)source_id;
+    
     bool *needs_matching = data;
     if (elem_kind == EcsFromSelf || elem_kind == EcsFromContainer) {
         *needs_matching = true;

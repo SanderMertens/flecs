@@ -271,8 +271,7 @@ void ecs_world_activate_system(
         dst_array = world->inactive_systems;
     }
 
-    uint32_t count = ecs_array_count(src_array);
-    int i;
+    uint32_t i, count = ecs_array_count(src_array);
     for (i = 0; i < count; i ++) {
         ecs_entity_t *h = ecs_array_get(
             src_array, &handle_arr_params, i);
@@ -598,7 +597,7 @@ int ecs_fini(
     if (system_count) {
         ecs_entity_t *buffer = ecs_array_buffer(world->fini_tasks);
         for (i = 0; i < system_count; i ++) {
-            ecs_run_task(world, buffer[i], 0);
+            ecs_run_task(world, buffer[i]);
         }
     }
 
@@ -725,8 +724,7 @@ void run_single_thread_stage(
 static
 void run_multi_thread_stage(
     ecs_world_t *world,
-    ecs_array_t *systems,
-    float delta_time)
+    ecs_array_t *systems)
 {
     /* Run periodic table systems */
     uint32_t i, system_count = ecs_array_count(systems);
@@ -754,8 +752,7 @@ void run_multi_thread_stage(
 
 static
 void run_tasks(
-    ecs_world_t *world,
-    float delta_time)
+    ecs_world_t *world)
 {
     /* Run periodic row systems (not matched to any entity) */
     uint32_t i, system_count = ecs_array_count(world->tasks);
@@ -764,7 +761,7 @@ void run_tasks(
 
         ecs_entity_t *buffer = ecs_array_buffer(world->tasks);
         for (i = 0; i < system_count; i ++) {
-            ecs_run_task(world, buffer[i], delta_time);
+            ecs_run_task(world, buffer[i]);
         }
     }
 }
@@ -834,16 +831,16 @@ bool ecs_progress(
     run_single_thread_stage(world, world->on_load_systems, delta_time);
 
     if (has_threads) {
-        run_multi_thread_stage(world, world->pre_frame_systems, delta_time);
-        run_multi_thread_stage(world, world->on_frame_systems, delta_time);
-        run_multi_thread_stage(world, world->post_frame_systems, delta_time);
+        run_multi_thread_stage(world, world->pre_frame_systems);
+        run_multi_thread_stage(world, world->on_frame_systems);
+        run_multi_thread_stage(world, world->post_frame_systems);
     } else {
         run_single_thread_stage(world, world->pre_frame_systems, delta_time);
         run_single_thread_stage(world, world->on_frame_systems, delta_time);
         run_single_thread_stage(world, world->post_frame_systems, delta_time);
     }
 
-    run_tasks(world, delta_time);
+    run_tasks(world);
 
     run_single_thread_stage(world, world->on_store_systems, delta_time);
 

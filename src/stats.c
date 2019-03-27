@@ -107,7 +107,7 @@ void calculate_stages_stats(
 static
 void get_memory_stats(
     ecs_world_t *world,
-    ecs_world_tStats *stats)
+    ecs_world_stats_t *stats)
 {
     EcsMemoryStats *memory = &stats->memory;
 
@@ -266,7 +266,7 @@ int system_stats_arr(
 static
 int system_stats_arr_inactive(
     ecs_world_t *world,
-    ecs_world_tStats *stats)
+    ecs_world_stats_t *stats)
 {
     ecs_array_t *systems = world->inactive_systems;
     ecs_entity_t *handles = ecs_array_buffer(systems);
@@ -297,7 +297,7 @@ int system_stats_arr_inactive(
 
 void ecs_get_stats(
     ecs_world_t *world,
-    ecs_world_tStats *stats)
+    ecs_world_stats_t *stats)
 {
     uint32_t mem_used = 0, mem_allocd = 0;
     stats->table_count = ecs_array_count(world->main_stage.tables);
@@ -441,8 +441,7 @@ void ecs_get_stats(
 }
 
 void ecs_free_stats(
-    ecs_world_t *world,
-    ecs_world_tStats *stats)
+    ecs_world_stats_t *stats)
 {
     uint32_t i, count = ecs_array_count(stats->tables);
     EcsTableStats *tables = ecs_array_buffer(stats->tables);

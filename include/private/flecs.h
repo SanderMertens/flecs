@@ -18,7 +18,6 @@ void ecs_merge_entity(
 /* Notify row system of entity (identified by row_index) */
 bool ecs_notify(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_map_t *systems,
     ecs_type_t type_id,
     ecs_table_t *table,
@@ -268,13 +267,11 @@ void ecs_system_activate_table(
 /* Run a task (periodic system that is not matched against any tables) */
 void ecs_run_task(
     ecs_world_t *world,
-    ecs_entity_t system,
-    float delta_time);
+    ecs_entity_t system);
 
 /* Invoke row system */
 bool ecs_notify_row_system(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t system,
     ecs_array_t *type,
     ecs_table_column_t *table_columns,

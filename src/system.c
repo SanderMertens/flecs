@@ -268,7 +268,6 @@ error:
 /** Run system on a single row */
 bool ecs_notify_row_system(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t system,
     ecs_array_t *type,
     ecs_table_column_t *table_columns,
@@ -356,11 +355,9 @@ bool ecs_notify_row_system(
  * Tasks are ran once every frame. */
 void ecs_run_task(
     ecs_world_t *world,
-    ecs_entity_t system,
-    float delta_time)
+    ecs_entity_t system)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_notify_row_system(world, stage, system, NULL, NULL, 0, 1);
+    ecs_notify_row_system(world, system, NULL, NULL, 0, 1);
 }
 
 /* Notify row system of a new type */

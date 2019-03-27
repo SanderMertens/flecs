@@ -53,7 +53,7 @@ typedef struct EcsMemoryStats {
     EcsMemoryStat world;
 } EcsMemoryStats;
 
-typedef struct ecs_world_tStats {
+typedef struct ecs_world_stats_t {
     uint32_t system_count;
     uint32_t table_count;
     uint32_t entity_count;
@@ -78,17 +78,16 @@ typedef struct ecs_world_tStats {
     ecs_array_t *tables;
     bool frame_profiling;
     bool system_profiling;
-} ecs_world_tStats;
+} ecs_world_stats_t;
 
 FLECS_EXPORT
 void ecs_get_stats(
     ecs_world_t *world,
-    ecs_world_tStats *stats);
+    ecs_world_stats_t *stats);
 
 FLECS_EXPORT
 void ecs_free_stats(
-    ecs_world_t *world,
-    ecs_world_tStats *stats);
+    ecs_world_stats_t *stats);
 
 FLECS_EXPORT
 void ecs_measure_frame_time(

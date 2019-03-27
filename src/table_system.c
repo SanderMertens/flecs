@@ -82,7 +82,6 @@ bool components_contains_component(
 /* Get ref array for system table */
 static
 ecs_system_ref_t* get_ref_data(
-    ecs_world_t *world,
     EcsColSystem *system_data,
     int32_t *table_data)
 {
@@ -287,7 +286,7 @@ void add_table(
                 
                 if (component_data->size) {
                     if (!ref_data) {
-                        ref_data = get_ref_data(world, system_data, table_data);
+                        ref_data = get_ref_data(system_data, table_data);
                         table_data[REFS_COUNT] = 0;
                     }
 
@@ -329,7 +328,6 @@ static
 bool match_table(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entity_t system,
     EcsColSystem *system_data)
 {
     ecs_type_t type, table_type;
@@ -415,7 +413,7 @@ void match_tables(
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = &buffer[i];
-        if (match_table(world, table, system, system_data)) {
+        if (match_table(world, table, system_data)) {
             add_table(world, system, system_data, table);
         }
     }
@@ -432,7 +430,7 @@ void ecs_col_system_notify_of_table(
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     assert(system_data != NULL);
 
-    if (match_table(world, table, system, system_data)) {
+    if (match_table(world, table, system_data)) {
         add_table(world, system, system_data, table);
     }
 }
@@ -460,8 +458,7 @@ void ecs_system_activate_table(
         dst_array = system_data->inactive_tables;
     }
 
-    uint32_t count = ecs_array_count(src_array);
-    int i;
+    uint32_t i, count = ecs_array_count(src_array);
     for (i = 0; i < count; i ++) {
         uint32_t *index = ecs_array_get(
             src_array, &system_data->table_params, i);

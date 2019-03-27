@@ -14,6 +14,7 @@ int add_type(
 {
     EcsTypeComponent *type = data;
     ecs_stage_t *stage = &world->main_stage;
+    (void)source_id;
 
     if (oper_kind != EcsOperAnd) {
         return -1;
@@ -65,7 +66,7 @@ uint32_t hash_handle_array(
     uint32_t count)
 {
     uint32_t hash = 0;
-    int i;
+    uint32_t i;
     for (i = 0; i < count; i ++) {
         ecs_hash(&array[i], sizeof(ecs_entity_t), &hash);
     }
