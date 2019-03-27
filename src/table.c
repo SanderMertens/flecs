@@ -74,6 +74,8 @@ int ecs_table_init(
         uint32_t i, count = ecs_array_count(type);
 
         for (i = 0; i < count; i ++) {
+            ecs_assert(buf[i] <= world->last_handle, ECS_INVALID_HANDLE, NULL);
+            
             /* Only if creating columns in the main stage, register prefab */
             if (!ecs_has(world, buf[i], EcsComponent)) {
                 if (ecs_has(world, buf[i], EcsPrefab)) {

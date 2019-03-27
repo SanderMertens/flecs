@@ -299,6 +299,10 @@ ecs_type_t ecs_type_merge_arr(
     } while (cur || add);
 
     if (new_count) {
+        ecs_assert(
+            (ecs_array_count(arr_cur) + 
+             ecs_array_count(to_add)) >= new_count, ECS_INTERNAL_ERROR, 0);
+
         return register_type_from_buffer(world, stage, buf_new, new_count);
     } else {
         return 0;

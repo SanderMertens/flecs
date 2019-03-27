@@ -154,9 +154,9 @@ void ecs_set_os_api_defaults(void);
 #define ecs_os_calloc(num, size) ecs_os_api.calloc(num, size)
 
 #ifdef _MSC_VER
-#define ecs_os_alloca(type, count) _alloca(sizeof(type) * count)
+#define ecs_os_alloca(type, count) _alloca(sizeof(type) * (count))
 #else
-#define ecs_os_alloca(type, count) alloca(sizeof(type) * count)
+#define ecs_os_alloca(type, count) alloca(sizeof(type) * (count))
 #endif
 
 /* Threads */
