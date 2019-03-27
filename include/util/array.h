@@ -133,15 +133,6 @@ void* ecs_array_buffer(
     ecs_array_t *array);
 
 FLECS_EXPORT
-EcsIter _ecs_array_iter(
-    ecs_array_t *array,
-    const ecs_array_params_t *params,
-    EcsArrayIter *iter_data);
-
-#define ecs_array_iter(me, params)\
-    _ecs_array_iter(me, params, ecs_os_alloca(EcsArrayIter))
-
-FLECS_EXPORT
 void ecs_array_sort(
     ecs_array_t *array,
     const ecs_array_params_t *params,

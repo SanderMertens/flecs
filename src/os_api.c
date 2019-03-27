@@ -116,6 +116,9 @@ void ecs_set_os_api_defaults(void)
     _ecs_os_api->cond_signal = bake_cond_signal;
     _ecs_os_api->cond_broadcast = bake_cond_broadcast;
     _ecs_os_api->cond_wait = bake_cond_wait;
+
+    _ecs_os_api->sleep = ut_sleep;
+    _ecs_os_api->get_time = timespec_gettime;
 #endif
 
     _ecs_os_api->abort = abort;

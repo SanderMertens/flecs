@@ -294,9 +294,10 @@ bool ecs_notify_row_system(
 
     uint32_t i, column_count = ecs_array_count(system_data->base.columns);
     ecs_system_column_t *buffer = ecs_array_buffer(system_data->base.columns);
-    ecs_os_declare_vla(int32_t, columns, column_count);
-    ecs_os_declare_vla(ecs_reference_t, references, column_count);
-    ecs_os_declare_vla(void*, ref_ptrs, column_count);
+    int32_t *columns = ecs_os_alloca(int32_t, column_count);
+    ecs_reference_t *references = ecs_os_alloca(ecs_reference_t, column_count);
+    void **ref_ptrs = ecs_os_alloca(void*, column_count);
+
     uint32_t ref_id = 0;
 
     for (i = 0; i < column_count; i ++) {

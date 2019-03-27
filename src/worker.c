@@ -178,11 +178,12 @@ void ecs_schedule_jobs(
     uint32_t thread_count = ecs_array_count(world->worker_threads);
     uint32_t total_rows = 0;
 
-    EcsIter table_it = ecs_array_iter(
-        system_data->tables, &system_data->table_params);
+    void *ptr = ecs_array_buffer(system_data->tables);
+    uint32_t i, count = ecs_array_count(system_data->tables);
+    size_t size = system_data->table_params.element_size;
 
-    while (ecs_iter_hasnext(&table_it)) {
-        uint32_t table_index = *(uint32_t*)ecs_iter_next(&table_it);
+    for (i = 0; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
+        uint32_t table_index = *(uint32_t*)ptr;
         ecs_table_t *table = ecs_array_get(
             world->main_stage.tables, &table_arr_params, table_index);
         total_rows += ecs_array_count(table->columns[0].data);
@@ -200,11 +201,9 @@ void ecs_schedule_jobs(
     float residual = 0;
     int32_t rows_per_thread_i = rows_per_thread;
 
-    table_it = ecs_array_iter(system_data->tables, &system_data->table_params);
     uint32_t start_index = 0;
 
     ecs_job_t *job = NULL;
-    uint32_t i;
     for (i = 0; i < thread_count; i ++) {
         job = ecs_array_get(system_data->jobs, &job_arr_params, i);
         int32_t rows_per_job = rows_per_thread_i;

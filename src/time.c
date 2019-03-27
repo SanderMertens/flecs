@@ -6,59 +6,18 @@
 #include <string.h>
 #include <include/util/time.h>
 
-#ifdef __MACH__
-#include <mach/clock.h>
-#include <mach/mach.h>
-#endif
-
-void ut_sleep(
-    unsigned int sec,
-    unsigned int nanosec)
-{
-    struct timespec sleepTime;
-
-    sleepTime.tv_sec = sec;
-    sleepTime.tv_nsec = nanosec;
-#ifdef _MSC_VER
-    //FIXME
-#else
-
-    if (nanosleep(&sleepTime, NULL)) {
-        fprintf(stderr, "nanosleep failed: %s\n", strerror(errno));
-    }
-#endif
-}
-
-void ut_sleepf(
+void ecs_sleepf(
     double t)
 {
     if (t > 0) {
         int sec = t;
         int nsec = ((t - sec) * 1000000000);
-        ut_sleep(sec, nsec);
+        ecs_os_sleep(sec, nsec);
     }
 }
 
-void ut_time_get(
-    struct timespec* time)
-{
-#ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
-    clock_serv_t cclock;
-    mach_timespec_t mts;
-    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
-    clock_get_time(cclock, &mts);
-    mach_port_deallocate(mach_task_self(), cclock);
-    time->tv_sec = mts.tv_sec;
-    time->tv_nsec = mts.tv_nsec;
-#elif _MSC_VER
-    //FIXME
-#else
-    clock_gettime(CLOCK_REALTIME, time);
-#endif
-}
-
 /** Convert time to double */
-double ut_time_to_double(
+double ecs_time_to_double(
     struct timespec t)
 {
     double result;
@@ -66,7 +25,7 @@ double ut_time_to_double(
     return result + (double)t.tv_nsec / (double)1000000000;;
 }
 
-struct timespec ut_time_sub(
+struct timespec ecs_time_sub(
     struct timespec t1,
     struct timespec t2)
 {
@@ -83,13 +42,13 @@ struct timespec ut_time_sub(
     return result;
 }
 
-double ut_time_measure(
+double ecs_time_measure(
     struct timespec *start)
 {
     struct timespec stop, temp;
-    ut_time_get(&stop);
+    ecs_os_get_time(&stop);
     temp = stop;
-    stop = ut_time_sub(stop, *start);
+    stop = ecs_time_sub(stop, *start);
     *start = temp;
-    return ut_time_to_double(stop);
+    return ecs_time_to_double(stop);
 }

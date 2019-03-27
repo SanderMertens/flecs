@@ -179,9 +179,11 @@ void add_table(
     table_data[COMPONENTS_INDEX] = ecs_array_count(system_data->components) - 1;
 
     /* Walk columns parsed from the system signature */
-    EcsIter it = ecs_array_iter(system_data->base.columns, &column_arr_params);
-    while (ecs_iter_hasnext(&it)) {
-        ecs_system_column_t *column = ecs_iter_next(&it);
+    ecs_system_column_t *columns = ecs_array_buffer(system_data->base.columns);
+    uint32_t c, count = ecs_array_count(system_data->base.columns);
+
+    for (c = 0; c < count; c ++) {
+        ecs_system_column_t *column = &columns[c];
         ecs_entity_t entity = 0, component = 0;
 
         /* Column that retrieves data from an entity */
@@ -644,7 +646,7 @@ ecs_entity_t _ecs_run_w_filter(
 
     struct timespec time_start;
     if (measure_time) {
-        ut_time_get(&time_start);
+        ecs_os_get_time(&time_start);
     }
 
     uint32_t column_count = ecs_array_count(system_data->base.columns);
@@ -654,7 +656,7 @@ ecs_entity_t _ecs_run_w_filter(
     ecs_system_action_t action = system_data->base.action;
     bool offset_limit = (offset | limit) != 0;
     bool limit_set = limit != 0;
-    ecs_os_declare_vla(void*, ref_ptrs, column_count); /* Use worst-case size for references */
+    void **ref_ptrs = ecs_os_alloca(void*, column_count);
 
     ecs_rows_t info = {
         .world = world,
@@ -756,7 +758,7 @@ ecs_entity_t _ecs_run_w_filter(
     }
 
     if (measure_time) {
-        system_data->base.time_spent += ut_time_measure(&time_start);
+        system_data->base.time_spent += ecs_time_measure(&time_start);
     }
 
     return interrupted_by;

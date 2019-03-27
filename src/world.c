@@ -671,27 +671,27 @@ ecs_entity_t ecs_lookup(
     ecs_world_t *world,
     const char *id)
 {
-    EcsIter it = ecs_array_iter(world->main_stage.tables, &table_arr_params);
+    ecs_table_t *tables = ecs_array_buffer(world->main_stage.tables);
+    uint32_t t, count = ecs_array_count(world->main_stage.tables);
 
-    while (ecs_iter_hasnext(&it)) {
-        ecs_table_t *table = ecs_iter_next(&it);
+    for (t = 0; t < count; t ++) {
         int16_t column_index;
 
-        if ((column_index = ecs_type_index_of(table->type, EEcsId)) == -1) {
+        if ((column_index = ecs_type_index_of(tables[t].type, EEcsId)) == -1) {
             continue;
         }
 
-
-        ecs_table_column_t *column = &table->columns[column_index + 1];
+        ecs_table_column_t *column = &tables[t].columns[column_index + 1];
         EcsId *buffer = ecs_array_buffer(column->data);
         uint32_t i, count = ecs_array_count(column->data);
         
         for (i = 0; i < count; i ++) {
             if (!strcmp(buffer[i], id)) {
                 return *(ecs_entity_t*)ecs_array_get(
-                    table->columns[0].data, &handle_arr_params, i);
+                    tables[t].columns[0].data, &handle_arr_params, i);
             }
         }
+
     }
 
     return 0;
@@ -774,12 +774,12 @@ float start_measure_frame(
 {
     if (world->measure_frame_time || !delta_time) {
         if (world->frame_start.tv_sec) {
-            float delta = ut_time_measure(&world->frame_start);
+            float delta = ecs_time_measure(&world->frame_start);
             if (!delta_time) {
                 delta_time = delta;
             }
         } else {
-            ut_time_measure(&world->frame_start);
+            ecs_time_measure(&world->frame_start);
             if (world->target_fps) {
                 delta_time = 1.0 / world->target_fps;
             } else {
@@ -798,7 +798,7 @@ void stop_measure_frame(
 {
     if (world->measure_frame_time) {
         struct timespec t = world->frame_start;
-        world->frame_time += ut_time_measure(&t);
+        world->frame_time += ecs_time_measure(&t);
         world->tick ++;
 
         /* Sleep if processing faster than target FPS */
@@ -809,7 +809,7 @@ void stop_measure_frame(
                 sleep = 0;
             }
             world->fps_sleep = sleep;
-            ut_sleepf(sleep);
+            ecs_sleepf(sleep);
         }
     }
 }
@@ -878,7 +878,7 @@ void ecs_merge(
     world->is_merging = true;
 
     struct timespec t_start;
-    ut_time_get(&t_start);
+    ecs_os_get_time(&t_start);
 
     ecs_stage_merge(world, &world->temp_stage);
 
@@ -888,7 +888,7 @@ void ecs_merge(
         ecs_stage_merge(world, &buffer[i]);
     }
 
-    world->merge_time += ut_time_measure(&t_start);
+    world->merge_time += ecs_time_measure(&t_start);
 
     world->is_merging = false;
 }

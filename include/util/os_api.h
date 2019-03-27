@@ -10,7 +10,7 @@
 #endif
 
 
-/* Use types that _at least_ can store pointers */
+/* Use handle types that _at least_ can store pointers */
 typedef uint64_t ecs_os_thread_t;
 typedef uint64_t ecs_os_cond_t;
 typedef uint64_t ecs_os_mutex_t;
@@ -89,6 +89,16 @@ void (*ecs_os_api_cond_wait_t)(
     ecs_os_cond_t cond,
     ecs_os_mutex_t mutex);
 
+
+typedef 
+void (*ecs_os_api_sleep_t)(
+    uint32_t sec,
+    uint32_t nanosec);
+
+typedef
+void (*ecs_os_api_get_time_t)(
+    struct timespec *time_out);
+
 /* Application termination */
 typedef
 void (*ecs_os_api_abort_t)(
@@ -118,6 +128,10 @@ typedef struct ecs_os_api_t {
     ecs_os_api_cond_broadcast_t cond_broadcast;
     ecs_os_api_cond_wait_t cond_wait;
 
+    /* Time */
+    ecs_os_api_sleep_t sleep;
+    ecs_os_api_get_time_t get_time;
+
     /* Application termination */
     ecs_os_api_abort_t abort;
 } ecs_os_api_t;
@@ -133,12 +147,17 @@ void ecs_set_os_api(
 FLECS_EXPORT
 void ecs_set_os_api_defaults(void);
 
-
 /* Memory management */
 #define ecs_os_malloc(size) ecs_os_api.malloc(size);
 #define ecs_os_free(ptr) ecs_os_api.free(ptr);
 #define ecs_os_realloc(ptr, size) ecs_os_api.realloc(ptr, size)
 #define ecs_os_calloc(num, size) ecs_os_api.calloc(num, size)
+
+#ifdef _MSC_VER
+#define ecs_os_alloca(type, count) _alloca(sizeof(type) * count)
+#else
+#define ecs_os_alloca(type, count) alloca(sizeof(type) * count)
+#endif
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new(callback, param)
@@ -157,17 +176,11 @@ void ecs_set_os_api_defaults(void);
 #define ecs_os_cond_broadcast(cond) ecs_os_api.cond_broadcast(cond)
 #define ecs_os_cond_wait(cond, mutex) ecs_os_api.cond_wait(cond, mutex)
 
+/* Time */
+#define ecs_os_sleep(sec, nanosec) ecs_os_api.sleep(sec, nanosec)
+#define ecs_os_get_time(time_out) ecs_os_api.get_time(time_out)
+
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort()
-
-#ifdef _MSC_VER
-/* TODO */
-#define ecs_os_alloca(type) _alloca(sizeof(type))
-#define ecs_os_declare_vla(type, name, count) type* name = _alloca(sizeof(type) * (count))
-#else
-/* TODO */
-#define ecs_os_alloca(type) alloca(sizeof(type))
-#define ecs_os_declare_vla(type, name, count) type name[(count)]
-#endif
 
 #endif

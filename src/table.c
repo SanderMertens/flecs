@@ -13,11 +13,12 @@ void activate_table(
         ecs_system_activate_table(world, system, table, activate);
     } else {
         ecs_array_t *systems = table->frame_systems;
+        
         if (systems) {
-            EcsIter it = ecs_array_iter(systems, &handle_arr_params);
-            while (ecs_iter_hasnext(&it)) {
-                system = *(ecs_entity_t*)ecs_iter_next(&it);
-                ecs_system_activate_table(world, system, table, activate);
+            ecs_entity_t *buffer = ecs_array_buffer(systems);
+            uint32_t i, count = ecs_array_count(systems);
+            for (i = 0; i < count; i ++) {
+                ecs_system_activate_table(world, buffer[i], table, activate);
             }
         }
     }

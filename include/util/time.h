@@ -13,29 +13,20 @@ extern "C" {
 #endif
 
 FLECS_EXPORT
-void ut_sleep(
-  unsigned int sec,
-  unsigned int nanosec);
-
-FLECS_EXPORT
-void ut_sleepf(
+void ecs_sleepf(
     double t);
 
 FLECS_EXPORT
-void ut_time_get(
-    struct timespec* time);
-
-FLECS_EXPORT
-double ut_time_to_double(
+double ecs_time_to_double(
     struct timespec t);
 
 FLECS_EXPORT
-struct timespec ut_time_sub(
+struct timespec ecs_time_sub(
     struct timespec t1,
     struct timespec t2);
 
 FLECS_EXPORT
-double ut_time_measure(
+double ecs_time_measure(
     struct timespec *start);
 
 #ifdef __cplusplus
