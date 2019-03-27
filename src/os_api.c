@@ -26,7 +26,7 @@ ecs_os_thread_t bake_thread_new(
     ecs_os_thread_callback_t callback, 
     void *param)
 {
-    return ut_thread_new(callback, param);
+    return (ecs_os_thread_t)ut_thread_new(callback, param);
 }
 
 static
@@ -34,7 +34,7 @@ void* bake_thread_join(
     ecs_os_thread_t thread)
 {
     void *arg;
-    ut_thread_join(thread, &arg);
+    ut_thread_join((ut_thread)thread, &arg);
     return arg;
 }
 
