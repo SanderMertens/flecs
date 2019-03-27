@@ -13,3 +13,14 @@ add_library(flecs_shared SHARED ${flecs_SRC})
 
 target_compile_definitions(flecs_static PRIVATE FLECS_STATIC)
 target_compile_definitions(flecs_shared PRIVATE FLECS_SHARED)
+
+
+install(
+	DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION include FILES_MATCHING PATTERN "*.h"
+)
+install(
+	TARGETS flecs_static DESTINATION lib
+)
+install(
+	TARGETS flecs_shared DESTINATION lib
+)
