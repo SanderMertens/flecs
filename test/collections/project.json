@@ -24,8 +24,6 @@
                 "get_out_of_bound",
                 "add_empty",
                 "add_resize",
-                "iter",
-                "iter_empty",
                 "remove",
                 "remove_first",
                 "remove_last",

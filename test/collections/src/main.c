@@ -20,8 +20,6 @@ void Array_get_empty(void);
 void Array_get_out_of_bound(void);
 void Array_add_empty(void);
 void Array_add_resize(void);
-void Array_iter(void);
-void Array_iter_empty(void);
 void Array_remove(void);
 void Array_remove_first(void);
 void Array_remove_last(void);
@@ -53,7 +51,7 @@ void Map_remove_unknown(void);
 static bake_test_suite suites[] = {
     {
         .id = "Array",
-        .testcase_count = 21,
+        .testcase_count = 19,
         .setup = Array_setup,
         .testcases = (bake_test_case[]){
             {
@@ -95,14 +93,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_resize",
                 .function = Array_add_resize
-            },
-            {
-                .id = "iter",
-                .function = Array_iter
-            },
-            {
-                .id = "iter_empty",
-                .function = Array_iter_empty
             },
             {
                 .id = "remove",
