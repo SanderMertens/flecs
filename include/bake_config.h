@@ -33,7 +33,7 @@
 /* Convenience macro for exporting symbols */
 #if FLECS_STATIC
 #define FLECS_EXPORT
-#elif FLECS_SHARED
+#else
 #if FLECS_IMPL && defined _MSC_VER
 #define FLECS_EXPORT __declspec(dllexport)
 #elif FLECS_IMPL
@@ -43,8 +43,6 @@
 #else
 #define FLECS_EXPORT
 #endif
-#else
-#define FLECS_EXPORT
 #endif
 #endif
 

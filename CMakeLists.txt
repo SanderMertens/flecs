@@ -12,7 +12,6 @@ add_library(flecs_static STATIC ${flecs_SRC})
 add_library(flecs_shared SHARED ${flecs_SRC})
 
 target_compile_definitions(flecs_static PRIVATE FLECS_STATIC)
-target_compile_definitions(flecs_shared PRIVATE FLECS_SHARED)
 
 
 install(
