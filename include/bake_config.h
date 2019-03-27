@@ -17,14 +17,17 @@
 #ifndef FLECS_BAKE_CONFIG_H
 #define FLECS_BAKE_CONFIG_H
 
-/* Headers of public dependencies */
-//FIXME: this should be generated for making `CMake` friendly
+/* Generated includes are specific to the bake environment. If a project is not
+ * built with bake, it will have to provide alternative methods for including
+ * its dependencies. */
 #ifdef __BAKE__
+/* Headers of public dependencies */
 #include <bake.util>
-#endif
+
 /* Headers of private dependencies */
 #ifdef FLECS_IMPL
 /* No dependencies */
+#endif
 #endif
 
 /* Convenience macro for exporting symbols */

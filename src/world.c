@@ -578,6 +578,7 @@ ecs_world_t* ecs_init_w_args(
                 i ++);
 
             /* Ignore arguments that were not parsed */
+            (void)parsed;
         } else {
             /* Ignore arguments that don't start with '-' */
         }
@@ -674,7 +675,7 @@ ecs_entity_t ecs_lookup(
 
     while (ecs_iter_hasnext(&it)) {
         ecs_table_t *table = ecs_iter_next(&it);
-        uint32_t column_index;
+        int16_t column_index;
 
         if ((column_index = ecs_type_index_of(table->type, EEcsId)) == -1) {
             continue;
