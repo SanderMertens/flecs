@@ -19,9 +19,14 @@ void ut_sleep(
 
     sleepTime.tv_sec = sec;
     sleepTime.tv_nsec = nanosec;
+#ifdef _MSC_VER
+    //FIXME
+#else
+
     if (nanosleep(&sleepTime, NULL)) {
         fprintf(stderr, "nanosleep failed: %s\n", strerror(errno));
     }
+#endif
 }
 
 void ut_sleepf(
@@ -45,6 +50,8 @@ void ut_time_get(
     mach_port_deallocate(mach_task_self(), cclock);
     time->tv_sec = mts.tv_sec;
     time->tv_nsec = mts.tv_nsec;
+#elif _MSC_VER
+    //FIXME
 #else
     clock_gettime(CLOCK_REALTIME, time);
 #endif

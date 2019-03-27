@@ -200,7 +200,7 @@ ecs_type_t ecs_type_register(
     ecs_array_t *set)
 {
     uint32_t count = ecs_array_count(set);
-    ecs_entity_t new_set[count + 1];
+    ecs_os_declare_vla(ecs_entity_t, new_set, count + 1);
     void *new_buffer = new_set;
 
     if (to_add) {
@@ -262,7 +262,7 @@ ecs_type_t ecs_type_merge_arr(
         add = buf_add[0];
     }
 
-        ecs_entity_t buf_new[cur_count + add_count];
+    ecs_os_declare_vla(ecs_entity_t, buf_new, cur_count + add_count);
     uint32_t new_count = 0;
 
     do {

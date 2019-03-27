@@ -3,6 +3,13 @@
 
 #include "../flecs.h"
 
+#ifdef _MSC_VER
+#include <malloc.h>
+#else
+#include <alloca.h>
+#endif
+
+
 /* Use types that _at least_ can store pointers */
 typedef uint64_t ecs_os_thread_t;
 typedef uint64_t ecs_os_cond_t;
@@ -152,5 +159,15 @@ void ecs_set_os_api_defaults(void);
 
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort()
+
+#ifdef _MSC_VER
+/* TODO */
+#define ecs_os_alloca(type) _alloca(sizeof(type))
+#define ecs_os_declare_vla(type, name, count) type* name = _alloca(sizeof(type) * (count))
+#else
+/* TODO */
+#define ecs_os_alloca(type) alloca(sizeof(type))
+#define ecs_os_declare_vla(type, name, count) type name[(count)]
+#endif
 
 #endif
