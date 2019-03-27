@@ -235,7 +235,6 @@ void ecs_table_free(
 /* Compute the AND type from the system columns */
 void ecs_system_compute_and_families(
     ecs_world_t *world,
-    ecs_entity_t system,
     EcsSystem *system_data);
 
 /* Create new table system */

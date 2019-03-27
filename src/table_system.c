@@ -543,7 +543,7 @@ ecs_entity_t ecs_new_col_system(
         assert(0);
     }
 
-    ecs_system_compute_and_families(world, result, &system_data->base);
+    ecs_system_compute_and_families(world, &system_data->base);
 
     match_tables(world, result, system_data);
 

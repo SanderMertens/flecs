@@ -139,7 +139,7 @@ ecs_entity_t new_row_system(
         *elem = result;
     }
 
-    ecs_system_compute_and_families(world, result, &system_data->base);
+    ecs_system_compute_and_families(world, &system_data->base);
 
     if (needs_tables) {
         match_families(world, result, system_data);
@@ -152,7 +152,6 @@ ecs_entity_t new_row_system(
 
 void ecs_system_compute_and_families(
     ecs_world_t *world,
-    ecs_entity_t system,
     EcsSystem *system_data)
 {
     uint32_t i, column_count = ecs_array_count(system_data->columns);

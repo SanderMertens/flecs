@@ -94,8 +94,8 @@ void ecs_table_deinit(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    /*ecs_notify(world, NULL,
-        world->remove_systems, table->type_id, table, table->rows, -1);*/
+    (void)world;
+    (void)table;
 }
 
 void ecs_table_free(
@@ -103,6 +103,7 @@ void ecs_table_free(
     ecs_table_t *table)
 {
     uint32_t i, column_count = ecs_array_count(table->type);
+    (void)world;
     
     for (i = 0; i < column_count + 1; i ++) {
         ecs_array_free(table->columns[i].data);

@@ -15,7 +15,7 @@ static
 void* ecs_worker(void *arg) {
     ecs_thread_t *thread = arg;
     ecs_world_t *world = thread->world;
-    int i;
+    uint32_t i;
 
     ecs_os_mutex_lock(world->thread_mutex);
     world->threads_running ++;
@@ -125,7 +125,7 @@ void start_threads(
     world->worker_threads = ecs_array_new(&thread_arr_params, threads);
     world->worker_stages = ecs_array_new(&stage_arr_params, threads - 1);
 
-    int i;
+    uint32_t i;
     for (i = 0; i < threads; i ++) {
         ecs_thread_t *thread =
             ecs_array_add(&world->worker_threads, &thread_arr_params);
@@ -160,7 +160,7 @@ void create_jobs(
 
     system_data->jobs = ecs_array_new(&job_arr_params, thread_count);
 
-    int i;
+    uint32_t i;
     for (i = 0; i < thread_count; i ++) {
         ecs_array_add(&system_data->jobs, &job_arr_params);
     }
@@ -235,7 +235,7 @@ void ecs_prepare_jobs(
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     ecs_array_t *threads = world->worker_threads;
     ecs_array_t *jobs = system_data->jobs;
-    int i;
+    uint32_t i;
 
     uint32_t thread_count = ecs_array_count(jobs);
 

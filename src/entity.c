@@ -63,14 +63,12 @@ void copy_row(
 
 static
 void* get_row_ptr(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_array_t *type,
     ecs_table_column_t *columns,
     uint32_t index,
     ecs_entity_t component)
 {
-    uint32_t column_index = ecs_type_index_of(type, component);
+    int16_t column_index = ecs_type_index_of(type, component);
     if (column_index == -1) {
         return NULL;
     }
@@ -113,8 +111,7 @@ void* get_ptr(
             info->index = row.index;
             info->table = table;
             info->columns = columns;
-            ptr = get_row_ptr(
-                world, stage, table->type, columns, row.index, component);  
+            ptr = get_row_ptr(table->type, columns, row.index, component);  
         }
 
         if (!ptr) {
@@ -146,8 +143,7 @@ void* get_ptr(
             info->index = row.index;
             info->table = table;
             info->columns = table->columns;
-            ptr = get_row_ptr(
-                world, stage, table->type, table->columns, row.index, component);
+            ptr = get_row_ptr(table->type, table->columns, row.index, component);
         }
 
         if (ptr) return ptr;
@@ -212,7 +208,7 @@ void copy_from_prefab(
         for (i = 0; i < add_count; i ++) {
             ecs_entity_t component = add_handles[i];
             void *prefab_ptr = get_row_ptr(
-                world, stage, prefab_table->type, prefab_table->columns,
+                prefab_table->type, prefab_table->columns,
                 row.index, component);
 
             if (prefab_ptr) {
@@ -231,7 +227,7 @@ void copy_from_prefab(
                 if (size) {
                     void *buffer = ecs_array_buffer(columns[column_index + 1].data);
                     void *ptr = ECS_OFFSET(buffer, offset * size);
-                    int i;
+                    uint32_t i;
                     for (i = 0; i < limit; i ++) {
                         memcpy(ptr, prefab_ptr, size);
                         ptr = ECS_OFFSET(ptr, size);
@@ -320,7 +316,7 @@ uint32_t commit_w_type(
     ecs_table_column_t *new_columns, *old_columns;
     ecs_map_t *entity_index;
     ecs_type_t old_type_id = 0;
-    uint32_t new_index = -1, old_index = -1;
+    int32_t new_index = -1, old_index = -1;
     bool in_progress = world->in_progress;
     ecs_entity_t entity = info->entity;
     ecs_array_t *old_type = NULL;
@@ -675,7 +671,7 @@ ecs_entity_t _ecs_new_w_count(
         uint32_t cur_index_count = ecs_map_count(entity_index);
         ecs_map_set_size(entity_index, cur_index_count + count);
 
-        int i, cur_row = row;
+        uint64_t i, cur_row = row;
         for (i = result; i < (result + count); i ++) {
             /* We need to commit each entity individually in order to populate
              * the entity index */
@@ -696,7 +692,7 @@ ecs_entity_t _ecs_new_w_count(
     } 
     
     if (handles_out) {
-        int i;
+        uint32_t i;
         for (i = 0; i < count; i ++) {
             handles_out[i] = result + i;
         }
