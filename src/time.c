@@ -18,34 +18,34 @@ void ecs_sleepf(
 
 /** Convert time to double */
 double ecs_time_to_double(
-    struct timespec t)
+    ecs_time_t t)
 {
     double result;
-    result = t.tv_sec;
-    return result + (double)t.tv_nsec / (double)1000000000;;
+    result = t.sec;
+    return result + (double)t.nanosec / (double)1000000000;;
 }
 
-struct timespec ecs_time_sub(
-    struct timespec t1,
-    struct timespec t2)
+ecs_time_t ecs_time_sub(
+    ecs_time_t t1,
+    ecs_time_t t2)
 {
-    struct timespec result;
+    ecs_time_t result;
 
-    if (t1.tv_nsec >= t2.tv_nsec) {
-        result.tv_nsec = t1.tv_nsec - t2.tv_nsec;
-        result.tv_sec = t1.tv_sec - t2.tv_sec;
+    if (t1.nanosec >= t2.nanosec) {
+        result.nanosec = t1.nanosec - t2.nanosec;
+        result.sec = t1.sec - t2.sec;
     } else {
-        result.tv_nsec = t1.tv_nsec - t2.tv_nsec + 1000000000;
-        result.tv_sec = t1.tv_sec - t2.tv_sec - 1;
+        result.nanosec = t1.nanosec - t2.nanosec + 1000000000;
+        result.sec = t1.sec - t2.sec - 1;
     }
 
     return result;
 }
 
 double ecs_time_measure(
-    struct timespec *start)
+    ecs_time_t *start)
 {
-    struct timespec stop, temp;
+    ecs_time_t stop, temp;
     ecs_os_get_time(&stop);
     temp = stop;
     stop = ecs_time_sub(stop, *start);

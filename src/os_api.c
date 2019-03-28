@@ -88,6 +88,13 @@ void bake_cond_wait(ecs_os_cond_t cond, ecs_os_mutex_t mutex) {
     ut_cond_wait((struct ut_cond_s *)cond, (struct ut_mutex_s *)mutex);
 }
 
+static
+void bake_gettime(ecs_time_t *t) {
+    struct timespec bt;
+    timespec_gettime(&bt);
+    *t = (ecs_time_t){bt.tv_sec, bt.tv_nsec};
+}
+
 #endif
 
 void ecs_set_os_api_defaults(void)
@@ -118,7 +125,7 @@ void ecs_set_os_api_defaults(void)
     _ecs_os_api->cond_wait = bake_cond_wait;
 
     _ecs_os_api->sleep = ut_sleep;
-    _ecs_os_api->get_time = timespec_gettime;
+    _ecs_os_api->get_time = bake_gettime;
 #endif
 
     _ecs_os_api->abort = abort;

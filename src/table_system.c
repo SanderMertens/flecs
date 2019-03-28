@@ -644,7 +644,7 @@ ecs_entity_t _ecs_run_w_filter(
         }
     }
 
-    struct timespec time_start;
+    ecs_time_t time_start;
     if (measure_time) {
         ecs_os_get_time(&time_start);
     }

@@ -31,18 +31,19 @@
 #endif
 
 /* Convenience macro for exporting symbols */
-#if FLECS_STATIC
-#define FLECS_EXPORT
+#ifndef FLECS_STATIC
+  #if FLECS_IMPL && defined _MSC_VER
+    #define FLECS_EXPORT __declspec(dllexport)
+  #elif FLECS_IMPL
+    #define FLECS_EXPORT __attribute__((__visibility__("default")))
+  #elif defined _MSC_VER
+    #define FLECS_EXPORT __declspec(dllimport)
+  #else
+    #define FLECS_EXPORT
+  #endif
 #else
-#if FLECS_IMPL && defined _MSC_VER
-#define FLECS_EXPORT __declspec(dllexport)
-#elif FLECS_IMPL
-#define FLECS_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-#define FLECS_EXPORT __declspec(dllimport)
-#else
-#define FLECS_EXPORT
+  #define FLECS_EXPORT
 #endif
-#endif
+
 #endif
 

@@ -320,7 +320,7 @@ struct ecs_world_t {
     /* -- Time management -- */
 
     uint32_t tick;                /* Number of computed frames by world */
-    struct timespec frame_start;  /* Starting timestamp of frame */
+    ecs_time_t frame_start;  /* Starting timestamp of frame */
     float frame_time;             /* Time spent processing a frame */
     float system_time;            /* Time spent processing systems */
     float merge_time;             /* Time spent on merging */

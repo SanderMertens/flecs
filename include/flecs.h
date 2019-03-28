@@ -2,7 +2,6 @@
 #ifndef FLECS_H
 #define FLECS_H
 
-#include <stdint.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,6 +26,11 @@ typedef struct ecs_world_t ecs_world_t;
 
 /** A handle identifies an entity */
 typedef uint64_t ecs_entity_t;
+
+typedef struct ecs_time_t {
+    int32_t sec;
+    uint32_t nanosec;
+} ecs_time_t;
 
 /* Utility headers */
 #include "util/os_api.h"

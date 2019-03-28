@@ -18,16 +18,16 @@ void ecs_sleepf(
 
 FLECS_EXPORT
 double ecs_time_to_double(
-    struct timespec t);
+    ecs_time_t t);
 
 FLECS_EXPORT
-struct timespec ecs_time_sub(
-    struct timespec t1,
-    struct timespec t2);
+ecs_time_t ecs_time_sub(
+    ecs_time_t t1,
+    ecs_time_t t2);
 
 FLECS_EXPORT
 double ecs_time_measure(
-    struct timespec *start);
+    ecs_time_t *start);
 
 #ifdef __cplusplus
 }

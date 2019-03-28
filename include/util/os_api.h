@@ -97,7 +97,7 @@ void (*ecs_os_api_sleep_t)(
 
 typedef
 void (*ecs_os_api_get_time_t)(
-    struct timespec *time_out);
+    ecs_time_t *time_out);
 
 /* Application termination */
 typedef

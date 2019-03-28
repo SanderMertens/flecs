@@ -497,7 +497,7 @@ ecs_world_t *ecs_init(void) {
     world->last_handle = 0;
     world->should_quit = false;
 
-    world->frame_start = (struct timespec){0, 0};
+    world->frame_start = (ecs_time_t){0, 0};
     world->frame_time = 0;
     world->merge_time = 0;
     world->system_time = 0;
@@ -775,7 +775,7 @@ float start_measure_frame(
     float delta_time)
 {
     if (world->measure_frame_time || !delta_time) {
-        if (world->frame_start.tv_sec) {
+        if (world->frame_start.sec) {
             float delta = ecs_time_measure(&world->frame_start);
             if (!delta_time) {
                 delta_time = delta;
@@ -799,7 +799,7 @@ void stop_measure_frame(
     float delta_time)
 {
     if (world->measure_frame_time) {
-        struct timespec t = world->frame_start;
+        ecs_time_t t = world->frame_start;
         world->frame_time += ecs_time_measure(&t);
         world->tick ++;
 
@@ -879,7 +879,7 @@ void ecs_merge(
 
     world->is_merging = true;
 
-    struct timespec t_start;
+    ecs_time_t t_start;
     ecs_os_get_time(&t_start);
 
     ecs_stage_merge(world, &world->temp_stage);
