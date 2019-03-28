@@ -1,4 +1,4 @@
-#include <assert.h>
+#include <string.h>
 #include "include/private/types.h"
 
 #define FLECS_LOAD_FACTOR (3.0f / 4.0f)
