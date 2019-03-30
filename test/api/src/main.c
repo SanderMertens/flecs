@@ -404,8 +404,8 @@ void SingleThreadStaging_remove_added_component_in_on_add_w_set(void);
 void SingleThreadStaging_on_add_in_on_add(void);
 void SingleThreadStaging_on_remove_in_on_add(void);
 void SingleThreadStaging_on_set_in_on_add(void);
-void SingleThreadStaging_on_add_in_on_frame(void);
-void SingleThreadStaging_on_remove_in_on_frame(void);
+void SingleThreadStaging_on_add_in_on_update(void);
+void SingleThreadStaging_on_remove_in_on_update(void);
 void SingleThreadStaging_match_table_created_in_progress(void);
 void SingleThreadStaging_match_table_created_w_add_in_on_set(void);
 void SingleThreadStaging_match_table_created_w_set_in_on_set(void);
@@ -1977,12 +1977,12 @@ static bake_test_suite suites[] = {
                 .function = SingleThreadStaging_on_set_in_on_add
             },
             {
-                .id = "on_add_in_on_frame",
-                .function = SingleThreadStaging_on_add_in_on_frame
+                .id = "on_add_in_on_update",
+                .function = SingleThreadStaging_on_add_in_on_update
             },
             {
-                .id = "on_remove_in_on_frame",
-                .function = SingleThreadStaging_on_remove_in_on_frame
+                .id = "on_remove_in_on_update",
+                .function = SingleThreadStaging_on_remove_in_on_update
             },
             {
                 .id = "match_table_created_in_progress",

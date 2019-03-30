@@ -65,9 +65,10 @@ typedef struct ecs_world_stats_t {
     EcsMemoryStats memory;
     ecs_array_t *features;
     ecs_array_t *on_load_systems;
-    ecs_array_t *pre_frame_systems;
-    ecs_array_t *on_frame_systems;
-    ecs_array_t *post_frame_systems;
+    ecs_array_t *pre_update_systems;
+    ecs_array_t *on_update_systems;
+    ecs_array_t *on_validate_systems;
+    ecs_array_t *post_update_systems;
     ecs_array_t *on_store_systems;
     ecs_array_t *task_systems;
     ecs_array_t *inactive_systems;

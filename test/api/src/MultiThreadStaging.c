@@ -34,7 +34,7 @@ void MultiThreadStaging_2_threads_add_to_current() {
     ECS_COMPONENT(world, Rotation);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, Add_to_current, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
     IterData ctx = {.component = ecs_to_type(Rotation)};
     ecs_set_context(world, &ctx);
@@ -70,7 +70,7 @@ void MultiThreadStaging_3_threads_add_to_current() {
     ECS_COMPONENT(world, Rotation);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, Add_to_current, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
     IterData ctx = {.component = ecs_to_type(Rotation)};
     ecs_set_context(world, &ctx);
@@ -106,7 +106,7 @@ void MultiThreadStaging_4_threads_add_to_current() {
     ECS_COMPONENT(world, Rotation);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, Add_to_current, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
     IterData ctx = {.component = ecs_to_type(Rotation)};
     ecs_set_context(world, &ctx);
@@ -142,7 +142,7 @@ void MultiThreadStaging_5_threads_add_to_current() {
     ECS_COMPONENT(world, Rotation);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, Add_to_current, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
     IterData ctx = {.component = ecs_to_type(Rotation)};
     ecs_set_context(world, &ctx);
@@ -178,7 +178,7 @@ void MultiThreadStaging_6_threads_add_to_current() {
     ECS_COMPONENT(world, Rotation);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, Add_to_current, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
     IterData ctx = {.component = ecs_to_type(Rotation)};
     ecs_set_context(world, &ctx);
@@ -259,8 +259,8 @@ void MultiThreadStaging_stress_create_delete_entity_random_components() {
     ECS_COMPONENT(world, Rotation);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, Add_random, EcsOnFrame, Position);
-    ECS_SYSTEM(world, Delete_above_1000, EcsPostFrame, Position);
+    ECS_SYSTEM(world, Add_random, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, Delete_above_1000, EcsPostUpdate, Position);
 
     IterData ctx = {.component = ecs_to_type(Position), .component_2 = ecs_to_type(Velocity), .component_3 = ecs_to_type(Rotation)};
     ecs_set_context(world, &ctx);
@@ -344,9 +344,9 @@ void MultiThreadStaging_stress_set_entity_random_components() {
     ECS_COMPONENT(world, Rotation);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, Set_random, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Set_random, EcsOnUpdate, Position);
     ECS_SYSTEM(world, Set_velocity_callback, EcsOnSet, Velocity);
-    ECS_SYSTEM(world, Delete_above_1000, EcsPostFrame, Position);
+    ECS_SYSTEM(world, Delete_above_1000, EcsPostUpdate, Position);
 
     IterData ctx = {.component = ecs_to_type(Position), .component_2 = ecs_to_type(Velocity), .component_3 = ecs_to_type(Rotation)};
     ecs_set_context(world, &ctx);

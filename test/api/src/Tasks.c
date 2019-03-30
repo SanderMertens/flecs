@@ -17,7 +17,7 @@ void Task(ecs_rows_t *rows) {
 void Tasks_no_components() {
     ecs_world_t *world = ecs_init();
 
-    ECS_SYSTEM(world, Task, EcsOnFrame, 0);
+    ECS_SYSTEM(world, Task, EcsOnUpdate, 0);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -34,7 +34,7 @@ void Tasks_no_components() {
 void Tasks_one_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_SYSTEM(world, Task, EcsOnFrame, SYSTEM.EcsHidden);
+    ECS_SYSTEM(world, Task, EcsOnUpdate, SYSTEM.EcsHidden);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -54,7 +54,7 @@ void Tasks_from_system() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Task, EcsOnFrame, SYSTEM.Position);
+    ECS_SYSTEM(world, Task, EcsOnUpdate, SYSTEM.Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);

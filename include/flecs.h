@@ -66,12 +66,13 @@ typedef const char *EcsId;
 typedef enum EcsSystemKind {
     /* Periodic systems */
     EcsOnLoad,
-    EcsPreFrame,
-    EcsOnFrame,
-    EcsPostFrame,
+    EcsPreUpdate,
+    EcsOnUpdate,
+    EcsOnValidate,
+    EcsPostUpdate,
     EcsOnStore,
 
-    /* On demand systems */
+    /* Manual systems */
     EcsManual,
 
     /* Reactive systems */
@@ -999,7 +1000,7 @@ ecs_type_t _ecs_merge_type(
  * After this operation is called, the system will be active. Systems can be
  * created with three different kinds:
  *
- * - EcsOnFrame: the system is invoked when ecs_progress is called.
+ * - EcsOnUpdate: the system is invoked when ecs_progress is called.
  * - EcsOnAdd: the system is invoked when a component is committed to memory.
  * - EcsOnRemove: the system is invoked when a component is removed from memory.
  * - EcsManual: the system is only invoked on demand (ecs_run)
@@ -1440,7 +1441,7 @@ void _ecs_assert(
  * This macro provides a convenient way to register systems with a world. It can
  * be used like this:
  *
- * ECS_SYSTEM(world, Move, EcsOnFrame, Location, Speed);
+ * ECS_SYSTEM(world, Move, EcsOnUpdate, Location, Speed);
  *
  * In this example, "Move" must be the identifier to a C function that matches
  * the signature of ecs_system_action_t. The signature of this component will be

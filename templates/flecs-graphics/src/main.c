@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     ECS_ENTITY(world, Square, EcsPosition2D, EcsSquare, EcsColor);
 
     /* Define system that moves the square on keyboard input */
-    ECS_SYSTEM(world, MoveSquare, EcsOnFrame, EcsInput, Square.EcsPosition2D);
+    ECS_SYSTEM(world, MoveSquare, EcsOnUpdate, EcsInput, Square.EcsPosition2D);
 
     /* Initialize canvas */
     ecs_set(world, 0, EcsCanvas2D, {

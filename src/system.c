@@ -120,7 +120,7 @@ ecs_entity_t new_row_system(
     ecs_entity_t *elem = NULL;
 
     if (!needs_tables) {
-        if (kind == EcsOnFrame) {
+        if (kind == EcsOnUpdate) {
             elem = ecs_array_add(&world->tasks, &handle_arr_params);
         } else if (kind == EcsOnRemove) {
             elem = ecs_array_add(&world->fini_tasks, &handle_arr_params);
@@ -395,8 +395,8 @@ ecs_entity_t ecs_new_system(
         ecs_abort(ECS_INVALID_PARAMETERS, 0);
     }
 
-    if (needs_tables && (kind == EcsOnFrame || kind == EcsPreFrame ||
-                         kind == EcsPostFrame || kind == EcsManual ||
+    if (needs_tables && (kind == EcsOnUpdate || kind == EcsOnValidate || kind == EcsPreUpdate ||
+                         kind == EcsPostUpdate || kind == EcsManual ||
                          kind == EcsOnLoad || kind == EcsOnStore))
     {
         result = ecs_new_col_system(world, id, kind, sig, action);

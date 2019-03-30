@@ -33,7 +33,7 @@ void SystemOnFrame_1_type_1_component() {
     ECS_ENTITY(world, e_2, Position);
     ECS_ENTITY(world, e_3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -81,7 +81,7 @@ void SystemOnFrame_1_type_3_component() {
     ECS_ENTITY(world, e_2, Position, Velocity, Mass);
     ECS_ENTITY(world, e_3, Position, Velocity, Mass);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, Mass);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, Mass);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -162,7 +162,7 @@ void SystemOnFrame_3_type_1_component() {
     ECS_ENTITY(world, e_2, Position, Velocity);
     ECS_ENTITY(world, e_3, Position, Mass);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -215,7 +215,7 @@ void SystemOnFrame_2_type_3_component() {
     ECS_ENTITY(world, e_2, Position, Velocity, Mass);
     ECS_ENTITY(world, e_3, Position, Velocity, Mass, Rotation);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, Mass);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, Mass);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -301,7 +301,7 @@ void SystemOnFrame_1_type_1_component_1_tag() {
     ECS_ENTITY(world, e_2, Position, Tag);
     ECS_ENTITY(world, e_3, Position, Tag);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Tag);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Tag);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -350,7 +350,7 @@ void SystemOnFrame_2_type_1_component_1_tag() {
     ECS_ENTITY(world, e_2, Position, Tag);
     ECS_ENTITY(world, e_3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Tag);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Tag);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -394,7 +394,7 @@ void SystemOnFrame_2_type_1_and_1_not() {
     ECS_ENTITY(world, e_2, Position);
     ECS_ENTITY(world, e_3, Position, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, !Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -438,7 +438,7 @@ void SystemOnFrame_2_type_2_and_1_not() {
     ECS_ENTITY(world, e_2, Position, Velocity);
     ECS_ENTITY(world, e_3, Position, Velocity, Mass);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, !Mass);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, !Mass);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -495,7 +495,7 @@ void SystemOnFrame_2_type_2_and_2_not() {
     ECS_ENTITY(world, e_2, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_3, Position, Velocity, Mass);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, !Mass, !Rotation);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, !Mass, !Rotation);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -546,7 +546,7 @@ void SystemOnFrame_4_type_1_and_1_or() {
     ECS_ENTITY(world, e_3, Position, Position_1, Velocity);
     ECS_ENTITY(world, e_4, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position | Position_1, Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position | Position_1, Velocity);
 
     ecs_set(world, e_3, Position_1, {0, 0});
     ecs_set(world, e_4, Velocity, {0, 0});
@@ -635,7 +635,7 @@ void SystemOnFrame_4_type_1_and_1_or_of_3() {
     ECS_ENTITY(world, e_3, Position_1, Position_2, Velocity);
     ECS_ENTITY(world, e_4, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position | Position_1 | Position_2, Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position | Position_1 | Position_2, Velocity);
 
     ecs_set(world, e_3, Position_2, {0, 0});
     ecs_set(world, e_4, Velocity, {0, 0});
@@ -721,7 +721,7 @@ void SystemOnFrame_1_type_1_and_1_or() {
     ECS_ENTITY(world, e_1, Position, Velocity);
     ECS_ENTITY(world, e_2, Position, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position | Position_1, Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position | Position_1, Velocity);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -778,7 +778,7 @@ void SystemOnFrame_2_type_1_and_1_optional() {
     ECS_ENTITY(world, e_2, Position, Velocity);
     ECS_ENTITY(world, e_3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, ?Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -842,7 +842,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
     ECS_ENTITY(world, e_2, Position, Velocity, Mass);
     ECS_ENTITY(world, e_3, Position, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, Velocity, ?Mass);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, ?Mass);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -922,7 +922,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
     ECS_ENTITY(world, e_5, Velocity);
     ECS_ENTITY(world, e_6, Mass);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, ?Velocity, ?Mass);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity, ?Mass);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1024,7 +1024,7 @@ void SystemOnFrame_use_fields_2_owned() {
 
     ECS_ENTITY(world, e_1, Position, Velocity);
 
-    ECS_SYSTEM(world, Use_field, EcsOnFrame, Position, Velocity);
+    ECS_SYSTEM(world, Use_field, EcsOnUpdate, Position, Velocity);
 
     ecs_set(world, e_1, Position, {1, 2});
     ecs_set(world, e_1, Velocity, {10, 20});
@@ -1047,7 +1047,7 @@ void SystemOnFrame_use_fields_1_owned_1_shared() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Use_field, EcsOnFrame, Position, CONTAINER.Velocity);
+    ECS_SYSTEM(world, Use_field, EcsOnUpdate, Position, CONTAINER.Velocity);
 
     ecs_entity_t e_1 = ecs_set(world, 0, Position, {1, 2});
     ecs_entity_t parent = ecs_set(world, 0, Velocity, {10, 20});
@@ -1075,8 +1075,8 @@ void SystemOnFrame_match_2_systems_w_populated_table() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, Dummy_1, EcsOnFrame, Position);
-    ECS_SYSTEM(world, Dummy_2, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Dummy_1, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, Dummy_2, EcsOnUpdate, Position);
     
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1136,7 +1136,7 @@ void SystemOnFrame_ensure_optional_is_null_column() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_column, EcsOnFrame, Position, ?Velocity);
+    ECS_SYSTEM(world, TestOptional_w_column, EcsOnUpdate, Position, ?Velocity);
     
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1164,7 +1164,7 @@ void SystemOnFrame_ensure_optional_is_null_shared() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnFrame, Position, ?CONTAINER.Velocity);
+    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?CONTAINER.Velocity);
     
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1192,7 +1192,7 @@ void SystemOnFrame_ensure_optional_is_null_field_owned() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_field, EcsOnFrame, Position, ?Velocity);
+    ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?Velocity);
     
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1220,7 +1220,7 @@ void SystemOnFrame_ensure_optional_is_null_field_shared() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_field, EcsOnFrame, Position, ?CONTAINER.Velocity);
+    ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?CONTAINER.Velocity);
     
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);

@@ -82,8 +82,8 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     
-    // Enumeration constants ('EcsOnFrame') use CamelCase
-    ECS_SYSTEM(world, Move, EcsOnFrame, Position, Velocity);
+    // Enumeration constants ('EcsOnUpdate') use CamelCase
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
     
     // Entity names use CamelCase
     ECS_ENTITY(world, MyEntity, Position, Velocity);
@@ -236,7 +236,7 @@ It is much more efficient to create entities in bulk (using the `ecs_new_w_count
 You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsId` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `ID` modifier, like so:
 
 ```c
-ECS_SYSTEM(world, MySystem, EcsOnFrame, Position, ID.MyEntity);
+ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, ID.MyEntity);
 ```
 
 This will lookup the entity in advance, instead of every time the system is invoked. Obtaining the entity from within the system can be done with the `ecs_column_entity` function.

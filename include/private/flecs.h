@@ -33,7 +33,7 @@ ecs_table_t* ecs_world_get_table(
     ecs_stage_t *stage,
     ecs_type_t type_id);
 
-/* Activate system (move from inactive array to on_frame array or vice versa) */
+/* Activate system (move from inactive array to on_update array or vice versa) */
 void ecs_world_activate_system(
     ecs_world_t *world,
     ecs_entity_t system,

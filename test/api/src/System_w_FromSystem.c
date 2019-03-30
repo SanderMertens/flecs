@@ -43,7 +43,7 @@ void System_w_FromSystem_2_column_1_from_system() {
     ECS_COMPONENT(world, Velocity);
 
     ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, SYSTEM.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SYSTEM.Velocity);
 
     test_assert( ecs_has(world, Iter, Velocity));
     Velocity *v = ecs_get_ptr(world, Iter, Velocity);
@@ -92,7 +92,7 @@ void System_w_FromSystem_3_column_2_from_system() {
 
     ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, InitMass, EcsOnAdd, Mass);
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position, SYSTEM.Velocity, SYSTEM.Mass);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SYSTEM.Velocity, SYSTEM.Mass);
 
     test_assert( ecs_has(world, Iter, Velocity));
     Velocity *v = ecs_get_ptr(world, Iter, Velocity);
@@ -287,7 +287,7 @@ void System_w_FromSystem_auto_add_tag() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Dummy_1, EcsOnFrame, Position, SYSTEM.EcsHidden);
+    ECS_SYSTEM(world, Dummy_1, EcsOnUpdate, Position, SYSTEM.EcsHidden);
     ECS_SYSTEM(world, Dummy_2, EcsOnAdd, Position, SYSTEM.EcsHidden);
     ECS_SYSTEM(world, Dummy_3, EcsOnRemove, Position, SYSTEM.EcsHidden);
     ECS_SYSTEM(world, Dummy_4, EcsOnSet, Position, SYSTEM.EcsHidden);

@@ -553,12 +553,14 @@ ecs_entity_t ecs_new_col_system(
     } else if (!ecs_array_count(system_data->tables)) {
         elem = ecs_array_add(&world->inactive_systems, &handle_arr_params);
     } else {
-        if (kind == EcsOnFrame) {
-            elem = ecs_array_add(&world->on_frame_systems, &handle_arr_params);
-        } else if (kind == EcsPreFrame) {
-            elem = ecs_array_add(&world->pre_frame_systems, &handle_arr_params);
-        } else if (kind == EcsPostFrame) {
-            elem = ecs_array_add(&world->post_frame_systems, &handle_arr_params);
+        if (kind == EcsOnUpdate) {
+            elem = ecs_array_add(&world->on_update_systems, &handle_arr_params);
+        } else if (kind == EcsOnValidate) {
+            elem = ecs_array_add(&world->on_validate_systems, &handle_arr_params);            
+        } else if (kind == EcsPreUpdate) {
+            elem = ecs_array_add(&world->pre_update_systems, &handle_arr_params);
+        } else if (kind == EcsPostUpdate) {
+            elem = ecs_array_add(&world->post_update_systems, &handle_arr_params);
         } else if (kind == EcsOnLoad) {
             elem = ecs_array_add(&world->on_load_systems, &handle_arr_params);
         } else if (kind == EcsOnStore) {

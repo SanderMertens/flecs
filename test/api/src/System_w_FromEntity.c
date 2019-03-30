@@ -34,7 +34,7 @@ void System_w_FromEntity_2_column_1_from_entity() {
     ECS_ENTITY(world, e_1, Mass);
     ECS_ENTITY(world, e_2, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, e_1.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, e_1.Mass, Position);
 
     ecs_set(world, e_1, Mass, {5});
 

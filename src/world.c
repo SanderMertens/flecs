@@ -155,11 +155,12 @@ void notify_systems_of_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    notify_create_table(world, world->pre_frame_systems, table);
-    notify_create_table(world, world->post_frame_systems, table);
+    notify_create_table(world, world->pre_update_systems, table);
+    notify_create_table(world, world->post_update_systems, table);
     notify_create_table(world, world->on_load_systems, table);
     notify_create_table(world, world->on_store_systems, table);
-    notify_create_table(world, world->on_frame_systems, table);
+    notify_create_table(world, world->on_validate_systems, table);
+    notify_create_table(world, world->on_update_systems, table);
     notify_create_table(world, world->inactive_systems, table);
     notify_create_table(world, world->on_demand_systems, table);
 }
@@ -228,12 +229,14 @@ ecs_array_t** frame_system_array(
     ecs_world_t *world,
     EcsSystemKind kind)
 {
-    if (kind == EcsOnFrame) {
-        return &world->on_frame_systems;
-    } else if (kind == EcsPreFrame) {
-        return &world->pre_frame_systems;
-    } else if (kind == EcsPostFrame) {
-        return &world->post_frame_systems;
+    if (kind == EcsOnUpdate) {
+        return &world->on_update_systems;
+    } else if (kind == EcsOnValidate) {
+        return &world->on_validate_systems;
+    } else if (kind == EcsPreUpdate) {
+        return &world->pre_update_systems;
+    } else if (kind == EcsPostUpdate) {
+        return &world->post_update_systems;
     } else if (kind == EcsOnLoad) {
         return &world->on_load_systems;
     } else if (kind == EcsOnStore) {
@@ -463,9 +466,10 @@ ecs_world_t *ecs_init(void) {
 
     world->magic = ECS_WORLD_MAGIC;
 
-    world->on_frame_systems = ecs_array_new(&handle_arr_params, 0);
-    world->pre_frame_systems = ecs_array_new(&handle_arr_params, 0);
-    world->post_frame_systems = ecs_array_new(&handle_arr_params, 0);
+    world->on_update_systems = ecs_array_new(&handle_arr_params, 0);
+    world->on_validate_systems = ecs_array_new(&handle_arr_params, 0);
+    world->pre_update_systems = ecs_array_new(&handle_arr_params, 0);
+    world->post_update_systems = ecs_array_new(&handle_arr_params, 0);
     world->on_load_systems = ecs_array_new(&handle_arr_params, 0);
     world->on_store_systems = ecs_array_new( &handle_arr_params, 0);
     world->inactive_systems = ecs_array_new(&handle_arr_params, 0);
@@ -608,9 +612,10 @@ int ecs_fini(
         ecs_set_threads(world, 0);
     }
 
-    col_systems_deinit(world, world->on_frame_systems);
-    col_systems_deinit(world, world->pre_frame_systems);
-    col_systems_deinit(world, world->post_frame_systems);
+    col_systems_deinit(world, world->on_update_systems);
+    col_systems_deinit(world, world->on_validate_systems);
+    col_systems_deinit(world, world->pre_update_systems);
+    col_systems_deinit(world, world->post_update_systems);
     col_systems_deinit(world, world->on_load_systems);
     col_systems_deinit(world, world->on_store_systems);
     col_systems_deinit(world, world->on_demand_systems);
@@ -619,9 +624,10 @@ int ecs_fini(
     ecs_stage_deinit(world, &world->main_stage);
     ecs_stage_deinit(world, &world->temp_stage);
 
-    ecs_array_free(world->on_frame_systems);
-    ecs_array_free(world->pre_frame_systems);
-    ecs_array_free(world->post_frame_systems);
+    ecs_array_free(world->on_update_systems);
+    ecs_array_free(world->on_validate_systems);
+    ecs_array_free(world->pre_update_systems);
+    ecs_array_free(world->post_update_systems);
     ecs_array_free(world->on_load_systems);
     ecs_array_free(world->on_store_systems);
 
@@ -702,8 +708,7 @@ ecs_entity_t ecs_lookup(
 static
 void run_single_thread_stage(
     ecs_world_t *world,
-    ecs_array_t *systems,
-    float delta_time)
+    ecs_array_t *systems)
 {
     uint32_t i, system_count = ecs_array_count(systems);
 
@@ -713,7 +718,7 @@ void run_single_thread_stage(
         world->in_progress = true;
 
         for (i = 0; i < system_count; i ++) {
-            ecs_run(world, buffer[i], delta_time, NULL);
+            ecs_run(world, buffer[i], world->delta_time, NULL);
         }
 
         if (world->auto_merge) {
@@ -771,15 +776,13 @@ void run_tasks(
 
 static
 float start_measure_frame(
-    ecs_world_t *world,
-    float delta_time)
+    ecs_world_t *world)
 {
-    if (world->measure_frame_time || !delta_time) {
+    float delta_time = 0;
+
+    if (world->measure_frame_time) {
         if (world->frame_start.sec) {
-            float delta = ecs_time_measure(&world->frame_start);
-            if (!delta_time) {
-                delta_time = delta;
-            }
+            delta_time = ecs_time_measure(&world->frame_start);
         } else {
             ecs_time_measure(&world->frame_start);
             if (world->target_fps) {
@@ -818,34 +821,41 @@ void stop_measure_frame(
 
 bool ecs_progress(
     ecs_world_t *world,
-    float delta_time)
+    float user_delta_time)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
 
     /* Start measuring total frame time */
-    delta_time = start_measure_frame(world, delta_time);
-    world->delta_time = delta_time;
+    float delta_time = start_measure_frame(world);
+
+    if (!user_delta_time) {
+        user_delta_time = delta_time;
+    }
+
+    world->delta_time = user_delta_time;
     world->merge_time = 0;
 
     bool has_threads = ecs_array_count(world->worker_threads) != 0;
 
     /* -- System execution starts here -- */
 
-    run_single_thread_stage(world, world->on_load_systems, delta_time);
+    run_single_thread_stage(world, world->on_load_systems);
 
     if (has_threads) {
-        run_multi_thread_stage(world, world->pre_frame_systems);
-        run_multi_thread_stage(world, world->on_frame_systems);
-        run_multi_thread_stage(world, world->post_frame_systems);
+        run_multi_thread_stage(world, world->pre_update_systems);
+        run_multi_thread_stage(world, world->on_update_systems);
+        run_multi_thread_stage(world, world->on_validate_systems);
+        run_multi_thread_stage(world, world->post_update_systems);
     } else {
-        run_single_thread_stage(world, world->pre_frame_systems, delta_time);
-        run_single_thread_stage(world, world->on_frame_systems, delta_time);
-        run_single_thread_stage(world, world->post_frame_systems, delta_time);
+        run_single_thread_stage(world, world->pre_update_systems);
+        run_single_thread_stage(world, world->on_update_systems);
+        run_single_thread_stage(world, world->on_validate_systems);
+        run_single_thread_stage(world, world->post_update_systems);
     }
 
     run_tasks(world);
 
-    run_single_thread_stage(world, world->on_store_systems, delta_time);
+    run_single_thread_stage(world, world->on_store_systems);
 
     /* -- System execution stops here -- */
 

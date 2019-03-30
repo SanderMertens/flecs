@@ -32,7 +32,7 @@ void Internals_deactivate_table() {
     ECS_ENTITY(world, e_1, Position);
     ECS_ENTITY(world, e_2, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* System is now matched with archetype of entities. Delete entities to
      * deactivate table for system */
@@ -49,7 +49,7 @@ void Internals_activate_table() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
     ECS_ENTITY(world, e_1, Position);
@@ -65,7 +65,7 @@ void Internals_activate_deactivate_table() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
     ECS_ENTITY(world, e_1, Position);
@@ -86,7 +86,7 @@ void Internals_activate_deactivate_reactive() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
     ECS_ENTITY(world, e_1, Position);
@@ -112,7 +112,7 @@ void Internals_activate_deactivate_activate_other() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     /* Add entities after system definition to trigger table activation */
     ECS_ENTITY(world, e_1, Position);

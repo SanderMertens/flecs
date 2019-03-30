@@ -265,7 +265,7 @@ void Has_has_in_progress() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, TestHas, EcsOnFrame, Position);
+    ECS_SYSTEM(world, TestHas, EcsOnUpdate, Position);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);

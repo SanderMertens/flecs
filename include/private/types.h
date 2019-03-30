@@ -257,13 +257,14 @@ struct ecs_world_t {
 
     /* -- Column systems -- */
 
-    ecs_array_t *on_load_systems;    /* Systems executed at start of frame */
-    ecs_array_t *pre_frame_systems;  /* Systems executed before frame systems */
-    ecs_array_t *on_frame_systems;   /* Frame systems */
-    ecs_array_t *post_frame_systems; /* Systems executed after frame systems */
-    ecs_array_t *on_store_systems;   /* Systems executed at end of frame */
-    ecs_array_t *on_demand_systems;  /* On demand systems */
-    ecs_array_t *inactive_systems;   /* Frame systems with empty tables */
+    ecs_array_t *on_load_systems;  
+    ecs_array_t *pre_update_systems;  
+    ecs_array_t *on_update_systems;   
+    ecs_array_t *on_validate_systems; 
+    ecs_array_t *post_update_systems; 
+    ecs_array_t *on_store_systems;   
+    ecs_array_t *on_demand_systems;  
+    ecs_array_t *inactive_systems;   
 
 
     /* -- Row systems -- */

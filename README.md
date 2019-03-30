@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
     /* Register components and systems */
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
-    ECS_SYSTEM(world, Move, EcsOnFrame, Position, Speed);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Speed);
     ECS_ENTITY(world, MyEntity, Position, Speed);
 
     /* Limit application to 60 FPS */
@@ -225,10 +225,10 @@ Flecs components are stored internally as entities, which is why handles to comp
 A system is logic (a function) that is executed for every entity that has a set of components that match a system's interest. In flecs, systems specify their interest, and when they should run. To define a system, you can use the `ECS_SYSTEM` macro, which wraps around the `ecs_new_system` function:
 
 ```c
-ECS_SYSTEM(world, LogPoints, EcsOnFrame, Point);
+ECS_SYSTEM(world, LogPoints, EcsOnUpdate, Point);
 ```
 
-In this statement, `LogPoints` refers to a C function that will be associated with the system. `EcsOnFrame` identifies the stage in which the system is executed. The `Point` identifies the component interest expression. The system is implemented as a regular C function, like this:
+In this statement, `LogPoints` refers to a C function that will be associated with the system. `EcsOnUpdate` identifies the stage in which the system is executed. The `Point` identifies the component interest expression. The system is implemented as a regular C function, like this:
 
 ```c
 void LogPoints(ecs_rows_t *rows) {
@@ -270,7 +270,7 @@ Components, systems, tasks, families and prefabs automatically register the `Ecs
 A task is a system that has no interest expression. Tasks are run once every frame. Tasks are defined the same way as normal systems, but instead of an interest expression, you specify `0`:
 
 ```c
-ECS_SYSTEM(world, MyTask, EcsOnFrame, 0);
+ECS_SYSTEM(world, MyTask, EcsOnUpdate, 0);
 ```
 
 ### Type
@@ -349,7 +349,7 @@ if (ecs_contains(world, parent, child) {
 Systems can request components from containers. If a system requests component `EcsPosition2D` from a container, but an entity does not have a container, or the container does not have `EcsPosition2D`, the system will not match the entity. This system definition shows an example of how a system can access container components:
 
 ```c
-ECS_SYSTEM(world, MySystem, EcsOnFrame, CONTAINER.Foo, Bar);
+ECS_SYSTEM(world, MySystem, EcsOnUpdate, CONTAINER.Foo, Bar);
 ```
 
 ### Prefab

@@ -689,7 +689,7 @@ void Prefab_iterate_w_prefab_field() {
     ECS_COMPONENT(world, Velocity);
     ECS_PREFAB(world, Prefab, Velocity);
     ECS_TYPE(world, Type, Prefab, Position);
-    ECS_SYSTEM(world, Prefab_w_field, EcsOnFrame, Position, Velocity);
+    ECS_SYSTEM(world, Prefab_w_field, EcsOnUpdate, Position, Velocity);
 
     ecs_set(world, Prefab, Velocity, {1, 2});
 
@@ -750,7 +750,7 @@ void Prefab_iterate_w_prefab_shared() {
     ECS_COMPONENT(world, Velocity);
     ECS_PREFAB(world, Prefab, Velocity);
     ECS_TYPE(world, Type, Prefab, Position);
-    ECS_SYSTEM(world, Prefab_w_shared, EcsOnFrame, Position, Velocity);
+    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, Velocity);
 
     ecs_set(world, Prefab, Velocity, {1, 2});
 
@@ -792,7 +792,7 @@ void Prefab_match_entity_prefab_w_system_optional() {
 
     ECS_PREFAB(world, Prefab, Velocity, Mass);
     ECS_TYPE(world, Type, Prefab, Position);
-    ECS_SYSTEM(world, Prefab_w_shared, EcsOnFrame, Position, Velocity, ?Mass);
+    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, Velocity, ?Mass);
 
     ecs_set(world, Prefab, Velocity, {1, 2});
     ecs_set(world, Prefab, Mass, {3});
@@ -836,7 +836,7 @@ void Prefab_prefab_in_system_expr() {
 
     ECS_PREFAB(world, Prefab1, Velocity);
     ECS_PREFAB(world, Prefab2, Velocity);
-    ECS_SYSTEM(world, Prefab_w_shared, EcsOnFrame, Position, Velocity, Prefab1);
+    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, Velocity, Prefab1);
 
     ecs_set(world, Prefab1, Velocity, {1, 2});
     ecs_set(world, Prefab2, Velocity, {1, 2});
@@ -896,7 +896,7 @@ void Prefab_dont_match_prefab() {
     ECS_COMPONENT(world, Position);
 
     ECS_PREFAB(world, Prefab, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnFrame, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);

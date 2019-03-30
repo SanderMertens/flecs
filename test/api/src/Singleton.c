@@ -50,7 +50,7 @@ void Singleton_system_w_singleton() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Iter_w_singleton, EcsOnFrame, Position, $Velocity);
+    ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, $Velocity);
 
     ecs_set_singleton(world, Velocity, {1, 2});
 
