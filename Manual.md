@@ -23,12 +23,12 @@
   - [Update components proportionally to delta_time](#update-components-proportionally-to-delta-time)
   - [Set a target FPS for applications](#set-a-target-fps-for-applications)
   - [Never store pointers to components](#never-store-pointers-to-components)
- - [Systems](#systems)
+- [Systems](#systems)
   - [System queries](#system-queries)
-   - [Query operators](#query-operators)
-    - [OR operator](#or-operator)
-    - [NOT operator](#not-operator)
-    - [Optional operator](#optional-operator)
+    - [Query operators](#query-operators)
+      - [OR operator](#or-operator)
+      - [NOT operator](#not-operator)
+      - [Optional operator](#optional-operator)
 
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
