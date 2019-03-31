@@ -343,7 +343,13 @@
             "testcases": [
                 "2_column_1_from_entity"
             ]
-        },{
+        }, {
+            "id": "Progress",
+            "testcases": [
+                "progress_w_0",
+                "progress_w_t"
+            ]
+        }, { 
             "id": "Run",
             "testcases": [
                 "run",

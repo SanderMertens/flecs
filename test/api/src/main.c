@@ -299,6 +299,10 @@ void System_w_FromSystem_auto_add_tag(void);
 // Testsuite 'System_w_FromEntity'
 void System_w_FromEntity_2_column_1_from_entity(void);
 
+// Testsuite 'Progress'
+void Progress_progress_w_0(void);
+void Progress_progress_w_t(void);
+
 // Testsuite 'Run'
 void Run_run(void);
 void Run_run_w_param(void);
@@ -1561,6 +1565,20 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "Progress",
+        .testcase_count = 2,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "progress_w_0",
+                .function = Progress_progress_w_0
+            },
+            {
+                .id = "progress_w_t",
+                .function = Progress_progress_w_t
+            }
+        }
+    },
+    {
         .id = "Run",
         .testcase_count = 22,
         .testcases = (bake_test_case[]){
@@ -2104,5 +2122,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 27);
+    return bake_test_run("api", argc, argv, suites, 28);
 }

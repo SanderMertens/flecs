@@ -776,11 +776,12 @@ void run_tasks(
 
 static
 float start_measure_frame(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    float user_delta_time)
 {
     float delta_time = 0;
 
-    if (world->measure_frame_time) {
+    if (world->measure_frame_time || !user_delta_time) {
         if (world->frame_start.sec) {
             delta_time = ecs_time_measure(&world->frame_start);
         } else {
@@ -826,7 +827,7 @@ bool ecs_progress(
     assert(world->magic == ECS_WORLD_MAGIC);
 
     /* Start measuring total frame time */
-    float delta_time = start_measure_frame(world);
+    float delta_time = start_measure_frame(world, user_delta_time);
 
     if (!user_delta_time) {
         user_delta_time = delta_time;
