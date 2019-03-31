@@ -23,7 +23,12 @@
   - [Update components proportionally to delta_time](#update-components-proportionally-to-delta-time)
   - [Set a target FPS for applications](#set-a-target-fps-for-applications)
   - [Never store pointers to components](#never-store-pointers-to-components)
-  - [
+- [Systems](#systems)
+  - [System queries](#system-queries)
+    - [Query operators](#query-operators)
+      - [OR operator](#or-operator)
+      - [NOT operator](#not-operator)
+      - [Optional operator](#optional-operator)
 
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
@@ -252,3 +257,48 @@ When you run `ecs_progress` in your main loop, you rarely want to run your appli
 
 ### Never store pointers to components
 In ECS frameworks, adding, removing, creating or deleting entities may cause memory to move around. This is it is not safe to store pointers to component values. Functions like `ecs_get_ptr` return a pointer which is guaranteed to remain valid until one of the aforementioned operations happens.
+
+## Systems
+Systems let applications execute logic on a set of entities that matches a certain component expression. The matching process is continuous, when new entities (or rather, new _entity types_) are created, systems will be automatically matched with those. Systems can be ran by Flecs as part of the built-in frame loop, or by invoking them individually using the Flecs API.
+
+### System queries
+A system query specifies which components the system is interested in. By default, it will match with entities that have all of the specified components in its expression. An example of a valid system query is:
+
+```
+Position, Velocity
+```
+
+The two elements are the components the system is interested in. Within a query they are called "columns", and they can be thought of as elements in the `SELECT` clause of an SQL query. The order in which components are specified is important, as the system implementation will need to access component in this exact order. Care must be taken that when changing the order of columns, the implementation is updated to reflect this. More on this in "System API".
+
+The system query is the only mechanism for specifying the input for the system. Any information that the system needs to run must therefore be captured in the system query. This strict enforcement of the interface can sometimes feel like a constraint, but it makes it possible to reuse systems across different applications. As you will see, system queries have a number of features that make it easier to specify a range of possible input parameters.
+
+#### Query operators
+System queries may contain operators to express optionality or exclusion of components. The most common one is the `,` (comma) which is equivalent to an AND operator. Only if an entity satisfies each of the expressions separated by the `,`, it will be matched with the system. In addition to the `,` operator, queries may contain a number of other operators:
+
+##### OR operator
+The OR operator (`|`) allows the system to match with one component in a list of components. An example of a valid query with an OR operator is:
+
+```
+Position, Velocity | Rotation
+```
+
+Inside of the system implementation, an application has the possibility to determine which component in the OR expression was the one that caused the system to match. An OR expression may contain any number of components.
+
+##### NOT operator
+The NOT operator (`!`) allows the system to exclude entities that have a certain component. An example of a valid query with a NOT operator is:
+
+```
+Position, !Velocity
+```
+
+Inside the system implementation an application will be able to obtain metadata for the column (it will be able to see the component type for `Velocity`), but no actual data will be associated with it.
+
+##### Optional operator
+The optional operator (`?`) allows a system to optionally match with a component. An example of a valid query with an optional operator is:
+
+```
+Position, ?Velocity
+```
+
+Inside the system implementation, an application will be able to check whether the component was available or not.
+
