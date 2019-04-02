@@ -38,6 +38,10 @@ void calculate_system_stats(
     uint32_t i, count = ecs_array_count(systems);
     for (i = 0; i < count; i ++) {
         EcsColSystem *sys = ecs_get_ptr(world, buffer[i], EcsColSystem);
+        if (!sys) {
+            continue;
+        }
+        
         ecs_array_memory(sys->base.columns, &column_arr_params, allocd, used);
         ecs_array_memory(sys->components, &handle_arr_params, allocd, used);
         ecs_array_memory(sys->inactive_tables, &sys->table_params, allocd, used);

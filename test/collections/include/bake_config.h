@@ -33,14 +33,18 @@
 #endif
 
 /* Convenience macro for exporting symbols */
-#if COLLECTIONS_IMPL && defined _MSC_VER
-#define COLLECTIONS_EXPORT __declspec(dllexport)
-#elif COLLECTIONS_IMPL
-#define COLLECTIONS_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-#define COLLECTIONS_EXPORT __declspec(dllimport)
+#ifndef COLLECTIONS_STATIC
+  #if COLLECTIONS_IMPL && defined _MSC_VER
+    #define COLLECTIONS_EXPORT __declspec(dllexport)
+  #elif COLLECTIONS_IMPL
+    #define COLLECTIONS_EXPORT __attribute__((__visibility__("default")))
+  #elif defined _MSC_VER
+    #define COLLECTIONS_EXPORT __declspec(dllimport)
+  #else
+    #define COLLECTIONS_EXPORT
+  #endif
 #else
-#define COLLECTIONS_EXPORT
+  #define COLLECTIONS_EXPORT
 #endif
 
 #endif

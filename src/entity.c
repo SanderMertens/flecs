@@ -1031,14 +1031,21 @@ ecs_entity_t ecs_get_component(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
 
     ecs_stage_t *stage = ecs_get_stage(&world);
-    int64_t row64 = ecs_map_get64(stage->entity_index, entity);
+    int64_t row64 = ecs_map_get64(world->main_stage.entity_index, entity);
+    ecs_row_t row = ecs_to_row(row64);
+    ecs_type_t type_id = row.type_id;
 
-    if (!row64) {
-        return 0;
+    if (world->in_progress) {
+        uint64_t to_add64 = ecs_map_get64(stage->entity_index, entity);
+        uint64_t to_remove64 = ecs_map_get64(stage->remove_merge, entity);
+
+        ecs_row_t to_add = ecs_to_row(to_add64);
+        ecs_row_t to_remove = ecs_to_row(to_remove64);
+        type_id = ecs_type_merge(world, stage, 
+            type_id, to_add.type_id, to_remove.type_id);
     }
 
-    ecs_row_t row = ecs_to_row(row64);
-    ecs_array_t *components = ecs_map_get(stage->type_index, row.type_id);
+    ecs_array_t *components = ecs_map_get(stage->type_index, type_id);
     ecs_entity_t *buffer = ecs_array_buffer(components);
 
     if (ecs_array_count(components) > index) {

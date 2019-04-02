@@ -86,15 +86,15 @@ typedef struct ecs_system_ref_t {
 /** Base type for a system */
 typedef struct EcsSystem {
     ecs_system_action_t action;    /* Callback to be invoked for matching rows */
-    const char *signature;     /* Signature with which system was created */
-    ecs_array_t *columns;         /* Column components */
-    ecs_type_t not_from_entity;   /* Exclude components from entity */
+    const char *signature;         /* Signature with which system was created */
+    ecs_array_t *columns;          /* Column components */
+    ecs_type_t not_from_entity;    /* Exclude components from entity */
     ecs_type_t not_from_component; /* Exclude components from components */
     ecs_type_t and_from_entity;   /* Which components are required from entity */
-    ecs_type_t and_from_system;   /* Used to auto-add components to system */
-    EcsSystemKind kind;        /* Kind of system */
-    float time_spent;          /* Time spent on running system */
-    bool enabled;              /* Is system enabled or not */
+    ecs_type_t and_from_system;    /* Used to auto-add components to system */
+    EcsSystemKind kind;            /* Kind of system */
+    float time_spent;              /* Time spent on running system */
+    bool enabled;                  /* Is system enabled or not */
 } EcsSystem;
 
 /** A column system is a system that is ran periodically (default = every frame)

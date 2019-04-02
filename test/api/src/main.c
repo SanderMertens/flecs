@@ -100,6 +100,17 @@ void Has_any_of_1_of_0(void);
 void Has_any_2_of_2_disjunct(void);
 void Has_has_in_progress(void);
 
+// Testsuite 'Get_component'
+void Get_component_get_empty(void);
+void Get_component_get_1_from_1(void);
+void Get_component_get_1_from_2(void);
+void Get_component_get_2_from_2(void);
+void Get_component_get_2_from_3(void);
+void Get_component_get_1_from_2_in_progress_from_main_stage(void);
+void Get_component_get_1_from_2_add_in_progress(void);
+void Get_component_get_both_from_2_add_in_progress(void);
+void Get_component_get_both_from_2_add_remove_in_progress(void);
+
 // Testsuite 'Delete'
 void Delete_delete_1(void);
 void Delete_delete_1_again(void);
@@ -797,6 +808,48 @@ static bake_test_suite suites[] = {
             {
                 .id = "has_in_progress",
                 .function = Has_has_in_progress
+            }
+        }
+    },
+    {
+        .id = "Get_component",
+        .testcase_count = 9,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "get_empty",
+                .function = Get_component_get_empty
+            },
+            {
+                .id = "get_1_from_1",
+                .function = Get_component_get_1_from_1
+            },
+            {
+                .id = "get_1_from_2",
+                .function = Get_component_get_1_from_2
+            },
+            {
+                .id = "get_2_from_2",
+                .function = Get_component_get_2_from_2
+            },
+            {
+                .id = "get_2_from_3",
+                .function = Get_component_get_2_from_3
+            },
+            {
+                .id = "get_1_from_2_in_progress_from_main_stage",
+                .function = Get_component_get_1_from_2_in_progress_from_main_stage
+            },
+            {
+                .id = "get_1_from_2_add_in_progress",
+                .function = Get_component_get_1_from_2_add_in_progress
+            },
+            {
+                .id = "get_both_from_2_add_in_progress",
+                .function = Get_component_get_both_from_2_add_in_progress
+            },
+            {
+                .id = "get_both_from_2_add_remove_in_progress",
+                .function = Get_component_get_both_from_2_add_remove_in_progress
             }
         }
     },
@@ -2122,5 +2175,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 28);
+    return bake_test_run("api", argc, argv, suites, 29);
 }

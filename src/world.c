@@ -449,7 +449,7 @@ void load_admin(
     ecs_type_t TEcsAdmin = ecs_type_from_entity(world, admin);
     ecs_set(world, 0, EcsAdmin, {port});
 
-    printf("admin is running in port %d\n", port);
+    printf("Admin is running in port %d\n", port);
 #else
     fprintf(stderr, 
         "sorry, loading the admin is only possible if flecs was built with bake :(");
