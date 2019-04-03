@@ -16,6 +16,7 @@
   - [Never compare types with anything](#never-compare-entity-types-with-anything)
   - [Write logic in systems](#write-logic-in-systems)
   - [Organize code in modules](#organize-code-in-modules)
+  - [Do not depend on systems in other modules](#do-not-depend-on-systems-in-other-modules)
   - [Use types where possible](#use-types-where-possible)
   - [Create entities in bulk](#create-entities-in-bulk)
   - [Limit usage of ecs_lookup](#limit-usage-of-ecs_lookup)
@@ -237,6 +238,11 @@ If you find yourself writing lots of code in the main loop of your application t
 
 ### Organize code in modules
 For small applications it is fine to create a few systems in your main source file, but for larger projects you will want to organize your systems and components in modules. Flecs has a module system that lets you easily import systems and components that are defined in other files in your project, or even other libraries. Ideally, the main function of your application only consists of importing modules and the creation of entities.
+
+### Do not depend on systems in other modules
+Flecs has been designed to allow applications define logic in a way that can be easily reused across a wide range of projects. This however only works if a small but important set of guiding principles is followed. As a general rule of thumb, a system should never depend on a _system_ that is not in the same module. Modules may import other modules, but should never directly refer systems from that module. The reason is, that individual systems are often small parts of a bigger whole that implements a certain _capability_. While it is fine to rely on the module implementing that capability, systems should not rely on _how_ that capability is implemented.
+
+If you find that your application has this need and you cannot work around it, this could be an indication of modules that have the wrong granularity, or missing information in components shared between the modules. 
 
 ### Use types where possible
 The sooner you can let Flecs know what entities you will be setting on an entity, the better. Flecs can add/remove multiple components to/from your entity in a single `ecs_add` or `ecs_remove` call with types (see `ECS_TYPE`), and this is much more efficient than calling these operations for each individual component. It is even more efficient to specify a type with `ecs_new`, as Flecs can take advantage of the knowledge that the entity to which the component is going to be added is empty.
