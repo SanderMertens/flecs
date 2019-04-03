@@ -25,10 +25,17 @@
   - [Never store pointers to components](#never-store-pointers-to-components)
 - [Systems](#systems)
   - [System queries](#system-queries)
-    - [Query operators](#query-operators)
-      - [OR operator](#or-operator)
-      - [NOT operator](#not-operator)
-      - [Optional operator](#optional-operator)
+   - [Column operators](#columm-operators)
+    - [OR operator](#or-operator)
+    - [NOT operator](#not-operator)
+    - [Optional operator](#optional-operator)
+   - [Column source modifiers](#column-source-modifiers)
+    - [SELF modifier](#id-modifier)
+    - [ID modifier](#id-modifier)
+    - [CONTAINER modifier](#container-modifier)
+    - [SYSTEM modifier](#system-modifier)
+    - [SINGLETON modifier](#singleton-modifier)
+    - [ENTITY modifier](#entity-modifier)
 
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
@@ -272,7 +279,7 @@ The two elements are the components the system is interested in. Within a query 
 
 The system query is the only mechanism for specifying the input for the system. Any information that the system needs to run must therefore be captured in the system query. This strict enforcement of the interface can sometimes feel like a constraint, but it makes it possible to reuse systems across different applications. As you will see, system queries have a number of features that make it easier to specify a range of possible input parameters.
 
-#### Query operators
+#### Column operators
 System queries may contain operators to express optionality or exclusion of components. The most common one is the `,` (comma) which is equivalent to an AND operator. Only if an entity satisfies each of the expressions separated by the `,`, it will be matched with the system. In addition to the `,` operator, queries may contain a number of other operators:
 
 ##### OR operator
@@ -302,3 +309,75 @@ Position, ?Velocity
 
 Inside the system implementation, an application will be able to check whether the component was available or not.
 
+#### Column source modifiers
+System queries can request components from a variety of sources. The most common and default source is from an entity. When a system specifies `Position, Velocity` as its query, it will match _entities_ that have `Position, Velocity`. A system may however require components from other entities than the one being iterated over. To streamline this use case, reduce `ecs_get` API calls within systems, and prevent excessive checking on whether components are available on external entities, the system query can capture these requirements. A query may contain the folllowing modifiers:
+
+##### SELF modifier
+This is the default modifier, and is implied when no modifiers are explicitly specified. An example of the `SELF` modifier is:
+
+```
+Position, Velocity
+```
+
+This system will match with any entities that have the `Position, Velocity` components. The components will be available to the system as owned (non-shared) columns, _except_ when a component is provided by a Prefab, in which case the component will be shared.
+
+##### ID modifier
+The `ID` modifier lets an application pass handles to components or other systems to a system. This is frequently useful, as systems may need component handles to add or set components on entities that may not be part of the entity yet. Another use case for this feature is passing a handle to another `EcsManual` system to the system, which the system can then execute. This is frequently used when a system needs to evaluate a set of entities for every matching entity. An example of the `ID` modifier is:
+
+```
+Position, ID.Velocity
+```
+
+This will match any entity that has the `Position` component, and pass the handle to the `Velocity` component to the system. This allows the system implementation to add or set the `Velocity` component on the matching entities.
+
+`ID` columns have no data, and as such should not be accessed as owned or shared columns. Instead, the system should only attempt to obtain the handle to the component or component type.
+
+##### CONTAINER modifier
+The `CONTAINER` modifier allows a system to select a component from the entity that contains the currently iterated over entity. An example of the `CONTAINER` modifier is:
+
+```
+CONTAINER.Position, Position, Velocity
+```
+
+This will match all entities that have `Position, Velocity`, _and_ that have a container (parent) entity that has the `Position` component. This facilitates building systems that must traverse entities in a hierarchical manner.
+
+`CONTAINER` columns are available to the system as a shared component.
+
+##### SINGLETON modifier
+The `SINGLETON` or `$` modifier selects components from the singleton entity. As the name suggests, this allows a system to access a single, global (but world-specific) instance of a component. An example of the `SINGLETON` modifier is:
+
+```
+$Position, Position, Velocity
+```
+
+This will match all entities that have `Position, Velocity`, and make the `Position` component from the singleton entity available to the system.
+
+`SINGLETON` columns are available to the system as a shared component.
+
+##### SYSTEM modifier
+In some cases it is useful to have stateful systems that either track progress in some way, or contain information pointing to an external source of data (like a database connection). The `SYSTEM` modifier allows for an easy way to access data associated with the system. An example of the `SYSTEM` modifier is:
+
+```
+SYSTEM.DbConnection, Position, Velocity
+```
+
+This will match all entities with `Position, Velocity`, and automatically add the `DbConnection` component to the system. Often this pattern is paired with an `EcsOnAdd` system for the `DbConnection` component, which would be immediately executed when the system is defined, and set up the database connection (or other functionality) accordingly.
+
+`SYSTEM` columns are available to the system as a shared component.
+
+##### ENTITY modifier
+In some cases, it is useful to get a component from a specific entity. In this case, the source modifier can specify the name of a named entity (that has the `EcsId` component) to obtain a component from that entity. An example of the `ENTITY` modifier is:
+
+```
+Position, SomeEntity.Velocity
+```
+
+This will match all antities with the `Position` component, and pass the `Velocity` component of `SomeEntity` to the system. The equivalent of this functionality would be to pass handles to `SomeEntity` and `Velocity` with the `ID` component, and then do an `ecs_get` from within the system, like so:
+
+```
+Position, ID.SomeEntity, ID.Velocity
+```
+
+Using the `ENTITY` modifier is however much less verbose, and can potentially also be optimized as the framework may use a more efficient version of `ecs_get`.
+
+`ENTITY` columns are available to the system as a shared component.
