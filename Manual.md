@@ -18,6 +18,7 @@
   - [Organize code in modules](#organize-code-in-modules)
   - [Do not depend on systems in other modules](#do-not-depend-on-systems-in-other-modules)
   - [Use types where possible](#use-types-where-possible)
+  - [Use declarative statements for static data](#use-declarative-statements-for-static-data)
   - [Create entities in bulk](#create-entities-in-bulk)
   - [Limit usage of ecs_lookup](#limit-usage-of-ecs_lookup)
   - [Use ecs_quit to signal that your application needs to exit](#use-ecs_quit-to-signal-that-your-application-needs-to-exit)
@@ -246,6 +247,18 @@ If you find that your application has this need and you cannot work around it, t
 
 ### Use types where possible
 The sooner you can let Flecs know what entities you will be setting on an entity, the better. Flecs can add/remove multiple components to/from your entity in a single `ecs_add` or `ecs_remove` call with types (see `ECS_TYPE`), and this is much more efficient than calling these operations for each individual component. It is even more efficient to specify a type with `ecs_new`, as Flecs can take advantage of the knowledge that the entity to which the component is going to be added is empty.
+
+### Use declarative statements for static data
+Declarative statements in Flecs can be recognized by their capitalized names. Declarative statements define the "fabric" of your application. They declare components, systems, prefabs, types and can even define entities. They improve the readability of applications as someone only needs to quickly glance over the code to get a good impression of which components, entities and systems an application has. An example of a declarative piece of code is:
+
+```c
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity);
+ECS_SYSTEM(world, Move, EcsOnFrame, Position, Velocity);
+ECS_ENTITY(world, Player, Position, Velocity);
+```
+
+You may find that certain things cannot be expressed through declarative statements yet, like setting component values on individual entities (you need `ecs_set` for that). These use cases represent areas in the API that we want to improve. Eventually, we would like applications to be able to define applications fully declaratively (except for the system implementations, of course!). 
 
 ### Create entities in bulk
 It is much more efficient to create entities in bulk (using the `ecs_new_w_count` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
