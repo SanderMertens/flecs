@@ -17,6 +17,7 @@
   - [Write logic in systems](#write-logic-in-systems)
   - [Organize code in modules](#organize-code-in-modules)
   - [Do not depend on systems in other modules](#do-not-depend-on-systems-in-other-modules)
+  - [Expose features, not systems in modules](#expose-features-not-systems-in-modules)
   - [Use types where possible](#use-types-where-possible)
   - [Use declarative statements for static data](#use-declarative-statements-for-static-data)
   - [Create entities in bulk](#create-entities-in-bulk)
@@ -55,6 +56,12 @@
      - [The EcsPreStore phase](#the-ecsprestore-phase)
      - [The EcsOnStore phase](#the-ecsonstore-phase)
      - [System phases example](#system-phases-example)
+   - [Reactive systems](#reactive-systems)
+     - [EcsOnAdd event](#ecsonadd-event)
+     - [EcsOnRemove event](#ecsonremove-event)
+     - [EcsOnSet event](#ecsonset-event)
+     - [Custom reactive systems](#custom-reactive-systems)
+   - [Features](#features)
    
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
@@ -261,6 +268,13 @@ For small applications it is fine to create a few systems in your main source fi
 Flecs has been designed to allow applications define logic in a way that can be easily reused across a wide range of projects. This however only works if a small but important set of guiding principles is followed. As a general rule of thumb, a system should never depend on a _system_ that is not in the same module. Modules may import other modules, but should never directly refer systems from that module. The reason is, that individual systems are often small parts of a bigger whole that implements a certain _capability_. While it is fine to rely on the module implementing that capability, systems should not rely on _how_ that capability is implemented.
 
 If you find that your application has this need and you cannot work around it, this could be an indication of modules that have the wrong granularity, or missing information in components shared between the modules. 
+
+### Expose features, not systems in modules
+Modules need to expose handles to the things they implement, to let the user interact with the contents of a module. A module should however be designed in such a way that it only exposes things that will not break compatibility between the application and the module in the future. When a module implements components, this is often not a problem, as component definitions are unlikely to change. When a module implements systems, this is less straightforward.
+
+Modules often organize and define systems in a way so that multiple systems achieve a single feature. Only in the case of simple features, will a feature map to a single system. The way that systems are mapped to features is implementation specific, and subject to change as the module evolves. Therefore, explicitly exposing system handles in a module is generally not a good idea.
+
+Instead, a module can expose [features](#features) which allow a module to group the systems that belong to a certain feature. This way a module can expose a single feature (for example, `CollisionDetection`) and group all systems that belong to that feature (for example, `AddCollider`, `TestColliders`, `CleanCollisions`) under that feature. Features are unlikely to change, and thus this ensures that future versions of a module won't break compatibility with the applications that uses it.
 
 ### Use types where possible
 The sooner you can let Flecs know what entities you will be setting on an entity, the better. Flecs can add/remove multiple components to/from your entity in a single `ecs_add` or `ecs_remove` call with types (see `ECS_TYPE`), and this is much more efficient than calling these operations for each individual component. It is even more efficient to specify a type with `ecs_new`, as Flecs can take advantage of the knowledge that the entity to which the component is going to be added is empty.
@@ -659,3 +673,44 @@ This is an example of how a typical application that loads data dynamically, use
   
 - EcsOnStore
   - Render
+
+### Reactive systems
+When a system is assigned to one of the various [system phases](#system-phases) systems are executed every frame (when `ecs_progress` is called), or periodically at a specified time interval. Alternatively, applications can define systems that are ran whenever a specific _event_ occurs. Events that can be intercepted are adding/removing components, and setting a value. The following sections describe these events.
+
+#### EcsOnAdd
+The `EcsOnAdd` event is triggered whenever a component is added to an entity. This can happen as a result of an `ecs_new` (when a component is specified), an `ecs_add` or an `ecs_set`. The `EcsOnAdd` event is typically used to build systems that initialize components, as flecs does not automatically initialize components itself.
+
+Systems that respond to `EcsOnAdd` events are executed immediately after the component is added, before any of the aforementioned calls (`ecs_new`, `ecs_add`, `ecs_set`) return. This ensures that right after the component is added, it can be initialized and safe to use.
+
+#### EcsOnRemove event
+The `EcsOnRemove` event is triggered whenever a component is removed from an entity. This can happen as a result of an `ecs_remove` or an `ecs_delete` (which removes all components). The `EcsOnRemove` event is typically used to build systems that deinitialize components, which often involves releasing resources or freeing memory.
+
+Systems that respond to `EcsOnRemove` events are normally executed immediately after the component is removed, before any of the aforementioned calls (`ecs_remove`, `ecs_delete`) return. The exception to this rule is when `ecs_remove` is invoked by a system, in which case the system is executed at the end of a phase, after all systems in that phase have been executed.
+
+#### EcsOnSet event
+The `EcsOnSet` event is triggered whenever a component is set to a value. This can happen as a result of an `ecs_set`. Systems responding to an `EcsOnSet` typically react to the data in a component, and require data to be initialized. During the lifecycle of a component, multiple `EcsOnSet` events may be generated, for every time the `ecs_set` function is called.
+
+#### Features
+In many situations, a particular feature is realized by multiple systems. For example, a feature that does matrix transformations may have three systems, for automatically adding the `TransformMatrix` component, resetting it to the identity, and doing the actual transform. The exact details on how a feature is split up between systems highly depends on its implementation, and this makes it more complicated for applications to tell which systems are associated with a feature. An application may, for example, want to enable/disable certain features that it does not need.
+
+To reduce this complexity, and to prevent applications from having to depend on specific implementation details, systems can be organized in features. Features combine multiple systems that fulfill a common goal under a single handle, which can be used to enable/disable all systems at the same time. A feature can be defined with the `ECS_TYPE` macro:
+
+```c
+ECS_TYPE(world, MyFeature, SystemA, SystemB);
+```
+
+An application can then enable/disable both `SystemA` and `SystemB` with a single call to `ecs_enable`:
+
+```c
+ecs_enable(world, MyFeature, false); // disables feature
+```
+
+Features can also be nested, like so:
+
+```c
+ECS_TYPE(world, ChildFeature1, Foo, Bar);
+ECS_TYPE(world, ChildFeature2, Hello, World);
+ECS_TYPE(world, ParentFeature, ChildFeature1, ChildFeature2);
+```
+
+When designing modules it is good practice to not directly expose handles to systems, but instead only expose feature handles. This decreases the chance that an application has to be modified because the implementation of a module changed.
