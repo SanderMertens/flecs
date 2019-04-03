@@ -45,6 +45,16 @@
      - [The ECS_COLUMN_ENTITY macro](#the-ecs_column_entity-macro)
      - [The ecs_field function](#the-ecs_field-function)
      - [The ECS_COLUMN_TEST and ECS_SHARED_TEST macro's](#the-ecs_column_test-and-ecs_shared_test-macros)
+   - [System phases](#system-phases)
+     - [The EcsOnLoad phase](#the-ecsonload-phase)
+     - [The EcsPostLoad phase](#the-ecspostload-phase)
+     - [The EcsPreUpdate phase](#the-ecspreupdate-phase)
+     - [The EcsOnUpdate phase](#the-ecsonupdate-phase)
+     - [The EcsOnValidate phase](#the-ecsonvalidate-phase)
+     - [The EcsPostUpdate phase](#the-ecspostupdate-phase)
+     - [The EcsPreStore phase](#the-ecsprestore-phase)
+     - [The EcsOnStore phase](#the-ecsonstore-phase)
+     - [System phases example](#system-phases-example)
    
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
@@ -586,3 +596,66 @@ void Move(ecs_rows_t *rows) {
 ```
 
 Note how if the component is not available, the variable of the optional column (`velocity`) will be set to `NULL`, which can then be tested by the system implementation.
+
+### System phases
+Each frame in Flecs is computed in different phases, which define the execution order in which certain systems are executed. Phases are necessary to guarantee interoperability between systems in different modules, as it imposes a high-level order on the systems that need to be executed each frame. A simple example is a system that updates game state, and a system that renders a frame. The first system needs to be executed before the second one, to ensure the correct data is rendered. 
+
+By using phases in the correct way, module developers can ensure that their systems work correctly across applications. There are no strictly enforced rules on how these phases must be used, and an application may decide to not use them at all. However, if an application or module defines logic that must be reused, phases are necessary to ensure systems run at the right moment.
+
+The following sections describe the different phases in the order of execution, and what kind of systems are expected to run in them.
+
+#### The EcsOnLoad phase
+The `EcsOnLoad` phase is the first phase that is executed every frame. In this phase any data that needs to be loaded from external sources should be inserted into the ECS world (`ecs_world_t` instance). An example could be a system that streams data from disk based on the game state.
+
+#### The EcsPostLoad phase
+The `EcsPostLoad` phase "primes" the loaded data so that it is ready for usage. This often involves automatically adding components to entities that have a certain set of components. For example, a transformation module may automatically add a `TransformMatrix` component to each entity that has a `Position`, `Rotation` or `Scale`. 
+
+#### The EcsPreUpdate phase
+The `EcsPreUpdate` phase prepares the frame for the game logic. This phase typically contains systems that cleanup data from the previous frame, or initialize components for the next frame. An example could be a system that resets the transformation matrices to the identity matrix, or remove components that describe collisions detected in the previous frame.
+
+#### The EcsOnUpdate phase
+During the `EcsOnUpdate` phase the game logic is executed. In this phase entities are moved, AI is executed, input is processed and so on. Most of the game-specific systems are executed in this phase.
+
+#### The EcsOnValidate phase
+The `EcsOnValidate` phase checks if any constrains have been violated during the `EcsOnUpdate` phase. A typical example is an entity that moved out of bounds, or two entities that collided and are now partially overlapping. An example of a system that is executed during the `EcsOnValidate` phase is collision detection.
+
+#### The EcsPostUpdate phase
+The `EcsPostUpdate` phase evaluates constraints and corrects entities where required. For example, a system in the `EcsPostUpdate` phase may evaluate collisions detected during the `EcsOnValidate` phase, and correct entity positions so that they are no longer overlapping. Whereas the systems in the `EcsOnValidate` stage are typically from imported modules (like physics) the systems in the `EcsPostUpdate` phase are typically application specific (insert explosion at location of collision).
+
+#### The EcsPreStore phase
+The `EcsPreStore` phase allows imported modules a last chance to react to application logic before rendering a frame. For example, if an entity was moved during the `EcsPostUpdate` phase, its transformation matrix should be updated before it is rendered to reflect its latest position.
+
+#### The EcsOnStore phase
+During the `EcsOnStore` phase the data computed in the frame is rendered, or stored in an external data source. 
+
+#### System phases example
+This is an example of how a typical application that loads data dynamically, uses collision detection and rendering (identifiers between parenthesis are component expressions):
+
+- EcsOnLoad
+  - StreamFromDisk (`Game`, `Player`)
+
+- EcsPostLoad
+  - AddTransformMatrix (`Position | Rotation | Scale`, `!TransformMatrix`)
+  - CleanCollisions (`Collision`)
+  
+- EcsPreUpdate
+  - ResetTransformMatrix (`TransformMatrix`)
+  
+- EcsOnUpdate
+  - Move (`Position`, `Velocity`)
+
+- EcsOnValidate
+  - Translate (`Position`, `TransformMatrix`)
+  - Rotate (`Rotation`, `TransformMatrix`)
+  - Scale (`Scale`, `TransformMatrix`)
+  - TransformColliders (`Collider`, `TransformMatrix`)
+  - TestForCollisions (`Collider`) -> `Collision`
+  
+- EcsPostFrame
+  - OnCollision (`Collision`)
+  
+- EcsPreStore
+  - CorrectTransform (`Collision`)
+  
+- EcsOnStore
+  - Render
