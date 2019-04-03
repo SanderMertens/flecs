@@ -655,7 +655,7 @@ This is an example of how a typical application that loads data dynamically, use
   - OnCollision (`Collision`)
   
 - EcsPreStore
-  - CorrectTransform (`Collision`)
+  - CorrectTransform (`Collision`, `TransformMatrix`)
   
 - EcsOnStore
   - Render
