@@ -26,6 +26,21 @@
   - [Update components proportionally to delta_time](#update-components-proportionally-to-delta_time)
   - [Set a target FPS for applications](#set-a-target-fps-for-applications)
   - [Never store pointers to components](#never-store-pointers-to-components)
+- [Entities](#entities)
+  - [Entity lifecycle](#entity-lifecycle)
+    - [Creating entities](#creating-entities)
+    - [Create entities in bulk](#create-entities-in-bulk)
+    - [Deleting entities](#deleting-entities)
+  - [Using components](#using-components)
+    - [Component handles](#component-handles)
+    - [Add components](#add-components)
+    - [Remove components](#remove-components)
+    - [Set components](#set-components)
+    - [Test for components](#test-for-components)
+    - [Walk components](#walk-components)
+  - [Types](#types)
+  - [Prefab entities](#prefabs)
+  - [Container entities](#container-entities)
 - [Systems](#systems)
    - [System queries](#system-queries)
      - [Column operators](#column-operators)
@@ -314,6 +329,68 @@ When you run `ecs_progress` in your main loop, you rarely want to run your appli
 
 ### Never store pointers to components
 In ECS frameworks, adding, removing, creating or deleting entities may cause memory to move around. This is it is not safe to store pointers to component values. Functions like `ecs_get_ptr` return a pointer which is guaranteed to remain valid until one of the aforementioned operations happens.
+
+## Entities
+Entities are the most important API primitive in any ECS framework, and even more so in Flecs. Entities by themselves are nothing special, just a number that identifies a specific "thing" in your application. What makes entities useful, is that they can be composed out of multiple _components_, which are data types describing the various _aspects_ or capabilities of an entity.
+
+In Flecs, entities take on an even more prominent role, as Flecs internally uses entities to store many of the framework primitives, like components and systems. How this works exactly is an advanced topic, and the only reason it is mentioned here is so that you do not get confused when you see a signature like this:
+
+```c
+ecs_set(ecs_world_t *world, ecs_entity_t entity, ecs_entity_t component);
+```
+
+The "component" is, unexpectedly, of the `ecs_entity_t` type, and this looks weird until you realize that a component _handle_ is actually an entity with _builtin components_. That is all you need to know about this, unless you want to contribute to Flecs yourself (which is encouraged :-).
+
+The next sections describe how applications can use Flecs to work with entities.
+
+### Entity lifecycle
+Entities in Flecs do not have an explicit lifecycle. This may seem confusing when you come from an OOP background, or perhaps even if you worked with other ECS Frameworks. An entity in Flecs is just an integer, nothing more. You can pick any integer you want as your entity identifier, and start assigning components to it. You cannot "create" or "delete" an entity, in the same way you cannot create or delete the number 10. That means in code, you can run this line by itself and it works:
+
+```c
+ecs_add(world, 10, Position);
+```
+
+This design emphasises the data-oriented nature of an ECS framework. Whereas in object oriented programming code is quite literally built to work with _individial_ objects, in ECS code is built around _a collection_ of components. In Flecs entities are an orthogonally designed feature that is only there to associate components.
+
+Having said that the API does provide `ecs_new` and `ecs_delete` operations, which on the surface seem to imply entity lifecycle. The next sections will describe these operations in more detail, and explain how it fits with the above.
+
+#### Creating entities
+In Flecs, the `ecs_new` operation returns an entity handle that is guaranteed to not have been returned before by `ecs_new`. Note how this decsription explicitly avoids terminology such as "create". In Flecs, the total entity addressing space (which is 64 bit) is "alive" at all times. The `ecs_new` operation is merely a utility to obtain unused entity handles in a convenient way. The simplest way to invoke `ecs_new` is like this:
+
+```c
+ecs_entity_t e = ecs_new(world, 0);
+```
+
+This returns a handle to an empty entity. It is possible to provide an initial component, or type to `ecs_new`.  This is in many ways equivalent to first calling `ecs_new`, followed by `ecs_add`, but has the added advantage that since the API knows the entity is empty, there is no need to lookup the existing set of components, which has better performance. To specify a component to `ecs_new`, do:
+
+```c
+ecs_entity_t e = ecs_new(world, Position);
+```
+
+As it is functionally equivalent to first calling `ecs_new` followed by `ecs_add`, `EcsOnAdd` systems will be invoked for the `Position` component as a result of this operation.
+
+#### Creating entities in bulk
+When creating a large number of new entities, it can be much faster do this them in bulk, especially when adding initial components. This can be achieved with the `ecs_new_w_count` function. This function is equivalent to `ecs_new` but it has an additional `count` parameter which indicates the number of entities to be returned. An application can use it like this:
+
+```c
+ecs_entity_t e = ecs_new_w_count(world, Position, 100);
+```
+
+This operation is functionally equivalent to calling `ecs_new` 100 times, but has the added benefit that all the resource allocations, updating of the internal administration and invoking of reactive systems can all happen in bulk. The function returns the first of the created entities, and it is guaranteed that the entity identifiers are consecutive, so that if the first entity identifier is 1, the last entity identifier is 101.
+
+#### Deleting entities
+The `ecs_delete` operation does not actually delete the entity identifier (as this is impossible) but it guarantees that after the operation, no more resources are being held by flecs that are associated to the entity. After invoking the `ecs_delete` operation, the entity will have no more components, and will not be stored in any internal data structures. An application can use it like this:
+
+```c
+ecs_delete(world, e);
+```
+
+Since the entity identifier itself is not invalidated after the `ecs_delete`, it is legal to continue using it, like this:
+
+```c
+ecs_delete(world, e); // empty entity
+ecs_add(world, e, Position); // add Position to empty entity
+```
 
 ## Systems
 Systems let applications execute logic on a set of entities that matches a certain component expression. The matching process is continuous, when new entities (or rather, new _entity types_) are created, systems will be automatically matched with those. Systems can be ran by Flecs as part of the built-in frame loop, or by invoking them individually using the Flecs API.
