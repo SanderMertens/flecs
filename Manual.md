@@ -32,6 +32,11 @@
     - [Creating entities](#creating-entities)
     - [Create entities in bulk](#create-entities-in-bulk)
     - [Deleting entities](#deleting-entities)
+  - [Containers](#containers)
+    - [The EcsContainer component](#the-ecscontainer-component)
+    - [Creating child entities](#creating-child-entities)
+    - [Adopting entities](#adopting-entities)
+    - [Orphaning entities](#orphaning-entities)
 - [Components and Types](#components-and-types)
   - [Owned components](#owned-components)
     - [Add components](#add-components)
@@ -42,7 +47,6 @@
       - [Overriding prefab components](#overriding-prefab-components)
       - [Prefabs and types](#prefabs-and-types)
       - [Nested prefabs](#nested-prefabs)
-    - [Containers](#containers)
 - [Systems](#systems)
    - [System queries](#system-queries)
      - [Column operators](#column-operators)
@@ -400,6 +404,96 @@ Since the entity identifier itself is not invalidated after the `ecs_delete`, it
 ecs_delete(world, e); // empty entity
 ecs_add(world, e, Position); // add Position to empty entity
 ```
+
+### Containers
+Flecs allows applications to create entities that are organized in hierarchies, or more accurately, directed acyclic graphs (DAG). This feature can be used, for example, when transforming entity coordinates to world space. An application can create a parent entity with child entities that specify their position relative to their parent. When transforming coordinates to world space, the transformation matrix can then be cascadingly applied from parents to children, according to the hierarchy.
+
+This is just one application of using entity hierarchies. The `flecs.components.http` and `flecs.systems.civetweb` modules both rely on the usage of parent-child relationships to express a web server (parent) with endpoints (children). Other APIs that feature hierarchical designs can benefit from this feature, like DDS (with `DomainParticipant` -> `Publisher` -> `DataWriter`) or UI development (`Window` -> `Group` -> `Button` -> `Label`). 
+
+The container API in Flecs is fully composed out of existing (public) API functionality. The API operations related to containers are intended to codify a pattern that provides a consistent way to implement parent-child relationships across applications. This approach has as side effect that container/contained entities behave no different from other entities, aside from the fact that they _can_ be accessed in a different way if the application so desires.
+
+The next sections describe how to work with containers.
+
+#### The EcsContainer tag
+In Flecs, containers are marked with the `EcsContainer` tag. This is a builtin tag that provides a quick way to test whether an entity can have child entities or not. The `EcsContainer` tag is automatically added to an entity when it _adopts_ another entity. If an application wants to know whether an entity is a container, it can simply do:
+
+```c
+if (ecs_has(world, e, EcsContainer)) {
+    // ...
+}
+```
+
+Flecs does not treat entities with the `EcsContainer` component differently from other entities. The only reason the `EcsContainer` tag is added by the API, is to provide a mechanism to discriminate between containers and non-containers. This prevents applications from having to assume that _every_ entity is a container, which could result in unnecessary operations that attempt to iterate over a set of children that does not exist.
+
+The `EcsContainer` component can be used in system queries to obtain various subsets of entities that are useful when working with containers. For example, the following system iterates over all container entities:
+
+```c
+ECS_SYSTEM(world, IterateContainers, EcsOnUpdate, EcsContainer);
+```
+
+A more common example is to find all the root entities. This is often the first step for applications that want to cascadingly iterate over entities. A system that only wants to iterate over roots can use this query:
+
+```c
+ECS_SYSTEM(world, IterateRoots, EcsOnUpdate, !CONTAINER.EcsContainer);
+```
+
+To only iterate over entities that are children of a specific entity, an application can create a manual system and provide the container as a filter to the function. For example, it can define the following system:
+
+```c
+ECS_SYSTEM(world, IterateChildren, EcsManual, CONTAINER.EcsContainer);
+```
+
+Now an application can only iterate over the children for a specific container by using the container as filter:
+
+```c
+ecs_run_w_filter(
+  world, 
+  IterateChildren, // System handle
+  delta_time,      // delta time
+  0,               // Offset
+  0,               // Limit
+  my_container,    // Filter (ecs_type_t)
+  NULL             // Parameter (void*)
+);
+```
+
+Note that the system query explicitly only accepts entities that have containers. While the filter would automatically filter out any entities that are not contained by the specified container entity, putting this in the query makes sure that the system only iterates over contained entities, while excluding root entities from the set of filtered entities in advance. This limits the number of entities (or rather, archetypes) to iterate over when filtering which can improve performance, especially if the operation is executed many times per iteration.
+
+#### Creating a child entity
+Flecs offers an API to create a new entity which also specifies a parent entity. The API can be invoked like this:
+
+```c
+ecs_entity_t my_root = ecs_new(world, 0);
+ecs_entity_t my_child = ecs_new_child(world, my_root, 0);
+```
+
+Any entity can be specifed as a parent entity (`my_root`, in this example). After the `ecs_new_child` operation the `my_root` entity will have the `EcsContainer` tag, so this statement:
+
+```c
+ecs_has(world, my_root, EcsContainer);
+```
+
+will return true.
+
+#### Adopting an entity
+The API allows applications to adopt entities by containers after they have been created with the `ecs_adopt` operation. The `ecs_adopt` operation is almost equivalent to an `ecs_add`, with as only difference that it accepts an `ecs_entity_t` (instead of an `ecs_type_t`), and it adds the `EcsContainer` component to the parent if it didn't have it already. The operation can be used like this:
+
+```c
+ecs_entity_t my_root = ecs_new(world, 0);
+ecs_entity_t e = ecs_new(world, 0);
+ecs_adopt(world, e, my_root);
+```
+
+After this operation, the `my_root` entity will have the `EcsContainer` tag. If the entity was already a child of the container, the operation has no side effects.
+
+#### Orphaning an entity
+The API allows applications to orphan entities from containers after they have been created with the `ecs_orphan` operation. The `ecs_orphan` operation is almost equivalent to an `ecs_remove`, with as only difference that it accepts an `ecs_entity_t` (instead of an `ecs_type_t`). The operation can be used like this:
+
+```c
+ecs_orphan(world, e, my_root);
+```
+
+If the entity was not a child of the container, the operation has no side effects. This operation will not add the `EcsContainer` tag to `my_root`.
 
 ## Components and Types
 Components, together with entities, are the most important building blocks for applications in Flecs. Like entities, components are orthogonally designed to do a single thing, which is to store data associated with an entity. Components, as with any ECS framework, do not contain any logic, and can be added or removed at any point in the application. A component can be registered like this:
