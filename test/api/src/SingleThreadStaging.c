@@ -2692,7 +2692,7 @@ void Create_container_reverse(ecs_rows_t *rows) {
         test_assert(child != 0);
         test_assert(parent != 0);
 
-        ecs_adopt(rows->world, parent, child);
+        ecs_adopt(rows->world, child, parent);
         test_assert( ecs_contains(rows->world, parent, child));
 
         g_parent = parent;
