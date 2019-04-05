@@ -2612,7 +2612,7 @@ void Create_container(ecs_rows_t *rows) {
 
     int i;
     for (i = 0; i < rows->count; i ++) {
-        ecs_new_child(rows->world, entities[i], NULL, 0);
+        ecs_new_child(rows->world, entities[i], 0);
     }
 }
 

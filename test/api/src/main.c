@@ -240,7 +240,6 @@ void Tasks_on_remove_from_system(void);
 
 // Testsuite 'Container'
 void Container_child(void);
-void Container_child_w_id(void);
 void Container_child_w_component(void);
 void Container_child_w_type(void);
 void Container_contains_w_empty_parent(void);
@@ -1341,15 +1340,11 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Container",
-        .testcase_count = 19,
+        .testcase_count = 18,
         .testcases = (bake_test_case[]){
             {
                 .id = "child",
                 .function = Container_child
-            },
-            {
-                .id = "child_w_id",
-                .function = Container_child_w_id
             },
             {
                 .id = "child_w_component",

@@ -530,12 +530,11 @@ FLECS_EXPORT
 ecs_entity_t _ecs_new_child(
     ecs_world_t *world,
     ecs_entity_t parent,
-    const char *name,
     ecs_type_t type);
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
-#define ecs_new_child(world, parent, name, type)\
-    _ecs_new_child(world, parent, name, T##type)
+#define ecs_new_child(world, parent, type)\
+    _ecs_new_child(world, parent, T##type)
 
 /** Convenience function to create an entity with id and component expression */
 FLECS_EXPORT

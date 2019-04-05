@@ -616,7 +616,6 @@ ecs_entity_t _ecs_new(
 ecs_entity_t _ecs_new_child(
     ecs_world_t *world,
     ecs_entity_t parent,
-    const char *name,
     ecs_type_t type)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
@@ -631,15 +630,7 @@ ecs_entity_t _ecs_new_child(
         TFullType = ecs_merge_type(world, FullType, ParentType, 0);
     }
 
-    if (name) {
-        TFullType = ecs_merge_type(world, FullType, EcsId, 0);
-    }
-
     ecs_entity_t result = ecs_new(world, FullType);
-
-    if (name) {
-        ecs_set(world, result, EcsId, {name});
-    }
 
     return result;
 }

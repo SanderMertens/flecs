@@ -276,7 +276,6 @@
             "id": "Container",
             "testcases": [
                 "child",
-                "child_w_id",
                 "child_w_component",
                 "child_w_type",
                 "contains_w_empty_parent",
