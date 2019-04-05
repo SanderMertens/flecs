@@ -39,6 +39,9 @@
     - [Set components](#set-components)
   - [Shared components](#shared-components)
     - [Prefabs](#prefabs)
+      - [Overriding prefab components](#overriding-prefab-components)
+      - [Prefabs and types](#prefabs-and-types)
+      - [Nested prefabs](#nested-prefabs)
     - [Containers](#containers)
 - [Systems](#systems)
    - [System queries](#system-queries)
@@ -624,7 +627,7 @@ When the `Shape` type is added to the entity, first the prefab is added (this is
 
 This is a powerful pattern for creating reusable entity templates that result in automatically initialized components, and is one of the preferred ways of instantiating entities.
 
-##### Nesting prefabs
+##### Nested prefabs
 Just like types, prefabs can also be nested. Consider the following code example:
 
 ```c
