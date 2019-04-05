@@ -471,19 +471,21 @@ In Flecs, components can either be owned by an entity or shared with other entit
 The following sections describe the API operations for working with owned components.
 
 #### Add components
-In Flecs, an application can add owned components to an entity with the `ecs_add` operation. The operation accepts an entity and a component handle, and can be used like this:
+In Flecs, an application can add owned components to an entity with the `ecs_add` operation. The operation accepts an entity and a _type_ handle, and can be used like this:
 
 ```c
 ecs_add(world, e, Position);
 ```
 
-After the operation, it is guaranteed that `e` will have the component. It is legal to call `ecs_add` multiple times. When a component is already added, this function will have no side effects.
+After the operation, it is guaranteed that `e` will have the component. It is legal to call `ecs_add` multiple times. When a component is already added, this operation will have no side effects. When the component is added as a result of this operation, any `EcsOnAdd` systems subscribed for `Position` will be invoked.
 
-It is also possible to use types with `ecs_add`. If an application for example defined a type `Movable` with the `ECS_TYPE` macro, it can be used with `ecs_add` like so:
+It is also possible to use types with `ecs_add`. If an application defined a type `Movable` with the `ECS_TYPE` macro, it can be used with `ecs_add` like so:
 
 ```c
 ecs_add(world, e, Movable);
 ```
+
+After the operation, it is guaranteed that `e` will have all components that are part of the type. If the entity already had a subset of the components in the type, only the difference is added. If the entity already had all components in the type, this operation will have no side effects.
 
 ##### A quick recap on handles
 The signature of `ecs_add` looks like this:
@@ -492,9 +494,35 @@ The signature of `ecs_add` looks like this:
 void ecs_add(ecs_world_t *world, ecs_entity_t entity, ecs_type_t type);
 ```
 
-Note that the function accepts a _type handle_ as its 3rd argument. Type handles are automatically defined by the API when an application uses the `ECS_COMPONENT`, `ECS_ENTITY`, `ECS_PREFAB` or `ECS_TYPE` macro's. When a component is defined with the `ECS_COMPONENT` macro a type handle is generated (or looked up, if it already existed) just with that one component.
+Note that the function accepts a _type handle_ as its 3rd argument. Type handles are automatically defined by the API when an application uses the `ECS_COMPONENT`, `ECS_ENTITY`, `ECS_PREFAB` or `ECS_TYPE` macro's. When a component is defined with the `ECS_COMPONENT` macro a type handle is generated (or looked up, if it already existed) just with that one component. If the set of added components matches any `EcsOnAdd` systems, they will be invoked.
 
 For more details on how handles work, see [Handles](#handles).
+
+#### Remove components
+Flecs allows applications to remove owned components with the `ecs_remove` operation. The operation accepts an entity and a _type_ handle, and can be used like this:
+
+```
+ecs_remove(world, e, Position);
+```
+
+After the operation, it is guaranteed that `e` will not have the component. It is legal to call `ecs_remove` multiple times. When the component was already removed, this operation will have no side effects. When the component is removed as a result of this operation, any `EcsOnRemove` systems that match with the `Position` component will be invoked.
+
+It is also possible to use types with `ecs_remove`. If an application defined a type `Movable` with the `ECS_TYPE` macro, it can be used with `ecs_remove` like so:
+
+```c
+ecs_remove(world, e, Movable);
+```
+
+After the operation, it is guaranteed that `e` will not have any of the components that are part of the type. If the entity only had a subset of the types, that subset is removed. If the entity had none of the components in the type, this operation will have no side effects. If the set of components that was part of this operation matched any `EcsOnRemove` systems, they will be invoked.
+
+#### Set components
+With the `ecs_set` operation, Flecs applications are able to set a component on an entity to a specific value. Other than the `ecs_add` and `ecs_remove` operations, `ecs_set` accepts a `_component` (entity) handle, as it is only possible to set a single component at the same time. The `ecs_set` operation can be used like this:
+
+```c
+ecs_set(world, e, Position, {10, 20});
+```
+
+After the operation it is guaranteed that `e` has `Position`, and that it is set to `{10, 20}`. If the entity did not yet have `Position`, it will be added by the operation. If the entity already had `Position`, it will only assign the value. If there are any `EcsOnSet` systems that match with the `Position` component, they will be invoked after the value is assigned.
 
 ## Systems
 Systems let applications execute logic on a set of entities that matches a certain component expression. The matching process is continuous, when new entities (or rather, new _entity types_) are created, systems will be automatically matched with those. Systems can be ran by Flecs as part of the built-in frame loop, or by invoking them individually using the Flecs API.
