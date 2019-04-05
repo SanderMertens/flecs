@@ -413,7 +413,7 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     ecs_adopt(world, e_2, parent_2);
     ecs_adopt(world, e_3, parent_2);
     ecs_adopt(world, e_4, parent_1);
-    ecs_adopt(world, parent_3, e_5);
+    ecs_adopt(world, e_5, parent_3);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -479,10 +479,10 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
 
     ecs_adopt(world, e_1, parent_1);
     ecs_adopt(world, e_2, parent_2);
-    ecs_adopt(world, parent_3, e_3);
-    ecs_adopt(world, parent_4, e_4);
+    ecs_adopt(world, e_3, parent_3);
+    ecs_adopt(world, e_4, parent_4);
     ecs_adopt(world, e_5, parent_2); 
-    ecs_adopt(world, parent_3, e_5);
+    ecs_adopt(world, e_5, parent_3);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
