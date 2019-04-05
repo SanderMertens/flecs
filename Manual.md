@@ -33,7 +33,7 @@
     - [Create entities in bulk](#create-entities-in-bulk)
     - [Deleting entities](#deleting-entities)
   - [Containers](#containers)
-    - [The EcsContainer component](#the-ecscontainer-component)
+    - [The EcsContainer tag](#the-ecscontainer-tag)
     - [Creating child entities](#creating-child-entities)
     - [Adopting entities](#adopting-entities)
     - [Orphaning entities](#orphaning-entities)
@@ -459,7 +459,7 @@ ecs_run_w_filter(
 
 Note that the system query explicitly only accepts entities that have containers. While the filter would automatically filter out any entities that are not contained by the specified container entity, putting this in the query makes sure that the system only iterates over contained entities, while excluding root entities from the set of filtered entities in advance. This limits the number of entities (or rather, archetypes) to iterate over when filtering which can improve performance, especially if the operation is executed many times per iteration.
 
-#### Creating a child entity
+#### Creating child entities
 Flecs offers an API to create a new entity which also specifies a parent entity. The API can be invoked like this:
 
 ```c
@@ -475,7 +475,7 @@ ecs_has(world, my_root, EcsContainer);
 
 will return true.
 
-#### Adopting an entity
+#### Adopting entities
 The API allows applications to adopt entities by containers after they have been created with the `ecs_adopt` operation. The `ecs_adopt` operation is almost equivalent to an `ecs_add`, with as only difference that it accepts an `ecs_entity_t` (instead of an `ecs_type_t`), and it adds the `EcsContainer` component to the parent if it didn't have it already. The operation can be used like this:
 
 ```c
@@ -486,7 +486,7 @@ ecs_adopt(world, e, my_root);
 
 After this operation, the `my_root` entity will have the `EcsContainer` tag. If the entity was already a child of the container, the operation has no side effects.
 
-#### Orphaning an entity
+#### Orphaning entities
 The API allows applications to orphan entities from containers after they have been created with the `ecs_orphan` operation. The `ecs_orphan` operation is almost equivalent to an `ecs_remove`, with as only difference that it accepts an `ecs_entity_t` (instead of an `ecs_type_t`). The operation can be used like this:
 
 ```c
