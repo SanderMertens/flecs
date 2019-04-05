@@ -647,8 +647,7 @@ ecs_entity_t _ecs_new_child(
 ecs_entity_t _ecs_new_w_count(
     ecs_world_t *world,
     ecs_type_t type,
-    uint32_t count,
-    ecs_entity_t *handles_out)
+    uint32_t count)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
 
@@ -687,13 +686,6 @@ ecs_entity_t _ecs_new_w_count(
         /* Check if there are prefabs */
         copy_from_prefab(world, stage, table, result, row, count, type, type);
     } 
-    
-    if (handles_out) {
-        uint32_t i;
-        for (i = 0; i < count; i ++) {
-            handles_out[i] = result + i;
-        }
-    }
 
     return result;
 }

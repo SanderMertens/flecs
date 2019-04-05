@@ -29,8 +29,6 @@
             "id": "New_w_Count",
             "testcases": [
                 "empty",
-                "empty_w_handles",
-                "nonempty_w_handles",
                 "component",
                 "type",
                 "type_of_2",

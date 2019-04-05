@@ -23,8 +23,6 @@ void New_type_w_tag_mixed(void);
 
 // Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
-void New_w_Count_empty_w_handles(void);
-void New_w_Count_nonempty_w_handles(void);
 void New_w_Count_component(void);
 void New_w_Count_type(void);
 void New_w_Count_type_of_2(void);
@@ -505,19 +503,11 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "New_w_Count",
-        .testcase_count = 13,
+        .testcase_count = 11,
         .testcases = (bake_test_case[]){
             {
                 .id = "empty",
                 .function = New_w_Count_empty
-            },
-            {
-                .id = "empty_w_handles",
-                .function = New_w_Count_empty_w_handles
-            },
-            {
-                .id = "nonempty_w_handles",
-                .function = New_w_Count_nonempty_w_handles
             },
             {
                 .id = "component",

@@ -1150,7 +1150,7 @@ void Run_run_comb_10_entities_1_type() {
 
     int i, ENTITIES = 10;
 
-    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES, NULL);
+    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, start + i, Position, {1, 2});
@@ -1178,8 +1178,8 @@ void Run_run_comb_10_entities_2_types() {
 
     int i, ENTITIES = 10;
 
-    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES / 2, NULL);
-    ecs_new_w_count(world, Type, ENTITIES / 2, NULL);
+    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES / 2);
+    ecs_new_w_count(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, start + i, Position, {1, 2});

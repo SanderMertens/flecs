@@ -66,10 +66,12 @@ typedef const char *EcsId;
 typedef enum EcsSystemKind {
     /* Periodic systems */
     EcsOnLoad,
+    EcsPostLoad,
     EcsPreUpdate,
     EcsOnUpdate,
     EcsOnValidate,
     EcsPostUpdate,
+    EcsPreStore,
     EcsOnStore,
 
     /* Manual systems */
@@ -556,12 +558,11 @@ FLECS_EXPORT
 ecs_entity_t _ecs_new_w_count(
     ecs_world_t *world,
     ecs_type_t type,
-    uint32_t count,
-    ecs_entity_t *handles_out);
+    uint32_t count);
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
-#define ecs_new_w_count(world, type, count, handles_out)\
-    _ecs_new_w_count(world, T##type, count, handles_out)
+#define ecs_new_w_count(world, type, count)\
+    _ecs_new_w_count(world, T##type, count)
 
 /** Create new entity with same components as specified entity.
  * This operation creates a new entity which has the same components as the

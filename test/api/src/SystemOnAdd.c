@@ -620,7 +620,7 @@ void SystemOnAdd_new_w_count_match_1_of_1() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, 3, NULL);
+    ecs_entity_t e = ecs_new_w_count(world, Position, 3);
     test_assert(e != 0);
 
     test_int(ctx.count, 3);

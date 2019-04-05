@@ -258,10 +258,12 @@ struct ecs_world_t {
     /* -- Column systems -- */
 
     ecs_array_t *on_load_systems;  
+    ecs_array_t *post_load_systems;  
     ecs_array_t *pre_update_systems;  
     ecs_array_t *on_update_systems;   
     ecs_array_t *on_validate_systems; 
     ecs_array_t *post_update_systems; 
+    ecs_array_t *pre_store_systems; 
     ecs_array_t *on_store_systems;   
     ecs_array_t *on_demand_systems;  
     ecs_array_t *inactive_systems;   
