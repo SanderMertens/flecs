@@ -449,17 +449,17 @@ The `ecs_new` operation actually accepts an argument of `ecs_type_t`, which mean
 
 This will create an entity with the `Position` and `Velocity` components, when using the previous definition of `Movable`. This approach is faster than individually adding the `Position` and `Velocity` components. Furthermore it allows applications to define reusable templates that can be managed in one location, as opposed to every location where entities are being created.
 
-Types can also be nested, which will create a union of its contents. Take this example:
+Types can also be nested. For example:
 
 ```c
 ECS_TYPE(world, Movable, Position, Velocity);
 ECS_TYPE(world, Unit, HealthPoints, Attack, Defense);
 ECS_TYPE(world, Magic, Mana, ManaRecharge);
 ECS_TYPE(world, Warrior, Movable, Unit);
-ECS_TYPE(world, Wizzard, Movable, Unit, Magic);
+ECS_TYPE(world, Wizard, Movable, Unit, Magic);
 ```
 
-When added to entities, types themselves are not associated with the entity. Instead, only the resulting set of components is. For example, creating an entity with the `Wizzard` type would be equivalent to creating an entity and individually adding `Position`, `Velocity`, `Attack`, `Defense`, `Mana` and `ManaRecharge`.
+When added to entities, types themselves are not associated with the entity. Instead, only the resulting set of components is. For example, creating an entity with the `Wizard` type would be equivalent to creating an entity and individually adding `Position`, `Velocity`, `Attack`, `Defense`, `Mana` and `ManaRecharge`.
 
 Types can be used with other operations as well, like `ecs_add`, `ecs_remove` and `ecs_has`. Whenever an application wants to add or remove multiple components, it is always faster to do this with a type as they approximate constant time performance (`O(1)`), whereas individually adding components is at least `O(n)`.
 
@@ -523,6 +523,127 @@ ecs_set(world, e, Position, {10, 20});
 ```
 
 After the operation it is guaranteed that `e` has `Position`, and that it is set to `{10, 20}`. If the entity did not yet have `Position`, it will be added by the operation. If the entity already had `Position`, it will only assign the value. If there are any `EcsOnSet` systems that match with the `Position` component, they will be invoked after the value is assigned.
+
+### Shared components
+Shared components in Flecs are components that are shared between multiple entities. Where owned components have a 1..1 relationship between a component and an entity, a shared component has a 1..N relationship between the component and entity. Shared components are only stored once in memory, which can drastically reduce memory usage of an application if the same component can be shared across many entities. Additionally, shared components are a fast way to update a component value in constant time (O(1)) for N entities.
+
+There are different mechanisms for sharing components across entities, which are described in the following sections.
+
+#### Prefabs
+A prefab is a special kind of entity in Flecs whos components are shared with any entity to which the prefab is added. Consider the following code example:
+
+```c
+ECS_PREFAB(world, Shape, Square, Color);
+
+ecs_entity_t e1 = ecs_new(world, Position);
+ecs_add(world, e1, Shape);
+
+ecs_entity_t e2 = ecs_new(world, Shape);
+```
+
+The result of this code will be an entity `e1` which has one owned component (`Position`) and two shared components (`Square`, `Color`), and an entity `e2` which only has two shared components (`Square`, `Color`). Both entities will share `Square`, `Color`, as the prefab has been added to both. Thus changing the `Color` for one entity, will change the color for the other one as well.
+
+In the API this is mostly transparent. Consider this example:
+
+```
+Color *color1 = ecs_get_ptr(world, e1, Color);
+Color *color2 = ecs_get_ptr(world, e2, Color);
+```
+
+Here, since both `e1` and `e2` share the color from `Shape`, the pointers `color1` and `color2` will point to the same memory. Modifying either values pointed to by them will change the value of the `Shape` entity as well.
+
+A prefab can be used both as a component (as shown in the first example) and as an entity. A prefab is mostly just a regular entity, which means that all the normal API calls like `ecs_add` and `ecs_remove` will work on a prefab as well, as is demonstrated by this example:
+
+```c
+ecs_add(world, Shape, Size);
+```
+
+After this operation, the `Shape` prefab will have an additional component called `Size`, and all of the entities that added the prefab will now also have `Size` as a shared component.
+
+Systems will treat shared components from prefabs as if they were defined on the entities themselves, thus a system with the query `Square, Color` would match both entities `e1` and `e2` from the example. It should be noted at this point that the system will _not_ match with the `Shape` prefab itself. Prefabs are explicitly excluded from matching with systems, as they should not be evaluated by application logic directly.
+
+##### Overriding prefab components
+A typical usage of prefabs is to specify a common value for entities. Often, code that uses prefabs looks something like this:
+
+```c
+ECS_PREFAB(world, Shape, Square, Color);
+ecs_set(world, Shape, Square, {.size = 50});
+ecs_set(world, Shape, Color, {.r = 255, .g = 0, .b = 0});
+
+ecs_entity_t e = ecs_new(world, Shape);
+```
+
+However, in some scenarios an entity may want to change the value of one of its shared components, without affecting the others. This is possible by _overriding_ the shared component. To override a component, an application can simply use the `ecs_add` operation:
+
+```c
+ecs_add(world, e, Color);
+```
+
+After the operation, the component will have turned into an owned component, and the entity can update its value without affecting the value of the `Shape` prefab (and therefore, of the entities that also share the components from `Shape`). Additionally, the _component value_ of the new owned `Color` component will have been initialized with the value of the shared component. This is an important property that enables many interesting design patterns, while also ensuring that a component value does not suddenly go from initialized (shared) to uninitialized (owned).
+
+Consequently, an entity can un-override a component by removing the component with the `ecs_remove` operation:
+
+```c
+ecs_remove(world, e, Color);
+```
+
+After this operation, the entity will have reverted to using the shared component from the `Shape` prefab. To remove the shared components entirely, the entity can remove the prefab with the `ecs_remove` operation:
+
+```c
+ecs_remove(world, e, Shape);
+```
+
+After this operation, the shared components will no longer appear on the entity.
+
+##### Prefabs and types
+It has been explained how [types](#components-and-types) can be used to create templates for entities, by adding sets of components commonly used together to the same type. When the type is added to the entity, all the components will be added as owned components to the entity. A quick example to recap:
+
+```c
+ECS_TYPE(world, Shape, Square, Color);
+
+ecs_entity_t e = ecs_new(world, Shape);
+```
+
+A limitation of types is that they cannot contain component values, thus after a type has been added to an entity, the value of the component is still uninitialized. With a prefab, it is possible to also define a set of commonly used components that can be added to an entity, and it _is_ possible to define component values, however with prefabs the components are not owned by the entity. It would be nice if there was a middle-ground, where it was both possible to add owned components, that are also initialized.
+
+It turns out this is achievable by combining the type and prefab features. A type can not only contain components, it can also contain prefabs. By adding both a prefab _and_ the components of a prefab to the same type, using the type will automatically override the components of the prefab, which will initialize them with the prefab values. Getting dizzy? Here is a code example:
+
+```c
+ECS_PREFAB(world, ShapePrefab, Square, Color);
+ECS_TYPE(world, Shape, ShapePrefab, Square, Color);
+
+ecs_set(world, ShapePrefab, Square, {.size = 50});
+ecs_set(world, ShapePrefab, Color, {.r = 255, .g = 0, .b = 0});
+
+ecs_entity_t e = ecs_new(world, Shape);
+```
+
+Lets breakdown what happens in this code. First a prefab called `ShapePrefab` is defined as usual with the `Square` and `Color` components. Then, a type called `Shape` is defined with _both_ the `ShapePrefab` _and_ the `Square` and `Color` components. After that, values are assigned to the prefab components, and the type is added to the entity.
+
+When the `Shape` type is added to the entity, first the prefab is added (this is guaranteed, regardless of the order in which the prefab is added to the type). Then, the components from the type are added to the entity. As `Square` and `Color` are already defined as shared components on the entity, adding them again will _override_ the components, just like when they would be overridden when using the `ecs_add` operation. Because overriding a component copies the value from the shared component to the owned component, the new owned components will be initialized with the value from the prefab.
+
+This is a powerful pattern for creating reusable entity templates that result in automatically initialized components, and is one of the preferred ways of instantiating entities.
+
+##### Nesting prefabs
+Just like types, prefabs can also be nested. Consider the following code example:
+
+```c
+ECS_PREFAB(world, ShapePrefab, Position, Color);
+ECS_PREFAB(world, SquareShapePrefab, Shape, Square);
+ECS_PREFAB(world, CircleShapePrefab, Shape, Circle);
+
+ECS_TYPE(world, SquareShape, SquareShapePrefab, Position);
+ECS_TYPE(world, CircleShape, CircleShapePrefab, Position);
+
+ecs_set(world, ShapePrefab, Position, {0, 0});
+ecs_set(world, ShapePrefab, Color, {.r = 255, .g = 0, .b = 0});
+ecs_set(world, SquareShapePrefab, Square, {.size = 50});
+ecs_set(world, CircleShapePrefab, Circle, {.radius = 25});
+
+ecs_entity_t e = ecs_new(world, SquareShape);
+```
+
+In this example, `e` will have an owned component `Position` which is initialized to `{0, 0}`, and `Color`, and `Square` as shared components. Other than with types, where only the union of components of all the nested types are associated with the entity, prefabs will be associated with the entity, and as mentioned in [Overriding prefab components](#overriding-prefab-components) prefabs have to be explicitly removed if an entity wants to disassociate itself from them.
 
 ## Systems
 Systems let applications execute logic on a set of entities that matches a certain component expression. The matching process is continuous, when new entities (or rather, new _entity types_) are created, systems will be automatically matched with those. Systems can be ran by Flecs as part of the built-in frame loop, or by invoking them individually using the Flecs API.
