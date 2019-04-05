@@ -352,7 +352,8 @@ char* ecs_type_tostr(
         if (id) {
             str = *id;
         } else {
-            sprintf(buf, "%" PRIu64, h);
+            int h_int = h;
+            sprintf(buf, "%u", h_int);
             str = buf;
         }
         len = strlen(str);
