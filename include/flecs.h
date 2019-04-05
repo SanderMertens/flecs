@@ -632,15 +632,15 @@ void _ecs_remove(
 FLECS_EXPORT
 void ecs_adopt(
     ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_entity_t child);
+    ecs_entity_t child,
+    ecs_entity_t parent);
 
 /** Orphan a child by a parent */
 FLECS_EXPORT
 void ecs_orphan(
     ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_entity_t child);
+    ecs_entity_t child,
+    ecs_entity_t parent);
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the

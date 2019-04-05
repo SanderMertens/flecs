@@ -327,7 +327,7 @@ A container is an entity that can contain other entities. There are several meth
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
-ecs_entity_t child = ecs_new_child(world, parent, "MyChild", 0);
+ecs_entity_t child = ecs_new_child(world, parent, 0);
 ```
 
 Alternatively, you can add an entity to a container entity after its creation using `ecs_adopt`:
@@ -335,7 +335,7 @@ Alternatively, you can add an entity to a container entity after its creation us
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
 ecs_entity_t child = ecs_new(world, 0);
-ecs_adopt(world, parent, child);
+ecs_adopt(world, child, parent);
 ```
 
 With the `ecs_contains` function you can check whether an entity contains another entity:

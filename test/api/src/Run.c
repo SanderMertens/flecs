@@ -1046,10 +1046,10 @@ void Run_run_w_container_filter() {
     ecs_entity_t parent = ecs_new(world, 0);
 
     /* Adopt child entities */
-    ecs_adopt(world, parent, e_1);
-    ecs_adopt(world, parent, e_4);
-    ecs_adopt(world, parent, e_6);
-    ecs_adopt(world, parent, e_7);
+    ecs_adopt(world, e_1, parent);
+    ecs_adopt(world, e_4, parent);
+    ecs_adopt(world, e_6, parent);
+    ecs_adopt(world, e_7, parent);
 
     /* Get type from parent to use as filter */
     ecs_type_t TParent = ecs_type_from_entity(world, parent);

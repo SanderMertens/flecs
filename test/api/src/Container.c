@@ -103,7 +103,7 @@ void Container_adopt() {
     ecs_entity_t parent = ecs_new(world, 0);
     ecs_entity_t child = ecs_new(world, 0);
 
-    ecs_adopt(world, parent, child);
+    ecs_adopt(world, child, parent);
 
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
@@ -117,11 +117,11 @@ void Container_adopt_again() {
     ecs_entity_t parent = ecs_new(world, 0);
     ecs_entity_t child = ecs_new(world, 0);
 
-    ecs_adopt(world, parent, child);
+    ecs_adopt(world, child, parent);
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
 
-    ecs_adopt(world, parent, child);
+    ecs_adopt(world, child, parent);
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
 
@@ -134,13 +134,13 @@ void Container_adopt_twice() {
     ecs_entity_t parent_1 = ecs_new(world, 0);
     ecs_entity_t child = ecs_new(world, 0);
 
-    ecs_adopt(world, parent_1, child);
+    ecs_adopt(world, child, parent_1);
     test_assert( ecs_contains(world, parent_1, child));
     test_assert( ecs_has(world, parent_1, EcsContainer));
 
     ecs_entity_t parent_2 = ecs_new(world, 0);
 
-    ecs_adopt(world, parent_2, child);
+    ecs_adopt(world, child, parent_2);
     test_assert( ecs_contains(world, parent_1, child));
     test_assert( ecs_contains(world, parent_2, child));
     test_assert( ecs_has(world, parent_2, EcsContainer));
@@ -154,7 +154,7 @@ void Container_orphan_empty() {
     ecs_entity_t parent = ecs_new(world, 0);
     ecs_entity_t child = ecs_new(world, 0);
 
-    ecs_orphan(world, parent, child);
+    ecs_orphan(world, child, parent);
     test_assert( !ecs_contains(world, parent, child));
     test_assert( !ecs_has(world, parent, EcsContainer));
 
@@ -170,7 +170,7 @@ void Container_orphan() {
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
 
-    ecs_orphan(world, parent, child);
+    ecs_orphan(world, child, parent);
     test_assert( !ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
 
@@ -186,11 +186,11 @@ void Container_orphan_again() {
     test_assert( ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
 
-    ecs_orphan(world, parent, child);
+    ecs_orphan(world, child, parent);
     test_assert( !ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
 
-    ecs_orphan(world, parent, child);
+    ecs_orphan(world, child, parent);
     test_assert( !ecs_contains(world, parent, child));
     test_assert( ecs_has(world, parent, EcsContainer));
 
@@ -208,18 +208,18 @@ void Container_orphan_twice() {
     test_assert( ecs_has(world, parent_1, EcsContainer));
     test_assert( !ecs_has(world, parent_2, EcsContainer));
 
-    ecs_adopt(world, parent_2, child);
+    ecs_adopt(world, child, parent_2);
     test_assert( ecs_contains(world, parent_2, child));
     test_assert( ecs_has(world, parent_1, EcsContainer));
     test_assert( ecs_has(world, parent_2, EcsContainer));
 
-    ecs_orphan(world, parent_1, child);
+    ecs_orphan(world, child, parent_1);
     test_assert( !ecs_contains(world, parent_1, child));
     test_assert( ecs_contains(world, parent_2, child));
     test_assert( ecs_has(world, parent_1, EcsContainer));
     test_assert( ecs_has(world, parent_2, EcsContainer));
 
-    ecs_orphan(world, parent_2, child);
+    ecs_orphan(world, child, parent_2);
     test_assert( !ecs_contains(world, parent_1, child));
     test_assert( !ecs_contains(world, parent_2, child));
     test_assert( ecs_has(world, parent_1, EcsContainer));
@@ -235,20 +235,20 @@ void Container_adopt_orphan() {
     ecs_entity_t parent_2 = ecs_new(world, 0);
     ecs_entity_t child = ecs_new(world, 0);
 
-    ecs_adopt(world, parent_1, child);
+    ecs_adopt(world, child, parent_1);
     test_assert( ecs_contains(world, parent_1, child));
     test_assert( ecs_has(world, parent_1, EcsContainer));
 
-    ecs_adopt(world, parent_2, child);
+    ecs_adopt(world, child, parent_2);
     test_assert( ecs_contains(world, parent_2, child));
     test_assert( ecs_has(world, parent_2, EcsContainer));
 
-    ecs_orphan(world, parent_1, child);
+    ecs_orphan(world, child, parent_1);
     test_assert( !ecs_contains(world, parent_1, child));
     test_assert( ecs_contains(world, parent_2, child));
     test_assert( ecs_has(world, parent_1, EcsContainer));
 
-    ecs_orphan(world, parent_2, child);
+    ecs_orphan(world, child, parent_2);
     test_assert( !ecs_contains(world, parent_1, child));
     test_assert( !ecs_contains(world, parent_2, child));
     test_assert( ecs_has(world, parent_2, EcsContainer));
@@ -263,15 +263,15 @@ void Container_adopt_2_orphan_1() {
     ecs_entity_t parent_2 = ecs_new(world, 0);
     ecs_entity_t child = ecs_new(world, 0);
 
-    ecs_adopt(world, parent_1, child);
+    ecs_adopt(world, child, parent_1);
     test_assert( ecs_contains(world, parent_1, child));
     test_assert( ecs_has(world, parent_1, EcsContainer));
 
-    ecs_adopt(world, parent_2, child);
+    ecs_adopt(world, child, parent_2);
     test_assert( ecs_contains(world, parent_2, child));
     test_assert( ecs_has(world, parent_2, EcsContainer));
 
-    ecs_orphan(world, parent_2, child);
+    ecs_orphan(world, child, parent_2);
     test_assert( ecs_contains(world, parent_1, child));
     test_assert( !ecs_contains(world, parent_2, child));
     test_assert( ecs_has(world, parent_2, EcsContainer));

@@ -1051,7 +1051,7 @@ void SystemOnFrame_use_fields_1_owned_1_shared() {
 
     ecs_entity_t e_1 = ecs_set(world, 0, Position, {1, 2});
     ecs_entity_t parent = ecs_set(world, 0, Velocity, {10, 20});
-    ecs_adopt(world, parent, e_1);
+    ecs_adopt(world, e_1, parent);
 
     ecs_progress(world, 1);
 

@@ -39,10 +39,10 @@ void System_w_FromContainer_1_column_from_container() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_adopt(world, parent, e_1);
-    ecs_adopt(world, parent, e_2);
+    ecs_adopt(world, e_1, parent);
+    ecs_adopt(world, e_2, parent);
 
-    ecs_adopt(world, parent, e_3);
+    ecs_adopt(world, e_3, parent);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -96,9 +96,9 @@ void System_w_FromContainer_2_column_1_from_container() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position, Velocity);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_adopt(world, parent, e_1);
-    ecs_adopt(world, parent, e_2);
-    ecs_adopt(world, parent, e_3);
+    ecs_adopt(world, e_1, parent);
+    ecs_adopt(world, e_2, parent);
+    ecs_adopt(world, e_3, parent);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -204,9 +204,9 @@ void System_w_FromContainer_3_column_2_from_container() {
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
     ecs_set(world, parent, Rotation, {3});
 
-    ecs_adopt(world, parent, e_1);
-    ecs_adopt(world, parent, e_2);
-    ecs_adopt(world, parent, e_4);
+    ecs_adopt(world, e_1, parent);
+    ecs_adopt(world, e_2, parent);
+    ecs_adopt(world, e_4, parent);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -266,18 +266,18 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
 
-    ecs_adopt(world, parent_1, e_1);
-    ecs_adopt(world, parent_2, e_1);
+    ecs_adopt(world, e_1, parent_1);
+    ecs_adopt(world, e_1, parent_2);
 
-    ecs_adopt(world, parent_1, e_2);
-    ecs_adopt(world, parent_2, e_2);
+    ecs_adopt(world, e_2, parent_1);
+    ecs_adopt(world, e_2, parent_2);
 
-    ecs_adopt(world, parent_1, e_3);
-    ecs_adopt(world, parent_2, e_3);
+    ecs_adopt(world, e_3, parent_1);
+    ecs_adopt(world, e_3, parent_2);
 
     /* e_4 and e_5 should not be matched */
-    ecs_adopt(world, parent_1, e_4);
-    ecs_adopt(world, parent_2, e_5);
+    ecs_adopt(world, e_4, parent_1);
+    ecs_adopt(world, e_5, parent_2);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -336,10 +336,10 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
 
-    ecs_adopt(world, parent_2, e_1);
-    ecs_adopt(world, parent_2, e_2);
-    ecs_adopt(world, parent_2, e_3);
-    ecs_adopt(world, parent_1, e_4);
+    ecs_adopt(world, e_1, parent_2);
+    ecs_adopt(world, e_2, parent_2);
+    ecs_adopt(world, e_3, parent_2);
+    ecs_adopt(world, e_4, parent_1);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -409,10 +409,10 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     ecs_entity_t parent_3 = ecs_set(world, 0, Mass, {4});
     ecs_set(world, parent_3, Rotation, {5});
 
-    ecs_adopt(world, parent_2, e_1);
-    ecs_adopt(world, parent_2, e_2);
-    ecs_adopt(world, parent_2, e_3);
-    ecs_adopt(world, parent_1, e_4);
+    ecs_adopt(world, e_1, parent_2);
+    ecs_adopt(world, e_2, parent_2);
+    ecs_adopt(world, e_3, parent_2);
+    ecs_adopt(world, e_4, parent_1);
     ecs_adopt(world, parent_3, e_5);
 
     SysTestData ctx = {0};
@@ -477,11 +477,11 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
         ecs_set(world, parent_3, Mass, {5});
     ecs_entity_t parent_4 = ecs_set(world, 0, Velocity, {10, 20});
 
-    ecs_adopt(world, parent_1, e_1);
-    ecs_adopt(world, parent_2, e_2);
+    ecs_adopt(world, e_1, parent_1);
+    ecs_adopt(world, e_2, parent_2);
     ecs_adopt(world, parent_3, e_3);
     ecs_adopt(world, parent_4, e_4);
-    ecs_adopt(world, parent_2, e_5); 
+    ecs_adopt(world, e_5, parent_2); 
     ecs_adopt(world, parent_3, e_5);
 
     SysTestData ctx = {0};

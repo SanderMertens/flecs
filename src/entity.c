@@ -782,8 +782,8 @@ void _ecs_remove(
 
 void ecs_adopt(
     ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_entity_t child)
+    ecs_entity_t child,
+    ecs_entity_t parent)
 {    
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
@@ -799,8 +799,8 @@ void ecs_adopt(
 
 void ecs_orphan(
     ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_entity_t child)
+    ecs_entity_t child,
+    ecs_entity_t parent)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
 
