@@ -1,5 +1,4 @@
 #include <string.h>
-#include <inttypes.h>
 #include <assert.h>
 #include "include/util/time.h"
 #include "include/util/stats.h"
