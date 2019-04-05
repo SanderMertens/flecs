@@ -978,33 +978,33 @@ During the `EcsOnStore` phase the data computed in the frame is rendered, or sto
 #### System phases example
 This is an example of how a typical application that loads data dynamically, uses collision detection and rendering (identifiers between parenthesis are component expressions):
 
-- EcsOnLoad
+- **EcsOnLoad**
   - StreamFromDisk (`Game`, `Player`)
 
-- EcsPostLoad
+- **EcsPostLoad**
   - AddTransformMatrix (`Position | Rotation | Scale`, `!TransformMatrix`)
   - CleanCollisions (`Collision`)
   
-- EcsPreUpdate
+- **EcsPreUpdate**
   - ResetTransformMatrix (`TransformMatrix`)
   
-- EcsOnUpdate
+- **EcsOnUpdate**
   - Move (`Position`, `Velocity`)
 
-- EcsOnValidate
+- **EcsOnValidate**
   - Translate (`Position`, `TransformMatrix`)
   - Rotate (`Rotation`, `TransformMatrix`)
   - Scale (`Scale`, `TransformMatrix`)
   - TransformColliders (`Collider`, `TransformMatrix`)
   - TestForCollisions (`Collider`) -> `Collision`
   
-- EcsPostFrame
+- **EcsPostFrame**
   - OnCollision (`Collision`)
   
-- EcsPreStore
+- **EcsPreStore**
   - CorrectTransform (`Collision`, `TransformMatrix`)
   
-- EcsOnStore
+- **EcsOnStore**
   - Render
 
 ### Reactive systems
@@ -1023,7 +1023,7 @@ Systems that respond to `EcsOnRemove` events are normally executed immediately a
 #### EcsOnSet event
 The `EcsOnSet` event is triggered whenever a component is set to a value. This can happen as a result of an `ecs_set`. Systems responding to an `EcsOnSet` typically react to the data in a component, and require data to be initialized. During the lifecycle of a component, multiple `EcsOnSet` events may be generated, for every time the `ecs_set` function is called.
 
-#### Features
+### Features
 In many situations, a particular feature is realized by multiple systems. For example, a feature that does matrix transformations may have three systems, for automatically adding the `TransformMatrix` component, resetting it to the identity, and doing the actual transform. The exact details on how a feature is split up between systems highly depends on its implementation, and this makes it more complicated for applications to tell which systems are associated with a feature. An application may, for example, want to enable/disable certain features that it does not need.
 
 To reduce this complexity, and to prevent applications from having to depend on specific implementation details, systems can be organized in features. Features combine multiple systems that fulfill a common goal under a single handle, which can be used to enable/disable all systems at the same time. A feature can be defined with the `ECS_TYPE` macro:
