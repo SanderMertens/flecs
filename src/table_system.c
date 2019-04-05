@@ -563,6 +563,10 @@ ecs_entity_t ecs_new_col_system(
             elem = ecs_array_add(&world->post_update_systems, &handle_arr_params);
         } else if (kind == EcsOnLoad) {
             elem = ecs_array_add(&world->on_load_systems, &handle_arr_params);
+        } else if (kind == EcsPostLoad) {
+            elem = ecs_array_add(&world->post_load_systems, &handle_arr_params);            
+        } else if (kind == EcsPreStore) {
+            elem = ecs_array_add(&world->pre_store_systems, &handle_arr_params);
         } else if (kind == EcsOnStore) {
             elem = ecs_array_add(&world->on_store_systems, &handle_arr_params);
         } else {

@@ -123,20 +123,24 @@ void get_memory_stats(
     ecs_map_memory(world->type_sys_set_index, &memory->systems.allocd, &memory->systems.used);
 
     ecs_array_memory(world->on_load_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_array_memory(world->post_load_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->pre_update_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->on_update_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->on_validate_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->post_update_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_array_memory(world->pre_store_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->on_store_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->tasks, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->inactive_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_array_memory(world->on_demand_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
 
     calculate_system_stats(world, world->on_load_systems, &memory->systems.allocd, &memory->systems.used);
+    calculate_system_stats(world, world->post_load_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->pre_update_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->on_update_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->on_validate_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->post_update_systems, &memory->systems.allocd, &memory->systems.used);
+    calculate_system_stats(world, world->pre_store_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->on_store_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->tasks, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->inactive_systems, &memory->systems.allocd, &memory->systems.used);
@@ -283,6 +287,8 @@ int system_stats_arr_inactive(
 
         if (data->base.kind == EcsOnLoad) {
             stats_array = &stats->on_load_systems;
+        } else if (data->base.kind == EcsPostLoad) {
+            stats_array = &stats->post_load_systems;
         } else if (data->base.kind == EcsPreUpdate) {
             stats_array = &stats->pre_update_systems;
         } else if (data->base.kind == EcsOnUpdate) {
@@ -291,6 +297,8 @@ int system_stats_arr_inactive(
             stats_array = &stats->on_validate_systems;
         } else if (data->base.kind == EcsPostUpdate) {
             stats_array = &stats->post_update_systems;
+        } else if (data->base.kind == EcsPreStore) {
+            stats_array = &stats->pre_store_systems;
         } else if (data->base.kind == EcsOnStore) {
             stats_array = &stats->on_store_systems;
         } else if (data->base.kind == EcsManual) {
@@ -386,6 +394,8 @@ void ecs_get_stats(
     stats->system_count += system_stats_arr(
         world, &stats->on_load_systems, world->on_load_systems);
     stats->system_count += system_stats_arr(
+        world, &stats->post_load_systems, world->post_load_systems);        
+    stats->system_count += system_stats_arr(
         world, &stats->pre_update_systems, world->pre_update_systems);
     stats->system_count += system_stats_arr(
         world, &stats->on_update_systems, world->on_update_systems);
@@ -393,6 +403,8 @@ void ecs_get_stats(
         world, &stats->on_validate_systems, world->on_validate_systems);        
     stats->system_count += system_stats_arr(
         world, &stats->post_update_systems, world->post_update_systems);
+    stats->system_count += system_stats_arr(
+        world, &stats->pre_store_systems, world->pre_store_systems);
     stats->system_count += system_stats_arr(
         world, &stats->on_store_systems, world->on_store_systems);
     stats->system_count += system_stats_arr(
@@ -468,10 +480,12 @@ void ecs_free_stats(
     ecs_array_free(stats->tables);
     ecs_array_free(stats->features);
     ecs_array_free(stats->on_load_systems);
+    ecs_array_free(stats->post_load_systems);
     ecs_array_free(stats->pre_update_systems);
     ecs_array_free(stats->on_update_systems);
     ecs_array_free(stats->on_validate_systems);
     ecs_array_free(stats->post_update_systems);
+    ecs_array_free(stats->pre_store_systems);
     ecs_array_free(stats->on_store_systems);
     ecs_array_free(stats->on_demand_systems);
     ecs_array_free(stats->on_add_systems);

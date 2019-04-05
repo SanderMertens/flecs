@@ -158,6 +158,8 @@ void notify_systems_of_table(
     notify_create_table(world, world->pre_update_systems, table);
     notify_create_table(world, world->post_update_systems, table);
     notify_create_table(world, world->on_load_systems, table);
+    notify_create_table(world, world->post_load_systems, table);
+    notify_create_table(world, world->pre_store_systems, table);
     notify_create_table(world, world->on_store_systems, table);
     notify_create_table(world, world->on_validate_systems, table);
     notify_create_table(world, world->on_update_systems, table);
@@ -237,8 +239,12 @@ ecs_array_t** frame_system_array(
         return &world->pre_update_systems;
     } else if (kind == EcsPostUpdate) {
         return &world->post_update_systems;
+    } else if (kind == EcsPostLoad) {
+        return &world->post_load_systems;
     } else if (kind == EcsOnLoad) {
         return &world->on_load_systems;
+    } else if (kind == EcsPreStore) {
+        return &world->pre_store_systems;        
     } else if (kind == EcsOnStore) {
         return &world->on_store_systems;
     } else if (kind == EcsManual) {
@@ -470,7 +476,9 @@ ecs_world_t *ecs_init(void) {
     world->on_validate_systems = ecs_array_new(&handle_arr_params, 0);
     world->pre_update_systems = ecs_array_new(&handle_arr_params, 0);
     world->post_update_systems = ecs_array_new(&handle_arr_params, 0);
+    world->post_load_systems = ecs_array_new(&handle_arr_params, 0);
     world->on_load_systems = ecs_array_new(&handle_arr_params, 0);
+    world->pre_store_systems = ecs_array_new( &handle_arr_params, 0);
     world->on_store_systems = ecs_array_new( &handle_arr_params, 0);
     world->inactive_systems = ecs_array_new(&handle_arr_params, 0);
     world->on_demand_systems = ecs_array_new(&handle_arr_params, 0);
@@ -617,6 +625,8 @@ int ecs_fini(
     col_systems_deinit(world, world->pre_update_systems);
     col_systems_deinit(world, world->post_update_systems);
     col_systems_deinit(world, world->on_load_systems);
+    col_systems_deinit(world, world->post_load_systems);
+    col_systems_deinit(world, world->pre_store_systems);
     col_systems_deinit(world, world->on_store_systems);
     col_systems_deinit(world, world->on_demand_systems);
     col_systems_deinit(world, world->inactive_systems);
@@ -629,6 +639,8 @@ int ecs_fini(
     ecs_array_free(world->pre_update_systems);
     ecs_array_free(world->post_update_systems);
     ecs_array_free(world->on_load_systems);
+    ecs_array_free(world->post_load_systems);
+    ecs_array_free(world->pre_store_systems);
     ecs_array_free(world->on_store_systems);
 
     ecs_array_free(world->inactive_systems);
@@ -841,6 +853,7 @@ bool ecs_progress(
     /* -- System execution starts here -- */
 
     run_single_thread_stage(world, world->on_load_systems);
+    run_single_thread_stage(world, world->post_load_systems);
 
     if (has_threads) {
         run_multi_thread_stage(world, world->pre_update_systems);
@@ -856,6 +869,7 @@ bool ecs_progress(
 
     run_tasks(world);
 
+    run_single_thread_stage(world, world->pre_store_systems);
     run_single_thread_stage(world, world->on_store_systems);
 
     /* -- System execution stops here -- */
