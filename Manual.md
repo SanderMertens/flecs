@@ -504,7 +504,7 @@ For more details on how handles work, see [Handles](#handles).
 #### Remove components
 Flecs allows applications to remove owned components with the `ecs_remove` operation. The operation accepts an entity and a _type_ handle, and can be used like this:
 
-```
+```c
 ecs_remove(world, e, Position);
 ```
 
@@ -548,7 +548,7 @@ The result of this code will be an entity `e1` which has one owned component (`P
 
 In the API this is mostly transparent. Consider this example:
 
-```
+```c
 Color *color1 = ecs_get_ptr(world, e1, Color);
 Color *color2 = ecs_get_ptr(world, e2, Color);
 ```
