@@ -508,6 +508,7 @@ ecs_world_t *ecs_init(void) {
     world->measure_system_time = false;
     world->last_handle = 0;
     world->should_quit = false;
+    world->should_match = false;
 
     world->frame_start = (ecs_time_t){0, 0};
     world->frame_time = 0;
@@ -718,6 +719,34 @@ ecs_entity_t ecs_lookup(
 }
 
 static
+void rematch_system_array(
+    ecs_world_t *world,
+    ecs_array_t *systems)
+{
+    uint32_t i, count = ecs_array_count(systems);
+    ecs_entity_t *buffer = ecs_array_buffer(systems);
+
+    for (i = 0; i < count; i ++) {
+        ecs_rematch_system(world, buffer[i]);
+    }
+}
+
+static
+void rematch_systems(
+    ecs_world_t *world)
+{
+    rematch_system_array(world, world->on_load_systems);
+    rematch_system_array(world, world->post_load_systems);
+    rematch_system_array(world, world->pre_update_systems);
+    rematch_system_array(world, world->on_update_systems);
+    rematch_system_array(world, world->on_validate_systems);
+    rematch_system_array(world, world->post_update_systems);
+    rematch_system_array(world, world->pre_store_systems);
+    rematch_system_array(world, world->on_store_systems);    
+    rematch_system_array(world, world->inactive_systems);   
+}
+
+static
 void run_single_thread_stage(
     ecs_world_t *world,
     ecs_array_t *systems)
@@ -849,6 +878,11 @@ bool ecs_progress(
     world->merge_time = 0;
 
     bool has_threads = ecs_array_count(world->worker_threads) != 0;
+
+    if (world->should_match) {
+        rematch_systems(world);
+        world->should_match = false;
+    }
 
     /* -- System execution starts here -- */
 

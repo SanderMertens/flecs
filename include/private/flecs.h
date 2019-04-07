@@ -294,6 +294,11 @@ int ecs_parse_component_action(
     const char *source_id,
     void *data);
 
+/* Trigger rematch of system */
+void ecs_rematch_system(
+    ecs_world_t *world,
+    ecs_entity_t system);
+
 /* -- Worker API -- */
 
 /* Compute schedule based on current number of entities matching system */

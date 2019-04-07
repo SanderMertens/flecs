@@ -364,7 +364,7 @@ uint32_t commit_w_type(
     }
 
     if (old_index < 0) {
-        /* Mark change in watched entity */
+        world->should_match = true;
     }
 
     if (type_id) {

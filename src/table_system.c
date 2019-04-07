@@ -1,4 +1,4 @@
-#include <string.h>
+ #include <string.h>
 #include <assert.h>
 #include "include/private/flecs.h"
 #include "include/util/time.h"
@@ -328,6 +328,93 @@ void add_table(
     ecs_table_register_system(world, table, system);
 }
 
+/* Utility function to update an index to a new value after a table has been
+ * removed from the system */
+static
+bool update_table_index(
+    EcsColSystem *system_data,
+    ecs_array_t *tables,
+    uint32_t data_index,
+    uint32_t old_index,
+    uint32_t new_index)
+{
+    int32_t *table = ecs_array_buffer(tables);
+    int32_t i, count = ecs_array_count(tables);
+
+    for (i = 0; i < count; i ++) {
+        if (table[data_index] == old_index) {
+            table[data_index] = new_index;
+            return true;
+        }
+
+        table = ECS_OFFSET(
+            table, system_data->table_params.element_size);
+    }
+
+    return false;
+}
+
+static
+void update_table_data(
+    ecs_world_t *world,
+    EcsColSystem *system_data,
+    int32_t *table_data,
+    uint32_t data_index,
+    ecs_array_t *data_array,
+    ecs_array_params_t *data_params)
+{
+    uint32_t index = table_data[data_index];
+    if (index) {
+        uint32_t count = ecs_array_count(data_array);
+
+        if (index == count) {
+            ecs_array_remove_last(data_array);
+        } else {
+            /* Removing the refs for this table will cause the ref index for
+             * another table to become invalid. Find the table for the last
+             * reference array, and change it to ref_index */
+            if (!update_table_index(
+                system_data, 
+                system_data->tables, 
+                data_index, 
+                count, 
+                index)) 
+            {
+                update_table_index(
+                    system_data, 
+                    system_data->inactive_tables, 
+                    data_index, 
+                    count, 
+                    index);
+            }
+
+            ecs_array_remove_index(data_array, data_params, index);
+        }
+    }
+}
+
+/* Remove table */
+static
+void remove_table(
+    ecs_world_t *world,
+    EcsColSystem *system_data,
+    ecs_array_t *tables,
+    int32_t index)
+{
+    int32_t *table_data = ecs_array_get(
+        tables, &system_data->table_params, index);
+
+    update_table_data(
+        world, system_data, table_data, REFS_INDEX, system_data->refs, 
+        &system_data->ref_params);
+
+    update_table_data(
+        world, system_data, table_data, COMPONENTS_INDEX, system_data->components, 
+        &system_data->component_params);        
+
+    ecs_array_remove(tables, &system_data->table_params, table_data);
+}
+
 /* Match table with system */
 static
 bool match_table(
@@ -422,6 +509,29 @@ void match_tables(
             add_table(world, system, system_data, table);
         }
     }
+}
+
+/** Check if a table was matched with the system */
+static
+int32_t table_matched(
+    ecs_world_t *world,
+    EcsColSystem *system_data,
+    ecs_array_t *tables,
+    uint32_t table_index)
+{
+    uint32_t i, count = ecs_array_count(tables);
+    int32_t *table_data = ecs_array_buffer(tables);
+    uint32_t elem_size = system_data->table_params.element_size;
+
+    for (i = 0; i < count; i ++) {
+        if (*table_data == table_index) {
+            return i;
+        }
+
+        table_data = ECS_OFFSET(table_data, elem_size);
+    }
+
+    return -1;
 }
 
 /* -- Private functions -- */
@@ -580,6 +690,40 @@ ecs_entity_t ecs_new_col_system(
     *elem = result;
 
     return result;
+}
+
+void ecs_rematch_system(
+    ecs_world_t *world,
+    ecs_entity_t system)
+{
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, 0);
+
+    if (system_data->refs) {
+        ecs_array_t *tables = world->main_stage.tables;
+        uint32_t i, count = ecs_array_count(tables);
+        ecs_table_t *buffer = ecs_array_buffer(tables);
+
+        for (i = 0; i < count; i ++) {
+            if (match_table(world, &buffer[i], system_data)) {
+                if (!table_matched(world, system_data, system_data->tables, i)) {
+                    add_table(world, system, system_data, &buffer[i]);
+                }
+            } else {
+                int32_t match = table_matched(world, system_data, system_data->tables, i);
+                if (match) {
+                    remove_table(world, system_data, system_data->tables, match);
+                } else {
+                    match = table_matched(
+                        world, system_data, system_data->inactive_tables, i);
+                    if (match) {
+                        remove_table(
+                            world, system_data, system_data->inactive_tables, match);
+                    }
+                }
+            }
+        }
+    }
 }
 
 /* -- Public API -- */

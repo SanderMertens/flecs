@@ -347,6 +347,7 @@ struct ecs_world_t {
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */
     bool should_quit;             /* Did a system signal that app should quit */
+    bool should_match;            /* Should tablea be rematched */
 };
 
 
