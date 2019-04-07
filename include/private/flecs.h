@@ -288,8 +288,8 @@ bool ecs_notify_row_system(
 /* Callback for parse_component_expr that stores result as ecs_system_column_t's */
 int ecs_parse_component_action(
     ecs_world_t *world,
-    EcsSystemExprElemKind elem_kind,
-    EcsSystemExprOperKind oper_kind,
+    ecs_system_expr_elem_kind_t elem_kind,
+    ecs_system_expr_oper_kind_t oper_kind,
     const char *component_id,
     const char *source_id,
     void *data);

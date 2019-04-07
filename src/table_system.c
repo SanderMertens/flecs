@@ -445,8 +445,8 @@ bool match_table(
 
     for (i = 0; i < column_count; i ++) {
         ecs_system_column_t *elem = &buffer[i];
-        EcsSystemExprElemKind elem_kind = elem->kind;
-        EcsSystemExprOperKind oper_kind = elem->oper_kind;
+        ecs_system_expr_elem_kind_t elem_kind = elem->kind;
+        ecs_system_expr_oper_kind_t oper_kind = elem->oper_kind;
 
         if (oper_kind == EcsOperAnd) {
             if (elem_kind == EcsFromSelf) {
@@ -692,6 +692,25 @@ ecs_entity_t ecs_new_col_system(
     return result;
 }
 
+static
+bool has_refs(
+    EcsColSystem *system_data)
+{
+    uint32_t i, count = ecs_array_count(system_data->base.columns);
+    ecs_system_column_t *columns = ecs_array_buffer(system_data->base.columns);
+
+    for (i = 0; i < count; i ++) {
+        ecs_system_expr_elem_kind_t elem_kind = columns[i].kind;
+        if (elem_kind != EcsFromSelf && elem_kind != EcsFromId) {
+            if (columns[i].oper_kind != EcsOperNot) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 void ecs_rematch_system(
     ecs_world_t *world,
     ecs_entity_t system)
@@ -699,24 +718,25 @@ void ecs_rematch_system(
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, 0);
 
-    if (system_data->refs) {
+    if (has_refs(system_data)) {
         ecs_array_t *tables = world->main_stage.tables;
         uint32_t i, count = ecs_array_count(tables);
         ecs_table_t *buffer = ecs_array_buffer(tables);
 
         for (i = 0; i < count; i ++) {
             if (match_table(world, &buffer[i], system_data)) {
-                if (!table_matched(world, system_data, system_data->tables, i)) {
+                if (table_matched(world, system_data, system_data->tables, i) == -1) {
                     add_table(world, system, system_data, &buffer[i]);
                 }
             } else {
                 int32_t match = table_matched(world, system_data, system_data->tables, i);
-                if (match) {
+
+                if (match != -1) {
                     remove_table(world, system_data, system_data->tables, match);
                 } else {
                     match = table_matched(
                         world, system_data, system_data->inactive_tables, i);
-                    if (match) {
+                    if (match != -1) {
                         remove_table(
                             world, system_data, system_data->inactive_tables, match);
                     }

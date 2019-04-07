@@ -329,7 +329,8 @@
                 "3_column_2_from_different_container",
                 "2_column_1_from_container_w_not",
                 "3_column_1_from_comtainer_1_from_container_w_not",
-                "2_column_1_from_container_w_or"
+                "2_column_1_from_container_w_or",
+                "add_component_after_match"
             ]
         }, {
             "id": "System_w_FromId",

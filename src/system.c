@@ -159,8 +159,8 @@ void ecs_system_compute_and_families(
 
     for (i = 0; i < column_count; i ++) {
         ecs_system_column_t *elem = &buffer[i];
-        EcsSystemExprElemKind elem_kind = elem->kind;
-        EcsSystemExprOperKind oper_kind = elem->oper_kind;
+        ecs_system_expr_elem_kind_t elem_kind = elem->kind;
+        ecs_system_expr_oper_kind_t oper_kind = elem->oper_kind;
 
         if (elem_kind == EcsFromSelf) {
             if (oper_kind == EcsOperAnd) {
@@ -179,8 +179,8 @@ void ecs_system_compute_and_families(
 /** Parse callback that adds component to the components array for a system */
 int ecs_parse_component_action(
     ecs_world_t *world,
-    EcsSystemExprElemKind elem_kind,
-    EcsSystemExprOperKind oper_kind,
+    ecs_system_expr_elem_kind_t elem_kind,
+    ecs_system_expr_oper_kind_t oper_kind,
     const char *component_id,
     const char *source_id,
     void *data)

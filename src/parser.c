@@ -17,8 +17,8 @@ const char *skip_space(
 static
 char* parse_complex_elem(
     char *bptr,
-    EcsSystemExprElemKind *elem_kind,
-    EcsSystemExprOperKind *oper_kind,
+    ecs_system_expr_elem_kind_t *elem_kind,
+    ecs_system_expr_oper_kind_t *oper_kind,
     const char * *source)
 {
     if (bptr[0] == '!') {
@@ -70,8 +70,8 @@ char* parse_complex_elem(
 static
 int has_tables(
     ecs_world_t *world,
-    EcsSystemExprElemKind elem_kind,
-    EcsSystemExprOperKind oper_kind,
+    ecs_system_expr_elem_kind_t elem_kind,
+    ecs_system_expr_oper_kind_t oper_kind,
     const char *component_id,
     const char *source_id,
     void *data)
@@ -128,8 +128,8 @@ int ecs_parse_component_expr(
     ecs_assert(buffer != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     bool complex_expr = false;
-    EcsSystemExprElemKind elem_kind = EcsFromSelf;
-    EcsSystemExprOperKind oper_kind = EcsOperAnd;
+    ecs_system_expr_elem_kind_t elem_kind = EcsFromSelf;
+    ecs_system_expr_oper_kind_t oper_kind = EcsOperAnd;
     const char *source;
 
     for (bptr = buffer, ch = sig[0], ptr = sig; ch; ptr++) {

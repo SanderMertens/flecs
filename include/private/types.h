@@ -39,37 +39,37 @@ typedef struct EcsComponent {
 } EcsComponent;
 
 /** Type that is used by systems to indicate where to fetch a component from */
-typedef enum EcsSystemExprElemKind {
+typedef enum ecs_system_expr_elem_kind_t {
     EcsFromSelf,            /* Get component from self (default) */
     EcsFromContainer,       /* Get component from container */
     EcsFromSystem,          /* Get component from system */
     EcsFromId,              /* Get entity handle by id */
     EcsFromSingleton,       /* Get singleton component */
     EcsFromEntity           /* Get component from other entity */
-} EcsSystemExprElemKind;
+} ecs_system_expr_elem_kind_t;
 
 /** Type describing an operator used in an signature of a system signature */
-typedef enum EcsSystemExprOperKind {
+typedef enum ecs_system_expr_oper_kind_t {
     EcsOperAnd = 0,
     EcsOperOr = 1,
     EcsOperNot = 2,
     EcsOperOptional = 3,
     EcsOperLast = 4
-} EcsSystemExprOperKind;
+} ecs_system_expr_oper_kind_t;
 
 /** Callback used by the system signature expression parser */
 typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,
-    EcsSystemExprElemKind elem_kind,
-    EcsSystemExprOperKind oper_kind,
+    ecs_system_expr_elem_kind_t elem_kind,
+    ecs_system_expr_oper_kind_t oper_kind,
     const char *component,
     const char *source,
     void *ctx);
 
 /** Type that describes a single column in the system signature */
 typedef struct ecs_system_column_t {
-    EcsSystemExprElemKind kind;       /* Element kind (Entity, Component) */
-    EcsSystemExprOperKind oper_kind;  /* Operator kind (AND, OR, NOT) */
+    ecs_system_expr_elem_kind_t kind;       /* Element kind (Entity, Component) */
+    ecs_system_expr_oper_kind_t oper_kind;  /* Operator kind (AND, OR, NOT) */
     union {
         ecs_type_t type;             /* Used for OR operator */
         ecs_entity_t component;      /* Used for AND operator */
