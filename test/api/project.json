@@ -333,7 +333,8 @@
                 "add_component_after_match",
                 "add_component_after_match_unmatch",
                 "add_component_after_match_unmatch_match",
-                "add_component_after_match_2_systems"
+                "add_component_after_match_2_systems",
+                "add_component_in_progress_after_match"
             ]
         }, {
             "id": "System_w_FromId",

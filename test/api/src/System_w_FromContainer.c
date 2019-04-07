@@ -751,3 +751,65 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
 
     ecs_fini(world);
 }
+
+static
+void AddMass(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Mass, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_set(rows->world, rows->entities[i], Mass, {2});
+    }
+}
+
+void System_w_FromContainer_add_component_in_progress_after_match() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Tag);
+
+    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e_4, Position);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, AddMass, EcsOnAdd, Tag, ID.Mass);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_adopt(world, e_1, parent);
+    ecs_adopt(world, e_2, parent);
+
+    ecs_add(world, parent, Tag);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Iter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
+    test_int(ctx.s[0][0], parent);
+    test_int(ctx.c[0][1], ecs_to_entity(Position));
+    test_int(ctx.s[0][1], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
