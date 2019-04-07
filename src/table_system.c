@@ -701,10 +701,14 @@ bool has_refs(
 
     for (i = 0; i < count; i ++) {
         ecs_system_expr_elem_kind_t elem_kind = columns[i].kind;
-        if (elem_kind != EcsFromSelf && elem_kind != EcsFromId) {
-            if (columns[i].oper_kind != EcsOperNot) {
-                return true;
-            }
+
+        if (columns[i].oper_kind == EcsOperNot && elem_kind == EcsFromId) {
+            /* Special case: if oper kind is Not and the query contained a
+             * shared expression, the expression is translated to FromId to
+             * prevent resolving the ref */
+            return true;
+        } else if (elem_kind != EcsFromSelf && elem_kind != EcsFromId) {
+            return true;
         }
     }
 

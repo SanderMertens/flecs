@@ -587,5 +587,47 @@ void System_w_FromContainer_add_component_after_match() {
     test_int(p->y, 40);
 
     ecs_fini(world);
+}
 
+void System_w_FromContainer_add_component_after_match_unmatch() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e_3, Position);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, !CONTAINER.Mass, Position);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_adopt(world, e_1, parent);
+    ecs_adopt(world, e_2, parent);
+
+    ecs_set(world, parent, Mass, {2});
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Iter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_3);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_to_entity(Position));
+    test_int(ctx.s[0][1], 0);
+
+    Position *p = ecs_get_ptr(world, e_3, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
 }
