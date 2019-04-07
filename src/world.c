@@ -727,7 +727,16 @@ void rematch_system_array(
     ecs_entity_t *buffer = ecs_array_buffer(systems);
 
     for (i = 0; i < count; i ++) {
-        ecs_rematch_system(world, buffer[i]);
+        ecs_entity_t system = buffer[i];
+        ecs_rematch_system(world, system);
+
+        if (system != buffer[i]) {
+            /* It is possible that rematching a system caused it to be activated
+             * or deactived. In that case, reevaluate the current element again,
+             * as it will now contain a different system. */
+            i --;
+            count = ecs_array_count(systems);
+        }
     }
 }
 

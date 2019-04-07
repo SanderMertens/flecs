@@ -292,6 +292,8 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not(voi
 void System_w_FromContainer_2_column_1_from_container_w_or(void);
 void System_w_FromContainer_add_component_after_match(void);
 void System_w_FromContainer_add_component_after_match_unmatch(void);
+void System_w_FromContainer_add_component_after_match_unmatch_match(void);
+void System_w_FromContainer_add_component_after_match_2_systems(void);
 
 // Testsuite 'System_w_FromId'
 void System_w_FromId_2_column_1_from_id(void);
@@ -1514,7 +1516,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "System_w_FromContainer",
-        .testcase_count = 9,
+        .testcase_count = 11,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_column_from_container",
@@ -1551,6 +1553,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_component_after_match_unmatch",
                 .function = System_w_FromContainer_add_component_after_match_unmatch
+            },
+            {
+                .id = "add_component_after_match_unmatch_match",
+                .function = System_w_FromContainer_add_component_after_match_unmatch_match
+            },
+            {
+                .id = "add_component_after_match_2_systems",
+                .function = System_w_FromContainer_add_component_after_match_2_systems
             }
         }
     },
