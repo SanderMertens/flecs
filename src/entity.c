@@ -14,8 +14,8 @@ void copy_column(
 
     if (size) {
         ecs_array_params_t param = {.element_size = new_column->size};
-        void *dst = ecs_array_get(new_column->data, &param, new_index);
-        void *src = ecs_array_get(old_column->data, &param, old_index);
+        void *dst = ecs_array_get(new_column->data, &param, new_index - 1);
+        void *src = ecs_array_get(old_column->data, &param, old_index - 1);
             
         ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -78,7 +78,7 @@ void* get_row_ptr(
 
     if (param.element_size) {
         ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
-        return ecs_array_get(column->data, &param, index);
+        return ecs_array_get(column->data, &param, index - 1);
     } else {
         return NULL;
     }
@@ -373,7 +373,7 @@ uint32_t commit_w_type(
             }
 
             new_index = ecs_table_insert(world, new_table, new_columns, entity);
-            assert(new_index != -1);
+            assert(new_index != 0);
 
             if (new_columns != columns) {
                 ecs_map_set(stage->data_stage, type_id, new_columns);
@@ -420,7 +420,7 @@ uint32_t commit_w_type(
          */
         if (to_remove && old_index != -1) {
             merged = notify_post_merge(
-                world, old_table, old_columns, old_index, 1, to_remove);
+                world, old_table, old_columns, old_index - 1, 1, to_remove);
         }
 
         /* After the cleanup code has been invoked we can finally remove the
@@ -440,11 +440,11 @@ uint32_t commit_w_type(
     if (type_id) {
         if (to_add) {
             notify_pre_merge (
-                world, new_table, new_columns, new_index, 1, to_add, 
+                world, new_table, new_columns, new_index - 1, 1, to_add, 
                 world->type_sys_add_index);
 
             copy_from_prefab(
-                world, stage, new_table, entity, new_index, 1, type_id, to_add);
+                world, stage, new_table, entity, new_index - 1, 1, type_id, to_add);
         }     
     }
 
@@ -525,6 +525,29 @@ void ecs_merge_entity(
     }
 }
 
+void ecs_set_watching(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    bool watching)
+{    
+    int64_t row64 = ecs_map_get64(world->main_stage.entity_index, entity);
+    ecs_row_t row = ecs_to_row(row64);
+
+    /*if (watching) {
+        if (row.index > 0) {
+            row.index *= -1;
+            ecs_map_set64(
+                world->main_stage.entity_index, entity, ecs_from_row(row));
+        }
+    } else {
+        if (row.index < 0) {
+            row.index *= -1;
+            ecs_map_set64(
+                world->main_stage.entity_index, entity, ecs_from_row(row));
+        }
+    }*/
+}
+
 /* -- Public functions -- */
 
 ecs_entity_t ecs_clone(
@@ -583,7 +606,7 @@ ecs_entity_t ecs_clone(
                 /* A clone with value is equivalent to a set */
                 ecs_notify(
                     world_arg, world->type_sys_set_index, from_table->type_id, 
-                    to_table, to_columns, to_row.index, 1);
+                    to_table, to_columns, to_row.index - 1, 1);
             }
         }
     }
@@ -671,11 +694,11 @@ ecs_entity_t _ecs_new_w_count(
 
         /* Now we can notify matching OnAdd row systems in bulk */
         notify_pre_merge(
-            world_arg, table, table->columns, row, count, 
+            world_arg, table, table->columns, row - 1, count, 
             type, world->type_sys_add_index);
         
         /* Check if there are prefabs */
-        copy_from_prefab(world, stage, table, result, row, count, type, type);
+        copy_from_prefab(world, stage, table, result, row - 1, count, type, type);
     } 
 
     return result;
@@ -866,7 +889,7 @@ ecs_entity_t _ecs_set_ptr_intern(
     memcpy(dst, ptr, size);
 
     notify_pre_merge(
-        world_arg, info.table, info.columns, info.index, 1, type,
+        world_arg, info.table, info.columns, info.index - 1, 1, type,
         world->type_sys_set_index);
 
     return entity;

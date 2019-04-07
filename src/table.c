@@ -166,7 +166,7 @@ uint32_t ecs_table_insert(
     }
 
     /* Return index of last added entity */
-    return index;
+    return index + 1;
 }
 
 void ecs_table_delete(
@@ -177,6 +177,8 @@ void ecs_table_delete(
     ecs_table_column_t *columns = table->columns;
     ecs_array_t *entity_column = columns[0].data;
     uint32_t count = ecs_array_count(entity_column);
+
+    index --;
 
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -203,7 +205,7 @@ void ecs_table_delete(
         /* Last entity in table is now moved to index of removed entity */
         ecs_row_t row;
         row.type_id = table->type_id;
-        row.index = index;
+        row.index = index + 1;
         ecs_map_set64(world->main_stage.entity_index, to_move, ecs_from_row(row));
 
         /* Decrease size of entity column */
@@ -271,7 +273,7 @@ uint32_t ecs_table_grow(
     }
 
     /* Return index of first added entity */
-    return row_count - count;
+    return row_count - count + 1;
 }
 
 int16_t ecs_table_dim(

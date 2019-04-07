@@ -166,12 +166,12 @@ ecs_type_t ecs_type_from_handle(
         if (row.type_id) {
             table = ecs_world_get_table(world, stage, row.type_id);
             columns = table->columns;
-            index = row.index;
+            index = row.index - 1;
         }
     } else {
         table = info->table;
         columns = info->columns;
-        index = info->index;
+        index = info->index - 1;
     }
 
     if (table) {
@@ -501,7 +501,7 @@ ecs_entity_t ecs_new_prefab(
     const char *id,
     const char *sig)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETERS, NULL);
     EcsTypeComponent type = {0};
 
     ecs_entity_t result = ecs_lookup(world, id);
@@ -527,7 +527,7 @@ ecs_entity_t ecs_new_entity(
     const char *id,
     const char *components)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETERS, NULL);
     EcsTypeComponent type = {0};
 
     ecs_entity_t result = ecs_lookup(world, id);

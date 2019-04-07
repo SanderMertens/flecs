@@ -183,8 +183,8 @@ typedef struct ecs_table_t {
  * (identified by a type_id) is stored, at which index. Entries in the 
  * world::entity_index are of type ecs_row_t. */
 typedef struct ecs_row_t {
-    ecs_type_t type_id;              /* Identifies a type (and table) in world */
-    uint32_t index;               /* Index of the entity in its table */
+    ecs_type_t type_id;           /* Identifies a type (and table) in world */
+    int32_t index;                /* Index of the entity in its table */
 } ecs_row_t;
 
 /** Supporting type that internal functions pass around to ensure that data

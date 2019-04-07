@@ -131,8 +131,8 @@ void bootstrap_component(
     EcsComponent *component_data = ecs_array_buffer(table->columns[1].data);
     EcsId *id_data = ecs_array_buffer(table->columns[2].data);
     
-    component_data[index].size = size;
-    id_data[index] = id;
+    component_data[index - 1].size = size;
+    id_data[index - 1] = id;
 }
 
 static
