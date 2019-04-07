@@ -287,6 +287,8 @@ void add_table(
                         world, component, EcsComponent);
                 
                 if (component_data->size) {
+                    ecs_entity_t e;
+
                     if (!ref_data) {
                         ref_data = get_ref_data(system_data, table_data);
                         table_data[REFS_COUNT] = 0;
@@ -294,14 +296,15 @@ void add_table(
 
                     /* Find the entity for the component */
                     if (column->kind == EcsFromSingleton) {
-                        ref_data[ref].entity = 0;
+                        e = 0;
                     } else if (column->kind == EcsFromEntity) {
-                        ref_data[ref].entity = entity;
+                        e = entity;
                     } else {
-                        ref_data[ref].entity = get_entity_for_component(
+                        e = get_entity_for_component(
                             world, entity, table_type, component);
                     }
 
+                    ref_data[ref].entity = e;
                     ref_data[ref].component = component;
                     ref ++;
 
@@ -728,9 +731,9 @@ ecs_entity_t _ecs_run_w_filter(
                 system_data->refs, &system_data->ref_params, ref_index - 1);
 
             /* Resolve references */
-            int i, count = table[REFS_COUNT];
+            int i, ref_count = table[REFS_COUNT];
 
-            for (i = 0; i < count; i ++) {
+            for (i = 0; i < ref_count; i ++) {
                 ecs_entity_info_t entity_info = {0};
 
                 info.ref_ptrs[i] = get_ptr(real_world, &real_world->main_stage,

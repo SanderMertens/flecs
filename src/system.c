@@ -220,6 +220,8 @@ int ecs_parse_component_action(
             if (!elem->source) {
                 ecs_abort(ECS_UNRESOLVED_IDENTIFIER, source_id);
             }
+
+            ecs_set_watching(world, elem->source, true);
         }
 
     /* OR columns store a type id instead of a single component */

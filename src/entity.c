@@ -6,14 +6,19 @@
 static
 void copy_column(
     ecs_table_column_t *new_column,
-    uint32_t new_index,
+    int32_t new_index,
     ecs_table_column_t *old_column,
-    uint32_t old_index)
+    int32_t old_index)
 {
+    ecs_assert(new_index > 0, ECS_INTERNAL_ERROR, NULL);
+
     uint32_t size = new_column->size;
 
     if (size) {
         ecs_array_params_t param = {.element_size = new_column->size};
+
+        if (old_index < 0) old_index *= -1;
+        
         void *dst = ecs_array_get(new_column->data, &param, new_index - 1);
         void *src = ecs_array_get(old_column->data, &param, old_index - 1);
             
@@ -28,10 +33,10 @@ static
 void copy_row(
     ecs_array_t *new_type,
     ecs_table_column_t *new_columns,
-    uint32_t new_index,
+    int32_t new_index,
     ecs_array_t *old_type,
     ecs_table_column_t *old_columns,
-    uint32_t old_index)
+    int32_t old_index)
 {
     uint16_t i_new, new_component_count = ecs_array_count(new_type);
     uint16_t i_old = 0, old_component_count = ecs_array_count(old_type);
@@ -65,12 +70,16 @@ static
 void* get_row_ptr(
     ecs_array_t *type,
     ecs_table_column_t *columns,
-    uint32_t index,
+    int32_t index,
     ecs_entity_t component)
 {
     int16_t column_index = ecs_type_index_of(type, component);
     if (column_index == -1) {
         return NULL;
+    }
+
+    if (index < 0) {
+        index *= -1;
     }
 
     ecs_table_column_t *column = &columns[column_index + 1];
@@ -314,7 +323,7 @@ uint32_t commit_w_type(
     ecs_table_column_t *new_columns, *old_columns;
     ecs_map_t *entity_index;
     ecs_type_t old_type_id = 0;
-    int32_t new_index = -1, old_index = -1;
+    int32_t new_index = 0, old_index = 0;
     bool in_progress = world->in_progress;
     ecs_entity_t entity = info->entity;
     ecs_array_t *old_type = NULL;
@@ -352,6 +361,10 @@ uint32_t commit_w_type(
         }
 
         old_type = old_table->type;
+    }
+
+    if (old_index < 0) {
+        /* Mark change in watched entity */
     }
 
     if (type_id) {
@@ -393,6 +406,12 @@ uint32_t commit_w_type(
 
     if (type_id) {
         ecs_row_t new_row = (ecs_row_t){.type_id = type_id, .index = new_index};
+
+        /* If old row was being watched, make sure new row is as well */
+        if (old_index < 0) {
+            new_row.index *= -1;
+        }
+
         ecs_map_set64(entity_index, entity, ecs_from_row(new_row));
     } else {
         if (in_progress) {
@@ -418,7 +437,7 @@ uint32_t commit_w_type(
          * update the entity index, so we need to make sure the index is up to
          * date before invoking the callback.
          */
-        if (to_remove && old_index != -1) {
+        if (to_remove && old_index) {
             merged = notify_post_merge(
                 world, old_table, old_columns, old_index - 1, 1, to_remove);
         }
@@ -533,7 +552,7 @@ void ecs_set_watching(
     int64_t row64 = ecs_map_get64(world->main_stage.entity_index, entity);
     ecs_row_t row = ecs_to_row(row64);
 
-    /*if (watching) {
+    if (watching) {
         if (row.index > 0) {
             row.index *= -1;
             ecs_map_set64(
@@ -545,7 +564,7 @@ void ecs_set_watching(
             ecs_map_set64(
                 world->main_stage.entity_index, entity, ecs_from_row(row));
         }
-    }*/
+    }
 }
 
 /* -- Public functions -- */
@@ -634,28 +653,6 @@ ecs_entity_t _ecs_new(
     }
 
     return entity;
-}
-
-ecs_entity_t _ecs_new_child(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_type_t type)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-
-    ecs_type_t TFullType = type;
-    
-    if (parent) {
-        if (!ecs_has(world, parent, EcsContainer)) {
-            ecs_add(world, parent, EcsContainer);
-        }
-        ecs_type_t TParentType = ecs_type_from_entity(world, parent);
-        TFullType = ecs_merge_type(world, FullType, ParentType, 0);
-    }
-
-    ecs_entity_t result = ecs_new(world, FullType);
-
-    return result;
 }
 
 ecs_entity_t _ecs_new_w_count(
@@ -803,6 +800,29 @@ void _ecs_remove(
     commit_w_type(world, stage, &info, dst_type, 0, type);
 }
 
+ecs_entity_t _ecs_new_child(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_type_t type)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
+    ecs_type_t TFullType = type;
+    
+    if (parent) {
+        if (!ecs_has(world, parent, EcsContainer)) {
+            ecs_add(world, parent, EcsContainer);
+            ecs_set_watching(world, parent, true);
+        }
+        ecs_type_t TParentType = ecs_type_from_entity(world, parent);
+        TFullType = ecs_merge_type(world, FullType, ParentType, 0);
+    }
+
+    ecs_entity_t result = ecs_new(world, FullType);
+
+    return result;
+}
+
 void ecs_adopt(
     ecs_world_t *world,
     ecs_entity_t child,
@@ -813,6 +833,7 @@ void ecs_adopt(
 
     if (!ecs_has(world, parent, EcsContainer)) {
         ecs_add(world, parent, EcsContainer);
+        ecs_set_watching(world, parent, true);
     }
 
     ecs_type_t TParentType = ecs_type_from_entity(world, parent);

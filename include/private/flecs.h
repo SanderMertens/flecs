@@ -25,6 +25,13 @@ bool ecs_notify(
     int32_t offset,
     int32_t limit);
 
+/* Mark an entity as being watched. This is used to trigger automatic rematching
+ * when entities used in system expressions change their components. */
+void ecs_set_watching(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    bool watching);
+
 /* -- World API -- */
 
 /* Get (or create) table from type */
@@ -206,7 +213,7 @@ uint32_t ecs_table_rows_dimensioned(
 void ecs_table_delete(
     ecs_world_t *world,
     ecs_table_t *table,
-    uint32_t index);
+    int32_t index);
 
 /* Get row from table (or stage) */
 void* ecs_table_get(

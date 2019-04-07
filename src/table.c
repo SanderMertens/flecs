@@ -172,11 +172,15 @@ uint32_t ecs_table_insert(
 void ecs_table_delete(
     ecs_world_t *world,
     ecs_table_t *table,
-    uint32_t index)
+    int32_t index)
 {
     ecs_table_column_t *columns = table->columns;
     ecs_array_t *entity_column = columns[0].data;
     uint32_t count = ecs_array_count(entity_column);
+
+    if (index < 0) {
+        index *= -1;
+    }
 
     index --;
 

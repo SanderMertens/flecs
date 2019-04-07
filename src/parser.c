@@ -49,7 +49,7 @@ char* parse_complex_elem(
             *elem_kind = EcsFromContainer;
         } else if (!strncmp(bptr, "SYSTEM", dot - bptr)) {
             *elem_kind = EcsFromSystem;
-        } else if (!strncmp(bptr, "ENTITY", dot - bptr)) {
+        } else if (!strncmp(bptr, "SELF", dot - bptr)) {
             /* default */
         } else if (!strncmp(bptr, "ID", dot - bptr)) {
             *elem_kind = EcsFromId;
