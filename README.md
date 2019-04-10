@@ -27,6 +27,9 @@ Oh, and we have [dashboards](https://github.com/SanderMertens/flecs-systems-admi
 
 See [here](#getting-started-with-the-dashboard) for how to create an application with the dashboard.
 
+## Manual
+[Click here](Manual.md) to view the Flecs manual.
+
 ## Contents
 * [Building](#building)
 * [Getting started](#getting-started)
