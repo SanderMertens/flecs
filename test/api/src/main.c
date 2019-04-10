@@ -288,6 +288,7 @@ void System_w_FromContainer_2_column_1_from_container(void);
 void System_w_FromContainer_3_column_2_from_container(void);
 void System_w_FromContainer_3_column_2_from_different_container(void);
 void System_w_FromContainer_2_column_1_from_container_w_not(void);
+void System_w_FromContainer_2_column_1_from_container_w_not_prefab(void);
 void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not(void);
 void System_w_FromContainer_2_column_1_from_container_w_or(void);
 void System_w_FromContainer_add_component_after_match(void);
@@ -1517,7 +1518,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "System_w_FromContainer",
-        .testcase_count = 12,
+        .testcase_count = 13,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_column_from_container",
@@ -1538,6 +1539,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "2_column_1_from_container_w_not",
                 .function = System_w_FromContainer_2_column_1_from_container_w_not
+            },
+            {
+                .id = "2_column_1_from_container_w_not_prefab",
+                .function = System_w_FromContainer_2_column_1_from_container_w_not_prefab
             },
             {
                 .id = "3_column_1_from_comtainer_1_from_container_w_not",

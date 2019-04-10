@@ -1,4 +1,4 @@
- #include <string.h>
+#include <string.h>
 #include <assert.h>
 #include "include/private/flecs.h"
 #include "include/util/time.h"
@@ -19,13 +19,9 @@ ecs_entity_t components_contains(
     assert(components != NULL);
 
     uint32_t i, count = ecs_array_count(components);
+    ecs_entity_t *buffer = ecs_array_buffer(components);
     for (i = 0; i < count; i ++) {
-        ecs_entity_t h = *(ecs_entity_t*)ecs_array_get(
-            components, &handle_arr_params, i);
-
-        if (ecs_has(world, h, EcsPrefab)) {
-            return 0;
-        }
+        ecs_entity_t h = buffer[i];
 
         uint64_t row_64 = ecs_map_get64(world->main_stage.entity_index, h);
         assert(row_64 != 0);

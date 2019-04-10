@@ -454,6 +454,58 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     ecs_fini(world);
 }
 
+void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Rotation);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_PREFAB(world, Prefab, Rotation);
+
+    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e_2, Position);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, !CONTAINER.Mass, Position);
+
+    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
+
+    ecs_add(world, e_1, Prefab);
+
+    ecs_adopt(world, e_1, parent_1);
+    ecs_set(world, e_1, Position, {1, 2});
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Iter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_2);
+    test_int(ctx.c[0][0], ecs_to_entity(Mass));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_to_entity(Position));
+    test_int(ctx.s[0][1], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+
 void System_w_FromContainer_2_column_1_from_container_w_or() {
     ecs_world_t *world = ecs_init();
 
