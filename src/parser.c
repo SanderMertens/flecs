@@ -53,6 +53,8 @@ char* parse_complex_elem(
             /* default */
         } else if (!strncmp(bptr, "ID", dot - bptr)) {
             *elem_kind = EcsFromId;
+        } else if (!strncmp(bptr, "CASCADE", dot - bptr)) {
+            *elem_kind = EcsCascade;            
         } else {
             *elem_kind = EcsFromEntity;
             *source = bptr;

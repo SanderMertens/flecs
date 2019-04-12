@@ -227,6 +227,9 @@ void SystemOnFrame_use_fields_2_owned(void);
 void SystemOnFrame_use_fields_1_owned_1_shared(void);
 void SystemOnFrame_match_2_systems_w_populated_table(void);
 
+// Testsuite 'SystemCascade'
+void SystemCascade_cascade_1_component(void);
+
 // Testsuite 'SystemManual'
 void SystemManual_1_type_1_component(void);
 
@@ -1305,6 +1308,16 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "SystemCascade",
+        .testcase_count = 1,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "cascade_1_component",
+                .function = SystemCascade_cascade_1_component
+            }
+        }
+    },
+    {
         .id = "SystemManual",
         .testcase_count = 1,
         .testcases = (bake_test_case[]){
@@ -2190,5 +2203,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 29);
+    return bake_test_run("api", argc, argv, suites, 30);
 }

@@ -45,7 +45,8 @@ typedef enum ecs_system_expr_elem_kind_t {
     EcsFromSystem,          /* Get component from system */
     EcsFromId,              /* Get entity handle by id */
     EcsFromSingleton,       /* Get singleton component */
-    EcsFromEntity           /* Get component from other entity */
+    EcsFromEntity,          /* Get component from other entity */
+    EcsCascade              /* Walk component in cascading (hierarchy) order */
 } ecs_system_expr_elem_kind_t;
 
 /** Type describing an operator used in an signature of a system signature */

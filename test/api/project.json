@@ -258,6 +258,11 @@
                 "match_2_systems_w_populated_table"
             ]
         }, {
+            "id": "SystemCascade",
+            "testcases": [
+                "cascade_1_component"
+            ]
+        }, {
             "id": "SystemManual",
             "testcases": [
                 "1_type_1_component"
