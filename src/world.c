@@ -866,7 +866,7 @@ void stop_measure_frame(
             }
             world->fps_sleep = sleep;
 
-            if (sleep > 0.008) {
+            if (sleep > 0.005) {
                 ecs_sleepf(sleep);
             }
         }

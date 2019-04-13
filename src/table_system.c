@@ -73,7 +73,8 @@ bool components_contains_component(
 #define REFS_INDEX (1)
 #define REFS_COUNT (2)
 #define COMPONENTS_INDEX (3)
-#define COLUMNS_INDEX (4)
+#define DEPTH_INDEX (4)
+#define COLUMNS_INDEX (5)
 
 /* Get ref array for system table */
 static
@@ -204,7 +205,7 @@ void add_table(
             table_data[i] = 0;
 
         /* Column that retrieves data from a component */
-        } else if (column->kind == EcsFromContainer) {
+        } else if (column->kind == EcsFromContainer || column->kind == EcsCascade) {
             if (column->oper_kind == EcsOperAnd ||
                 column->oper_kind == EcsOperOptional)
             {
@@ -489,6 +490,35 @@ bool match_table(
     return true;
 }
 
+static
+int table_compare(
+    const void *table_1,
+    const void *table_2)
+{
+    const int32_t *table_1_data = table_1;
+    const int32_t *table_2_data = table_2;
+
+    return table_1_data[DEPTH_INDEX] - table_2_data[DEPTH_INDEX];
+}
+
+void order_cascade_tables(
+    ecs_world_t *world,
+    EcsColSystem *system_data)
+{
+    uint32_t i, count = ecs_array_count(system_data->tables);
+
+    for (i = 0; i < count; i ++) {
+        int32_t *table_data = ecs_array_get(
+            system_data->tables, &system_data->table_params, i);
+        ecs_table_t *tables = ecs_array_buffer(world->main_stage.tables);
+        ecs_type_t type = tables[table_data[TABLE_INDEX]].type_id;
+        table_data[DEPTH_INDEX] = ecs_type_container_depth(
+            world, type, system_data->base.cascade_by);
+    }
+
+    ecs_array_sort(system_data->tables, &system_data->table_params, table_compare);
+}
+
 /** Match existing tables against system (table is created before system) */
 static
 void match_tables(
@@ -504,6 +534,10 @@ void match_tables(
         if (match_table(world, table, system_data)) {
             add_table(world, system, system_data, table);
         }
+    }
+
+    if (system_data->base.cascade_by) {
+        order_cascade_tables(world, system_data);
     }
 }
 
@@ -742,6 +776,10 @@ void ecs_rematch_system(
                     }
                 }
             }
+        }
+
+        if (system_data->base.cascade_by) {
+            order_cascade_tables(world, system_data);
         }
     }
 }

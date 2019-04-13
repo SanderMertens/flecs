@@ -172,6 +172,8 @@ void ecs_system_compute_and_families(
                 system_data->and_from_system = ecs_type_add(
                   world, NULL, system_data->and_from_system, elem->is.component);
             }
+        } else if (elem_kind == EcsCascade) {
+            system_data->cascade_by = elem->is.component;
         }
     }
 }

@@ -260,7 +260,8 @@
         }, {
             "id": "SystemCascade",
             "testcases": [
-                "cascade_1_component"
+                "cascade_depth_1",
+                "cascade_depth_2"
             ]
         }, {
             "id": "SystemManual",
@@ -340,7 +341,9 @@
                 "add_component_after_match_unmatch",
                 "add_component_after_match_unmatch_match",
                 "add_component_after_match_2_systems",
-                "add_component_in_progress_after_match"
+                "add_component_in_progress_after_match",
+                "adopt_after_match",
+                "new_child_after_match"
             ]
         }, {
             "id": "System_w_FromId",

@@ -228,7 +228,8 @@ void SystemOnFrame_use_fields_1_owned_1_shared(void);
 void SystemOnFrame_match_2_systems_w_populated_table(void);
 
 // Testsuite 'SystemCascade'
-void SystemCascade_cascade_1_component(void);
+void SystemCascade_cascade_depth_1(void);
+void SystemCascade_cascade_depth_2(void);
 
 // Testsuite 'SystemManual'
 void SystemManual_1_type_1_component(void);
@@ -299,6 +300,8 @@ void System_w_FromContainer_add_component_after_match_unmatch(void);
 void System_w_FromContainer_add_component_after_match_unmatch_match(void);
 void System_w_FromContainer_add_component_after_match_2_systems(void);
 void System_w_FromContainer_add_component_in_progress_after_match(void);
+void System_w_FromContainer_adopt_after_match(void);
+void System_w_FromContainer_new_child_after_match(void);
 
 // Testsuite 'System_w_FromId'
 void System_w_FromId_2_column_1_from_id(void);
@@ -1309,11 +1312,15 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemCascade",
-        .testcase_count = 1,
+        .testcase_count = 2,
         .testcases = (bake_test_case[]){
             {
-                .id = "cascade_1_component",
-                .function = SystemCascade_cascade_1_component
+                .id = "cascade_depth_1",
+                .function = SystemCascade_cascade_depth_1
+            },
+            {
+                .id = "cascade_depth_2",
+                .function = SystemCascade_cascade_depth_2
             }
         }
     },
@@ -1531,7 +1538,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "System_w_FromContainer",
-        .testcase_count = 13,
+        .testcase_count = 15,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_column_from_container",
@@ -1584,6 +1591,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_component_in_progress_after_match",
                 .function = System_w_FromContainer_add_component_in_progress_after_match
+            },
+            {
+                .id = "adopt_after_match",
+                .function = System_w_FromContainer_adopt_after_match
+            },
+            {
+                .id = "new_child_after_match",
+                .function = System_w_FromContainer_new_child_after_match
             }
         }
     },
