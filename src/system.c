@@ -92,6 +92,7 @@ ecs_entity_t new_row_system(
     system_data->base.signature = sig;
     system_data->base.enabled = true;
     system_data->base.kind = kind;
+    system_data->base.cascade_by = 0;
     system_data->components = ecs_array_new(&handle_arr_params, count);
 
     if (ecs_parse_component_expr(
@@ -173,7 +174,7 @@ void ecs_system_compute_and_families(
                   world, NULL, system_data->and_from_system, elem->is.component);
             }
         } else if (elem_kind == EcsCascade) {
-            system_data->cascade_by = elem->is.component;
+            system_data->cascade_by = i + 1;
         }
     }
 }
@@ -399,9 +400,11 @@ ecs_entity_t ecs_new_system(
         ecs_abort(ECS_INVALID_PARAMETERS, 0);
     }
 
-    if (needs_tables && (kind == EcsOnUpdate || kind == EcsOnValidate || kind == EcsPreUpdate ||
-                         kind == EcsPostUpdate || kind == EcsManual ||
-                         kind == EcsOnLoad || kind == EcsOnStore))
+    if (needs_tables && (kind == EcsOnLoad ||
+                         kind == EcsPreUpdate || kind == EcsOnUpdate ||
+                         kind == EcsOnValidate || kind == EcsPostUpdate ||
+                         kind == EcsPreStore || kind == EcsOnStore ||
+                         kind == EcsManual))
     {
         result = ecs_new_col_system(world, id, kind, sig, action);
     } else if (!needs_tables ||

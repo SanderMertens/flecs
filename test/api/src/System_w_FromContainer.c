@@ -961,3 +961,75 @@ void System_w_FromContainer_new_child_after_match() {
 
     ecs_fini(world);
 }
+
+void IterSame(ecs_rows_t *rows) {
+    ECS_SHARED(rows, Position, p_parent, 1);
+    ECS_COLUMN(rows, Position, p, 2);
+
+    ProbeSystem(rows);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        p[i].x += p_parent->x;
+        p[i].y += p_parent->y;
+    }
+}
+
+void System_w_FromContainer_select_same_from_container() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e_4, Position);
+
+    ECS_SYSTEM(world, IterSame, EcsOnUpdate, CONTAINER.Position, Position);
+
+    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+    ecs_adopt(world, e_1, parent);
+    ecs_adopt(world, e_2, parent);
+    ecs_adopt(world, e_3, parent);
+
+    ecs_set(world, e_1, Position, {10, 20});
+    ecs_set(world, e_2, Position, {20, 40});
+    ecs_set(world, e_3, Position, {30, 60});
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, IterSame);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[2], e_3);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.s[0][0], parent);
+    test_int(ctx.c[0][1], ecs_to_entity(Position));
+    test_int(ctx.s[0][1], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 21);
+    test_int(p->y, 42);
+
+    p = ecs_get_ptr(world, e_3, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 31);
+    test_int(p->y, 62);
+
+    ecs_fini(world);
+}

@@ -145,6 +145,9 @@ extern ecs_type_t
 /* This allows passing 0 as type to functions that accept types */
 #define T0 (0)
 
+/* This id can be used to indicate an entity handle is not set */
+#define ECS_INVALID_ENTITY ((ecs_entity_t)-1)
+
 FLECS_EXPORT
 extern const char 
     *ECS_COMPONENT_ID,

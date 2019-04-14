@@ -261,7 +261,9 @@
             "id": "SystemCascade",
             "testcases": [
                 "cascade_depth_1",
-                "cascade_depth_2"
+                "cascade_depth_2",
+                "add_after_match",
+                "adopt_after_match"
             ]
         }, {
             "id": "SystemManual",
@@ -337,6 +339,7 @@
                 "2_column_1_from_container_w_not_prefab",
                 "3_column_1_from_comtainer_1_from_container_w_not",
                 "2_column_1_from_container_w_or",
+                "select_same_from_container",
                 "add_component_after_match",
                 "add_component_after_match_unmatch",
                 "add_component_after_match_unmatch_match",

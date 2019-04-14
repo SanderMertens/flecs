@@ -158,3 +158,155 @@ void SystemCascade_cascade_depth_2() {
 
     ecs_fini(world);
 }
+
+static
+void AddParent(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_SHARED_TEST(rows, Position, p_parent, 2);
+
+    ProbeSystem(rows);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        if (p_parent) {
+            p[i].x += p_parent->x;
+            p[i].y += p_parent->y;
+        }
+    }
+}
+
+void SystemCascade_add_after_match() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e_4, Position);
+
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE.Position);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_set(world, e_1, Position, {1, 2});
+    ecs_set(world, e_2, Position, {1, 2});
+    ecs_set(world, e_3, Position, {1, 2});
+    ecs_set(world, e_4, Position, {1, 2});
+
+    ecs_adopt(world, e_3, parent);
+    ecs_adopt(world, e_4, parent);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    ecs_set(world, parent, Position, {1, 2});
+
+    ctx = (SysTestData){0};
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 5);
+    test_int(ctx.invoked, 3);
+    test_int(ctx.system, AddParent);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[2], parent);
+    test_int(ctx.e[3], e_3);
+    test_int(ctx.e[4], e_4);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.s[0][0], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    p = ecs_get_ptr(world, e_3, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 4);
+
+    p = ecs_get_ptr(world, e_4, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void SystemCascade_adopt_after_match() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e_4, Position);
+
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE.Position);
+
+    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+    ecs_set(world, e_1, Position, {1, 2});
+    ecs_set(world, e_2, Position, {1, 2});
+    ecs_set(world, e_3, Position, {1, 2});
+    ecs_set(world, e_4, Position, {1, 2});
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    ecs_adopt(world, e_3, parent);
+    ecs_adopt(world, e_4, parent);
+
+    ctx = (SysTestData){0};
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 5);
+    test_int(ctx.invoked, 3);
+    test_int(ctx.system, AddParent);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[2], parent);
+    test_int(ctx.e[3], e_3);
+    test_int(ctx.e[4], e_4);
+    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.s[0][0], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    p = ecs_get_ptr(world, e_3, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 4);
+
+    p = ecs_get_ptr(world, e_4, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}

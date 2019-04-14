@@ -91,9 +91,9 @@ typedef struct EcsSystem {
     ecs_array_t *columns;          /* Column components */
     ecs_type_t not_from_entity;    /* Exclude components from entity */
     ecs_type_t not_from_component; /* Exclude components from components */
-    ecs_type_t and_from_entity;   /* Which components are required from entity */
+    ecs_type_t and_from_entity;  /* Which components are required from entity */
     ecs_type_t and_from_system;    /* Used to auto-add components to system */
-    ecs_entity_t cascade_by;       /* Component used for ordering system tables */
+    int32_t cascade_by;            /* CASCADE column index */
     EcsSystemKind kind;            /* Kind of system */
     float time_spent;              /* Time spent on running system */
     bool enabled;                  /* Is system enabled or not */

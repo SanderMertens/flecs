@@ -230,6 +230,8 @@ void SystemOnFrame_match_2_systems_w_populated_table(void);
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
 void SystemCascade_cascade_depth_2(void);
+void SystemCascade_add_after_match(void);
+void SystemCascade_adopt_after_match(void);
 
 // Testsuite 'SystemManual'
 void SystemManual_1_type_1_component(void);
@@ -295,6 +297,7 @@ void System_w_FromContainer_2_column_1_from_container_w_not(void);
 void System_w_FromContainer_2_column_1_from_container_w_not_prefab(void);
 void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not(void);
 void System_w_FromContainer_2_column_1_from_container_w_or(void);
+void System_w_FromContainer_select_same_from_container(void);
 void System_w_FromContainer_add_component_after_match(void);
 void System_w_FromContainer_add_component_after_match_unmatch(void);
 void System_w_FromContainer_add_component_after_match_unmatch_match(void);
@@ -1312,7 +1315,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemCascade",
-        .testcase_count = 2,
+        .testcase_count = 4,
         .testcases = (bake_test_case[]){
             {
                 .id = "cascade_depth_1",
@@ -1321,6 +1324,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "cascade_depth_2",
                 .function = SystemCascade_cascade_depth_2
+            },
+            {
+                .id = "add_after_match",
+                .function = SystemCascade_add_after_match
+            },
+            {
+                .id = "adopt_after_match",
+                .function = SystemCascade_adopt_after_match
             }
         }
     },
@@ -1538,7 +1549,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "System_w_FromContainer",
-        .testcase_count = 15,
+        .testcase_count = 16,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_column_from_container",
@@ -1571,6 +1582,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "2_column_1_from_container_w_or",
                 .function = System_w_FromContainer_2_column_1_from_container_w_or
+            },
+            {
+                .id = "select_same_from_container",
+                .function = System_w_FromContainer_select_same_from_container
             },
             {
                 .id = "add_component_after_match",
