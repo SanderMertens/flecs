@@ -57,6 +57,7 @@
        - [SELF modifier](#id-modifier)
        - [ID modifier](#id-modifier)
        - [CONTAINER modifier](#container-modifier)
+       - [CASCADE modifier](#cascade-modifier)
        - [SYSTEM modifier](#system-modifier)
        - [SINGLETON modifier](#singleton-modifier)
        - [ENTITY modifier](#entity-modifier)
@@ -819,6 +820,29 @@ CONTAINER.Position, Position, Velocity
 This will match all entities that have `Position, Velocity`, _and_ that have a container (parent) entity that has the `Position` component. This facilitates building systems that must traverse entities in a hierarchical manner.
 
 `CONTAINER` columns are available to the system as a shared component.
+
+##### CASCADE modifier
+The `CASCADE` modifier is similar to an optional `CONTAINER` column, but in addition it ensures that entities are iterated over in the order of the container hierarchy. 
+
+For a hierarchy like this:
+
+```
+   A
+  / \
+ B   C
+    / \
+   D   E 
+```
+
+the order in which entities will be visited by the system will be `A, B, C, D, E`. Note how the system also matches the root entities (`A`) that do not have a container (hence "optional"). An example of a `CASCADE` modifier is:
+
+```
+CASCADE.Position, Position, Velocity
+```
+
+The order will be determined by the container that has the specified component (`Position` in the example). Containers of the entity that do not have this component will be ignored. 
+
+`CASCADE` columns are available to the system as an optional shared component.
 
 ##### SINGLETON modifier
 The `SINGLETON` or `$` modifier selects components from the singleton entity. As the name suggests, this allows a system to access a single, global (but world-specific) instance of a component. An example of the `SINGLETON` modifier is:
