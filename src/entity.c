@@ -565,6 +565,8 @@ void ecs_set_watching(
                 world->main_stage.entity_index, entity, ecs_from_row(row));
         }
     }
+
+    world->should_match = true;
 }
 
 /* -- Public functions -- */

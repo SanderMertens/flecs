@@ -452,6 +452,55 @@ bool ecs_type_contains_component(
     return false;
 }
 
+int32_t ecs_type_container_depth(
+   ecs_world_t *world,
+   ecs_type_t type,
+   ecs_entity_t component)     
+{
+    ecs_array_t *arr = ecs_map_get(world->main_stage.type_index, type);
+    ecs_assert(arr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int result = 0;
+
+    int32_t i, count = ecs_array_count(arr);
+    ecs_entity_t *buffer = ecs_array_buffer(arr);
+
+    for (i = 0; i < count; i ++) {
+        uint64_t row64 = ecs_map_get64(world->main_stage.entity_index, buffer[i]);
+        if (row64) {
+            ecs_row_t row = ecs_to_row(row64);
+            ecs_type_t c_type = row.type_id;
+            ecs_array_t *c_arr = ecs_map_get(world->main_stage.type_index, c_type);
+            int32_t j, c_count = ecs_array_count(c_arr);
+            ecs_entity_t *c_buffer = ecs_array_buffer(c_arr);
+
+            bool found_container = false;
+            bool found_component = false;
+
+            for (j = 0; j < c_count; j ++) {
+                if (c_buffer[j] == EEcsContainer) {
+                    found_container = true;
+                }
+                if (c_buffer[j] == component) {
+                    found_component = true;
+                }
+
+                if (found_component && found_container) {
+                    result ++;
+                    result += ecs_type_container_depth(world, c_type, component);
+                    break;
+                }
+            }
+
+            if (j != c_count) {
+                break;
+            }
+        }
+    }
+
+    return result;
+}
+
 /* -- Public API -- */
 
 ecs_entity_t ecs_new_type(
@@ -568,3 +617,4 @@ ecs_type_t _ecs_merge_type(
     ecs_stage_t *stage = ecs_get_stage(&world);
     return ecs_type_merge(world, stage, type, type_add, type_remove);
 }
+

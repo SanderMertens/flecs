@@ -455,7 +455,7 @@ void load_admin(
     ecs_type_t TEcsAdmin = ecs_type_from_entity(world, admin);
     ecs_set(world, 0, EcsAdmin, {port});
 
-    printf("Admin is running in port %d\n", port);
+    printf("Admin is running on port %d\n", port);
 #else
     fprintf(stderr, 
         "sorry, loading the admin is only possible if flecs was built with bake :(");
@@ -866,7 +866,7 @@ void stop_measure_frame(
             }
             world->fps_sleep = sleep;
 
-            if (sleep > 0.008) {
+            if (sleep > 0.005) {
                 ecs_sleepf(sleep);
             }
         }
