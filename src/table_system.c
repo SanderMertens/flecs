@@ -38,36 +38,6 @@ ecs_entity_t components_contains(
     return 0;
 }
 
-static
-bool components_contains_component(
-    ecs_world_t *world,
-    ecs_type_t table_type,
-    ecs_entity_t component,
-    ecs_entity_t *entity_out)
-{
-    ecs_array_t *components = ecs_type_get(world, &world->main_stage, table_type);
-    assert(components != NULL);
-
-    uint32_t i, count = ecs_array_count(components);
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t h = *(ecs_entity_t*)ecs_array_get(
-            components, &handle_arr_params, i);
-
-        uint64_t row_64 = ecs_map_get64(world->main_stage.entity_index, h);
-        assert(row_64 != 0);
-
-        ecs_row_t row = ecs_to_row(row_64);
-        bool result = ecs_type_contains_component(
-            world, &world->main_stage, row.type_id, component, true);
-        if (result) {
-            if (entity_out) *entity_out = h;
-            return true;
-        }
-    }
-
-    return false;
-}
-
 /* Special indexes in table_data array */
 #define TABLE_INDEX (0)
 #define REFS_INDEX (1)
@@ -208,7 +178,7 @@ void add_table(
                 oper_kind == EcsOperOptional)
             {
                 component = column->is.component;
-                components_contains_component(
+                ecs_components_contains_component(
                     world, table_type, component, &entity);
 
             } else if (oper_kind == EcsOperOr) {
@@ -469,7 +439,7 @@ bool match_table(
             if (elem_kind == EcsFromSelf) {
                 /* Already validated */
             } else if (elem_kind == EcsFromContainer) {
-                if (!components_contains_component(
+                if (!ecs_components_contains_component(
                     world, table_type, elem->is.component, NULL))
                 {
                     return false;
@@ -647,7 +617,7 @@ void resolve_cascade_container(
 
     /* Resolve container entity */
     ecs_entity_t container = 0;
-    components_contains_component(
+    ecs_components_contains_component(
         world, table_type, ref->component, &container);        
 
     /* If container was found, update the reference */

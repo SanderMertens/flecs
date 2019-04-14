@@ -787,6 +787,13 @@ bool ecs_contains(
     ecs_entity_t parent,
     ecs_entity_t child);
 
+/** Return container for component */
+FLECS_EXPORT
+ecs_entity_t ecs_get_parent(
+    ecs_world_t *world,
+    ecs_entity_t child,
+    ecs_entity_t component);
+
 
 /** Return if the entity is valid.
  * This returns whether the provided entity handle is valid. An entity that has

@@ -569,6 +569,35 @@ void ecs_set_watching(
     world->should_match = true;
 }
 
+bool ecs_components_contains_component(
+    ecs_world_t *world,
+    ecs_type_t table_type,
+    ecs_entity_t component,
+    ecs_entity_t *entity_out)
+{
+    ecs_array_t *components = ecs_type_get(world, &world->main_stage, table_type);
+    assert(components != NULL);
+
+    uint32_t i, count = ecs_array_count(components);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t h = *(ecs_entity_t*)ecs_array_get(
+            components, &handle_arr_params, i);
+
+        uint64_t row_64 = ecs_map_get64(world->main_stage.entity_index, h);
+        assert(row_64 != 0);
+
+        ecs_row_t row = ecs_to_row(row_64);
+        bool result = ecs_type_contains_component(
+            world, &world->main_stage, row.type_id, component, true);
+        if (result) {
+            if (entity_out) *entity_out = h;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 /* -- Public functions -- */
 
 ecs_entity_t ecs_clone(
@@ -993,6 +1022,20 @@ bool ecs_contains(
 
     ecs_type_t TParent = ecs_type_from_entity(world, parent);
     return ecs_has(world, child, Parent);
+}
+
+ecs_entity_t ecs_get_parent(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component)
+{
+    ecs_entity_t parent = 0;
+    ecs_type_t type = ecs_get_type(world, entity);
+    
+    ecs_components_contains_component(
+        world, type, component, &parent);
+
+    return parent;
 }
 
 ecs_entity_t ecs_new_component(
