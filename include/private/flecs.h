@@ -176,7 +176,7 @@ int ecs_table_init(
 ecs_table_column_t *ecs_table_get_columns(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_array_t *type);
+    ecs_table_t *table);
 
 /* Initialize table with component size (used during bootstrap) */
 int ecs_table_init_w_size(

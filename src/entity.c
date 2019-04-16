@@ -375,28 +375,11 @@ uint32_t commit_w_type(
             old_table = ecs_world_get_table(world, stage, info->type_id);
         }
 
-        if (in_progress) {
-            ecs_table_column_t *columns = ecs_map_get(stage->data_stage, type_id);
-            new_columns = columns;
+        new_columns = ecs_table_get_columns(world, stage, new_table);
+        ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, 0);
 
-            if (!new_columns) {
-                ecs_array_t *type = ecs_type_get(world, stage, type_id);
-                ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
-                new_columns = ecs_table_get_columns(world, stage, type);
-            }
-
-            new_index = ecs_table_insert(world, new_table, new_columns, entity);
-            assert(new_index != 0);
-
-            if (new_columns != columns) {
-                ecs_map_set(stage->data_stage, type_id, new_columns);
-            }
-        } else {
-            new_index = ecs_table_insert(
-                world, new_table, new_table->columns, entity);
-
-            new_columns = new_table->columns;
-        }
+        new_index = ecs_table_insert(world, new_table, new_columns, entity);
+        ecs_assert(new_index != 0, ECS_INTERNAL_ERROR, 0);
     }
 
     if (old_type_id && type_id) {
@@ -538,6 +521,8 @@ void ecs_merge_entity(
         ecs_table_t *staged_table = ecs_world_get_table(world, stage, staged_id);
         ecs_table_column_t *staged_columns = ecs_map_get(
             stage->data_stage, staged_row->type_id);
+
+        ecs_assert(staged_columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
         copy_row( new_table->type, new_table->columns, new_index,
                   staged_table->type, staged_columns, staged_row->index); 
@@ -702,7 +687,11 @@ ecs_entity_t _ecs_new_w_count(
 
     if (type) {
         ecs_table_t *table = ecs_world_get_table(world, stage, type);
-        uint32_t row = ecs_table_grow(world, table, table->columns, count, result);
+
+        ecs_table_column_t *columns = ecs_table_get_columns(world, stage, table);
+        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, 0);
+
+        uint32_t row = ecs_table_grow(world, table, columns, count, result);
 
         ecs_map_t *entity_index = stage->entity_index;
 
@@ -722,12 +711,12 @@ ecs_entity_t _ecs_new_w_count(
 
         /* Now we can notify matching OnAdd row systems in bulk */
         notify_pre_merge(
-            world_arg, table, table->columns, row - 1, count, 
+            world_arg, table, columns, row - 1, count, 
             type, world->type_sys_add_index);
         
         /* Check if there are prefabs */
         copy_from_prefab(world, stage, table, result, row - 1, count, type, type);
-    } 
+    }
 
     return result;
 }

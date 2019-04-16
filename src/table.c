@@ -24,14 +24,15 @@ void activate_table(
     }
 }
 
-/* -- Private functions -- */
-
-ecs_table_column_t *ecs_table_get_columns(
+static
+ecs_table_column_t* new_columns(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_array_t *type)
 {
-    ecs_table_column_t *result = ecs_os_calloc(sizeof(ecs_table_column_t), ecs_array_count(type) + 1);
+    ecs_table_column_t *result = ecs_os_calloc(
+        sizeof(ecs_table_column_t), ecs_array_count(type) + 1);
+
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     ecs_entity_t *buf = ecs_array_buffer(type);
@@ -43,7 +44,8 @@ ecs_table_column_t *ecs_table_get_columns(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_info_t info = {0};
-        EcsComponent *component = get_ptr(world, stage, buf[i], EEcsComponent, false, false, &info);
+        EcsComponent *component = get_ptr(
+            world, stage, buf[i], EEcsComponent, false, false, &info);
 
         if (component) {
             if (component->size) {
@@ -52,8 +54,31 @@ ecs_table_column_t *ecs_table_get_columns(
             }
         }
     }
-
+    
     return result;
+}
+
+/* -- Private functions -- */
+
+ecs_table_column_t* ecs_table_get_columns(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table)
+{
+    if (!world->in_progress) {
+        return table->columns;
+    } else {
+        ecs_type_t type_id = table->type_id;
+        ecs_table_column_t *columns = ecs_map_get(stage->data_stage, type_id);
+
+        if (!columns) {
+            ecs_array_t *type = table->type;
+            columns = new_columns(world, stage, type);
+            ecs_map_set(stage->data_stage, type_id, columns);
+        }
+
+        return columns;
+    }
 }
 
 int ecs_table_init(
@@ -67,7 +92,7 @@ int ecs_table_init(
 
     table->frame_systems = NULL;
     table->type = type;
-    table->columns = ecs_table_get_columns(world, stage, type);
+    table->columns = new_columns(world, stage, type);
 
     if (stage == &world->main_stage) {
         ecs_entity_t *buf = ecs_array_buffer(type);

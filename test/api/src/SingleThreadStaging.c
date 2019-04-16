@@ -113,23 +113,90 @@ void SingleThreadStaging_new_w_type_of_2() {
 static
 void NewEmpty_w_count(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
-    int i;
-    for (i = 0; i < rows->count; i ++) {
-        ctx->new_entities[ctx->entity_count] = ecs_new(rows->world, 0);
-        ctx->entity_count ++;
-    }
+
+    ctx->new_entities[ctx->entity_count] = ecs_new_w_count(rows->world, 0, 1000);
+    ctx->entity_count ++;
 }
 
 void SingleThreadStaging_new_empty_w_count() {
+    ecs_world_t *world = ecs_init();
 
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, e_1, Position);
+    ECS_SYSTEM(world, NewEmpty_w_count, EcsOnUpdate, Position);
+
+    IterData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.entity_count, 1);
+    test_assert(ctx.new_entities[0] != 0);
+
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        test_assert( ecs_is_empty(world, ctx.new_entities[0] + i));
+    }
+
+    ecs_fini(world);
+}
+
+static
+void New_w_component_w_count(ecs_rows_t *rows) {
+    IterData *ctx = ecs_get_context(rows->world);
+
+    ctx->new_entities[ctx->entity_count] = _ecs_new_w_count(rows->world, ctx->component, 1000);
+    ctx->entity_count ++;
 }
 
 void SingleThreadStaging_new_component_w_count() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, e_1, Position);
+    ECS_SYSTEM(world, New_w_component_w_count, EcsOnUpdate, Position);
+
+    IterData ctx = {.component = ecs_to_type(Position)};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.entity_count, 1);
+    test_assert(ctx.new_entities[0] != 0);
+    test_int(ecs_count(world, Position), 1001);
+
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        test_assert( ecs_has(world, ctx.new_entities[0] + i, Position));
+    }
+
+    ecs_fini(world);
 }
 
 void SingleThreadStaging_new_type_w_count() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+    ECS_ENTITY(world, e_1, Position);
+    ECS_SYSTEM(world, New_w_component_w_count, EcsOnUpdate, Position);
+
+    IterData ctx = {.component = ecs_to_type(Type)};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.entity_count, 1);
+    test_assert(ctx.new_entities[0] != 0);
+    test_int(ecs_count(world, Type), 1000);
+
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        test_assert( ecs_has(world, ctx.new_entities[0] + i, Type));
+    }
+
+    ecs_fini(world);
 }
 
 static
