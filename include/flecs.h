@@ -131,6 +131,7 @@ typedef void (*ecs_module_init_action_t)(
 #define EEcsHidden (7)
 #define EEcsContainer (8)
 
+/* Type handles to builtin components */
 FLECS_EXPORT
 extern ecs_type_t 
     TEcsComponent,
@@ -148,6 +149,7 @@ extern ecs_type_t
 /* This id can be used to indicate an entity handle is not set */
 #define ECS_INVALID_ENTITY ((ecs_entity_t)-1)
 
+/* Ids (names) of builtin components */
 FLECS_EXPORT
 extern const char 
     *ECS_COMPONENT_ID,
@@ -484,6 +486,7 @@ void _ecs_dim_type(
 #define ecs_dim_type(world, type, entity_count)\
     _ecs_dim_type(world, T##type, entity_count)
 
+
 /* -- Entity API -- */
 
 /** Create a new entity.
@@ -491,23 +494,19 @@ void _ecs_dim_type(
  * Entities themselves do not have any state or logic, but instead are composed
  * out of a set of zero or more components.
  *
- * The memory occupied by an entity is the combined size of its components plus
- * approximately 40 bytes. Component lists are shared between entities,
- * thus adding a component to one entity does not necessarily increase
- * footprint. Each active combination of components is stored exactly once.
- *
- * Component data is stored in tables, with one table for each combination of
- * components. An entity is stored in the table that matches its component list.
- * When components are added or removed from an entity, the entity is moved to
- * another table.
- *
  * Entities are accessed through handles instead of direct pointers. Certain
  * operations may move an entity in memory. Handles provide a safe mechanism for
- * addressing entities. The average lookup complexity for a handle is O(1).
+ * addressing entities.
+ *
+ * Flecs does not require applications to explicitly create handles, as entities
+ * do not have an explicit lifecycle. The ecs_new operation merely provides a
+ * convenient way to dispense handles. It is guaranteed that the handle returned
+ * by ecs_new has not bee returned before.
  *
  * @param world The world to which to add the entity.
  * @param type Zero if no type, or handle to a component, type or prefab.
  * @returns A handle to the new entity.
+ * @see ecs_new_entity ecs_new_component ecs_new_system ecs_new_prefab ecs_new_type ecs_new_child ecs_new_w_count
  */
 FLECS_EXPORT
 ecs_entity_t _ecs_new(
@@ -517,34 +516,6 @@ ecs_entity_t _ecs_new(
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_new(world, type)\
     _ecs_new(world, T##type)
-
-/** Create a new child entity.
- * Child entities are equivalent to normal entities, but can additionally be 
- * created with a container entity. Container entities allow for the creation of
- * entity hierarchies.
- * 
- * This function is equivalent to calling ecs_new with a type that combines both
- * the type specified in this function and the type id for the container.
- * 
- * If the provided parent entity does not have the 'EcsContainer' component, it
- * will be added automatically.
- */
-FLECS_EXPORT
-ecs_entity_t _ecs_new_child(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_type_t type);
-
-/* Macro to ensure you don't accidentally pass a non-type into the function */
-#define ecs_new_child(world, parent, type)\
-    _ecs_new_child(world, parent, T##type)
-
-/** Convenience function to create an entity with id and component expression */
-FLECS_EXPORT
-ecs_entity_t ecs_new_entity(
-    ecs_world_t *world,
-    const char *id,
-    const char *components);
 
 /** Create a new set of entities.
  * This operation creates the number of specified entities with one API call
@@ -586,41 +557,62 @@ ecs_entity_t ecs_clone(
     ecs_entity_t entity,
     bool copy_value);
 
-/** Delete an existing entity.
- * Deleting an entity in most cases causes the data of another entity to be
- * copied. This happens to prevent memory fragmentation. It means that for
- * entities with lots of components (or few large ones) deleting can be an
- * expensive operation.
+/** Delete components for an entity.
+ * This operation will delete all components from the specified entity. As
+ * entities in Flecs do not have an explicit lifecycle, this operation will not
+ * invalidate the entity id.
  *
- * After this operation the handle will be invalidated and should no longer be
- * used. Handles are not recycled, which implies a finite number of new / delete
- * operations. In the current implementation that number is 2^64 - 1, which
- * should keep code running until the sun runs out of fuel. Possibly longer.
+ * When the delete operation is invoked upon an already deleted entity, the
+ * operation will have no effect, as it will attempt to delete components from
+ * an already empty entity.
  *
- * The only post condition for this function is that no entity with the
- * specified handle will exist after the operation. If a handle is provided to
- * the function that does not resolve to an entity, this function is a no-op.
+ * As a result of a delete operation, EcsOnRemove systems will be invoked if
+ * applicable for any of the removed components.
  *
  * @param world The world.
- * @param entity A handle to the entity to delete.
+ * @param entity The entity to empty.
  */
 FLECS_EXPORT
 void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-/** Add a type to an entity */
+/** Add a type to an entity.
+ * This operation will add one or more components (as per the specified type) to
+ * an entity. If the entity already contains a subset of the components in the
+ * type, only components that are not contained by the entity will be added. If
+ * the entity already contains all components, this operation has no effect.
+ *
+ * As a result of an add operation, EcsOnAdd systems will be invoked if
+ * applicable for any of the added components.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the type.
+ * @param type The type to add to the entity.
+ */
 FLECS_EXPORT
 void _ecs_add(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_type_t component);
+    ecs_type_t type);
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_add(world, entity, type)\
     _ecs_add(world, entity, T##type)
 
-/** Remove a type from an entity */
+/** Remove a type from an entity.
+ * This operation will remove one or more components (as per the specified type)
+ * from an entity. If the entity contained a subset of the components in the
+ * type, only that subset will be removed. If the entity contains none of the
+ * components in the type, the operation has no effect.
+ *
+ * As a result of a remove operation, EcsOnRemove systems will be invoked if
+ * applicable for any of the removed components.
+ *
+ * @param world The world.
+ * @param entity The entity from which to remove the type.
+ * @param type The type to remove from the entity.
+ */
 FLECS_EXPORT
 void _ecs_remove(
     ecs_world_t *world,
@@ -630,20 +622,6 @@ void _ecs_remove(
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_remove(world, entity, type)\
     _ecs_remove(world, entity, T##type)
-
-/** Adopt a child entity by a parent */
-FLECS_EXPORT
-void ecs_adopt(
-    ecs_world_t *world,
-    ecs_entity_t child,
-    ecs_entity_t parent);
-
-/** Orphan a child by a parent */
-FLECS_EXPORT
-void ecs_orphan(
-    ecs_world_t *world,
-    ecs_entity_t child,
-    ecs_entity_t parent);
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
@@ -720,19 +698,91 @@ ecs_entity_t _ecs_set_singleton_ptr(
 #define ecs_set_ptr(world, entity, type, ptr)\
     _ecs_set_ptr(world, entity, T##type, sizeof(type), ptr)
 
-
+/* Conditionally skip macro's as compound literals are not supported in C89 */
 #ifndef __BAKE_LEGACY__
-
 #define ecs_set(world, entity, type, ...)\
     _ecs_set_ptr(world, entity, T##type, sizeof(type), &(type)__VA_ARGS__)
 
 #define ecs_set_singleton(world, type, ...)\
     _ecs_set_singleton_ptr(world, T##type, sizeof(type), &(type)__VA_ARGS__)
-
 #endif
 
 #define ecs_set_singleton_ptr(world, type, ptr)\
     _ecs_set_singleton_ptr(world, T##type, sizeof(type), ptr)
+
+
+/* Container API */
+
+/** Create a new child entity.
+ * Child entities are equivalent to normal entities, but can additionally be 
+ * created with a container entity. Container entities allow for the creation of
+ * entity hierarchies.
+ * 
+ * This function is equivalent to calling ecs_new with a type that combines both
+ * the type specified in this function and the type id for the container.
+ * 
+ * If the provided parent entity does not have the 'EcsContainer' component, it
+ * will be added automatically.
+ *
+ * @param world The world.
+ * @param parent The container to which to add the child entity.
+ * @param type The type with which to create the child entity.
+ * @returns A handle to the created entity.
+ * @see ecs_new_entity ecs_new_component ecs_new_system ecs_new_prefab ecs_new_type ecs_new ecs_new_w_count
+ */
+FLECS_EXPORT
+ecs_entity_t _ecs_new_child(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_type_t type);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_new_child(world, parent, type)\
+    _ecs_new_child(world, parent, T##type)
+
+/** Adopt a child entity by a parent.
+ * This operation adds the specified parent entity to the type of the specified
+ * entity, which effectively establishes a parent-child relationship. The parent
+ * entity, when added, behaves like a normal component in that it becomes part
+ * of the entity type.
+ *
+ * If the parent was already added to the entity, this operation will have no
+ * effect. If this is the first time a child is added to the parent entity, the
+ * EcsContainer component will be added to the parent.
+ *
+ * This operation is similar to an ecs_add, with as difference that instead of a 
+ * type it accepts any entity handle.
+ *
+ * @param world The world.
+ * @param entity The entity to adopt.
+ * @param parent The parent entity to add to the entity.
+ */
+FLECS_EXPORT
+void ecs_adopt(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t parent);
+
+/** Orphan a child by a parent. 
+ * This operation removes the specified parent entity from the type of the
+ * specified entity. If the parent was not added to the entity, this operation
+ * has no effect.
+ *
+ * This operation is similar to ecs_remove, with as difference that instead of a
+ * type it accepts any entity handle.
+ *
+ * @param world The world.
+ * @param entity The entity to orphan.
+ * @param parent The parent entity to remove from the entity.
+ */
+FLECS_EXPORT
+void ecs_orphan(
+    ecs_world_t *world,
+    ecs_entity_t child,
+    ecs_entity_t parent);
+
+
+/* Utility API */
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the
@@ -780,49 +830,59 @@ bool _ecs_has_any(
 #define ecs_has_any(world, entity, type)\
     _ecs_has_any(world, entity, T##type)
 
-/** Check if parent entity contains child entity */
+/** Check if parent entity contains child entity.
+ * This function tests if the specified parent entity has been added to the
+ * specified child entity.
+ *
+ * This function is similar to ecs_has, with as difference that instead of a 
+ * type it accepts a handle to any entity.
+ *
+ * @param world The world.
+ * @param parent The parent.
+ * @param child The child.
+ * @returns true if the parent contains the child, otherwise false.
+ */
 FLECS_EXPORT
 bool ecs_contains(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child);
 
-/** Return container for component */
+/** Return container for component.
+ * This function allows the application to query for a container of the
+ * specified entity that has the specified component. If there are multiple
+ * containers with this component, the function will return the first one it
+ * encounters.
+ *
+ * @param world The world.
+ * @param entity The entity for which to resolve the container.
+ * @param component The component which the resovled container should have.
+ */
 FLECS_EXPORT
 ecs_entity_t ecs_get_parent(
     ecs_world_t *world,
-    ecs_entity_t child,
+    ecs_entity_t entity,
     ecs_entity_t component);
 
-
-/** Return if the entity is valid.
- * This returns whether the provided entity handle is valid. An entity that has
- * never been returned by ecs_new (or variants) or that has been deleted with
- * ecs_delete is not valid.
+/** Get type of entity.
+ * This operation returns the entity type, which is a handle to the a list of
+ * the current components an entity has.
+ *
+ * Note that this function is different from ecs_type_from_entity, which returns
+ * a type which only contains the specified entity.
+ *
+ * This operation is mostly intended for debugging, as it is considered a bad
+ * practice to rely on the type for logic, as the type changes when components
+ * are added/removed to the entity.
  *
  * @param world The world.
- * @param entity The entity handle.
- * @returns true if valid, false if not valid.
+ * @param entity The entity for which to obtain the type.
+ * @returns The type of the entity.
  */
-FLECS_EXPORT
-bool ecs_empty(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Get type of entity */
 FLECS_EXPORT
 ecs_type_t ecs_get_type(
     ecs_world_t *world,
     ecs_entity_t entity);
-
-/** Get component from entity */
-FLECS_EXPORT
-ecs_entity_t ecs_get_component(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    uint32_t index);
-
-/* -- Id API -- */
 
 /** Return the entity id.
  * This returns the string identifier of an entity, if the entity has the EcsId
@@ -837,9 +897,34 @@ ecs_entity_t ecs_get_component(
  * @returns The id of the entity.
  */
 FLECS_EXPORT
-const char* ecs_id(
+const char* ecs_get_id(
     ecs_world_t *world,
     ecs_entity_t entity);
+
+/** Return if the entity is empty.
+ * This returns whether the provided entity handle is empty. An entity that is
+ * empty has no components.
+ *
+ * @param world The world.
+ * @param entity The entity handle.
+ * @returns true if empty, false if not empty.
+ */
+FLECS_EXPORT
+bool ecs_is_empty(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Returns number of entities that have a given type. 
+ * This operation will count the number of entities that have all of the
+ * components in the specified type.
+ *
+ * @param world The world.
+ * @param type The type used to match entities.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_count(
+    ecs_world_t *world,
+    ecs_type_t type);
 
 /** Lookup an entity by id.
  * This operation is a convenient way to lookup entities by string identifier
@@ -855,106 +940,6 @@ FLECS_EXPORT
 ecs_entity_t ecs_lookup(
     ecs_world_t *world,
     const char *id);
-
-
-/* -- Component API -- */
-
-/** Create a new component.
- * This operation creates a new component with a specified id and size. After
- * this operation is called, the component can be added to entities by using
- * the returned handle with ecs_add.
- *
- * Components represent the data of entities. An entity can be composed out of
- * zero or more components. Internally compoments are stored in tables that
- * are created for active combinations of components in a world.
- *
- * This operation accepts a size, which is the size of the type that contains
- * the component data. Any native type can be used, and the size can be
- * obtained with the built-in sizeof function. For convenience, an application
- * may use the ECS_COMPONENT macro instead of calling this function directly.
- *
- * Components are stored internally as entities. This operation is equivalent
- * to creating an entity with the EcsComponent and EcsId components. The
- * returned handle can be used in any function that accepts an entity handle.
- *
- * @param world The world.
- * @param id A unique component identifier.
- * @param size The size of the component type (as obtained by sizeof).
- * @returns A handle to the new component, or 0 if failed.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_new_component(
-    ecs_world_t *world,
-    const char *id,
-    size_t size);
-
-
-/* -- Type API -- */
-
-/** Get handle to type.
- * This operation obtains a handle to a type that can be used with
- * ecs_new. Predefining types has performance benefits over using
- * ecs_add/ecs_remove multiple times, as it provides constant
- * creation time regardless of the number of components. This function will
- * internally create a table for the type.
- *
- * If a type had been created for this set of components before with the same
- * identifier, the existing type is returned. If the type had been created
- * with a different identifier, this function will fail.
- *
- * The ECS_TYPE macro wraps around this function.
- *
- * @param world The world.
- * @param components A comma-separated string with the component identifiers.
- * @returns Handle to the type, zero if failed.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_new_type(
-    ecs_world_t *world,
-    const char *id,
-    const char *components);
-
-/** Create a new prefab entity.
- * Prefab entities allow entities to share a set of components. Components of
- * the prefab will appear on the specified entity when using any of the API
- * functions and ECS systems.
- *
- * A prefab is a regular entity, with the only difference that it has the
- * EcsPrefab component.
- *
- * The ECS_PREFAB macro wraps around this function.
- *
- * Changing the value of one of the components on the prefab will change the
- * value for all entities that added the prefab, as components are stored only
- * once in memory. This makes prefabs also a memory-saving mechanism; there can
- * be many entities that reuse component records from the prefab.
- *
- * Entities can override components from a prefab by adding the component with
- * ecs_add. When a component is overridden, its value will be copied from the
- * prefab. This technique can be combined with families to automatically
- * initialize entities, like this:
- *
- * ECS_PREFAB(world, MyPrefab, Foo);
- * ECS_TYPE(world, MyType, MyPrefab, Foo);
- * ecs_entity_t e = ecs_new(world, MyType);
- *
- * In this code, the entity will be created with the prefab and directly
- * override 'Foo', which will copy the value of 'Foo' from the prefab.
- *
- * Prefabs are explicitly stored on the component list of an entity. This means
- * that two entities with the same set of components but a different prefab are
- * stored in different tables.
- *
- * Prefabs can be part of the component list of other prefabs. This allows for
- * creating hierarchies of prefabs, where the leaves are the most specialized.
- *
- * Only one prefab may be added to an entity.
- */
-FLECS_EXPORT
-ecs_entity_t ecs_new_prefab(
-    ecs_world_t *world,
-    const char *id,
-    const char *sig);
 
 
 /* -- Type API -- */
@@ -982,17 +967,38 @@ ecs_type_t ecs_type_from_entity(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-
 /** Get an entity from a type.
  * This function is the reverse of ecs_type_from_entity. It only works for types
- * that contain exactly one entity. */
+ * that contain exactly one entity. 
+ *
+ * If this operation is invoked on a type that contains more than just one 
+ * entity, the function will abort. Applications should only use types with this
+ * function that are guaranteed to have one entity, such as the types created 
+ * for prefabs. 
+ *
+ * @param world The world.
+ * @param type The entity for which to obtain the type.
+ * @returns The entity associated with the type.
+ */
 FLECS_EXPORT
 ecs_entity_t ecs_entity_from_type(
     ecs_world_t *world,
-    ecs_type_t entity);
+    ecs_type_t type);
 
-
-/** Merge two types. */
+/** Merge two types. 
+ * This operation will return a type that contains exactly the components in the
+ * specified type, plus the components in type_add, and not the components in
+ * type_remove.
+ *
+ * The result of the operation is as if type_remove is subtracted before adding 
+ * type_add. If type_add contains components that are removed by type_remove,
+ * the result will contain the components in type_add.
+ *
+ * @oaram world The world.
+ * @param type The original type.
+ * @param type_add The type to add to the original type.
+ * @param type_remove The type to remove from the original type.
+ */
 FLECS_EXPORT
 ecs_type_t _ecs_merge_type(
     ecs_world_t *world,
@@ -1003,48 +1009,22 @@ ecs_type_t _ecs_merge_type(
 #define ecs_merge_type(world, type, type_add, type_remove)\
     _ecs_merge_type(world, T##type, T##type_add, T##type_remove)
 
-/* -- System API -- */
-
-/** Create a new system.
- * This operation creates a new system with a specified id, kind and action.
- * After this operation is called, the system will be active. Systems can be
- * created with three different kinds:
- *
- * - EcsOnUpdate: the system is invoked when ecs_progress is called.
- * - EcsOnAdd: the system is invoked when a component is committed to memory.
- * - EcsOnRemove: the system is invoked when a component is removed from memory.
- * - EcsManual: the system is only invoked on demand (ecs_run)
- *
- * The signature of the system is a string formatted as a comma separated list
- * of component identifiers. For example, a system that wants to receive the
- * Location and Speed components, should provide "Location, Speed" as its
- * signature.
- *
- * The action is a function that is invoked for every entity that has the
- * components the system is interested in. The action has three parameters:
- *
- * - ecs_entity_t system: Handle to the system (same as returned by this function)
- * - ecs_entity_t entity: Handle to the current entity
- * - void *data[]: Array of pointers to the component data
- *
- * Systems are stored internally as entities. This operation is equivalent to
- * creating an entity with the EcsSystem and EcsId components. The returned
- * handle can be used in any function that accepts an entity handle.
+/** Get component from type at index. 
+ * This operation returns the components (or entities) that are contained in the
+ * type at the specified index.
  *
  * @param world The world.
- * @param id The identifier of the system.
- * @param kind The kind of system.
- * @param signature The signature that describes the components.
- * @param action The action that is invoked for matching entities.
- * @returns A handle to the system.
+ * @param type The type for which to obtain the component.
+ * @param index The index at which to obtain the component.
+ * @returns zero if out of bounds, a component if within bounds.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_new_system(
+ecs_entity_t ecs_type_get_component(
     ecs_world_t *world,
-    const char *id,
-    EcsSystemKind kind,
-    const char *sig,
-    ecs_system_action_t action);
+    ecs_type_t type,
+    uint32_t index);
+
+/* -- System API -- */
 
 /** Enable or disable a system.
  * This operation enables or disables a system. A disabled system will not be
@@ -1314,6 +1294,163 @@ ecs_type_t _ecs_column_type(
         _ecs_column_type(rows, column, true)
 
 
+/* -- Functions used in convenience macro's -- */
+
+/** Convenience function to create an entity with id and component expression.
+ * This is equivalent to calling ecs_new with a type that contains all 
+ * components provided in the 'component' expression. In addition, this function
+ * also adds the EcsId component, which will be set to the provided id string.
+ *
+ * This function is wrapped by the ECS_ENTITY convenience macro.
+ *
+ * @param world The world.
+ * @param id The entity id.
+ * @param components A component expression.
+ * @returns A handle to the created entity.
+ * @see ecs_new_component ecs_new_system ecs_new_prefab ecs_new_type ecs_new_child ecs_new ecs_new_w_count
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_new_entity(
+    ecs_world_t *world,
+    const char *id,
+    const char *components);
+
+/** Create a new component.
+ * This operation creates a new component with a specified id and size. After
+ * this operation is called, the component can be added to entities by using
+ * the returned handle with ecs_add.
+ *
+ * Components represent the data of entities. An entity can be composed out of
+ * zero or more components. Internally compoments are stored in tables that
+ * are created for active combinations of components in a world.
+ *
+ * This operation accepts a size, which is the size of the type that contains
+ * the component data. Any native type can be used, and the size can be
+ * obtained with the built-in sizeof function. For convenience, an application
+ * may use the ECS_COMPONENT macro instead of calling this function directly.
+ *
+ * Components are stored internally as entities. This operation is equivalent
+ * to creating an entity with the EcsComponent and EcsId components. The
+ * returned handle can be used in any function that accepts an entity handle.
+ *
+ * @param world The world.
+ * @param id A unique component identifier.
+ * @param size The size of the component type (as obtained by sizeof).
+ * @returns A handle to the new component, or 0 if failed.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_new_component(
+    ecs_world_t *world,
+    const char *id,
+    size_t size);
+
+/** Create a new system.
+ * This operation creates a new system with a specified id, kind and action.
+ * After this operation is called, the system will be active. Systems can be
+ * created with three different kinds:
+ *
+ * - EcsOnUpdate: the system is invoked when ecs_progress is called.
+ * - EcsOnAdd: the system is invoked when a component is committed to memory.
+ * - EcsOnRemove: the system is invoked when a component is removed from memory.
+ * - EcsManual: the system is only invoked on demand (ecs_run)
+ *
+ * The signature of the system is a string formatted as a comma separated list
+ * of component identifiers. For example, a system that wants to receive the
+ * Location and Speed components, should provide "Location, Speed" as its
+ * signature.
+ *
+ * The action is a function that is invoked for every entity that has the
+ * components the system is interested in. The action has three parameters:
+ *
+ * - ecs_entity_t system: Handle to the system (same as returned by this function)
+ * - ecs_entity_t entity: Handle to the current entity
+ * - void *data[]: Array of pointers to the component data
+ *
+ * Systems are stored internally as entities. This operation is equivalent to
+ * creating an entity with the EcsSystem and EcsId components. The returned
+ * handle can be used in any function that accepts an entity handle.
+ *
+ * @param world The world.
+ * @param id The identifier of the system.
+ * @param kind The kind of system.
+ * @param signature The signature that describes the components.
+ * @param action The action that is invoked for matching entities.
+ * @returns A handle to the system.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_new_system(
+    ecs_world_t *world,
+    const char *id,
+    EcsSystemKind kind,
+    const char *sig,
+    ecs_system_action_t action);
+
+/** Get handle to type.
+ * This operation obtains a handle to a type that can be used with
+ * ecs_new. Predefining types has performance benefits over using
+ * ecs_add/ecs_remove multiple times, as it provides constant
+ * creation time regardless of the number of components. This function will
+ * internally create a table for the type.
+ *
+ * If a type had been created for this set of components before with the same
+ * identifier, the existing type is returned. If the type had been created
+ * with a different identifier, this function will fail.
+ *
+ * The ECS_TYPE macro wraps around this function.
+ *
+ * @param world The world.
+ * @param components A comma-separated string with the component identifiers.
+ * @returns Handle to the type, zero if failed.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_new_type(
+    ecs_world_t *world,
+    const char *id,
+    const char *components);
+
+/** Create a new prefab entity.
+ * Prefab entities allow entities to share a set of components. Components of
+ * the prefab will appear on the specified entity when using any of the API
+ * functions and ECS systems.
+ *
+ * A prefab is a regular entity, with the only difference that it has the
+ * EcsPrefab component.
+ *
+ * The ECS_PREFAB macro wraps around this function.
+ *
+ * Changing the value of one of the components on the prefab will change the
+ * value for all entities that added the prefab, as components are stored only
+ * once in memory. This makes prefabs also a memory-saving mechanism; there can
+ * be many entities that reuse component records from the prefab.
+ *
+ * Entities can override components from a prefab by adding the component with
+ * ecs_add. When a component is overridden, its value will be copied from the
+ * prefab. This technique can be combined with families to automatically
+ * initialize entities, like this:
+ *
+ * ECS_PREFAB(world, MyPrefab, Foo);
+ * ECS_TYPE(world, MyType, MyPrefab, Foo);
+ * ecs_entity_t e = ecs_new(world, MyType);
+ *
+ * In this code, the entity will be created with the prefab and directly
+ * override 'Foo', which will copy the value of 'Foo' from the prefab.
+ *
+ * Prefabs are explicitly stored on the component list of an entity. This means
+ * that two entities with the same set of components but a different prefab are
+ * stored in different tables.
+ *
+ * Prefabs can be part of the component list of other prefabs. This allows for
+ * creating hierarchies of prefabs, where the leaves are the most specialized.
+ *
+ * Only one prefab may be added to an entity.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_new_prefab(
+    ecs_world_t *world,
+    const char *id,
+    const char *sig);
+
+
 /* -- Error handling & error codes -- */
 
 /** Get description for error code */
@@ -1506,7 +1643,7 @@ void _ecs_assert(
 #define ECS_COLUMN_ENTITY(rows, id, column)\
     ecs_entity_t id = ecs_column_entity(rows, column);\
     ECS_TYPE_VAR(id) = ecs_column_type(rows, column);\
-    (void)ecs_to_entity(id);\
+    (void)id;\
     (void)ecs_to_type(id)
 
 

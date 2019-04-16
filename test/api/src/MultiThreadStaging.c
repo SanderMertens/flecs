@@ -9,7 +9,7 @@ void Add_to_current(ecs_rows_t *rows) {
         if (ctx->component) {
             _ecs_add(rows->world, entities[i], ctx->component);
             
-            test_assert( !ecs_empty(rows->world, entities[i]));
+            test_assert( !ecs_is_empty(rows->world, entities[i]));
             test_assert( _ecs_has(rows->world, entities[i], ctx->component));
             test_assert( _ecs_get_ptr(rows->world, entities[i], ctx->component) != NULL);
         }
@@ -17,7 +17,7 @@ void Add_to_current(ecs_rows_t *rows) {
         if (ctx->component_2) {
             _ecs_add(rows->world, entities[i], ctx->component_2);
 
-            test_assert( !ecs_empty(rows->world, entities[i]));
+            test_assert( !ecs_is_empty(rows->world, entities[i]));
             test_assert( _ecs_has(rows->world, entities[i], ctx->component_2)); 
             test_assert( _ecs_get_ptr(rows->world, entities[i], ctx->component_2) != NULL);
         }
@@ -226,7 +226,7 @@ void Add_random(ecs_rows_t *rows) {
     for (i = 0; i < rows->count; i ++) {
         if (rand() % 2) {
             ecs_entity_t e = _ecs_new(rows->world, ctx->component);
-            test_assert( !ecs_empty(rows->world, e));
+            test_assert( !ecs_is_empty(rows->world, e));
             test_assert( _ecs_has(rows->world, e, ctx->component));
             test_assert( _ecs_get_ptr(rows->world, e, ctx->component) != NULL);
         }
@@ -234,7 +234,7 @@ void Add_random(ecs_rows_t *rows) {
         if (rand() % 2) {
             _ecs_add(rows->world, entities[i], ctx->component_2);
             
-            test_assert( !ecs_empty(rows->world, entities[i]));
+            test_assert( !ecs_is_empty(rows->world, entities[i]));
             test_assert( _ecs_has(rows->world, entities[i], ctx->component));
             test_assert( _ecs_get_ptr(rows->world, entities[i], ctx->component) != NULL);
         }
@@ -242,7 +242,7 @@ void Add_random(ecs_rows_t *rows) {
         if (rand() % 2) {
             _ecs_add(rows->world, entities[i], ctx->component_3);
 
-            test_assert( !ecs_empty(rows->world, entities[i]));
+            test_assert( !ecs_is_empty(rows->world, entities[i]));
             test_assert( _ecs_has(rows->world, entities[i], ctx->component_3)); 
             test_assert( _ecs_get_ptr(rows->world, entities[i], ctx->component_3) != NULL);
         }
@@ -303,7 +303,7 @@ void Set_random(ecs_rows_t *rows) {
     for (i = 0; i < rows->count; i ++) {
         if (rand() % 2) {
             ecs_entity_t e = ecs_set(rows->world, 0, Position, {10, 20});
-            test_assert( !ecs_empty(rows->world, e));
+            test_assert( !ecs_is_empty(rows->world, e));
             test_assert( ecs_has(rows->world, e, Position));
             Position *p = ecs_get_ptr(rows->world, e, Position);
             test_assert(p != NULL);
@@ -314,7 +314,7 @@ void Set_random(ecs_rows_t *rows) {
         if (rand() % 2) {
             ecs_set(rows->world, entities[i], Velocity, {30, 40});
             
-            test_assert( !ecs_empty(rows->world, entities[i]));
+            test_assert( !ecs_is_empty(rows->world, entities[i]));
             test_assert( ecs_has(rows->world, entities[i], Velocity));
             Velocity *v = ecs_get_ptr(rows->world, entities[i], Velocity);            
             test_assert(v != NULL);
@@ -325,7 +325,7 @@ void Set_random(ecs_rows_t *rows) {
         if (rand() % 2) {
             ecs_set(rows->world, entities[i], Rotation, {50});
 
-            test_assert( !ecs_empty(rows->world, entities[i]));
+            test_assert( !ecs_is_empty(rows->world, entities[i]));
             test_assert( ecs_has(rows->world, entities[i], Rotation));
             Rotation *r = ecs_get_ptr(rows->world, entities[i], Rotation);            
             test_assert(r != NULL);

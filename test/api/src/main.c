@@ -386,6 +386,9 @@ void MultiThread_6_thread_test_combs_100_entity_2_types(void);
 void SingleThreadStaging_new_empty(void);
 void SingleThreadStaging_new_w_component(void);
 void SingleThreadStaging_new_w_type_of_2(void);
+void SingleThreadStaging_new_empty_w_count(void);
+void SingleThreadStaging_new_component_w_count(void);
+void SingleThreadStaging_new_type_w_count(void);
 void SingleThreadStaging_add_to_new_empty(void);
 void SingleThreadStaging_2_add_to_new_empty(void);
 void SingleThreadStaging_add_remove_same_to_new_empty(void);
@@ -1911,7 +1914,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 58,
+        .testcase_count = 61,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -1924,6 +1927,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "new_w_type_of_2",
                 .function = SingleThreadStaging_new_w_type_of_2
+            },
+            {
+                .id = "new_empty_w_count",
+                .function = SingleThreadStaging_new_empty_w_count
+            },
+            {
+                .id = "new_component_w_count",
+                .function = SingleThreadStaging_new_component_w_count
+            },
+            {
+                .id = "new_type_w_count",
+                .function = SingleThreadStaging_new_type_w_count
             },
             {
                 .id = "add_to_new_empty",

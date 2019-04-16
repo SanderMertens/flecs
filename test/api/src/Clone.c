@@ -10,8 +10,8 @@ void Clone_empty() {
     test_assert(e_2 != 0);
     test_assert(e_1 != e_2);
 
-    test_assert(ecs_empty(world, e_1));
-    test_assert(ecs_empty(world, e_2));
+    test_assert(ecs_is_empty(world, e_1));
+    test_assert(ecs_is_empty(world, e_2));
 
     ecs_fini(world);
 }
@@ -26,8 +26,8 @@ void Clone_empty_w_value() {
     test_assert(e_2 != 0);
     test_assert(e_1 != e_2);
 
-    test_assert(ecs_empty(world, e_1));
-    test_assert(ecs_empty(world, e_2));
+    test_assert(ecs_is_empty(world, e_1));
+    test_assert(ecs_is_empty(world, e_2));
 
     ecs_fini(world);
 }
@@ -38,7 +38,7 @@ void Clone_null() {
     ecs_entity_t e = ecs_clone(world, 0, false);
     test_assert(e != 0);
 
-    test_assert(ecs_empty(world, e));
+    test_assert(ecs_is_empty(world, e));
 
     ecs_fini(world);
 }
@@ -49,7 +49,7 @@ void Clone_null_w_value() {
     ecs_entity_t e = ecs_clone(world, 0, true);
     test_assert(e != 0);
 
-    test_assert(ecs_empty(world, e));
+    test_assert(ecs_is_empty(world, e));
 
     ecs_fini(world);
 }

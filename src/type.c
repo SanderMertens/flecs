@@ -29,6 +29,7 @@ int add_type(
 
         ecs_entity_t entity = ecs_lookup(world, entity_id);
         if (!entity) {
+            fprintf(stderr, "component %s not found\n", entity_id);
             return -1;
         }
 
@@ -618,3 +619,21 @@ ecs_type_t _ecs_merge_type(
     return ecs_type_merge(world, stage, type, type_add, type_remove);
 }
 
+ecs_entity_t ecs_type_get_component(
+    ecs_world_t *world,
+    ecs_type_t type_id,
+    uint32_t index)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    
+    ecs_stage_t *stage = ecs_get_stage(&world);
+
+    ecs_array_t *components = ecs_map_get(stage->type_index, type_id);
+    ecs_entity_t *buffer = ecs_array_buffer(components);
+
+    if (ecs_array_count(components) > index) {
+        return buffer[index];
+    } else {
+        return 0;
+    }
+}

@@ -80,7 +80,7 @@ int ecs_table_init(
             if (!ecs_has(world, buf[i], EcsComponent)) {
                 if (ecs_has(world, buf[i], EcsPrefab)) {
                     /* Tables can contain at most one prefab */
-                    ecs_assert(prefab_set == false, ECS_MORE_THAN_ONE_PREFAB, ecs_id(world, buf[i]));
+                    ecs_assert(prefab_set == false, ECS_MORE_THAN_ONE_PREFAB, ecs_get_id(world, buf[i]));
                     prefab_set = true;
 
                     /* Register type with prefab index for quick lookups */

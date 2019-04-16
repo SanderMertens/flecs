@@ -1007,7 +1007,7 @@ ecs_entity_t _ecs_run_w_filter(
                         false, true, &entity_info);
                         
                     ecs_assert(info.ref_ptrs[i] != NULL, 
-                        ECS_UNRESOLVED_REFERENCE, ecs_id(world, system));
+                        ECS_UNRESOLVED_REFERENCE, ecs_get_id(world, system));
                 } else {
                     info.ref_ptrs[i] = NULL;
                 }

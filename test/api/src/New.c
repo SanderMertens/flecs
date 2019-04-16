@@ -5,7 +5,7 @@ void New_empty() {
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
-    test_assert(ecs_empty(world, e));
+    test_assert(ecs_is_empty(world, e));
 
     ecs_fini(world);
 }

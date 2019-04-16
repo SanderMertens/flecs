@@ -234,7 +234,7 @@ ecs_set(world, e, EcsId, {"MyEntity"});
 This sets the `EcsId` component on an entity which is used by Flecs to assign names to entities. The `"MyEntity"` string is a literal and will certainly outlive the lifespan of the component, as it is tied to the lifecycle of the process, therefore it is safe to assign it like this. It can subsequently be obtained with this function:
 
 ```c
-const char *id = ecs_id(world, e);
+const char *id = ecs_get_id(world, e);
 ```
 
 This function returns the verbatim address that is stored in the `EcsId` component, and thus should not be freed.

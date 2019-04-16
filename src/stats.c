@@ -340,7 +340,7 @@ void ecs_get_stats(
         ecs_entity_t type_handle = ecs_map_get64(
             world->type_handles, table->type_id);
         if (type_handle) {
-            tstats->id = ecs_id(world, type_handle);
+            tstats->id = ecs_get_id(world, type_handle);
         } else {
             tstats->id = NULL;
         }
@@ -383,7 +383,7 @@ void ecs_get_stats(
             EcsFeatureStats *elem = ecs_array_add(
                 &stats->features, &featurestats_arr_params);
             *elem = feature;
-            elem->id = ecs_id(world, h);
+            elem->id = ecs_get_id(world, h);
             elem->entities = ecs_type_tostr(world, NULL, data->type);
             elem->is_hidden = ecs_has(world, h, EcsHidden);
         }
