@@ -110,8 +110,18 @@ void SingleThreadStaging_new_w_type_of_2() {
     ecs_fini(world);
 }
 
+static
+void NewEmpty_w_count(ecs_rows_t *rows) {
+    IterData *ctx = ecs_get_context(rows->world);
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ctx->new_entities[ctx->entity_count] = ecs_new(rows->world, 0);
+        ctx->entity_count ++;
+    }
+}
+
 void SingleThreadStaging_new_empty_w_count() {
-    // Implement testcase
+
 }
 
 void SingleThreadStaging_new_component_w_count() {

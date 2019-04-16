@@ -918,13 +918,19 @@ bool ecs_is_empty(
  * This operation will count the number of entities that have all of the
  * components in the specified type.
  *
+ * This operation will not reflect entities created/deleted when invoked while
+ * iterating. To get a consistent count, the function should be invoked after
+ * data from an iteration has been merged.
+ *
  * @param world The world.
  * @param type The type used to match entities.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_count(
+uint32_t _ecs_count(
     ecs_world_t *world,
     ecs_type_t type);
+
+#define ecs_count(world, type) _ecs_count(world, ecs_to_type(type))
 
 /** Lookup an entity by id.
  * This operation is a convenient way to lookup entities by string identifier

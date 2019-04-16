@@ -111,6 +111,15 @@
                 "has_in_progress"
             ]
         }, {
+            "id": "Count",
+            "testcases": [
+                "count_empty",
+                "count_1_component",
+                "count_2_components",
+                "count_3_components",
+                "count_2_types_2_comps"
+            ]
+        }, {
             "id": "Get_component",
             "testcases": [
                 "get_empty",

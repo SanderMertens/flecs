@@ -1149,3 +1149,27 @@ ecs_type_t ecs_get_type(
     
     return result;
 }
+
+uint32_t _ecs_count(
+    ecs_world_t *world,
+    ecs_type_t type)
+{
+    if (!type) {
+        return 0;
+    }
+
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_array_t *table_array = world->main_stage.tables;
+    
+    ecs_table_t *tables = ecs_array_buffer(table_array);
+    uint32_t i, count = ecs_array_count(table_array);
+    uint32_t result = 0;
+
+    for (i = 0; i < count; i ++) {
+        if (ecs_type_contains(world, stage, tables[i].type_id, type, true, true)) {
+            result += ecs_array_count(tables[i].columns[0].data);
+        }
+    }
+    
+    return result;
+}

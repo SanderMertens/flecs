@@ -98,6 +98,13 @@ void Has_any_of_1_of_0(void);
 void Has_any_2_of_2_disjunct(void);
 void Has_has_in_progress(void);
 
+// Testsuite 'Count'
+void Count_count_empty(void);
+void Count_count_1_component(void);
+void Count_count_2_components(void);
+void Count_count_3_components(void);
+void Count_count_2_types_2_comps(void);
+
 // Testsuite 'Get_component'
 void Get_component_get_empty(void);
 void Get_component_get_1_from_1(void);
@@ -815,6 +822,32 @@ static bake_test_suite suites[] = {
             {
                 .id = "has_in_progress",
                 .function = Has_has_in_progress
+            }
+        }
+    },
+    {
+        .id = "Count",
+        .testcase_count = 5,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "count_empty",
+                .function = Count_count_empty
+            },
+            {
+                .id = "count_1_component",
+                .function = Count_count_1_component
+            },
+            {
+                .id = "count_2_components",
+                .function = Count_count_2_components
+            },
+            {
+                .id = "count_3_components",
+                .function = Count_count_3_components
+            },
+            {
+                .id = "count_2_types_2_comps",
+                .function = Count_count_2_types_2_comps
             }
         }
     },
@@ -2248,5 +2281,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 30);
+    return bake_test_run("api", argc, argv, suites, 31);
 }

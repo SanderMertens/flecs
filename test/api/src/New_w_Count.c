@@ -17,6 +17,7 @@ void New_w_Count_component() {
     ecs_entity_t e = ecs_new_w_count(world, Position, 1000);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
+    test_int(ecs_count(world, Position), 1000);
 
     ecs_fini(world);
 }
@@ -29,6 +30,7 @@ void New_w_Count_type() {
 
     ecs_entity_t e = ecs_new_w_count(world, MyType, 1000);
     test_assert(e != 0);
+    test_int(ecs_count(world, MyType), 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {
@@ -47,6 +49,7 @@ void New_w_Count_type_of_2() {
 
     ecs_entity_t e = ecs_new_w_count(world, MyType, 1000);
     test_assert(e != 0);
+    test_int(ecs_count(world, MyType), 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {
@@ -66,6 +69,7 @@ void New_w_Count_type_w_type() {
 
     ecs_entity_t e = ecs_new_w_count(world, Type_2, 1000);
     test_assert(e != 0);
+    test_int(ecs_count(world, Type_2), 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {
@@ -86,6 +90,7 @@ void New_w_Count_type_w_2_types() {
 
     ecs_entity_t e = ecs_new_w_count(world, Type_3, 1000);
     test_assert(e != 0);
+    test_int(ecs_count(world, Type_3), 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {
@@ -106,6 +111,7 @@ void New_w_Count_type_mixed() {
 
     ecs_entity_t e = ecs_new_w_count(world, Type_2, 1000);
     test_assert(e != 0);
+    test_int(ecs_count(world, Type_2), 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {
@@ -123,6 +129,7 @@ void New_w_Count_tag() {
 
     ecs_entity_t e = ecs_new_w_count(world, Tag, 1000);
     test_assert(e != 0);
+    test_int(ecs_count(world, Tag), 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {
@@ -140,6 +147,7 @@ void New_w_Count_type_w_tag() {
 
     ecs_entity_t e = ecs_new_w_count(world, Type, 1000);
     test_assert(e != 0);
+    test_int(ecs_count(world, Type), 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {
@@ -158,6 +166,7 @@ void New_w_Count_type_w_2_tags() {
 
     ecs_entity_t e = ecs_new_w_count(world, Type, 1000);
     test_assert(e != 0);
+    test_int(ecs_count(world, Type), 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {
@@ -178,6 +187,7 @@ void New_w_Count_type_w_tag_mixed() {
 
     ecs_entity_t e = ecs_new_w_count(world, Type, 1000);
     test_assert(e != 0);
+    test_int(ecs_count(world, Type), 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {
