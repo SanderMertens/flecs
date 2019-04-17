@@ -263,8 +263,7 @@ ecs_entity_t ecs_import(
 /* Import a module from a library.
  * If a module is stored in another library, it can be dynamically loaded with
  * this operation. A library may contain multiple modules, and to disambiguate
- * the function allows applications to disambiguate with the 'module_name'
- * parameter.
+ * the function allows applications to specify the 'module_name' aprameter.
  *
  * A library name typically looks like 'flecs.components.transform', whereas a
  * module name typically looks like 'FlecsComponentsTransform'.
