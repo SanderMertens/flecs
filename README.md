@@ -119,7 +119,7 @@ A simple application demonstrating collision detection with flecs.
 An implementation of pong in flecs.
 
 #### [ecs_solar](https://github.com/SanderMertens/ecs_solar)
-A simple application that demonstrates entity hierarchies
+An intermediate application that demonstrates hierarchies and particle effects
 
 #### [ecs_benchmark](https://github.com/SanderMertens/ecs_benchmark)
 ECS performance benchmark that tests various operations and iterations.
