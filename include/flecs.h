@@ -260,6 +260,30 @@ ecs_entity_t ecs_import(
     void *handles_out,
     size_t handles_size);
 
+/* Import a module from a library.
+ * If a module is stored in another library, it can be dynamically loaded with
+ * this operation. A library may contain multiple modules, and to disambiguate
+ * the function allows applications to disambiguate with the 'module_name'
+ * parameter.
+ *
+ * A library name typically looks like 'flecs.components.transform', whereas a
+ * module name typically looks like 'FlecsComponentsTransform'.
+ *
+ * To use this function, Flecs needs to be built with bake, as it relies on
+ * bake's package discovery utility API.
+ *
+ * @param world The world.
+ * @param library_name The name of the library to load.
+ * @param module_name The name of the module to load.
+ * @param flags The flags to pass to the module.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_import_from_library(
+    ecs_world_t *world,
+    const char *library_name,
+    const char *module_name,
+    int flags);
+
 /** Progress a world.
  * This operation progresses the world by running all systems that are both
  * enabled and periodic on their matching entities.

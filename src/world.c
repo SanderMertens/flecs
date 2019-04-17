@@ -417,34 +417,23 @@ void load_admin(
     const char *exec,
     uint16_t port)
 {
-#ifdef __BAKE__
     ut_init(exec);
     if (ut_load_init(NULL, NULL, NULL, NULL)) {
         fprintf(stderr, "failed to initialize package loader, cannot load admin");
         return;
     }
 
-    /* Find civetweb module & entry point */
-    ecs_module_init_action_t civet_action = (ecs_module_init_action_t)ut_load_proc(
-            "flecs.systems.civetweb", NULL, "EcsSystemsCivetweb");
-    if (!civet_action) {
-        ut_raise();
-        fprintf(stderr, "failed to load the flecs civetweb module\n");
+    if (ecs_import_from_library(
+        world, "flecs.systems.civetweb", "EcsSystemsCivetweb", 0) == ECS_INVALID_ENTITY) 
+    {
         return;
     }
-
-    /* Find admin module & entry point */
-    ecs_module_init_action_t admin_action = (ecs_module_init_action_t)ut_load_proc(
-        "flecs.systems.admin", NULL, "EcsSystemsAdmin");
-    if (!admin_action) {
-        ut_raise();
-        fprintf(stderr, "failed to load the flecs admin module\n");
+    
+    if (ecs_import_from_library(
+        world, "flecs.systems.admin", "EcsSystemsAdmin", 0) == ECS_INVALID_ENTITY)
+    {
         return;
     }
-
-    /* Load both modules */
-    civet_action(world, 0, NULL);
-    admin_action(world, 0, NULL);
 
     /* Enable monitoring */
     ecs_measure_frame_time(world, true);
@@ -456,10 +445,6 @@ void load_admin(
     ecs_set(world, 0, EcsAdmin, {port});
 
     printf("Admin is running on port %d\n", port);
-#else
-    fprintf(stderr, 
-        "sorry, loading the admin is only possible if flecs was built with bake :(");
-#endif
 }
 
 /* -- Public functions -- */
@@ -1032,13 +1017,67 @@ ecs_entity_t ecs_import(
         module(world, flags, handles_out);
 
         /* Register component for module that contains handles */
-        e = ecs_new_component(world, module_name, handles_size);
-        ecs_type_t t = ecs_type_from_entity(world, e);
+        if (handles_size) {
+            e = ecs_new_component(world, module_name, handles_size);
 
-        /* Set module handles component on singleton */
-        _ecs_set_singleton_ptr(world, t, handles_size, handles_out);
+            ecs_type_t t = ecs_type_from_entity(world, e);
+
+            /* Set module handles component on singleton */
+            _ecs_set_singleton_ptr(world, t, handles_size, handles_out);
+        }
     }
 
     return e;
 }
 
+ecs_entity_t ecs_import_from_library(
+    ecs_world_t *world,
+    const char *library_name,
+    const char *module_name,
+    int flags)
+{
+#ifdef __BAKE__
+    char *module = (char*)module_name; /* safe */
+
+    /* If no module name is specified, try default naming convention for loading
+     * the main module from the library */
+    if (!module) {
+        module = malloc(strlen(library_name) + 1);
+        const char *ptr;
+        char ch, *bptr = module;
+        bool capitalize = true;
+        for (ptr = library_name; (ch = *ptr); ptr ++) {
+            if (ch == '.') {
+                capitalize = true;
+            } else {
+                if (capitalize) {
+                    *bptr = toupper(ch);
+                    bptr ++;
+                    capitalize = false;
+                } else {
+                    *bptr = tolower(ch);
+                    bptr ++;
+                }
+            }
+        }
+        *bptr = '\0';
+    }
+
+    /* Find civetweb module & entry point */
+    ecs_module_init_action_t action = (ecs_module_init_action_t)ut_load_proc(
+            library_name, NULL, module);
+    if (!action) {
+        fprintf(stderr, "failed to load the %s module from library %s\n",
+            module, library_name);
+        return ECS_INVALID_ENTITY;
+    }
+
+    /* Do not free id, as it will be stored as the component identifier */
+    return ecs_import(world, action, module, flags, NULL, 0); 
+#else
+    fprintf(stderr, 
+        "sorry, loading libraries is only possible if flecs is built with bake :(");
+
+    return ECS_INVALID_ENTITY;
+#endif
+}
