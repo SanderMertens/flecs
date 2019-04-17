@@ -1042,7 +1042,7 @@ ecs_entity_t ecs_import_from_library(
     /* If no module name is specified, try default naming convention for loading
      * the main module from the library */
     if (!module) {
-        module = malloc(strlen(library_name) + 1);
+        module = ecs_os_malloc(strlen(library_name) + 1);
         const char *ptr;
         char ch, *bptr = module;
         bool capitalize = true;
