@@ -417,12 +417,6 @@ void load_admin(
     const char *exec,
     uint16_t port)
 {
-    ut_init(exec);
-    if (ut_load_init(NULL, NULL, NULL, NULL)) {
-        fprintf(stderr, "failed to initialize package loader, cannot load admin");
-        return;
-    }
-
     if (ecs_import_from_library(
         world, "flecs.systems.civetweb", "EcsSystemsCivetweb", 0) == ECS_INVALID_ENTITY) 
     {
@@ -451,6 +445,13 @@ void load_admin(
 
 ecs_world_t *ecs_init(void) {
     ecs_set_os_api_defaults();
+
+#ifdef __BAKE__
+    ut_init(NULL);
+    if (ut_load_init(NULL, NULL, NULL, NULL)) {
+        fprintf(stderr, "warning: failed to initialize package loader");
+    }
+#endif
 
     ecs_world_t *world = ecs_os_malloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
@@ -647,6 +648,10 @@ int ecs_fini(
     world->magic = 0;
 
     ecs_os_free(world);
+
+#ifdef __BAKE__
+    ut_deinit();
+#endif    
 
     return 0;
 }
