@@ -517,7 +517,7 @@ ecs_entity_t _ecs_new(
 #define ecs_new(world, type)\
     _ecs_new(world, T##type)
 
-/** Create a new set of entities.
+/** Create new entities in a batch.
  * This operation creates the number of specified entities with one API call
  * which is a more efficient alternative to calling ecs_new in a loop.
  *
@@ -739,6 +739,26 @@ ecs_entity_t _ecs_new_child(
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_new_child(world, parent, type)\
     _ecs_new_child(world, parent, T##type)
+
+/* Create new child entities in batch.
+ * This operation is similar to ecs_new_w_count, with as only difference that
+ * the parent is added to the type of the new entities.
+ *
+ * @param world The world.
+ * @param parent The parent.
+ * @param type The type to create the new entities with.
+ * @param count The number of entities to create.
+ */
+FLECS_EXPORT
+ecs_entity_t _ecs_new_child_w_count(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_type_t type,
+    uint32_t count);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_new_child_w_count(world, parent, type, count)\
+    _ecs_new_child_w_count(world, parent, T##type, count)
 
 /** Adopt a child entity by a parent.
  * This operation adds the specified parent entity to the type of the specified
