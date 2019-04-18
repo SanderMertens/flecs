@@ -23,13 +23,19 @@ int add_type(
     if (!strcmp(entity_id, "0")) {
         *type = (EcsTypeComponent){0, 0};
     } else {
-        if (elem_kind != EcsFromSelf) {
+        ecs_entity_t entity = ecs_lookup(world, entity_id);
+        if (!entity) {
+            fprintf(stderr, "%s not found\n", entity_id);
             return -1;
         }
 
-        ecs_entity_t entity = ecs_lookup(world, entity_id);
-        if (!entity) {
-            fprintf(stderr, "component %s not found\n", entity_id);
+        if (elem_kind == EcsFromContainer) {
+            if (!ecs_has(world, entity, EcsContainer)) {
+                ecs_add(world, entity, EcsContainer);
+                ecs_set_watching(world, entity, true);
+            }
+        } else if (elem_kind != EcsFromSelf) {
+            fprintf(stderr, "invalid prefix for component '%s'", entity_id);
             return -1;
         }
 
