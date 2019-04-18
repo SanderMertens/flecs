@@ -136,6 +136,7 @@ Module      | Description
 [flecs.components.geometry](https://github.com/SanderMertens/flecs-components-geometry) | Components for describing geometry
 [flecs.components.input](https://github.com/SanderMertens/flecs-components-input) | Components for describing keyboard and mouse input
 [flecs.components.http](https://github.com/SanderMertens/flecs-components-http) | Components for describing an HTTP server with endpoints
+[flecs.components.meta](https://github.com/SanderMertens/flecs-components-meta) | Reflection components for flecs components
 [flecs.systems.transform](https://github.com/SanderMertens/flecs-systems-transform) | Compute transformation matrices from transform components
 [flecs.systems.physics](https://github.com/SanderMertens/flecs-systems-physics) | Simple 2D physics engine with limited 3D features
 [flecs.systems.civetweb](https://github.com/SanderMertens/flecs-systems-civetweb) | A civetweb-based implementation of components-http
