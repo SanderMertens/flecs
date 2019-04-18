@@ -660,6 +660,9 @@ ecs_entity_t _ecs_new(
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
 
     ecs_entity_t entity = ++ world->last_handle;
+
+    ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, NULL);
+
     if (type) {
         ecs_entity_info_t info = {
             .entity = entity
@@ -681,8 +684,10 @@ ecs_entity_t _ecs_new_w_count(
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_t result = world->last_handle + 1;
-    world->last_handle += count;
     
+    world->last_handle += count;
+
+    ecs_assert(!world->max_handle || world->last_handle <= world->max_handle, ECS_OUT_OF_RANGE, NULL);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
 
     if (type) {

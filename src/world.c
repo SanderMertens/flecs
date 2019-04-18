@@ -530,6 +530,7 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsContainer, ECS_CONTAINER_ID, 0);
 
     world->last_handle = EEcsContainer + 1;
+    world->max_handle = 0;
 
     return world;
 }
@@ -867,7 +868,7 @@ bool ecs_progress(
     ecs_world_t *world,
     float user_delta_time)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
 
     /* Start measuring total frame time */
     float delta_time = start_measure_frame(world, user_delta_time);
@@ -935,7 +936,7 @@ void ecs_quit(
 void ecs_merge(
     ecs_world_t *world)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     assert(world->is_merging == false);
 
     world->is_merging = true;
@@ -960,7 +961,7 @@ void ecs_set_automerge(
     ecs_world_t *world,
     bool auto_merge)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     world->auto_merge = auto_merge;
 }
 
@@ -968,7 +969,7 @@ void ecs_measure_frame_time(
     ecs_world_t *world,
     bool enable)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     if (!world->target_fps || enable) {
         world->measure_frame_time = enable;
     }
@@ -978,7 +979,7 @@ void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     world->measure_system_time = enable;
 }
 
@@ -986,7 +987,7 @@ void ecs_set_target_fps(
     ecs_world_t *world,
     float fps)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
 
     if (!world->arg_fps) {
         ecs_measure_frame_time(world, true);
@@ -1005,8 +1006,24 @@ void ecs_set_context(
     ecs_world_t *world,
     void *context)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     world->context = context;
+}
+
+void ecs_set_entity_range(
+    ecs_world_t *world,
+    ecs_entity_t id_start,
+    ecs_entity_t id_end)
+{
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(!id_end || id_end > id_start, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(id_end > world->last_handle, ECS_INVALID_PARAMETERS, NULL);
+
+    if (world->last_handle < id_start) {
+        world->last_handle = id_start;
+    }
+
+    world->max_handle = id_end;
 }
 
 ecs_entity_t ecs_import(

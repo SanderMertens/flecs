@@ -58,8 +58,6 @@ const char* ecs_strerror(
         return "type contains more than one entity";
     case ECS_NOT_A_COMPONENT:
         return "handle is not a component";
-    case ecs_type_IN_USE:
-        return "type specified by system is already in use";
     case ECS_INTERNAL_ERROR:
         return "internal error";
     case ECS_MORE_THAN_ONE_PREFAB:
@@ -80,6 +78,10 @@ const char* ecs_strerror(
         return "column is shared";
     case ECS_INVALID_WHILE_MERGING:
         return "operation is invalid while merging";
+    case ECS_INVALID_WHILE_ITERATING:
+        return "operation is invalid while iterating";    
+    case ECS_INVALID_FROM_WORKER:
+        return "operation is invalid from worker thread";
     case ECS_UNRESOLVED_IDENTIFIER:
         return "unresolved identifier";
     case ECS_OUT_OF_RANGE:

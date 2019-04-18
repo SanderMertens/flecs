@@ -509,6 +509,28 @@ void _ecs_dim_type(
 #define ecs_dim_type(world, type, entity_count)\
     _ecs_dim_type(world, T##type, entity_count)
 
+/** Set a range for issueing new entity ids.
+ * This function constrains the entity identifiers returned by ecs_new to the 
+ * specified range. This operation can be used to ensure that multiple processes
+ * can run in the same simulation without requiring a central service that
+ * coordinates issueing identifiers.
+ * 
+ * If id_end is set to 0, the range is infinite. If id_end is set to a non-zero
+ * value, it has to be larger than id_start. If id_end is set and ecs_new is
+ * invoked after an id is issued that is equal to id_end, the application will
+ * abort. Flecs does not automatically recycle ids.
+ * 
+ * The id_end parameter has to be smaller than the last issued identifier.
+ * 
+ * @param world The world.
+ * @param id_start The start of the range.
+ * @param id_end The end of the range.
+ */
+FLECS_EXPORT
+void ecs_set_entity_range(
+    ecs_world_t *world,
+    ecs_entity_t id_start,
+    ecs_entity_t id_end);
 
 /* -- Entity API -- */
 
@@ -1537,22 +1559,23 @@ void _ecs_assert(
 #define ECS_TYPE_NOT_AN_ENTITY (7)
 #define ECS_MISSING_SYSTEM_CONTEXT (8)
 #define ECS_NOT_A_COMPONENT (9)
-#define ecs_type_IN_USE (10)
-#define ECS_INTERNAL_ERROR (11)
-#define ECS_MORE_THAN_ONE_PREFAB (12)
-#define ECS_ENTITY_ALREADY_DEFINED (13)
-#define ECS_INVALID_COMPONENT_SIZE (14)
-#define ECS_OUT_OF_MEMORY (15)
-#define ECS_MODULE_UNDEFINED (16)
-#define ECS_COLUMN_INDEX_OUT_OF_RANGE (17)
-#define ECS_COLUMN_IS_NOT_SHARED (18)
-#define ECS_COLUMN_IS_SHARED (19)
-#define ECS_INVALID_WHILE_MERGING (20)
-#define ECS_UNRESOLVED_IDENTIFIER (21)
-#define ECS_OUT_OF_RANGE (22)
-#define ECS_COLUMN_IS_NOT_SET (23)
-#define ECS_UNRESOLVED_REFERENCE (24)
-#define ECS_THREAD_ERROR (25)
+#define ECS_INTERNAL_ERROR (10)
+#define ECS_MORE_THAN_ONE_PREFAB (11)
+#define ECS_ENTITY_ALREADY_DEFINED (12)
+#define ECS_INVALID_COMPONENT_SIZE (13)
+#define ECS_OUT_OF_MEMORY (14)
+#define ECS_MODULE_UNDEFINED (15)
+#define ECS_COLUMN_INDEX_OUT_OF_RANGE (16)
+#define ECS_COLUMN_IS_NOT_SHARED (17)
+#define ECS_COLUMN_IS_SHARED (18)
+#define ECS_INVALID_WHILE_MERGING (19)
+#define ECS_INVALID_WHILE_ITERATING (20)
+#define ECS_INVALID_FROM_WORKER (21)
+#define ECS_UNRESOLVED_IDENTIFIER (22)
+#define ECS_OUT_OF_RANGE (23)
+#define ECS_COLUMN_IS_NOT_SET (24)
+#define ECS_UNRESOLVED_REFERENCE (25)
+#define ECS_THREAD_ERROR (26)
 
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */

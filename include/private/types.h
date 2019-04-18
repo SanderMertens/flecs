@@ -255,7 +255,6 @@ struct ecs_world_t {
     uint32_t magic;               /* Magic number to verify world pointer */
     float delta_time;           /* Time passed to or computed by ecs_progress */
     void *context;                /* Application context */
-    
 
     /* -- Column systems -- */
 
@@ -311,6 +310,7 @@ struct ecs_world_t {
     uint32_t threads_running;        /* Number of threads running */
 
     ecs_entity_t last_handle;        /* Last issued handle */
+    ecs_entity_t max_handle;         /* Last allowed handle */
 
 
     /* -- Handles to builtin components families -- */
