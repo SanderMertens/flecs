@@ -7,19 +7,19 @@
 
 /* -- Global array parameters -- */
 
-const ecs_array_params_t table_arr_params = {
+const ecs_vector_params_t table_arr_params = {
     .element_size = sizeof(ecs_table_t)
 };
 
-const ecs_array_params_t handle_arr_params = {
+const ecs_vector_params_t handle_arr_params = {
     .element_size = sizeof(ecs_entity_t)
 };
 
-const ecs_array_params_t stage_arr_params = {
+const ecs_vector_params_t stage_arr_params = {
     .element_size = sizeof(ecs_stage_t)
 };
 
-const ecs_array_params_t char_arr_params = {
+const ecs_vector_params_t char_arr_params = {
     .element_size = sizeof(char)
 };
 
@@ -84,22 +84,22 @@ ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
     ecs_stage_t *stage = &world->main_stage;
-    ecs_table_t *result = ecs_array_add(&stage->tables, &table_arr_params);
-    ecs_array_t *type = ecs_map_get(stage->type_index, world->t_component);
+    ecs_table_t *result = ecs_vector_add(&stage->tables, &table_arr_params);
+    ecs_vector_t *type = ecs_map_get(stage->type_index, world->t_component);
     result->type_id = world->t_component;
     result->type = type;
     result->frame_systems = NULL;
     result->columns = ecs_os_malloc(sizeof(ecs_table_column_t) * 3);
     ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    result->columns[0].data = ecs_array_new(&handle_arr_params, 8);
+    result->columns[0].data = ecs_vector_new(&handle_arr_params, 8);
     result->columns[0].size = sizeof(ecs_entity_t);
-    result->columns[1].data = ecs_array_new(&handle_arr_params, 8);
+    result->columns[1].data = ecs_vector_new(&handle_arr_params, 8);
     result->columns[1].size = sizeof(EcsComponent);
-    result->columns[2].data = ecs_array_new(&handle_arr_params, 8);
+    result->columns[2].data = ecs_vector_new(&handle_arr_params, 8);
     result->columns[2].size = sizeof(EcsId);
 
-    uint32_t index = ecs_array_get_index(
+    uint32_t index = ecs_vector_get_index(
         stage->tables, &table_arr_params, result);
 
     ecs_assert(index == 0, ECS_INTERNAL_ERROR, "first table index must be 0");
@@ -128,8 +128,8 @@ void bootstrap_component(
     ecs_map_set(stage->entity_index, entity, ecs_from_row(row));
 
     /* Set size and id */
-    EcsComponent *component_data = ecs_array_buffer(table->columns[1].data);
-    EcsId *id_data = ecs_array_buffer(table->columns[2].data);
+    EcsComponent *component_data = ecs_vector_buffer(table->columns[1].data);
+    EcsId *id_data = ecs_vector_buffer(table->columns[2].data);
     
     component_data[index - 1].size = size;
     id_data[index - 1] = id;
@@ -138,11 +138,11 @@ void bootstrap_component(
 static
 void notify_create_table(
     ecs_world_t *world,
-    ecs_array_t *systems,
+    ecs_vector_t *systems,
     ecs_table_t *table)
 {
-    ecs_entity_t *buffer = ecs_array_buffer(systems);
-    uint32_t i, count = ecs_array_count(systems);
+    ecs_entity_t *buffer = ecs_vector_buffer(systems);
+    uint32_t i, count = ecs_vector_count(systems);
 
     for (i = 0; i < count; i ++) {
         ecs_col_system_notify_of_table(world, buffer[i], table);
@@ -175,7 +175,7 @@ ecs_table_t* create_table(
     ecs_type_t type_id)
 {
     /* Add and initialize table */
-    ecs_table_t *result = ecs_array_add(&stage->tables, &table_arr_params);
+    ecs_table_t *result = ecs_vector_add(&stage->tables, &table_arr_params);
     
     result->type_id = type_id;
 
@@ -183,7 +183,7 @@ ecs_table_t* create_table(
         return NULL;
     }
 
-    uint32_t index = ecs_array_get_index(stage->tables, &table_arr_params, result);
+    uint32_t index = ecs_vector_get_index(stage->tables, &table_arr_params, result);
     ecs_map_set64(stage->table_index, type_id, index + 1);
 
     if (stage == &world->main_stage) {
@@ -210,13 +210,13 @@ ecs_table_t* ecs_world_get_table(
         assert(stage != NULL);
         table_index = ecs_map_get64(stage->table_index, type_id);
         if (table_index) {
-            return ecs_array_get(
+            return ecs_vector_get(
                 stage->tables, &table_arr_params, table_index - 1);
         }
     }
 
     if (table_index) {
-        return ecs_array_get(
+        return ecs_vector_get(
             main_stage->tables, &table_arr_params, table_index - 1);
     } else {
         return create_table(world, stage, type_id);
@@ -226,7 +226,7 @@ ecs_table_t* ecs_world_get_table(
 }
 
 static
-ecs_array_t** frame_system_array(
+ecs_vector_t** frame_system_array(
     ecs_world_t *world,
     EcsSystemKind kind)
 {
@@ -269,7 +269,7 @@ void ecs_world_activate_system(
     EcsSystemKind kind,
     bool active)
 {
-    ecs_array_t *src_array, *dst_array;
+    ecs_vector_t *src_array, *dst_array;
 
     if (active) {
         src_array = world->inactive_systems;
@@ -279,9 +279,9 @@ void ecs_world_activate_system(
         dst_array = world->inactive_systems;
     }
 
-    uint32_t i, count = ecs_array_count(src_array);
+    uint32_t i, count = ecs_vector_count(src_array);
     for (i = 0; i < count; i ++) {
-        ecs_entity_t *h = ecs_array_get(
+        ecs_entity_t *h = ecs_vector_get(
             src_array, &handle_arr_params, i);
         if (*h == system) {
             break;
@@ -292,16 +292,16 @@ void ecs_world_activate_system(
         return; /* System is disabled */
     }
 
-    ecs_array_move_index(
+    ecs_vector_move_index(
         &dst_array, src_array, &handle_arr_params, i);
 
     if (active) {
          *frame_system_array(world, kind) = dst_array;
-         qsort(dst_array, ecs_array_count(dst_array) + 1,
+         qsort(dst_array, ecs_vector_count(dst_array) + 1,
           sizeof(ecs_entity_t), compare_handle);
     } else {
         world->inactive_systems = dst_array;
-        qsort(src_array, ecs_array_count(src_array) + 1,
+        qsort(src_array, ecs_vector_count(src_array) + 1,
           sizeof(ecs_entity_t), compare_handle);
     }
 }
@@ -332,19 +332,19 @@ char* ecs_type_tostr(
     ecs_stage_t *stage,
     ecs_type_t type_id)
 {
-    ecs_array_t *type = ecs_type_get(world, stage, type_id);
-    ecs_array_t *chbuf = ecs_array_new(&char_arr_params, 32);
+    ecs_vector_t *type = ecs_type_get(world, stage, type_id);
+    ecs_vector_t *chbuf = ecs_vector_new(&char_arr_params, 32);
     char *dst;
     uint32_t len;
     char buf[15];
 
-    ecs_entity_t *handles = ecs_array_buffer(type);
-    uint32_t i, count = ecs_array_count(type);
+    ecs_entity_t *handles = ecs_vector_buffer(type);
+    uint32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t h = handles[i];
         if (i) {
-            *(char*)ecs_array_add(&chbuf, &char_arr_params) = ',';
+            *(char*)ecs_vector_add(&chbuf, &char_arr_params) = ',';
         }
 
         const char *str = NULL;
@@ -357,14 +357,14 @@ char* ecs_type_tostr(
             str = buf;
         }
         len = strlen(str);
-        dst = ecs_array_addn(&chbuf, &char_arr_params, len);
+        dst = ecs_vector_addn(&chbuf, &char_arr_params, len);
         memcpy(dst, str, len);
     }
 
-    *(char*)ecs_array_add(&chbuf, &char_arr_params) = '\0';
+    *(char*)ecs_vector_add(&chbuf, &char_arr_params) = '\0';
 
-    char *result = strdup(ecs_array_buffer(chbuf));
-    ecs_array_free(chbuf);
+    char *result = strdup(ecs_vector_buffer(chbuf));
+    ecs_vector_free(chbuf);
     return result;
 }
 
@@ -392,19 +392,19 @@ ecs_stage_t *ecs_get_stage(
 static
 void col_systems_deinit(
     ecs_world_t *world,
-    ecs_array_t *systems)
+    ecs_vector_t *systems)
 {
-    uint32_t i, count = ecs_array_count(systems);
-    ecs_entity_t *buffer = ecs_array_buffer(systems);
+    uint32_t i, count = ecs_vector_count(systems);
+    ecs_entity_t *buffer = ecs_vector_buffer(systems);
 
     for (i = 0; i < count; i ++) {
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
-        ecs_array_free(ptr->base.columns);
-        ecs_array_free(ptr->components);
-        ecs_array_free(ptr->inactive_tables);
-        ecs_array_free(ptr->jobs);
-        ecs_array_free(ptr->tables);
-        ecs_array_free(ptr->refs);
+        ecs_vector_free(ptr->base.columns);
+        ecs_vector_free(ptr->components);
+        ecs_vector_free(ptr->inactive_tables);
+        ecs_vector_free(ptr->jobs);
+        ecs_vector_free(ptr->tables);
+        ecs_vector_free(ptr->refs);
     }
 }
 
@@ -458,22 +458,22 @@ ecs_world_t *ecs_init(void) {
 
     world->magic = ECS_WORLD_MAGIC;
 
-    world->on_update_systems = ecs_array_new(&handle_arr_params, 0);
-    world->on_validate_systems = ecs_array_new(&handle_arr_params, 0);
-    world->pre_update_systems = ecs_array_new(&handle_arr_params, 0);
-    world->post_update_systems = ecs_array_new(&handle_arr_params, 0);
-    world->post_load_systems = ecs_array_new(&handle_arr_params, 0);
-    world->on_load_systems = ecs_array_new(&handle_arr_params, 0);
-    world->pre_store_systems = ecs_array_new( &handle_arr_params, 0);
-    world->on_store_systems = ecs_array_new( &handle_arr_params, 0);
-    world->inactive_systems = ecs_array_new(&handle_arr_params, 0);
-    world->on_demand_systems = ecs_array_new(&handle_arr_params, 0);
+    world->on_update_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->on_validate_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->pre_update_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->post_update_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->post_load_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->on_load_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->pre_store_systems = ecs_vector_new( &handle_arr_params, 0);
+    world->on_store_systems = ecs_vector_new( &handle_arr_params, 0);
+    world->inactive_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->on_demand_systems = ecs_vector_new(&handle_arr_params, 0);
 
-    world->add_systems = ecs_array_new(&handle_arr_params, 0);
-    world->remove_systems = ecs_array_new(&handle_arr_params, 0);
-    world->set_systems = ecs_array_new(&handle_arr_params, 0);
-    world->tasks = ecs_array_new(&handle_arr_params, 0);
-    world->fini_tasks = ecs_array_new(&handle_arr_params, 0);
+    world->add_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->remove_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->set_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->tasks = ecs_vector_new(&handle_arr_params, 0);
+    world->fini_tasks = ecs_vector_new(&handle_arr_params, 0);
 
     world->type_sys_add_index = ecs_map_new(0);
     world->type_sys_remove_index = ecs_map_new(0);
@@ -596,9 +596,9 @@ int ecs_fini(
     assert(!world->in_progress);
     assert(!world->is_merging);
 
-    uint32_t i, system_count = ecs_array_count(world->fini_tasks);
+    uint32_t i, system_count = ecs_vector_count(world->fini_tasks);
     if (system_count) {
-        ecs_entity_t *buffer = ecs_array_buffer(world->fini_tasks);
+        ecs_entity_t *buffer = ecs_vector_buffer(world->fini_tasks);
         for (i = 0; i < system_count; i ++) {
             ecs_run_task(world, buffer[i]);
         }
@@ -622,23 +622,23 @@ int ecs_fini(
     ecs_stage_deinit(world, &world->main_stage);
     ecs_stage_deinit(world, &world->temp_stage);
 
-    ecs_array_free(world->on_update_systems);
-    ecs_array_free(world->on_validate_systems);
-    ecs_array_free(world->pre_update_systems);
-    ecs_array_free(world->post_update_systems);
-    ecs_array_free(world->on_load_systems);
-    ecs_array_free(world->post_load_systems);
-    ecs_array_free(world->pre_store_systems);
-    ecs_array_free(world->on_store_systems);
+    ecs_vector_free(world->on_update_systems);
+    ecs_vector_free(world->on_validate_systems);
+    ecs_vector_free(world->pre_update_systems);
+    ecs_vector_free(world->post_update_systems);
+    ecs_vector_free(world->on_load_systems);
+    ecs_vector_free(world->post_load_systems);
+    ecs_vector_free(world->pre_store_systems);
+    ecs_vector_free(world->on_store_systems);
 
-    ecs_array_free(world->inactive_systems);
-    ecs_array_free(world->on_demand_systems);
-    ecs_array_free(world->tasks);
-    ecs_array_free(world->fini_tasks);
+    ecs_vector_free(world->inactive_systems);
+    ecs_vector_free(world->on_demand_systems);
+    ecs_vector_free(world->tasks);
+    ecs_vector_free(world->fini_tasks);
 
-    ecs_array_free(world->add_systems);
-    ecs_array_free(world->remove_systems);
-    ecs_array_free(world->set_systems);
+    ecs_vector_free(world->add_systems);
+    ecs_vector_free(world->remove_systems);
+    ecs_vector_free(world->set_systems);
 
     ecs_map_free(world->prefab_index);
     ecs_map_free(world->type_sys_add_index);
@@ -683,8 +683,8 @@ ecs_entity_t ecs_lookup(
     ecs_world_t *world,
     const char *id)
 {
-    ecs_table_t *tables = ecs_array_buffer(world->main_stage.tables);
-    uint32_t t, count = ecs_array_count(world->main_stage.tables);
+    ecs_table_t *tables = ecs_vector_buffer(world->main_stage.tables);
+    uint32_t t, count = ecs_vector_count(world->main_stage.tables);
 
     for (t = 0; t < count; t ++) {
         int16_t column_index;
@@ -694,12 +694,12 @@ ecs_entity_t ecs_lookup(
         }
 
         ecs_table_column_t *column = &tables[t].columns[column_index + 1];
-        EcsId *buffer = ecs_array_buffer(column->data);
-        uint32_t i, count = ecs_array_count(column->data);
+        EcsId *buffer = ecs_vector_buffer(column->data);
+        uint32_t i, count = ecs_vector_count(column->data);
         
         for (i = 0; i < count; i ++) {
             if (!strcmp(buffer[i], id)) {
-                return *(ecs_entity_t*)ecs_array_get(
+                return *(ecs_entity_t*)ecs_vector_get(
                     tables[t].columns[0].data, &handle_arr_params, i);
             }
         }
@@ -712,10 +712,10 @@ ecs_entity_t ecs_lookup(
 static
 void rematch_system_array(
     ecs_world_t *world,
-    ecs_array_t *systems)
+    ecs_vector_t *systems)
 {
-    uint32_t i, count = ecs_array_count(systems);
-    ecs_entity_t *buffer = ecs_array_buffer(systems);
+    uint32_t i, count = ecs_vector_count(systems);
+    ecs_entity_t *buffer = ecs_vector_buffer(systems);
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t system = buffer[i];
@@ -726,7 +726,7 @@ void rematch_system_array(
              * or deactived. In that case, reevaluate the current element again,
              * as it will now contain a different system. */
             i --;
-            count = ecs_array_count(systems);
+            count = ecs_vector_count(systems);
         }
     }
 }
@@ -749,12 +749,12 @@ void rematch_systems(
 static
 void run_single_thread_stage(
     ecs_world_t *world,
-    ecs_array_t *systems)
+    ecs_vector_t *systems)
 {
-    uint32_t i, system_count = ecs_array_count(systems);
+    uint32_t i, system_count = ecs_vector_count(systems);
 
     if (system_count) {
-        ecs_entity_t *buffer = ecs_array_buffer(systems);
+        ecs_entity_t *buffer = ecs_vector_buffer(systems);
 
         world->in_progress = true;
 
@@ -773,13 +773,13 @@ void run_single_thread_stage(
 static
 void run_multi_thread_stage(
     ecs_world_t *world,
-    ecs_array_t *systems)
+    ecs_vector_t *systems)
 {
     /* Run periodic table systems */
-    uint32_t i, system_count = ecs_array_count(systems);
+    uint32_t i, system_count = ecs_vector_count(systems);
     if (system_count) {
         bool valid_schedule = world->valid_schedule;
-        ecs_entity_t *buffer = ecs_array_buffer(systems);
+        ecs_entity_t *buffer = ecs_vector_buffer(systems);
 
         world->in_progress = true;
 
@@ -804,11 +804,11 @@ void run_tasks(
     ecs_world_t *world)
 {
     /* Run periodic row systems (not matched to any entity) */
-    uint32_t i, system_count = ecs_array_count(world->tasks);
+    uint32_t i, system_count = ecs_vector_count(world->tasks);
     if (system_count) {
         world->in_progress = true;
 
-        ecs_entity_t *buffer = ecs_array_buffer(world->tasks);
+        ecs_entity_t *buffer = ecs_vector_buffer(world->tasks);
         for (i = 0; i < system_count; i ++) {
             ecs_run_task(world, buffer[i]);
         }
@@ -880,7 +880,7 @@ bool ecs_progress(
     world->delta_time = user_delta_time;
     world->merge_time = 0;
 
-    bool has_threads = ecs_array_count(world->worker_threads) != 0;
+    bool has_threads = ecs_vector_count(world->worker_threads) != 0;
 
     if (world->should_match) {
         rematch_systems(world);
@@ -946,8 +946,8 @@ void ecs_merge(
 
     ecs_stage_merge(world, &world->temp_stage);
 
-    uint32_t i, count = ecs_array_count(world->worker_stages);
-    ecs_stage_t *buffer = ecs_array_buffer(world->worker_stages);
+    uint32_t i, count = ecs_vector_count(world->worker_stages);
+    ecs_stage_t *buffer = ecs_vector_buffer(world->worker_stages);
     for (i = 0; i < count; i ++) {
         ecs_stage_merge(world, &buffer[i]);
     }

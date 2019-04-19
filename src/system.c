@@ -31,12 +31,12 @@ void match_type(
             ecs_abort(ECS_INVALID_PARAMETERS, NULL);
         }
 
-        ecs_array_t *systems = ecs_map_get(index, type);
+        ecs_vector_t *systems = ecs_map_get(index, type);
         if (!systems) {
-            systems = ecs_array_new(&handle_arr_params, 1);
+            systems = ecs_vector_new(&handle_arr_params, 1);
         }
 
-        ecs_entity_t *new_elem = ecs_array_add(&systems, &handle_arr_params);
+        ecs_entity_t *new_elem = ecs_vector_add(&systems, &handle_arr_params);
         *new_elem = system;
 
         /* Always set the system entry, as array may have been realloc'd */
@@ -93,7 +93,7 @@ ecs_entity_t new_row_system(
     system_data->base.enabled = true;
     system_data->base.kind = kind;
     system_data->base.cascade_by = 0;
-    system_data->components = ecs_array_new(&handle_arr_params, count);
+    system_data->components = ecs_vector_new(&handle_arr_params, count);
 
     if (ecs_parse_component_expr(
         world, sig, ecs_parse_component_action, system_data) != 0)
@@ -102,11 +102,11 @@ ecs_entity_t new_row_system(
     }
 
     ecs_type_t type_id = 0;
-    uint32_t i, column_count = ecs_array_count(system_data->base.columns);
-    ecs_system_column_t *buffer = ecs_array_buffer(system_data->base.columns);
+    uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
+    ecs_system_column_t *buffer = ecs_vector_buffer(system_data->base.columns);
 
     for (i = 0; i < column_count; i ++) {
-        ecs_entity_t *h = ecs_array_add(
+        ecs_entity_t *h = ecs_vector_add(
             &system_data->components, &handle_arr_params);
 
         ecs_system_column_t *column = &buffer[i];
@@ -122,17 +122,17 @@ ecs_entity_t new_row_system(
 
     if (!needs_tables) {
         if (kind == EcsOnUpdate) {
-            elem = ecs_array_add(&world->tasks, &handle_arr_params);
+            elem = ecs_vector_add(&world->tasks, &handle_arr_params);
         } else if (kind == EcsOnRemove) {
-            elem = ecs_array_add(&world->fini_tasks, &handle_arr_params);
+            elem = ecs_vector_add(&world->fini_tasks, &handle_arr_params);
         }
     } else {
         if (kind == EcsOnAdd) {
-            elem = ecs_array_add(&world->add_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->add_systems, &handle_arr_params);
         } else if (kind == EcsOnRemove) {
-            elem = ecs_array_add(&world->remove_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->remove_systems, &handle_arr_params);
         } else if (kind == EcsOnSet) {
-            elem = ecs_array_add(&world->set_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->set_systems, &handle_arr_params);
         }
     }
 
@@ -155,8 +155,8 @@ void ecs_system_compute_and_families(
     ecs_world_t *world,
     EcsSystem *system_data)
 {
-    uint32_t i, column_count = ecs_array_count(system_data->columns);
-    ecs_system_column_t *buffer = ecs_array_buffer(system_data->columns);
+    uint32_t i, column_count = ecs_vector_count(system_data->columns);
+    ecs_system_column_t *buffer = ecs_vector_buffer(system_data->columns);
 
     for (i = 0; i < column_count; i ++) {
         ecs_system_column_t *elem = &buffer[i];
@@ -213,7 +213,7 @@ int ecs_parse_component_action(
 
     /* AND (default) and optional columns are stored the same way */
     if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
-        elem = ecs_array_add(&system_data->columns, &column_arr_params);
+        elem = ecs_vector_add(&system_data->columns, &column_arr_params);
         elem->kind = elem_kind;
         elem->oper_kind = oper_kind;
         elem->is.component = component;
@@ -229,7 +229,7 @@ int ecs_parse_component_action(
 
     /* OR columns store a type id instead of a single component */
     } else if (oper_kind == EcsOperOr) {
-        elem = ecs_array_last(system_data->columns, &column_arr_params);
+        elem = ecs_vector_last(system_data->columns, &column_arr_params);
         if (elem->oper_kind == EcsOperAnd) {
             elem->is.type = ecs_type_add(
                 world, NULL, 0, elem->is.component);
@@ -249,7 +249,7 @@ int ecs_parse_component_action(
      * These can be quickly & efficiently used to exclude tables with
      * ecs_type_contains. */
     } else if (oper_kind == EcsOperNot) {
-        elem = ecs_array_add(&system_data->columns, &column_arr_params);
+        elem = ecs_vector_add(&system_data->columns, &column_arr_params);
         elem->kind = EcsFromId; /* Just pass handle to system */
         elem->oper_kind = EcsOperNot;
         elem->is.component = component;
@@ -274,7 +274,7 @@ error:
 bool ecs_notify_row_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_array_t *type,
+    ecs_vector_t *type,
     ecs_table_column_t *table_columns,
     uint32_t offset,
     uint32_t limit)
@@ -297,8 +297,8 @@ bool ecs_notify_row_system(
 
     ecs_system_action_t action = system_data->base.action;
 
-    uint32_t i, column_count = ecs_array_count(system_data->base.columns);
-    ecs_system_column_t *buffer = ecs_array_buffer(system_data->base.columns);
+    uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
+    ecs_system_column_t *buffer = ecs_vector_buffer(system_data->base.columns);
     int32_t *columns = ecs_os_alloca(int32_t, column_count);
     ecs_reference_t *references = ecs_os_alloca(ecs_reference_t, column_count);
     void **ref_ptrs = ecs_os_alloca(void*, column_count);
@@ -332,10 +332,10 @@ bool ecs_notify_row_system(
         .world = world,
         .system = system,
         .columns = columns,
-        .column_count = ecs_array_count(system_data->components),
+        .column_count = ecs_vector_count(system_data->components),
         .references = references,
         .table_columns = table_columns,
-        .components = ecs_array_buffer(system_data->components),
+        .components = ecs_vector_buffer(system_data->components),
         .frame_offset = 0,
         .offset = offset,
         .count = limit
@@ -347,7 +347,7 @@ bool ecs_notify_row_system(
     }
 
     if (table_columns) {
-        ecs_entity_t *entities = ecs_array_buffer(table_columns[0].data);
+        ecs_entity_t *entities = ecs_vector_buffer(table_columns[0].data);
         rows.entities = &entities[rows.offset];
     }
 
@@ -425,9 +425,9 @@ ecs_entity_t ecs_new_system(
 
     /* If system contains FromSystem params, add them tot the system */
     if (system_data->and_from_system) {
-        ecs_array_t *f = ecs_type_get(world, NULL, system_data->and_from_system);
-        ecs_entity_t *buffer = ecs_array_buffer(f);
-        uint32_t i, count = ecs_array_count(f);
+        ecs_vector_t *f = ecs_type_get(world, NULL, system_data->and_from_system);
+        ecs_entity_t *buffer = ecs_vector_buffer(f);
+        uint32_t i, count = ecs_vector_count(f);
         for (i = 0; i < count; i ++) {
             ecs_type_t type = ecs_type_from_entity(world, buffer[i]);
             _ecs_add(world, result, type);
@@ -462,9 +462,9 @@ void ecs_enable(
 
         ecs_world_t *world_temp = world;
         ecs_stage_t *stage = ecs_get_stage(&world_temp);
-        ecs_array_t *type = ecs_type_get(world, stage, type_data->type);
-        ecs_entity_t *buffer = ecs_array_buffer(type);
-        uint32_t i, count = ecs_array_count(type);
+        ecs_vector_t *type = ecs_type_get(world, stage, type_data->type);
+        ecs_entity_t *buffer = ecs_vector_buffer(type);
+        uint32_t i, count = ecs_vector_count(type);
         for (i = 0; i < count; i ++) {
             /* Enable/disable all systems in type */
             ecs_enable(world, buffer[i], enabled);
@@ -474,14 +474,14 @@ void ecs_enable(
             EcsColSystem *col_system = (EcsColSystem*)system_data;
             if (enabled) {
                 if (!system_data->enabled) {
-                    if (ecs_array_count(col_system->tables)) {
+                    if (ecs_vector_count(col_system->tables)) {
                         ecs_world_activate_system(
                             world, system, col_system->base.kind, true);
                     }
                 }
             } else {
                 if (system_data->enabled) {
-                    if (ecs_array_count(col_system->tables)) {
+                    if (ecs_vector_count(col_system->tables)) {
                         ecs_world_activate_system(
                             world, system, col_system->base.kind, false);
                     }
@@ -559,7 +559,7 @@ void* _ecs_column(
     }
 
     ecs_table_column_t *column = &((ecs_table_column_t*)rows->table_columns)[table_column];
-    void *buffer = ecs_array_buffer(column->data);
+    void *buffer = ecs_vector_buffer(column->data);
     return ECS_OFFSET(buffer, column->size * rows->offset);
 }
 
@@ -697,10 +697,10 @@ void *_ecs_field(
         ecs_table_column_t *column = &((ecs_table_column_t*)rows->table_columns)[table_column];
 
 #ifndef NDEBUG
-        ecs_assert(index < ecs_array_count(column->data), ECS_OUT_OF_RANGE, 0);
+        ecs_assert(index < ecs_vector_count(column->data), ECS_OUT_OF_RANGE, 0);
 #endif
 
-        void *buffer = ecs_array_buffer(column->data);
+        void *buffer = ecs_vector_buffer(column->data);
         return ECS_OFFSET(buffer, column->size * (index + rows->offset));
     }
 }

@@ -2,7 +2,6 @@
 #define FLECS_STATS_H
 
 #include "../flecs.h"
-#include "array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,22 +62,22 @@ typedef struct ecs_world_stats_t {
     float frame_time;
     float merge_time;
     EcsMemoryStats memory;
-    ecs_array_t *features;
-    ecs_array_t *on_load_systems;
-    ecs_array_t *post_load_systems;
-    ecs_array_t *pre_update_systems;
-    ecs_array_t *on_update_systems;
-    ecs_array_t *on_validate_systems;
-    ecs_array_t *post_update_systems;
-    ecs_array_t *pre_store_systems;
-    ecs_array_t *on_store_systems;
-    ecs_array_t *task_systems;
-    ecs_array_t *inactive_systems;
-    ecs_array_t *on_demand_systems;
-    ecs_array_t *on_add_systems;
-    ecs_array_t *on_remove_systems;
-    ecs_array_t *on_set_systems;
-    ecs_array_t *tables;
+    ecs_vector_t *features;
+    ecs_vector_t *on_load_systems;
+    ecs_vector_t *post_load_systems;
+    ecs_vector_t *pre_update_systems;
+    ecs_vector_t *on_update_systems;
+    ecs_vector_t *on_validate_systems;
+    ecs_vector_t *post_update_systems;
+    ecs_vector_t *pre_store_systems;
+    ecs_vector_t *on_store_systems;
+    ecs_vector_t *task_systems;
+    ecs_vector_t *inactive_systems;
+    ecs_vector_t *on_demand_systems;
+    ecs_vector_t *on_add_systems;
+    ecs_vector_t *on_remove_systems;
+    ecs_vector_t *on_set_systems;
+    ecs_vector_t *tables;
     bool frame_profiling;
     bool system_profiling;
 } ecs_world_stats_t;

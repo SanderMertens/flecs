@@ -105,9 +105,9 @@ ecs_type_t ecs_type_merge(
 ecs_type_t ecs_type_merge_arr(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_array_t *arr_cur,
-    ecs_array_t *to_add,
-    ecs_array_t *to_del);
+    ecs_vector_t *arr_cur,
+    ecs_vector_t *to_add,
+    ecs_vector_t *to_del);
 
 /* Test if type_id_1 contains type_id_2 */
 ecs_entity_t ecs_type_contains(
@@ -132,7 +132,7 @@ ecs_type_t ecs_type_register(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t to_add,
-    ecs_array_t *set);
+    ecs_vector_t *set);
 
 /* Add component to type */
 ecs_type_t ecs_type_add(
@@ -142,7 +142,7 @@ ecs_type_t ecs_type_add(
     ecs_entity_t component);
 
 /* Get array with component handles from type */
-ecs_array_t* ecs_type_get(
+ecs_vector_t* ecs_type_get(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t type_id);
@@ -155,7 +155,7 @@ char* ecs_type_tostr(
 
 /* Get index for entity in type */
 int16_t ecs_type_index_of(
-    ecs_array_t *type,
+    ecs_vector_t *type,
     ecs_entity_t component);
 
 /* Get number of containers (parents) for a type */
@@ -182,7 +182,7 @@ ecs_table_column_t *ecs_table_get_columns(
 int ecs_table_init_w_size(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_array_t *type,
+    ecs_vector_t *type,
     uint32_t size);
 
 void ecs_table_register_system(
@@ -231,13 +231,13 @@ void ecs_table_delete(
 /* Get row from table (or stage) */
 void* ecs_table_get(
     ecs_table_t *table,
-    ecs_array_t *rows,
+    ecs_vector_t *rows,
     uint32_t index);
 
 /* Test if table has component */
 bool ecs_table_has_components(
     ecs_table_t *table,
-    ecs_array_t *components);
+    ecs_vector_t *components);
 
 /* Deinitialize table. This invokes all matching on_remove systems */
 void ecs_table_deinit(
@@ -293,7 +293,7 @@ void ecs_run_task(
 bool ecs_notify_row_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_array_t *type,
+    ecs_vector_t *type,
     ecs_table_column_t *table_columns,
     uint32_t offset,
     uint32_t limit);

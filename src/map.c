@@ -12,7 +12,7 @@ typedef struct EcsMapNode {
 
 struct ecs_map_t {
     uint32_t *buckets;      /* Array of buckets */
-    ecs_array_t *nodes;        /* Array with memory for map nodes */
+    ecs_vector_t *nodes;        /* Array with memory for map nodes */
     size_t bucket_count;    /* number of buckets */
     uint32_t count;         /* number of elements */
     uint32_t min;           /* minimum number of elements */
@@ -20,13 +20,13 @@ struct ecs_map_t {
 
 static
 void move_node(
-    ecs_array_t *array,
-    const ecs_array_params_t *params,
+    ecs_vector_t *array,
+    const ecs_vector_params_t *params,
     void *to,
     void *from,
     void *ctx);
 
-const ecs_array_params_t node_arr_params = {
+const ecs_vector_params_t node_arr_params = {
     .element_size = sizeof(EcsMapNode),
     .move_action = move_node
 };
@@ -34,10 +34,10 @@ const ecs_array_params_t node_arr_params = {
 /** Get map node from index */
 static
 EcsMapNode *node_from_index(
-    ecs_array_t *nodes,
+    ecs_vector_t *nodes,
     uint32_t index)
 {
-    return ecs_array_get(nodes, &node_arr_params, index - 1);
+    return ecs_vector_get(nodes, &node_arr_params, index - 1);
 }
 
 /** Get a bucket for a given key */
@@ -53,14 +53,14 @@ uint32_t* get_bucket(
 /** Callback that updates administration when node is moved in nodes array */
 static
 void move_node(
-    ecs_array_t *array,
-    const ecs_array_params_t *params,
+    ecs_vector_t *array,
+    const ecs_vector_params_t *params,
     void *to,
     void *from,
     void *ctx)
 {
     EcsMapNode *node_p = to;
-    uint32_t node = ecs_array_get_index(array, &node_arr_params, to) + 1;
+    uint32_t node = ecs_vector_get_index(array, &node_arr_params, to) + 1;
     uint32_t prev = node_p->prev;
     uint32_t next = node_p->next;
     (void)params;
@@ -108,7 +108,7 @@ ecs_map_t *alloc_map(
     alloc_buffer(result, bucket_count);
     result->count = 0;
     result->min = bucket_count;
-    result->nodes = ecs_array_new(&node_arr_params, ECS_MAP_INITIAL_NODE_COUNT);
+    result->nodes = ecs_vector_new(&node_arr_params, ECS_MAP_INITIAL_NODE_COUNT);
     return result;
 }
 
@@ -140,10 +140,10 @@ void add_node(
     uint32_t elem;
 
     if (!elem_p) {
-        elem_p = ecs_array_add(&map->nodes, &node_arr_params);
-        elem = ecs_array_count(map->nodes);
+        elem_p = ecs_vector_add(&map->nodes, &node_arr_params);
+        elem = ecs_vector_count(map->nodes);
     } else {
-        elem = ecs_array_get_index(
+        elem = ecs_vector_get_index(
             map->nodes,
             &node_arr_params,
             elem_p) + 1;
@@ -317,8 +317,8 @@ void ecs_map_clear(
         memset(map->buckets, 0, sizeof(int32_t) * map->bucket_count);
     }
 
-    ecs_array_reclaim(&map->nodes, &node_arr_params);
-    ecs_array_clear(map->nodes);
+    ecs_vector_reclaim(&map->nodes, &node_arr_params);
+    ecs_vector_clear(map->nodes);
 
     map->count = 0;
 }
@@ -326,7 +326,7 @@ void ecs_map_clear(
 void ecs_map_free(
     ecs_map_t *map)
 {
-    ecs_array_free(map->nodes);
+    ecs_vector_free(map->nodes);
     ecs_os_free(map->buckets);
     ecs_os_free(map);
 }
@@ -388,10 +388,10 @@ int ecs_map_remove(
                 next_node->prev = node->prev;
             }
 
-            ecs_array_params_t params = node_arr_params;
+            ecs_vector_params_t params = node_arr_params;
             params.move_ctx = map;
 
-            ecs_array_remove(map->nodes, &params, node);
+            ecs_vector_remove(map->nodes, &params, node);
             map->count --;
 
             return 0;
@@ -459,7 +459,7 @@ uint32_t ecs_map_set_size(
     ecs_map_t *map,
     uint32_t size)
 {
-    uint32_t result = ecs_array_set_size(&map->nodes, &node_arr_params, size);
+    uint32_t result = ecs_vector_set_size(&map->nodes, &node_arr_params, size);
     resize_map(map, size / FLECS_LOAD_FACTOR);
     return result;
 }
@@ -501,11 +501,11 @@ void ecs_map_memory(
     if (total) {
 
         *total += map->bucket_count * sizeof(uint32_t) + sizeof(ecs_map_t);
-        ecs_array_memory(map->nodes, &node_arr_params, total, NULL);
+        ecs_vector_memory(map->nodes, &node_arr_params, total, NULL);
     }
 
     if (used) {
         *used += map->count * sizeof(uint32_t);
-        ecs_array_memory(map->nodes, &node_arr_params, NULL, used);
+        ecs_vector_memory(map->nodes, &node_arr_params, NULL, used);
     }
 }

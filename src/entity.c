@@ -15,12 +15,12 @@ void copy_column(
     uint32_t size = new_column->size;
 
     if (size) {
-        ecs_array_params_t param = {.element_size = new_column->size};
+        ecs_vector_params_t param = {.element_size = new_column->size};
 
         if (old_index < 0) old_index *= -1;
         
-        void *dst = ecs_array_get(new_column->data, &param, new_index - 1);
-        void *src = ecs_array_get(old_column->data, &param, old_index - 1);
+        void *dst = ecs_vector_get(new_column->data, &param, new_index - 1);
+        void *src = ecs_vector_get(old_column->data, &param, old_index - 1);
             
         ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -31,17 +31,17 @@ void copy_column(
 
 static
 void copy_row(
-    ecs_array_t *new_type,
+    ecs_vector_t *new_type,
     ecs_table_column_t *new_columns,
     int32_t new_index,
-    ecs_array_t *old_type,
+    ecs_vector_t *old_type,
     ecs_table_column_t *old_columns,
     int32_t old_index)
 {
-    uint16_t i_new, new_component_count = ecs_array_count(new_type);
-    uint16_t i_old = 0, old_component_count = ecs_array_count(old_type);
-    ecs_entity_t *new_components = ecs_array_buffer(new_type);
-    ecs_entity_t *old_components = ecs_array_buffer(old_type);
+    uint16_t i_new, new_component_count = ecs_vector_count(new_type);
+    uint16_t i_old = 0, old_component_count = ecs_vector_count(old_type);
+    ecs_entity_t *new_components = ecs_vector_buffer(new_type);
+    ecs_entity_t *old_components = ecs_vector_buffer(old_type);
 
     ecs_assert(old_columns->data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_columns->data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -68,7 +68,7 @@ void copy_row(
 
 static
 void* get_row_ptr(
-    ecs_array_t *type,
+    ecs_vector_t *type,
     ecs_table_column_t *columns,
     int32_t index,
     ecs_entity_t component)
@@ -83,11 +83,11 @@ void* get_row_ptr(
     }
 
     ecs_table_column_t *column = &columns[column_index + 1];
-    ecs_array_params_t param = {.element_size = column->size};
+    ecs_vector_params_t param = {.element_size = column->size};
 
     if (param.element_size) {
         ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
-        return ecs_array_get(column->data, &param, index - 1);
+        return ecs_vector_get(column->data, &param, index - 1);
     } else {
         return NULL;
     }
@@ -208,9 +208,9 @@ void copy_from_prefab(
         ecs_table_t *prefab_table = ecs_world_get_table(
             world, stage, row.type_id);
 
-        ecs_array_t *add_type = ecs_type_get(world, stage, to_add);
-        ecs_entity_t *add_handles = ecs_array_buffer(add_type);
-        uint32_t i, add_count = ecs_array_count(add_type);
+        ecs_vector_t *add_type = ecs_type_get(world, stage, to_add);
+        ecs_entity_t *add_handles = ecs_vector_buffer(add_type);
+        uint32_t i, add_count = ecs_vector_count(add_type);
 
         ecs_table_column_t *columns = NULL;
 
@@ -229,12 +229,12 @@ void copy_from_prefab(
                     }
                 }
 
-                ecs_array_t *type_arr = ecs_type_get(world, stage, type_id);
+                ecs_vector_t *type_arr = ecs_type_get(world, stage, type_id);
                 uint32_t column_index = ecs_type_index_of(type_arr, component);
                 uint32_t size = columns[column_index + 1].size;
 
                 if (size) {
-                    void *buffer = ecs_array_buffer(columns[column_index + 1].data);
+                    void *buffer = ecs_vector_buffer(columns[column_index + 1].data);
                     void *ptr = ECS_OFFSET(buffer, offset * size);
                     uint32_t i;
                     for (i = 0; i < limit; i ++) {
@@ -326,7 +326,7 @@ uint32_t commit_w_type(
     int32_t new_index = 0, old_index = 0;
     bool in_progress = world->in_progress;
     ecs_entity_t entity = info->entity;
-    ecs_array_t *old_type = NULL;
+    ecs_vector_t *old_type = NULL;
 
     entity_index = stage->entity_index;
 
@@ -368,7 +368,7 @@ uint32_t commit_w_type(
     }
 
     if (type_id) {
-        ecs_array_t *old_table_db = stage->tables;
+        ecs_vector_t *old_table_db = stage->tables;
         new_table = ecs_world_get_table(world, stage, type_id);
 
         if (old_table && old_table_db != stage->tables) {
@@ -469,12 +469,12 @@ bool ecs_notify(
     int32_t offset,
     int32_t limit)
 {
-    ecs_array_t *systems = ecs_map_get(index, type_id);
+    ecs_vector_t *systems = ecs_map_get(index, type_id);
     bool notified = false;
 
     if (systems) {
-        ecs_entity_t *buffer = ecs_array_buffer(systems);
-        uint32_t i, count = ecs_array_count(systems);
+        ecs_entity_t *buffer = ecs_vector_buffer(systems);
+        uint32_t i, count = ecs_vector_count(systems);
 
         for (i = 0; i < count; i ++) {
             notified |= ecs_notify_row_system(
@@ -560,12 +560,12 @@ bool ecs_components_contains_component(
     ecs_entity_t component,
     ecs_entity_t *entity_out)
 {
-    ecs_array_t *components = ecs_type_get(world, &world->main_stage, table_type);
+    ecs_vector_t *components = ecs_type_get(world, &world->main_stage, table_type);
     assert(components != NULL);
 
-    uint32_t i, count = ecs_array_count(components);
+    uint32_t i, count = ecs_vector_count(components);
     for (i = 0; i < count; i ++) {
-        ecs_entity_t h = *(ecs_entity_t*)ecs_array_get(
+        ecs_entity_t h = *(ecs_entity_t*)ecs_vector_get(
             components, &handle_arr_params, i);
 
         uint64_t row_64 = ecs_map_get64(world->main_stage.entity_index, h);
@@ -809,7 +809,7 @@ void _ecs_add(
         info.columns = info.table->columns;
         info.index = row.index;
         info.type_id = row.type_id;
-        ecs_array_t *to_add = ecs_type_get(world, stage, type);
+        ecs_vector_t *to_add = ecs_type_get(world, stage, type);
         dst_type = ecs_type_merge_arr(world, stage, info.table->type, to_add, NULL);
     } else {
         dst_type = type;
@@ -838,7 +838,7 @@ void _ecs_remove(
         info.columns = info.table->columns;
         info.index = row.index;
         info.type_id = row.type_id;
-        ecs_array_t *to_remove = ecs_type_get(world, stage, type);
+        ecs_vector_t *to_remove = ecs_type_get(world, stage, type);
         dst_type = ecs_type_merge_arr(world, stage, info.table->type, NULL, to_remove);
     } else if (!world->in_progress) {
         return;
@@ -1126,7 +1126,7 @@ ecs_entity_t ecs_entity_from_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
 
-    ecs_array_t *type = ecs_map_get(world->main_stage.type_index, type_id);
+    ecs_vector_t *type = ecs_map_get(world->main_stage.type_index, type_id);
     if (!type) {
         if (world->in_progress) {
             type = ecs_map_get(stage->type_index, type_id);
@@ -1136,11 +1136,11 @@ ecs_entity_t ecs_entity_from_type(
     }
 
     /* If array contains n entities, it cannot be reduced to a single entity */
-    if (ecs_array_count(type) != 1) {
+    if (ecs_vector_count(type) != 1) {
         ecs_abort(ECS_TYPE_NOT_AN_ENTITY, NULL);
     }
 
-    return ((ecs_entity_t*)ecs_array_buffer(type))[0];
+    return ((ecs_entity_t*)ecs_vector_buffer(type))[0];
 }
 
 ecs_type_t ecs_get_type(
@@ -1173,15 +1173,15 @@ uint32_t _ecs_count(
     }
 
     ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_array_t *table_array = world->main_stage.tables;
+    ecs_vector_t *table_array = world->main_stage.tables;
     
-    ecs_table_t *tables = ecs_array_buffer(table_array);
-    uint32_t i, count = ecs_array_count(table_array);
+    ecs_table_t *tables = ecs_vector_buffer(table_array);
+    uint32_t i, count = ecs_vector_count(table_array);
     uint32_t result = 0;
 
     for (i = 0; i < count; i ++) {
         if (ecs_type_contains(world, stage, tables[i].type_id, type, true, true)) {
-            result += ecs_array_count(tables[i].columns[0].data);
+            result += ecs_vector_count(tables[i].columns[0].data);
         }
     }
     

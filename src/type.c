@@ -84,11 +84,11 @@ static
 void notify_create_type(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_array_t *systems,
+    ecs_vector_t *systems,
     ecs_type_t type)
 {
-    ecs_entity_t *buffer = ecs_array_buffer(systems);
-    uint32_t i, count = ecs_array_count(systems);
+    ecs_entity_t *buffer = ecs_vector_buffer(systems);
+    uint32_t i, count = ecs_vector_count(systems);
 
     for (i = 0; i < count; i ++) {
         ecs_row_system_notify_of_type(world, stage, buffer[i], type);
@@ -109,10 +109,10 @@ ecs_type_t register_type_from_buffer(
 
     type_index = stage->type_index;
 
-    ecs_array_t *new_array = ecs_map_get(type_index, new_id);
+    ecs_vector_t *new_array = ecs_map_get(type_index, new_id);
 
     if (!new_array) {
-        new_array = ecs_array_new_from_buffer(&handle_arr_params, count, buf);
+        new_array = ecs_vector_new_from_buffer(&handle_arr_params, count, buf);
         ecs_map_set(type_index, new_id,  new_array);
 
         if (!world->in_progress) {
@@ -127,12 +127,12 @@ ecs_type_t register_type_from_buffer(
 
 /* -- Private functions -- */
 
-ecs_array_t* ecs_type_get(
+ecs_vector_t* ecs_type_get(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t type_id)
 {
-    ecs_array_t *result = ecs_map_get(world->main_stage.type_index, type_id);
+    ecs_vector_t *result = ecs_map_get(world->main_stage.type_index, type_id);
     if (!result) {
         if (world->threads_running) {
             assert(stage != NULL);
@@ -182,13 +182,13 @@ ecs_type_t ecs_type_from_handle(
     }
 
     if (table) {
-        ecs_entity_t *components = ecs_array_buffer(table->type);
+        ecs_entity_t *components = ecs_vector_buffer(table->type);
         component = components[0];
     }
 
     if (component == EEcsTypeComponent) {
-        ecs_array_params_t params = {.element_size = sizeof(EcsTypeComponent)};
-        EcsTypeComponent *fe = ecs_array_get(columns[1].data, &params, index);
+        ecs_vector_params_t params = {.element_size = sizeof(EcsTypeComponent)};
+        EcsTypeComponent *fe = ecs_vector_get(columns[1].data, &params, index);
         type = fe->resolved;
     } else {
         type = ecs_type_register(world, stage, entity, NULL);
@@ -205,14 +205,14 @@ ecs_type_t ecs_type_register(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t to_add,
-    ecs_array_t *set)
+    ecs_vector_t *set)
 {
-    uint32_t count = ecs_array_count(set);
+    uint32_t count = ecs_vector_count(set);
     ecs_entity_t *new_set = ecs_os_alloca(ecs_entity_t, count + 1);
     void *new_buffer = new_set;
 
     if (to_add) {
-        void *buffer = ecs_array_buffer(set);
+        void *buffer = ecs_vector_buffer(set);
         if (count) {
             memcpy(new_set, buffer, sizeof(ecs_entity_t) * count);
         }
@@ -220,7 +220,7 @@ ecs_type_t ecs_type_register(
         qsort(new_set, count + 1, sizeof(ecs_entity_t), compare_handle);
         count ++;
     } else if (set) {
-        void *buffer = ecs_array_buffer(set);
+        void *buffer = ecs_vector_buffer(set);
         new_buffer = buffer;
     } else {
         return 0;
@@ -235,7 +235,7 @@ ecs_type_t ecs_type_add(
     ecs_type_t type,
     ecs_entity_t component)
 {
-    ecs_array_t *array = ecs_type_get(world, stage, type);
+    ecs_vector_t *array = ecs_type_get(world, stage, type);
     assert(!type || array != NULL);
     return ecs_type_register(world, stage, component, array);
 }
@@ -243,9 +243,9 @@ ecs_type_t ecs_type_add(
 ecs_type_t ecs_type_merge_arr(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_array_t *arr_cur,
-    ecs_array_t *to_add,
-    ecs_array_t *to_del)
+    ecs_vector_t *arr_cur,
+    ecs_vector_t *to_add,
+    ecs_vector_t *to_del)
 {
     ecs_entity_t *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
     ecs_entity_t cur = 0, add = 0, del = 0;
@@ -253,20 +253,20 @@ ecs_type_t ecs_type_merge_arr(
     uint32_t cur_count = 0, add_count = 0, del_count = 0;
 
     if (to_del) {
-        del_count = ecs_array_count(to_del);
-        buf_del = ecs_array_buffer(to_del);
+        del_count = ecs_vector_count(to_del);
+        buf_del = ecs_vector_buffer(to_del);
         del = buf_del[0];
     }
 
     if (arr_cur) {
-        cur_count = ecs_array_count(arr_cur);
-        buf_cur = ecs_array_buffer(arr_cur);
+        cur_count = ecs_vector_count(arr_cur);
+        buf_cur = ecs_vector_buffer(arr_cur);
         cur = buf_cur[0];
     }
 
     if (to_add) {
-        add_count = ecs_array_count(to_add);
-        buf_add = ecs_array_buffer(to_add);
+        add_count = ecs_vector_count(to_add);
+        buf_add = ecs_vector_buffer(to_add);
         add = buf_add[0];
     }
 
@@ -307,8 +307,8 @@ ecs_type_t ecs_type_merge_arr(
 
     if (new_count) {
         ecs_assert(
-            (ecs_array_count(arr_cur) + 
-             ecs_array_count(to_add)) >= new_count, ECS_INTERNAL_ERROR, 0);
+            (ecs_vector_count(arr_cur) + 
+             ecs_vector_count(to_add)) >= new_count, ECS_INTERNAL_ERROR, 0);
 
         return register_type_from_buffer(world, stage, buf_new, new_count);
     } else {
@@ -336,8 +336,8 @@ ecs_type_t ecs_type_merge(
         return to_add_id;
     }
 
-    ecs_array_t *arr_cur = ecs_type_get(world, stage, cur_id);
-    ecs_array_t *to_add = NULL, *to_del = NULL;
+    ecs_vector_t *arr_cur = ecs_type_get(world, stage, cur_id);
+    ecs_vector_t *to_add = NULL, *to_del = NULL;
 
     if (to_remove_id) {
         to_del = ecs_type_get(world, stage, to_remove_id);
@@ -365,21 +365,21 @@ ecs_entity_t ecs_type_contains(
 
     assert(type_id_2 != 0);
 
-    ecs_array_t *f_1 = ecs_type_get(world, stage, type_id_1);
-    ecs_array_t *f_2 = ecs_type_get(world, stage, type_id_2);
+    ecs_vector_t *f_1 = ecs_type_get(world, stage, type_id_1);
+    ecs_vector_t *f_2 = ecs_type_get(world, stage, type_id_2);
 
     assert(f_1 && f_2);
 
     if (type_id_1 == type_id_2) {
-        return *(ecs_entity_t*)ecs_array_get(f_1, &handle_arr_params, 0);
+        return *(ecs_entity_t*)ecs_vector_get(f_1, &handle_arr_params, 0);
     }
 
     uint32_t i_2, i_1 = 0;
-    ecs_entity_t *h2p, *h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
+    ecs_entity_t *h2p, *h1p = ecs_vector_get(f_1, &handle_arr_params, i_1);
     ecs_entity_t h1 = 0, prefab = 0;
     bool prefab_searched = false;
 
-    for (i_2 = 0; (h2p = ecs_array_get(f_2, &handle_arr_params, i_2)); i_2 ++) {
+    for (i_2 = 0; (h2p = ecs_vector_get(f_2, &handle_arr_params, i_2)); i_2 ++) {
         ecs_entity_t h2 = *h2p;
 
         if (!h1p) {
@@ -391,7 +391,7 @@ ecs_entity_t ecs_type_contains(
         if (h2 > h1) {
             do {
                 i_1 ++;
-                h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
+                h1p = ecs_vector_get(f_1, &handle_arr_params, i_1);
             } while (h1p && (h1 = *h1p) && h2 > h1);
         }
 
@@ -418,7 +418,7 @@ ecs_entity_t ecs_type_contains(
         } else {
             if (!match_all) return h1;
             i_1 ++;
-            h1p = ecs_array_get(f_1, &handle_arr_params, i_1);
+            h1p = ecs_vector_get(f_1, &handle_arr_params, i_1);
         }
     }
 
@@ -436,9 +436,9 @@ bool ecs_type_contains_component(
     ecs_entity_t component,
     bool match_prefab)
 {
-    ecs_array_t *type = ecs_type_get(world, stage, type_id);
-    ecs_entity_t *buffer = ecs_array_buffer(type);
-    uint32_t i, count = ecs_array_count(type);
+    ecs_vector_t *type = ecs_type_get(world, stage, type_id);
+    ecs_entity_t *buffer = ecs_vector_buffer(type);
+    uint32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i++) {
         if (buffer[i] == component) {
@@ -464,22 +464,22 @@ int32_t ecs_type_container_depth(
    ecs_type_t type,
    ecs_entity_t component)     
 {
-    ecs_array_t *arr = ecs_map_get(world->main_stage.type_index, type);
+    ecs_vector_t *arr = ecs_map_get(world->main_stage.type_index, type);
     ecs_assert(arr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int result = 0;
 
-    int32_t i, count = ecs_array_count(arr);
-    ecs_entity_t *buffer = ecs_array_buffer(arr);
+    int32_t i, count = ecs_vector_count(arr);
+    ecs_entity_t *buffer = ecs_vector_buffer(arr);
 
     for (i = 0; i < count; i ++) {
         uint64_t row64 = ecs_map_get64(world->main_stage.entity_index, buffer[i]);
         if (row64) {
             ecs_row_t row = ecs_to_row(row64);
             ecs_type_t c_type = row.type_id;
-            ecs_array_t *c_arr = ecs_map_get(world->main_stage.type_index, c_type);
-            int32_t j, c_count = ecs_array_count(c_arr);
-            ecs_entity_t *c_buffer = ecs_array_buffer(c_arr);
+            ecs_vector_t *c_arr = ecs_map_get(world->main_stage.type_index, c_type);
+            int32_t j, c_count = ecs_vector_count(c_arr);
+            ecs_entity_t *c_buffer = ecs_vector_buffer(c_arr);
 
             bool found_container = false;
             bool found_component = false;
@@ -600,11 +600,11 @@ ecs_entity_t ecs_new_entity(
 }
 
 int16_t ecs_type_index_of(
-    ecs_array_t *type,
+    ecs_vector_t *type,
     ecs_entity_t component)
 {
-    ecs_entity_t *buf = ecs_array_buffer(type);
-    int i, count = ecs_array_count(type);
+    ecs_entity_t *buf = ecs_vector_buffer(type);
+    int i, count = ecs_vector_count(type);
     
     for (i = 0; i < count; i ++) {
         if (buf[i] == component) {
@@ -634,10 +634,10 @@ ecs_entity_t ecs_type_get_component(
     
     ecs_stage_t *stage = ecs_get_stage(&world);
 
-    ecs_array_t *components = ecs_map_get(stage->type_index, type_id);
-    ecs_entity_t *buffer = ecs_array_buffer(components);
+    ecs_vector_t *components = ecs_map_get(stage->type_index, type_id);
+    ecs_entity_t *buffer = ecs_vector_buffer(components);
 
-    if (ecs_array_count(components) > index) {
+    if (ecs_vector_count(components) > index) {
         return buffer[index];
     } else {
         return 0;

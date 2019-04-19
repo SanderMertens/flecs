@@ -39,7 +39,7 @@ typedef struct ecs_time_t {
 /* Utility headers */
 #include "util/os_api.h"
 #include "util/iter.h"
-#include "util/array.h"
+#include "util/vector.h"
 #include "util/map.h"
 #include "util/stats.h"
 #include "util/time.h"

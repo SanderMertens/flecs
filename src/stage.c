@@ -10,7 +10,7 @@ void merge_families(
     EcsIter it = ecs_map_iter(stage->type_index);
     while (ecs_iter_hasnext(&it)) {
         uint64_t type_id;
-        ecs_array_t *type = (void*)(uintptr_t)ecs_map_next(&it, &type_id);
+        ecs_vector_t *type = (void*)(uintptr_t)ecs_map_next(&it, &type_id);
 
         if (!ecs_map_has(world->main_stage.type_index, type_id, NULL)) {
             ecs_map_set(world->main_stage.type_index, type_id, type);
@@ -25,8 +25,8 @@ void merge_tables(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_table_t *buffer = ecs_array_buffer(stage->tables);
-    uint32_t i, count = ecs_array_count(stage->tables);
+    ecs_table_t *buffer = ecs_vector_buffer(stage->tables);
+    uint32_t i, count = ecs_vector_count(stage->tables);
 
     ecs_stage_t *main_stage = &world->main_stage;
 
@@ -43,7 +43,7 @@ void merge_tables(
         ecs_table_deinit(world, table);
     }
 
-    ecs_array_clear(stage->tables);
+    ecs_vector_clear(stage->tables);
     ecs_map_clear(stage->table_index);
 }
 
@@ -63,8 +63,8 @@ void merge_commits(
 
     it = ecs_map_iter(stage->data_stage);
     while (ecs_iter_hasnext(&it)) {
-        ecs_array_t *stage = ecs_iter_next(&it);
-        ecs_array_free(stage);
+        ecs_vector_t *stage = ecs_iter_next(&it);
+        ecs_vector_free(stage);
     }
 
     ecs_map_clear(stage->entity_index);
@@ -78,8 +78,8 @@ void clean_families(
 {
     EcsIter it = ecs_map_iter(stage->type_index);
     while (ecs_iter_hasnext(&it)) {
-        ecs_array_t *type = ecs_iter_next(&it);
-        ecs_array_free(type);
+        ecs_vector_t *type = ecs_iter_next(&it);
+        ecs_vector_free(type);
     }
 
     ecs_map_free(stage->type_index);
@@ -90,8 +90,8 @@ void clean_tables(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_table_t *buffer = ecs_array_buffer(stage->tables);
-    int32_t i, count = ecs_array_count(stage->tables);
+    ecs_table_t *buffer = ecs_vector_buffer(stage->tables);
+    int32_t i, count = ecs_vector_count(stage->tables);
 
     for (i = count - 1; i >= 0; i --) {
         ecs_table_t *table = &buffer[i];
@@ -103,7 +103,7 @@ void clean_tables(
         ecs_table_free(world, table);
     }
 
-    ecs_array_free(stage->tables);
+    ecs_vector_free(stage->tables);
 }
 
 /* -- Private functions -- */
@@ -127,9 +127,9 @@ void ecs_stage_init(
 
     stage->table_index = ecs_map_new(0);
     if (is_main_stage) {
-        stage->tables = ecs_array_new(&table_arr_params, 8);
+        stage->tables = ecs_vector_new(&table_arr_params, 8);
     } else {
-        stage->tables = ecs_array_new(&table_arr_params, 0);
+        stage->tables = ecs_vector_new(&table_arr_params, 0);
     }
 
     if (!is_main_stage) {

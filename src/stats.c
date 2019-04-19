@@ -2,15 +2,15 @@
 #include "include/private/flecs.h"
 #include <string.h>
 
-const ecs_array_params_t tablestats_arr_params = {
+const ecs_vector_params_t tablestats_arr_params = {
     .element_size = sizeof(EcsTableStats)
 };
 
-const ecs_array_params_t systemstats_arr_params = {
+const ecs_vector_params_t systemstats_arr_params = {
     .element_size = sizeof(EcsSystemStats)
 };
 
-const ecs_array_params_t featurestats_arr_params = {
+const ecs_vector_params_t featurestats_arr_params = {
     .element_size = sizeof(EcsFeatureStats)
 };
 
@@ -22,32 +22,32 @@ void calculate_type_stats(
 {
     EcsIter it = ecs_map_iter(world->main_stage.type_index);
     while (ecs_iter_hasnext(&it)) {
-        ecs_array_t *type = ecs_iter_next(&it);
-        ecs_array_memory(type, &handle_arr_params, allocd, used);
+        ecs_vector_t *type = ecs_iter_next(&it);
+        ecs_vector_memory(type, &handle_arr_params, allocd, used);
     }
 }
 
 static
 void calculate_system_stats(
     ecs_world_t *world,
-    ecs_array_t *systems,
+    ecs_vector_t *systems,
     uint32_t *allocd,
     uint32_t *used)
 {
-    ecs_entity_t *buffer = ecs_array_buffer(systems);
-    uint32_t i, count = ecs_array_count(systems);
+    ecs_entity_t *buffer = ecs_vector_buffer(systems);
+    uint32_t i, count = ecs_vector_count(systems);
     for (i = 0; i < count; i ++) {
         EcsColSystem *sys = ecs_get_ptr(world, buffer[i], EcsColSystem);
         if (!sys) {
             continue;
         }
         
-        ecs_array_memory(sys->base.columns, &column_arr_params, allocd, used);
-        ecs_array_memory(sys->components, &handle_arr_params, allocd, used);
-        ecs_array_memory(sys->inactive_tables, &sys->table_params, allocd, used);
-        ecs_array_memory(sys->jobs, &job_arr_params, allocd, used);
-        ecs_array_memory(sys->tables, &sys->table_params, allocd, used);
-        ecs_array_memory(sys->refs, &sys->ref_params, allocd, used);
+        ecs_vector_memory(sys->base.columns, &column_arr_params, allocd, used);
+        ecs_vector_memory(sys->components, &handle_arr_params, allocd, used);
+        ecs_vector_memory(sys->inactive_tables, &sys->table_params, allocd, used);
+        ecs_vector_memory(sys->jobs, &job_arr_params, allocd, used);
+        ecs_vector_memory(sys->tables, &sys->table_params, allocd, used);
+        ecs_vector_memory(sys->refs, &sys->ref_params, allocd, used);
     }
 }
 
@@ -57,13 +57,13 @@ void calculate_table_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    ecs_table_t *buffer = ecs_array_buffer(world->main_stage.tables);
-    uint32_t i, count = ecs_array_count(world->main_stage.tables);
+    ecs_table_t *buffer = ecs_vector_buffer(world->main_stage.tables);
+    uint32_t i, count = ecs_vector_count(world->main_stage.tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = &buffer[i];
-        ecs_array_memory(table->frame_systems, &handle_arr_params, allocd, used);
-        *allocd += ecs_array_count(table->type) * sizeof(uint16_t);
-        *used += ecs_array_count(table->type) * sizeof(uint16_t);
+        ecs_vector_memory(table->frame_systems, &handle_arr_params, allocd, used);
+        *allocd += ecs_vector_count(table->type) * sizeof(uint16_t);
+        *used += ecs_vector_count(table->type) * sizeof(uint16_t);
     }
 }
 
@@ -85,7 +85,7 @@ void calculate_stage_stats(
         ecs_map_memory(stage->type_index, allocd, used);
     }
     
-    ecs_array_memory(stage->tables, &table_arr_params, allocd, used);
+    ecs_vector_memory(stage->tables, &table_arr_params, allocd, used);
     ecs_map_memory(stage->table_index, allocd, used);
 
     if (!is_main_stage) {
@@ -100,8 +100,8 @@ void calculate_stages_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    ecs_stage_t *buffer = ecs_array_buffer(world->worker_stages);
-    uint32_t i, count = ecs_array_count(world->worker_stages);
+    ecs_stage_t *buffer = ecs_vector_buffer(world->worker_stages);
+    uint32_t i, count = ecs_vector_count(world->worker_stages);
     for (i = 0; i < count; i ++) {
         ecs_stage_t *stage = &buffer[i];
         calculate_stage_stats(world, stage, allocd, used);
@@ -115,24 +115,24 @@ void get_memory_stats(
 {
     EcsMemoryStats *memory = &stats->memory;
 
-    ecs_array_memory(world->add_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->set_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->remove_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->add_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->set_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->remove_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_map_memory(world->type_sys_add_index, &memory->systems.allocd, &memory->systems.used);
     ecs_map_memory(world->type_sys_remove_index, &memory->systems.allocd, &memory->systems.used);
     ecs_map_memory(world->type_sys_set_index, &memory->systems.allocd, &memory->systems.used);
 
-    ecs_array_memory(world->on_load_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->post_load_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->pre_update_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->on_update_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->on_validate_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->post_update_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->pre_store_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->on_store_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->tasks, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->inactive_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_array_memory(world->on_demand_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->on_load_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->post_load_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->pre_update_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->on_update_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->on_validate_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->post_update_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->pre_store_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->on_store_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->tasks, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->inactive_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->on_demand_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
 
     calculate_system_stats(world, world->on_load_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_system_stats(world, world->post_load_systems, &memory->systems.allocd, &memory->systems.used);
@@ -151,7 +151,7 @@ void get_memory_stats(
     calculate_type_stats(world, &memory->families.allocd, &memory->families.used);
     calculate_table_stats(world, &memory->tables.allocd, &memory->tables.used);
 
-    ecs_array_memory(world->worker_stages, &table_arr_params, &memory->stage.allocd, &memory->stage.used);
+    ecs_vector_memory(world->worker_stages, &table_arr_params, &memory->stage.allocd, &memory->stage.used);
     memory->stage.allocd += sizeof(ecs_stage_t);
     memory->stage.used += sizeof(ecs_stage_t);
 
@@ -161,7 +161,7 @@ void get_memory_stats(
 
     ecs_map_memory(world->main_stage.entity_index, &memory->entities.allocd, &memory->entities.used);
 
-    ecs_array_memory(world->worker_threads, &table_arr_params, &memory->world.allocd, &memory->world.used);
+    ecs_vector_memory(world->worker_threads, &table_arr_params, &memory->world.allocd, &memory->world.used);
     stats->memory.world.allocd += sizeof(ecs_world_t) - sizeof(ecs_stage_t);
     stats->memory.world.used += sizeof(ecs_world_t) - sizeof(ecs_stage_t);
 
@@ -187,12 +187,12 @@ void get_memory_stats(
 static
 void set_system_stats(
     ecs_world_t *world,
-    ecs_array_t **stats_array,
+    ecs_vector_t **stats_array,
     ecs_entity_t system,
     bool active)
 {
     EcsId *id = ecs_get_ptr(world, system, EcsId);
-    EcsSystemStats *sstats = ecs_array_add(
+    EcsSystemStats *sstats = ecs_vector_add(
         stats_array, &systemstats_arr_params);
 
     sstats->handle = system;
@@ -204,19 +204,19 @@ void set_system_stats(
     EcsSystem *system_ptr = ecs_get_ptr(world, system, EcsColSystem);
     if (system_ptr) {
         EcsColSystem *col_system = (EcsColSystem*)system_ptr;
-        ecs_array_t *tables = col_system->tables;
-        uint32_t i, count = ecs_array_count(tables);
+        ecs_vector_t *tables = col_system->tables;
+        uint32_t i, count = ecs_vector_count(tables);
 
         sstats->entities_matched = 0;
         for (i = 0; i < count; i ++) {
-            int32_t *index = ecs_array_get(tables, &col_system->table_params, i);
-            ecs_table_t *table = ecs_array_get(
+            int32_t *index = ecs_vector_get(tables, &col_system->table_params, i);
+            ecs_table_t *table = ecs_vector_get(
                 world->main_stage.tables, &table_arr_params, *index);
             sstats->entities_matched += ecs_table_count(table);
         }
 
         sstats->period = col_system->period;
-        sstats->tables_matched = count + ecs_array_count(
+        sstats->tables_matched = count + ecs_vector_count(
             col_system->inactive_tables);
     } else {
         system_ptr = ecs_get_ptr(world, system, EcsRowSystem);
@@ -259,16 +259,16 @@ int compare_tablestats(
 static
 int system_stats_arr(
     ecs_world_t *world,
-    ecs_array_t **stats_array,
-    ecs_array_t *systems)
+    ecs_vector_t **stats_array,
+    ecs_vector_t *systems)
 {
-    ecs_entity_t *handles = ecs_array_buffer(systems);
-    uint32_t i, count = ecs_array_count(systems);
+    ecs_entity_t *handles = ecs_vector_buffer(systems);
+    uint32_t i, count = ecs_vector_count(systems);
     for (i = 0; i < count; i ++) {
         set_system_stats(world, stats_array, handles[i], true);
     }
 
-    ecs_array_sort(*stats_array, &systemstats_arr_params, compare_sysstats);
+    ecs_vector_sort(*stats_array, &systemstats_arr_params, compare_sysstats);
 
     return count;
 }
@@ -278,12 +278,12 @@ int system_stats_arr_inactive(
     ecs_world_t *world,
     ecs_world_stats_t *stats)
 {
-    ecs_array_t *systems = world->inactive_systems;
-    ecs_entity_t *handles = ecs_array_buffer(systems);
-    uint32_t i, count = ecs_array_count(systems);
+    ecs_vector_t *systems = world->inactive_systems;
+    ecs_entity_t *handles = ecs_vector_buffer(systems);
+    uint32_t i, count = ecs_vector_count(systems);
     for (i = 0; i < count; i ++) {
         EcsColSystem *data = ecs_get_ptr(world, handles[i], EcsColSystem);
-        ecs_array_t **stats_array = NULL;
+        ecs_vector_t **stats_array = NULL;
 
         if (data->base.kind == EcsOnLoad) {
             stats_array = &stats->on_load_systems;
@@ -316,19 +316,19 @@ void ecs_get_stats(
     ecs_world_stats_t *stats)
 {
     uint32_t mem_used = 0, mem_allocd = 0;
-    stats->table_count = ecs_array_count(world->main_stage.tables);
+    stats->table_count = ecs_vector_count(world->main_stage.tables);
 
     if (!stats->tables) {
-        stats->tables = ecs_array_new(&tablestats_arr_params, stats->table_count);
+        stats->tables = ecs_vector_new(&tablestats_arr_params, stats->table_count);
     } else {
-        ecs_array_clear(stats->tables);
+        ecs_vector_clear(stats->tables);
     }
 
-    ecs_table_t *tables = ecs_array_buffer(world->main_stage.tables);
-    uint32_t i, count = ecs_array_count(world->main_stage.tables);
+    ecs_table_t *tables = ecs_vector_buffer(world->main_stage.tables);
+    uint32_t i, count = ecs_vector_count(world->main_stage.tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = &tables[i];
-        EcsTableStats *tstats = ecs_array_add(
+        EcsTableStats *tstats = ecs_vector_add(
             &stats->tables, &tablestats_arr_params);
 
         uint32_t row_size = ecs_table_row_size(table);
@@ -349,21 +349,21 @@ void ecs_get_stats(
         mem_allocd += tstats->memory_allocd;
     }
 
-    ecs_array_sort(stats->tables, &tablestats_arr_params, compare_tablestats);
+    ecs_vector_sort(stats->tables, &tablestats_arr_params, compare_tablestats);
 
     if (!stats->features) {
-        stats->features = ecs_array_new(&featurestats_arr_params, 0);
+        stats->features = ecs_vector_new(&featurestats_arr_params, 0);
     } else {
-        ecs_array_clear(stats->features);
+        ecs_vector_clear(stats->features);
     }
 
     EcsIter it = ecs_map_iter(world->type_handles);
     while (ecs_iter_hasnext(&it)) {
         ecs_entity_t h = ecs_map_next(&it, NULL);
         EcsTypeComponent *data = ecs_get_ptr(world, h, EcsTypeComponent);
-        ecs_array_t *type = ecs_map_get(world->main_stage.type_index, data->resolved);
-        ecs_entity_t *buffer = ecs_array_buffer(type);
-        uint32_t i, count = ecs_array_count(type);
+        ecs_vector_t *type = ecs_map_get(world->main_stage.type_index, data->resolved);
+        ecs_entity_t *buffer = ecs_vector_buffer(type);
+        uint32_t i, count = ecs_vector_count(type);
 
         EcsFeatureStats feature = {0};
         for (i = 0; i < count; i ++) {
@@ -380,7 +380,7 @@ void ecs_get_stats(
         }
 
         if (feature.system_count) {
-            EcsFeatureStats *elem = ecs_array_add(
+            EcsFeatureStats *elem = ecs_vector_add(
                 &stats->features, &featurestats_arr_params);
             *elem = feature;
             elem->id = ecs_get_id(world, h);
@@ -465,30 +465,30 @@ void ecs_get_stats(
 void ecs_free_stats(
     ecs_world_stats_t *stats)
 {
-    uint32_t i, count = ecs_array_count(stats->tables);
-    EcsTableStats *tables = ecs_array_buffer(stats->tables);
+    uint32_t i, count = ecs_vector_count(stats->tables);
+    EcsTableStats *tables = ecs_vector_buffer(stats->tables);
     for (i = 0; i < count; i ++) {
         ecs_os_free(tables[i].columns);
     }
 
-    EcsFeatureStats *entities = ecs_array_buffer(stats->features);
-    count = ecs_array_count(stats->features);
+    EcsFeatureStats *entities = ecs_vector_buffer(stats->features);
+    count = ecs_vector_count(stats->features);
     for (i = 0; i < count; i ++) {
         ecs_os_free(entities[i].entities);
     }
 
-    ecs_array_free(stats->tables);
-    ecs_array_free(stats->features);
-    ecs_array_free(stats->on_load_systems);
-    ecs_array_free(stats->post_load_systems);
-    ecs_array_free(stats->pre_update_systems);
-    ecs_array_free(stats->on_update_systems);
-    ecs_array_free(stats->on_validate_systems);
-    ecs_array_free(stats->post_update_systems);
-    ecs_array_free(stats->pre_store_systems);
-    ecs_array_free(stats->on_store_systems);
-    ecs_array_free(stats->on_demand_systems);
-    ecs_array_free(stats->on_add_systems);
-    ecs_array_free(stats->on_set_systems);
-    ecs_array_free(stats->on_remove_systems);
+    ecs_vector_free(stats->tables);
+    ecs_vector_free(stats->features);
+    ecs_vector_free(stats->on_load_systems);
+    ecs_vector_free(stats->post_load_systems);
+    ecs_vector_free(stats->pre_update_systems);
+    ecs_vector_free(stats->on_update_systems);
+    ecs_vector_free(stats->on_validate_systems);
+    ecs_vector_free(stats->post_update_systems);
+    ecs_vector_free(stats->pre_store_systems);
+    ecs_vector_free(stats->on_store_systems);
+    ecs_vector_free(stats->on_demand_systems);
+    ecs_vector_free(stats->on_add_systems);
+    ecs_vector_free(stats->on_set_systems);
+    ecs_vector_free(stats->on_remove_systems);
 }

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "../flecs.h"
-#include "../util/array.h"
+#include "../util/vector.h"
 #include "../util/map.h"
 
 #define ECS_WORLD_INITIAL_TABLE_COUNT (2)
@@ -88,7 +88,7 @@ typedef struct ecs_system_ref_t {
 typedef struct EcsSystem {
     ecs_system_action_t action;    /* Callback to be invoked for matching rows */
     const char *signature;         /* Signature with which system was created */
-    ecs_array_t *columns;          /* Column components */
+    ecs_vector_t *columns;          /* Column components */
     ecs_type_t not_from_entity;    /* Exclude components from entity */
     ecs_type_t not_from_component; /* Exclude components from components */
     ecs_type_t and_from_entity;  /* Which components are required from entity */
@@ -140,14 +140,14 @@ typedef struct EcsSystem {
 typedef struct EcsColSystem {
     EcsSystem base;
     ecs_entity_t entity;          /* Entity id of system, used for ordering */
-    ecs_array_t *components;      /* Computed component list per matched table */
-    ecs_array_t *inactive_tables; /* Inactive tables */
-    ecs_array_t *jobs;            /* Jobs for this system */
-    ecs_array_t *tables;          /* Table index + refs index + column offsets */
-    ecs_array_t *refs;            /* Columns that point to other entities */
-    ecs_array_params_t table_params; /* Parameters for tables array */
-    ecs_array_params_t component_params; /* Parameters for components array */
-    ecs_array_params_t ref_params; /* Parameters for tables array */
+    ecs_vector_t *components;      /* Computed component list per matched table */
+    ecs_vector_t *inactive_tables; /* Inactive tables */
+    ecs_vector_t *jobs;            /* Jobs for this system */
+    ecs_vector_t *tables;          /* Table index + refs index + column offsets */
+    ecs_vector_t *refs;            /* Columns that point to other entities */
+    ecs_vector_params_t table_params; /* Parameters for tables array */
+    ecs_vector_params_t component_params; /* Parameters for components array */
+    ecs_vector_params_t ref_params; /* Parameters for tables array */
     float period;              /* Minimum period inbetween system invocations */
     float time_passed;         /* Time passed since last invocation */
 } EcsColSystem;
@@ -158,7 +158,7 @@ typedef struct EcsColSystem {
  * ecs_remove and ecs_set. */
 typedef struct EcsRowSystem {
     EcsSystem base;
-    ecs_array_t *components;       /* Components in order of signature */
+    ecs_vector_t *components;       /* Components in order of signature */
 } EcsRowSystem;
 
 
@@ -166,7 +166,7 @@ typedef struct EcsRowSystem {
 
 /** A table column describes a single column in a table (archetype) */
 typedef struct ecs_table_column_t {
-    ecs_array_t *data;               /* Column data */
+    ecs_vector_t *data;               /* Column data */
     uint16_t size;                /* Column size (saves component lookups) */
 } ecs_table_column_t;
 
@@ -175,9 +175,9 @@ typedef struct ecs_table_column_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
 typedef struct ecs_table_t {
-    ecs_array_t *type;               /* Reference to type_index entry */
+    ecs_vector_t *type;               /* Reference to type_index entry */
     ecs_table_column_t *columns;      /* Columns storing components of array */
-    ecs_array_t *frame_systems;      /* Frame systems matched with table */
+    ecs_vector_t *frame_systems;      /* Frame systems matched with table */
     ecs_type_t type_id;              /* Identifies table type in type_index */
  } ecs_table_t;
  
@@ -214,7 +214,7 @@ typedef struct ecs_stage_t {
      * stage, these are the same
      * as the main stage */
     ecs_map_t *table_index;         /* Index for table stage */
-    ecs_array_t *tables;            /* Tables created while >1 threads running */
+    ecs_vector_t *tables;            /* Tables created while >1 threads running */
     ecs_map_t *type_index;          /* Types created while >1 threads running */
 
     
@@ -258,29 +258,29 @@ struct ecs_world_t {
 
     /* -- Column systems -- */
 
-    ecs_array_t *on_load_systems;  
-    ecs_array_t *post_load_systems;  
-    ecs_array_t *pre_update_systems;  
-    ecs_array_t *on_update_systems;   
-    ecs_array_t *on_validate_systems; 
-    ecs_array_t *post_update_systems; 
-    ecs_array_t *pre_store_systems; 
-    ecs_array_t *on_store_systems;   
-    ecs_array_t *on_demand_systems;  
-    ecs_array_t *inactive_systems;   
+    ecs_vector_t *on_load_systems;  
+    ecs_vector_t *post_load_systems;  
+    ecs_vector_t *pre_update_systems;  
+    ecs_vector_t *on_update_systems;   
+    ecs_vector_t *on_validate_systems; 
+    ecs_vector_t *post_update_systems; 
+    ecs_vector_t *pre_store_systems; 
+    ecs_vector_t *on_store_systems;   
+    ecs_vector_t *on_demand_systems;  
+    ecs_vector_t *inactive_systems;   
 
 
     /* -- Row systems -- */
 
-    ecs_array_t *add_systems;        /* Systems invoked on ecs_stage_add */
-    ecs_array_t *remove_systems;     /* Systems invoked on ecs_stage_remove */
-    ecs_array_t *set_systems;        /* Systems invoked on ecs_set */
+    ecs_vector_t *add_systems;        /* Systems invoked on ecs_stage_add */
+    ecs_vector_t *remove_systems;     /* Systems invoked on ecs_stage_remove */
+    ecs_vector_t *set_systems;        /* Systems invoked on ecs_set */
 
 
     /* -- Tasks -- */
 
-    ecs_array_t *tasks;              /* Periodic actions not invoked on entities */
-    ecs_array_t *fini_tasks;         /* Tasks to execute on ecs_fini */
+    ecs_vector_t *tasks;              /* Periodic actions not invoked on entities */
+    ecs_vector_t *fini_tasks;         /* Tasks to execute on ecs_fini */
 
 
     /* -- Lookup Indices -- */
@@ -296,12 +296,12 @@ struct ecs_world_t {
 
     ecs_stage_t main_stage;          /* Main storage */
     ecs_stage_t temp_stage;          /* Stage for when processing systems */
-    ecs_array_t *worker_stages;      /* Stages for worker threads */
+    ecs_vector_t *worker_stages;      /* Stages for worker threads */
 
 
     /* -- Multithreading -- */
 
-    ecs_array_t *worker_threads;     /* Worker threads */
+    ecs_vector_t *worker_threads;     /* Worker threads */
     ecs_os_cond_t thread_cond;       /* Signal that worker threads can start */
     ecs_os_mutex_t thread_mutex;     /* Mutex for thread condition */
     ecs_os_cond_t job_cond;          /* Signal that worker thread job is done */
@@ -354,12 +354,12 @@ struct ecs_world_t {
 
 
 /* Parameters for various array types */
-extern const ecs_array_params_t handle_arr_params;
-extern const ecs_array_params_t stage_arr_params;
-extern const ecs_array_params_t table_arr_params;
-extern const ecs_array_params_t thread_arr_params;
-extern const ecs_array_params_t job_arr_params;
-extern const ecs_array_params_t column_arr_params;
+extern const ecs_vector_params_t handle_arr_params;
+extern const ecs_vector_params_t stage_arr_params;
+extern const ecs_vector_params_t table_arr_params;
+extern const ecs_vector_params_t thread_arr_params;
+extern const ecs_vector_params_t job_arr_params;
+extern const ecs_vector_params_t column_arr_params;
 
 
 #endif

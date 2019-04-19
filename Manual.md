@@ -243,21 +243,21 @@ This function returns the verbatim address that is stored in the `EcsId` compone
 If memory is tied to the lifecycle of a component, applications can use `OnAdd` and `OnRemove` components to initialize and free the memory when components are added/removed. This example shows how to create two systems for a dynamic buffer that automatically allocate/free the memory for the dynamic buffer when it is added to an entity:
 
 ```c
-typedef ecs_array_t *DynamicBuffer;
+typedef ecs_vector_t *DynamicBuffer;
 
-ecs_array_params_t params = {.element_size = sizeof(int)};
+ecs_vector_params_t params = {.element_size = sizeof(int)};
 
 void InitDynamicBuffer(ecs_rows_t *rows) {
     DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
     for (int i = rows->begin; i < rows->end; i ++) {
-        data[i] = ecs_array_new(&params, 0);
+        data[i] = ecs_vector_new(&params, 0);
     }
 }
 
 void DeinitDynamicBuffer(ecs_rows_t *rows) {
     DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
     for (int i = rows->begin; i < rows->end; i ++) {
-        ecs_array_free(data[i]);
+        ecs_vector_free(data[i]);
     }
 }
 
