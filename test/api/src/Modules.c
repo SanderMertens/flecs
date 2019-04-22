@@ -2,27 +2,26 @@
 
 /* -- Begin module code -- */
 
-typedef struct SimpleModuleHandles {
+typedef struct SimpleModule {
     ECS_DECLARE_COMPONENT(Position);
     ECS_DECLARE_COMPONENT(Velocity);
-} SimpleModuleHandles;
+} SimpleModule;
 
-#define SimpleModule_ImportHandles(handles)\
+#define SimpleModuleImportHandles(handles)\
     ECS_IMPORT_COMPONENT(handles, Position);\
     ECS_IMPORT_COMPONENT(handles, Velocity);
 
-void SimpleModule(
+void SimpleModuleImport(
     ecs_world_t *world, 
-    int flags, 
-    void *handles)
+    int flags)
 {
-    SimpleModuleHandles *handles_out = handles;
+    ECS_MODULE(world, SimpleModule);
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SET_COMPONENT(handles_out, Position);
-    ECS_SET_COMPONENT(handles_out, Velocity);
+    ECS_SET_COMPONENT(handles, Position);
+    ECS_SET_COMPONENT(handles, Velocity);
 }
 
 /* -- End module code -- */

@@ -1088,7 +1088,7 @@ ecs_entity_t _ecs_import(
         module(world, flags);
 
         /* Lookup module component (must be registered by module) */
-        ecs_entity_t e = ecs_lookup(world, module_name);
+        e = ecs_lookup(world, module_name);
 
         /* Copy value of module component in handles_out parameter */
         if (handles_size && handles_out) {
