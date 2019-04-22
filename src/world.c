@@ -459,13 +459,13 @@ void load_admin(
     uint16_t port)
 {
     if (ecs_import_from_library(
-        world, "flecs.systems.civetweb", "EcsSystemsCivetweb", 0) == ECS_INVALID_ENTITY) 
+        world, "flecs.systems.civetweb", NULL, 0) == ECS_INVALID_ENTITY) 
     {
         return;
     }
     
     if (ecs_import_from_library(
-        world, "flecs.systems.admin", "EcsSystemsAdmin", 0) == ECS_INVALID_ENTITY)
+        world, "flecs.systems.admin", NULL, 0) == ECS_INVALID_ENTITY)
     {
         return;
     }
@@ -1119,7 +1119,7 @@ ecs_entity_t ecs_import_from_library(
     /* If no module name is specified, try default naming convention for loading
      * the main module from the library */
     if (!module) {
-        module = ecs_os_malloc(strlen(library_name) + 1);
+        module = ecs_os_malloc(strlen(library_name) + strlen("Import") + 1);
         const char *ptr;
         char ch, *bptr = module;
         bool capitalize = true;
@@ -1138,6 +1138,7 @@ ecs_entity_t ecs_import_from_library(
             }
         }
         *bptr = '\0';
+        strcat(bptr, "Import");
     }
 
     /* Find civetweb module & entry point */
@@ -1146,6 +1147,7 @@ ecs_entity_t ecs_import_from_library(
     if (!action) {
         fprintf(stderr, "failed to load the %s module from library %s\n",
             module, library_name);
+        ut_raise();
         return ECS_INVALID_ENTITY;
     }
 
@@ -1154,7 +1156,7 @@ ecs_entity_t ecs_import_from_library(
 #else
     fprintf(stderr, 
         "sorry, loading libraries is only possible if flecs is built with bake :(");
-
+    ut_raise();
     return ECS_INVALID_ENTITY;
 #endif
 }
