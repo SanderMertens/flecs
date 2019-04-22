@@ -93,11 +93,6 @@ void clean_tables(
     ecs_table_t *buffer = ecs_vector_first(stage->tables);
     int32_t i, count = ecs_vector_count(stage->tables);
 
-    for (i = count - 1; i >= 0; i --) {
-        ecs_table_t *table = &buffer[i];
-        ecs_table_deinit(world, table);
-    }
-
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = &buffer[i];
         ecs_table_free(world, table);

@@ -122,8 +122,12 @@ void ecs_table_deinit(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    (void)world;
-    (void)table;
+    uint32_t count = ecs_vector_count(table->columns[0].data);
+    if (count) {
+        ecs_notify(
+            world, world->type_sys_remove_index, table->type_id, table,
+            table->columns, 0, count);
+    }
 }
 
 void ecs_table_free(

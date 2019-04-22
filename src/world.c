@@ -408,6 +408,47 @@ void col_systems_deinit(
     }
 }
 
+static
+void row_systems_deinit(
+    ecs_world_t *world,
+    ecs_vector_t *systems)
+{
+    uint32_t i, count = ecs_vector_count(systems);
+    ecs_entity_t *buffer = ecs_vector_first(systems);
+
+    for (i = 0; i < count; i ++) {
+        EcsRowSystem *ptr = ecs_get_ptr(world, buffer[i], EcsRowSystem);
+        ecs_vector_free(ptr->base.columns);
+        ecs_vector_free(ptr->components);
+    }
+}
+
+static
+void row_index_deinit(
+    ecs_map_t *sys_index)
+{
+    EcsIter it = ecs_map_iter(sys_index);
+
+    while (ecs_iter_hasnext(&it)) {
+        ecs_vector_t *v = ecs_iter_next(&it);
+        ecs_vector_free(v);
+    }
+
+    ecs_map_free(sys_index);
+}
+
+static
+void deinit_tables(
+    ecs_world_t *world)
+{
+    ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
+    int i, count = ecs_vector_count(world->main_stage.tables);
+
+    for (i = 0; i < count; i ++) {
+        ecs_table_deinit(world, &tables[i]);
+    }
+}
+
 /* Spoof EcsAdnin type (needed until we have proper reflection) */
 typedef uint16_t EcsAdmin;
 
@@ -608,6 +649,8 @@ int ecs_fini(
         ecs_set_threads(world, 0);
     }
 
+    deinit_tables(world);
+
     col_systems_deinit(world, world->on_update_systems);
     col_systems_deinit(world, world->on_validate_systems);
     col_systems_deinit(world, world->pre_update_systems);
@@ -618,6 +661,14 @@ int ecs_fini(
     col_systems_deinit(world, world->on_store_systems);
     col_systems_deinit(world, world->on_demand_systems);
     col_systems_deinit(world, world->inactive_systems);
+
+    row_systems_deinit(world, world->add_systems);
+    row_systems_deinit(world, world->remove_systems);
+    row_systems_deinit(world, world->set_systems);
+
+    row_index_deinit(world->type_sys_add_index);
+    row_index_deinit(world->type_sys_remove_index);
+    row_index_deinit(world->type_sys_set_index);
 
     ecs_stage_deinit(world, &world->main_stage);
     ecs_stage_deinit(world, &world->temp_stage);
@@ -641,9 +692,6 @@ int ecs_fini(
     ecs_vector_free(world->set_systems);
 
     ecs_map_free(world->prefab_index);
-    ecs_map_free(world->type_sys_add_index);
-    ecs_map_free(world->type_sys_remove_index);
-    ecs_map_free(world->type_sys_set_index);
     ecs_map_free(world->type_handles);
 
     world->magic = 0;
@@ -1036,29 +1084,20 @@ ecs_entity_t _ecs_import(
 {
     ecs_entity_t e = ecs_lookup(world, module_name);
     if (!e) {
-        void *handles_component_ptr = handles_out;
+        /* Load module */
+        module(world, flags);
 
-        /* Register component for module that contains handles */
-        if (handles_size) {
-            e = ecs_new_component(world, module_name, handles_size);
+        /* Lookup module component (must be registered by module) */
+        ecs_entity_t e = ecs_lookup(world, module_name);
 
+        /* Copy value of module component in handles_out parameter */
+        if (handles_size && handles_out) {
             ecs_type_t t = ecs_type_from_entity(world, e);
-
-            _ecs_add(world, 0, t);
-
-            handles_component_ptr = _ecs_get_ptr(world, 0, t);
-            ecs_assert(handles_component_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            void *module_ptr = _ecs_get_ptr(world, 0, t);
+            memcpy(handles_out, module_ptr, handles_size);
         }
 
-        /* Ensure that if a component is created, the pointer to the component
-         * is passed into the module. That way, the module loader can internally
-         * use the component, if needed. */
-
-        module(world, flags, handles_component_ptr);
-
-        if (handles_size) {
-            memcpy(handles_out, handles_component_ptr, handles_size);
-        }
+    /* If module was already loaded, copy module component into handles_out */
     } else if (handles_size) {
         ecs_type_t t = ecs_type_from_entity(world, e);
         void *handles_ptr = _ecs_get_ptr(world, 0, t);

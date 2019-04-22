@@ -124,8 +124,7 @@ typedef void (*ecs_system_action_t)(
 /** Initialization function signature of modules */
 typedef void (*ecs_module_init_action_t)(
     ecs_world_t *world,
-    int flags,
-    void *handles_out);
+    int flags);
 
 /** Handles to builtin components */
 #define EEcsComponent (1)
@@ -267,7 +266,7 @@ ecs_entity_t _ecs_import(
     size_t handles_size);
 
 #define ecs_import(world, module, flags, handles_out)\
-    _ecs_import(world, module, #module, flags, handles_out, sizeof(module##Handles))
+    _ecs_import(world, module##Import, #module, flags, handles_out, sizeof(module))
 
 /* Import a module from a library.
  * If a module is stored in another library, it can be dynamically loaded with
@@ -1689,6 +1688,13 @@ void _ecs_assert(
 
 #endif
 
+/** Define module
+ */
+#define ECS_MODULE(world, id)\
+    ECS_COMPONENT(world, id);\
+    ecs_set_singleton(world, id, {0});\
+    id *handles = ecs_get_singleton_ptr(world, id);\
+
 /** Wrapper around ecs_load.
  * This macro provides a convenient way to load a module with the world. It can
  * be used like this:
@@ -1697,10 +1703,10 @@ void _ecs_assert(
  *
  * ecs_enable(world, EcsSystemsMovement_h.Move); */
 #define ECS_IMPORT(world, id, flags) \
-    id##Handles M##id;\
+    id M##id;\
     ECS_ENTITY_VAR(id) = ecs_import(world, id, flags, &M##id);\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
-    id##_ImportHandles(M##id);\
+    id##ImportHandles(M##id);\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
 
@@ -1769,10 +1775,10 @@ void _ecs_assert(
 
 /** Utility macro for importing all handles for a module from a system column */
 #define ECS_IMPORT_COLUMN(rows, module, column) \
-    module##Handles *M##module##_ptr = ecs_shared(rows, module##Handles, column);\
+    module *M##module##_ptr = ecs_shared(rows, module, column);\
     ecs_assert(M##module##_ptr != NULL, ECS_MODULE_UNDEFINED, #module);\
-    module##Handles M##module = *M##module##_ptr;\
-    module##_ImportHandles(M##module)
+    module M##module = *M##module##_ptr;\
+    module##ImportHandles(M##module)
 
 
 /* -- Misc macro's -- */
