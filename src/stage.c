@@ -25,7 +25,7 @@ void merge_tables(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_table_t *buffer = ecs_vector_buffer(stage->tables);
+    ecs_table_t *buffer = ecs_vector_first(stage->tables);
     uint32_t i, count = ecs_vector_count(stage->tables);
 
     ecs_stage_t *main_stage = &world->main_stage;
@@ -90,7 +90,7 @@ void clean_tables(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_table_t *buffer = ecs_vector_buffer(stage->tables);
+    ecs_table_t *buffer = ecs_vector_first(stage->tables);
     int32_t i, count = ecs_vector_count(stage->tables);
 
     for (i = count - 1; i >= 0; i --) {

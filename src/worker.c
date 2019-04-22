@@ -100,7 +100,7 @@ void ecs_stop_threads(
     ecs_os_cond_broadcast(world->thread_cond);
     ecs_os_mutex_unlock(world->thread_mutex);
 
-    ecs_thread_t *buffer = ecs_vector_buffer(world->worker_threads);
+    ecs_thread_t *buffer = ecs_vector_first(world->worker_threads);
     uint32_t i, count = ecs_vector_count(world->worker_threads);
     for (i = 1; i < count; i ++) {
         ecs_os_thread_join(buffer[i].thread);
@@ -178,7 +178,7 @@ void ecs_schedule_jobs(
     uint32_t thread_count = ecs_vector_count(world->worker_threads);
     uint32_t total_rows = 0;
 
-    void *ptr = ecs_vector_buffer(system_data->tables);
+    void *ptr = ecs_vector_first(system_data->tables);
     uint32_t i, count = ecs_vector_count(system_data->tables);
     size_t size = system_data->table_params.element_size;
 
@@ -258,7 +258,7 @@ void ecs_run_jobs(
     ecs_os_mutex_unlock(world->thread_mutex);
 
     /* Run job for thread 0 in main thread */
-    ecs_thread_t *thread = ecs_vector_buffer(world->worker_threads);
+    ecs_thread_t *thread = ecs_vector_first(world->worker_threads);
     ecs_job_t **jobs = thread->jobs;
     uint32_t i, job_count = thread->job_count;
 

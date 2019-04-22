@@ -40,7 +40,7 @@ void SystemOnRemove_remove_match_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -69,7 +69,7 @@ void SystemOnRemove_remove_match_1_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -98,9 +98,9 @@ void SystemOnRemove_remove_match_2_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -130,9 +130,9 @@ void SystemOnRemove_remove_match_2_of_3() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -229,7 +229,7 @@ void SystemOnRemove_delete_match_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -258,7 +258,7 @@ void SystemOnRemove_delete_match_1_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -287,9 +287,9 @@ void SystemOnRemove_delete_match_2_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);    
 
     ecs_fini(world);
@@ -319,9 +319,9 @@ void SystemOnRemove_delete_match_2_of_3() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);

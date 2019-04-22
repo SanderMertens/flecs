@@ -20,13 +20,13 @@
 #undef bool
 #undef true
 #undef false
-#define bool char
+typedef char bool;
 #define false 0
 #define true !false
 #endif
 
 /* The flecs world object */
-typedef struct ecs_world_t ecs_world_t;
+typedef struct ecs_world ecs_world_t;
 
 /** A handle identifies an entity */
 typedef uint64_t ecs_entity_t;
@@ -46,8 +46,9 @@ typedef struct ecs_time_t {
 #include "util/os_api.h"
 
 /** -- Builtin module flags -- */
-#define ECS_2D (1)
-#define ECS_3D (2)
+#define ECS_REFLECTION (1)
+#define ECS_2D (2)
+#define ECS_3D (3)
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,6 +62,11 @@ typedef uint32_t ecs_type_t;
 
 /** Id component type */
 typedef const char *EcsId;
+
+/** Metadata of a component */
+typedef struct EcsComponent {
+    uint32_t size;
+} EcsComponent;
 
 /** System kinds determine when and how systems are ran */
 typedef enum EcsSystemKind {
@@ -252,13 +258,16 @@ void ecs_quit(
  * @param handles_out A struct with handles to the module components/systems.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_import(
+ecs_entity_t _ecs_import(
     ecs_world_t *world,
     ecs_module_init_action_t module,
     const char *module_name,
     int flags,
     void *handles_out,
     size_t handles_size);
+
+#define ecs_import(world, module, flags, handles_out)\
+    _ecs_import(world, module, #module, flags, handles_out, sizeof(module##Handles))
 
 /* Import a module from a library.
  * If a module is stored in another library, it can be dynamically loaded with
@@ -995,7 +1004,7 @@ uint32_t _ecs_count(
     ecs_world_t *world,
     ecs_type_t type);
 
-#define ecs_count(world, type) _ecs_count(world, ecs_to_type(type))
+#define ecs_count(world, type) _ecs_count(world, ecs_type(type))
 
 /** Lookup an entity by id.
  * This operation is a convenient way to lookup entities by string identifier
@@ -1581,18 +1590,21 @@ void _ecs_assert(
 /* -- Convenience macro's for wrapping around generated types and entities -- */
 
 /** Translate C type to entity variable */
-#define ecs_to_entity(type) E##type
+#define ecs_entity(type) E##type
 
 /** Translate C type to type variable */
-#define ecs_to_type(type) T##type
+#define ecs_type(type) T##type
+
+/** Translate module name into handles struct */
+#define ecs_module(type) M##type
 
 /** Declare type variable */
 #define ECS_TYPE_VAR(type)\
-    ecs_type_t ecs_to_type(type)
+    ecs_type_t ecs_type(type)
 
 /** Declare entity variable */
 #define ECS_ENTITY_VAR(type)\
-    ecs_entity_t ecs_to_entity(type)
+    ecs_entity_t ecs_entity(type)
 
 
 /* -- Convenience macro's for declaring Flecs objects -- */
@@ -1616,16 +1628,16 @@ void _ecs_assert(
  * handle to the new component. */
 #define ECS_COMPONENT(world, id) \
     ECS_ENTITY_VAR(id) = ecs_new_component(world, #id, sizeof(id));\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_to_entity(id));\
-    (void)ecs_to_entity(id);\
-    (void)ecs_to_type(id);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id);\
 
 /** Same as component, but no size */
 #define ECS_TAG(world, id) \
     ecs_entity_t id = ecs_new_component(world, #id, 0);\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    (void)ecs_to_type(id);\
+    (void)ecs_type(id);\
 
 /** Wrapper around ecs_new_type.
  * This macro provides a convenient way to register a type with the world.
@@ -1640,7 +1652,7 @@ void _ecs_assert(
     ecs_entity_t id = ecs_new_type(world, #id, #__VA_ARGS__);\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    (void)ecs_to_type(id);\
+    (void)ecs_type(id);\
 
 /** Wrapper around ecs_new_prefab.
  * This macro provides a convenient way to register a prefab with the world. It
@@ -1654,7 +1666,7 @@ void _ecs_assert(
     ecs_entity_t id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    (void)ecs_to_type(id);\
+    (void)ecs_type(id);\
 
 /** Wrapper around ecs_new_system.
  * This macro provides a convenient way to register systems with a world. It can
@@ -1673,7 +1685,7 @@ void _ecs_assert(
     ecs_entity_t id = F##id;\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    (void)ecs_to_type(id);
+    (void)ecs_type(id);
 
 #endif
 
@@ -1686,11 +1698,11 @@ void _ecs_assert(
  * ecs_enable(world, EcsSystemsMovement_h.Move); */
 #define ECS_IMPORT(world, id, flags) \
     id##Handles M##id;\
-    ECS_ENTITY_VAR(id) = ecs_import(world, id, #id, flags, &M##id, sizeof(id##Handles));\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_to_entity(id));\
+    ECS_ENTITY_VAR(id) = ecs_import(world, id, flags, &M##id);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
     id##_ImportHandles(M##id);\
-    (void)ecs_to_entity(id);\
-    (void)ecs_to_type(id);\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id);\
 
 /* -- Utilities for importing handles from within systems -- */
 
@@ -1709,14 +1721,14 @@ void _ecs_assert(
 #define ECS_COLUMN_COMPONENT(rows, id, column)\
     ECS_ENTITY_VAR(id) = ecs_column_entity(rows, column);\
     ECS_TYPE_VAR(id) = ecs_column_type(rows, column);\
-    (void)ecs_to_entity(id);\
-    (void)ecs_to_type(id)
+    (void)ecs_entity(id);\
+    (void)ecs_type(id)
 
 #define ECS_COLUMN_ENTITY(rows, id, column)\
     ecs_entity_t id = ecs_column_entity(rows, column);\
     ECS_TYPE_VAR(id) = ecs_column_type(rows, column);\
     (void)id;\
-    (void)ecs_to_type(id)
+    (void)ecs_type(id)
 
 
 /* -- Module convenience macro's -- */
@@ -1733,27 +1745,27 @@ void _ecs_assert(
 
 /** Utility macro for setting a component in a module function */
 #define ECS_SET_COMPONENT(handles, type)\
-    if (handles) handles->ecs_to_entity(type) = ecs_to_entity(type);\
-    if (handles) handles->ecs_to_type(type) = ecs_to_type(type)
+    if (handles) handles->ecs_entity(type) = ecs_entity(type);\
+    if (handles) handles->ecs_type(type) = ecs_type(type)
 
 /** Utility macro for setting a system in a module function */
 #define ECS_SET_ENTITY(handles, entity)\
     if (handles) handles->entity = entity;\
-    if (handles) handles->ecs_to_type(entity) = ecs_to_type(entity)
+    if (handles) handles->ecs_type(entity) = ecs_type(entity)
 
 /** Utility macro for declaring handles by modules */
 #define ECS_IMPORT_COMPONENT(handles, type)\
-    ECS_ENTITY_VAR(type) = handles.ecs_to_entity(type); (void)ecs_to_entity(type);\
-    ECS_TYPE_VAR(type) = handles.ecs_to_type(type); (void)ecs_to_type(type);\
-    (void)ecs_to_entity(type);\
-    (void)ecs_to_type(type)
+    ECS_ENTITY_VAR(type) = (handles).ecs_entity(type); (void)ecs_entity(type);\
+    ECS_TYPE_VAR(type) = (handles).ecs_type(type); (void)ecs_type(type);\
+    (void)ecs_entity(type);\
+    (void)ecs_type(type)
 
 /** Utility macro for declaring handles by modules */
 #define ECS_IMPORT_ENTITY(handles, entity)\
-    ecs_entity_t entity = handles.entity;\
-    ECS_TYPE_VAR(entity) = handles.ecs_to_type(entity); (void)ecs_to_type(entity);\
+    ecs_entity_t entity = (handles).entity;\
+    ECS_TYPE_VAR(entity) = (handles).ecs_type(entity); (void)ecs_type(entity);\
     (void)entity;\
-    (void)ecs_to_type(entity)
+    (void)ecs_type(entity)
 
 /** Utility macro for importing all handles for a module from a system column */
 #define ECS_IMPORT_COLUMN(rows, module, column) \

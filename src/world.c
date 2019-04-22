@@ -128,8 +128,8 @@ void bootstrap_component(
     ecs_map_set(stage->entity_index, entity, ecs_from_row(row));
 
     /* Set size and id */
-    EcsComponent *component_data = ecs_vector_buffer(table->columns[1].data);
-    EcsId *id_data = ecs_vector_buffer(table->columns[2].data);
+    EcsComponent *component_data = ecs_vector_first(table->columns[1].data);
+    EcsId *id_data = ecs_vector_first(table->columns[2].data);
     
     component_data[index - 1].size = size;
     id_data[index - 1] = id;
@@ -141,7 +141,7 @@ void notify_create_table(
     ecs_vector_t *systems,
     ecs_table_t *table)
 {
-    ecs_entity_t *buffer = ecs_vector_buffer(systems);
+    ecs_entity_t *buffer = ecs_vector_first(systems);
     uint32_t i, count = ecs_vector_count(systems);
 
     for (i = 0; i < count; i ++) {
@@ -338,7 +338,7 @@ char* ecs_type_tostr(
     uint32_t len;
     char buf[15];
 
-    ecs_entity_t *handles = ecs_vector_buffer(type);
+    ecs_entity_t *handles = ecs_vector_first(type);
     uint32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
@@ -363,7 +363,7 @@ char* ecs_type_tostr(
 
     *(char*)ecs_vector_add(&chbuf, &char_arr_params) = '\0';
 
-    char *result = strdup(ecs_vector_buffer(chbuf));
+    char *result = strdup(ecs_vector_first(chbuf));
     ecs_vector_free(chbuf);
     return result;
 }
@@ -395,7 +395,7 @@ void col_systems_deinit(
     ecs_vector_t *systems)
 {
     uint32_t i, count = ecs_vector_count(systems);
-    ecs_entity_t *buffer = ecs_vector_buffer(systems);
+    ecs_entity_t *buffer = ecs_vector_first(systems);
 
     for (i = 0; i < count; i ++) {
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
@@ -598,7 +598,7 @@ int ecs_fini(
 
     uint32_t i, system_count = ecs_vector_count(world->fini_tasks);
     if (system_count) {
-        ecs_entity_t *buffer = ecs_vector_buffer(world->fini_tasks);
+        ecs_entity_t *buffer = ecs_vector_first(world->fini_tasks);
         for (i = 0; i < system_count; i ++) {
             ecs_run_task(world, buffer[i]);
         }
@@ -683,7 +683,7 @@ ecs_entity_t ecs_lookup(
     ecs_world_t *world,
     const char *id)
 {
-    ecs_table_t *tables = ecs_vector_buffer(world->main_stage.tables);
+    ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
     uint32_t t, count = ecs_vector_count(world->main_stage.tables);
 
     for (t = 0; t < count; t ++) {
@@ -694,7 +694,7 @@ ecs_entity_t ecs_lookup(
         }
 
         ecs_table_column_t *column = &tables[t].columns[column_index + 1];
-        EcsId *buffer = ecs_vector_buffer(column->data);
+        EcsId *buffer = ecs_vector_first(column->data);
         uint32_t i, count = ecs_vector_count(column->data);
         
         for (i = 0; i < count; i ++) {
@@ -715,7 +715,7 @@ void rematch_system_array(
     ecs_vector_t *systems)
 {
     uint32_t i, count = ecs_vector_count(systems);
-    ecs_entity_t *buffer = ecs_vector_buffer(systems);
+    ecs_entity_t *buffer = ecs_vector_first(systems);
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t system = buffer[i];
@@ -754,7 +754,7 @@ void run_single_thread_stage(
     uint32_t i, system_count = ecs_vector_count(systems);
 
     if (system_count) {
-        ecs_entity_t *buffer = ecs_vector_buffer(systems);
+        ecs_entity_t *buffer = ecs_vector_first(systems);
 
         world->in_progress = true;
 
@@ -779,7 +779,7 @@ void run_multi_thread_stage(
     uint32_t i, system_count = ecs_vector_count(systems);
     if (system_count) {
         bool valid_schedule = world->valid_schedule;
-        ecs_entity_t *buffer = ecs_vector_buffer(systems);
+        ecs_entity_t *buffer = ecs_vector_first(systems);
 
         world->in_progress = true;
 
@@ -808,7 +808,7 @@ void run_tasks(
     if (system_count) {
         world->in_progress = true;
 
-        ecs_entity_t *buffer = ecs_vector_buffer(world->tasks);
+        ecs_entity_t *buffer = ecs_vector_first(world->tasks);
         for (i = 0; i < system_count; i ++) {
             ecs_run_task(world, buffer[i]);
         }
@@ -947,7 +947,7 @@ void ecs_merge(
     ecs_stage_merge(world, &world->temp_stage);
 
     uint32_t i, count = ecs_vector_count(world->worker_stages);
-    ecs_stage_t *buffer = ecs_vector_buffer(world->worker_stages);
+    ecs_stage_t *buffer = ecs_vector_first(world->worker_stages);
     for (i = 0; i < count; i ++) {
         ecs_stage_merge(world, &buffer[i]);
     }
@@ -1026,7 +1026,7 @@ void ecs_set_entity_range(
     world->max_handle = id_end;
 }
 
-ecs_entity_t ecs_import(
+ecs_entity_t _ecs_import(
     ecs_world_t *world,
     ecs_module_init_action_t module,
     const char *module_name,
@@ -1036,7 +1036,7 @@ ecs_entity_t ecs_import(
 {
     ecs_entity_t e = ecs_lookup(world, module_name);
     if (!e) {
-        module(world, flags, handles_out);
+        void *handles_component_ptr = handles_out;
 
         /* Register component for module that contains handles */
         if (handles_size) {
@@ -1044,9 +1044,25 @@ ecs_entity_t ecs_import(
 
             ecs_type_t t = ecs_type_from_entity(world, e);
 
-            /* Set module handles component on singleton */
-            _ecs_set_singleton_ptr(world, t, handles_size, handles_out);
+            _ecs_add(world, 0, t);
+
+            handles_component_ptr = _ecs_get_ptr(world, 0, t);
+            ecs_assert(handles_component_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         }
+
+        /* Ensure that if a component is created, the pointer to the component
+         * is passed into the module. That way, the module loader can internally
+         * use the component, if needed. */
+
+        module(world, flags, handles_component_ptr);
+
+        if (handles_size) {
+            memcpy(handles_out, handles_component_ptr, handles_size);
+        }
+    } else if (handles_size) {
+        ecs_type_t t = ecs_type_from_entity(world, e);
+        void *handles_ptr = _ecs_get_ptr(world, 0, t);
+        memcpy(handles_out, handles_ptr, handles_size);
     }
 
     return e;
@@ -1095,7 +1111,7 @@ ecs_entity_t ecs_import_from_library(
     }
 
     /* Do not free id, as it will be stored as the component identifier */
-    return ecs_import(world, action, module, flags, NULL, 0); 
+    return _ecs_import(world, action, module, flags, NULL, 0); 
 #else
     fprintf(stderr, 
         "sorry, loading libraries is only possible if flecs is built with bake :(");

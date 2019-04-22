@@ -124,7 +124,7 @@ uint32_t ecs_vector_size(
     ecs_vector_t *array);
 
 FLECS_EXPORT
-void* ecs_vector_buffer(
+void* ecs_vector_first(
     ecs_vector_t *array);
 
 FLECS_EXPORT

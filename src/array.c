@@ -249,7 +249,7 @@ uint32_t ecs_vector_set_count(
     return size;
 }
 
-void* ecs_vector_buffer(
+void* ecs_vector_first(
     ecs_vector_t *array)
 {
     return ARRAY_BUFFER(array);

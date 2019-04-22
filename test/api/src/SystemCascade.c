@@ -54,7 +54,7 @@ void SystemCascade_cascade_depth_1() {
     test_int(ctx.e[1], e_2);
     test_int(ctx.e[2], e_4);
     test_int(ctx.e[3], e_3);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -123,7 +123,7 @@ void SystemCascade_cascade_depth_2() {
     test_int(ctx.e[3], e_4);
     test_int(ctx.e[4], e_6);
     test_int(ctx.e[5], e_5);    
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -218,7 +218,7 @@ void SystemCascade_add_after_match() {
     test_int(ctx.e[2], parent);
     test_int(ctx.e[3], e_3);
     test_int(ctx.e[4], e_4);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -285,7 +285,7 @@ void SystemCascade_adopt_after_match() {
     test_int(ctx.e[2], parent);
     test_int(ctx.e[3], e_3);
     test_int(ctx.e[4], e_4);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e_1, Position);

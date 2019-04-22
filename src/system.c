@@ -103,7 +103,7 @@ ecs_entity_t new_row_system(
 
     ecs_type_t type_id = 0;
     uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
-    ecs_system_column_t *buffer = ecs_vector_buffer(system_data->base.columns);
+    ecs_system_column_t *buffer = ecs_vector_first(system_data->base.columns);
 
     for (i = 0; i < column_count; i ++) {
         ecs_entity_t *h = ecs_vector_add(
@@ -156,7 +156,7 @@ void ecs_system_compute_and_families(
     EcsSystem *system_data)
 {
     uint32_t i, column_count = ecs_vector_count(system_data->columns);
-    ecs_system_column_t *buffer = ecs_vector_buffer(system_data->columns);
+    ecs_system_column_t *buffer = ecs_vector_first(system_data->columns);
 
     for (i = 0; i < column_count; i ++) {
         ecs_system_column_t *elem = &buffer[i];
@@ -298,7 +298,7 @@ bool ecs_notify_row_system(
     ecs_system_action_t action = system_data->base.action;
 
     uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
-    ecs_system_column_t *buffer = ecs_vector_buffer(system_data->base.columns);
+    ecs_system_column_t *buffer = ecs_vector_first(system_data->base.columns);
     int32_t *columns = ecs_os_alloca(int32_t, column_count);
     ecs_reference_t *references = ecs_os_alloca(ecs_reference_t, column_count);
     void **ref_ptrs = ecs_os_alloca(void*, column_count);
@@ -335,7 +335,7 @@ bool ecs_notify_row_system(
         .column_count = ecs_vector_count(system_data->components),
         .references = references,
         .table_columns = table_columns,
-        .components = ecs_vector_buffer(system_data->components),
+        .components = ecs_vector_first(system_data->components),
         .frame_offset = 0,
         .offset = offset,
         .count = limit
@@ -347,7 +347,7 @@ bool ecs_notify_row_system(
     }
 
     if (table_columns) {
-        ecs_entity_t *entities = ecs_vector_buffer(table_columns[0].data);
+        ecs_entity_t *entities = ecs_vector_first(table_columns[0].data);
         rows.entities = &entities[rows.offset];
     }
 
@@ -426,7 +426,7 @@ ecs_entity_t ecs_new_system(
     /* If system contains FromSystem params, add them tot the system */
     if (system_data->and_from_system) {
         ecs_vector_t *f = ecs_type_get(world, NULL, system_data->and_from_system);
-        ecs_entity_t *buffer = ecs_vector_buffer(f);
+        ecs_entity_t *buffer = ecs_vector_first(f);
         uint32_t i, count = ecs_vector_count(f);
         for (i = 0; i < count; i ++) {
             ecs_type_t type = ecs_type_from_entity(world, buffer[i]);
@@ -463,7 +463,7 @@ void ecs_enable(
         ecs_world_t *world_temp = world;
         ecs_stage_t *stage = ecs_get_stage(&world_temp);
         ecs_vector_t *type = ecs_type_get(world, stage, type_data->type);
-        ecs_entity_t *buffer = ecs_vector_buffer(type);
+        ecs_entity_t *buffer = ecs_vector_first(type);
         uint32_t i, count = ecs_vector_count(type);
         for (i = 0; i < count; i ++) {
             /* Enable/disable all systems in type */
@@ -559,7 +559,7 @@ void* _ecs_column(
     }
 
     ecs_table_column_t *column = &((ecs_table_column_t*)rows->table_columns)[table_column];
-    void *buffer = ecs_vector_buffer(column->data);
+    void *buffer = ecs_vector_first(column->data);
     return ECS_OFFSET(buffer, column->size * rows->offset);
 }
 
@@ -700,7 +700,7 @@ void *_ecs_field(
         ecs_assert(index < ecs_vector_count(column->data), ECS_OUT_OF_RANGE, 0);
 #endif
 
-        void *buffer = ecs_vector_buffer(column->data);
+        void *buffer = ecs_vector_first(column->data);
         return ECS_OFFSET(buffer, column->size * (index + rows->offset));
     }
 }

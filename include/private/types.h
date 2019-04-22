@@ -33,11 +33,6 @@ typedef struct EcsTypeComponent {
     ecs_type_t resolved;  /* Resolved nested families */
 } EcsTypeComponent;
 
-/** Metadata of a component */
-typedef struct EcsComponent {
-    uint32_t size;
-} EcsComponent;
-
 /** Type that is used by systems to indicate where to fetch a component from */
 typedef enum ecs_system_expr_elem_kind_t {
     EcsFromSelf,            /* Get component from self (default) */
@@ -251,7 +246,7 @@ typedef struct ecs_thread_t {
 
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
-struct ecs_world_t {
+struct ecs_world {
     uint32_t magic;               /* Magic number to verify world pointer */
     float delta_time;           /* Time passed to or computed by ecs_progress */
     void *context;                /* Application context */

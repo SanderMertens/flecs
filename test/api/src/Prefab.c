@@ -709,9 +709,9 @@ void Prefab_iterate_w_prefab_field() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], Prefab);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -770,9 +770,9 @@ void Prefab_iterate_w_prefab_shared() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], Prefab);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -813,11 +813,11 @@ void Prefab_match_entity_prefab_w_system_optional() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], Prefab);
-    test_int(ctx.c[0][2], ecs_to_entity(Mass));
+    test_int(ctx.c[0][2], ecs_entity(Mass));
     test_int(ctx.s[0][2], Prefab);
 
     Position *p = ecs_get_ptr(world, e_1, Position);
@@ -866,9 +866,9 @@ void Prefab_prefab_in_system_expr() {
 
     test_int(ctx.e[0], e_1);
     test_int(ctx.e[1], e_2);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], Prefab1);
     test_int(ctx.c[0][2], Prefab1);
     test_int(ctx.s[0][2], 0);

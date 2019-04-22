@@ -40,8 +40,8 @@ void copy_row(
 {
     uint16_t i_new, new_component_count = ecs_vector_count(new_type);
     uint16_t i_old = 0, old_component_count = ecs_vector_count(old_type);
-    ecs_entity_t *new_components = ecs_vector_buffer(new_type);
-    ecs_entity_t *old_components = ecs_vector_buffer(old_type);
+    ecs_entity_t *new_components = ecs_vector_first(new_type);
+    ecs_entity_t *old_components = ecs_vector_first(old_type);
 
     ecs_assert(old_columns->data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_columns->data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -209,7 +209,7 @@ void copy_from_prefab(
             world, stage, row.type_id);
 
         ecs_vector_t *add_type = ecs_type_get(world, stage, to_add);
-        ecs_entity_t *add_handles = ecs_vector_buffer(add_type);
+        ecs_entity_t *add_handles = ecs_vector_first(add_type);
         uint32_t i, add_count = ecs_vector_count(add_type);
 
         ecs_table_column_t *columns = NULL;
@@ -234,7 +234,7 @@ void copy_from_prefab(
                 uint32_t size = columns[column_index + 1].size;
 
                 if (size) {
-                    void *buffer = ecs_vector_buffer(columns[column_index + 1].data);
+                    void *buffer = ecs_vector_first(columns[column_index + 1].data);
                     void *ptr = ECS_OFFSET(buffer, offset * size);
                     uint32_t i;
                     for (i = 0; i < limit; i ++) {
@@ -473,7 +473,7 @@ bool ecs_notify(
     bool notified = false;
 
     if (systems) {
-        ecs_entity_t *buffer = ecs_vector_buffer(systems);
+        ecs_entity_t *buffer = ecs_vector_first(systems);
         uint32_t i, count = ecs_vector_count(systems);
 
         for (i = 0; i < count; i ++) {
@@ -1140,7 +1140,7 @@ ecs_entity_t ecs_entity_from_type(
         ecs_abort(ECS_TYPE_NOT_AN_ENTITY, NULL);
     }
 
-    return ((ecs_entity_t*)ecs_vector_buffer(type))[0];
+    return ((ecs_entity_t*)ecs_vector_first(type))[0];
 }
 
 ecs_type_t ecs_get_type(
@@ -1175,7 +1175,7 @@ uint32_t _ecs_count(
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_vector_t *table_array = world->main_stage.tables;
     
-    ecs_table_t *tables = ecs_vector_buffer(table_array);
+    ecs_table_t *tables = ecs_vector_first(table_array);
     uint32_t i, count = ecs_vector_count(table_array);
     uint32_t result = 0;
 

@@ -35,9 +35,9 @@ void System_w_FromId_2_column_1_from_id() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 }
 
@@ -64,11 +64,11 @@ void System_w_FromId_3_column_2_from_id() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
+    test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_to_entity(Rotation));
+    test_int(ctx.c[0][2], ecs_entity(Rotation));
     test_int(ctx.s[0][2], 0);    
 }
 
@@ -76,7 +76,7 @@ static
 void CheckColumnType(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, Position, 2);
 
-    test_assert(ecs_to_type(Position) == ecs_column_type(rows, 1));
+    test_assert(ecs_type(Position) == ecs_column_type(rows, 1));
 
     ProbeSystem(rows);
 }

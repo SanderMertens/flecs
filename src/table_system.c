@@ -19,7 +19,7 @@ ecs_entity_t components_contains(
     assert(components != NULL);
 
     uint32_t i, count = ecs_vector_count(components);
-    ecs_entity_t *buffer = ecs_vector_buffer(components);
+    ecs_entity_t *buffer = ecs_vector_first(components);
     for (i = 0; i < count; i ++) {
         ecs_entity_t h = buffer[i];
 
@@ -84,7 +84,7 @@ ecs_entity_t get_entity_for_component(
     }
 
     ecs_vector_t *type = ecs_type_get(world, NULL, type_id);
-    ecs_entity_t *buffer = ecs_vector_buffer(type);
+    ecs_entity_t *buffer = ecs_vector_first(type);
     uint32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
@@ -142,7 +142,7 @@ void add_table(
     table_data[COMPONENTS_INDEX] = ecs_vector_count(system_data->components) - 1;
 
     /* Walk columns parsed from the system signature */
-    ecs_system_column_t *columns = ecs_vector_buffer(system_data->base.columns);
+    ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
     uint32_t c, count = ecs_vector_count(system_data->base.columns);
 
     for (c = 0; c < count; c ++) {
@@ -325,7 +325,7 @@ bool update_table_index(
     uint32_t old_index,
     uint32_t new_index)
 {
-    int32_t *table = ecs_vector_buffer(tables);
+    int32_t *table = ecs_vector_first(tables);
     int32_t i, count = ecs_vector_count(tables);
 
     for (i = 0; i < count; i ++) {
@@ -428,7 +428,7 @@ bool match_table(
     }
 
     uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
-    ecs_system_column_t *buffer = ecs_vector_buffer(system_data->base.columns);
+    ecs_system_column_t *buffer = ecs_vector_first(system_data->base.columns);
 
     for (i = 0; i < column_count; i ++) {
         ecs_system_column_t *elem = &buffer[i];
@@ -495,7 +495,7 @@ static
 ecs_entity_t get_cascade_component(
     EcsColSystem *system_data)
 {
-    ecs_system_column_t *column = ecs_vector_buffer(system_data->base.columns);
+    ecs_system_column_t *column = ecs_vector_first(system_data->base.columns);
     return column[system_data->base.cascade_by - 1].is.component;
 }
 
@@ -510,7 +510,7 @@ void order_cascade_tables(
     for (i = 0; i < count; i ++) {
         int32_t *table_data = ecs_vector_get(
             system_data->tables, &system_data->table_params, i);
-        ecs_table_t *tables = ecs_vector_buffer(world->main_stage.tables);
+        ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
         ecs_type_t type = tables[table_data[TABLE_INDEX]].type_id;
         table_data[DEPTH_INDEX] = ecs_type_container_depth(
             world, type, cascade_component);
@@ -526,7 +526,7 @@ void match_tables(
     ecs_entity_t system,
     EcsColSystem *system_data)
 {
-    ecs_table_t *buffer = ecs_vector_buffer(world->main_stage.tables);
+    ecs_table_t *buffer = ecs_vector_first(world->main_stage.tables);
     uint32_t i, count = ecs_vector_count(world->main_stage.tables);
 
     for (i = 0; i < count; i ++) {
@@ -550,7 +550,7 @@ int32_t table_matched(
     uint32_t table_index)
 {
     uint32_t i, count = ecs_vector_count(tables);
-    int32_t *table_data = ecs_vector_buffer(tables);
+    int32_t *table_data = ecs_vector_first(tables);
     uint32_t elem_size = system_data->table_params.element_size;
 
     for (i = 0; i < count; i ++) {
@@ -570,7 +570,7 @@ bool has_refs(
     EcsColSystem *system_data)
 {
     uint32_t i, count = ecs_vector_count(system_data->base.columns);
-    ecs_system_column_t *columns = ecs_vector_buffer(system_data->base.columns);
+    ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
 
     for (i = 0; i < count; i ++) {
         ecs_system_expr_elem_kind_t elem_kind = columns[i].kind;
@@ -642,7 +642,7 @@ void ecs_rematch_system(
     if (has_refs(system_data)) {
         ecs_vector_t *tables = world->main_stage.tables;
         uint32_t i, count = ecs_vector_count(tables);
-        ecs_table_t *buffer = ecs_vector_buffer(tables);
+        ecs_table_t *buffer = ecs_vector_first(tables);
         bool changed = false;
 
         for (i = 0; i < count; i ++) {
@@ -903,7 +903,7 @@ ecs_entity_t _ecs_run_w_filter(
 
     ecs_vector_t *tables = system_data->tables;
     uint32_t tables_size = system_data->table_params.element_size;
-    int32_t *table_first = ecs_vector_buffer(tables);
+    int32_t *table_first = ecs_vector_first(tables);
     int32_t *table_last = ECS_OFFSET(table_first, tables_size * ecs_vector_count(tables));
 
     if (table_first == table_last) {
@@ -923,7 +923,7 @@ ecs_entity_t _ecs_run_w_filter(
 
     uint32_t column_count = ecs_vector_count(system_data->base.columns);
     uint32_t components_size = system_data->component_params.element_size;
-    char *components = ecs_vector_buffer(system_data->components);
+    char *components = ecs_vector_first(system_data->components);
     ecs_entity_t interrupted_by = 0;
     ecs_system_action_t action = system_data->base.action;
     bool offset_limit = (offset | limit) != 0;
@@ -946,7 +946,7 @@ ecs_entity_t _ecs_run_w_filter(
 
         /* A system may introduce a new table if in the main thread. Make sure
          * world_tables points to the valid memory */
-        ecs_table_t *world_tables = ecs_vector_buffer(real_world->main_stage.tables);
+        ecs_table_t *world_tables = ecs_vector_first(real_world->main_stage.tables);
         ecs_table_t *w_table = &world_tables[table_index];
         ecs_table_column_t *table_columns = w_table->columns;
         uint32_t first = 0, count = ecs_table_count(w_table);
@@ -1024,7 +1024,7 @@ ecs_entity_t _ecs_run_w_filter(
         info.count = count;
 
         ecs_entity_t *entity_buffer = 
-                ecs_vector_buffer(((ecs_table_column_t*)info.table_columns)[0].data);
+                ecs_vector_first(((ecs_table_column_t*)info.table_columns)[0].data);
         info.entities = &entity_buffer[first];
         
         action(&info);

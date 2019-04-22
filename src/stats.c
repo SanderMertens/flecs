@@ -34,7 +34,7 @@ void calculate_system_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    ecs_entity_t *buffer = ecs_vector_buffer(systems);
+    ecs_entity_t *buffer = ecs_vector_first(systems);
     uint32_t i, count = ecs_vector_count(systems);
     for (i = 0; i < count; i ++) {
         EcsColSystem *sys = ecs_get_ptr(world, buffer[i], EcsColSystem);
@@ -57,7 +57,7 @@ void calculate_table_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    ecs_table_t *buffer = ecs_vector_buffer(world->main_stage.tables);
+    ecs_table_t *buffer = ecs_vector_first(world->main_stage.tables);
     uint32_t i, count = ecs_vector_count(world->main_stage.tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = &buffer[i];
@@ -100,7 +100,7 @@ void calculate_stages_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    ecs_stage_t *buffer = ecs_vector_buffer(world->worker_stages);
+    ecs_stage_t *buffer = ecs_vector_first(world->worker_stages);
     uint32_t i, count = ecs_vector_count(world->worker_stages);
     for (i = 0; i < count; i ++) {
         ecs_stage_t *stage = &buffer[i];
@@ -262,7 +262,7 @@ int system_stats_arr(
     ecs_vector_t **stats_array,
     ecs_vector_t *systems)
 {
-    ecs_entity_t *handles = ecs_vector_buffer(systems);
+    ecs_entity_t *handles = ecs_vector_first(systems);
     uint32_t i, count = ecs_vector_count(systems);
     for (i = 0; i < count; i ++) {
         set_system_stats(world, stats_array, handles[i], true);
@@ -279,7 +279,7 @@ int system_stats_arr_inactive(
     ecs_world_stats_t *stats)
 {
     ecs_vector_t *systems = world->inactive_systems;
-    ecs_entity_t *handles = ecs_vector_buffer(systems);
+    ecs_entity_t *handles = ecs_vector_first(systems);
     uint32_t i, count = ecs_vector_count(systems);
     for (i = 0; i < count; i ++) {
         EcsColSystem *data = ecs_get_ptr(world, handles[i], EcsColSystem);
@@ -324,7 +324,7 @@ void ecs_get_stats(
         ecs_vector_clear(stats->tables);
     }
 
-    ecs_table_t *tables = ecs_vector_buffer(world->main_stage.tables);
+    ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
     uint32_t i, count = ecs_vector_count(world->main_stage.tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = &tables[i];
@@ -362,7 +362,7 @@ void ecs_get_stats(
         ecs_entity_t h = ecs_map_next(&it, NULL);
         EcsTypeComponent *data = ecs_get_ptr(world, h, EcsTypeComponent);
         ecs_vector_t *type = ecs_map_get(world->main_stage.type_index, data->resolved);
-        ecs_entity_t *buffer = ecs_vector_buffer(type);
+        ecs_entity_t *buffer = ecs_vector_first(type);
         uint32_t i, count = ecs_vector_count(type);
 
         EcsFeatureStats feature = {0};
@@ -466,12 +466,12 @@ void ecs_free_stats(
     ecs_world_stats_t *stats)
 {
     uint32_t i, count = ecs_vector_count(stats->tables);
-    EcsTableStats *tables = ecs_vector_buffer(stats->tables);
+    EcsTableStats *tables = ecs_vector_first(stats->tables);
     for (i = 0; i < count; i ++) {
         ecs_os_free(tables[i].columns);
     }
 
-    EcsFeatureStats *entities = ecs_vector_buffer(stats->features);
+    EcsFeatureStats *entities = ecs_vector_first(stats->features);
     count = ecs_vector_count(stats->features);
     for (i = 0; i < count; i ++) {
         ecs_os_free(entities[i].entities);

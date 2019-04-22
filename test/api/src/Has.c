@@ -253,7 +253,7 @@ void Has_any_2_of_2_disjunct() {
 
 void TestHas(ecs_rows_t *rows) {
     ecs_entity_t *entities = ecs_column(rows, ecs_entity_t, 0);
-    ecs_type_t ecs_to_type(Position) = ecs_column_type(rows, 1);
+    ecs_type_t ecs_type(Position) = ecs_column_type(rows, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {

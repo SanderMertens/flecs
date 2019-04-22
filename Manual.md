@@ -160,13 +160,13 @@ The Flecs API creates and uses handles (integers) to refer to entities, systems 
 
 The Flecs API has entity handles (of type `ecs_entity_t`) and type handles (of type `ecs_type_t`). Entity handles are used to refer to a single entity. Systems and components (amongst others) obtain identifiers from the same id pool as entities, thus handles to systems and components are also of type `ecs_entity_t`. Types are identifiers that uniquely identify a set of entities (or systems, components). Types are commonly used to add/remove one or more components to/from an entity, or enable/disable one or more systems at once.
 
-Type handles are automatically created by API macro's like `ECS_COMPONENT`, `ECS_TYPE` and `ECS_PREFAB`. To obtain a handle to a type, use the `ecs_to_type` macro and provide as argument the identifier of the component or entity. Entity handles in most cases have the same identifier that is provided to the macro. For example:
+Type handles are automatically created by API macro's like `ECS_COMPONENT`, `ECS_TYPE` and `ECS_PREFAB`. To obtain a handle to a type, use the `ecs_type` macro and provide as argument the identifier of the component or entity. Entity handles in most cases have the same identifier that is provided to the macro. For example:
 
 ```c
 ECS_TYPE(world, MyType, Position);
 ```
 
-This statement makes the entity handle available as `MyType`. To access the type handle directly, use `ecs_to_type(MyType)`. There is one exception to this rule, which is components. Entity handles of components are prefixed, so that the names do not collide with the component type name. To obtain the entity handle of a component, use the `ecs_to_entity` function. For example:
+This statement makes the entity handle available as `MyType`. To access the type handle directly, use `ecs_type(MyType)`. There is one exception to this rule, which is components. Entity handles of components are prefixed, so that the names do not collide with the component type name. To obtain the entity handle of a component, use the `ecs_entity` function. For example:
 
 ```c
 ECS_COMPONENT(world, Position);
@@ -175,8 +175,8 @@ ECS_COMPONENT(world, Position);
 This statement makes the entity handle available as `ecs_entity_of(Position)`, and the type handle as `ecs_type_of(Position)`, where `ecs_entity_of` and `ecs_type_of` again are the macro's that translate from the component type name to the respective entity and type handles. If one were to fully write out what the `ECS_COMPONENT` macro does, it would look like this (replace 'Type' with a C type):
 
 ```c
-ecs_entity_t ecs_to_entity(Type) = ecs_new_component(world, "Type", sizeof(Type));
-ecs_type_t ecs_to_type(Type) = ecs_type_from_entity(ecs_to_entity(Type));
+ecs_entity_t ecs_entity(Type) = ecs_new_component(world, "Type", sizeof(Type));
+ecs_type_t ecs_type(Type) = ecs_type_from_entity(ecs_entity(Type));
 ```
 
 The `ecs_type_from_entity` function is an API function that can obtain a type handle from any entity handle.

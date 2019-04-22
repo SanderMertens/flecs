@@ -37,8 +37,8 @@ void Progress_progress_w_0() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
@@ -75,8 +75,8 @@ void Progress_progress_w_t() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
-    test_int(ctx.c[0][0], ecs_to_entity(Position));
-    test_int(ctx.c[0][1], ecs_to_entity(Velocity));
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 

@@ -15,7 +15,7 @@ void activate_table(
         ecs_vector_t *systems = table->frame_systems;
         
         if (systems) {
-            ecs_entity_t *buffer = ecs_vector_buffer(systems);
+            ecs_entity_t *buffer = ecs_vector_first(systems);
             uint32_t i, count = ecs_vector_count(systems);
             for (i = 0; i < count; i ++) {
                 ecs_system_activate_table(world, buffer[i], table, activate);
@@ -35,7 +35,7 @@ ecs_table_column_t* new_columns(
 
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    ecs_entity_t *buf = ecs_vector_buffer(type);
+    ecs_entity_t *buf = ecs_vector_first(type);
     uint32_t i, count = ecs_vector_count(type);
 
     /* First column is reserved for storing entity id's */
@@ -95,7 +95,7 @@ int ecs_table_init(
     table->columns = new_columns(world, stage, type);
 
     if (stage == &world->main_stage) {
-        ecs_entity_t *buf = ecs_vector_buffer(type);
+        ecs_entity_t *buf = ecs_vector_first(type);
         uint32_t i, count = ecs_vector_count(type);
 
         for (i = 0; i < count; i ++) {
@@ -220,7 +220,7 @@ void ecs_table_delete(
 
     if (index != count) {        
         /* Move last entity in array to index */
-        ecs_entity_t *entities = ecs_vector_buffer(entity_column);
+        ecs_entity_t *entities = ecs_vector_first(entity_column);
         ecs_entity_t to_move = entities[count];
         entities[index] = to_move;
 

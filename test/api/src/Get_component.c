@@ -19,7 +19,7 @@ void Get_component_get_1_from_1() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
-    test_assert(ecs_type_get_component(world, ecs_get_type(world, e), 0) == ecs_to_entity(Position));
+    test_assert(ecs_type_get_component(world, ecs_get_type(world, e), 0) == ecs_entity(Position));
     
     ecs_fini(world);
 }
@@ -34,7 +34,7 @@ void Get_component_get_1_from_2() {
     ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
-    test_assert(ecs_type_get_component(world, ecs_get_type(world, e), 0) == ecs_to_entity(Position));
+    test_assert(ecs_type_get_component(world, ecs_get_type(world, e), 0) == ecs_entity(Position));
     
     ecs_fini(world);
 }
@@ -49,7 +49,7 @@ void Get_component_get_2_from_2() {
     ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
-    test_assert(ecs_type_get_component(world, ecs_get_type(world, e), 1) == ecs_to_entity(Velocity));
+    test_assert(ecs_type_get_component(world, ecs_get_type(world, e), 1) == ecs_entity(Velocity));
     
     ecs_fini(world);
 }
@@ -65,7 +65,7 @@ void Get_component_get_2_from_3() {
     ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
-    test_assert(ecs_type_get_component(world, ecs_get_type(world, e), 1) == ecs_to_entity(Velocity));
+    test_assert(ecs_type_get_component(world, ecs_get_type(world, e), 1) == ecs_entity(Velocity));
     
     ecs_fini(world);
 }
@@ -76,7 +76,7 @@ void Test_main_stage(ecs_rows_t *rows) {
 
     for (int i = 0; i < rows->count; i ++) {
         ecs_entity_t e = rows->entities[i];
-        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_to_entity(Position));
+        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_entity(Position));
     }
 }
 
@@ -105,7 +105,7 @@ void Add_in_progress(ecs_rows_t *rows) {
         
         ecs_add(rows->world, e, Velocity);
         test_assert( ecs_has(rows->world, e, Velocity));
-        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 1) == ecs_to_entity(Velocity));
+        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 1) == ecs_entity(Velocity));
     }
 }
 
@@ -131,13 +131,13 @@ void Add_in_progress_test_main(ecs_rows_t *rows) {
 
     for (int i = 0; i < rows->count; i ++) {
         ecs_entity_t e = rows->entities[i];
-        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_to_entity(Position));
+        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_entity(Position));
         
         ecs_add(rows->world, e, Velocity);
         test_assert( ecs_has(rows->world, e, Velocity));
 
-        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_to_entity(Position));
-        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 1) == ecs_to_entity(Velocity));
+        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_entity(Position));
+        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 1) == ecs_entity(Velocity));
     }
 }
 
@@ -164,20 +164,20 @@ void Add_remove_in_progress_test_main(ecs_rows_t *rows) {
 
     for (int i = 0; i < rows->count; i ++) {
         ecs_entity_t e = rows->entities[i];
-        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_to_entity(Position));
+        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_entity(Position));
         
         ecs_add(rows->world, e, Velocity);
         test_assert( ecs_has(rows->world, e, Position));
         test_assert( ecs_has(rows->world, e, Velocity));
 
-        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_to_entity(Position));
-        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 1) == ecs_to_entity(Velocity));
+        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_entity(Position));
+        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 1) == ecs_entity(Velocity));
 
         ecs_remove(rows->world, e, Position);
         test_assert( !ecs_has(rows->world, e, Position));
         test_assert( ecs_has(rows->world, e, Velocity));
 
-        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_to_entity(Velocity));
+        test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 0) == ecs_entity(Velocity));
         test_assert(ecs_type_get_component(rows->world, ecs_get_type(rows->world, e), 1) == 0);
     }
 }

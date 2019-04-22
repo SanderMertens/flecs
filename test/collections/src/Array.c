@@ -208,7 +208,7 @@ void Array_sort_rnd() {
 
     ecs_vector_sort(array, &arr_params, compare_int);
 
-    int *buffer = ecs_vector_buffer(array);
+    int *buffer = ecs_vector_first(array);
     count = ecs_vector_count(array);
 
     for (i = 0; i < count; i ++) {
@@ -232,7 +232,7 @@ void Array_sort_sorted() {
 
     ecs_vector_sort(array, &arr_params, compare_int);
 
-    int *buffer = ecs_vector_buffer(array);
+    int *buffer = ecs_vector_first(array);
     count = ecs_vector_count(array);
 
     for (i = 0; i < count; i ++) {
