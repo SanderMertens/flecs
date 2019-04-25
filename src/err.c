@@ -8,10 +8,10 @@ void _ecs_abort(
     uint32_t line)
 {
     if (param) {
-        fprintf(stderr, "abort %s:%d: %s (%s)\n",
+        ecs_os_err("abort %s:%d: %s (%s)\n",
             file, line, ecs_strerror(error_code), param);
     } else {
-        fprintf(stderr, "abort %s:%d: %s\n", file, line, ecs_strerror(error_code));
+        ecs_os_err("abort %s:%d: %s\n", file, line, ecs_strerror(error_code));
     }
     ecs_os_abort();
 }
@@ -26,10 +26,10 @@ void _ecs_assert(
 {
     if (!condition) {
         if (param) {
-            fprintf(stderr, "assert(%s) %s:%d: %s (%s)\n",
+            ecs_os_err("assert(%s) %s:%d: %s (%s)\n",
                 condition_str, file, line, ecs_strerror(error_code), param);
         } else {
-            fprintf(stderr, "assert(%s) %s:%d: %s\n",
+            ecs_os_err("assert(%s) %s:%d: %s\n",
                 condition_str, file, line, ecs_strerror(error_code));
         }
         ecs_os_abort();

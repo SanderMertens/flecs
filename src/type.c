@@ -25,7 +25,7 @@ int add_type(
     } else {
         ecs_entity_t entity = ecs_lookup(world, entity_id);
         if (!entity) {
-            fprintf(stderr, "%s not found\n", entity_id);
+            ecs_os_err("%s not found\n", entity_id);
             return -1;
         }
 
@@ -35,7 +35,7 @@ int add_type(
                 ecs_set_watching(world, entity, true);
             }
         } else if (elem_kind != EcsFromSelf) {
-            fprintf(stderr, "invalid prefix for component '%s'", entity_id);
+            ecs_os_err("invalid prefix for component '%s'", entity_id);
             return -1;
         }
 

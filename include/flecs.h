@@ -468,6 +468,18 @@ FLECS_EXPORT
 void* ecs_get_context(
     ecs_world_t *world);
 
+/** Get the world tick.
+ * This operation retrieves the tick count (frame number). The tick count is 0
+ * when ecs_process is called for the first time, and increases by one for every
+ * subsequent call.
+ *
+ * @param world The world.
+ * @returns The current tick.
+ */
+FLECS_EXPORT
+uint32_t ecs_get_tick(
+    ecs_world_t *world);
+
 /** Dimension the world for a specified number of entities.
  * This operation will preallocate memory in the world for the specified number
  * of entities. Specifying a number lower than the current number of entities in

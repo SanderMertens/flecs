@@ -97,6 +97,26 @@ void bake_gettime(ecs_time_t *t) {
 
 #endif
 
+static
+void ecs_log(const char *msg, ...) {
+    fprintf(stdout, "[log] ");
+    va_list list;
+    va_start(list, msg);
+    vfprintf(stdout, msg, list);
+    va_end(list);
+    fprintf(stdout, "\n");
+}
+
+static
+void ecs_log_error(const char *msg, ...) {
+    fprintf(stderr, "[err] ");
+    va_list list;
+    va_start(list, msg);
+    vfprintf(stderr, msg, list);
+    va_end(list);
+    fprintf(stderr, "\n");
+}
+
 void ecs_set_os_api_defaults(void)
 {
     /* Don't overwrite if already initialized */
@@ -127,6 +147,9 @@ void ecs_set_os_api_defaults(void)
     _ecs_os_api->sleep = ut_sleep;
     _ecs_os_api->get_time = bake_gettime;
 #endif
+
+    _ecs_os_api->log = ecs_log;
+    _ecs_os_api->log_error = ecs_log_error;
 
     _ecs_os_api->abort = abort;
 }

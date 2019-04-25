@@ -383,7 +383,7 @@ ecs_stage_t *ecs_get_stage(
         *world_ptr = thread->world;
         return thread->stage;
     } else {
-        fprintf(stderr, "Invalid world object\n");
+        ecs_os_err("Invalid world object\n");
         assert(0);
         return NULL;
     }
@@ -479,7 +479,7 @@ void load_admin(
     ecs_type_t TEcsAdmin = ecs_type_from_entity(world, admin);
     ecs_set(world, 0, EcsAdmin, {port});
 
-    printf("Admin is running on port %d\n", port);
+    ecs_os_log("Admin is running on port %d\n", port);
 }
 
 /* -- Public functions -- */
@@ -490,7 +490,7 @@ ecs_world_t *ecs_init(void) {
 #ifdef __BAKE__
     ut_init(NULL);
     if (ut_load_init(NULL, NULL, NULL, NULL)) {
-        fprintf(stderr, "warning: failed to initialize package loader");
+        ecs_os_err("warning: failed to initialize package loader");
     }
 #endif
 
@@ -1050,6 +1050,13 @@ void* ecs_get_context(
     return world->context;
 }
 
+uint32_t ecs_get_tick(
+    ecs_world_t *world)
+{
+    ecs_get_stage(&world);
+    return world->tick;    
+}
+
 void ecs_set_context(
     ecs_world_t *world,
     void *context)
@@ -1065,7 +1072,7 @@ void ecs_set_entity_range(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(!id_end || id_end > id_start, ECS_INVALID_PARAMETERS, NULL);
-    ecs_assert(id_end > world->last_handle, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(!id_end || id_end > world->last_handle, ECS_INVALID_PARAMETERS, NULL);
 
     if (world->last_handle < id_start) {
         world->last_handle = id_start;
@@ -1145,7 +1152,7 @@ ecs_entity_t ecs_import_from_library(
     ecs_module_init_action_t action = (ecs_module_init_action_t)ut_load_proc(
             library_name, NULL, module);
     if (!action) {
-        fprintf(stderr, "failed to load the %s module from library %s\n",
+        ecs_os_err("failed to load the %s module from library %s\n",
             module, library_name);
         ut_raise();
         return ECS_INVALID_ENTITY;
@@ -1154,7 +1161,7 @@ ecs_entity_t ecs_import_from_library(
     /* Do not free id, as it will be stored as the component identifier */
     return _ecs_import(world, action, module, flags, NULL, 0); 
 #else
-    fprintf(stderr, 
+    ecs_os_err(
         "sorry, loading libraries is only possible if flecs is built with bake :(");
     ut_raise();
     return ECS_INVALID_ENTITY;

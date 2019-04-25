@@ -99,6 +99,12 @@ typedef
 void (*ecs_os_api_get_time_t)(
     ecs_time_t *time_out);
 
+/* Logging */
+typedef
+void (*ecs_os_api_log_t)(
+    const char *msg,
+    ...);
+
 /* Application termination */
 typedef
 void (*ecs_os_api_abort_t)(
@@ -131,6 +137,10 @@ typedef struct ecs_os_api_t {
     /* Time */
     ecs_os_api_sleep_t sleep;
     ecs_os_api_get_time_t get_time;
+
+    /* Logging */
+    ecs_os_api_log_t log;
+    ecs_os_api_log_t log_error;
 
     /* Application termination */
     ecs_os_api_abort_t abort;
@@ -179,6 +189,10 @@ void ecs_set_os_api_defaults(void);
 /* Time */
 #define ecs_os_sleep(sec, nanosec) ecs_os_api.sleep(sec, nanosec)
 #define ecs_os_get_time(time_out) ecs_os_api.get_time(time_out)
+
+/* Logging */
+#define ecs_os_log(...) ecs_os_api.log(__VA_ARGS__)
+#define ecs_os_err(...) ecs_os_api.log_error(__VA_ARGS__)
 
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort()
