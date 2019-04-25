@@ -25,7 +25,7 @@ int add_type(
     } else {
         ecs_entity_t entity = ecs_lookup(world, entity_id);
         if (!entity) {
-            ecs_os_err("%s not found\n", entity_id);
+            ecs_os_err("%s not found", entity_id);
             return -1;
         }
 

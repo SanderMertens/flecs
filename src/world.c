@@ -479,7 +479,7 @@ void load_admin(
     ecs_type_t TEcsAdmin = ecs_type_from_entity(world, admin);
     ecs_set(world, 0, EcsAdmin, {port});
 
-    ecs_os_log("Admin is running on port %d\n", port);
+    ecs_os_log("Admin is running on port %d", port);
 }
 
 /* -- Public functions -- */
@@ -1152,7 +1152,7 @@ ecs_entity_t ecs_import_from_library(
     ecs_module_init_action_t action = (ecs_module_init_action_t)ut_load_proc(
             library_name, NULL, module);
     if (!action) {
-        ecs_os_err("failed to load the %s module from library %s\n",
+        ecs_os_err("failed to load the %s module from library %s",
             module, library_name);
         ut_raise();
         return ECS_INVALID_ENTITY;
