@@ -9,6 +9,9 @@
 #include <alloca.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Use handle types that _at least_ can store pointers */
 typedef uint64_t ecs_os_thread_t;
@@ -102,8 +105,8 @@ void (*ecs_os_api_get_time_t)(
 /* Logging */
 typedef
 void (*ecs_os_api_log_t)(
-    const char *msg,
-    ...);
+    const char *fmt,
+    va_list args);
 
 /* Application termination */
 typedef
@@ -145,8 +148,6 @@ typedef struct ecs_os_api_t {
     /* Application termination */
     ecs_os_api_abort_t abort;
 } ecs_os_api_t;
-
-
 FLECS_EXPORT
 extern const ecs_os_api_t ecs_os_api;
 
@@ -190,11 +191,15 @@ void ecs_set_os_api_defaults(void);
 #define ecs_os_sleep(sec, nanosec) ecs_os_api.sleep(sec, nanosec)
 #define ecs_os_get_time(time_out) ecs_os_api.get_time(time_out)
 
-/* Logging */
-#define ecs_os_log(...) ecs_os_api.log(__VA_ARGS__)
-#define ecs_os_err(...) ecs_os_api.log_error(__VA_ARGS__)
+/* Logging (use functions to avoid using variadic macro arguments) */
+void ecs_os_log(const char *fmt, ...);
+void ecs_os_err(const char *fmt, ...);
 
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort()
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

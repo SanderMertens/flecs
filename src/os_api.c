@@ -98,23 +98,31 @@ void bake_gettime(ecs_time_t *t) {
 #endif
 
 static
-void ecs_log(const char *msg, ...) {
+void ecs_log(const char *fmt, va_list args) {
     fprintf(stdout, "[log] ");
-    va_list list;
-    va_start(list, msg);
-    vfprintf(stdout, msg, list);
-    va_end(list);
+    vfprintf(stdout, fmt, args);
     fprintf(stdout, "\n");
 }
 
 static
-void ecs_log_error(const char *msg, ...) {
+void ecs_log_error(const char *fmt, va_list args) {
     fprintf(stderr, "[err] ");
-    va_list list;
-    va_start(list, msg);
-    vfprintf(stderr, msg, list);
-    va_end(list);
+    vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
+}
+
+void ecs_os_log(const char *fmt, ...) {
+    va_list args;;
+    va_start(args, fmt);
+    ecs_os_api.log(fmt, args);
+    va_end(args);
+}
+
+void ecs_os_err(const char *fmt, ...) {
+    va_list args;;
+    va_start(args, fmt);
+    ecs_os_api.log_error(fmt, args);
+    va_end(args);
 }
 
 void ecs_set_os_api_defaults(void)
