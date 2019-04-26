@@ -43,9 +43,9 @@ ecs_table_column_t* new_columns(
     result[0].data = NULL;
 
     for (i = 0; i < count; i ++) {
-        ecs_entity_info_t info = {0};
+        ecs_entity_info_t info = {.entity = buf[i]};
         EcsComponent *component = get_ptr(
-            world, stage, buf[i], EEcsComponent, false, false, &info);
+            world, stage, &info, EEcsComponent, false, false);
 
         if (component) {
             if (component->size) {
@@ -125,8 +125,8 @@ void ecs_table_deinit(
     uint32_t count = ecs_vector_count(table->columns[0].data);
     if (count) {
         ecs_notify(
-            world, world->type_sys_remove_index, table->type_id, table,
-            table->columns, 0, count);
+            world, &world->main_stage, world->type_sys_remove_index, 
+            table->type_id, table, table->columns, 0, count);
     }
 }
 

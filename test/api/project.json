@@ -238,7 +238,15 @@
                 "clone",
                 "clone_w_value",
                 "set_w_optional",
-                "set_and_add_system"
+                "set_and_add_system",
+                "on_set_after_on_add",
+                "on_set_after_on_add_w_new",
+                "on_set_after_on_add_w_new_w_count",
+                "on_set_after_on_add_1_of_2_matched",
+                "on_set_after_override",
+                "on_set_after_override_w_new",
+                "on_set_after_override_w_new_w_count",
+                "on_set_after_override_1_of_2_overridden"
             ]
         }, {
             "id": "SystemOnFrame",

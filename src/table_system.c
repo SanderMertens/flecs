@@ -887,8 +887,9 @@ ecs_entity_t _ecs_run_w_filter(
         real_world = ((ecs_thread_t*)world)->world; /* dispel the magic */
     }
 
-    ecs_entity_info_t entity_info = {0};
-    EcsColSystem *system_data = get_ptr(real_world, &real_world->main_stage, system, EEcsColSystem, false, false, &entity_info);
+    ecs_entity_info_t sys_info = {.entity = system};
+    EcsColSystem *system_data = get_ptr(real_world, &real_world->main_stage, 
+        &sys_info, EEcsColSystem, false, false);
     assert(system_data != NULL);
 
     if (!system_data->base.enabled) {
@@ -997,14 +998,13 @@ ecs_entity_t _ecs_run_w_filter(
             int i, ref_count = table[REFS_COUNT];
 
             for (i = 0; i < ref_count; i ++) {
-                ecs_entity_info_t entity_info = {0};
-
                 ecs_reference_t ref = info.references[i];
+                ecs_entity_info_t entity_info = {.entity = ref.entity};
 
                 if (ref.entity != ECS_INVALID_ENTITY) {
                     info.ref_ptrs[i] = get_ptr(real_world, &real_world->main_stage,
-                        info.references[i].entity, info.references[i].component, 
-                        false, true, &entity_info);
+                        &entity_info, info.references[i].component, 
+                        false, true);
                         
                     ecs_assert(info.ref_ptrs[i] != NULL, 
                         ECS_UNRESOLVED_REFERENCE, ecs_get_id(world, system));

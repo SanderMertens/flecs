@@ -93,34 +93,58 @@ void* get_row_ptr(
     }
 }
 
+static
+bool populate_info(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_info_t *info)
+{
+    if (!info->table) {
+        ecs_entity_t entity = info->entity;
+        ecs_map_t *entity_index = stage->entity_index;
+        uint64_t row_64 = ecs_map_get64(entity_index, entity);
+
+        if (row_64) {
+            ecs_row_t row = ecs_to_row(row_64);
+            ecs_table_t *table = ecs_world_get_table(world, stage, row.type_id);
+            info->table = table;
+
+            if (world->in_progress && stage != &world->main_stage) {
+                info->columns = ecs_map_get(stage->data_stage, row.type_id);
+            } else {
+                info->columns = table->columns;
+            }
+
+            info->index = row.index;
+            info->type_id = row.type_id;
+            return true;
+        }
+    } else {
+        return true;
+    }
+
+    return false;
+}
+
 void* get_ptr(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_entity_t entity,
+    ecs_entity_info_t *info,
     ecs_entity_t component,
     bool staged_only,
-    bool search_prefab,
-    ecs_entity_info_t *info)
+    bool search_prefab)
 {
-    uint64_t row_64;
     ecs_type_t type_id = 0, staged_id = 0;
+    ecs_entity_t entity = info->entity;
     void *ptr = NULL;
+    bool populated = false;
 
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
     if (world->in_progress && stage != &world->main_stage) {
-        row_64 = ecs_map_get64(stage->entity_index, entity);
-        if (row_64) {
-            ecs_row_t row = ecs_to_row(row_64);
-            staged_id = row.type_id;
-            ecs_table_column_t *columns = ecs_map_get(stage->data_stage, staged_id);
-            ecs_table_t *table = ecs_world_get_table(world, stage, staged_id);
-            info->entity = entity;
-            info->type_id = row.type_id;
-            info->index = row.index;
-            info->table = table;
-            info->columns = columns;
-            ptr = get_row_ptr(table->type, columns, row.index, component);  
+        if (populate_info(world, stage, info)) {
+            populated = true;
+            ptr = get_row_ptr(info->table->type, info->columns, info->index, component);
         }
 
         if (!ptr) {
@@ -142,20 +166,16 @@ void* get_ptr(
     ecs_entity_t prefab = 0;
 
     if (!world->in_progress || !staged_only) {
-        row_64 = ecs_map_get64(world->main_stage.entity_index, entity);
-        if (row_64) {
-            ecs_row_t row = ecs_to_row(row_64);
-            type_id = row.type_id;
-            ecs_table_t *table = ecs_world_get_table(world, stage, type_id);
-            info->entity = entity;
-            info->type_id = row.type_id;
-            info->index = row.index;
-            info->table = table;
-            info->columns = table->columns;
-            ptr = get_row_ptr(table->type, table->columns, row.index, component);
+        if (populated) {
+            *info = (ecs_entity_info_t){.entity = entity};
+        }
+        if (populate_info(world, &world->main_stage, info)) {
+            ptr = get_row_ptr(info->table->type, info->columns, info->index, component);
         }
 
         if (ptr) return ptr;
+
+        type_id = info->type_id;
 
         if (type_id && search_prefab) {
             prefab = ecs_map_get64(world->prefab_index, type_id);
@@ -168,7 +188,8 @@ void* get_ptr(
 
     if (prefab) {
         if (component != EEcsId && component != EEcsPrefab) {
-            return get_ptr(world, stage, prefab, component, staged_only, true, info);
+            *info = (ecs_entity_info_t){.entity = prefab};
+            return get_ptr(world, stage, info, component, staged_only, true);
         } else {
             return NULL;
         }
@@ -177,9 +198,70 @@ void* get_ptr(
     }
 }
 
+static
+ecs_type_t notify_pre_merge(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_table_column_t *table_columns,
+    uint32_t offset,
+    uint32_t limit,
+    ecs_type_t to_init,
+    ecs_map_t *systems)
+{
+    ecs_world_t *real_world = world;
+    ecs_get_stage(&real_world);
+    
+    if (real_world->is_merging) {
+        return 0;
+    }
+
+    bool in_progress = real_world->in_progress;
+    real_world->in_progress = true;
+
+    ecs_type_t result = ecs_notify(
+        world, stage, systems, to_init, table, table_columns, offset, limit);
+
+    real_world->in_progress = in_progress;
+    if (result && !in_progress) {
+        ecs_merge(world);
+
+    }
+
+    return result;
+}
+
+static
+bool notify_post_merge(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_table_column_t *table_columns,
+    uint32_t offset,
+    uint32_t limit,
+    ecs_type_t to_deinit)
+{
+    if (world->magic != ECS_WORLD_MAGIC || world->in_progress) {
+        return false;
+    }
+
+    /* This will trigger asserts when operations are invoked during a merge that
+     * are not valid while merging. */
+    bool is_merging = world->is_merging;
+    world->is_merging = true;
+
+    bool result = ecs_notify(
+        world, stage, world->type_sys_remove_index, to_deinit, table, 
+        table_columns, offset, limit);
+
+    world->is_merging = is_merging;
+
+    return result;
+}
+
 /** Copy default values from base (and base of base) prefabs */
 static
-void copy_from_prefab(
+ecs_type_t copy_from_prefab(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
@@ -191,6 +273,8 @@ void copy_from_prefab(
 {
     ecs_entity_t prefab;
     ecs_type_t entity_type = type_id;
+    ecs_type_t modified = 0;
+    ecs_table_column_t *columns = NULL;
 
     if (world->in_progress) {
         uint64_t row64 = ecs_map_get64(stage->entity_index, entity);
@@ -211,8 +295,6 @@ void copy_from_prefab(
         ecs_vector_t *add_type = ecs_type_get(world, stage, to_add);
         ecs_entity_t *add_handles = ecs_vector_first(add_type);
         uint32_t i, add_count = ecs_vector_count(add_type);
-
-        ecs_table_column_t *columns = NULL;
 
         for (i = 0; i < add_count; i ++) {
             ecs_entity_t component = add_handles[i];
@@ -241,6 +323,9 @@ void copy_from_prefab(
                         memcpy(ptr, prefab_ptr, size);
                         ptr = ECS_OFFSET(ptr, size);
                     }
+
+                    /* Keep track of which components were set by prefabs */
+                    modified = ecs_type_add(world, stage, modified, component);
                 }
             }
         }
@@ -248,65 +333,45 @@ void copy_from_prefab(
         /* Recursively search through prefabs */
         entity_type = row.type_id;
     }
+
+    return modified;
 }
 
 static
-bool notify_pre_merge(
+bool notify_after_commit(
     ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
     ecs_table_t *table,
-    ecs_table_column_t *table_columns,
+    ecs_table_column_t *columns,
     uint32_t offset,
     uint32_t limit,
-    ecs_type_t to_init,
-    ecs_map_t *systems)
+    ecs_type_t type_id,
+    ecs_type_t to_add,
+    bool do_set)
 {
-    ecs_world_t *real_world = world;
-    ecs_get_stage(&real_world);
-    
-    if (real_world->is_merging) {
-        return false;
+    ecs_type_t modified = 0;
+
+    ecs_type_t initialized = notify_pre_merge (
+        world, stage, table, columns, offset, limit, to_add, 
+        world->type_sys_add_index);
+
+    ecs_type_t overridden = copy_from_prefab(
+        world, stage, table, entity, offset, limit, type_id, to_add);
+
+    /* Invoke OnSet handlers if components received their first value */
+    if (do_set) {
+        if (initialized || overridden) {
+            modified = ecs_type_merge(
+                world, stage, initialized, overridden, 0);
+
+            notify_pre_merge (
+                world, stage, table, columns, offset, limit, 
+                modified, world->type_sys_set_index);
+        }
     }
 
-    bool in_progress = real_world->in_progress;
-    real_world->in_progress = true;
-
-    bool result = ecs_notify(
-        world, systems, to_init, table, table_columns, offset, limit);
-
-    real_world->in_progress = in_progress;
-    if (result && !in_progress) {
-        ecs_merge(world);
-
-    }
-
-    return result;
-}
-
-static
-bool notify_post_merge(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_table_column_t *table_columns,
-    uint32_t offset,
-    uint32_t limit,
-    ecs_type_t to_deinit)
-{
-    if (world->magic != ECS_WORLD_MAGIC || world->in_progress) {
-        return false;
-    }
-
-    /* This will trigger asserts when operations are invoked during a merge that
-     * are not valid while merging. */
-    bool is_merging = world->is_merging;
-    world->is_merging = true;
-
-    bool result = ecs_notify(
-        world, world->type_sys_remove_index, to_deinit, table, 
-        table_columns, offset, limit);
-
-    world->is_merging = is_merging;
-
-    return result;
+    return initialized || overridden || modified;
 }
 
 /** Commit an entity with a specified type to memory */
@@ -317,10 +382,11 @@ uint32_t commit_w_type(
     ecs_entity_info_t *info,
     ecs_type_t type_id,
     ecs_type_t to_add,
-    ecs_type_t to_remove)
+    ecs_type_t to_remove,
+    bool do_set)
 {
     ecs_table_t *old_table, *new_table = NULL;
-    ecs_table_column_t *new_columns, *old_columns;
+    ecs_table_column_t *new_columns = NULL, *old_columns;
     ecs_map_t *entity_index;
     ecs_type_t old_type_id = 0;
     int32_t new_index = 0, old_index = 0;
@@ -422,7 +488,7 @@ uint32_t commit_w_type(
          */
         if (to_remove && old_index) {
             merged = notify_post_merge(
-                world, old_table, old_columns, old_index - 1, 1, to_remove);
+                world, stage, old_table, old_columns, old_index - 1, 1, to_remove);
         }
 
         /* After the cleanup code has been invoked we can finally remove the
@@ -437,17 +503,31 @@ uint32_t commit_w_type(
         }
     }
 
+    /* Keep track of whether OnAdd / OnSet systems have been called */
+    bool systems_called = false;
+
     /* After the entity has been created in the new table and the stage is
      * consistent again with the entity index, execute the OnAdd actions. */
     if (type_id) {
         if (to_add) {
-            notify_pre_merge (
-                world, new_table, new_columns, new_index - 1, 1, to_add, 
-                world->type_sys_add_index);
-
-            copy_from_prefab(
-                world, stage, new_table, entity, new_index - 1, 1, type_id, to_add);
+            systems_called = notify_after_commit(world, stage, entity, new_table, 
+                    new_columns, new_index - 1, 1, type_id, to_add, do_set);
         }     
+    }
+
+    /* Update entity info */
+    if (!systems_called) {
+        /* Only if no systems have been called, it can be ensured that the
+         * entity is still in the table below. A system may have added/removed
+         * components to the entity which would change the type/table */
+        info->type_id = type_id;
+        info->index = new_index;
+        info->table = new_table;
+        info->columns = new_columns;
+    } else {
+        /* If systems have been called, reset the info so that the logic after
+         * this function doesn't use out-of-date information */
+        *info = (ecs_entity_info_t){.entity = entity};
     }
 
     /* This is a crude way to signal to the world that we need to redetermine
@@ -460,8 +540,9 @@ uint32_t commit_w_type(
 
 /* -- Private functions -- */
 
-bool ecs_notify(
+ecs_type_t ecs_notify(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_map_t *index,
     ecs_type_t type_id,
     ecs_table_t *table,
@@ -470,19 +551,25 @@ bool ecs_notify(
     int32_t limit)
 {
     ecs_vector_t *systems = ecs_map_get(index, type_id);
-    bool notified = false;
+    ecs_type_t modified = 0;
 
     if (systems) {
         ecs_entity_t *buffer = ecs_vector_first(systems);
         uint32_t i, count = ecs_vector_count(systems);
 
         for (i = 0; i < count; i ++) {
-            notified |= ecs_notify_row_system(
+            ecs_type_t m = ecs_notify_row_system(
                 world, buffer[i], table->type, table_columns, offset, limit);
+            
+            if (i) {
+                modified = ecs_type_merge(world, stage, modified, m, 0);
+            } else {
+                modified = m;
+            }
         }
     } 
 
-    return notified;
+    return modified;
 }
 
 void ecs_merge_entity(
@@ -512,7 +599,7 @@ void ecs_merge_entity(
     };
 
     uint32_t new_index = commit_w_type(
-        world, &world->main_stage, &info, type_id, 0, to_remove);
+        world, &world->main_stage, &info, type_id, 0, to_remove, false);
 
     if (type_id && staged_id) {
         ecs_table_t *new_table = ecs_world_get_table(world, stage, type_id);
@@ -609,7 +696,7 @@ ecs_entity_t ecs_clone(
                 .index = row.index
             };
 
-            commit_w_type(world, stage, &info, type_id, type_id, 0);
+            commit_w_type(world, stage, &info, type_id, type_id, 0, false);
 
             if (copy_value) {
                 ecs_table_t *from_table = ecs_world_get_table(world, stage, type_id);
@@ -640,8 +727,9 @@ ecs_entity_t ecs_clone(
 
                 /* A clone with value is equivalent to a set */
                 ecs_notify(
-                    world_arg, world->type_sys_set_index, from_table->type_id, 
-                    to_table, to_columns, to_row.index - 1, 1);
+                    world_arg, stage, world->type_sys_set_index, 
+                    from_table->type_id, to_table, to_columns, to_row.index - 1, 
+                    1);
             }
         }
     }
@@ -668,7 +756,7 @@ ecs_entity_t _ecs_new(
             .entity = entity
         };
 
-        commit_w_type(world, stage, &info, type, type, 0);
+        commit_w_type(world, stage, &info, type, type, 0, true);
     }
 
     return entity;
@@ -714,13 +802,8 @@ ecs_entity_t _ecs_new_w_count(
             cur_row ++;
         }
 
-        /* Now we can notify matching OnAdd row systems in bulk */
-        notify_pre_merge(
-            world_arg, table, columns, row - 1, count, 
-            type, world->type_sys_add_index);
-        
-        /* Check if there are prefabs */
-        copy_from_prefab(world, stage, table, result, row - 1, count, type, type);
+        notify_after_commit(world_arg, stage, result, table, 
+                columns, row - 1, count, type, type, true);
     }
 
     return result;
@@ -769,7 +852,7 @@ void ecs_delete(
                 .table = ecs_world_get_table(world, stage, row.type_id)
             };
 
-            commit_w_type(world, stage, &info, 0, 0, row.type_id);
+            commit_w_type(world, stage, &info, 0, 0, row.type_id, false);
 
             ecs_map_remove(world->main_stage.entity_index, entity);
         }
@@ -789,33 +872,36 @@ void ecs_delete(
     }
 }
 
-void _ecs_add(
+static
+void add_intern(
     ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_type_t type)
+    ecs_entity_info_t *info,
+    ecs_type_t type,
+    bool do_set)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
     
-    ecs_map_t *entity_index = stage->entity_index;
     ecs_type_t dst_type = 0;
-    ecs_entity_info_t info = {.entity = entity};
 
-    uint64_t row_64 = ecs_map_get64(entity_index, entity);
-    if (row_64) {
-        ecs_row_t row = ecs_to_row(row_64);
-        info.table = ecs_world_get_table(world, stage, row.type_id);
-        info.columns = info.table->columns;
-        info.index = row.index;
-        info.type_id = row.type_id;
+    if (populate_info(world, stage, info)) {
         ecs_vector_t *to_add = ecs_type_get(world, stage, type);
-        dst_type = ecs_type_merge_arr(world, stage, info.table->type, to_add, NULL);
+        dst_type = ecs_type_merge_arr(world, stage, info->table->type, to_add, NULL);
     } else {
         dst_type = type;
     }
 
-    commit_w_type(world, stage, &info, dst_type, type, 0);
+    commit_w_type(world, stage, info, dst_type, type, 0, do_set);
+}
+
+void _ecs_add(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_type_t type)
+{
+    ecs_entity_info_t info = {.entity = entity};
+    add_intern(world, &info, type, true);
 }
 
 void _ecs_remove(
@@ -827,24 +913,17 @@ void _ecs_remove(
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
 
-    ecs_map_t *entity_index = stage->entity_index;
     ecs_type_t dst_type = 0;
     ecs_entity_info_t info = {.entity = entity};
 
-    uint64_t row_64 = ecs_map_get64(entity_index, entity);
-    if (row_64) {
-        ecs_row_t row = ecs_to_row(row_64);
-        info.table = ecs_world_get_table(world, stage, row.type_id);
-        info.columns = info.table->columns;
-        info.index = row.index;
-        info.type_id = row.type_id;
+    if (populate_info(world, stage, &info)) {
         ecs_vector_t *to_remove = ecs_type_get(world, stage, type);
         dst_type = ecs_type_merge_arr(world, stage, info.table->type, NULL, to_remove);
     } else if (!world->in_progress) {
         return;
     }
 
-    commit_w_type(world, stage, &info, dst_type, 0, type);
+    commit_w_type(world, stage, &info, dst_type, 0, type, false);
 }
 
 ecs_entity_t _ecs_new_child(
@@ -910,8 +989,8 @@ void* _ecs_get_ptr(
     /* Get only accepts types that hold a single component */
     ecs_entity_t component = ecs_entity_from_type(world_arg, type);
 
-    ecs_entity_info_t info;
-    return get_ptr(world, stage, entity, component, false, true, &info);
+    ecs_entity_info_t info = {.entity = entity};
+    return get_ptr(world, stage, &info, component, false, true);
 }
 
 static
@@ -928,16 +1007,16 @@ ecs_entity_t _ecs_set_ptr_intern(
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
 
-    ecs_entity_info_t info = {0};
+    ecs_entity_info_t info = {.entity = entity};
 
     /* Set only accepts types that hold a single component */
     ecs_entity_t component = ecs_entity_from_type(world_arg, type);
 
     /* If component hasn't been added to entity yet, add it */
-    int *dst = get_ptr(world, stage, entity, component, true, false, &info);
+    int *dst = get_ptr(world, stage, &info, component, true, false);
     if (!dst) {
-        _ecs_add(world_arg, entity, type);
-        dst = get_ptr(world, stage, entity, component, true, false, &info);
+        add_intern(world_arg, &info, type, false);
+        dst = get_ptr(world, stage, &info, component, true, false);
         if (!dst) {
             /* It is possible that an OnAdd system removed the component before
              * it could have been set */
@@ -946,16 +1025,16 @@ ecs_entity_t _ecs_set_ptr_intern(
     }
 
 #ifndef NDEBUG
-    ecs_entity_info_t cinfo = {0};
+    ecs_entity_info_t cinfo = {.entity = component};
     EcsComponent *cdata = get_ptr(
-        world, stage, component, EEcsComponent, false, false, &cinfo);
+        world, stage, &cinfo, EEcsComponent, false, false);
     ecs_assert(cdata->size == size, ECS_INVALID_COMPONENT_SIZE, NULL);
 #endif
 
     memcpy(dst, ptr, size);
 
     notify_pre_merge(
-        world_arg, info.table, info.columns, info.index - 1, 1, type,
+        world_arg, stage, info.table, info.columns, info.index - 1, 1, type,
         world->type_sys_set_index);
 
     return entity;

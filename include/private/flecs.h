@@ -16,8 +16,9 @@ void ecs_merge_entity(
 
 
 /* Notify row system of entity (identified by row_index) */
-bool ecs_notify(
+ecs_type_t ecs_notify(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_map_t *systems,
     ecs_type_t type_id,
     ecs_table_t *table,
@@ -61,11 +62,10 @@ ecs_stage_t *ecs_get_stage(
 void* get_ptr(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_entity_t entity,
+    ecs_entity_info_t *info,
     ecs_entity_t component,
     bool staged_only,
-    bool search_prefab,
-    ecs_entity_info_t *info);
+    bool search_prefab);
 
 /* -- Stage API -- */
 
@@ -290,7 +290,7 @@ void ecs_run_task(
     ecs_entity_t system);
 
 /* Invoke row system */
-bool ecs_notify_row_system(
+ecs_type_t ecs_notify_row_system(
     ecs_world_t *world,
     ecs_entity_t system,
     ecs_vector_t *type,

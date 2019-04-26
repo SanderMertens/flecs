@@ -340,3 +340,300 @@ void SystemOnSet_set_and_add_system() {
 
     test_assert(set_called);
 }
+
+static
+void OnAdd(ecs_rows_t *rows) {
+    Position *p = ecs_column(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        p[i].x = 1;
+        p[i].y = 3;
+    }
+}
+
+void SystemOnSet_on_set_after_on_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Position);
+    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_add(world, e, Position);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, OnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0); 
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);  
+}
+
+void SystemOnSet_on_set_after_on_add_w_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Position);
+    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, OnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0); 
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3); 
+}
+
+void SystemOnSet_on_set_after_on_add_w_new_w_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Position);
+    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new_w_count(world, Position, 3);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, OnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0); 
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+
+    p = ecs_get_ptr(world, e + 1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+
+    p = ecs_get_ptr(world, e + 2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3); 
+}
+
+static bool on_set_velocity = false;
+
+static
+void OnSetVelocity(ecs_rows_t *rows) {
+    on_set_velocity = true;
+}
+
+void SystemOnSet_on_set_after_on_add_1_of_2_matched() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Position);
+    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Type);
+
+    test_int(on_set_velocity, false);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, OnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0); 
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3); 
+}
+
+void SystemOnSet_on_set_after_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_PREFAB(world, Prefab, Position);
+    ecs_set(world, Prefab, Position, {1, 3});
+
+    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Prefab);
+
+    test_int(ctx.count, 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e, Position);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, OnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0); 
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+}
+
+void SystemOnSet_on_set_after_override_w_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_PREFAB(world, Prefab, Position);
+    ecs_set(world, Prefab, Position, {1, 3});
+
+    ECS_TYPE(world, Type, Prefab, Position);
+
+    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Type);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, OnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+}
+
+void SystemOnSet_on_set_after_override_w_new_w_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_PREFAB(world, Prefab, Position);
+    ecs_set(world, Prefab, Position, {1, 3});
+
+    ECS_TYPE(world, Type, Prefab, Position);
+
+    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new_w_count(world, Type, 3);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, OnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0); 
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+
+    p = ecs_get_ptr(world, e + 1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+
+    p = ecs_get_ptr(world, e + 2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+}
+
+void SystemOnSet_on_set_after_override_1_of_2_overridden() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_PREFAB(world, Prefab, Position);
+    ecs_set(world, Prefab, Position, {1, 3});
+
+    ECS_TYPE(world, Type, Prefab, Position);
+
+    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Type);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, OnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+}

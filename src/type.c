@@ -594,6 +594,7 @@ ecs_entity_t ecs_new_entity(
     }
 
     result = _ecs_new(world, type.resolved);
+
     ecs_set(world, result, EcsId, {id});
 
     return result;

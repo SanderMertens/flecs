@@ -236,6 +236,7 @@ void Add_random(ecs_rows_t *rows) {
             
             test_assert( !ecs_is_empty(rows->world, entities[i]));
             test_assert( _ecs_has(rows->world, entities[i], ctx->component));
+
             test_assert( _ecs_get_ptr(rows->world, entities[i], ctx->component) != NULL);
         }
 
@@ -269,7 +270,6 @@ void MultiThreadStaging_stress_create_delete_entity_random_components() {
     ecs_new_w_count(world, Type, 500);
 
     ecs_set_threads(world, 6);
-
 
     uint64_t i;
     for (i = 0; i < 1000; i ++) {

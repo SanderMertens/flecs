@@ -209,6 +209,14 @@ void SystemOnSet_clone(void);
 void SystemOnSet_clone_w_value(void);
 void SystemOnSet_set_w_optional(void);
 void SystemOnSet_set_and_add_system(void);
+void SystemOnSet_on_set_after_on_add(void);
+void SystemOnSet_on_set_after_on_add_w_new(void);
+void SystemOnSet_on_set_after_on_add_w_new_w_count(void);
+void SystemOnSet_on_set_after_on_add_1_of_2_matched(void);
+void SystemOnSet_on_set_after_override(void);
+void SystemOnSet_on_set_after_override_w_new(void);
+void SystemOnSet_on_set_after_override_w_new_w_count(void);
+void SystemOnSet_on_set_after_override_1_of_2_overridden(void);
 
 // Testsuite 'SystemOnFrame'
 void SystemOnFrame_1_type_1_component(void);
@@ -1223,7 +1231,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 7,
+        .testcase_count = 15,
         .testcases = (bake_test_case[]){
             {
                 .id = "set",
@@ -1252,6 +1260,38 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_and_add_system",
                 .function = SystemOnSet_set_and_add_system
+            },
+            {
+                .id = "on_set_after_on_add",
+                .function = SystemOnSet_on_set_after_on_add
+            },
+            {
+                .id = "on_set_after_on_add_w_new",
+                .function = SystemOnSet_on_set_after_on_add_w_new
+            },
+            {
+                .id = "on_set_after_on_add_w_new_w_count",
+                .function = SystemOnSet_on_set_after_on_add_w_new_w_count
+            },
+            {
+                .id = "on_set_after_on_add_1_of_2_matched",
+                .function = SystemOnSet_on_set_after_on_add_1_of_2_matched
+            },
+            {
+                .id = "on_set_after_override",
+                .function = SystemOnSet_on_set_after_override
+            },
+            {
+                .id = "on_set_after_override_w_new",
+                .function = SystemOnSet_on_set_after_override_w_new
+            },
+            {
+                .id = "on_set_after_override_w_new_w_count",
+                .function = SystemOnSet_on_set_after_override_w_new_w_count
+            },
+            {
+                .id = "on_set_after_override_1_of_2_overridden",
+                .function = SystemOnSet_on_set_after_override_1_of_2_overridden
             }
         }
     },

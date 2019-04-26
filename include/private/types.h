@@ -184,16 +184,6 @@ typedef struct ecs_row_t {
     int32_t index;                /* Index of the entity in its table */
 } ecs_row_t;
 
-/** Supporting type that internal functions pass around to ensure that data
- * related to an entity is only looked up once. */
-typedef struct ecs_entity_info_t {
-    ecs_entity_t entity;
-    ecs_type_t type_id;
-    uint32_t index;
-    ecs_table_t *table;
-    ecs_table_column_t *columns;
-} ecs_entity_info_t;
-
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
  * to arbitrarily add/remove/set components and create/delete entities while
@@ -212,13 +202,22 @@ typedef struct ecs_stage_t {
     ecs_vector_t *tables;            /* Tables created while >1 threads running */
     ecs_map_t *type_index;          /* Types created while >1 threads running */
 
-    
     /* These occur only in
      * temporary stages, and
      * not on the main stage */
     ecs_map_t *data_stage;          /* Arrays with staged component values */
     ecs_map_t *remove_merge;        /* All removed components before merge */
 } ecs_stage_t;
+
+/** Supporting type that internal functions pass around to ensure that data
+ * related to an entity is only looked up once. */
+typedef struct ecs_entity_info_t {
+    ecs_entity_t entity;
+    ecs_type_t type_id;
+    uint32_t index;
+    ecs_table_t *table;
+    ecs_table_column_t *columns;
+} ecs_entity_info_t;
 
 /** A type describing a unit of work to be executed by a worker thread. */ 
 typedef struct ecs_job_t {

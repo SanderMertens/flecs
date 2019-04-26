@@ -751,7 +751,6 @@ ecs_entity_t ecs_lookup(
                     tables[t].columns[0].data, &handle_arr_params, i);
             }
         }
-
     }
 
     return 0;

@@ -271,7 +271,7 @@ error:
 }
 
 /** Run system on a single row */
-bool ecs_notify_row_system(
+ecs_type_t ecs_notify_row_system(
     ecs_world_t *world,
     ecs_entity_t system,
     ecs_vector_t *type,
@@ -279,7 +279,7 @@ bool ecs_notify_row_system(
     uint32_t offset,
     uint32_t limit)
 {
-    ecs_entity_info_t entity_info = {0};
+    ecs_entity_info_t info = {.entity = system};
 
     ecs_world_t *real_world = world;
     if (world->magic == ECS_THREAD_MAGIC) {
@@ -287,7 +287,7 @@ bool ecs_notify_row_system(
     }
 
     EcsRowSystem *system_data = get_ptr(
-        real_world, &real_world->main_stage, system, EEcsRowSystem, false, true, &entity_info);
+        real_world, &real_world->main_stage, &info, EEcsRowSystem, false, true);
     
     assert(system_data != NULL);
 
@@ -305,35 +305,53 @@ bool ecs_notify_row_system(
 
     uint32_t ref_id = 0;
 
+    /* Iterate over system columns, resolve data from table or references */
+
     for (i = 0; i < column_count; i ++) {
         if (buffer[i].kind == EcsFromSelf) {
+            /* If a regular column, find corresponding column in table */
             columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
         } else {
+            /* If not a regular column, it is a reference */
             ecs_entity_t entity = 0;
             ecs_entity_t component = buffer[i].is.component;
+
+            /* Resolve component from the right source */
             
             if (buffer[i].kind == EcsFromSystem) {
+                /* The source is the system itself */
                 entity = system;
             } else if (buffer[i].kind == EcsFromSingleton) {
+                /* The source is the world's singleton entity */
                 entity = 0;         
             } else if (buffer[i].kind == EcsFromEntity) {
+                /* The source is another entity (prefab, container, other) */
                 entity = buffer[i].source;
             }
 
-            references[ref_id] = (ecs_reference_t){.entity = entity, .component = component};
-            ref_ptrs[ref_id] = get_ptr(real_world, &real_world->main_stage, entity, component, false, true, &entity_info);
+            /* Store the reference data so the system callback can access it */
+            references[ref_id] = (ecs_reference_t){
+                .entity = entity, 
+                .component = component
+            };
 
+            /* Resolve the reference */
+            info = (ecs_entity_info_t){.entity = entity};
+            ref_ptrs[ref_id] = get_ptr(real_world, &real_world->main_stage, 
+                                &info, component, false, true);
+
+            /* Update the column vector with the entry to the ref vector */
             ref_id ++;
             columns[i] = -ref_id;
         }
     }
 
+    /* Prepare ecs_rows_t for system callback */
     ecs_rows_t rows = {
         .world = world,
         .system = system,
         .columns = columns,
         .column_count = ecs_vector_count(system_data->components),
-        .references = references,
         .table_columns = table_columns,
         .components = ecs_vector_first(system_data->components),
         .frame_offset = 0,
@@ -341,19 +359,23 @@ bool ecs_notify_row_system(
         .count = limit
     };
 
+    /* Set references metadata if system has references */
     if (ref_id) {
         rows.references = references;
         rows.ref_ptrs = ref_ptrs;
     }
 
+    /* Obtain pointer to vector with entity identifiers */
     if (table_columns) {
         ecs_entity_t *entities = ecs_vector_first(table_columns[0].data);
         rows.entities = &entities[rows.offset];
     }
 
+    /* Run system */
     action(&rows);
 
-    return true;
+    /* Return the components that the system promised to init/read/fini */
+    return system_data->base.and_from_entity;
 }
 
 /** Run a task. A task is a system that contains no columns that can be matched

@@ -29,6 +29,7 @@ void Count_count_2_components() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_ENTITY(world, e1, Type);
+
     ECS_ENTITY(world, e2, Type);
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Velocity);
