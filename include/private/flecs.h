@@ -172,6 +172,12 @@ int ecs_table_init(
     ecs_stage_t *stage,
     ecs_table_t *table);
 
+/* Evaluate table for special columns */
+void ecs_table_eval_columns(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table);
+
 /* Allocate a set of columns for a type */
 ecs_table_column_t *ecs_table_get_columns(
     ecs_world_t *world,
@@ -294,6 +300,7 @@ ecs_type_t ecs_notify_row_system(
     ecs_world_t *world,
     ecs_entity_t system,
     ecs_vector_t *type,
+    ecs_table_t *table,
     ecs_table_column_t *table_columns,
     uint32_t offset,
     uint32_t limit);

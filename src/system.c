@@ -275,6 +275,7 @@ ecs_type_t ecs_notify_row_system(
     ecs_world_t *world,
     ecs_entity_t system,
     ecs_vector_t *type,
+    ecs_table_t *table,
     ecs_table_column_t *table_columns,
     uint32_t offset,
     uint32_t limit)
@@ -352,6 +353,7 @@ ecs_type_t ecs_notify_row_system(
         .system = system,
         .columns = columns,
         .column_count = ecs_vector_count(system_data->components),
+        .table = table,
         .table_columns = table_columns,
         .components = ecs_vector_first(system_data->components),
         .frame_offset = 0,
@@ -385,7 +387,7 @@ void ecs_run_task(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    ecs_notify_row_system(world, system, NULL, NULL, 0, 1);
+    ecs_notify_row_system(world, system, NULL, NULL, NULL, 0, 1);
 }
 
 /* Notify row system of a new type */

@@ -1017,6 +1017,7 @@ ecs_entity_t _ecs_run_w_filter(
         }
 
         info.columns =  &table[COLUMNS_INDEX];
+        info.table = w_table;
         info.table_columns = table_columns;
         info.components = ECS_OFFSET(components,
             components_size * table[COMPONENTS_INDEX]);

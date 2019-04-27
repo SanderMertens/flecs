@@ -63,10 +63,15 @@ typedef uint32_t ecs_type_t;
 /** Id component type */
 typedef const char *EcsId;
 
-/** Metadata of a component */
+/** Component component */
 typedef struct EcsComponent {
     uint32_t size;
 } EcsComponent;
+
+/** Prefab component */
+typedef struct EcsPrefab {
+    ecs_entity_t parent;
+} EcsPrefab;
 
 /** System kinds determine when and how systems are ran */
 typedef enum EcsSystemKind {
@@ -101,18 +106,19 @@ typedef struct ecs_rows_t {
     ecs_entity_t system;         /* Handle to current system */
 
     int32_t *columns;    /* Indices mapping system params to columns and refs */
-    uint16_t column_count;    /* Number of columns for system */
-    void *table_columns;  /* Opaque structure that contains table column data */
+    uint16_t column_count;       /* Number of columns for system */
+    void *table;                 /* Opaque structure with reference to table */
+    void *table_columns;         /* Opaque structure with table column data */
     ecs_reference_t *references; /* References to other entities */
-    void **ref_ptrs;          /* The resolved pointers to the references */
+    void **ref_ptrs;             /* The resolved pointers to the references */
     ecs_entity_t *components;    /* System-table specific list of components */
     ecs_entity_t *entities;      /* Entity row */
 
-    void *param;              /* Userdata passed to on-demand system */
-    float delta_time;         /* Time elapsed since last frame */
-    uint32_t frame_offset;    /* Offset relative to frame */
-    uint32_t offset;          /* Offset relative to current table */
-    uint32_t count;           /* Number of rows to process by system */
+    void *param;                 /* Userdata passed to on-demand system */
+    float delta_time;            /* Time elapsed since last frame */
+    uint32_t frame_offset;       /* Offset relative to frame */
+    uint32_t offset;             /* Offset relative to current table */
+    uint32_t count;              /* Number of rows to process by system */
 
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
 } ecs_rows_t;
@@ -130,11 +136,12 @@ typedef void (*ecs_module_init_action_t)(
 #define EEcsComponent (1)
 #define EEcsTypeComponent (2)
 #define EEcsPrefab (3)
-#define EEcsRowSystem (4)
-#define EEcsColSystem (5)
-#define EEcsId (6)
-#define EEcsHidden (7)
-#define EEcsContainer (8)
+#define EEcsPrefabParent (4)
+#define EEcsRowSystem (5)
+#define EEcsColSystem (6)
+#define EEcsId (7)
+#define EEcsHidden (8)
+#define EEcsContainer (9)
 
 /* Type handles to builtin components */
 FLECS_EXPORT
@@ -142,6 +149,7 @@ extern ecs_type_t
     TEcsComponent,
     TEcsTypeComponent,
     TEcsPrefab,
+    TEcsPrefabParent,
     TEcsRowSystem,
     TEcsColSystem,
     TEcsId,
@@ -160,6 +168,7 @@ extern const char
     *ECS_COMPONENT_ID,
     *ECS_TYPE_COMPONENT_ID,
     *ECS_PREFAB_ID,
+    *ECS_PREFAB_PARENT_ID,
     *ECS_ROW_SYSTEM_ID,
     *ECS_COL_SYSTEM_ID,
     *ECS_ID_ID,

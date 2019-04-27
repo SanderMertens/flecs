@@ -33,6 +33,29 @@ typedef struct EcsTypeComponent {
     ecs_type_t resolved;  /* Resolved nested families */
 } EcsTypeComponent;
 
+/* For prefabs with child entities, the parent prefab must be marked so that
+ * flecs knows not to share components from it, as adding a prefab as a parent
+ * is stored in the same way as adding a prefab for sharing components.
+ * There are two mechanisms required to accomplish this. The first one is to set
+ * the 'parent' member in the EcsPrefab component, for the child entity of the
+ * prefab. This acts as a front-end for another mechanism, that ensures that
+ * child entities for different prefab parents are added to different tables, As
+ * a result of setting a parent in EcsPrefab, Flecs will:
+ * 
+ *  - Add the prefab to the entity type
+ *  - Find or create a prefab parent flag entity
+ *  - Set the EcsPrefabParent component on the prefab parent flag entity
+ *  - Add the prefab parent flag entity to the child
+ * 
+ * The last step ensures that the type of the child entity is associated with at
+ * most one prefab parent. If the mechanism would just rely on the EcsPrefab
+ * parent field, it would theoretically be possible that childs for different
+ * prefab parents end up in the same table.
+ */
+typedef struct EcsPrefabParent {
+    ecs_entity_t parent;
+} EcsPrefabParent;
+
 /** Type that is used by systems to indicate where to fetch a component from */
 typedef enum ecs_system_expr_elem_kind_t {
     EcsFromSelf,            /* Get component from self (default) */
@@ -280,6 +303,7 @@ struct ecs_world {
     /* -- Lookup Indices -- */
 
     ecs_map_t *prefab_index;          /* Index to find prefabs in families */
+    ecs_map_t *prefab_parent_index;   /* Index to find flag for prefab parent */
     ecs_map_t *type_sys_add_index;    /* Index to find add row systems for type */
     ecs_map_t *type_sys_remove_index; /* Index to find remove row systems for type*/
     ecs_map_t *type_sys_set_index;    /* Index to find set row systems for type */

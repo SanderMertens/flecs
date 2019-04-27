@@ -1001,3 +1001,51 @@ void Prefab_override_2_components_different_size() {
 
     ecs_fini(world);
 }
+
+void Prefab_ignore_prefab_parent_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, parent, EcsPrefab, Position);
+    ECS_ENTITY(world, child, EcsPrefab, Velocity);
+
+    ecs_set(world, child, EcsPrefab, {.parent = parent});
+
+    test_assert( ecs_contains(world, parent, child));
+    test_assert( !ecs_has(world, child, Position));
+    test_assert( ecs_has(world, child, Velocity));
+
+    ecs_fini(world);
+}
+
+void Prefab_ignore_prefab_parent_component_after_prefab_parent_change() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, parent1, EcsPrefab, Position);
+    ECS_ENTITY(world, parent2, EcsPrefab, Velocity);
+    ECS_ENTITY(world, child, EcsPrefab, Mass);
+
+    ecs_set(world, child, EcsPrefab, {.parent = parent1});
+
+    test_assert( ecs_contains(world, parent1, child));
+    test_assert( !ecs_has(world, child, Position));
+    test_assert( !ecs_has(world, child, Velocity));
+    test_assert( ecs_has(world, child, Mass));
+
+    ecs_set(world, child, EcsPrefab, {.parent = parent2});
+    
+    test_assert( ecs_contains(world, parent1, child));
+    test_assert( ecs_contains(world, parent2, child));
+    test_assert( ecs_has(world, child, Position));
+    test_assert( !ecs_has(world, child, Velocity));
+    test_assert( ecs_has(world, child, Mass));
+
+
+    ecs_fini(world);
+}

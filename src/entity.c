@@ -559,7 +559,7 @@ ecs_type_t ecs_notify(
 
         for (i = 0; i < count; i ++) {
             ecs_type_t m = ecs_notify_row_system(
-                world, buffer[i], table->type, table_columns, offset, limit);
+                world, buffer[i], table->type, table, table_columns, offset, limit);
             
             if (i) {
                 modified = ecs_type_merge(world, stage, modified, m, 0);
@@ -587,7 +587,7 @@ void ecs_merge_entity(
     }
 
     ecs_type_t to_remove = ecs_map_get64(stage->remove_merge, entity);
-    ecs_type_t staged_id = staged_row->type_id;
+    ecs_type_t staged_id = staged_row->type_id;    
     ecs_type_t type_id = ecs_type_merge(
         world, stage, old_row.type_id, staged_row->type_id, to_remove);
 

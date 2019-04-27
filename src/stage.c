@@ -21,30 +21,18 @@ void merge_families(
 }
 
 static
-void merge_tables(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
+void eval_table_columns(
+    ecs_world_t *world, 
+    ecs_stage_t *stage, 
+    uint32_t old_table_count, 
+    uint32_t new_table_count) 
 {
-    ecs_table_t *buffer = ecs_vector_first(stage->tables);
-    uint32_t i, count = ecs_vector_count(stage->tables);
+    ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
 
-    ecs_stage_t *main_stage = &world->main_stage;
-
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = &buffer[i];
-        ecs_type_t type_id = table->type_id;
-
-        /* Ensure table exists in main stage */
-        ecs_table_t *main_table = ecs_world_get_table(
-            world, main_stage, type_id);
-
-        ecs_assert(main_table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_table_deinit(world, table);
+    uint32_t i;
+    for (i = old_table_count; i < new_table_count; i ++) {
+        ecs_table_eval_columns(world, stage, &tables[i]);
     }
-
-    ecs_vector_clear(stage->tables);
-    ecs_map_clear(stage->table_index);
 }
 
 static
@@ -161,13 +149,28 @@ void ecs_stage_merge(
 {
     assert(stage != &world->main_stage);
     
+    /* Keep track of old number of tables so we know how many have been added */
+    uint32_t old_table_count = ecs_vector_count(world->main_stage.tables);
+    
     bool is_temp_stage = stage == &world->temp_stage;
 
+    /* Merge any new families */
     if (!is_temp_stage) {
         merge_families(world, stage);
     }
     
+    /* Merge entities. This can create tables if a new combination of components
+     * is found after merging the staged type with the non-staged type. */
     merge_commits(world, stage);
 
-    merge_tables(world, stage);
+    /* Clear temporary tables used by stage */
+    ecs_vector_clear(stage->tables);
+    ecs_map_clear(stage->table_index);
+
+    /* Now that all data has been merged, evaluate columns of added tables. This
+     * step updates the world for special columns, like prefab components */
+    uint32_t new_table_count = ecs_vector_count(world->main_stage.tables);
+    if (old_table_count != new_table_count) {
+        eval_table_columns(world, stage, old_table_count, new_table_count);
+    }
 }
