@@ -85,6 +85,14 @@
      - [Custom reactive systems](#custom-reactive-systems)
    - [Features](#features)
 - [Staging](#staging)
+  - [Staged vs. inline modifications](#staged-vs-inline-modifications)
+  - [Staging and ecs_get_ptr](#staging-and-ecs_get_ptr)
+  - [Overwriting the stage](#overwriting-the-stage)
+  - [Staging and EcsOnAdd, EcsOnSet and EcsOnRemove](#staging-and-ecsonadd-ecsonset-and-ecsonremove)
+  - [Staging and system phases](#staging-and-system-phases)
+  - [Staging and threading](#staging-and-threading)
+  - [Manually merging stages](#manually-merging-stages)
+  - [Limitations of staging](#limitations-of-staging)
 
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
@@ -1205,7 +1213,7 @@ int main(int argc, const char *argv[]) {
 }
 ```
 
-#### Staging vs. inline modifications
+#### Staged vs. inline modifications
 When a system is iterating, it receives buffers to the component data. These buffers are not staged, as they provide direct access to the components in the Flecs store. Applications can choose to change the data in these buffers, which is referred to as "inline modications". An important decision system implementors have to make is whether to modify data inline, or whether to use staging. The following code example shows the difference between the two:
 
 ```c
