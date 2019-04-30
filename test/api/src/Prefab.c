@@ -1046,6 +1046,67 @@ void Prefab_ignore_prefab_parent_component_after_prefab_parent_change() {
     test_assert( !ecs_has(world, child, Velocity));
     test_assert( ecs_has(world, child, Mass));
 
+    ecs_fini(world);
+}
+
+static
+void Move(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN(rows, Velocity, v, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        p[i].x += v[i].y;
+        p[i].y += v[i].y;
+    }
+}
+
+static
+void AddVelocity(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_set(rows->world, rows->entities[i], Velocity, {1, 1});
+    }
+}
+
+void Prefab_match_table_created_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_PREFAB(world, Prefab, Mass);
+    ecs_set(world, Prefab, Mass, {10});
+
+    ECS_ENTITY(world, e, Prefab, Position);
+
+    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, !Velocity);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity, Mass);
+
+    ecs_set(world, e, Position, {0, 0});
+    
+    test_assert( ecs_has(world, e, Position));
+    test_assert( !ecs_has(world, e, Velocity));
+    test_assert( ecs_has(world, e, Mass));
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e, Velocity));
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+    test_int(p->y, 0);
+
+    ecs_progress(world, 1);
+
+    p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 1);
 
     ecs_fini(world);
 }

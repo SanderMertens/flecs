@@ -345,7 +345,8 @@
                 "new_w_count_w_override",
                 "override_2_components_different_size",
                 "ignore_prefab_parent_component",
-                "ignore_prefab_parent_component_after_prefab_parent_change"
+                "ignore_prefab_parent_component_after_prefab_parent_change",
+                "match_table_created_in_progress"
             ]
         }, {
             "id": "System_w_FromContainer",
