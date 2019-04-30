@@ -1176,11 +1176,11 @@ ECS_TYPE(world, ParentFeature, ChildFeature1, ChildFeature2);
 When designing modules it is good practice to not directly expose handles to systems, but instead only expose feature handles. This decreases the chance that an application has to be modified because the implementation of a module changed.
 
 ### Staging
-ECS frameworks typically store data in contiguous arrays, and Flecs is no exception. Logic in ECS frameworks often involves iterating over these arrays. A challenge for ECS frameworks is thus how to allow for mutations on an array, such as adding/removing components and removing entities. Because of this, ECS frameworks often have limitations on which operations are allowed while iterating. A common solution to this problem is to implemement command buffers, which store a list of operations which are executed after an iteration.
+ECS frameworks typically store data in contiguous arrays where systems iterate over these arrays, and Flecs is no exception. A challenge for ECS frameworks is how to allow for mutations, such as adding/removing components and removing entities which alter the array. To address this, ECS frameworks often have limitations on which operations are allowed while iterating. A common solution to this problem is to implemement something called a _command buffer_, which stores a list of operations that are executed after an iteration.
 
-Command buffers however have several disadvantages. First of all, mutations are not visible until the next iteration. When a system adds a component, and subsequently tests if the component has been added, the test would return false, which is not intuitive. Another disadvantage is that applications require a different API while iterating.
+Command buffers however have several disadvantages. First of all, mutations are not visible until the next iteration. When a system adds a component, and subsequently tests if the component has been added, the test would return false, which is not intuitive. Another disadvantage is that applications need a different API while iterating.
 
-Flecs addresses this problem with a technique called "staging". Staging, similar to command buffers, stores data in a temporary data structure which is merged after the iteration, but unlike command buffers, staging uses a more intelligent data structure called a "staging area" which can be introspected by the API while iterating. In practice this means that Flecs API calls behave the same inside iterations as outside iterations, and that there are no limitations on which _mutations_ can be executed while iterating. Staging is also the key enabling feature for multithreading.
+Flecs addresses this problem with a technique called "staging". Staging uses a data structure called a "staging area" which can be introspected by the API while iterating. In practice this means that Flecs API calls behave the same way inside iterations as outside iterations, and that there are no limitations on which _mutations_ can be executed while iterating. Staging is also an enabling feature for [multithreading](#staging-and-multithreading).
 
 The following code shows an example of a system that relies on staging:
 
@@ -1189,7 +1189,7 @@ void System(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, Velocity, 2);
 
     for(int i = 0; i < rows->count; i ++) {
-        // Add component Velocity to stage, set its value to {10, 20}
+        // Add component Velocity to stage, set its value to {1, 1}
         ecs_set(rows->world, rows->entities[i], Velocity, {1, 1});
         
         // Operation returns true
