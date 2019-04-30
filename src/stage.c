@@ -32,6 +32,7 @@ void eval_table_columns(
     uint32_t i;
     for (i = old_table_count; i < new_table_count; i ++) {
         ecs_table_eval_columns(world, stage, &tables[i]);
+        ecs_notify_systems_of_table(world, &tables[i]);
     }
 }
 

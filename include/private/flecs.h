@@ -48,6 +48,11 @@ ecs_table_t* ecs_world_get_table(
     ecs_stage_t *stage,
     ecs_type_t type_id);
 
+/* Notify systems that there is a new table, which triggers matching */
+void ecs_notify_systems_of_table(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
 /* Activate system (move from inactive array to on_update array or vice versa) */
 void ecs_world_activate_system(
     ecs_world_t *world,

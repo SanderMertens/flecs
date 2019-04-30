@@ -152,8 +152,7 @@ void notify_create_table(
     }
 }
 
-static
-void notify_systems_of_table(
+void ecs_notify_systems_of_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -189,8 +188,8 @@ ecs_table_t* create_table(
     uint32_t index = ecs_vector_get_index(stage->tables, &table_arr_params, result);
     ecs_map_set64(stage->table_index, type_id, index + 1);
 
-    if (stage == &world->main_stage) {
-        notify_systems_of_table(world, result);
+    if (stage == &world->main_stage && !world->is_merging) {
+        ecs_notify_systems_of_table(world, result);
     }
 
     assert(result != NULL);
