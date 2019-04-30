@@ -93,7 +93,7 @@ typedef struct ecs_system_column_t {
         ecs_type_t type;             /* Used for OR operator */
         ecs_entity_t component;      /* Used for AND operator */
     } is;
-    ecs_entity_t source;            /* Source entity (used with FromEntity) */
+    ecs_entity_t source;             /* Source entity (used with FromEntity) */
 } ecs_system_column_t;
 
 /** Type that stores a reference to components of external entities (prefabs) */
@@ -106,10 +106,10 @@ typedef struct ecs_system_ref_t {
 typedef struct EcsSystem {
     ecs_system_action_t action;    /* Callback to be invoked for matching rows */
     const char *signature;         /* Signature with which system was created */
-    ecs_vector_t *columns;          /* Column components */
+    ecs_vector_t *columns;         /* Column components */
     ecs_type_t not_from_entity;    /* Exclude components from entity */
     ecs_type_t not_from_component; /* Exclude components from components */
-    ecs_type_t and_from_entity;  /* Which components are required from entity */
+    ecs_type_t and_from_entity;    /* Which components are required from entity */
     ecs_type_t and_from_system;    /* Used to auto-add components to system */
     int32_t cascade_by;            /* CASCADE column index */
     EcsSystemKind kind;            /* Kind of system */
@@ -157,17 +157,17 @@ typedef struct EcsSystem {
  */
 typedef struct EcsColSystem {
     EcsSystem base;
-    ecs_entity_t entity;          /* Entity id of system, used for ordering */
-    ecs_vector_t *components;      /* Computed component list per matched table */
-    ecs_vector_t *inactive_tables; /* Inactive tables */
-    ecs_vector_t *jobs;            /* Jobs for this system */
-    ecs_vector_t *tables;          /* Table index + refs index + column offsets */
-    ecs_vector_t *refs;            /* Columns that point to other entities */
-    ecs_vector_params_t table_params; /* Parameters for tables array */
+    ecs_entity_t entity;                  /* Entity id of system, used for ordering */
+    ecs_vector_t *components;             /* Computed component list per matched table */
+    ecs_vector_t *inactive_tables;        /* Inactive tables */
+    ecs_vector_t *jobs;                   /* Jobs for this system */
+    ecs_vector_t *tables;                 /* Table index + refs index + column offsets */
+    ecs_vector_t *refs;                   /* Columns that point to other entities */
+    ecs_vector_params_t table_params;     /* Parameters for tables array */
     ecs_vector_params_t component_params; /* Parameters for components array */
-    ecs_vector_params_t ref_params; /* Parameters for tables array */
-    float period;              /* Minimum period inbetween system invocations */
-    float time_passed;         /* Time passed since last invocation */
+    ecs_vector_params_t ref_params;       /* Parameters for tables array */
+    float period;                         /* Minimum period inbetween system invocations */
+    float time_passed;                    /* Time passed since last invocation */
 } EcsColSystem;
 
 /** A row system is a system that is ran on 1..n entities for which a certain 
@@ -184,8 +184,8 @@ typedef struct EcsRowSystem {
 
 /** A table column describes a single column in a table (archetype) */
 typedef struct ecs_table_column_t {
-    ecs_vector_t *data;               /* Column data */
-    uint16_t size;                /* Column size (saves component lookups) */
+    ecs_vector_t *data;              /* Column data */
+    uint16_t size;                   /* Column size (saves component lookups) */
 } ecs_table_column_t;
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
@@ -196,7 +196,7 @@ typedef struct ecs_table_t {
     ecs_vector_t *type;               /* Reference to type_index entry */
     ecs_table_column_t *columns;      /* Columns storing components of array */
     ecs_vector_t *frame_systems;      /* Frame systems matched with table */
-    ecs_type_t type_id;              /* Identifies table type in type_index */
+    ecs_type_t type_id;               /* Identifies table type in type_index */
  } ecs_table_t;
  
 /** The ecs_row_t struct is a 64-bit value that describes in which table
@@ -216,20 +216,20 @@ typedef struct ecs_stage_t {
     /* If this is not main stage, 
      * changes to the entity index 
      * are buffered here */
-    ecs_map_t *entity_index;        /* Entity lookup table for (table, row) */
+    ecs_map_t *entity_index;       /* Entity lookup table for (table, row) */
 
     /* If this is not a thread
      * stage, these are the same
      * as the main stage */
-    ecs_map_t *table_index;         /* Index for table stage */
-    ecs_vector_t *tables;            /* Tables created while >1 threads running */
-    ecs_map_t *type_index;          /* Types created while >1 threads running */
+    ecs_map_t *table_index;        /* Index for table stage */
+    ecs_vector_t *tables;          /* Tables created while >1 threads running */
+    ecs_map_t *type_index;         /* Types created while >1 threads running */
 
     /* These occur only in
      * temporary stages, and
      * not on the main stage */
-    ecs_map_t *data_stage;          /* Arrays with staged component values */
-    ecs_map_t *remove_merge;        /* All removed components before merge */
+    ecs_map_t *data_stage;         /* Arrays with staged component values */
+    ecs_map_t *remove_merge;       /* All removed components before merge */
 } ecs_stage_t;
 
 /** Supporting type that internal functions pass around to ensure that data
@@ -244,7 +244,7 @@ typedef struct ecs_entity_info_t {
 
 /** A type describing a unit of work to be executed by a worker thread. */ 
 typedef struct ecs_job_t {
-    ecs_entity_t system;             /* System handle */
+    ecs_entity_t system;          /* System handle */
     EcsColSystem *system_data;    /* System to run */
     uint32_t offset;              /* Start index in row chunk */
     uint32_t limit;               /* Total number of rows to process */
@@ -258,19 +258,19 @@ typedef struct ecs_job_t {
  * API to transparently resolve the stage to which updates should be written,
  * without requiring different API calls when working in multi threaded mode. */
 typedef struct ecs_thread_t {
-    uint32_t magic;               /* Magic number to verify thread pointer */
-    uint32_t job_count;           /* Number of jobs scheduled for thread */
-    ecs_world_t *world;              /* Reference to world */
+    uint32_t magic;                           /* Magic number to verify thread pointer */
+    uint32_t job_count;                       /* Number of jobs scheduled for thread */
+    ecs_world_t *world;                       /* Reference to world */
     ecs_job_t *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
-    ecs_stage_t *stage;              /* Stage for thread */
-    ecs_os_thread_t thread;          /* Thread handle */
+    ecs_stage_t *stage;                       /* Stage for thread */
+    ecs_os_thread_t thread;                   /* Thread handle */
 } ecs_thread_t;
 
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world {
     uint32_t magic;               /* Magic number to verify world pointer */
-    float delta_time;           /* Time passed to or computed by ecs_progress */
+    float delta_time;             /* Time passed to or computed by ecs_progress */
     void *context;                /* Application context */
 
     /* -- Column systems -- */
@@ -314,12 +314,12 @@ struct ecs_world {
 
     ecs_stage_t main_stage;          /* Main storage */
     ecs_stage_t temp_stage;          /* Stage for when processing systems */
-    ecs_vector_t *worker_stages;      /* Stages for worker threads */
+    ecs_vector_t *worker_stages;     /* Stages for worker threads */
 
 
     /* -- Multithreading -- */
 
-    ecs_vector_t *worker_threads;     /* Worker threads */
+    ecs_vector_t *worker_threads;    /* Worker threads */
     ecs_os_cond_t thread_cond;       /* Signal that worker threads can start */
     ecs_os_mutex_t thread_mutex;     /* Mutex for thread condition */
     ecs_os_cond_t job_cond;          /* Signal that worker thread job is done */
@@ -343,7 +343,7 @@ struct ecs_world {
     /* -- Time management -- */
 
     uint32_t tick;                /* Number of computed frames by world */
-    ecs_time_t frame_start;  /* Starting timestamp of frame */
+    ecs_time_t frame_start;       /* Starting timestamp of frame */
     float frame_time;             /* Time spent processing a frame */
     float system_time;            /* Time spent processing systems */
     float merge_time;             /* Time spent on merging */
