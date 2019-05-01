@@ -139,21 +139,27 @@ void ecs_log_debug(const char *fmt, va_list args) {
 void ecs_os_dbg(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    ecs_os_api.log_debug(fmt, args);
+    if (ecs_os_api.log_debug) {
+        ecs_os_api.log_debug(fmt, args);
+    }
     va_end(args);
 }
 
 void ecs_os_log(const char *fmt, ...) {
     va_list args;;
     va_start(args, fmt);
-    ecs_os_api.log(fmt, args);
+    if (ecs_os_api.log) {
+        ecs_os_api.log(fmt, args);
+    }
     va_end(args);
 }
 
 void ecs_os_err(const char *fmt, ...) {
     va_list args;;
     va_start(args, fmt);
-    ecs_os_api.log_error(fmt, args);
+    if (ecs_os_api.log_error) {
+        ecs_os_api.log_error(fmt, args);
+    }
     va_end(args);
 }
 

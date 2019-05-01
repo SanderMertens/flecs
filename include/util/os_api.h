@@ -14,9 +14,9 @@ extern "C" {
 #endif
 
 /* Use handle types that _at least_ can store pointers */
-typedef uint64_t ecs_os_thread_t;
-typedef uint64_t ecs_os_cond_t;
-typedef uint64_t ecs_os_mutex_t;
+typedef uintptr_t ecs_os_thread_t;
+typedef uintptr_t ecs_os_cond_t;
+typedef uintptr_t ecs_os_mutex_t;
 
 /* Memory management */
 typedef 
