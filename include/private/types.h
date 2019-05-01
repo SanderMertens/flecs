@@ -56,6 +56,11 @@ typedef struct EcsPrefabParent {
     ecs_entity_t parent;
 } EcsPrefabParent;
 
+/* Component used to instantiate entities from a prefab hierarchy. */
+typedef struct EcsPrefabBuilder {
+    ecs_vector_t *children;
+} EcsPrefabBuilder;
+
 /** Type that is used by systems to indicate where to fetch a component from */
 typedef enum ecs_system_expr_elem_kind_t {
     EcsFromSelf,            /* Get component from self (default) */

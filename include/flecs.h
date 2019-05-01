@@ -137,11 +137,12 @@ typedef void (*ecs_module_init_action_t)(
 #define EEcsTypeComponent (2)
 #define EEcsPrefab (3)
 #define EEcsPrefabParent (4)
-#define EEcsRowSystem (5)
-#define EEcsColSystem (6)
-#define EEcsId (7)
-#define EEcsHidden (8)
-#define EEcsContainer (9)
+#define EEcsPrefabBuilder (5)
+#define EEcsRowSystem (6)
+#define EEcsColSystem (7)
+#define EEcsId (8)
+#define EEcsHidden (9)
+#define EEcsContainer (10)
 
 /* Type handles to builtin components */
 FLECS_EXPORT
@@ -150,6 +151,7 @@ extern ecs_type_t
     TEcsTypeComponent,
     TEcsPrefab,
     TEcsPrefabParent,
+    TEcsPrefabBuilder,
     TEcsRowSystem,
     TEcsColSystem,
     TEcsId,

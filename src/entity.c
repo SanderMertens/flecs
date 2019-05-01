@@ -287,10 +287,12 @@ ecs_type_t copy_from_prefab(
     while ((prefab = ecs_map_get64(world->prefab_index, entity_type))) {
         /* Prefabs are only resolved from the main stage. Prefabs created while
          * iterating cannot be resolved in the same iteration. */
-        ecs_row_t row = ecs_to_row(ecs_map_get64(world->main_stage.entity_index, prefab));
+        ecs_row_t prefab_row = ecs_to_row(ecs_map_get64(world->main_stage.entity_index, prefab));
 
         ecs_table_t *prefab_table = ecs_world_get_table(
-            world, stage, row.type_id);
+            world, stage, prefab_row.type_id);
+        ecs_vector_t *prefab_type = prefab_table->type;
+        ecs_table_column_t *prefab_columns = prefab_table->columns;
 
         ecs_vector_t *add_type = ecs_type_get(world, stage, to_add);
         ecs_entity_t *add_handles = ecs_vector_first(add_type);
@@ -301,9 +303,8 @@ ecs_type_t copy_from_prefab(
 
             /* Nothing to copy if this component is the prefab itself */
             if (component != prefab) {
-                void *prefab_ptr = get_row_ptr(
-                    prefab_table->type, prefab_table->columns,
-                    row.index, component);
+                void *prefab_ptr = get_row_ptr(prefab_type, prefab_columns, 
+                    prefab_row.index, component);
 
                 if (prefab_ptr) {
                     if (!columns) {
@@ -331,11 +332,16 @@ ecs_type_t copy_from_prefab(
                         modified = ecs_type_add(world, stage, modified, component);
                     }
                 }
+            } else {
+                /* If the prefab itself is added, test if the prefab has any
+                 * children that need to be instantiated for the entity */
+                EcsPrefabBuilder *builder = get_row_ptr(prefab_type, prefab_columns, 
+                    prefab_row.index, EEcsPrefabBuilder);
             }
         }
 
         /* Recursively search through prefabs */
-        entity_type = row.type_id;
+        entity_type = prefab_row.type_id;
     }
 
     return modified;

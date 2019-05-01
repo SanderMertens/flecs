@@ -30,6 +30,7 @@ ecs_type_t TEcsComponent;
 ecs_type_t TEcsTypeComponent;
 ecs_type_t TEcsPrefab;
 ecs_type_t TEcsPrefabParent;
+ecs_type_t TEcsPrefabBuilder;
 ecs_type_t TEcsRowSystem;
 ecs_type_t TEcsColSystem;
 ecs_type_t TEcsId;
@@ -40,6 +41,7 @@ const char *ECS_COMPONENT_ID =      "EcsComponent";
 const char *ECS_TYPE_COMPONENT_ID = "EcsTypeComponent";
 const char *ECS_PREFAB_ID =         "EcsPrefab";
 const char *ECS_PREFAB_PARENT_ID =  "EcsPrefabParent";
+const char *ECS_PREFAB_BUILDER_ID = "EcsPrefabBuilder";
 const char *ECS_ROW_SYSTEM_ID =     "EcsRowSystem";
 const char *ECS_COL_SYSTEM_ID =     "EcsColSystem";
 const char *ECS_ID_ID =             "EcsId";
@@ -66,6 +68,7 @@ void bootstrap_types(
     TEcsTypeComponent = ecs_type_register(world, stage, EEcsTypeComponent, NULL);
     TEcsPrefab = ecs_type_register(world, stage, EEcsPrefab, NULL);
     TEcsPrefabParent = ecs_type_register(world, stage, EEcsPrefabParent, NULL);
+    TEcsPrefabBuilder = ecs_type_register(world, stage, EEcsPrefabBuilder, NULL);
     TEcsRowSystem = ecs_type_register(world, stage, EEcsRowSystem, NULL);
     TEcsColSystem = ecs_type_register(world, stage, EEcsColSystem, NULL);
     TEcsId = ecs_type_register(world, stage, EEcsId, NULL);
@@ -225,6 +228,15 @@ void init_prefab(ecs_rows_t *rows) {
 }
 
 static
+void add_to_builder(
+    ecs_world_t *world,
+    ecs_entity_t prefab,
+    ecs_entity_t child)
+{
+    ecs_add(world, prefab, EcsPrefabBuilder);
+}
+
+static
 void set_prefab(ecs_rows_t *rows) {
     ecs_world_t *world = rows->world;
 
@@ -275,6 +287,7 @@ void set_prefab(ecs_rows_t *rows) {
         /* Add the prefab parent to the type of the entity */
         if (!prefab_parent_added && parent) {
             ecs_adopt(world, e, parent);
+            add_to_builder(world, parent, e);
         }
 
         /* Add the prefab parent flag to the type of the entity */
@@ -663,6 +676,7 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsTypeComponent, ECS_TYPE_COMPONENT_ID, sizeof(EcsTypeComponent));
     bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_ID, sizeof(EcsPrefab));
     bootstrap_component(world, table, EEcsPrefabParent, ECS_PREFAB_PARENT_ID, sizeof(EcsPrefabParent));
+    bootstrap_component(world, table, EEcsPrefabBuilder, ECS_PREFAB_BUILDER_ID, sizeof(EEcsPrefabBuilder));
     bootstrap_component(world, table, EEcsRowSystem, ECS_ROW_SYSTEM_ID, sizeof(EcsRowSystem));
     bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_ID, sizeof(EcsColSystem));
     bootstrap_component(world, table, EEcsId, ECS_ID_ID, sizeof(EcsId));
