@@ -10,7 +10,7 @@ const ecs_os_api_t ecs_os_api;
 static
 ecs_os_api_t *_ecs_os_api = (ecs_os_api_t*)&ecs_os_api;
 
-void ecs_set_os_api(
+void ecs_os_set_api(
     ecs_os_api_t *os_api)
 {
     if (!ecs_os_api_initialized) {
@@ -161,7 +161,7 @@ void ecs_os_enable_dbg(bool enable) {
     ecs_os_api_debug_enabled = enable;
 }
 
-void ecs_set_os_api_defaults(void)
+void ecs_os_set_api_defaults(void)
 {
     /* Don't overwrite if already initialized */
     if (ecs_os_api_initialized) {

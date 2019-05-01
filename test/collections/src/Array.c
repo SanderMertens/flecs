@@ -37,7 +37,7 @@ ecs_vector_t* fill_array(
 }
 
 void Array_setup() {
-    ecs_set_os_api_defaults();
+    ecs_os_set_api_defaults();
 }
 
 void Array_free_empty() {

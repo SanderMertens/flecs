@@ -153,11 +153,11 @@ FLECS_EXPORT
 extern const ecs_os_api_t ecs_os_api;
 
 FLECS_EXPORT
-void ecs_set_os_api(
+void ecs_os_set_api(
     ecs_os_api_t *os_api);
 
 FLECS_EXPORT
-void ecs_set_os_api_defaults(void);
+void ecs_os_set_api_defaults(void);
 
 /* Memory management */
 #define ecs_os_malloc(size) ecs_os_api.malloc(size);

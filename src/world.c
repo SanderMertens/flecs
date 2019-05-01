@@ -585,7 +585,7 @@ void load_admin(
 /* -- Public functions -- */
 
 ecs_world_t *ecs_init(void) {
-    ecs_set_os_api_defaults();
+    ecs_os_set_api_defaults();
 
 #ifdef __BAKE__
     ut_init(NULL);
