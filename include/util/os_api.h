@@ -144,6 +144,7 @@ typedef struct ecs_os_api_t {
     /* Logging */
     ecs_os_api_log_t log;
     ecs_os_api_log_t log_error;
+    ecs_os_api_log_t log_debug;
 
     /* Application termination */
     ecs_os_api_abort_t abort;
@@ -192,8 +193,17 @@ void ecs_set_os_api_defaults(void);
 #define ecs_os_get_time(time_out) ecs_os_api.get_time(time_out)
 
 /* Logging (use functions to avoid using variadic macro arguments) */
+FLECS_EXPORT
 void ecs_os_log(const char *fmt, ...);
+
+FLECS_EXPORT
 void ecs_os_err(const char *fmt, ...);
+
+FLECS_EXPORT
+void ecs_os_dbg(const char *fmt, ...);
+
+FLECS_EXPORT
+void ecs_os_enable_dbg(bool enable);
 
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort()

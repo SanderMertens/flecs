@@ -2,6 +2,7 @@
 #include "include/private/flecs.h"
 
 static bool ecs_os_api_initialized = false;
+static bool ecs_os_api_debug_enabled = false;
 
 const ecs_os_api_t ecs_os_api;
 
@@ -95,6 +96,20 @@ void bake_gettime(ecs_time_t *t) {
     *t = (ecs_time_t){bt.tv_sec, bt.tv_nsec};
 }
 
+static void bake_log(
+    ut_log_verbosity level,
+    const char *msg,
+    void *ctx)
+{
+    if (level >= UT_ERROR) {
+        ecs_os_err("%s", msg);
+    } else if (level <= UT_TRACE) {
+        ecs_os_dbg("%s", msg);
+    } else {
+        ecs_os_log("%s", msg);
+    }
+}
+
 #endif
 
 static
@@ -111,6 +126,23 @@ void ecs_log_error(const char *fmt, va_list args) {
     fprintf(stderr, "\n");
 }
 
+static
+void ecs_log_debug(const char *fmt, va_list args) {
+    if (ecs_os_api_debug_enabled) {
+        fprintf(stderr, "[dbg] ");
+        vfprintf(stderr, fmt, args);
+        fprintf(stderr, "\n");
+    }
+}
+
+
+void ecs_os_dbg(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    ecs_os_api.log_debug(fmt, args);
+    va_end(args);
+}
+
 void ecs_os_log(const char *fmt, ...) {
     va_list args;;
     va_start(args, fmt);
@@ -123,6 +155,10 @@ void ecs_os_err(const char *fmt, ...) {
     va_start(args, fmt);
     ecs_os_api.log_error(fmt, args);
     va_end(args);
+}
+
+void ecs_os_enable_dbg(bool enable) {
+    ecs_os_api_debug_enabled = enable;
 }
 
 void ecs_set_os_api_defaults(void)
@@ -154,10 +190,13 @@ void ecs_set_os_api_defaults(void)
 
     _ecs_os_api->sleep = ut_sleep;
     _ecs_os_api->get_time = bake_gettime;
+
+    ut_log_handlerRegister(bake_log, NULL);
 #endif
 
     _ecs_os_api->log = ecs_log;
     _ecs_os_api->log_error = ecs_log_error;
+    _ecs_os_api->log_debug = ecs_log_debug;
 
     _ecs_os_api->abort = abort;
 }

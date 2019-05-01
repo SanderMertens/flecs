@@ -208,7 +208,8 @@ ecs_world_t* ecs_init(void);
  * The following options are available:
  * --threads [n]   Use n worker threads
  * --fps [hz]      Run at hz FPS
- * --admin [port]        Enable admin dashboard (requires flecs-systems-admin & flecs-systems-civetweb)
+ * --admin [port]  Enable admin dashboard (requires flecs-systems-admin & flecs-systems-civetweb)
+ * --debug         Enables debug tracing
  *
  * @returns A new world object
  */

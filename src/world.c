@@ -706,8 +706,22 @@ ecs_world_t* ecs_init_w_args(
 {
     ecs_world_t *world = ecs_init();
 
-    /* Parse arguments */
+    /* First parse debug argument so logging is enabled for other args */ 
     int i;
+    for (i = 1; i < argc; i ++) {
+        if (argv[i][0] == '-') {
+            bool parsed = false;
+
+            ARG(0, "debug", ecs_os_enable_dbg(true));
+
+            /* Ignore arguments that were not parsed */
+            (void)parsed;
+        } else {
+            /* Ignore arguments that don't start with '-' */
+        }
+    }
+
+    /* Parse remaining arguments */
     for (i = 1; i < argc; i ++) {
         if (argv[i][0] == '-') {
             bool parsed = false;
