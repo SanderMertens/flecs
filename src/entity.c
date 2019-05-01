@@ -87,7 +87,8 @@ void* get_row_ptr(
 
     if (param.element_size) {
         ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
-        return ecs_vector_get(column->data, &param, index - 1);
+        void *ptr = ecs_vector_get(column->data, &param, index - 1);
+        return ptr;
     } else {
         return NULL;
     }
@@ -106,6 +107,7 @@ bool populate_info(
 
         if (row_64) {
             ecs_row_t row = ecs_to_row(row_64);
+
             ecs_table_t *table = ecs_world_get_table(world, stage, row.type_id);
             info->table = table;
 
@@ -126,7 +128,7 @@ bool populate_info(
     return false;
 }
 
-void* get_ptr(
+void* ecs_get_ptr_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_info_t *info,
@@ -189,7 +191,7 @@ void* get_ptr(
     if (prefab) {
         if (component != EEcsId && component != EEcsPrefab) {
             *info = (ecs_entity_info_t){.entity = prefab};
-            return get_ptr(world, stage, info, component, staged_only, true);
+            return ecs_get_ptr_intern(world, stage, info, component, staged_only, true);
         } else {
             return NULL;
         }
@@ -696,6 +698,28 @@ bool ecs_components_contains_component(
     return false;
 }
 
+void ecs_add_intern(
+    ecs_world_t *world,
+    ecs_entity_info_t *info,
+    ecs_type_t type,
+    bool do_set)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
+    
+    ecs_type_t dst_type = 0;
+
+    if (populate_info(world, stage, info)) {
+        ecs_vector_t *to_add = ecs_type_get(world, stage, type);
+        dst_type = ecs_type_merge_arr(world, stage, info->table->type, to_add, NULL);
+    } else {
+        dst_type = type;
+    }
+
+    commit_w_type(world, stage, info, dst_type, type, 0, do_set);
+}
+
 /* -- Public functions -- */
 
 ecs_entity_t ecs_clone(
@@ -898,36 +922,13 @@ void ecs_delete(
     }
 }
 
-static
-void add_intern(
-    ecs_world_t *world,
-    ecs_entity_info_t *info,
-    ecs_type_t type,
-    bool do_set)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
-    
-    ecs_type_t dst_type = 0;
-
-    if (populate_info(world, stage, info)) {
-        ecs_vector_t *to_add = ecs_type_get(world, stage, type);
-        dst_type = ecs_type_merge_arr(world, stage, info->table->type, to_add, NULL);
-    } else {
-        dst_type = type;
-    }
-
-    commit_w_type(world, stage, info, dst_type, type, 0, do_set);
-}
-
 void _ecs_add(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type)
 {
     ecs_entity_info_t info = {.entity = entity};
-    add_intern(world, &info, type, true);
+    ecs_add_intern(world, &info, type, true);
 }
 
 void _ecs_remove(
@@ -1016,7 +1017,7 @@ void* _ecs_get_ptr(
     ecs_entity_t component = ecs_entity_from_type(world_arg, type);
 
     ecs_entity_info_t info = {.entity = entity};
-    return get_ptr(world, stage, &info, component, false, true);
+    return ecs_get_ptr_intern(world, stage, &info, component, false, true);
 }
 
 static
@@ -1039,10 +1040,10 @@ ecs_entity_t _ecs_set_ptr_intern(
     ecs_entity_t component = ecs_entity_from_type(world_arg, type);
 
     /* If component hasn't been added to entity yet, add it */
-    int *dst = get_ptr(world, stage, &info, component, true, false);
+    int *dst = ecs_get_ptr_intern(world, stage, &info, component, true, false);
     if (!dst) {
-        add_intern(world_arg, &info, type, false);
-        dst = get_ptr(world, stage, &info, component, true, false);
+        ecs_add_intern(world_arg, &info, type, false);
+        dst = ecs_get_ptr_intern(world, stage, &info, component, true, false);
         if (!dst) {
             /* It is possible that an OnAdd system removed the component before
              * it could have been set */
@@ -1052,7 +1053,7 @@ ecs_entity_t _ecs_set_ptr_intern(
 
 #ifndef NDEBUG
     ecs_entity_info_t cinfo = {.entity = component};
-    EcsComponent *cdata = get_ptr(
+    EcsComponent *cdata = ecs_get_ptr_intern(
         world, stage, &cinfo, EEcsComponent, false, false);
     ecs_assert(cdata->size == size, ECS_INVALID_COMPONENT_SIZE, NULL);
 #endif

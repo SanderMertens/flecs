@@ -83,7 +83,10 @@ ecs_entity_t new_row_system(
     }
 
     ecs_entity_t result = _ecs_new(world, world->t_row_system);
+
     EcsId *id_data = ecs_get_ptr(world, result, EcsId);
+    ecs_assert(id_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
     *id_data = id;
 
     EcsRowSystem *system_data = ecs_get_ptr(world, result, EcsRowSystem);
@@ -287,7 +290,7 @@ ecs_type_t ecs_notify_row_system(
         real_world = ((ecs_thread_t*)world)->world; /* dispel the magic */
     }
 
-    EcsRowSystem *system_data = get_ptr(
+    EcsRowSystem *system_data = ecs_get_ptr_intern(
         real_world, &real_world->main_stage, &info, EEcsRowSystem, false, true);
     
     assert(system_data != NULL);
@@ -338,7 +341,7 @@ ecs_type_t ecs_notify_row_system(
 
             /* Resolve the reference */
             info = (ecs_entity_info_t){.entity = entity};
-            ref_ptrs[ref_id] = get_ptr(real_world, &real_world->main_stage, 
+            ref_ptrs[ref_id] = ecs_get_ptr_intern(real_world, &real_world->main_stage, 
                                 &info, component, false, true);
 
             /* Update the column vector with the entry to the ref vector */

@@ -64,13 +64,19 @@ void ecs_world_activate_system(
 ecs_stage_t *ecs_get_stage(
     ecs_world_t **world_ptr);
 
-void* get_ptr(
+void* ecs_get_ptr_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_info_t *info,
     ecs_entity_t component,
     bool staged_only,
     bool search_prefab);
+
+void ecs_add_intern(
+    ecs_world_t *world,
+    ecs_entity_info_t *info,
+    ecs_type_t type,
+    bool do_set);
 
 /* -- Stage API -- */
 

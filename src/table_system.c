@@ -888,7 +888,7 @@ ecs_entity_t _ecs_run_w_filter(
     }
 
     ecs_entity_info_t sys_info = {.entity = system};
-    EcsColSystem *system_data = get_ptr(real_world, &real_world->main_stage, 
+    EcsColSystem *system_data = ecs_get_ptr_intern(real_world, &real_world->main_stage, 
         &sys_info, EEcsColSystem, false, false);
     assert(system_data != NULL);
 
@@ -1002,7 +1002,7 @@ ecs_entity_t _ecs_run_w_filter(
                 ecs_entity_info_t entity_info = {.entity = ref.entity};
 
                 if (ref.entity != ECS_INVALID_ENTITY) {
-                    info.ref_ptrs[i] = get_ptr(real_world, &real_world->main_stage,
+                    info.ref_ptrs[i] = ecs_get_ptr_intern(real_world, &real_world->main_stage,
                         &entity_info, info.references[i].component, 
                         false, true);
                         

@@ -255,7 +255,7 @@ static
 void *next(
     EcsIter *iter)
 {
-    return (void*)next_w_key(iter, NULL);
+    return (void*)(uintptr_t)next_w_key(iter, NULL);
 }
 
 /** Resize number of buckets in a map */
