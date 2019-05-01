@@ -298,34 +298,38 @@ ecs_type_t copy_from_prefab(
 
         for (i = 0; i < add_count; i ++) {
             ecs_entity_t component = add_handles[i];
-            void *prefab_ptr = get_row_ptr(
-                prefab_table->type, prefab_table->columns,
-                row.index, component);
 
-            if (prefab_ptr) {
-                if (!columns) {
-                    if (world->in_progress) {
-                        columns = ecs_map_get(stage->data_stage, type_id);
-                    } else {
-                        columns = table->columns;
-                    }
-                }
+            /* Nothing to copy if this component is the prefab itself */
+            if (component != prefab) {
+                void *prefab_ptr = get_row_ptr(
+                    prefab_table->type, prefab_table->columns,
+                    row.index, component);
 
-                ecs_vector_t *type_arr = ecs_type_get(world, stage, type_id);
-                uint32_t column_index = ecs_type_index_of(type_arr, component);
-                uint32_t size = columns[column_index + 1].size;
-
-                if (size) {
-                    void *buffer = ecs_vector_first(columns[column_index + 1].data);
-                    void *ptr = ECS_OFFSET(buffer, offset * size);
-                    uint32_t i;
-                    for (i = 0; i < limit; i ++) {
-                        memcpy(ptr, prefab_ptr, size);
-                        ptr = ECS_OFFSET(ptr, size);
+                if (prefab_ptr) {
+                    if (!columns) {
+                        if (world->in_progress) {
+                            columns = ecs_map_get(stage->data_stage, type_id);
+                        } else {
+                            columns = table->columns;
+                        }
                     }
 
-                    /* Keep track of which components were set by prefabs */
-                    modified = ecs_type_add(world, stage, modified, component);
+                    ecs_vector_t *type_arr = ecs_type_get(world, stage, type_id);
+                    uint32_t column_index = ecs_type_index_of(type_arr, component);
+                    uint32_t size = columns[column_index + 1].size;
+
+                    if (size) {
+                        void *buffer = ecs_vector_first(columns[column_index + 1].data);
+                        void *ptr = ECS_OFFSET(buffer, offset * size);
+                        uint32_t i;
+                        for (i = 0; i < limit; i ++) {
+                            memcpy(ptr, prefab_ptr, size);
+                            ptr = ECS_OFFSET(ptr, size);
+                        }
+
+                        /* Keep track of which components were set by prefabs */
+                        modified = ecs_type_add(world, stage, modified, component);
+                    }
                 }
             }
         }
