@@ -123,7 +123,7 @@ void start_threads(
     ecs_assert(world->worker_threads == NULL, ECS_INTERNAL_ERROR, NULL);
 
     world->worker_threads = ecs_vector_new(&thread_arr_params, threads);
-    world->worker_stages = ecs_vector_new(&stage_arr_params, threads - 1);
+    world->worker_stages = ecs_vector_new(&stage_arr_params, threads);
 
     uint32_t i;
     for (i = 0; i < threads; i ++) {
@@ -135,15 +135,14 @@ void start_threads(
         thread->thread = 0;
         thread->job_count = 0;
 
+        thread->stage = ecs_vector_add(&world->worker_stages, &stage_arr_params);
+        ecs_stage_init(world, thread->stage);
+
         if (i != 0) {
-            thread->stage = ecs_vector_add(&world->worker_stages, &stage_arr_params);
-            ecs_stage_init(world, thread->stage);
             thread->thread = ecs_os_thread_new(ecs_worker, thread);
             if (!thread->thread) {
                 ecs_abort(ECS_THREAD_ERROR, NULL);
             }
-        } else {
-            thread->stage = NULL;
         }
     }
 }
@@ -264,7 +263,7 @@ void ecs_run_jobs(
 
     for (i = 0; i < job_count; i ++) {
         ecs_run_w_filter(
-            world, jobs[i]->system, world->delta_time, jobs[i]->offset, jobs[i]->limit, 0, NULL);
+            (ecs_world_t*)thread, jobs[i]->system, world->delta_time, jobs[i]->offset, jobs[i]->limit, 0, NULL);
     }
     thread->job_count = 0;
 

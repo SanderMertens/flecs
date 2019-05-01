@@ -98,11 +98,11 @@ ecs_table_t* bootstrap_component_table(
     result->columns = ecs_os_malloc(sizeof(ecs_table_column_t) * 3);
     ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    result->columns[0].data = ecs_vector_new(&handle_arr_params, 8);
+    result->columns[0].data = ecs_vector_new(&handle_arr_params, 12);
     result->columns[0].size = sizeof(ecs_entity_t);
-    result->columns[1].data = ecs_vector_new(&handle_arr_params, 8);
+    result->columns[1].data = ecs_vector_new(&handle_arr_params, 12);
     result->columns[1].size = sizeof(EcsComponent);
-    result->columns[2].data = ecs_vector_new(&handle_arr_params, 8);
+    result->columns[2].data = ecs_vector_new(&handle_arr_params, 12);
     result->columns[2].size = sizeof(EcsId);
 
     uint32_t index = ecs_vector_get_index(
@@ -228,15 +228,6 @@ void init_prefab(ecs_rows_t *rows) {
 }
 
 static
-void add_to_builder(
-    ecs_world_t *world,
-    ecs_entity_t prefab,
-    ecs_entity_t child)
-{
-    ecs_add(world, prefab, EcsPrefabBuilder);
-}
-
-static
 void set_prefab(ecs_rows_t *rows) {
     ecs_world_t *world = rows->world;
 
@@ -287,7 +278,6 @@ void set_prefab(ecs_rows_t *rows) {
         /* Add the prefab parent to the type of the entity */
         if (!prefab_parent_added && parent) {
             ecs_adopt(world, e, parent);
-            add_to_builder(world, parent, e);
         }
 
         /* Add the prefab parent flag to the type of the entity */

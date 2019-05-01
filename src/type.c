@@ -113,7 +113,7 @@ ecs_type_t register_type_from_buffer(
 
     if (!new_array) {
         new_array = ecs_vector_new_from_buffer(&handle_arr_params, count, buf);
-        ecs_map_set(type_index, new_id,  new_array);
+        ecs_map_set(type_index, new_id, new_array);
 
         if (!world->in_progress) {
             notify_create_type(world, stage, world->add_systems, new_id);
@@ -363,16 +363,17 @@ ecs_entity_t ecs_type_contains(
         return 0;
     }
 
-    assert(type_id_2 != 0);
+    ecs_assert(type_id_2 != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_vector_t *f_1 = ecs_type_get(world, stage, type_id_1);
-    ecs_vector_t *f_2 = ecs_type_get(world, stage, type_id_2);
-
-    assert(f_1 && f_2);
+    ecs_assert(f_1 != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (type_id_1 == type_id_2) {
-        return *(ecs_entity_t*)ecs_vector_get(f_1, &handle_arr_params, 0);
+        return *(ecs_entity_t*)ecs_vector_first(f_1);
     }
+
+    ecs_vector_t *f_2 = ecs_type_get(world, stage, type_id_2);
+    ecs_assert(f_2 != NULL, ECS_INTERNAL_ERROR, NULL);
 
     uint32_t i_2, i_1 = 0;
     ecs_entity_t *h2p, *h1p = ecs_vector_get(f_1, &handle_arr_params, i_1);

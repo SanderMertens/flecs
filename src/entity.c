@@ -1229,16 +1229,21 @@ ecs_entity_t ecs_entity_from_type(
     ecs_type_t type_id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
+    if (!type_id) {
+        return 0;
+    }
+    
     ecs_stage_t *stage = ecs_get_stage(&world);
 
     ecs_vector_t *type = ecs_map_get(world->main_stage.type_index, type_id);
     if (!type) {
         if (world->in_progress) {
             type = ecs_map_get(stage->type_index, type_id);
-        } else {
-            ecs_abort(ECS_UNKNOWN_TYPE_ID, NULL);
         }
     }
+
+    ecs_assert(type != NULL, ECS_UNKNOWN_TYPE_ID, NULL);
 
     /* If array contains n entities, it cannot be reduced to a single entity */
     if (ecs_vector_count(type) != 1) {
