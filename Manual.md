@@ -1180,7 +1180,7 @@ ECS frameworks typically store data in contiguous arrays where systems iterate o
 
 Command buffers however have several disadvantages. First of all, mutations are not visible until the next iteration. When a system adds a component, and subsequently tests if the component has been added, the test would return false, which is not intuitive. Another disadvantage is that applications need a different API while iterating.
 
-Flecs addresses this problem with a technique called "staging". Staging uses a data structure called a "staging area" which can be introspected by the API while iterating. In practice this means that Flecs API calls behave the same way inside iterations as outside iterations, and that there are no limitations on which _mutations_ can be executed while iterating. Staging is also an enabling feature for [multithreading](#staging-and-multithreading).
+Flecs uses an alternative solution called "staging". Staging uses a data structure (called a "stage" or "staging area") which stores the _result_ of operations instead of the operations themselves. The data structure behaves like a "branch" of the main (not staged) data store, and can be queried by the flecs API in much the same way as the main data store can be queried. This allows the Flecs API to mutate data without limitations, while still having access to the mutated data while iterating. This capability is also a key enabling feature for [multithreading](#staging-and-multithreading).
 
 The following code shows an example of a system that relies on staging:
 
@@ -1213,8 +1213,10 @@ int main(int argc, const char *argv[]) {
 }
 ```
 
+Note how you cannot tell from the API calls that staging is used. Flecs "knows" that the application is iterating over data, and when it is in this mode, all operations will automatically query and write to the stage.
+
 #### Staged vs. inline modifications
-When a system is iterating, it receives buffers to the component data. These buffers are not staged, as they provide direct access to the components in the Flecs store. Applications can choose to change the data in these buffers, which is referred to as "inline modications". An important decision system implementors have to make is whether to modify data inline, or whether to use staging. The following code example shows the difference between the two:
+When a system is iterating, it receives contiguous arrays with component data. These arrays are not staged, as they provide direct access to the components in the main data store. Applications can change the contents of these arrays, which is referred to as "inline modifications". An important decision system implementors have to make is whether to modify data inline, or whether to use staging. The following code example shows the difference between the two:
 
 ```c
 void System(ecs_rows_t *rows) {
@@ -1233,14 +1235,14 @@ void System(ecs_rows_t *rows) {
 }
 ```
 
-A staged modification, while much slower than an inline modification, has as advantage that the component is not changed until data is merged, which means that subsequent systems can still have access to the previous value. If a subsequently executed system wants to read the value set in the stage, it can use the `ecs_get_ptr` API.
+A staged modification, while much slower than an inline modification, has as advantage that the component is not changed until data is merged, which means that subsequent systems can still have access to the previous value. If a subsequently executed system wants to read the value set in the stage, it has to use the `ecs_get` API.
 
-A system _always_ receives the component buffers from the main Flecs store. If a previous system has added components to the stage, the only way to access these values is through the `ecs_get` or `ecs_get_ptr` API, as the buffers by Flecs (through the `ECS_COLUMN` macro) will always be from the main Flecs store. This provides systems with a built-in mechanism to have access to both previous and current value of a component.
+A system _always_ receives the component arrays from the main data store. If a previously executed system added components to the stage, the only way to access these values is through the `ecs_get` API.
 
-Using the stage, and `ecs_get` and `ecs_set` in general has a performance penalty however, and nothing beats the raw performance of inline reads/writes on a contiguous array. Expect application performance to take a significant hit when using these API calls versus using inline modifications.
+Using `ecs_get` and `ecs_set` has a performance penalty however as nothing beats the raw performance of inline reads/writes on a contiguous array. Expect application performance to take a significant hit when using these API calls versus using inline modifications.
 
-#### Staging and ecs_get_ptr
-When an application uses `ecs_get_ptr` while iterating, the operation may return a pointer to the main Flecs store or to the stage, depending on whether the component has been added to the stage. Consider the following example:
+#### Staging and ecs_get
+When an application uses `ecs_get` while iterating, the operation may return data from to the main data store or to the stage, depending on whether the component has been added to the stage. Consider the following example:
 
 ```c
 void System(ecs_rows_t *rows) {
@@ -1263,6 +1265,8 @@ void System(ecs_rows_t *rows) {
 }
 ```
 
+The `ecs_get_ptr` operation returns a pointer from the main data store _unless_ the component is staged.
+
 #### Overwriting the stage
 A single iteration may contain multiple operations on the same component. Consider the following example:
 
@@ -1281,12 +1285,16 @@ void System(ecs_rows_t *rows) {
 }
 ```
 
-In this sense, the stage behaves the same as the main Flecs data store. While the above example is not terribly useful, it is not inconceivable that systems and subsequent systems access and update the same component.
+The stage behaves the same as the main data store, in that it stores entities with their type, and tables in which all components for a type are stored. When a component is written twice in an iteration, it just means that its record in the staged table will be overwritten. This example is contrived, but it is not inconceivable that two subsequent systems modify the same component in a single iteration.
 
 #### Staging and EcsOnAdd, EcsOnSet and EcsOnRemove
-Systems that are executed while adding, setting and removing components (`EcsOnAdd`, `EcsOnSet`, `EcsOnRemove`) work also on staged components. When a system adds a component, for example, applicable `EcsOnAdd` systems will be executed. When a component is set, `EcsOnSet` systems will be executed. These systems are executed within the `ecs_add`/`ecs_set` operation, which ensures that the component value is usable immediately after the operation finishes.
+Systems that are executed after adding, setting and removing components (`EcsOnAdd`, `EcsOnSet`, `EcsOnRemove`) work also on staged components. When a component is added while iterating, the applicable `EcsOnAdd` systems will be called and the staged component will be exposed as a regular `ECS_COLUMN`. Note that this is different from regular (`EcsOnUpdate` etc) systems, where an `ECS_COLUMN` always returns an array from the main data store.
 
-`EcsOnRemove` systems however are not immediately ran after an `ecs_remove`. Such systems are typically used as destructors, and to clean up/free any resources that a component owns. As such, `EcsOnRemove` systems can invalidate component values, and accessing a component value after executing an `EcsOnRemove` is not safe. For this reason, `EcsOnRemove` systems are executed during the merge, and not while iterating. This ensures that for the duration of the iteration, it is guaranteed that component values passed into systems are valid.
+The `EcsOnAdd` and `EcsOnSet` systems are executed by the `ecs_add`/`ecs_set` operation. This means that data is always initialized by an `EcsOnAdd` system before `ecs_add` returns, and that any actions executed by an `EcsOnSet` system are executed before `ecs_set` returns.
+
+`EcsOnRemove` systems however are not immediately ran by `ecs_remove`. Such systems are typically used as destructors which clean up/free any resources that a component owns. As such, `EcsOnRemove` systems can invalidate component values, making accessing a component value after executing an `EcsOnRemove` unsafe. For this reason, `EcsOnRemove` systems are executed during the merge, and not while iterating. This ensures that for the duration of the iteration, it is guaranteed that component values passed into systems are valid.
+
+The folllowing code shows an example of an `EcsOnAdd` and `EcsOnRemove` system, and when they are executed:
 
 ```c
 void AddVelocity(ecs_rows_t *rows) {
@@ -1331,28 +1339,28 @@ int main(int argc, const char *argv[]) {
 ```
 
 #### Staging and system phases
-Flecs orders systems in different phases (see [System phases](#system-phases)), which are executed subsequently. To ensure that data is available between stages, Flecs by default performs a merge between each phase. This means for example that any components added or set during the `EcsPreUpdate` phase, will be merged with the main Flecs store in the `EcsOnUpdate` phase, and made available to systems in the subsequent phase through regular `ECS_COLUMN`s.
+Systems in Flecs can be be assigned to different phases (see [System phases](#system-phases)). To ensure that data is available between phases, a merge is performed between each phase. This means for example that any components added or set during the `EcsPreUpdate` phase, will be merged with the main data store before the `EcsOnUpdate` phase starts. This by default limits the effects of staging to a single phase, and can improve reusability of systems as they do not need to be aware of how systems in another phase used staging.
 
-Components are not merged inside a system phase, and the only way a system can access staged component data is through `ecs_get` or `ecs_get_ptr`.
+While merging after each phase is the default behavior, applications can choose to [manually merge data](#manually-merging-stages).
 
 #### Staging and threading
 Staging is the key enabler for multithreading in Flecs, as it provides a mechanism for mutating state in a thread-safe way without requiring locking. When an application is ran on multiple threads (using the `ecs_set_threads` operation) each thread receives its own private stage which the thread can read and write without having to synchronize with other threads.
 
-As a result, there are no limitations on adding/removing components, and creating/deleting entities from a thread. Invoking `ecs_add` or `ecs_set` from a thread is not significantly more expensive than calling it from a synchronous system, as both use the same mechanism to prevent operations from mutating the Flecs data store while iterating. At the end of every phase, stages are merged with the main data store just like a normal iteration, with the only difference that Flecs needs to merge N stages as opposed to just a single one.
+As a result, there are no limitations on adding/removing components, and creating/deleting entities from a thread. Invoking `ecs_add` or `ecs_set` from a thread is not significantly more expensive than calling it from a system executed on a single thread, as both use the same mechanism to prevent operations from mutating the Flecs data store while iterating. At the end of every phase, stages are merged with the main data store just like a normal iteration, with the only difference that Flecs needs to merge N stages as opposed to just a single one.
 
-This capability does not absolve applications from the responsibility of making sure access to component data is thread safe. The component data that systems receive through `ECS_COLUMN` still comes from the main Flecs store, and is shared between threads. To understand when it is safe and when it is not safe to access (and modify) this data, it is important to understand how Flecs splits up the workload for a systems.
-
-The following issue is not specific to staging, but describes a scenario where staging can provide a solution to a non-trivial multi threaded example:
+This capability does not absolve applications from the responsibility of making sure access to component data is thread safe. The component data that systems receive through `ECS_COLUMN` always comes from the main Flecs store, and is shared between threads. To understand when it is safe and when it is not safe to access (and modify) this data, it is important to understand how Flecs splits up the workload for a systems.
 
 Flecs distributes load in jobs, where the number of jobs generated is equal to the number of threads, and where each job will (roughly) process `number of matched entities / number of threads` entities. This distribution is stable, meaning that in the absense of mutations, threads are guaranteed to process the same entities in subsequent iterations.
 
-With this knowledge, applications can write systems that can safely modify component values inline without having to go through the stage, as every job will only read and write the entities it is allocated to. Things get trickier when systems _in the same phase_ access _and write_ the same components, and have _different component signatures_. Lets unpack this statement. 
+With this knowledge, applications can write systems that can safely modify component values inline without having to go through the stage, as every job will only read and write the entities that are allocated to it. Things get trickier when systems _in the same phase_ access _and write_ the same components, and have _different component signatures_. Lets unpack this statement. 
 
-Each phase introduces a sychronization point for Flecs. After running systems in a phase, all threads are synchronized and data is merged. Inside the phase however, system execution is not synchronized, and different systems in that phase may (and will) run at the same time. Imagine phase `EcsOnUpdate` defines systems `Foo` and `Bar` in that order, and that the systems are ran on two threads. System `Foo` writes- and `Bar` reads data from component `A`. Suppose `Foo` subscribes for `A`, while `Bar` subscribes for `A, B`.
+Each phase introduces a sychronization point for Flecs. After running systems in a phase, all threads are synchronized and data is merged. Inside the phase however, system execution is not synchronized, and different systems in that phase may (and will) run at any particular point in time. Imagine phase `EcsOnUpdate` defines systems `Foo` and `Bar` in that order, and that the systems are ran on two threads. System `Foo` writes- and system `Bar` reads data from component `A`. Suppose `Foo` subscribes for `A`, while `Bar` subscribes for `A, B`.
 
-Now suppose thread 1 finishes the job for `Foo` before thread 2. In that scenario, thread 1 starts processing `Bar` before thread 2 has finished processing `Foo`. Because system `Bar` has a different signature than `Foo`, it is matched to different entities. This means that an entity may be processed on thread 1 for `Foo`, but on thread 2 for `Bar`. As a result the `Bar` job of thread 1 may start reading data from `A` that thread 2 is still writing, which can result in race conditions.
+Now suppose thread 1 finishes the `Foo` job before thread 2. In that scenario, thread 1 starts processing the job for `Bar` before thread 2 has finished processing the job for `Foo`. Because system `Bar` has a different signature than `Foo`, it is matched to different entities. This means that an entity may be processed on thread 1 for `Foo`, but on thread 2 for `Bar`. As a result the `Bar` job of thread 1 may start reading data from `A` that thread 2 is still writing, which can result in race conditions.
 
 A straightforward solution to this problem could be to put `Foo` and `Bar` in different phases. This guarantees that `Bar` can access data from `Foo` in a reliable way within the same iteration. If `Bar` however should only use data from the main store, this problem could be addressed by making `Foo` write to the stage instead. That way, changes made by `Foo` will not be visible until the next phase, and `Bar` can safely access the data from `A` inline.
+
+To take the most advantage of staging and multithreading, it is important to understand how both mechanisms work. While Flecs makes it easier to write applications in a way that allows for fast processing of data by multiple threads, applications still need to take care to prevent race conditions. Simply adding more threads with `ecs_set_threads` in an application that is not written with multithreading in mind, will almost surely result in undefined behavior.
 
 #### Manually merging stages
 By default, Flecs merges data each iteration, for each phase. While a merge is relatively cheap (especially when there is not much to merge) merging may still incur overhead when there is lots of data to merge. For certain applications with high-throughput requirements, an application may want to take control over when Flecs performs a merge.
