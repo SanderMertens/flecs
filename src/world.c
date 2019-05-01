@@ -131,7 +131,7 @@ void bootstrap_component(
 
     /* Create record in entity index */
     ecs_row_t row = {.type_id = world->t_component, .index = index};
-    ecs_map_set(stage->entity_index, entity, ecs_from_row(row));
+    ecs_map_set64(stage->entity_index, entity, ecs_from_row(row));
 
     /* Set size and id */
     EcsComponent *component_data = ecs_vector_first(table->columns[1].data);
