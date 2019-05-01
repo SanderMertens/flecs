@@ -27,7 +27,7 @@
 
 /* -- Builtin component types -- */
 
-/** Metadata of an explicitly created type (identified by an entity id) */
+/** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
 typedef struct EcsTypeComponent {
     ecs_type_t type;    /* Preserved nested families */
     ecs_type_t resolved;  /* Resolved nested families */
@@ -39,7 +39,7 @@ typedef struct EcsTypeComponent {
  * There are two mechanisms required to accomplish this. The first one is to set
  * the 'parent' member in the EcsPrefab component, for the child entity of the
  * prefab. This acts as a front-end for another mechanism, that ensures that
- * child entities for different prefab parents are added to different tables, As
+ * child entities for different prefab parents are added to different tables. As
  * a result of setting a parent in EcsPrefab, Flecs will:
  * 
  *  - Add the prefab to the entity type

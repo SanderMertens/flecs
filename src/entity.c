@@ -385,16 +385,14 @@ uint32_t commit_w_type(
     ecs_type_t to_remove,
     bool do_set)
 {
-    ecs_table_t *old_table, *new_table = NULL;
+    ecs_table_t *new_table = NULL, *old_table;
     ecs_table_column_t *new_columns = NULL, *old_columns;
-    ecs_map_t *entity_index;
+    ecs_map_t *entity_index = stage->entity_index;
     ecs_type_t old_type_id = 0;
     int32_t new_index = 0, old_index = 0;
     bool in_progress = world->in_progress;
     ecs_entity_t entity = info->entity;
     ecs_vector_t *old_type = NULL;
-
-    entity_index = stage->entity_index;
 
     /* Always update remove_merge stage when in progress. It is possible (and
      * likely) that when a component is removed, it hasn't been added in the
@@ -415,10 +413,15 @@ uint32_t commit_w_type(
 
     if ((old_table = info->table)) {
         old_type_id = info->type_id;
+
+        /* If the type id is the same as that of the table where the entity is
+         * currently stored, nothing needs to be committed. */
         if (old_type_id == type_id) {
             return info->index;
         }
 
+        /* If committing while iterating, obtain component columns from the
+         * stage. Otherwise, obtain columns from the table directly. */
         old_index = info->index;
         if (in_progress) {
             old_columns = ecs_map_get(stage->data_stage, old_type_id);
@@ -429,10 +432,17 @@ uint32_t commit_w_type(
         old_type = old_table->type;
     }
 
+    /* If the entity has a negative index, it is being monitored for changes and
+     * requires rematching systems when components are added or removed. This
+     * ensures that systems that rely on components from containers or prefabs
+     * update the matched tables when the application adds or removes a 
+     * component from, for example, a container. */
     if (old_index < 0) {
         world->should_match = true;
     }
 
+    /* If the new type contains components (that is, it is not 0) obtain the new
+     * table and new columns. */
     if (type_id) {
         ecs_vector_t *old_table_db = stage->tables;
         new_table = ecs_world_get_table(world, stage, type_id);
@@ -441,6 +451,8 @@ uint32_t commit_w_type(
             old_table = ecs_world_get_table(world, stage, info->type_id);
         }
 
+        /* This operation will automatically obtain components from the stage if
+         * the application is iterating. */
         new_columns = ecs_table_get_columns(world, stage, new_table);
         ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, 0);
 
@@ -448,11 +460,14 @@ uint32_t commit_w_type(
         ecs_assert(new_index != 0, ECS_INTERNAL_ERROR, 0);
     }
 
+    /* Copy components from old table to new table, only if the entity was not
+     * empty, and will not be empty */
     if (old_type_id && type_id) {
         copy_row(new_table->type, new_columns, new_index, 
             old_type, old_columns, old_index);
     }
 
+    /* Update the entity index so that it points to the new table */
     if (type_id) {
         ecs_row_t new_row = (ecs_row_t){.type_id = type_id, .index = new_index};
 
@@ -512,7 +527,7 @@ uint32_t commit_w_type(
         if (to_add) {
             systems_called = notify_after_commit(world, stage, entity, new_table, 
                     new_columns, new_index - 1, 1, type_id, to_add, do_set);
-        }     
+        }
     }
 
     /* Update entity info */
@@ -559,7 +574,8 @@ ecs_type_t ecs_notify(
 
         for (i = 0; i < count; i ++) {
             ecs_type_t m = ecs_notify_row_system(
-                world, buffer[i], table->type, table, table_columns, offset, limit);
+                world, buffer[i], table->type, table, table_columns, offset, 
+                limit);
             
             if (i) {
                 modified = ecs_type_merge(world, stage, modified, m, 0);
