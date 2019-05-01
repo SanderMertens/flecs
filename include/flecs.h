@@ -1041,6 +1041,27 @@ ecs_entity_t ecs_lookup(
     ecs_world_t *world,
     const char *id);
 
+/** Lookup child of parent by id.
+ * This operation is the same as ecs_lookup, except for that it only searches
+ * entities that are children of the specified parent.
+ * 
+ * This operation can also be used to only lookup entities with a certain
+ * component, in the following way:
+ * 
+ * ecs_lookup_child(world, ecs_entity(Component), "child_id");
+ * 
+ * Here, 'Component' refers to the component (type) identifier.
+ * 
+ * @param world The world.
+ * @param parent The parent.
+ * @param id The id to lookup.
+ * @returns The entity handle if found, or 0 if not found.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup_child(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *id);
 
 /* -- Type API -- */
 

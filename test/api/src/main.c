@@ -140,6 +140,13 @@ void Set_set_remove_other(void);
 void Set_set_remove_twice(void);
 void Set_set_and_new(void);
 
+// Testsuite 'Lookup'
+void Lookup_lookup(void);
+void Lookup_lookup_component(void);
+void Lookup_lookup_not_found(void);
+void Lookup_lookup_child(void);
+void Lookup_lookup_child_w_component(void);
+
 // Testsuite 'Singleton'
 void Singleton_set(void);
 void Singleton_set_ptr(void);
@@ -993,6 +1000,32 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_and_new",
                 .function = Set_set_and_new
+            }
+        }
+    },
+    {
+        .id = "Lookup",
+        .testcase_count = 5,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "lookup",
+                .function = Lookup_lookup
+            },
+            {
+                .id = "lookup_component",
+                .function = Lookup_lookup_component
+            },
+            {
+                .id = "lookup_not_found",
+                .function = Lookup_lookup_not_found
+            },
+            {
+                .id = "lookup_child",
+                .function = Lookup_lookup_child
+            },
+            {
+                .id = "lookup_child_w_component",
+                .function = Lookup_lookup_child_w_component
             }
         }
     },
@@ -2336,5 +2369,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 31);
+    return bake_test_run("api", argc, argv, suites, 32);
 }

@@ -161,6 +161,15 @@
                 "set_and_new"
             ]
         }, {
+            "id": "Lookup",
+            "testcases": [
+                "lookup",
+                "lookup_component",
+                "lookup_not_found",
+                "lookup_child",
+                "lookup_child_w_component"
+            ]
+        }, {
             "id": "Singleton",
             "testcases": [
                 "set",
@@ -456,7 +465,7 @@
                 "5_thread_test_combs_100_entity_2_types",
                 "6_thread_test_combs_100_entity_2_types"
             ]
-        },{
+        }, {
             "id": "SingleThreadStaging",
             "testcases": [
                 "new_empty",

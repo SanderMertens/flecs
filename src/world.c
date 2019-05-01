@@ -830,8 +830,9 @@ void _ecs_dim_type(
     }
 }
 
-ecs_entity_t ecs_lookup(
+ecs_entity_t ecs_lookup_child(
     ecs_world_t *world,
+    ecs_entity_t parent,
     const char *id)
 {
     ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
@@ -841,6 +842,10 @@ ecs_entity_t ecs_lookup(
         int16_t column_index;
 
         if ((column_index = ecs_type_index_of(tables[t].type, EEcsId)) == -1) {
+            continue;
+        }
+
+        if (parent && ecs_type_index_of(tables[t].type, parent) == -1) {
             continue;
         }
 
@@ -856,7 +861,14 @@ ecs_entity_t ecs_lookup(
         }
     }
 
-    return 0;
+    return 0;    
+}
+
+ecs_entity_t ecs_lookup(
+    ecs_world_t *world,
+    const char *id)
+{
+    return ecs_lookup_child(world, 0, id);
 }
 
 static
