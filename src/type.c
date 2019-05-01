@@ -109,8 +109,11 @@ ecs_type_t register_type_from_buffer(
 
     type_index = stage->type_index;
 
-    ecs_vector_t *new_array = ecs_map_get(type_index, new_id);
-
+    ecs_vector_t *new_array = ecs_map_get(world->main_stage.type_index, new_id);
+    if (!new_array) {
+        ecs_map_get(type_index, new_id);
+    }
+    
     if (!new_array) {
         new_array = ecs_vector_new_from_buffer(&handle_arr_params, count, buf);
         ecs_map_set(type_index, new_id, new_array);
