@@ -1655,8 +1655,9 @@ void _ecs_assert(
 /** Wrapper around ecs_new_entity. */ 
 #define ECS_ENTITY(world, id, ...)\
     ecs_entity_t id = ecs_new_entity(world, #id, #__VA_ARGS__);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
-    assert (id != 0)
+    (void)ecs_type(id);
 
 /** Wrapper around ecs_new_component.
  * This macro provides a convenient way to register components with a world. It
