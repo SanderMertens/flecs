@@ -66,8 +66,7 @@ void copy_row(
     }
 }
 
-static
-void* get_row_ptr(
+void* ecs_get_row_ptr(
     ecs_vector_t *type,
     ecs_table_column_t *columns,
     int32_t index,
@@ -108,6 +107,8 @@ bool populate_info(
         if (row_64) {
             ecs_row_t row = ecs_to_row(row_64);
 
+            ecs_assert(row.type_id != 0, ECS_INTERNAL_ERROR, NULL);
+
             ecs_table_t *table = ecs_world_get_table(world, stage, row.type_id);
             info->table = table;
 
@@ -117,8 +118,11 @@ bool populate_info(
                 info->columns = table->columns;
             }
 
+            ecs_assert(info->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
             info->index = row.index;
             info->type_id = row.type_id;
+
             return true;
         }
     } else {
@@ -146,7 +150,7 @@ void* ecs_get_ptr_intern(
     if (world->in_progress && stage != &world->main_stage) {
         if (populate_info(world, stage, info)) {
             populated = true;
-            ptr = get_row_ptr(info->table->type, info->columns, info->index, component);
+            ptr = ecs_get_row_ptr(info->table->type, info->columns, info->index, component);
         }
 
         if (!ptr) {
@@ -172,7 +176,7 @@ void* ecs_get_ptr_intern(
             *info = (ecs_entity_info_t){.entity = entity};
         }
         if (populate_info(world, &world->main_stage, info)) {
-            ptr = get_row_ptr(info->table->type, info->columns, info->index, component);
+            ptr = ecs_get_row_ptr(info->table->type, info->columns, info->index, component);
         }
 
         if (ptr) return ptr;
@@ -261,94 +265,6 @@ bool notify_post_merge(
     return result;
 }
 
-/** Copy default values from base (and base of base) prefabs */
-static
-ecs_type_t copy_from_prefab(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_entity_t entity,
-    uint32_t offset,
-    uint32_t limit,
-    ecs_type_t type_id,
-    ecs_type_t to_add)
-{
-    ecs_entity_t prefab;
-    ecs_type_t entity_type = type_id;
-    ecs_type_t modified = 0;
-    ecs_table_column_t *columns = NULL;
-
-    if (world->in_progress) {
-        uint64_t row64 = ecs_map_get64(stage->entity_index, entity);
-        if (row64) {
-            ecs_row_t row = ecs_to_row(row64);
-            entity_type = row.type_id;
-        }
-    }
-
-    while ((prefab = ecs_map_get64(world->prefab_index, entity_type))) {
-        /* Prefabs are only resolved from the main stage. Prefabs created while
-         * iterating cannot be resolved in the same iteration. */
-        ecs_row_t prefab_row = ecs_to_row(ecs_map_get64(world->main_stage.entity_index, prefab));
-
-        ecs_table_t *prefab_table = ecs_world_get_table(
-            world, stage, prefab_row.type_id);
-        ecs_vector_t *prefab_type = prefab_table->type;
-        ecs_table_column_t *prefab_columns = prefab_table->columns;
-
-        ecs_vector_t *add_type = ecs_type_get(world, stage, to_add);
-        ecs_entity_t *add_handles = ecs_vector_first(add_type);
-        uint32_t i, add_count = ecs_vector_count(add_type);
-
-        for (i = 0; i < add_count; i ++) {
-            ecs_entity_t component = add_handles[i];
-
-            /* Nothing to copy if this component is the prefab itself */
-            if (component != prefab) {
-                void *prefab_ptr = get_row_ptr(prefab_type, prefab_columns, 
-                    prefab_row.index, component);
-
-                if (prefab_ptr) {
-                    if (!columns) {
-                        if (world->in_progress) {
-                            columns = ecs_map_get(stage->data_stage, type_id);
-                        } else {
-                            columns = table->columns;
-                        }
-                    }
-
-                    ecs_vector_t *type_arr = ecs_type_get(world, stage, type_id);
-                    uint32_t column_index = ecs_type_index_of(type_arr, component);
-                    uint32_t size = columns[column_index + 1].size;
-
-                    if (size) {
-                        void *buffer = ecs_vector_first(columns[column_index + 1].data);
-                        void *ptr = ECS_OFFSET(buffer, offset * size);
-                        uint32_t i;
-                        for (i = 0; i < limit; i ++) {
-                            memcpy(ptr, prefab_ptr, size);
-                            ptr = ECS_OFFSET(ptr, size);
-                        }
-
-                        /* Keep track of which components were set by prefabs */
-                        modified = ecs_type_add(world, stage, modified, component);
-                    }
-                }
-            } else {
-                /* If the prefab itself is added, test if the prefab has any
-                 * children that need to be instantiated for the entity */
-                EcsPrefabBuilder *builder = get_row_ptr(prefab_type, prefab_columns, 
-                    prefab_row.index, EEcsPrefabBuilder);
-            }
-        }
-
-        /* Recursively search through prefabs */
-        entity_type = prefab_row.type_id;
-    }
-
-    return modified;
-}
-
 static
 bool notify_after_commit(
     ecs_world_t *world,
@@ -368,7 +284,7 @@ bool notify_after_commit(
         world, stage, table, columns, offset, limit, to_add, 
         world->type_sys_add_index);
 
-    ecs_type_t overridden = copy_from_prefab(
+    ecs_type_t overridden = ecs_copy_from_prefab(
         world, stage, table, entity, offset, limit, type_id, to_add);
 
     /* Invoke OnSet handlers if components received their first value */
@@ -386,7 +302,8 @@ bool notify_after_commit(
     return initialized || overridden || modified;
 }
 
-/** Commit an entity with a specified type to memory */
+/** Commit an entity with a specified type to a table (probably the most 
+ * important function in flecs). */
 static
 uint32_t commit_w_type(
     ecs_world_t *world,
@@ -435,6 +352,7 @@ uint32_t commit_w_type(
         /* If committing while iterating, obtain component columns from the
          * stage. Otherwise, obtain columns from the table directly. */
         old_index = info->index;
+        
         if (in_progress) {
             old_columns = ecs_map_get(stage->data_stage, old_type_id);
         } else {
