@@ -239,6 +239,13 @@ typedef struct ecs_stage_t {
      * not on the main stage */
     ecs_map_t *data_stage;         /* Arrays with staged component values */
     ecs_map_t *remove_merge;       /* All removed components before merge */
+
+    /* Keep track of changes so
+     * code knows when entity
+     * info is invalidated */
+    uint32_t commit_count;
+    ecs_type_t from_type;
+    ecs_type_t to_type;
 } ecs_stage_t;
 
 /** Supporting type that internal functions pass around to ensure that data
@@ -249,6 +256,10 @@ typedef struct ecs_entity_info_t {
     uint32_t index;
     ecs_table_t *table;
     ecs_table_column_t *columns;
+
+    /* Used for determining if ecs_entity_info_t should be invalidated */
+    ecs_stage_t *stage;
+    uint32_t commit_count;
 } ecs_entity_info_t;
 
 /** A type describing a unit of work to be executed by a worker thread. */ 

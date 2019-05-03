@@ -641,3 +641,105 @@ void SystemOnAdd_new_w_count_match_1_of_1() {
 
     ecs_fini(world);
 }
+
+static
+void AddVelocity(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    ProbeSystem(rows);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        p[i].x = 1;
+        p[i].y = 2;
+        ecs_add(rows->world, rows->entities[i], Velocity);
+    }
+}
+
+void SystemOnAdd_override_after_add_in_on_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_PREFAB(world, Prefab, Position);
+    ecs_set(world, Prefab, Position, {1, 2});
+
+    ECS_SYSTEM(world, AddVelocity, EcsOnAdd, Position, ID.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Prefab);
+    test_assert(e != 0);
+
+    test_int(ctx.count, 0);
+
+    ecs_add(world, e, Position);
+    test_assert( ecs_has(world, e, Position));
+    test_assert( ecs_has(world, e, Velocity));
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, AddVelocity);
+    test_int(ctx.column_count, 2);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
+
+static
+void OnSetPosition(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        p[i].x ++;
+        p[i].y ++;
+    }
+}
+
+void SystemOnAdd_set_after_add_in_on_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, AddVelocity, EcsOnAdd, Position, ID.Velocity);
+    ECS_SYSTEM(world, OnSetPosition, EcsOnSet, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    test_int(ctx.count, 0);
+
+    ecs_add(world, e, Position);
+    test_assert( ecs_has(world, e, Position));
+    test_assert( ecs_has(world, e, Velocity));
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, AddVelocity);
+    test_int(ctx.column_count, 2);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+
+    ecs_fini(world);
+}

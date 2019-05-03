@@ -70,11 +70,9 @@ void ecs_add_intern(
 ecs_type_t ecs_copy_from_prefab(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_entity_t entity,
+    ecs_entity_info_t *info,
     uint32_t offset,
     uint32_t limit,
-    ecs_type_t type_id,
     ecs_type_t to_add);
 
 /* Initialize prefab component */

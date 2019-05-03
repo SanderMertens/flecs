@@ -120,6 +120,10 @@ void ecs_stage_init(
         stage->data_stage = ecs_map_new(0);
         stage->remove_merge = ecs_map_new(0);
     }
+
+    stage->commit_count = 0;
+    stage->to_type = 0;
+    stage->from_type = 0;
 }
 
 void ecs_stage_deinit(

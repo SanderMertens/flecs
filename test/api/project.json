@@ -218,7 +218,9 @@
                 "clone_match_2_of_3",
                 "add_again_1",
                 "set_again_1",
-                "add_again_2"
+                "add_again_2",
+                "override_after_add_in_on_add",
+                "set_after_add_in_on_add"
             ]
         }, {
             "id": "SystemOnRemove",

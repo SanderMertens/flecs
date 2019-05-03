@@ -125,25 +125,24 @@ void EcsSetPrefab(ecs_rows_t *rows) {
 ecs_type_t ecs_copy_from_prefab(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_entity_t entity,
+    ecs_entity_info_t *info,
     uint32_t offset,
     uint32_t limit,
-    ecs_type_t type_id,
     ecs_type_t to_add)
 {
-    ecs_entity_t prefab;
+    ecs_entity_t prefab, entity = info->entity;
+    ecs_type_t type_id = info->type_id;
     ecs_type_t entity_type = type_id;
     ecs_type_t modified = 0;
-    ecs_table_column_t *columns = NULL;
+    ecs_table_column_t *columns = info->columns;
 
-    if (world->in_progress) {
+/*    if (world->in_progress) {
         uint64_t row64 = ecs_map_get64(stage->entity_index, entity);
         if (row64) {
             ecs_row_t row = ecs_to_row(row64);
             entity_type = row.type_id;
         }
-    }
+    }*/
 
     while ((prefab = ecs_map_get64(world->prefab_index, entity_type))) {
         /* Prefabs are only resolved from the main stage. Prefabs created while
@@ -173,14 +172,6 @@ ecs_type_t ecs_copy_from_prefab(
                     prefab_row.index, component);
 
                 if (prefab_ptr) {
-                    if (!columns) {
-                        if (world->in_progress) {
-                            columns = ecs_map_get(stage->data_stage, type_id);
-                        } else {
-                            columns = table->columns;
-                        }
-                    }
-
                     ecs_vector_t *type_arr = ecs_type_get(world, stage, type_id);
                     uint32_t column_index = ecs_type_index_of(type_arr, component);
                     uint32_t size = columns[column_index + 1].size;
