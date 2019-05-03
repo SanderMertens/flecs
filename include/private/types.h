@@ -56,21 +56,12 @@ typedef struct EcsPrefabParent {
     ecs_entity_t parent;
 } EcsPrefabParent;
 
-/* Component used to instantiate entities from a prefab hierarchy. */
-typedef enum ecs_builder_op_kind_t {
-    EcsBuilderNew,
-    EcsBuilderPush,
-    EcsBuilderPop
-} ecs_builder_op_kind_t;
-
 typedef struct ecs_builder_op_t {
-    ecs_builder_op_kind_t kind;
     const char *id;
     ecs_type_t type;
 } ecs_builder_op_t;
 
 typedef struct EcsPrefabBuilder {
-    uint32_t stack_depth;
     ecs_vector_t *ops; /* ecs_builder_op_t */
 } EcsPrefabBuilder;
 

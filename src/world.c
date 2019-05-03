@@ -572,7 +572,7 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsTypeComponent, ECS_TYPE_COMPONENT_ID, sizeof(EcsTypeComponent));
     bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_ID, sizeof(EcsPrefab));
     bootstrap_component(world, table, EEcsPrefabParent, ECS_PREFAB_PARENT_ID, sizeof(EcsPrefabParent));
-    bootstrap_component(world, table, EEcsPrefabBuilder, ECS_PREFAB_BUILDER_ID, sizeof(EEcsPrefabBuilder));
+    bootstrap_component(world, table, EEcsPrefabBuilder, ECS_PREFAB_BUILDER_ID, sizeof(EcsPrefabBuilder));
     bootstrap_component(world, table, EEcsRowSystem, ECS_ROW_SYSTEM_ID, sizeof(EcsRowSystem));
     bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_ID, sizeof(EcsColSystem));
     bootstrap_component(world, table, EEcsId, ECS_ID_ID, sizeof(EcsId));

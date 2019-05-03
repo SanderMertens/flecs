@@ -135,14 +135,17 @@ void ecs_log_debug(const char *fmt, va_list args) {
     }
 }
 
-
 void ecs_os_dbg(const char *fmt, ...) {
+#ifndef NDEBUG
     va_list args;
     va_start(args, fmt);
     if (ecs_os_api.log_debug) {
         ecs_os_api.log_debug(fmt, args);
     }
     va_end(args);
+#else
+    (void)fmt;
+#endif
 }
 
 void ecs_os_log(const char *fmt, ...) {

@@ -1,4 +1,6 @@
-#include "include/private/flecs.h"
+#include <include/private/flecs.h>
+
+static ecs_vector_params_t builder_params = {.element_size = sizeof(ecs_builder_op_t)};
 
 static
 ecs_entity_t get_prefab_parent_flag(
@@ -25,8 +27,17 @@ void add_prefab_child_to_builder(
     if (!builder) {
         ecs_add(world, prefab, EcsPrefabBuilder);
         builder = ecs_get_ptr(world, prefab, EcsPrefabBuilder);
-        builder->stack_depth = 0;
+        builder->ops = ecs_vector_new(&builder_params, 1);
     }
+
+    ecs_type_t child_type = _ecs_merge_type(world, 
+        ecs_type_from_entity(world, child), ecs_type(EcsId), 0);
+
+    /* If there are no child ops, this is the first time that this child is
+     * added to this parent prefab. Simply add it to the vector */
+    ecs_builder_op_t *op = ecs_vector_add(&builder->ops, &builder_params);
+    op->id = ecs_get_id(world, child);
+    op->type = child_type;
 }
 
 /* -- Systems -- */
@@ -138,6 +149,7 @@ ecs_type_t ecs_copy_from_prefab(
         /* Prefabs are only resolved from the main stage. Prefabs created while
          * iterating cannot be resolved in the same iteration. */
         ecs_row_t prefab_row = ecs_to_row(ecs_map_get64(world->main_stage.entity_index, prefab));
+        bool is_prefab = false;
 
         ecs_table_t *prefab_table = ecs_world_get_table(
             world, stage, prefab_row.type_id);
@@ -151,8 +163,12 @@ ecs_type_t ecs_copy_from_prefab(
         for (i = 0; i < add_count; i ++) {
             ecs_entity_t component = add_handles[i];
 
-            /* Nothing to copy if this component is the prefab itself */
-            if (component != prefab) {
+            /* Keep track of whether this entity is a prefab */
+            if (component == EEcsPrefab) {
+                is_prefab = true;
+
+            /* Nothing to copy if this component is the prefab itself */                
+            } else if (component != prefab) {
                 void *prefab_ptr = ecs_get_row_ptr(prefab_type, prefab_columns, 
                     prefab_row.index, component);
 
@@ -183,10 +199,49 @@ ecs_type_t ecs_copy_from_prefab(
                     }
                 }
             } else {
-                /* If the prefab itself is added, test if the prefab has any
-                 * children that need to be instantiated for the entity */
-                EcsPrefabBuilder *builder = ecs_get_row_ptr(prefab_type, prefab_columns, 
-                    prefab_row.index, EEcsPrefabBuilder);
+                EcsPrefabBuilder *builder = ecs_get_row_ptr(prefab_type, 
+                    prefab_columns, prefab_row.index, EEcsPrefabBuilder);
+
+                /* If the current entity is not a prefab itself, and the prefab
+                 * has children, add the children to the entity. */
+                if (!is_prefab) {
+                    if (builder && builder->ops) {
+                        int32_t i, count = ecs_vector_count(builder->ops);
+                        ecs_builder_op_t *ops = ecs_vector_first(builder->ops);
+
+                        for (i = 0; i < count; i ++) {
+                            ecs_builder_op_t *op = &ops[i];
+                            ecs_entity_t child = _ecs_new(world, op->type);
+                            ecs_adopt(world, child, entity);
+                            ecs_set(world, child, EcsId, {op->id});
+                        }
+                    }
+
+                /* If the current entity is also prefab, do not add children to
+                 * it. Instead, add children (if any) of its base to its ops */
+                } else if (builder) {
+                    /* TODO */
+
+                    /*ecs_entity_info_t info = {.entity = entity};
+                    EcsPrefabBuilder *entity_builder = ecs_get_ptr_intern(world, 
+                        stage, &info, EEcsPrefabBuilder, false, false);
+
+                    if (!entity_builder) {
+                        ecs_add(world, entity, EcsPrefabBuilder);
+                        entity_builder = ecs_get_ptr(world, entity, EcsPrefabBuilder);
+                        entity_builder->ops = NULL;
+                    }
+
+                    uint32_t count = ecs_vector_count(builder->ops);
+                    void *new_ops = ecs_vector_addn(
+                        &entity_builder->ops, &builder_params, count);
+                    
+                    memcpy(new_ops, ecs_vector_first(builder->ops), 
+                        sizeof(ecs_builder_op_t) * count);
+
+                    printf("copy %d ops to prefab %lld (%s) from prefab %s (%lld)\n", 
+                        count, entity, ecs_get_id(world, entity), ecs_get_id(world, prefab), prefab);*/
+                }
             }
         }
 
