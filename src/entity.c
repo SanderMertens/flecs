@@ -101,9 +101,7 @@ bool populate_info(
 {
     bool needs_update = false;
 
-    if (!info->table) {
-        needs_update = true;
-    } else if (info->stage != stage) {
+    if (info->stage != stage) {
         needs_update = true;
     } else {
         int diff = stage->commit_count - info->commit_count;
@@ -122,6 +120,9 @@ bool populate_info(
         ecs_entity_t entity = info->entity;
         ecs_map_t *entity_index = stage->entity_index;
         uint64_t row_64 = ecs_map_get64(entity_index, entity);
+
+        info->commit_count = stage->commit_count;
+        info->stage = stage;
 
         if (row_64) {
             ecs_row_t row = ecs_to_row(row_64);
@@ -144,11 +145,8 @@ bool populate_info(
 
             return true;
         }
-
-        info->commit_count = stage->commit_count;
-        info->stage = stage;
     } else {
-        return true;
+        return info->table != NULL;
     }
 
     return false;
