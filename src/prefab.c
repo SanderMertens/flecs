@@ -211,9 +211,7 @@ ecs_type_t ecs_copy_from_prefab(
                 /* If the current entity is also prefab, do not add children to
                  * it. Instead, add children (if any) of its base to its ops */
                 } else if (builder) {
-                    /* TODO */
-
-                    /*ecs_entity_info_t info = {.entity = entity};
+                    ecs_entity_info_t info = {.entity = entity};
                     EcsPrefabBuilder *entity_builder = ecs_get_ptr_intern(world, 
                         stage, &info, EEcsPrefabBuilder, false, false);
 
@@ -229,9 +227,6 @@ ecs_type_t ecs_copy_from_prefab(
                     
                     memcpy(new_ops, ecs_vector_first(builder->ops), 
                         sizeof(ecs_builder_op_t) * count);
-
-                    printf("copy %d ops to prefab %lld (%s) from prefab %s (%lld)\n", 
-                        count, entity, ecs_get_id(world, entity), ecs_get_id(world, prefab), prefab);*/
                 }
             }
         }

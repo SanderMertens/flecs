@@ -301,6 +301,8 @@ bool notify_after_commit(
     ecs_type_t overridden = ecs_copy_from_prefab(
         world, stage, info, offset, limit, to_add);
 
+    populate_info(world, stage, info);
+
     /* Invoke OnSet handlers if components received their first value */
     if (do_set) {
         if (initialized || overridden) {
