@@ -454,38 +454,6 @@ void deinit_tables(
     }
 }
 
-/* Spoof EcsAdnin type (needed until we have proper reflection) */
-typedef uint16_t EcsAdmin;
-
-static
-void load_admin(
-    ecs_world_t *world,
-    const char *exec,
-    uint16_t port)
-{
-    if (ecs_import_from_library(
-        world, "flecs.systems.civetweb", NULL, 0) == ECS_INVALID_ENTITY) 
-    {
-        return;
-    }
-    
-    if (ecs_import_from_library(
-        world, "flecs.systems.admin", NULL, 0) == ECS_INVALID_ENTITY)
-    {
-        return;
-    }
-
-    /* Enable monitoring */
-    ecs_measure_frame_time(world, true);
-    ecs_measure_system_time(world, true);
-
-    /* Create admin instance */
-    ecs_entity_t admin = ecs_lookup(world, "EcsAdmin");
-    ecs_type_t TEcsAdmin = ecs_type_from_entity(world, admin);
-    ecs_set(world, 0, EcsAdmin, {port});
-
-    ecs_os_log("Admin is running on port %d", port);
-}
 
 
 /* -- Public functions -- */
@@ -644,7 +612,7 @@ ecs_world_t* ecs_init_w_args(
                 i ++);
 
             ARG(0, "admin", 
-                load_admin(world, argv[0], atoi(argv[i + 1]));
+				ecs_enable_admin(world, atoi(argv[i + 1]));
                 i ++);
 
             /* Ignore arguments that were not parsed */
@@ -1079,6 +1047,39 @@ void ecs_set_target_fps(
         ecs_measure_frame_time(world, true);
         world->target_fps = fps;
     }
+}
+
+/* Spoof EcsAdmin type (needed until we have proper reflection) */
+typedef uint16_t EcsAdmin;
+
+int ecs_enable_admin(
+	ecs_world_t* world,
+	uint16_t port)
+{
+    if (ecs_import_from_library(
+        world, "flecs.systems.civetweb", NULL, 0) == ECS_INVALID_ENTITY) 
+    {
+        return 1;
+    }
+    
+    if (ecs_import_from_library(
+        world, "flecs.systems.admin", NULL, 0) == ECS_INVALID_ENTITY)
+    {
+        return 2;
+    }
+
+    /* Enable monitoring */
+    ecs_measure_frame_time(world, true);
+    ecs_measure_system_time(world, true);
+
+    /* Create admin instance */
+    ecs_entity_t admin = ecs_lookup(world, "EcsAdmin");
+    ecs_type_t TEcsAdmin = ecs_type_from_entity(world, admin);
+    ecs_set(world, 0, EcsAdmin, {port});
+
+    ecs_os_log("Admin is running on port %d", port);
+
+    return 0;
 }
 
 void* ecs_get_context(
