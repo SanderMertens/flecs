@@ -295,6 +295,8 @@ void add_table(
                     ref_data[ref].component = component;
                     ref ++;
 
+                    ecs_set_watching(world, e, true);
+
                     /* Negative number indicates ref instead of offset to ecs_data */
                     table_data[i] = -ref;
                     table_data[REFS_COUNT] ++;
@@ -1005,7 +1007,7 @@ ecs_entity_t _ecs_run_w_filter(
                     info.ref_ptrs[i] = ecs_get_ptr_intern(real_world, &real_world->main_stage,
                         &entity_info, info.references[i].component, 
                         false, true);
-                        
+
                     ecs_assert(info.ref_ptrs[i] != NULL, 
                         ECS_UNRESOLVED_REFERENCE, ecs_get_id(world, system));
                 } else {
