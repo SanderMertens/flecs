@@ -1392,3 +1392,41 @@ void Prefab_prefab_w_child_w_base_w_children() {
     test_int(p_base_child->x, 4);
     test_int(p_base_child->y, 5);
 }
+
+void Prefab_prefab_w_child_new_w_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+        ecs_set(world, Parent, Position, {1, 2});
+
+        ECS_ENTITY(world, Child, EcsPrefab, Position);
+            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+            ecs_set(world, Child, Position, {2, 3});
+
+    ecs_entity_t e = ecs_new_w_count(world, Parent, 3);
+    test_assert(e != 0);
+
+    int end = e + 3;
+    for (; e < end; e ++) {
+        test_assert( ecs_has(world, e, Position));
+
+        Position *p_e = ecs_get_ptr(world, e, Position);
+        test_assert(p_e != NULL);
+        test_int(p_e->x, 1);
+        test_int(p_e->y, 2);
+
+        ecs_entity_t e_child = ecs_lookup_child(world, e, "Child");
+        test_assert(e_child != 0);
+        test_assert(ecs_has(world, e_child, Position));
+        test_assert(ecs_contains(world, e, e_child));
+
+        Position *p_child = ecs_get_ptr(world, e_child, Position);
+        test_assert(p_child != NULL);
+        test_int(p_child->x, 2);
+        test_int(p_child->y, 3);
+    }
+
+    ecs_fini(world);
+}

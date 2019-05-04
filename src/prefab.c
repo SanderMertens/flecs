@@ -202,9 +202,14 @@ ecs_type_t ecs_copy_from_prefab(
 
                         for (i = 0; i < count; i ++) {
                             ecs_builder_op_t *op = &ops[i];
-                            ecs_entity_t child = _ecs_new(world, op->type);
-                            ecs_adopt(world, child, entity);
-                            ecs_set(world, child, EcsId, {op->id});
+                            ecs_entity_t child = _ecs_new_w_count(
+                                world, op->type, limit);
+
+                            int j;
+                            for (j = 0; j < limit; j ++) {
+                                ecs_adopt(world, child + j, entity + j);
+                                ecs_set(world, child + j, EcsId, {op->id});
+                            }
                         }
                     }
 
