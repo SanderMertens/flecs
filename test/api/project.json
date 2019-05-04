@@ -357,7 +357,13 @@
                 "override_2_components_different_size",
                 "ignore_prefab_parent_component",
                 "ignore_prefab_parent_component_after_prefab_parent_change",
-                "match_table_created_in_progress"
+                "match_table_created_in_progress",
+                "prefab_w_1_child",
+                "prefab_w_2_children",
+                "prefab_w_grandchild",
+                "prefab_w_base_w_child",
+                "prefab_w_child_w_base",
+                "prefab_w_child_w_base_w_children"
             ]
         }, {
             "id": "System_w_FromContainer",

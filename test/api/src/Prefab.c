@@ -1110,3 +1110,285 @@ void Prefab_match_table_created_in_progress() {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_w_1_child() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+        ecs_set(world, Parent, Position, {1, 2});
+
+        ECS_ENTITY(world, Child, EcsPrefab, Position);
+            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+            ecs_set(world, Child, Position, {2, 3});
+
+    ecs_entity_t e = ecs_new(world, Parent);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    Position *p_e = ecs_get_ptr(world, e, Position);
+    test_assert(p_e != NULL);
+    test_int(p_e->x, 1);
+    test_int(p_e->y, 2);
+
+    ecs_entity_t e_child = ecs_lookup_child(world, e, "Child");
+    test_assert(e_child != 0);
+    test_assert(ecs_has(world, e_child, Position));
+    test_assert(ecs_contains(world, e, e_child));
+
+    Position *p_child = ecs_get_ptr(world, e_child, Position);
+    test_assert(p_child != NULL);
+    test_int(p_child->x, 2);
+    test_int(p_child->y, 3);
+
+    ecs_entity_t e2 = ecs_new(world, Parent);
+    test_assert(e2 != 0);
+    test_assert( ecs_has(world, e, Position));
+    test_assert( ecs_get_ptr(world, e2, Position) == p_e);
+
+    ecs_entity_t e_child2 = ecs_lookup_child(world, e2, "Child");
+    test_assert(e_child2 != 0);
+    test_assert(ecs_has(world, e_child2, Position));
+    test_assert(ecs_contains(world, e2, e_child2));
+    test_assert( ecs_get_ptr(world, e_child2, Position) == p_child);
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_w_2_children() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+        ecs_set(world, Parent, Position, {1, 2});
+
+        ECS_ENTITY(world, Child1, EcsPrefab, Position);
+            ecs_set(world, Child1, EcsPrefab, {.parent = Parent});
+            ecs_set(world, Child1, Position, {2, 3});
+
+        ECS_ENTITY(world, Child2, EcsPrefab, Position);
+            ecs_set(world, Child2, EcsPrefab, {.parent = Parent});
+            ecs_set(world, Child2, Position, {3, 4});
+
+    ecs_entity_t e = ecs_new(world, Parent);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_entity_t e_child = ecs_lookup_child(world, e, "Child1");
+    test_assert(e_child != 0);
+    test_assert(ecs_has(world, e_child, Position));
+    test_assert(ecs_contains(world, e, e_child));
+
+    p = ecs_get_ptr(world, e_child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+
+    e_child = ecs_lookup_child(world, e, "Child2");
+    test_assert(e_child != 0);
+    test_assert(ecs_has(world, e_child, Position));
+    test_assert(ecs_contains(world, e, e_child));
+
+    p = ecs_get_ptr(world, e_child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void Prefab_prefab_w_grandchild() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+        ecs_set(world, Parent, Position, {1, 2});
+
+        ECS_ENTITY(world, Child, EcsPrefab, Position);
+            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+            ecs_set(world, Child, Position, {2, 3});
+
+            ECS_ENTITY(world, GrandChild, EcsPrefab, Position);
+                ecs_set(world, GrandChild, EcsPrefab, {.parent = Child});
+                ecs_set(world, GrandChild, Position, {3, 4});
+
+    ecs_entity_t e = ecs_new(world, Parent);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_entity_t e_child = ecs_lookup_child(world, e, "Child");
+    test_assert(e_child != 0);
+    test_assert(ecs_has(world, e_child, Position));
+    test_assert(ecs_contains(world, e, e_child));
+
+    p = ecs_get_ptr(world, e_child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+
+    ecs_entity_t e_grandchild = ecs_lookup_child(world, e_child, "GrandChild");
+    test_assert(e_grandchild != 0);
+    test_assert(ecs_has(world, e_grandchild, Position));
+    test_assert(ecs_contains(world, e_child, e_grandchild));
+
+    p = ecs_get_ptr(world, e_grandchild, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+}
+
+void Prefab_prefab_w_base_w_child() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, Base, EcsPrefab, Velocity);
+        ecs_set(world, Base, Velocity, {3, 4});
+
+    ECS_ENTITY(world, Parent, EcsPrefab, Base, Position);
+        ecs_set(world, Parent, Position, {1, 2});
+
+        ECS_ENTITY(world, Child, EcsPrefab, Position);
+            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+            ecs_set(world, Child, Position, {2, 3});
+
+    ecs_entity_t e = ecs_new(world, Parent);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+    test_assert( ecs_has(world, e, Velocity));
+
+    Position *p_e = ecs_get_ptr(world, e, Position);
+    test_assert(p_e != NULL);
+    test_int(p_e->x, 1);
+    test_int(p_e->y, 2);
+
+    Velocity *v_e = ecs_get_ptr(world, e, Velocity);
+    test_assert(v_e != NULL);
+    test_int(v_e->x, 3);
+    test_int(v_e->y, 4);    
+
+    ecs_entity_t e_child = ecs_lookup_child(world, e, "Child");
+    test_assert(e_child != 0);
+    test_assert(ecs_has(world, e_child, Position));
+    test_assert(!ecs_has(world, e_child, Velocity));
+    test_assert(ecs_contains(world, e, e_child));
+
+    Position *p_child = ecs_get_ptr(world, e_child, Position);
+    test_assert(p_child != NULL);
+    test_int(p_child->x, 2);
+    test_int(p_child->y, 3);    
+}
+
+void Prefab_prefab_w_child_w_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, Base, EcsPrefab, Velocity);
+        ecs_set(world, Base, Velocity, {3, 4});
+
+    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+        ecs_set(world, Parent, Position, {1, 2});
+
+        ECS_ENTITY(world, Child, EcsPrefab, Base, Position);
+            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+            ecs_set(world, Child, Position, {2, 3});
+
+    ecs_entity_t e = ecs_new(world, Parent);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    Position *p_e = ecs_get_ptr(world, e, Position);
+    test_assert(p_e != NULL);
+    test_int(p_e->x, 1);
+    test_int(p_e->y, 2);   
+
+    ecs_entity_t e_child = ecs_lookup_child(world, e, "Child");
+    test_assert(e_child != 0);
+    test_assert(ecs_has(world, e_child, Position));
+    test_assert(ecs_has(world, e_child, Velocity));
+    test_assert(ecs_contains(world, e, e_child));
+
+    Position *p_child = ecs_get_ptr(world, e_child, Position);
+    test_assert(p_child != NULL);
+    test_int(p_child->x, 2);
+    test_int(p_child->y, 3);
+
+    Velocity *v_child = ecs_get_ptr(world, e_child, Velocity);
+    test_assert(v_child != NULL);
+    test_int(v_child->x, 3);
+    test_int(v_child->y, 4);     
+}
+
+void Prefab_prefab_w_child_w_base_w_children() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, Base, EcsPrefab, Velocity);
+        ecs_set(world, Base, Velocity, {3, 4});
+
+        ECS_ENTITY(world, BaseChild, EcsPrefab, Position);
+            ecs_set(world, BaseChild, EcsPrefab, {.parent = Base});
+            ecs_set(world, BaseChild, Position, {4, 5});
+
+    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+        ecs_set(world, Parent, Position, {1, 2});
+
+        ECS_ENTITY(world, Child, EcsPrefab, Base, Position);
+            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+            ecs_set(world, Child, Position, {2, 3});
+
+    ecs_entity_t e = ecs_new(world, Parent);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    Position *p_e = ecs_get_ptr(world, e, Position);
+    test_assert(p_e != NULL);
+    test_int(p_e->x, 1);
+    test_int(p_e->y, 2);   
+
+    ecs_entity_t e_child = ecs_lookup_child(world, e, "Child");
+    test_assert(e_child != 0);
+    test_assert(ecs_has(world, e_child, Position));
+    test_assert(ecs_has(world, e_child, Velocity));
+    test_assert(ecs_contains(world, e, e_child));
+
+    Position *p_child = ecs_get_ptr(world, e_child, Position);
+    test_assert(p_child != NULL);
+    test_int(p_child->x, 2);
+    test_int(p_child->y, 3);
+
+    Velocity *v_child = ecs_get_ptr(world, e_child, Velocity);
+    test_assert(v_child != NULL);
+    test_int(v_child->x, 3);
+    test_int(v_child->y, 4); 
+
+    ecs_entity_t e_base_child = ecs_lookup_child(world, e_child, "BaseChild");
+    test_assert(e_base_child != 0);
+    test_assert(ecs_has(world, e_base_child, Position));
+    test_assert(!ecs_has(world, e_base_child, Velocity));
+    test_assert(ecs_contains(world, e_child, e_base_child)); 
+
+    Position *p_base_child = ecs_get_ptr(world, e_base_child, Position);
+    test_assert(p_base_child != NULL);
+    test_assert(p_base_child != p_child);
+    test_int(p_base_child->x, 4);
+    test_int(p_base_child->y, 5);
+}

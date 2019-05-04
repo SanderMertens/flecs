@@ -314,6 +314,12 @@ void Prefab_override_2_components_different_size(void);
 void Prefab_ignore_prefab_parent_component(void);
 void Prefab_ignore_prefab_parent_component_after_prefab_parent_change(void);
 void Prefab_match_table_created_in_progress(void);
+void Prefab_prefab_w_1_child(void);
+void Prefab_prefab_w_2_children(void);
+void Prefab_prefab_w_grandchild(void);
+void Prefab_prefab_w_base_w_child(void);
+void Prefab_prefab_w_child_w_base(void);
+void Prefab_prefab_w_child_w_base_w_children(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -1577,7 +1583,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 25,
+        .testcase_count = 31,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -1678,6 +1684,30 @@ static bake_test_suite suites[] = {
             {
                 .id = "match_table_created_in_progress",
                 .function = Prefab_match_table_created_in_progress
+            },
+            {
+                .id = "prefab_w_1_child",
+                .function = Prefab_prefab_w_1_child
+            },
+            {
+                .id = "prefab_w_2_children",
+                .function = Prefab_prefab_w_2_children
+            },
+            {
+                .id = "prefab_w_grandchild",
+                .function = Prefab_prefab_w_grandchild
+            },
+            {
+                .id = "prefab_w_base_w_child",
+                .function = Prefab_prefab_w_base_w_child
+            },
+            {
+                .id = "prefab_w_child_w_base",
+                .function = Prefab_prefab_w_child_w_base
+            },
+            {
+                .id = "prefab_w_child_w_base_w_children",
+                .function = Prefab_prefab_w_child_w_base_w_children
             }
         }
     },
