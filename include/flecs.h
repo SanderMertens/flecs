@@ -449,6 +449,22 @@ void ecs_set_target_fps(
     ecs_world_t *world,
     float fps);
 
+/** Enables admin web server
+ * This operation allows an profile and enable/disable registered systems
+ *
+ * @param world The world.
+ * @param port A port number for server.
+ * 
+ * @returns The error code
+ *          0 - success
+ *          1 - failed to dynamically load `flecs.systems.civetweb` module
+ *          2 - failed to dynamically load `lecs.systems.admin` module
+ */
+FLECS_EXPORT
+int ecs_enable_admin(
+	ecs_world_t* world,
+	uint16_t port);
+
 /** Get last used delta time from world */
 FLECS_EXPORT
 float ecs_get_delta_time(
