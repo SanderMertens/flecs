@@ -86,6 +86,7 @@ void* ecs_get_row_ptr(
 
     if (param.element_size) {
         ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
+
         void *ptr = ecs_vector_get(column->data, &param, index - 1);
         return ptr;
     } else {
@@ -805,7 +806,7 @@ ecs_entity_t _ecs_new_child_w_count(
     if (parent) {
         if (!ecs_has(world, parent, EcsContainer)) {
             ecs_add(world, parent, EcsContainer);
-            world->should_match = true;
+            ecs_set_watching(world, parent, true);
         }
         ecs_type_t TParentType = ecs_type_from_entity(world, parent);
         TFullType = ecs_merge_type(world, FullType, ParentType, 0);
@@ -898,7 +899,7 @@ ecs_entity_t _ecs_new_child(
     if (parent) {
         if (!ecs_has(world, parent, EcsContainer)) {
             ecs_add(world, parent, EcsContainer);
-            world->should_match = true;
+            ecs_set_watching(world, parent, true);
         }
         ecs_type_t TParentType = ecs_type_from_entity(world, parent);
         TFullType = ecs_merge_type(world, FullType, ParentType, 0);
@@ -917,7 +918,7 @@ void ecs_adopt(
 
     if (!ecs_has(world, parent, EcsContainer)) {
         ecs_add(world, parent, EcsContainer);
-        world->should_match = true;
+        ecs_set_watching(world, parent, true);
     }
 
     ecs_type_t TParentType = ecs_type_from_entity(world, parent);
@@ -1153,7 +1154,7 @@ ecs_type_t ecs_type_from_entity(
     ecs_entity_t entity)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_stage_t *stage = ecs_get_stage(&world);   
 
     return ecs_type_from_handle(world, stage, entity, NULL);
 }

@@ -105,12 +105,6 @@ typedef struct ecs_system_column_t {
     ecs_entity_t source;             /* Source entity (used with FromEntity) */
 } ecs_system_column_t;
 
-/** Type that stores a reference to components of external entities (prefabs) */
-typedef struct ecs_system_ref_t {
-    ecs_entity_t entity;
-    ecs_entity_t component;
-} ecs_system_ref_t;
-
 /** Base type for a system */
 typedef struct EcsSystem {
     ecs_system_action_t action;    /* Callback to be invoked for matching rows */
@@ -124,6 +118,7 @@ typedef struct EcsSystem {
     EcsSystemKind kind;            /* Kind of system */
     float time_spent;              /* Time spent on running system */
     bool enabled;                  /* Is system enabled or not */
+    bool has_refs;                 /* Does the system have reference columns */
 } EcsSystem;
 
 /** A column system is a system that is ran periodically (default = every frame)
@@ -388,6 +383,7 @@ struct ecs_world {
     bool measure_system_time;     /* Time spent by each system */
     bool should_quit;             /* Did a system signal that app should quit */
     bool should_match;            /* Should tablea be rematched */
+    bool should_resolve;          /* If a table reallocd, resolve system refs */
 };
 
 

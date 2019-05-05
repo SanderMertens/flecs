@@ -833,6 +833,35 @@ void rematch_systems(
 }
 
 static
+void revalidate_system_array(
+    ecs_world_t *world,
+    ecs_vector_t *systems)
+{
+    uint32_t i, count = ecs_vector_count(systems);
+    ecs_entity_t *buffer = ecs_vector_first(systems);
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t system = buffer[i];
+        ecs_revalidate_system_refs(world, system);
+    }
+}
+
+static
+void revalidate_system_refs(
+    ecs_world_t *world)
+{
+    revalidate_system_array(world, world->on_load_systems);
+    revalidate_system_array(world, world->post_load_systems);
+    revalidate_system_array(world, world->pre_update_systems);
+    revalidate_system_array(world, world->on_update_systems);
+    revalidate_system_array(world, world->on_validate_systems);
+    revalidate_system_array(world, world->post_update_systems);
+    revalidate_system_array(world, world->pre_store_systems);
+    revalidate_system_array(world, world->on_store_systems);    
+    revalidate_system_array(world, world->inactive_systems);   
+}
+
+static
 void run_single_thread_stage(
     ecs_world_t *world,
     ecs_vector_t *systems)
@@ -971,6 +1000,11 @@ bool ecs_progress(
     if (world->should_match) {
         rematch_systems(world);
         world->should_match = false;
+    }
+
+    if (world->should_resolve) {
+        revalidate_system_refs(world);
+        world->should_resolve = false;
     }
 
     /* -- System execution starts here -- */

@@ -361,6 +361,11 @@ void ecs_rematch_system(
     ecs_world_t *world,
     ecs_entity_t system);
 
+/* Re-resolve references of system after table realloc */
+void ecs_revalidate_system_refs(
+    ecs_world_t *world,
+    ecs_entity_t system);
+
 /* -- Worker API -- */
 
 /* Compute schedule based on current number of entities matching system */

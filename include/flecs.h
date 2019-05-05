@@ -98,6 +98,7 @@ typedef enum EcsSystemKind {
 typedef struct ecs_reference_t {
     ecs_entity_t entity;
     ecs_entity_t component;
+    void *cached_ptr;
 } ecs_reference_t;
 
 /** Data passed to system action callback, used for iterating entities */
@@ -110,7 +111,6 @@ typedef struct ecs_rows_t {
     void *table;                 /* Opaque structure with reference to table */
     void *table_columns;         /* Opaque structure with table column data */
     ecs_reference_t *references; /* References to other entities */
-    void **ref_ptrs;             /* The resolved pointers to the references */
     ecs_entity_t *components;    /* System-table specific list of components */
     ecs_entity_t *entities;      /* Entity row */
 

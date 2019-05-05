@@ -1033,3 +1033,73 @@ void System_w_FromContainer_select_same_from_container() {
 
     ecs_fini(world);
 }
+
+void System_w_FromContainer_realloc_after_match() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, e_1, Position);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+
+    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
+    ecs_adopt(world, e_1, parent);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Iter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.c[0][0], ecs_entity(Mass));
+    test_int(ctx.s[0][0], parent);
+    test_int(ctx.c[0][1], ecs_entity(Position));
+    test_int(ctx.s[0][1], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
+
+    /* Add 1000 entities to table of container, which will trigger realloc */
+    ecs_type_t parent_type = ecs_get_type(world, parent);
+    test_assert(parent_type != 0);
+
+    _ecs_new_w_count(world, parent_type, 1000);
+
+    /* Change value of parent Mass. This will update the value in the new table.
+     * If the realloc would not be properly handled, the code could either crash
+     * or reference freed memory and use the old value. */
+    ecs_set(world, parent, Mass, {3});
+
+    ctx = (SysTestData){0};
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Iter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.c[0][0], ecs_entity(Mass));
+    test_int(ctx.s[0][0], parent);
+    test_int(ctx.c[0][1], ecs_entity(Position));
+    test_int(ctx.s[0][1], 0);
+
+    p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 60);
+
+    ecs_fini(world);
+}

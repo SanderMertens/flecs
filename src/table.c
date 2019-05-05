@@ -25,6 +25,14 @@ void activate_table(
 }
 
 static
+void notify_systems_of_realloc(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    world->should_resolve = true;
+}
+
+static
 ecs_table_column_t* new_columns(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -213,12 +221,20 @@ uint32_t ecs_table_insert(
 
     /* Add elements to each column array */
     uint32_t i;
+    bool reallocd = false;
+
     for (i = 1; i < column_count + 1; i ++) {
         uint32_t size = columns[i].size;
         if (size) {
             ecs_vector_params_t params = {.element_size = size};
+            void *old_vector = columns[i].data;
+
             if (!ecs_vector_add(&columns[i].data, &params)) {
                 return -1;
+            }
+            
+            if (old_vector != columns[i].data) {
+                reallocd = true;
             }
         }
     }
@@ -227,6 +243,10 @@ uint32_t ecs_table_insert(
 
     if (!world->in_progress && !index) {
         activate_table(world, table, 0, true);
+    }
+
+    if (reallocd && table->columns == columns) {
+        notify_systems_of_realloc(world, table);
     }
 
     /* Return index of last added entity */
@@ -279,18 +299,6 @@ void ecs_table_delete(
         /* Decrease size of entity column */
         ecs_vector_remove_last(entity_column);
 
-    /* This was the last entity, free all columns */
-    } else if (!count) {
-        ecs_vector_free(entity_column);
-        columns[0].data = NULL;
-
-        for (i = 1; i < column_last; i ++) {
-            if (columns[i].size) {
-                ecs_vector_free(columns[i].data);
-                columns[i].data = NULL;
-            }
-        }
-
     /* This is the last entity in the table, just decrease column counts */
     } else {
         ecs_vector_remove_last(entity_column);
@@ -327,17 +335,29 @@ uint32_t ecs_table_grow(
         e[i] = first_entity + i;
     }
 
+    bool reallocd = false;
+
     /* Add elements to each column array */
     for (i = 1; i < column_count + 1; i ++) {
         ecs_vector_params_t params = {.element_size = columns[i].size};
+        void *old_vector = columns[i].data;
+
         if (!ecs_vector_addn(&columns[i].data, &params, count)) {
             return -1;
+        }
+
+        if (old_vector != columns[i].data) {
+            reallocd = true;
         }
     }
 
     uint32_t row_count = ecs_vector_count(columns[0].data);
     if (!world->in_progress && row_count == count) {
         activate_table(world, table, 0, true);
+    }
+
+    if (reallocd && table->columns == columns) {
+        notify_systems_of_realloc(world, table);
     }
 
     /* Return index of first added entity */

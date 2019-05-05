@@ -65,6 +65,32 @@ void match_families(
     }
 }
 
+static
+bool has_refs(
+    EcsSystem *system_data)
+{
+    uint32_t i, count = ecs_vector_count(system_data->columns);
+    ecs_system_column_t *columns = ecs_vector_first(system_data->columns);
+
+    for (i = 0; i < count; i ++) {
+        ecs_system_expr_elem_kind_t elem_kind = columns[i].kind;
+
+        if (columns[i].oper_kind == EcsOperNot && elem_kind == EcsFromId) {
+            /* Special case: if oper kind is Not and the query contained a
+             * shared expression, the expression is translated to FromId to
+             * prevent resolving the ref */
+            return true;
+        } else if (elem_kind != EcsFromSelf && elem_kind != EcsFromId) {
+            /* If the component is not from the entity being iterated over, and
+             * the column is not just passing an id, it must be a reference to
+             * another entity. */
+            return true;
+        }
+    }
+
+    return false;
+}
+
 /** Create a new row system. A row system is a system executed on a single row,
  * typically as a result of a ADD, REMOVE or SET trigger.
  */
@@ -305,7 +331,6 @@ ecs_type_t ecs_notify_row_system(
     ecs_system_column_t *buffer = ecs_vector_first(system_data->base.columns);
     int32_t *columns = ecs_os_alloca(int32_t, column_count);
     ecs_reference_t *references = ecs_os_alloca(ecs_reference_t, column_count);
-    void **ref_ptrs = ecs_os_alloca(void*, column_count);
 
     uint32_t ref_id = 0;
 
@@ -334,15 +359,13 @@ ecs_type_t ecs_notify_row_system(
             }
 
             /* Store the reference data so the system callback can access it */
+            info = (ecs_entity_info_t){.entity = entity};
             references[ref_id] = (ecs_reference_t){
                 .entity = entity, 
-                .component = component
+                .component = component,
+                .cached_ptr = ecs_get_ptr_intern(real_world, &real_world->main_stage, 
+                                &info, component, false, true)
             };
-
-            /* Resolve the reference */
-            info = (ecs_entity_info_t){.entity = entity};
-            ref_ptrs[ref_id] = ecs_get_ptr_intern(real_world, &real_world->main_stage, 
-                                &info, component, false, true);
 
             /* Update the column vector with the entry to the ref vector */
             ref_id ++;
@@ -367,7 +390,6 @@ ecs_type_t ecs_notify_row_system(
     /* Set references metadata if system has references */
     if (ref_id) {
         rows.references = references;
-        rows.ref_ptrs = ref_ptrs;
     }
 
     /* Obtain pointer to vector with entity identifiers */
@@ -449,6 +471,8 @@ ecs_entity_t ecs_new_system(
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
         }
     }
+
+    system_data->has_refs = has_refs(system_data);
 
     /* If system contains FromSystem params, add them tot the system */
     if (system_data->and_from_system) {
@@ -621,7 +645,7 @@ void* _ecs_shared(
             return NULL;
         }
 
-        return rows->ref_ptrs[-table_column - 1];
+        return rows->references[-table_column - 1].cached_ptr;
     }
 }
 
@@ -717,8 +741,8 @@ void *_ecs_field(
     }
 
     if (table_column < 0) {
-        ecs_assert(rows->ref_ptrs != NULL, ECS_INTERNAL_ERROR, NULL);
-        return rows->ref_ptrs[-table_column - 1];
+        ecs_assert(rows->references != NULL, ECS_INTERNAL_ERROR, NULL);
+        return rows->references[-table_column - 1].cached_ptr;
     } else {
         ecs_assert(rows->table_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_table_column_t *column = &((ecs_table_column_t*)rows->table_columns)[table_column];

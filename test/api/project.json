@@ -384,7 +384,8 @@
                 "add_component_after_match_2_systems",
                 "add_component_in_progress_after_match",
                 "adopt_after_match",
-                "new_child_after_match"
+                "new_child_after_match",
+                "realloc_after_match"
             ]
         }, {
             "id": "System_w_FromId",
