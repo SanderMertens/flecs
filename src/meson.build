@@ -1,0 +1,20 @@
+flecs_src += files([
+    'array.c',
+    'entity.c',
+    'err.c',
+    'hash.c',
+    'iter.c',
+    'map.c',
+    'os_api.c',
+    'parser.c',
+    'prefab.c',
+    'stage.c',
+    'stats.c',
+    'system.c',
+    'table.c',
+    'table_system.c',
+    'time.c',
+    'type.c',
+    'worker.c',
+    'world.c'
+])
