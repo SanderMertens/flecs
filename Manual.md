@@ -742,7 +742,7 @@ ecs_set(world, FastCar, MaxSpeed, {240}); // Override MaxSpeed
 ```
 
 ##### Nested prefabs
-Prefabs can be created as children of other entities. This lets applications create prefab hierarchies that can be instantiated by creating an entity with the top-level prefab. To create a prefab hierarchy, applications must explicitly set the value of the builtin `EcsPrefab` component:
+Prefabs can be created as children of other prefabs. This lets applications create prefab hierarchies that can be instantiated by creating an entity with the top-level prefab. To create a prefab hierarchy, applications must explicitly set the value of the builtin `EcsPrefab` component:
 
 ```c
 ECS_PREFAB(world, ParentPrefab, EcsPosition2D);
