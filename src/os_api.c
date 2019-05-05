@@ -1,4 +1,4 @@
-
+#include <stdarg.h>
 #include "include/private/flecs.h"
 
 static bool ecs_os_api_initialized = false;

@@ -3,6 +3,8 @@
 
 #include "../flecs.h"
 
+#include <stdarg.h>
+
 #ifdef _MSC_VER
 #include <malloc.h>
 #else

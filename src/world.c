@@ -1236,7 +1236,6 @@ ecs_entity_t ecs_import_from_library(
 #else
     ecs_os_err(
         "sorry, loading libraries is only possible if flecs is built with bake :(");
-    ut_raise();
     return ECS_INVALID_ENTITY;
 #endif
 }

@@ -49,7 +49,7 @@ See [here](#getting-started-with-the-dashboard) for how to create an application
   * [module](#module)
 
 ## Building
-You can build flecs with either [Bake](https://github.com/SanderMertens/bake) or CMake. If you just want to build the flecs shared library, CMake wil get you there. If you want to use flecs modules, you'll need Bake (for now).
+You can build flecs with either [Bake](https://github.com/SanderMertens/bake), CMake or Meson. If you just want to build the flecs shared library, CMake will get you there. If you want to use flecs modules, you'll need Bake (for now).
 
 ### CMake
 ```
@@ -69,6 +69,16 @@ bake/bake setup
 bake clone https://github.com/SanderMertens/flecs
 ```
 Note that bake may ask for your password to install a single shell script to `/usr/local`. It is highly recommended you do this, as it makes everything much easier, but if you'd rather not, make sure to follow the instructions in the bake setup to setup the environment before calling bake!
+
+### Meson
+
+```
+git clone https://github.com/SanderMertens/flecs
+cd flecs
+meson build --default-library=both
+cd build
+ninja
+```
 
 ## Getting started
 To create a new flecs application, first create a new project:
