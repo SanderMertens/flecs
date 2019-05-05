@@ -46,6 +46,7 @@
     - [Prefabs](#prefabs)
       - [Overriding prefab components](#overriding-prefab-components)
       - [Prefabs and types](#prefabs-and-types)
+      - [Prefab variants](#prefab-variants)
       - [Nested prefabs](#nested-prefabs)
 - [Systems](#systems)
    - [System queries](#system-queries)
@@ -729,26 +730,63 @@ When the `Shape` type is added to the entity, first the prefab is added (this is
 
 This is a powerful pattern for creating reusable entity templates that result in automatically initialized components, and is one of the preferred ways of instantiating entities.
 
-##### Nested prefabs
-Just like types, prefabs can also be nested. Consider the following code example:
+##### Prefabs variants
+Prefab variants are useful when you want to take an existing prefab, and add more components, or change some of its component values. A prefab variant inherits components and values from another prefab, called the base. A prefab can at most have one other prefab as its base. To specify a base, an application can simply specify it in the list of components of the prefab:
 
 ```c
-ECS_PREFAB(world, ShapePrefab, Position, Color);
-ECS_PREFAB(world, SquareShapePrefab, Shape, Square);
-ECS_PREFAB(world, CircleShapePrefab, Shape, Circle);
+ECS_PREFAB(world, Car, Velocity, MaxSpeed);
+ecs_set(world, Car, Velocity, {160});
 
-ECS_TYPE(world, SquareShape, SquareShapePrefab, Position);
-ECS_TYPE(world, CircleShape, CircleShapePrefab, Position);
-
-ecs_set(world, ShapePrefab, Position, {0, 0});
-ecs_set(world, ShapePrefab, Color, {.r = 255, .g = 0, .b = 0});
-ecs_set(world, SquareShapePrefab, Square, {.size = 50});
-ecs_set(world, CircleShapePrefab, Circle, {.radius = 25});
-
-ecs_entity_t e = ecs_new(world, SquareShape);
+ECS_PREFAB(world, FastCar, Car, Velocity, MaxSpeed); // Car is the base prefab
+ecs_set(world, FastCar, MaxSpeed, {240}); // Override MaxSpeed
 ```
 
-In this example, `e` will have an owned component `Position` which is initialized to `{0, 0}`, and `Color`, and `Square` as shared components. Other than with types, where only the union of components of all the nested types are associated with the entity, prefabs will be associated with the entity, and as mentioned in [Overriding prefab components](#overriding-prefab-components) prefabs have to be explicitly removed if an entity wants to disassociate itself from them.
+##### Nested prefabs
+Prefabs can be created as children of other entities. This lets applications create prefab hierarchies that can be instantiated by creating an entity with the top-level prefab. To create a prefab hierarchy, applications must explicitly set the value of the builtin `EcsPrefab` component:
+
+```c
+ECS_PREFAB(world, ParentPrefab, EcsPosition2D);
+  ECS_PREFAB(world, ChildPrefab, EcsPosition2D);
+     ecs_set(world, ChildPrefab, EcsPrefab, {.parent = ParentPrefab);
+     
+ecs_entity_t e = ecs_new(world, ParentPrefab);
+```
+
+After running this example, entity `e` will contain a child entity called `ChildPrefab`. All components of `e` will be shared with `ParentPrefab`, and all components of `e`'s child will be shared with `ChildPrefab`. Just like with regular prefabs, component values can be overridden. To override the component of a child entity, an application can use the following method:
+
+```c
+ecs_entity_t child = ecs_lookup_child(world, e, "ChildPrefab"); // Resolve the child entity created by the prefab instantiation
+ecs_set(world, child, Position, {10, 20}); // Override the component of the child
+```
+
+An application can also choose to instantiate a child prefab directly:
+
+```c
+ecs_entity_t e = ecs_new(world, ChildPrefab);
+```
+
+Applications may want to compose a prefab out of various existing prefabs. This can be achieved by combining nested prefabs with prefab variants, as is shown in the following example:
+
+```c
+// Prefab that defines a wheel
+ECS_PREFAB(world, Wheel, EcsPosition2D, EcsCircle2D);
+  ECS_PREFAB(world, Tire, EcsPosition2D, EcsCircle2D, Pressure);
+
+// Prefab that defines a car
+ECS_PREFAB(world, Car, EcsPosition2D);
+  ECS_PREFAB(world, FrontWheel, Wheel);
+     ecs_set(world, FrontWheel, EcsPrefab, {.parent = Car});
+     ecs_set(world, FrontWheel, EcsPosition, {-100, 0});
+  ECS_PREFAB(world, BackWheel, Wheel);
+     ecs_set(world, BackWheel, EcsPrefab, {.parent = Car});
+     ecs_set(world, BackWheel, EcsPosition, {100, 0});     
+```
+
+In this example, the `FrontWheel` and `BackWheel` prefabs of the car inherit from `Wheel`, which is an effective mechanism to compose a prefab out of one or more existing prefabs, as it reuses the components of the prefab base, while also allowing for the possibility to override component values where necessary. Children of the base (`Wheel`) are also automatically inherited by the variants (`FrontWheel`, `BackWheel`), thus for every entity that is created with `Car`, 4 additional child entities will be created:
+
+```
+ecs_entity_t e = ecs_new(world, Car); // Creates FrontWheel, FrontWheel/Tire, BackWheel, BackWheel/Tire
+```
 
 ## Systems
 Systems let applications execute logic on a set of entities that matches a certain component expression. The matching process is continuous, when new entities (or rather, new _entity types_) are created, systems will be automatically matched with those. Systems can be ran by Flecs as part of the built-in frame loop, or by invoking them individually using the Flecs API.
