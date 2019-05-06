@@ -48,6 +48,7 @@
     - [Remove components](#remove-components)
     - [Set components](#set-components)
   - [Shared components](#shared-components)
+  - [Tags](#tags)
 - [Systems](#systems)
    - [System queries](#system-queries)
      - [Column operators](#column-operators)
@@ -787,6 +788,39 @@ After the operation it is guaranteed that `e` has `Position`, and that it is set
 Shared components in Flecs are components that are shared between multiple entities. Where owned components have a 1..1 relationship between a component and an entity, a shared component has a 1..N relationship between the component and entity. Shared components are only stored once in memory, which can drastically reduce memory usage of an application if the same component can be shared across many entities. Additionally, shared components are a fast way to update a component value in constant time (O(1)) for N entities.
 
 Shared components can be implemented with [prefabs](#prefabs).
+
+### Tags
+Tags are components that do not contain any data. Internally it is represented as a component with data-size 0. Tags can be useful for subdividing entities into categories, without adding any data. A tag can be defined with the ECS_TAG macro:
+
+```c
+ECS_TAG(world, MyTag);
+```
+
+Tags can be added/removed just like regular components with `ecs_new`, `ecs_add` and `ecs_remove`:
+
+```c
+ecs_entity_t e = ecs_new(world, MyTag);
+ecs_remove(world, e, MyTag);
+```
+
+A system can subscribe for instances of that tag by adding the tag to the system signature:
+
+```c
+ECS_SYSTEM(world, Foo, EcsOnUpdate, Position, MyTag);
+```
+
+This introduces an additional column to the system which has no data associated with it, but systems can still access the tag handle with the `ECS_COLUMN_COMPONENT` marco:
+
+```c
+void Foo(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, 1);
+    ECS_COLUMN_COMPONENT(rows, MyTag, 2);
+    
+    for (int i = 0; i < rows->count; i ++) {
+        ecs_remove(rows->world, rows->entities[i], MyTag);
+    }
+}
+```
 
 ## Systems
 Systems let applications execute logic on a set of entities that matches a certain component expression. The matching process is continuous, when new entities (or rather, new _entity types_) are created, systems will be automatically matched with those. Systems can be ran by Flecs as part of the built-in frame loop, or by invoking them individually using the Flecs API.
