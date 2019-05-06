@@ -1816,10 +1816,16 @@ void _ecs_assert(
     if (handles) handles->ecs_entity(type) = ecs_entity(type);\
     if (handles) handles->ecs_type(type) = ecs_type(type)
 
+#define ECS_EXPORT_COMPONENT(type)\
+    ECS_SET_COMPONENT(handles, type)
+
 /** Utility macro for setting a system in a module function */
 #define ECS_SET_ENTITY(handles, entity)\
     if (handles) handles->entity = entity;\
     if (handles) handles->ecs_type(entity) = ecs_type(entity)
+
+#define ECS_EXPORT_ENTITY(type)\
+    ECS_SET_ENTITY(handles, type)
 
 /** Utility macro for declaring handles by modules */
 #define ECS_IMPORT_COMPONENT(handles, type)\
