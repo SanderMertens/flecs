@@ -42,12 +42,11 @@
     - [Add components](#add-components)
     - [Remove components](#remove-components)
     - [Set components](#set-components)
-  - [Shared components](#shared-components)
-    - [Prefabs](#prefabs)
-      - [Overriding prefab components](#overriding-prefab-components)
-      - [Prefabs and types](#prefabs-and-types)
-      - [Prefab variants](#prefab-variants)
-      - [Nested prefabs](#nested-prefabs)
+  - [Prefabs](#prefabs)
+    - [Overriding prefab components](#overriding-prefab-components)
+    - [Prefabs and types](#prefabs-and-types)
+    - [Prefab variants](#prefab-variants)
+    - [Nested prefabs](#nested-prefabs)
 - [Systems](#systems)
    - [System queries](#system-queries)
      - [Column operators](#column-operators)
@@ -635,7 +634,7 @@ Shared components in Flecs are components that are shared between multiple entit
 
 There are different mechanisms for sharing components across entities, which are described in the following sections.
 
-#### Prefabs
+### Prefabs
 A prefab is a special kind of entity in Flecs whos components are shared with any entity to which the prefab is added. Consider the following code example:
 
 ```c
@@ -668,7 +667,7 @@ After this operation, the `Shape` prefab will have an additional component calle
 
 Systems will treat shared components from prefabs as if they were defined on the entities themselves, thus a system with the query `Square, Color` would match both entities `e1` and `e2` from the example. It should be noted at this point that the system will _not_ match with the `Shape` prefab itself. Prefabs are explicitly excluded from matching with systems, as they should not be evaluated by application logic directly.
 
-##### Overriding prefab components
+#### Overriding prefab components
 A typical usage of prefabs is to specify a common value for entities. Often, code that uses prefabs looks something like this:
 
 ```c
@@ -701,7 +700,7 @@ ecs_remove(world, e, Shape);
 
 After this operation, the shared components will no longer appear on the entity.
 
-##### Prefabs and types
+#### Prefabs and types
 It has been explained how [types](#components-and-types) can be used to create templates for entities, by adding sets of components commonly used together to the same type. When the type is added to the entity, all the components will be added as owned components to the entity. A quick example to recap:
 
 ```c
@@ -730,7 +729,7 @@ When the `Shape` type is added to the entity, first the prefab is added (this is
 
 This is a powerful pattern for creating reusable entity templates that result in automatically initialized components, and is one of the preferred ways of instantiating entities.
 
-##### Prefabs variants
+#### Prefabs variants
 Prefab variants are useful when you want to take an existing prefab, and add more components, or change some of its component values. A prefab variant inherits components and values from another prefab, called the base. A prefab can at most have one other prefab as its base. To specify a base, an application can simply specify it in the list of components of the prefab:
 
 ```c
@@ -741,7 +740,7 @@ ECS_PREFAB(world, FastCar, Car, Velocity, MaxSpeed); // Car is the base prefab
 ecs_set(world, FastCar, MaxSpeed, {240}); // Override MaxSpeed
 ```
 
-##### Nested prefabs
+#### Nested prefabs
 Prefabs can be created as children of other prefabs. This lets applications create prefab hierarchies that can be instantiated by creating an entity with the top-level prefab. To create a prefab hierarchy, applications must explicitly set the value of the builtin `EcsPrefab` component:
 
 ```c
