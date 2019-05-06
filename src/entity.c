@@ -593,8 +593,6 @@ void ecs_set_watching(
                 world->main_stage.entity_index, entity, ecs_from_row(row));
         }
     }
-
-    world->should_match = true;
 }
 
 bool ecs_components_contains_component(
@@ -807,6 +805,7 @@ ecs_entity_t _ecs_new_child_w_count(
         if (!ecs_has(world, parent, EcsContainer)) {
             ecs_add(world, parent, EcsContainer);
             ecs_set_watching(world, parent, true);
+            world->should_match = true;
         }
         ecs_type_t TParentType = ecs_type_from_entity(world, parent);
         TFullType = ecs_merge_type(world, FullType, ParentType, 0);
@@ -900,6 +899,7 @@ ecs_entity_t _ecs_new_child(
         if (!ecs_has(world, parent, EcsContainer)) {
             ecs_add(world, parent, EcsContainer);
             ecs_set_watching(world, parent, true);
+            world->should_match = true;
         }
         ecs_type_t TParentType = ecs_type_from_entity(world, parent);
         TFullType = ecs_merge_type(world, FullType, ParentType, 0);
@@ -919,6 +919,7 @@ void ecs_adopt(
     if (!ecs_has(world, parent, EcsContainer)) {
         ecs_add(world, parent, EcsContainer);
         ecs_set_watching(world, parent, true);
+        world->should_match = true;
     }
 
     ecs_type_t TParentType = ecs_type_from_entity(world, parent);
