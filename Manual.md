@@ -1579,3 +1579,91 @@ ecs_import_from_library(world, "flecs.systems.admin", "FlecsSystemsAdmin");
 ```
 
 The `flecs.systems.admin` argument is the name of the library or package. The `FlecsSystemsAdmin` argument is the name of the module, as a library may contain more than one module. If the module name is `NULL`, Flecs will automatically attempt to derive the module name from the library name. Currently this operation is only supported when Flecs is built with the bake build system, as Flecs reuses package management functions from the bake runtime. Future versions of Flecs will support this functionality for other build systems as well.
+
+### Creating a module
+A few steps are required to create a module from scratch:
+
+- Create a type which contains the _public_ handles
+- Create a function that instantiates the module contents
+- Create a macro that declares handle variables
+
+These steps all have to conform to a specific naming convention of them to work correctly. Fortunately, For each of these steps, Flecs has convenience macro's that simplify this process.
+
+Suppose a module called `MyTransformModule` defines a component called `Position`. First of all, we have to create a struct that exposes the handle to `Position`. To do this, create the following struct in a publicly available header of the module:
+
+```c
+typedef struct MyTransformModuleHandles {
+    ECS_DECLARE_COMPONENT(Position);
+} MyTransformModuleHandles;
+```
+
+Make sure that the struct name is the module name (`MyTransformModule`) plus `Handles`. In that same header, a function must be declared that will be responsible for importing the module contents into Flecs:
+
+```c
+void MyTransformModuleImport(ecs_world_t *world, int flags);
+```
+
+Again, make sure that the name of the function is the module name plus `Import`, and that it follows this exact function signature. Now we need to create a macro that declares handle variables. This macro is used by the `ECS_IMPORT` macro to make the `Position` handle available to the application function where this module is imported. Creating this macro is straightforward, and looks like this:
+
+```c
+#define MyTransformModuleImportHandles(handles)\
+    ECS_IMPORT_COMPONENT(handles, Position)
+```
+
+When this macro is invoked by `ECS_IMPORT`, it will receive an initialized instance to the `MyTransformModuleHandles` struct.
+
+Lastly, the function that imports the contents into Flecs needs to be created. This function needs to accomplish a few things, outlined in this example:
+
+```c
+void MyTransformModuleImport(ecs_world_t *world, int flags)
+{
+    // Create the module in Flecs
+    ECS_MODULE(world, MyTransformModule);
+
+    // Create the component
+    ECS_COMPONENT(world, Position);
+
+    // Export the component
+    ECS_EXPORT_COMPONENT(Position);
+}
+```
+
+With that in place, an application can now use `ECS_IMPORT` to import the module:
+
+```c
+ECS_IMPORT(world, MyTransformModule, 0);
+```
+
+When a module defines other kinds of things besides components, a different set of macro's is used. The following code needs to be added to a header of a module that exports a system:
+
+```c
+// To declare a system handle, use ECS_DECLARE_ENTITY
+typedef struct MyTransformModuleHandles {
+    ECS_DECLARE_ENTITY(MySystem);
+} MyTransformModuleHandles;
+
+// This does not change
+void MyTransformModuleImport(ecs_world_t *world, int flags);
+
+// To import a system handle, use ECS_IMPORT_ENTITY 
+#define MyTransformModuleImportHandles(handles)\
+    ECS_IMPORT_ENTITY(handles, Position)
+```
+
+The `MyTransformModuleImport` function then needs to be changed to this:
+
+```c
+void MyTransformModuleImport(ecs_world_t *world, int flags)
+{
+    // Create the module in Flecs
+    ECS_MODULE(world, MyTransformModule);
+
+    // Create the component
+    ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position);
+
+    // Export the component
+    ECS_EXPORT_ENTITY(MySystem);
+}
+```
+
+Prefabs, types and tags can all be exported with the ECS_EXPORT_ENTITY macro.
