@@ -17,11 +17,11 @@ Additionally, flecs has a flexible engine that lets you do many things, like:
 - Use expressive system expressions with AND, OR, NOT and optional operators
 - Create hierarchies, indexes and DAGs with container entities
 - Add/remove components and create/delete entities whenever, wherever
-- Add components to ANYTHING. Entities? Check. Systems? Check. Components? N.. wait. Check!
+- Add components to _anything_. Entities? Check. Systems? Check. Components? Check!
 
-Check out the [examples](https://github.com/SanderMertens/flecs/tree/master/examples) and [documentation](https://github.com/SanderMertens/flecs/blob/master/include/flecs.h) to learn more.
+[Learn more](Manual.md) here.
 
-Oh, and we have [dashboards](https://github.com/SanderMertens/flecs-systems-admin)!
+Make sure to check the flecs [dashboard](https://github.com/SanderMertens/flecs-systems-admin):
 
 ![dashboard](https://user-images.githubusercontent.com/9919222/54180572-309ec380-4459-11e9-9e48-1a08de57ff91.png)
 
@@ -333,10 +333,11 @@ A tag is a component that does not contain any data. Internally it is represente
 ```c
 ECS_TAG(world, MyTag);
 ```
-The macro will define the `MyTag_h` variable, which an application can then use as a regular component, like with the ecs_add function:
+
+Tags can be added/removed like any other component:
 
 ```c
-ecs_add(world, e, MyTag_h);
+ecs_add(world, e, MyTag);
 ```
 
 ### Container
