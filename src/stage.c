@@ -40,7 +40,11 @@ static
 void merge_commits(
     ecs_world_t *world,
     ecs_stage_t *stage)
-{
+{  
+    if (!ecs_map_count(stage->entity_index)) {
+        return;
+    }
+
     EcsIter it = ecs_map_iter(stage->entity_index);
 
     while (ecs_iter_hasnext(&it)) {

@@ -1027,20 +1027,28 @@ void ecs_merge(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     assert(world->is_merging == false);
 
+    bool measure_frame_time = world->measure_frame_time;
+
     world->is_merging = true;
 
     ecs_time_t t_start;
-    ecs_os_get_time(&t_start);
+    if (measure_frame_time) {
+        ecs_os_get_time(&t_start);
+    }
 
     ecs_stage_merge(world, &world->temp_stage);
 
     uint32_t i, count = ecs_vector_count(world->worker_stages);
-    ecs_stage_t *buffer = ecs_vector_first(world->worker_stages);
-    for (i = 0; i < count; i ++) {
-        ecs_stage_merge(world, &buffer[i]);
+    if (count) {
+        ecs_stage_t *buffer = ecs_vector_first(world->worker_stages);
+        for (i = 0; i < count; i ++) {
+            ecs_stage_merge(world, &buffer[i]);
+        }
     }
 
-    world->merge_time += ecs_time_measure(&t_start);
+    if (measure_frame_time) {
+        world->merge_time += ecs_time_measure(&t_start);
+    }
 
     world->is_merging = false;
 }
