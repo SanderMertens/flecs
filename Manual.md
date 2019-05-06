@@ -95,6 +95,11 @@
   - [Staging and threading](#staging-and-threading)
   - [Manually merging stages](#manually-merging-stages)
   - [Limitations of staging](#limitations-of-staging)
+- [Modules](#modules)
+  - [Importing modules](#importing-modules)
+    - [Module content handles](#module-content-handles)
+    - [Dynamic imports](#dynamic-imports)
+  - [Creating modules](#creating-modules)
 
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
@@ -1506,3 +1511,71 @@ The `ecs_count` operation does not take into account staged data and only counts
 
 **You cannot make changes from an EcsOnRemove system beyond the to be removed component**
 `EcsOnRemove` systems are invoked during merging. As these systems also iterate over components, any mutations performed while in an `EcsOnRemove` system would require nested staging, which would reduce performance and increase complexity by a lot.
+
+## Modules
+Modules are a simple concept used to organize components, systems and entities into units that can be easily reused across applications, but also as a way to organize code in large applications. Modules can be located inside a project, inside a statically linked, dynamically linked, or runtime loaded library. See [good practices](#good-practices) for some tips around how to organize code in modules.
+
+### Importing modules
+The default way to import an existing module is by using the `ECS_IMPORT` macro. This will invoke the module loader that instantiates all contents of the module in the Flecs data store. After importing a module, components can be used, entities will be created and systems will be matched against any entities in the application. To import a module with `ECS_IMPORT`, do:
+
+```c
+ECS_IMPORT(world, MyModule, flags);
+```
+
+Here, `MyModule` is the module identifier. The `flags` parameter is an integer that is passed to the module loader, which allows an application to specify whether only specific parts of the module should be included. For example, a module may contain systems for moving entities in both 2D and 3D, and the application may only be interested in the 2D systems. Flecs defines a few flags out of the box, but modules are not required to use them. The application that imports the module should refer to the module documentation to find out which flags are supported. The flags defined by Flecs are:
+
+- ECS_2D
+- ECS_3D
+- ECS_REFLECTION
+
+The same module may be imported more than once without introducing duplicate definitions into the Flecs world.
+
+#### Module content handles
+To interact with module contents, the application needs handles to the content. Handles are needed to, for example, add or remove components (component handle is required) or enabling/disabling systems (system handle is required). When a module is imported, handles are automatically imported into the current application scope. In other words, if a module is imported with the `ECS_IMPORT` macro in the main function, the handles of the contents in the module will be available to code in the main function.
+
+To enable access to module handles from outside of the function in which it was imported, Flecs registers a type with the module handles as a singleton component. To obtain a struct with the module handles, an application can use the `ecs_get_singleton` operation:
+
+```c
+ecs_entity_t ecs_type(MyModule) = ecs_lookup(world, "MyModule");
+MyModule module_handles = ecs_get_singleton(world, MyModule);
+```
+
+Additionally, applications can get access to this struct with the `ecs_module()` macro after an `ECS_IMPORT`:
+
+```c
+ecs_module(MyModule); // returns struct with handles
+```
+
+The returned `MyModule` struct contains handles to the module components, but for the Flecs API to work correctly, they need to be imported in the current function scope. This will define a local variable for each handle inside the struct, which are used by the Flecs API. To do this, use the module specific `ImportHandles` macro:
+
+```c
+MyModuleImportHandles(module_handles);
+```
+
+A full code example that uses `ecs_module`:
+
+```c
+void do_stuff(ecs_world_t *world, MyModule *handles) {
+    MyModuleImportHandles(*handles);
+    return ecs_new(world, ComponentFromMyModule);
+}
+
+int main(int argc, char *argv[]) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, MyModule, 0);
+
+    do_stuff(world, &ecs_module(MyModule));
+
+    ecs_fini(world);
+}
+```
+
+#### Dynamic imports
+Modules can be dynamically imported from a shared library. This is only possible when an application does not require compile-time knowledge about the contents of a module, but can be a powerful mechanism for dynamically loading functionality into an application. To dynamically load a module, applications can use the `ecs_import_from_library` function:
+
+```c
+ecs_import_from_library(world, "flecs.systems.admin", "FlecsSystemsAdmin");
+```
+
+The `flecs.systems.admin` argument is the name of the library or package. The `FlecsSystemsAdmin` argument is the name of the module, as a library may contain more than one module. If the module name is `NULL`, Flecs will automatically attempt to derive the module name from the library name. Currently this operation is only supported when Flecs is built with the bake build system, as Flecs reuses package management functions from the bake runtime. Future versions of Flecs will support this functionality for other build systems as well.
