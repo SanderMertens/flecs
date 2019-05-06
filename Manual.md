@@ -37,16 +37,17 @@
     - [Creating child entities](#creating-child-entities)
     - [Adopting entities](#adopting-entities)
     - [Orphaning entities](#orphaning-entities)
+  - [Prefabs](#prefabs)
+    - [Overriding prefab components](#overriding-prefab-components)
+    - [Prefabs and types](#prefabs-and-types)
+    - [Prefab variants](#prefab-variants)
+    - [Nested prefabs](#nested-prefabs)    
 - [Components and Types](#components-and-types)
   - [Owned components](#owned-components)
     - [Add components](#add-components)
     - [Remove components](#remove-components)
     - [Set components](#set-components)
-  - [Prefabs](#prefabs)
-    - [Overriding prefab components](#overriding-prefab-components)
-    - [Prefabs and types](#prefabs-and-types)
-    - [Prefab variants](#prefab-variants)
-    - [Nested prefabs](#nested-prefabs)
+  - [Shared components](#shared-components)
 - [Systems](#systems)
    - [System queries](#system-queries)
      - [Column operators](#column-operators)
@@ -503,137 +504,6 @@ ecs_orphan(world, e, my_root);
 
 If the entity was not a child of the container, the operation has no side effects. This operation will not add the `EcsContainer` tag to `my_root`.
 
-## Components and Types
-Components, together with entities, are the most important building blocks for applications in Flecs. Like entities, components are orthogonally designed to do a single thing, which is to store data associated with an entity. Components, as with any ECS framework, do not contain any logic, and can be added or removed at any point in the application. A component can be registered like this:
-
-```c
-ECS_COMPONENT(world, Position);
-```
-
-Here, `Position` has to be an existing type in your application. You can register the same type twice with a typedef. If you have the following types:
-
-```c
-struct Vector {
-    float x;
-    float y;
-};
-
-typedef struct Vector Position;
-typedef struct Vector Velocity;
-```
-
-they can be simply registered like this:
-
-```c
-ECS_COMPONENT(world, Position);
-ECS_COMPONENT(world, Velocity);
-```
-
-With the API, you can even register the same type twice:
-
-```c
-ecs_new_component(world, "Position", sizeof(struct Vector));
-ecs_new_component(world, "Velocity", sizeof(struct Vector));
-```
-
-A _type_ in Flecs is any set of 1..N components. If an entity has components `A` and `B`, then the _type_ of that entity is `A, B`. Types in Flecs are a first class citizen, in that they are just as prominently featured in the API as components, and in many cases they can be used interchangeably. An application can explicitly create a type, like this:
-
-```c
-ECS_TYPE(world, Movable, Position, Velocity);
-```
-
-This creates a type called `Movable` with the `Position` and `Velocity` components. Components have to be defined with either the `ECS_COMPONENT` macro or the `ecs_new_component` function before they can be used in an `ECS_TYPE` declaration.
-
-Types handles be used interchangeably with components for most API operations. Using types instead of components can be useful for various reasons. A common application is to use a type to define an initial set of components for new entities. A type can be used together with `ecs_new` to accomplish this, like so:
-
-```c
-ecs_new(world, Movable);
-```
-
-The `ecs_new` operation actually accepts an argument of `ecs_type_t`, which means that even when a single component (like `Position`) is passed to the function, actually a _type_ is passed with only the `Position` component. 
-
-This will create an entity with the `Position` and `Velocity` components, when using the previous definition of `Movable`. This approach is faster than individually adding the `Position` and `Velocity` components. Furthermore it allows applications to define reusable templates that can be managed in one location, as opposed to every location where entities are being created.
-
-Types can also be nested. For example:
-
-```c
-ECS_TYPE(world, Movable, Position, Velocity);
-ECS_TYPE(world, Unit, HealthPoints, Attack, Defense);
-ECS_TYPE(world, Magic, Mana, ManaRecharge);
-ECS_TYPE(world, Warrior, Movable, Unit);
-ECS_TYPE(world, Wizard, Movable, Unit, Magic);
-```
-
-When added to entities, types themselves are not associated with the entity. Instead, only the resulting set of components is. For example, creating an entity with the `Wizard` type would be equivalent to creating an entity and individually adding `Position`, `Velocity`, `Attack`, `Defense`, `Mana` and `ManaRecharge`.
-
-Types can be used with other operations as well, like `ecs_add`, `ecs_remove` and `ecs_has`. Whenever an application wants to add or remove multiple components, it is always faster to do this with a type as they approximate constant time performance (`O(1)`), whereas individually adding components is at least `O(n)`.
-
-Types are not limited to grouping components. They can also group entities or systems. This is a key enabler for powerful features, like [prefabs](#prefabs), [containers](#containers) and [features](#features).
-
-### Owned components
-In Flecs, components can either be owned by an entity or shared with other entities. When a component is owned, it means that an entity has a private instance of the component that can be modified individually. Owned components are useful when a component is mutable, and individual entities require the component to have a unique value.
-
-The following sections describe the API operations for working with owned components.
-
-#### Add components
-In Flecs, an application can add owned components to an entity with the `ecs_add` operation. The operation accepts an entity and a _type_ handle, and can be used like this:
-
-```c
-ecs_add(world, e, Position);
-```
-
-After the operation, it is guaranteed that `e` will have the component. It is legal to call `ecs_add` multiple times. When a component is already added, this operation will have no side effects. When the component is added as a result of this operation, any `EcsOnAdd` systems subscribed for `Position` will be invoked.
-
-It is also possible to use types with `ecs_add`. If an application defined a type `Movable` with the `ECS_TYPE` macro, it can be used with `ecs_add` like so:
-
-```c
-ecs_add(world, e, Movable);
-```
-
-After the operation, it is guaranteed that `e` will have all components that are part of the type. If the entity already had a subset of the components in the type, only the difference is added. If the entity already had all components in the type, this operation will have no side effects.
-
-##### A quick recap on handles
-The signature of `ecs_add` looks like this:
-
-```c
-void ecs_add(ecs_world_t *world, ecs_entity_t entity, ecs_type_t type);
-```
-
-Note that the function accepts a _type handle_ as its 3rd argument. Type handles are automatically defined by the API when an application uses the `ECS_COMPONENT`, `ECS_ENTITY`, `ECS_PREFAB` or `ECS_TYPE` macro's. When a component is defined with the `ECS_COMPONENT` macro a type handle is generated (or looked up, if it already existed) just with that one component. If the set of added components matches any `EcsOnAdd` systems, they will be invoked.
-
-For more details on how handles work, see [Handles](#handles).
-
-#### Remove components
-Flecs allows applications to remove owned components with the `ecs_remove` operation. The operation accepts an entity and a _type_ handle, and can be used like this:
-
-```c
-ecs_remove(world, e, Position);
-```
-
-After the operation, it is guaranteed that `e` will not have the component. It is legal to call `ecs_remove` multiple times. When the component was already removed, this operation will have no side effects. When the component is removed as a result of this operation, any `EcsOnRemove` systems that match with the `Position` component will be invoked.
-
-It is also possible to use types with `ecs_remove`. If an application defined a type `Movable` with the `ECS_TYPE` macro, it can be used with `ecs_remove` like so:
-
-```c
-ecs_remove(world, e, Movable);
-```
-
-After the operation, it is guaranteed that `e` will not have any of the components that are part of the type. If the entity only had a subset of the types, that subset is removed. If the entity had none of the components in the type, this operation will have no side effects. If the set of components that was part of this operation matched any `EcsOnRemove` systems, they will be invoked.
-
-#### Set components
-With the `ecs_set` operation, Flecs applications are able to set a component on an entity to a specific value. Other than the `ecs_add` and `ecs_remove` operations, `ecs_set` accepts a `_component` (entity) handle, as it is only possible to set a single component at the same time. The `ecs_set` operation can be used like this:
-
-```c
-ecs_set(world, e, Position, {10, 20});
-```
-
-After the operation it is guaranteed that `e` has `Position`, and that it is set to `{10, 20}`. If the entity did not yet have `Position`, it will be added by the operation. If the entity already had `Position`, it will only assign the value. If there are any `EcsOnSet` systems that match with the `Position` component, they will be invoked after the value is assigned.
-
-### Shared components
-Shared components in Flecs are components that are shared between multiple entities. Where owned components have a 1..1 relationship between a component and an entity, a shared component has a 1..N relationship between the component and entity. Shared components are only stored once in memory, which can drastically reduce memory usage of an application if the same component can be shared across many entities. Additionally, shared components are a fast way to update a component value in constant time (O(1)) for N entities.
-
-There are different mechanisms for sharing components across entities, which are described in the following sections.
-
 ### Prefabs
 A prefab is a special kind of entity in Flecs whos components are shared with any entity to which the prefab is added. Consider the following code example:
 
@@ -786,6 +656,137 @@ In this example, the `FrontWheel` and `BackWheel` prefabs of the car inherit fro
 ```
 ecs_entity_t e = ecs_new(world, Car); // Creates FrontWheel, FrontWheel/Tire, BackWheel, BackWheel/Tire
 ```
+
+## Components and Types
+Components, together with entities, are the most important building blocks for applications in Flecs. Like entities, components are orthogonally designed to do a single thing, which is to store data associated with an entity. Components, as with any ECS framework, do not contain any logic, and can be added or removed at any point in the application. A component can be registered like this:
+
+```c
+ECS_COMPONENT(world, Position);
+```
+
+Here, `Position` has to be an existing type in your application. You can register the same type twice with a typedef. If you have the following types:
+
+```c
+struct Vector {
+    float x;
+    float y;
+};
+
+typedef struct Vector Position;
+typedef struct Vector Velocity;
+```
+
+they can be simply registered like this:
+
+```c
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity);
+```
+
+With the API, you can even register the same type twice:
+
+```c
+ecs_new_component(world, "Position", sizeof(struct Vector));
+ecs_new_component(world, "Velocity", sizeof(struct Vector));
+```
+
+A _type_ in Flecs is any set of 1..N components. If an entity has components `A` and `B`, then the _type_ of that entity is `A, B`. Types in Flecs are a first class citizen, in that they are just as prominently featured in the API as components, and in many cases they can be used interchangeably. An application can explicitly create a type, like this:
+
+```c
+ECS_TYPE(world, Movable, Position, Velocity);
+```
+
+This creates a type called `Movable` with the `Position` and `Velocity` components. Components have to be defined with either the `ECS_COMPONENT` macro or the `ecs_new_component` function before they can be used in an `ECS_TYPE` declaration.
+
+Types handles be used interchangeably with components for most API operations. Using types instead of components can be useful for various reasons. A common application is to use a type to define an initial set of components for new entities. A type can be used together with `ecs_new` to accomplish this, like so:
+
+```c
+ecs_new(world, Movable);
+```
+
+The `ecs_new` operation actually accepts an argument of `ecs_type_t`, which means that even when a single component (like `Position`) is passed to the function, actually a _type_ is passed with only the `Position` component. 
+
+This will create an entity with the `Position` and `Velocity` components, when using the previous definition of `Movable`. This approach is faster than individually adding the `Position` and `Velocity` components. Furthermore it allows applications to define reusable templates that can be managed in one location, as opposed to every location where entities are being created.
+
+Types can also be nested. For example:
+
+```c
+ECS_TYPE(world, Movable, Position, Velocity);
+ECS_TYPE(world, Unit, HealthPoints, Attack, Defense);
+ECS_TYPE(world, Magic, Mana, ManaRecharge);
+ECS_TYPE(world, Warrior, Movable, Unit);
+ECS_TYPE(world, Wizard, Movable, Unit, Magic);
+```
+
+When added to entities, types themselves are not associated with the entity. Instead, only the resulting set of components is. For example, creating an entity with the `Wizard` type would be equivalent to creating an entity and individually adding `Position`, `Velocity`, `Attack`, `Defense`, `Mana` and `ManaRecharge`.
+
+Types can be used with other operations as well, like `ecs_add`, `ecs_remove` and `ecs_has`. Whenever an application wants to add or remove multiple components, it is always faster to do this with a type as they approximate constant time performance (`O(1)`), whereas individually adding components is at least `O(n)`.
+
+Types are not limited to grouping components. They can also group entities or systems. This is a key enabler for powerful features, like [prefabs](#prefabs), [containers](#containers) and [features](#features).
+
+### Owned components
+In Flecs, components can either be owned by an entity or shared with other entities. When a component is owned, it means that an entity has a private instance of the component that can be modified individually. Owned components are useful when a component is mutable, and individual entities require the component to have a unique value.
+
+The following sections describe the API operations for working with owned components.
+
+#### Add components
+In Flecs, an application can add owned components to an entity with the `ecs_add` operation. The operation accepts an entity and a _type_ handle, and can be used like this:
+
+```c
+ecs_add(world, e, Position);
+```
+
+After the operation, it is guaranteed that `e` will have the component. It is legal to call `ecs_add` multiple times. When a component is already added, this operation will have no side effects. When the component is added as a result of this operation, any `EcsOnAdd` systems subscribed for `Position` will be invoked.
+
+It is also possible to use types with `ecs_add`. If an application defined a type `Movable` with the `ECS_TYPE` macro, it can be used with `ecs_add` like so:
+
+```c
+ecs_add(world, e, Movable);
+```
+
+After the operation, it is guaranteed that `e` will have all components that are part of the type. If the entity already had a subset of the components in the type, only the difference is added. If the entity already had all components in the type, this operation will have no side effects.
+
+##### A quick recap on handles
+The signature of `ecs_add` looks like this:
+
+```c
+void ecs_add(ecs_world_t *world, ecs_entity_t entity, ecs_type_t type);
+```
+
+Note that the function accepts a _type handle_ as its 3rd argument. Type handles are automatically defined by the API when an application uses the `ECS_COMPONENT`, `ECS_ENTITY`, `ECS_PREFAB` or `ECS_TYPE` macro's. When a component is defined with the `ECS_COMPONENT` macro a type handle is generated (or looked up, if it already existed) just with that one component. If the set of added components matches any `EcsOnAdd` systems, they will be invoked.
+
+For more details on how handles work, see [Handles](#handles).
+
+#### Remove components
+Flecs allows applications to remove owned components with the `ecs_remove` operation. The operation accepts an entity and a _type_ handle, and can be used like this:
+
+```c
+ecs_remove(world, e, Position);
+```
+
+After the operation, it is guaranteed that `e` will not have the component. It is legal to call `ecs_remove` multiple times. When the component was already removed, this operation will have no side effects. When the component is removed as a result of this operation, any `EcsOnRemove` systems that match with the `Position` component will be invoked.
+
+It is also possible to use types with `ecs_remove`. If an application defined a type `Movable` with the `ECS_TYPE` macro, it can be used with `ecs_remove` like so:
+
+```c
+ecs_remove(world, e, Movable);
+```
+
+After the operation, it is guaranteed that `e` will not have any of the components that are part of the type. If the entity only had a subset of the types, that subset is removed. If the entity had none of the components in the type, this operation will have no side effects. If the set of components that was part of this operation matched any `EcsOnRemove` systems, they will be invoked.
+
+#### Set components
+With the `ecs_set` operation, Flecs applications are able to set a component on an entity to a specific value. Other than the `ecs_add` and `ecs_remove` operations, `ecs_set` accepts a `_component` (entity) handle, as it is only possible to set a single component at the same time. The `ecs_set` operation can be used like this:
+
+```c
+ecs_set(world, e, Position, {10, 20});
+```
+
+After the operation it is guaranteed that `e` has `Position`, and that it is set to `{10, 20}`. If the entity did not yet have `Position`, it will be added by the operation. If the entity already had `Position`, it will only assign the value. If there are any `EcsOnSet` systems that match with the `Position` component, they will be invoked after the value is assigned.
+
+### Shared components
+Shared components in Flecs are components that are shared between multiple entities. Where owned components have a 1..1 relationship between a component and an entity, a shared component has a 1..N relationship between the component and entity. Shared components are only stored once in memory, which can drastically reduce memory usage of an application if the same component can be shared across many entities. Additionally, shared components are a fast way to update a component value in constant time (O(1)) for N entities.
+
+Shared components can be implemented with [prefabs](#prefabs).
 
 ## Systems
 Systems let applications execute logic on a set of entities that matches a certain component expression. The matching process is continuous, when new entities (or rather, new _entity types_) are created, systems will be automatically matched with those. Systems can be ran by Flecs as part of the built-in frame loop, or by invoking them individually using the Flecs API.
