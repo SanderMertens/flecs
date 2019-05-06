@@ -1639,6 +1639,7 @@ When a module defines other kinds of things besides components, a different set 
 ```c
 // To declare a system handle, use ECS_DECLARE_ENTITY
 typedef struct MyTransformModuleHandles {
+    ECS_DECLARE_COMPONENT(Position);
     ECS_DECLARE_ENTITY(MySystem);
 } MyTransformModuleHandles;
 
@@ -1647,7 +1648,8 @@ void MyTransformModuleImport(ecs_world_t *world, int flags);
 
 // To import a system handle, use ECS_IMPORT_ENTITY 
 #define MyTransformModuleImportHandles(handles)\
-    ECS_IMPORT_ENTITY(handles, Position)
+    ECS_IMPORT_COMPONENT(handles, Position)\
+    ECS_IMPORT_ENTITY(handles, MySystem)
 ```
 
 The `MyTransformModuleImport` function then needs to be changed to this:
@@ -1657,11 +1659,17 @@ void MyTransformModuleImport(ecs_world_t *world, int flags)
 {
     // Create the module in Flecs
     ECS_MODULE(world, MyTransformModule);
+    
+    // Create the component
+    ECS_COMPONENT(world, Position);
 
     // Create the component
     ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position);
 
     // Export the component
+    ECS_EXPORT_COMPONENT(Position);
+
+    // Export the system
     ECS_EXPORT_ENTITY(MySystem);
 }
 ```
