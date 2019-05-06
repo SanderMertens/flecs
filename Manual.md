@@ -1580,7 +1580,7 @@ ecs_import_from_library(world, "flecs.systems.admin", "FlecsSystemsAdmin");
 
 The `flecs.systems.admin` argument is the name of the library or package. The `FlecsSystemsAdmin` argument is the name of the module, as a library may contain more than one module. If the module name is `NULL`, Flecs will automatically attempt to derive the module name from the library name. Currently this operation is only supported when Flecs is built with the bake build system, as Flecs reuses package management functions from the bake runtime. Future versions of Flecs will support this functionality for other build systems as well.
 
-### Creating a module
+### Creating modules
 A few steps are required to create a module from scratch:
 
 - Create a type which contains the _public_ handles
@@ -1666,4 +1666,4 @@ void MyTransformModuleImport(ecs_world_t *world, int flags)
 }
 ```
 
-Prefabs, types and tags can all be exported with the ECS_EXPORT_ENTITY macro.
+Prefabs, types and tags can all be exported with the `ECS_EXPORT_ENTITY` macro.
