@@ -96,7 +96,8 @@ void bake_gettime(ecs_time_t *t) {
     *t = (ecs_time_t){bt.tv_sec, bt.tv_nsec};
 }
 
-static void bake_log(
+static 
+void bake_log(
     ut_log_verbosity level,
     const char *msg,
     void *ctx)
