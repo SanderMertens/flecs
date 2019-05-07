@@ -49,7 +49,7 @@ See [here](#getting-started-with-the-dashboard) for how to create an application
   * [module](#module)
 
 ## Building
-You can build flecs with either [Bake](https://github.com/SanderMertens/bake), CMake or Meson. If you just want to build the flecs shared library, CMake will get you there. If you want to use flecs modules, you'll need Bake (for now).
+You can build flecs with either CMake, Meson or [Bake](https://github.com/SanderMertens/bake). 
 
 ### CMake
 ```
@@ -61,15 +61,6 @@ cmake ..
 make
 ```
 
-### Bake
-```
-git clone https://github.com/SanderMertens/bake
-make -C bake/build-$(uname)
-bake/bake setup
-bake clone https://github.com/SanderMertens/flecs
-```
-Note that bake may ask for your password to install a single shell script to `/usr/local`. It is highly recommended you do this, as it makes everything much easier, but if you'd rather not, make sure to follow the instructions in the bake setup to setup the environment before calling bake!
-
 ### Meson
 
 ```
@@ -79,6 +70,37 @@ meson build --default-library=both
 cd build
 ninja
 ```
+
+### Bake
+Install bake first:
+```
+git clone https://github.com/SanderMertens/bake
+make -C bake/build-$(uname)
+bake/bake setup
+```
+
+To then install Flecs, do:
+```
+bake clone https://github.com/SanderMertens/flecs
+```
+
+### Building notes
+
+#### Operating system abstraction API
+Flecs does not contain any platform-specific code. For threading (amongst others) it relies on a platform abstraction API that needs to be populated by the application. When Flecs is built with bake, this API is populated automatically by the bake runtime. When building with CMake or Meson, applications will have to do this manually if they rely on any of these features:
+
+- Threading
+- FPS control
+- Profiling
+
+[This section of the manual](Manual.md#operating-system-abstraction-api) describes how to set the OS API.
+
+#### Modules
+Flecs has optional [modules](#modules) which are created as bake packages. It is possible to use modules in a non-bake environment, but this is still a work in progress and likely requires manual labor. 
+
+If you want to use modules, but you do not want to use bake as the build tool for your own applications, the recommended way of accomplishing this is to first build Flecs and the modules with bake, and use the generated binaries with your own build system. 
+
+After building with bake, you will have a folder called `bake` in your home directory which contains binaries and include files. Depending on your operating system, you may need to set `LD_LIBRARY_PATH` (Linux), `DYLD_LIBRARY_PATH` (MacOS) or `PATH` (Windows) to the path where the libraries are stored.
 
 ## Getting started
 To create a new flecs application, first create a new project:

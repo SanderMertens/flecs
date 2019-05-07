@@ -151,6 +151,7 @@ typedef struct ecs_os_api_t {
     /* Application termination */
     ecs_os_api_abort_t abort;
 } ecs_os_api_t;
+
 FLECS_EXPORT
 extern const ecs_os_api_t ecs_os_api;
 
