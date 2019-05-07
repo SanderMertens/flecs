@@ -84,7 +84,6 @@
      - [EcsOnAdd event](#ecsonadd-event)
      - [EcsOnRemove event](#ecsonremove-event)
      - [EcsOnSet event](#ecsonset-event)
-     - [Custom reactive systems](#custom-reactive-systems)
    - [Features](#features)
 - [Staging](#staging)
   - [Staged vs. inline modifications](#staged-vs-inline-modifications)
