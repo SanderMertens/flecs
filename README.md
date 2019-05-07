@@ -6,20 +6,16 @@
 
 Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)). Flecs packs as much punch as possible into a small library with a tiny C99 API and zero dependencies. Here are some of the things it can do:
 
-- Process entites on multiple threads with a lock-free, zero-overhead staging architecture
-- Organize components & systems in reusable, library-friendly modules
-- Report runtime statistics on memory usage, performance and more
-- Run systems every frame, periodically, on demand or on change events
+- Process entites on multiple threads with a lock-free, zero-overhead staging architecture [[learn more](Manual.md#staging)]
+- Organize components & systems in reusable, library-friendly modules [[learn more](Manual.md#modules)]
+- Run systems every frame, periodically, on demand or on change events [[learn more](Manual.md#reactive-systems)]
+- Report runtime statistics on memory usage, performance and more [[learn more](https://github.com/SanderMertens/flecs/blob/master/include/util/stats.h)]
 
 Additionally, flecs has a flexible engine that lets you do many things, like:
 
-- Share components across entities with prefabs
-- Use expressive system expressions with AND, OR, NOT and optional operators
-- Create hierarchies, indexes and DAGs with container entities
-- Add/remove components and create/delete entities whenever, wherever
-- Add components to _anything_. Entities? Check. Systems? Check. Components? Check!
-
-[Learn more](Manual.md) here.
+- An expressive prefab system with prefab variants, component overrides and nested prefabs [[learn more](Manual.md#prefabs)]
+- Create specific system expressions with AND, OR, NOT and optional operators [[learn more](Manual.md#system-queries)]
+- Create hierarchies, indexes and DAGs with container entities [[learn more](Manual.md#containers)]
 
 Make sure to check the flecs [dashboard](https://github.com/SanderMertens/flecs-systems-admin):
 
@@ -49,7 +45,14 @@ See [here](#getting-started-with-the-dashboard) for how to create an application
   * [module](#module)
 
 ## Building
-You can build flecs with either CMake, Meson or [Bake](https://github.com/SanderMertens/bake). 
+You can build flecs with either CMake, Meson, [Bake](https://github.com/SanderMertens/bake) or embed the sources into your own project.
+
+### Embedding:
+Flecs can be easily embedded into projects, as it does not require complex build instructions. The following build instructions are enough to build a functioning Flecs library with gcc:
+
+```
+gcc src/*.c -I. --shared -o libflecs.so
+```
 
 ### CMake
 ```
@@ -235,6 +238,8 @@ An entity is an integer that uniquely identifies an "object" in a system. An ent
 ecs_entity_t e = ecs_new(world, 0);
 ```
 
+[Learn more](Manual.md#entities)
+
 ### Component
 Components are datatypes that can be added to an entity. Any C datatype can be registered as a component within flecs. To register a component, you can use the `ECS_COMPONENT` macro, which wraps around the `ecs_new_component` function:
 
@@ -261,6 +266,8 @@ ecs_set(world, e, Point, {.x = 10, .y = 20});
 
 Flecs components are stored internally as entities, which is why handles to components are of the `ecs_entity_t` type.
 
+[Learn more](Manual.md#components-and-types)
+
 ### System
 A system is logic (a function) that is executed for every entity that has a set of components that match a system's interest. In flecs, systems specify their interest, and when they should run. To define a system, you can use the `ECS_SYSTEM` macro, which wraps around the `ecs_new_system` function:
 
@@ -284,6 +291,8 @@ Systems can be enabled / disabled. By default a system is enabled. To enable or 
 ```c
 ecs_enable(world, LogPoints, false);
 ```
+
+[Learn more](Manual.md#systems)
 
 ### Identifier
 Entities in flecs may have an optional string-based identifier. An identifier can be added to an entity by setting the `EcsId` component, like this:
@@ -331,6 +340,8 @@ This defines a type called `Circle` that contains `EcsCircle` and `EcsPosition2D
 ecs_add(world, e, Circle);
 ```
 
+[Learn more](Manual.md#components-and-types)
+
 ### Feature
 A feature is a type that contains solely out of systems. To create features, use the `ECS_TYPE` macro or `ecs_new_type` function. This can be used to enable/disable multiple systems with a single API call, like so:
 
@@ -350,6 +361,8 @@ ECS_TYPE(world, MyFeature, MyNestedFeatureA, MyNestedFeatureB);
 ecs_enable(World, MyFeature, true);
 ```
 
+[Learn more](Manual.md#features)
+
 ### Tag
 A tag is a component that does not contain any data. Internally it is represented as a component with data-size 0. Tags can be useful for subdividing entities into categories, without adding any data. A tag can be defined with the `ECS_TAG` macro:
 
@@ -362,6 +375,8 @@ Tags can be added/removed like any other component:
 ```c
 ecs_add(world, e, MyTag);
 ```
+
+[Learn more](Manual.md#tags)
 
 ### Container
 A container is an entity that can contain other entities. There are several methods to add a child entity to a container entity. The easiest way is with the `ecs_new_child` function:
@@ -393,6 +408,8 @@ Systems can request components from containers. If a system requests component `
 ECS_SYSTEM(world, MySystem, EcsOnUpdate, CONTAINER.Foo, Bar);
 ```
 
+[Learn more](Manual.md#containers)
+
 ### Prefab
 Prefabs are a special kind of entity that enable applications to reuse components values across entities. To create a prefab, you can use the `ECS_PREFAB` macro, or `ecs_new_prefab` function:
 
@@ -415,6 +432,8 @@ ecs_set(world, CirclePrefab, EcsCircle, {.radius = 10});
 
 This will change the value of `EcsCircle` across all entities that have the prefab. Entities can override component values from a prefab, by either adding or setting a component on themselves, using `ecs_add` or `ecs_set`. When a component is added using `ecs_add`, it will be initialized with the component value of the prefab.
 
+[Learn more](Manual.md#prefabs)
+
 ### Module
 Modules are used to group entities / components / systems. They can be imported with the `ECS_IMPORT` macro:
 
@@ -427,3 +446,5 @@ This will invoke the `EcsComponentsTransform` function, which will define the en
 In large code bases modules can be used to organize code and limit exposure of internal systems to other parts of the code. Modules may be implemented in separate shared libraries, or within the same project. The only requirements for using the `ECS_IMPORT` macro is that the name of the module (`EcsComponentsTransform`) can be resolved as a C function with the right type. For an example on how to implement modules, see the implementation of one of the flecs modules (see above).
 
 Modules can be imported multiple times without causing side effects.
+
+[Learn more](Manual.md#modules)
