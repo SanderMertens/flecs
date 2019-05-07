@@ -100,6 +100,7 @@
     - [Module content handles](#module-content-handles)
     - [Dynamic imports](#dynamic-imports)
   - [Creating modules](#creating-modules)
+- [Operating system abstraction API](#operating-system-abstraction-api)
 
 ## Design Goals
 Flecs is designed with the following goals in mind, in order of importance:
@@ -1667,3 +1668,52 @@ void MyTransformModuleImport(ecs_world_t *world, int flags)
 ```
 
 Prefabs, types and tags can all be exported with the ECS_EXPORT_ENTITY macro.
+
+### Operating system abstraction API
+Flecs relies on functionality that is not standardized across platforms, like threading and measuring high resolution time. While the essential features of Flecs work out of the box, some of its features require additional effort. To keep Flecs as portable as possible, it does not contain any platform-specific API calls. Instead, it requires the application to provide them.
+
+Note that when Flecs is built with bake, it automatically uses the platform specific API from the bake runtime. Applications do not need to manually set these, unless they want to provide their own implementations.
+
+The OS API is defined by a struct in `util/os_api.h`. The default pattern for providing custom abstraction functions is:
+
+```c
+// Set default calls, like malloc, free
+ecs_os_set_api_defaults();
+
+// Obtain a private writable copy of the os_api struct
+ecs_os_api_t os_api = ecs_os_api;
+
+// Override any calls
+os_api.thread_new = my_thread_new;
+os_api.thread_join = my_thread_join;
+
+// Set the custom API callbacks
+ecs_os_set_api(&os_api);
+```
+
+These APIs callbacks are set automatically when calling `ecs_os_set_api_defaults`:
+
+- malloc
+- free
+- realloc
+- calloc
+- log
+- log_error
+- log_debug
+- abort
+
+When Flecs is built with bake, these additional API callbacks are set to the corresponding functions from the bake runtime:
+
+- thread_new
+- thread_join
+- mutex_new
+- mutex_free
+- mutex_lock
+- mutex_unlock
+- cond_new
+- cond_free
+- cond_signal
+- cond_broadcast
+- cond_wait
+- sleep
+- get_time
