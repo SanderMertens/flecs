@@ -1581,7 +1581,7 @@ ecs_import_from_library(world, "flecs.systems.admin", "FlecsSystemsAdmin");
 
 The `flecs.systems.admin` argument is the name of the library or package. The `FlecsSystemsAdmin` argument is the name of the module, as a library may contain more than one module. If the module name is `NULL`, Flecs will automatically attempt to derive the module name from the library name. Currently this operation is only supported when Flecs is built with the bake build system, as Flecs reuses package management functions from the bake runtime. Future versions of Flecs will support this functionality for other build systems as well.
 
-### Creating a module
+### Creating modules
 A few steps are required to create a module from scratch:
 
 - Create a type which contains the _public_ handles
@@ -1640,6 +1640,7 @@ When a module defines other kinds of things besides components, a different set 
 ```c
 // To declare a system handle, use ECS_DECLARE_ENTITY
 typedef struct MyTransformModuleHandles {
+    ECS_DECLARE_COMPONENT(Position);
     ECS_DECLARE_ENTITY(MySystem);
 } MyTransformModuleHandles;
 
@@ -1648,7 +1649,8 @@ void MyTransformModuleImport(ecs_world_t *world, int flags);
 
 // To import a system handle, use ECS_IMPORT_ENTITY 
 #define MyTransformModuleImportHandles(handles)\
-    ECS_IMPORT_ENTITY(handles, Position)
+    ECS_IMPORT_COMPONENT(handles, Position)\
+    ECS_IMPORT_ENTITY(handles, MySystem)
 ```
 
 The `MyTransformModuleImport` function then needs to be changed to this:
@@ -1658,11 +1660,17 @@ void MyTransformModuleImport(ecs_world_t *world, int flags)
 {
     // Create the module in Flecs
     ECS_MODULE(world, MyTransformModule);
+    
+    // Create the component
+    ECS_COMPONENT(world, Position);
 
     // Create the component
     ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position);
 
     // Export the component
+    ECS_EXPORT_COMPONENT(Position);
+
+    // Export the system
     ECS_EXPORT_ENTITY(MySystem);
 }
 ```
