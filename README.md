@@ -49,7 +49,14 @@ See [here](#getting-started-with-the-dashboard) for how to create an application
   * [module](#module)
 
 ## Building
-You can build flecs with either CMake, Meson or [Bake](https://github.com/SanderMertens/bake). 
+You can build flecs with either CMake, Meson, [Bake](https://github.com/SanderMertens/bake) or embed the sources into your own project.
+
+### Embedding:
+Flecs can be easily embedded into projects, as it does not require complex build instructions. The following build instructions are enough to build a functioning Flecs library with gcc:
+
+```
+gcc src/*.c -I. --shared -o libflecs.so
+```
 
 ### CMake
 ```
