@@ -17,8 +17,6 @@ Additionally, flecs has a flexible engine that lets you do many things, like:
 - Create specific system expressions with AND, OR, NOT and optional operators [[learn more](Manual.md#system-queries)]
 - Create hierarchies, indexes and DAGs with container entities [[learn more](Manual.md#containers)]
 
-[Learn more](Manual.md) here.
-
 Make sure to check the flecs [dashboard](https://github.com/SanderMertens/flecs-systems-admin):
 
 ![dashboard](https://user-images.githubusercontent.com/9919222/54180572-309ec380-4459-11e9-9e48-1a08de57ff91.png)
