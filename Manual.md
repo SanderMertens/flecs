@@ -660,7 +660,7 @@ ECS_PREFAB(world, Car, EcsPosition2D);
 
 In this example, the `FrontWheel` and `BackWheel` prefabs of the car inherit from `Wheel`, which is an effective mechanism to compose a prefab out of one or more existing prefabs, as it reuses the components of the prefab base, while also allowing for the possibility to override component values where necessary. Children of the base (`Wheel`) are also automatically inherited by the variants (`FrontWheel`, `BackWheel`), thus for every entity that is created with `Car`, 4 additional child entities will be created:
 
-```
+```c
 ecs_entity_t e = ecs_new(world, Car); // Creates FrontWheel, FrontWheel/Tire, BackWheel, BackWheel/Tire
 ```
 
