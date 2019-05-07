@@ -91,7 +91,8 @@ Flecs does not contain any platform-specific code. For threading (amongst others
 
 - Threading
 - FPS control
-- Profiling
+- Automatic time management (delta_time)
+- System / frame profiling
 
 [This section of the manual](Manual.md#operating-system-abstraction-api) describes how to set the OS API.
 

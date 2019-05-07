@@ -92,6 +92,8 @@ const char* ecs_strerror(
         return "unresolved reference for system";
     case ECS_THREAD_ERROR:
         return "failed to create thread";
+    case ECS_MISSING_OS_API:
+        return "missing implementation for OS API function";
     }
 
     return "unknown error code";

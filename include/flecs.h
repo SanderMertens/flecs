@@ -1645,6 +1645,7 @@ void _ecs_assert(
 #define ECS_COLUMN_IS_NOT_SET (24)
 #define ECS_UNRESOLVED_REFERENCE (25)
 #define ECS_THREAD_ERROR (26)
+#define ECS_MISSING_OS_API (27)
 
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */

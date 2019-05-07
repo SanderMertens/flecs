@@ -200,6 +200,22 @@ ecs_table_t* create_table(
     return result;
 }
 
+#ifndef NDEBUG
+static
+void no_threading(
+    const char *function)
+{
+    ecs_os_dbg("threading unavailable: %s not implemented", function);
+}
+
+static
+void no_time(
+    const char *function)
+{
+    ecs_os_dbg("time management: %s not implemented", function);
+}
+#endif
+
 /* -- Private functions -- */
 
 /** Get pointer to table data from type id */
@@ -468,6 +484,35 @@ ecs_world_t *ecs_init(void) {
     }
 #endif
 
+    ecs_assert(ecs_os_api.malloc != NULL, ECS_MISSING_OS_API, "malloc");
+    ecs_assert(ecs_os_api.realloc != NULL, ECS_MISSING_OS_API, "realloc");
+    ecs_assert(ecs_os_api.calloc != NULL, ECS_MISSING_OS_API, "calloc");
+
+#ifndef NDEBUG
+    bool thr_ok = true;
+    if (!ecs_os_api.mutex_new) {thr_ok = false; no_threading("mutex_new");}
+    if (!ecs_os_api.mutex_free) {thr_ok = false; no_threading("mutex_free");}
+    if (!ecs_os_api.mutex_lock) {thr_ok = false; no_threading("mutex_lock");}
+    if (!ecs_os_api.mutex_unlock) {thr_ok = false; no_threading("mutex_unlock");}
+    if (!ecs_os_api.cond_new) {thr_ok = false; no_threading("cond_new");}
+    if (!ecs_os_api.cond_free) {thr_ok = false; no_threading("cond_free");}
+    if (!ecs_os_api.cond_wait) {thr_ok = false; no_threading("cond_wait");}
+    if (!ecs_os_api.cond_signal) {thr_ok = false; no_threading("cond_signal");}
+    if (!ecs_os_api.cond_broadcast) {thr_ok = false; no_threading("cond_broadcast"); }
+    if (!ecs_os_api.thread_new) {thr_ok = false; no_threading("thread_new");}
+    if (!ecs_os_api.thread_join) {thr_ok = false; no_threading("thread_join");}
+    if (thr_ok) {
+        ecs_os_dbg("threading available");
+    }
+
+    bool time_ok = true;
+    if (!ecs_os_api.get_time) {time_ok = false; no_time("get_time");}
+    if (!ecs_os_api.sleep) {time_ok = false; no_time("sleep");}
+    if (time_ok) {
+        ecs_os_dbg("time management available");
+    }
+#endif
+
     ecs_world_t *world = ecs_os_malloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
 
@@ -578,9 +623,7 @@ ecs_world_t* ecs_init_w_args(
     int argc,
     char *argv[])
 {
-    ecs_world_t *world = ecs_init();
-
-    /* First parse debug argument so logging is enabled for other args */ 
+    /* First parse debug argument so logging is enabled while initializing world */ 
     int i;
     for (i = 1; i < argc; i ++) {
         if (argv[i][0] == '-') {
@@ -594,6 +637,8 @@ ecs_world_t* ecs_init_w_args(
             /* Ignore arguments that don't start with '-' */
         }
     }
+
+    ecs_world_t *world = ecs_init();
 
     /* Parse remaining arguments */
     for (i = 1; i < argc; i ++) {
@@ -1066,6 +1111,7 @@ void ecs_measure_frame_time(
     bool enable)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
     if (!world->target_fps || enable) {
         world->measure_frame_time = enable;
     }
@@ -1076,6 +1122,7 @@ void ecs_measure_system_time(
     bool enable)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
     world->measure_system_time = enable;
 }
 
@@ -1084,6 +1131,8 @@ void ecs_set_target_fps(
     float fps)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
+    ecs_assert(ecs_os_api.sleep != NULL, ECS_MISSING_OS_API, "sleep");
 
     if (!world->arg_fps) {
         ecs_measure_frame_time(world, true);
