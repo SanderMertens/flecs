@@ -2,8 +2,8 @@
 #include "include/private/flecs.h"
 #include <string.h>
 
-const ecs_vector_params_t tablestats_arr_params = {
-    .element_size = sizeof(EcsTableStats)
+const ecs_vector_params_t compstats_arr_params = {
+    .element_size = sizeof(EcsComponentStats)
 };
 
 const ecs_vector_params_t systemstats_arr_params = {
@@ -242,21 +242,6 @@ int compare_sysstats(
 }
 
 static
-int compare_tablestats(
-    const void *e1,
-    const void *e2)
-{
-    const EcsTableStats *t1 = e1;
-    const EcsTableStats *t2 = e2;
-    return t2->row_count > t1->row_count
-      ? 1
-      : t2->row_count < t1->row_count
-        ? -1
-        : 0
-        ;
-}
-
-static
 int system_stats_arr(
     ecs_world_t *world,
     ecs_vector_t **stats_array,
@@ -311,45 +296,95 @@ int system_stats_arr_inactive(
     return count;
 }
 
+static
+void add_component_measurement(
+    ecs_world_t *world,
+    ecs_world_stats_t *stats,
+    ecs_entity_t component,
+    ecs_table_column_t *column,
+    uint32_t *memory_allocd,
+    uint32_t *memory_used)
+{
+    if (!column->data) {
+        return;
+    }
+
+    uint32_t i, count = ecs_vector_count(stats->components);
+    EcsComponentStats *c = ecs_vector_first(stats->components);
+
+    for (i = 0; i < count; i ++) {
+        if (c[i].handle == component) {
+            break;
+        }
+    }
+
+    if (i == count) {
+        EcsComponent *c_data = ecs_get_ptr(world, component, EcsComponent);
+        if (c_data) {
+
+            ecs_vector_add(&stats->components, &compstats_arr_params);
+            c = ecs_vector_first(stats->components);
+
+            c[i].handle = component;
+            c[i].id = ecs_get_id(world, component);
+            c[i].memory_allocd = 0;
+            c[i].memory_used = 0;
+            c[i].entities = 0;
+            c[i].tables = 0;
+
+            c[i].size = c_data->size;
+        } else {
+            return;
+        }
+    }
+
+    ecs_vector_params_t param = {.element_size = c[i].size};
+    ecs_vector_memory(column->data, &param, &c[i].memory_allocd, &c[i].memory_used);
+    ecs_vector_memory(column->data, &param, memory_allocd, memory_used);
+
+    c[i].entities += ecs_vector_count(column->data);
+    c[i].tables ++;
+}
+
+static
+void collect_comp_stats(
+    ecs_world_t *world,
+    ecs_world_stats_t *stats,
+    uint32_t *memory_allocd,
+    uint32_t *memory_used)
+{
+    ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
+    uint32_t i, count = ecs_vector_count(world->main_stage.tables);
+
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *table = &tables[i];
+        ecs_entity_t *components = ecs_vector_first(table->type);
+
+        uint32_t c, c_count = ecs_vector_count(table->type);
+
+        for (c = 0; c < c_count; c ++) {
+            add_component_measurement(world, stats, components[c], 
+                    &table->columns[c], memory_allocd, memory_used);
+        }
+    }
+}
+
 void ecs_get_stats(
     ecs_world_t *world,
     ecs_world_stats_t *stats)
 {
     uint32_t mem_used = 0, mem_allocd = 0;
-    stats->table_count = ecs_vector_count(world->main_stage.tables);
 
-    if (!stats->tables) {
-        stats->tables = ecs_vector_new(&tablestats_arr_params, stats->table_count);
+    if (!stats->components) {
+        stats->components = ecs_vector_new(&compstats_arr_params, stats->component_count);
     } else {
-        ecs_vector_clear(stats->tables);
+        ecs_vector_clear(stats->components);
     }
 
-    ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
-    uint32_t i, count = ecs_vector_count(world->main_stage.tables);
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = &tables[i];
-        EcsTableStats *tstats = ecs_vector_add(
-            &stats->tables, &tablestats_arr_params);
+    collect_comp_stats(world, stats, &mem_allocd, &mem_used);
 
-        uint32_t row_size = ecs_table_row_size(table);
-        tstats->row_count = ecs_table_count(table);
-        tstats->memory_used = tstats->row_count * row_size;
-        tstats->memory_allocd = ecs_table_rows_dimensioned(table) * row_size;
-        tstats->columns = ecs_type_tostr(world, NULL, table->type_id);
-
-        ecs_entity_t type_handle = ecs_map_get64(
-            world->type_handles, table->type_id);
-        if (type_handle) {
-            tstats->id = ecs_get_id(world, type_handle);
-        } else {
-            tstats->id = NULL;
-        }
-
-        mem_used += tstats->memory_used;
-        mem_allocd += tstats->memory_allocd;
-    }
-
-    ecs_vector_sort(stats->tables, &tablestats_arr_params, compare_tablestats);
+    stats->component_count = ecs_vector_count(stats->components);
+    stats->table_count = ecs_vector_count(world->main_stage.tables);
 
     if (!stats->features) {
         stats->features = ecs_vector_new(&featurestats_arr_params, 0);
@@ -465,19 +500,13 @@ void ecs_get_stats(
 void ecs_free_stats(
     ecs_world_stats_t *stats)
 {
-    uint32_t i, count = ecs_vector_count(stats->tables);
-    EcsTableStats *tables = ecs_vector_first(stats->tables);
-    for (i = 0; i < count; i ++) {
-        ecs_os_free(tables[i].columns);
-    }
-
     EcsFeatureStats *entities = ecs_vector_first(stats->features);
-    count = ecs_vector_count(stats->features);
+    uint32_t i, count = ecs_vector_count(stats->features);
     for (i = 0; i < count; i ++) {
         ecs_os_free(entities[i].entities);
     }
 
-    ecs_vector_free(stats->tables);
+    ecs_vector_free(stats->components);
     ecs_vector_free(stats->features);
     ecs_vector_free(stats->on_load_systems);
     ecs_vector_free(stats->post_load_systems);

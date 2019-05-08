@@ -28,13 +28,15 @@ typedef struct EcsFeatureStats {
     bool is_hidden;
 } EcsFeatureStats;
 
-typedef struct EcsTableStats {
+typedef struct EcsComponentStats {
+    ecs_entity_t handle;
     const char *id;
-    char *columns;
-    uint32_t row_count;
+    uint16_t size;
     uint32_t memory_used;
     uint32_t memory_allocd;
-} EcsTableStats;
+    uint32_t entities;
+    uint32_t tables;    
+} EcsComponentStats;
 
 typedef struct EcsMemoryStat {
     uint32_t allocd;
@@ -55,6 +57,7 @@ typedef struct EcsMemoryStats {
 typedef struct ecs_world_stats_t {
     uint32_t system_count;
     uint32_t table_count;
+    uint32_t component_count;
     uint32_t entity_count;
     uint32_t thread_count;
     uint32_t tick_count;
@@ -77,7 +80,7 @@ typedef struct ecs_world_stats_t {
     ecs_vector_t *on_add_systems;
     ecs_vector_t *on_remove_systems;
     ecs_vector_t *on_set_systems;
-    ecs_vector_t *tables;
+    ecs_vector_t *components;
     bool frame_profiling;
     bool system_profiling;
 } ecs_world_stats_t;
