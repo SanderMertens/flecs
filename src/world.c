@@ -997,6 +997,7 @@ bool ecs_progress(
     float user_delta_time)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(user_delta_time || ecs_os_api.get_time, ECS_MISSING_OS_API, "get_time");
 
     /* Start measuring total frame time */
     float delta_time = start_measure_frame(world, user_delta_time);
