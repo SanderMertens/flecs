@@ -1430,3 +1430,74 @@ void Prefab_prefab_w_child_new_w_count() {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_auto_override_child_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+        ecs_set(world, Parent, Position, {1, 2});
+
+        ECS_ENTITY(world, ChildPrefab, EcsPrefab, Position, Velocity);
+        ECS_TYPE(world, Child, ChildPrefab, Velocity);
+            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+            ecs_set(world, ChildPrefab, Position, {2, 3});
+            ecs_set(world, ChildPrefab, Velocity, {4, 5});
+
+    ecs_entity_t e1 = ecs_new(world, Parent);
+    test_assert(e1 != 0);
+    test_assert( ecs_has(world, e1, Position));
+
+    ecs_entity_t e2 = ecs_new(world, Parent);
+    test_assert(e2 != 0);
+    test_assert( ecs_has(world, e2, Position));
+
+    Position *p1 = ecs_get_ptr(world, e1, Position);
+    test_assert(p1 != NULL);
+    test_int(p1->x, 1);
+    test_int(p1->y, 2);
+
+    Position *p2 = ecs_get_ptr(world, e2, Position);
+    test_assert(p2 != NULL);
+    test_int(p2->x, 1);
+    test_int(p2->y, 2);    
+    test_assert(p1 == p2);
+
+    ecs_entity_t child_1 = ecs_lookup_child(world, e1, "Child");
+    test_assert(child_1 != 0);
+    test_assert( ecs_has(world, child_1, Position));
+    test_assert( ecs_has(world, child_1, Velocity));
+    test_assert( !ecs_has(world, child_1, EcsTypeComponent));
+
+    ecs_entity_t child_2 = ecs_lookup_child(world, e2, "Child");
+    test_assert(child_2 != 0);
+    test_assert( ecs_has(world, child_2, Position));
+    test_assert( ecs_has(world, child_2, Velocity));
+    test_assert( !ecs_has(world, child_2, EcsTypeComponent));
+
+    Position *child_p1 = ecs_get_ptr(world, child_1, Position);
+    test_assert(child_p1 != NULL);
+    test_int(child_p1->x, 2);
+    test_int(child_p1->y, 3);
+
+    Position *child_p2 = ecs_get_ptr(world, child_2, Position);
+    test_assert(child_p2 != NULL);
+    test_int(child_p2->x, 2);
+    test_int(child_p2->y, 3);   
+    test_assert(child_p1 == child_p2); 
+
+    Velocity *child_v1 = ecs_get_ptr(world, child_1, Velocity);
+    test_assert(child_v1 != NULL);
+    test_int(child_v1->x, 4);
+    test_int(child_v1->y, 5);
+
+    Velocity *child_v2 = ecs_get_ptr(world, child_2, Velocity);
+    test_assert(child_v2 != NULL);
+    test_int(child_v2->x, 4);
+    test_int(child_v2->y, 5); 
+    test_assert(child_v1 != child_v2);
+
+    ecs_fini(world);
+}
