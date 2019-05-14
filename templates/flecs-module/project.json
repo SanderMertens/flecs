@@ -1,0 +1,9 @@
+{
+    "id": "flecs.module",
+    "type": "template",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "Flecs module package",
+        "use": ["flecs"]
+    }
+}
