@@ -137,6 +137,7 @@ void add_table(
 
     /* Index in ref array is at element 1 (0 means no refs) */
     table_data[REFS_INDEX] = 0;
+    table_data[REFS_COUNT] = 0;
 
     /* Index in components array is at element 2 */
     table_data[COMPONENTS_INDEX] = ecs_vector_count(system_data->components) - 1;
