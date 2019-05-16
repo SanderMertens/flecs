@@ -5,7 +5,7 @@
 
 #include <stdarg.h>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
 #else
 #include <alloca.h>
@@ -168,7 +168,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_realloc(ptr, size) ecs_os_api.realloc(ptr, size)
 #define ecs_os_calloc(num, size) ecs_os_api.calloc(num, size)
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define ecs_os_alloca(type, count) _alloca(sizeof(type) * (count))
 #else
 #define ecs_os_alloca(type, count) alloca(sizeof(type) * (count))
