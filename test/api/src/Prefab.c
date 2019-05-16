@@ -1501,3 +1501,59 @@ void Prefab_prefab_auto_override_child_component() {
 
     ecs_fini(world);
 }
+
+static int invoked;
+
+void PrefabReactiveTest(ecs_rows_t *rows) {
+    invoked ++;
+}
+
+void Prefab_ignore_on_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnAdd, Position);
+
+    ECS_PREFAB(world, Prefab, Position);
+
+    test_int(invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Prefab_ignore_on_remove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnRemove, Position);
+
+    ECS_PREFAB(world, Prefab, Position);
+
+    test_int(invoked, 0);
+
+    ecs_remove(world, Prefab, Position);
+
+    test_int(invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Prefab_ignore_on_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnSet, Position);
+
+    ECS_PREFAB(world, Prefab, Position);
+
+    test_int(invoked, 0);
+
+    ecs_set(world, Prefab, Position, {0, 0});
+
+    test_int(invoked, 0);
+
+    ecs_fini(world);
+}

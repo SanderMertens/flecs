@@ -325,6 +325,12 @@ ecs_type_t ecs_notify_row_system(
         return false;
     }
 
+    if (table && table->flags & EcsTableIsPrefab && 
+        !system_data->base.match_prefabs) 
+    {
+        return 0;
+    }
+
     ecs_system_action_t action = system_data->base.action;
 
     uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
@@ -473,6 +479,10 @@ ecs_entity_t ecs_new_system(
     }
 
     system_data->has_refs = has_refs(system_data);
+
+    system_data->match_prefabs = ecs_type_contains_component(
+        world, &world->main_stage, system_data->and_from_entity, 
+        ecs_entity(EcsPrefab), false);
 
     /* If system contains FromSystem params, add them tot the system */
     if (system_data->and_from_system) {

@@ -114,6 +114,10 @@ void ecs_table_eval_columns(
         ecs_entity_t c = buf[i];
 
         ecs_assert(c <= world->last_handle, ECS_INVALID_HANDLE, NULL);
+
+        if (c == ecs_entity(EcsPrefab)) {
+            table->flags |= EcsTableIsPrefab;
+        }
         
         /* Only if creating columns in the main stage, register prefab */
         if (!ecs_has(world, c, EcsComponent)) {
@@ -126,6 +130,8 @@ void ecs_table_eval_columns(
 
                 /* Register type with prefab index for quick lookups */
                 ecs_map_set64(world->prefab_index, table->type_id, c);
+
+                table->flags |= EcsTableHasPrefab;
             
             } else if (ecs_has(world, c, EcsPrefabParent)) {
                 EcsPrefabParent *pparent = ecs_get_ptr(
@@ -148,6 +154,7 @@ int ecs_table_init(
     table->frame_systems = NULL;
     table->type = type;
     table->columns = new_columns(world, stage, type);
+    table->flags = 0;
 
     if (stage == &world->main_stage && !world->is_merging) {
         /* If world is merging, column evaluation is delayed and invoked
