@@ -22,3 +22,6 @@ flecs_dep = declare_dependency(
     dependencies : flecs_deps,
     include_directories : flecs_inc
 )
+
+pkg = import('pkgconfig')
+pkg.generate(flecs_lib)
