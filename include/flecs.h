@@ -37,13 +37,13 @@ typedef struct ecs_time_t {
 } ecs_time_t;
 
 /* Utility headers */
-#include "util/os_api.h"
-#include "util/iter.h"
-#include "util/vector.h"
-#include "util/map.h"
-#include "util/stats.h"
-#include "util/time.h"
-#include "util/os_api.h"
+#include "flecs/os_api.h"
+#include "flecs/iter.h"
+#include "flecs/vector.h"
+#include "flecs/map.h"
+#include "flecs/stats.h"
+#include "flecs/time.h"
+#include "flecs/os_api.h"
 
 /** -- Builtin module flags -- */
 #define ECS_REFLECTION (1)

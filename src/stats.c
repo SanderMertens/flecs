@@ -1,4 +1,4 @@
-#include "include/util/stats.h"
+#include "include/flecs/stats.h"
 #include "include/private/flecs.h"
 #include <string.h>
 

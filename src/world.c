@@ -1,7 +1,7 @@
 #include <string.h>
 #include <assert.h>
-#include "include/util/time.h"
-#include "include/util/stats.h"
+#include "include/flecs/time.h"
+#include "include/flecs/stats.h"
 #include "include/private/flecs.h"
 
 

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include "include/private/flecs.h"
-#include "include/util/time.h"
+#include "include/flecs/time.h"
 
 static
 void match_type(

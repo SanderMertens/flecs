@@ -4,8 +4,8 @@
 #include <stdlib.h>
 
 #include "../flecs.h"
-#include "../util/vector.h"
-#include "../util/map.h"
+#include "../flecs/vector.h"
+#include "../flecs/map.h"
 
 #define ECS_WORLD_INITIAL_TABLE_COUNT (2)
 #define ECS_WORLD_INITIAL_ENTITY_COUNT (2)

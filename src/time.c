@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <include/util/time.h>
+#include <include/flecs/time.h>
 
 void ecs_sleepf(
     double t)

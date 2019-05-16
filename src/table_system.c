@@ -1,7 +1,7 @@
 #include <string.h>
 #include <assert.h>
 #include "include/private/flecs.h"
-#include "include/util/time.h"
+#include "include/flecs/time.h"
 
 const ecs_vector_params_t column_arr_params = {
     .element_size = sizeof(ecs_system_column_t)
