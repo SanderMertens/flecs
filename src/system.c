@@ -343,12 +343,26 @@ ecs_type_t ecs_notify_row_system(
     /* Iterate over system columns, resolve data from table or references */
 
     for (i = 0; i < column_count; i ++) {
+        ecs_entity_t entity = 0;
+
         if (buffer[i].kind == EcsFromSelf) {
             /* If a regular column, find corresponding column in table */
             columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
-        } else {
+
+            if (!columns[i]) {
+                /* If column is not found, it could come from a prefab. Look for
+                 * components of components */
+                entity = ecs_get_entity_for_component(
+                    world, 0, table->type_id, buffer[i].is.component);
+
+                ecs_assert(entity != 0 || 
+                           buffer[i].oper_kind == EcsOperOptional, 
+                                ECS_INTERNAL_ERROR, NULL);
+            }
+        }
+
+        if (entity || buffer[i].kind != EcsFromSelf) {
             /* If not a regular column, it is a reference */
-            ecs_entity_t entity = 0;
             ecs_entity_t component = buffer[i].is.component;
 
             /* Resolve component from the right source */
@@ -645,7 +659,12 @@ void* _ecs_shared(
         }
 
         table_column = rows->columns[index - 1];
-        if (table_column >= 0) {
+        if (!table_column) {
+            ecs_assert(test, ECS_COLUMN_IS_NOT_SET, NULL);
+            return NULL;
+        }
+
+        if (table_column > 0) {
             ecs_assert(test, ECS_COLUMN_IS_NOT_SHARED, NULL);
             return NULL;
         }

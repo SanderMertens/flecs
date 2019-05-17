@@ -493,6 +493,36 @@ void SystemOnSet_on_set_after_on_add_1_of_2_matched() {
     test_int(p->y, 3); 
 }
 
+static
+void OnSetShared(ecs_rows_t *rows) {
+    Position *p = ecs_column_test(rows, Position, 1);
+    Velocity *v = ecs_column_test(rows, Velocity, 2);
+
+    ProbeSystem(rows);
+
+    int i;
+
+    if (p) {
+        for (i = 0; i < rows->count; i ++) {
+            p[i].x ++;
+
+            if (v) {
+                v[i].x = p[i].x;
+                v[i].y = p[i].y;
+            }
+        }
+    } else {
+        p = ecs_shared(rows, Position, 1);
+
+        for (i = 0; i < rows->count; i ++) {
+            if (v) {
+                v[i].x = p[i].x;
+                v[i].y = p[i].y;
+            }
+        }        
+    }
+}
+
 void SystemOnSet_on_set_after_override() {
     ecs_world_t *world = ecs_init();
 
@@ -501,32 +531,69 @@ void SystemOnSet_on_set_after_override() {
     ECS_PREFAB(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
-    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+    ECS_SYSTEM(world, OnSetShared, EcsOnSet, Position);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
+    /* instantiate prefab */
+
     ecs_entity_t e = ecs_new(world, Prefab);
-
-    test_int(ctx.count, 0);
-    test_int(ctx.invoked, 0);
-
-    ecs_add(world, e, Position);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, OnSet);
+
+    test_int(ctx.system, OnSetShared);
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0); 
+    test_int(ctx.s[0][0], Prefab);
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
-    test_int(p->x, 2);
-    test_int(p->y, 3);
+    test_assert(p == ecs_get_ptr(world, Prefab, Position));
+    test_int(p->x, 1);
+    test_int(p->y, 3);     
+
+    /* override component (doesn't call system) */
+
+    ctx = (SysTestData){0};
+
+    ecs_add(world, e, Position);
+
+    test_int(ctx.count, 0);
+    test_int(ctx.invoked, 0);
+
+    Position *p_after = ecs_get_ptr(world, e, Position);
+    test_assert(p_after != NULL);
+    test_assert(p != p_after);
+    test_int(p_after->x, 1);
+    test_int(p_after->y, 3);
+
+    /* set component */
+
+    ecs_set(world, e, Position, {2, 4});
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+
+    test_int(ctx.system, OnSetShared);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);    
+
+    p_after = ecs_get_ptr(world, e, Position);
+    test_assert(p_after != NULL);
+    test_assert(p != p_after);
+    test_int(p_after->x, 3);
+    test_int(p_after->y, 4);
+
+    ecs_fini(world);
 }
 
 void SystemOnSet_on_set_after_override_w_new() {

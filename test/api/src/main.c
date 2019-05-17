@@ -325,6 +325,7 @@ void Prefab_prefab_auto_override_child_component(void);
 void Prefab_ignore_on_add(void);
 void Prefab_ignore_on_remove(void);
 void Prefab_ignore_on_set(void);
+void Prefab_on_set_on_instance(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -1589,7 +1590,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 36,
+        .testcase_count = 37,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -1734,6 +1735,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "ignore_on_set",
                 .function = Prefab_ignore_on_set
+            },
+            {
+                .id = "on_set_on_instance",
+                .function = Prefab_on_set_on_instance
             }
         }
     },

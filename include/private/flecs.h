@@ -63,6 +63,11 @@ void ecs_add_intern(
     ecs_type_t type,
     bool do_set);
 
+ecs_entity_t ecs_get_entity_for_component(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_type_t type_id,
+    ecs_entity_t component);
 
 /* -- Prefab API -- */
 

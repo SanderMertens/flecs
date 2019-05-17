@@ -137,28 +137,29 @@ ecs_type_t ecs_copy_from_prefab(
     ecs_type_t modified = 0;
     ecs_table_column_t *columns = info->columns;
 
-/*    if (world->in_progress) {
+    if (world->in_progress) {
         uint64_t row64 = ecs_map_get64(stage->entity_index, entity);
         if (row64) {
             ecs_row_t row = ecs_to_row(row64);
             entity_type = row.type_id;
         }
-    }*/
+    }
+
+    ecs_vector_t *add_type = ecs_type_get(world, stage, to_add);
+    ecs_entity_t *add_handles = ecs_vector_first(add_type);
+    uint32_t i, add_count = ecs_vector_count(add_type);
+
+    bool is_prefab = false;
 
     while ((prefab = ecs_map_get64(world->prefab_index, entity_type))) {
         /* Prefabs are only resolved from the main stage. Prefabs created while
          * iterating cannot be resolved in the same iteration. */
         ecs_row_t prefab_row = ecs_to_row(ecs_map_get64(world->main_stage.entity_index, prefab));
-        bool is_prefab = false;
 
         ecs_table_t *prefab_table = ecs_world_get_table(
             world, stage, prefab_row.type_id);
         ecs_vector_t *prefab_type = prefab_table->type;
         ecs_table_column_t *prefab_columns = prefab_table->columns;
-
-        ecs_vector_t *add_type = ecs_type_get(world, stage, to_add);
-        ecs_entity_t *add_handles = ecs_vector_first(add_type);
-        uint32_t i, add_count = ecs_vector_count(add_type);
 
         for (i = 0; i < add_count; i ++) {
             ecs_entity_t component = add_handles[i];
@@ -185,9 +186,6 @@ ecs_type_t ecs_copy_from_prefab(
                             memcpy(ptr, prefab_ptr, size);
                             ptr = ECS_OFFSET(ptr, size);
                         }
-
-                        /* Keep track of which components were set by prefabs */
-                        modified = ecs_type_add(world, stage, modified, component);
                     }
                 }
             } else {
@@ -214,6 +212,9 @@ ecs_type_t ecs_copy_from_prefab(
                         }
                     }
 
+                    /* Keep track of components shared from new prefabs */
+                    modified = ecs_type_merge(world, stage, modified, prefab_row.type_id, 0);
+
                 /* If the current entity is also prefab, do not add children to
                  * it. Instead, add children (if any) of its base to its ops */
                 } else if (builder) {
@@ -239,6 +240,13 @@ ecs_type_t ecs_copy_from_prefab(
 
         /* Recursively search through prefabs */
         entity_type = prefab_row.type_id;
+    }
+
+    if (modified) {
+        /* Always strip EcsPrefab, as an entity will never inherit the EcsPrefab
+         * component from a prefab. Same for EcsId. */
+        modified = ecs_type_merge(world, stage, modified, 0, ecs_type(EcsPrefab));
+        modified = ecs_type_merge(world, stage, modified, 0, ecs_type(EcsId));
     }
 
     return modified;

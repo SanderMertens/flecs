@@ -71,8 +71,7 @@ ecs_reference_t* get_ref_data(
 }
 
 /* Get actual entity on which specified component is stored */
-static
-ecs_entity_t get_entity_for_component(
+ecs_entity_t ecs_get_entity_for_component(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type_id,
@@ -96,7 +95,7 @@ ecs_entity_t get_entity_for_component(
     if (i == count) {
         ecs_entity_t prefab = ecs_map_get64(world->prefab_index, type_id);
         if (prefab) {
-            return get_entity_for_component(world, prefab, 0, component);
+            return ecs_get_entity_for_component(world, prefab, 0, component);
         }
     }
 
@@ -282,7 +281,7 @@ void add_table(
                     } else if (kind == EcsFromEntity) {
                         e = entity;
                     } else {
-                        e = get_entity_for_component(
+                        e = ecs_get_entity_for_component(
                             world, entity, table_type, component);
 
                         if (kind != EcsCascade) {

@@ -368,7 +368,8 @@
                 "prefab_auto_override_child_component",
                 "ignore_on_add",
                 "ignore_on_remove",
-                "ignore_on_set"
+                "ignore_on_set",
+                "on_set_on_instance"
             ]
         }, {
             "id": "System_w_FromContainer",

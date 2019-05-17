@@ -1557,3 +1557,31 @@ void Prefab_ignore_on_set() {
 
     ecs_fini(world);
 }
+
+void Prefab_on_set_on_instance() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnSet, Position);
+
+    ECS_PREFAB(world, Prefab, Position);
+
+    test_int(invoked, 0);
+
+    ecs_set(world, Prefab, Position, {1, 2});
+
+    test_int(invoked, 0);
+
+    ecs_entity_t e = ecs_new(world, Prefab);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+    test_int(invoked, 1);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    ecs_fini(world);
+}
