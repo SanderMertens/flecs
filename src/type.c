@@ -135,6 +135,10 @@ ecs_vector_t* ecs_type_get(
     ecs_stage_t *stage,
     ecs_type_t type_id)
 {
+    if (!type_id) {
+        return NULL;
+    }
+    
     ecs_vector_t *result = ecs_map_get(world->main_stage.type_index, type_id);
     if (!result) {
         if (world->threads_running) {

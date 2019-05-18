@@ -67,7 +67,10 @@
                 "tag",
                 "type_w_tag",
                 "type_w_2_tags",
-                "type_w_tag_mixed"
+                "type_w_tag_mixed",
+                "add_remove",
+                "add_remove_same",
+                "add_2_remove"
             ]
         }, {
             "id": "Remove",

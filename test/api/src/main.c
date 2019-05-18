@@ -60,6 +60,9 @@ void Add_tag(void);
 void Add_type_w_tag(void);
 void Add_type_w_2_tags(void);
 void Add_type_w_tag_mixed(void);
+void Add_add_remove(void);
+void Add_add_remove_same(void);
+void Add_add_2_remove(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -610,7 +613,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Add",
-        .testcase_count = 25,
+        .testcase_count = 28,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -711,6 +714,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_w_tag_mixed",
                 .function = Add_type_w_tag_mixed
+            },
+            {
+                .id = "add_remove",
+                .function = Add_add_remove
+            },
+            {
+                .id = "add_remove_same",
+                .function = Add_add_remove_same
+            },
+            {
+                .id = "add_2_remove",
+                .function = Add_add_2_remove
             }
         }
     },

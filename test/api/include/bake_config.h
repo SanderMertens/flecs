@@ -34,7 +34,7 @@
 
 /* Convenience macro for exporting symbols */
 #ifndef API_STATIC
-  #if API_IMPL && defined _MSC_VER
+  #if API_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
     #define API_EXPORT __declspec(dllexport)
   #elif API_IMPL
     #define API_EXPORT __attribute__((__visibility__("default")))

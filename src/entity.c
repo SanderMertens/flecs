@@ -624,10 +624,11 @@ bool ecs_components_contains_component(
     return false;
 }
 
-void ecs_add_intern(
+void ecs_add_remove_intern(
     ecs_world_t *world,
     ecs_entity_info_t *info,
-    ecs_type_t type,
+    ecs_type_t to_add_type,
+    ecs_type_t to_remove_type,
     bool do_set)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
@@ -637,13 +638,14 @@ void ecs_add_intern(
     ecs_type_t dst_type = 0;
 
     if (populate_info(world, stage, info)) {
-        ecs_vector_t *to_add = ecs_type_get(world, stage, type);
-        dst_type = ecs_type_merge_arr(world, stage, info->table->type, to_add, NULL);
+        ecs_vector_t *to_add = ecs_type_get(world, stage, to_add_type);
+        ecs_vector_t *to_remove = ecs_type_get(world, stage, to_remove_type);
+        dst_type = ecs_type_merge_arr(world, stage, info->table->type, to_add, to_remove);
     } else {
-        dst_type = type;
+        dst_type = to_add_type;
     }
 
-    commit_w_type(world, stage, info, dst_type, type, 0, do_set);
+    commit_w_type(world, stage, info, dst_type, to_add_type, to_remove_type, do_set);
 }
 
 /* -- Public functions -- */
@@ -861,7 +863,7 @@ void _ecs_add(
     ecs_type_t type)
 {
     ecs_entity_info_t info = {.entity = entity};
-    ecs_add_intern(world, &info, type, true);
+    ecs_add_remove_intern(world, &info, type, 0, true);
 }
 
 void _ecs_remove(
@@ -869,21 +871,18 @@ void _ecs_remove(
     ecs_entity_t entity,
     ecs_type_t type)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
-
-    ecs_type_t dst_type = 0;
     ecs_entity_info_t info = {.entity = entity};
+    ecs_add_remove_intern(world, &info, 0, type, false);
+}
 
-    if (populate_info(world, stage, &info)) {
-        ecs_vector_t *to_remove = ecs_type_get(world, stage, type);
-        dst_type = ecs_type_merge_arr(world, stage, info.table->type, NULL, to_remove);
-    } else if (!world->in_progress) {
-        return;
-    }
-
-    commit_w_type(world, stage, &info, dst_type, 0, type, false);
+void _ecs_add_remove(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_type_t add_type,
+    ecs_type_t remove_type)
+{
+    ecs_entity_info_t info = {.entity = entity};
+    ecs_add_remove_intern(world, &info, add_type, remove_type, false);
 }
 
 ecs_entity_t _ecs_new_child(
@@ -977,7 +976,7 @@ ecs_entity_t _ecs_set_ptr_intern(
     /* If component hasn't been added to entity yet, add it */
     int *dst = ecs_get_ptr_intern(world, stage, &info, component, true, false);
     if (!dst) {
-        ecs_add_intern(world_arg, &info, type, false);
+        ecs_add_remove_intern(world_arg, &info, type, 0, false);
         dst = ecs_get_ptr_intern(world, stage, &info, component, true, false);
         if (!dst) {
             /* It is possible that an OnAdd system removed the component before

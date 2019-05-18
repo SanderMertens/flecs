@@ -716,6 +716,28 @@ void _ecs_remove(
 #define ecs_remove(world, entity, type)\
     _ecs_remove(world, entity, T##type)
 
+/** Add and remove types from an entity.
+ * This operation is a combination of ecs_add and ecs_remove. The operation
+ * behaves as if the specified to_remove type is removed first, and 
+ * subsequently the to_add type is added. This operation is more efficient than
+ * adding/removing components separately with ecs_add/ecs_remove.
+ * 
+ * @param world The world.
+ * @param entity The entity from which to remove, and to which to add the types.
+ * @param to_add The type to add to the entity.
+ * @param to_remove The type to remove from the entity.
+ */ 
+FLECS_EXPORT
+void _ecs_add_remove(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_type_t to_add,
+    ecs_type_t to_remove);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_add_remove(world, entity, to_add, to_remove)\
+    _ecs_add_remove(world, entity, T##to_add, T##to_remove)
+
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
  * component was not added for the specified entity, the operation will return

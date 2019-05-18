@@ -34,7 +34,7 @@
 
 /* Convenience macro for exporting symbols */
 #ifndef COLLECTIONS_STATIC
-  #if COLLECTIONS_IMPL && defined _MSC_VER
+  #if COLLECTIONS_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
     #define COLLECTIONS_EXPORT __declspec(dllexport)
   #elif COLLECTIONS_IMPL
     #define COLLECTIONS_EXPORT __attribute__((__visibility__("default")))
