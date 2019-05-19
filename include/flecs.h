@@ -458,7 +458,7 @@ void ecs_set_target_fps(
  * @returns The error code
  *          0 - success
  *          1 - failed to dynamically load `flecs.systems.civetweb` module
- *          2 - failed to dynamically load `lecs.systems.admin` module
+ *          2 - failed to dynamically load `flecs.systems.admin` module
  */
 FLECS_EXPORT
 int ecs_enable_admin(
