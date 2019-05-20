@@ -391,13 +391,6 @@ void ecs_run_jobs(
 
 void os_time_setup(void);
 uint64_t os_time_now(void);
-// uint64_t os_time_diff(uint64_t new_ticks, uint64_t old_ticks);
-// uint64_t os_time_since(uint64_t start_ticks);
-// uint64_t os_time_laptime(uint64_t* last_time);
-// double os_time_sec(uint64_t ticks);
-// double os_time_ms(uint64_t ticks);
-// double os_time_us(uint64_t ticks);
-// double os_time_ns(uint64_t ticks);
 
 
 /* -- Private utilities -- */
