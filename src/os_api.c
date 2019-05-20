@@ -171,12 +171,21 @@ void ecs_os_enable_dbg(bool enable) {
     ecs_os_api_debug_enabled = enable;
 }
 
+void ecs_os_gettime(ecs_time_t* timeOut)
+{
+    uint64_t now = os_time_now();
+    timeOut->nanosec = now;
+    timeOut->sec = (int32_t)((double)now / 1000000000.0);
+}
+
 void ecs_os_set_api_defaults(void)
 {
     /* Don't overwrite if already initialized */
     if (ecs_os_api_initialized) {
         return;
     }
+
+    os_time_setup();
     
     _ecs_os_api->malloc = malloc;
     _ecs_os_api->free = free;
@@ -202,6 +211,9 @@ void ecs_os_set_api_defaults(void)
     _ecs_os_api->get_time = bake_gettime;
 
     ut_log_handlerRegister(bake_log, NULL);
+
+#else
+     _ecs_os_api->get_time = ecs_os_gettime;
 #endif
 
     _ecs_os_api->log = ecs_log;
