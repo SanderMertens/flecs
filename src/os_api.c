@@ -173,7 +173,7 @@ void ecs_os_enable_dbg(bool enable) {
 
 void ecs_os_gettime(ecs_time_t* timeOut)
 {
-    uint64_t now = os_time_now();
+    uint64_t now = ecs_os_time_now();
     timeOut->nanosec = now;
     timeOut->sec = (int32_t)((double)now / 1000000000.0);
 }
@@ -185,7 +185,7 @@ void ecs_os_set_api_defaults(void)
         return;
     }
 
-    os_time_setup();
+    ecs_os_time_setup();
     
     _ecs_os_api->malloc = malloc;
     _ecs_os_api->free = free;

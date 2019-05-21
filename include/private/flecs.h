@@ -389,8 +389,8 @@ void ecs_run_jobs(
 
 /* -- Os time api -- */
 
-void os_time_setup(void);
-uint64_t os_time_now(void);
+void ecs_os_time_setup(void);
+uint64_t ecs_os_time_now(void);
 
 
 /* -- Private utilities -- */
