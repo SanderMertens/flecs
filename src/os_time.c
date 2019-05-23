@@ -22,26 +22,6 @@
 
 #include "include/private/flecs.h"
 
-#ifndef SOKOL_API_DECL
-    #define SOKOL_API_DECL extern
-#endif
-
-
-#ifndef SOKOL_API_IMPL
-    #define SOKOL_API_IMPL
-#endif
-#ifndef SOKOL_ASSERT
-    #include <assert.h>
-    #define SOKOL_ASSERT(c) assert(c)
-#endif
-#ifndef _SOKOL_PRIVATE
-    #if defined(__GNUC__)
-        #define _SOKOL_PRIVATE __attribute__((unused)) static
-    #else
-        #define _SOKOL_PRIVATE static
-    #endif
-#endif
-
 static int _ecs_os_time_initialized;
 #if defined(_WIN32)
 #ifndef WIN32_LEAN_AND_MEAN
@@ -63,7 +43,7 @@ static uint64_t _ecs_os_time_posix_start;
     see https://gist.github.com/jspohr/3dc4f00033d79ec5bdaf67bc46c813e3
 */
 #if defined(_WIN32) || (defined(__APPLE__) && defined(__MACH__))
-_SOKOL_PRIVATE int64_t int64_muldiv(int64_t value, int64_t numer, int64_t denom) {
+int64_t int64_muldiv(int64_t value, int64_t numer, int64_t denom) {
     int64_t q = value / denom;
     int64_t r = value % denom;
     return q * numer + r * numer / denom;
@@ -71,8 +51,8 @@ _SOKOL_PRIVATE int64_t int64_muldiv(int64_t value, int64_t numer, int64_t denom)
 #endif
 
 
-SOKOL_API_IMPL void ecs_os_time_setup(void) {
-    SOKOL_ASSERT(0 == _ecs_os_time_initialized);
+void ecs_os_time_setup(void) {
+    ecs_assert(0 == _ecs_os_time_initialized, ECS_INTERNAL_ERROR, "ecs_os_time_setup must be called only once");
     _ecs_os_time_initialized = 1;
     #if defined(_WIN32)
         QueryPerformanceFrequency(&_ecs_os_time_win_freq);
@@ -87,8 +67,8 @@ SOKOL_API_IMPL void ecs_os_time_setup(void) {
     #endif
 }
 
-SOKOL_API_IMPL uint64_t ecs_os_time_now(void) {
-    SOKOL_ASSERT(_ecs_os_time_initialized);
+uint64_t ecs_os_time_now(void) {
+    ecs_assert(_ecs_os_time_initialized, ECS_INTERNAL_ERROR, "you must call ecs_os_time_setup first");
     uint64_t now;
     #if defined(_WIN32)
         LARGE_INTEGER qpc_t;
@@ -103,45 +83,4 @@ SOKOL_API_IMPL uint64_t ecs_os_time_now(void) {
         now = ((uint64_t)ts.tv_sec*1000000000 + (uint64_t)ts.tv_nsec) - _ecs_os_time_posix_start;
     #endif
     return now;
-}
-
-SOKOL_API_IMPL uint64_t ecs_os_time_diff(uint64_t new_ticks, uint64_t old_ticks) {
-    if (new_ticks > old_ticks) {
-        return new_ticks - old_ticks;
-    }
-    else {
-        /* FIXME: this should be a value that converts to a non-null double */
-        return 1;
-    }
-}
-
-SOKOL_API_IMPL uint64_t ecs_os_time_since(uint64_t start_ticks) {
-    return ecs_os_time_diff(ecs_os_time_now(), start_ticks);
-}
-
-SOKOL_API_IMPL uint64_t ecs_os_time_laptime(uint64_t* last_time) {
-    SOKOL_ASSERT(last_time);
-    uint64_t dt = 0;
-    uint64_t now = ecs_os_time_now();
-    if (0 != *last_time) {
-        dt = ecs_os_time_diff(now, *last_time);
-    }
-    *last_time = now;
-    return dt;
-}
-
-SOKOL_API_IMPL double ecs_os_time_sec(uint64_t ticks) {
-    return (double)ticks / 1000000000.0;
-}
-
-SOKOL_API_IMPL double ecs_os_time_ms(uint64_t ticks) {
-    return (double)ticks / 1000000.0;
-}
-
-SOKOL_API_IMPL double ecs_os_time_us(uint64_t ticks) {
-    return (double)ticks / 1000.0;
-}
-
-SOKOL_API_IMPL double ecs_os_time_ns(uint64_t ticks) {
-    return (double)ticks;
 }
