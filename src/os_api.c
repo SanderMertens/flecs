@@ -191,9 +191,7 @@ void ecs_os_set_api_defaults(void)
     _ecs_os_api->free = free;
     _ecs_os_api->realloc = realloc;
     _ecs_os_api->calloc = calloc;
-    _ecs_os_api->get_time = ecs_os_gettime;
 
-    
 #ifdef __BAKE__
     _ecs_os_api->thread_new = bake_thread_new;
     _ecs_os_api->thread_join = bake_thread_join;
@@ -210,12 +208,13 @@ void ecs_os_set_api_defaults(void)
     _ecs_os_api->cond_wait = bake_cond_wait;
 
     _ecs_os_api->sleep = ut_sleep;
+    _ecs_os_api->get_time = bake_gettime;
 
     ut_log_handlerRegister(bake_log, NULL);
 
+#else
+     _ecs_os_api->get_time = ecs_os_gettime;
 #endif
-
-
 
     _ecs_os_api->log = ecs_log;
     _ecs_os_api->log_error = ecs_log_error;
