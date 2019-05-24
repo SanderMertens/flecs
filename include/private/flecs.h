@@ -387,6 +387,12 @@ void ecs_prepare_jobs(
 void ecs_run_jobs(
     ecs_world_t *world);
 
+/* -- Os time api -- */
+
+void ecs_os_time_setup(void);
+uint64_t ecs_os_time_now(void);
+
+
 /* -- Private utilities -- */
 
 /* Compute hash */
