@@ -71,18 +71,35 @@ uint64_t ecs_os_time_now(void) {
     ecs_assert(ecs_os_time_initialized != 0, ECS_INTERNAL_ERROR, NULL);
 
     uint64_t now;
+
     #if defined(_WIN32)
         LARGE_INTEGER qpc_t;
         QueryPerformanceCounter(&qpc_t);
-        now = int64_muldiv(qpc_t.QuadPart - _ecs_os_time_win_start.QuadPart, 1000000000, _ecs_os_time_win_freq.QuadPart);
+        now = qpc_t.QuadPart;
     #elif defined(__APPLE__) && defined(__MACH__)
-        const uint64_t mach_now = mach_absolute_time() - _ecs_os_time_osx_start;
-        now = int64_muldiv(mach_now, _ecs_os_time_osx_timebase.numer, _ecs_os_time_osx_timebase.denom);
+        now = mach_absolute_time();
     #else
         struct timespec ts;
         clock_gettime(CLOCK_MONOTONIC, &ts);
-        now = ((uint64_t)ts.tv_sec*1000000000 + (uint64_t)ts.tv_nsec) - _ecs_os_time_posix_start;
+        now = ((uint64_t)ts.tv_sec * 1000000000 + (uint64_t)ts.tv_nsec);
     #endif
 
     return now;
+}
+
+void ecs_os_time_sleep(
+    unsigned int sec, 
+    unsigned int nanosec) 
+{
+#ifndef _WIN32
+    struct timespec sleepTime;
+
+    sleepTime.tv_sec = sec;
+    sleepTime.tv_nsec = nanosec;
+    if (nanosleep(&sleepTime, NULL)) {
+        ecs_os_err("nanosleep failed");
+    }
+#else
+	Sleep(sec + nanosec/1000000);
+#endif
 }

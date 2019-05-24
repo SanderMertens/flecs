@@ -391,6 +391,7 @@ void ecs_run_jobs(
 
 void ecs_os_time_setup(void);
 uint64_t ecs_os_time_now(void);
+void ecs_os_time_sleep(unsigned int sec, unsigned int nanosec);
 
 
 /* -- Private utilities -- */
