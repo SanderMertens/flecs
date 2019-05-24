@@ -86,28 +86,3 @@ uint64_t ecs_os_time_now(void) {
 
     return now;
 }
-
-uint64_t ecs_os_time_diff(uint64_t new_ticks, uint64_t old_ticks) {
-    if (new_ticks > old_ticks) {
-        return new_ticks - old_ticks;
-    }
-    else {
-        /* FIXME: this should be a value that converts to a non-null double */
-        return 1;
-    }
-}
-
-uint64_t ecs_os_time_since(uint64_t start_ticks) {
-    return ecs_os_time_diff(ecs_os_time_now(), start_ticks);
-}
-
-uint64_t ecs_os_time_laptime(uint64_t* last_time) {
-    ecs_assert(ecs_os_time_initialized != 0, ECS_INTERNAL_ERROR, NULL);
-    uint64_t dt = 0;
-    uint64_t now = ecs_os_time_now();
-    if (0 != *last_time) {
-        dt = ecs_os_time_diff(now, *last_time);
-    }
-    *last_time = now;
-    return dt;
-}
