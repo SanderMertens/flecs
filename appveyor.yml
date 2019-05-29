@@ -14,7 +14,7 @@ init:
 
     cd ..\
 
-    bake.exe setup
+    bake.exe setup --local
 
     cd ..\flecs
 
