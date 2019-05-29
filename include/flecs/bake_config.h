@@ -21,7 +21,9 @@
  * built with bake, it will have to provide alternative methods for including
  * its dependencies. */
 /* Headers of public dependencies */
+#ifdef __BAKE__
 #include <bake_util.h>
+#endif
 
 /* Headers of private dependencies */
 #ifdef FLECS_IMPL
