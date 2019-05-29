@@ -17,9 +17,6 @@
 #ifndef FLECS_BAKE_CONFIG_H
 #define FLECS_BAKE_CONFIG_H
 
-/* Generated includes are specific to the bake environment. If a project is not
- * built with bake, it will have to provide alternative methods for including
- * its dependencies. */
 /* Headers of public dependencies */
 #ifdef __BAKE__
 #include <bake_util.h>
