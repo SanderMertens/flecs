@@ -1,5 +1,4 @@
-#include <include/collections.h>
-#include "../../include/private/types.h"
+#include <collections.h>
 
 struct elem { int hash; char *value; } elems[] = {
     {1, "hello"},

@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 void Deinit(ecs_rows_t *rows) {
     Position *p = ecs_column(rows, Position, 1);

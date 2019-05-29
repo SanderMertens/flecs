@@ -1,5 +1,4 @@
-#include <assert.h>
-#include "include/private/flecs.h"
+#include "flecs_private.h"
 
 /** Notify systems that a table has changed its active state */
 static

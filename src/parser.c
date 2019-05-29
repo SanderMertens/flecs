@@ -1,6 +1,4 @@
-#include <ctype.h>
-#include <string.h>
-#include "include/private/flecs.h"
+#include "flecs_private.h"
 
 /** Skip spaces when parsing signature */
 static

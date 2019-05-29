@@ -1,5 +1,5 @@
-#include <string.h>
-#include "include/private/types.h"
+
+#include "flecs_private.h"
 
 #define FLECS_LOAD_FACTOR (3.0f / 4.0f)
 

@@ -1,8 +1,6 @@
 #ifndef FLECS_OS_API_H
 #define FLECS_OS_API_H
 
-#include "../flecs.h"
-
 #include <stdarg.h>
 
 #if defined(_MSC_VER) || defined(__MINGW32__)

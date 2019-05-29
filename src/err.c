@@ -1,5 +1,5 @@
 
-#include "include/private/types.h"
+#include "flecs_private.h"
 
 void _ecs_abort(
     uint32_t error_code,

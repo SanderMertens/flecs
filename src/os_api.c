@@ -1,5 +1,4 @@
-#include <stdarg.h>
-#include "include/private/flecs.h"
+#include "flecs_private.h"
 
 static bool ecs_os_api_initialized = false;
 static bool ecs_os_api_debug_enabled = false;
@@ -89,13 +88,6 @@ void bake_cond_wait(ecs_os_cond_t cond, ecs_os_mutex_t mutex) {
     ut_cond_wait((struct ut_cond_s *)cond, (struct ut_mutex_s *)mutex);
 }
 
-static
-void bake_gettime(ecs_time_t *t) {
-    struct timespec bt;
-    timespec_gettime(&bt);
-    *t = (ecs_time_t){bt.tv_sec, bt.tv_nsec};
-}
-
 static 
 void bake_log(
     ut_log_verbosity level,
@@ -110,7 +102,6 @@ void bake_log(
         ecs_os_log("%s", msg);
     }
 }
-
 #endif
 
 static

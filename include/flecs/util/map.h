@@ -1,8 +1,6 @@
 #ifndef FLECS_MAP_H
 #define FLECS_MAP_H
 
-#include "../flecs.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -2,7 +2,7 @@
 #define API_H
 
 /* This generated file contains includes for project dependencies */
-#include "bake_config.h"
+#include <api/bake_config.h>
 
 #ifdef __cplusplus
 extern "C" {

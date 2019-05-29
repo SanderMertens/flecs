@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 void Count_count_empty() {
     ecs_world_t *world = ecs_init();

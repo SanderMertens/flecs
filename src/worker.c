@@ -1,6 +1,4 @@
-#include "include/private/flecs.h"
-#include <assert.h>
-#include <math.h>
+#include "flecs_private.h"
 
 const ecs_vector_params_t thread_arr_params = {
     .element_size = sizeof(ecs_thread_t)

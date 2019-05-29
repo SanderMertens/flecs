@@ -6,7 +6,7 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <include/collections.h>
+#include <collections.h>
 
 // Testsuite 'Array'
 void Array_setup(void);

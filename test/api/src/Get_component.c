@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 void Get_component_get_empty() {
     ecs_world_t *world = ecs_init();

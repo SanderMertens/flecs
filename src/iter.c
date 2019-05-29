@@ -1,4 +1,4 @@
-#include "include/private/types.h"
+#include "flecs_private.h"
 
 bool ecs_iter_hasnext(
     EcsIter* iter)

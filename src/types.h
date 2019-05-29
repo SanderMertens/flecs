@@ -2,10 +2,24 @@
 #define FLECS_TYPES_PRIVATE_H
 
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <time.h>
+#include <ctype.h>
+#include <math.h>
 
-#include "../flecs.h"
-#include "../util/vector.h"
-#include "../util/map.h"
+#ifdef _MSC_VER
+//FIXME
+#else
+#include <sys/param.h>  /* attempt to define endianness */
+#endif
+#ifdef linux
+# include <endian.h>    /* attempt to define endianness */
+#endif
+
+#include <flecs.h>
 
 #define ECS_WORLD_INITIAL_TABLE_COUNT (2)
 #define ECS_WORLD_INITIAL_ENTITY_COUNT (2)

@@ -6,7 +6,7 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <include/api.h>
+#include <api.h>
 
 // Testsuite 'New'
 void New_empty(void);

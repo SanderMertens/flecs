@@ -1,8 +1,6 @@
 #ifndef FLECS_VECTOR_H
 #define FLECS_VECTOR_H
 
-#include "../flecs.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -1,5 +1,4 @@
-#include <string.h>
-#include "include/private/types.h"
+#include "types.h"
 
 struct ecs_vector_t {
     uint32_t count;

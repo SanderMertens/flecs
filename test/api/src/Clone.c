@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 void Clone_empty() {
     ecs_world_t *world = ecs_init();

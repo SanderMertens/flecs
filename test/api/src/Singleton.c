@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 void Singleton_set() {
     ecs_world_t *world = ecs_init();

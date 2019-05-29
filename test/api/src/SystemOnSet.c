@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 static
 void OnSet(ecs_rows_t *rows) {

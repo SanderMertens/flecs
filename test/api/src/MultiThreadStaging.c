@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 static
 void Add_to_current(ecs_rows_t *rows) {
@@ -39,21 +39,21 @@ void MultiThreadStaging_2_threads_add_to_current() {
     IterData ctx = {.component = ecs_type(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 500);
-    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 500);
+    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 100);
+    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 100);
 
     ecs_set_threads(world, 2);
 
     ecs_progress(world, 1);
 
     int i;
-    for (i = 0; i < 500; i ++) {
+    for (i = 0; i < 100; i ++) {
         test_assert( ecs_has(world, start_1 + i, Position));
         test_assert( ecs_has(world, start_1 + i, Rotation));
         test_assert( !ecs_has(world, start_1 + i, Velocity));
     }
 
-    for (i = 0; i < 500; i ++) {
+    for (i = 0; i < 100; i ++) {
         test_assert( ecs_has(world, start_2 + i, Position));
         test_assert( ecs_has(world, start_2 + i, Rotation));
         test_assert( ecs_has(world, start_2 + i, Velocity));
@@ -75,21 +75,21 @@ void MultiThreadStaging_3_threads_add_to_current() {
     IterData ctx = {.component = ecs_type(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 500);
-    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 500);
+    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 100);
+    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 100);
 
     ecs_set_threads(world, 3);
 
     ecs_progress(world, 1);
 
     int i;
-    for (i = 0; i < 500; i ++) {
+    for (i = 0; i < 100; i ++) {
         test_assert( ecs_has(world, start_1 + i, Position));
         test_assert( ecs_has(world, start_1 + i, Rotation));
         test_assert( !ecs_has(world, start_1 + i, Velocity));
     }
 
-    for (i = 0; i < 500; i ++) {
+    for (i = 0; i < 100; i ++) {
         test_assert( ecs_has(world, start_2 + i, Position));
         test_assert( ecs_has(world, start_2 + i, Rotation));
         test_assert( ecs_has(world, start_2 + i, Velocity));
@@ -111,21 +111,21 @@ void MultiThreadStaging_4_threads_add_to_current() {
     IterData ctx = {.component = ecs_type(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 500);
-    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 500);
+    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 100);
+    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 100);
 
     ecs_set_threads(world, 4);
 
     ecs_progress(world, 1);
 
     int i;
-    for (i = 0; i < 500; i ++) {
+    for (i = 0; i < 100; i ++) {
         test_assert( ecs_has(world, start_1 + i, Position));
         test_assert( ecs_has(world, start_1 + i, Rotation));
         test_assert( !ecs_has(world, start_1 + i, Velocity));
     }
 
-    for (i = 0; i < 500; i ++) {
+    for (i = 0; i < 100; i ++) {
         test_assert( ecs_has(world, start_2 + i, Position));
         test_assert( ecs_has(world, start_2 + i, Rotation));
         test_assert( ecs_has(world, start_2 + i, Velocity));
@@ -147,21 +147,21 @@ void MultiThreadStaging_5_threads_add_to_current() {
     IterData ctx = {.component = ecs_type(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 500);
-    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 500);
+    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 100);
+    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 100);
 
     ecs_set_threads(world, 5);
 
     ecs_progress(world, 1);
 
     int i;
-    for (i = 0; i < 500; i ++) {
+    for (i = 0; i < 100; i ++) {
         test_assert( ecs_has(world, start_1 + i, Position));
         test_assert( ecs_has(world, start_1 + i, Rotation));
         test_assert( !ecs_has(world, start_1 + i, Velocity));
     }
 
-    for (i = 0; i < 500; i ++) {
+    for (i = 0; i < 100; i ++) {
         test_assert( ecs_has(world, start_2 + i, Position));
         test_assert( ecs_has(world, start_2 + i, Rotation));
         test_assert( ecs_has(world, start_2 + i, Velocity));
@@ -183,21 +183,21 @@ void MultiThreadStaging_6_threads_add_to_current() {
     IterData ctx = {.component = ecs_type(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 500);
-    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 500);
+    ecs_entity_t start_1 = ecs_new_w_count(world, Position, 100);
+    ecs_entity_t start_2 = ecs_new_w_count(world, Type, 100);
 
     ecs_set_threads(world, 6);
 
     ecs_progress(world, 1);
 
     int i;
-    for (i = 0; i < 500; i ++) {
+    for (i = 0; i < 100; i ++) {
         test_assert( ecs_has(world, start_1 + i, Position));
         test_assert( ecs_has(world, start_1 + i, Rotation));
         test_assert( !ecs_has(world, start_1 + i, Velocity));
     }
 
-    for (i = 0; i < 500; i ++) {
+    for (i = 0; i < 100; i ++) {
         test_assert( ecs_has(world, start_2 + i, Position));
         test_assert( ecs_has(world, start_2 + i, Rotation));
         test_assert( ecs_has(world, start_2 + i, Velocity));
@@ -272,7 +272,7 @@ void MultiThreadStaging_stress_create_delete_entity_random_components() {
     ecs_set_threads(world, 6);
 
     uint64_t i;
-    for (i = 0; i < 1000; i ++) {
+    for (i = 0; i < 100; i ++) {
         ecs_progress(world, 1);
     }
 
@@ -357,7 +357,7 @@ void MultiThreadStaging_stress_set_entity_random_components() {
     ecs_set_threads(world, 6);
 
     int i;
-    for (i = 0; i < 1000; i ++) {
+    for (i = 0; i < 100; i ++) {
         ecs_progress(world, 1);
     }
 

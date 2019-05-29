@@ -1,9 +1,4 @@
-#include <string.h>
-#include <assert.h>
-#include "include/util/time.h"
-#include "include/util/stats.h"
-#include "include/private/flecs.h"
-
+#include "flecs_private.h"
 
 /* -- Global array parameters -- */
 

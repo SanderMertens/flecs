@@ -34,19 +34,8 @@ mixing with 12*3 instructions on 3 integers than you can with 3 instructions
 on 1 byte), but shoehorning those bytes into integers efficiently is messy.
 -------------------------------------------------------------------------------
 */
-#include <stdio.h>      /* defines printf for tests */
-#include <time.h>       /* defines time_t for timings in the test */
 
-#ifdef _MSC_VER
-//FIXME
-#else
-#include <sys/param.h>  /* attempt to define endianness */
-#endif
-#ifdef linux
-# include <endian.h>    /* attempt to define endianness */
-#endif
-
-#include <include/flecs.h>
+#include "flecs_private.h"
 
 /*
  * My best guess at if you are big-endian or little-endian.  This may

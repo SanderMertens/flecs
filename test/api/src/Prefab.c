@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 void Prefab_new_w_prefab() {
     ecs_world_t *world = ecs_init();

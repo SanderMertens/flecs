@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 void InitVelocity(ecs_rows_t *rows) {
     Velocity *v = ecs_column(rows, Velocity, 1);

@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 void Delete_delete_1() {
     ecs_world_t *world = ecs_init();

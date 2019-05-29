@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 void Add_zero() {
     ecs_world_t *world = ecs_init();

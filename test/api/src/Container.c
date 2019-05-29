@@ -1,4 +1,4 @@
-#include <include/api.h>
+#include <api.h>
 
 void Container_child() {
     ecs_world_t *world = ecs_init();

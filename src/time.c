@@ -1,10 +1,4 @@
-
-#include <time.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <include/util/time.h>
+#include "flecs_private.h"
 
 void ecs_sleepf(
     double t)

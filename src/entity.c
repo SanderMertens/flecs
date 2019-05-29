@@ -1,7 +1,5 @@
-#include <string.h>
-#include <assert.h>
-#include <stdarg.h>
-#include "include/private/flecs.h"
+
+#include "flecs_private.h"
 
 static
 void copy_column(

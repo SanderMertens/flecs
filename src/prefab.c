@@ -1,5 +1,4 @@
-#include <include/private/flecs.h>
-#include <string.h>
+#include "flecs_private.h"
 
 static ecs_vector_params_t builder_params = {.element_size = sizeof(ecs_builder_op_t)};
 

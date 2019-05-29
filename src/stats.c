@@ -1,6 +1,4 @@
-#include "include/util/stats.h"
-#include "include/private/flecs.h"
-#include <string.h>
+#include "flecs_private.h"
 
 const ecs_vector_params_t compstats_arr_params = {
     .element_size = sizeof(EcsComponentStats)

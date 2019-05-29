@@ -1,6 +1,4 @@
-
-#include "include/private/flecs.h"
-#include <string.h>
+#include "flecs_private.h"
 
 static
 void merge_families(

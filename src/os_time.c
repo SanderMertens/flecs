@@ -20,7 +20,7 @@
         distribution.
 */
 
-#include "include/private/flecs.h"
+#include "flecs_private.h"
 
 static int ecs_os_time_initialized;
 
