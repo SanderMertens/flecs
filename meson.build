@@ -9,6 +9,7 @@ flecs_src = []
 subdir('src')
 
 install_headers('include/flecs.h')
+install_subdir('include/flecs', install_dir : get_option('includedir'))
 
 flecs_lib = library('flecs',
     flecs_src,
