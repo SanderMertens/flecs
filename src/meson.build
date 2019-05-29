@@ -6,6 +6,7 @@ flecs_src += files([
     'iter.c',
     'map.c',
     'os_api.c',
+    'os_time.c',
     'parser.c',
     'prefab.c',
     'stage.c',
