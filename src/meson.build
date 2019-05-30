@@ -1,5 +1,4 @@
 flecs_src += files([
-    'array.c',
     'entity.c',
     'err.c',
     'map.c',
@@ -12,6 +11,7 @@ flecs_src += files([
     'table_system.c',
     'table.c',
     'type.c',
+    'vector.c',
     'worker.c',
     'world.c'
 ])
