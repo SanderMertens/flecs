@@ -38,11 +38,9 @@ typedef struct ecs_time_t {
 
 /* Utility headers */
 #include <flecs/util/os_api.h>
-#include <flecs/util/iter.h>
 #include <flecs/util/vector.h>
 #include <flecs/util/map.h>
 #include <flecs/util/stats.h>
-#include <flecs/util/time.h>
 #include <flecs/util/os_api.h>
 
 /** -- Builtin module flags -- */

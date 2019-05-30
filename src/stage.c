@@ -5,10 +5,10 @@ void merge_families(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    EcsIter it = ecs_map_iter(stage->type_index);
-    while (ecs_iter_hasnext(&it)) {
+    ecs_map_iter_t it = ecs_map_iter(stage->type_index);
+    while (ecs_map_hasnext(&it)) {
         uint64_t type_id;
-        ecs_vector_t *type = (void*)(uintptr_t)ecs_map_next(&it, &type_id);
+        ecs_vector_t *type = (void*)(uintptr_t)ecs_map_next_w_key(&it, &type_id);
 
         if (!ecs_map_has(world->main_stage.type_index, type_id, NULL)) {
             ecs_map_set(world->main_stage.type_index, type_id, type);
@@ -43,18 +43,18 @@ void merge_commits(
         return;
     }
 
-    EcsIter it = ecs_map_iter(stage->entity_index);
+    ecs_map_iter_t it = ecs_map_iter(stage->entity_index);
 
-    while (ecs_iter_hasnext(&it)) {
+    while (ecs_map_hasnext(&it)) {
         ecs_entity_t entity;
-        uint64_t row64 = ecs_map_next(&it, &entity);
+        uint64_t row64 = ecs_map_next_w_key(&it, &entity);
         ecs_row_t staged_row = ecs_to_row(row64);
         ecs_merge_entity(world, stage, entity, &staged_row);
     }
 
     it = ecs_map_iter(stage->data_stage);
-    while (ecs_iter_hasnext(&it)) {
-        ecs_vector_t *stage = ecs_iter_next(&it);
+    while (ecs_map_hasnext(&it)) {
+        ecs_vector_t *stage = ecs_map_next_ptr(&it);
         ecs_vector_free(stage);
     }
 
@@ -67,9 +67,9 @@ static
 void clean_families(
     ecs_stage_t *stage)
 {
-    EcsIter it = ecs_map_iter(stage->type_index);
-    while (ecs_iter_hasnext(&it)) {
-        ecs_vector_t *type = ecs_iter_next(&it);
+    ecs_map_iter_t it = ecs_map_iter(stage->type_index);
+    while (ecs_map_hasnext(&it)) {
+        ecs_vector_t *type = ecs_map_next_ptr(&it);
         ecs_vector_free(type);
     }
 

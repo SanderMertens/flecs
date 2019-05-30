@@ -3,12 +3,12 @@
 
 #define FLECS_LOAD_FACTOR (3.0f / 4.0f)
 
-typedef struct EcsMapNode {
+typedef struct ecs_map_node_t {
     uint64_t key;           /* Key */
     uint64_t data;          /* Value */
     uint32_t next;          /* Next node index */
     uint32_t prev;          /* Previous node index (enables O(1) removal) */
-} EcsMapNode;
+} ecs_map_node_t;
 
 struct ecs_map_t {
     uint32_t *buckets;      /* Array of buckets */
@@ -27,13 +27,13 @@ void move_node(
     void *ctx);
 
 const ecs_vector_params_t node_arr_params = {
-    .element_size = sizeof(EcsMapNode),
+    .element_size = sizeof(ecs_map_node_t),
     .move_action = move_node
 };
 
 /** Get map node from index */
 static
-EcsMapNode *node_from_index(
+ecs_map_node_t *node_from_index(
     ecs_vector_t *nodes,
     uint32_t index)
 {
@@ -59,7 +59,7 @@ void move_node(
     void *from,
     void *ctx)
 {
-    EcsMapNode *node_p = to;
+    ecs_map_node_t *node_p = to;
     uint32_t node = ecs_vector_get_index(array, &node_arr_params, to) + 1;
     uint32_t prev = node_p->prev;
     uint32_t next = node_p->next;
@@ -67,7 +67,7 @@ void move_node(
     (void)from;
 
     if (prev) {
-        EcsMapNode *prev_p = node_from_index(array, prev);
+        ecs_map_node_t *prev_p = node_from_index(array, prev);
         prev_p->next = node;
     } else {
         ecs_map_t *map = ctx;
@@ -76,7 +76,7 @@ void move_node(
     }
 
     if (next) {
-        EcsMapNode *next_p = node_from_index(array, next);
+        ecs_map_node_t *next_p = node_from_index(array, next);
         next_p->prev = node;
     }
 }
@@ -135,7 +135,7 @@ void add_node(
     uint32_t *bucket,
     uint64_t key,
     uint64_t data,
-    EcsMapNode *elem_p)
+    ecs_map_node_t *elem_p)
 {
     uint32_t elem;
 
@@ -156,7 +156,7 @@ void add_node(
 
     uint32_t first = *bucket;
     if (first) {
-        EcsMapNode *first_p = node_from_index(map->nodes, first);
+        ecs_map_node_t *first_p = node_from_index(map->nodes, first);
         first_p->prev = elem;
         elem_p->next = first;
     }
@@ -168,7 +168,7 @@ void add_node(
 
 /** Get map node for a given key */
 static
-EcsMapNode *get_node(
+ecs_map_node_t *get_node(
     ecs_map_t *map,
     uint32_t *bucket,
     uint64_t key)
@@ -176,7 +176,7 @@ EcsMapNode *get_node(
     uint32_t node = *bucket;
 
     while (node) {
-        EcsMapNode *node_p = node_from_index(map->nodes, node);
+        ecs_map_node_t *node_p = node_from_index(map->nodes, node);
 
         if (node_p->prev) {
             assert(node_from_index(map->nodes, node_p->prev)->next == node);
@@ -192,70 +192,6 @@ EcsMapNode *get_node(
     }
 
     return NULL;
-}
-
-/** Iterator hasnext callback */
-static
-bool hasnext(
-    EcsIter *iter)
-{
-    ecs_map_t *map = iter->data;
-
-    if (!map->count) {
-        return false;
-    }
-
-    if (!map->buckets) {
-        return false;
-    }
-
-    EcsMapIter *iter_data = iter->ctx;
-    uint32_t bucket_index = iter_data->bucket_index;
-    uint32_t node = iter_data->node;
-
-    if (node) {
-        EcsMapNode *node_p = node_from_index(map->nodes, node);
-        node = node_p->next;
-    }
-
-    if (!node) {
-        bucket_index = next_bucket(map, bucket_index + 1);
-        if (bucket_index < map->bucket_count) {
-            node = map->buckets[bucket_index];
-        } else {
-            node = 0;
-        }
-    }
-
-    if (node) {
-        iter_data->node = node;
-        iter_data->bucket_index = bucket_index;
-        return true;
-    } else {
-        return false;
-    }
-}
-
-/** Map-specific next functionality that returns keys and 64bit data */
-static
-uint64_t next_w_key(
-    EcsIter *iter,
-    uint64_t *key_out)
-{
-    ecs_map_t *map = iter->data;
-    EcsMapIter *iter_data = iter->ctx;
-    EcsMapNode *node_p = node_from_index(map->nodes, iter_data->node);
-    assert(node_p != NULL);
-    if (key_out) *key_out = node_p->key;
-    return node_p->data;
-}
-
-/** Iterator next callback */
-static
-void *next(
-    EcsIter *iter)
-{
-    return (void*)(uintptr_t)next_w_key(iter, NULL);
 }
 
 /** Resize number of buckets in a map */
@@ -278,7 +214,7 @@ void resize_map(
             uint32_t next;
             uint64_t key;
 
-            EcsMapNode *node_p;
+            ecs_map_node_t *node_p;
             do {
                 node_p = node_from_index(map->nodes, node);
                 next = node_p->next;
@@ -347,7 +283,7 @@ void ecs_map_set64(
     if (!*bucket) {
         add_node(map, bucket, key, data, NULL);
     } else {
-        EcsMapNode *elem = get_node(map, bucket, key);
+        ecs_map_node_t *elem = get_node(map, bucket, key);
         if (elem) {
             elem->data = data;
         } else {
@@ -371,10 +307,10 @@ int ecs_map_remove(
     uint32_t *bucket = get_bucket(map, key);
 
     if (*bucket) {
-        EcsMapNode *node = get_node(map, bucket, key);
+        ecs_map_node_t *node = get_node(map, bucket, key);
         if (node) {
-            EcsMapNode *prev_node = node_from_index(map->nodes, node->prev);
-            EcsMapNode *next_node = node_from_index(map->nodes, node->next);
+            ecs_map_node_t *prev_node = node_from_index(map->nodes, node->prev);
+            ecs_map_node_t *next_node = node_from_index(map->nodes, node->next);
 
             if (prev_node) {
                 assert(node_from_index(map->nodes, prev_node->next) == node);
@@ -411,7 +347,7 @@ uint64_t ecs_map_get64(
 
     uint32_t *bucket = get_bucket(map, key);
     if (*bucket) {
-        EcsMapNode *elem = get_node(map, bucket, key);
+        ecs_map_node_t *elem = get_node(map, bucket, key);
         if (elem) {
             return elem->data;
         }
@@ -431,7 +367,7 @@ bool ecs_map_has(
 
     uint32_t *bucket = get_bucket(map, key_hash);
     if (*bucket) {
-        EcsMapNode *elem = get_node(map, bucket, key_hash);
+        ecs_map_node_t *elem = get_node(map, bucket, key_hash);
         if (elem) {
             if (value_out) {
                 *value_out = elem->data;
@@ -464,31 +400,6 @@ uint32_t ecs_map_set_size(
     return result;
 }
 
-EcsIter _ecs_map_iter(
-    ecs_map_t *map,
-    EcsMapIter *iter_data)
-{
-    EcsIter result = {
-        .data = map,
-        .ctx = iter_data,
-        .hasnext = hasnext,
-        .next = next,
-        .release = NULL
-    };
-
-    iter_data->bucket_index = -1;
-    iter_data->node = 0;
-
-    return result;
-}
-
-uint64_t ecs_map_next(
-    EcsIter *it,
-    uint64_t *key_out)
-{
-    return next_w_key(it, key_out);
-}
-
 void ecs_map_memory(
     ecs_map_t *map,
     uint32_t *total,
@@ -508,4 +419,77 @@ void ecs_map_memory(
         *used += map->count * sizeof(uint32_t);
         ecs_vector_memory(map->nodes, &node_arr_params, NULL, used);
     }
+}
+
+ecs_map_iter_t ecs_map_iter(
+    ecs_map_t *map)
+{
+    ecs_map_iter_t result = {
+        .map = map,
+        .bucket_index = -1,
+        .node = 0
+    };
+
+    return result;
+}
+
+bool ecs_map_hasnext(
+    ecs_map_iter_t *iter_data)
+{
+    ecs_map_t *map = iter_data->map;
+    if (!map->count) {
+        return false;
+    }
+
+    if (!map->buckets) {
+        return false;
+    }
+
+    uint32_t bucket_index = iter_data->bucket_index;
+    uint32_t node = iter_data->node;
+
+    if (node) {
+        ecs_map_node_t *node_p = node_from_index(map->nodes, node);
+        node = node_p->next;
+    }
+
+    if (!node) {
+        bucket_index = next_bucket(map, bucket_index + 1);
+        if (bucket_index < map->bucket_count) {
+            node = map->buckets[bucket_index];
+        } else {
+            node = 0;
+        }
+    }
+
+    if (node) {
+        iter_data->node = node;
+        iter_data->bucket_index = bucket_index;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+uint64_t ecs_map_next_w_key(
+    ecs_map_iter_t *iter_data,
+    uint64_t *key_out)
+{
+    ecs_map_t *map = iter_data->map;
+    ecs_map_node_t *node_p = node_from_index(map->nodes, iter_data->node);
+    assert(node_p != NULL);
+    if (key_out) *key_out = node_p->key;
+    return node_p->data;
+}
+
+uint64_t ecs_map_next(
+    ecs_map_iter_t *iter_data)
+{
+    return ecs_map_next_w_key(iter_data, NULL);
+}
+
+void* ecs_map_next_ptr(
+    ecs_map_iter_t *iter_data)
+{
+    return (void*)(uintptr_t)ecs_map_next_w_key(iter_data, NULL);
 }

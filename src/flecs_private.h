@@ -40,13 +40,6 @@ bool ecs_components_contains_component(
     ecs_entity_t component,
     ecs_entity_t *entity_out);
 
-/* Get pointer to a row for a specific column */
-void* ecs_get_row_ptr(
-    ecs_vector_t *type,
-    ecs_table_column_t *columns,
-    int32_t index,
-    ecs_entity_t component);
-
 /* Get pointer to a component */
 void* ecs_get_ptr_intern(
     ecs_world_t *world,
@@ -56,37 +49,11 @@ void* ecs_get_ptr_intern(
     bool staged_only,
     bool search_prefab);
 
-/* Add component to an entity */
-void ecs_add_intern(
-    ecs_world_t *world,
-    ecs_entity_info_t *info,
-    ecs_type_t type,
-    bool do_set);
-
 ecs_entity_t ecs_get_entity_for_component(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type_id,
     ecs_entity_t component);
-
-/* -- Prefab API -- */
-
-/* Copy values from prefab to entity when overriding a component */
-ecs_type_t ecs_copy_from_prefab(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_info_t *info,
-    uint32_t offset,
-    uint32_t limit,
-    ecs_type_t to_add);
-
-/* Initialize prefab component */
-void EcsInitPrefab(
-    ecs_rows_t *rows);
-
-/*  Handler for setting the prefab component */
-void EcsSetPrefab(
-    ecs_rows_t *rows);
 
 
 /* -- World API -- */
@@ -112,7 +79,6 @@ void ecs_world_activate_system(
 /* Get current thread-specific stage */
 ecs_stage_t *ecs_get_stage(
     ecs_world_t **world_ptr);
-
 
 /* -- Stage API -- */
 
@@ -401,6 +367,14 @@ void ecs_hash(
     const void *key,
     size_t length,
     uint32_t *result);
+
+/* Sleep with floating point time */
+void ecs_sleepf(
+    double t);
+
+/* Measure time since provided timestamp */
+double ecs_time_measure(
+    ecs_time_t *start);
 
 /* Convert 64bit value to ecs_row_t type. ecs_row_t is stored as 64bit int in the
  * entity index */

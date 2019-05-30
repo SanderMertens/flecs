@@ -7,10 +7,11 @@ extern "C" {
 
 typedef struct ecs_map_t ecs_map_t;
 
-typedef struct EcsMapIter {
+typedef struct ecs_map_iter_t {
+    ecs_map_t *map;
     uint32_t bucket_index;
     uint32_t node;
-} EcsMapIter;
+} ecs_map_iter_t;
 
 FLECS_EXPORT
 ecs_map_t* ecs_map_new(
@@ -72,16 +73,24 @@ int ecs_map_remove(
     uint64_t key_hash);
 
 FLECS_EXPORT
-EcsIter _ecs_map_iter(
-    ecs_map_t *map,
-    EcsMapIter *iter_data);
+ecs_map_iter_t ecs_map_iter(
+    ecs_map_t *map);
 
-#define ecs_map_iter(me)\
-    _ecs_map_iter(me, ecs_os_alloca(EcsMapIter, 1))
+FLECS_EXPORT
+bool ecs_map_hasnext(
+    ecs_map_iter_t *it);
 
 FLECS_EXPORT
 uint64_t ecs_map_next(
-    EcsIter *it,
+    ecs_map_iter_t *it);
+
+FLECS_EXPORT
+void* ecs_map_next_ptr(
+    ecs_map_iter_t *iter_data);
+
+FLECS_EXPORT
+uint64_t ecs_map_next_w_key(
+    ecs_map_iter_t *it,
     uint64_t *key_out);
 
 #ifdef __cplusplus

@@ -18,6 +18,9 @@ const ecs_vector_params_t char_arr_params = {
     .element_size = sizeof(char)
 };
 
+const ecs_vector_params_t builder_params = {
+    .element_size = sizeof(ecs_builder_op_t)
+};
 
 /* -- Global variables -- */
 
@@ -443,10 +446,10 @@ static
 void row_index_deinit(
     ecs_map_t *sys_index)
 {
-    EcsIter it = ecs_map_iter(sys_index);
+    ecs_map_iter_t it = ecs_map_iter(sys_index);
 
-    while (ecs_iter_hasnext(&it)) {
-        ecs_vector_t *v = ecs_iter_next(&it);
+    while (ecs_map_hasnext(&it)) {
+        ecs_vector_t *v = ecs_map_next_ptr(&it);
         ecs_vector_free(v);
     }
 
@@ -465,6 +468,119 @@ void deinit_tables(
     }
 }
 
+static
+ecs_entity_t get_prefab_parent_flag(
+    ecs_world_t *world,
+    ecs_entity_t prefab)
+{
+    ecs_entity_t flag = ecs_map_get64(world->prefab_parent_index, prefab);
+    if (!flag) {
+        flag = ecs_new(world, EcsPrefabParent);
+        ecs_set(world, flag, EcsPrefabParent, {.parent = prefab});
+        ecs_map_set64(world->prefab_parent_index, prefab, flag);
+    }
+
+    return flag;
+}
+
+static
+void add_prefab_child_to_builder(
+    ecs_world_t *world,
+    ecs_entity_t prefab,
+    ecs_entity_t child)
+{
+    EcsPrefabBuilder *builder = ecs_get_ptr(world, prefab, EcsPrefabBuilder);
+    if (!builder) {
+        ecs_add(world, prefab, EcsPrefabBuilder);
+        builder = ecs_get_ptr(world, prefab, EcsPrefabBuilder);
+        builder->ops = ecs_vector_new(&builder_params, 1);
+    }
+
+    ecs_type_t child_type = _ecs_merge_type(world, 
+        ecs_type_from_entity(world, child), ecs_type(EcsId), 0);
+
+    /* If there are no child ops, this is the first time that this child is
+     * added to this parent prefab. Simply add it to the vector */
+    ecs_builder_op_t *op = ecs_vector_add(&builder->ops, &builder_params);
+    op->id = ecs_get_id(world, child);
+    op->type = child_type;
+}
+
+void EcsInitPrefab(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, EcsPrefab, prefab, 1);
+
+    uint32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        prefab[i].parent = 0;
+    }
+}
+
+void EcsSetPrefab(ecs_rows_t *rows) {
+    ecs_world_t *world = rows->world;
+
+    ECS_COLUMN(rows, EcsPrefab, prefab, 1);
+
+    uint32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_entity_t parent = prefab[i].parent;
+
+        ecs_entity_t e = rows->entities[i];
+        ecs_table_t *table = rows->table;
+
+        ecs_entity_t *type = ecs_vector_first(table->type);
+        uint32_t t, t_count = ecs_vector_count(table->type);
+
+        ecs_entity_t found = 0;
+        bool prefab_parent_flag_added = false;
+        bool prefab_parent_added = false;
+
+        /* Walk components of entity, find prefab */
+        for (t = 0; t < t_count; t++) {
+            EcsPrefabParent *pparent;
+
+            ecs_entity_t component = type[t];
+
+            if (parent != component) {
+                if (ecs_has(world, component, EcsPrefab)) {
+                    ecs_assert(found == 0, ECS_MORE_THAN_ONE_PREFAB, NULL);
+                    found = component;
+
+                } else if ((pparent = ecs_get_ptr(world, component, EcsPrefabParent))) {                    
+                    if (pparent->parent != parent) {
+                        /* If this entity has a flag that is for a different prefab,
+                        * it must have switched prefabs. Remove the old flag. */
+                       ecs_type_t old_type = ecs_type_from_entity(world, component);
+                        _ecs_remove(world, e, old_type);
+                    } else {
+                        /* If the entity has a flag for the current prefab parent,
+                        * keep track of it so we don't add it again. */
+                        prefab_parent_flag_added = true;
+                    }
+                }
+            } else {
+                prefab_parent_added = true;
+            }
+        }
+
+        /* Add the prefab parent to the type of the entity */
+        if (!prefab_parent_added && parent) {
+            ecs_adopt(world, e, parent);
+            add_prefab_child_to_builder(world, parent, e);
+        }
+
+        /* Add the prefab parent flag to the type of the entity */
+        if (!prefab_parent_flag_added && parent) {
+            ecs_entity_t flag = get_prefab_parent_flag(world, parent);
+            ecs_assert(flag != 0, ECS_INTERNAL_ERROR, NULL);
+
+            /* Add the flag as a type instead of with adopt, to prevent adding
+             * the EcsContainer flag, and to prevent tracking the flag for
+             * changes, to keep it as light weight as possible. */
+            ecs_type_t flag_type = ecs_type_from_entity(world, flag);
+            _ecs_add(world, e, flag_type);
+        }
+    }
+}
 
 
 /* -- Public functions -- */
@@ -590,7 +706,6 @@ ecs_world_t *ecs_init(void) {
     world->last_handle = EEcsContainer + 1;
     world->max_handle = 0;
 
-    /* Create two systems for initializing and setting EcsPrefab */
     ecs_new_system(world, "EcsInitPrefab", EcsOnAdd, "EcsPrefab", EcsInitPrefab);
     ecs_new_system(world, "EcsSetPrefab", EcsOnSet, "EcsPrefab", EcsSetPrefab);
 

@@ -48,13 +48,13 @@ void match_families(
     ecs_entity_t system,
     EcsRowSystem *system_data)
 {
-    EcsIter it = ecs_map_iter(world->main_stage.type_index);
+    ecs_map_iter_t it = ecs_map_iter(world->main_stage.type_index);
 
     /* Iterating over a map is a bit slow, but this only happens when a new
      * row system is created, which is very infrequent. */
-    while (ecs_iter_hasnext(&it)) {
+    while (ecs_map_hasnext(&it)) {
         uint64_t key; /* Only interested in the key, which is the type hash */
-        ecs_map_next(&it, &key);
+        ecs_map_next_w_key(&it, &key);
 
         ecs_type_t type = key;
         

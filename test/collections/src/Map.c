@@ -120,33 +120,33 @@ void Map_iter() {
     ecs_map_t *map = ecs_map_new(16);
     fill_map(map);
 
-    EcsIter it = ecs_map_iter(map);
-    test_assert(ecs_iter_hasnext(&it) == true);
-    test_str(ecs_iter_next(&it), "hello");
+    ecs_map_iter_t it = ecs_map_iter(map);
+    test_assert(ecs_map_hasnext(&it) == true);
+    test_str(ecs_map_next_ptr(&it), "hello");
 
-    test_assert(ecs_iter_hasnext(&it) == true);
-    test_str(ecs_iter_next(&it), "world");
+    test_assert(ecs_map_hasnext(&it) == true);
+    test_str(ecs_map_next_ptr(&it), "world");
 
-    test_assert(ecs_iter_hasnext(&it) == true);
-    test_str(ecs_iter_next(&it), "foo");
+    test_assert(ecs_map_hasnext(&it) == true);
+    test_str(ecs_map_next_ptr(&it), "foo");
 
-    test_assert(ecs_iter_hasnext(&it) == true);
-    test_str(ecs_iter_next(&it), "bar");
+    test_assert(ecs_map_hasnext(&it) == true);
+    test_str(ecs_map_next_ptr(&it), "bar");
 
-    test_assert(ecs_iter_hasnext(&it) == false);
+    test_assert(ecs_map_hasnext(&it) == false);
 }
 
 void Map_iter_empty() {
     ecs_map_t *map = ecs_map_new(16);
-    EcsIter it = ecs_map_iter(map);
-    test_assert(!ecs_iter_hasnext(&it));
+    ecs_map_iter_t it = ecs_map_iter(map);
+    test_assert(!ecs_map_hasnext(&it));
     ecs_map_free(map);
 }
 
 void Map_iter_zero_buckets() {
     ecs_map_t *map = ecs_map_new(0);
-    EcsIter it = ecs_map_iter(map);
-    test_assert(!ecs_iter_hasnext(&it));
+    ecs_map_iter_t it = ecs_map_iter(map);
+    test_assert(!ecs_map_hasnext(&it));
     ecs_map_free(map);
 }
 

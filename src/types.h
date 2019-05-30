@@ -413,6 +413,6 @@ extern const ecs_vector_params_t table_arr_params;
 extern const ecs_vector_params_t thread_arr_params;
 extern const ecs_vector_params_t job_arr_params;
 extern const ecs_vector_params_t column_arr_params;
-
+extern const ecs_vector_params_t builder_params;
 
 #endif

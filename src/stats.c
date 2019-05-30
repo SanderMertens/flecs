@@ -18,9 +18,9 @@ void calculate_type_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    EcsIter it = ecs_map_iter(world->main_stage.type_index);
-    while (ecs_iter_hasnext(&it)) {
-        ecs_vector_t *type = ecs_iter_next(&it);
+    ecs_map_iter_t it = ecs_map_iter(world->main_stage.type_index);
+    while (ecs_map_hasnext(&it)) {
+        ecs_vector_t *type = ecs_map_next_ptr(&it);
         ecs_vector_memory(type, &handle_arr_params, allocd, used);
     }
 }
@@ -390,9 +390,9 @@ void ecs_get_stats(
         ecs_vector_clear(stats->features);
     }
 
-    EcsIter it = ecs_map_iter(world->type_handles);
-    while (ecs_iter_hasnext(&it)) {
-        ecs_entity_t h = ecs_map_next(&it, NULL);
+    ecs_map_iter_t it = ecs_map_iter(world->type_handles);
+    while (ecs_map_hasnext(&it)) {
+        ecs_entity_t h = ecs_map_next_w_key(&it, NULL);
         EcsTypeComponent *data = ecs_get_ptr(world, h, EcsTypeComponent);
         ecs_vector_t *type = ecs_map_get(world->main_stage.type_index, data->resolved);
         ecs_entity_t *buffer = ecs_vector_first(type);
