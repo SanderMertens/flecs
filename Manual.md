@@ -1009,7 +1009,7 @@ void Move(ecs_rows_t *rows) {
     
     for (int i = 0; i < rows->count; i ++) {
         position[i].x += velocity[i].x;
-        position[i].y += velocity[i[.y;
+        position[i].y += velocity[i].y;
     }
 }
 ```
@@ -1041,7 +1041,7 @@ void Move(ecs_rows_t *rows) {
     
     for (int i = 0; i < rows->count; i ++) {
         position[i].x = position_player->x + velocity[i].x;
-        position[i].y = position_player->x + velocity[i[.y;
+        position[i].y = position_player->x + velocity[i].y;
     }
 }
 ```
