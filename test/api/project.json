@@ -423,7 +423,11 @@
             "id": "World",
             "testcases": [
                 "progress_w_0",
-                "progress_w_t"
+                "progress_w_t",
+                "get_tick",
+                "entity_range_offset",
+                "entity_range_offset_out_of_range",
+                "entity_range_limit_out_of_range"
             ]
         }, { 
             "id": "Run",

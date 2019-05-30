@@ -491,6 +491,9 @@ uint32_t commit_w_type(
         }
 
         old_type = old_table->type;
+    } else {
+        ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, 0);
+        ecs_assert(entity >= world->min_handle, ECS_OUT_OF_RANGE, 0);
     }
 
     /* If the entity has a negative index, it is being monitored for changes and

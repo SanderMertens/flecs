@@ -12,7 +12,7 @@ void Move(ecs_rows_t *rows) {
     }
 }
 
-void Progress_progress_w_0() {
+void World_progress_w_0() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -50,7 +50,7 @@ void Progress_progress_w_0() {
     ecs_fini(world);
 }
 
-void Progress_progress_w_t() {
+void World_progress_w_t() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -84,6 +84,61 @@ void Progress_progress_w_t() {
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 4);
+
+    ecs_fini(world);
+}
+
+void World_entity_range_offset() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_entity_range(world, 50, 0);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(e, 50);
+
+    ecs_fini(world);
+}
+
+void World_entity_range_offset_out_of_range() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_entity_range(world, 50, 0);
+
+    test_expect_abort();
+
+    ecs_add(world, 20, Position);
+
+    ecs_fini(world);
+}
+
+void World_entity_range_limit_out_of_range() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_entity_range(world, 0, 50);
+
+    test_expect_abort();
+
+    ecs_add(world, 60, Position);
+
+    ecs_fini(world);
+}
+
+void World_get_tick() {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ecs_get_tick(world), 0);
+
+    ecs_progress(world, 1);
+
+    test_int(ecs_get_tick(world), 1);
+
+    ecs_progress(world, 1);
+
+    test_int(ecs_get_tick(world), 2);
 
     ecs_fini(world);
 }

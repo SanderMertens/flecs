@@ -1084,7 +1084,6 @@ void stop_measure_frame(
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start;
         world->frame_time += ecs_time_measure(&t);
-        world->tick ++;
 
         /* Sleep if processing faster than target FPS */
         float target_fps = world->target_fps;
@@ -1155,8 +1154,10 @@ bool ecs_progress(
 
     /* -- System execution stops here -- */
 
+    world->tick ++;
+    
     stop_measure_frame(world, delta_time);
-
+    
     /* Time spent on systems is time spent on frame minus merge time */
     world->system_time = world->frame_time - world->merge_time;
 
@@ -1316,9 +1317,10 @@ void ecs_set_entity_range(
     ecs_assert(!id_end || id_end > world->last_handle, ECS_INVALID_PARAMETERS, NULL);
 
     if (world->last_handle < id_start) {
-        world->last_handle = id_start;
+        world->last_handle = id_start - 1;
     }
 
+    world->min_handle = id_start;
     world->max_handle = id_end;
 }
 

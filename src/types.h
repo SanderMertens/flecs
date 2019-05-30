@@ -362,6 +362,7 @@ struct ecs_world {
     uint32_t threads_running;        /* Number of threads running */
 
     ecs_entity_t last_handle;        /* Last issued handle */
+    ecs_entity_t min_handle;         /* First allowed handle */
     ecs_entity_t max_handle;         /* Last allowed handle */
 
 
@@ -403,7 +404,7 @@ struct ecs_world {
     bool should_quit;             /* Did a system signal that app should quit */
     bool should_match;            /* Should tablea be rematched */
     bool should_resolve;          /* If a table reallocd, resolve system refs */
-};
+}; 
 
 
 /* Parameters for various array types */

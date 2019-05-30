@@ -367,9 +367,13 @@ void System_w_FromSystem_auto_add_tag(void);
 // Testsuite 'System_w_FromEntity'
 void System_w_FromEntity_2_column_1_from_entity(void);
 
-// Testsuite 'Progress'
-void Progress_progress_w_0(void);
-void Progress_progress_w_t(void);
+// Testsuite 'World'
+void World_progress_w_0(void);
+void World_progress_w_t(void);
+void World_get_tick(void);
+void World_entity_range_offset(void);
+void World_entity_range_offset_out_of_range(void);
+void World_entity_range_limit_out_of_range(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -1900,16 +1904,32 @@ static bake_test_suite suites[] = {
         }
     },
     {
-        .id = "Progress",
-        .testcase_count = 2,
+        .id = "World",
+        .testcase_count = 6,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
-                .function = Progress_progress_w_0
+                .function = World_progress_w_0
             },
             {
                 .id = "progress_w_t",
-                .function = Progress_progress_w_t
+                .function = World_progress_w_t
+            },
+            {
+                .id = "get_tick",
+                .function = World_get_tick
+            },
+            {
+                .id = "entity_range_offset",
+                .function = World_entity_range_offset
+            },
+            {
+                .id = "entity_range_offset_out_of_range",
+                .function = World_entity_range_offset_out_of_range
+            },
+            {
+                .id = "entity_range_limit_out_of_range",
+                .function = World_entity_range_limit_out_of_range
             }
         }
     },
