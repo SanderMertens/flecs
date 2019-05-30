@@ -142,7 +142,7 @@ void ecs_table_eval_columns(
     }
 }
 
-int ecs_table_init(
+void ecs_table_init(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table)
@@ -163,8 +163,6 @@ int ecs_table_init(
          * merged first. */ 
         ecs_table_eval_columns(world, stage, table);
     }
-
-    return 0;
 }
 
 void ecs_table_deinit(

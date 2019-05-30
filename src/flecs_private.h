@@ -180,7 +180,7 @@ int32_t ecs_type_container_depth(
 /* -- Table API -- */
 
 /* Initialize table */
-int ecs_table_init(
+void ecs_table_init(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table);
@@ -196,13 +196,6 @@ ecs_table_column_t *ecs_table_get_columns(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table);
-
-/* Initialize table with component size (used during bootstrap) */
-int ecs_table_init_w_size(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_vector_t *type,
-    uint32_t size);
 
 void ecs_table_register_system(
     ecs_world_t *world,

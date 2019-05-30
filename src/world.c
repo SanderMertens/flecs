@@ -182,9 +182,7 @@ ecs_table_t* create_table(
     
     result->type_id = type_id;
 
-    if (ecs_table_init(world, stage, result) != 0) {
-        return NULL;
-    }
+    ecs_table_init(world, stage, result);
 
     uint32_t index = ecs_vector_get_index(stage->tables, &table_arr_params, result);
     ecs_map_set64(stage->table_index, type_id, index + 1);
@@ -704,6 +702,7 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsContainer, ECS_CONTAINER_ID, 0);
 
     world->last_handle = EEcsContainer + 1;
+    world->min_handle = 0;
     world->max_handle = 0;
 
     ecs_new_system(world, "EcsInitPrefab", EcsOnAdd, "EcsPrefab", EcsInitPrefab);
