@@ -466,7 +466,7 @@ ecs_entity_t ecs_new_system(
         ecs_abort(ECS_INVALID_PARAMETERS, 0);
     }
 
-    if (needs_tables && (kind == EcsOnLoad ||
+    if (needs_tables && (kind == EcsOnLoad || kind == EcsPostLoad ||
                          kind == EcsPreUpdate || kind == EcsOnUpdate ||
                          kind == EcsOnValidate || kind == EcsPostUpdate ||
                          kind == EcsPreStore || kind == EcsOnStore ||
