@@ -275,6 +275,8 @@ void Tasks_on_remove_from_system(void);
 void Container_child(void);
 void Container_child_w_component(void);
 void Container_child_w_type(void);
+void Container_child_w_count_component(void);
+void Container_child_w_count_w_type(void);
 void Container_contains_w_empty_parent(void);
 void Container_contains_w_child_as_parent(void);
 void Container_contains_w_0_as_child(void);
@@ -1527,7 +1529,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Container",
-        .testcase_count = 18,
+        .testcase_count = 20,
         .testcases = (bake_test_case[]){
             {
                 .id = "child",
@@ -1540,6 +1542,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "child_w_type",
                 .function = Container_child_w_type
+            },
+            {
+                .id = "child_w_count_component",
+                .function = Container_child_w_count_component
+            },
+            {
+                .id = "child_w_count_w_type",
+                .function = Container_child_w_count_w_type
             },
             {
                 .id = "contains_w_empty_parent",

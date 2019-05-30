@@ -203,9 +203,7 @@ ecs_type_t notify_pre_merge(
     ecs_world_t *real_world = world;
     ecs_get_stage(&real_world);
     
-    if (real_world->is_merging) {
-        return 0;
-    }
+    ecs_assert(!real_world->is_merging, ECS_INTERNAL_ERROR, 0);
 
     bool in_progress = real_world->in_progress;
     real_world->in_progress = true;
@@ -216,7 +214,6 @@ ecs_type_t notify_pre_merge(
     real_world->in_progress = in_progress;
     if (result && !in_progress) {
         ecs_merge(world);
-
     }
 
     return result;

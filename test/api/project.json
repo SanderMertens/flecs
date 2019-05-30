@@ -317,6 +317,8 @@
                 "child",
                 "child_w_component",
                 "child_w_type",
+                "child_w_count_component",
+                "child_w_count_w_type",
                 "contains_w_empty_parent",
                 "contains_w_child_as_parent",
                 "contains_w_0_as_child",
@@ -418,7 +420,7 @@
                 "2_column_1_from_entity"
             ]
         }, {
-            "id": "Progress",
+            "id": "World",
             "testcases": [
                 "progress_w_0",
                 "progress_w_t"

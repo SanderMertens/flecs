@@ -295,3 +295,43 @@ void Container_get_ptr_container() {
 
     ecs_fini(world);
 }
+
+void Container_child_w_count_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_child_w_count(world, parent, Position, 10);
+
+    test_assert( ecs_has(world, parent, EcsContainer));
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_contains(world, parent, child + i));
+        test_assert( ecs_has(world, child + i, Position));
+    }
+
+    ecs_fini(world);
+}
+
+void Container_child_w_count_w_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TYPE(world, Type, Position);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_child_w_count(world, parent, Type, 10);
+
+    test_assert( ecs_has(world, parent, EcsContainer));
+
+    int i;
+    for (i = 0; i < 10; i ++) {    
+        test_assert( ecs_contains(world, parent, child + i));
+        test_assert( ecs_has(world, child + i, Type));
+        test_assert( ecs_has(world, child + i, Position));
+    }
+
+    ecs_fini(world);
+}
