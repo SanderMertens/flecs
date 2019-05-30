@@ -377,6 +377,7 @@ void World_entity_range_limit_out_of_range(void);
 void World_dim(void);
 void World_dim_type(void);
 void World_dim_dim_type(void);
+void World_phases(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -1908,7 +1909,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 9,
+        .testcase_count = 10,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -1945,6 +1946,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "dim_dim_type",
                 .function = World_dim_dim_type
+            },
+            {
+                .id = "phases",
+                .function = World_phases
             }
         }
     },

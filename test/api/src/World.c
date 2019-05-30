@@ -250,3 +250,102 @@ void World_dim_dim_type() {
 
     ecs_fini(world);
 }
+
+void TOnLoad(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 0);
+        p[i].x ++;
+    }
+}
+
+void TPostLoad(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 1);
+        p[i].x ++;
+    }
+}
+
+void TPreUpdate(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 2);
+        p[i].x ++;
+    }
+}
+
+void TOnUpdate(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 3);
+        p[i].x ++;
+    }
+}
+
+void TOnValidate(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 4);
+        p[i].x ++;
+    }
+}
+
+void TPostUpdate(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 5);
+        p[i].x ++;
+    }
+}
+
+void TPreStore(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 6);
+        p[i].x ++;
+    }
+}
+
+void TOnStore(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 7);
+        p[i].x ++;
+    }
+}
+
+void World_phases() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, TOnLoad, EcsOnLoad, Position);
+    ECS_SYSTEM(world, TPostLoad, EcsPostLoad, Position);
+    ECS_SYSTEM(world, TPreUpdate, EcsPreUpdate, Position);
+    ECS_SYSTEM(world, TOnUpdate, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, TOnValidate, EcsOnValidate, Position);
+    ECS_SYSTEM(world, TPostUpdate, EcsPostUpdate, Position);
+    ECS_SYSTEM(world, TPreStore, EcsPreStore, Position);
+    ECS_SYSTEM(world, TOnStore, EcsOnStore, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_set(world, e, Position, {0, 0});
+
+    ecs_progress(world, 1);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 8);
+
+    ecs_fini(world);
+}
