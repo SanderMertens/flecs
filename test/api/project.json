@@ -427,7 +427,10 @@
                 "get_tick",
                 "entity_range_offset",
                 "entity_range_offset_out_of_range",
-                "entity_range_limit_out_of_range"
+                "entity_range_limit_out_of_range",
+                "dim",
+                "dim_type",
+                "dim_dim_type"
             ]
         }, { 
             "id": "Run",

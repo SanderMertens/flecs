@@ -142,3 +142,111 @@ void World_get_tick() {
 
     ecs_fini(world);
 }
+
+static int32_t malloc_count;
+
+static
+void *test_malloc(size_t size) {
+    malloc_count ++;
+    return malloc(size);
+}
+
+static
+void *test_calloc(size_t size, size_t n) {
+    malloc_count ++;
+    return calloc(size, n);
+}
+
+static
+void *test_realloc(void *old_ptr, size_t size) {
+    malloc_count ++;
+    return realloc(old_ptr, size);
+}
+
+void World_dim() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.malloc = test_malloc;
+    os_api.calloc = test_calloc;
+    os_api.realloc = test_realloc;
+    ecs_os_set_api(&os_api);    
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_dim(world, 1000);
+
+    malloc_count = 0;
+
+    ecs_new_w_count(world, Position, 500);
+
+    test_int(malloc_count, 6);
+
+    malloc_count = 0;
+
+    ecs_new_w_count(world, Position, 500);
+
+    test_int(malloc_count, 5);
+
+    ecs_fini(world);
+}
+
+void World_dim_type() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.malloc = test_malloc;
+    os_api.calloc = test_calloc;
+    os_api.realloc = test_realloc;
+    ecs_os_set_api(&os_api);    
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_dim_type(world, Position, 1000);
+
+    malloc_count = 0;
+
+    ecs_new_w_count(world, Position, 500);
+
+    test_int(malloc_count, 2);
+
+    malloc_count = 0;
+
+    ecs_new_w_count(world, Position, 400);
+
+    test_int(malloc_count, 3);
+
+    ecs_fini(world);
+}
+
+void World_dim_dim_type() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.malloc = test_malloc;
+    os_api.calloc = test_calloc;
+    os_api.realloc = test_realloc;
+    ecs_os_set_api(&os_api);    
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_dim(world, 1000);
+    ecs_dim_type(world, Position, 1000);
+
+    malloc_count = 0;
+
+    ecs_new_w_count(world, Position, 500);
+
+    test_int(malloc_count, 1);
+
+    malloc_count = 0;
+
+    ecs_new_w_count(world, Position, 400);
+
+    test_int(malloc_count, 2);
+
+    ecs_fini(world);
+}
