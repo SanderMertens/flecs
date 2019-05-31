@@ -304,7 +304,8 @@
         }, {
             "id": "SystemManual",
             "testcases": [
-                "1_type_1_component"
+                "1_type_1_component",
+                "disabled"
             ]
         }, {
             "id": "Tasks",

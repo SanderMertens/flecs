@@ -69,3 +69,38 @@ void SystemManual_1_type_1_component() {
 
     ecs_fini(world);
 }
+
+static int normal_count;
+
+static
+void NormalSystem(ecs_rows_t *rows) {
+    normal_count ++;
+}
+
+void SystemManual_disabled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, NormalSystem, EcsManual, Position);
+
+    ecs_run(world, NormalSystem, 0, NULL);
+
+    test_int(normal_count, 1);
+
+    ecs_enable(world, NormalSystem, false);
+
+    ecs_run(world, NormalSystem, 0, NULL);
+
+    test_int(normal_count, 1);
+
+    ecs_enable(world, NormalSystem, true);
+
+    ecs_run(world, NormalSystem, 0, NULL);
+
+    test_int(normal_count, 2);
+
+    ecs_fini(world);
+}

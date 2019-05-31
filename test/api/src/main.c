@@ -266,6 +266,7 @@ void SystemCascade_adopt_after_match(void);
 
 // Testsuite 'SystemManual'
 void SystemManual_1_type_1_component(void);
+void SystemManual_disabled(void);
 
 // Testsuite 'Tasks'
 void Tasks_no_components(void);
@@ -1532,11 +1533,15 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemManual",
-        .testcase_count = 1,
+        .testcase_count = 2,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
                 .function = SystemManual_1_type_1_component
+            },
+            {
+                .id = "disabled",
+                .function = SystemManual_disabled
             }
         }
     },

@@ -259,6 +259,8 @@ ecs_vector_t** frame_system_array(
         return &world->pre_store_systems;        
     } else if (kind == EcsOnStore) {
         return &world->on_store_systems;
+    } else if (kind == EcsManual) {
+        return &world->on_demand_systems;        
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, 0);
     }
