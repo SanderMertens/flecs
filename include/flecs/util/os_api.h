@@ -209,6 +209,14 @@ void ecs_os_enable_dbg(bool enable);
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort()
 
+/* Sleep with floating point time */
+void ecs_sleepf(
+    double t);
+
+/* Measure time since provided timestamp */
+double ecs_time_measure(
+    ecs_time_t *start);
+
 #ifdef __cplusplus
 }
 #endif

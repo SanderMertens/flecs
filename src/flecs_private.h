@@ -361,14 +361,6 @@ void ecs_hash(
     size_t length,
     uint32_t *result);
 
-/* Sleep with floating point time */
-void ecs_sleepf(
-    double t);
-
-/* Measure time since provided timestamp */
-double ecs_time_measure(
-    ecs_time_t *start);
-
 /* Convert 64bit value to ecs_row_t type. ecs_row_t is stored as 64bit int in the
  * entity index */
 ecs_row_t ecs_to_row(

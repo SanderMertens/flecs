@@ -378,6 +378,9 @@ void World_dim(void);
 void World_dim_type(void);
 void World_dim_dim_type(void);
 void World_phases(void);
+void World_phases_w_merging(void);
+void World_measure_time(void);
+void World_control_fps(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -1909,7 +1912,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 10,
+        .testcase_count = 13,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -1950,6 +1953,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "phases",
                 .function = World_phases
+            },
+            {
+                .id = "phases_w_merging",
+                .function = World_phases_w_merging
+            },
+            {
+                .id = "measure_time",
+                .function = World_measure_time
+            },
+            {
+                .id = "control_fps",
+                .function = World_control_fps
             }
         }
     },

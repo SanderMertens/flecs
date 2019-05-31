@@ -251,6 +251,7 @@ void World_dim_dim_type() {
     ecs_fini(world);
 }
 
+static
 void TOnLoad(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     int i;
@@ -260,6 +261,7 @@ void TOnLoad(ecs_rows_t *rows) {
     }
 }
 
+static
 void TPostLoad(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     int i;
@@ -269,6 +271,7 @@ void TPostLoad(ecs_rows_t *rows) {
     }
 }
 
+static
 void TPreUpdate(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     int i;
@@ -278,6 +281,7 @@ void TPreUpdate(ecs_rows_t *rows) {
     }
 }
 
+static
 void TOnUpdate(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     int i;
@@ -287,6 +291,7 @@ void TOnUpdate(ecs_rows_t *rows) {
     }
 }
 
+static
 void TOnValidate(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     int i;
@@ -296,6 +301,7 @@ void TOnValidate(ecs_rows_t *rows) {
     }
 }
 
+static
 void TPostUpdate(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     int i;
@@ -305,6 +311,7 @@ void TPostUpdate(ecs_rows_t *rows) {
     }
 }
 
+static
 void TPreStore(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     int i;
@@ -314,11 +321,22 @@ void TPreStore(ecs_rows_t *rows) {
     }
 }
 
+static
 void TOnStore(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     int i;
     for (i = 0; i < rows->count; i ++) {
         test_int(p[i].x, 7);
+        p[i].x ++;
+    }
+}
+
+static
+void TManual(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 8);
         p[i].x ++;
     }
 }
@@ -336,6 +354,7 @@ void World_phases() {
     ECS_SYSTEM(world, TPostUpdate, EcsPostUpdate, Position);
     ECS_SYSTEM(world, TPreStore, EcsPreStore, Position);
     ECS_SYSTEM(world, TOnStore, EcsOnStore, Position);
+    ECS_SYSTEM(world, TManual, EcsManual, Position);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -346,6 +365,205 @@ void World_phases() {
 
     Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 8);
+
+    ecs_run(world, TManual, 0, NULL);
+
+    test_int(p->x, 9);
+
+    ecs_fini(world);
+}
+
+static
+void TMergeOnLoad(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 0);
+        ecs_set(rows->world, rows->entities[i], Position, {p[i].x + 1, 0});
+    }
+}
+
+static
+void TMergePostLoad(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 1);
+        ecs_set(rows->world, rows->entities[i], Position, {p[i].x + 1, 0});
+    }
+}
+
+static
+void TMergePreUpdate(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 2);
+        ecs_set(rows->world, rows->entities[i], Position, {p[i].x + 1, 0});
+    }
+}
+
+static
+void TMergeOnUpdate(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 3);
+        ecs_set(rows->world, rows->entities[i], Position, {p[i].x + 1, 0});
+    }
+}
+
+static
+void TMergeOnValidate(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 4);
+        ecs_set(rows->world, rows->entities[i], Position, {p[i].x + 1, 0});
+    }
+}
+
+static
+void TMergePostUpdate(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 5);
+        ecs_set(rows->world, rows->entities[i], Position, {p[i].x + 1, 0});
+    }
+}
+
+static
+void TMergePreStore(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 6);
+        ecs_set(rows->world, rows->entities[i], Position, {p[i].x + 1, 0});
+    }
+}
+
+static
+void TMergeOnStore(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 7);
+        ecs_set(rows->world, rows->entities[i], Position, {p[i].x + 1, 0});
+    }
+}
+
+static
+void TMergeManual(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 8);
+        ecs_set(rows->world, rows->entities[i], Position, {p[i].x + 1, 0});
+    }
+}
+
+void World_phases_w_merging() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, TMergeOnLoad, EcsOnLoad, Position);
+    ECS_SYSTEM(world, TMergePostLoad, EcsPostLoad, Position);
+    ECS_SYSTEM(world, TMergePreUpdate, EcsPreUpdate, Position);
+    ECS_SYSTEM(world, TMergeOnUpdate, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, TMergeOnValidate, EcsOnValidate, Position);
+    ECS_SYSTEM(world, TMergePostUpdate, EcsPostUpdate, Position);
+    ECS_SYSTEM(world, TMergePreStore, EcsPreStore, Position);
+    ECS_SYSTEM(world, TMergeOnStore, EcsOnStore, Position);
+    ECS_SYSTEM(world, TMergeManual, EcsManual, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_set(world, e, Position, {0, 0});
+
+    ecs_progress(world, 1);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 8);
+
+    ecs_run(world, TMergeManual, 0, NULL);
+
+    test_int(p->x, 9);
+
+    ecs_fini(world);
+}
+
+static
+void TimeCheck(ecs_rows_t *rows) {    
+    test_assert(rows->delta_time != 0);
+    test_assert(rows->delta_time > 0);
+}
+
+void World_measure_time() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, TimeCheck, EcsOnLoad, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    int i = 0;
+    for (i = 0; i < 100; i ++) {
+        ecs_progress(world, 0);
+    }
+
+    ecs_fini(world);
+}
+
+void World_control_fps() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, TimeCheck, EcsOnLoad, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_time_t start, temp;
+    ecs_set_target_fps(world, 60);
+    ecs_os_get_time(&start);
+
+    /* Run for one second */
+    int count = 0;
+    do {    
+        ecs_progress(world, 0);
+        temp = start;
+        count ++;
+    } while (ecs_time_measure(&temp) < 1.0);
+
+    /* Allow for one frame overshoot */
+    test_assert(count <= 61);
+
+    /* Allow for one frame undershoot */
+    test_assert(count >= 59);
 
     ecs_fini(world);
 }

@@ -431,7 +431,10 @@
                 "dim",
                 "dim_type",
                 "dim_dim_type",
-                "phases"
+                "phases",
+                "phases_w_merging",
+                "measure_time",
+                "control_fps"
             ]
         }, { 
             "id": "Run",
