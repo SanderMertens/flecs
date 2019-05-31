@@ -254,9 +254,11 @@ void SystemOnFrame_use_fields_2_owned(void);
 void SystemOnFrame_use_fields_1_owned_1_shared(void);
 void SystemOnFrame_match_2_systems_w_populated_table(void);
 void SystemOnFrame_on_period(void);
+void SystemOnFrame_on_period_long_delta(void);
 void SystemOnFrame_disabled(void);
 void SystemOnFrame_disabled_feature(void);
 void SystemOnFrame_disabled_nested_feature(void);
+void SystemOnFrame_two_refs(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -1401,7 +1403,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 26,
+        .testcase_count = 28,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -1496,6 +1498,10 @@ static bake_test_suite suites[] = {
                 .function = SystemOnFrame_on_period
             },
             {
+                .id = "on_period_long_delta",
+                .function = SystemOnFrame_on_period_long_delta
+            },
+            {
                 .id = "disabled",
                 .function = SystemOnFrame_disabled
             },
@@ -1506,6 +1512,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "disabled_nested_feature",
                 .function = SystemOnFrame_disabled_nested_feature
+            },
+            {
+                .id = "two_refs",
+                .function = SystemOnFrame_two_refs
             }
         }
     },

@@ -1295,6 +1295,37 @@ void SystemOnFrame_on_period() {
     ecs_fini(world);
 }
 
+void SystemOnFrame_on_period_long_delta() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, OnPeriodSystem, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
+
+    ecs_set_period(world, OnPeriodSystem, 0.5);
+
+    ecs_progress(world, 0);
+
+    test_int(on_period_count, 0);
+
+    ecs_sleepf(1.2);
+
+    ecs_progress(world, 0);
+
+    test_int(on_period_count, 1);
+
+    ecs_sleepf(0.5);
+
+    ecs_progress(world, 0);
+
+    test_int(on_period_count, 2);    
+
+    ecs_fini(world);
+}
+
 void SystemOnFrame_disabled() {
     ecs_world_t *world = ecs_init();
 
@@ -1392,6 +1423,47 @@ void SystemOnFrame_disabled_nested_feature() {
     test_int(normal_count, 2);
     test_int(normal_count_2, 2);
     test_int(normal_count_3, 2);
+
+    ecs_fini(world);
+}
+
+void TwoRefs(ecs_rows_t *rows) {
+    ECS_SHARED(rows, Position, p, 1);
+    ECS_SHARED(rows, Velocity, v, 2);
+
+    ProbeSystem(rows);
+}
+
+void SystemOnFrame_two_refs() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, E, Position, Velocity);
+    ECS_ENTITY(world, E2, Mass);
+
+    ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, E.Position, E.Velocity, ID.E, Mass);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 4);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], E);
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.s[0][1], E);
+    test_int(ctx.c[0][2], E);
+    test_int(ctx.s[0][2], 0);
+    test_int(ctx.c[0][3], ecs_entity(Mass));
+    test_int(ctx.s[0][3], 0);
+
+    test_int(ctx.e[0], E2);
 
     ecs_fini(world);
 }

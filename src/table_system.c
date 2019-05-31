@@ -49,20 +49,14 @@ ecs_reference_t* get_ref_data(
     EcsColSystem *system_data,
     int32_t *table_data)
 {
-    ecs_reference_t *ref_data = NULL;
-
     if (!system_data->refs) {
         system_data->refs = ecs_vector_new(&system_data->ref_params, 1);
     }
 
-    if (!table_data[REFS_INDEX]) {
-        ref_data = ecs_vector_add(
-            &system_data->refs, &system_data->ref_params);
-        table_data[REFS_INDEX] = ecs_vector_count(system_data->refs);
-    } else {
-        ref_data = ecs_vector_get(
-            system_data->refs, &system_data->ref_params, table_data[REFS_INDEX] - 1);
-    }
+    ecs_reference_t *ref_data = ecs_vector_add(
+        &system_data->refs, &system_data->ref_params);
+        
+    table_data[REFS_INDEX] = ecs_vector_count(system_data->refs);
 
     return ref_data;
 }

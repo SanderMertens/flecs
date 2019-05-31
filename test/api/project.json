@@ -289,9 +289,11 @@
                 "use_fields_1_owned_1_shared",
                 "match_2_systems_w_populated_table",
                 "on_period",
+                "on_period_long_delta",
                 "disabled",
                 "disabled_feature",
-                "disabled_nested_feature"
+                "disabled_nested_feature",
+                "two_refs"
             ]
         }, {
             "id": "SystemCascade",
