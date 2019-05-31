@@ -1239,6 +1239,46 @@ void SystemOnFrame_ensure_optional_is_null_field_shared() {
 
     ecs_fini(world);
 }
+
+static int on_period_count;
+static int normal_count;
+
+static
+void OnPeriodSystem(ecs_rows_t *rows) {
+    on_period_count ++;
+}
+
+static
+void NormalSystem(ecs_rows_t *rows) {
+    normal_count ++;
+}
+
 void SystemOnFrame_on_period() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, OnPeriodSystem, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
+
+    ecs_set_period(world, OnPeriodSystem, 0.5);
+
+    ecs_time_t start, temp;
+    ecs_set_target_fps(world, 60);
+    ecs_os_get_time(&start);
+
+    /* Run for one second */
+    int count = 0;
+    do {    
+        ecs_progress(world, 0);
+        temp = start;
+        count ++;
+    } while (ecs_time_measure(&temp) < 1.0);
+
+    test_int(count, normal_count);
+    test_int(on_period_count, 2);
+
+    ecs_fini(world);
 }
