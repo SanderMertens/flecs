@@ -50,3 +50,15 @@ void Type_type_of_2_tostr_no_id() {
 
     ecs_fini(world);
 }
+
+void Type_type_redefine() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t type = ecs_new_type(world, "Type", "Position");
+
+    test_assert(type == ecs_new_type(world, "Type", "Position"));
+
+    ecs_fini(world);
+}

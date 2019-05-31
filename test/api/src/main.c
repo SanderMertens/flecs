@@ -387,6 +387,7 @@ void World_basic_stats(void);
 void Type_type_of_1_tostr(void);
 void Type_type_of_2_tostr(void);
 void Type_type_of_2_tostr_no_id(void);
+void Type_type_redefine(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -1981,7 +1982,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Type",
-        .testcase_count = 3,
+        .testcase_count = 4,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_of_1_tostr",
@@ -1994,6 +1995,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_of_2_tostr_no_id",
                 .function = Type_type_of_2_tostr_no_id
+            },
+            {
+                .id = "type_redefine",
+                .function = Type_type_redefine
             }
         }
     },

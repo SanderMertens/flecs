@@ -528,10 +528,7 @@ ecs_entity_t ecs_new_type(
     assert(world->magic == ECS_WORLD_MAGIC);
     EcsTypeComponent type = {0};
 
-    ecs_entity_t result = ecs_lookup(world, id);
-    if (result) {
-        return result;
-    }
+    ecs_entity_t result;
 
     if (ecs_parse_component_expr(world, sig, add_type, &type) != 0) {
         return 0;
@@ -543,8 +540,9 @@ ecs_entity_t ecs_new_type(
     if (type_entity) {
         EcsId *id_ptr = ecs_get_ptr(world, type_entity, EcsId);
 
-        assert(id_ptr != NULL);
-        if(!strcmp(*id_ptr, id)) {
+        ecs_assert(id_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        
+        if(strcmp(*id_ptr, id)) {
             ecs_abort(ECS_ENTITY_ALREADY_DEFINED, id);
         }
 
