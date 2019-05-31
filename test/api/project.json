@@ -5,6 +5,7 @@
         "author": "Sander Mertens",
         "description": "Test project for flecs",
         "public": false,
+        "coverage": false,
         "use": [
             "flecs"
         ]
@@ -287,7 +288,10 @@
                 "use_fields_2_owned",
                 "use_fields_1_owned_1_shared",
                 "match_2_systems_w_populated_table",
-                "on_period"
+                "on_period",
+                "disabled",
+                "disabled_feature",
+                "disabled_nested_feature"
             ]
         }, {
             "id": "SystemCascade",

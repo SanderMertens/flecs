@@ -5,6 +5,7 @@
         "author": "Sander Mertens",
         "description": "Test project for flecs",
         "public": false,
+        "coverage": false,
         "use": [
             "flecs"
         ]

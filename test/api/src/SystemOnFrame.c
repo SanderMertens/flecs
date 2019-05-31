@@ -1242,6 +1242,8 @@ void SystemOnFrame_ensure_optional_is_null_field_shared() {
 
 static int on_period_count;
 static int normal_count;
+static int normal_count_2;
+static int normal_count_3;
 
 static
 void OnPeriodSystem(ecs_rows_t *rows) {
@@ -1251,6 +1253,16 @@ void OnPeriodSystem(ecs_rows_t *rows) {
 static
 void NormalSystem(ecs_rows_t *rows) {
     normal_count ++;
+}
+
+static
+void NormalSystem2(ecs_rows_t *rows) {
+    normal_count_2 ++;
+}
+
+static
+void NormalSystem3(ecs_rows_t *rows) {
+    normal_count_3 ++;
 }
 
 void SystemOnFrame_on_period() {
@@ -1279,6 +1291,107 @@ void SystemOnFrame_on_period() {
 
     test_int(count, normal_count);
     test_int(on_period_count, 2);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_disabled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 1);
+
+    ecs_enable(world, NormalSystem, false);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 1);
+
+    ecs_enable(world, NormalSystem, true);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 2);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_disabled_feature() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, NormalSystem2, EcsOnUpdate, Position);
+
+    ECS_TYPE(world, Type, NormalSystem, NormalSystem2);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 1);
+    test_int(normal_count_2, 1);
+
+    ecs_enable(world, Type, false);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 1);
+    test_int(normal_count_2, 1);
+
+    ecs_enable(world, Type, true);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 2);
+    test_int(normal_count_2, 2);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_disabled_nested_feature() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, NormalSystem2, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, NormalSystem3, EcsOnUpdate, Position);
+
+    ECS_TYPE(world, NestedType, NormalSystem2, NormalSystem3);
+    ECS_TYPE(world, Type, NormalSystem, NestedType);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 1);
+    test_int(normal_count_2, 1);
+    test_int(normal_count_3, 1);
+
+    ecs_enable(world, Type, false);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 1);
+    test_int(normal_count_2, 1);
+    test_int(normal_count_3, 1);
+
+    ecs_enable(world, Type, true);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 2);
+    test_int(normal_count_2, 2);
+    test_int(normal_count_3, 2);
 
     ecs_fini(world);
 }
