@@ -1586,3 +1586,117 @@ void Prefab_on_set_on_instance() {
 
     ecs_fini(world);
 }
+
+void InstantiateInProgress(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Type, 2);
+
+    ecs_entity_t *ids = ecs_get_context(rows->world);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ids[i] = ecs_new(rows->world, Type);
+    }
+}
+
+void Prefab_instantiate_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_PREFAB(world, Prefab, Velocity);
+    ecs_set(world, Prefab, Velocity, {1, 2});
+
+    ECS_SYSTEM(world, InstantiateInProgress, EcsOnUpdate, Position, ID.Prefab);
+
+    ecs_entity_t e = ecs_new_w_count(world, Position, 10);
+    test_assert(e != 0);
+
+    ecs_entity_t ids[10];
+    ecs_set_context(world, ids);
+
+    ecs_progress(world, 1);
+
+    test_int(ecs_count(world, Prefab), 10);
+
+    Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        Velocity *v = ecs_get_ptr(world, ids[i], Velocity);
+        test_assert(v == v_prefab);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_copy_from_prefab_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_PREFAB(world, Prefab, Velocity);
+    ecs_set(world, Prefab, Velocity, {1, 2});
+
+    ECS_TYPE(world, Type, Prefab, Velocity);
+
+    ECS_SYSTEM(world, InstantiateInProgress, EcsOnUpdate, Position, ID.Type);
+
+    ecs_entity_t ids[10];
+    ecs_set_context(world, ids);
+
+    ecs_entity_t e_dummy = ecs_new_w_count(world, Position, 10);
+    test_assert(e_dummy != 0);
+
+    /* Create one prefab instance so table is already created (case where table
+     * is not created is tested in copy_from_prefab_first_instance_in_progress*/
+    ecs_entity_t e = ecs_new(world, Type);
+    test_assert(e != 0);
+
+    ecs_progress(world, 1);
+
+    test_int(ecs_count(world, Prefab), 11);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        Velocity *v = ecs_get_ptr(world, ids[i], Velocity);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_copy_from_prefab_first_instance_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_PREFAB(world, Prefab, Velocity);
+    ecs_set(world, Prefab, Velocity, {1, 2});
+
+    ECS_TYPE(world, Type, Prefab, Velocity);
+
+    ECS_SYSTEM(world, InstantiateInProgress, EcsOnUpdate, Position, ID.Type);
+
+    ecs_entity_t ids[10];
+    ecs_set_context(world, ids);
+
+    ecs_entity_t e = ecs_new_w_count(world, Position, 10);
+    test_assert(e != 0);
+
+    ecs_progress(world, 1);
+
+    test_int(ecs_count(world, Prefab), 10);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        Velocity *v = ecs_get_ptr(world, ids[i], Velocity);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}

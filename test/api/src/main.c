@@ -338,6 +338,9 @@ void Prefab_ignore_on_add(void);
 void Prefab_ignore_on_remove(void);
 void Prefab_ignore_on_set(void);
 void Prefab_on_set_on_instance(void);
+void Prefab_instantiate_in_progress(void);
+void Prefab_copy_from_prefab_in_progress(void);
+void Prefab_copy_from_prefab_first_instance_in_progress(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -1674,7 +1677,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 37,
+        .testcase_count = 40,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -1823,6 +1826,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "on_set_on_instance",
                 .function = Prefab_on_set_on_instance
+            },
+            {
+                .id = "instantiate_in_progress",
+                .function = Prefab_instantiate_in_progress
+            },
+            {
+                .id = "copy_from_prefab_in_progress",
+                .function = Prefab_copy_from_prefab_in_progress
+            },
+            {
+                .id = "copy_from_prefab_first_instance_in_progress",
+                .function = Prefab_copy_from_prefab_first_instance_in_progress
             }
         }
     },

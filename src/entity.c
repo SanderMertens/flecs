@@ -340,7 +340,8 @@ ecs_type_t copy_from_prefab(
     while ((prefab = ecs_map_get64(world->prefab_index, entity_type))) {
         /* Prefabs are only resolved from the main stage. Prefabs created while
          * iterating cannot be resolved in the same iteration. */
-        ecs_row_t prefab_row = row_from_stage(stage, prefab);
+        ecs_row_t prefab_row = row_from_stage(&world->main_stage, prefab);
+
         ecs_table_t *prefab_table = ecs_world_get_table(
             world, stage, prefab_row.type_id);
         ecs_vector_t *prefab_type = prefab_table->type;
