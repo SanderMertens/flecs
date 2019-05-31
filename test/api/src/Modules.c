@@ -110,3 +110,19 @@ void Modules_import_from_on_set_system() {
 
     ecs_fini(world);
 }
+
+ecs_entity_t import_module(ecs_world_t *world) {
+    ECS_IMPORT(world, SimpleModule, 0);
+    return ecs_entity(SimpleModule);
+}
+
+void Modules_import_again() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, SimpleModule, 0);
+
+    test_assert(ecs_entity(SimpleModule) != 0);
+    test_assert(ecs_entity(SimpleModule) == import_module(world));
+    
+    ecs_fini(world);
+}

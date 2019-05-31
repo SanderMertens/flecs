@@ -516,6 +516,7 @@ void Modules_simple_module(void);
 void Modules_import_module_from_system(void);
 void Modules_import_from_on_add_system(void);
 void Modules_import_from_on_set_system(void);
+void Modules_import_again(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -2479,7 +2480,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Modules",
-        .testcase_count = 4,
+        .testcase_count = 5,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_module",
@@ -2496,6 +2497,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "import_from_on_set_system",
                 .function = Modules_import_from_on_set_system
+            },
+            {
+                .id = "import_again",
+                .function = Modules_import_again
             }
         }
     },

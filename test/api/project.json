@@ -579,7 +579,8 @@
                 "simple_module",
                 "import_module_from_system",
                 "import_from_on_add_system",
-                "import_from_on_set_system"
+                "import_from_on_set_system",
+                "import_again"
             ]
         }, {
             "id": "Internals",
