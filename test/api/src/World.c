@@ -631,3 +631,4 @@ void World_basic_stats() {
 
     ecs_fini(world);
 }
+

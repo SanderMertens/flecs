@@ -417,7 +417,7 @@ void ecs_get_stats(
                 &stats->features, &featurestats_arr_params);
             *elem = feature;
             elem->id = ecs_get_id(world, h);
-            elem->entities = ecs_type_tostr(world, NULL, data->type);
+            elem->entities = _ecs_type_str(world, data->type);
             elem->is_hidden = ecs_has(world, h, EcsHidden);
         }
     }

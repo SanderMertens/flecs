@@ -14,10 +14,6 @@ const ecs_vector_params_t stage_arr_params = {
     .element_size = sizeof(ecs_stage_t)
 };
 
-const ecs_vector_params_t char_arr_params = {
-    .element_size = sizeof(char)
-};
-
 const ecs_vector_params_t builder_params = {
     .element_size = sizeof(ecs_builder_op_t)
 };
@@ -342,47 +338,6 @@ uint64_t ecs_from_row(
 {
     union RowUnion u = {.row = row};
     return u.value;
-}
-
-char* ecs_type_tostr(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type_id)
-{
-    ecs_vector_t *type = ecs_type_get(world, stage, type_id);
-    ecs_vector_t *chbuf = ecs_vector_new(&char_arr_params, 32);
-    char *dst;
-    uint32_t len;
-    char buf[15];
-
-    ecs_entity_t *handles = ecs_vector_first(type);
-    uint32_t i, count = ecs_vector_count(type);
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t h = handles[i];
-        if (i) {
-            *(char*)ecs_vector_add(&chbuf, &char_arr_params) = ',';
-        }
-
-        const char *str = NULL;
-        EcsId *id = ecs_get_ptr(world, h, EcsId);
-        if (id) {
-            str = *id;
-        } else {
-            int h_int = h;
-            sprintf(buf, "%u", h_int);
-            str = buf;
-        }
-        len = strlen(str);
-        dst = ecs_vector_addn(&chbuf, &char_arr_params, len);
-        memcpy(dst, str, len);
-    }
-
-    *(char*)ecs_vector_add(&chbuf, &char_arr_params) = '\0';
-
-    char *result = strdup(ecs_vector_first(chbuf));
-    ecs_vector_free(chbuf);
-    return result;
 }
 
 ecs_stage_t *ecs_get_stage(

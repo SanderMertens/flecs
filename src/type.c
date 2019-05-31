@@ -1,5 +1,9 @@
 #include "flecs_private.h"
 
+const ecs_vector_params_t char_arr_params = {
+    .element_size = sizeof(char)
+};
+
 /** Parse callback that adds type to type identifier for ecs_new_type */
 static
 int add_type(
@@ -649,4 +653,45 @@ ecs_entity_t ecs_type_get_component(
     } else {
         return 0;
     }
+}
+
+char* _ecs_type_str(
+    ecs_world_t *world,
+    ecs_type_t type_id)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_vector_t *type = ecs_type_get(world, stage, type_id);
+    ecs_vector_t *chbuf = ecs_vector_new(&char_arr_params, 32);
+    char *dst;
+    uint32_t len;
+    char buf[15];
+
+    ecs_entity_t *handles = ecs_vector_first(type);
+    uint32_t i, count = ecs_vector_count(type);
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t h = handles[i];
+        if (i) {
+            *(char*)ecs_vector_add(&chbuf, &char_arr_params) = ',';
+        }
+
+        const char *str = NULL;
+        EcsId *id = ecs_get_ptr(world, h, EcsId);
+        if (id) {
+            str = *id;
+        } else {
+            int h_int = h;
+            sprintf(buf, "%u", h_int);
+            str = buf;
+        }
+        len = strlen(str);
+        dst = ecs_vector_addn(&chbuf, &char_arr_params, len);
+        memcpy(dst, str, len);
+    }
+
+    *(char*)ecs_vector_add(&chbuf, &char_arr_params) = '\0';
+
+    char *result = strdup(ecs_vector_first(chbuf));
+    ecs_vector_free(chbuf);
+    return result;
 }

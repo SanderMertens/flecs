@@ -383,6 +383,11 @@ void World_measure_time(void);
 void World_control_fps(void);
 void World_basic_stats(void);
 
+// Testsuite 'Type'
+void Type_type_of_1_tostr(void);
+void Type_type_of_2_tostr(void);
+void Type_type_of_2_tostr_no_id(void);
+
 // Testsuite 'Run'
 void Run_run(void);
 void Run_run_w_param(void);
@@ -1975,6 +1980,24 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "Type",
+        .testcase_count = 3,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "type_of_1_tostr",
+                .function = Type_type_of_1_tostr
+            },
+            {
+                .id = "type_of_2_tostr",
+                .function = Type_type_of_2_tostr
+            },
+            {
+                .id = "type_of_2_tostr_no_id",
+                .function = Type_type_of_2_tostr_no_id
+            }
+        }
+    },
+    {
         .id = "Run",
         .testcase_count = 22,
         .testcases = (bake_test_case[]){
@@ -2534,5 +2557,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 32);
+    return bake_test_run("api", argc, argv, suites, 33);
 }

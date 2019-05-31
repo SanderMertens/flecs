@@ -160,12 +160,6 @@ ecs_vector_t* ecs_type_get(
     ecs_stage_t *stage,
     ecs_type_t type_id);
 
-/* Convert type to string */
-char* ecs_type_tostr(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type_id);
-
 /* Get index for entity in type */
 int16_t ecs_type_index_of(
     ecs_vector_t *type,

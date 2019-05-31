@@ -1184,6 +1184,14 @@ ecs_entity_t ecs_type_get_component(
     ecs_type_t type,
     uint32_t index);
 
+/** Convert type to string */
+FLECS_EXPORT
+char* _ecs_type_str(
+    ecs_world_t *world,
+    ecs_type_t type);
+
+#define ecs_type_str(world, type) _ecs_type_str(world, ecs_type(type))
+
 /* -- System API -- */
 
 /** Enable or disable a system.
