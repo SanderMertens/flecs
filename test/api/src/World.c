@@ -659,6 +659,24 @@ void World_basic_stats() {
     test_int(stats.component_count - init_component_count, 2);
     test_int(stats.entity_count - init_entity_count, 4);
 
+    ECS_TYPE(world, Type, Position);
+
+    ecs_get_stats(world, &stats);
+
+    test_int(stats.system_count - init_system_count, 2);
+    test_int(stats.table_count - init_table_count, 3);
+    test_int(stats.component_count - init_component_count, 3);
+    test_int(stats.entity_count - init_entity_count, 5);
+
+    ECS_TYPE(world, Feature, Move, Dummy);
+
+    ecs_get_stats(world, &stats);
+
+    test_int(stats.system_count - init_system_count, 2);
+    test_int(stats.table_count - init_table_count, 3);
+    test_int(stats.component_count - init_component_count, 3);
+    test_int(stats.entity_count - init_entity_count, 6);
+
     ecs_free_stats(&stats);
 
     ecs_fini(world);
