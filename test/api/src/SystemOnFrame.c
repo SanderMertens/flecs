@@ -1239,3 +1239,6 @@ void SystemOnFrame_ensure_optional_is_null_field_shared() {
 
     ecs_fini(world);
 }
+void SystemOnFrame_on_period() {
+    // Implement testcase
+}

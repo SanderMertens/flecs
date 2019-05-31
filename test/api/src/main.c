@@ -253,6 +253,7 @@ void SystemOnFrame_ensure_optional_is_null_field_shared(void);
 void SystemOnFrame_use_fields_2_owned(void);
 void SystemOnFrame_use_fields_1_owned_1_shared(void);
 void SystemOnFrame_match_2_systems_w_populated_table(void);
+void SystemOnFrame_on_period(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -379,9 +380,13 @@ void World_dim_type(void);
 void World_dim_dim_type(void);
 void World_phases(void);
 void World_phases_w_merging(void);
+void World_phases_match_in_create(void);
 void World_measure_time(void);
 void World_control_fps(void);
 void World_basic_stats(void);
+void World_quit(void);
+void World_get_delta_time(void);
+void World_get_delta_time_auto(void);
 
 // Testsuite 'Type'
 void Type_type_of_1_tostr(void);
@@ -1392,7 +1397,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 22,
+        .testcase_count = 23,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -1481,6 +1486,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "match_2_systems_w_populated_table",
                 .function = SystemOnFrame_match_2_systems_w_populated_table
+            },
+            {
+                .id = "on_period",
+                .function = SystemOnFrame_on_period
             }
         }
     },
@@ -1920,7 +1929,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 14,
+        .testcase_count = 18,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -1967,6 +1976,10 @@ static bake_test_suite suites[] = {
                 .function = World_phases_w_merging
             },
             {
+                .id = "phases_match_in_create",
+                .function = World_phases_match_in_create
+            },
+            {
                 .id = "measure_time",
                 .function = World_measure_time
             },
@@ -1977,6 +1990,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "basic_stats",
                 .function = World_basic_stats
+            },
+            {
+                .id = "quit",
+                .function = World_quit
+            },
+            {
+                .id = "get_delta_time",
+                .function = World_get_delta_time
+            },
+            {
+                .id = "get_delta_time_auto",
+                .function = World_get_delta_time_auto
             }
         }
     },

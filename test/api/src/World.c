@@ -373,6 +373,38 @@ void World_phases() {
     ecs_fini(world);
 }
 
+void World_phases_match_in_create() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_set(world, e, Position, {0, 0});
+
+    ECS_SYSTEM(world, TOnLoad, EcsOnLoad, Position);
+    ECS_SYSTEM(world, TPostLoad, EcsPostLoad, Position);
+    ECS_SYSTEM(world, TPreUpdate, EcsPreUpdate, Position);
+    ECS_SYSTEM(world, TOnUpdate, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, TOnValidate, EcsOnValidate, Position);
+    ECS_SYSTEM(world, TPostUpdate, EcsPostUpdate, Position);
+    ECS_SYSTEM(world, TPreStore, EcsPreStore, Position);
+    ECS_SYSTEM(world, TOnStore, EcsOnStore, Position);
+    ECS_SYSTEM(world, TManual, EcsManual, Position);
+
+    ecs_progress(world, 1);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 8);
+
+    ecs_run(world, TManual, 0, NULL);
+
+    test_int(p->x, 9);
+
+    ecs_fini(world);
+}
+
 static
 void TMergeOnLoad(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
@@ -632,3 +664,41 @@ void World_basic_stats() {
     ecs_fini(world);
 }
 
+
+void World_quit() {
+    ecs_world_t *world = ecs_init();
+
+    uint32_t count = 0;
+
+    while (ecs_progress(world, 0)) {
+        test_int(count, 0);
+        ecs_quit(world);
+        count ++;
+    }
+
+    ecs_fini(world);
+}
+
+void World_get_delta_time() {
+    ecs_world_t *world = ecs_init();
+
+    test_flt(ecs_get_delta_time(world), 0);
+
+    ecs_progress(world, 1.0);
+
+    test_flt(ecs_get_delta_time(world), 1.0);
+
+    ecs_fini(world);
+}
+
+void World_get_delta_time_auto() {
+    ecs_world_t *world = ecs_init();
+
+    test_flt(ecs_get_delta_time(world), 0);
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_get_delta_time(world) != 0);
+
+    ecs_fini(world);
+}

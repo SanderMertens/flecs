@@ -259,8 +259,6 @@ ecs_vector_t** frame_system_array(
         return &world->pre_store_systems;        
     } else if (kind == EcsOnStore) {
         return &world->on_store_systems;
-    } else if (kind == EcsManual) {
-        return &world->on_demand_systems;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, 0);
     }
@@ -355,10 +353,10 @@ ecs_stage_t *ecs_get_stage(
         *world_ptr = thread->world;
         return thread->stage;
     } else {
-        ecs_os_err("Invalid world object\n");
-        assert(0);
-        return NULL;
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+    
+    return NULL;
 }
 
 static
