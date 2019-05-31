@@ -434,7 +434,8 @@
                 "phases",
                 "phases_w_merging",
                 "measure_time",
-                "control_fps"
+                "control_fps",
+                "basic_stats"
             ]
         }, { 
             "id": "Run",

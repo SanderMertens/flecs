@@ -381,6 +381,7 @@ void World_phases(void);
 void World_phases_w_merging(void);
 void World_measure_time(void);
 void World_control_fps(void);
+void World_basic_stats(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -1912,7 +1913,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 13,
+        .testcase_count = 14,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -1965,6 +1966,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "control_fps",
                 .function = World_control_fps
+            },
+            {
+                .id = "basic_stats",
+                .function = World_basic_stats
             }
         }
     },

@@ -567,3 +567,67 @@ void World_control_fps() {
 
     ecs_fini(world);
 }
+
+static
+void Dummy(ecs_rows_t *rows) { }
+
+void World_basic_stats() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_stats_t stats = {0};
+
+    ecs_get_stats(world, &stats);
+
+    int init_system_count = stats.system_count;
+    int init_table_count = stats.table_count;
+    int init_component_count = stats.component_count;
+    int init_entity_count = stats.entity_count;
+
+    ecs_get_stats(world, &stats);
+
+    test_int(stats.system_count - init_system_count, 0);
+    test_int(stats.table_count - init_table_count, 0);
+    test_int(stats.component_count - init_component_count, 0);
+    test_int(stats.entity_count - init_entity_count, 0);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_get_stats(world, &stats);
+
+    test_int(stats.system_count - init_system_count, 0);
+    test_int(stats.table_count - init_table_count, 0);
+    test_int(stats.component_count - init_component_count, 0);
+    test_int(stats.entity_count - init_entity_count, 1);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_get_stats(world, &stats);
+
+    test_int(stats.system_count - init_system_count, 0);
+    test_int(stats.table_count - init_table_count, 1);
+    test_int(stats.component_count - init_component_count, 1);
+    test_int(stats.entity_count - init_entity_count, 2);
+
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position);
+
+    ecs_get_stats(world, &stats);
+
+    test_int(stats.system_count - init_system_count, 1);
+    test_int(stats.table_count - init_table_count, 2);
+    test_int(stats.component_count - init_component_count, 2);
+    test_int(stats.entity_count - init_entity_count, 3);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_get_stats(world, &stats);
+
+    test_int(stats.system_count - init_system_count, 2);
+    test_int(stats.table_count - init_table_count, 2);
+    test_int(stats.component_count - init_component_count, 2);
+    test_int(stats.entity_count - init_entity_count, 4);
+
+    ecs_free_stats(&stats);
+
+    ecs_fini(world);
+}

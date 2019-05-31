@@ -886,6 +886,7 @@ void Prefab_prefab_in_system_expr() {
     ecs_fini(world);
 }
 
+static
 void Dummy(ecs_rows_t *rows) {
     ProbeSystem(rows);
 }
