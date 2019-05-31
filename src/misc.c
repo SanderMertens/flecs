@@ -102,7 +102,10 @@ int64_t int64_muldiv(int64_t value, int64_t numer, int64_t denom) {
 #endif
 
 void ecs_os_time_setup(void) {
-    ecs_assert(ecs_os_time_initialized == 0, ECS_INTERNAL_ERROR, NULL);
+    if ( ecs_os_time_initialized) {
+        return;
+    }
+    
     ecs_os_time_initialized = 1;
     #if defined(_WIN32)
         QueryPerformanceFrequency(&_ecs_os_time_win_freq);

@@ -447,7 +447,8 @@
                 "basic_stats",
                 "quit",
                 "get_delta_time",
-                "get_delta_time_auto"
+                "get_delta_time_auto",
+                "recreate_world"
             ]
         }, {
             "id": "Type",

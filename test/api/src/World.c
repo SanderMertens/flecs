@@ -720,3 +720,13 @@ void World_get_delta_time_auto() {
 
     ecs_fini(world);
 }
+
+void World_recreate_world() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_fini(world) == 0);
+
+    world = ecs_init();
+
+    test_assert(ecs_fini(world) == 0);
+}

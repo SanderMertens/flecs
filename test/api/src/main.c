@@ -393,6 +393,7 @@ void World_basic_stats(void);
 void World_quit(void);
 void World_get_delta_time(void);
 void World_get_delta_time_auto(void);
+void World_recreate_world(void);
 
 // Testsuite 'Type'
 void Type_type_of_1_tostr(void);
@@ -1959,7 +1960,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 18,
+        .testcase_count = 19,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -2032,6 +2033,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_delta_time_auto",
                 .function = World_get_delta_time_auto
+            },
+            {
+                .id = "recreate_world",
+                .function = World_recreate_world
             }
         }
     },
