@@ -93,6 +93,11 @@ uint64_t ecs_map_next_w_key(
     ecs_map_iter_t *it,
     uint64_t *key_out);
 
+FLECS_EXPORT
+void* ecs_map_next_ptr_w_key(
+    ecs_map_iter_t *it,
+    uint64_t *key_out);
+
 #ifdef __cplusplus
 }
 #endif

@@ -493,3 +493,10 @@ void* ecs_map_next_ptr(
 {
     return (void*)(uintptr_t)ecs_map_next_w_key(iter_data, NULL);
 }
+
+void* ecs_map_next_ptr_w_key(
+    ecs_map_iter_t *iter_data,
+    uint64_t *key_out)
+{
+    return (void*)(uintptr_t)ecs_map_next_w_key(iter_data, key_out);
+}
