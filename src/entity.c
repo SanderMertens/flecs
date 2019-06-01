@@ -167,6 +167,8 @@ bool populate_info(
 {
     bool needs_update = false;
 
+    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (info->stage != stage) {
         needs_update = true;
     } else {

@@ -346,7 +346,7 @@ ecs_type_t ecs_notify_row_system(
             /* If a regular column, find corresponding column in table */
             columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
 
-            if (!columns[i]) {
+            if (!columns[i] && table) {
                 /* If column is not found, it could come from a prefab. Look for
                  * components of components */
                 entity = ecs_get_entity_for_component(

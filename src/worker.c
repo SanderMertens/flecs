@@ -201,6 +201,7 @@ void ecs_schedule_jobs(
     uint32_t start_index = 0;
 
     ecs_job_t *job = NULL;
+
     for (i = 0; i < thread_count; i ++) {
         job = ecs_vector_get(system_data->jobs, &job_arr_params, i);
         int32_t rows_per_job = rows_per_thread_i;
@@ -218,7 +219,7 @@ void ecs_schedule_jobs(
         start_index += rows_per_job;
     }
 
-    if (residual >= 0.9) {
+    if (i && residual >= 0.9) {
         job->limit ++;
     }
 }

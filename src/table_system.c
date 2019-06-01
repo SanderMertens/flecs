@@ -887,8 +887,6 @@ bool should_run(
 {
     float time_passed = system_data->time_passed + delta_time;
 
-    delta_time = time_passed;
-
     if (time_passed >= period) {
         time_passed -= period;
         if (time_passed > period) {

@@ -104,12 +104,12 @@ ecs_type_t register_type_from_buffer(
     ecs_entity_t *buf,
     uint32_t count)
 {
+    if (!stage) {
+        stage = &world->main_stage;
+    }
+
     ecs_type_t new_id = hash_handle_array(buf, count);
-    ecs_map_t *type_index;
-
-    if (!stage) stage = &world->main_stage;
-
-    type_index = stage->type_index;
+    ecs_map_t *type_index = stage->type_index;
 
     ecs_vector_t *new_array = ecs_map_get(world->main_stage.type_index, new_id);
     if (!new_array) {
@@ -216,6 +216,8 @@ ecs_type_t ecs_type_register(
     ecs_entity_t to_add,
     ecs_vector_t *set)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
     uint32_t count = ecs_vector_count(set);
     ecs_entity_t *new_set = ecs_os_alloca(ecs_entity_t, count + 1);
     void *new_buffer = new_set;
@@ -256,6 +258,8 @@ ecs_type_t ecs_type_merge_arr(
     ecs_vector_t *to_add,
     ecs_vector_t *to_del)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_entity_t *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
     ecs_entity_t cur = 0, add = 0, del = 0;
     uint32_t i_cur = 0, i_add = 0, i_del = 0;
@@ -279,11 +283,16 @@ ecs_type_t ecs_type_merge_arr(
         add = buf_add[0];
     }
 
-    ecs_entity_t *buf_new = ecs_os_alloca(ecs_entity_t, cur_count + add_count);
+    ecs_entity_t *buf_new = NULL; 
+    if (cur_count + add_count) {
+        buf_new = ecs_os_alloca(ecs_entity_t, cur_count + add_count);
+    }
+
     uint32_t new_count = 0;
 
     do {
         if (add && (!cur || add < cur)) {
+            ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
             buf_new[new_count] = add;
             new_count ++;
             i_add ++;
@@ -295,6 +304,7 @@ ecs_type_t ecs_type_merge_arr(
             }
 
             if (del != cur) {
+                ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
                 buf_new[new_count] = cur;
                 new_count ++;
             } else if (del == cur) {
@@ -305,6 +315,7 @@ ecs_type_t ecs_type_merge_arr(
             i_cur ++;
             cur = i_cur < cur_count ? buf_cur[i_cur] : 0;
         } else if (add && add == cur) {
+            ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
             buf_new[new_count] = add;
             new_count ++;
             i_cur ++;

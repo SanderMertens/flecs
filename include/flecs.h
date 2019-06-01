@@ -1644,8 +1644,8 @@ void _ecs_assert(
     const char *file,
     uint32_t line);
 
-#define ecs_abort(error_code, param) _ecs_abort(error_code, param, __FILE__, __LINE__)
-#define ecs_assert(condition, error_code, param) _ecs_assert(condition, error_code, param, #condition, __FILE__, __LINE__)
+#define ecs_abort(error_code, param) _ecs_abort(error_code, param, __FILE__, __LINE__); abort()
+#define ecs_assert(condition, error_code, param) _ecs_assert(condition, error_code, param, #condition, __FILE__, __LINE__); assert(condition)
 
 #define ECS_INVALID_HANDLE (1)
 #define ECS_INVALID_PARAMETERS (2)
