@@ -149,6 +149,8 @@ void Lookup_lookup_component(void);
 void Lookup_lookup_not_found(void);
 void Lookup_lookup_child(void);
 void Lookup_lookup_child_w_component(void);
+void Lookup_lookup_in_progress(void);
+void Lookup_lookup_child_in_progress(void);
 
 // Testsuite 'Singleton'
 void Singleton_set(void);
@@ -1071,7 +1073,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Lookup",
-        .testcase_count = 5,
+        .testcase_count = 7,
         .testcases = (bake_test_case[]){
             {
                 .id = "lookup",
@@ -1092,6 +1094,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "lookup_child_w_component",
                 .function = Lookup_lookup_child_w_component
+            },
+            {
+                .id = "lookup_in_progress",
+                .function = Lookup_lookup_in_progress
+            },
+            {
+                .id = "lookup_child_in_progress",
+                .function = Lookup_lookup_child_in_progress
             }
         }
     },

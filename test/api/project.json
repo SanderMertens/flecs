@@ -171,7 +171,9 @@
                 "lookup_component",
                 "lookup_not_found",
                 "lookup_child",
-                "lookup_child_w_component"
+                "lookup_child_w_component",
+                "lookup_in_progress",
+                "lookup_child_in_progress"
             ]
         }, {
             "id": "Singleton",

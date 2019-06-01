@@ -207,8 +207,9 @@ typedef struct ecs_table_column_t {
     uint16_t size;                   /* Column size (saves component lookups) */
 } ecs_table_column_t;
 
-#define EcsTableIsPrefab (1)
-#define EcsTableHasPrefab (2)
+#define EcsTableIsStaged  (1)
+#define EcsTableIsPrefab (2)
+#define EcsTableHasPrefab (4)
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an

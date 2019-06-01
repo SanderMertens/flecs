@@ -311,6 +311,41 @@ ecs_type_t instantiate_prefab(
     return modified;
 }
 
+static
+ecs_entity_t get_prefab_from_type(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    bool is_new_table,
+    ecs_entity_t entity,
+    ecs_type_t entity_type)
+{
+    if (is_new_table) {
+        ecs_vector_t *type = ecs_type_get(world, stage, entity_type);
+        int32_t i, count = ecs_vector_count(type);
+        ecs_entity_t *buffer = ecs_vector_first(type);
+
+        ecs_entity_t exclude_prefab = 0;
+
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t component = buffer[i];
+            if (component == ecs_entity(EcsPrefab)) {
+                EcsPrefab *prefab = ecs_get_ptr(world, entity, EcsPrefab);
+                if (prefab) {
+                    exclude_prefab = prefab->parent;
+                }
+            } else if (buffer[i] != exclude_prefab) {
+                if (ecs_has(world, buffer[i], EcsPrefab)) {
+                    return buffer[i];
+                }                
+            }
+        }
+
+        return 0;
+    } else {
+        return ecs_map_get64(world->prefab_index, entity_type);
+    }
+}
+
 /** Copy default values from base (and base of base) prefabs */
 static
 ecs_type_t copy_from_prefab(
@@ -326,9 +361,14 @@ ecs_type_t copy_from_prefab(
     ecs_type_t entity_type = type_id;
     ecs_type_t modified = 0;
     ecs_table_column_t *columns = info->columns;
+    bool is_new_table = info->table->flags & EcsTableIsStaged;
 
     if (world->in_progress) {
-        entity_type = row_from_stage(stage, entity).type_id;
+        entity_type = info->type_id;
+        if (is_new_table) {
+            entity_type = ecs_type_merge( world, stage, row_from_stage(
+                &world->main_stage, entity).type_id, entity_type, 0);
+        }
     }
 
     ecs_vector_t *add_type = ecs_type_get(world, stage, to_add);
@@ -337,7 +377,7 @@ ecs_type_t copy_from_prefab(
 
     bool is_prefab = false;
 
-    while ((prefab = ecs_map_get64(world->prefab_index, entity_type))) {
+    while ((prefab = get_prefab_from_type(world, stage, is_new_table, entity, entity_type))) {
         /* Prefabs are only resolved from the main stage. Prefabs created while
          * iterating cannot be resolved in the same iteration. */
         ecs_row_t prefab_row = row_from_stage(&world->main_stage, prefab);
