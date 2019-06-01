@@ -532,7 +532,7 @@ uint32_t commit_w_type(
         }
 
         old_type = old_table->type;
-    } else {
+    } else if (!in_progress) {
         ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, 0);
         ecs_assert(entity >= world->min_handle, ECS_OUT_OF_RANGE, 0);
     }

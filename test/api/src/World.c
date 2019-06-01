@@ -127,6 +127,82 @@ void World_entity_range_limit_out_of_range() {
     ecs_fini(world);
 }
 
+void AddToExisting(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Velocity);
+        test_assert( ecs_has(rows->world, rows->entities[i], Velocity));
+    }
+}
+
+void World_entity_range_add_existing_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, AddToExisting, EcsOnUpdate, Position, ID.Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(e < 500);
+
+    ecs_set_entity_range(world, 500, 1000);
+
+    ecs_progress(world, 1);
+
+    ecs_fini(world);
+}
+
+void World_entity_range_add_in_range_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, AddToExisting, EcsOnUpdate, Position, ID.Velocity);
+
+    ecs_set_entity_range(world, 500, 1000);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e == 500);
+
+    ecs_progress(world, 1);
+
+    ecs_fini(world);
+}
+
+void AddOutOfRange(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_expect_abort();
+        ecs_add(rows->world, 1001, Velocity);
+    }
+}
+
+void World_entity_range_add_out_of_range_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, AddOutOfRange, EcsOnUpdate, Position, ID.Velocity);
+
+    ecs_set_entity_range(world, 500, 1000);
+
+    /* Dummy entity to invoke the system */
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e == 500);
+
+    ecs_progress(world, 1);
+
+    ecs_fini(world);
+}
+
 void World_get_tick() {
     ecs_world_t *world = ecs_init();
 

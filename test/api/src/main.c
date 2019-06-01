@@ -386,6 +386,9 @@ void World_get_tick(void);
 void World_entity_range_offset(void);
 void World_entity_range_offset_out_of_range(void);
 void World_entity_range_limit_out_of_range(void);
+void World_entity_range_add_existing_in_progress(void);
+void World_entity_range_add_in_range_in_progress(void);
+void World_entity_range_add_out_of_range_in_progress(void);
 void World_dim(void);
 void World_dim_type(void);
 void World_dim_dim_type(void);
@@ -1985,7 +1988,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 19,
+        .testcase_count = 22,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -2010,6 +2013,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "entity_range_limit_out_of_range",
                 .function = World_entity_range_limit_out_of_range
+            },
+            {
+                .id = "entity_range_add_existing_in_progress",
+                .function = World_entity_range_add_existing_in_progress
+            },
+            {
+                .id = "entity_range_add_in_range_in_progress",
+                .function = World_entity_range_add_in_range_in_progress
+            },
+            {
+                .id = "entity_range_add_out_of_range_in_progress",
+                .function = World_entity_range_add_out_of_range_in_progress
             },
             {
                 .id = "dim",
