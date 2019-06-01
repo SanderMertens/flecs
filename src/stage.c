@@ -12,6 +12,8 @@ void merge_families(
 
         if (!ecs_map_has(world->main_stage.type_index, type_id, NULL)) {
             ecs_map_set(world->main_stage.type_index, type_id, type);
+        } else {
+            ecs_vector_free(type);
         }
     }
 
@@ -67,13 +69,7 @@ static
 void clean_families(
     ecs_stage_t *stage)
 {
-    ecs_map_iter_t it = ecs_map_iter(stage->type_index);
-    while (ecs_map_hasnext(&it)) {
-        ecs_vector_t *type = ecs_map_next_ptr(&it);
-        ecs_vector_free(type);
-    }
-
-    ecs_map_free(stage->type_index);
+    ecs_map_free(stage->type_index); 
 }
 
 static
