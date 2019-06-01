@@ -333,11 +333,11 @@ bool update_table_index(
     uint32_t new_index)
 {
     int32_t *table = ecs_vector_first(tables);
-    int32_t i, count = ecs_vector_count(tables);
+    uint32_t i, count = ecs_vector_count(tables);
 
     for (i = 0; i < count; i ++) {
-        if (table[data_index] == old_index) {
-            table[data_index] = new_index;
+        if (table[data_index] == (int32_t)old_index) {
+            table[data_index] = (int32_t)new_index;
             return true;
         }
 
@@ -350,7 +350,6 @@ bool update_table_index(
 
 static
 void update_table_data(
-    ecs_world_t *world,
     EcsColSystem *system_data,
     int32_t *table_data,
     uint32_t data_index,
@@ -390,7 +389,6 @@ void update_table_data(
 /* Remove table */
 static
 void remove_table(
-    ecs_world_t *world,
     EcsColSystem *system_data,
     ecs_vector_t *tables,
     int32_t index)
@@ -399,11 +397,11 @@ void remove_table(
         tables, &system_data->table_params, index);
 
     update_table_data(
-        world, system_data, table_data, REFS_INDEX, system_data->refs, 
+        system_data, table_data, REFS_INDEX, system_data->refs, 
         &system_data->ref_params);
 
     update_table_data(
-        world, system_data, table_data, COMPONENTS_INDEX, system_data->components, 
+        system_data, table_data, COMPONENTS_INDEX, system_data->components, 
         &system_data->component_params);        
 
     ecs_vector_remove(tables, &system_data->table_params, table_data);
@@ -551,7 +549,6 @@ void match_tables(
 /** Check if a table was matched with the system */
 static
 int32_t table_matched(
-    ecs_world_t *world,
     EcsColSystem *system_data,
     ecs_vector_t *tables,
     uint32_t table_index)
@@ -561,7 +558,7 @@ int32_t table_matched(
     uint32_t elem_size = system_data->table_params.element_size;
 
     for (i = 0; i < count; i ++) {
-        if (*table_data == table_index) {
+        if (*table_data == (int32_t)table_index) {
             return i;
         }
 
@@ -635,7 +632,7 @@ void ecs_rematch_system(
 
     for (i = 0; i < count; i ++) {
         /* Is the system currently matched with the table? */
-        int32_t match = table_matched(world, system_data, system_data->tables, i);
+        int32_t match = table_matched(system_data, system_data->tables, i);
         ecs_table_t *table = &buffer[i];
 
         if (match_table(world, table, system_data)) {
@@ -654,16 +651,15 @@ void ecs_rematch_system(
         } else {
             /* If table no longer matches, remove it */
             if (match != -1) {
-                remove_table(world, system_data, system_data->tables, match);
+                remove_table(system_data, system_data->tables, match);
                 changed = true;
             } else {
                 /* Make sure the table is removed if it was inactive */
                 match = table_matched(
-                    world, system_data, system_data->inactive_tables, i);
+                    system_data, system_data->inactive_tables, i);
                 if (match != -1) {
                     remove_table(
-                        world, system_data, system_data->inactive_tables, 
-                        match);
+                        system_data, system_data->inactive_tables, match);
                     changed = true;
                 }
             }
@@ -770,7 +766,7 @@ void ecs_system_activate_table(
         dst_array = system_data->inactive_tables;
     }
 
-    uint32_t i = get_table_param_index(world, system_data, table, src_array);
+    int32_t i = get_table_param_index(world, system_data, table, src_array);
 
     ecs_assert(i != -1, ECS_INTERNAL_ERROR, "cannot find table to (de)activate");
 

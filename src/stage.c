@@ -23,7 +23,6 @@ void merge_families(
 static
 void eval_table_columns(
     ecs_world_t *world, 
-    ecs_stage_t *stage, 
     uint32_t old_table_count, 
     uint32_t new_table_count) 
 {
@@ -31,7 +30,7 @@ void eval_table_columns(
 
     uint32_t i;
     for (i = old_table_count; i < new_table_count; i ++) {
-        ecs_table_eval_columns(world, stage, &tables[i]);
+        ecs_table_eval_columns(world, &tables[i]);
         ecs_notify_systems_of_table(world, &tables[i]);
     }
 }
@@ -174,6 +173,6 @@ void ecs_stage_merge(
      * step updates the world for special columns, like prefab components */
     uint32_t new_table_count = ecs_vector_count(world->main_stage.tables);
     if (old_table_count != new_table_count) {
-        eval_table_columns(world, stage, old_table_count, new_table_count);
+        eval_table_columns(world, old_table_count, new_table_count);
     }
 }

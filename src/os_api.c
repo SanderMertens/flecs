@@ -94,6 +94,7 @@ void bake_log(
     const char *msg,
     void *ctx)
 {
+    (void)ctx;
     if (level >= UT_ERROR) {
         ecs_os_err("%s", msg);
     } else if (level <= UT_TRACE) {

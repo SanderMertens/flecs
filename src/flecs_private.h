@@ -182,7 +182,6 @@ void ecs_table_init(
 /* Evaluate table for special columns */
 void ecs_table_eval_columns(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table);
 
 /* Allocate a set of columns for a type */

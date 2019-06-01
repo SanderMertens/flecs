@@ -838,7 +838,6 @@ void _ecs_dim_type(
 
 static
 ecs_entity_t ecs_lookup_child_in_columns(
-    ecs_world_t *world,
     ecs_vector_t *type,
     ecs_table_column_t *columns,
     ecs_entity_t parent,
@@ -884,7 +883,7 @@ ecs_entity_t ecs_lookup_child(
             ecs_table_column_t *columns = ecs_map_next_ptr_w_key(&it, &key);
             ecs_type_t key_type = key;
             ecs_vector_t *type = ecs_type_get(world, stage, key_type);
-            result = ecs_lookup_child_in_columns(world, type, columns, parent, id);
+            result = ecs_lookup_child_in_columns(type, columns, parent, id);
             if (result) {
                 break;
             }
@@ -897,7 +896,7 @@ ecs_entity_t ecs_lookup_child(
 
         for (t = 0; t < count; t ++) {
             result = ecs_lookup_child_in_columns(
-                world, tables[t].type, tables[t].columns, parent, id);
+                tables[t].type, tables[t].columns, parent, id);
             if (result) {
                 break;
             }

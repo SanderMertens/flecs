@@ -24,14 +24,6 @@ void activate_table(
 }
 
 static
-void notify_systems_of_realloc(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    world->should_resolve = true;
-}
-
-static
 ecs_table_column_t* new_columns(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -90,7 +82,6 @@ ecs_table_column_t* ecs_table_get_columns(
 
 void ecs_table_eval_columns(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table)
 {
     ecs_vector_t *type = table->type;
@@ -161,7 +152,7 @@ void ecs_table_init(
          * column evaluation may rely on entities to have certain components,
          * which could have been added while in progress and thus need to be 
          * merged first. */ 
-        ecs_table_eval_columns(world, stage, table);
+        ecs_table_eval_columns(world, table);
     }
 }
 
@@ -250,7 +241,7 @@ uint32_t ecs_table_insert(
     }
 
     if (reallocd && table->columns == columns) {
-        notify_systems_of_realloc(world, table);
+        world->should_resolve = true;
     }
 
     /* Return index of last added entity */
@@ -260,14 +251,16 @@ uint32_t ecs_table_insert(
 void ecs_table_delete(
     ecs_world_t *world,
     ecs_table_t *table,
-    int32_t index)
+    int32_t sindex)
 {
     ecs_table_column_t *columns = table->columns;
     ecs_vector_t *entity_column = columns[0].data;
-    uint32_t count = ecs_vector_count(entity_column);
+    uint32_t index, count = ecs_vector_count(entity_column);
 
-    if (index < 0) {
-        index *= -1;
+    if (sindex < 0) {
+        index = -sindex;
+    } else {
+        index = sindex;
     }
 
     index --;
@@ -281,7 +274,7 @@ void ecs_table_delete(
     uint32_t column_last = ecs_vector_count(table->type) + 1;
     uint32_t i;
 
-    if (index != count) {        
+    if (index != count) {
         /* Move last entity in array to index */
         ecs_entity_t *entities = ecs_vector_first(entity_column);
         ecs_entity_t to_move = entities[count];
@@ -361,7 +354,7 @@ uint32_t ecs_table_grow(
     }
 
     if (reallocd && table->columns == columns) {
-        notify_systems_of_realloc(world, table);
+        world->should_resolve = true;
     }
 
     /* Return index of first added entity */

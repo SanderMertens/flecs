@@ -276,7 +276,7 @@ ecs_type_t instantiate_prefab(
                 ecs_entity_t child = _ecs_new_w_count(
                     world, op->type, limit);
 
-                int j;
+                uint32_t j;
                 for (j = 0; j < limit; j ++) {
                     ecs_adopt(world, child + j, entity + j);
                     ecs_set(world, child + j, EcsId, {op->id});
