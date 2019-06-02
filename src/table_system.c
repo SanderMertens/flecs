@@ -305,6 +305,8 @@ void add_table(
                     /* Negative number indicates ref instead of offset to ecs_data */
                     table_data[i] = -ref;
                     table_data[REFS_COUNT] ++;
+
+                    system_data->base.has_refs = true;
                 }
             }
         }
@@ -692,15 +694,20 @@ void ecs_revalidate_system_refs(
             continue;
         }
 
+
         uint32_t *table_data = ecs_vector_get(system_data->tables, &system_data->table_params, i);
-        ecs_reference_t *refs = ecs_vector_get(system_data->refs, &system_data->ref_params, i);
         uint32_t r, ref_count = table_data[REFS_COUNT];
 
-        for (r = 0; r < ref_count; r ++) {
-            ecs_reference_t ref = refs[r];
-            ecs_entity_info_t info = {.entity = ref.entity};
-            refs[r].cached_ptr = ecs_get_ptr_intern(
-                world, &world->main_stage, &info, ref.component, false, true);
+        ecs_reference_t *refs = NULL;
+        
+        if (ref_count) {
+            refs = ecs_vector_get(system_data->refs, &system_data->ref_params, table_data[REFS_INDEX] - 1);
+            for (r = 0; r < ref_count; r ++) {
+                ecs_reference_t ref = refs[r];
+                ecs_entity_info_t info = {.entity = ref.entity};
+                refs[r].cached_ptr = ecs_get_ptr_intern(
+                    world, &world->main_stage, &info, ref.component, false, true);
+            }            
         }
     }
 }
@@ -820,6 +827,7 @@ ecs_entity_t ecs_new_col_system(
     system_data->base.columns = ecs_vector_new(&column_arr_params, count);
     system_data->base.kind = kind;
     system_data->base.cascade_by = 0;
+    system_data->base.has_refs = false;
 
     system_data->table_params.element_size = sizeof(int32_t) * (count + COLUMNS_INDEX);
     system_data->ref_params.element_size = sizeof(ecs_reference_t) * count;

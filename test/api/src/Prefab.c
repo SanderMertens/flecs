@@ -1,5 +1,43 @@
 #include <api.h>
 
+static
+void Iter(ecs_rows_t *rows) {
+    bool shared = false;
+
+    Mass *m_ptr = ecs_column_test(rows, Mass, 1);
+    if (!m_ptr) {
+        m_ptr = ecs_shared_test(rows, Mass, 1);
+        if (m_ptr) {
+            shared = true;
+        }
+    }
+
+    Position *p = ecs_column(rows, Position, 2);
+    Velocity *v = ecs_column_test(rows, Velocity, 3);
+
+    ProbeSystem(rows);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        Mass m = 1;
+        if (m_ptr) {
+            if (shared) {
+                m = *m_ptr;
+            } else {
+                m = m_ptr[i];
+            }
+        }
+        
+        p[i].x = 10 * m;
+        p[i].y = 20 * m;
+
+        if (v) {
+            v[i].x = 30 * m;
+            v[i].y = 40 * m;
+        }
+    }
+}
+
 void Prefab_new_w_prefab() {
     ecs_world_t *world = ecs_init();
 
@@ -1697,6 +1735,83 @@ void Prefab_copy_from_prefab_first_instance_in_progress() {
         test_int(v->x, 1);
         test_int(v->y, 2);
     }
+
+    ecs_fini(world);
+}
+
+void Prefab_cached_ptr_after_realloc() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_PREFAB(world, Prefab, Mass);
+    ecs_set(world, Prefab, Mass, {1});
+
+    ECS_ENTITY(world, e_1, Position, Mass);
+    ecs_set(world, e_1, Mass, {3});
+
+    ECS_ENTITY(world, e_2, Position, Prefab);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass, Position);
+
+    ecs_type_t prefab_type = ecs_get_type(world, Prefab);
+
+    /* Trigger a realloc of the table in which the prefab is stored. This should
+     * cause systems with refs to re-resolve their cached ref ptrs  */
+    _ecs_new_w_count(world, prefab_type, 1000);
+    
+    ecs_set(world, Prefab, Mass, {2});
+    ecs_progress(world, 1);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 60);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void Prefab_revalidate_cached_ptr_w_mixed_table_refs() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_PREFAB(world, Prefab, Mass);
+    ecs_set(world, Prefab, Mass, {1});
+
+    ECS_ENTITY(world, e_1, Position, Prefab);
+    ECS_ENTITY(world, e_2, Position, Mass);
+    ecs_set(world, e_2, Mass, {3});
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass, Position);
+
+    ecs_type_t prefab_type = ecs_get_type(world, Prefab);
+
+    /* Trigger a realloc of the table in which the prefab is stored. This should
+     * cause systems with refs to re-resolve their cached ref ptrs  */
+    _ecs_new_w_count(world, prefab_type, 1000);
+    
+    ecs_set(world, Prefab, Mass, {2});
+    ecs_progress(world, 1);
+
+    Position *p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 60);
+
+    p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
 
     ecs_fini(world);
 }

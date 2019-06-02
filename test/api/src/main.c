@@ -343,6 +343,8 @@ void Prefab_on_set_on_instance(void);
 void Prefab_instantiate_in_progress(void);
 void Prefab_copy_from_prefab_in_progress(void);
 void Prefab_copy_from_prefab_first_instance_in_progress(void);
+void Prefab_cached_ptr_after_realloc(void);
+void Prefab_revalidate_cached_ptr_w_mixed_table_refs(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -1690,7 +1692,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 40,
+        .testcase_count = 42,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -1851,6 +1853,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "copy_from_prefab_first_instance_in_progress",
                 .function = Prefab_copy_from_prefab_first_instance_in_progress
+            },
+            {
+                .id = "cached_ptr_after_realloc",
+                .function = Prefab_cached_ptr_after_realloc
+            },
+            {
+                .id = "revalidate_cached_ptr_w_mixed_table_refs",
+                .function = Prefab_revalidate_cached_ptr_w_mixed_table_refs
             }
         }
     },

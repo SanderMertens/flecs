@@ -2,19 +2,32 @@
 
 static
 void Iter(ecs_rows_t *rows) {
-    Mass *m_ptr = ecs_shared_test(rows, Mass, 1);
+    bool shared = false;
+
+    Mass *m_ptr = ecs_column_test(rows, Mass, 1);
+    if (!m_ptr) {
+        m_ptr = ecs_shared_test(rows, Mass, 1);
+        if (m_ptr) {
+            shared = true;
+        }
+    }
+
     Position *p = ecs_column(rows, Position, 2);
     Velocity *v = ecs_column_test(rows, Velocity, 3);
 
     ProbeSystem(rows);
 
-    Mass m = 1;
-    if (m_ptr) {
-        m = *m_ptr;
-    }
-
     int i;
     for (i = 0; i < rows->count; i ++) {
+        Mass m = 1;
+        if (m_ptr) {
+            if (shared) {
+                m = *m_ptr;
+            } else {
+                m = m_ptr[i];
+            }
+        }
+        
         p[i].x = 10 * m;
         p[i].y = 20 * m;
 
@@ -1102,4 +1115,8 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(p->y, 60);
 
     ecs_fini(world);
+}
+
+void System_w_FromContainer_add_component_after_match_mixed_refs_tables() {
+    // Implement testcase
 }

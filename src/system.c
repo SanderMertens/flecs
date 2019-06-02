@@ -119,6 +119,7 @@ ecs_entity_t new_row_system(
     system_data->base.enabled = true;
     system_data->base.kind = kind;
     system_data->base.cascade_by = 0;
+    system_data->base.has_refs = false;
     system_data->components = ecs_vector_new(&handle_arr_params, count);
 
     if (ecs_parse_component_expr(
@@ -489,7 +490,9 @@ ecs_entity_t ecs_new_system(
         }
     }
 
-    system_data->has_refs = has_refs(system_data);
+    if (!system_data->has_refs) {
+        system_data->has_refs = has_refs(system_data);
+    }
 
     system_data->match_prefabs = ecs_type_contains_component(
         world, &world->main_stage, system_data->and_from_entity, 

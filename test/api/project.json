@@ -387,7 +387,9 @@
                 "on_set_on_instance",
                 "instantiate_in_progress",
                 "copy_from_prefab_in_progress",
-                "copy_from_prefab_first_instance_in_progress"
+                "copy_from_prefab_first_instance_in_progress",
+                "cached_ptr_after_realloc",
+                "revalidate_cached_ptr_w_mixed_table_refs"
             ]
         }, {
             "id": "System_w_FromContainer",

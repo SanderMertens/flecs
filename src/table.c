@@ -103,8 +103,6 @@ void ecs_table_eval_columns(
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t c = buf[i];
 
-        ecs_assert(c <= world->last_handle, ECS_INVALID_HANDLE, NULL);
-
         if (c == ecs_entity(EcsPrefab)) {
             table->flags |= EcsTableIsPrefab;
         }
