@@ -210,10 +210,12 @@ void ecs_os_enable_dbg(bool enable);
 #define ecs_os_abort() ecs_os_api.abort()
 
 /* Sleep with floating point time */
+FLECS_EXPORT
 void ecs_sleepf(
     double t);
 
 /* Measure time since provided timestamp */
+FLECS_EXPORT
 double ecs_time_measure(
     ecs_time_t *start);
 
