@@ -58,6 +58,11 @@ uint64_t ecs_map_get64(
     ecs_map_t *map,
     uint64_t key_hash);
 
+FLECS_EXPORT
+uint64_t* ecs_map_get_ptr(
+    ecs_map_t *map,
+    uint64_t key_hash);
+
 #define ecs_map_get(map, key_hash) \
     (void*)(uintptr_t)ecs_map_get64(map, key_hash)
 

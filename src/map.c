@@ -356,6 +356,25 @@ uint64_t ecs_map_get64(
     return 0;
 }
 
+uint64_t* ecs_map_get_ptr(
+    ecs_map_t *map,
+    uint64_t key)
+{
+    if (!map->count) {
+        return 0;
+    }
+
+    uint32_t *bucket = get_bucket(map, key);
+    if (*bucket) {
+        ecs_map_node_t *elem = get_node(map, bucket, key);
+        if (elem) {
+            return &elem->data;
+        }
+    }
+
+    return 0;
+}
+
 bool ecs_map_has(
     ecs_map_t *map,
     uint64_t key_hash,

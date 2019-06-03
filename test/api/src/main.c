@@ -198,6 +198,7 @@ void SystemOnAdd_set_again_1(void);
 void SystemOnAdd_add_again_2(void);
 void SystemOnAdd_override_after_add_in_on_add(void);
 void SystemOnAdd_set_after_add_in_on_add(void);
+void SystemOnAdd_add_again_in_progress(void);
 
 // Testsuite 'SystemOnRemove'
 void SystemOnRemove_remove_match_1_of_1(void);
@@ -345,6 +346,10 @@ void Prefab_copy_from_prefab_in_progress(void);
 void Prefab_copy_from_prefab_first_instance_in_progress(void);
 void Prefab_cached_ptr_after_realloc(void);
 void Prefab_revalidate_cached_ptr_w_mixed_table_refs(void);
+void Prefab_no_overwrite_on_2nd_add(void);
+void Prefab_no_overwrite_on_2nd_add_in_progress(void);
+void Prefab_no_instantiate_on_2nd_add(void);
+void Prefab_no_instantiate_on_2nd_add_in_progress(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -1192,7 +1197,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 24,
+        .testcase_count = 25,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -1289,6 +1294,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_after_add_in_on_add",
                 .function = SystemOnAdd_set_after_add_in_on_add
+            },
+            {
+                .id = "add_again_in_progress",
+                .function = SystemOnAdd_add_again_in_progress
             }
         }
     },
@@ -1692,7 +1701,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 42,
+        .testcase_count = 46,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -1861,6 +1870,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "revalidate_cached_ptr_w_mixed_table_refs",
                 .function = Prefab_revalidate_cached_ptr_w_mixed_table_refs
+            },
+            {
+                .id = "no_overwrite_on_2nd_add",
+                .function = Prefab_no_overwrite_on_2nd_add
+            },
+            {
+                .id = "no_overwrite_on_2nd_add_in_progress",
+                .function = Prefab_no_overwrite_on_2nd_add_in_progress
+            },
+            {
+                .id = "no_instantiate_on_2nd_add",
+                .function = Prefab_no_instantiate_on_2nd_add
+            },
+            {
+                .id = "no_instantiate_on_2nd_add_in_progress",
+                .function = Prefab_no_instantiate_on_2nd_add_in_progress
             }
         }
     },

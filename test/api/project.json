@@ -226,7 +226,8 @@
                 "set_again_1",
                 "add_again_2",
                 "override_after_add_in_on_add",
-                "set_after_add_in_on_add"
+                "set_after_add_in_on_add",
+                "add_again_in_progress"
             ]
         }, {
             "id": "SystemOnRemove",
@@ -389,7 +390,11 @@
                 "copy_from_prefab_in_progress",
                 "copy_from_prefab_first_instance_in_progress",
                 "cached_ptr_after_realloc",
-                "revalidate_cached_ptr_w_mixed_table_refs"
+                "revalidate_cached_ptr_w_mixed_table_refs",
+                "no_overwrite_on_2nd_add",
+                "no_overwrite_on_2nd_add_in_progress",
+                "no_instantiate_on_2nd_add",
+                "no_instantiate_on_2nd_add_in_progress"
             ]
         }, {
             "id": "System_w_FromContainer",

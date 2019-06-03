@@ -743,3 +743,35 @@ void SystemOnAdd_set_after_add_in_on_add() {
 
     ecs_fini(world);
 }
+
+static
+void AddAgain(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Position);
+    }
+}
+
+void SystemOnAdd_add_again_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position);
+    ECS_SYSTEM(world, AddAgain, EcsOnUpdate, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    ecs_add(world, e, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 0);
+
+    ecs_fini(world);
+}

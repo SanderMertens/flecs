@@ -507,11 +507,25 @@ uint32_t commit_w_type(
      * stage once the merge takes place. */
     if (in_progress) {
         /* Update remove type. Add to_remove, and subtract to_add. */
-        ecs_type_t remove_type = ecs_map_get64(stage->remove_merge, entity);
+        uint64_t *rm_type_ptr = ecs_map_get_ptr(stage->remove_merge, entity);
+        ecs_type_t remove_type = rm_type_ptr ? *rm_type_ptr : 0;
 
-        remove_type = ecs_type_merge(
-            world, stage, remove_type, to_remove, to_add);
-        ecs_map_set64(stage->remove_merge, entity, remove_type);
+        /* If remove_type and to_remove are 0, the result of the merge is going
+         * to be 0 as well, so don't bother overwriting the remove_index */
+        if (remove_type || to_remove) {
+            remove_type = ecs_type_merge(
+                world, stage, remove_type, to_remove, to_add);
+
+            if (rm_type_ptr) {
+                *rm_type_ptr = remove_type;
+            } else if (remove_type) {
+                ecs_map_set64(stage->remove_merge, entity, remove_type);
+            } else {
+                /* If the result is 0, remove entity from remove stage which
+                 * reduces the work required during the merge */
+                ecs_map_remove(stage->remove_merge, entity);
+            }
+        }
     }
 
     if ((old_table = info->table)) {
@@ -535,6 +549,14 @@ uint32_t commit_w_type(
 
         old_type = old_table->type;
     } else if (!in_progress) {
+        /* Entity ranges are only checked when not iterating. It is allowed to
+         * modify entities that existed before setting the range, and thus the
+         * range checks are only applied if the old_table is NULL, meaning the
+         * entity did not yet exist/was empty. When iterating, old_table refers
+         * to a table in the data stage, not to the table in the main stage.
+         * Therefore it is not possible to check while in progress if the entity
+         * already existed. Instead, the check will be applied when the entity
+         * is merged, which will invoke commit_w_type again. */
         ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, 0);
         ecs_assert(entity >= world->min_handle, ECS_OUT_OF_RANGE, 0);
     }
@@ -640,7 +662,18 @@ uint32_t commit_w_type(
      * consistent again with the entity index, execute the OnAdd actions. */
     if (type_id) {
         if (to_add) {
-            notify_after_commit(world, stage, info, new_index - 1, 1, to_add, do_set);
+            /* If in progress, check that overrides, OnAdd systems and prefab 
+             * instantiations don't take place if the component is already added 
+             * in the main stage. */
+            if (in_progress) {
+                ecs_row_t main_row = row_from_stage(&world->main_stage, entity);
+                to_add = _ecs_merge_type(world, to_add, 0, main_row.type_id);
+            }
+
+            if (to_add) {
+                notify_after_commit(
+                    world, stage, info, new_index - 1, 1, to_add, do_set);
+            }
         }
     }
 
@@ -780,7 +813,7 @@ void ecs_merge_entity(
         .index = old_row.index
     };
 
-    uint32_t new_index = commit_w_type(
+    int32_t new_index = commit_w_type(
         world, &world->main_stage, &info, type_id, 0, to_remove, false);
 
     if (type_id && staged_id) {
@@ -792,6 +825,10 @@ void ecs_merge_entity(
             stage->data_stage, staged_row->type_id);
 
         ecs_assert(staged_columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (new_index < 0) {
+            new_index *= -1;
+        }
 
         copy_row( new_table->type, new_table->columns, new_index,
                   staged_table->type, staged_columns, staged_row->index); 
