@@ -121,6 +121,7 @@ void ecs_stage_init(
     stage->commit_count = 0;
     stage->to_type = 0;
     stage->from_type = 0;
+    stage->range_check_enabled = true;
 }
 
 void ecs_stage_deinit(

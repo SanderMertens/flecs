@@ -578,6 +578,18 @@ void ecs_set_entity_range(
     ecs_entity_t id_start,
     ecs_entity_t id_end);
 
+/** Temporarily enable/disable range limits.
+ * When an application is both a receiver of range-limited entities and a
+ * producer of range-limited entities, range checking needs to be temporarily
+ * disabled when receiving entities.
+ * 
+ * Range checking is disabled on a stage, so setting this value is thread safe.
+ */
+FLECS_EXPORT
+bool ecs_enable_range_check(
+    ecs_world_t *world,
+    bool enable);
+
 /* -- Entity API -- */
 
 /** Create a new entity.

@@ -261,6 +261,9 @@ typedef struct ecs_stage_t {
     uint32_t commit_count;
     ecs_type_t from_type;
     ecs_type_t to_type;
+    
+    /* Is entity range checking enabled? */
+    bool range_check_enabled;
 } ecs_stage_t;
 
 /** Supporting type that internal functions pass around to ensure that data

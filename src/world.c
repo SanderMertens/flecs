@@ -1319,6 +1319,16 @@ void ecs_set_entity_range(
     world->max_handle = id_end;
 }
 
+bool ecs_enable_range_check(
+    ecs_world_t *world,
+    bool enable)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    bool old_value = stage->range_check_enabled;
+    stage->range_check_enabled = enable;
+    return old_value;
+}
+
 ecs_entity_t _ecs_import(
     ecs_world_t *world,
     ecs_module_init_action_t module,

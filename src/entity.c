@@ -272,7 +272,6 @@ ecs_type_t instantiate_prefab(
         if (builder && builder->ops) {
             int32_t i, count = ecs_vector_count(builder->ops);
             ecs_builder_op_t *ops = ecs_vector_first(builder->ops);
-            ecs_entity_t *prefabs = ecs_vector_first(prefab_columns[0].data);
 
             for (i = 0; i < count; i ++) {
                 ecs_builder_op_t *op = &ops[i];
@@ -559,8 +558,10 @@ uint32_t commit_w_type(
          * Therefore it is not possible to check while in progress if the entity
          * already existed. Instead, the check will be applied when the entity
          * is merged, which will invoke commit_w_type again. */
-        ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, 0);
-        ecs_assert(entity >= world->min_handle, ECS_OUT_OF_RANGE, 0);
+        if (stage->range_check_enabled) {
+            ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, 0);
+            ecs_assert(entity >= world->min_handle, ECS_OUT_OF_RANGE, 0);
+        }
     }
 
     /* If the entity has a negative index, it is being monitored for changes and
