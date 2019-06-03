@@ -350,8 +350,10 @@ ecs_type_t ecs_notify_row_system(
             if (!columns[i] && table) {
                 /* If column is not found, it could come from a prefab. Look for
                  * components of components */
+
+                bool new_table = table->flags & EcsTableIsStaged;
                 entity = ecs_get_entity_for_component(
-                    world, 0, table->type_id, buffer[i].is.component);
+                    world, new_table, 0, table->type_id, buffer[i].is.component);
 
                 ecs_assert(entity != 0 || 
                            buffer[i].oper_kind == EcsOperOptional, 

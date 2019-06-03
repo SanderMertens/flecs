@@ -64,6 +64,7 @@ ecs_reference_t* get_ref_data(
 /* Get actual entity on which specified component is stored */
 ecs_entity_t ecs_get_entity_for_component(
     ecs_world_t *world,
+    bool new_table,
     ecs_entity_t entity,
     ecs_type_t type_id,
     ecs_entity_t component)
@@ -84,9 +85,18 @@ ecs_entity_t ecs_get_entity_for_component(
     }
 
     if (i == count) {
-        ecs_entity_t prefab = ecs_map_get64(world->prefab_index, type_id);
+        ecs_stage_t *stage;
+        if (world->in_progress) {
+            stage = &world->temp_stage;
+        } else {
+            stage = &world->main_stage;
+        }
+
+        ecs_entity_t prefab = ecs_get_prefab_from_type(
+            world, stage, new_table, entity, type_id);
+        
         if (prefab) {
-            return ecs_get_entity_for_component(world, prefab, 0, component);
+            return ecs_get_entity_for_component(world, new_table, prefab, 0, component);
         }
     }
 
@@ -273,7 +283,7 @@ void add_table(
                         e = entity;
                     } else {
                         e = ecs_get_entity_for_component(
-                            world, entity, table_type, component);
+                            world, false, entity, table_type, component);
 
                         if (kind != EcsCascade) {
                             ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);

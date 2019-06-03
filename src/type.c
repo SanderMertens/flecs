@@ -120,7 +120,7 @@ ecs_type_t register_type_from_buffer(
         new_array = ecs_vector_new_from_buffer(&handle_arr_params, count, buf);
         ecs_map_set(type_index, new_id, new_array);
 
-        if (!world->in_progress) {
+        if (!world->threads_running) {
             notify_create_type(world, stage, world->add_systems, new_id);
             notify_create_type(world, stage, world->remove_systems, new_id);
             notify_create_type(world, stage, world->set_systems, new_id);

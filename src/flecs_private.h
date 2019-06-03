@@ -14,6 +14,13 @@ void ecs_merge_entity(
     ecs_entity_t entity,
     ecs_row_t *staged_row);
 
+/* Get prefab from type, even if type was introduced while in progress */
+ecs_entity_t ecs_get_prefab_from_type(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    bool is_new_table,
+    ecs_entity_t entity,
+    ecs_type_t type_id);
 
 /* Notify row system of entity (identified by row_index) */
 ecs_type_t ecs_notify(
@@ -51,6 +58,7 @@ void* ecs_get_ptr_intern(
 
 ecs_entity_t ecs_get_entity_for_component(
     ecs_world_t *world,
+    bool new_table,
     ecs_entity_t entity,
     ecs_type_t type_id,
     ecs_entity_t component);

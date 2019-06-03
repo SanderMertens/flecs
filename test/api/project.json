@@ -71,7 +71,8 @@
                 "type_w_tag_mixed",
                 "add_remove",
                 "add_remove_same",
-                "add_2_remove"
+                "add_2_remove",
+                "on_add_after_new_type_in_progress"
             ]
         }, {
             "id": "Remove",
@@ -394,7 +395,8 @@
                 "no_overwrite_on_2nd_add",
                 "no_overwrite_on_2nd_add_in_progress",
                 "no_instantiate_on_2nd_add",
-                "no_instantiate_on_2nd_add_in_progress"
+                "no_instantiate_on_2nd_add_in_progress",
+                "get_ptr_from_prefab_from_new_table"
             ]
         }, {
             "id": "System_w_FromContainer",

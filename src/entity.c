@@ -272,9 +272,11 @@ ecs_type_t instantiate_prefab(
         if (builder && builder->ops) {
             int32_t i, count = ecs_vector_count(builder->ops);
             ecs_builder_op_t *ops = ecs_vector_first(builder->ops);
+            ecs_entity_t *prefabs = ecs_vector_first(prefab_columns[0].data);
 
             for (i = 0; i < count; i ++) {
                 ecs_builder_op_t *op = &ops[i];
+                
                 ecs_entity_t child = _ecs_new_w_count(
                     world, op->type, limit);
 
@@ -313,16 +315,15 @@ ecs_type_t instantiate_prefab(
     return modified;
 }
 
-static
-ecs_entity_t get_prefab_from_type(
+ecs_entity_t ecs_get_prefab_from_type(
     ecs_world_t *world,
     ecs_stage_t *stage,
     bool is_new_table,
     ecs_entity_t entity,
-    ecs_type_t entity_type)
+    ecs_type_t type_id)
 {
     if (is_new_table) {
-        ecs_vector_t *type = ecs_type_get(world, stage, entity_type);
+        ecs_vector_t *type = ecs_type_get(world, stage, type_id);
         int32_t i, count = ecs_vector_count(type);
         ecs_entity_t *buffer = ecs_vector_first(type);
 
@@ -330,7 +331,7 @@ ecs_entity_t get_prefab_from_type(
 
         for (i = 0; i < count; i ++) {
             ecs_entity_t component = buffer[i];
-            if (component == ecs_entity(EcsPrefab)) {
+            if (entity && component == ecs_entity(EcsPrefab)) {
                 EcsPrefab *prefab = ecs_get_ptr(world, entity, EcsPrefab);
                 if (prefab) {
                     exclude_prefab = prefab->parent;
@@ -344,7 +345,7 @@ ecs_entity_t get_prefab_from_type(
 
         return 0;
     } else {
-        return ecs_map_get64(world->prefab_index, entity_type);
+        return ecs_map_get64(world->prefab_index, type_id);
     }
 }
 
@@ -379,7 +380,7 @@ ecs_type_t copy_from_prefab(
 
     bool is_prefab = false;
 
-    while ((prefab = get_prefab_from_type(world, stage, is_new_table, entity, entity_type))) {
+    while ((prefab = ecs_get_prefab_from_type(world, stage, is_new_table, entity, entity_type))) {
         /* Prefabs are only resolved from the main stage. Prefabs created while
          * iterating cannot be resolved in the same iteration. */
         ecs_row_t prefab_row = row_from_stage(&world->main_stage, prefab);
@@ -410,6 +411,7 @@ ecs_type_t copy_from_prefab(
                         void *buffer = ecs_vector_first(columns[column_index + 1].data);
                         void *ptr = ECS_OFFSET(buffer, offset * size);
                         uint32_t i;
+
                         for (i = 0; i < limit; i ++) {
                             memcpy(ptr, prefab_ptr, size);
                             ptr = ECS_OFFSET(ptr, size);
@@ -417,7 +419,7 @@ ecs_type_t copy_from_prefab(
                     }
                 }
 
-            /* If this branch is taken, the prefab has just been added */
+            /* If component is the prefab, the prefab has just been added */
             } else {
                 modified = instantiate_prefab(world, stage, entity, is_prefab, 
                     prefab_table, prefab_row, limit);
@@ -734,7 +736,12 @@ void* ecs_get_ptr_intern(
         type_id = info->type_id;
 
         if (type_id && search_prefab) {
-            prefab = ecs_map_get64(world->prefab_index, type_id);
+            bool new_table = false;
+            if (info->table) {
+                new_table = info->table->flags & EcsTableIsStaged;
+            }            
+
+            prefab = ecs_get_prefab_from_type(world, stage, new_table, 0, type_id);
         }
     }
 
