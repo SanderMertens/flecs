@@ -396,7 +396,7 @@
                 "no_overwrite_on_2nd_add_in_progress",
                 "no_instantiate_on_2nd_add",
                 "no_instantiate_on_2nd_add_in_progress",
-                "get_ptr_from_prefab_from_new_table"
+                "get_ptr_from_prefab_from_new_table_in_progress"
             ]
         }, {
             "id": "System_w_FromContainer",
