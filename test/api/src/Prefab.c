@@ -1970,3 +1970,51 @@ void Prefab_no_instantiate_on_2nd_add_in_progress() {
     
     ecs_fini(world);
 }
+
+void AddPrefabInProgress(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Prefab, 2);
+    ECS_COLUMN_COMPONENT(rows, Velocity, 3);
+
+    ecs_entity_t Prefab = ecs_entity_from_type(rows->world, ecs_type(Prefab));
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Prefab);
+        test_assert( ecs_has(rows->world, rows->entities[i], Prefab));
+        test_assert( ecs_has(rows->world, rows->entities[i], Velocity));
+        
+        Velocity *v = ecs_get_ptr(rows->world, rows->entities[i], Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        test_assert( ecs_get_ptr(rows->world, Prefab, Velocity) == v);
+    }
+}
+
+void Prefab_get_ptr_from_prefab_from_new_table_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_PREFAB(world, Prefab, Velocity);
+        ecs_set(world, Prefab, Velocity, {1, 2});
+
+    ECS_SYSTEM(world, AddPrefabInProgress, EcsOnUpdate, Position, ID.Prefab, ID.Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e, Prefab));
+    test_assert( ecs_has(world, e, Velocity));
+    
+    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    test_assert( ecs_get_ptr(world, Prefab, Velocity) == v);
+
+    ecs_fini(world);
+}

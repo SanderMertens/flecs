@@ -518,3 +518,43 @@ void Add_add_2_remove() {
 
     ecs_fini(world);
 }
+
+void OnAdd(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Velocity, v, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        v->x = 1;
+        v->y = 2;
+    }
+}
+
+void AddInProgress(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Velocity);
+    }
+}
+
+void Add_on_add_after_new_type_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, AddInProgress, EcsOnUpdate, Position, ID.Velocity);
+    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e, Velocity));
+    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}
