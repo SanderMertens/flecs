@@ -39,8 +39,8 @@ void Type_type_of_2_tostr_no_id() {
     ecs_type_t t_1 = ecs_type_from_entity(world, 100);
     ecs_type_t t_2 = ecs_type_from_entity(world, 200);
     ecs_type_t t = 0;
-    t = _ecs_merge_type(world, t, t_1, 0);
-    t = _ecs_merge_type(world, t, t_2, 0);
+    t = _ecs_type_merge(world, t, t_1, 0);
+    t = _ecs_type_merge(world, t, t_2, 0);
     
     char *str = _ecs_type_str(world, t);
     
