@@ -753,6 +753,24 @@ void _ecs_add_remove(
 #define ecs_add_remove(world, entity, to_add, to_remove)\
     _ecs_add_remove(world, entity, T##to_add, T##to_remove)
 
+#define ECS_ADD_FRAGMENT (1 << 63)
+#define ECS_ADD_PREFAB (2 << 62)
+#define ECS_ADD_PARENT (4 << 61)
+#define ECS_ADD_ALL (ECS_ADD_FRAGMENT | ECS_ADD_PREFAB | ECS_ADD_PARENT)
+#define ECS_ENTITY_MASK (!ECS_ADD_ALL)
+#define ECS_SINGLETON (ECS_ADD_ALL - 1)
+
+ecs_entity_t _ecs_commit(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_type_t t_add,
+    ecs_type_t t_remove,
+    uint8_t flags,
+    uint32_t count);
+
+#define ecs_commit(world, entity, t_add, t_remove, count, flags)\
+    _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), count, flags)
+
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
  * component was not added for the specified entity, the operation will return
@@ -1177,14 +1195,27 @@ ecs_entity_t ecs_entity_from_type(
  * @param type_remove The type to remove from the original type.
  */
 FLECS_EXPORT
-ecs_type_t _ecs_merge_type(
+ecs_type_t _ecs_type_merge(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t type_add,
     ecs_type_t type_remove);
 
-#define ecs_merge_type(world, type, type_add, type_remove)\
-    _ecs_merge_type(world, T##type, T##type_add, T##type_remove)
+#define ecs_type_merge(world, type, type_add, type_remove)\
+    _ecs_type_merge(world, T##type, T##type_add, T##type_remove)
+
+/** Get type id from entity array */
+FLECS_EXPORT
+ecs_type_t ecs_type_from_array(
+    ecs_world_t *world,
+    ecs_entity_t *array,
+    uint32_t count);
+
+/** Get vector with entities from type */
+FLECS_EXPORT
+ecs_vector_t* ecs_type_get_vector(
+    ecs_world_t *world,
+    ecs_type_t type);
 
 /** Get component from type at index. 
  * This operation returns the components (or entities) that are contained in the
@@ -1196,7 +1227,7 @@ ecs_type_t _ecs_merge_type(
  * @returns zero if out of bounds, a component if within bounds.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_type_get_component(
+ecs_entity_t ecs_type_get_entity(
     ecs_world_t *world,
     ecs_type_t type,
     uint32_t index);

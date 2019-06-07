@@ -49,10 +49,10 @@ int add_type(
             world, stage, entity, NULL);
         assert(resolved_id != 0);
 
-        type->type = ecs_type_merge(
+        type->type = ecs_type_merge_intern(
             world, stage, type->type, type_id, 0);
 
-        type->resolved = ecs_type_merge(
+        type->resolved = ecs_type_merge_intern(
             world, stage, type->resolved, resolved_id, 0);
     }
 
@@ -97,8 +97,29 @@ void notify_create_type(
     }
 }
 
-static
-ecs_type_t register_type_from_buffer(
+/* -- Private functions -- */
+
+ecs_vector_t* ecs_type_get(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_type_t type_id)
+{
+    if (!type_id) {
+        return NULL;
+    }
+    
+    ecs_vector_t *result = ecs_map_get(world->main_stage.type_index, type_id);
+    if (!result) {
+        if (world->threads_running) {
+            assert(stage != NULL);
+            result = ecs_map_get(stage->type_index, type_id);
+        }
+    }
+
+    return result;
+}
+
+ecs_type_t ecs_type_from_array_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t *buf,
@@ -128,28 +149,6 @@ ecs_type_t register_type_from_buffer(
     }
 
     return new_id;
-}
-
-/* -- Private functions -- */
-
-ecs_vector_t* ecs_type_get(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type_id)
-{
-    if (!type_id) {
-        return NULL;
-    }
-    
-    ecs_vector_t *result = ecs_map_get(world->main_stage.type_index, type_id);
-    if (!result) {
-        if (world->threads_running) {
-            assert(stage != NULL);
-            result = ecs_map_get(stage->type_index, type_id);
-        }
-    }
-
-    return result;
 }
 
 /** Get type id from entity handle */
@@ -237,7 +236,7 @@ ecs_type_t ecs_type_register(
         return 0;
     }
 
-    return register_type_from_buffer(world, stage, new_buffer, count);
+    return ecs_type_from_array_intern(world, stage, new_buffer, count);
 }
 
 ecs_type_t ecs_type_add(
@@ -330,14 +329,14 @@ ecs_type_t ecs_type_merge_arr(
             (ecs_vector_count(arr_cur) + 
              ecs_vector_count(to_add)) >= new_count, ECS_INTERNAL_ERROR, 0);
 
-        return register_type_from_buffer(world, stage, buf_new, new_count);
+        return ecs_type_from_array_intern(world, stage, buf_new, new_count);
     } else {
         return 0;
     }
 }
 
 /** O(n) algorithm to merge families */
-ecs_type_t ecs_type_merge(
+ecs_type_t ecs_type_merge_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t cur_id,
@@ -588,7 +587,7 @@ ecs_entity_t ecs_new_prefab(
         return 0;
     }
 
-    type.resolved = ecs_type_merge(
+    type.resolved = ecs_type_merge_intern(
         world, NULL, world->t_prefab, type.resolved, 0);
 
     result = _ecs_new(world, type.resolved);
@@ -635,17 +634,17 @@ int16_t ecs_type_index_of(
     return -1;
 }
 
-ecs_type_t _ecs_merge_type(
+ecs_type_t _ecs_type_merge(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t type_add,
     ecs_type_t type_remove)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
-    return ecs_type_merge(world, stage, type, type_add, type_remove);
+    return ecs_type_merge_intern(world, stage, type, type_add, type_remove);
 }
 
-ecs_entity_t ecs_type_get_component(
+ecs_entity_t ecs_type_get_entity(
     ecs_world_t *world,
     ecs_type_t type_id,
     uint32_t index)
@@ -703,4 +702,14 @@ char* _ecs_type_str(
     char *result = strdup(ecs_vector_first(chbuf));
     ecs_vector_free(chbuf);
     return result;
+}
+
+
+ecs_type_t ecs_type_from_array(
+    ecs_world_t *world,
+    ecs_entity_t *array,
+    uint32_t count)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    return ecs_type_from_array_intern(world, stage, array, count);
 }

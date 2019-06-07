@@ -69,11 +69,11 @@ void bootstrap_types(
     TEcsHidden = ecs_type_register(world, stage, EEcsHidden, NULL);
     TEcsContainer = ecs_type_register(world, stage, EEcsContainer, NULL);    
 
-    world->t_component = ecs_type_merge(world, stage, TEcsComponent, TEcsId, 0);
-    world->t_type = ecs_type_merge(world, stage, TEcsTypeComponent, TEcsId, 0);
-    world->t_prefab = ecs_type_merge(world, stage, TEcsPrefab, TEcsId, 0);
-    world->t_row_system = ecs_type_merge(world, stage, TEcsRowSystem, TEcsId, 0);
-    world->t_col_system = ecs_type_merge(world, stage, TEcsColSystem, TEcsId, 0);
+    world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsId, 0);
+    world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsId, 0);
+    world->t_prefab = ecs_type_merge_intern(world, stage, TEcsPrefab, TEcsId, 0);
+    world->t_row_system = ecs_type_merge_intern(world, stage, TEcsRowSystem, TEcsId, 0);
+    world->t_col_system = ecs_type_merge_intern(world, stage, TEcsColSystem, TEcsId, 0);
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -454,7 +454,7 @@ void add_prefab_child_to_builder(
         builder->ops = ecs_vector_new(&builder_params, 1);
     }
 
-    ecs_type_t child_type = _ecs_merge_type(world, 
+    ecs_type_t child_type = _ecs_type_merge(world, 
         ecs_type_from_entity(world, child), ecs_type(EcsId), 0);
 
     /* If there are no child ops, this is the first time that this child is

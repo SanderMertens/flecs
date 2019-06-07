@@ -114,8 +114,14 @@ ecs_type_t ecs_type_from_handle(
     ecs_entity_t entity,
     ecs_entity_info_t *info);
 
+ecs_type_t ecs_type_from_array_intern(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t *buf,
+    uint32_t count);
+
 /* Merge add/remove families */
-ecs_type_t ecs_type_merge(
+ecs_type_t ecs_type_merge_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t cur_id,
