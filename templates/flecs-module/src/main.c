@@ -1,4 +1,4 @@
-#include <include/${id base}.h>
+#include <${id underscore}.h>
 
 void ${id pascalcase}Import(
     ecs_world_t *world,

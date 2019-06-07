@@ -1,4 +1,4 @@
-#include <include/${id base}.h>
+#include <${id underscore}.h>
 
 #define MOVE_SPEED (5)
 

@@ -2,7 +2,7 @@
 #define ${id upper}_H
 
 /* This generated file contains includes for project dependencies */
-#include "bake_config.h"
+#include "${id dash}/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {
