@@ -753,9 +753,9 @@ void _ecs_add_remove(
 #define ecs_add_remove(world, entity, to_add, to_remove)\
     _ecs_add_remove(world, entity, T##to_add, T##to_remove)
 
-#define ECS_ADD_FRAGMENT (1 << 63)
-#define ECS_ADD_PREFAB (2 << 62)
-#define ECS_ADD_PARENT (4 << 61)
+#define ECS_ADD_FRAGMENT ((uint64_t)1 << 63)
+#define ECS_ADD_PREFAB ((uint64_t)1 << 62)
+#define ECS_ADD_PARENT ((uint64_t)1 << 61)
 #define ECS_ADD_ALL (ECS_ADD_FRAGMENT | ECS_ADD_PREFAB | ECS_ADD_PARENT)
 #define ECS_ENTITY_MASK (!ECS_ADD_ALL)
 #define ECS_SINGLETON (ECS_ADD_ALL - 1)
@@ -1231,6 +1231,13 @@ ecs_entity_t ecs_type_get_entity(
     ecs_world_t *world,
     ecs_type_t type,
     uint32_t index);
+
+/** Check if type has entity. */
+FLECS_EXPORT
+ecs_entity_t ecs_type_has_entity(
+    ecs_world_t *world,
+    ecs_type_t type_id,
+    ecs_entity_t entity);
 
 /** Convert type to string */
 FLECS_EXPORT
