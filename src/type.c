@@ -644,6 +644,15 @@ ecs_type_t _ecs_type_merge(
     return ecs_type_merge_intern(world, stage, type, type_add, type_remove);
 }
 
+ecs_type_t ecs_type_from_array(
+    ecs_world_t *world,
+    ecs_entity_t *array,
+    uint32_t count)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    return ecs_type_from_array_intern(world, stage, array, count);
+}
+
 ecs_entity_t ecs_type_get_entity(
     ecs_world_t *world,
     ecs_type_t type_id,
@@ -661,6 +670,27 @@ ecs_entity_t ecs_type_get_entity(
     } else {
         return 0;
     }
+}
+
+ecs_entity_t ecs_type_has_entity(
+    ecs_world_t *world,
+    ecs_type_t type_id,
+    ecs_entity_t entity)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_vector_t *type = ecs_type_get(world, stage, type_id);
+    ecs_entity_t *buffer = ecs_vector_first(type);
+    uint32_t i, count = ecs_vector_count(type);
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = buffer[i];
+
+        if ((e & ECS_ENTITY_MASK) == entity) {
+            return e;
+        }
+    }
+
+    return 0;
 }
 
 char* _ecs_type_str(
@@ -704,12 +734,3 @@ char* _ecs_type_str(
     return result;
 }
 
-
-ecs_type_t ecs_type_from_array(
-    ecs_world_t *world,
-    ecs_entity_t *array,
-    uint32_t count)
-{
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    return ecs_type_from_array_intern(world, stage, array, count);
-}
