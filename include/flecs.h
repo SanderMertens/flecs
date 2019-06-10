@@ -757,7 +757,7 @@ void _ecs_add_remove(
 #define ECS_ADD_PREFAB ((uint64_t)1 << 62)
 #define ECS_ADD_PARENT ((uint64_t)1 << 61)
 #define ECS_ADD_ALL (ECS_ADD_FRAGMENT | ECS_ADD_PREFAB | ECS_ADD_PARENT)
-#define ECS_ENTITY_MASK (!ECS_ADD_ALL)
+#define ECS_ENTITY_MASK (~ECS_ADD_ALL)
 #define ECS_SINGLETON (ECS_ADD_ALL - 1)
 
 ecs_entity_t _ecs_commit(

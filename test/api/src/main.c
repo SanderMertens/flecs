@@ -417,6 +417,16 @@ void Type_type_of_1_tostr(void);
 void Type_type_of_2_tostr(void);
 void Type_type_of_2_tostr_no_id(void);
 void Type_type_redefine(void);
+void Type_type_from_array(void);
+void Type_type_from_array_unsorted(void);
+void Type_vector_from_type(void);
+void Type_type_has_prefab(void);
+void Type_type_has_container(void);
+void Type_type_has_prefab_container(void);
+void Type_type_merge(void);
+void Type_type_merge_overlap(void);
+void Type_type_merge_overlap_w_flag(void);
+void Type_type_merge_overlap_w_flags_from_both(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -2127,7 +2137,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Type",
-        .testcase_count = 4,
+        .testcase_count = 14,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_of_1_tostr",
@@ -2144,6 +2154,46 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_redefine",
                 .function = Type_type_redefine
+            },
+            {
+                .id = "type_from_array",
+                .function = Type_type_from_array
+            },
+            {
+                .id = "type_from_array_unsorted",
+                .function = Type_type_from_array_unsorted
+            },
+            {
+                .id = "vector_from_type",
+                .function = Type_vector_from_type
+            },
+            {
+                .id = "type_has_prefab",
+                .function = Type_type_has_prefab
+            },
+            {
+                .id = "type_has_container",
+                .function = Type_type_has_container
+            },
+            {
+                .id = "type_has_prefab_container",
+                .function = Type_type_has_prefab_container
+            },
+            {
+                .id = "type_merge",
+                .function = Type_type_merge
+            },
+            {
+                .id = "type_merge_overlap",
+                .function = Type_type_merge_overlap
+            },
+            {
+                .id = "type_merge_overlap_w_flag",
+                .function = Type_type_merge_overlap_w_flag
+            },
+            {
+                .id = "type_merge_overlap_w_flags_from_both",
+                .function = Type_type_merge_overlap_w_flags_from_both
             }
         }
     },

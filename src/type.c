@@ -250,6 +250,14 @@ ecs_type_t ecs_type_add(
     return ecs_type_register(world, stage, component, array);
 }
 
+ecs_entity_t split_entity_id(
+    ecs_entity_t id,
+    ecs_entity_t *entity)
+{
+    *entity = (id & ECS_ENTITY_MASK);
+    return id;
+}
+
 ecs_type_t ecs_type_merge_arr(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -261,25 +269,26 @@ ecs_type_t ecs_type_merge_arr(
 
     ecs_entity_t *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
     ecs_entity_t cur = 0, add = 0, del = 0;
+    ecs_entity_t cur_flags = 0, add_flags = 0, del_flags = 0;
     uint32_t i_cur = 0, i_add = 0, i_del = 0;
     uint32_t cur_count = 0, add_count = 0, del_count = 0;
 
     if (to_del) {
         del_count = ecs_vector_count(to_del);
         buf_del = ecs_vector_first(to_del);
-        del = buf_del[0];
+        del_flags = split_entity_id(buf_del[0], &del);
     }
 
     if (arr_cur) {
         cur_count = ecs_vector_count(arr_cur);
         buf_cur = ecs_vector_first(arr_cur);
-        cur = buf_cur[0];
+        cur_flags = split_entity_id(buf_cur[0], &cur);
     }
 
     if (to_add) {
         add_count = ecs_vector_count(to_add);
         buf_add = ecs_vector_first(to_add);
-        add = buf_add[0];
+        add_flags = split_entity_id(buf_add[0], &add);
     }
 
     ecs_entity_t *buf_new = NULL; 
@@ -292,35 +301,61 @@ ecs_type_t ecs_type_merge_arr(
     do {
         if (add && (!cur || add < cur)) {
             ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
-            buf_new[new_count] = add;
+            buf_new[new_count] = add | add_flags;
             new_count ++;
             i_add ++;
-            add = i_add < add_count ? buf_add[i_add] : 0;
+            if (i_add < add_count) {
+                add_flags = split_entity_id(buf_add[i_add], &add);
+            } else {
+                add = 0;
+            }
         } else if (cur && (!add || cur < add)) {
             while (del && del < cur) {
                 i_del ++;
-                del = i_del < del_count ? buf_del[i_del] : 0;
+                if (i_del < del_count) {
+                    del_flags = split_entity_id(buf_del[i_del], &del);
+                } else {
+                    del = 0;
+                }
             }
 
             if (del != cur) {
                 ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
-                buf_new[new_count] = cur;
+                buf_new[new_count] = cur | cur_flags;
                 new_count ++;
             } else if (del == cur) {
                 i_del ++;
-                del = i_del < del_count ? buf_del[i_del] : 0;
+                if (i_del < del_count) {
+                    del_flags = split_entity_id(buf_del[i_del], &del);
+                } else {
+                    del = 0;
+                }
             }
 
             i_cur ++;
-            cur = i_cur < cur_count ? buf_cur[i_cur] : 0;
+            if (i_cur < cur_count) {
+                cur_flags = split_entity_id(buf_cur[i_cur], &cur);
+            } else {
+                cur = 0;
+            }
         } else if (add && add == cur) {
             ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
-            buf_new[new_count] = add;
+            buf_new[new_count] = add | add_flags | cur_flags;
             new_count ++;
             i_cur ++;
             i_add ++;
-            add = i_add < add_count ? buf_add[i_add] : 0;
-            cur = i_cur < cur_count ? buf_cur[i_cur] : 0;
+
+            if (i_add < add_count) {
+                add_flags = split_entity_id(buf_add[i_add], &add);
+            } else {
+                add = 0;
+            }
+
+            if (i_cur < cur_count) {
+                cur_flags = split_entity_id(buf_cur[i_cur], &cur);
+            } else {
+                cur = 0;
+            }
         }
     } while (cur || add);
 
@@ -650,7 +685,18 @@ ecs_type_t ecs_type_from_array(
     uint32_t count)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
+
+    qsort(array, count, sizeof(ecs_entity_t), compare_handle);
+
     return ecs_type_from_array_intern(world, stage, array, count);
+}
+
+ecs_vector_t* ecs_type_get_vector(
+    ecs_world_t *world,
+    ecs_type_t type_id)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    return ecs_type_get(world, stage, type_id);
 }
 
 ecs_entity_t ecs_type_get_entity(
