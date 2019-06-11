@@ -58,16 +58,16 @@ void bootstrap_types(
     ecs_world_t *world)
 {
     ecs_stage_t *stage = &world->main_stage;
-    TEcsComponent = ecs_type_register(world, stage, EEcsComponent, NULL);
-    TEcsTypeComponent = ecs_type_register(world, stage, EEcsTypeComponent, NULL);
-    TEcsPrefab = ecs_type_register(world, stage, EEcsPrefab, NULL);
-    TEcsPrefabParent = ecs_type_register(world, stage, EEcsPrefabParent, NULL);
-    TEcsPrefabBuilder = ecs_type_register(world, stage, EEcsPrefabBuilder, NULL);
-    TEcsRowSystem = ecs_type_register(world, stage, EEcsRowSystem, NULL);
-    TEcsColSystem = ecs_type_register(world, stage, EEcsColSystem, NULL);
-    TEcsId = ecs_type_register(world, stage, EEcsId, NULL);
-    TEcsHidden = ecs_type_register(world, stage, EEcsHidden, NULL);
-    TEcsContainer = ecs_type_register(world, stage, EEcsContainer, NULL);    
+    TEcsComponent = ecs_type_add_to_array(world, stage, EEcsComponent, NULL);
+    TEcsTypeComponent = ecs_type_add_to_array(world, stage, EEcsTypeComponent, NULL);
+    TEcsPrefab = ecs_type_add_to_array(world, stage, EEcsPrefab, NULL);
+    TEcsPrefabParent = ecs_type_add_to_array(world, stage, EEcsPrefabParent, NULL);
+    TEcsPrefabBuilder = ecs_type_add_to_array(world, stage, EEcsPrefabBuilder, NULL);
+    TEcsRowSystem = ecs_type_add_to_array(world, stage, EEcsRowSystem, NULL);
+    TEcsColSystem = ecs_type_add_to_array(world, stage, EEcsColSystem, NULL);
+    TEcsId = ecs_type_add_to_array(world, stage, EEcsId, NULL);
+    TEcsHidden = ecs_type_add_to_array(world, stage, EEcsHidden, NULL);
+    TEcsContainer = ecs_type_add_to_array(world, stage, EEcsContainer, NULL);    
 
     world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsId, 0);
     world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsId, 0);
@@ -454,7 +454,7 @@ void add_prefab_child_to_builder(
         builder->ops = ecs_vector_new(&builder_params, 1);
     }
 
-    ecs_type_t child_type = _ecs_type_merge(world, 
+    ecs_type_t child_type = ecs_type_merge(world, 
         ecs_type_from_entity(world, child), ecs_type(EcsId), 0);
 
     /* If there are no child ops, this is the first time that this child is

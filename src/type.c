@@ -41,12 +41,11 @@ int add_type(
             return -1;
         }
 
-        ecs_type_t type_id = ecs_type_register(
+        ecs_type_t type_id = ecs_type_add_to_array(
             world, stage, entity, NULL);
         assert(type_id != 0);
 
-        ecs_type_t resolved_id = ecs_type_from_handle(
-            world, stage, entity, NULL);
+        ecs_type_t resolved_id = ecs_type_from_entity(world, entity);
         assert(resolved_id != 0);
 
         type->type = ecs_type_merge_intern(
@@ -151,90 +150,28 @@ ecs_type_t ecs_type_from_array_intern(
     return new_id;
 }
 
-/** Get type id from entity handle */
-ecs_type_t ecs_type_from_handle(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_entity_info_t *info)
-{
-    if (entity == 0) {
-        return 0;
-    }
-
-    ecs_table_t *table = NULL;
-    ecs_table_column_t *columns = NULL;
-    uint32_t index = 0;
-    ecs_entity_t component = 0;
-    ecs_type_t type = 0;
-
-    if (!info) {
-        uint64_t row_64 = ecs_map_get64(world->main_stage.entity_index, entity);
-        if (!row_64 && world->in_progress) {
-            row_64 = ecs_map_get64(stage->entity_index, entity);
-            if (!row_64) {
-                return 0;
-            }
-        }
-
-        ecs_row_t row = ecs_to_row(row_64);
-        if (row.type_id) {
-            table = ecs_world_get_table(world, stage, row.type_id);
-            columns = table->columns;
-            index = row.index - 1;
-        }
-    } else {
-        table = info->table;
-        columns = info->columns;
-        index = info->index - 1;
-    }
-
-    if (table) {
-        ecs_entity_t *components = ecs_vector_first(table->type);
-        component = components[0];
-    }
-
-    if (component == EEcsTypeComponent) {
-        ecs_vector_params_t params = {.element_size = sizeof(EcsTypeComponent)};
-        EcsTypeComponent *fe = ecs_vector_get(columns[1].data, &params, index);
-        type = fe->resolved;
-    } else {
-        type = ecs_type_register(world, stage, entity, NULL);
-    }
-
-    assert(type != 0);
-
-    return type;
-}
-
-
-/** Register a new type, optionally extending from existing type */
-ecs_type_t ecs_type_register(
+/** Extend existing type with additional entity */
+ecs_type_t ecs_type_add_to_array(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t to_add,
-    ecs_vector_t *set)
+    ecs_vector_t *array)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t count = ecs_vector_count(set);
-    ecs_entity_t *new_set = ecs_os_alloca(ecs_entity_t, count + 1);
-    void *new_buffer = new_set;
+    uint32_t count = ecs_vector_count(array);
+    ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, count + 1);
+    void *new_buffer = new_array;
 
-    if (to_add) {
-        void *buffer = ecs_vector_first(set);
-        if (count) {
-            memcpy(new_set, buffer, sizeof(ecs_entity_t) * count);
-        }
-        new_set[count] = to_add;
-        qsort(new_set, count + 1, sizeof(ecs_entity_t), compare_handle);
-        count ++;
-    } else if (set) {
-        void *buffer = ecs_vector_first(set);
-        new_buffer = buffer;
-    } else {
-        return 0;
+    ecs_assert(to_add != 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (count) {
+        memcpy(new_array, ecs_vector_first(array), sizeof(ecs_entity_t) * count);
     }
+
+    new_array[count] = to_add;
+    qsort(new_array, count + 1, sizeof(ecs_entity_t), compare_handle);
+    count ++;
 
     return ecs_type_from_array_intern(world, stage, new_buffer, count);
 }
@@ -247,7 +184,7 @@ ecs_type_t ecs_type_add(
 {
     ecs_vector_t *array = ecs_type_get(world, stage, type);
     assert(!type || array != NULL);
-    return ecs_type_register(world, stage, component, array);
+    return ecs_type_add_to_array(world, stage, component, array);
 }
 
 ecs_entity_t split_entity_id(
@@ -669,7 +606,7 @@ int16_t ecs_type_index_of(
     return -1;
 }
 
-ecs_type_t _ecs_type_merge(
+ecs_type_t ecs_type_merge(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t type_add,

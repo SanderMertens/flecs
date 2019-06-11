@@ -420,6 +420,9 @@ void Type_type_redefine(void);
 void Type_type_from_array(void);
 void Type_type_from_array_unsorted(void);
 void Type_vector_from_type(void);
+void Type_type_has(void);
+void Type_type_has_not(void);
+void Type_zero_type_has_not(void);
 void Type_type_has_prefab(void);
 void Type_type_has_container(void);
 void Type_type_has_prefab_container(void);
@@ -2137,7 +2140,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Type",
-        .testcase_count = 14,
+        .testcase_count = 17,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_of_1_tostr",
@@ -2166,6 +2169,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "vector_from_type",
                 .function = Type_vector_from_type
+            },
+            {
+                .id = "type_has",
+                .function = Type_type_has
+            },
+            {
+                .id = "type_has_not",
+                .function = Type_type_has_not
+            },
+            {
+                .id = "zero_type_has_not",
+                .function = Type_zero_type_has_not
             },
             {
                 .id = "type_has_prefab",

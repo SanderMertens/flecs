@@ -107,13 +107,6 @@ void ecs_stage_merge(
 
 /* -- Type utility API -- */
 
-/* Get type from entity handle (component, type, prefab) */
-ecs_type_t ecs_type_from_handle(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_entity_info_t *info);
-
 ecs_type_t ecs_type_from_array_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -155,7 +148,7 @@ bool ecs_type_contains_component(
 
 /* Register new type from either a single component, an array of component
  * handles, or a combination */
-ecs_type_t ecs_type_register(
+ecs_type_t ecs_type_add_to_array(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t to_add,
