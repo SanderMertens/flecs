@@ -96,6 +96,15 @@ void notify_create_type(
     }
 }
 
+static
+ecs_entity_t split_entity_id(
+    ecs_entity_t id,
+    ecs_entity_t *entity)
+{
+    *entity = (id & ECS_ENTITY_MASK);
+    return id;
+}
+
 /* -- Private functions -- */
 
 ecs_vector_t* ecs_type_get(
@@ -185,14 +194,6 @@ ecs_type_t ecs_type_add(
     ecs_vector_t *array = ecs_type_get(world, stage, type);
     assert(!type || array != NULL);
     return ecs_type_add_to_array(world, stage, component, array);
-}
-
-ecs_entity_t split_entity_id(
-    ecs_entity_t id,
-    ecs_entity_t *entity)
-{
-    *entity = (id & ECS_ENTITY_MASK);
-    return id;
 }
 
 ecs_type_t ecs_type_merge_arr(
