@@ -687,7 +687,6 @@ uint32_t commit(
     return new_index;
 }
 
-
 /* -- Private functions -- */
 
 void* ecs_get_ptr_intern(
@@ -1009,7 +1008,7 @@ ecs_entity_t _ecs_new_child_w_count(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
 
-    ecs_type_t TFullType = type;
+    ecs_type_t full_type = type;
     
     if (parent) {
         if (!ecs_has(world, parent, EcsContainer)) {
@@ -1017,11 +1016,11 @@ ecs_entity_t _ecs_new_child_w_count(
             ecs_set_watching(world, parent, true);
             world->should_match = true;
         }
-        ecs_type_t TParentType = ecs_type_from_entity(world, parent);
-        TFullType = ecs_type_merge(world, FullType, ParentType, 0);
+        ecs_type_t parent_type = ecs_type_from_entity(world, parent);
+        full_type = ecs_type_merge(world, full_type, parent_type, 0);
     }
 
-    return ecs_new_w_count(world, FullType, count);
+    return _ecs_new_w_count(world, full_type, count);
 }
 
 ecs_entity_t _ecs_new_child(
@@ -1031,7 +1030,7 @@ ecs_entity_t _ecs_new_child(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
 
-    ecs_type_t TFullType = type;
+    ecs_type_t full_type = type;
     
     if (parent) {
         if (!ecs_has(world, parent, EcsContainer)) {
@@ -1039,11 +1038,11 @@ ecs_entity_t _ecs_new_child(
             ecs_set_watching(world, parent, true);
             world->should_match = true;
         }
-        ecs_type_t TParentType = ecs_type_from_entity(world, parent);
-        TFullType = ecs_type_merge(world, FullType, ParentType, 0);
+        ecs_type_t parent_type = ecs_type_from_entity(world, parent);
+        full_type = ecs_type_merge(world, full_type, parent_type, 0);
     }
 
-    return ecs_new(world, FullType);
+    return _ecs_new(world, full_type);
 }
 
 void ecs_delete(
@@ -1465,9 +1464,47 @@ ecs_type_t ecs_type_from_entity(
     ecs_entity_t entity)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);   
 
-    return ecs_type_from_handle(world, stage, entity, NULL);
+    if (entity == 0) {
+        return 0;
+    }
+
+    ecs_stage_t *stage = ecs_get_stage(&world);   
+    ecs_table_t *table = NULL;
+    ecs_table_column_t *columns = NULL;
+    uint32_t index = 0;
+    ecs_entity_t component = 0;
+    ecs_type_t type = 0;
+    ecs_row_t row = {0};
+
+    if (!stage_has_entity(&world->main_stage, entity, &row)) {
+        if (!stage_has_entity(stage, entity, &row) && world->in_progress) {
+            return 0;
+        }
+    }
+
+    if (row.type_id) {
+        table = ecs_world_get_table(world, stage, row.type_id);
+        columns = table->columns;
+        index = row.index - 1;
+    }
+
+    if (table) {
+        ecs_entity_t *components = ecs_vector_first(table->type);
+        component = components[0];
+    }
+
+    if (component == EEcsTypeComponent) {
+        ecs_vector_params_t params = {.element_size = sizeof(EcsTypeComponent)};
+        EcsTypeComponent *fe = ecs_vector_get(columns[1].data, &params, index);
+        type = fe->resolved;
+    } else {
+        type = ecs_type_add_to_array(world, stage, entity, NULL);
+    }
+
+    assert(type != 0);
+
+    return type;
 }
 
 ecs_entity_t ecs_entity_from_type(

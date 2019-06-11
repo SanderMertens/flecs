@@ -1195,14 +1195,11 @@ ecs_entity_t ecs_entity_from_type(
  * @param type_remove The type to remove from the original type.
  */
 FLECS_EXPORT
-ecs_type_t _ecs_type_merge(
+ecs_type_t ecs_type_merge(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t type_add,
     ecs_type_t type_remove);
-
-#define ecs_type_merge(world, type, type_add, type_remove)\
-    _ecs_type_merge(world, T##type, T##type_add, T##type_remove)
 
 /** Get type id from entity array */
 FLECS_EXPORT
