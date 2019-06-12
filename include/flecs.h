@@ -141,6 +141,7 @@ typedef void (*ecs_module_init_action_t)(
 #define EEcsId (8)
 #define EEcsHidden (9)
 #define EEcsContainer (10)
+#define EEcsDisabled (11)
 
 /* Type handles to builtin components */
 FLECS_EXPORT
@@ -154,7 +155,8 @@ extern ecs_type_t
     TEcsColSystem,
     TEcsId,
     TEcsHidden,
-    TEcsContainer;
+    TEcsContainer,
+    TEcsDisabled;
 
 /* This allows passing 0 as type to functions that accept types */
 #define T0 (0)
@@ -173,7 +175,8 @@ extern const char
     *ECS_COL_SYSTEM_ID,
     *ECS_ID_ID,
     *ECS_HIDDEN_ID,
-    *ECS_CONTAINER_ID;
+    *ECS_CONTAINER_ID,
+    *ECS_DISABLED_ID;
 
 /* -- World API -- */
 

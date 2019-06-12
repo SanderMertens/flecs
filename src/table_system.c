@@ -436,6 +436,13 @@ bool match_table(
         return false;
     }
 
+    if (ecs_type_contains_component(
+        world, &world->main_stage, table_type, EEcsDisabled, false))
+    {
+        /* Never match disabled entities */
+        return false;
+    }
+
     type = system_data->base.and_from_entity;
 
     if (type && !ecs_type_contains(

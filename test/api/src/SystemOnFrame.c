@@ -1467,3 +1467,27 @@ void SystemOnFrame_two_refs() {
 
     ecs_fini(world);
 }
+
+void SystemOnFrame_filter_disabled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Entity1, Position);
+    ECS_ENTITY(world, Entity2, Position, EcsDisabled);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 1);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}

@@ -30,6 +30,7 @@ ecs_type_t TEcsColSystem;
 ecs_type_t TEcsId;
 ecs_type_t TEcsHidden;
 ecs_type_t TEcsContainer;
+ecs_type_t TEcsDisabled;
 
 const char *ECS_COMPONENT_ID =      "EcsComponent";
 const char *ECS_TYPE_COMPONENT_ID = "EcsTypeComponent";
@@ -41,7 +42,7 @@ const char *ECS_COL_SYSTEM_ID =     "EcsColSystem";
 const char *ECS_ID_ID =             "EcsId";
 const char *ECS_HIDDEN_ID =         "EcsHidden";
 const char *ECS_CONTAINER_ID =      "EcsContainer";
-
+const char *ECS_DISABLED_ID =       "EcsDisabled";
 
 /** Comparator function for handles */
 static
@@ -67,7 +68,8 @@ void bootstrap_types(
     TEcsColSystem = ecs_type_add_to_array(world, stage, EEcsColSystem, NULL);
     TEcsId = ecs_type_add_to_array(world, stage, EEcsId, NULL);
     TEcsHidden = ecs_type_add_to_array(world, stage, EEcsHidden, NULL);
-    TEcsContainer = ecs_type_add_to_array(world, stage, EEcsContainer, NULL);    
+    TEcsContainer = ecs_type_add_to_array(world, stage, EEcsContainer, NULL);
+    TEcsDisabled = ecs_type_add_to_array(world, stage, EEcsDisabled, NULL);    
 
     world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsId, 0);
     world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsId, 0);
@@ -660,6 +662,7 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsId, ECS_ID_ID, sizeof(EcsId));
     bootstrap_component(world, table, EEcsHidden, ECS_HIDDEN_ID, 0);
     bootstrap_component(world, table, EEcsContainer, ECS_CONTAINER_ID, 0);
+    bootstrap_component(world, table, EEcsDisabled, ECS_DISABLED_ID, 0);
 
     world->last_handle = EEcsContainer + 1;
     world->min_handle = 0;
