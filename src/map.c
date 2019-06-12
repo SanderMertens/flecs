@@ -419,6 +419,17 @@ uint32_t ecs_map_set_size(
     return result;
 }
 
+uint32_t ecs_map_grow(
+    ecs_map_t *map,
+    uint32_t size)
+{
+    if (size > ecs_vector_size(map->nodes)) {
+        return ecs_map_set_size(map, size);
+    }
+
+    return 0;
+}
+
 void ecs_map_memory(
     ecs_map_t *map,
     uint32_t *total,
