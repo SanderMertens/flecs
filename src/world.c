@@ -69,11 +69,12 @@ void bootstrap_types(
     TEcsId = ecs_type_add_to_array(world, stage, EEcsId, NULL);
     TEcsHidden = ecs_type_add_to_array(world, stage, EEcsHidden, NULL);
     TEcsContainer = ecs_type_add_to_array(world, stage, EEcsContainer, NULL);
-    TEcsDisabled = ecs_type_add_to_array(world, stage, EEcsDisabled, NULL);    
+    TEcsDisabled = ecs_type_add_to_array(world, stage, EEcsDisabled, NULL);
 
     world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsId, 0);
     world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsId, 0);
     world->t_prefab = ecs_type_merge_intern(world, stage, TEcsPrefab, TEcsId, 0);
+    world->t_prefab = ecs_type_merge_intern(world, stage, world->t_prefab, TEcsDisabled, 0);
     world->t_row_system = ecs_type_merge_intern(world, stage, TEcsRowSystem, TEcsId, 0);
     world->t_col_system = ecs_type_merge_intern(world, stage, TEcsColSystem, TEcsId, 0);
 }
