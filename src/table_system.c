@@ -430,13 +430,6 @@ bool match_table(
     table_type = table->type_id;
 
     if (ecs_type_contains_component(
-        world, &world->main_stage, table_type, EEcsPrefab, false))
-    {
-        /* Never match prefabs */
-        return false;
-    }
-
-    if (ecs_type_contains_component(
         world, &world->main_stage, table_type, EEcsDisabled, false))
     {
         /* Never match disabled entities */
