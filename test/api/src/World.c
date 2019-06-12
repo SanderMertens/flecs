@@ -251,19 +251,19 @@ void World_dim() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_dim(world, 1000);
-
-    malloc_count = 0;
-
-    ecs_new_w_count(world, Position, 500);
-
-    test_int(malloc_count, 6);
+    ecs_dim(world, 1100);
 
     malloc_count = 0;
 
     ecs_new_w_count(world, Position, 500);
 
     test_int(malloc_count, 5);
+
+    malloc_count = 0;
+
+    ecs_new_w_count(world, Position, 500);
+
+    test_int(malloc_count, 2);
 
     ecs_fini(world);
 }
@@ -286,7 +286,7 @@ void World_dim_type() {
 
     ecs_new_w_count(world, Position, 500);
 
-    test_int(malloc_count, 2);
+    test_int(malloc_count, 3);
 
     malloc_count = 0;
 
@@ -316,13 +316,13 @@ void World_dim_dim_type() {
 
     ecs_new_w_count(world, Position, 500);
 
-    test_int(malloc_count, 1);
+    test_int(malloc_count, 0);
 
     malloc_count = 0;
 
     ecs_new_w_count(world, Position, 400);
 
-    test_int(malloc_count, 2);
+    test_int(malloc_count, 0);
 
     ecs_fini(world);
 }

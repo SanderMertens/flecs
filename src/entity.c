@@ -973,7 +973,7 @@ ecs_entity_t _ecs_new_w_count(
         ecs_map_t *entity_index = stage->entity_index;
 
         uint32_t cur_index_count = ecs_map_count(entity_index);
-        ecs_map_set_size(entity_index, cur_index_count + count);
+        ecs_map_grow(entity_index, cur_index_count + count);
 
         uint64_t i, cur_row = row;
         for (i = result; i < (result + count); i ++) {
