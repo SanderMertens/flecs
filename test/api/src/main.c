@@ -263,6 +263,7 @@ void SystemOnFrame_disabled(void);
 void SystemOnFrame_disabled_feature(void);
 void SystemOnFrame_disabled_nested_feature(void);
 void SystemOnFrame_two_refs(void);
+void SystemOnFrame_filter_disabled(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -1450,7 +1451,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 28,
+        .testcase_count = 29,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -1563,6 +1564,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "two_refs",
                 .function = SystemOnFrame_two_refs
+            },
+            {
+                .id = "filter_disabled",
+                .function = SystemOnFrame_filter_disabled
             }
         }
     },

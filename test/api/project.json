@@ -297,7 +297,8 @@
                 "disabled",
                 "disabled_feature",
                 "disabled_nested_feature",
-                "two_refs"
+                "two_refs",
+                "filter_disabled"
             ]
         }, {
             "id": "SystemCascade",
