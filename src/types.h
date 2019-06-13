@@ -134,7 +134,7 @@ typedef struct EcsSystem {
     float time_spent;              /* Time spent on running system */
     bool enabled;                  /* Is system enabled or not */
     bool has_refs;                 /* Does the system have reference columns */
-    bool match_disabled;            /* Should this system match prefabs */
+    bool match_prefab;             /* Should this system match prefabs */
 } EcsSystem;
 
 /** A column system is a system that is ran periodically (default = every frame)
