@@ -324,7 +324,7 @@ ecs_type_t ecs_notify_row_system(
     }
 
     if (table && table->flags & EcsTableIsPrefab && 
-        !system_data->base.match_disabled) 
+        !system_data->base.match_prefab) 
     {
         return 0;
     }
@@ -496,7 +496,7 @@ ecs_entity_t ecs_new_system(
         system_data->has_refs = has_refs(system_data);
     }
 
-    system_data->match_disabled = ecs_type_contains_component(
+    system_data->match_prefab = ecs_type_contains_component(
         world, &world->main_stage, system_data->and_from_entity, 
         ecs_entity(EcsPrefab), false);
 

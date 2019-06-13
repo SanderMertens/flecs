@@ -84,7 +84,7 @@ ecs_entity_t ecs_get_entity_for_component(
         }
     }
 
-    if (i == count) {
+    /*if (i == count) {
         ecs_stage_t *stage;
         if (world->in_progress) {
             stage = &world->temp_stage;
@@ -98,7 +98,7 @@ ecs_entity_t ecs_get_entity_for_component(
         if (prefab) {
             return ecs_get_entity_for_component(world, new_table, prefab, 0, component);
         }
-    }
+    }*/
 
     return entity;
 }
@@ -431,6 +431,13 @@ bool match_table(
 
     if (ecs_type_contains_component(
         world, &world->main_stage, table_type, EEcsDisabled, false))
+    {
+        /* Never match disabled entities */
+        return false;
+    }
+
+    if (ecs_type_contains_component(
+        world, &world->main_stage, table_type, EEcsPrefab, false))
     {
         /* Never match disabled entities */
         return false;

@@ -768,7 +768,7 @@ ecs_entity_t _ecs_commit(
     ecs_entity_t entity,
     ecs_type_t t_add,
     ecs_type_t t_remove,
-    uint8_t flags,
+    ecs_entity_t flags,
     uint32_t count);
 
 #define ecs_commit(world, entity, t_add, t_remove, count, flags)\

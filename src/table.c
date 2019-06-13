@@ -80,57 +80,6 @@ ecs_table_column_t* ecs_table_get_columns(
     }
 }
 
-void ecs_table_eval_columns(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_vector_t *type = table->type;
-    ecs_entity_t *buf = ecs_vector_first(type);
-    int32_t i, count = ecs_vector_count(type);
-
-    bool prefab_set = false;
-    ecs_entity_t exclude_prefab = 0;
-
-    /* Walk array backwards to properly detect prefab parents. It is
-    * guaranteed that a prefab parent flag is created after a prefab
-    * parent. Therefore, the id of the flag is guaranteed to be higher than
-    * the prefab, which, because components in a type are ordered by id,
-    * guarantees that the prefab comes before the flag. Because it is more
-    * convenient to know about the flag before the prefab, walk the type
-    * backwards, as this way we know immediately whether a prefab should be
-    * treated as a regular container, or as an actual prefab - in the
-    * latter case we should register the table type in the prefab index. */
-    for (i = count - 1; i >= 0; i --) {
-        ecs_entity_t c = buf[i];
-
-        if (c == ecs_entity(EcsPrefab)) {
-            table->flags |= EcsTableIsPrefab;
-        }
-        
-        /* Only if creating columns in the main stage, register prefab */
-        if (!ecs_has(world, c, EcsComponent)) {
-            if (c != exclude_prefab && ecs_has(world, c, EcsPrefab)) {
-                /* Tables can contain at most one prefab */
-                ecs_assert(prefab_set == false, ECS_MORE_THAN_ONE_PREFAB, 
-                            ecs_get_id(world, c));
-
-                prefab_set = true;
-
-                /* Register type with prefab index for quick lookups */
-                ecs_map_set64(world->prefab_index, table->type_id, c);
-
-                table->flags |= EcsTableHasPrefab;
-            
-            } else if (ecs_has(world, c, EcsPrefabParent)) {
-                EcsPrefabParent *pparent = ecs_get_ptr(
-                        world, c, EcsPrefabParent);
-                exclude_prefab = pparent->parent;
-                ecs_assert(exclude_prefab != 0, ECS_INTERNAL_ERROR, NULL);
-            }
-        }
-    }
-}
-
 void ecs_table_init(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -143,15 +92,6 @@ void ecs_table_init(
     table->type = type;
     table->columns = new_columns(world, stage, type);
     table->flags = 0;
-
-    if (stage == &world->main_stage && !world->is_merging) {
-        /* If world is merging, column evaluation is delayed and invoked
-         * explicitly by the merge process. The reason for this is that the
-         * column evaluation may rely on entities to have certain components,
-         * which could have been added while in progress and thus need to be 
-         * merged first. */ 
-        ecs_table_eval_columns(world, table);
-    }
 }
 
 void ecs_table_deinit(

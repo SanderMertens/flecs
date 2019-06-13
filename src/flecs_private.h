@@ -178,6 +178,11 @@ int32_t ecs_type_container_depth(
    ecs_type_t type,
    ecs_entity_t component);
 
+/** Utility to iterate over prefabs in type */
+int32_t ecs_type_get_prefab(
+    ecs_vector_t *type,
+    int32_t n);
+
 /* -- Table API -- */
 
 /* Initialize table */
