@@ -349,7 +349,8 @@ ecs_type_t copy_from_prefab(
     ecs_vector_t *prefab_type = prefab_table->type;
     ecs_table_column_t *prefab_columns = prefab_table->columns;
 
-    uint32_t e, p = 0, add_count = ecs_vector_count(to_add);
+    uint32_t e, add_count = ecs_vector_count(to_add);
+    uint32_t p = 0, prefab_count = ecs_vector_count(prefab_type);
     ecs_entity_t *to_add_buffer = ecs_vector_first(to_add);
     ecs_entity_t *prefab_type_buffer = ecs_vector_first(prefab_type);
 
@@ -370,7 +371,7 @@ ecs_type_t copy_from_prefab(
             continue;
         }
 
-        while ((pe = prefab_type_buffer[p]) < ee) {
+        while ((p < prefab_count) && (pe = prefab_type_buffer[p]) < ee) {
             p ++;
         }
 
@@ -379,15 +380,15 @@ ecs_type_t copy_from_prefab(
         }
 
         ecs_table_column_t *src_column = &prefab_columns[p + 1];
-        uint32_t size = src_column[e + 1].size;
+        uint32_t size = src_column->size;
 
         if (size) {
             void *src_column_data = ecs_vector_first(src_column->data);
-            void *src_ptr = ECS_OFFSET(src_column_data, src_column->size * prefab_row.index);
+            void *src_ptr = ECS_OFFSET(src_column_data, size * (prefab_row.index - 1));
 
             ecs_table_column_t *dst_column = &columns[e + 1];
             void *dst_column_data = ecs_vector_first(dst_column->data);
-            void *dst_ptr = ECS_OFFSET(dst_column_data, dst_column->size * info->index);
+            void *dst_ptr = ECS_OFFSET(dst_column_data, size * (info->index - 1));
 
             uint32_t i;
             for (i = 0; i < limit; i ++) {
