@@ -88,8 +88,8 @@ ecs_table_t* bootstrap_component_table(
 {
     ecs_stage_t *stage = &world->main_stage;
     ecs_table_t *result = ecs_vector_add(&stage->tables, &table_arr_params);
-    ecs_vector_t *type = ecs_map_get(stage->type_index, world->t_component);
-    result->type_id = world->t_component;
+    ecs_vector_t *type = ecs_map_get(stage->type_index, (uintptr_t)world->t_component);
+    result->type = world->t_component;
     result->type = type;
     result->frame_systems = NULL;
     result->flags = 0;
@@ -108,7 +108,7 @@ ecs_table_t* bootstrap_component_table(
 
     ecs_assert(index == 0, ECS_INTERNAL_ERROR, "first table index must be 0");
 
-    ecs_map_set64(stage->table_index, world->t_component, 1);
+    ecs_map_set32(stage->table_index, (uintptr_t)world->t_component, (int32_t){1});
 
     return result;
 }
@@ -128,8 +128,8 @@ void bootstrap_component(
     int32_t index = ecs_table_insert(world, table, table->columns, entity);
 
     /* Create record in entity index */
-    ecs_row_t row = {.type_id = world->t_component, .index = index};
-    ecs_map_set64(stage->entity_index, entity, ecs_from_row(row));
+    ecs_row_t row = {.type = world->t_component, .index = index};
+    ecs_map_set(stage->entity_index, entity, &row);
 
     /* Set size and id */
     EcsComponent *component_data = ecs_vector_first(table->columns[1].data);
@@ -175,12 +175,12 @@ static
 ecs_table_t* create_table(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_type_t type_id)
+    ecs_type_t type)
 {
     /* Add and initialize table */
     ecs_table_t *result = ecs_vector_add(&stage->tables, &table_arr_params);
     
-    result->type_id = type_id;
+    result->type = type;
 
     ecs_table_init(world, stage, result);
 
@@ -189,7 +189,7 @@ ecs_table_t* create_table(
     }
 
     uint32_t index = ecs_vector_get_index(stage->tables, &table_arr_params, result);
-    ecs_map_set64(stage->table_index, type_id, index + 1);
+    ecs_map_set32(stage->table_index, (uintptr_t)type, (int32_t){index + 1});
 
     if (stage == &world->main_stage && !world->is_merging) {
         ecs_notify_systems_of_table(world, result);
@@ -222,14 +222,14 @@ void no_time(
 ecs_table_t* ecs_world_get_table(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_type_t type_id)
+    ecs_type_t type)
 {
     ecs_stage_t *main_stage = &world->main_stage;
-    uint32_t table_index = ecs_map_get64(main_stage->table_index, type_id);
+    uint32_t table_index = ecs_map_get64(main_stage->table_index, (uintptr_t)type);
 
     if (!table_index && world->in_progress) {
         assert(stage != NULL);
-        table_index = ecs_map_get64(stage->table_index, type_id);
+        table_index = ecs_map_get64(stage->table_index, (uintptr_t)type);
         if (table_index) {
             return ecs_vector_get(
                 stage->tables, &table_arr_params, table_index - 1);
@@ -240,7 +240,7 @@ ecs_table_t* ecs_world_get_table(
         return ecs_vector_get(
             main_stage->tables, &table_arr_params, table_index - 1);
     } else {
-        return create_table(world, stage, type_id);
+        return create_table(world, stage, type);
     }
 
     return NULL;
@@ -607,12 +607,12 @@ ecs_world_t *ecs_init(void) {
     world->tasks = ecs_vector_new(&handle_arr_params, 0);
     world->fini_tasks = ecs_vector_new(&handle_arr_params, 0);
 
-    world->type_sys_add_index = ecs_map_new(0);
-    world->type_sys_remove_index = ecs_map_new(0);
-    world->type_sys_set_index = ecs_map_new(0);
-    world->type_handles = ecs_map_new(0);
-    world->prefab_index = ecs_map_new(0);
-    world->prefab_parent_index = ecs_map_new(0);
+    world->type_sys_add_index = ecs_map_new(0, 0);
+    world->type_sys_remove_index = ecs_map_new(0, 0);
+    world->type_sys_set_index = ecs_map_new(0, 0);
+    world->type_handles = ecs_map_new(0, 0);
+    world->prefab_index = ecs_map_new(0, 0);
+    world->prefab_parent_index = ecs_map_new(0, 0);
 
     world->worker_stages = NULL;
     world->worker_threads = NULL;
@@ -842,7 +842,7 @@ void _ecs_dim_type(
 
 static
 ecs_entity_t ecs_lookup_child_in_columns(
-    ecs_vector_t *type,
+    ecs_type_t type,
     ecs_table_column_t *columns,
     ecs_entity_t parent,
     const char *id)
@@ -885,7 +885,7 @@ ecs_entity_t ecs_lookup_child(
         while (ecs_map_hasnext(&it)) {
             uint64_t key;
             ecs_table_column_t *columns = ecs_map_next_ptr_w_key(&it, &key);
-            ecs_type_t key_type = key;
+            ecs_type_t key_type = (ecs_type_t)(uintptr_t)key;
             ecs_vector_t *type = ecs_type_get(world, stage, key_type);
             result = ecs_lookup_child_in_columns(type, columns, parent, id);
             if (result) {
