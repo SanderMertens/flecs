@@ -217,18 +217,17 @@ typedef struct ecs_table_column_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
 typedef struct ecs_table_t {
-    ecs_vector_t *type;               /* Reference to type_index entry */
     ecs_table_column_t *columns;      /* Columns storing components of array */
     ecs_vector_t *frame_systems;      /* Frame systems matched with table */
-    ecs_type_t type_id;               /* Identifies table type in type_index */
+    ecs_type_t type;                  /* Identifies table type in type_index */
     uint32_t flags;                   /* Flags for testing table properties */
  } ecs_table_t;
  
 /** The ecs_row_t struct is a 64-bit value that describes in which table
- * (identified by a type_id) is stored, at which index. Entries in the 
+ * (identified by a type) is stored, at which index. Entries in the 
  * world::entity_index are of type ecs_row_t. */
 typedef struct ecs_row_t {
-    ecs_type_t type_id;           /* Identifies a type (and table) in world */
+    ecs_type_t type;              /* Identifies a type (and table) in world */
     int32_t index;                /* Index of the entity in its table */
 } ecs_row_t;
 
@@ -271,7 +270,7 @@ typedef struct ecs_stage_t {
  * related to an entity is only looked up once. */
 typedef struct ecs_entity_info_t {
     ecs_entity_t entity;
-    ecs_type_t type_id;
+    ecs_type_t type;
     uint32_t index;
     ecs_table_t *table;
     ecs_table_column_t *columns;

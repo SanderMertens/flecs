@@ -121,14 +121,6 @@ ecs_type_t ecs_type_merge_intern(
     ecs_type_t to_add_id,
     ecs_type_t to_remove_id);
 
-/* Merge add/remove families using arrays */
-ecs_type_t ecs_type_merge_arr(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_vector_t *arr_cur,
-    ecs_vector_t *to_add,
-    ecs_vector_t *to_del);
-
 /* Test if type_id_1 contains type_id_2 */
 ecs_entity_t ecs_type_contains(
     ecs_world_t *world,
@@ -169,7 +161,7 @@ ecs_vector_t* ecs_type_get(
 
 /* Get index for entity in type */
 int16_t ecs_type_index_of(
-    ecs_vector_t *type,
+    ecs_type_t type,
     ecs_entity_t component);
 
 /* Get number of containers (parents) for a type */
@@ -180,7 +172,7 @@ int32_t ecs_type_container_depth(
 
 /** Utility to iterate over prefabs in type */
 int32_t ecs_type_get_prefab(
-    ecs_vector_t *type,
+    ecs_type_t type,
     int32_t n);
 
 /* -- Table API -- */
@@ -310,7 +302,7 @@ void ecs_run_task(
 ecs_type_t ecs_notify_row_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_vector_t *type,
+    ecs_type_t type,
     ecs_table_t *table,
     ecs_table_column_t *table_columns,
     uint32_t offset,
