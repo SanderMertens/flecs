@@ -768,11 +768,10 @@ ecs_entity_t _ecs_commit(
     ecs_entity_t entity,
     ecs_type_t t_add,
     ecs_type_t t_remove,
-    ecs_entity_t flags,
-    uint32_t count);
+    ecs_entity_t flags);
 
-#define ecs_commit(world, entity, t_add, t_remove, count, flags)\
-    _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), count, flags)
+#define ecs_commit(world, entity, t_add, t_remove, flags)\
+    _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), flags)
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
