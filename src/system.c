@@ -28,8 +28,8 @@ void match_type(
             ecs_abort(ECS_INVALID_PARAMETERS, NULL);
         }
 
-        ecs_vector_t *systems = ecs_map_get(index, type);
-        if (!systems) {
+        ecs_vector_t *systems = NULL;
+        if (!ecs_map_has(index, (uintptr_t)type, &systems)) {
             systems = ecs_vector_new(&handle_arr_params, 1);
         }
 
@@ -37,7 +37,7 @@ void match_type(
         *new_elem = system;
 
         /* Always set the system entry, as array may have been realloc'd */
-        ecs_map_set(index, type, systems);
+        ecs_map_setptr(index, (uintptr_t)type, systems);
     }
 }
 
@@ -56,7 +56,7 @@ void match_families(
         uint64_t key; /* Only interested in the key, which is the type hash */
         ecs_map_next_w_key(&it, &key);
 
-        ecs_type_t type = key;
+        ecs_type_t type = (ecs_type_t)(uintptr_t)key;
         
         match_type(world, NULL, system, system_data, type);
     }
@@ -353,7 +353,7 @@ ecs_type_t ecs_notify_row_system(
 
                 bool new_table = table->flags & EcsTableIsStaged;
                 entity = ecs_get_entity_for_component(
-                    world, new_table, 0, table->type_id, buffer[i].is.component);
+                    world, new_table, 0, table->type, buffer[i].is.component);
 
                 ecs_assert(entity != 0 || 
                            buffer[i].oper_kind == EcsOperOptional, 
