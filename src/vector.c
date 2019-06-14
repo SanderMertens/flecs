@@ -194,7 +194,7 @@ void ecs_vector_reclaim(
 }
 
 uint32_t ecs_vector_count(
-    ecs_vector_t *array)
+    const ecs_vector_t *array)
 {
     if (!array) {
         return 0;
@@ -203,7 +203,7 @@ uint32_t ecs_vector_count(
 }
 
 uint32_t ecs_vector_size(
-    ecs_vector_t *array)
+    const ecs_vector_t *array)
 {
     if (!array) {
         return 0;
@@ -249,13 +249,13 @@ uint32_t ecs_vector_set_count(
 }
 
 void* ecs_vector_first(
-    ecs_vector_t *array)
+    const ecs_vector_t *array)
 {
     return ARRAY_BUFFER(array);
 }
 
 void* ecs_vector_get(
-    ecs_vector_t *array,
+    const ecs_vector_t *array,
     const ecs_vector_params_t *params,
     uint32_t index)
 {
@@ -270,7 +270,7 @@ void* ecs_vector_get(
 }
 
 uint32_t ecs_vector_get_index(
-    ecs_vector_t *array,
+    const ecs_vector_t *array,
     const ecs_vector_params_t *params,
     void *elem)
 {
@@ -283,7 +283,7 @@ uint32_t ecs_vector_get_index(
 }
 
 void* ecs_vector_last(
-    ecs_vector_t *array,
+    const ecs_vector_t *array,
     const ecs_vector_params_t *params)
 {
     uint32_t count = array->count;
@@ -309,7 +309,7 @@ void ecs_vector_sort(
 }
 
 void ecs_vector_memory(
-    ecs_vector_t *array,
+    const ecs_vector_t *array,
     const ecs_vector_params_t *params,
     uint32_t *allocd,
     uint32_t *used)

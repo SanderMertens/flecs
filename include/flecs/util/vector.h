@@ -58,19 +58,19 @@ void* ecs_vector_addn(
 
 FLECS_EXPORT
 void* ecs_vector_get(
-    ecs_vector_t *array,
+    const ecs_vector_t *array,
     const ecs_vector_params_t *params,
     uint32_t index);
 
 FLECS_EXPORT
 uint32_t ecs_vector_get_index(
-    ecs_vector_t *array,
+    const ecs_vector_t *array,
     const ecs_vector_params_t *params,
     void *elem);
 
 FLECS_EXPORT
 void* ecs_vector_last(
-    ecs_vector_t *array,
+    const ecs_vector_t *array,
     const ecs_vector_params_t *params);
 
 FLECS_EXPORT
@@ -115,15 +115,15 @@ uint32_t ecs_vector_set_count(
 
 FLECS_EXPORT
 uint32_t ecs_vector_count(
-    ecs_vector_t *array);
+    const ecs_vector_t *array);
 
 FLECS_EXPORT
 uint32_t ecs_vector_size(
-    ecs_vector_t *array);
+    const ecs_vector_t *array);
 
 FLECS_EXPORT
 void* ecs_vector_first(
-    ecs_vector_t *array);
+    const ecs_vector_t *array);
 
 FLECS_EXPORT
 void ecs_vector_sort(
@@ -133,7 +133,7 @@ void ecs_vector_sort(
 
 FLECS_EXPORT
 void ecs_vector_memory(
-    ecs_vector_t *array,
+    const ecs_vector_t *array,
     const ecs_vector_params_t *params,
     uint32_t *allocd,
     uint32_t *used);
