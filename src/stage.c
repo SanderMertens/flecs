@@ -97,15 +97,15 @@ void ecs_stage_init(
 
     memset(stage, 0, sizeof(ecs_stage_t));
 
-    stage->entity_index = ecs_map_new(0);
+    stage->entity_index = ecs_map_new(0, sizeof(ecs_row_t));
 
     if (is_temp_stage) {
         stage->type_index = world->main_stage.type_index;
     } else {
-        stage->type_index = ecs_map_new(0);
+        stage->type_index = ecs_map_new(0, 0);
     }
 
-    stage->table_index = ecs_map_new(0);
+    stage->table_index = ecs_map_new(0, sizeof(ecs_table_t*));
     if (is_main_stage) {
         stage->tables = ecs_vector_new(&table_arr_params, 8);
     } else {
@@ -113,8 +113,8 @@ void ecs_stage_init(
     }
 
     if (!is_main_stage) {
-        stage->data_stage = ecs_map_new(0);
-        stage->remove_merge = ecs_map_new(0);
+        stage->data_stage = ecs_map_new(0, sizeof(ecs_table_column_t*));
+        stage->remove_merge = ecs_map_new(0, sizeof(ecs_type_t));
     }
 
     stage->commit_count = 0;
