@@ -15,7 +15,8 @@ typedef struct ecs_map_iter_t {
 
 FLECS_EXPORT
 ecs_map_t* ecs_map_new(
-    uint32_t size);
+    uint32_t size,
+    uint32_t elem_size);
 
 FLECS_EXPORT
 void ecs_map_free(
@@ -37,6 +38,10 @@ uint32_t ecs_map_set_size(
     uint32_t size);
 
 FLECS_EXPORT
+uint32_t ecs_map_data_size(
+    ecs_map_t *map);
+
+FLECS_EXPORT
 uint32_t ecs_map_grow(
     ecs_map_t *map,
     uint32_t size);
@@ -50,32 +55,21 @@ void ecs_map_clear(
     ecs_map_t *map);
 
 FLECS_EXPORT
-void ecs_map_set64(
+void ecs_map_set(
     ecs_map_t *map,
     uint64_t key_hash,
-    uint64_t data);
-
-#define ecs_map_set(map, key_hash, data) \
-    ecs_map_set64(map, key_hash, (uintptr_t)data)
+    void *data);
 
 FLECS_EXPORT
-uint64_t ecs_map_get64(
+void* ecs_map_get(
     ecs_map_t *map,
     uint64_t key_hash);
-
-FLECS_EXPORT
-uint64_t* ecs_map_get_ptr(
-    ecs_map_t *map,
-    uint64_t key_hash);
-
-#define ecs_map_get(map, key_hash) \
-    (void*)(uintptr_t)ecs_map_get64(map, key_hash)
 
 FLECS_EXPORT
 bool ecs_map_has(
     ecs_map_t *map,
     uint64_t key_hash,
-    uint64_t *value_out);
+    void *value_out);
 
 FLECS_EXPORT
 int ecs_map_remove(
