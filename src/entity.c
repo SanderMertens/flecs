@@ -255,16 +255,15 @@ ecs_type_t instantiate_prefab(
     ecs_stage_t *stage,
     ecs_entity_t entity,
     bool is_prefab,
-    ecs_table_t *prefab_table,
-    ecs_row_t prefab_row,
+    ecs_entity_info_t *prefab_info,
     uint32_t limit)
 {
     ecs_type_t modified = 0;
-    ecs_vector_t *prefab_type = prefab_table->type;
-    ecs_table_column_t *prefab_columns = prefab_table->columns;
+    ecs_vector_t *prefab_type = prefab_info->table->type;
+    ecs_table_column_t *prefab_columns = prefab_info->table->columns;
 
     EcsPrefabBuilder *builder = get_row_ptr(prefab_type, 
-        prefab_columns, prefab_row.index, EEcsPrefabBuilder);
+        prefab_columns, prefab_info->index, EEcsPrefabBuilder);
 
     /* If the current entity is not a prefab itself, and the prefab
      * has children, add the children to the entity. */
@@ -288,7 +287,7 @@ ecs_type_t instantiate_prefab(
         }
 
         /* Keep track of components shared from new prefabs */
-        modified = ecs_type_merge_intern(world, stage, modified, prefab_row.type_id, 0);
+        modified = ecs_type_merge_intern(world, stage, modified, prefab_info->type_id, 0);
 
     /* If the current entity is also prefab, do not add children to
      * it. Instead, add children (if any) of its base to its ops */
@@ -335,7 +334,7 @@ static
 ecs_type_t copy_from_prefab(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_entity_t prefab,
+    ecs_entity_info_t *prefab_info,
     ecs_entity_info_t *info,
     uint32_t offset,
     uint32_t limit,
@@ -343,11 +342,11 @@ ecs_type_t copy_from_prefab(
     ecs_vector_t *to_add,
     ecs_type_t modified)
 {
-    ecs_row_t prefab_row = row_from_stage(&world->main_stage, prefab);
-    ecs_table_t *prefab_table = ecs_world_get_table(
-        world, stage, prefab_row.type_id);
+    ecs_table_t *prefab_table = prefab_info->table;
     ecs_vector_t *prefab_type = prefab_table->type;
     ecs_table_column_t *prefab_columns = prefab_table->columns;
+    ecs_entity_t prefab = prefab_info->entity;
+    uint32_t prefab_index = prefab_info->index;
 
     uint32_t e, add_count = ecs_vector_count(to_add);
     uint32_t p = 0, prefab_count = ecs_vector_count(prefab_type);
@@ -367,7 +366,7 @@ ecs_type_t copy_from_prefab(
 
         if (ee == prefab) {
             modified = instantiate_prefab(world, stage, info->entity, is_prefab, 
-                prefab_table, prefab_row, limit);
+                prefab_info, limit);
             continue;
         }
 
@@ -384,7 +383,7 @@ ecs_type_t copy_from_prefab(
 
         if (size) {
             void *src_column_data = ecs_vector_first(src_column->data);
-            void *src_ptr = ECS_OFFSET(src_column_data, size * (prefab_row.index - 1));
+            void *src_ptr = ECS_OFFSET(src_column_data, size * (prefab_index - 1));
 
             ecs_table_column_t *dst_column = &columns[e + 1];
             void *dst_column_data = ecs_vector_first(dst_column->data);
@@ -426,9 +425,13 @@ ecs_type_t copy_from_prefabs(
 
     while ((i = ecs_type_get_prefab(type, i)) != -1) {
         ecs_entity_t prefab = type_buffer[i] & ECS_ENTITY_MASK;
+        ecs_entity_info_t prefab_info = {.entity = prefab};
 
-        modified = copy_from_prefab(
-            world, stage, prefab, info, offset, limit, type, to_add, modified);
+        if (populate_info(world, stage, &prefab_info)) {
+            modified = copy_from_prefab(
+                world, stage, &prefab_info, info, offset, limit, type, to_add, 
+                modified);                
+        }
     }
 
     return modified;
@@ -441,19 +444,19 @@ bool notify_after_commit(
     ecs_entity_info_t *info,
     uint32_t offset,
     uint32_t limit,
-    ecs_type_t to_add,
+    ecs_type_t to_add_id,
     bool do_set)
 {
     ecs_type_t modified = 0;
 
     ecs_type_t initialized = notify_pre_merge (
-        world, stage, info->table, info->columns, offset, limit, to_add, 
+        world, stage, info->table, info->columns, offset, limit, to_add_id, 
         world->type_sys_add_index);
 
     populate_info(world, stage, info);
 
     ecs_type_t overridden = copy_from_prefabs(
-        world, stage, info, offset, limit, to_add);
+        world, stage, info, offset, limit, to_add_id);
 
     populate_info(world, stage, info);
 
@@ -695,11 +698,16 @@ void* get_ptr_from_prefab(
     void *ptr = NULL;
 
     while (!ptr && (p = ecs_type_get_prefab(type, p)) != -1) {
-        ecs_entity_t prefab = type_buffer[p];
+        ecs_entity_t prefab = type_buffer[p] & ECS_ENTITY_MASK;
+
         ecs_entity_info_t prefab_info = {.entity = prefab};
         if (populate_info(world, &world->main_stage, &prefab_info)) {
             ptr = get_row_ptr(prefab_info.table->type, prefab_info.columns, 
                 prefab_info.index, component);
+            
+            if (!ptr) {
+                ptr = get_ptr_from_prefab(world, stage, &prefab_info, component);
+            }
         }
     }
 
@@ -1241,8 +1249,7 @@ ecs_entity_t _ecs_commit(
     ecs_entity_t entity,
     ecs_type_t t_add,
     ecs_type_t t_remove,
-    ecs_entity_t flags,
-    uint32_t count)
+    ecs_entity_t flags)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
