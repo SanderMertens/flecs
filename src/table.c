@@ -27,7 +27,7 @@ static
 ecs_table_column_t* new_columns(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_vector_t *type)
+    ecs_type_t type)
 {
     ecs_table_column_t *result = ecs_os_calloc(
         sizeof(ecs_table_column_t), ecs_vector_count(type) + 1);
@@ -67,13 +67,13 @@ ecs_table_column_t* ecs_table_get_columns(
     if (!world->in_progress) {
         return table->columns;
     } else {
-        ecs_type_t type_id = table->type_id;
-        ecs_table_column_t *columns = ecs_map_get(stage->data_stage, type_id);
+        ecs_type_t type = table->type;
+        ecs_table_column_t *columns = ecs_map_get(stage->data_stage, (uintptr_t)type);
 
         if (!columns) {
-            ecs_vector_t *type = table->type;
+            ecs_type_t type = table->type;
             columns = new_columns(world, stage, type);
-            ecs_map_set(stage->data_stage, type_id, columns);
+            ecs_map_set(stage->data_stage, (uintptr_t)type, columns);
         }
 
         return columns;
@@ -85,12 +85,8 @@ void ecs_table_init(
     ecs_stage_t *stage,
     ecs_table_t *table)
 {
-    ecs_vector_t *type = ecs_type_get(world, stage, table->type_id);
-    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, "invalid type id of table");
-
     table->frame_systems = NULL;
-    table->type = type;
-    table->columns = new_columns(world, stage, type);
+    table->columns = new_columns(world, stage, table->type);
     table->flags = 0;
 }
 
@@ -102,7 +98,7 @@ void ecs_table_deinit(
     if (count) {
         ecs_notify(
             world, &world->main_stage, world->type_sys_remove_index, 
-            table->type_id, table, table->columns, 0, count);
+            table->type, table, table->columns, 0, count);
     }
 }
 
@@ -227,9 +223,9 @@ void ecs_table_delete(
 
         /* Last entity in table is now moved to index of removed entity */
         ecs_row_t row;
-        row.type_id = table->type_id;
+        row.type = table->type;
         row.index = index + 1;
-        ecs_map_set64(world->main_stage.entity_index, to_move, ecs_from_row(row));
+        ecs_map_set(world->main_stage.entity_index, to_move, &row);
 
         /* Decrease size of entity column */
         ecs_vector_remove_last(entity_column);

@@ -64,7 +64,7 @@ void move_node(
     (void)from;
 
     if (prev) {
-        ecs_map_node_t *prev_p = node_from_index(array, prev);
+        ecs_map_node_t *prev_p = node_from_index(map, array, prev);
         prev_p->next = node;
     } else {
         uint32_t *bucket = get_bucket(map, node_p->key);
@@ -72,7 +72,7 @@ void move_node(
     }
 
     if (next) {
-        ecs_map_node_t *next_p = node_from_index(array, next);
+        ecs_map_node_t *next_p = node_from_index(map, array, next);
         next_p->prev = node;
     }
 }
@@ -96,7 +96,7 @@ void alloc_buffer(
 /** Allocate a map object */
 static
 ecs_map_t *alloc_map(
-    uint32_t bucket_count
+    uint32_t bucket_count,
     uint32_t data_size)
 {
     ecs_map_t *result = ecs_os_malloc(sizeof(ecs_map_t));
@@ -105,7 +105,7 @@ ecs_map_t *alloc_map(
     alloc_buffer(result, bucket_count);
     result->count = 0;
     result->min = bucket_count;
-    result->nodes = ecs_vector_new(&node_arr_params, ECS_MAP_INITIAL_NODE_COUNT);
+    result->nodes = ecs_vector_new(&result->node_params, ECS_MAP_INITIAL_NODE_COUNT);
     result->node_params = (ecs_vector_params_t){
         .element_size = data_size
     };
@@ -133,7 +133,7 @@ static
 void *get_node_data(
     ecs_map_node_t *node)
 {
-    return ECS_OFFSET(node, sizeof(ecs_map_node_t);
+    return ECS_OFFSET(node, sizeof(ecs_map_node_t));
 }
 
 static
@@ -157,7 +157,7 @@ void add_node(
     uint32_t elem;
 
     if (!elem_p) {
-        elem_p = ecs_vector_add(&map->nodes, &node_arr_params);
+        elem_p = ecs_vector_add(&map->nodes, &map->node_params);
         elem = ecs_vector_count(map->nodes);
     } else {
         elem = ecs_vector_get_index(
@@ -173,7 +173,7 @@ void add_node(
 
     uint32_t first = *bucket;
     if (first) {
-        ecs_map_node_t *first_p = node_from_index(map->nodes, first);
+        ecs_map_node_t *first_p = node_from_index(map, map->nodes, first);
         first_p->prev = elem;
         elem_p->next = first;
     }
@@ -193,13 +193,13 @@ ecs_map_node_t *get_node(
     uint32_t node = *bucket;
 
     while (node) {
-        ecs_map_node_t *node_p = node_from_index(map->nodes, node);
+        ecs_map_node_t *node_p = node_from_index(map, map->nodes, node);
 
         if (node_p->prev) {
-            assert(node_from_index(map->nodes, node_p->prev)->next == node);
+            assert(node_from_index(map, map->nodes, node_p->prev)->next == node);
         }
         if (node_p->next) {
-            assert(node_from_index(map->nodes, node_p->next)->prev == node);
+            assert(node_from_index(map, map->nodes, node_p->next)->prev == node);
         }
 
         if (node_p->key == key) {
@@ -233,7 +233,7 @@ void resize_map(
 
             ecs_map_node_t *node_p;
             do {
-                node_p = node_from_index(map->nodes, node);
+                node_p = node_from_index(map, map->nodes, node);
                 next = node_p->next;
                 key = node_p->key;
                 uint32_t *new_bucket = get_bucket(map, key);
@@ -253,7 +253,7 @@ ecs_map_t* ecs_map_new(
     uint32_t data_size)
 {
     if (!data_size) {
-        data_size = uint64_t;
+        data_size = sizeof(uint64_t);
     }
     return alloc_map((float)size / FLECS_LOAD_FACTOR, data_size);
 }
@@ -274,7 +274,7 @@ void ecs_map_clear(
         memset(map->buckets, 0, sizeof(int32_t) * map->bucket_count);
     }
 
-    ecs_vector_reclaim(&map->nodes, &node_arr_params);
+    ecs_vector_reclaim(&map->nodes, &map->node_params);
     ecs_vector_clear(map->nodes);
 
     map->count = 0;
@@ -291,7 +291,7 @@ void ecs_map_free(
 void ecs_map_set(
     ecs_map_t *map,
     uint64_t key,
-    void *data)
+    const void *data)
 {
     uint32_t bucket_count = map->bucket_count;
     if (!bucket_count) {
@@ -306,7 +306,7 @@ void ecs_map_set(
     } else {
         ecs_map_node_t *elem = get_node(map, bucket, key);
         if (elem) {
-            set_node_data(elem, data);
+            set_node_data(map, elem, data);
         } else {
             add_node(map, bucket, key, data, NULL);
         }
@@ -330,22 +330,22 @@ int ecs_map_remove(
     if (*bucket) {
         ecs_map_node_t *node = get_node(map, bucket, key);
         if (node) {
-            ecs_map_node_t *prev_node = node_from_index(map->nodes, node->prev);
-            ecs_map_node_t *next_node = node_from_index(map->nodes, node->next);
+            ecs_map_node_t *prev_node = node_from_index(map, map->nodes, node->prev);
+            ecs_map_node_t *next_node = node_from_index(map, map->nodes, node->next);
 
             if (prev_node) {
-                assert(node_from_index(map->nodes, prev_node->next) == node);
+                assert(node_from_index(map, map->nodes, prev_node->next) == node);
                 prev_node->next = node->next;
             } else {
                 *bucket = node->next;
             }
 
             if (next_node) {
-                assert(node_from_index(map->nodes, next_node->prev) == node);
+                assert(node_from_index(map, map->nodes, next_node->prev) == node);
                 next_node->prev = node->prev;
             }
 
-            ecs_vector_params_t params = node_arr_params;
+            ecs_vector_params_t params = map->node_params;
             params.move_ctx = map;
 
             ecs_vector_remove(map->nodes, &params, node);
@@ -375,6 +375,15 @@ void* ecs_map_get(
     }
 
     return 0;
+}
+
+void* ecs_map_get_w_size(
+    ecs_map_t *map,
+    uint64_t key,
+    uint32_t size)
+{
+    ecs_assert(size == map->node_params.element_size, ECS_INTERNAL_ERROR, NULL);
+    return ecs_map_get(map, key);
 }
 
 bool ecs_map_has(
@@ -416,7 +425,7 @@ uint32_t ecs_map_set_size(
     ecs_map_t *map,
     uint32_t size)
 {
-    uint32_t result = ecs_vector_set_size(&map->nodes, &node_arr_params, size);
+    uint32_t result = ecs_vector_set_size(&map->nodes, &map->node_params, size);
     resize_map(map, size / FLECS_LOAD_FACTOR);
     return result;
 }
@@ -444,12 +453,12 @@ void ecs_map_memory(
     if (total) {
 
         *total += map->bucket_count * sizeof(uint32_t) + sizeof(ecs_map_t);
-        ecs_vector_memory(map->nodes, &node_arr_params, total, NULL);
+        ecs_vector_memory(map->nodes, &map->node_params, total, NULL);
     }
 
     if (used) {
         *used += map->count * sizeof(uint32_t);
-        ecs_vector_memory(map->nodes, &node_arr_params, NULL, used);
+        ecs_vector_memory(map->nodes, &map->node_params, NULL, used);
     }
 }
 
@@ -481,7 +490,7 @@ bool ecs_map_hasnext(
     uint32_t node = iter_data->node;
 
     if (node) {
-        ecs_map_node_t *node_p = node_from_index(map->nodes, node);
+        ecs_map_node_t *node_p = node_from_index(map, map->nodes, node);
         node = node_p->next;
     }
 
@@ -508,7 +517,7 @@ uint64_t ecs_map_next_w_key(
     uint64_t *key_out)
 {
     ecs_map_t *map = iter_data->map;
-    ecs_map_node_t *node_p = node_from_index(map->nodes, iter_data->node);
+    ecs_map_node_t *node_p = node_from_index(map, map->nodes, iter_data->node);
     assert(node_p != NULL);
     if (key_out) *key_out = node_p->key;
     return get_node_data(node_p);

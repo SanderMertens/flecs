@@ -301,7 +301,7 @@ error:
 ecs_type_t ecs_notify_row_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_vector_t *type,
+    ecs_type_t type,
     ecs_table_t *table,
     ecs_table_column_t *table_columns,
     uint32_t offset,

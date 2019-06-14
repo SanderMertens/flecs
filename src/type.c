@@ -196,14 +196,26 @@ ecs_type_t ecs_type_add(
     return ecs_type_add_to_array(world, stage, component, array);
 }
 
-ecs_type_t ecs_type_merge_arr(
+ecs_type_t ecs_type_merge_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_vector_t *arr_cur,
-    ecs_vector_t *to_add,
-    ecs_vector_t *to_del)
+    ecs_type_t arr_cur,
+    ecs_type_t to_add,
+    ecs_type_t to_del)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!to_del) {
+        if (arr_cur && !to_add) {
+            return arr_cur;
+        } else if (to_add && !arr_cur) {
+            return to_add;
+        } else if (to_add == arr_cur) {
+            return arr_cur;
+        }
+    } else if (to_del == arr_cur) {
+        return to_add;
+    }
 
     ecs_entity_t *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
     ecs_entity_t cur = 0, add = 0, del = 0;
@@ -306,40 +318,6 @@ ecs_type_t ecs_type_merge_arr(
     } else {
         return 0;
     }
-}
-
-/** O(n) algorithm to merge families */
-ecs_type_t ecs_type_merge_intern(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t cur_id,
-    ecs_type_t to_add_id,
-    ecs_type_t to_remove_id)
-{
-    if (!to_remove_id) {
-        if (cur_id && !to_add_id) {
-            return cur_id;
-        } else if (to_add_id && !cur_id) {
-            return to_add_id;
-        } else if (to_add_id == cur_id) {
-            return cur_id;
-        }
-    } else if (to_remove_id == cur_id) {
-        return to_add_id;
-    }
-
-    ecs_vector_t *arr_cur = ecs_type_get(world, stage, cur_id);
-    ecs_vector_t *to_add = NULL, *to_del = NULL;
-
-    if (to_remove_id) {
-        to_del = ecs_type_get(world, stage, to_remove_id);
-    }
-
-    if (to_add_id) {
-        to_add = ecs_type_get(world, stage, to_add_id);
-    }
-
-    return ecs_type_merge_arr(world, stage, arr_cur, to_add, to_del);
 }
 
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
@@ -592,7 +570,7 @@ ecs_entity_t ecs_new_entity(
 }
 
 int16_t ecs_type_index_of(
-    ecs_vector_t *type,
+    ecs_type_t type,
     ecs_entity_t component)
 {
     ecs_entity_t *buf = ecs_vector_first(type);

@@ -58,12 +58,39 @@ FLECS_EXPORT
 void ecs_map_set(
     ecs_map_t *map,
     uint64_t key_hash,
-    void *data);
+    const void *data);
+
+#define ecs_map_set32(map, key, data)\
+    ecs_assert(ecs_map_data_size(map) == sizeof(uint32_t), ECS_INVALID_PARAMETERS, NULL);\
+    ecs_map_set(map, key, &data)
+
+#define ecs_map_set64(map, key, data)\
+    ecs_assert(ecs_map_data_size(map) == sizeof(uint64_t), ECS_INVALID_PARAMETERS, NULL);\
+    ecs_map_set(map, key, &data)
+
+#define ecs_map_setptr(map, key, data)\
+    ecs_assert(ecs_map_data_size(map) == sizeof(void*), ECS_INVALID_PARAMETERS, NULL);\
+    ecs_map_set(map, key, &data)
 
 FLECS_EXPORT
 void* ecs_map_get(
     ecs_map_t *map,
     uint64_t key_hash);
+
+FLECS_EXPORT
+void* ecs_map_get_w_size(
+    ecs_map_t *map,
+    uint64_t key_hash,
+    uint32_t size);
+
+#define ecs_map_get32(map, key)\
+    *(uint32_t*)ecs_map_get_w_size(map, key, sizeof(uint32_t))
+
+#define ecs_map_get64(map, key)\
+    *(uint64_t*)ecs_map_get_w_size(map, key, sizeof(uint64_t))
+
+#define ecs_map_getptr(map, key)\
+    *(void**)ecs_map_get_w_size(map, key, sizeof(void*))
 
 FLECS_EXPORT
 bool ecs_map_has(

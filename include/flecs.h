@@ -56,7 +56,7 @@ extern "C" {
 /* -- Supporting types -- */
 
 /** A hash of the component identifiers in a type. */
-typedef uint32_t ecs_type_t;
+typedef const ecs_vector_t* ecs_type_t;
 
 /** Id component type */
 typedef const char *EcsId;
