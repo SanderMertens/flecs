@@ -55,7 +55,7 @@ void ecs_map_clear(
     ecs_map_t *map);
 
 FLECS_EXPORT
-void ecs_map_set(
+void* ecs_map_set(
     ecs_map_t *map,
     uint64_t key_hash,
     const void *data);

@@ -736,7 +736,7 @@ void* ecs_get_ptr_intern(
              * progress. Return NULL if so. */
             ecs_type_t to_remove = ecs_map_getptr(stage->remove_merge, entity);
             if (to_remove) {
-                if (ecs_type_contains_component(
+                if (ecs_type_contains_entity(
                     world, stage, to_remove, component, false)) 
                 {
                     return NULL;
@@ -889,7 +889,7 @@ bool ecs_components_contains_component(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = type_buffer[i];
         ecs_row_t row = row_from_stage(&world->main_stage, e);
-        bool result = ecs_type_contains_component(
+        bool result = ecs_type_contains_entity(
             world, &world->main_stage, row.type, component, true);
         if (result) {
             if (entity_out) *entity_out = e;
@@ -1226,7 +1226,7 @@ ecs_type_t add_flags_to_type(
     }
 
     if (dst_buffer) {
-        type = ecs_type_from_array_intern(world, stage, dst_buffer, count);
+        type = ecs_type_find_intern(world, stage, dst_buffer, count);
     }
 
     return type;

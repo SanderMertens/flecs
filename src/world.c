@@ -88,9 +88,7 @@ ecs_table_t* bootstrap_component_table(
 {
     ecs_stage_t *stage = &world->main_stage;
     ecs_table_t *result = ecs_vector_add(&stage->tables, &table_arr_params);
-    ecs_vector_t *type = ecs_map_get(stage->type_index, (uintptr_t)world->t_component);
     result->type = world->t_component;
-    result->type = type;
     result->frame_systems = NULL;
     result->flags = 0;
     result->columns = ecs_os_malloc(sizeof(ecs_table_column_t) * 3);
@@ -886,8 +884,7 @@ ecs_entity_t ecs_lookup_child(
             uint64_t key;
             ecs_table_column_t *columns = ecs_map_next_ptr_w_key(&it, &key);
             ecs_type_t key_type = (ecs_type_t)(uintptr_t)key;
-            ecs_vector_t *type = ecs_type_get(world, stage, key_type);
-            result = ecs_lookup_child_in_columns(type, columns, parent, id);
+            result = ecs_lookup_child_in_columns(key_type, columns, parent, id);
             if (result) {
                 break;
             }

@@ -48,18 +48,18 @@ void match_families(
     ecs_entity_t system,
     EcsRowSystem *system_data)
 {
-    ecs_map_iter_t it = ecs_map_iter(world->main_stage.type_index);
+/*     ecs_map_iter_t it = ecs_map_iter(world->main_stage.type_index);
 
-    /* Iterating over a map is a bit slow, but this only happens when a new
-     * row system is created, which is very infrequent. */
+    / * Iterating over a map is a bit slow, but this only happens when a new
+     * row system is created, which is very infrequent. * /
     while (ecs_map_hasnext(&it)) {
-        uint64_t key; /* Only interested in the key, which is the type hash */
+        uint64_t key; / * Only interested in the key, which is the type hash * /
         ecs_map_next_w_key(&it, &key);
 
         ecs_type_t type = (ecs_type_t)(uintptr_t)key;
         
         match_type(world, NULL, system, system_data, type);
-    }
+    } */
 }
 
 static
@@ -496,17 +496,17 @@ ecs_entity_t ecs_new_system(
         system_data->has_refs = has_refs(system_data);
     }
 
-    system_data->match_prefab = ecs_type_contains_component(
+    system_data->match_prefab = ecs_type_contains_entity(
         world, &world->main_stage, system_data->and_from_entity, 
         ecs_entity(EcsPrefab), false);
 
     /* If system contains FromSystem params, add them tot the system */
-    if (system_data->and_from_system) {
-        ecs_vector_t *f = ecs_type_get(world, NULL, system_data->and_from_system);
-        ecs_entity_t *buffer = ecs_vector_first(f);
-        uint32_t i, count = ecs_vector_count(f);
+    ecs_type_t type = system_data->and_from_system;
+    if (type) {
+        ecs_entity_t *array = ecs_vector_first(type);
+        uint32_t i, count = ecs_vector_count(type);
         for (i = 0; i < count; i ++) {
-            ecs_type_t type = ecs_type_from_entity(world, buffer[i]);
+            ecs_type_t type = ecs_type_from_entity(world, array[i]);
             _ecs_add(world, result, type);
         }
     }
@@ -537,14 +537,12 @@ void ecs_enable(
 
         assert(type_data != NULL);
 
-        ecs_world_t *world_temp = world;
-        ecs_stage_t *stage = ecs_get_stage(&world_temp);
-        ecs_vector_t *type = ecs_type_get(world, stage, type_data->type);
-        ecs_entity_t *buffer = ecs_vector_first(type);
+        ecs_type_t type = type_data->type;
+        ecs_entity_t *array = ecs_vector_first(type);
         uint32_t i, count = ecs_vector_count(type);
         for (i = 0; i < count; i ++) {
             /* Enable/disable all systems in type */
-            ecs_enable(world, buffer[i], enabled);
+            ecs_enable(world, array[i], enabled);
         }
     } else {
         if (col_system) {

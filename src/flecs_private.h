@@ -107,7 +107,7 @@ void ecs_stage_merge(
 
 /* -- Type utility API -- */
 
-ecs_type_t ecs_type_from_array_intern(
+ecs_type_t ecs_type_find_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t *buf,
@@ -131,7 +131,7 @@ ecs_entity_t ecs_type_contains(
     bool match_prefab);
 
 /* Test if type contains component */
-bool ecs_type_contains_component(
+bool ecs_type_contains_entity(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t type,
@@ -152,12 +152,6 @@ ecs_type_t ecs_type_add(
     ecs_stage_t *stage,
     ecs_type_t type,
     ecs_entity_t component);
-
-/* Get array with component handles from type */
-ecs_vector_t* ecs_type_get(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type_id);
 
 /* Get index for entity in type */
 int16_t ecs_type_index_of(

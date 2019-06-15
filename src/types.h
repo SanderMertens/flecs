@@ -231,6 +231,28 @@ typedef struct ecs_row_t {
     int32_t index;                /* Index of the entity in its table */
 } ecs_row_t;
 
+#define ECS_TYPE_DB_MAX_CHILD_NODES (256)
+#define ECS_TYPE_DB_BUCKET_COUNT (256)
+
+/** The ecs_type_node_t type is a node in a hierarchical structure that allows
+ * for quick lookups of types. A node represents a type, and its direct children
+ * represent types with one additional entity. For example, given a node [A],
+ * [A, B] would be a child node.
+ * 
+ * Child nodes are looked up directly using the entity id. For example, node [A]
+ * will be stored at root.nodes[A]. Children entity ids are offset by their 
+ * parent, such that [A, B] is stored at root.nodes[A].nodes[B - A].
+ * 
+ * If the offset exceeds ECS_TYPE_DB_MAX_CHILD_NODES, the type will be stored in
+ * the types map. This map is keyed by the hash of the type relative to its
+ * parent. For example, the hash for type [A, B, C] will be computed on [B, C]
+ * if its parent is [A]. */
+typedef struct ecs_type_node_t {
+    ecs_vector_t *nodes; /* child nodes - <ecs_entity_t, ecs_type_db_t> */
+    ecs_vector_t **types; /* child types w/large entity offsets - <hash, vector<type>> */
+    ecs_type_t type;     /* type of current node */
+} ecs_type_node_t;
+
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
  * to arbitrarily add/remove/set components and create/delete entities while
@@ -245,9 +267,9 @@ typedef struct ecs_stage_t {
     /* If this is not a thread
      * stage, these are the same
      * as the main stage */
-    ecs_map_t *table_index;        /* Index for table stage */
+    ecs_type_node_t type_root;     /* Hierarchical type store */
     ecs_vector_t *tables;          /* Tables created while >1 threads running */
-    ecs_map_t *type_index;         /* Types created while >1 threads running */
+    ecs_map_t *table_index;        /* Lookup table by type */
 
     /* These occur only in
      * temporary stages, and
