@@ -251,7 +251,11 @@ uint32_t ecs_vector_set_count(
 void* ecs_vector_first(
     const ecs_vector_t *array)
 {
-    return ARRAY_BUFFER(array);
+    if (array->count) {
+        return ARRAY_BUFFER(array);
+    } else {
+        return NULL;
+    }
 }
 
 void* ecs_vector_get(

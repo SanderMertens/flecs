@@ -5,7 +5,7 @@ void merge_families(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_map_iter_t it = ecs_map_iter(stage->type_index);
+    /*ecs_map_iter_t it = ecs_map_iter(stage->type_index);
     while (ecs_map_hasnext(&it)) {
         uint64_t type_id;
         ecs_vector_t *type = (void*)(uintptr_t)ecs_map_next_w_key(&it, &type_id);
@@ -18,6 +18,7 @@ void merge_families(
     }
 
     ecs_map_clear(stage->type_index);
+    */
 }
 
 static
@@ -67,7 +68,7 @@ static
 void clean_families(
     ecs_stage_t *stage)
 {
-    ecs_map_free(stage->type_index); 
+    /* ecs_map_free(stage->type_index);  */
 }
 
 static
@@ -99,11 +100,11 @@ void ecs_stage_init(
 
     stage->entity_index = ecs_map_new(0, sizeof(ecs_row_t));
 
-    if (is_temp_stage) {
+    /*if (is_temp_stage) {
         stage->type_index = world->main_stage.type_index;
     } else {
         stage->type_index = ecs_map_new(0, 0);
-    }
+    }*/
 
     stage->table_index = ecs_map_new(0, sizeof(ecs_table_t*));
     if (is_main_stage) {

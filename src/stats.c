@@ -18,11 +18,11 @@ void calculate_type_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
-    ecs_map_iter_t it = ecs_map_iter(world->main_stage.type_index);
+    /*ecs_map_iter_t it = ecs_map_iter(world->main_stage.type_index);
     while (ecs_map_hasnext(&it)) {
         ecs_vector_t *type = ecs_map_next_ptr(&it);
         ecs_vector_memory(type, &handle_arr_params, allocd, used);
-    }
+    }*/
 }
 
 static
@@ -80,7 +80,7 @@ void calculate_stage_stats(
     }
 
     if (!is_temp_stage) {
-        ecs_map_memory(stage->type_index, allocd, used);
+        /* ecs_map_memory(stage->type_index, allocd, used); */
     }
     
     ecs_vector_memory(stage->tables, &table_arr_params, allocd, used);
@@ -394,9 +394,8 @@ void ecs_get_stats(
     while (ecs_map_hasnext(&it)) {
         ecs_entity_t h = ecs_map_next_w_key(&it, NULL);
         EcsTypeComponent *data = ecs_get_ptr(world, h, EcsTypeComponent);
-        ecs_vector_t *type = ecs_map_get(world->main_stage.type_index, data->resolved);
-        ecs_entity_t *buffer = ecs_vector_first(type);
-        uint32_t i, count = ecs_vector_count(type);
+        ecs_entity_t *buffer = ecs_vector_first(data->resolved);
+        uint32_t i, count = ecs_vector_count(data->resolved);
 
         EcsFeatureStats feature = {0};
         for (i = 0; i < count; i ++) {
@@ -468,12 +467,12 @@ void ecs_get_stats(
     stats->memory.systems.used += system_memory;
     stats->memory.systems.allocd += system_memory;
 
-    uint32_t type_memory = ecs_map_count(world->main_stage.type_index) *
+/*     uint32_t type_memory = ecs_map_count(world->main_stage.type_index) *
       (sizeof(EcsTypeComponent) + sizeof(EcsId));
     stats->memory.components.used -= type_memory;
     stats->memory.components.allocd -= type_memory;
     stats->memory.families.used += type_memory;
-    stats->memory.families.allocd += type_memory;
+    stats->memory.families.allocd += type_memory; */
 
     stats->entity_count = ecs_map_count(world->main_stage.entity_index);
     stats->tick_count = world->tick;

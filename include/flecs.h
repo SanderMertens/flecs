@@ -756,9 +756,9 @@ void _ecs_add_remove(
 #define ecs_add_remove(world, entity, to_add, to_remove)\
     _ecs_add_remove(world, entity, T##to_add, T##to_remove)
 
-#define ECS_ADD_FRAGMENT ((uint64_t)1 << 63)
-#define ECS_ADD_PREFAB ((uint64_t)1 << 62)
-#define ECS_ADD_PARENT ((uint64_t)1 << 61)
+#define ECS_ADD_PREFAB ((uint64_t)1 << 63)
+#define ECS_ADD_PARENT ((uint64_t)1 << 62)
+#define ECS_ADD_FRAGMENT ((uint64_t)1 << 61)
 #define ECS_ADD_ALL (ECS_ADD_FRAGMENT | ECS_ADD_PREFAB | ECS_ADD_PARENT)
 #define ECS_ENTITY_MASK (~ECS_ADD_ALL)
 #define ECS_SINGLETON (ECS_ADD_ALL - 1)
@@ -1205,16 +1205,10 @@ ecs_type_t ecs_type_merge(
 
 /** Get type id from entity array */
 FLECS_EXPORT
-ecs_type_t ecs_type_from_array(
+ecs_type_t ecs_type_find(
     ecs_world_t *world,
     ecs_entity_t *array,
     uint32_t count);
-
-/** Get vector with entities from type */
-FLECS_EXPORT
-ecs_vector_t* ecs_type_get_vector(
-    ecs_world_t *world,
-    ecs_type_t type);
 
 /** Get component from type at index. 
  * This operation returns the components (or entities) that are contained in the

@@ -142,12 +142,16 @@ void set_node_data(
     ecs_map_node_t *node,
     void *data)
 {
-    memcpy(get_node_data(node), data, map->node_params.element_size);
+    if (data) {
+        memcpy(get_node_data(node), data, map->node_params.element_size);
+    } else {
+        memset(get_node_data(node), 0, map->node_params.element_size);
+    }
 }
 
 /** Add new node to bucket */
 static
-void add_node(
+void* add_node(
     ecs_map_t *map,
     uint32_t *bucket,
     uint64_t key,
@@ -181,6 +185,8 @@ void add_node(
     *bucket = elem;
 
     map->count ++;
+
+    return elem_p;
 }
 
 /** Get map node for a given key */
@@ -288,7 +294,7 @@ void ecs_map_free(
     ecs_os_free(map);
 }
 
-void ecs_map_set(
+void* ecs_map_set(
     ecs_map_t *map,
     uint64_t key,
     const void *data)
@@ -299,22 +305,27 @@ void ecs_map_set(
         bucket_count = map->bucket_count;
     }
 
+    if (((float)map->count + 1) / (float)bucket_count > FLECS_LOAD_FACTOR) {
+        resize_map(map, bucket_count * 2);
+    }
+
     uint32_t *bucket = get_bucket(map, key);
+    ecs_map_node_t *node = NULL;
 
     if (!*bucket) {
-        add_node(map, bucket, key, data, NULL);
+        node = add_node(map, bucket, key, data, NULL);
     } else {
-        ecs_map_node_t *elem = get_node(map, bucket, key);
-        if (elem) {
-            set_node_data(map, elem, data);
+        node = get_node(map, bucket, key);
+        if (node) {
+            set_node_data(map, node, data);
         } else {
-            add_node(map, bucket, key, data, NULL);
+            node = add_node(map, bucket, key, data, NULL);
         }
     }
 
-    if ((float)map->count / (float)bucket_count > FLECS_LOAD_FACTOR) {
-        resize_map(map, bucket_count * 2);
-    }
+    ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return get_node_data(node);
 }
 
 int ecs_map_remove(
@@ -391,6 +402,10 @@ bool ecs_map_has(
     uint64_t key_hash,
     void *value_out)
 {
+    if (!map) {
+        return false;
+    }
+    
     if (!map->count) {
         return false;
     }
