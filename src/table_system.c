@@ -12,22 +12,20 @@ ecs_entity_t components_contains(
     ecs_entity_t *entity_out,
     bool match_all)
 {
-    ecs_vector_t *components = ecs_type_get(world, &world->main_stage, table_type);
-    assert(components != NULL);
+    uint32_t i, count = ecs_vector_count(type);
+    ecs_entity_t *array = ecs_vector_first(type);
 
-    uint32_t i, count = ecs_vector_count(components);
-    ecs_entity_t *buffer = ecs_vector_first(components);
     for (i = 0; i < count; i ++) {
-        ecs_entity_t h = buffer[i];
+        ecs_entity_t entity = array[i];
 
-        uint64_t row_64 = ecs_map_get64(world->main_stage.entity_index, h);
-        assert(row_64 != 0);
+        ecs_row_t *row = ecs_map_getptr(world->main_stage.entity_index, entity);
+        ecs_assert(row != 0, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_row_t row = ecs_to_row(row_64);
         ecs_entity_t component = ecs_type_contains(
-            world, &world->main_stage, row.type_id, type, match_all, true);
+            world, &world->main_stage, row->type, type, match_all, true);
+
         if (component != 0) {
-            if (entity_out) *entity_out = h;
+            if (entity_out) *entity_out = entity;
             return component;
         }
     }
@@ -66,20 +64,19 @@ ecs_entity_t ecs_get_entity_for_component(
     ecs_world_t *world,
     bool new_table,
     ecs_entity_t entity,
-    ecs_type_t type_id,
+    ecs_type_t type,
     ecs_entity_t component)
 {
     if (entity) {
-        ecs_row_t row = ecs_to_row(ecs_map_get64(world->main_stage.entity_index, entity));
-        type_id = row.type_id;
+        ecs_row_t *row = ecs_map_getptr(world->main_stage.entity_index, entity);
+        type = row->type;
     }
 
-    ecs_vector_t *type = ecs_type_get(world, NULL, type_id);
-    ecs_entity_t *buffer = ecs_vector_first(type);
+    ecs_entity_t *array = ecs_vector_first(type);
     uint32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
-        if (buffer[i] == component) {
+        if (array[i] == component) {
             break;
         }
     }
@@ -113,7 +110,7 @@ void add_table(
 {
     int32_t *table_data;
     ecs_reference_t *ref_data = NULL;
-    ecs_type_t table_type = table->type_id;
+    ecs_type_t table_type = table->type;
     uint32_t i = COLUMNS_INDEX;
     uint32_t ref = 0;
     uint32_t column_count = ecs_vector_count(system_data->base.columns);
@@ -426,8 +423,7 @@ bool match_table(
     ecs_table_t *table,
     EcsColSystem *system_data)
 {
-    ecs_type_t type, table_type;
-    table_type = table->type_id;
+    ecs_type_t type, table_type = table->type;
 
     if (ecs_type_contains_entity(
         world, &world->main_stage, table_type, EEcsDisabled, false))
@@ -535,7 +531,7 @@ void order_cascade_tables(
         int32_t *table_data = ecs_vector_get(
             system_data->tables, &system_data->table_params, i);
         ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
-        ecs_type_t type = tables[table_data[TABLE_INDEX]].type_id;
+        ecs_type_t type = tables[table_data[TABLE_INDEX]].type;
         table_data[DEPTH_INDEX] = ecs_type_container_depth(
             world, type, cascade_component);
     }
@@ -665,7 +661,7 @@ void ecs_rematch_system(
                 * components were added/removed to container entities */ 
             } else if (system_data->base.cascade_by) {
                 resolve_cascade_container(
-                    world, system_data, match, table->type_id);
+                    world, system_data, match, table->type);
             }
         } else {
             /* If table no longer matches, remove it */
@@ -1007,7 +1003,7 @@ ecs_entity_t _ecs_run_w_filter(
 
         if (filter) {
             if (!ecs_type_contains(
-                real_world, stage, w_table->type_id, filter, true, true))
+                real_world, stage, w_table->type, filter, true, true))
             {
                 continue;
             }

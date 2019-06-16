@@ -247,10 +247,15 @@ typedef struct ecs_row_t {
  * the types map. This map is keyed by the hash of the type relative to its
  * parent. For example, the hash for type [A, B, C] will be computed on [B, C]
  * if its parent is [A]. */
+typedef struct ecs_type_link_t {
+    ecs_type_t type;                /* type of current node */
+    struct ecs_type_link_t *next;   /* next link (for iterating linearly) */
+} ecs_type_link_t;
+
 typedef struct ecs_type_node_t {
-    ecs_vector_t *nodes; /* child nodes - <ecs_entity_t, ecs_type_db_t> */
-    ecs_vector_t **types; /* child types w/large entity offsets - <hash, vector<type>> */
-    ecs_type_t type;     /* type of current node */
+    ecs_vector_t *nodes;    /* child nodes - <ecs_entity_t, ecs_type_node_t> */
+    ecs_vector_t **types;   /* child types w/large entity offsets - <hash, vector<ecs_type_link_t>> */
+    ecs_type_link_t link;     
 } ecs_type_node_t;
 
 /** A stage is a data structure in which delta's are stored until it is safe to
@@ -267,7 +272,8 @@ typedef struct ecs_stage_t {
     /* If this is not a thread
      * stage, these are the same
      * as the main stage */
-    ecs_type_node_t type_root;     /* Hierarchical type store */
+    ecs_type_node_t type_root;     /* Hierarchical type store (& first link) */
+    ecs_type_link_t *last_link;    /* Link to last registered type */
     ecs_vector_t *tables;          /* Tables created while >1 threads running */
     ecs_map_t *table_index;        /* Lookup table by type */
 
