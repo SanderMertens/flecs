@@ -18,14 +18,6 @@ struct ecs_map_t {
     uint32_t min;           /* minimum number of elements */
 };
 
-static
-void move_node(
-    ecs_vector_t *array,
-    const ecs_vector_params_t *params,
-    void *to,
-    void *from,
-    void *ctx);
-
 /** Get map node from index */
 static
 ecs_map_node_t *node_from_index(
@@ -107,7 +99,8 @@ ecs_map_t *alloc_map(
     result->min = bucket_count;
     result->nodes = ecs_vector_new(&result->node_params, ECS_MAP_INITIAL_NODE_COUNT);
     result->node_params = (ecs_vector_params_t){
-        .element_size = data_size
+        .element_size = data_size,
+        .move_action = move_node
     };
 
     return result;
@@ -140,7 +133,7 @@ static
 void set_node_data(
     ecs_map_t *map,
     ecs_map_node_t *node,
-    void *data)
+    const void *data)
 {
     if (data) {
         memcpy(get_node_data(node), data, map->node_params.element_size);
@@ -155,7 +148,7 @@ void* add_node(
     ecs_map_t *map,
     uint32_t *bucket,
     uint64_t key,
-    void *data,
+    const void *data,
     ecs_map_node_t *elem_p)
 {
     uint32_t elem;
@@ -391,7 +384,7 @@ void* ecs_map_get(
 void* ecs_map_get_w_size(
     ecs_map_t *map,
     uint64_t key,
-    uint32_t size)
+    size_t size)
 {
     ecs_assert(size == map->node_params.element_size, ECS_INTERNAL_ERROR, NULL);
     return ecs_map_get(map, key);
@@ -527,32 +520,42 @@ bool ecs_map_hasnext(
     }
 }
 
-uint64_t ecs_map_next_w_key(
+void* ecs_map_next_w_key_w_size(
     ecs_map_iter_t *iter_data,
-    uint64_t *key_out)
+    uint64_t *key_out,
+    size_t size)
 {
     ecs_map_t *map = iter_data->map;
+    ecs_assert(!size || map->node_params.element_size == size, ECS_INTERNAL_ERROR, NULL);
+
     ecs_map_node_t *node_p = node_from_index(map, map->nodes, iter_data->node);
     assert(node_p != NULL);
     if (key_out) *key_out = node_p->key;
     return get_node_data(node_p);
 }
 
-uint64_t ecs_map_next(
-    ecs_map_iter_t *iter_data)
-{
-    return ecs_map_next_w_key(iter_data, NULL);
-}
-
-void* ecs_map_next_ptr(
-    ecs_map_iter_t *iter_data)
-{
-    return (void*)(uintptr_t)ecs_map_next_w_key(iter_data, NULL);
-}
-
-void* ecs_map_next_ptr_w_key(
+void* ecs_map_next_w_key(
     ecs_map_iter_t *iter_data,
     uint64_t *key_out)
 {
-    return (void*)(uintptr_t)ecs_map_next_w_key(iter_data, key_out);
+    return ecs_map_next_w_key_w_size(iter_data, key_out, 0);
+}
+
+void* ecs_map_next(
+    ecs_map_iter_t *iter_data)
+{
+    return ecs_map_next_w_key_w_size(iter_data, NULL, 0);
+}
+
+void* ecs_map_next_w_size(
+    ecs_map_iter_t *iter_data,
+    size_t size)
+{
+    return ecs_map_next_w_key_w_size(iter_data, NULL, size);
+}
+
+uint32_t ecs_map_data_size(
+    ecs_map_t *map)
+{
+    return map->node_params.element_size;
 }

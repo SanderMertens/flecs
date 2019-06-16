@@ -48,14 +48,13 @@ void merge_commits(
 
     while (ecs_map_hasnext(&it)) {
         ecs_entity_t entity;
-        uint64_t row64 = ecs_map_next_w_key(&it, &entity);
-        ecs_row_t staged_row = ecs_to_row(row64);
-        ecs_merge_entity(world, stage, entity, &staged_row);
+        ecs_row_t *row = ecs_map_next_w_key(&it, &entity);
+        ecs_merge_entity(world, stage, entity, row);
     }
 
     it = ecs_map_iter(stage->data_stage);
     while (ecs_map_hasnext(&it)) {
-        ecs_vector_t *stage = ecs_map_next_ptr(&it);
+        ecs_vector_t *stage = ecs_map_nextptr(&it);
         ecs_vector_free(stage);
     }
 
@@ -100,11 +99,12 @@ void ecs_stage_init(
 
     stage->entity_index = ecs_map_new(0, sizeof(ecs_row_t));
 
-    /*if (is_temp_stage) {
-        stage->type_index = world->main_stage.type_index;
+    if (is_temp_stage) {
+        stage->type_root = world->main_stage.type_root;
+        stage->last_link = world->main_stage.last_link;
     } else {
-        stage->type_index = ecs_map_new(0, 0);
-    }*/
+        /* Leave initialized to 0 */
+    }
 
     stage->table_index = ecs_map_new(0, sizeof(ecs_table_t*));
     if (is_main_stage) {

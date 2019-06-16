@@ -235,7 +235,7 @@ void add_table(
 
         if (oper_kind == EcsOperOptional) {
             /* If table doesn't have the field, mark it as no data */
-            if (!ecs_type_contains_entity(
+            if (!ecs_type_has_entity_intern(
                 world, &world->main_stage, table_type, component, true))
             {
                 table_data[i] = 0;
@@ -425,14 +425,14 @@ bool match_table(
 {
     ecs_type_t type, table_type = table->type;
 
-    if (ecs_type_contains_entity(
+    if (ecs_type_has_entity_intern(
         world, &world->main_stage, table_type, EEcsDisabled, false))
     {
         /* Never match disabled entities */
         return false;
     }
 
-    if (ecs_type_contains_entity(
+    if (ecs_type_has_entity_intern(
         world, &world->main_stage, table_type, EEcsPrefab, false))
     {
         /* Never match disabled entities */
