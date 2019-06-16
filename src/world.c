@@ -59,17 +59,17 @@ void bootstrap_types(
     ecs_world_t *world)
 {
     ecs_stage_t *stage = &world->main_stage;
-    TEcsComponent = ecs_type_add_to_array(world, stage, EEcsComponent, NULL);
-    TEcsTypeComponent = ecs_type_add_to_array(world, stage, EEcsTypeComponent, NULL);
-    TEcsPrefab = ecs_type_add_to_array(world, stage, EEcsPrefab, NULL);
-    TEcsPrefabParent = ecs_type_add_to_array(world, stage, EEcsPrefabParent, NULL);
-    TEcsPrefabBuilder = ecs_type_add_to_array(world, stage, EEcsPrefabBuilder, NULL);
-    TEcsRowSystem = ecs_type_add_to_array(world, stage, EEcsRowSystem, NULL);
-    TEcsColSystem = ecs_type_add_to_array(world, stage, EEcsColSystem, NULL);
-    TEcsId = ecs_type_add_to_array(world, stage, EEcsId, NULL);
-    TEcsHidden = ecs_type_add_to_array(world, stage, EEcsHidden, NULL);
-    TEcsContainer = ecs_type_add_to_array(world, stage, EEcsContainer, NULL);
-    TEcsDisabled = ecs_type_add_to_array(world, stage, EEcsDisabled, NULL);
+    TEcsComponent = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsComponent}, 1);
+    TEcsTypeComponent = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsTypeComponent}, 1);
+    TEcsPrefab = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsPrefab}, 1);
+    TEcsPrefabParent = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsPrefabParent}, 1);
+    TEcsPrefabBuilder = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsPrefabBuilder}, 1);
+    TEcsRowSystem = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsRowSystem}, 1);
+    TEcsColSystem = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsColSystem}, 1);
+    TEcsId = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsId}, 1);
+    TEcsHidden = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsHidden}, 1);
+    TEcsContainer = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsContainer}, 1);
+    TEcsDisabled = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsDisabled}, 1);
 
     world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsId, 0);
     world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsId, 0);
@@ -408,7 +408,7 @@ void row_index_deinit(
     ecs_map_iter_t it = ecs_map_iter(sys_index);
 
     while (ecs_map_hasnext(&it)) {
-        ecs_vector_t *v = ecs_map_next_ptr(&it);
+        ecs_vector_t *v = ecs_map_nextptr(&it);
         ecs_vector_free(v);
     }
 
@@ -882,7 +882,7 @@ ecs_entity_t ecs_lookup_child(
 
         while (ecs_map_hasnext(&it)) {
             uint64_t key;
-            ecs_table_column_t *columns = ecs_map_next_ptr_w_key(&it, &key);
+            ecs_table_column_t *columns = ecs_map_nextptr_w_key(&it, &key);
             ecs_type_t key_type = (ecs_type_t)(uintptr_t)key;
             result = ecs_lookup_child_in_columns(key_type, columns, parent, id);
             if (result) {

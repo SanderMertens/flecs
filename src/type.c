@@ -26,7 +26,7 @@ int add_type(
     const char *source_id,
     void *data)
 {
-    EcsTypeComponent *type = data;
+    EcsTypeComponent *type_component = data;
     ecs_stage_t *stage = &world->main_stage;
     (void)source_id;
 
@@ -35,7 +35,7 @@ int add_type(
     }
 
     if (!strcmp(entity_id, "0")) {
-        *type = (EcsTypeComponent){0, 0};
+        *type_component = (EcsTypeComponent){0, 0};
     } else {
         ecs_entity_t entity = ecs_lookup(world, entity_id);
         if (!entity) {
@@ -53,18 +53,15 @@ int add_type(
             return -1;
         }
 
-        ecs_type_t type_id = ecs_type_add_to_array(
-            world, stage, entity, NULL);
-        assert(type_id != 0);
-
+        ecs_type_t type = ecs_type_find_intern(world, stage, &entity, 1);
         ecs_type_t resolved_id = ecs_type_from_entity(world, entity);
         assert(resolved_id != 0);
 
-        type->type = ecs_type_merge_intern(
-            world, stage, type->type, type_id, 0);
+        type_component->type = ecs_type_merge_intern(
+            world, stage, type_component->type, type, 0);
 
-        type->resolved = ecs_type_merge_intern(
-            world, stage, type->resolved, resolved_id, 0);
+        type_component->resolved = ecs_type_merge_intern(
+            world, stage, type_component->resolved, resolved_id, 0);
     }
 
     return 0;

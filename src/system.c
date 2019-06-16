@@ -496,7 +496,7 @@ ecs_entity_t ecs_new_system(
         system_data->has_refs = has_refs(system_data);
     }
 
-    system_data->match_prefab = ecs_type_contains_entity(
+    system_data->match_prefab = ecs_type_has_entity_intern(
         world, &world->main_stage, system_data->and_from_entity, 
         ecs_entity(EcsPrefab), false);
 

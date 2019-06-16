@@ -131,20 +131,12 @@ ecs_entity_t ecs_type_contains(
     bool match_prefab);
 
 /* Test if type contains component */
-bool ecs_type_contains_entity(
+bool ecs_type_has_entity_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t type,
     ecs_entity_t component,
     bool match_prefab);
-
-/* Register new type from either a single component, an array of component
- * handles, or a combination */
-ecs_type_t ecs_type_add_to_array(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t to_add,
-    ecs_vector_t *set);
 
 /* Add component to type */
 ecs_type_t ecs_type_add(
