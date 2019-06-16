@@ -12,6 +12,10 @@ const ecs_vector_params_t ptr_params = {
     .element_size = sizeof(void*)
 };
 
+const ecs_vector_params_t link_params = {
+    .element_size = sizeof(ecs_type_link_t)
+};
+
 /** Parse callback that adds type to type identifier for ecs_new_type */
 static
 int add_type(
@@ -137,6 +141,22 @@ ecs_type_t ecs_type_from_array(
 }
 
 static
+ecs_type_t register_type(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_type_link_t *link,
+    ecs_entity_t *array,
+    uint32_t count)
+{
+    ecs_type_t result = ecs_type_from_array(array, count);
+    link->type = result;
+    stage->last_link->next = link;
+    stage->last_link = link;
+    notify_systems_of_type(world, stage, result);
+    return result;
+}
+
+static
 ecs_type_t find_type_in_vector(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -172,11 +192,8 @@ ecs_type_t find_type_in_vector(
 
     /* Type has not been found, add it */
     if (create) {
-        ecs_type_t type = ecs_type_from_array(array, count);
-        ecs_type_t *elem = ecs_vector_add(&vector, &ptr_params);
-        *elem = type;
-        notify_systems_of_type(world, stage, type);
-        return type;
+        ecs_type_link_t *link = ecs_vector_add(&vector, &link_params);
+        return register_type(world, stage, link, array, count);;
     }
     
     return NULL;
@@ -206,11 +223,13 @@ ecs_type_t find_or_create_type(
 
             if (rel >= node_count) {
                 if (create) {
+                    /* Grow number of nodes */
                     ecs_vector_set_count(&node->nodes, &type_node_params, rel + 1);
                     node_array = ecs_vector_first(node->nodes);
                     memset(node_array, 0, (rel - node_count + 1) * sizeof(ecs_type_node_t));
-                    node_array[rel].type = ecs_type_from_array(array, i);
-                    notify_systems_of_type(world, stage, node_array[rel].type);
+
+                    /* Register new type */
+                    register_type(world, stage, &node_array[rel].link, array, i);
                 } else {
                     return NULL;
                 }
@@ -253,7 +272,7 @@ ecs_type_t find_or_create_type(
 
     ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    return node->type;
+    return node->link.type;
 }
 
 static
