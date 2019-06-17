@@ -145,10 +145,10 @@ ecs_type_t register_type(
     ecs_entity_t *array,
     uint32_t count)
 {
+    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_type_t result = ecs_type_from_array(array, count);
     link->type = result;
-    stage->last_link->next = link;
-    stage->last_link = link;
     notify_systems_of_type(world, stage, result);
     return result;
 }
@@ -223,7 +223,10 @@ ecs_type_t find_or_create_type(
                     /* Grow number of nodes */
                     ecs_vector_set_count(&node->nodes, &type_node_params, rel + 1);
                     node_array = ecs_vector_first(node->nodes);
-                    memset(node_array, 0, (rel - node_count + 1) * sizeof(ecs_type_node_t));
+                    memset(
+                        &node_array[node_count],
+                        0, 
+                        (rel - node_count + 1) * sizeof(ecs_type_node_t));
 
                     /* Register new type */
                     register_type(world, stage, &node_array[rel].link, array, i);
@@ -389,20 +392,20 @@ ecs_type_t ecs_type_merge_intern(
 
     (void)del_flags;
 
-    if (to_del) {
-        del_count = ecs_vector_count(to_del);
+    del_count = ecs_vector_count(to_del);
+    if (del_count) {
         buf_del = ecs_vector_first(to_del);
         del_flags = split_entity_id(buf_del[0], &del);
     }
 
-    if (arr_cur) {
-        cur_count = ecs_vector_count(arr_cur);
+    cur_count = ecs_vector_count(arr_cur);
+    if (cur_count) {
         buf_cur = ecs_vector_first(arr_cur);
         cur_flags = split_entity_id(buf_cur[0], &cur);
     }
 
-    if (to_add) {
-        add_count = ecs_vector_count(to_add);
+    add_count = ecs_vector_count(to_add);
+    if (add_count) {
         buf_add = ecs_vector_first(to_add);
         add_flags = split_entity_id(buf_add[0], &add);
     }

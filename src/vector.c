@@ -243,6 +243,9 @@ uint32_t ecs_vector_set_count(
     const ecs_vector_params_t *params,
     uint32_t count)
 {
+    if (!*array_inout) {
+        *array_inout = ecs_vector_new(params, count);
+    }
     (*array_inout)->count = count;
     uint32_t size = ecs_vector_set_size(array_inout, params, count);
     return size;
