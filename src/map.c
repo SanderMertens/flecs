@@ -97,12 +97,13 @@ ecs_map_t *alloc_map(
     alloc_buffer(result, bucket_count);
     result->count = 0;
     result->min = bucket_count;
-    result->nodes = ecs_vector_new(&result->node_params, ECS_MAP_INITIAL_NODE_COUNT);
     result->node_params = (ecs_vector_params_t){
-        .element_size = data_size,
+        .element_size = data_size + sizeof(ecs_map_node_t),
         .move_action = move_node
     };
 
+    result->nodes = ecs_vector_new(&result->node_params, ECS_MAP_INITIAL_NODE_COUNT);
+    
     return result;
 }
 
@@ -557,5 +558,5 @@ void* ecs_map_next_w_size(
 uint32_t ecs_map_data_size(
     ecs_map_t *map)
 {
-    return map->node_params.element_size;
+    return map->node_params.element_size - sizeof(ecs_map_node_t);
 }
