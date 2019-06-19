@@ -146,6 +146,7 @@ ecs_type_t register_type(
     uint32_t count)
 {
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(count < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
 
     ecs_type_t result = ecs_type_from_array(array, count);
     link->type = result;
@@ -214,6 +215,8 @@ ecs_type_t find_or_create_type(
     ecs_type_t type = NULL;
     ecs_entity_t offset = 0;
     uint32_t i;
+
+    ecs_assert(count < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
@@ -421,6 +424,7 @@ ecs_type_t ecs_type_merge_intern(
 
     ecs_entity_t *buf_new = NULL; 
     if (cur_count + add_count) {
+        ecs_assert((cur_count + add_count) < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
         buf_new = ecs_os_alloca(ecs_entity_t, cur_count + add_count);
     }
 

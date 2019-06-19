@@ -36,6 +36,13 @@
 #define ECS_SYSTEM_INITIAL_TABLE_COUNT (0)
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
+/* This is _not_ the max number of entities that can be of a given type. This 
+ * constant defines the maximum number of components, prefabs and parents can be
+ * in one type. This limit serves two purposes: detect errors earlier (assert on
+ * very large types) and allow for more efficient allocation strategies (like
+ * using alloca for temporary buffers). */
+#define ECS_MAX_ENTITIES_IN_TYPE (256)
+
 #define ECS_WORLD_MAGIC (0x65637377)
 #define ECS_THREAD_MAGIC (0x65637374)
 
