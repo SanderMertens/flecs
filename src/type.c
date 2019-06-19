@@ -244,9 +244,14 @@ ecs_type_t find_or_create_type(
                 }
             } else {
                 node_array = ecs_vector_first(node->nodes);
+                node = &node_array[rel];
+                type = node->link.type;
+                
+                if (!type) {
+                    type = register_type(world, stage, &node->link, array, count);
+                }
             }
 
-            node = &node_array[rel];
         } else {
             if (!node->types) {
                 if (create) {
@@ -280,7 +285,6 @@ ecs_type_t find_or_create_type(
     
     ecs_assert(!create || type != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!type || ecs_vector_count(type) == count, ECS_INTERNAL_ERROR, NULL);
-
 
     return type;
 }
