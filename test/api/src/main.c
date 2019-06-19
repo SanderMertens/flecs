@@ -420,7 +420,6 @@ void Type_type_of_2_tostr_no_id(void);
 void Type_type_redefine(void);
 void Type_type_from_array(void);
 void Type_type_from_array_unsorted(void);
-void Type_vector_from_type(void);
 void Type_type_has(void);
 void Type_type_has_not(void);
 void Type_zero_type_has_not(void);
@@ -2145,7 +2144,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Type",
-        .testcase_count = 17,
+        .testcase_count = 16,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_of_1_tostr",
@@ -2170,10 +2169,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_from_array_unsorted",
                 .function = Type_type_from_array_unsorted
-            },
-            {
-                .id = "vector_from_type",
-                .function = Type_vector_from_type
             },
             {
                 .id = "type_has",

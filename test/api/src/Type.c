@@ -97,26 +97,6 @@ void Type_type_from_array_unsorted() {
     ecs_fini(world);
 }
 
-
-void Type_vector_from_type() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_TYPE(world, Type, Position, Velocity);
-
-    ecs_vector_t *vector = ecs_type_get_vector(world, ecs_type(Type));
-    test_assert(vector != NULL);
-    test_int(ecs_vector_count(vector), 2);
-
-    ecs_entity_t *entities = ecs_vector_first(vector);
-    test_int(entities[0], ecs_entity(Position));
-    test_int(entities[1], ecs_entity(Velocity));
-
-    ecs_fini(world);
-}
-
 void Type_type_has() {
     ecs_world_t *world = ecs_init();
 
@@ -217,12 +197,10 @@ void Type_type_merge() {
     ECS_TYPE(world, Type2, Mass);
 
     ecs_type_t t = ecs_type_merge(world, ecs_type(Type1), ecs_type(Type2), 0);
+    test_assert(t != NULL);
+    test_int( ecs_vector_count(t), 3);
 
-    ecs_vector_t *v = ecs_type_get_vector(world, t);
-    test_assert(v != NULL);
-    test_int( ecs_vector_count(v), 3);
-
-    ecs_entity_t *entities = ecs_vector_first(v);
+    ecs_entity_t *entities = ecs_vector_first(t);
     test_int(entities[0], ecs_entity(Position));
     test_int(entities[1], ecs_entity(Velocity));
     test_int(entities[2], ecs_entity(Mass));
@@ -241,12 +219,10 @@ void Type_type_merge_overlap() {
     ECS_TYPE(world, Type2, Velocity, Mass);
 
     ecs_type_t t = ecs_type_merge(world, ecs_type(Type1), ecs_type(Type2), 0);
+    test_assert(t != NULL);
+    test_int( ecs_vector_count(t), 3);
 
-    ecs_vector_t *v = ecs_type_get_vector(world, t);
-    test_assert(v != NULL);
-    test_int( ecs_vector_count(v), 3);
-
-    ecs_entity_t *entities = ecs_vector_first(v);
+    ecs_entity_t *entities = ecs_vector_first(t);
     test_int(entities[0], ecs_entity(Position));
     test_int(entities[1], ecs_entity(Velocity));
     test_int(entities[2], ecs_entity(Mass));
@@ -269,12 +245,10 @@ void Type_type_merge_overlap_w_flag() {
     ecs_type_t type2 = ecs_type_find(world, type2_entities, 2);
 
     ecs_type_t t = ecs_type_merge(world, ecs_type(Type1), type2, 0);
+    test_assert(t != NULL);
+    test_int( ecs_vector_count(t), 3);
 
-    ecs_vector_t *v = ecs_type_get_vector(world, t);
-    test_assert(v != NULL);
-    test_int( ecs_vector_count(v), 3);
-
-    ecs_entity_t *entities = ecs_vector_first(v);
+    ecs_entity_t *entities = ecs_vector_first(t);
     test_int(entities[0], ecs_entity(Position));
     test_int(entities[1], ecs_entity(Velocity) | ECS_ADD_PREFAB);
     test_int(entities[2], ecs_entity(Mass));
@@ -300,12 +274,10 @@ void Type_type_merge_overlap_w_flags_from_both() {
     ecs_type_t type2 = ecs_type_find(world, type2_entities, 2);
 
     ecs_type_t t = ecs_type_merge(world, ecs_type(Type1), type2, 0);
+    test_assert(t != NULL);
+    test_int( ecs_vector_count(t), 3);
 
-    ecs_vector_t *v = ecs_type_get_vector(world, t);
-    test_assert(v != NULL);
-    test_int( ecs_vector_count(v), 3);
-
-    ecs_entity_t *entities = ecs_vector_first(v);
+    ecs_entity_t *entities = ecs_vector_first(t);
     test_int(entities[0], ecs_entity(Position));
     test_int(entities[1], ecs_entity(Velocity) | ECS_ADD_PARENT | ECS_ADD_PREFAB);
     test_int(entities[2], ecs_entity(Mass));
