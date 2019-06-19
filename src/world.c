@@ -53,6 +53,29 @@ int compare_handle(
     return *(ecs_entity_t*)p1 - *(ecs_entity_t*)p2;
 }
 
+static
+uint32_t lookup_table_id(
+    ecs_stage_t *stage,
+    ecs_type_t type)
+{
+    uint32_t result;
+
+    if (ecs_map_has(stage->table_index, (uintptr_t)type, &result)) {
+        return result;
+    } else {
+        return 0;
+    }
+}
+
+static
+void set_table_id(
+    ecs_stage_t *stage,
+    ecs_type_t type,
+    uint32_t table_id)
+{
+    ecs_map_set32(stage->table_index, (uintptr_t)type, (int32_t){table_id});
+}
+
 /** Bootstrap builtin component types and commonly used types */
 static
 void bootstrap_types(
@@ -115,7 +138,7 @@ ecs_table_t* bootstrap_component_table(
 
     ecs_assert(index == 0, ECS_INTERNAL_ERROR, "first table index must be 0");
 
-    ecs_map_set32(stage->table_index, (uintptr_t)world->t_component, (int32_t){1});
+    set_table_id(stage, world->t_component, 1);
 
     return result;
 }
@@ -196,7 +219,8 @@ ecs_table_t* create_table(
     }
 
     uint32_t index = ecs_vector_get_index(stage->tables, &table_arr_params, result);
-    ecs_map_set32(stage->table_index, (uintptr_t)type, (int32_t){index + 1});
+
+    set_table_id(stage, type, index + 1);
 
     if (stage == &world->main_stage && !world->is_merging) {
         ecs_notify_systems_of_table(world, result);
@@ -232,20 +256,20 @@ ecs_table_t* ecs_world_get_table(
     ecs_type_t type)
 {
     ecs_stage_t *main_stage = &world->main_stage;
-    uint32_t table_index = ecs_map_get64(main_stage->table_index, (uintptr_t)type);
-
-    if (!table_index && world->in_progress) {
+    uint32_t table_id = lookup_table_id(main_stage, type);
+    
+    if (!table_id && world->in_progress) {
         assert(stage != NULL);
-        table_index = ecs_map_get64(stage->table_index, (uintptr_t)type);
-        if (table_index) {
+        table_id = lookup_table_id(stage, type);
+        if (table_id) {
             return ecs_vector_get(
-                stage->tables, &table_arr_params, table_index - 1);
+                stage->tables, &table_arr_params, table_id - 1);
         }
     }
 
-    if (table_index) {
+    if (table_id) {
         return ecs_vector_get(
-            main_stage->tables, &table_arr_params, table_index - 1);
+            main_stage->tables, &table_arr_params, table_id - 1);
     } else {
         return create_table(world, stage, type);
     }
