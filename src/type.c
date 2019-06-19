@@ -149,7 +149,12 @@ ecs_type_t register_type(
 
     ecs_type_t result = ecs_type_from_array(array, count);
     link->type = result;
+
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vector_count(result) == count, ECS_INTERNAL_ERROR, NULL);
+
     notify_systems_of_type(world, stage, result);
+
     return result;
 }
 
@@ -190,7 +195,7 @@ ecs_type_t find_type_in_vector(
     /* Type has not been found, add it */
     if (create) {
         ecs_type_link_t *link = ecs_vector_add(&vector, &link_params);
-        return register_type(world, stage, link, array, count);;
+        return register_type(world, stage, link, array, count);
     }
     
     return NULL;
@@ -206,6 +211,7 @@ ecs_type_t find_or_create_type(
     bool create)
 {
     ecs_type_node_t *node = root;
+    ecs_type_t type = NULL;
     ecs_entity_t offset = 0;
     uint32_t i;
 
@@ -229,7 +235,7 @@ ecs_type_t find_or_create_type(
                         (rel - node_count + 1) * sizeof(ecs_type_node_t));
 
                     /* Register new type */
-                    register_type(world, stage, &node_array[rel].link, array, i);
+                    type = register_type(world, stage, &node_array[rel].link, array, count);
                 } else {
                     return NULL;
                 }
@@ -259,20 +265,21 @@ ecs_type_t find_or_create_type(
                 }
             }
 
-            ecs_type_t type = find_type_in_vector(
+            type = find_type_in_vector(
                 world, stage, node->types[index], array, count, create);
-            if (!type) {
+            if (create && !type) {
                 return NULL;
             }
-
         }
         
         offset = e;
     }
+    
+    ecs_assert(!create || type != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!type || ecs_vector_count(type) == count, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    return node->link.type;
+    return type;
 }
 
 static
@@ -333,6 +340,8 @@ ecs_type_t ecs_type_find_intern(
     }
 
     ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_assert(ecs_vector_count(type) == count, ECS_INTERNAL_ERROR, NULL);
 
     return type;
 }

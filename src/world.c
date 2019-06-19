@@ -59,6 +59,7 @@ void bootstrap_types(
     ecs_world_t *world)
 {
     ecs_stage_t *stage = &world->main_stage;
+    
     TEcsComponent = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsComponent}, 1);
     TEcsTypeComponent = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsTypeComponent}, 1);
     TEcsPrefab = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsPrefab}, 1);
@@ -74,9 +75,14 @@ void bootstrap_types(
     world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsId, 0);
     world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsId, 0);
     world->t_prefab = ecs_type_merge_intern(world, stage, TEcsPrefab, TEcsId, 0);
-    world->t_prefab = ecs_type_merge_intern(world, stage, world->t_prefab, TEcsDisabled, 0);
     world->t_row_system = ecs_type_merge_intern(world, stage, TEcsRowSystem, TEcsId, 0);
     world->t_col_system = ecs_type_merge_intern(world, stage, TEcsColSystem, TEcsId, 0);
+
+    ecs_assert(ecs_vector_count(world->t_component) == 2, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vector_count(world->t_type) == 2, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vector_count(world->t_prefab) == 2, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vector_count(world->t_row_system) == 2, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vector_count(world->t_col_system) == 2, ECS_INTERNAL_ERROR, NULL);
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -86,12 +92,15 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
+    ecs_assert(world->t_component != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_stage_t *stage = &world->main_stage;
     ecs_table_t *result = ecs_vector_add(&stage->tables, &table_arr_params);
     result->type = world->t_component;
     result->frame_systems = NULL;
     result->flags = 0;
     result->columns = ecs_os_malloc(sizeof(ecs_table_column_t) * 3);
+    
     ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->columns[0].data = ecs_vector_new(&handle_arr_params, 12);
