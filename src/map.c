@@ -419,7 +419,7 @@ bool ecs_map_has(
         ecs_map_node_t *elem = get_node(map, bucket, key_hash);
         if (elem) {
             if (value_out) {
-                *(void**)value_out = get_node_data(elem);
+                memcpy(value_out, get_node_data(elem), data_size(map));
             }
             return true;
         }

@@ -71,6 +71,8 @@ void* get_row_ptr(
     int32_t index,
     ecs_entity_t component)
 {
+    ecs_assert(ecs_vector_count(type) < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
+
     int16_t column_index = ecs_type_index_of(type, component);
     if (column_index == -1) {
         return NULL;
@@ -138,6 +140,10 @@ bool update_info(
 
     ecs_row_t row;
     if (stage_has_entity(stage, entity, &row)) {
+        ecs_assert(row.type != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_vector_count(row.type) < ECS_MAX_ENTITIES_IN_TYPE, 
+            ECS_TYPE_TOO_LARGE, NULL);
+
         ecs_table_t *table = ecs_world_get_table(world, stage, row.type);
         info->table = table;
 

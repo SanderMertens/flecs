@@ -94,6 +94,8 @@ const char* ecs_strerror(
         return "failed to create thread";
     case ECS_MISSING_OS_API:
         return "missing implementation for OS API function";
+    case ECS_TYPE_TOO_LARGE:
+        return "type contains too many entities";
     }
 
     return "unknown error code";
