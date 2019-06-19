@@ -18,6 +18,13 @@ struct ecs_map_t {
     uint32_t min;           /* minimum number of elements */
 };
 
+static
+size_t data_size(
+    ecs_map_t *map)
+{
+    return map->node_params.element_size - sizeof(ecs_map_node_t);
+}
+
 /** Get map node from index */
 static
 ecs_map_node_t *node_from_index(
@@ -136,10 +143,13 @@ void set_node_data(
     ecs_map_node_t *node,
     const void *data)
 {
-    if (data) {
-        memcpy(get_node_data(node), data, map->node_params.element_size);
-    } else {
-        memset(get_node_data(node), 0, map->node_params.element_size);
+    void *node_data = get_node_data(node);
+    if (data != node_data) { 
+        if (data) {
+            memcpy(node_data, data, data_size(map));
+        } else {
+            memset(node_data, 0, data_size(map));
+        }
     }
 }
 
@@ -387,7 +397,7 @@ void* ecs_map_get_w_size(
     uint64_t key,
     size_t size)
 {
-    ecs_assert(size == map->node_params.element_size, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(size == data_size(map), ECS_INTERNAL_ERROR, NULL);
     return ecs_map_get(map, key);
 }
 
@@ -527,7 +537,7 @@ void* ecs_map_next_w_key_w_size(
     size_t size)
 {
     ecs_map_t *map = iter_data->map;
-    ecs_assert(!size || map->node_params.element_size == size, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!size || data_size(map) == size, ECS_INTERNAL_ERROR, NULL);
 
     ecs_map_node_t *node_p = node_from_index(map, map->nodes, iter_data->node);
     assert(node_p != NULL);
@@ -558,5 +568,5 @@ void* ecs_map_next_w_size(
 uint32_t ecs_map_data_size(
     ecs_map_t *map)
 {
-    return map->node_params.element_size - sizeof(ecs_map_node_t);
+    return data_size(map);
 }
