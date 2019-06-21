@@ -18,7 +18,7 @@ ecs_entity_t components_contains(
     for (i = 0; i < count; i ++) {
         ecs_entity_t entity = array[i];
 
-        ecs_row_t *row = ecs_map_getptr(world->main_stage.entity_index, entity);
+        ecs_row_t *row = ecs_map_get_ptr(world->main_stage.entity_index, entity);
         ecs_assert(row != 0, ECS_INTERNAL_ERROR, NULL);
 
         ecs_entity_t component = ecs_type_contains(
@@ -68,7 +68,8 @@ ecs_entity_t ecs_get_entity_for_component(
     ecs_entity_t component)
 {
     if (entity) {
-        ecs_row_t *row = ecs_map_getptr(world->main_stage.entity_index, entity);
+        ecs_row_t *row = ecs_map_get_ptr(world->main_stage.entity_index, entity);
+        ecs_assert(row != NULL, ECS_INTERNAL_ERROR, NULL);
         type = row->type;
     }
 

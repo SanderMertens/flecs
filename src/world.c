@@ -73,7 +73,7 @@ void set_table_id(
     ecs_type_t type,
     uint32_t table_id)
 {
-    ecs_map_set32(stage->table_index, (uintptr_t)type, (int32_t){table_id});
+    ecs_map_set(stage->table_index, (uintptr_t)type, &(int32_t){table_id});
 }
 
 /** Bootstrap builtin component types and commonly used types */
@@ -467,11 +467,11 @@ ecs_entity_t get_prefab_parent_flag(
     ecs_world_t *world,
     ecs_entity_t prefab)
 {
-    ecs_entity_t flag = ecs_map_get64(world->prefab_parent_index, prefab);
-    if (!flag) {
+    ecs_entity_t flag;
+    if (!ecs_map_has(world->prefab_parent_index, prefab, &flag)) {
         flag = ecs_new(world, EcsPrefabParent);
         ecs_set(world, flag, EcsPrefabParent, {.parent = prefab});
-        ecs_map_set64(world->prefab_parent_index, prefab, flag);
+        ecs_map_set(world->prefab_parent_index, prefab, &flag);
     }
 
     return flag;

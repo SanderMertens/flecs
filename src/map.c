@@ -298,11 +298,14 @@ void ecs_map_free(
     ecs_os_free(map);
 }
 
-void* ecs_map_set(
+void* _ecs_map_set(
     ecs_map_t *map,
     uint64_t key,
-    const void *data)
+    const void *data,
+    uint32_t size)
 {
+    ecs_assert(ecs_map_data_size(map) == size, ECS_INVALID_PARAMETERS, NULL);
+
     uint32_t bucket_count = map->bucket_count;
     if (!bucket_count) {
         alloc_buffer(map, 2);
@@ -373,7 +376,7 @@ int ecs_map_remove(
     return -1;
 }
 
-void* ecs_map_get(
+void* ecs_map_get_ptr(
     ecs_map_t *map,
     uint64_t key)
 {
@@ -392,19 +395,11 @@ void* ecs_map_get(
     return 0;
 }
 
-void* ecs_map_get_w_size(
-    ecs_map_t *map,
-    uint64_t key,
-    size_t size)
-{
-    ecs_assert(size == data_size(map), ECS_INTERNAL_ERROR, NULL);
-    return ecs_map_get(map, key);
-}
-
-bool ecs_map_has(
+bool _ecs_map_has(
     ecs_map_t *map,
     uint64_t key_hash,
-    void *value_out)
+    void *value_out,
+    uint32_t size)
 {
     if (!map) {
         return false;
@@ -413,6 +408,8 @@ bool ecs_map_has(
     if (!map->count) {
         return false;
     }
+
+    ecs_assert(ecs_map_data_size(map) == size, ECS_INVALID_PARAMETERS, NULL); 
 
     uint32_t *bucket = get_bucket(map, key_hash);
     if (*bucket) {

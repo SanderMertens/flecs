@@ -148,7 +148,7 @@ bool update_info(
         info->table = table;
 
         if (world->in_progress && stage != &world->main_stage) {
-            info->columns = ecs_map_get(stage->data_stage, (uintptr_t)row.type);
+            ecs_map_has(stage->data_stage, (uintptr_t)row.type, &info->columns);
         } else {
             info->columns = table->columns;
         }
@@ -508,7 +508,7 @@ uint32_t commit(
      * stage once the merge takes place. */
     if (in_progress) {
         /* Update remove type. Add to_remove, and subtract to_add. */
-        ecs_type_t *rm_type_ptr = ecs_map_get(stage->remove_merge, entity);
+        ecs_type_t *rm_type_ptr = ecs_map_get_ptr(stage->remove_merge, entity);
         ecs_type_t remove_type = rm_type_ptr ? *rm_type_ptr : NULL;
 
         /* If remove_type and to_remove are 0, the result of the merge is going
@@ -520,7 +520,7 @@ uint32_t commit(
             if (rm_type_ptr) {
                 *rm_type_ptr = remove_type;
             } else if (remove_type) {
-                ecs_map_setptr(stage->remove_merge, entity, remove_type);
+                ecs_map_set(stage->remove_merge, entity, &remove_type);
             } else {
                 /* If the result is 0, remove entity from remove stage which
                  * reduces the work required during the merge */
@@ -543,7 +543,7 @@ uint32_t commit(
         old_index = info->index;
         
         if (in_progress) {
-            old_columns = ecs_map_get(stage->data_stage, (uintptr_t)old_type);
+            ecs_map_has(stage->data_stage, (uintptr_t)old_type, &old_columns);
         } else {
             old_columns = old_table->columns;
         }
@@ -613,7 +613,7 @@ uint32_t commit(
         if (in_progress) {
             /* The entity must be kept in the stage index because otherwise the
              * merge doesn't know that it needs to merge data for the entity */
-            ecs_map_set(entity_index, entity, &(ecs_row_t){0, 0});
+            ecs_map_set(entity_index, entity, &((ecs_row_t){0, 0}));
         } else {
             ecs_map_remove(entity_index, entity);
         }
@@ -740,8 +740,8 @@ void* ecs_get_ptr_intern(
         if (ptr) {
             /* If component is in to remove type, it has been removed while in
              * progress. Return NULL if so. */
-            ecs_type_t to_remove = ecs_map_getptr(stage->remove_merge, entity);
-            if (to_remove) {
+            ecs_type_t to_remove;
+            if (ecs_map_has(stage->remove_merge, entity, &to_remove)) {
                 if (ecs_type_has_entity_intern(
                     world, stage, to_remove, component, false)) 
                 {
@@ -793,10 +793,10 @@ ecs_type_t ecs_notify(
     int32_t offset,
     int32_t limit)
 {
-    ecs_vector_t *systems = ecs_map_get(index, (uintptr_t)type);
+    ecs_vector_t *systems;
     ecs_type_t modified = 0;
 
-    if (systems) {
+    if (ecs_map_has(index, (uintptr_t)type, &systems)) {
         ecs_entity_t *buffer = ecs_vector_first(systems);
         uint32_t i, count = ecs_vector_count(systems);
 
@@ -829,7 +829,9 @@ void ecs_merge_entity(
         old_table = ecs_world_get_table(world, stage, old_row.type);
     }
 
-    ecs_type_t to_remove = ecs_map_getptr(stage->remove_merge, entity);
+    ecs_type_t to_remove = NULL;
+    ecs_map_has(stage->remove_merge, entity, &to_remove);
+
     ecs_type_t staged_id = staged_row->type;    
     ecs_type_t type = ecs_type_merge_intern(
         world, stage, old_row.type, staged_row->type, to_remove);
@@ -849,9 +851,8 @@ void ecs_merge_entity(
         assert(new_table != NULL);
 
         ecs_table_t *staged_table = ecs_world_get_table(world, stage, staged_id);
-        ecs_table_column_t *staged_columns = ecs_map_get(
-            stage->data_stage, (uintptr_t)staged_row->type);
-
+        ecs_table_column_t *staged_columns = NULL;
+        ecs_map_has(stage->data_stage, (uintptr_t)staged_row->type, &staged_columns);
         ecs_assert(staged_columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (new_index < 0) {
@@ -1087,12 +1088,12 @@ void ecs_delete(
          * ensure that subsequent calls to ecs_has, ecs_get and ecs_is_empty will
          * behave consistently with the delete. */
         if (stage_has_entity(&world->main_stage, entity, &row)) {
-            ecs_map_set64(stage->remove_merge, entity, row.type);
+            ecs_map_set(stage->remove_merge, entity, &row.type);
         }
 
         /* Remove the entity from the staged index. Any added components while
          * in progress will be discarded as a result. */
-        ecs_map_set(stage->entity_index, entity, &(ecs_row_t){0, 0});
+        ecs_map_set(stage->entity_index, entity, &((ecs_row_t){0, 0}));
     }
 }
 
@@ -1127,7 +1128,7 @@ ecs_entity_t ecs_clone(
                 ecs_table_t *to_table = ecs_world_get_table(world, stage, type);
 
                 if (world->in_progress) {
-                    to_columns = ecs_map_get(stage->data_stage, (uintptr_t)type);
+                    ecs_map_has(stage->data_stage, (uintptr_t)type, &to_columns);
                 } else {
                     to_columns = to_table->columns;
                 }
@@ -1457,7 +1458,8 @@ bool ecs_is_empty(
 
     if (world->in_progress) {
         ecs_row_t to_add = row_from_stage(stage, entity);
-        ecs_row_t *to_remove = ecs_map_get(stage->remove_merge, entity);
+        ecs_row_t *to_remove = {0};
+        ecs_map_has(stage->remove_merge, entity, &to_remove);
 
         ecs_type_t result = ecs_type_merge_intern(world, stage, 
             cur.type, to_add.type, to_remove->type);
@@ -1547,7 +1549,9 @@ ecs_type_t ecs_get_type(
     ecs_type_t result = row.type;
 
     if (world->in_progress) {
-        ecs_type_t remove_type = ecs_map_getptr(stage->remove_merge, entity);
+        ecs_type_t remove_type = NULL;
+        ecs_map_has(stage->remove_merge, entity, &remove_type);
+        
         ecs_row_t main_row = row_from_stage(&world->main_stage, entity);
         result = ecs_type_merge_intern(world, stage, main_row.type, result, remove_type);
     }
