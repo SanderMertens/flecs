@@ -37,7 +37,7 @@ void match_type(
         *new_elem = system;
 
         /* Always set the system entry, as array may have been realloc'd */
-        ecs_map_setptr(index, (uintptr_t)type, systems);
+        ecs_map_set(index, (uintptr_t)type, &systems);
     }
 }
 

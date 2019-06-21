@@ -617,9 +617,8 @@ int32_t ecs_type_container_depth(
     ecs_entity_t *array = ecs_vector_first(type);
 
     for (i = 0; i < count; i ++) {
-        uint64_t row64 = ecs_map_get64(world->main_stage.entity_index, array[i]);
-        if (row64) {
-            ecs_row_t row = ecs_to_row(row64);
+        ecs_row_t row;
+        if (ecs_map_has(world->main_stage.entity_index, array[i], &row)) {
             ecs_type_t c_type = row.type;
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type);
@@ -667,10 +666,9 @@ ecs_entity_t ecs_new_type(
         return 0;
     }
 
-    ecs_entity_t type_entity = ecs_map_get64(
-        world->type_handles, (uintptr_t)type.type);
+    ecs_entity_t type_entity;
 
-    if (type_entity) {
+    if (ecs_map_has(world->type_handles, (uintptr_t)type.type, &type_entity)) {
         EcsId *id_ptr = ecs_get_ptr(world, type_entity, EcsId);
 
         ecs_assert(id_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -687,7 +685,7 @@ ecs_entity_t ecs_new_type(
             .type = type.type, .resolved = type.resolved
         });
 
-        ecs_map_set64(world->type_handles, (uintptr_t)type.type, result);
+        ecs_map_set(world->type_handles, (uintptr_t)type.type, &result);
 
         return result;
     }
