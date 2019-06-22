@@ -238,7 +238,15 @@ ecs_type_t find_or_create_type(
                         (rel - node_count + 1) * sizeof(ecs_type_node_t));
 
                     /* Register new type */
-                    type = register_type(world, stage, &node_array[rel].link, array, count);
+                    node = &node_array[rel];
+
+                    type = register_type(
+                        world, stage, &node->link, array, i + 1);
+
+                    ecs_assert(
+                        ecs_vector_count(type) == i + 1, 
+                        ECS_INTERNAL_ERROR, 
+                        NULL);
                 } else {
                     return NULL;
                 }
@@ -248,7 +256,8 @@ ecs_type_t find_or_create_type(
                 type = node->link.type;
                 
                 if (!type) {
-                    type = register_type(world, stage, &node->link, array, count);
+                    type = register_type(
+                        world, stage, &node->link, array, i + 1);
                 }
             }
 
@@ -566,10 +575,9 @@ ecs_entity_t ecs_type_contains(
         } else {
             if (!match_all) return e1;
             i_1 ++;
-            if (i_1 >= t1_count) {
-                return 0;
+            if (i_1 < t1_count) {
+                e1 = t1_array[i_1];
             }
-            e1 = t1_array[i_1];
         }
     }
 
@@ -783,6 +791,10 @@ ecs_entity_t ecs_type_get_entity(
     uint32_t index)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
+    if (!type) {
+        return 0;
+    }
     
     ecs_entity_t *array = ecs_vector_first(type);
 

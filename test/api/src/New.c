@@ -74,6 +74,7 @@ void New_type_w_2_types() {
     ECS_TYPE(world, Type_3, Type_1, Type_2);
 
     ecs_entity_t e = ecs_new(world, Type_3);
+
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
