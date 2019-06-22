@@ -100,13 +100,13 @@ void ecs_stage_init(
     stage->entity_index = ecs_map_new(0, sizeof(ecs_row_t));
 
     if (is_main_stage) {
-
+        stage->last_link = &world->main_stage.type_root.link;
     } else if (is_temp_stage) {
         stage->type_root = world->main_stage.type_root;
         stage->last_link = world->main_stage.last_link;
     } else {
-        /* Leave initialized to 0 */
     }
+    
 
     stage->table_index = ecs_map_new(0, sizeof(int32_t));
     if (is_main_stage) {

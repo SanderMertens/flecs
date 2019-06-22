@@ -151,6 +151,11 @@ ecs_type_t register_type(
     ecs_type_t result = ecs_type_from_array(array, count);
     link->type = result;
 
+    if (stage->last_link) {
+        stage->last_link->next = link;
+        stage->last_link = link;
+    }
+
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_vector_count(result) == count, ECS_INTERNAL_ERROR, NULL);
 
@@ -221,25 +226,29 @@ ecs_type_t find_or_create_type(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
         ecs_entity_t rel = e - offset;
-        uint32_t node_count = ecs_vector_count(node->nodes);
 
         /* Lookup next node in nodes array */
         if (rel < ECS_TYPE_DB_MAX_CHILD_NODES) {
             ecs_type_node_t *node_array = NULL;
 
-            if (rel >= node_count) {
-                if (create) {
-                    /* Grow number of nodes */
-                    ecs_vector_set_count(&node->nodes, &type_node_params, rel + 1);
-                    node_array = ecs_vector_first(node->nodes);
-                    memset(
-                        &node_array[node_count],
-                        0, 
-                        (rel - node_count + 1) * sizeof(ecs_type_node_t));
+            if (!node->nodes && create) {
+                /* Create vector */
+                ecs_vector_set_count(&node->nodes, &type_node_params, 
+                    ECS_TYPE_DB_MAX_CHILD_NODES);
 
-                    /* Register new type */
-                    node = &node_array[rel];
+                node_array = ecs_vector_first(node->nodes);
 
+                memset(node_array, 0, 
+                    ECS_TYPE_DB_MAX_CHILD_NODES * sizeof(ecs_type_node_t));
+            } else {
+                node_array = ecs_vector_first(node->nodes);
+            }
+            
+            if (node_array) {
+                node = &node_array[rel];
+                type = node->link.type;
+                
+                if (!type && create) {
                     type = register_type(
                         world, stage, &node->link, array, i + 1);
 
@@ -247,18 +256,9 @@ ecs_type_t find_or_create_type(
                         ecs_vector_count(type) == i + 1, 
                         ECS_INTERNAL_ERROR, 
                         NULL);
-                } else {
-                    return NULL;
                 }
             } else {
-                node_array = ecs_vector_first(node->nodes);
-                node = &node_array[rel];
-                type = node->link.type;
-                
-                if (!type) {
-                    type = register_type(
-                        world, stage, &node->link, array, i + 1);
-                }
+                type = NULL;
             }
 
         } else {
@@ -293,7 +293,7 @@ ecs_type_t find_or_create_type(
     }
     
     ecs_assert(!create || type != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!type || ecs_vector_count(type) == count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!create || ecs_vector_count(type) == count, ECS_INTERNAL_ERROR, NULL);
 
     return type;
 }
