@@ -1451,23 +1451,7 @@ bool ecs_is_empty(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-    ecs_stage_t *stage = ecs_get_stage(&world);
-
-    ecs_row_t cur = row_from_stage(&world->main_stage, entity);
-
-    if (world->in_progress) {
-        ecs_row_t to_add = row_from_stage(stage, entity);
-        ecs_row_t *to_remove = {0};
-        ecs_map_has(stage->remove_merge, entity, &to_remove);
-
-        ecs_type_t result = ecs_type_merge_intern(world, stage, 
-            cur.type, to_add.type, to_remove->type);
-
-        return result == 0;   
-    } else {
-        return cur.type == 0;
-    }
+    return ecs_get_type(world, entity) == NULL;
 }
 
 ecs_type_t ecs_type_from_entity(
