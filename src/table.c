@@ -73,7 +73,7 @@ ecs_table_column_t* ecs_table_get_columns(
         if (!ecs_map_has(stage->data_stage, (uintptr_t)type, &columns)) {
             ecs_type_t type = table->type;
             columns = new_columns(world, stage, type);
-            ecs_map_set(stage->data_stage, (uintptr_t)type, columns);
+            ecs_map_set(stage->data_stage, (uintptr_t)type, &columns);
         }
 
         return columns;
