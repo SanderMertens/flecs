@@ -409,7 +409,7 @@ bool _ecs_map_has(
         return false;
     }
 
-    ecs_assert(ecs_map_data_size(map) == size, ECS_INVALID_PARAMETERS, NULL); 
+    ecs_assert(!value_out || (ecs_map_data_size(map) == size), ECS_INVALID_PARAMETERS, NULL); 
 
     uint32_t *bucket = get_bucket(map, key_hash);
     if (*bucket) {

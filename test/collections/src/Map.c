@@ -14,7 +14,7 @@ void fill_map(
     int i, count = sizeof(elems) / sizeof(struct elem);
 
     for (i = 0; i < count; i ++) {
-        ecs_map_set(map, elems[i].hash, elems[i].value);
+        ecs_map_set(map, elems[i].hash, &elems[i].value);
     }
 }
 
@@ -23,157 +23,160 @@ void Map_setup() {
 }
 
 void Map_count() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     fill_map(map);
     test_int(ecs_map_count(map), 4);
     ecs_map_free(map);
 }
 
 void Map_count_empty() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     test_int(ecs_map_count(map), 0);
     ecs_map_free(map);
 }
 
 void Map_set_overwrite() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     fill_map(map);
-    ecs_map_set(map, 1, "foobar");
-    char *value = ecs_map_get(map, 1);
+    ecs_map_set(map, 1, &(char*){"foobar"});
+    char *value;
+    test_bool(ecs_map_has(map, 1, &value), true);
     test_str(value, "foobar");
     ecs_map_free(map);
 }
 
 void Map_set_rehash() {
-    ecs_map_t *map = ecs_map_new(8);
+    ecs_map_t *map = ecs_map_new(8, sizeof(char*));
     fill_map(map);
 
     test_int(ecs_map_bucket_count(map), 10);
 
     int i;
     for (i = 5; i < 10; i ++) {
-        ecs_map_set(map, i, "zzz");
+        ecs_map_set(map, i, &(char*){"zzz"});
     }
 
     test_int(ecs_map_bucket_count(map), 20);
-    test_str(ecs_map_get(map, 1), "hello");
-    test_str(ecs_map_get(map, 2), "world");
-    test_str(ecs_map_get(map, 3), "foo");
-    test_str(ecs_map_get(map, 4), "bar");
-    test_str(ecs_map_get(map, 5), "zzz");
-    test_str(ecs_map_get(map, 6), "zzz");
-    test_str(ecs_map_get(map, 7), "zzz");
+    test_str(*(char**)ecs_map_get_ptr(map, 1), "hello");
+    test_str(*(char**)ecs_map_get_ptr(map, 2), "world");
+    test_str(*(char**)ecs_map_get_ptr(map, 3), "foo");
+    test_str(*(char**)ecs_map_get_ptr(map, 4), "bar");
+    test_str(*(char**)ecs_map_get_ptr(map, 5), "zzz");
+    test_str(*(char**)ecs_map_get_ptr(map, 6), "zzz");
+    test_str(*(char**)ecs_map_get_ptr(map, 7), "zzz");
 
     ecs_map_free(map);
 }
 
 void Map_set_zero_buckets() {
-    ecs_map_t *map = ecs_map_new(0);
-    ecs_map_set(map, 1, "hello");
+    ecs_map_t *map = ecs_map_new(0, sizeof(char*));
+    ecs_map_set(map, 1, &(char*){"hello"});
     test_int(ecs_map_count(map), 1);
     ecs_map_free(map);
 }
 
 void Map_get() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     fill_map(map);
-    char *value = ecs_map_get(map, 1);
+    char *value;
+    test_bool( ecs_map_has(map, 1, &value), true);
     test_str(value, "hello");
     ecs_map_free(map);
 }
 
 void Map_get_all() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     fill_map(map);
 
-    char *value = ecs_map_get(map, 1);
+    char *value;
+    test_bool(ecs_map_has(map, 1, &value), true);
     test_str(value, "hello");
 
-    value = ecs_map_get(map, 2);
+    test_bool(ecs_map_has(map, 2, &value), true);
     test_str(value, "world");
 
-    value = ecs_map_get(map, 3);
+    test_bool(ecs_map_has(map, 3, &value), true);
     test_str(value, "foo");
 
-    value = ecs_map_get(map, 4);
+    test_bool(ecs_map_has(map, 4, &value), true);
     test_str(value, "bar");
 
     ecs_map_free(map);
 }
 
 void Map_get_empty() {
-    ecs_map_t *map = ecs_map_new(16);
-    char *value = ecs_map_get(map, 1);
-    test_assert(value == NULL);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
+    char *value;
+    test_bool(ecs_map_has(map, 1, &value), false);
     ecs_map_free(map);
 }
 
 void Map_get_unknown() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     fill_map(map);
-    char *value = ecs_map_get(map, 5);
-    test_assert(value == NULL);
+    char *value;
+    test_bool(ecs_map_has(map, 5, &value), false);
     ecs_map_free(map);
 }
 
 void Map_iter() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     fill_map(map);
 
     ecs_map_iter_t it = ecs_map_iter(map);
     test_assert(ecs_map_hasnext(&it) == true);
-    test_str(ecs_map_next_ptr(&it), "hello");
+    test_str(*(char**)ecs_map_next(&it), "hello");
 
     test_assert(ecs_map_hasnext(&it) == true);
-    test_str(ecs_map_next_ptr(&it), "world");
+    test_str(*(char**)ecs_map_next(&it), "world");
 
     test_assert(ecs_map_hasnext(&it) == true);
-    test_str(ecs_map_next_ptr(&it), "foo");
+    test_str(*(char**)ecs_map_next(&it), "foo");
 
     test_assert(ecs_map_hasnext(&it) == true);
-    test_str(ecs_map_next_ptr(&it), "bar");
+    test_str(*(char**)ecs_map_next(&it), "bar");
 
     test_assert(ecs_map_hasnext(&it) == false);
 }
 
 void Map_iter_empty() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     ecs_map_iter_t it = ecs_map_iter(map);
     test_assert(!ecs_map_hasnext(&it));
     ecs_map_free(map);
 }
 
 void Map_iter_zero_buckets() {
-    ecs_map_t *map = ecs_map_new(0);
+    ecs_map_t *map = ecs_map_new(0, sizeof(char*));
     ecs_map_iter_t it = ecs_map_iter(map);
     test_assert(!ecs_map_hasnext(&it));
     ecs_map_free(map);
 }
 
 void Map_remove() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     fill_map(map);
     test_assert(ecs_map_remove(map, 3) == 0);
-    test_assert(ecs_map_get(map, 3) == NULL);
+    test_bool(ecs_map_has(map, 3, NULL), false);
     test_int(ecs_map_count(map), 3);
     ecs_map_free(map);
 }
 
 void Map_remove_empty() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     test_assert(ecs_map_remove(map, 3) == -1);
     test_int(ecs_map_count(map), 0);
     ecs_map_free(map);
 }
 
 void Map_remove_unknown() {
-    ecs_map_t *map = ecs_map_new(16);
+    ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     fill_map(map);
     test_assert(ecs_map_remove(map, 5) == -1);
-    test_str(ecs_map_get(map, 1), "hello");
-    test_str(ecs_map_get(map, 2), "world");
-    test_str(ecs_map_get(map, 3), "foo");
-    test_str(ecs_map_get(map, 4), "bar");
+    test_str(*(char**)ecs_map_get_ptr(map, 1), "hello");
+    test_str(*(char**)ecs_map_get_ptr(map, 2), "world");
+    test_str(*(char**)ecs_map_get_ptr(map, 3), "foo");
+    test_str(*(char**)ecs_map_get_ptr(map, 4), "bar");
     test_int(ecs_map_count(map), 4);
     ecs_map_free(map);
 }
