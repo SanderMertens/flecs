@@ -650,7 +650,7 @@ uint32_t commit(
         }
     }
 
-    uint32_t last_count = stage->commit_count ++;
+    uint32_t last_count = ++ stage->commit_count;
     stage->from_type = old_type;
     stage->to_type = type;
 
