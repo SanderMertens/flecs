@@ -327,7 +327,7 @@ int32_t ecs_type_get_prefab(
 
     for (i = n + 1; i < count; i ++) {
         ecs_entity_t e = buffer[i];
-        if (e & ECS_ADD_PREFAB) {
+        if (e & EcsAsPrefab) {
             return i;
         }
     }
@@ -766,7 +766,7 @@ void* ecs_get_ptr_intern(
 
     if (ptr) return ptr;
 
-    if (search_prefab) {
+    if (search_prefab && component != EEcsId && component != EEcsPrefab) {
         if (main_info.table) {
             ptr = get_ptr_from_prefab(world, stage, &main_info, component);
         }
@@ -1252,17 +1252,21 @@ ecs_entity_t _ecs_commit(
         to_add = add_flags_to_type(world, stage, to_add, flags);
     }
     
-    ecs_type_t dst_type = 0;
-    ecs_entity_info_t info = {.entity = entity};
+    if (entity) {
+        ecs_type_t dst_type = 0;
+        ecs_entity_info_t info = {.entity = entity};
 
-    if (populate_info(world, stage, &info)) {
-        dst_type = ecs_type_merge_intern(
-            world, stage, info.table->type, to_add, to_remove);
+        if (populate_info(world, stage, &info)) {
+            dst_type = ecs_type_merge_intern(
+                world, stage, info.table->type, to_add, to_remove);
+        } else {
+            dst_type = to_add;
+        }
+
+        commit(world, stage, &info, dst_type, to_add, to_remove, true);
     } else {
-        dst_type = to_add;
+        entity = _ecs_new(world, to_add);
     }
-
-    commit(world, stage, &info, dst_type, to_add, to_remove, true);
 
     return entity;
 }

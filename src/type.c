@@ -160,7 +160,7 @@ ecs_type_t register_type(
     ecs_assert(ecs_vector_count(result) == count, ECS_INTERNAL_ERROR, NULL);
 
     notify_systems_of_type(world, stage, result);
-
+    
     return result;
 }
 
@@ -276,7 +276,7 @@ ecs_type_t find_or_create_type(
 
             if (!node->types[index]) {
                 if (create) {
-                    node->types[index] = ecs_vector_new(&ptr_params, 1);
+                    node->types[index] = ecs_vector_new(&link_params, 1);
                 } else {
                     return NULL;
                 }
@@ -305,16 +305,17 @@ ecs_entity_t find_entity_in_prefabs(
     ecs_entity_t entity)
 {
     ecs_type_t entity_type = ecs_type_from_entity(world, entity);
-    uint32_t i, count = ecs_vector_count(type);
+    int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type);
 
     /* Walk from back to front, as prefabs are always located
      * at the end of the type. */
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = array[i];
-        if (e & ECS_ADD_PREFAB) {
-            if (_ecs_has(world, e, entity_type)) {
-                return (e & ECS_ENTITY_MASK);
+        if (e & EcsAsPrefab) {
+            ecs_entity_t prefab = e & ECS_ENTITY_MASK;
+            if (_ecs_has(world, prefab, entity_type)) {
+                return prefab;
             }
         } else {
             /* If this is not a prefab, the following entities won't
@@ -542,13 +543,13 @@ ecs_entity_t ecs_type_contains(
     uint32_t t2_count = ecs_vector_count(type_2);
 
     for (i_2 = 0; i_2 < t2_count; i_2 ++) {
-        ecs_entity_t e2 = t2_array[i_2];
+        ecs_entity_t e2 = t2_array[i_2] & ECS_ENTITY_MASK;
 
         if (i_1 >= t1_count) {
             return 0;
         }
 
-        e1 = t1_array[i_1];
+        e1 = t1_array[i_1] & ECS_ENTITY_MASK;
 
         if (e2 > e1) {
             do {
@@ -556,7 +557,7 @@ ecs_entity_t ecs_type_contains(
                 if (i_1 >= t1_count) {
                     return 0;
                 }
-                e1 = t1_array[i_1];
+                e1 = t1_array[i_1] & ECS_ENTITY_MASK;
             } while (e2 > e1);
         }
 
@@ -576,7 +577,7 @@ ecs_entity_t ecs_type_contains(
             if (!match_all) return e1;
             i_1 ++;
             if (i_1 < t1_count) {
-                e1 = t1_array[i_1];
+                e1 = t1_array[i_1] & ECS_ENTITY_MASK;
             }
         }
     }
