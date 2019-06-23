@@ -47,7 +47,7 @@ void Prefab_new_w_prefab() {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    ecs_entity_t e_1 = ecs_new(world, Prefab);
+    ecs_entity_t e_1 = ecs_commit(world, 0, Prefab, 0, EcsAsPrefab);
     test_assert(e_1 != 0);
     test_assert( ecs_has(world, e_1, Position));
     test_assert( ecs_has(world, e_1, Prefab));
@@ -66,7 +66,7 @@ void Prefab_new_w_prefab() {
     test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
     test_assert( !ecs_get_ptr(world, e_1, EcsId));
 
-    ecs_entity_t e_2 = ecs_new(world, Prefab);
+    ecs_entity_t e_2 = ecs_commit(world, 0, Prefab, 0, EcsAsPrefab);
     test_assert( ecs_has(world, e_2, Position));
     test_assert( ecs_has(world, e_2, Prefab));
     test_assert( !ecs_has(world, e_2, EcsPrefab));

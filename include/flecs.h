@@ -158,11 +158,18 @@ extern ecs_type_t
     TEcsContainer,
     TEcsDisabled;
 
+typedef enum ecs_type_flags_t {
+    EcsAsPrefab = ((uint64_t)1 << 63),
+    EcsAsContainer = ((uint64_t)1 << 62),
+    EcsTypeFlagsAll = (EcsAsPrefab | EcsAsContainer)
+} ecs_type_flags_t;
+
+#define ECS_ENTITY_MASK (~EcsTypeFlagsAll)
+#define ECS_SINGLETON (EcsTypeFlagsAll - 1)
+#define ECS_INVALID_ENTITY (0)
+
 /* This allows passing 0 as type to functions that accept types */
 #define T0 (0)
-
-/* This id can be used to indicate an entity handle is not set */
-#define ECS_INVALID_ENTITY ((ecs_entity_t)-1)
 
 /* Ids (names) of builtin components */
 FLECS_EXPORT
@@ -756,19 +763,12 @@ void _ecs_add_remove(
 #define ecs_add_remove(world, entity, to_add, to_remove)\
     _ecs_add_remove(world, entity, T##to_add, T##to_remove)
 
-#define ECS_ADD_PREFAB ((uint64_t)1 << 63)
-#define ECS_ADD_PARENT ((uint64_t)1 << 62)
-#define ECS_ADD_FRAGMENT ((uint64_t)1 << 61)
-#define ECS_ADD_ALL (ECS_ADD_FRAGMENT | ECS_ADD_PREFAB | ECS_ADD_PARENT)
-#define ECS_ENTITY_MASK (~ECS_ADD_ALL)
-#define ECS_SINGLETON (ECS_ADD_ALL - 1)
-
 ecs_entity_t _ecs_commit(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t t_add,
     ecs_type_t t_remove,
-    ecs_entity_t flags);
+    ecs_type_flags_t flags);
 
 #define ecs_commit(world, entity, t_add, t_remove, flags)\
     _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), flags)
@@ -808,10 +808,10 @@ void* _ecs_get_ptr(
   (*(type*)_ecs_get_ptr(world, entity, T##type))
 
 #define ecs_get_singleton(world, type)\
-    (*(type*)_ecs_get_ptr(world, 0, T##type))
+    (*(type*)_ecs_get_ptr(world, ECS_SINGLETON, T##type))
 
 #define ecs_get_singleton_ptr(world, type)\
-    _ecs_get_ptr(world, 0, T##type)
+    _ecs_get_ptr(world, ECS_SINGLETON, T##type)
 
 /* Set value of component.
  * This function sets the value of a component on the specified entity. If the
