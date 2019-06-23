@@ -737,32 +737,30 @@ void* ecs_get_ptr_intern(
             ptr = get_row_ptr(info->table->type, info->columns, info->index, component);
         }
 
-        if (ptr) {
-            /* If component is in to remove type, it has been removed while in
-             * progress. Return NULL if so. */
-            ecs_type_t to_remove;
-            if (ecs_map_has(stage->remove_merge, entity, &to_remove)) {
-                if (ecs_type_has_entity_intern(
-                    world, stage, to_remove, component, false)) 
-                {
-                    return NULL;
-                }
-            }
-        } else if (search_prefab) {
+        if (!ptr && search_prefab) {
             /* Store staged info for when looking up data from prefab */
             staged_info = *info;
         }
     }
 
-    if (ptr) return ptr;
-
-    if (!world->in_progress || !staged_only) {
+    if (!ptr && (!world->in_progress || !staged_only)) {
         if (populate_info(world, &world->main_stage, info)) {
             ptr = get_row_ptr(
                 info->table->type, info->columns, info->index, component);
             if (!ptr && search_prefab) {
                 main_info = *info;
             }                
+        }
+    }
+
+    if (ptr && world->in_progress) {
+        ecs_type_t to_remove;
+        if (ecs_map_has(stage->remove_merge, entity, &to_remove)) {
+            if (ecs_type_has_entity_intern(
+                world, stage, to_remove, component, false)) 
+            {
+                ptr = NULL;
+            }
         }
     }
 
