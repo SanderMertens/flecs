@@ -1227,6 +1227,8 @@ ecs_type_t add_flags_to_type(
             }
 
             dst_buffer[i] = buffer[i] | flags;
+        } else if (dst_buffer) {
+            dst_buffer[i] = buffer[i];
         }
     }
 

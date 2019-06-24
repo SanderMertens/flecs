@@ -174,13 +174,13 @@ static
 ecs_type_t find_type_in_vector(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_vector_t *vector,
+    ecs_vector_t **vector,
     ecs_entity_t *array,
     uint32_t count,
     bool create)
 {
-    uint32_t i, types_count = ecs_vector_count(vector);
-    ecs_type_t *type_array = ecs_vector_first(vector);
+    uint32_t i, types_count = ecs_vector_count(*vector);
+    ecs_type_t *type_array = ecs_vector_first(*vector);
 
     for (i = 0; i < types_count; i ++) {
         ecs_type_t type = type_array[i];
@@ -206,7 +206,7 @@ ecs_type_t find_type_in_vector(
 
     /* Type has not been found, add it */
     if (create) {
-        ecs_type_link_t *link = ecs_vector_add(&vector, &link_params);
+        ecs_type_link_t *link = ecs_vector_add(vector, &link_params);
         return register_type(world, stage, link, array, count);
     }
     
@@ -289,7 +289,12 @@ ecs_type_t find_or_create_type(
             }
 
             type = find_type_in_vector(
-                world, stage, node->types[index], array, count, create);
+                world, stage, &node->types[index], array, count, create);
+                
+            if (type) {
+                break;
+            }
+
             if (create && !type) {
                 return NULL;
             }
