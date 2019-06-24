@@ -365,7 +365,7 @@ ecs_type_t ecs_notify_row_system(
                 entity = system;
             } else if (buffer[i].kind == EcsFromSingleton) {
                 /* The source is the world's singleton entity */
-                entity = 0;         
+                entity = ECS_SINGLETON;         
             } else if (buffer[i].kind == EcsFromEntity) {
                 /* The source is another entity (prefab, container, other) */
                 entity = buffer[i].source;

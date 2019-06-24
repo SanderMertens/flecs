@@ -1242,7 +1242,7 @@ ecs_entity_t _ecs_commit(
     ecs_entity_t entity,
     ecs_type_t to_add,
     ecs_type_t to_remove,
-    ecs_entity_t flags)
+    ecs_type_flags_t flags)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
@@ -1370,7 +1370,7 @@ ecs_entity_t _ecs_set_singleton_ptr(
     size_t size,
     void *ptr)
 {
-    return _ecs_set_ptr_intern(world, 0, type, size, ptr);
+    return _ecs_set_ptr_intern(world, ECS_SINGLETON, type, size, ptr);
 }
 
 bool _ecs_has(
