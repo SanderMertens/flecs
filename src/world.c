@@ -1384,14 +1384,14 @@ ecs_entity_t _ecs_import(
         /* Copy value of module component in handles_out parameter */
         if (handles_size && handles_out) {
             ecs_type_t t = ecs_type_from_entity(world, e);
-            void *module_ptr = _ecs_get_ptr(world, 0, t);
+            void *module_ptr = _ecs_get_ptr(world, ECS_SINGLETON, t);
             memcpy(handles_out, module_ptr, handles_size);
         }
 
     /* If module was already loaded, copy module component into handles_out */
     } else if (handles_size) {
         ecs_type_t t = ecs_type_from_entity(world, e);
-        void *handles_ptr = _ecs_get_ptr(world, 0, t);
+        void *handles_ptr = _ecs_get_ptr(world, ECS_SINGLETON, t);
         memcpy(handles_out, handles_ptr, handles_size);
     }
 
