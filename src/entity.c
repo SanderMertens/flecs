@@ -327,7 +327,7 @@ int32_t ecs_type_get_prefab(
 
     for (i = n + 1; i < count; i ++) {
         ecs_entity_t e = buffer[i];
-        if (e & EcsAsPrefab) {
+        if (e & EcsInstanceOf) {
             return i;
         }
     }

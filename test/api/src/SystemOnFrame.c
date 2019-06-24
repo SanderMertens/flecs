@@ -1444,7 +1444,7 @@ void SystemOnFrame_two_refs() {
     ECS_ENTITY(world, E, Position, Velocity);
     ECS_ENTITY(world, E2, Mass);
 
-    ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, E.Position, E.Velocity, ID.E, Mass);
+    ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, E.Position, E.Velocity, .E, Mass);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);

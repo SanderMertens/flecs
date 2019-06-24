@@ -295,7 +295,7 @@ ecs_type_t ecs_notify_row_system(
     uint32_t limit);
 
 /* Callback for parse_component_expr that stores result as ecs_system_column_t's */
-int ecs_parse_component_action(
+int ecs_parse_signature_action(
     ecs_world_t *world,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,

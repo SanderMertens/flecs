@@ -347,7 +347,7 @@ It is much more efficient to [create entities in bulk](#create-entities-in-bulk)
 You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsId` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `ID` modifier, like so:
 
 ```c
-ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, ID.MyEntity);
+ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, .MyEntity);
 ```
 
 This will lookup the entity in advance, instead of every time the system is invoked. Obtaining the entity from within the system can be done with the `ecs_column_entity` function.
@@ -1128,7 +1128,7 @@ This code may look a bit weird as it introduces a few things that haven't been c
 This macro can also be used when a column uses the `ID` source modifier. For example, if a system has the following query:
 
 ```
-Position, ID.Velocity
+Position, .Velocity
 ```
 
 Then the system can obtain the handle to the `Velocity` component with the following statement:

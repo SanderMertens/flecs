@@ -43,14 +43,14 @@ char* parse_complex_elem(
 
     char *dot = strchr(bptr, '.');
     if (dot) {
-        if (!strncmp(bptr, "CONTAINER", dot - bptr)) {
+        if (bptr == dot) {
+            *elem_kind = EcsFromId;
+        } else if (!strncmp(bptr, "CONTAINER", dot - bptr)) {
             *elem_kind = EcsFromContainer;
         } else if (!strncmp(bptr, "SYSTEM", dot - bptr)) {
             *elem_kind = EcsFromSystem;
         } else if (!strncmp(bptr, "SELF", dot - bptr)) {
             /* default */
-        } else if (!strncmp(bptr, "ID", dot - bptr)) {
-            *elem_kind = EcsFromId;
         } else if (!strncmp(bptr, "CASCADE", dot - bptr)) {
             *elem_kind = EcsCascade;            
         } else {

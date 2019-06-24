@@ -543,7 +543,7 @@ void Add_on_add_after_new_type_in_progress() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, AddInProgress, EcsOnUpdate, Position, ID.Velocity);
+    ECS_SYSTEM(world, AddInProgress, EcsOnUpdate, Position, .Velocity);
     ECS_SYSTEM(world, OnAdd, EcsOnAdd, Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
