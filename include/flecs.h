@@ -773,6 +773,9 @@ ecs_entity_t _ecs_commit(
 #define ecs_commit(world, entity, t_add, t_remove, flags)\
     _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), flags)
 
+#define ecs_instantiate(world, prefab)\
+    _ecs_commit(world, 0, ecs_type(prefab), 0, EcsInstanceOf);
+
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
  * component was not added for the specified entity, the operation will return
