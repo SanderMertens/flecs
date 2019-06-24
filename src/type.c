@@ -18,7 +18,7 @@ const ecs_vector_params_t link_params = {
 
 /** Parse callback that adds type to type identifier for ecs_new_type */
 static
-int add_type(
+int parse_type_action(
     ecs_world_t *world,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
@@ -26,42 +26,48 @@ int add_type(
     const char *source_id,
     void *data)
 {
-    EcsTypeComponent *type_component = data;
-    ecs_stage_t *stage = &world->main_stage;
+    ecs_vector_t **array = data;
     (void)source_id;
 
-    if (oper_kind != EcsOperAnd) {
-        return -1;
-    }
+    if (strcmp(entity_id, "0")) {
+        ecs_entity_t entity = 0; 
 
-    if (!strcmp(entity_id, "0")) {
-        *type_component = (EcsTypeComponent){0, 0};
-    } else {
-        ecs_entity_t entity = ecs_lookup(world, entity_id);
+        if (!strcmp(entity_id, "INSTANCEOF")) {
+            entity = EcsInstanceOf;
+        } else if (!strcmp(entity_id, "CHILDOF")) {
+            entity = EcsChildOf;
+        } else {
+            entity = ecs_lookup(world, entity_id);
+        }
+        
         if (!entity) {
             ecs_os_err("%s not found", entity_id);
             return -1;
         }
 
-        if (elem_kind == EcsFromContainer) {
-            if (!ecs_has(world, entity, EcsContainer)) {
-                ecs_add(world, entity, EcsContainer);
-                ecs_set_watching(world, entity, true);
+        if (oper_kind == EcsOperAnd) {
+            ecs_entity_t* e_ptr = ecs_vector_add(array, &handle_arr_params);
+            *e_ptr = entity;
+        } else if (oper_kind == EcsOperOr) {
+            ecs_entity_t *e_ptr = ecs_vector_last(*array, &handle_arr_params);
+
+            /* If using an OR operator, the array should at least have one 
+             * element. */
+            ecs_assert(e_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            if (*e_ptr & ECS_ENTITY_MASK) {
+                if (entity & ECS_ENTITY_MASK) {
+                    /* An expression should not OR entity ids, only entities +
+                     * entity flags. */
+                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, NULL);
+                }
             }
-        } else if (elem_kind != EcsFromSelf) {
-            ecs_os_err("invalid prefix for component '%s'", entity_id);
-            return -1;
+
+            *e_ptr |= entity;
+        } else {
+            /* Only AND and OR operators are supported for type expressions */
+            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, NULL);
         }
-
-        ecs_type_t type = ecs_type_find_intern(world, stage, &entity, 1);
-        ecs_type_t resolved_id = ecs_type_from_entity(world, entity);
-        assert(resolved_id != 0);
-
-        type_component->type = ecs_type_merge_intern(
-            world, stage, type_component->type, type, 0);
-
-        type_component->resolved = ecs_type_merge_intern(
-            world, stage, type_component->resolved, resolved_id, 0);
     }
 
     return 0;
@@ -312,7 +318,7 @@ ecs_entity_t find_entity_in_prefabs(
      * at the end of the type. */
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = array[i];
-        if (e & EcsAsPrefab) {
+        if (e & EcsInstanceOf) {
             ecs_entity_t prefab = e & ECS_ENTITY_MASK;
             if (_ecs_has(world, prefab, entity_type)) {
                 return prefab;
@@ -659,69 +665,99 @@ int32_t ecs_type_container_depth(
     return result;
 }
 
+static
+EcsTypeComponent type_from_vec(
+    ecs_world_t *world,
+    ecs_vector_t *vec)
+{
+    EcsTypeComponent result = {0, 0};
+    ecs_entity_t *array = ecs_vector_first(vec);
+    uint32_t i, count = ecs_vector_count(vec);
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t entity = array[i];
+
+        ecs_type_t entity_type = ecs_type_find_intern(world, &world->main_stage, &entity, 1);
+        ecs_type_t resolved_type = ecs_type_from_entity(world, entity);
+        assert(resolved_type != 0);
+
+        result.type = ecs_type_merge_intern(
+            world, &world->main_stage, result.type, entity_type, 0);
+
+        result.resolved = ecs_type_merge_intern(
+            world, &world->main_stage, result.resolved, resolved_type, 0);
+    }
+
+    return result;
+}
+
+static
+EcsTypeComponent type_from_expr(
+    ecs_world_t *world,
+    const char *id,
+    const char *expr)
+{
+    ecs_vector_t *vec = ecs_vector_new(&handle_arr_params, 1);
+    ecs_parse_component_expr(world, expr, parse_type_action, &vec);
+    EcsTypeComponent result = type_from_vec(world, vec);
+    ecs_vector_free(vec);
+    return result;
+}
+
 /* -- Public API -- */
 
 ecs_entity_t ecs_new_type(
     ecs_world_t *world,
     const char *id,
-    const char *sig)
+    const char *expr)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);
-    EcsTypeComponent type = {0};
+    assert(world->magic == ECS_WORLD_MAGIC);  
 
-    ecs_entity_t result;
+    EcsTypeComponent type = type_from_expr(world, id, expr);
+    ecs_entity_t result = ecs_lookup(world, id);
 
-    if (ecs_parse_component_expr(world, sig, add_type, &type) != 0) {
-        return 0;
-    }
-
-    ecs_entity_t type_entity;
-
-    if (ecs_map_has(world->type_handles, (uintptr_t)type.type, &type_entity)) {
-        EcsId *id_ptr = ecs_get_ptr(world, type_entity, EcsId);
-
-        ecs_assert(id_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        
-        if(strcmp(*id_ptr, id)) {
-            ecs_abort(ECS_ENTITY_ALREADY_DEFINED, id);
+    if (result) {
+        EcsTypeComponent *type_ptr = ecs_get_ptr(world, result, EcsTypeComponent);
+        if (type_ptr) {
+            if (type_ptr->type != type.type || 
+                type_ptr->resolved != type.resolved) 
+            {
+                ecs_abort(ECS_ALREADY_DEFINED, id);
+            }
+        } else {
+            ecs_abort(ECS_ALREADY_DEFINED, id);
         }
-
-        return type_entity;
-    } else {
+    } else if (!result) {
         result = _ecs_new(world, world->t_type);
         ecs_set(world, result, EcsId, {id});
         ecs_set(world, result, EcsTypeComponent, {
             .type = type.type, .resolved = type.resolved
-        });
-
-        ecs_map_set(world->type_handles, (uintptr_t)type.type, &result);
-
-        return result;
+        });        
     }
+
+    return result;
 }
 
 ecs_entity_t ecs_new_prefab(
     ecs_world_t *world,
     const char *id,
-    const char *sig)
+    const char *expr)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETERS, NULL);
-    EcsTypeComponent type = {0};
-
-    ecs_entity_t result = ecs_lookup(world, id);
-    if (result) {
-        return result;
-    }
-
-    if (ecs_parse_component_expr(world, sig, add_type, &type) != 0) {
-        return 0;
-    }
-
+   
+    EcsTypeComponent type = type_from_expr(world, id, expr);
     type.resolved = ecs_type_merge_intern(
         world, NULL, world->t_prefab, type.resolved, 0);
 
-    result = _ecs_new(world, type.resolved);
-    ecs_set(world, result, EcsId, {id});
+    ecs_entity_t result = ecs_lookup(world, id);
+    if (result) {
+        if (ecs_get_type(world, result) != type.resolved) {
+            ecs_abort(ECS_ALREADY_DEFINED, id);
+        }
+    } else {
+        result = _ecs_new(world, type.resolved);
+        ecs_set(world, result, EcsId, {id});
+    }
 
     return result;
 }
@@ -729,21 +765,21 @@ ecs_entity_t ecs_new_prefab(
 ecs_entity_t ecs_new_entity(
     ecs_world_t *world,
     const char *id,
-    const char *components)
+    const char *expr)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETERS, NULL);
-    EcsTypeComponent type = {0};
+   
+    EcsTypeComponent type = type_from_expr(world, id, expr);
 
     ecs_entity_t result = ecs_lookup(world, id);
-    ecs_assert(!result, ECS_ENTITY_ALREADY_DEFINED, id);
-
-    if (ecs_parse_component_expr(world, components, add_type, &type) != 0) {
-        return 0;
+    if (result) {
+        if (ecs_get_type(world, result) != type.resolved) {
+            ecs_abort(ECS_ALREADY_DEFINED, id);
+        }
+    } else {
+        result = _ecs_new(world, type.resolved);
+        ecs_set(world, result, EcsId, {id});
     }
-
-    result = _ecs_new(world, type.resolved);
-
-    ecs_set(world, result, EcsId, {id});
 
     return result;
 }

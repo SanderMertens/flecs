@@ -538,7 +538,7 @@ void SystemOnSet_on_set_after_override() {
 
     /* instantiate prefab */
 
-    ecs_entity_t e = ecs_new(world, Prefab);
+    ecs_entity_t e = ecs_commit(world, 0, Prefab, 0, EcsInstanceOf);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -604,7 +604,7 @@ void SystemOnSet_on_set_after_override_w_new() {
     ECS_PREFAB(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
-    ECS_TYPE(world, Type, Prefab, Position);
+    ECS_TYPE(world, Type, INSTANCEOF | Prefab, Position);
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
@@ -637,7 +637,7 @@ void SystemOnSet_on_set_after_override_w_new_w_count() {
     ECS_PREFAB(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
-    ECS_TYPE(world, Type, Prefab, Position);
+    ECS_TYPE(world, Type, INSTANCEOF | Prefab, Position);
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
@@ -680,7 +680,7 @@ void SystemOnSet_on_set_after_override_1_of_2_overridden() {
     ECS_PREFAB(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
-    ECS_TYPE(world, Type, Prefab, Position);
+    ECS_TYPE(world, Type, INSTANCEOF | Prefab, Position);
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 

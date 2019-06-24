@@ -159,9 +159,9 @@ extern ecs_type_t
     TEcsDisabled;
 
 typedef enum ecs_type_flags_t {
-    EcsAsPrefab = ((uint64_t)1 << 63),
-    EcsAsContainer = ((uint64_t)1 << 62),
-    EcsTypeFlagsAll = (EcsAsPrefab | EcsAsContainer)
+    EcsInstanceOf = ((uint64_t)1 << 63),
+    EcsChildOf = ((uint64_t)1 << 62),
+    EcsTypeFlagsAll = (EcsInstanceOf | EcsChildOf)
 } ecs_type_flags_t;
 
 #define ECS_ENTITY_MASK (~EcsTypeFlagsAll)
@@ -1711,7 +1711,7 @@ void _ecs_assert(
 #define ECS_NOT_A_COMPONENT (9)
 #define ECS_INTERNAL_ERROR (10)
 #define ECS_MORE_THAN_ONE_PREFAB (11)
-#define ECS_ENTITY_ALREADY_DEFINED (12)
+#define ECS_ALREADY_DEFINED (12)
 #define ECS_INVALID_COMPONENT_SIZE (13)
 #define ECS_OUT_OF_MEMORY (14)
 #define ECS_MODULE_UNDEFINED (15)

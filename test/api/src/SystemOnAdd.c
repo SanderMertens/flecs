@@ -666,7 +666,7 @@ void SystemOnAdd_override_after_add_in_on_add() {
     ECS_PREFAB(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 2});
 
-    ECS_SYSTEM(world, AddVelocity, EcsOnAdd, Position, ID.Velocity);
+    ECS_SYSTEM(world, AddVelocity, EcsOnAdd, Position, .Velocity);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -713,7 +713,7 @@ void SystemOnAdd_set_after_add_in_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddVelocity, EcsOnAdd, Position, ID.Velocity);
+    ECS_SYSTEM(world, AddVelocity, EcsOnAdd, Position, .Velocity);
     ECS_SYSTEM(world, OnSetPosition, EcsOnSet, Position);
 
     SysTestData ctx = {0};

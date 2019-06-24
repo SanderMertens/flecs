@@ -62,7 +62,7 @@ const char* ecs_strerror(
         return "internal error";
     case ECS_MORE_THAN_ONE_PREFAB:
         return "more than one prefab added to entity";
-    case ECS_ENTITY_ALREADY_DEFINED:
+    case ECS_ALREADY_DEFINED:
         return "entity has already been defined";
     case ECS_INVALID_COMPONENT_SIZE:
         return "the specified size does not match the component";

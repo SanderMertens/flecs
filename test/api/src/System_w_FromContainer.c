@@ -840,7 +840,7 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ECS_ENTITY(world, e_4, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
-    ECS_SYSTEM(world, AddMass, EcsOnAdd, Tag, ID.Mass);
+    ECS_SYSTEM(world, AddMass, EcsOnAdd, Tag, .Mass);
 
     ecs_entity_t parent = ecs_new(world, 0);
     ecs_adopt(world, e_1, parent);

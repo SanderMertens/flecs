@@ -143,7 +143,7 @@ void World_entity_range_add_existing_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddToExisting, EcsOnUpdate, Position, ID.Velocity);
+    ECS_SYSTEM(world, AddToExisting, EcsOnUpdate, Position, .Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -162,7 +162,7 @@ void World_entity_range_add_in_range_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddToExisting, EcsOnUpdate, Position, ID.Velocity);
+    ECS_SYSTEM(world, AddToExisting, EcsOnUpdate, Position, .Velocity);
 
     ecs_set_entity_range(world, 500, 1000);
 
@@ -190,7 +190,7 @@ void World_entity_range_add_out_of_range_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddOutOfRange, EcsOnUpdate, Position, ID.Velocity);
+    ECS_SYSTEM(world, AddOutOfRange, EcsOnUpdate, Position, .Velocity);
 
     ecs_set_entity_range(world, 500, 1000);
 

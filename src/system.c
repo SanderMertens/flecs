@@ -116,7 +116,7 @@ ecs_entity_t new_row_system(
     system_data->components = ecs_vector_new(&handle_arr_params, count);
 
     if (ecs_parse_component_expr(
-        world, sig, ecs_parse_component_action, system_data) != 0)
+        world, sig, ecs_parse_signature_action, system_data) != 0)
     {
         ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
     }
@@ -200,7 +200,7 @@ void ecs_system_compute_and_families(
 }
 
 /** Parse callback that adds component to the components array for a system */
-int ecs_parse_component_action(
+int ecs_parse_signature_action(
     ecs_world_t *world,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
@@ -523,21 +523,7 @@ void ecs_enable(
         col_system = true;
     }
 
-    /* If entity is neither ColSystem nor RowSystem, it should be a type */
-    if (!system_data) {
-        EcsTypeComponent *type_data = ecs_get_ptr(
-            world, system, EcsTypeComponent);
-
-        assert(type_data != NULL);
-
-        ecs_type_t type = type_data->type;
-        ecs_entity_t *array = ecs_vector_first(type);
-        uint32_t i, count = ecs_vector_count(type);
-        for (i = 0; i < count; i ++) {
-            /* Enable/disable all systems in type */
-            ecs_enable(world, array[i], enabled);
-        }
-    } else {
+    if (system_data) {
         if (col_system) {
             EcsColSystem *col_system = (EcsColSystem*)system_data;
             if (enabled) {
@@ -558,6 +544,20 @@ void ecs_enable(
         }
 
         system_data->enabled = enabled;
+    } else {
+        /* If entity is neither ColSystem nor RowSystem, it should be a type */
+        EcsTypeComponent *type_data = ecs_get_ptr(
+            world, system, EcsTypeComponent);
+
+        assert(type_data != NULL);
+
+        ecs_type_t type = type_data->type;
+        ecs_entity_t *array = ecs_vector_first(type);
+        uint32_t i, count = ecs_vector_count(type);
+        for (i = 0; i < count; i ++) {
+            /* Enable/disable all systems in type */
+            ecs_enable(world, array[i], enabled);
+        }        
     }
 }
 

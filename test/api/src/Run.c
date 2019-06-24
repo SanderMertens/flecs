@@ -1146,7 +1146,7 @@ void Run_run_comb_10_entities_1_type() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 10;
 
@@ -1174,7 +1174,7 @@ void Run_run_comb_10_entities_2_types() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 10;
 

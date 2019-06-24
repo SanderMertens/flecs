@@ -642,7 +642,7 @@ void MultiThread_2_thread_test_combs_100_entity() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 100, THREADS = 2;
 
@@ -670,7 +670,7 @@ void MultiThread_3_thread_test_combs_100_entity() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 100, THREADS = 3;
 
@@ -698,7 +698,7 @@ void MultiThread_4_thread_test_combs_100_entity() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 100, THREADS = 4;
 
@@ -726,7 +726,7 @@ void MultiThread_5_thread_test_combs_100_entity() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 100, THREADS = 5;
 
@@ -754,7 +754,7 @@ void MultiThread_6_thread_test_combs_100_entity() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 100, THREADS = 6;
 
@@ -784,7 +784,7 @@ void MultiThread_2_thread_test_combs_100_entity_2_types() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 100, THREADS = 2;
 
@@ -815,7 +815,7 @@ void MultiThread_3_thread_test_combs_100_entity_2_types() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 20, THREADS = 3;
 
@@ -846,7 +846,7 @@ void MultiThread_4_thread_test_combs_100_entity_2_types() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 100, THREADS = 4;
 
@@ -877,7 +877,7 @@ void MultiThread_5_thread_test_combs_100_entity_2_types() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 100, THREADS = 5;
 
@@ -908,7 +908,7 @@ void MultiThread_6_thread_test_combs_100_entity_2_types() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, ID.TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
 
     int i, ENTITIES = 100, THREADS = 6;
 

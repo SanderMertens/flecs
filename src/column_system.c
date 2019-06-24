@@ -857,7 +857,7 @@ ecs_entity_t ecs_new_col_system(
         &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
 
     if (ecs_parse_component_expr(
-        world, sig, ecs_parse_component_action, system_data) != 0)
+        world, sig, ecs_parse_signature_action, system_data) != 0)
     {
         assert(0);
     }
