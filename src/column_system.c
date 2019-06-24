@@ -200,7 +200,7 @@ void add_table(
         /* Column that retrieves singleton components */
         } else if (kind == EcsFromSingleton) {
             component = column->is.component;
-            entity = 0;
+            entity = ECS_SINGLETON;
         }
 
         /* This column does not retrieve data from a static entity (either
@@ -276,7 +276,7 @@ void add_table(
 
                     /* Find the entity for the component */
                     if (kind == EcsFromSingleton) {
-                        e = 0;
+                        e = ECS_SINGLETON;
                     } else if (kind == EcsFromEntity) {
                         e = entity;
                     } else {
