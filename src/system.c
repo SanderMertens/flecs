@@ -696,6 +696,7 @@ ecs_entity_t _ecs_column_source(
         ecs_assert(rows->references != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_reference_t *ref = &rows->references[-table_column - 1];
+
         return ref->entity;
     }
 }

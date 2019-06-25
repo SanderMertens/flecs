@@ -161,6 +161,12 @@ int32_t ecs_type_get_prefab(
     ecs_type_t type,
     int32_t n);
 
+/* Find entity in prefabs of type */
+ecs_entity_t ecs_find_entity_in_prefabs(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity);
+
 /* -- Table API -- */
 
 /* Initialize table */

@@ -290,7 +290,7 @@ ecs_type_t find_or_create_type(
 
             type = find_type_in_vector(
                 world, stage, &node->types[index], array, count, create);
-                
+
             if (type) {
                 break;
             }
@@ -309,8 +309,7 @@ ecs_type_t find_or_create_type(
     return type;
 }
 
-static
-ecs_entity_t find_entity_in_prefabs(
+ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity)
@@ -574,7 +573,7 @@ ecs_entity_t ecs_type_contains(
 
         if (e1 != e2) {
             if (match_prefab && e2 != EEcsId && e2 != EEcsPrefab) {
-                if (find_entity_in_prefabs(world, type_1, e2)) {
+                if (ecs_find_entity_in_prefabs(world, type_1, e2)) {
                     e1 = e2;
                 }
             }
@@ -618,7 +617,7 @@ bool ecs_type_has_entity_intern(
     }
 
     if (match_prefab) {
-        if (find_entity_in_prefabs(world, type, entity)) {
+        if (ecs_find_entity_in_prefabs(world, type, entity)) {
             return true;
         }
     }
@@ -791,13 +790,13 @@ ecs_entity_t ecs_new_entity(
 
 int16_t ecs_type_index_of(
     ecs_type_t type,
-    ecs_entity_t component)
+    ecs_entity_t entity)
 {
     ecs_entity_t *buf = ecs_vector_first(type);
     int i, count = ecs_vector_count(type);
     
     for (i = 0; i < count; i ++) {
-        if (buf[i] == component) {
+        if ((buf[i] & ECS_ENTITY_MASK) == entity) {
             return i; 
         }
     }

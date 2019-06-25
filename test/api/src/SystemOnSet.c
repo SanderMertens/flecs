@@ -538,7 +538,7 @@ void SystemOnSet_on_set_after_override() {
 
     /* instantiate prefab */
 
-    ecs_entity_t e = ecs_commit(world, 0, Prefab, 0, EcsInstanceOf);
+    ecs_entity_t e = ecs_instantiate(world, Prefab);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
