@@ -1,6 +1,7 @@
 #ifndef FLECS_TYPES_PRIVATE_H
 #define FLECS_TYPES_PRIVATE_H
 
+#define _POSIX_C_SOURCE 200809L
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
