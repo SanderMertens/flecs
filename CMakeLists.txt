@@ -4,7 +4,7 @@ project (flecs C)
 
 file(GLOB flecs_SRC "src/*.c")
 
-include_directories(".")
+include_directories("include")
 
 add_compile_definitions(FLECS_IMPL)
 
