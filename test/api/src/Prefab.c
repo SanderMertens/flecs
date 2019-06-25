@@ -879,9 +879,9 @@ void Prefab_prefab_in_system_expr() {
     ecs_set(world, Prefab1, Velocity, {1, 2});
     ecs_set(world, Prefab2, Velocity, {1, 2});
 
-    ecs_entity_t e_1 = ecs_new(world, Prefab1);
-    ecs_entity_t e_2 = ecs_new(world, Prefab1);
-    ecs_entity_t e_3 = ecs_new(world, Prefab2);
+    ecs_entity_t e_1 = ecs_instantiate(world, Prefab1);
+    ecs_entity_t e_2 = ecs_instantiate(world, Prefab1);
+    ecs_entity_t e_3 = ecs_instantiate(world, Prefab2);
 
     test_assert(e_1 != 0);
     test_assert(e_2 != 0);

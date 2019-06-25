@@ -82,21 +82,9 @@ ecs_entity_t ecs_get_entity_for_component(
         }
     }
 
-    /*if (i == count) {
-        ecs_stage_t *stage;
-        if (world->in_progress) {
-            stage = &world->temp_stage;
-        } else {
-            stage = &world->main_stage;
-        }
-
-        ecs_entity_t prefab = ecs_get_prefab_from_type(
-            world, stage, new_table, entity, type_id);
-        
-        if (prefab) {
-            return ecs_get_entity_for_component(world, new_table, prefab, 0, component);
-        }
-    }*/
+    if (i == count) {
+        entity = ecs_find_entity_in_prefabs(world, type, component);
+    }
 
     return entity;
 }
@@ -177,6 +165,7 @@ void add_table(
                 oper_kind == EcsOperOptional)
             {
                 component = column->is.component;
+
                 ecs_components_contains_component(
                     world, table_type, component, &entity);
 
@@ -261,7 +250,7 @@ void add_table(
          * reference. Having the reference already linked to the system table
          * makes changing this administation easier when the change happens.
          * */
-        if (entity || table_data[i] == -1 || kind == EcsFromSingleton || kind == EcsCascade) {
+        if (entity || table_data[i] == -1 || kind == EcsCascade) {
             if (ecs_has(world, component, EcsComponent)) {
                 EcsComponent *component_data = ecs_get_ptr(
                         world, component, EcsComponent);
@@ -275,9 +264,7 @@ void add_table(
                     }
 
                     /* Find the entity for the component */
-                    if (kind == EcsFromSingleton) {
-                        e = ECS_SINGLETON;
-                    } else if (kind == EcsFromEntity) {
+                    if (kind == EcsFromEntity || kind == EcsFromSingleton) {
                         e = entity;
                     } else {
                         e = ecs_get_entity_for_component(
@@ -309,7 +296,6 @@ void add_table(
                     }
 
                     ref ++;
-
                     /* Negative number indicates ref instead of offset to ecs_data */
                     table_data[i] = -ref;
                     table_data[REFS_COUNT] ++;
