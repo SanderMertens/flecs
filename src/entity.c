@@ -261,9 +261,9 @@ ecs_type_t instantiate_prefab(
     ecs_entity_t entity,
     bool is_prefab,
     ecs_entity_info_t *prefab_info,
-    uint32_t limit)
+    uint32_t limit,
+    ecs_type_t modified)
 {
-    ecs_type_t modified = 0;
     ecs_type_t prefab_type = prefab_info->type;
     ecs_table_column_t *prefab_columns = prefab_info->table->columns;
 
@@ -358,20 +358,24 @@ ecs_type_t copy_from_prefab(
     ecs_entity_t *to_add_buffer = ecs_vector_first(to_add);
     ecs_entity_t *prefab_type_buffer = ecs_vector_first(prefab_type);
 
-    bool is_prefab;
+    bool is_prefab = false;
     ecs_table_column_t *columns = info->columns;
 
     for (e = 0; e < add_count; e ++) {
-        ecs_entity_t pe, ee = to_add_buffer[e];
+        ecs_entity_t pe, ee = to_add_buffer[e] & ECS_ENTITY_MASK;
 
         if (ee == EEcsPrefab) {
             is_prefab = true;
             continue;
         }
 
+        if (ee == EEcsId) {
+            continue;
+        }
+
         if (ee == prefab) {
             modified = instantiate_prefab(world, stage, info->entity, is_prefab, 
-                prefab_info, limit);
+                prefab_info, limit, modified);
             continue;
         }
 
@@ -407,7 +411,7 @@ ecs_type_t copy_from_prefab(
          * component from a prefab. Same for EcsId. */
         modified = ecs_type_merge_intern(world, stage, modified, 0, ecs_type(EcsPrefab));
         modified = ecs_type_merge_intern(world, stage, modified, 0, ecs_type(EcsId));
-    }
+    }    
 
     return modified;
 }
@@ -419,11 +423,11 @@ ecs_type_t copy_from_prefabs(
     ecs_entity_info_t *info,
     uint32_t offset,
     uint32_t limit,
-    ecs_type_t to_add)
+    ecs_type_t to_add,
+    ecs_type_t modified)
 {
     ecs_type_t type = info->type;
     ecs_entity_t *type_buffer = ecs_vector_first(type);
-    ecs_type_t modified = 0;
     int32_t i = -1;
 
     while ((i = ecs_type_get_prefab(type, i)) != -1) {
@@ -450,32 +454,25 @@ bool notify_after_commit(
     ecs_type_t to_add_id,
     bool do_set)
 {
-    ecs_type_t modified = 0;
-
-    ecs_type_t initialized = notify_pre_merge (
+    ecs_type_t modified = notify_pre_merge (
         world, stage, info->table, info->columns, offset, limit, to_add_id, 
         world->type_sys_add_index);
 
     populate_info(world, stage, info);
 
-    ecs_type_t overridden = copy_from_prefabs(
-        world, stage, info, offset, limit, to_add_id);
+    modified = copy_from_prefabs(
+        world, stage, info, offset, limit, to_add_id, modified);
 
     populate_info(world, stage, info);
-
+    
     /* Invoke OnSet handlers if components received their first value */
-    if (do_set) {
-        if (initialized || overridden) {
-            modified = ecs_type_merge_intern(
-                world, stage, initialized, overridden, 0);
-
-            notify_pre_merge (
-                world, stage, info->table, info->columns, offset, limit, 
-                modified, world->type_sys_set_index);
-        }
+    if (do_set && modified) {
+        notify_pre_merge (
+            world, stage, info->table, info->columns, offset, limit, 
+            modified, world->type_sys_set_index);
     }
 
-    return initialized || overridden || modified;
+    return modified != NULL;
 }
 
 /** Commit an entity with a specified type to a table (probably the most 
