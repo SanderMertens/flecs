@@ -27,6 +27,7 @@ static
 ecs_table_column_t* new_columns(
     ecs_world_t *world,
     ecs_stage_t *stage,
+    ecs_table_t *table,
     ecs_type_t type)
 {
     ecs_table_column_t *result = ecs_os_calloc(
@@ -52,6 +53,10 @@ ecs_table_column_t* new_columns(
                 result[i + 1].size = component->size;
             }
         }
+
+        if (table && buf[i] == EEcsPrefab) {
+            table->flags |= EcsTableIsPrefab;
+        }
     }
     
     return result;
@@ -72,7 +77,7 @@ ecs_table_column_t* ecs_table_get_columns(
 
         if (!ecs_map_has(stage->data_stage, (uintptr_t)type, &columns)) {
             ecs_type_t type = table->type;
-            columns = new_columns(world, stage, type);
+            columns = new_columns(world, stage, table, type);
             ecs_map_set(stage->data_stage, (uintptr_t)type, &columns);
         }
 
@@ -86,8 +91,8 @@ void ecs_table_init(
     ecs_table_t *table)
 {
     table->frame_systems = NULL;
-    table->columns = new_columns(world, stage, table->type);
     table->flags = 0;
+    table->columns = new_columns(world, stage, table, table->type);
 }
 
 void ecs_table_deinit(
