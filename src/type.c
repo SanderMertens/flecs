@@ -869,9 +869,21 @@ char* _ecs_type_str(
     uint32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
-        ecs_entity_t h = handles[i];
+        ecs_entity_t h;
+        ecs_entity_t flags = split_entity_id(handles[i], &h) & EcsTypeFlagsAll;
+
         if (i) {
             *(char*)ecs_vector_add(&chbuf, &char_arr_params) = ',';
+        }
+
+        if (flags & EcsInstanceOf) {
+            dst = ecs_vector_addn(&chbuf, &char_arr_params, strlen("INSTANCEOF|"));
+            strcpy(dst, "INSTANCEOF|");
+        }
+
+        if (flags & EcsChildOf) {
+            dst = ecs_vector_addn(&chbuf, &char_arr_params, strlen("CHILDOF|"));
+            strcpy(dst, "CHILDOF|");
         }
 
         const char *str = NULL;
