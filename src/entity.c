@@ -1198,7 +1198,7 @@ void ecs_adopt(
 
     ecs_type_t TParentType = ecs_type_from_entity(world, parent);
 
-    ecs_add(world, child, ParentType);
+    ecs_commit(world, child, ParentType, 0, EcsChildOf);
 }
 
 static

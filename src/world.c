@@ -490,14 +490,18 @@ void add_prefab_child_to_builder(
         builder->ops = ecs_vector_new(&builder_params, 1);
     }
 
-    ecs_type_t child_type = ecs_type_merge(world, 
-        ecs_type_from_entity(world, child), ecs_type(EcsId), 0);
+    ecs_entity_t array[] = {
+        child | EcsInstanceOf,
+        EEcsId
+    };
+
+    ecs_type_t type = ecs_type_find(world, array, 2);
 
     /* If there are no child ops, this is the first time that this child is
      * added to this parent prefab. Simply add it to the vector */
     ecs_builder_op_t *op = ecs_vector_add(&builder->ops, &builder_params);
     op->id = ecs_get_id(world, child);
-    op->type = child_type;
+    op->type = type;
 }
 
 void EcsInitPrefab(ecs_rows_t *rows) {
