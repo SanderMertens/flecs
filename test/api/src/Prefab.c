@@ -1120,7 +1120,7 @@ void Prefab_match_table_created_in_progress() {
     ECS_PREFAB(world, Prefab, Mass);
     ecs_set(world, Prefab, Mass, {10});
 
-    ECS_ENTITY(world, e, Prefab, Position);
+    ECS_ENTITY(world, e, INSTANCEOF | Prefab, Position);
 
     ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, !Velocity);
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity, Mass);
@@ -1162,7 +1162,7 @@ void Prefab_prefab_w_1_child() {
             ecs_set(world, Child, EcsPrefab, {.parent = Parent});
             ecs_set(world, Child, Position, {2, 3});
 
-    ecs_entity_t e = ecs_new(world, Parent);
+    ecs_entity_t e = ecs_instantiate(world, Parent);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
@@ -1173,6 +1173,7 @@ void Prefab_prefab_w_1_child() {
 
     ecs_entity_t e_child = ecs_lookup_child(world, e, "Child");
     test_assert(e_child != 0);
+
     test_assert(ecs_has(world, e_child, Position));
     test_assert(ecs_contains(world, e, e_child));
 
@@ -1181,7 +1182,7 @@ void Prefab_prefab_w_1_child() {
     test_int(p_child->x, 2);
     test_int(p_child->y, 3);
 
-    ecs_entity_t e2 = ecs_new(world, Parent);
+    ecs_entity_t e2 = ecs_instantiate(world, Parent);
     test_assert(e2 != 0);
     test_assert( ecs_has(world, e, Position));
     test_assert( ecs_get_ptr(world, e2, Position) == p_e);

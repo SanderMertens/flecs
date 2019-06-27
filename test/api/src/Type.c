@@ -250,8 +250,8 @@ void Type_type_merge_overlap_w_flag() {
 
     ecs_entity_t *entities = ecs_vector_first(t);
     test_int(entities[0], ecs_entity(Position));
-    test_int(entities[1], ecs_entity(Velocity) | EcsInstanceOf);
-    test_int(entities[2], ecs_entity(Mass));
+    test_int(entities[1], ecs_entity(Mass));
+    test_int(entities[2], ecs_entity(Velocity) | EcsInstanceOf);
 
     ecs_fini(world);
 }
@@ -279,8 +279,8 @@ void Type_type_merge_overlap_w_flags_from_both() {
 
     ecs_entity_t *entities = ecs_vector_first(t);
     test_int(entities[0], ecs_entity(Position));
-    test_int(entities[1], ecs_entity(Velocity) | EcsChildOf | EcsInstanceOf);
-    test_int(entities[2], ecs_entity(Mass));
+    test_int(entities[1], ecs_entity(Mass));
+    test_int(entities[2], ecs_entity(Velocity) | EcsChildOf | EcsInstanceOf);
 
     ecs_fini(world);
 }
