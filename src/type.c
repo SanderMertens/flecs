@@ -13,8 +13,18 @@ const ecs_vector_params_t ptr_params = {
 };
 
 const ecs_vector_params_t link_params = {
-    .element_size = sizeof(ecs_type_link_t)
+    .element_size = sizeof(ecs_type_link_t*)
 };
+
+static
+ecs_type_t find_or_create_type(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_type_node_t *root,
+    ecs_entity_t *array,
+    uint32_t count,
+    bool create,
+    bool normalized);
 
 /** Parse callback that adds type to type identifier for ecs_new_type */
 static
@@ -79,7 +89,9 @@ int compare_handle(
     const void *p1,
     const void *p2)
 {
-    return *(ecs_entity_t*)p1 - *(ecs_entity_t*)p2;
+    ecs_entity_t e1 = *(ecs_entity_t*)p1;
+    ecs_entity_t e2 = *(ecs_entity_t*)p2;
+    return e1 > e2 ? 1 : e1 < e2 ? -1 : 0;
 }
 
 /** Hash array of handles */
@@ -143,18 +155,101 @@ ecs_type_t ecs_type_from_array(
     return vector;
 }
 
+/* Algorithm that guarantees each entity only occurs once in a type. Even though
+ * the elements of a type are ordered, the same entity with flags or without
+ * flags typically is stored at a different index, as a flag changes the element
+ * value, and thus the ordering.
+ * This complicates merging of two types, which, if both types are perfectly
+ * ordered and have no flags, is an O(n) operation. With flags however, a merge
+ * still needs to yield a type in which each entity occurs no more than once, 
+ * and this cannot be done in O(n).
+ * Type merging is a common operation which can happen often in the main loop,
+ * thus it needs to be fast. Similarly, it would be possible to ignore type
+ * flags when ordering, but then other common operations (those that check for
+ * prefabs / containers) become more expensive (O(1) to O(n)).
+ * To move this complexity out of the main loop, the algorithm that ensures each
+ * entity only occurs once in a type (this function) is only performed when a
+ * new type is registered. The result of this operation is that the type tree
+ * contains an entry for the non-normalized type which points to the normalized
+ * type. This ensures that a type merge can produce a non-normalized array,
+ * which when looked up, is guaranteed to return a normalized type.
+ * This results in some extra memory usage for extra entries in the type tree.
+ * For example, a type [A] may occur multiple times:
+ *
+ * - [A]
+ * - [A, INSTANCEOF|A]
+ * - [A, CHILDOF|A]
+ * - [A, INSTANCEOF|CHILDOF|A]
+ * - [INSTANCEOF|A]
+ * - [CHILDOF|A]
+ * - [INSTANCEOF|CHILDOF|A]
+ *
+ * While worst case this could result in a lot of memory overhead, in practice
+ * this is manageable. Entities are typically only used in combination with a
+ * single flag, and types typically have comparatively low numbers of entities
+ * with flags. If in the previous example, "A" would always be used as a prefab,
+ * it would only create this entry:
+ *
+ * - [INSTANCEOF|A]
+ */
+static
+ecs_type_t ecs_type_from_array_normalize(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t *array,
+    uint32_t count)
+{
+    ecs_entity_t *dst_array = ecs_os_alloca(ecs_entity_t, count);
+    uint32_t dst_count = 0;
+    
+    int i, j;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t ie = array[i];
+        ecs_entity_t ie_e = ie & ECS_ENTITY_MASK;
+        ecs_entity_t found = 0;
+
+        for (j = count - 1; j > i; j --) {
+            ecs_entity_t je = array[j];
+            ecs_entity_t je_e = je & ECS_ENTITY_MASK;
+
+            if (je_e == ie_e) {
+                found = je;
+                break;
+            }
+        }
+
+        if (!found) {
+            dst_array[dst_count ++] = ie;
+        } else {
+            array[j] |= ie;
+        }
+    }
+
+    return find_or_create_type(
+        world, stage, &stage->type_root, dst_array, dst_count, true, true);
+}
+
 static
 ecs_type_t register_type(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_link_t *link,
     ecs_entity_t *array,
-    uint32_t count)
+    uint32_t count,
+    bool normalized)
 {
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
 
-    ecs_type_t result = ecs_type_from_array(array, count);
+    ecs_type_t result;
+    bool has_flags = (array[count - 1] & EcsTypeFlagsAll) != 0;
+    
+    if (!normalized && has_flags) {
+        result = ecs_type_from_array_normalize(world, stage, array, count);
+    } else {
+        result = ecs_type_from_array(array, count);
+    }
+
     link->type = result;
 
     if (stage->last_link) {
@@ -163,7 +258,6 @@ ecs_type_t register_type(
     }
 
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_vector_count(result) == count, ECS_INTERNAL_ERROR, NULL);
 
     notify_systems_of_type(world, stage, result);
     
@@ -177,13 +271,18 @@ ecs_type_t find_type_in_vector(
     ecs_vector_t **vector,
     ecs_entity_t *array,
     uint32_t count,
-    bool create)
+    bool create,
+    bool normalized)
 {
     uint32_t i, types_count = ecs_vector_count(*vector);
-    ecs_type_t *type_array = ecs_vector_first(*vector);
+    ecs_type_link_t **type_array = ecs_vector_first(*vector);
 
     for (i = 0; i < types_count; i ++) {
-        ecs_type_t type = type_array[i];
+        ecs_type_t type = type_array[i]->type;
+        if (!type) {
+            continue;
+        }
+
         uint32_t type_count = ecs_vector_count(type);
 
         if (type_count != count) {
@@ -206,8 +305,9 @@ ecs_type_t find_type_in_vector(
 
     /* Type has not been found, add it */
     if (create) {
-        ecs_type_link_t *link = ecs_vector_add(vector, &link_params);
-        return register_type(world, stage, link, array, count);
+        ecs_type_link_t **link = ecs_vector_add(vector, &link_params);
+        *link = ecs_os_calloc(1, sizeof(ecs_type_link_t));
+        return register_type(world, stage, *link, array, count, normalized);
     }
     
     return NULL;
@@ -220,7 +320,8 @@ ecs_type_t find_or_create_type(
     ecs_type_node_t *root,
     ecs_entity_t *array,
     uint32_t count,
-    bool create)
+    bool create,
+    bool normalized)
 {
     ecs_type_node_t *node = root;
     ecs_type_t type = NULL;
@@ -256,7 +357,7 @@ ecs_type_t find_or_create_type(
                 
                 if (!type && create) {
                     type = register_type(
-                        world, stage, &node->link, array, i + 1);
+                        world, stage, &node->link, array, i + 1, normalized);
 
                     ecs_assert(
                         ecs_vector_count(type) == i + 1, 
@@ -289,7 +390,8 @@ ecs_type_t find_or_create_type(
             }
 
             type = find_type_in_vector(
-                world, stage, &node->types[index], array, count, create);
+                world, stage, &node->types[index], array, count, create, 
+                normalized);
 
             if (type) {
                 break;
@@ -304,7 +406,7 @@ ecs_type_t find_or_create_type(
     }
     
     ecs_assert(!create || type != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!create || ecs_vector_count(type) == count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!create || !normalized || ecs_vector_count(type) == count, ECS_INTERNAL_ERROR, NULL);
 
     return type;
 }
@@ -355,20 +457,18 @@ ecs_type_t ecs_type_find_intern(
 
     if (stage == &world->main_stage) {
         type = find_or_create_type(
-            world, stage, &world->main_stage.type_root, array, count, true);
+            world, stage, &world->main_stage.type_root, array, count, true, false);
     } else {
         type = find_or_create_type(
-            world, stage, &world->main_stage.type_root, array, count, false);
+            world, stage, &world->main_stage.type_root, array, count, false, false);
     }
 
     if (!type && stage != &world->main_stage) {
         type = find_or_create_type(
-            world, stage, &world->main_stage.type_root, array, count, true);
+            world, stage, &world->main_stage.type_root, array, count, true, false);
     }
 
     ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_assert(ecs_vector_count(type) == count, ECS_INTERNAL_ERROR, NULL);
 
     return type;
 }
@@ -422,28 +522,25 @@ ecs_type_t ecs_type_merge_intern(
 
     ecs_entity_t *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
     ecs_entity_t cur = 0, add = 0, del = 0;
-    ecs_entity_t cur_flags = 0, add_flags = 0, del_flags = 0;
     uint32_t i_cur = 0, i_add = 0, i_del = 0;
     uint32_t cur_count = 0, add_count = 0, del_count = 0;
-
-    (void)del_flags;
 
     del_count = ecs_vector_count(to_del);
     if (del_count) {
         buf_del = ecs_vector_first(to_del);
-        del_flags = split_entity_id(buf_del[0], &del);
+        del = buf_del[0];
     }
 
     cur_count = ecs_vector_count(arr_cur);
     if (cur_count) {
         buf_cur = ecs_vector_first(arr_cur);
-        cur_flags = split_entity_id(buf_cur[0], &cur);
+        cur = buf_cur[0];
     }
 
     add_count = ecs_vector_count(to_add);
     if (add_count) {
         buf_add = ecs_vector_first(to_add);
-        add_flags = split_entity_id(buf_add[0], &add);
+        add = buf_add[0];
     }
 
     ecs_entity_t *buf_new = NULL; 
@@ -457,11 +554,11 @@ ecs_type_t ecs_type_merge_intern(
     do {
         if (add && (!cur || add < cur)) {
             ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
-            buf_new[new_count] = add | add_flags;
+            buf_new[new_count] = add;
             new_count ++;
             i_add ++;
             if (i_add < add_count) {
-                add_flags = split_entity_id(buf_add[i_add], &add);
+                add = buf_add[i_add];
             } else {
                 add = 0;
             }
@@ -469,7 +566,7 @@ ecs_type_t ecs_type_merge_intern(
             while (del && del < cur) {
                 i_del ++;
                 if (i_del < del_count) {
-                    del_flags = split_entity_id(buf_del[i_del], &del);
+                    del = buf_del[i_del];
                 } else {
                     del = 0;
                 }
@@ -477,12 +574,12 @@ ecs_type_t ecs_type_merge_intern(
 
             if (del != cur) {
                 ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
-                buf_new[new_count] = cur | cur_flags;
+                buf_new[new_count] = cur;
                 new_count ++;
             } else if (del == cur) {
                 i_del ++;
                 if (i_del < del_count) {
-                    del_flags = split_entity_id(buf_del[i_del], &del);
+                    del = buf_del[i_del];
                 } else {
                     del = 0;
                 }
@@ -490,25 +587,25 @@ ecs_type_t ecs_type_merge_intern(
 
             i_cur ++;
             if (i_cur < cur_count) {
-                cur_flags = split_entity_id(buf_cur[i_cur], &cur);
+                cur = buf_cur[i_cur];
             } else {
                 cur = 0;
             }
         } else if (add && add == cur) {
             ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
-            buf_new[new_count] = add | add_flags | cur_flags;
+            buf_new[new_count] = add;
             new_count ++;
             i_cur ++;
             i_add ++;
 
             if (i_add < add_count) {
-                add_flags = split_entity_id(buf_add[i_add], &add);
+                add = buf_add[i_add];
             } else {
                 add = 0;
             }
 
             if (i_cur < cur_count) {
-                cur_flags = split_entity_id(buf_cur[i_cur], &cur);
+                cur = i_cur;
             } else {
                 cur = 0;
             }
