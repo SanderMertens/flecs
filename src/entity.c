@@ -1030,7 +1030,7 @@ ecs_entity_t _ecs_new_child_w_count(
         full_type = ecs_type_merge(world, full_type, parent_type, 0);
     }
 
-    return _ecs_new_w_count(world, full_type, count);
+    return _ecs_commit(world, 0, full_type, 0, EcsChildOf, count);
 }
 
 ecs_entity_t _ecs_new_child(
@@ -1052,7 +1052,7 @@ ecs_entity_t _ecs_new_child(
         full_type = ecs_type_merge(world, full_type, parent_type, 0);
     }
 
-    return _ecs_new(world, full_type);
+    return _ecs_commit(world, 0, full_type, 0, EcsChildOf, 0);
 }
 
 void ecs_delete(
@@ -1242,14 +1242,20 @@ ecs_entity_t _ecs_commit(
     ecs_entity_t entity,
     ecs_type_t to_add,
     ecs_type_t to_remove,
-    ecs_type_flags_t flags)
+    ecs_type_flags_t flags,
+    uint32_t count)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(!count || !entity, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
 
     ecs_stage_t *stage = ecs_get_stage(&world);
     if (flags) {
-        to_add = add_flags_to_type(world, stage, to_add, flags);
+        if (to_add) {
+            to_add = add_flags_to_type(world, stage, to_add, flags);
+        } else if (to_remove) {
+            to_remove = add_flags_to_type(world, stage, to_remove, flags);
+        }
     }
     
     if (entity) {
@@ -1264,6 +1270,8 @@ ecs_entity_t _ecs_commit(
         }
 
         commit(world, stage, &info, dst_type, to_add, to_remove, true);
+    } else if (count) {
+        entity = _ecs_new_w_count(world, to_add, count);
     } else {
         entity = _ecs_new(world, to_add);
     }
@@ -1280,7 +1288,7 @@ void ecs_orphan(
 
     ecs_type_t TParentType = ecs_type_from_entity(world, parent);
 
-    ecs_remove(world, child, ParentType);    
+    ecs_commit(world, child, 0, ParentType, EcsChildOf);
 }
 
 void* _ecs_get_ptr(

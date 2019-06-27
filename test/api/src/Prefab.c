@@ -116,7 +116,7 @@ void Prefab_new_w_count_prefab() {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    ecs_entity_t e_start = ecs_new_w_count(world, Prefab, 10);
+    ecs_entity_t e_start = ecs_instantiate_w_count(world, Prefab, 10);
 
     int i;
     Position *p_prev = NULL;
@@ -1000,7 +1000,7 @@ void Prefab_override_2_components_different_size() {
     ecs_set(world, Prefab, Velocity, {30, 40});
     ecs_set(world, Prefab, Color, {1, 2, 3, 4});
 
-    ecs_entity_t e_1 = ecs_new_w_count(world, Type, 100);
+    ecs_entity_t e_1 = ecs_instantiate_w_count(world, Type, 100);
     test_assert(e_1 != 0);
 
     Position *prefab_p = ecs_get_ptr(world, Prefab, Position);
@@ -1445,7 +1445,7 @@ void Prefab_prefab_w_child_new_w_count() {
             ecs_set(world, Child, EcsPrefab, {.parent = Parent});
             ecs_set(world, Child, Position, {2, 3});
 
-    ecs_entity_t e = ecs_new_w_count(world, Parent, 3);
+    ecs_entity_t e = ecs_instantiate_w_count(world, Parent, 3);
     test_assert(e != 0);
 
     int end = e + 3;
