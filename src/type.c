@@ -605,7 +605,7 @@ ecs_type_t ecs_type_merge_intern(
             }
 
             if (i_cur < cur_count) {
-                cur = i_cur;
+                cur = buf_cur[i_cur];
             } else {
                 cur = 0;
             }
@@ -617,7 +617,8 @@ ecs_type_t ecs_type_merge_intern(
             (ecs_vector_count(arr_cur) + 
              ecs_vector_count(to_add)) >= new_count, ECS_INTERNAL_ERROR, 0);
 
-        return ecs_type_find_intern(world, stage, buf_new, new_count);
+        ecs_type_t result = ecs_type_find_intern(world, stage, buf_new, new_count);
+        return result;
     } else {
         return 0;
     }

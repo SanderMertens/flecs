@@ -422,7 +422,7 @@ bool match_table(
     if (ecs_type_has_entity_intern(
         world, &world->main_stage, table_type, EEcsPrefab, false))
     {
-        /* Never match disabled entities */
+        /* Never match prefab entities */
         return false;
     }
 

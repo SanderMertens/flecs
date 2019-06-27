@@ -889,8 +889,9 @@ bool ecs_components_contains_component(
     ecs_entity_t *type_buffer = ecs_vector_first(type);
 
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = type_buffer[i];
+        ecs_entity_t e = type_buffer[i] & ECS_ENTITY_MASK;
         ecs_row_t row = row_from_stage(&world->main_stage, e);
+
         bool result = ecs_type_has_entity_intern(
             world, &world->main_stage, row.type, component, true);
         if (result) {
