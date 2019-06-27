@@ -230,6 +230,27 @@ void Type_type_merge_overlap() {
     ecs_fini(world);
 }
 
+void Type_type_merge_overlap_one() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_TYPE(world, Type1, Position, Velocity);
+    ECS_TYPE(world, Type2, Position);
+
+    ecs_type_t t = ecs_type_merge(world, ecs_type(Type1), ecs_type(Type2), 0);
+    test_assert(t != NULL);
+    test_int( ecs_vector_count(t), 2);
+
+    ecs_entity_t *entities = ecs_vector_first(t);
+    test_int(entities[0], ecs_entity(Position));
+    test_int(entities[1], ecs_entity(Velocity));
+
+    ecs_fini(world);
+}
+
 void Type_type_merge_overlap_w_flag() {
     ecs_world_t *world = ecs_init();
 

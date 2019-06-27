@@ -428,6 +428,7 @@ void Type_type_has_container(void);
 void Type_type_has_prefab_container(void);
 void Type_type_merge(void);
 void Type_type_merge_overlap(void);
+void Type_type_merge_overlap_one(void);
 void Type_type_merge_overlap_w_flag(void);
 void Type_type_merge_overlap_w_flags_from_both(void);
 
@@ -2144,7 +2145,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Type",
-        .testcase_count = 16,
+        .testcase_count = 17,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_of_1_tostr",
@@ -2201,6 +2202,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_merge_overlap",
                 .function = Type_type_merge_overlap
+            },
+            {
+                .id = "type_merge_overlap_one",
+                .function = Type_type_merge_overlap_one
             },
             {
                 .id = "type_merge_overlap_w_flag",

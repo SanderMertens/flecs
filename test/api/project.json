@@ -485,6 +485,7 @@
                 "type_has_prefab_container",
                 "type_merge",
                 "type_merge_overlap",
+                "type_merge_overlap_one",
                 "type_merge_overlap_w_flag",
                 "type_merge_overlap_w_flags_from_both"
             ]

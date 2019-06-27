@@ -321,6 +321,7 @@ void Add_component_to_nonempty_overlap() {
     test_assert(ecs_has(world, e, Velocity));
 
     ecs_add(world, e, Position);
+
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
