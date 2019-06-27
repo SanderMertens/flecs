@@ -768,13 +768,20 @@ ecs_entity_t _ecs_commit(
     ecs_entity_t entity,
     ecs_type_t t_add,
     ecs_type_t t_remove,
-    ecs_type_flags_t flags);
+    ecs_type_flags_t flags,
+    uint32_t count);
 
 #define ecs_commit(world, entity, t_add, t_remove, flags)\
-    _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), flags)
+    _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), flags, 0)
+
+#define ecs_commit_w_count(world, t_add, t_remove, flags, count)\
+    _ecs_commit(world, 0, ecs_type(t_add), ecs_type(t_remove), flags, count)
 
 #define ecs_instantiate(world, prefab)\
-    _ecs_commit(world, 0, ecs_type(prefab), 0, EcsInstanceOf);
+    _ecs_commit(world, 0, ecs_type(prefab), 0, EcsInstanceOf, 0);
+
+#define ecs_instantiate_w_count(world, prefab, count)\
+    _ecs_commit(world, 0, ecs_type(prefab), 0, EcsInstanceOf, count);
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
