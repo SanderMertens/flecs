@@ -421,6 +421,11 @@ void ecs_set_threads(
     ecs_world_t *world,
     uint32_t threads);
 
+/** Get index of current worker thread */
+FLECS_EXPORT
+uint16_t ecs_get_thread_index(
+    ecs_world_t *world);
+
 /** Set target frames per second (FPS) for application.
  * Setting the target FPS ensures that ecs_progress is not invoked faster than
  * the specified FPS. When enabled, ecs_progress tracks the time passed since

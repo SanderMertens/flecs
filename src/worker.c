@@ -132,6 +132,7 @@ void start_threads(
         thread->world = world;
         thread->thread = 0;
         thread->job_count = 0;
+        thread->index = i;
 
         thread->stage = ecs_vector_add(&world->worker_stages, &stage_arr_params);
         ecs_stage_init(world, thread->stage);

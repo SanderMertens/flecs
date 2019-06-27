@@ -303,6 +303,7 @@ typedef struct ecs_thread_t {
     ecs_job_t *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
     ecs_stage_t *stage;                       /* Stage for thread */
     ecs_os_thread_t thread;                   /* Thread handle */
+    uint16_t index;                           /* Index of thread */
 } ecs_thread_t;
 
 /** The world stores and manages all ECS data. An application can have more than

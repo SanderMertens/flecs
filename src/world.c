@@ -1414,3 +1414,16 @@ ecs_entity_t ecs_import_from_library(
     return ECS_INVALID_ENTITY;
 #endif
 }
+
+uint16_t ecs_get_thread_index(
+    ecs_world_t *world)
+{
+    if (world->magic == ECS_THREAD_MAGIC) {
+        ecs_thread_t *thr = (ecs_thread_t*)world;
+        return thr->index;
+    } else if (world->magic == ECS_WORLD_MAGIC) {
+        return 0;
+    } else {
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    }
+}
