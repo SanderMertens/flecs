@@ -1422,13 +1422,16 @@ bool ecs_contains(
     ecs_entity_t child)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    ecs_stage_t *stage = ecs_get_stage(&world);
 
     if (!parent || !child) {
         return false;
     }
 
-    ecs_type_t TParent = ecs_type_from_entity(world, parent);
-    return ecs_has(world, child, Parent);
+    ecs_type_t child_type = ecs_get_type(world, child);
+
+    return ecs_type_has_entity_intern(
+        world, stage, child_type, parent | EcsChildOf, false);
 }
 
 ecs_entity_t ecs_get_parent(
