@@ -298,7 +298,8 @@ ecs_type_t instantiate_prefab(
         }
 
         /* Keep track of components shared from new prefabs */
-        modified = ecs_type_merge_intern(world, stage, modified, prefab_info->type, 0);
+        modified = ecs_type_merge_intern(
+            world, stage, modified, prefab_info->type, 0);
 
     /* If the current entity is also prefab, do not add children to
      * it. Instead, add children (if any) of its base to its ops */
@@ -375,7 +376,7 @@ ecs_type_t copy_from_prefab(
             continue;
         }
 
-        if (ee == EEcsId) {
+        if (ee == EEcsId || ee == EEcsPrefabBuilder) {
             continue;
         }
 
@@ -398,7 +399,8 @@ ecs_type_t copy_from_prefab(
 
         if (size) {
             void *src_column_data = ecs_vector_first(src_column->data);
-            void *src_ptr = ECS_OFFSET(src_column_data, size * (prefab_index - 1));
+            void *src_ptr = ECS_OFFSET(
+                src_column_data, size * (prefab_index - 1));
 
             uint32_t dst_col_index;
             if (info->type == to_add) {
@@ -409,7 +411,8 @@ ecs_type_t copy_from_prefab(
             
             ecs_table_column_t *dst_column = &columns[dst_col_index + 1];
             void *dst_column_data = ecs_vector_first(dst_column->data);
-            void *dst_ptr = ECS_OFFSET(dst_column_data, size * (info->index - 1));
+            void *dst_ptr = ECS_OFFSET(
+                dst_column_data, size * (info->index - 1));
 
             uint32_t i;
             for (i = 0; i < limit; i ++) {
