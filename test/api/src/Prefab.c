@@ -1301,7 +1301,7 @@ void Prefab_prefab_w_base_w_child() {
     ECS_ENTITY(world, Base, EcsPrefab, Velocity);
         ecs_set(world, Base, Velocity, {3, 4});
 
-    ECS_ENTITY(world, Parent, EcsPrefab, Base, Position);
+    ECS_ENTITY(world, Parent, EcsPrefab, INSTANCEOF | Base, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
         ECS_ENTITY(world, Child, EcsPrefab, Position);
@@ -1347,7 +1347,7 @@ void Prefab_prefab_w_child_w_base() {
     ECS_ENTITY(world, Parent, EcsPrefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, Base, Position);
+        ECS_ENTITY(world, Child, EcsPrefab, INSTANCEOF | Base, Position);
             ecs_set(world, Child, EcsPrefab, {.parent = Parent});
             ecs_set(world, Child, Position, {2, 3});
 
@@ -1393,7 +1393,7 @@ void Prefab_prefab_w_child_w_base_w_children() {
     ECS_ENTITY(world, Parent, EcsPrefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, Base, Position);
+        ECS_ENTITY(world, Child, EcsPrefab, INSTANCEOF | Base, Position);
             ecs_set(world, Child, EcsPrefab, {.parent = Parent});
             ecs_set(world, Child, Position, {2, 3});
 
