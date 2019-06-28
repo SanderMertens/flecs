@@ -400,7 +400,13 @@ ecs_type_t copy_from_prefab(
             void *src_column_data = ecs_vector_first(src_column->data);
             void *src_ptr = ECS_OFFSET(src_column_data, size * (prefab_index - 1));
 
-            uint32_t dst_col_index = ecs_type_index_of(info->type, ee);
+            uint32_t dst_col_index;
+            if (info->type == to_add) {
+                dst_col_index = e;
+            } else {
+                dst_col_index = ecs_type_index_of(info->type, ee);
+            }
+            
             ecs_table_column_t *dst_column = &columns[dst_col_index + 1];
             void *dst_column_data = ecs_vector_first(dst_column->data);
             void *dst_ptr = ECS_OFFSET(dst_column_data, size * (info->index - 1));
