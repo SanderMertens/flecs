@@ -709,7 +709,7 @@ bool ecs_type_has_entity_intern(
 
     for (i = 0; i < count; i++) {
         ecs_entity_t e = array[i];
-        if ((e & ECS_ENTITY_MASK) == entity) {
+        if ((e == entity) || (e & ECS_ENTITY_MASK) == entity) {
             return true;
         }
     }
