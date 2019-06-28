@@ -52,6 +52,12 @@ void copy_row(
         ecs_entity_t new_component = new_components[i_new];
         ecs_entity_t old_component = old_components[i_old];
 
+        if ((new_component & EcsTypeFlagsAll) || 
+            (old_component & EcsTypeFlagsAll)) 
+        {
+            break;
+        }
+
         if (new_component == old_component) {
             copy_column(&new_columns[i_new + 1], new_index, &old_columns[i_old + 1], old_index);
             i_new ++;
@@ -394,7 +400,8 @@ ecs_type_t copy_from_prefab(
             void *src_column_data = ecs_vector_first(src_column->data);
             void *src_ptr = ECS_OFFSET(src_column_data, size * (prefab_index - 1));
 
-            ecs_table_column_t *dst_column = &columns[e + 1];
+            uint32_t dst_col_index = ecs_type_index_of(info->type, ee);
+            ecs_table_column_t *dst_column = &columns[dst_col_index + 1];
             void *dst_column_data = ecs_vector_first(dst_column->data);
             void *dst_ptr = ECS_OFFSET(dst_column_data, size * (info->index - 1));
 
@@ -1317,7 +1324,7 @@ ecs_entity_t _ecs_set_ptr_intern(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(type != 0, ECS_INVALID_PARAMETERS, NULL);
-    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(!size || ptr != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
 
@@ -1362,7 +1369,6 @@ ecs_entity_t _ecs_set_ptr(
     void *ptr)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETERS, NULL);
 
     /* If no entity is specified, create one */
     if (!entity) {
