@@ -1914,7 +1914,7 @@ void Prefab_no_instantiate_on_2nd_add() {
     test_int(v->x, 4);
     test_int(v->y, 5);
 
-    ecs_add(world, e, Prefab);
+    ecs_commit(world, e, Prefab, 0, EcsInstanceOf);
 
     ecs_entity_t e_child_2 = ecs_lookup_child(world, e, "ChildPrefab");
     test_assert(e_child == e_child_2);
