@@ -1607,7 +1607,7 @@ void InstantiateInProgress(ecs_rows_t *rows) {
 
     int i;
     for (i = 0; i < rows->count; i ++) {
-        ids[i] = ecs_new(rows->world, Type);
+        ids[i] = ecs_instantiate(rows->world, Type);
     }
 }
 
