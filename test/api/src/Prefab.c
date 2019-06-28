@@ -1061,35 +1061,6 @@ void Prefab_ignore_prefab_parent_component() {
     ecs_fini(world);
 }
 
-void Prefab_ignore_prefab_parent_component_after_prefab_parent_change() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-
-    ECS_ENTITY(world, parent1, EcsPrefab, Position);
-    ECS_ENTITY(world, parent2, EcsPrefab, Velocity);
-    ECS_ENTITY(world, child, EcsPrefab, Mass);
-
-    ecs_set(world, child, EcsPrefab, {.parent = parent1});
-
-    test_assert( ecs_contains(world, parent1, child));
-    test_assert( !ecs_has(world, child, Position));
-    test_assert( !ecs_has(world, child, Velocity));
-    test_assert( ecs_has(world, child, Mass));
-
-    ecs_set(world, child, EcsPrefab, {.parent = parent2});
-    
-    test_assert( ecs_contains(world, parent1, child));
-    test_assert( ecs_contains(world, parent2, child));
-    test_assert( ecs_has(world, child, Position));
-    test_assert( !ecs_has(world, child, Velocity));
-    test_assert( ecs_has(world, child, Mass));
-
-    ecs_fini(world);
-}
-
 static
 void Move(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
@@ -1483,7 +1454,7 @@ void Prefab_prefab_auto_override_child_component() {
         ecs_set(world, Parent, Position, {1, 2});
 
         ECS_ENTITY(world, ChildPrefab, EcsPrefab, Position, Velocity);
-        ECS_TYPE(world, Child, ChildPrefab, Velocity);
+        ECS_TYPE(world, Child, INSTANCEOF | ChildPrefab, Velocity);
             ecs_set(world, Child, EcsPrefab, {.parent = Parent});
             ecs_set(world, ChildPrefab, Position, {2, 3});
             ecs_set(world, ChildPrefab, Velocity, {4, 5});
@@ -1509,6 +1480,7 @@ void Prefab_prefab_auto_override_child_component() {
 
     ecs_entity_t child_1 = ecs_lookup_child(world, e1, "Child");
     test_assert(child_1 != 0);
+
     test_assert( ecs_has(world, child_1, Position));
     test_assert( ecs_has(world, child_1, Velocity));
     test_assert( !ecs_has(world, child_1, EcsTypeComponent));
