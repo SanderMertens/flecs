@@ -490,12 +490,23 @@ void add_prefab_child_to_builder(
         builder->ops = ecs_vector_new(&builder_params, 1);
     }
 
-    ecs_entity_t array[] = {
-        child | EcsInstanceOf,
-        EEcsId
-    };
+    ecs_type_t type = NULL;
+    if (ecs_has(world, child, EcsTypeComponent)) {
+        type = ecs_type_from_entity(world, child); 
 
-    ecs_type_t type = ecs_type_find(world, array, 2);
+        ecs_entity_t *array = ecs_vector_first(type);
+        uint32_t count = ecs_vector_count(type);
+        if (!(array[count - 1] & EcsInstanceOf)) {
+            ecs_abort(ECS_INVALID_PREAFB_CHILD_TYPE, NULL);
+        }
+    } else {
+        ecs_entity_t array[] = {
+            child | EcsInstanceOf,
+            EEcsId
+        };
+
+        type = ecs_type_find(world, array, 2);
+    }
 
     /* If there are no child ops, this is the first time that this child is
      * added to this parent prefab. Simply add it to the vector */

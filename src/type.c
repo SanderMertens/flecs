@@ -975,13 +975,15 @@ char* _ecs_type_str(
         }
 
         if (flags & EcsInstanceOf) {
+            int len = strlen("INSTANCEOF|");
             dst = ecs_vector_addn(&chbuf, &char_arr_params, strlen("INSTANCEOF|"));
-            strcpy(dst, "INSTANCEOF|");
+            memcpy(dst, "INSTANCEOF|", len);
         }
 
         if (flags & EcsChildOf) {
+            int len = strlen("CHILDOF|");
             dst = ecs_vector_addn(&chbuf, &char_arr_params, strlen("CHILDOF|"));
-            strcpy(dst, "CHILDOF|");
+            memcpy(dst, "CHILDOF|", len);
         }
 
         const char *str = NULL;

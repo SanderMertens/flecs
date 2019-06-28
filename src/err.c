@@ -96,6 +96,8 @@ const char* ecs_strerror(
         return "missing implementation for OS API function";
     case ECS_TYPE_TOO_LARGE:
         return "type contains too many entities";
+    case ECS_INVALID_PREAFB_CHILD_TYPE:
+        return "a prefab child type must have at least one INSTANCEOF element";
     }
 
     return "unknown error code";

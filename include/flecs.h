@@ -1738,7 +1738,7 @@ void _ecs_assert(
 #define ECS_THREAD_ERROR (26)
 #define ECS_MISSING_OS_API (27)
 #define ECS_TYPE_TOO_LARGE (28)
-
+#define ECS_INVALID_PREAFB_CHILD_TYPE (29)
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */
 
