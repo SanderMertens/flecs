@@ -733,25 +733,14 @@ int32_t ecs_type_container_depth(
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type);
 
-    for (i = 0; i < count; i ++) {
-        ecs_row_t row;
-        if (ecs_map_has(world->main_stage.entity_index, array[i], &row)) {
-            ecs_type_t c_type = row.type;
+    for (i = count - 1; i >= 0; i --) {
+        if (array[i] & EcsChildOf) {
+            ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_ENTITY_MASK);
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type);
 
-            bool found_container = false;
-            bool found_component = false;
-
             for (j = 0; j < c_count; j ++) {
-                if (c_array[j] == EEcsContainer) {
-                    found_container = true;
-                }
                 if (c_array[j] == component) {
-                    found_component = true;
-                }
-
-                if (found_component && found_container) {
                     result ++;
                     result += ecs_type_container_depth(world, c_type, component);
                     break;
@@ -761,6 +750,9 @@ int32_t ecs_type_container_depth(
             if (j != c_count) {
                 break;
             }
+        } else if (!(array[i] & EcsTypeFlagsAll)) {
+            /* No more parents after this */
+            break;
         }
     }
 
