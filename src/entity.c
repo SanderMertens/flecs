@@ -1354,6 +1354,10 @@ ecs_entity_t _ecs_set_ptr_intern(
         }
     }
 
+    if (dst == ptr) {
+        return entity;
+    }
+
 #ifndef NDEBUG
     ecs_entity_info_t cinfo = {.entity = component};
     EcsComponent *cdata = ecs_get_ptr_intern(
