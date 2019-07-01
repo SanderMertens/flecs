@@ -474,7 +474,7 @@ ecs_type_t ecs_type_find_intern(
 }
 
 /** Extend existing type with additional entity */
-ecs_type_t ecs_type_add(
+ecs_type_t ecs_type_add_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t type,
@@ -942,8 +942,16 @@ ecs_entity_t ecs_type_has_entity(
     ecs_entity_t entity)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
-
     return ecs_type_has_entity_intern(world, stage, type, entity, false);
+}
+
+ecs_type_t ecs_type_add(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t e)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    return ecs_type_add_intern(world, stage, type, e);
 }
 
 char* _ecs_type_str(
@@ -998,4 +1006,3 @@ char* _ecs_type_str(
     ecs_vector_free(chbuf);
     return result;
 }
-
