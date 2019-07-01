@@ -133,7 +133,7 @@ ecs_entity_t new_row_system(
         *h = column->is.component;
 
         if (column->kind != EcsFromId) {
-            type_id = ecs_type_add(
+            type_id = ecs_type_add_intern(
                 world, NULL, type_id, column->is.component);
         }
     }
@@ -185,12 +185,12 @@ void ecs_system_compute_and_families(
 
         if (elem_kind == EcsFromSelf) {
             if (oper_kind == EcsOperAnd) {
-                system_data->and_from_entity = ecs_type_add(
+                system_data->and_from_entity = ecs_type_add_intern(
                  world, NULL, system_data->and_from_entity, elem->is.component);
             }
         } else if (elem_kind == EcsFromSystem) {
             if (oper_kind == EcsOperAnd) {
-                system_data->and_from_system = ecs_type_add(
+                system_data->and_from_system = ecs_type_add_intern(
                   world, NULL, system_data->and_from_system, elem->is.component);
             }
         } else if (elem_kind == EcsCascade) {
@@ -251,7 +251,7 @@ int ecs_parse_signature_action(
     } else if (oper_kind == EcsOperOr) {
         elem = ecs_vector_last(system_data->columns, &column_arr_params);
         if (elem->oper_kind == EcsOperAnd) {
-            elem->is.type = ecs_type_add(
+            elem->is.type = ecs_type_add_intern(
                 world, NULL, 0, elem->is.component);
         } else {
             if (elem->kind != elem_kind) {
@@ -260,7 +260,7 @@ int ecs_parse_signature_action(
             }
         }
 
-        elem->is.type = ecs_type_add(
+        elem->is.type = ecs_type_add_intern(
             world, NULL, elem->is.type, component);
         elem->kind = elem_kind;
         elem->oper_kind = EcsOperOr;
@@ -276,11 +276,11 @@ int ecs_parse_signature_action(
 
         if (elem_kind == EcsFromSelf) {
             system_data->not_from_entity =
-                ecs_type_add(
+                ecs_type_add_intern(
                     world, NULL, system_data->not_from_entity, component);
         } else {
             system_data->not_from_component =
-              ecs_type_add(
+              ecs_type_add_intern(
                   world, NULL, system_data->not_from_component, component);
         }
     }
@@ -627,6 +627,7 @@ void* _ecs_column(
     }
 
     ecs_table_column_t *column = &((ecs_table_column_t*)rows->table_columns)[table_column];
+    ecs_assert(column->size != 0, ECS_COLUMN_HAS_NO_DATA, NULL);
     void *buffer = ecs_vector_first(column->data);
     return ECS_OFFSET(buffer, column->size * rows->offset);
 }

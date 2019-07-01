@@ -139,7 +139,7 @@ bool ecs_type_has_entity_intern(
     bool match_prefab);
 
 /* Add component to type */
-ecs_type_t ecs_type_add(
+ecs_type_t ecs_type_add_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t type,
