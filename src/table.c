@@ -276,6 +276,9 @@ uint32_t ecs_table_grow(
     /* Add elements to each column array */
     for (i = 1; i < column_count + 1; i ++) {
         ecs_vector_params_t params = {.element_size = columns[i].size};
+        if (!params.element_size) {
+            continue;
+        }
         void *old_vector = columns[i].data;
 
         if (!ecs_vector_addn(&columns[i].data, &params, count)) {
