@@ -1192,7 +1192,14 @@ ecs_entity_t ecs_entity_from_type(
     ecs_world_t *world,
     ecs_type_t type);
 
-/** Merge two types. 
+/** Find or create type from existing type and entity. */
+FLECS_EXPORT
+ecs_type_t ecs_type_add(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity);
+
+/** Find or create type that is the union of two types. 
  * This operation will return a type that contains exactly the components in the
  * specified type, plus the components in type_add, and not the components in
  * type_remove.
@@ -1728,17 +1735,18 @@ void _ecs_assert(
 #define ECS_COLUMN_INDEX_OUT_OF_RANGE (16)
 #define ECS_COLUMN_IS_NOT_SHARED (17)
 #define ECS_COLUMN_IS_SHARED (18)
-#define ECS_INVALID_WHILE_MERGING (19)
-#define ECS_INVALID_WHILE_ITERATING (20)
-#define ECS_INVALID_FROM_WORKER (21)
-#define ECS_UNRESOLVED_IDENTIFIER (22)
-#define ECS_OUT_OF_RANGE (23)
-#define ECS_COLUMN_IS_NOT_SET (24)
-#define ECS_UNRESOLVED_REFERENCE (25)
-#define ECS_THREAD_ERROR (26)
-#define ECS_MISSING_OS_API (27)
-#define ECS_TYPE_TOO_LARGE (28)
-#define ECS_INVALID_PREAFB_CHILD_TYPE (29)
+#define ECS_COLUMN_HAS_NO_DATA (19)
+#define ECS_INVALID_WHILE_MERGING (20)
+#define ECS_INVALID_WHILE_ITERATING (21)
+#define ECS_INVALID_FROM_WORKER (22)
+#define ECS_UNRESOLVED_IDENTIFIER (23)
+#define ECS_OUT_OF_RANGE (24)
+#define ECS_COLUMN_IS_NOT_SET (25)
+#define ECS_UNRESOLVED_REFERENCE (26)
+#define ECS_THREAD_ERROR (27)
+#define ECS_MISSING_OS_API (28)
+#define ECS_TYPE_TOO_LARGE (29)
+#define ECS_INVALID_PREAFB_CHILD_TYPE (30)
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */
 

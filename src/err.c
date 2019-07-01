@@ -76,6 +76,8 @@ const char* ecs_strerror(
         return "column is not shared";
     case ECS_COLUMN_IS_SHARED:
         return "column is shared";
+    case ECS_COLUMN_HAS_NO_DATA:
+        return "column has no data";
     case ECS_INVALID_WHILE_MERGING:
         return "operation is invalid while merging";
     case ECS_INVALID_WHILE_ITERATING:
