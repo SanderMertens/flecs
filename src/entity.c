@@ -1042,11 +1042,11 @@ ecs_entity_t _ecs_new_child_w_count(
             ecs_set_watching(world, parent, true);
             world->should_match = true;
         }
-        ecs_type_t parent_type = ecs_type_from_entity(world, parent);
-        full_type = ecs_type_merge(world, full_type, parent_type, 0);
+
+        full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
     }
 
-    return _ecs_commit(world, 0, full_type, 0, EcsChildOf, count);
+    return _ecs_commit(world, 0, full_type, 0, 0, count);
 }
 
 ecs_entity_t _ecs_new_child(
@@ -1064,11 +1064,11 @@ ecs_entity_t _ecs_new_child(
             ecs_set_watching(world, parent, true);
             world->should_match = true;
         }
-        ecs_type_t parent_type = ecs_type_from_entity(world, parent);
-        full_type = ecs_type_merge(world, full_type, parent_type, 0);
+        
+        full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
     }
 
-    return _ecs_commit(world, 0, full_type, 0, EcsChildOf, 0);
+    return _ecs_commit(world, 0, full_type, 0, 0, 0);
 }
 
 void ecs_delete(

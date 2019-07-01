@@ -44,6 +44,53 @@ void Container_child_w_type() {
     ecs_fini(world);
 }
 
+void Container_child_w_type_w_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, parent, 0);
+    ECS_TYPE(world, Type, Position, CHILDOF | parent);
+
+    ecs_entity_t child = ecs_new_child(world, parent, Type);
+    test_assert(child != 0);
+
+    ecs_type_t child_type = ecs_get_type(world, child);
+    test_assert(child_type != NULL);
+    test_int(ecs_vector_count(child_type), 2);
+
+    ecs_entity_t *array = ecs_vector_first(child_type);
+    test_assert(array != NULL);
+    test_int(array[0], ecs_entity(Position));
+    test_int(array[1], parent | EcsChildOf);
+
+    ecs_fini(world);
+}
+
+void Container_child_w_count_type_w_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, parent, 0);
+    ECS_TYPE(world, Type, Position, CHILDOF | parent);
+
+    ecs_entity_t child = ecs_new_child_w_count(world, parent, Type, 3);
+    test_assert(child != 0);
+
+    ecs_type_t child_type = ecs_get_type(world, child);
+    test_assert(child_type != NULL);
+    test_int(ecs_vector_count(child_type), 2);
+
+    test_assert(child_type == ecs_get_type(world, child + 1));
+    test_assert(child_type == ecs_get_type(world, child + 2));
+
+    ecs_entity_t *array = ecs_vector_first(child_type);
+    test_assert(array != NULL);
+    test_int(array[0], ecs_entity(Position));
+    test_int(array[1], parent | EcsChildOf);
+
+    ecs_fini(world);
+}
+
 void Container_contains_w_empty_parent() {
     ecs_world_t *world = ecs_init();
 
