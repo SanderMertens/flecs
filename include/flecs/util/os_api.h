@@ -145,6 +145,7 @@ typedef struct ecs_os_api_t {
     ecs_os_api_log_t log;
     ecs_os_api_log_t log_error;
     ecs_os_api_log_t log_debug;
+    ecs_os_api_log_t log_warning;
 
     /* Application termination */
     ecs_os_api_abort_t abort;
@@ -196,6 +197,9 @@ void ecs_os_set_api_defaults(void);
 /* Logging (use functions to avoid using variadic macro arguments) */
 FLECS_EXPORT
 void ecs_os_log(const char *fmt, ...);
+
+FLECS_EXPORT
+void ecs_os_warn(const char *fmt, ...);
 
 FLECS_EXPORT
 void ecs_os_err(const char *fmt, ...);
