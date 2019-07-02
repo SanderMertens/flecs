@@ -128,6 +128,13 @@ void ecs_log_debug(const char *fmt, va_list args) {
     }
 }
 
+static
+void ecs_log_warning(const char *fmt, va_list args) {
+    fprintf(stderr, "[warn] ");
+    vfprintf(stderr, fmt, args);
+    fprintf(stderr, "\n");
+}
+
 void ecs_os_dbg(const char *fmt, ...) {
 #ifndef NDEBUG
     va_list args;
@@ -139,6 +146,15 @@ void ecs_os_dbg(const char *fmt, ...) {
 #else
     (void)fmt;
 #endif
+}
+
+void ecs_os_warn(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    if (ecs_os_api.log_warning) {
+        ecs_os_api.log_warning(fmt, args);
+    }
+    va_end(args);
 }
 
 void ecs_os_log(const char *fmt, ...) {
@@ -209,6 +225,7 @@ void ecs_os_set_api_defaults(void)
     _ecs_os_api->log = ecs_log;
     _ecs_os_api->log_error = ecs_log_error;
     _ecs_os_api->log_debug = ecs_log_debug;
+    _ecs_os_api->log_warning = ecs_log_warning;
 
     _ecs_os_api->abort = abort;
 }
