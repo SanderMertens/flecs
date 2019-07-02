@@ -488,7 +488,14 @@
                 "type_merge_overlap",
                 "type_merge_overlap_one",
                 "type_merge_overlap_w_flag",
-                "type_merge_overlap_w_flags_from_both"
+                "type_merge_overlap_w_flags_from_both",
+                "type_add",
+                "type_add_empty",
+                "type_add_entity_again",
+                "type_add_out_of_order",
+                "type_add_existing",
+                "type_add_empty_existing",
+                "type_add_out_of_order_existing"
             ]
         }, { 
             "id": "Run",
