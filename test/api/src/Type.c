@@ -445,3 +445,47 @@ void Type_type_add_out_of_order_existing() {
 
     ecs_fini(world);
 }
+
+void Type_type_of_2_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+    ECS_TYPE(world, Type, Position, Mass);
+
+    ecs_type_t new_type = ecs_type_add(world, ecs_type(Type), ecs_entity(Velocity));
+    test_assert(new_type != NULL);
+    test_assert(new_type != ecs_type(Type));
+
+    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    test_assert(type_array != NULL);
+    test_int(ecs_vector_count(new_type), 3);
+    test_int(type_array[0], ecs_entity(Velocity));
+    test_int(type_array[1], ecs_entity(Position));
+    test_int(type_array[2], ecs_entity(Mass));
+
+    ecs_fini(world);
+}
+
+void Type_type_of_3_add_entity_again() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+    ECS_TYPE(world, Type, Velocity, Position, Mass);
+
+    ecs_type_t new_type = ecs_type_add(world, ecs_type(Type), ecs_entity(Velocity));
+    test_assert(new_type != NULL);
+    test_assert(new_type == ecs_type(Type));
+
+    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    test_assert(type_array != NULL);
+    test_int(ecs_vector_count(new_type), 3);
+    test_int(type_array[0], ecs_entity(Velocity));
+    test_int(type_array[1], ecs_entity(Position));
+    test_int(type_array[2], ecs_entity(Mass));
+
+    ecs_fini(world);
+}

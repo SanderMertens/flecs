@@ -439,6 +439,8 @@ void Type_type_add_out_of_order(void);
 void Type_type_add_existing(void);
 void Type_type_add_empty_existing(void);
 void Type_type_add_out_of_order_existing(void);
+void Type_type_of_2_add(void);
+void Type_type_of_3_add_entity_again(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -2157,7 +2159,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Type",
-        .testcase_count = 24,
+        .testcase_count = 26,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_of_1_tostr",
@@ -2254,6 +2256,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_add_out_of_order_existing",
                 .function = Type_type_add_out_of_order_existing
+            },
+            {
+                .id = "type_of_2_add",
+                .function = Type_type_of_2_add
+            },
+            {
+                .id = "type_of_3_add_entity_again",
+                .function = Type_type_of_3_add_entity_again
             }
         }
     },
