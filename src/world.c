@@ -1308,13 +1308,15 @@ int ecs_enable_admin(
     if (ecs_import_from_library(
         world, "flecs.systems.civetweb", NULL, 0) == ECS_INVALID_ENTITY) 
     {
+        ecs_os_err("Failed to load flecs.systems.civetweb");
         return 1;
     }
     
     if (ecs_import_from_library(
         world, "flecs.systems.admin", NULL, 0) == ECS_INVALID_ENTITY)
     {
-        return 2;
+        ecs_os_err("Failed to load flecs.systems.admin");
+        return 1;
     }
 
     /* Enable monitoring */
@@ -1395,6 +1397,7 @@ ecs_entity_t _ecs_import(
 
         /* Lookup module component (must be registered by module) */
         e = ecs_lookup(world, module_name);
+        ecs_assert(e != ECS_INVALID_ENTITY, ECS_MODULE_UNDEFINED, module_name);
 
         /* Copy value of module component in handles_out parameter */
         if (handles_size && handles_out) {
@@ -1420,14 +1423,15 @@ ecs_entity_t ecs_import_from_library(
     int flags)
 {
 #ifdef __BAKE__
-    char *module = (char*)module_name; /* safe */
+    char *import_func = (char*)module_name; /* safe */
+    char *module = (char*)module_name;
 
     /* If no module name is specified, try default naming convention for loading
      * the main module from the library */
-    if (!module) {
-        module = ecs_os_malloc(strlen(library_name) + strlen("Import") + 1);
+    if (!import_func) {
+        import_func = ecs_os_malloc(strlen(library_name) + strlen("Import") + 1);
         const char *ptr;
-        char ch, *bptr = module;
+        char ch, *bptr = import_func;
         bool capitalize = true;
         for (ptr = library_name; (ch = *ptr); ptr ++) {
             if (ch == '.') {
@@ -1444,21 +1448,37 @@ ecs_entity_t ecs_import_from_library(
             }
         }
         *bptr = '\0';
+
+        module = strdup(import_func);
+
         strcat(bptr, "Import");
     }
 
     /* Find civetweb module & entry point */
     ecs_module_init_action_t action = (ecs_module_init_action_t)ut_load_proc(
-            library_name, NULL, module);
+            library_name, NULL, import_func);
     if (!action) {
-        ecs_os_err("failed to load the %s module from library %s",
-            module, library_name);
+        ecs_os_err("failed to load import function %s from library %s",
+            import_func, library_name);
         ut_raise();
         return ECS_INVALID_ENTITY;
+    } else {
+        ecs_os_dbg("found import function %s in library %s for module %s",
+            import_func, library_name, module);
     }
 
     /* Do not free id, as it will be stored as the component identifier */
-    return _ecs_import(world, action, module, flags, NULL, 0); 
+    ecs_entity_t result = _ecs_import(world, action, module, flags, NULL, 0);
+
+    if (import_func != module_name) {
+        free(import_func);
+    }
+
+    if (module != module_name) {
+        free(module);
+    }
+
+    return result;
 #else
     ecs_os_err(
         "sorry, loading libraries is only possible if flecs is built with bake :(");
