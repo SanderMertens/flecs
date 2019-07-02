@@ -490,25 +490,30 @@ ecs_type_t ecs_type_add_intern(
     ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
 
     int i, pos = 0;
-    bool already_in_type = false;
+    bool in_type = false;
     for (i = 0; i < count; i ++) {
         ecs_entity_t elem = old_array[i];
         if (elem < e) {
             new_array[pos ++] = elem;
-        } else if (elem > e) {
+        } else if (elem > e && !in_type) {
             new_array[pos ++] = e;
             new_array[pos ++] = elem;
+            in_type = true;
         } else {
             new_array[pos ++] = elem;
-            already_in_type = true;
+            in_type = true;
         }
     }
 
-    if (!already_in_type && i == pos) {
+    if (!in_type && i == pos) {
         new_array[pos ++] = e;
     }
 
-    return ecs_type_find_intern(world, stage, new_buffer, pos);
+    ecs_type_t result = ecs_type_find_intern(world, stage, new_buffer, pos);
+    ecs_assert(ecs_vector_count(result) == pos, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(pos - count <= 1, ECS_INTERNAL_ERROR, NULL);
+
+    return result;
 }
 
 ecs_type_t ecs_type_merge_intern(

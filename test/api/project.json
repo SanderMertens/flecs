@@ -495,7 +495,9 @@
                 "type_add_out_of_order",
                 "type_add_existing",
                 "type_add_empty_existing",
-                "type_add_out_of_order_existing"
+                "type_add_out_of_order_existing",
+                "type_of_2_add",
+                "type_of_3_add_entity_again"
             ]
         }, { 
             "id": "Run",
