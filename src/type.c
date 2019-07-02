@@ -484,19 +484,31 @@ ecs_type_t ecs_type_add_intern(
 
     uint32_t count = ecs_vector_count(type);
     ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, count + 1);
+    ecs_entity_t *old_array = ecs_vector_first(type);
     void *new_buffer = new_array;
 
     ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (count) {
-        memcpy(new_array, ecs_vector_first(type), sizeof(ecs_entity_t) * count);
+    int i, pos = 0;
+    bool already_in_type = false;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t elem = old_array[i];
+        if (elem < e) {
+            new_array[pos ++] = elem;
+        } else if (elem > e) {
+            new_array[pos ++] = e;
+            new_array[pos ++] = elem;
+        } else {
+            new_array[pos ++] = elem;
+            already_in_type = true;
+        }
     }
 
-    new_array[count] = e;
-    qsort(new_array, count + 1, sizeof(ecs_entity_t), compare_handle);
-    count ++;
+    if (!already_in_type && i == pos) {
+        new_array[pos ++] = e;
+    }
 
-    return ecs_type_find_intern(world, stage, new_buffer, count);
+    return ecs_type_find_intern(world, stage, new_buffer, pos);
 }
 
 ecs_type_t ecs_type_merge_intern(

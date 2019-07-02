@@ -432,6 +432,13 @@ void Type_type_merge_overlap(void);
 void Type_type_merge_overlap_one(void);
 void Type_type_merge_overlap_w_flag(void);
 void Type_type_merge_overlap_w_flags_from_both(void);
+void Type_type_add(void);
+void Type_type_add_empty(void);
+void Type_type_add_entity_again(void);
+void Type_type_add_out_of_order(void);
+void Type_type_add_existing(void);
+void Type_type_add_empty_existing(void);
+void Type_type_add_out_of_order_existing(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -2150,7 +2157,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Type",
-        .testcase_count = 17,
+        .testcase_count = 24,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_of_1_tostr",
@@ -2219,6 +2226,34 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_merge_overlap_w_flags_from_both",
                 .function = Type_type_merge_overlap_w_flags_from_both
+            },
+            {
+                .id = "type_add",
+                .function = Type_type_add
+            },
+            {
+                .id = "type_add_empty",
+                .function = Type_type_add_empty
+            },
+            {
+                .id = "type_add_entity_again",
+                .function = Type_type_add_entity_again
+            },
+            {
+                .id = "type_add_out_of_order",
+                .function = Type_type_add_out_of_order
+            },
+            {
+                .id = "type_add_existing",
+                .function = Type_type_add_existing
+            },
+            {
+                .id = "type_add_empty_existing",
+                .function = Type_type_add_empty_existing
+            },
+            {
+                .id = "type_add_out_of_order_existing",
+                .function = Type_type_add_out_of_order_existing
             }
         }
     },
