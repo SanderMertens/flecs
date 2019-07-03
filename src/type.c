@@ -152,6 +152,7 @@ ecs_type_t ecs_type_from_array(
     ecs_vector_set_count(&vector, &handle_arr_params, count);
     ecs_entity_t *vector_first = ecs_vector_first(vector);
     memcpy(vector_first, array, sizeof(ecs_entity_t) * count);
+
     return vector;
 }
 

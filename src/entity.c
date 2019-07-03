@@ -1354,10 +1354,6 @@ ecs_entity_t _ecs_set_ptr_intern(
         }
     }
 
-    if (dst == ptr) {
-        return entity;
-    }
-
 #ifndef NDEBUG
     ecs_entity_info_t cinfo = {.entity = component};
     EcsComponent *cdata = ecs_get_ptr_intern(
@@ -1365,7 +1361,9 @@ ecs_entity_t _ecs_set_ptr_intern(
     ecs_assert(cdata->size == size, ECS_INVALID_COMPONENT_SIZE, NULL);
 #endif
 
-    memcpy(dst, ptr, size);
+    if (dst != ptr) {
+        memcpy(dst, ptr, size);
+    }
 
     notify_pre_merge(
         world_arg, stage, info.table, info.columns, info.index - 1, 1, type,
