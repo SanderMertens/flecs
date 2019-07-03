@@ -228,7 +228,8 @@
                 "add_again_2",
                 "override_after_add_in_on_add",
                 "set_after_add_in_on_add",
-                "add_again_in_progress"
+                "add_again_in_progress",
+                "add_in_progress_before_system_def"
             ]
         }, {
             "id": "SystemOnRemove",

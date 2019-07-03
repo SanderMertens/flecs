@@ -258,6 +258,7 @@ ecs_table_t* ecs_world_get_table(
     ecs_stage_t *main_stage = &world->main_stage;
     uint32_t table_id = lookup_table_id(main_stage, type);
 
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_vector_count(type) < ECS_MAX_ENTITIES_IN_TYPE, ECS_INTERNAL_ERROR, NULL);
 
     if (!table_id && world->in_progress) {

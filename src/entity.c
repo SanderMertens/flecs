@@ -822,7 +822,7 @@ ecs_type_t ecs_notify(
                 modified = m;
             }
         }
-    } 
+    }
 
     return modified;
 }
@@ -1332,7 +1332,7 @@ ecs_entity_t _ecs_set_ptr_intern(
     void *ptr)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-    ecs_assert(type != 0, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(type != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(!size || ptr != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
@@ -1544,8 +1544,6 @@ ecs_entity_t ecs_entity_from_type(
         return 0;
     }
     
-    ecs_assert(type != NULL, ECS_UNKNOWN_TYPE_ID, NULL);
-
     /* If array contains n entities, it cannot be reduced to a single entity */
     if (ecs_vector_count(type) != 1) {
         ecs_abort(ECS_TYPE_NOT_AN_ENTITY, NULL);

@@ -5,20 +5,14 @@ void merge_families(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    /*ecs_map_iter_t it = ecs_map_iter(stage->type_index);
-    while (ecs_map_hasnext(&it)) {
-        uint64_t type_id;
-        ecs_vector_t *type = (void*)(uintptr_t)ecs_map_next_w_key(&it, &type_id);
-
-        if (!ecs_map_has(world->main_stage.type_index, type_id, NULL)) {
-            ecs_map_set(world->main_stage.type_index, type_id, type);
-        } else {
-            ecs_vector_free(type);
+    bool is_temp_stage = stage == &world->temp_stage;
+    if (is_temp_stage) {
+        if (stage->last_link) {
+            world->main_stage.last_link = stage->last_link;
         }
-    }
 
-    ecs_map_clear(stage->type_index);
-    */
+        stage->last_link = NULL;
+    }
 }
 
 static
@@ -103,7 +97,7 @@ void ecs_stage_init(
         stage->last_link = &world->main_stage.type_root.link;
     } else if (is_temp_stage) {
         stage->type_root = world->main_stage.type_root;
-        stage->last_link = world->main_stage.last_link;
+        stage->last_link = NULL;
     } else {
     }
     
@@ -157,12 +151,8 @@ void ecs_stage_merge(
     /* Keep track of old number of tables so we know how many have been added */
     uint32_t old_table_count = ecs_vector_count(world->main_stage.tables);
     
-    bool is_temp_stage = stage == &world->temp_stage;
-
     /* Merge any new families */
-    if (!is_temp_stage) {
-        merge_families(world, stage);
-    }
+    merge_families(world, stage);
     
     /* Merge entities. This can create tables if a new combination of components
      * is found after merging the staged type with the non-staged type. */
