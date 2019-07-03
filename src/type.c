@@ -252,10 +252,12 @@ ecs_type_t register_type(
 
     link->type = result;
 
-    if (stage->last_link) {
-        stage->last_link->next = link;
-        stage->last_link = link;
+    if (!stage->last_link) {
+        stage->last_link = world->main_stage.last_link;
     }
+
+    stage->last_link->next = link;
+    stage->last_link = link;
 
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 

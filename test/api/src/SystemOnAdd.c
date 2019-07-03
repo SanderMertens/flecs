@@ -775,3 +775,43 @@ void SystemOnAdd_add_again_in_progress() {
 
     ecs_fini(world);
 }
+
+static
+void AddMass(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Mass, m, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        m[i] = 10;
+    }
+}
+
+void SystemOnAdd_add_in_progress_before_system_def() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, .Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+    test_assert( !ecs_has(world, e, Velocity));
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e, Position));
+    test_assert( ecs_has(world, e, Velocity));
+
+    ECS_COMPONENT(world, Mass);
+    ECS_SYSTEM(world, AddMass, EcsOnAdd, Mass);
+
+    ecs_add(world, e, Mass);
+    test_assert( ecs_has(world, e, Mass));
+    
+    Mass *m = ecs_get_ptr(world, e, Mass);
+    test_assert(m != NULL);
+    test_int(*m, 10);
+
+    ecs_fini(world);
+}

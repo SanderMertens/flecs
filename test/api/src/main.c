@@ -200,6 +200,7 @@ void SystemOnAdd_add_again_2(void);
 void SystemOnAdd_override_after_add_in_on_add(void);
 void SystemOnAdd_set_after_add_in_on_add(void);
 void SystemOnAdd_add_again_in_progress(void);
+void SystemOnAdd_add_in_progress_before_system_def(void);
 
 // Testsuite 'SystemOnRemove'
 void SystemOnRemove_remove_match_1_of_1(void);
@@ -1227,7 +1228,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 25,
+        .testcase_count = 26,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -1328,6 +1329,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_again_in_progress",
                 .function = SystemOnAdd_add_again_in_progress
+            },
+            {
+                .id = "add_in_progress_before_system_def",
+                .function = SystemOnAdd_add_in_progress_before_system_def
             }
         }
     },
