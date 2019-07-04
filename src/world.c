@@ -962,6 +962,10 @@ ecs_entity_t ecs_lookup(
     ecs_world_t *world,
     const char *id)
 {
+    if (!strcmp(id, "$")) {
+        return ECS_SINGLETON;
+    }
+    
     return ecs_lookup_child(world, 0, id);
 }
 
@@ -1175,7 +1179,7 @@ bool ecs_progress(
     if (world->should_resolve) {
         revalidate_system_refs(world);
         world->should_resolve = false;
-    }
+    }    
 
     /* -- System execution starts here -- */
 

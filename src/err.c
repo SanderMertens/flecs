@@ -46,8 +46,12 @@ const char* ecs_strerror(
         return "invalid parameters";
     case ECS_INVALID_COMPONENT_ID:
         return "invalid component id";
-    case ECS_INVALID_COMPONENT_EXPRESSION:
-        return "invalid component expression for system";
+    case ECS_INVALID_TYPE_EXPRESSION:
+        return "invalid type expression";
+    case ECS_INVALID_SIGNATURE:
+        return "invalid system signature";
+    case ECS_INVALID_EXPRESSION:
+        return "invalid type expression/signature";
     case ECS_MISSING_SYSTEM_CONTEXT:
         return "missing system context";
     case ECS_UNKNOWN_COMPONENT_ID:

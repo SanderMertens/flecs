@@ -181,7 +181,11 @@
             "testcases": [
                 "set",
                 "set_ptr",
-                "system_w_singleton"
+                "system_w_singleton",
+                "system_w_singleton_no_match",
+                "system_w_not_singleton",
+                "lookup_singleton",
+                "get_singleton_id"
             ]
         }, {
             "id": "Clone",
@@ -399,7 +403,10 @@
                 "no_overwrite_on_2nd_add_in_progress",
                 "no_instantiate_on_2nd_add",
                 "no_instantiate_on_2nd_add_in_progress",
-                "get_ptr_from_prefab_from_new_table_in_progress"
+                "get_ptr_from_prefab_from_new_table_in_progress",
+                "match_base",
+                "match_base_after_add_in_prev_phase",
+                "override_watched_prefab"
             ]
         }, {
             "id": "System_w_FromContainer",
@@ -498,7 +505,11 @@
                 "type_add_empty_existing",
                 "type_add_out_of_order_existing",
                 "type_of_2_add",
-                "type_of_3_add_entity_again"
+                "type_of_3_add_entity_again",
+                "invalid_entity_type_expression",
+                "invalid_singleton_type_expression",
+                "invalid_container_type_expression",
+                "invalid_system_type_expression"
             ]
         }, { 
             "id": "Run",

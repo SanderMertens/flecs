@@ -780,8 +780,14 @@ ecs_entity_t _ecs_commit(
 #define ecs_instantiate(world, prefab)\
     _ecs_commit(world, 0, ecs_type(prefab), 0, EcsInstanceOf, 0);
 
+#define _ecs_instantiate(world, prefab)\
+    _ecs_commit(world, 0, prefab, 0, EcsInstanceOf, 0);
+
 #define ecs_instantiate_w_count(world, prefab, count)\
     _ecs_commit(world, 0, ecs_type(prefab), 0, EcsInstanceOf, count);
+
+#define _ecs_instantiate_w_count(world, prefab, count)\
+    _ecs_commit(world, 0, prefab, 0, EcsInstanceOf, count);
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
@@ -1720,33 +1726,35 @@ void _ecs_assert(
 #define ECS_INVALID_HANDLE (1)
 #define ECS_INVALID_PARAMETERS (2)
 #define ECS_INVALID_COMPONENT_ID (3)
-#define ECS_INVALID_COMPONENT_EXPRESSION (4)
-#define ECS_UNKNOWN_COMPONENT_ID (5)
-#define ECS_UNKNOWN_TYPE_ID (6)
-#define ECS_TYPE_NOT_AN_ENTITY (7)
-#define ECS_MISSING_SYSTEM_CONTEXT (8)
-#define ECS_NOT_A_COMPONENT (9)
-#define ECS_INTERNAL_ERROR (10)
-#define ECS_MORE_THAN_ONE_PREFAB (11)
-#define ECS_ALREADY_DEFINED (12)
-#define ECS_INVALID_COMPONENT_SIZE (13)
-#define ECS_OUT_OF_MEMORY (14)
-#define ECS_MODULE_UNDEFINED (15)
-#define ECS_COLUMN_INDEX_OUT_OF_RANGE (16)
-#define ECS_COLUMN_IS_NOT_SHARED (17)
-#define ECS_COLUMN_IS_SHARED (18)
-#define ECS_COLUMN_HAS_NO_DATA (19)
-#define ECS_INVALID_WHILE_MERGING (20)
-#define ECS_INVALID_WHILE_ITERATING (21)
-#define ECS_INVALID_FROM_WORKER (22)
-#define ECS_UNRESOLVED_IDENTIFIER (23)
-#define ECS_OUT_OF_RANGE (24)
-#define ECS_COLUMN_IS_NOT_SET (25)
-#define ECS_UNRESOLVED_REFERENCE (26)
-#define ECS_THREAD_ERROR (27)
-#define ECS_MISSING_OS_API (28)
-#define ECS_TYPE_TOO_LARGE (29)
-#define ECS_INVALID_PREAFB_CHILD_TYPE (30)
+#define ECS_INVALID_EXPRESSION (4)
+#define ECS_INVALID_TYPE_EXPRESSION (5)
+#define ECS_INVALID_SIGNATURE (6)
+#define ECS_UNKNOWN_COMPONENT_ID (7)
+#define ECS_UNKNOWN_TYPE_ID (8)
+#define ECS_TYPE_NOT_AN_ENTITY (9)
+#define ECS_MISSING_SYSTEM_CONTEXT (10)
+#define ECS_NOT_A_COMPONENT (11)
+#define ECS_INTERNAL_ERROR (12)
+#define ECS_MORE_THAN_ONE_PREFAB (13)
+#define ECS_ALREADY_DEFINED (14)
+#define ECS_INVALID_COMPONENT_SIZE (15)
+#define ECS_OUT_OF_MEMORY (16)
+#define ECS_MODULE_UNDEFINED (17)
+#define ECS_COLUMN_INDEX_OUT_OF_RANGE (18)
+#define ECS_COLUMN_IS_NOT_SHARED (19)
+#define ECS_COLUMN_IS_SHARED (20)
+#define ECS_COLUMN_HAS_NO_DATA (21)
+#define ECS_INVALID_WHILE_MERGING (22)
+#define ECS_INVALID_WHILE_ITERATING (23)
+#define ECS_INVALID_FROM_WORKER (24)
+#define ECS_UNRESOLVED_IDENTIFIER (25)
+#define ECS_OUT_OF_RANGE (26)
+#define ECS_COLUMN_IS_NOT_SET (27)
+#define ECS_UNRESOLVED_REFERENCE (28)
+#define ECS_THREAD_ERROR (29)
+#define ECS_MISSING_OS_API (30)
+#define ECS_TYPE_TOO_LARGE (31)
+#define ECS_INVALID_PREAFB_CHILD_TYPE (32)
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */
 

@@ -118,7 +118,7 @@ ecs_entity_t new_row_system(
     if (ecs_parse_component_expr(
         world, sig, ecs_parse_signature_action, system_data) != 0)
     {
-        ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
+        ecs_abort(ECS_INVALID_SIGNATURE, sig);
     }
 
     ecs_type_t type_id = 0;
@@ -228,7 +228,7 @@ int ecs_parse_signature_action(
      * supported. The set of system components is expected to be constant, and
      * thus no conditional operators are needed. */
     if (elem_kind == EcsFromSystem && oper_kind != EcsOperAnd) {
-        ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, 0);
+        return ECS_INVALID_SIGNATURE;
     }
 
     /* AND (default) and optional columns are stored the same way */
@@ -278,6 +278,9 @@ int ecs_parse_signature_action(
             system_data->not_from_entity =
                 ecs_type_add_intern(
                     world, NULL, system_data->not_from_entity, component);
+        } else if (elem_kind == EcsFromEntity) {
+            elem->kind = EcsFromEntity;
+            elem->source = ecs_lookup(world, source_id);
         } else {
             system_data->not_from_component =
               ecs_type_add_intern(
@@ -363,9 +366,6 @@ ecs_type_t ecs_notify_row_system(
             if (buffer[i].kind == EcsFromSystem) {
                 /* The source is the system itself */
                 entity = system;
-            } else if (buffer[i].kind == EcsFromSingleton) {
-                /* The source is the world's singleton entity */
-                entity = ECS_SINGLETON;         
             } else if (buffer[i].kind == EcsFromEntity) {
                 /* The source is another entity (prefab, container, other) */
                 entity = buffer[i].source;

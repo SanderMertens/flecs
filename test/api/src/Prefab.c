@@ -1993,3 +1993,94 @@ void Prefab_get_ptr_from_prefab_from_new_table_in_progress() {
 
     ecs_fini(world);
 }
+
+void TestBase(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_SHARED(rows, Velocity, v, 2);
+
+    test_assert(p != NULL);
+    test_assert(v != NULL);
+    test_int(rows->count, 1);
+}
+
+void Prefab_match_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_PREFAB(world, Base, Velocity);
+        ecs_set(world, Base, Velocity, {1, 2});
+
+    ECS_PREFAB(world, Child, INSTANCEOF | Base);
+
+    ecs_entity_t e = ecs_instantiate(world, Child);
+    ecs_add(world, e, Position);
+
+    ECS_SYSTEM(world, TestBase, EcsOnUpdate, Position, Velocity);
+
+    ecs_progress(world, 1);
+
+    ecs_fini(world);
+}
+
+static
+void AddMass(ecs_rows_t *rows) {
+    ECS_COLUMN_ENTITY(rows, Mass, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Mass);
+    }
+}
+
+void Prefab_match_base_after_add_in_prev_phase() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_PREFAB(world, Base, Velocity);
+        ecs_set(world, Base, Velocity, {1, 2});
+
+    ECS_PREFAB(world, Child, INSTANCEOF | Base);
+
+    ecs_entity_t e = ecs_instantiate(world, Child);
+    ecs_add(world, e, Position);
+
+    ECS_SYSTEM(world, AddMass, EcsPreUpdate, Position, !Mass);
+    ECS_SYSTEM(world, TestBase, EcsOnUpdate, Position, Velocity);
+
+    ecs_progress(world, 1);
+
+    ecs_fini(world);
+}
+
+void Prefab_override_watched_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    /* Create a system that listens for Position */
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    /* Create a prefab with Position */
+    ECS_PREFAB(world, Prefab, Position);
+
+    /* Create an instance of Prefab, this will cause Prefab to be watched since
+     * it will be matched as reference with the system */
+    ECS_ENTITY(world, Entity1, INSTANCEOF | Prefab);
+
+    /* Another instance of Prefab is created, prefab data is resolved to check
+     * if components need to be overridden. Index will be negative, so code 
+     * needs to flip sign on the index, or this will fail. */
+    ECS_ENTITY(world, Entity2, INSTANCEOF | Prefab, Position);
+
+    Position *p1 = ecs_get_ptr(world, Prefab, Position);
+    Position *p2 = ecs_get_ptr(world, Entity1, Position);
+    Position *p3 = ecs_get_ptr(world, Entity2, Position);
+
+    test_assert(p1 == p2);
+    test_assert(p2 != p3);
+
+    ecs_fini(world);
+}
