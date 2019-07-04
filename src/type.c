@@ -40,7 +40,11 @@ int parse_type_action(
     (void)source_id;
 
     if (strcmp(entity_id, "0")) {
-        ecs_entity_t entity = 0; 
+        ecs_entity_t entity = 0;
+
+        if (elem_kind != EcsFromSelf) {
+            return ECS_INVALID_TYPE_EXPRESSION;
+        }
 
         if (!strcmp(entity_id, "INSTANCEOF")) {
             entity = EcsInstanceOf;
@@ -52,7 +56,7 @@ int parse_type_action(
         
         if (!entity) {
             ecs_os_err("%s not found", entity_id);
-            return -1;
+            return ECS_INVALID_TYPE_EXPRESSION;
         }
 
         if (oper_kind == EcsOperAnd) {
@@ -69,14 +73,14 @@ int parse_type_action(
                 if (entity & ECS_ENTITY_MASK) {
                     /* An expression should not OR entity ids, only entities +
                      * entity flags. */
-                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, NULL);
+                    return ECS_INVALID_TYPE_EXPRESSION;
                 }
             }
 
             *e_ptr |= entity;
         } else {
             /* Only AND and OR operators are supported for type expressions */
-            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, NULL);
+            return ECS_INVALID_TYPE_EXPRESSION;
         }
     }
 
@@ -808,7 +812,6 @@ EcsTypeComponent type_from_vec(
 static
 EcsTypeComponent type_from_expr(
     ecs_world_t *world,
-    const char *id,
     const char *expr)
 {
     ecs_vector_t *vec = ecs_vector_new(&handle_arr_params, 1);
@@ -827,7 +830,7 @@ ecs_entity_t ecs_new_type(
 {
     assert(world->magic == ECS_WORLD_MAGIC);  
 
-    EcsTypeComponent type = type_from_expr(world, id, expr);
+    EcsTypeComponent type = type_from_expr(world, expr);
     ecs_entity_t result = ecs_lookup(world, id);
 
     if (result) {
@@ -859,7 +862,7 @@ ecs_entity_t ecs_new_prefab(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETERS, NULL);
    
-    EcsTypeComponent type = type_from_expr(world, id, expr);
+    EcsTypeComponent type = type_from_expr(world, expr);
     type.resolved = ecs_type_merge_intern(
         world, NULL, world->t_prefab, type.resolved, 0);
 
@@ -883,7 +886,7 @@ ecs_entity_t ecs_new_entity(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETERS, NULL);
    
-    EcsTypeComponent type = type_from_expr(world, id, expr);
+    EcsTypeComponent type = type_from_expr(world, expr);
 
     ecs_entity_t result = ecs_lookup(world, id);
     if (result) {

@@ -157,6 +157,10 @@ void Lookup_lookup_child_in_progress(void);
 void Singleton_set(void);
 void Singleton_set_ptr(void);
 void Singleton_system_w_singleton(void);
+void Singleton_system_w_singleton_no_match(void);
+void Singleton_system_w_not_singleton(void);
+void Singleton_lookup_singleton(void);
+void Singleton_get_singleton_id(void);
 
 // Testsuite 'Clone'
 void Clone_empty(void);
@@ -355,6 +359,9 @@ void Prefab_no_overwrite_on_2nd_add_in_progress(void);
 void Prefab_no_instantiate_on_2nd_add(void);
 void Prefab_no_instantiate_on_2nd_add_in_progress(void);
 void Prefab_get_ptr_from_prefab_from_new_table_in_progress(void);
+void Prefab_match_base(void);
+void Prefab_match_base_after_add_in_prev_phase(void);
+void Prefab_override_watched_prefab(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -442,6 +449,10 @@ void Type_type_add_empty_existing(void);
 void Type_type_add_out_of_order_existing(void);
 void Type_type_of_2_add(void);
 void Type_type_of_3_add_entity_again(void);
+void Type_invalid_entity_type_expression(void);
+void Type_invalid_singleton_type_expression(void);
+void Type_invalid_container_type_expression(void);
+void Type_invalid_system_type_expression(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -1148,7 +1159,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Singleton",
-        .testcase_count = 3,
+        .testcase_count = 7,
         .testcases = (bake_test_case[]){
             {
                 .id = "set",
@@ -1161,6 +1172,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "system_w_singleton",
                 .function = Singleton_system_w_singleton
+            },
+            {
+                .id = "system_w_singleton_no_match",
+                .function = Singleton_system_w_singleton_no_match
+            },
+            {
+                .id = "system_w_not_singleton",
+                .function = Singleton_system_w_not_singleton
+            },
+            {
+                .id = "lookup_singleton",
+                .function = Singleton_lookup_singleton
+            },
+            {
+                .id = "get_singleton_id",
+                .function = Singleton_get_singleton_id
             }
         }
     },
@@ -1748,7 +1775,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 46,
+        .testcase_count = 49,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -1933,6 +1960,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_ptr_from_prefab_from_new_table_in_progress",
                 .function = Prefab_get_ptr_from_prefab_from_new_table_in_progress
+            },
+            {
+                .id = "match_base",
+                .function = Prefab_match_base
+            },
+            {
+                .id = "match_base_after_add_in_prev_phase",
+                .function = Prefab_match_base_after_add_in_prev_phase
+            },
+            {
+                .id = "override_watched_prefab",
+                .function = Prefab_override_watched_prefab
             }
         }
     },
@@ -2164,7 +2203,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Type",
-        .testcase_count = 26,
+        .testcase_count = 30,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_of_1_tostr",
@@ -2269,6 +2308,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_of_3_add_entity_again",
                 .function = Type_type_of_3_add_entity_again
+            },
+            {
+                .id = "invalid_entity_type_expression",
+                .function = Type_invalid_entity_type_expression
+            },
+            {
+                .id = "invalid_singleton_type_expression",
+                .function = Type_invalid_singleton_type_expression
+            },
+            {
+                .id = "invalid_container_type_expression",
+                .function = Type_invalid_container_type_expression
+            },
+            {
+                .id = "invalid_system_type_expression",
+                .function = Type_invalid_system_type_expression
             }
         }
     },

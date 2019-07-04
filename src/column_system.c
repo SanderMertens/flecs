@@ -190,9 +190,6 @@ void add_table(
             entity = system;
 
         /* Column that retrieves singleton components */
-        } else if (kind == EcsFromSingleton) {
-            component = column->is.component;
-            entity = ECS_SINGLETON;
         }
 
         /* This column does not retrieve data from a static entity (either
@@ -267,7 +264,7 @@ void add_table(
                     }
 
                     /* Find the entity for the component */
-                    if (kind == EcsFromEntity || kind == EcsFromSingleton) {
+                    if (kind == EcsFromEntity) {
                         e = entity;
                     } else {
                         e = ecs_get_entity_for_component(
@@ -285,13 +282,14 @@ void add_table(
                     
                     if (e != ECS_INVALID_ENTITY) {
                         ecs_entity_info_t info = {.entity = e};
+
                         ref_data[ref].cached_ptr = ecs_get_ptr_intern(
                             world, 
                             &world->main_stage,
                             &info,
                             component,
                             false,
-                            false);
+                            true);
 
                         ecs_set_watching(world, e, true);                     
                     } else {
@@ -454,6 +452,11 @@ bool match_table(
                 {
                     return false;
                 }
+            } else if (elem_kind == EcsFromEntity) {
+                ecs_type_t type = ecs_get_type(world, elem->source);
+                if (!ecs_type_has_entity(world, type, elem->is.component)) {
+                    return false;
+                }
             }
         } else if (oper_kind == EcsOperOr) {
             type = elem->is.type;
@@ -470,6 +473,14 @@ bool match_table(
                     return false;
                 }
             }
+        } else if (oper_kind == EcsOperNot) {
+            if (elem_kind == EcsFromEntity) {
+                ecs_type_t type = ecs_get_type(world, elem->source);
+                if (ecs_type_has_entity(world, type, elem->is.component)) {
+                    return false;
+                }
+
+            }
         }
     }
 
@@ -481,7 +492,6 @@ bool match_table(
     }
 
     type = system_data->base.not_from_component;
-
     if (type && components_contains(
         world, table_type, type, NULL, false))
     {

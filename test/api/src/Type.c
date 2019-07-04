@@ -489,3 +489,57 @@ void Type_type_of_3_add_entity_again() {
 
     ecs_fini(world);
 }
+
+void Type_invalid_container_type_expression() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+
+    ECS_TYPE(world, Type, CONTAINER.Position, Velocity);
+
+    ecs_fini(world);
+}
+
+void Type_invalid_entity_type_expression() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Entity, Position);
+
+    test_expect_abort();
+
+    ECS_TYPE(world, Type, Entity.Position, Velocity);
+
+    ecs_fini(world);
+}
+
+void Type_invalid_singleton_type_expression() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+
+    ECS_TYPE(world, Type, $.Position, Velocity);
+
+    ecs_fini(world);
+}
+
+void Type_invalid_system_type_expression() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+
+    ECS_TYPE(world, Type, SYSTEM.Position, Velocity);
+
+    ecs_fini(world);
+}

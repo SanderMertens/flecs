@@ -161,7 +161,12 @@ bool update_info(
 
         ecs_assert(info->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        info->index = row.index;
+        if (row.index > 0) {
+            info->index = row.index;
+        } else {
+            info->index = -row.index;
+        }
+
         info->type = row.type;
 
         return true;
@@ -359,6 +364,9 @@ ecs_type_t copy_from_prefab(
     ecs_table_column_t *prefab_columns = prefab_table->columns;
     ecs_entity_t prefab = prefab_info->entity;
     uint32_t prefab_index = prefab_info->index;
+
+    ecs_assert(prefab_index != -1, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(info->index != -1, ECS_INTERNAL_ERROR, NULL);
 
     uint32_t e, add_count = ecs_vector_count(to_add);
     uint32_t p = 0, prefab_count = ecs_vector_count(prefab_type);
@@ -1469,6 +1477,10 @@ const char* ecs_get_id(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
+    if (entity == ECS_SINGLETON) {
+        return "$";
+    }
+
     EcsId *id = ecs_get_ptr(world, entity, EcsId);
     if (id) {
         return *id;

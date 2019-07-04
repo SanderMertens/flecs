@@ -22,19 +22,13 @@ char* parse_complex_elem(
     if (bptr[0] == '!') {
         *oper_kind = EcsOperNot;
         if (!bptr[1]) {
-            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
+            ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
         bptr ++;
     } else if (bptr[0] == '?') {
         *oper_kind = EcsOperOptional;
         if (!bptr[1]) {
-            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
-        }
-        bptr ++;
-    } else if (bptr[0] == '$') {
-        *elem_kind = EcsFromSingleton;
-        if (!bptr[1]) {
-            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
+            ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
         bptr ++;
     }
@@ -52,15 +46,16 @@ char* parse_complex_elem(
         } else if (!strncmp(bptr, "SELF", dot - bptr)) {
             /* default */
         } else if (!strncmp(bptr, "CASCADE", dot - bptr)) {
-            *elem_kind = EcsCascade;            
+            *elem_kind = EcsCascade;   
         } else {
             *elem_kind = EcsFromEntity;
             *source = bptr;
         }
+        
         bptr = dot + 1;
 
         if (!bptr[0]) {
-            ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, bptr);
+            ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
     }
 
@@ -138,7 +133,7 @@ int ecs_parse_component_expr(
 
         if (ch == ',' || ch == '|' || ch == '\0') {
             if (bptr == buffer) {
-                ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
+                ecs_abort(ECS_INVALID_SIGNATURE, sig);
             }
 
             *bptr = '\0';
@@ -149,24 +144,24 @@ int ecs_parse_component_expr(
             if (complex_expr) {
                 bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source);
                 if (!bptr) {
-                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
+                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
                 }
             }
 
             if (oper_kind == EcsOperNot && ch == '|') {
                 /* Cannot combine OR and NOT */
-                ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
+                ecs_abort(ECS_INVALID_EXPRESSION, sig);
             }
 
             if (!strcmp(bptr, "0")) {
                 if (oper_kind != EcsOperAnd) {
                     /* Cannot combine 0 component with operators */
-                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
+                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
                 }
 
                 if (elem_kind != EcsFromSelf) {
                     /* Cannot get 0 component from anything other than entity */
-                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
+                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
                 }
 
                 elem_kind = EcsFromId;
@@ -182,8 +177,11 @@ int ecs_parse_component_expr(
                 source_id[dot - source] = '\0';
             }
 
-            if (action(world, elem_kind, oper_kind, bptr, source_id, ctx) != 0) {
-                ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
+            int ret;
+            if ((ret = action(
+                world, elem_kind, oper_kind, bptr, source_id, ctx))) 
+            {
+                ecs_abort(ret, sig);
             }
 
             if (source_id) {
@@ -196,7 +194,7 @@ int ecs_parse_component_expr(
             if (ch == '|') {
                 if (elem_kind == EcsFromId) {
                     /* Cannot OR handles */
-                    ecs_abort(ECS_INVALID_COMPONENT_EXPRESSION, sig);
+                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
                 }
                 oper_kind = EcsOperOr;
             } else {
