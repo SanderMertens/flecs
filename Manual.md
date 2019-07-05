@@ -180,13 +180,13 @@ Type handles are automatically created by API macro's like `ECS_COMPONENT`, `ECS
 ECS_TYPE(world, MyType, Position);
 ```
 
-This statement makes the entity handle available as `MyType`. To access the type handle directly, use `ecs_type(MyType)`. There is one exception to this rule, which is components. Entity handles of components are prefixed, so that the names do not collide with the component type name. To obtain the entity handle of a component, use the `ecs_entity` function. For example:
+This statement makes the entity handle available as `MyType`. To access the type handle directly, use `ecs_type(MyType)`. There is one exception to this rule, which is components. Entity handles of components are prefixed, so that the names do not collide with the component type name. To obtain the entity handle of a component, use the `ecs_entity` macro. For example:
 
 ```c
 ECS_COMPONENT(world, Position);
 ```
 
-This statement makes the entity handle available as `ecs_entity_of(Position)`, and the type handle as `ecs_type_of(Position)`, where `ecs_entity_of` and `ecs_type_of` again are the macro's that translate from the component type name to the respective entity and type handles. If one were to fully write out what the `ECS_COMPONENT` macro does, it would look like this (replace 'Type' with a C type):
+This statement makes the entity handle available as `ecs_entity(Position)`, and the type handle as `ecs_type(Position)`, where `ecs_entity` and `ecs_type` again are the macro's that translate from the component type name to the respective entity and type handles. If one were to fully write out what the `ECS_COMPONENT` macro does, it would look like this (replace 'Type' with a C type):
 
 ```c
 ecs_entity_t ecs_entity(Type) = ecs_new_component(world, "Type", sizeof(Type));
