@@ -213,9 +213,9 @@ void SystemCascade_add_after_match() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], parent);
-    test_int(ctx.e[1], e_1);
-    test_int(ctx.e[2], e_2);
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[2], parent);
     test_int(ctx.e[3], e_3);
     test_int(ctx.e[4], e_4);
     test_int(ctx.c[0][0], ecs_entity(Position));
