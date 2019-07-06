@@ -286,7 +286,7 @@ void World_dim_type() {
 
     ecs_new_w_count(world, Position, 500);
 
-    test_int(malloc_count, 3);
+    test_int(malloc_count, 2);
 
     malloc_count = 0;
 

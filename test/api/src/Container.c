@@ -7,7 +7,6 @@ void Container_child() {
     ecs_entity_t child = ecs_new_child(world, parent, 0);
 
     test_assert( ecs_contains(world, parent, child));
-    test_assert( ecs_has(world, parent, EcsContainer));
 
     ecs_fini(world);
 }
@@ -21,7 +20,6 @@ void Container_child_w_component() {
     ecs_entity_t child = ecs_new_child(world, parent, Position);
 
     test_assert( ecs_contains(world, parent, child));
-    test_assert( ecs_has(world, parent, EcsContainer));
     test_assert( ecs_has(world, child, Position));
 
     ecs_fini(world);
@@ -37,7 +35,6 @@ void Container_child_w_type() {
     ecs_entity_t child = ecs_new_child(world, parent, Type);
 
     test_assert( ecs_contains(world, parent, child));
-    test_assert( ecs_has(world, parent, EcsContainer));
     test_assert( ecs_has(world, child, Type));
     test_assert( ecs_has(world, child, Position));
 

@@ -1063,11 +1063,8 @@ ecs_entity_t _ecs_new_child_w_count(
     ecs_type_t full_type = type;
     
     if (parent) {
-        if (!ecs_has(world, parent, EcsContainer)) {
-            ecs_add(world, parent, EcsContainer);
-            ecs_set_watching(world, parent, true);
-            world->should_match = true;
-        }
+        ecs_set_watching(world, parent, true);
+        world->should_match = true;
 
         full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
     }
@@ -1085,11 +1082,8 @@ ecs_entity_t _ecs_new_child(
     ecs_type_t full_type = type;
     
     if (parent) {
-        if (!ecs_has(world, parent, EcsContainer)) {
-            ecs_add(world, parent, EcsContainer);
-            ecs_set_watching(world, parent, true);
-            world->should_match = true;
-        }
+        ecs_set_watching(world, parent, true);
+        world->should_match = true;
         
         full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
     }

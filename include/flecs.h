@@ -140,8 +140,7 @@ typedef void (*ecs_module_init_action_t)(
 #define EEcsColSystem (7)
 #define EEcsId (8)
 #define EEcsHidden (9)
-#define EEcsContainer (10)
-#define EEcsDisabled (11)
+#define EEcsDisabled (10)
 
 /* Type handles to builtin components */
 FLECS_EXPORT
@@ -155,7 +154,6 @@ extern ecs_type_t
     TEcsColSystem,
     TEcsId,
     TEcsHidden,
-    TEcsContainer,
     TEcsDisabled;
 
 typedef enum ecs_type_flags_t {
@@ -886,9 +884,6 @@ ecs_entity_t _ecs_set_singleton_ptr(
  * 
  * This function is equivalent to calling ecs_new with a type that combines both
  * the type specified in this function and the type id for the container.
- * 
- * If the provided parent entity does not have the 'EcsContainer' component, it
- * will be added automatically.
  *
  * @param world The world.
  * @param parent The container to which to add the child entity.
@@ -933,8 +928,7 @@ ecs_entity_t _ecs_new_child_w_count(
  * of the entity type.
  *
  * If the parent was already added to the entity, this operation will have no
- * effect. If this is the first time a child is added to the parent entity, the
- * EcsContainer component will be added to the parent.
+ * effect.
  *
  * This operation is similar to an ecs_add, with as difference that instead of a 
  * type it accepts any entity handle.
@@ -1168,7 +1162,7 @@ ecs_entity_t ecs_lookup_child(
  * functions like ecs_add and ecs_remove.
  * 
  * You can only obtain types from entities that have EcsComponent, EcsPrefab,
- * EcsTypeComponent or EcsContainer. These components are automatically added
+ * or EcsTypeComponent. These components are automatically added
  * by the ecs_new_* functions, but can also be added manually.
  * 
  * The ECS_COMPONENT, ECS_TAG, ECS_TYPE or ECS_PREFAB macro's will auto-
