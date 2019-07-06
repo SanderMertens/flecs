@@ -645,7 +645,6 @@ void ecs_rematch_system(
     ecs_vector_t *tables = world->main_stage.tables;
     uint32_t i, count = ecs_vector_count(tables);
     ecs_table_t *buffer = ecs_vector_first(tables);
-    bool changed = false;
 
     for (i = 0; i < count; i ++) {
         /* Is the system currently matched with the table? */
@@ -655,8 +654,9 @@ void ecs_rematch_system(
         if (match_table(world, table, system, system_data)) {
             /* If the table matches, and it is not currently matched, add */
             if (match == -1) {
-                add_table(world, system, system_data, table);
-                changed = true;
+                if (table_matched(system_data, system_data->inactive_tables, i) == -1) {
+                    add_table(world, system, system_data, table);
+                }
 
             /* If table still matches and has cascade column, reevaluate the
                 * sources of references. This may have changed in case 
@@ -669,7 +669,6 @@ void ecs_rematch_system(
             /* If table no longer matches, remove it */
             if (match != -1) {
                 remove_table(system_data, system_data->tables, match);
-                changed = true;
             } else {
                 /* Make sure the table is removed if it was inactive */
                 match = table_matched(
@@ -677,7 +676,6 @@ void ecs_rematch_system(
                 if (match != -1) {
                     remove_table(
                         system_data, system_data->inactive_tables, match);
-                    changed = true;
                 }
             }
         }
@@ -685,7 +683,7 @@ void ecs_rematch_system(
 
     /* If the system has a CASCADE column and modifications were made, 
         * reorder the system tables so that the depth order is preserved */
-    if (changed && system_data->base.cascade_by) {
+    if (system_data->base.cascade_by) {
         order_cascade_tables(world, system_data);
     }
 }
