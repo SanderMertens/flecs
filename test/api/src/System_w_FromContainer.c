@@ -673,6 +673,183 @@ void System_w_FromContainer_add_component_after_match() {
     ecs_fini(world);
 }
 
+void System_w_FromContainer_add_component_after_match_and_rematch() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, e_1, Position);
+    ECS_ENTITY(world, e_2, Position);
+    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e_4, Position);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+
+    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_adopt(world, e_1, parent);
+    ecs_adopt(world, e_2, parent);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    /* This will rematch tables, but not match Iter with e_1 and e_2 because the
+     * parent does not have Mass yet */
+    ecs_progress(world, 1);
+    test_int(ctx.count, 0);
+
+    ecs_set(world, parent, Mass, {2});
+
+    /* Now a rematch of tables need to happen again, since parent has changed */
+    ctx = (SysTestData){0};
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Iter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.c[0][0], ecs_entity(Mass));
+    test_int(ctx.s[0][0], parent);
+    test_int(ctx.c[0][1], ecs_entity(Position));
+    test_int(ctx.s[0][1], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_expr() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e_4, Position);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, e_1, Position, CHILDOF | Parent);
+    ECS_ENTITY(world, e_2, Position, CHILDOF | Parent);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    /* This will rematch tables, but not match Iter with e_1 and e_2 because the
+     * Parent does not have Mass yet */
+    ecs_progress(world, 1);
+    test_int(ctx.count, 0);
+
+    ecs_set(world, Parent, Mass, {2});
+
+    /* Now a rematch of tables need to happen again, since parent has changed */
+    ctx = (SysTestData){0};
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Iter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.c[0][0], ecs_entity(Mass));
+    test_int(ctx.s[0][0], Parent);
+    test_int(ctx.c[0][1], ecs_entity(Position));
+    test_int(ctx.s[0][1], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+static
+void SetMass(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Mass, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_set(rows->world, rows->entities[i], Mass, {2});
+    }
+}
+
+void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_expr_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, e_3, Position);
+    ECS_ENTITY(world, e_4, Position);     
+
+    ECS_SYSTEM(world, SetMass, EcsOnUpdate, Velocity, .Mass);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+
+    ECS_ENTITY(world, Parent, Velocity);
+    ECS_ENTITY(world, e_1, Position, CHILDOF | Parent);
+    ECS_ENTITY(world, e_2, Position, CHILDOF | Parent);  
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    /* This will rematch tables, but not match Iter with e_1 and e_2 because the
+     * Parent does not have Mass yet */
+    ecs_progress(world, 1);
+    test_int(ctx.count, 0);
+
+    /* Now a rematch of tables need to happen again, since parent has changed */
+    ctx = (SysTestData){0};
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Iter);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.c[0][0], ecs_entity(Mass));
+    test_int(ctx.s[0][0], Parent);
+    test_int(ctx.c[0][1], ecs_entity(Position));
+    test_int(ctx.s[0][1], 0);
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
+
+    p = ecs_get_ptr(world, e_2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
 void System_w_FromContainer_add_component_after_match_unmatch() {
     ecs_world_t *world = ecs_init();
 
@@ -1115,8 +1292,4 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(p->y, 60);
 
     ecs_fini(world);
-}
-
-void System_w_FromContainer_add_component_after_match_mixed_refs_tables() {
-    // Implement testcase
 }

@@ -235,6 +235,24 @@ ecs_type_t ecs_type_from_array_normalize(
 }
 
 static
+void mark_parents(
+    ecs_world_t *world,
+    ecs_entity_t *array,
+    uint32_t count)
+{
+    int i;
+    for (i = count - 1; i >= 0; i --) {
+        ecs_entity_t e = array[i];
+
+        if (e & EcsChildOf) {
+            ecs_set_watching(world, e & ECS_ENTITY_MASK, true);
+        } else if (!(e & EcsTypeFlagsAll)) {
+            break;
+        }
+    }   
+}
+
+static
 ecs_type_t register_type(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -253,6 +271,10 @@ ecs_type_t register_type(
         result = ecs_type_from_array_normalize(world, stage, array, count);
     } else {
         result = ecs_type_from_array(array, count);
+
+        if (has_flags) {
+            mark_parents(world, array, count);
+        }
     }
 
     link->type = result;

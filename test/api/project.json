@@ -421,10 +421,13 @@
                 "2_column_1_from_container_w_or",
                 "select_same_from_container",
                 "add_component_after_match",
+                "add_component_after_match_and_rematch",
                 "add_component_after_match_unmatch",
                 "add_component_after_match_unmatch_match",
                 "add_component_after_match_2_systems",
                 "add_component_in_progress_after_match",
+                "add_component_after_match_and_rematch_w_entity_type_expr",
+                "add_component_after_match_and_rematch_w_entity_type_expr_in_progress",
                 "adopt_after_match",
                 "new_child_after_match",
                 "realloc_after_match"
@@ -509,7 +512,9 @@
                 "invalid_entity_type_expression",
                 "invalid_singleton_type_expression",
                 "invalid_container_type_expression",
-                "invalid_system_type_expression"
+                "invalid_system_type_expression",
+                "type_from_empty_entity",
+                "type_from_empty_entity_in_progress"
             ]
         }, { 
             "id": "Run",

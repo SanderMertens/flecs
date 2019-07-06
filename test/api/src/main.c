@@ -374,10 +374,13 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not(voi
 void System_w_FromContainer_2_column_1_from_container_w_or(void);
 void System_w_FromContainer_select_same_from_container(void);
 void System_w_FromContainer_add_component_after_match(void);
+void System_w_FromContainer_add_component_after_match_and_rematch(void);
 void System_w_FromContainer_add_component_after_match_unmatch(void);
 void System_w_FromContainer_add_component_after_match_unmatch_match(void);
 void System_w_FromContainer_add_component_after_match_2_systems(void);
 void System_w_FromContainer_add_component_in_progress_after_match(void);
+void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_expr(void);
+void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_expr_in_progress(void);
 void System_w_FromContainer_adopt_after_match(void);
 void System_w_FromContainer_new_child_after_match(void);
 void System_w_FromContainer_realloc_after_match(void);
@@ -453,6 +456,8 @@ void Type_invalid_entity_type_expression(void);
 void Type_invalid_singleton_type_expression(void);
 void Type_invalid_container_type_expression(void);
 void Type_invalid_system_type_expression(void);
+void Type_type_from_empty_entity(void);
+void Type_type_from_empty_entity_in_progress(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -1977,7 +1982,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "System_w_FromContainer",
-        .testcase_count = 17,
+        .testcase_count = 20,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_column_from_container",
@@ -2020,6 +2025,10 @@ static bake_test_suite suites[] = {
                 .function = System_w_FromContainer_add_component_after_match
             },
             {
+                .id = "add_component_after_match_and_rematch",
+                .function = System_w_FromContainer_add_component_after_match_and_rematch
+            },
+            {
                 .id = "add_component_after_match_unmatch",
                 .function = System_w_FromContainer_add_component_after_match_unmatch
             },
@@ -2034,6 +2043,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_component_in_progress_after_match",
                 .function = System_w_FromContainer_add_component_in_progress_after_match
+            },
+            {
+                .id = "add_component_after_match_and_rematch_w_entity_type_expr",
+                .function = System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_expr
+            },
+            {
+                .id = "add_component_after_match_and_rematch_w_entity_type_expr_in_progress",
+                .function = System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_expr_in_progress
             },
             {
                 .id = "adopt_after_match",
@@ -2203,7 +2220,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Type",
-        .testcase_count = 30,
+        .testcase_count = 32,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_of_1_tostr",
@@ -2324,6 +2341,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "invalid_system_type_expression",
                 .function = Type_invalid_system_type_expression
+            },
+            {
+                .id = "type_from_empty_entity",
+                .function = Type_type_from_empty_entity
+            },
+            {
+                .id = "type_from_empty_entity_in_progress",
+                .function = Type_type_from_empty_entity_in_progress
             }
         }
     },
