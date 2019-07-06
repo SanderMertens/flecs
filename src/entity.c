@@ -122,7 +122,7 @@ bool stage_has_entity(
 {
     ecs_row_t row;
     if (ecs_map_has(stage->entity_index, entity, &row)) {
-        if (row.type) {
+        if (row.index) {
             *row_out = row;
             return true;
         } else {
@@ -146,30 +146,33 @@ bool update_info(
 
     ecs_row_t row;
     if (stage_has_entity(stage, entity, &row)) {
-        ecs_assert(row.type != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(ecs_vector_count(row.type) < ECS_MAX_ENTITIES_IN_TYPE, 
-            ECS_TYPE_TOO_LARGE, NULL);
+        if (row.type) {
+            ecs_assert(ecs_vector_count(row.type) < ECS_MAX_ENTITIES_IN_TYPE, 
+                ECS_TYPE_TOO_LARGE, NULL);
 
-        ecs_table_t *table = ecs_world_get_table(world, stage, row.type);
-        info->table = table;
+            ecs_table_t *table = ecs_world_get_table(world, stage, row.type);
+            info->table = table;
 
-        if (world->in_progress && stage != &world->main_stage) {
-            ecs_map_has(stage->data_stage, (uintptr_t)row.type, &info->columns);
-        } else {
-            info->columns = table->columns;
+            if (world->in_progress && stage != &world->main_stage) {
+                ecs_map_has(stage->data_stage, (uintptr_t)row.type, &info->columns);
+            } else {
+                info->columns = table->columns;
+            }
+
+            ecs_assert(info->columns != NULL, ECS_INTERNAL_ERROR, NULL);
         }
-
-        ecs_assert(info->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (row.index > 0) {
             info->index = row.index;
+            info->is_watched = false;
         } else {
             info->index = -row.index;
+            info->is_watched = true;
         }
 
         info->type = row.type;
 
-        return true;
+        return row.type != NULL;
     } else {
         return false;
     }
@@ -585,12 +588,12 @@ uint32_t commit(
         }
     }
 
-    /* If the entity has a negative index, it is being monitored for changes and
+    /* If the entity is being watched, it is being monitored for changes and
      * requires rematching systems when components are added or removed. This
      * ensures that systems that rely on components from containers or prefabs
      * update the matched tables when the application adds or removes a 
      * component from, for example, a container. */
-    if (old_index < 0) {
+    if (info->is_watched) {
         world->should_match = true;
     }
 
@@ -862,6 +865,11 @@ void ecs_merge_entity(
         .index = old_row.index
     };
 
+    if (old_row.index < 0) {
+        info.index *= -1;
+        info.is_watched = true;
+    }
+
     int32_t new_index = commit(
         world, &world->main_stage, &info, type, 0, to_remove, false);
 
@@ -893,11 +901,21 @@ void ecs_set_watching(
     if (watching) {
         if (row.index > 0) {
             row.index *= -1;
-            ecs_map_set(world->main_stage.entity_index, entity, &row);
+        } else if (row.index == 0) {
+            /* If entity is empty, there is no index to change the sign of. In
+             * this case, set the index to -1, and assign an empty type. */
+            row.index = -1;
+            row.type = NULL;
         }
+        ecs_map_set(world->main_stage.entity_index, entity, &row);
     } else {
         if (row.index < 0) {
-            row.index *= -1;
+            if (row.type) {
+                row.index *= -1;
+            } else {
+                row.index = 0;
+                row.type = NULL;
+            }
             ecs_map_set(world->main_stage.entity_index, entity, &row);
         }
     }
@@ -1215,11 +1233,8 @@ void ecs_adopt(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
 
-    if (!ecs_has(world, parent, EcsContainer)) {
-        ecs_add(world, parent, EcsContainer);
-        ecs_set_watching(world, parent, true);
-        world->should_match = true;
-    }
+    ecs_set_watching(world, parent, true);
+    world->should_match = true;
 
     ecs_type_t TParentType = ecs_type_from_entity(world, parent);
 
@@ -1515,8 +1530,8 @@ ecs_type_t ecs_type_from_entity(
     ecs_row_t row = {0};
 
     if (!stage_has_entity(&world->main_stage, entity, &row)) {
-        if (!stage_has_entity(stage, entity, &row) && world->in_progress) {
-            return 0;
+        if (world->in_progress) {
+            row = row_from_stage(stage, entity);
         }
     }
 

@@ -2719,10 +2719,6 @@ void SingleThreadStaging_merge_table_w_container_added_in_progress() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    /* Entity will become a container. A child component is stored in a new
-     * archetype that includes e_1 in its component list. However, e_1 doesn't
-     * have the EcsContainer tag yet in the main stage. This test ensures that
-     * the table can be created. */
     ecs_progress(world, 1);
 
     test_int(ctx.count, 1);
@@ -2818,7 +2814,6 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
     test_assert(g_child != 0);
 
     test_assert( ecs_contains(world, g_parent, g_child));
-    test_assert( ecs_has(world, g_parent, EcsContainer));
 
     ecs_fini(world);
 }

@@ -311,6 +311,7 @@ typedef struct ecs_entity_info_t {
     uint32_t index;
     ecs_table_t *table;
     ecs_table_column_t *columns;
+    bool is_watched;
 
     /* Used for determining if ecs_entity_info_t should be invalidated */
     ecs_stage_t *stage;

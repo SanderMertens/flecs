@@ -409,6 +409,7 @@ static
 bool match_table(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_entity_t system,
     EcsColSystem *system_data)
 {
     ecs_type_t type, table_type = table->type;
@@ -552,7 +553,7 @@ void match_tables(
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = &buffer[i];
-        if (match_table(world, table, system_data)) {
+        if (match_table(world, table, system, system_data)) {
             add_table(world, system, system_data, table);
         }
     }
@@ -651,7 +652,7 @@ void ecs_rematch_system(
         int32_t match = table_matched(system_data, system_data->tables, i);
         ecs_table_t *table = &buffer[i];
 
-        if (match_table(world, table, system_data)) {
+        if (match_table(world, table, system, system_data)) {
             /* If the table matches, and it is not currently matched, add */
             if (match == -1) {
                 add_table(world, system, system_data, table);
@@ -735,7 +736,7 @@ void ecs_col_system_notify_of_table(
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     assert(system_data != NULL);
 
-    if (match_table(world, table, system_data)) {
+    if (match_table(world, table, system, system_data)) {
         add_table(world, system, system_data, table);
     }
 }
