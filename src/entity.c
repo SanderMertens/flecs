@@ -1063,9 +1063,6 @@ ecs_entity_t _ecs_new_child_w_count(
     ecs_type_t full_type = type;
     
     if (parent) {
-        ecs_set_watching(world, parent, true);
-        world->should_match = true;
-
         full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
     }
 
@@ -1082,9 +1079,6 @@ ecs_entity_t _ecs_new_child(
     ecs_type_t full_type = type;
     
     if (parent) {
-        ecs_set_watching(world, parent, true);
-        world->should_match = true;
-        
         full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
     }
 
@@ -1226,9 +1220,6 @@ void ecs_adopt(
 {    
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
-
-    ecs_set_watching(world, parent, true);
-    world->should_match = true;
 
     ecs_type_t TParentType = ecs_type_from_entity(world, parent);
 
