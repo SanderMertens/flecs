@@ -990,6 +990,14 @@ ecs_entity_t ecs_type_has_entity(
     return ecs_type_has_entity_intern(world, stage, type, entity, false);
 }
 
+ecs_type_t ecs_expr_to_type(
+    ecs_world_t *world,
+    const char *expr)
+{
+    EcsTypeComponent type = type_from_expr(world, expr);
+    return type.resolved;
+}
+
 ecs_type_t ecs_type_add(
     ecs_world_t *world,
     ecs_type_t type,
@@ -999,7 +1007,7 @@ ecs_type_t ecs_type_add(
     return ecs_type_add_intern(world, stage, type, e);
 }
 
-char* _ecs_type_str(
+char* _ecs_type_to_expr(
     ecs_world_t *world,
     ecs_type_t type)
 {
