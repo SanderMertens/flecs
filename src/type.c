@@ -981,7 +981,7 @@ ecs_entity_t ecs_type_get_entity(
     }
 }
 
-ecs_entity_t ecs_type_has_entity(
+bool ecs_type_has_entity(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity)
@@ -1007,7 +1007,7 @@ ecs_type_t ecs_type_add(
     return ecs_type_add_intern(world, stage, type, e);
 }
 
-char* _ecs_type_to_expr(
+char* ecs_type_to_expr(
     ecs_world_t *world,
     ecs_type_t type)
 {

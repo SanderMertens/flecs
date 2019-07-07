@@ -7,7 +7,7 @@ void Type_type_of_1_tostr() {
 
     ECS_TYPE(world, Type, Position);
 
-    char *str = ecs_type_to_expr(world, Type);
+    char *str = ecs_type_to_expr(world, ecs_type(Type));
     
     test_str(str, "Position");
 
@@ -24,7 +24,7 @@ void Type_type_of_2_tostr() {
 
     ECS_TYPE(world, Type, Position, Velocity);
 
-    char *str = ecs_type_to_expr(world, Type);
+    char *str = ecs_type_to_expr(world, ecs_type(Type));
     
     test_str(str, "Position,Velocity");
 
@@ -42,7 +42,7 @@ void Type_type_of_2_tostr_no_id() {
     t = ecs_type_merge(world, t, t_1, 0);
     t = ecs_type_merge(world, t, t_2, 0);
     
-    char *str = _ecs_type_to_expr(world, t);
+    char *str = ecs_type_to_expr(world, t);
     
     test_str(str, "100,200");
 
