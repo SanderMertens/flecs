@@ -1244,7 +1244,7 @@ ecs_entity_t ecs_type_get_entity(
 
 /** Check if type has entity. */
 FLECS_EXPORT
-ecs_entity_t ecs_type_has_entity(
+bool ecs_type_has_entity(
     ecs_world_t *world,
     ecs_type_t type_id,
     ecs_entity_t entity);
