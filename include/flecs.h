@@ -1249,13 +1249,59 @@ ecs_entity_t ecs_type_has_entity(
     ecs_type_t type_id,
     ecs_entity_t entity);
 
-/** Convert type to string */
+/** Get type from type expression.
+ * This function obtains a type from a type expression. A type expression is a
+ * comma-deliminated list of the type's entity identifiers. For example, a type
+ * with entities Position and Velocity is: "Position, Velocity".
+ * 
+ * Type expressions may include type flags that indicate the role of the entity
+ * within the type. The following type flags are supported:
+ * - INSTANCEOF: share components from this entity
+ * - CHILDOF:    treat entity as parent
+ * 
+ * Type flags can be added with the OR (|) operator. More than one type flag may
+ * be specified. This is an example of a type expression with type flags:
+ * 
+ * Position, Velocity, INSTANCEOF | my_prefab, CHILDOF | my_parent
+ * 
+ * Entities created with this type will have the Position and Velocity 
+ * components, will share components from my_prefab, and will be children of
+ * my_parent. The following is also a valid type expression:
+ * 
+ * INSTANCEOF | CHILDOF | my_prefab
+ * 
+ * Entities of this type will both share components from my_prefab, as well as
+ * be treated as children of my_prefab.
+ * 
+ * The order in which components are specified has no effect. The following type
+ * expressions are equivalent:
+ * 
+ * - Position, Velocity
+ * - Velocity, Position
+ * 
+ * @param world The world.
+ * @param expr The type expression.
+ * @returns A type if the expression is valid, otherwise NULL.
+ */
+ecs_type_t ecs_expr_to_type(
+    ecs_world_t *world,
+    const char *expr);
+
+/** Get type expression from type. 
+ * This function converts a type to a type expression, which is a string
+ * representation of the type as it is provided to the ecs_new_entity and
+ * ecs_new_type functions. For more information on type expressions, see 
+ * ecs_expr_to_type.
+ * 
+ * @param world The world.
+ * @param type The type for which to obtain the expression.
+ * @returns The type expression string. This string needs to be deallocated in
+ *          order to prevent memory leaks.
+ */ 
 FLECS_EXPORT
-char* _ecs_type_str(
+char* ecs_type_to_expr(
     ecs_world_t *world,
     ecs_type_t type);
-
-#define ecs_type_str(world, type) _ecs_type_str(world, ecs_type(type))
 
 /* -- System API -- */
 
