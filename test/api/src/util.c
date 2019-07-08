@@ -26,22 +26,24 @@ void ProbeSystem(
         test_assert(e != 0);
     }
 
-    ecs_entity_t *e = ecs_column_test(rows, ecs_entity_t, 0);
-    if (e) {
-        test_assert(e != NULL);
-        test_assert(rows->entities != NULL);
-        test_assert(rows->entities == e);
-        
-        for (i = 0; i < rows->count; i ++) {
-            ctx->e[i + ctx->count] = e[i];
+    if (rows->table_columns) {
+        ecs_entity_t *e = ecs_column(rows, ecs_entity_t, 0);
+        if (e) {
+            test_assert(e != NULL);
+            test_assert(rows->entities != NULL);
+            test_assert(rows->entities == e);
+            
+            for (i = 0; i < rows->count; i ++) {
+                ctx->e[i + ctx->count] = e[i];
 
-            /* Make sure ecs_field works for all columns */
-            int c;
-            for (c = 0; c < ctx->column_count; c ++) {
-                _ecs_field(rows, i, c, false);
+                /* Make sure ecs_field works for all columns */
+                int c;
+                for (c = 0; c < ctx->column_count; c ++) {
+                    _ecs_field(rows, 0, c, i);
+                }
             }
+            ctx->count += rows->count;
         }
-        ctx->count += rows->count;
     }
 
     ctx->invoked ++;

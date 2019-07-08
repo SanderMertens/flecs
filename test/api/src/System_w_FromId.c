@@ -2,7 +2,7 @@
 
 static
 void Iter(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
+    ECS_COLUMN(rows, Position, p, 1);
 
     ProbeSystem(rows);
 

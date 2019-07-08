@@ -33,16 +33,17 @@ void Singleton_set_ptr() {
 }
 
 void Iter_w_singleton(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
-    Velocity *v_shared = ecs_shared(rows, Velocity, 2);
-    
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN(rows, Velocity, v, 2);
+    test_assert(!v || ecs_is_shared(rows, 2));
+
     ProbeSystem(rows);
 
-    if (v_shared) {
+    if (v) {
         int i;
         for (i = 0; i < rows->count; i ++) {
-            p[i].x += v_shared->x;
-            p[i].y += v_shared->y;
+            p[i].x += v->x;
+            p[i].y += v->y;
         }
     }
 }

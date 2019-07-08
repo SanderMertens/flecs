@@ -1,7 +1,7 @@
 #include <api.h>
 
 void InitVelocity(ecs_rows_t *rows) {
-    Velocity *v = ecs_column(rows, Velocity, 1);
+    ECS_COLUMN(rows, Velocity, v, 1);
     int i;
     for (i = 0; i < rows->count; i ++) {
         v[i].x = 10;
@@ -10,7 +10,7 @@ void InitVelocity(ecs_rows_t *rows) {
 }
 
 void InitMass(ecs_rows_t *rows) {
-    Mass *m = ecs_column(rows, Mass, 1);
+    ECS_COLUMN(rows, Mass, m, 1);    
     int i;
     for (i = 0; i < rows->count; i ++) {
         m[i] = 3;
@@ -18,9 +18,20 @@ void InitMass(ecs_rows_t *rows) {
 }
 
 void Iter(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
-    Velocity *v = ecs_shared(rows, Velocity, 2);
-    Mass *m = ecs_shared_test(rows, Mass, 3);
+    ECS_COLUMN(rows, Position, p, 1);
+
+    Velocity *v = NULL;
+    Mass *m = NULL;
+
+    if (rows->column_count >= 2) {
+        v = ecs_column(rows, Velocity, 2);
+        test_assert(ecs_is_shared(rows, 2));
+    }
+
+    if (rows->column_count >= 3) {
+        m = ecs_column(rows, Mass, 3);
+        test_assert(!m || ecs_is_shared(rows, 3));
+    }
 
     ProbeSystem(rows);
 
@@ -140,9 +151,20 @@ void System_w_FromSystem_3_column_2_from_system() {
 }
 
 void Iter_reactive(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
-    Velocity *v = ecs_shared(rows, Velocity, 2);
-    Mass *m = ecs_shared_test(rows, Mass, 3);
+    ECS_COLUMN(rows, Position, p, 1);
+
+    Velocity *v = NULL;
+    Mass *m = NULL;
+
+    if (rows->column_count >= 2) {
+        v = ecs_column(rows, Velocity, 2);
+        test_assert(ecs_is_shared(rows, 2));
+    }
+
+    if (rows->column_count >= 3) {
+        m = ecs_column(rows, Mass, 3);
+        test_assert(!m || ecs_is_shared(rows, 3));
+    }
 
     ProbeSystem(rows);
 

@@ -3,8 +3,16 @@
 static
 void Iter(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_TEST(rows, Velocity, v, 2);
-    ECS_COLUMN_TEST(rows, Mass, m, 3);
+    Velocity *v = NULL;
+    Mass *m = NULL;
+
+    if (rows->column_count >= 2) {
+        v = ecs_column(rows, Velocity, 2);
+    }
+
+    if (rows->column_count >= 3) {
+        m = ecs_column(rows, Mass, 3);
+    }
 
     ProbeSystem(rows);
 
@@ -1008,8 +1016,8 @@ void SystemOnFrame_6_type_1_and_2_optional() {
 void Use_field(ecs_rows_t *rows) {
     int i;
     for (i = 0; i < rows->count; i ++) {
-        Position *p = ecs_field(rows, Position, i, 1);
-        Velocity *v = ecs_field(rows, Velocity, i, 2);
+        Position *p = ecs_field(rows, Position, 1, i);
+        Velocity *v = ecs_field(rows, Velocity, 2, i);
 
         p->x += v->x;
         p->y += v->y;
@@ -1096,8 +1104,8 @@ void SystemOnFrame_match_2_systems_w_populated_table() {
 }
 
 void TestOptional_w_column(ecs_rows_t *rows) {
-    ECS_COLUMN_TEST(rows, Position, p, 1);
-    ECS_COLUMN_TEST(rows, Velocity, v, 2);
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN(rows, Velocity, v, 2);
 
     test_assert(p != NULL);
     test_assert(v == NULL);
@@ -1106,8 +1114,8 @@ void TestOptional_w_column(ecs_rows_t *rows) {
 }
 
 void TestOptional_w_shared(ecs_rows_t *rows) {
-    ECS_COLUMN_TEST(rows, Position, p, 1);
-    ECS_SHARED_TEST(rows, Velocity, v, 2);
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN(rows, Velocity, v, 2);
 
     test_assert(p != NULL);
     test_assert(v == NULL);
@@ -1116,14 +1124,14 @@ void TestOptional_w_shared(ecs_rows_t *rows) {
 }
 
 void TestOptional_w_field(ecs_rows_t *rows) {
-    ECS_COLUMN_TEST(rows, Position, p, 1);
+    ECS_COLUMN(rows, Position, p, 1);
 
     test_assert(p != NULL);
 
     ProbeSystem(rows);
 
     for (int i = 0; i < rows->count; i ++) {
-        Velocity *v = ecs_field(rows, Velocity, i, 2);
+        Velocity *v = ecs_field(rows, Velocity, 2, i);
         test_assert(v == NULL);
     }
 }
@@ -1428,8 +1436,11 @@ void SystemOnFrame_disabled_nested_feature() {
 }
 
 void TwoRefs(ecs_rows_t *rows) {
-    ECS_SHARED(rows, Position, p, 1);
-    ECS_SHARED(rows, Velocity, v, 2);
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN(rows, Velocity, v, 2);
+
+    test_assert(ecs_is_shared(rows, 1));
+    test_assert(ecs_is_shared(rows, 2));
 
     (void)p;
     (void)v;

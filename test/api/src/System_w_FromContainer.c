@@ -2,18 +2,23 @@
 
 static
 void Iter(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Mass, m_ptr, 1);
     bool shared = false;
-
-    Mass *m_ptr = ecs_column_test(rows, Mass, 1);
-    if (!m_ptr) {
-        m_ptr = ecs_shared_test(rows, Mass, 1);
-        if (m_ptr) {
-            shared = true;
-        }
+    
+    if (m_ptr) {
+        shared = ecs_is_shared(rows, 1);
     }
 
-    Position *p = ecs_column(rows, Position, 2);
-    Velocity *v = ecs_column_test(rows, Velocity, 3);
+    Position *p = NULL;
+    Velocity *v = NULL;
+
+    if (rows->column_count >= 2) {
+        p = ecs_column(rows, Position, 2);
+    }
+
+    if (rows->column_count >= 3) {
+        v = ecs_column(rows, Velocity, 3);
+    }
 
     ProbeSystem(rows);
 
@@ -169,10 +174,23 @@ void System_w_FromContainer_2_column_1_from_container() {
 
 static
 void Iter_2_shared(ecs_rows_t *rows) {
-    Mass *m_ptr = ecs_shared_test(rows, Mass, 1);
-    Rotation *r_ptr = ecs_shared_test(rows, Rotation, 2);
-    Position *p = ecs_column_test(rows, Position, 3);
-    Velocity *v = ecs_column_test(rows, Velocity, 4);
+    ECS_COLUMN(rows, Mass, m_ptr, 1);
+
+    Rotation *r_ptr = NULL;
+    Position *p = NULL;
+    Velocity *v = NULL;
+
+    if (rows->column_count >= 2) {
+        r_ptr = ecs_column(rows, Rotation, 2);
+    }
+
+    if (rows->column_count >= 3) {
+        p = ecs_column(rows, Position, 3);
+    }
+
+    if (rows->column_count >= 4) {
+        v = ecs_column(rows, Velocity, 4);
+    }    
 
     ProbeSystem(rows);
 
@@ -606,8 +624,10 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
 
 static
 void Dummy(ecs_rows_t *rows) {
-    Mass *m_ptr = ecs_shared_test(rows, Mass, 1);
-    Position *p = ecs_column(rows, Position, 2);
+    ECS_COLUMN(rows, Mass, m_ptr, 1);
+    ECS_COLUMN(rows, Position, p, 2);
+
+    test_assert(!m_ptr || ecs_is_shared(rows, 1));
 
     ProbeSystem(rows);
 
@@ -1153,8 +1173,10 @@ void System_w_FromContainer_new_child_after_match() {
 }
 
 void IterSame(ecs_rows_t *rows) {
-    ECS_SHARED(rows, Position, p_parent, 1);
+    ECS_COLUMN(rows, Position, p_parent, 1);
     ECS_COLUMN(rows, Position, p, 2);
+
+    test_assert(ecs_is_shared(rows, 1));
 
     ProbeSystem(rows);
 

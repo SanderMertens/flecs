@@ -589,87 +589,127 @@ void ecs_set_period(
     }
 }
 
-void* _ecs_column(
+static
+void* get_owned_column(
     ecs_rows_t *rows,
-    uint32_t index,
-    bool test)
+    size_t size,
+    int32_t table_column)
 {
-    if (index > rows->column_count) {
-        ecs_assert(test, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        return NULL;
-    }
-
-    int32_t table_column;
-
-    if (index == 0) {
-        table_column = 0;
-    } else {
-        if (!rows->columns) {
-            ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
-            return NULL;
-        }
-
-        table_column = rows->columns[index - 1];
-        if (!table_column) {
-            ecs_assert(test, ECS_COLUMN_IS_NOT_SET, NULL);
-            return NULL;
-        }
-    }
-
-    if (table_column < 0) {
-        ecs_assert(test, ECS_COLUMN_IS_SHARED, NULL);
-        return NULL;
-    }
-
     if (!rows->table_columns) {
-        ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
         return NULL;
     }
 
     ecs_table_column_t *column = &((ecs_table_column_t*)rows->table_columns)[table_column];
     ecs_assert(column->size != 0, ECS_COLUMN_HAS_NO_DATA, NULL);
+    ecs_assert(!size || column->size == size, ECS_COLUMN_TYPE_MISMATCH, NULL);
     void *buffer = ecs_vector_first(column->data);
     return ECS_OFFSET(buffer, column->size * rows->offset);
 }
 
-void* _ecs_shared(
+static
+void* get_shared_column(
     ecs_rows_t *rows,
-    uint32_t index,
-    bool test)
+    size_t size,
+    int32_t table_column)
 {
-    if (index > rows->column_count) {
-        ecs_assert(test, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+    if (!rows->references) {
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
         return NULL;
     }
-    
+
+#ifndef NDEBUG
+    if (size) {
+        EcsComponent *cdata = ecs_get_ptr(
+            rows->world, rows->references[-table_column - 1].component, 
+            EcsComponent);
+        ecs_assert(cdata != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cdata->size == size, ECS_COLUMN_TYPE_MISMATCH, NULL);
+    }
+#endif
+
+    return rows->references[-table_column - 1].cached_ptr;    
+}
+
+static
+bool get_table_column(
+    ecs_rows_t *rows,
+    uint32_t column,
+    int32_t *table_column_out)
+{
+    if (column > rows->column_count) {
+        ecs_abort(ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+    }
+
+    int32_t table_column = 0;
+
+    if (column != 0) {
+        if (!rows->columns) {
+            ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        }
+
+        table_column = rows->columns[column - 1];
+        if (!table_column) {
+            /* column is not set */
+            return false;
+        }
+    }
+
+    *table_column_out = table_column;
+
+    return true;
+}
+
+static
+void* get_column(
+    ecs_rows_t *rows,
+    size_t size,
+    uint32_t column,
+    uint32_t row)
+{
     int32_t table_column;
 
-    if (index == 0) {
-        return 0;
-    } else {
-        if (!rows->columns) {
-            ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
-            return NULL;
-        }
-
-        table_column = rows->columns[index - 1];
-        if (!table_column) {
-            ecs_assert(test, ECS_COLUMN_IS_NOT_SET, NULL);
-            return NULL;
-        }
-
-        if (table_column > 0) {
-            ecs_assert(test, ECS_COLUMN_IS_NOT_SHARED, NULL);
-            return NULL;
-        }
-
-        if (!rows->references) {
-            ecs_assert(test, ECS_INTERNAL_ERROR, NULL);
-            return NULL;
-        }
-
-        return rows->references[-table_column - 1].cached_ptr;
+    if (!get_table_column(rows, column, &table_column)) {
+        return NULL;
     }
+
+    if (table_column < 0) {
+        return get_shared_column(rows, size, table_column);
+    } else {
+        return ECS_OFFSET(get_owned_column(rows, size, table_column), size  * row);
+    }
+}
+
+void* _ecs_column(
+    ecs_rows_t *rows,
+    size_t size,
+    uint32_t column)
+{
+    return get_column(rows, size, column, 0);
+}
+
+void* _ecs_field(
+    ecs_rows_t *rows, 
+    size_t size,
+    uint32_t column,
+    uint32_t row)
+{
+    return get_column(rows, size, column, row);
+}
+
+bool ecs_is_shared(
+    ecs_rows_t *rows,
+    uint32_t column)
+{
+    int32_t table_column;
+
+    if(!get_table_column(rows, column, &table_column)) {
+        /* If column is not set, it cannot be determined if it is shared or
+         * not.  */
+        ecs_abort(ECS_COLUMN_IS_NOT_SET, NULL);
+    }
+
+    return table_column < 0;
 }
 
 ecs_entity_t _ecs_column_source(
@@ -738,44 +778,4 @@ ecs_entity_t _ecs_column_entity(
         }
         return rows->components[index - 1];
     }  
-}
-
-void *_ecs_field(
-    ecs_rows_t *rows, 
-    uint32_t index, 
-    uint32_t column,
-    bool test)
-{
-    if (column > rows->column_count) {
-        ecs_assert(test, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        return NULL;
-    }
-
-    int32_t table_column;
-
-    if (column == 0) {
-        table_column = 0;
-    } else {
-        ecs_assert(rows->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-        table_column = rows->columns[column - 1];
-
-        if (!table_column) {
-            return NULL;
-        }
-    }
-
-    if (table_column < 0) {
-        ecs_assert(rows->references != NULL, ECS_INTERNAL_ERROR, NULL);
-        return rows->references[-table_column - 1].cached_ptr;
-    } else {
-        ecs_assert(rows->table_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_table_column_t *column = &((ecs_table_column_t*)rows->table_columns)[table_column];
-
-#ifndef NDEBUG
-        ecs_assert(index < ecs_vector_count(column->data), ECS_OUT_OF_RANGE, 0);
-#endif
-
-        void *buffer = ecs_vector_first(column->data);
-        return ECS_OFFSET(buffer, column->size * (index + rows->offset));
-    }
 }

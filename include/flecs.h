@@ -1232,7 +1232,16 @@ ecs_entity_t ecs_entity_from_type(
     ecs_world_t *world,
     ecs_type_t type);
 
-/** Find or create type from existing type and entity. */
+/** Find or create type from existing type and entity. 
+ * This operation adds the specified entity to the specified type, and returns a
+ * new or existing type that is a union of the specified type and entity. The
+ * provided type will not be altered.
+ * 
+ * @param world The world.
+ * @param type The type to which to add the entity.
+ * @param entity The entity to add to the type.
+ * @returns A type that is the union of the specified type and entity.
+ */
 FLECS_EXPORT
 ecs_type_t ecs_type_add(
     ecs_world_t *world,
@@ -1260,7 +1269,16 @@ ecs_type_t ecs_type_merge(
     ecs_type_t type_add,
     ecs_type_t type_remove);
 
-/** Get type id from entity array */
+/** Find or create type from entity array.
+ * This operation will return a type that contains the entities in the specified
+ * array. If a type with the specified entities already exists, it will be
+ * returned, otherwise a new type will be created.
+ * 
+ * @param world The world.
+ * @param array A C array with entity identifiers.
+ * @param count The number of elements in the array.
+ * @returns A type that contains the specified number of entities.
+ */
 FLECS_EXPORT
 ecs_type_t ecs_type_find(
     ecs_world_t *world,
@@ -1282,11 +1300,18 @@ ecs_entity_t ecs_type_get_entity(
     ecs_type_t type,
     uint32_t index);
 
-/** Check if type has entity. */
+/** Check if type has entity.
+ * This operation returns whether a type has a specified entity.
+ * 
+ * @param world The world.
+ * @param type The type to check.
+ * @param entity The entity to check for.
+ * @returns true if the type contains the entity, otherwise false.
+ */
 FLECS_EXPORT
 bool ecs_type_has_entity(
     ecs_world_t *world,
-    ecs_type_t type_id,
+    ecs_type_t type,
     ecs_entity_t entity);
 
 /** Get type from type expression.
@@ -1409,39 +1434,29 @@ bool ecs_is_enabled(
     ecs_entity_t system);
 
 /** Run a specific system manually.
- * This operation runs a single system on demand. It is an efficient way to
- * invoke logic on a set of entities, as on demand systems are only matched to
+ * This operation runs a single system manually. It is an efficient way to
+ * invoke logic on a set of entities, as manual systems are only matched to
  * tables at creation time or after creation time, when a new table is created.
  *
- * On demand systems are useful to evaluate lists of prematched entities at
+ * Manual systems are useful to evaluate lists of prematched entities at
  * application defined times. Because none of the matching logic is evaluated
- * before the system is invoked, on demand systems are much more efficient than
+ * before the system is invoked, manual systems are much more efficient than
  * manually obtaining a list of entities and retrieving their components.
- *
- * An application may however want to apply a filter to an on demand system for
- * fast-changing unpredictable selections of entity subsets. The filter
- * parameter lets applications pass handles to components or component families,
- * and only entities that have said components will be evaluated.
- *
- * Because the filter is evaluated not on a per-entity basis, but on a per table
- * basis, filter evaluation is still very cheap, especially when compared to
- * tables with large numbers of entities.
  *
  * An application may pass custom data to a system through the param parameter.
  * This data can be accessed by the system through the param member in the
  * ecs_rows_t value that is passed to the system callback.
  *
  * Any system may interrupt execution by setting the interrupted_by member in
- * the ecs_rows_t value. This is particularly useful for on demand systems, where
+ * the ecs_rows_t value. This is particularly useful for manual systems, where
  * the value of interrupted_by is returned by this operation. This, in
- * cominbation with the param argument lets applications use on demand systems
+ * cominbation with the param argument lets applications use manual systems
  * to lookup entities: once the entity has been found its handle is passed to
  * interrupted_by, which is then subsequently returned.
  *
  * @param world The world.
  * @param system The system to run.
  * @param delta_time: The time passed since the last system invocation.
- * @param filter A component or type to filter matched entities.
  * @param param A user-defined parameter to pass to the system.
  * @returns handle to last evaluated entity if system was interrupted.
  */
@@ -1452,7 +1467,27 @@ ecs_entity_t ecs_run(
     float delta_time,
     void *param);
 
-/** Run system with offset/limit and type filter */
+/** Run system with offset/limit and type filter.
+ * This operation is the same as ecs_run, but filters the entities that will be
+ * iterated by the system.
+ * 
+ * Entities can be filtered in two ways. Offset and limit control the range of
+ * entities that is iterated over. The range is applied to all entities matched
+ * with the system, thus may cover multiple archetypes.
+ * 
+ * The type filter controls which entity types the system will evaluate. Only
+ * types that contain all components in the type filter will be iterated over. A
+ * type filter is only evaluated once per table, which makes filtering cheap if
+ * the number of entities is large and the number of tables is small, but not as
+ * cheap as filtering in the system signature.
+ * 
+ * @param world The world.
+ * @param system The system to invoke.
+ * @param delta_time: The time passed since the last system invocation.
+ * @param filter A component or type to filter matched entities.
+ * @param param A user-defined parameter to pass to the system.
+ * @returns handle to last evaluated entity if system was interrupted.
+ */
 FLECS_EXPORT
 ecs_entity_t _ecs_run_w_filter(
     ecs_world_t *world,
@@ -1466,31 +1501,62 @@ ecs_entity_t _ecs_run_w_filter(
 #define ecs_run_w_filter(world, system, delta_time, offset, limit, type, param)\
     _ecs_run_w_filter(world, system, delta_time, offset, limit, T##type, param)
 
-/* Obtain a column from inside a system */
+/** Obtain a pointer to column data. 
+ * This function is to be used inside a system to obtain data from a column in
+ * the system signature. The provided index corresponds with the index of the
+ * element in the system signature, starting from one. For example, for the
+ * following system signature:
+ * 
+ * Position, Velocity
+ * 
+ * Position is at index 1, and Velocity is at index 2.
+ * 
+ * This function is typically invoked through the `ECS_COLUMN` macro which
+ * automates declaring a variable of the correct type in the scope of the system
+ * function.
+ * 
+ * When a valid pointer is obtained, it can be used as an array with rows->count
+ * elements if the column is owned by the entity being iterated over, or as a
+ * pointer if the column is shared (see ecs_is_shared).
+ * 
+ * @param rows The rows parameter passed into the system.
+ * @param index The index identifying the column in a system signature.
+ * @returns A pointer to the column data if index is valid, otherwise NULL.
+ */
 FLECS_EXPORT
 void* _ecs_column(
     ecs_rows_t *rows,
-    uint32_t index,
-    bool test);
+    size_t size,
+    uint32_t column);
 
-#define ecs_column(rows, type, index)\
-    ((type*)_ecs_column(rows, index, false))
+#define ecs_column(rows, type, column)\
+    ((type*)_ecs_column(rows, sizeof(type), column))
 
-#define ecs_column_test(rows, type, index)\
-    ((type*)_ecs_column(rows, index, true))
-
-/* Obtain a reference to a shared component */
+/** Test if column is shared or not. 
+ * The following signature shows an example of owned components and shared
+ * components:
+ * 
+ * Position, CONTAINER.Velocity, MyEntity.Mass
+ * 
+ * Position is an owned component, while Velocity and Mass are shared 
+ * components. While these kinds of relationships are expressed explicity in a
+ * system signature, inheritance relationships are implicit. The above signature
+ * matches both entities for which Position is owned as well as entities for
+ * which Position appears in an entity that they inherit from.
+ * 
+ * If a system needs to support both cases, it needs to test whether the
+ * component is shared or not. This test only needs to happen once per system
+ * callback invocation, as all the entities being iterated over will either own
+ * or not own the component.
+ * 
+ * @param rows The rows parameter passed into the system.
+ * @param index The index identifying the column in a system signature.
+ * @returns true if the column is shared, false if it is owned.
+ */
 FLECS_EXPORT
-void* _ecs_shared(
+bool ecs_is_shared(
     ecs_rows_t *rows,
-    uint32_t index,
-    bool test);
-
-#define ecs_shared(rows, type, index)\
-    ((type*)_ecs_shared(rows, index, false))
-
-#define ecs_shared_test(rows, type, index)\
-    ((type*)_ecs_shared(rows, index, true))
+    uint32_t column);
 
 /** Obtain a single field. 
  * This is an alternative method to ecs_column to access data in a system, which
@@ -1509,16 +1575,13 @@ void* _ecs_shared(
  */
 FLECS_EXPORT
 void *_ecs_field(
-    ecs_rows_t *rows, 
-    uint32_t index, 
+    ecs_rows_t *rows,
+    size_t size,
     uint32_t column,
-    bool test);
+    uint32_t row);
 
-#define ecs_field(rows, type, index, column)\
-    ((type*)_ecs_field(rows, index, column, false))
-
-#define ecs_field_test(rows, type, index, column)\
-    ((type*)_ecs_field(rows, index, column, true))
+#define ecs_field(rows, type, column, row)\
+    _ecs_field(rows, sizeof(type), column, row)
 
 /** Obtain the source of a column from inside a system.
  * This operation lets you obtain the entity from which the column data was
@@ -1825,17 +1888,18 @@ void _ecs_assert(
 #define ECS_COLUMN_IS_NOT_SHARED (19)
 #define ECS_COLUMN_IS_SHARED (20)
 #define ECS_COLUMN_HAS_NO_DATA (21)
-#define ECS_INVALID_WHILE_MERGING (22)
-#define ECS_INVALID_WHILE_ITERATING (23)
-#define ECS_INVALID_FROM_WORKER (24)
-#define ECS_UNRESOLVED_IDENTIFIER (25)
-#define ECS_OUT_OF_RANGE (26)
-#define ECS_COLUMN_IS_NOT_SET (27)
-#define ECS_UNRESOLVED_REFERENCE (28)
-#define ECS_THREAD_ERROR (29)
-#define ECS_MISSING_OS_API (30)
-#define ECS_TYPE_TOO_LARGE (31)
-#define ECS_INVALID_PREAFB_CHILD_TYPE (32)
+#define ECS_COLUMN_TYPE_MISMATCH (22)
+#define ECS_INVALID_WHILE_MERGING (23)
+#define ECS_INVALID_WHILE_ITERATING (24)
+#define ECS_INVALID_FROM_WORKER (25)
+#define ECS_UNRESOLVED_IDENTIFIER (26)
+#define ECS_OUT_OF_RANGE (27)
+#define ECS_COLUMN_IS_NOT_SET (28)
+#define ECS_UNRESOLVED_REFERENCE (29)
+#define ECS_THREAD_ERROR (30)
+#define ECS_MISSING_OS_API (31)
+#define ECS_TYPE_TOO_LARGE (32)
+#define ECS_INVALID_PREAFB_CHILD_TYPE (33)
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */
 
@@ -1947,7 +2011,7 @@ void _ecs_assert(
     ecs_set_singleton(world, id, {0});\
     id *handles = ecs_get_singleton_ptr(world, id);\
 
-/** Wrapper around ecs_load.
+/** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
  * be used like this:
  *
@@ -1966,15 +2030,6 @@ void _ecs_assert(
 
 #define ECS_COLUMN(rows, type, id, column)\
     type *id = ecs_column(rows, type, column)
-
-#define ECS_COLUMN_TEST(rows, type, id, column)\
-    type *id = ecs_column_test(rows, type, column)
-
-#define ECS_SHARED(rows, type, id, column)\
-    type *id = ecs_shared(rows, type, column)
-
-#define ECS_SHARED_TEST(rows, type, id, column)\
-    type *id = ecs_shared_test(rows, type, column)
 
 #define ECS_COLUMN_COMPONENT(rows, id, column)\
     ECS_ENTITY_VAR(id) = ecs_column_entity(rows, column);\
@@ -2033,8 +2088,9 @@ void _ecs_assert(
 
 /** Utility macro for importing all handles for a module from a system column */
 #define ECS_IMPORT_COLUMN(rows, module, column) \
-    module *M##module##_ptr = ecs_shared(rows, module, column);\
+    module *M##module##_ptr = ecs_column(rows, module, column);\
     ecs_assert(M##module##_ptr != NULL, ECS_MODULE_UNDEFINED, #module);\
+    ecs_assert(ecs_is_shared(rows, column), ECS_COLUMN_IS_NOT_SHARED, NULL);\
     module M##module = *M##module##_ptr;\
     module##ImportHandles(M##module)
 
