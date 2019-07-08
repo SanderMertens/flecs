@@ -1,17 +1,7 @@
 #include <api.h>
 
 void Task(ecs_rows_t *rows) {
-    Position *p = ecs_shared_test(rows, Position, 1);
-    
     ProbeSystem(rows);
-
-    int i;
-    for (i = 0; i < rows->count; i ++) {
-        if (p) {
-            p->x = 0;
-            p->y = 0;
-        }
-    }
 }
 
 void Tasks_no_components() {

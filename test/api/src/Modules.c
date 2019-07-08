@@ -43,13 +43,11 @@ void Modules_simple_module() {
 
 static
 void AddVtoP(ecs_rows_t *rows) {
-    ecs_entity_t *entities = ecs_column(rows, ecs_entity_t, 0);    
-    
     ECS_IMPORT_COLUMN(rows, SimpleModule, 2);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
-        ecs_add(rows->world, entities[i], Velocity);
+        ecs_add(rows->world, rows->entities[i], Velocity);
     }
 }
 

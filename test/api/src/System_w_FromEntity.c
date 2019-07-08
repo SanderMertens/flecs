@@ -2,9 +2,20 @@
 
 static
 void Iter(ecs_rows_t *rows) {
-    Mass *m_ptr = ecs_shared_test(rows, Mass, 1);
-    Position *p = ecs_column(rows, Position, 2);
-    Velocity *v = ecs_column_test(rows, Velocity, 3);
+    ECS_COLUMN(rows, Mass, m_ptr, 1);
+
+    Position *p = NULL;
+    Velocity *v = NULL;
+
+    if (rows->column_count >= 2) {
+        p = ecs_column(rows, Position, 2);
+    }
+
+    if (rows->column_count >= 3) {
+        v = ecs_column(rows, Velocity, 3);
+    }
+
+    test_assert(!m_ptr || ecs_is_shared(rows, 1));
 
     ProbeSystem(rows);
 

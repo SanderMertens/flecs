@@ -72,7 +72,7 @@
      - [The ECS_COLUMN_COMPONENT macro](#the-ecs_column_component-macro)
      - [The ECS_COLUMN_ENTITY macro](#the-ecs_column_entity-macro)
      - [The ecs_field function](#the-ecs_field-function)
-     - [The ECS_COLUMN_TEST and ECS_SHARED_TEST macro's](#the-ecs_column_test-and-ecs_shared_test-macros)
+     - [The ECS_COLUMN and ECS_SHARED_TEST macro's](#the-ecs_column_test-and-ecs_shared_test-macros)
    - [System phases](#system-phases)
      - [The EcsOnLoad phase](#the-ecsonload-phase)
      - [The EcsPostLoad phase](#the-ecspostload-phase)

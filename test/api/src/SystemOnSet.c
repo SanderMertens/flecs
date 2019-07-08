@@ -2,8 +2,12 @@
 
 static
 void OnSet(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
-    Velocity *v = ecs_column_test(rows, Velocity, 2);
+    ECS_COLUMN(rows, Position, p, 1);
+
+    Velocity *v = NULL;
+    if (rows->column_count >= 2) {
+        v = ecs_column(rows, Velocity, 2);
+    }
 
     ProbeSystem(rows);
 
@@ -271,7 +275,7 @@ static bool set_called;
 
 static
 void OnAdd_check_order(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
+    ECS_COLUMN(rows, Position, p, 1);
 
     test_assert(!add_called);
     test_assert(!set_called);
@@ -289,7 +293,7 @@ void OnAdd_check_order(ecs_rows_t *rows) {
 
 static
 void OnSet_check_order(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
+    ECS_COLUMN(rows, Position, p, 1);
 
     ProbeSystem(rows);
 
@@ -343,7 +347,7 @@ void SystemOnSet_set_and_add_system() {
 
 static
 void OnAdd(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
+    ECS_COLUMN(rows, Position, p, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -495,14 +499,18 @@ void SystemOnSet_on_set_after_on_add_1_of_2_matched() {
 
 static
 void OnSetShared(ecs_rows_t *rows) {
-    Position *p = ecs_column_test(rows, Position, 1);
-    Velocity *v = ecs_column_test(rows, Velocity, 2);
+    ECS_COLUMN(rows, Position, p, 1);
+
+    Velocity *v = NULL;
+    if (rows->column_count >= 2) {
+        v = ecs_column(rows, Velocity, 2);
+    }
 
     ProbeSystem(rows);
 
     int i;
 
-    if (p) {
+    if (!ecs_is_shared(rows, 1)) {
         for (i = 0; i < rows->count; i ++) {
             p[i].x ++;
 
@@ -512,12 +520,10 @@ void OnSetShared(ecs_rows_t *rows) {
             }
         }
     } else {
-        p = ecs_shared(rows, Position, 1);
-
         for (i = 0; i < rows->count; i ++) {
             if (v) {
-                v[i].x = p[i].x;
-                v[i].y = p[i].y;
+                v[i].x = p->x;
+                v[i].y = p->y;
             }
         }        
     }

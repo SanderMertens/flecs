@@ -5,8 +5,8 @@ void Move(ecs_rows_t *rows) {
 
     int row;
     for (row = 0; row < rows->count; row ++) {
-        Position *p = ecs_field(rows, Position, row, 1);
-        Velocity *v = ecs_field(rows, Velocity, row, 2);
+        Position *p = ecs_field(rows, Position, 1, row);
+        Velocity *v = ecs_field(rows, Velocity, 2, row);
         p->x += v->x * rows->delta_time;
         p->y += v->y * rows->delta_time;
     }

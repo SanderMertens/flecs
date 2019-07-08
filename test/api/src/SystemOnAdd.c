@@ -1,8 +1,12 @@
 #include <api.h>
 
 void Init(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
-    Velocity *v = ecs_column_test(rows, Velocity, 2);
+    ECS_COLUMN(rows, Position, p, 1);
+    
+    Velocity *v = NULL;
+    if (rows->column_count >= 2) {
+        v = ecs_column(rows, Velocity, 2);
+    }
 
     ProbeSystem(rows);
 

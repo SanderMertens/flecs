@@ -2,18 +2,15 @@
 
 static
 void Iter(ecs_rows_t *rows) {
-    bool shared = false;
+    ECS_COLUMN(rows, Mass, m_ptr, 1);
+    bool shared = ecs_is_shared(rows, 1);
 
-    Mass *m_ptr = ecs_column_test(rows, Mass, 1);
-    if (!m_ptr) {
-        m_ptr = ecs_shared_test(rows, Mass, 1);
-        if (m_ptr) {
-            shared = true;
-        }
+    ECS_COLUMN(rows, Position, p, 2);
+
+    Velocity *v = NULL;
+    if (rows->column_count >= 3) {
+        v = ecs_column(rows, Velocity, 3);
     }
-
-    Position *p = ecs_column(rows, Position, 2);
-    Velocity *v = ecs_column_test(rows, Velocity, 3);
 
     ProbeSystem(rows);
 
@@ -713,8 +710,8 @@ void Prefab_w_field(ecs_rows_t *rows) {
     ProbeSystem(rows);
 
     for (int i = 0; i < rows->count; i ++) {
-        Position *p = ecs_field(rows, Position, i, 1);
-        Velocity *v = ecs_field(rows, Velocity, i, 2);
+        Position *p = ecs_field(rows, Position, 1, i);
+        Velocity *v = ecs_field(rows, Velocity, 2, i);
         p->x += v->x;
         p->y += v->y;
     }
@@ -762,15 +759,23 @@ void Prefab_iterate_w_prefab_field() {
 
 static
 void Prefab_w_shared(ecs_rows_t *rows) {
-    Velocity *v = ecs_shared(rows, Velocity, 2);
-    Mass *m = ecs_shared_test(rows, Mass, 3);
-
-    test_assert(v != NULL);
+    Velocity *v = NULL;
+    if (rows->column_count >= 2) {
+        v = ecs_column(rows, Velocity, 2);
+        if (v) {
+            test_assert(ecs_is_shared(rows, 2));
+        }
+    }
+    
+    Mass *m = NULL;
+    if (rows->column_count >= 3) {
+        m = ecs_column(rows, Mass, 3);
+    }
 
     ProbeSystem(rows);
 
     for (int i = 0; i < rows->count; i ++) {
-        Position *p = ecs_field(rows, Position, i, 1);
+        Position *p = ecs_field(rows, Position, 1, i);
         p->x += v->x;
         p->y += v->y;
 
@@ -2007,7 +2012,9 @@ void Prefab_get_ptr_from_prefab_from_new_table_in_progress() {
 
 void TestBase(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_SHARED(rows, Velocity, v, 2);
+    ECS_COLUMN(rows, Velocity, v, 2);
+
+    test_assert(ecs_is_shared(rows, 2));
 
     test_assert(p != NULL);
     test_assert(v != NULL);

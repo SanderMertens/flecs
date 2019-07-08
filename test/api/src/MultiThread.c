@@ -3,7 +3,7 @@
 void Progress(ecs_rows_t *rows) {
     int row;
     for (row = 0; row < rows->count; row ++) {
-        Position *foo = ecs_field(rows, Position, row, 1);
+        Position *foo = ecs_field(rows, Position, 1, row);
         foo->x ++;
     }
 }
@@ -625,7 +625,8 @@ void TestSubset(ecs_rows_t *rows) {
 
 static
 void TestAll(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
+    ECS_COLUMN(rows, Position, p, 1);
+
     ecs_entity_t TestSubset = ecs_column_entity(rows, 2);
 
     int i;
