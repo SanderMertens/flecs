@@ -48,11 +48,9 @@
     - [Prefabs](#prefabs)
     - [Prefab nesting](#prefab-nesting)
 - [Components and Types](#components-and-types)
-  - [Owned components](#owned-components)
-    - [Add components](#add-components)
-    - [Remove components](#remove-components)
-    - [Set components](#set-components)
-  - [Shared components](#shared-components)
+  - [Add components](#add-components)
+  - [Remove components](#remove-components)
+  - [Set components](#set-components)
   - [Tags](#tags)
 - [Systems](#systems)
    - [System queries](#system-queries)
@@ -793,12 +791,7 @@ Types can be used with other operations as well, like `ecs_add`, `ecs_remove` an
 
 Types are not limited to grouping components. They can also group entities or systems. This is a key enabler for powerful features, like [prefabs](#prefabs), [containers](#containers) and [features](#features).
 
-### Owned components
-In Flecs, components can either be owned by an entity or shared with other entities. When a component is owned, it means that an entity has a private instance of the component that can be modified individually. Owned components are useful when a component is mutable, and individual entities require the component to have a unique value.
-
-The following sections describe the API operations for working with owned components.
-
-#### Add components
+### Add components
 In Flecs, an application can add owned components to an entity with the `ecs_add` operation. The operation accepts an entity and a _type_ handle, and can be used like this:
 
 ```c
@@ -815,7 +808,7 @@ ecs_add(world, e, Movable);
 
 After the operation, it is guaranteed that `e` will have all components that are part of the type. If the entity already had a subset of the components in the type, only the difference is added. If the entity already had all components in the type, this operation will have no side effects.
 
-##### A quick recap on handles
+#### A quick recap on handles
 The signature of `ecs_add` looks like this:
 
 ```c
@@ -826,7 +819,7 @@ Note that the function accepts a _type handle_ as its 3rd argument. Type handles
 
 For more details on how handles work, see [Handles](#handles).
 
-#### Remove components
+### Remove components
 Flecs allows applications to remove owned components with the `ecs_remove` operation. The operation accepts an entity and a _type_ handle, and can be used like this:
 
 ```c
@@ -843,7 +836,7 @@ ecs_remove(world, e, Movable);
 
 After the operation, it is guaranteed that `e` will not have any of the components that are part of the type. If the entity only had a subset of the types, that subset is removed. If the entity had none of the components in the type, this operation will have no side effects. If the set of components that was part of this operation matched any `EcsOnRemove` systems, they will be invoked.
 
-#### Set components
+### Set components
 With the `ecs_set` operation, Flecs applications are able to set a component on an entity to a specific value. Other than the `ecs_add` and `ecs_remove` operations, `ecs_set` accepts a `_component` (entity) handle, as it is only possible to set a single component at the same time. The `ecs_set` operation can be used like this:
 
 ```c
@@ -851,11 +844,6 @@ ecs_set(world, e, Position, {10, 20});
 ```
 
 After the operation it is guaranteed that `e` has `Position`, and that it is set to `{10, 20}`. If the entity did not yet have `Position`, it will be added by the operation. If the entity already had `Position`, it will only assign the value. If there are any `EcsOnSet` systems that match with the `Position` component, they will be invoked after the value is assigned.
-
-### Shared components
-Shared components in Flecs are components that are shared between multiple entities. Where owned components have a 1..1 relationship between a component and an entity, a shared component has a 1..N relationship between the component and entity. Shared components are only stored once in memory, which can drastically reduce memory usage of an application if the same component can be shared across many entities. Additionally, shared components are a fast way to update a component value in constant time (O(1)) for N entities.
-
-Shared components can be implemented with [prefabs](#prefabs).
 
 ### Tags
 Tags are components that do not contain any data. Internally it is represented as a component with data-size 0. Tags can be useful for subdividing entities into categories, without adding any data. A tag can be defined with the ECS_TAG macro:
