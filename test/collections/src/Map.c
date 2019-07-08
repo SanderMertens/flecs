@@ -157,7 +157,7 @@ void Map_remove() {
     ecs_map_t *map = ecs_map_new(16, sizeof(char*));
     fill_map(map);
     test_assert(ecs_map_remove(map, 3) == 0);
-    test_bool(ecs_map_has(map, 3, NULL), false);
+    test_bool(ecs_map_has(map, 3, (void**)NULL), false);
     test_int(ecs_map_count(map), 3);
     ecs_map_free(map);
 }
