@@ -461,7 +461,7 @@ ecs_type_t copy_from_prefabs(
         ecs_entity_t prefab = type_buffer[i] & ECS_ENTITY_MASK;
         ecs_entity_info_t prefab_info = {.entity = prefab};
 
-        if (populate_info(world, stage, &prefab_info)) {
+        if (populate_info(world, &world->main_stage, &prefab_info)) {
             modified = copy_from_prefab(
                 world, stage, &prefab_info, info, offset, limit, type, to_add, 
                 modified);                
@@ -1052,6 +1052,22 @@ ecs_entity_t _ecs_new_w_count(
     return result;
 }
 
+ecs_entity_t _ecs_new_child(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_type_t type)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
+    ecs_type_t full_type = type;
+    
+    if (parent) {
+        full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
+    }
+
+    return _ecs_new(world, full_type);
+}
+
 ecs_entity_t _ecs_new_child_w_count(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -1066,23 +1082,40 @@ ecs_entity_t _ecs_new_child_w_count(
         full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
     }
 
-    return _ecs_commit(world, 0, full_type, 0, 0, count);
+    return _ecs_new_w_count(world, full_type, count);
 }
 
-ecs_entity_t _ecs_new_child(
+ecs_entity_t _ecs_new_instance(
     ecs_world_t *world,
-    ecs_entity_t parent,
+    ecs_entity_t base,
     ecs_type_t type)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
 
     ecs_type_t full_type = type;
     
-    if (parent) {
-        full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
+    if (base) {
+        full_type = ecs_type_add(world, full_type, base | EcsInstanceOf);
     }
 
-    return _ecs_commit(world, 0, full_type, 0, 0, 0);
+    return _ecs_new(world, full_type);
+}
+
+ecs_entity_t _ecs_new_instance_w_count(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_type_t type,
+    uint32_t count)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
+    ecs_type_t full_type = type;
+    
+    if (base) {
+        full_type = ecs_type_add(world, full_type, base | EcsInstanceOf);
+    }
+
+    return _ecs_new_w_count(world, full_type, count);
 }
 
 void ecs_delete(
@@ -1215,15 +1248,64 @@ void _ecs_add_remove(
 
 void ecs_adopt(
     ecs_world_t *world,
-    ecs_entity_t child,
+    ecs_entity_t entity,
     ecs_entity_t parent)
 {    
     ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
+    
+    ecs_type_t add_type = ecs_type_find(
+        world, 
+        &(ecs_entity_t){parent | EcsChildOf},
+        1);
 
-    ecs_type_t TParentType = ecs_type_from_entity(world, parent);
+    _ecs_add_remove(world, entity, add_type, 0);
+}
 
-    ecs_commit(world, child, ParentType, 0, EcsChildOf);
+void ecs_orphan(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t parent)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
+    ecs_type_t remove_type = ecs_type_find(
+        world, 
+        &(ecs_entity_t){parent | EcsChildOf},
+        1);
+
+    _ecs_add_remove(world, entity, 0, remove_type);
+}
+
+void ecs_inherit(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t base)
+{    
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
+    
+    ecs_type_t add_type = ecs_type_find(
+        world, 
+        &(ecs_entity_t){base | EcsInstanceOf},
+        1);
+
+    _ecs_add_remove(world, entity, add_type, 0);
+}
+
+void ecs_disinherit(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t base)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+
+    ecs_type_t remove_type = ecs_type_find(
+        world, 
+        &(ecs_entity_t){base | EcsInstanceOf},
+        1);
+
+    _ecs_add_remove(world, entity, 0, remove_type);
 }
 
 static
@@ -1301,18 +1383,6 @@ ecs_entity_t _ecs_commit(
     }
 
     return entity;
-}
-
-void ecs_orphan(
-    ecs_world_t *world,
-    ecs_entity_t child,
-    ecs_entity_t parent)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-
-    ecs_type_t TParentType = ecs_type_from_entity(world, parent);
-
-    ecs_commit(world, child, 0, ParentType, EcsChildOf);
 }
 
 void* _ecs_get_ptr(

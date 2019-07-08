@@ -653,6 +653,89 @@ ecs_entity_t _ecs_new_w_count(
 #define ecs_new_w_count(world, type, count)\
     _ecs_new_w_count(world, T##type, count)
 
+/** Create a new child entity.
+ * Child entities are equivalent to normal entities, but can additionally be 
+ * created with a container entity. Container entities allow for the creation of
+ * entity hierarchies.
+ * 
+ * This function is equivalent to calling ecs_new with a type that combines both
+ * the type specified in this function and the type id for the container.
+ *
+ * @param world The world.
+ * @param parent The container to which to add the child entity.
+ * @param type The type with which to create the child entity.
+ * @returns A handle to the created entity.
+ * @see ecs_new_entity ecs_new_component ecs_new_system ecs_new_prefab ecs_new_type ecs_new ecs_new_w_count
+ */
+FLECS_EXPORT
+ecs_entity_t _ecs_new_child(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_type_t type);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_new_child(world, parent, type)\
+    _ecs_new_child(world, parent, T##type)
+
+/* Create new child entities in batch.
+ * This operation is similar to ecs_new_w_count, with as only difference that
+ * the parent is added to the type of the new entities.
+ *
+ * @param world The world.
+ * @param parent The parent.
+ * @param type The type to create the new entities with.
+ * @param count The number of entities to create.
+ */
+FLECS_EXPORT
+ecs_entity_t _ecs_new_child_w_count(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_type_t type,
+    uint32_t count);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_new_child_w_count(world, parent, type, count)\
+    _ecs_new_child_w_count(world, parent, T##type, count)
+
+/** Instantiate entity from a base entity.
+ * This operation returns a new entity that shares components with the provided 
+ * base entity.
+ * 
+ * This operation is equivalent to calling:
+ * ecs_commit(world, 0, base, 0, EcsInstanceOf);
+ * 
+ * @param world The world.
+ * @param base The base entity.
+ * @return A new entity that is an instance of base.
+ */
+FLECS_EXPORT
+ecs_entity_t _ecs_new_instance(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_type_t type);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_new_instance(world, base, type)\
+    _ecs_new_instance(world, base, T##type)
+
+/** Instantiate entities from a base entity in batch.
+ * This operation returns a specified number of new entities that share 
+ * components with the provided base entity.
+ * 
+ * @param world The world.
+ * @param base The base entity.
+ * @return The id to the first new entity.
+ */
+FLECS_EXPORT
+ecs_entity_t _ecs_new_instance_w_count(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_type_t type,
+    uint32_t count);
+
+#define ecs_new_instance_w_count(world, base, type, count)\
+    _ecs_new_instance_w_count(world, base, T##type, count)
+
 /** Create new entity with same components as specified entity.
  * This operation creates a new entity which has the same components as the
  * specified entity. This includes prefabs and entity-components (entities to
@@ -743,7 +826,8 @@ void _ecs_remove(
  * This operation is a combination of ecs_add and ecs_remove. The operation
  * behaves as if the specified to_remove type is removed first, and 
  * subsequently the to_add type is added. This operation is more efficient than
- * adding/removing components separately with ecs_add/ecs_remove.
+ * adding/removing components separately with ecs_add/ecs_remove, as the entity
+ * is moved between tables at most once.
  * 
  * @param world The world.
  * @param entity The entity from which to remove, and to which to add the types.
@@ -773,19 +857,77 @@ ecs_entity_t _ecs_commit(
     _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), flags, 0)
 
 #define ecs_commit_w_count(world, t_add, t_remove, flags, count)\
-    _ecs_commit(world, 0, ecs_type(t_add), ecs_type(t_remove), flags, count)
+    _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), flags, count)
 
-#define ecs_instantiate(world, prefab)\
-    _ecs_commit(world, 0, ecs_type(prefab), 0, EcsInstanceOf, 0);
+/** Adopt a child entity by a parent.
+ * This operation adds the specified parent entity to the type of the specified
+ * entity, which effectively establishes a parent-child relationship. The parent
+ * entity, when added, behaves like a normal component in that it becomes part
+ * of the entity type.
+ *
+ * If the parent was already added to the entity, this operation will have no
+ * effect.
+ *
+ * This operation is similar to an ecs_add, with as difference that instead of a 
+ * type it accepts any entity handle.
+ *
+ * @param world The world.
+ * @param entity The entity to adopt.
+ * @param parent The parent entity to add to the entity.
+ */
+FLECS_EXPORT
+void ecs_adopt(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t parent);
 
-#define _ecs_instantiate(world, prefab)\
-    _ecs_commit(world, 0, prefab, 0, EcsInstanceOf, 0);
+/** Orphan a child by a parent. 
+ * This operation removes the specified parent entity from the type of the
+ * specified entity. If the parent was not added to the entity, this operation
+ * has no effect.
+ *
+ * This operation is similar to ecs_remove, with as difference that instead of a
+ * type it accepts any entity handle.
+ *
+ * @param world The world.
+ * @param entity The entity to orphan.
+ * @param parent The parent entity to remove from the entity.
+ */
+FLECS_EXPORT
+void ecs_orphan(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t parent);
 
-#define ecs_instantiate_w_count(world, prefab, count)\
-    _ecs_commit(world, 0, ecs_type(prefab), 0, EcsInstanceOf, count);
+/** Inherit from a base.
+ * This operation adds a base to an entity, which will cause the entity to
+ * inherit the components of the base. If the entity already inherited from the
+ * specified base, this operation does nothing.
+ * 
+ * @param world The world.
+ * @param entity The entity to add the base to.
+ * @param base The base to add to the entity.
+ */
+FLECS_EXPORT
+void ecs_inherit(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t base);
 
-#define _ecs_instantiate_w_count(world, prefab, count)\
-    _ecs_commit(world, 0, prefab, 0, EcsInstanceOf, count);
+/** Disinherit from a base.
+ * This operation removes a base from an entity, which will cause the entity to
+ * no longer inherit the components of the base. If the entity did not inherit
+ * from the specified base, this operation does nothing.
+ * 
+ * @param world The world.
+ * @param entity The entity to remove the base from.
+ * @param base The base to remove from the entity.
+ */
+FLECS_EXPORT
+void ecs_disinherit(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t base);
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the
@@ -874,95 +1016,6 @@ ecs_entity_t _ecs_set_singleton_ptr(
 #define ecs_set_singleton_ptr(world, type, ptr)\
     _ecs_set_singleton_ptr(world, T##type, sizeof(type), ptr)
 
-
-/* Container API */
-
-/** Create a new child entity.
- * Child entities are equivalent to normal entities, but can additionally be 
- * created with a container entity. Container entities allow for the creation of
- * entity hierarchies.
- * 
- * This function is equivalent to calling ecs_new with a type that combines both
- * the type specified in this function and the type id for the container.
- *
- * @param world The world.
- * @param parent The container to which to add the child entity.
- * @param type The type with which to create the child entity.
- * @returns A handle to the created entity.
- * @see ecs_new_entity ecs_new_component ecs_new_system ecs_new_prefab ecs_new_type ecs_new ecs_new_w_count
- */
-FLECS_EXPORT
-ecs_entity_t _ecs_new_child(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_type_t type);
-
-/* Macro to ensure you don't accidentally pass a non-type into the function */
-#define ecs_new_child(world, parent, type)\
-    _ecs_new_child(world, parent, T##type)
-
-/* Create new child entities in batch.
- * This operation is similar to ecs_new_w_count, with as only difference that
- * the parent is added to the type of the new entities.
- *
- * @param world The world.
- * @param parent The parent.
- * @param type The type to create the new entities with.
- * @param count The number of entities to create.
- */
-FLECS_EXPORT
-ecs_entity_t _ecs_new_child_w_count(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_type_t type,
-    uint32_t count);
-
-/* Macro to ensure you don't accidentally pass a non-type into the function */
-#define ecs_new_child_w_count(world, parent, type, count)\
-    _ecs_new_child_w_count(world, parent, T##type, count)
-
-/** Adopt a child entity by a parent.
- * This operation adds the specified parent entity to the type of the specified
- * entity, which effectively establishes a parent-child relationship. The parent
- * entity, when added, behaves like a normal component in that it becomes part
- * of the entity type.
- *
- * If the parent was already added to the entity, this operation will have no
- * effect.
- *
- * This operation is similar to an ecs_add, with as difference that instead of a 
- * type it accepts any entity handle.
- *
- * @param world The world.
- * @param entity The entity to adopt.
- * @param parent The parent entity to add to the entity.
- */
-FLECS_EXPORT
-void ecs_adopt(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t parent);
-
-/** Orphan a child by a parent. 
- * This operation removes the specified parent entity from the type of the
- * specified entity. If the parent was not added to the entity, this operation
- * has no effect.
- *
- * This operation is similar to ecs_remove, with as difference that instead of a
- * type it accepts any entity handle.
- *
- * @param world The world.
- * @param entity The entity to orphan.
- * @param parent The parent entity to remove from the entity.
- */
-FLECS_EXPORT
-void ecs_orphan(
-    ecs_world_t *world,
-    ecs_entity_t child,
-    ecs_entity_t parent);
-
-
-/* Utility API */
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the
@@ -1149,6 +1202,7 @@ ecs_entity_t ecs_lookup_child(
     ecs_entity_t parent,
     const char *id);
 
+
 /* -- Type API -- */
 
 /** Get a type from an entity.
@@ -1302,6 +1356,7 @@ FLECS_EXPORT
 char* ecs_type_to_expr(
     ecs_world_t *world,
     ecs_type_t type);
+
 
 /* -- System API -- */
 
