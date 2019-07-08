@@ -379,7 +379,6 @@ struct ecs_world {
 
     /* -- Lookup Indices -- */
 
-    ecs_map_t *prefab_index;          /* Index to find prefabs in families */
     ecs_map_t *prefab_parent_index;   /* Index to find flag for prefab parent */
     ecs_map_t *type_sys_add_index;    /* Index to find add row systems for type */
     ecs_map_t *type_sys_remove_index; /* Index to find remove row systems for type*/

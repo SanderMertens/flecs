@@ -650,12 +650,11 @@ ecs_world_t *ecs_init(void) {
     world->tasks = ecs_vector_new(&handle_arr_params, 0);
     world->fini_tasks = ecs_vector_new(&handle_arr_params, 0);
 
-    world->type_sys_add_index = ecs_map_new(0, 0);
-    world->type_sys_remove_index = ecs_map_new(0, 0);
-    world->type_sys_set_index = ecs_map_new(0, 0);
-    world->type_handles = ecs_map_new(0, 0);
-    world->prefab_index = ecs_map_new(0, 0);
-    world->prefab_parent_index = ecs_map_new(0, 0);
+    world->type_sys_add_index = ecs_map_new(0, sizeof(ecs_vector_t*));
+    world->type_sys_remove_index = ecs_map_new(0, sizeof(ecs_vector_t*));
+    world->type_sys_set_index = ecs_map_new(0, sizeof(ecs_vector_t*));
+    world->type_handles = ecs_map_new(0, sizeof(ecs_entity_t));
+    world->prefab_parent_index = ecs_map_new(0, sizeof(ecs_entity_t));
 
     world->worker_stages = NULL;
     world->worker_threads = NULL;
@@ -846,7 +845,6 @@ int ecs_fini(
     ecs_vector_free(world->remove_systems);
     ecs_vector_free(world->set_systems);
 
-    ecs_map_free(world->prefab_index);
     ecs_map_free(world->type_handles);
 
     world->magic = 0;

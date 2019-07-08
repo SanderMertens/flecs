@@ -145,7 +145,6 @@ void get_memory_stats(
     calculate_system_stats(world, world->on_demand_systems, &memory->systems.allocd, &memory->systems.used);
 
     ecs_map_memory(world->type_handles, &memory->families.allocd, &memory->families.used);
-    ecs_map_memory(world->prefab_index, &memory->families.allocd, &memory->families.used);
     calculate_type_stats(world, &memory->families.allocd, &memory->families.used);
     calculate_table_stats(world, &memory->tables.allocd, &memory->tables.used);
 
