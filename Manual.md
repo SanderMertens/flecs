@@ -934,16 +934,16 @@ Position, Velocity
 
 This system will match with any entities that have the `Position, Velocity` components. The components will be available to the system as owned (non-shared) columns, _except_ when a component is provided by a Prefab, in which case the component will be shared.
 
-##### ID modifier
-The `ID` modifier lets an application pass handles to components or other systems to a system. This is frequently useful, as systems may need component handles to add or set components on entities that may not be part of the entity yet. Another use case for this feature is passing a handle to another `EcsManual` system to the system, which the system can then execute. This is frequently used when a system needs to evaluate a set of entities for every matching entity. An example of the `ID` modifier is:
+##### EMPTY modifier
+The empty modifier lets an application pass handles to components or other systems to a system. This is frequently useful, as systems may need component handles to add or set components on entities that may not be part of the entity yet. Another use case for this feature is passing a handle to another `EcsManual` system to the system, which the system can then execute. This is frequently used when a system needs to evaluate a set of entities for every matching entity. An example of the empty modifier is:
 
 ```
-Position, ID.Velocity
+Position, .Velocity
 ```
 
 This will match any entity that has the `Position` component, and pass the handle to the `Velocity` component to the system. This allows the system implementation to add or set the `Velocity` component on the matching entities.
 
-`ID` columns have no data, and as such should not be accessed as owned or shared columns. Instead, the system should only attempt to obtain the handle to the component or component type.
+Empty columns have no data, and as such should not be accessed as owned or shared columns. Instead, the system should only attempt to obtain the handle to the component or component type.
 
 ##### CONTAINER modifier
 The `CONTAINER` modifier allows a system to select a component from the entity that contains the currently iterated over entity. An example of the `CONTAINER` modifier is:
@@ -954,7 +954,7 @@ CONTAINER.Position, Position, Velocity
 
 This will match all entities that have `Position, Velocity`, _and_ that have a container (parent) entity that has the `Position` component. This facilitates building systems that must traverse entities in a hierarchical manner.
 
-`CONTAINER` columns are available to the system as a shared component.
+`CONTAINER` columns are available to the system as a shared columns.
 
 ##### CASCADE modifier
 The `CASCADE` modifier is similar to an optional `CONTAINER` column, but in addition it ensures that entities are iterated over in the order of the container hierarchy. 
@@ -977,18 +977,7 @@ CASCADE.Position, Position, Velocity
 
 The order will be determined by the container that has the specified component (`Position` in the example). Containers of the entity that do not have this component will be ignored. 
 
-`CASCADE` columns are available to the system as an optional shared component.
-
-##### SINGLETON modifier
-The `SINGLETON` or `$` modifier selects components from the singleton entity. As the name suggests, this allows a system to access a single, global (but world-specific) instance of a component. An example of the `SINGLETON` modifier is:
-
-```
-$Position, Position, Velocity
-```
-
-This will match all entities that have `Position, Velocity`, and make the `Position` component from the singleton entity available to the system.
-
-`SINGLETON` columns are available to the system as a shared component.
+`CASCADE` columns are available to the system as an optional shared columns.
 
 ##### SYSTEM modifier
 In some cases it is useful to have stateful systems that either track progress in some way, or contain information pointing to an external source of data (like a database connection). The `SYSTEM` modifier allows for an easy way to access data associated with the system. An example of the `SYSTEM` modifier is:
@@ -999,7 +988,7 @@ SYSTEM.DbConnection, Position, Velocity
 
 This will match all entities with `Position, Velocity`, and automatically add the `DbConnection` component to the system. Often this pattern is paired with an `EcsOnAdd` system for the `DbConnection` component, which would be immediately executed when the system is defined, and set up the database connection (or other functionality) accordingly.
 
-`SYSTEM` columns are available to the system as a shared component.
+`SYSTEM` columns are available to the system as a shared columns.
 
 ##### ENTITY modifier
 In some cases, it is useful to get a component from a specific entity. In this case, the source modifier can specify the name of a named entity (that has the `EcsId` component) to obtain a component from that entity. An example of the `ENTITY` modifier is:
@@ -1008,15 +997,15 @@ In some cases, it is useful to get a component from a specific entity. In this c
 Position, SomeEntity.Velocity
 ```
 
-This will match all antities with the `Position` component, and pass the `Velocity` component of `SomeEntity` to the system. The equivalent of this functionality would be to pass handles to `SomeEntity` and `Velocity` with the `ID` component, and then do an `ecs_get` from within the system, like so:
+This will match all antities with the `Position` component, and pass the `Velocity` component of `SomeEntity` to the system. The equivalent of this functionality would be to pass handles to `SomeEntity` and `Velocity` as empty columns, and then do an `ecs_get` from within the system. The system modifier would then look like this:
 
 ```
-Position, ID.SomeEntity, ID.Velocity
+Position, .SomeEntity, .Velocity
 ```
 
-Using the `ENTITY` modifier is however much less verbose, and can potentially also be optimized as the framework may use a more efficient version of `ecs_get`.
+Using the `ENTITY` modifier is however much less verbose, and can potentially also be optimized as the framework may use a more efficient version of `ecs_get` as flecs can cache the component value inbetween iterations.
 
-`ENTITY` columns are available to the system as a shared component.
+`ENTITY` columns are available to the system as a shared columns.
 
 ### System API
 Now that you now how to specify system queries, it is time to find out how to use the columns specified in a query in the system itself! First of all, lets take a look at the anatomy of a system. Suppose we define a system like this in our application `main`:
@@ -1037,7 +1026,7 @@ void Move(ecs_rows_t *rows) {
 The `rows` parameter provides access to the entities that matched with the system, and a lot of other useful information. This example already has the typical `for` loop that defines many system implementations, and the application can get the number of entities to iterate over from the `rows->count` member.
 
 #### The ECS_COLUMN macro
-To actually do something useful with the matched entities, the functino needs to obtain the components. In order to do this, the code needs to look at the system query, which in this case is `Position, Velocity`. This query has two columns, and the components can be accessed from the system by using the corresponding column index:
+To access the data of matched entities, the system function needs to obtain pointers to the component arrays. In order to do this, the code needs to look at the system query, which in this case is `Position, Velocity`. This query has two columns, and the components can be accessed from the system by using the corresponding column index:
 
 ```c
 void Move(ecs_rows_t *rows) {
@@ -1049,7 +1038,7 @@ void Move(ecs_rows_t *rows) {
 }
 ```
 
-This macro requires the `rows` parameter, to get access to the matched entities, the type of the component (`Position`) a name for the variable which will point to the component array (`position`) and the column index (`1`). Note how the column index starts counting from `1`. This is because column index `0` is reserved for the column that stores the _entity identifiers_. More on that later.
+This macro requires the `rows` parameter, to get access to the matched entities, the type of the component (`Position`) a name for the variable which will point to the component array (`position`) and the column index (`1`). Note how the column index starts counting from `1`. This is because column index `0` is reserved for the column that stores the _entity identifiers_.
 
 Now the system logic can be written, by using the `position` and `velocity` variables. Because they point to arrays of the component types (`Position`, `Velocity`) the application can simply use them as C arrays, like so:
 
@@ -1065,39 +1054,54 @@ void Move(ecs_rows_t *rows) {
 }
 ```
 
-The `ECS_COLUMN` macro provides the fastest, easiest access to components in a system. It can however not be used for any column. The next sections discuss some of the other macro's that can be used to obtain data from within a system.
-
-#### The ECS_SHARED macro
-When a component is not stored on a matched entity, it is shared. For a system this means that instead of having an array of component values, there is only a single component instance available for this iteration. Flecs has been designed in such a way that a shared component never changes within an invocation of a system, though a system may be invoked multiple times per run (more on that later). This means that a system can obtain a shared component once.
-
-An example of a shared component is when using the `ENTITY` column source modifier. With this modifier, the application can pass a component from an entity that is not (necessarily) matched with the system, like so:
-
-```
-Position, Velocity, Player.Position
-```
-
-The `Player.Position` identifies the `Position` component on an entity named `Player`. This entity could have been created like so:
+When a column contains shared data, a system should not access the data as an array. Colummns that are guaranteed to be shared are columns with the `CONTAINER` modifier, `SYSTEM` modifier or `ENTITIY` modifier. In this case, a system should treat the column pointer as an ordinary pointer instead of an array:
 
 ```c
-ECS_ENTITY(world, Player, Position);
+void Move(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, position, 1);
+    ECS_COLUMN(rows, Velocity, velocity, 2); // Assuming column 2 is shared
+    
+    for (int i = 0; i < rows->count; i ++) {
+        // Don't access velocity as array
+        position[i].x += velocity->x;
+        position[i].y += velocity->y;
+    }
+}
 ```
 
-With the above system query, the `Position` component of `Player` will be passed to the system function. To access it, the system should not use the `ECS_COLUMN` macro (attempting this will result in an assert) as this suggests that the variable can be used as an array. Instead, the system should use the `ECS_SHARED` macro, which is invoked similar to `ECS_COLUMN`: 
+In some cases a normal system signature can still cause shared components to be matched with systems, which can happen if entities inherit from base entities. If an application uses inheritance, a system needs to be made robust against this. Consider the following example:
 
 ```c
 void Move(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, position, 1);
     ECS_COLUMN(rows, Velocity, velocity, 2);
-    ECS_SHARED(rows, Position, position_player, 3);
+    
+    bool velocity_is_shared = ecs_is_shared(rows, 2);
     
     for (int i = 0; i < rows->count; i ++) {
-        position[i].x = position_player->x + velocity[i].x;
-        position[i].y = position_player->x + velocity[i].y;
+        if (velocity_is_shared) {
+            position[i].x += velocity->x;
+            position[i].y += velocity->y;        
+        } else {
+            position[i].x += velocity[i].x;
+            position[i].y += velocity[i].y;
+        }
     }
 }
 ```
 
-Note how the code uses the `position_player` variable as a pointer, and not as an array, as expected. Shared components are common in Flecs, and you will often find yourself writing systems using both `ECS_COLUMN` and `ECS_SHARED`. Familiarizing yourself with these concepts will go a long way in understanding how to write effective Flecs applications!
+For systems with large numbers of components for which it is unknown whether a column is shared or not, it can be unwieldy to have to check all columns and create if statements that switch between access methods. In this case a system can choose to use the `ecs_field` function, which has a larger overhead than accessing the data directly, but abstracts away from the difference between an owned and a shared column. This is the same code with `ecs_field`:
+
+```c
+void Move(ecs_rows_t *rows) {    
+    for (int i = 0; i < rows->count; i ++) {
+        Position *p = ecs_field(rows, Position, 1, i);
+        Velocity *v = ecs_field(rows, Velocity, 2, i);
+        position->x += velocity->x;
+        position->y += velocity->y;        
+    }
+}
+```
 
 #### The ECS_COLUMN_COMPONENT macro
 When a system needs a component handle to one of its components, the `ECS_COLUMN_COMPONENT` will declare a handle to the component in the system. This is useful when a system needs to use the Flecs API, like the `ecs_set` function. When the `ecs_set` function is called, it expects the handle for a component to be there. In the application `main` function this happens automatically when a component is defined with `ECS_COMPONENT` or when it is imported with `ECS_IMPORT`, but a system needs to do this itself.
@@ -1153,49 +1157,6 @@ void Move(ecs_rows_t *rows) {
 ```
 
 Aside from this being a highly contrived example, it demonstrates the difference in how entity handles and type handles are used. When unsure about when to use an entity handle or a type handle, refer to the API documentation.
-
-#### The ecs_field function
-In some cases, a system may not know whether a component is shared or not. This is particularly the case when a system is generic, and it does not know when an application uses prefabs. While using prefabs for certain components is uncommon (like `Position`), for other components this may be less obvious. In such cases, a system may choose to use the `ecs_field` function, which is a less performant alternative to `ECS_COLUMN` and `ECS_SHARED`, but with the benefit that it is agnostic to whether a component is owned or shared.
-
-This is an example of how to use the `ecs_field` function:
-
-```c
-void Move(ecs_rows_t *rows) {    
-    for (int i = 0; i < rows->count; i ++) {
-        Position *p = ecs_field(rows, Position, i, 1);
-        Velocity *v = ecs_field(rows, Velocity, i, 2);
-        p->x += v->x;
-        p->y += v->y;
-    }
-}
-```
-
-Note how this example does not use any macro's to import the components, but instead uses `ecs_field` to obtain a pointer to the component of the entity that is being iterated over directly. While `ecs_field` is quite fast, it is not as fast as iterating over an array, and a compiler will not be able to vectorize code that uses `ecs_field`.
-
-#### The ECS_COLUMN_TEST and ECS_SHARED_TEST macro's
-Both the `ECS_COLUMN` and `ECS_SHARED` macro's have an equivalent macro with the postfix `_TEST`. This macro should be used when a system is unsure about whether a component is available or not. This may be the case with optional columns. For example, when a system has this signature:
-
-```
-Position, ?Velocity
-```
-
-The components should be retrieved like this:
-
-```c
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, position, 1);
-    ECS_COLUMN_TEST(rows, Velocity, velocity, 2);
-    
-    for (int i = 0; i < rows->count; i ++) {
-      if (velocity) {
-          position[i].x += velocity[i].x;
-          position[i].y += velocity[i].y;
-      }
-    }
-}
-```
-
-Note how if the component is not available, the variable of the optional column (`velocity`) will be set to `NULL`, which can then be tested by the system implementation.
 
 ### System phases
 Each frame in Flecs is computed in different phases, which define the execution order in which certain systems are executed. Phases are necessary to guarantee interoperability between systems in different modules, as it imposes a high-level order on the systems that need to be executed each frame. A simple example is a system that updates game state, and a system that renders a frame. The first system needs to be executed before the second one, to ensure the correct data is rendered. 
