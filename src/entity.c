@@ -52,8 +52,8 @@ void copy_row(
         ecs_entity_t new_component = new_components[i_new];
         ecs_entity_t old_component = old_components[i_old];
 
-        if ((new_component & EcsTypeFlagsAll) || 
-            (old_component & EcsTypeFlagsAll)) 
+        if ((new_component & ECS_ENTITY_FLAGS_MASK) || 
+            (old_component & ECS_ENTITY_FLAGS_MASK)) 
         {
             break;
         }
@@ -1306,83 +1306,6 @@ void ecs_disinherit(
         1);
 
     _ecs_add_remove(world, entity, 0, remove_type);
-}
-
-static
-ecs_type_t add_flags_to_type(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type,
-    ecs_entity_t flags)
-{    
-    ecs_type_t dst_type = NULL;
-    ecs_assert(type != NULL, ECS_NOT_A_COMPONENT, NULL);
-    ecs_entity_t *buffer = ecs_vector_first(type), *dst_buffer = NULL;
-    uint32_t i, count = ecs_vector_count(type);
-
-    for (i = 0; i < count; i ++) {
-        if ((buffer[i] & flags) != flags) {
-            if (!dst_type) {
-                dst_buffer = alloca(count * sizeof(ecs_entity_t));
-                int j;
-                for (j = 0; j < i; j ++) {
-                    dst_buffer[j] = buffer[j];
-                }
-            }
-
-            dst_buffer[i] = buffer[i] | flags;
-        } else if (dst_buffer) {
-            dst_buffer[i] = buffer[i];
-        }
-    }
-
-    if (dst_buffer) {
-        type = ecs_type_find_intern(world, stage, dst_buffer, count);
-    }
-
-    return type;
-}
-
-ecs_entity_t _ecs_commit(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_type_t to_add,
-    ecs_type_t to_remove,
-    ecs_type_flags_t flags,
-    uint32_t count)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
-    ecs_assert(!count || !entity, ECS_INVALID_PARAMETERS, NULL);
-    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
-
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    if (flags) {
-        if (to_add) {
-            to_add = add_flags_to_type(world, stage, to_add, flags);
-        } else if (to_remove) {
-            to_remove = add_flags_to_type(world, stage, to_remove, flags);
-        }
-    }
-    
-    if (entity) {
-        ecs_type_t dst_type = 0;
-        ecs_entity_info_t info = {.entity = entity};
-
-        if (populate_info(world, stage, &info)) {
-            dst_type = ecs_type_merge_intern(
-                world, stage, info.table->type, to_add, to_remove);
-        } else {
-            dst_type = to_add;
-        }
-
-        commit(world, stage, &info, dst_type, to_add, to_remove, true);
-    } else if (count) {
-        entity = _ecs_new_w_count(world, to_add, count);
-    } else {
-        entity = _ecs_new(world, to_add);
-    }
-
-    return entity;
 }
 
 void* _ecs_get_ptr(

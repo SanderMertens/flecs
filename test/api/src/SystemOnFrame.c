@@ -1431,6 +1431,9 @@ void TwoRefs(ecs_rows_t *rows) {
     ECS_SHARED(rows, Position, p, 1);
     ECS_SHARED(rows, Velocity, v, 2);
 
+    (void)p;
+    (void)v;
+
     ProbeSystem(rows);
 }
 

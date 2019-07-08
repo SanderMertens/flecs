@@ -158,12 +158,12 @@ extern ecs_type_t
 
 typedef enum ecs_type_flags_t {
     EcsInstanceOf = ((uint64_t)1 << 63),
-    EcsChildOf = ((uint64_t)1 << 62),
-    EcsTypeFlagsAll = (EcsInstanceOf | EcsChildOf)
+    EcsChildOf = ((uint64_t)1 << 62)
 } ecs_type_flags_t;
 
-#define ECS_ENTITY_MASK (~EcsTypeFlagsAll)
-#define ECS_SINGLETON (EcsTypeFlagsAll - 1)
+#define ECS_ENTITY_FLAGS_MASK (EcsInstanceOf | EcsChildOf)
+#define ECS_ENTITY_MASK (~ECS_ENTITY_FLAGS_MASK)
+#define ECS_SINGLETON (ECS_ENTITY_FLAGS_MASK - 1)
 #define ECS_INVALID_ENTITY (0)
 
 /* This allows passing 0 as type to functions that accept types */
@@ -844,20 +844,6 @@ void _ecs_add_remove(
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_add_remove(world, entity, to_add, to_remove)\
     _ecs_add_remove(world, entity, T##to_add, T##to_remove)
-
-ecs_entity_t _ecs_commit(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_type_t t_add,
-    ecs_type_t t_remove,
-    ecs_type_flags_t flags,
-    uint32_t count);
-
-#define ecs_commit(world, entity, t_add, t_remove, flags)\
-    _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), flags, 0)
-
-#define ecs_commit_w_count(world, t_add, t_remove, flags, count)\
-    _ecs_commit(world, entity, ecs_type(t_add), ecs_type(t_remove), flags, count)
 
 /** Adopt a child entity by a parent.
  * This operation adds the specified parent entity to the type of the specified

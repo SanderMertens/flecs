@@ -246,7 +246,7 @@ void mark_parents(
 
         if (e & EcsChildOf) {
             ecs_set_watching(world, e & ECS_ENTITY_MASK, true);
-        } else if (!(e & EcsTypeFlagsAll)) {
+        } else if (!(e & ECS_ENTITY_FLAGS_MASK)) {
             break;
         }
     }   
@@ -265,7 +265,7 @@ ecs_type_t register_type(
     ecs_assert(count < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
 
     ecs_type_t result;
-    bool has_flags = (array[count - 1] & EcsTypeFlagsAll) != 0;
+    bool has_flags = (array[count - 1] & ECS_ENTITY_FLAGS_MASK) != 0;
     
     if (!normalized && has_flags) {
         result = ecs_type_from_array_normalize(world, stage, array, count);
@@ -796,7 +796,7 @@ int32_t ecs_type_container_depth(
             if (j != c_count) {
                 break;
             }
-        } else if (!(array[i] & EcsTypeFlagsAll)) {
+        } else if (!(array[i] & ECS_ENTITY_FLAGS_MASK)) {
             /* No more parents after this */
             break;
         }
@@ -1021,7 +1021,7 @@ char* ecs_type_to_expr(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t h;
-        ecs_entity_t flags = split_entity_id(handles[i], &h) & EcsTypeFlagsAll;
+        ecs_entity_t flags = split_entity_id(handles[i], &h) & ECS_ENTITY_FLAGS_MASK;
 
         if (i) {
             *(char*)ecs_vector_add(&chbuf, &char_arr_params) = ',';
