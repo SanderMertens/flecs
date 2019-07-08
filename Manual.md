@@ -53,7 +53,7 @@
   - [Set components](#set-components)
   - [Tags](#tags)
 - [Systems](#systems)
-   - [System queries](#system-queries)
+   - [System signatures](#system-signatures)
      - [Column operators](#column-operators)
        - [OR operator](#or-operator)
        - [NOT operator](#not-operator)
@@ -881,22 +881,22 @@ void Foo(ecs_rows_t *rows) {
 ## Systems
 Systems let applications execute logic on a set of entities that matches a certain component expression. The matching process is continuous, when new entities (or rather, new _entity types_) are created, systems will be automatically matched with those. Systems can be ran by Flecs as part of the built-in frame loop, or by invoking them individually using the Flecs API.
 
-### System queries
-A system query specifies which components the system is interested in. By default, it will match with entities that have all of the specified components in its expression. An example of a valid system query is:
+### System signatures
+A system signature specifies which components the system is interested in. By default, it will match with entities that have all of the specified components in its expression. An example of a valid system signature is:
 
 ```
 Position, Velocity
 ```
 
-The two elements are the components the system is interested in. Within a query they are called "columns", and they can be thought of as elements in the `SELECT` clause of an SQL query. The order in which components are specified is important, as the system implementation will need to access component in this exact order. Care must be taken that when changing the order of columns, the implementation is updated to reflect this. More on this in "System API".
+The two elements are the components the system is interested in. Within a signature they are called "columns", and they can be thought of as elements in the `SELECT` clause of an SQL query. The order in which components are specified is important, as the system implementation will need to access component in this exact order. Care must be taken that when changing the order of columns, the implementation is updated to reflect this. More on this in "System API".
 
-The system query is the only mechanism for specifying the input for the system. Any information that the system needs to run must therefore be captured in the system query. This strict enforcement of the interface can sometimes feel like a constraint, but it makes it possible to reuse systems across different applications. As you will see, system queries have a number of features that make it easier to specify a range of possible input parameters.
+The system signature is the only mechanism for specifying the input for the system. Any information that the system needs to run must therefore be captured in the system signature. This strict enforcement of the interface can sometimes feel like a constraint, but it makes it possible to reuse systems across different applications. As you will see, system signatures have a number of features that make it easier to specify a range of possible input parameters.
 
 #### Column operators
-System queries may contain operators to express optionality or exclusion of components. The most common one is the `,` (comma) which is equivalent to an AND operator. Only if an entity satisfies each of the expressions separated by the `,`, it will be matched with the system. In addition to the `,` operator, queries may contain a number of other operators:
+System signatures may contain operators to express optionality or exclusion of components. The most common one is the `,` (comma) which is equivalent to an AND operator. Only if an entity satisfies each of the expressions separated by the `,`, it will be matched with the system. In addition to the `,` operator, signatures may contain a number of other operators:
 
 ##### OR operator
-The OR operator (`|`) allows the system to match with one component in a list of components. An example of a valid query with an OR operator is:
+The OR operator (`|`) allows the system to match with one component in a list of components. An example of a valid signature with an OR operator is:
 
 ```
 Position, Velocity | Rotation
@@ -905,7 +905,7 @@ Position, Velocity | Rotation
 Inside of the system implementation, an application has the possibility to determine which component in the OR expression was the one that caused the system to match. An OR expression may contain any number of components.
 
 ##### NOT operator
-The NOT operator (`!`) allows the system to exclude entities that have a certain component. An example of a valid query with a NOT operator is:
+The NOT operator (`!`) allows the system to exclude entities that have a certain component. An example of a valid signature with a NOT operator is:
 
 ```
 Position, !Velocity
@@ -914,7 +914,7 @@ Position, !Velocity
 Inside the system implementation an application will be able to obtain metadata for the column (it will be able to see the component type for `Velocity`), but no actual data will be associated with it.
 
 ##### Optional operator
-The optional operator (`?`) allows a system to optionally match with a component. An example of a valid query with an optional operator is:
+The optional operator (`?`) allows a system to optionally match with a component. An example of a valid signature with an optional operator is:
 
 ```
 Position, ?Velocity
@@ -923,7 +923,7 @@ Position, ?Velocity
 Inside the system implementation, an application will be able to check whether the component was available or not.
 
 #### Column source modifiers
-System queries can request components from a variety of sources. The most common and default source is from an entity. When a system specifies `Position, Velocity` as its query, it will match _entities_ that have `Position, Velocity`. A system may however require components from other entities than the one being iterated over. To streamline this use case, reduce `ecs_get` API calls within systems, and prevent excessive checking on whether components are available on external entities, the system query can capture these requirements. A query may contain the folllowing modifiers:
+System signatures can request components from a variety of sources. The most common and default source is from an entity. When a system specifies `Position, Velocity` as its signature, it will match _entities_ that have `Position, Velocity`. A system may however require components from other entities than the one being iterated over. To streamline this use case, reduce `ecs_get` API calls within systems, and prevent excessive checking on whether components are available on external entities, the system signature can capture these requirements. A signature may contain the folllowing modifiers:
 
 ##### SELF modifier
 This is the default modifier, and is implied when no modifiers are explicitly specified. An example of the `SELF` modifier is:
@@ -1008,7 +1008,7 @@ Using the `ENTITY` modifier is however much less verbose, and can potentially al
 `ENTITY` columns are available to the system as a shared columns.
 
 ### System API
-Now that you now how to specify system queries, it is time to find out how to use the columns specified in a query in the system itself! First of all, lets take a look at the anatomy of a system. Suppose we define a system like this in our application `main`:
+Now that you now how to specify system signatures, it is time to find out how to use the columns specified in a signature in the system itself! First of all, lets take a look at the anatomy of a system. Suppose we define a system like this in our application `main`:
 
 ```
 ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
@@ -1026,7 +1026,7 @@ void Move(ecs_rows_t *rows) {
 The `rows` parameter provides access to the entities that matched with the system, and a lot of other useful information. This example already has the typical `for` loop that defines many system implementations, and the application can get the number of entities to iterate over from the `rows->count` member.
 
 #### The ECS_COLUMN macro
-To access the data of matched entities, the system function needs to obtain pointers to the component arrays. In order to do this, the code needs to look at the system query, which in this case is `Position, Velocity`. This query has two columns, and the components can be accessed from the system by using the corresponding column index:
+To access the data of matched entities, the system function needs to obtain pointers to the component arrays. In order to do this, the code needs to look at the system signature, which in this case is `Position, Velocity`. This signature has two columns, and the components can be accessed from the system by using the corresponding column index:
 
 ```c
 void Move(ecs_rows_t *rows) {
@@ -1125,7 +1125,7 @@ void Move(ecs_rows_t *rows) {
 
 This code may look a bit weird as it introduces a few things that haven't been covered yet. First of all, note how the `world` object is passed into the system through the `rows` parameter. This lets a system call Flecs API functions, as all functions at least require a reference to an `ecs_world_t` instance. Secondly, note how the system obtains the entity id of the currently iterated over entity with `rows->entities`. Finally, note how the `ecs_set` function is able to use the `Position` component. The function requires a handle to the `Position` component to be defined, or it will result in a compiler error (try removing the `ECS_COLUMN_COMPONENT` macro).
 
-This macro can also be used when a column uses the `ID` source modifier. For example, if a system has the following query:
+This macro can also be used when a column uses the `ID` source modifier. For example, if a system has the following signature:
 
 ```
 Position, .Velocity
