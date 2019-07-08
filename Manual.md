@@ -28,20 +28,25 @@
   - [Set a target FPS for applications](#set-a-target-fps-for-applications)
   - [Never store pointers to components](#never-store-pointers-to-components)
 - [Entities](#entities)
-  - [Entity lifecycle](#entity-lifecycle)
+  - [Entity basics](#entity-basics)
     - [Creating entities](#creating-entities)
     - [Create entities in bulk](#create-entities-in-bulk)
     - [Deleting entities](#deleting-entities)
-  - [Containers](#containers)
-    - [The EcsContainer tag](#the-ecscontainer-tag)
+  - [Hierarchies](#hierarchies)
     - [Creating child entities](#creating-child-entities)
     - [Adopting entities](#adopting-entities)
     - [Orphaning entities](#orphaning-entities)
-  - [Prefabs](#prefabs)
-    - [Overriding prefab components](#overriding-prefab-components)
-    - [Prefabs and types](#prefabs-and-types)
-    - [Prefab variants](#prefab-variants)
-    - [Nested prefabs](#nested-prefabs)    
+    - [Hierarchies and types](#hierarchies-and-types)
+  - [Inheritance](#inheritance)
+    - [Creating instances](#creating-instances)
+    - [Adding inheritance relationships](#adding-inheritance-relationships)
+    - [Removing inheritance relationships](#adding-inheritance-relationships)
+    - [Inheritance and types](#inheritance-and-types)
+    - [Multiple inheritance](#multiple-inheritance)
+    - [Overriding components](#overriding-components)
+    - [Specialization](#Specialization)
+    - [Prefabs](#prefabs)
+    - [Prefab nesting](#prefab-nesting)
 - [Components and Types](#components-and-types)
   - [Owned components](#owned-components)
     - [Add components](#add-components)
@@ -139,9 +144,9 @@ typedef struct Velocity {
 
 // System names ('Move') use CamelCase. Supporting API types use snake_case_t
 void Move(ecs_rows_t *rows) {
-    // API functions ('ecs_column') use snake_case
-    Position *p = ecs_column(rows, Position, 1);
-    Velocity *v = ecs_column(rows, Velocity, 2);
+    // Declarative macro's use SCREAMING_SNAKE_CASE
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN(rows, Velocity, v, 2);
     
     for (int i = 0; i < rows->count; i ++) {
         p[i].x += v[i].x;
@@ -150,6 +155,7 @@ void Move(ecs_rows_t *rows) {
 }
 
 int main(int argc, char *argv[]) {
+    // Functions use snake_case
     ecs_world_t *world = ecs_init();
     
     // Declarative macro's use SCREAMING_SNAKE_CASE
@@ -170,9 +176,9 @@ int main(int argc, char *argv[]) {
 ```
 
 #### Handles
-The Flecs API creates and uses handles (integers) to refer to entities, systems and components. Most of the times these handles are transparently created and used by the API, and most code can be written without explicitly being aware of how they are managed. However, in some cases the API may need to access the handles directly, in which case it is useful to know their conventions.
+The Flecs API creates and uses handles to refer to entities, systems and components. Most of the times these handles are transparently created and used by the API, and most code can be written without explicitly being aware of how they are managed. However, in some cases the API may need to access the handles directly, in which case it is useful to know their conventions.
 
-The Flecs API has entity handles (of type `ecs_entity_t`) and type handles (of type `ecs_type_t`). Entity handles are used to refer to a single entity. Systems and components (amongst others) obtain identifiers from the same id pool as entities, thus handles to systems and components are also of type `ecs_entity_t`. Types are identifiers that uniquely identify a set of entities (or systems, components). Types are commonly used to add/remove one or more components to/from an entity, or enable/disable one or more systems at once.
+The Flecs API has entity handles (of type `ecs_entity_t`) and type handles (of type `ecs_type_t`). Entity handles are used to refer to a single entity. Systems and components (amongst others) obtain identifiers from the same id pool as entities, thus handles to systems and components are also of type `ecs_entity_t`. Types are vectors of entity identifiers that are used to describe which components an entity has (components are identified by entity identifiers), amongst others.
 
 Type handles are automatically created by API macro's like `ECS_COMPONENT`, `ECS_TYPE` and `ECS_PREFAB`. To obtain a handle to a type, use the `ecs_type` macro and provide as argument the identifier of the component or entity. Entity handles in most cases have the same identifier that is provided to the macro. For example:
 
@@ -262,14 +268,16 @@ typedef ecs_vector_t *DynamicBuffer;
 ecs_vector_params_t params = {.element_size = sizeof(int)};
 
 void InitDynamicBuffer(ecs_rows_t *rows) {
-    DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
+    ECS_COLUMN(rows, DynamicBuffer, data, 1);
+    
     for (int i = rows->begin; i < rows->end; i ++) {
         data[i] = ecs_vector_new(&params, 0);
     }
 }
 
 void DeinitDynamicBuffer(ecs_rows_t *rows) {
-    DynamicBuffer *data = ecs_column(rows, DynamicBuffer, 1);
+    ECS_COLUMN(rows, DynamicBuffer, data, 1);
+    
     for (int i = rows->begin; i < rows->end; i ++) {
         ecs_vector_free(data[i]);
     }
@@ -371,7 +379,7 @@ The "component" is, unexpectedly, of the `ecs_entity_t` type, and this looks wei
 
 The next sections describe how applications can use Flecs to work with entities.
 
-### Entity lifecycle
+### Entity basics
 Entities in Flecs do not have an explicit lifecycle. This may seem confusing when you come from an OOP background, or perhaps even if you worked with other ECS Frameworks. An entity in Flecs is just an integer, nothing more. You can pick any integer you want as your entity identifier, and start assigning components to it. You cannot "create" or "delete" an entity, in the same way you cannot create or delete the number 10. That means in code, you can run this line by itself and it works:
 
 ```c
@@ -420,7 +428,7 @@ ecs_delete(world, e); // empty entity
 ecs_add(world, e, Position); // add Position to empty entity
 ```
 
-### Containers
+### Hierarchies
 Flecs allows applications to create entities that are organized in hierarchies, or more accurately, directed acyclic graphs (DAG). This feature can be used, for example, when transforming entity coordinates to world space. An application can create a parent entity with child entities that specify their position relative to their parent. When transforming coordinates to world space, the transformation matrix can then be cascadingly applied from parents to children, according to the hierarchy.
 
 This is just one application of using entity hierarchies. The `flecs.components.http` and `flecs.systems.civetweb` modules both rely on the usage of parent-child relationships to express a web server (parent) with endpoints (children). Other APIs that feature hierarchical designs can benefit from this feature, like DDS (with `DomainParticipant` -> `Publisher` -> `DataWriter`) or UI development (`Window` -> `Group` -> `Button` -> `Label`). 
@@ -429,66 +437,15 @@ The container API in Flecs is fully composed out of existing (public) API functi
 
 The next sections describe how to work with containers.
 
-#### The EcsContainer tag
-In Flecs, containers are marked with the `EcsContainer` tag. This is a builtin tag that provides a quick way to test whether an entity can have child entities or not. The `EcsContainer` tag is automatically added to an entity when it _adopts_ another entity. If an application wants to know whether an entity is a container, it can simply do:
-
-```c
-if (ecs_has(world, e, EcsContainer)) {
-    // ...
-}
-```
-
-Flecs does not treat entities with the `EcsContainer` component differently from other entities. The only reason the `EcsContainer` tag is added by the API, is to provide a mechanism to discriminate between containers and non-containers. This prevents applications from having to assume that _every_ entity is a container, which could result in unnecessary operations that attempt to iterate over a set of children that does not exist.
-
-The `EcsContainer` component can be used in system queries to obtain various subsets of entities that are useful when working with containers. For example, the following system iterates over all container entities:
-
-```c
-ECS_SYSTEM(world, IterateContainers, EcsOnUpdate, EcsContainer);
-```
-
-A more common example is to find all the root entities. This is often the first step for applications that want to cascadingly iterate over entities. A system that only wants to iterate over roots can use this query:
-
-```c
-ECS_SYSTEM(world, IterateRoots, EcsOnUpdate, !CONTAINER.EcsContainer);
-```
-
-To only iterate over entities that are children of a specific entity, an application can create a manual system and provide the container as a filter to the function. For example, it can define the following system:
-
-```c
-ECS_SYSTEM(world, IterateChildren, EcsManual, CONTAINER.EcsContainer);
-```
-
-Now an application can only iterate over the children for a specific container by using the container as filter:
-
-```c
-ecs_run_w_filter(
-  world, 
-  IterateChildren, // System handle
-  delta_time,      // delta time
-  0,               // Offset
-  0,               // Limit
-  my_container,    // Filter (ecs_type_t)
-  NULL             // Parameter (void*)
-);
-```
-
-Note that the system query explicitly only accepts entities that have containers. While the filter would automatically filter out any entities that are not contained by the specified container entity, putting this in the query makes sure that the system only iterates over contained entities, while excluding root entities from the set of filtered entities in advance. This limits the number of entities (or rather, archetypes) to iterate over when filtering which can improve performance, especially if the operation is executed many times per iteration.
-
 #### Creating child entities
-Flecs offers an API to create a new entity which also specifies a parent entity. The API can be invoked like this:
+Flecs has an API to create a new entity which also specifies a parent entity. The API can be invoked like this:
 
 ```c
 ecs_entity_t my_root = ecs_new(world, 0);
 ecs_entity_t my_child = ecs_new_child(world, my_root, 0);
 ```
 
-Any entity can be specifed as a parent entity (`my_root`, in this example). After the `ecs_new_child` operation the `my_root` entity will have the `EcsContainer` tag, so this statement:
-
-```c
-ecs_has(world, my_root, EcsContainer);
-```
-
-will return true.
+Any entity can be specifed as a parent entity (`my_root`, in this example).
 
 #### Adopting entities
 The API allows applications to adopt entities by containers after they have been created with the `ecs_adopt` operation. The `ecs_adopt` operation is almost equivalent to an `ecs_add`, with as only difference that it accepts an `ecs_entity_t` (instead of an `ecs_type_t`), and it adds the `EcsContainer` component to the parent if it didn't have it already. The operation can be used like this:
@@ -499,7 +456,7 @@ ecs_entity_t e = ecs_new(world, 0);
 ecs_adopt(world, e, my_root);
 ```
 
-After this operation, the `my_root` entity will have the `EcsContainer` tag. If the entity was already a child of the container, the operation has no side effects.
+If the entity was already a child of the container, the operation has no side effects.
 
 #### Orphaning entities
 The API allows applications to orphan entities from containers after they have been created with the `ecs_orphan` operation. The `ecs_orphan` operation is almost equivalent to an `ecs_remove`, with as only difference that it accepts an `ecs_entity_t` (instead of an `ecs_type_t`). The operation can be used like this:
@@ -510,121 +467,225 @@ ecs_orphan(world, e, my_root);
 
 If the entity was not a child of the container, the operation has no side effects. This operation will not add the `EcsContainer` tag to `my_root`.
 
-### Prefabs
-A prefab is a special kind of entity in Flecs whos components are shared with any entity to which the prefab is added. Consider the following code example:
+#### Hierarchies and types
+Parent-child relationships are encoded in entity types using the `CHILDOF` entity flag. It is possible to create a type that describes what the parent will be of an entity created with that type. Consider the following example:
 
 ```c
-ECS_PREFAB(world, Shape, Square, Color);
+ECS_ENTITY(world, MyParent, Position);
+ECS_TYPE(world, MyType, CHILDOF | MyParent, Position);
 
-ecs_entity_t e1 = ecs_new(world, Position);
-ecs_add(world, e1, Shape);
-
-ecs_entity_t e2 = ecs_new(world, Shape);
+// This entity will be a child of MyParent
+ecs_entity_t MyChild = ecs_new(world, MyType);
 ```
 
-The result of this code will be an entity `e1` which has one owned component (`Position`) and two shared components (`Square`, `Color`), and an entity `e2` which only has two shared components (`Square`, `Color`). Both entities will share `Square`, `Color`, as the prefab has been added to both. Thus changing the `Color` for one entity, will change the color for the other one as well.
-
-In the API this is mostly transparent. Consider this example:
+Alternatively, the `CHILDOF` entity flag can also be specified directly into the ECS_ENTITY macro:
 
 ```c
-Color *color1 = ecs_get_ptr(world, e1, Color);
-Color *color2 = ecs_get_ptr(world, e2, Color);
+ECS_ENTITY(world, MyParent, Position);
+ECS_ENTITY(world, MyChild, CHILDOF | MyParent, Position);
 ```
 
-Here, since both `e1` and `e2` share the color from `Shape`, the pointers `color1` and `color2` will point to the same memory. Modifying either values pointed to by them will change the value of the `Shape` entity as well.
-
-A prefab can be used both as a component (as shown in the first example) and as an entity. A prefab is mostly just a regular entity, which means that all the normal API calls like `ecs_add` and `ecs_remove` will work on a prefab as well, as is demonstrated by this example:
+Note that in order to be able to use entity flags, the parent entity must be named (it must have an `EcsId` component). When not considering the entity identifiers, the above examples are equivalent to:
 
 ```c
-ecs_add(world, Shape, Size);
+ecs_entity_t MyParent = ecs_new(world, Position);
+ecs_entity_t MyChild = ecs_new_child(world, MyParent, Position);
 ```
 
-After this operation, the `Shape` prefab will have an additional component called `Size`, and all of the entities that added the prefab will now also have `Size` as a shared component.
+### Inheritance
+Inheritance is a mechanism in flecs that allows entities to "inherit", or share components from another entity. Inherited components will appear as if they are added to an entity, even though they are actually part of another entity. Inheritance relationships can be specified at creation time, or it can be added / removed at a later point in time. An entity may inherit from multiple other entities at the same time.
 
-Systems will treat shared components from prefabs as if they were defined on the entities themselves, thus a system with the query `Square, Color` would match both entities `e1` and `e2` from the example. It should be noted at this point that the system will _not_ match with the `Shape` prefab itself. Prefabs are explicitly excluded from matching with systems, as they should not be evaluated by application logic directly.
+The entity that inherits components is called the "instance". The entity from which the components are inherited is called the "base" entity.
 
-#### Overriding prefab components
-A typical usage of prefabs is to specify a common value for entities. Often, code that uses prefabs looks something like this:
+#### Creating instances
+Flecs has an API to create a new entity which also specifies a base entity. The API can be invoked like this:
 
 ```c
-ECS_PREFAB(world, Shape, Square, Color);
-ecs_set(world, Shape, Square, {.size = 50});
-ecs_set(world, Shape, Color, {.r = 255, .g = 0, .b = 0});
-
-ecs_entity_t e = ecs_new(world, Shape);
+ecs_entity_t my_base = ecs_new(world, Position);
+ecs_entity_t my_instance = ecs_new_instance(world, my_base, Velocity);
 ```
 
-However, in some scenarios an entity may want to change the value of one of its shared components, without affecting the others. This is possible by _overriding_ the shared component. To override a component, an application can simply use the `ecs_add` operation:
+In this example, `my_instance` will now share the `Position` component from the `my_base` entity. If an application were to retrieve the Position component from both `my_base` and `my_instance`, it would observe that they are the same. Consider the following code snippet:
 
 ```c
-ecs_add(world, e, Color);
+Position *p_base = ecs_get_ptr(world, my_base, Position);
+Position *p_instance = ecs_get_ptr(world, my_instance, Position);
+assert(p_base == p_instance); // condition will be true
 ```
 
-After the operation, the component will have turned into an owned component, and the entity can update its value without affecting the value of the `Shape` prefab (and therefore, of the entities that also share the components from `Shape`). Additionally, the _component value_ of the new owned `Color` component will have been initialized with the value of the shared component. This is an important property that enables many interesting design patterns, while also ensuring that a component value does not suddenly go from initialized (shared) to uninitialized (owned).
+From this follows that modifying the component value of the base will also modify components of all its instances. Any entity can be specifed as a base entity (`my_root`, in this example).
 
-Consequently, an entity can un-override a component by removing the component with the `ecs_remove` operation:
+#### Adding inheritance relationships
+Inheritance relationships can be added after entities have been created with the `ecs_inherit` method. Consider:
 
 ```c
-ecs_remove(world, e, Color);
+ecs_entity_t my_base = ecs_new(world, Position);
+ecs_entity_t my_instance = ecs_new(world, Velocity);
+
+// Create inheritance relationship where my_instance inherits from my_base
+ecs_inherit(world, my_instance, my_base);
 ```
 
-After this operation, the entity will have reverted to using the shared component from the `Shape` prefab. To remove the shared components entirely, the entity can remove the prefab with the `ecs_remove` operation:
+If the inheritance relationship was already added to the entity, this operation will have no effects.
+
+#### Removing inheritance relationships
+Inheritance relationships can be removed after they have been added with the `ecs_deinherit` method. Consider:
 
 ```c
-ecs_remove(world, e, Shape);
+ecs_entity_t my_base = ecs_new(world, Position);
+ecs_entity_t my_instance = ecs_new_instance(world, my_base, Velocity);
+
+// Remove inheritance relationship
+ecs_deinherit(world, my_instance, my_base);
 ```
 
-After this operation, the shared components will no longer appear on the entity.
+If the inheritance relationship was not added to the entity, this operation will have no effects.
 
-#### Prefabs and types
-It has been explained how [types](#components-and-types) can be used to create templates for entities, by adding sets of components commonly used together to the same type. When the type is added to the entity, all the components will be added as owned components to the entity. A quick example to recap:
+#### Inheritance and types
+Inheritance relationships are encoded in entity types using the `INSTANCEOF` entity flag. It is possible to create a type that describes what the base entity will be of an entity created with that type. Consider the following example:
 
 ```c
-ECS_TYPE(world, Shape, Square, Color);
+ECS_ENTITY(world, MyBase, Position);
+ECS_TYPE(world, MyType, INSTANCEOF | MyParent, Velocity);
 
-ecs_entity_t e = ecs_new(world, Shape);
+// This entity will be an instance of MyBase
+ecs_entity_t MyInstance = ecs_new(world, MyType);
 ```
 
-A limitation of types is that they cannot contain component values, thus after a type has been added to an entity, the value of the component is still uninitialized. With a prefab, it is possible to also define a set of commonly used components that can be added to an entity, and it _is_ possible to define component values, however with prefabs the components are not owned by the entity. It would be nice if there was a middle-ground, where it was both possible to add owned components, that are also initialized.
-
-It turns out this is achievable by combining the type and prefab features. A type can not only contain components, it can also contain prefabs. By adding both a prefab _and_ the components of a prefab to the same type, using the type will automatically override the components of the prefab, which will initialize them with the prefab values. Getting dizzy? Here is a code example:
+Alternatively, the `INSTANCEOF` entity flag can also be specified directly into the ECS_ENTITY macro:
 
 ```c
-ECS_PREFAB(world, ShapePrefab, Square, Color);
-ECS_TYPE(world, Shape, ShapePrefab, Square, Color);
-
-ecs_set(world, ShapePrefab, Square, {.size = 50});
-ecs_set(world, ShapePrefab, Color, {.r = 255, .g = 0, .b = 0});
-
-ecs_entity_t e = ecs_new(world, Shape);
+ECS_ENTITY(world, MyBase, Position);
+ECS_ENTITY(world, MyInstance, INSTANCEOF | MyBase, Velocity);
 ```
 
-Lets breakdown what happens in this code. First a prefab called `ShapePrefab` is defined as usual with the `Square` and `Color` components. Then, a type called `Shape` is defined with _both_ the `ShapePrefab` _and_ the `Square` and `Color` components. After that, values are assigned to the prefab components, and the type is added to the entity.
-
-When the `Shape` type is added to the entity, first the prefab is added (this is guaranteed, regardless of the order in which the prefab is added to the type). Then, the components from the type are added to the entity. As `Square` and `Color` are already defined as shared components on the entity, adding them again will _override_ the components, just like when they would be overridden when using the `ecs_add` operation. Because overriding a component copies the value from the shared component to the owned component, the new owned components will be initialized with the value from the prefab.
-
-This is a powerful pattern for creating reusable entity templates that result in automatically initialized components, and is one of the preferred ways of instantiating entities.
-
-#### Prefabs variants
-Prefab variants are useful when you want to take an existing prefab, and add more components, or change some of its component values. A prefab variant inherits components and values from another prefab, called the base. A prefab can at most have one other prefab as its base. To specify a base, an application can simply specify it in the list of components of the prefab:
+Note that in order to be able to use entity flags, the parent entity must be named (it must have an `EcsId` component). When not considering the entity identifiers, the above examples are equivalent to:
 
 ```c
-ECS_PREFAB(world, Car, Velocity, MaxSpeed);
-ecs_set(world, Car, Velocity, {160});
-
-ECS_PREFAB(world, FastCar, Car, Velocity, MaxSpeed); // Car is the base prefab
-ecs_set(world, FastCar, MaxSpeed, {240}); // Override MaxSpeed
+ecs_entity_t MyBase = ecs_new(world, Position);
+ecs_entity_t MyInstance = ecs_new_instance(world, MyBase, Velocity);
 ```
 
-#### Nested prefabs
+#### Multiple inheritance
+An entity may inherit from multiple base entities. Consider the following example:
+
+```c
+ECS_ENTITY(world, MyBase1, Position);
+ECS_ENTITY(world, MyBase2, Velocity);
+ECS_ENTITY(world, MyInstance, INSTANCEOF | MyBase1, INSTANCEOF | MyBase2, Mass);
+```
+
+In this scenario, the `MyInstance` entity will inherit components from both `MyBase1` and `MyBase2`. If two base entities contain the same component, the component will be shared from the base entity with the highest id (typically the one that is created last).
+
+#### Overriding components
+An instance may override the components of a base entity. Consider the following example:
+
+```c
+ecs_entity_t MyBase = ecs_new(world, Position);
+ecs_entity_t MyInstance = ecs_new_instance(world, MyBase, 0);
+
+// Override Position from MyBase
+ecs_add(world, MyInstance, Position);
+```
+
+When an instance overrides a component, it obtains a private copy of the component which it can modify without changing the value of the base component. An instance can remove an override by removing the component:
+
+```c
+// Revert to Position shared from MyBase
+ecs_remove(world, MyInstance, Position);
+```
+
+When an instance overrides a component from a base, the value from the base component is copied to the instance component.
+
+#### Overriding and initialization
+Component overrides enable a useful pattern for initializing components with default values when an entity is created. Consider the following example:
+
+```c
+ecs_entity_t MyBase = ecs_new(world, Position);
+    ecs_set(world, MyBase, Position, {10, 20});
+
+// Override Position on creation, copies the value from MyBase into MyInstance
+ecs_entity_t MyInstance = ecs_new_instance(world, MyBase, Position);
+```
+
+After this operation, `MyInstance` will have a private `Position` component that is initialized to `{10, 20}`. The utility of this pattern becomes more obvious when combined when used in combination with types in which the inheritance relationship is encoded:
+
+```c
+ECS_ENTITY(world, MyBase, Position, Velocity);
+  ecs_set(world, MyBase, Position, {0, 0});
+  ecs_set(world, MyBase, Velocity, {1, 1});
+  
+ECS_TYPE(world, MyType, INSTANCEOF | MyBase, Position, Velocity);
+
+// Creates an instance of MyBase and overrides Position & Velocity
+ecs_entity_t MyInstance = ecs_new(world, MyType);
+```
+
+Applications can leverage this pattern by creating "template" entities for which the sole purpose is to provide initial values for other entities. Often such template entities should not be matched with systems by default. To accomplish this, applications can add the `EcsDisabled` flag to entities:
+
+```c
+ECS_ENTITY(world, MyTemplate, EcsDisabled, Position, Velocity);
+```
+
+Alternatively, applications can choose to create the template entities as [prefabs](#prefabs). Prefab entities are ignored by default by systems, and offer additional features for creating template hierarchies.
+
+#### Inheritance trees
+It is possible to create inheritance trees, where base entities themselves inherit from other base entities. This allows applications to create base entities that range from very generic to very specialized while allowing for code reuse. Consider the following example:
+
+```c
+ECS_ENTITY(world, MyRoot, Position);
+ECS_ENTITY(world, MyBase, INSTANCEOF | MyRoot, Velocity);
+ECS_ENTITY(world, MyInstance, INSTANCEOF | MyBase, Mass);
+```
+
+In this example, `MyInstance` will inherit `Position` and `Velocity` from its base entities, and will own `Mass`. The `MyBase` entity will own `Velocity` and shared `Position` from `MyRoot`.
+
+It is possible to override components in inheritance trees to specialize components:
+
+```c
+ECS_ENTITY(world, Planet, Mass);
+ECS_ENTITY(world, LightPlanet, INSTANCEOF | Planet, Mass);
+    ecs_set(world, LigthPlanet, Mass, {5.972 ^ 24});
+ECS_ENTITY(world, HeavyPlanet, INSTANCEOF | Planet, Mass);
+    ecs_set(world, LigthPlanet, Mass, {1898 ^ 27});
+```
+
+#### Prefabs
+Prefabs are entities that are solely meant to be used as templates for other entities. Prefabs behave and can be accessed just like ordinary entities, but they are ignored by systems by default. Furthermore, prefabs can be combined with hierarchies to create entity trees that can be reused by instantiating the top-level prefab.
+
+The only thing that distinguishes a prefab from an ordinary entity is the `EcsPrefab` component. Entities with this component are ignored by default by systems. An application can create a prefab like this:
+
+```c
+ECS_ENTITY(world, MyPrefab, EcsPrefab, Position);
+```
+
+Or by simply using the `ECS_PREFAB` macro:
+
+```c
+ECS_PREFAB(world, MyPrefab, Position);
+```
+
+Prefabs can be instantiated just like normal base entities:
+
+```c
+ECS_ENTITY(world, MyEntity, INSTANCEOF | MyPrefab);
+```
+
+or:
+
+```c
+ecs_entity_t e = ecs_new_instance(world, MyPrefab);
+```
+
+#### Prefab nesting
 Prefabs can be created as children of other prefabs. This lets applications create prefab hierarchies that can be instantiated by creating an entity with the top-level prefab. To create a prefab hierarchy, applications must explicitly set the value of the builtin `EcsPrefab` component:
 
 ```c
 ECS_PREFAB(world, ParentPrefab, EcsPosition2D);
   ECS_PREFAB(world, ChildPrefab, EcsPosition2D);
-     ecs_set(world, ChildPrefab, EcsPrefab, {.parent = ParentPrefab);
+     ecs_set(world, ChildPrefab, EcsPrefab, {.parent = ParentPrefab});
      
-ecs_entity_t e = ecs_new(world, ParentPrefab);
+ecs_entity_t e = ecs_new_instance(world, ParentPrefab);
 ```
 
 After running this example, entity `e` will contain a child entity called `ChildPrefab`. All components of `e` will be shared with `ParentPrefab`, and all components of `e`'s child will be shared with `ChildPrefab`. Just like with regular prefabs, component values can be overridden. To override the component of a child entity, an application can use the following method:
@@ -637,7 +698,7 @@ ecs_set(world, child, Position, {10, 20}); // Override the component of the chil
 An application can also choose to instantiate a child prefab directly:
 
 ```c
-ecs_entity_t e = ecs_new(world, ChildPrefab);
+ecs_entity_t e = ecs_new_instance(world, ChildPrefab);
 ```
 
 Applications may want to compose a prefab out of various existing prefabs. This can be achieved by combining nested prefabs with prefab variants, as is shown in the following example:
@@ -646,25 +707,27 @@ Applications may want to compose a prefab out of various existing prefabs. This 
 // Prefab that defines a wheel
 ECS_PREFAB(world, Wheel, EcsPosition2D, EcsCircle2D);
   ECS_PREFAB(world, Tire, EcsPosition2D, EcsCircle2D, Pressure);
+      ecs_set(world, Tire, EcsPrefab, {.parent = Wheel});
 
 // Prefab that defines a car
 ECS_PREFAB(world, Car, EcsPosition2D);
-  ECS_PREFAB(world, FrontWheel, Wheel);
+  ECS_PREFAB(world, FrontWheel, INSTANCEOF | Wheel);
      ecs_set(world, FrontWheel, EcsPrefab, {.parent = Car});
      ecs_set(world, FrontWheel, EcsPosition, {-100, 0});
-  ECS_PREFAB(world, BackWheel, Wheel);
+  ECS_PREFAB(world, BackWheel, INSTANCEOF | Wheel);
      ecs_set(world, BackWheel, EcsPrefab, {.parent = Car});
      ecs_set(world, BackWheel, EcsPosition, {100, 0});     
 ```
 
-In this example, the `FrontWheel` and `BackWheel` prefabs of the car inherit from `Wheel`, which is an effective mechanism to compose a prefab out of one or more existing prefabs, as it reuses the components of the prefab base, while also allowing for the possibility to override component values where necessary. Children of the base (`Wheel`) are also automatically inherited by the variants (`FrontWheel`, `BackWheel`), thus for every entity that is created with `Car`, 4 additional child entities will be created:
+In this example, the `FrontWheel` and `BackWheel` prefabs of the car inherit from `Wheel`. Children of the base (`Wheel`) are also automatically inherited by the instances (`FrontWheel`, `BackWheel`), thus for every entity that is created with `Car`, 4 additional child entities will be created:
 
 ```c
-ecs_entity_t e = ecs_new(world, Car); // Creates FrontWheel, FrontWheel/Tire, BackWheel, BackWheel/Tire
+// Also creates FrontWheel, FrontWheel/Tire, BackWheel, BackWheel/Tire
+ecs_entity_t e = ecs_new_instance(world, Car); 
 ```
 
 ## Components and Types
-Components, together with entities, are the most important building blocks for applications in Flecs. Like entities, components are orthogonally designed to do a single thing, which is to store data associated with an entity. Components, as with any ECS framework, do not contain any logic, and can be added or removed at any point in the application. A component can be registered like this:
+Components are important building blocks for applications in Flecs. Components do not contain any logic, and can be added or removed at any point in the application. A component can be registered like this:
 
 ```c
 ECS_COMPONENT(world, Position);
