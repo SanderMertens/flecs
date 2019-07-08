@@ -629,7 +629,7 @@ ECS_ENTITY(world, MyTemplate, EcsDisabled, Position, Velocity);
 
 Alternatively, applications can choose to create the template entities as [prefabs](#prefabs). Prefab entities are ignored by default by systems, and offer additional features for creating template hierarchies.
 
-#### Inheritance trees
+#### Specialization
 It is possible to create inheritance trees, where base entities themselves inherit from other base entities. This allows applications to create base entities that range from very generic to very specialized while allowing for code reuse. Consider the following example:
 
 ```c
