@@ -871,7 +871,11 @@ ecs_entity_t ecs_new_type(
         ecs_set(world, result, EcsId, {id});
         ecs_set(world, result, EcsTypeComponent, {
             .type = type.type, .resolved = type.resolved
-        });        
+        });
+
+        /* Register named types with world, so applications can automatically
+         * detect features (amongst others). */
+        ecs_map_set(world->type_handles, (uintptr_t)type.type, &result);
     }
 
     return result;
