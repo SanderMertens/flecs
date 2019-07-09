@@ -79,7 +79,7 @@ static int ecs_os_time_initialized;
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
-static LARGE_INTEGER _ecs_os_time_win_freq;
+static double _ecs_os_time_win_freq;
 static LARGE_INTEGER _ecs_os_time_win_start;
 #elif defined(__APPLE__) && defined(__MACH__)
 #include <mach/mach_time.h>
@@ -108,8 +108,10 @@ void ecs_os_time_setup(void) {
     
     ecs_os_time_initialized = 1;
     #if defined(_WIN32)
-        QueryPerformanceFrequency(&_ecs_os_time_win_freq);
+        LARGE_INTEGER freq;
+        QueryPerformanceFrequency(&freq);
         QueryPerformanceCounter(&_ecs_os_time_win_start);
+        _ecs_os_time_win_freq = (double)freq.QuadPart / 1000000000.0;
     #elif defined(__APPLE__) && defined(__MACH__)
         mach_timebase_info(&_ecs_os_time_osx_timebase);
         _ecs_os_time_osx_start = mach_absolute_time();
@@ -128,7 +130,7 @@ uint64_t ecs_os_time_now(void) {
     #if defined(_WIN32)
         LARGE_INTEGER qpc_t;
         QueryPerformanceCounter(&qpc_t);
-        now = qpc_t.QuadPart;
+        now = qpc_t.QuadPart / _ecs_os_time_win_freq;
     #elif defined(__APPLE__) && defined(__MACH__)
         now = mach_absolute_time();
     #else
@@ -153,7 +155,7 @@ void ecs_os_time_sleep(
         ecs_os_err("nanosleep failed");
     }
 #else
-	Sleep(sec + nanosec/1000000);
+	Sleep(sec + nanosec / 1000000000);
 #endif
 }
 
