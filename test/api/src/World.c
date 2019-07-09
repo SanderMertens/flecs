@@ -1,5 +1,13 @@
 #include <api.h>
 
+static
+void install_test_abort() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.abort = test_abort;
+    ecs_os_set_api(&os_api);
+}
+
 void Move(ecs_rows_t *rows) {
     ProbeSystem(rows);
 
@@ -100,6 +108,8 @@ void World_entity_range_offset() {
 }
 
 void World_entity_range_offset_out_of_range() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -114,6 +124,8 @@ void World_entity_range_offset_out_of_range() {
 }
 
 void World_entity_range_limit_out_of_range() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -185,6 +197,8 @@ void AddOutOfRange(ecs_rows_t *rows) {
 }
 
 void World_entity_range_add_out_of_range_in_progress() {
+    install_test_abort();
+    
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

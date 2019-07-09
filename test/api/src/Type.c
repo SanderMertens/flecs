@@ -1,5 +1,13 @@
 #include <api.h>
 
+static
+void install_test_abort() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.abort = test_abort;
+    ecs_os_set_api(&os_api);
+}
+
 void Type_type_of_1_tostr() {
     ecs_world_t *world = ecs_init();
 
@@ -491,6 +499,8 @@ void Type_type_of_3_add_entity_again() {
 }
 
 void Type_invalid_container_type_expression() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Velocity);
@@ -504,6 +514,8 @@ void Type_invalid_container_type_expression() {
 }
 
 void Type_invalid_entity_type_expression() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Velocity);
@@ -519,6 +531,8 @@ void Type_invalid_entity_type_expression() {
 }
 
 void Type_invalid_singleton_type_expression() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Velocity);
@@ -532,6 +546,8 @@ void Type_invalid_singleton_type_expression() {
 }
 
 void Type_invalid_system_type_expression() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Velocity);
