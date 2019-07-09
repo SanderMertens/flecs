@@ -198,7 +198,7 @@ void AddOutOfRange(ecs_rows_t *rows) {
 
 void World_entity_range_add_out_of_range_in_progress() {
     install_test_abort();
-    
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -790,7 +790,7 @@ void World_quit() {
 void World_get_delta_time() {
     ecs_world_t *world = ecs_init();
 
-    test_flt(ecs_get_delta_time(world), 0);
+    test_int(ecs_get_delta_time(world), 0);
 
     ecs_progress(world, 1.0);
 
@@ -802,7 +802,7 @@ void World_get_delta_time() {
 void World_get_delta_time_auto() {
     ecs_world_t *world = ecs_init();
 
-    test_flt(ecs_get_delta_time(world), 0);
+    test_int(ecs_get_delta_time(world), 0);
 
     ecs_progress(world, 0);
 
