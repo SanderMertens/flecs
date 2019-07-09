@@ -1277,7 +1277,6 @@ void SystemOnFrame_on_period() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-
     ECS_ENTITY(world, e, Position);
 
     ECS_SYSTEM(world, OnPeriodSystem, EcsOnUpdate, Position);
@@ -1285,7 +1284,7 @@ void SystemOnFrame_on_period() {
 
     ecs_set_period(world, OnPeriodSystem, 0.5);
 
-    ecs_time_t start, temp;
+    double start, now = 0;
     ecs_set_target_fps(world, 60);
     ecs_os_get_time(&start);
 
@@ -1293,9 +1292,13 @@ void SystemOnFrame_on_period() {
     int count = 0;
     do {    
         ecs_progress(world, 0);
-        temp = start;
+        if (!count) {
+            start = ecs_get_delta_time(world);
+        }
+
+        now += ecs_get_delta_time(world);
         count ++;
-    } while (ecs_time_measure(&temp) < 1.0);
+    } while ((now - start) < 1.0);
 
     test_int(count, normal_count);
     test_int(on_period_count, 2);
