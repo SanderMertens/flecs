@@ -494,12 +494,12 @@ void add_prefab_child_to_builder(
 
         ecs_entity_t *array = ecs_vector_first(type);
         uint32_t count = ecs_vector_count(type);
-        if (!(array[count - 1] & EcsInstanceOf)) {
+        if (!(array[count - 1] & ECS_INSTANCEOF)) {
             ecs_abort(ECS_INVALID_PREAFB_CHILD_TYPE, NULL);
         }
     } else {
         ecs_entity_t array[] = {
-            child | EcsInstanceOf,
+            child | ECS_INSTANCEOF,
             EEcsId
         };
 

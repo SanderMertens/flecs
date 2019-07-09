@@ -156,14 +156,12 @@ extern ecs_type_t
     TEcsHidden,
     TEcsDisabled;
 
-typedef enum ecs_type_flags_t {
-    EcsInstanceOf = ((uint64_t)1 << 63),
-    EcsChildOf = ((uint64_t)1 << 62)
-} ecs_type_flags_t;
 
-#define ECS_ENTITY_FLAGS_MASK (EcsInstanceOf | EcsChildOf)
-#define ECS_ENTITY_MASK (~ECS_ENTITY_FLAGS_MASK)
-#define ECS_SINGLETON (ECS_ENTITY_FLAGS_MASK - 1)
+#define ECS_INSTANCEOF ((ecs_entity_t)1 << 63)
+#define ECS_CHILDOF ((ecs_entity_t)1 << 62)
+#define ECS_ENTITY_FLAGS_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF))
+#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ENTITY_FLAGS_MASK)
+#define ECS_SINGLETON ((ecs_entity_t)(ECS_ENTITY_FLAGS_MASK - 1))
 #define ECS_INVALID_ENTITY (0)
 
 /* This allows passing 0 as type to functions that accept types */
@@ -702,7 +700,7 @@ ecs_entity_t _ecs_new_child_w_count(
  * base entity.
  * 
  * This operation is equivalent to calling:
- * ecs_commit(world, 0, base, 0, EcsInstanceOf);
+ * ecs_commit(world, 0, base, 0, ECS_INSTANCEOF);
  * 
  * @param world The world.
  * @param base The base entity.

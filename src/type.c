@@ -47,9 +47,9 @@ int parse_type_action(
         }
 
         if (!strcmp(entity_id, "INSTANCEOF")) {
-            entity = EcsInstanceOf;
+            entity = ECS_INSTANCEOF;
         } else if (!strcmp(entity_id, "CHILDOF")) {
-            entity = EcsChildOf;
+            entity = ECS_CHILDOF;
         } else {
             entity = ecs_lookup(world, entity_id);
         }
@@ -244,7 +244,7 @@ void mark_parents(
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = array[i];
 
-        if (e & EcsChildOf) {
+        if (e & ECS_CHILDOF) {
             ecs_set_watching(world, e & ECS_ENTITY_MASK, true);
         } else if (!(e & ECS_ENTITY_FLAGS_MASK)) {
             break;
@@ -453,7 +453,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
      * at the end of the type. */
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = array[i];
-        if (e & EcsInstanceOf) {
+        if (e & ECS_INSTANCEOF) {
             ecs_entity_t prefab = e & ECS_ENTITY_MASK;
             if (_ecs_has(world, prefab, entity_type)) {
                 return prefab;
@@ -780,7 +780,7 @@ int32_t ecs_type_container_depth(
     ecs_entity_t *array = ecs_vector_first(type);
 
     for (i = count - 1; i >= 0; i --) {
-        if (array[i] & EcsChildOf) {
+        if (array[i] & ECS_CHILDOF) {
             ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_ENTITY_MASK);
             int32_t j, c_count = ecs_vector_count(c_type);
             ecs_entity_t *c_array = ecs_vector_first(c_type);
@@ -1031,13 +1031,13 @@ char* ecs_type_to_expr(
             *(char*)ecs_vector_add(&chbuf, &char_arr_params) = ',';
         }
 
-        if (flags & EcsInstanceOf) {
+        if (flags & ECS_INSTANCEOF) {
             int len = strlen("INSTANCEOF|");
             dst = ecs_vector_addn(&chbuf, &char_arr_params, strlen("INSTANCEOF|"));
             memcpy(dst, "INSTANCEOF|", len);
         }
 
-        if (flags & EcsChildOf) {
+        if (flags & ECS_CHILDOF) {
             int len = strlen("CHILDOF|");
             dst = ecs_vector_addn(&chbuf, &char_arr_params, strlen("CHILDOF|"));
             memcpy(dst, "CHILDOF|", len);
