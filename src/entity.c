@@ -342,7 +342,7 @@ int32_t ecs_type_get_prefab(
 
     for (i = n + 1; i < count; i ++) {
         ecs_entity_t e = buffer[i];
-        if (e & EcsInstanceOf) {
+        if (e & ECS_INSTANCEOF) {
             return i;
         }
     }
@@ -1062,7 +1062,7 @@ ecs_entity_t _ecs_new_child(
     ecs_type_t full_type = type;
     
     if (parent) {
-        full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
+        full_type = ecs_type_add(world, full_type, parent | ECS_CHILDOF);
     }
 
     return _ecs_new(world, full_type);
@@ -1079,7 +1079,7 @@ ecs_entity_t _ecs_new_child_w_count(
     ecs_type_t full_type = type;
     
     if (parent) {
-        full_type = ecs_type_add(world, full_type, parent | EcsChildOf);
+        full_type = ecs_type_add(world, full_type, parent | ECS_CHILDOF);
     }
 
     return _ecs_new_w_count(world, full_type, count);
@@ -1095,7 +1095,7 @@ ecs_entity_t _ecs_new_instance(
     ecs_type_t full_type = type;
     
     if (base) {
-        full_type = ecs_type_add(world, full_type, base | EcsInstanceOf);
+        full_type = ecs_type_add(world, full_type, base | ECS_INSTANCEOF);
     }
 
     return _ecs_new(world, full_type);
@@ -1112,7 +1112,7 @@ ecs_entity_t _ecs_new_instance_w_count(
     ecs_type_t full_type = type;
     
     if (base) {
-        full_type = ecs_type_add(world, full_type, base | EcsInstanceOf);
+        full_type = ecs_type_add(world, full_type, base | ECS_INSTANCEOF);
     }
 
     return _ecs_new_w_count(world, full_type, count);
@@ -1256,7 +1256,7 @@ void ecs_adopt(
     
     ecs_type_t add_type = ecs_type_find(
         world, 
-        &(ecs_entity_t){parent | EcsChildOf},
+        &(ecs_entity_t){parent | ECS_CHILDOF},
         1);
 
     _ecs_add_remove(world, entity, add_type, 0);
@@ -1271,7 +1271,7 @@ void ecs_orphan(
 
     ecs_type_t remove_type = ecs_type_find(
         world, 
-        &(ecs_entity_t){parent | EcsChildOf},
+        &(ecs_entity_t){parent | ECS_CHILDOF},
         1);
 
     _ecs_add_remove(world, entity, 0, remove_type);
@@ -1287,7 +1287,7 @@ void ecs_inherit(
     
     ecs_type_t add_type = ecs_type_find(
         world, 
-        &(ecs_entity_t){base | EcsInstanceOf},
+        &(ecs_entity_t){base | ECS_INSTANCEOF},
         1);
 
     _ecs_add_remove(world, entity, add_type, 0);
@@ -1302,7 +1302,7 @@ void ecs_disinherit(
 
     ecs_type_t remove_type = ecs_type_find(
         world, 
-        &(ecs_entity_t){base | EcsInstanceOf},
+        &(ecs_entity_t){base | ECS_INSTANCEOF},
         1);
 
     _ecs_add_remove(world, entity, 0, remove_type);
@@ -1449,7 +1449,7 @@ bool ecs_contains(
     ecs_type_t child_type = ecs_get_type(world, child);
 
     return ecs_type_has_entity_intern(
-        world, stage, child_type, parent | EcsChildOf, false);
+        world, stage, child_type, parent | ECS_CHILDOF, false);
 }
 
 ecs_entity_t ecs_get_parent(

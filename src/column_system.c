@@ -18,7 +18,7 @@ ecs_entity_t components_contains(
     for (i = 0; i < count; i ++) {
         ecs_entity_t entity = array[i];
 
-        if (entity & EcsChildOf) {
+        if (entity & ECS_CHILDOF) {
             entity &= ECS_ENTITY_MASK;
             ecs_row_t *row = ecs_map_get_ptr(world->main_stage.entity_index, entity);
             ecs_assert(row != 0, ECS_INTERNAL_ERROR, NULL);

@@ -58,7 +58,7 @@ void Container_child_w_type_w_childof() {
     ecs_entity_t *array = ecs_vector_first(child_type);
     test_assert(array != NULL);
     test_int(array[0], ecs_entity(Position));
-    test_int(array[1], parent | EcsChildOf);
+    test_int(array[1], parent | ECS_CHILDOF);
 
     ecs_fini(world);
 }
@@ -83,7 +83,7 @@ void Container_child_w_count_type_w_childof() {
     ecs_entity_t *array = ecs_vector_first(child_type);
     test_assert(array != NULL);
     test_int(array[0], ecs_entity(Position));
-    test_int(array[1], parent | EcsChildOf);
+    test_int(array[1], parent | ECS_CHILDOF);
 
     ecs_fini(world);
 }
