@@ -613,7 +613,7 @@ ecs_type_t ecs_type_merge_intern(
         } else if (cur && (!add || cur < add)) {
             while (del && del < cur) {
                 i_del ++;
-                if (i_del < del_count) {
+                if (del_count && i_del < del_count) {
                     del = buf_del[i_del];
                 } else {
                     del = 0;
@@ -1034,14 +1034,14 @@ char* ecs_type_to_expr(
         }
 
         if (flags & ECS_INSTANCEOF) {
-            int len = strlen("INSTANCEOF|");
-            dst = ecs_vector_addn(&chbuf, &char_arr_params, strlen("INSTANCEOF|"));
+            int len = sizeof("INSTANCEOF|") - 1;
+            dst = ecs_vector_addn(&chbuf, &char_arr_params, len);
             memcpy(dst, "INSTANCEOF|", len);
         }
 
         if (flags & ECS_CHILDOF) {
-            int len = strlen("CHILDOF|");
-            dst = ecs_vector_addn(&chbuf, &char_arr_params, strlen("CHILDOF|"));
+            int len = sizeof("CHILDOF|") - 1;
+            dst = ecs_vector_addn(&chbuf, &char_arr_params, len);
             memcpy(dst, "CHILDOF|", len);
         }
 
