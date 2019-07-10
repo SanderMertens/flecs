@@ -380,27 +380,32 @@ ecs_type_t copy_from_prefab(
     ecs_table_column_t *columns = info->columns;
 
     for (e = 0; e < add_count; e ++) {
-        ecs_entity_t pe, ee = to_add_buffer[e] & ECS_ENTITY_MASK;
+        ecs_entity_t pe = 0, ee = to_add_buffer[e] & ECS_ENTITY_MASK;
 
+        /* Keep track of whether this entity became a prefab */
         if (ee == EEcsPrefab) {
             is_prefab = true;
             continue;
         }
 
+        /* Never copy EcsId and EcsPrefabBuilder components from base */
         if (ee == EEcsId || ee == EEcsPrefabBuilder) {
             continue;
         }
 
+        /* If added entity is an instance of base, instantiate it */
         if (ee == prefab) {
             modified = instantiate_prefab(world, stage, info->entity, is_prefab, 
                 prefab_info, limit, modified);
             continue;
         }
 
+        /* Find the corresponding component in the base type */
         while ((p < prefab_count) && (pe = prefab_type_buffer[p]) < ee) {
             p ++;
         }
 
+        /* If base hasn't been found, continue */
         if (ee != pe) {
             continue;
         }

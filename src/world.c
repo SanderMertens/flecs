@@ -130,10 +130,10 @@ ecs_table_t* bootstrap_component_table(
     result->columns[2].data = ecs_vector_new(&handle_arr_params, 12);
     result->columns[2].size = sizeof(EcsId);
 
-    uint32_t index = ecs_vector_get_index(
-        stage->tables, &table_arr_params, result);
-
-    ecs_assert(index == 0, ECS_INTERNAL_ERROR, "first table index must be 0");
+    ecs_assert(
+        ecs_vector_get_index(
+            stage->tables, &table_arr_params, result) == 0, ECS_INTERNAL_ERROR, 
+            "first table index must be 0");
 
     set_table_id(stage, world->t_component, 1);
 
@@ -537,7 +537,6 @@ void EcsSetPrefab(ecs_rows_t *rows) {
         ecs_entity_t *type = ecs_vector_first(table->type);
         uint32_t t, t_count = ecs_vector_count(table->type);
 
-        ecs_entity_t found = 0;
         bool prefab_parent_flag_added = false;
         bool prefab_parent_added = false;
 
@@ -548,11 +547,7 @@ void EcsSetPrefab(ecs_rows_t *rows) {
             ecs_entity_t component = type[t];
 
             if (parent != component) {
-                if (ecs_has(world, component, EcsPrefab)) {
-                    ecs_assert(found == 0, ECS_MORE_THAN_ONE_PREFAB, NULL);
-                    found = component;
-
-                } else if ((pparent = ecs_get_ptr(world, component, EcsPrefabParent))) {                    
+                if ((pparent = ecs_get_ptr(world, component, EcsPrefabParent))) {                    
                     if (pparent->parent != parent) {
                         /* If this entity has a flag that is for a different prefab,
                         * it must have switched prefabs. Remove the old flag. */
