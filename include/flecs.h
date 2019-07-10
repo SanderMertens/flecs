@@ -1934,11 +1934,13 @@ void _ecs_assert(
  * This macro provides a convenient way to register components with a world. It
  * can be used like this:
  *
- * ECS_COMPONENT(world, Location);
+ * ECS_COMPONENT(world, Position);
+ * ecs_entity_t e = ecs_new(world, Position);
  *
- * In this example, "Location" must be a valid C type name. After the macro,
- * the application will have access to a Location_h variable which holds the
- * handle to the new component. */
+ * In this example, "Position" must be a valid C type name. The macro will 
+ * define two local variables, one for a type handle and one for an entity
+ * handle. These handles can be accessed with ecs_type(Position) and 
+ * ecs_entity(Position). */
 #define ECS_COMPONENT(world, id) \
     ECS_ENTITY_VAR(id) = ecs_new_component(world, #id, sizeof(id));\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
@@ -1956,8 +1958,8 @@ void _ecs_assert(
  * This macro provides a convenient way to register a type with the world.
  * It can be used like this:
  *
- * ECS_TYPE(world, MyType, ComponentA, ComponentB);
- * ecs_entity_t h = ecs_new(world, MyType_h);
+ * ECS_TYPE(world, MyType, Position, Velocity);
+ * ecs_entity_t e = ecs_new(world, MyType);
  *
  * Creating a type and using it with ecs_new/ecs_add is faster
  * than calling ecs_add multiple types. */
@@ -1971,8 +1973,8 @@ void _ecs_assert(
  * This macro provides a convenient way to register a prefab with the world. It
  * can be used like this:
  *
- * ECS_PREFAB(world, MyPrefab, ComponentA, ComponentB);
- * ecs_entity_t h = ecs_new(world, MyPrefab_h);
+ * ECS_PREFAB(world, MyPrefab, Position, Velocity);
+ * ecs_entity_t e = ecs_new_instance(world, MyPrefab);
  *
  * For more specifics, see description of ecs_new_prefab. */
 #define ECS_PREFAB(world, id, ...) \
@@ -1985,14 +1987,14 @@ void _ecs_assert(
  * This macro provides a convenient way to register systems with a world. It can
  * be used like this:
  *
- * ECS_SYSTEM(world, Move, EcsOnUpdate, Location, Speed);
+ * ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
  *
  * In this example, "Move" must be the identifier to a C function that matches
  * the signature of ecs_system_action_t. The signature of this component will be
  * "Location, Speed".
  *
- * After the macro, the application will have access to a Move_h variable which
- * holds the handle to the new system. */
+ * After the macro, the application will have access to a Move entity variable 
+ * which can be accessed through ecs_entity(Move). */
 #define ECS_SYSTEM(world, id, kind, ...) \
     ecs_entity_t F##id = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
     ecs_entity_t id = F##id;\
@@ -2013,9 +2015,16 @@ void _ecs_assert(
  * This macro provides a convenient way to load a module with the world. It can
  * be used like this:
  *
- * ECS_IMPORT(world, EcsSystemsMovement, 0);
- *
- * ecs_enable(world, EcsSystemsMovement_h.Move); */
+ * ECS_IMPORT(world, FlecsSystemsPhysics, 0);
+ * 
+ * This macro will define entity and type handles for the component associated
+ * with the module. An application can retrieve the module component like this:
+ * 
+ * FlecsSystemsPhysics m = ecs_get_singleton(world, FlecsSystemsPhysics);
+ * 
+ * The contents of a module component are module specific, although they
+ * typically contain handles to the content of the module.
+ */
 #define ECS_IMPORT(world, id, flags) \
     id M##id;\
     ECS_ENTITY_VAR(id) = ecs_import(world, id, flags, &M##id);\
