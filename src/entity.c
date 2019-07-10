@@ -558,7 +558,11 @@ uint32_t commit(
         /* If the type id is the same as that of the table where the entity is
          * currently stored, nothing needs to be committed. */
         if (old_type == type) {
-            return info->index;
+            if (info->index < 0) {
+                return -info->index;
+            } else {
+                return info->index;
+            }
         }
 
         /* If committing while iterating, obtain component columns from the
@@ -865,13 +869,12 @@ void ecs_merge_entity(
     };
 
     if (old_row.index < 0) {
-        info.index *= -1;
         info.is_watched = true;
     }
 
     int32_t new_index = commit(
         world, &world->main_stage, &info, type, 0, to_remove, false);
-
+    
     if (type && staged_id) {
         ecs_table_t *new_table = ecs_world_get_table(world, stage, type);
         assert(new_table != NULL);
@@ -880,10 +883,6 @@ void ecs_merge_entity(
         ecs_table_column_t *staged_columns = NULL;
         ecs_map_has(stage->data_stage, (uintptr_t)staged_row->type, &staged_columns);
         ecs_assert(staged_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (new_index < 0) {
-            new_index *= -1;
-        }
 
         copy_row( new_table->type, new_table->columns, new_index,
                   staged_table->type, staged_columns, staged_row->index); 
@@ -1191,16 +1190,14 @@ ecs_entity_t ecs_clone(
                     to_columns = to_table->columns;
                 }
 
-                ecs_row_t to_row = row_from_stage(stage, result);
+                ecs_assert(to_table != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(to_columns != NULL, ECS_INTERNAL_ERROR, NULL);  
 
-                if (!to_table)
-                    to_table = from_table;
-
-                if (!to_columns)
-                    to_columns = from_columns;
-
-                if (!stage_has_entity(stage, result, &to_row))
-                    to_row = row_from_stage(&world->main_stage, result);
+                ecs_row_t to_row;
+                if (!stage_has_entity(stage, result, &to_row)) {
+                    /* Entity was just committed to stage */
+                    ecs_abort(ECS_INTERNAL_ERROR, NULL);
+                }
 
                 copy_row(to_table->type, to_columns, to_row.index,
                     from_table->type, from_columns, row.index);

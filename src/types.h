@@ -309,7 +309,7 @@ typedef struct ecs_stage_t {
 typedef struct ecs_entity_info_t {
     ecs_entity_t entity;
     ecs_type_t type;
-    uint32_t index;
+    int32_t index;
     ecs_table_t *table;
     ecs_table_column_t *columns;
     bool is_watched;
