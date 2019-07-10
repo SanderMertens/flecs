@@ -366,6 +366,7 @@ void Prefab_get_ptr_from_prefab_from_new_table_in_progress(void);
 void Prefab_match_base(void);
 void Prefab_match_base_after_add_in_prev_phase(void);
 void Prefab_override_watched_prefab(void);
+void Prefab_rematch_twice(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -552,6 +553,7 @@ void SingleThreadStaging_add_remove_2_same_existing_to_current(void);
 void SingleThreadStaging_remove_add_2_same_to_current(void);
 void SingleThreadStaging_remove_add_2_same_existing_to_current(void);
 void SingleThreadStaging_add_remove_different_to_current(void);
+void SingleThreadStaging_add_remove_add_same_to_current(void);
 void SingleThreadStaging_2_add_1_remove_to_current(void);
 void SingleThreadStaging_1_add_2_remove_to_current(void);
 void SingleThreadStaging_delete_current(void);
@@ -1804,7 +1806,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 49,
+        .testcase_count = 50,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -2001,6 +2003,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "override_watched_prefab",
                 .function = Prefab_override_watched_prefab
+            },
+            {
+                .id = "rematch_twice",
+                .function = Prefab_rematch_twice
             }
         }
     },
@@ -2614,7 +2620,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 61,
+        .testcase_count = 62,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -2727,6 +2733,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_remove_different_to_current",
                 .function = SingleThreadStaging_add_remove_different_to_current
+            },
+            {
+                .id = "add_remove_add_same_to_current",
+                .function = SingleThreadStaging_add_remove_add_same_to_current
             },
             {
                 .id = "2_add_1_remove_to_current",

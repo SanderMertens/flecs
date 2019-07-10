@@ -1167,6 +1167,38 @@ void SingleThreadStaging_remove_add_2_same_to_current() {
     ecs_fini(world);
 }
 
+static
+void AddRemoveAdd(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Velocity);
+        ecs_remove(rows->world, rows->entities[i], Velocity);
+        ecs_add(rows->world, rows->entities[i], Velocity);
+    }
+}
+
+void SingleThreadStaging_add_remove_add_same_to_current() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, AddRemoveAdd, EcsOnUpdate, Position, .Velocity);
+
+    /* Create entities from scratch so they don't have the EcsId component */
+    ecs_entity_t e_1 = ecs_new(world, Position);
+    ecs_entity_t e_2 = ecs_new(world, Position);
+    ecs_entity_t e_3 = ecs_new(world, Position);
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_3, Velocity));
+}
+
 void SingleThreadStaging_remove_add_2_same_existing_to_current() {
     ecs_world_t *world = ecs_init();
 

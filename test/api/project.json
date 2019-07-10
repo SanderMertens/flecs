@@ -410,7 +410,8 @@
                 "get_ptr_from_prefab_from_new_table_in_progress",
                 "match_base",
                 "match_base_after_add_in_prev_phase",
-                "override_watched_prefab"
+                "override_watched_prefab",
+                "rematch_twice"
             ]
         }, {
             "id": "System_w_FromContainer",
@@ -615,6 +616,7 @@
                 "remove_add_2_same_to_current",
                 "remove_add_2_same_existing_to_current",
                 "add_remove_different_to_current",
+                "add_remove_add_same_to_current",
                 "2_add_1_remove_to_current",
                 "1_add_2_remove_to_current",
                 "delete_current",

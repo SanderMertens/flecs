@@ -2102,3 +2102,36 @@ void Prefab_override_watched_prefab() {
 
     ecs_fini(world);
 }
+
+void Prefab_rematch_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position, Velocity, Mass);
+
+    ECS_PREFAB(world, Prefab, Position);
+    ECS_ENTITY(world, Entity, INSTANCEOF | Prefab);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+    test_int(ctx.count, 0);
+    ctx.count = 0;
+
+    ecs_add(world, Prefab, Velocity);
+
+    ecs_progress(world, 1);
+    test_int(ctx.count, 0);
+    ctx.count = 0;
+
+    ecs_add(world, Prefab, Mass);
+
+    ecs_progress(world, 1);
+    test_int(ctx.count, 1);
+
+    ecs_fini(world);
+}

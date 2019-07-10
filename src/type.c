@@ -244,7 +244,7 @@ void mark_parents(
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = array[i];
 
-        if (e & ECS_CHILDOF) {
+        if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {
             ecs_set_watching(world, e & ECS_ENTITY_MASK, true);
         } else if (!(e & ECS_ENTITY_FLAGS_MASK)) {
             break;

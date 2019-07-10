@@ -84,9 +84,7 @@ void* get_row_ptr(
         return NULL;
     }
 
-    if (index < 0) {
-        index *= -1;
-    }
+    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_column_t *column = &columns[column_index + 1];
     ecs_vector_params_t param = {.element_size = column->size};
@@ -250,10 +248,6 @@ bool notify_post_merge(
     uint32_t limit,
     ecs_type_t to_deinit)
 {
-    if (world->magic != ECS_WORLD_MAGIC || world->in_progress) {
-        return false;
-    }
-
     /* This will trigger asserts when operations are invoked during a merge that
      * are not valid while merging. */
     bool is_merging = world->is_merging;
@@ -546,7 +540,7 @@ uint32_t commit(
             remove_type = ecs_type_merge_intern(
                 world, stage, remove_type, to_remove, to_add);
 
-            if (rm_type_ptr) {
+            if (rm_type_ptr && remove_type) {
                 *rm_type_ptr = remove_type;
             } else if (remove_type) {
                 ecs_map_set(stage->remove_merge, entity, &remove_type);
@@ -633,7 +627,7 @@ uint32_t commit(
         ecs_row_t new_row = (ecs_row_t){.type = type, .index = new_index};
 
         /* If old row was being watched, make sure new row is as well */
-        if (old_index < 0) {
+        if (info->is_watched) {
             new_row.index *= -1;
         }
 

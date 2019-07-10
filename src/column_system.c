@@ -637,11 +637,6 @@ void ecs_rematch_system(
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, 0);
 
-    /* Only rematch systems that have references */
-    if (!system_data->base.has_refs) {
-        return;
-    }
-
     ecs_vector_t *tables = world->main_stage.tables;
     uint32_t i, count = ecs_vector_count(tables);
     ecs_table_t *buffer = ecs_vector_first(tables);
