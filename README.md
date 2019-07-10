@@ -1,6 +1,7 @@
 [![Join the chat at https://gitter.im/flecsdev/community](https://badges.gitter.im/flecsdev/community.svg)](https://gitter.im/flecsdev/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/SanderMertens/flecs.svg?branch=master)](https://travis-ci.org/SanderMertens/flecs)
 [![Build status](https://ci.appveyor.com/api/projects/status/t99p1per439ctg1a/branch/master?svg=true)](https://ci.appveyor.com/project/SanderMertens/flecs/branch/master)
+[![codecov](https://codecov.io/gh/SanderMertens/flecs/branch/add-coverage/graph/badge.svg)](https://codecov.io/gh/SanderMertens/flecs)
 
 ![flecs](https://user-images.githubusercontent.com/9919222/54175082-b107f900-4446-11e9-9cbc-91c096f7c0b1.png)
 
@@ -448,3 +449,4 @@ In large code bases modules can be used to organize code and limit exposure of i
 Modules can be imported multiple times without causing side effects.
 
 [Learn more](Manual.md#modules)
+
