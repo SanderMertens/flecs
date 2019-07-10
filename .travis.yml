@@ -32,8 +32,7 @@ install:
   - bake
 
 script:
-  - bake run test/collections
-  - bake run test/api
+  - bake test
   - bake coverage
 
   
