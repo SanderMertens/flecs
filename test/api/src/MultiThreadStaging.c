@@ -252,6 +252,8 @@ void Add_random(ecs_rows_t *rows) {
 }
 
 void MultiThreadStaging_stress_create_delete_entity_random_components() {
+    test_quarantine("07-09-2019");
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -335,6 +337,8 @@ void Set_random(ecs_rows_t *rows) {
 }
 
 void MultiThreadStaging_stress_set_entity_random_components() {
+    test_quarantine("07-09-2019");
+    
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
