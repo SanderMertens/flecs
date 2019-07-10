@@ -60,7 +60,7 @@
        - [Optional operator](#optional-operator)
      - [Column source modifiers](#column-source-modifiers)
        - [SELF modifier](#id-modifier)
-       - [ID modifier](#id-modifier)
+       - [EMPTY modifier](#id-modifier)
        - [CONTAINER modifier](#container-modifier)
        - [CASCADE modifier](#cascade-modifier)
        - [SYSTEM modifier](#system-modifier)
@@ -68,11 +68,8 @@
        - [ENTITY modifier](#entity-modifier)
    - [System API](#system-api)
      - [The ECS_COLUMN macro](#the-ecs_column-macro)
-     - [The ECS_SHARED macro](#the-ecs_shared-macro)
      - [The ECS_COLUMN_COMPONENT macro](#the-ecs_column_component-macro)
      - [The ECS_COLUMN_ENTITY macro](#the-ecs_column_entity-macro)
-     - [The ecs_field function](#the-ecs_field-function)
-     - [The ECS_COLUMN and ECS_SHARED_TEST macro's](#the-ecs_column_test-and-ecs_shared_test-macros)
    - [System phases](#system-phases)
      - [The EcsOnLoad phase](#the-ecsonload-phase)
      - [The EcsPostLoad phase](#the-ecspostload-phase)
@@ -344,7 +341,7 @@ You may find that certain things cannot be expressed through declarative stateme
 It is much more efficient to [create entities in bulk](#create-entities-in-bulk) (using the `ecs_new_w_count` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
 
 ### Limit usage of ecs_lookup
-You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsId` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `ID` modifier, like so:
+You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsId` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `EMPTY` modifier, like so:
 
 ```c
 ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, .MyEntity);
@@ -1125,7 +1122,7 @@ void Move(ecs_rows_t *rows) {
 
 This code may look a bit weird as it introduces a few things that haven't been covered yet. First of all, note how the `world` object is passed into the system through the `rows` parameter. This lets a system call Flecs API functions, as all functions at least require a reference to an `ecs_world_t` instance. Secondly, note how the system obtains the entity id of the currently iterated over entity with `rows->entities`. Finally, note how the `ecs_set` function is able to use the `Position` component. The function requires a handle to the `Position` component to be defined, or it will result in a compiler error (try removing the `ECS_COLUMN_COMPONENT` macro).
 
-This macro can also be used when a column uses the `ID` source modifier. For example, if a system has the following signature:
+This macro can also be used when a column uses the `EMPTY` modifier. For example, if a system has the following signature:
 
 ```
 Position, .Velocity
