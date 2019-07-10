@@ -303,7 +303,11 @@
                 "disabled_feature",
                 "disabled_nested_feature",
                 "two_refs",
-                "filter_disabled"
+                "filter_disabled",
+                "match_disabled",
+                "match_disabled_and_enabled",
+                "match_prefab",
+                "match_prefab_and_normal"
             ]
         }, {
             "id": "SystemCascade",

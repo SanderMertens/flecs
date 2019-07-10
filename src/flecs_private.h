@@ -252,6 +252,10 @@ void ecs_table_free(
 
 /* -- System API -- */
 
+void ecs_system_init_base(
+    ecs_world_t *world,
+    EcsSystem *base_data);
+
 /* Compute the AND type from the system columns */
 void ecs_system_compute_and_families(
     ecs_world_t *world,

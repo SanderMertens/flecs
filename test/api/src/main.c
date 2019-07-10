@@ -269,6 +269,10 @@ void SystemOnFrame_disabled_feature(void);
 void SystemOnFrame_disabled_nested_feature(void);
 void SystemOnFrame_two_refs(void);
 void SystemOnFrame_filter_disabled(void);
+void SystemOnFrame_match_disabled(void);
+void SystemOnFrame_match_disabled_and_enabled(void);
+void SystemOnFrame_match_prefab(void);
+void SystemOnFrame_match_prefab_and_normal(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -1502,7 +1506,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 29,
+        .testcase_count = 33,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -1619,6 +1623,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "filter_disabled",
                 .function = SystemOnFrame_filter_disabled
+            },
+            {
+                .id = "match_disabled",
+                .function = SystemOnFrame_match_disabled
+            },
+            {
+                .id = "match_disabled_and_enabled",
+                .function = SystemOnFrame_match_disabled_and_enabled
+            },
+            {
+                .id = "match_prefab",
+                .function = SystemOnFrame_match_prefab
+            },
+            {
+                .id = "match_prefab_and_normal",
+                .function = SystemOnFrame_match_prefab_and_normal
             }
         }
     },

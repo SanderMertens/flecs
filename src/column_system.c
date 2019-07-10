@@ -414,17 +414,17 @@ bool match_table(
 {
     ecs_type_t type, table_type = table->type;
 
-    if (ecs_type_has_entity_intern(
+    if (!system_data->base.match_disabled && ecs_type_has_entity_intern(
         world, &world->main_stage, table_type, EEcsDisabled, false))
     {
-        /* Never match disabled entities */
+        /* Don't match disabled entities */
         return false;
     }
 
-    if (ecs_type_has_entity_intern(
+    if (!system_data->base.match_prefab && ecs_type_has_entity_intern(
         world, &world->main_stage, table_type, EEcsPrefab, false))
     {
-        /* Never match prefab entities */
+        /* Don't match prefab entities */
         return false;
     }
 
@@ -862,6 +862,8 @@ ecs_entity_t ecs_new_col_system(
     }
 
     ecs_system_compute_and_families(world, &system_data->base);
+
+    ecs_system_init_base(world, &system_data->base);
 
     match_tables(world, result, system_data);
 

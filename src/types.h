@@ -144,6 +144,7 @@ typedef struct EcsSystem {
     bool enabled;                  /* Is system enabled or not */
     bool has_refs;                 /* Does the system have reference columns */
     bool match_prefab;             /* Should this system match prefabs */
+    bool match_disabled;           /* Should this system match disabled entities */
 } EcsSystem;
 
 /** A column system is a system that is ran periodically (default = every frame)

@@ -1503,8 +1503,119 @@ void SystemOnFrame_filter_disabled() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 1);
+    test_int(ctx.e[0], Entity1);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_match_disabled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Entity1, Position);
+    ECS_ENTITY(world, Entity2, Position, EcsDisabled);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, EcsDisabled);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.e[0], Entity2);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(EcsDisabled));
+    test_int(ctx.s[0][1], 0);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_match_disabled_and_enabled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Entity1, Position);
+    ECS_ENTITY(world, Entity2, Position, EcsDisabled);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?EcsDisabled);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.e[0], Entity1);
+    test_int(ctx.e[1], Entity2);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(EcsDisabled));
+    test_int(ctx.s[0][1], 0);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_match_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Entity1, Position);
+    ECS_ENTITY(world, Entity2, Position, EcsPrefab);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, EcsPrefab);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.e[0], Entity2);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(EcsPrefab));
+    test_int(ctx.s[0][1], 0);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_match_prefab_and_normal() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Entity1, Position);
+    ECS_ENTITY(world, Entity2, Position, EcsPrefab);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?EcsPrefab);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.e[0], Entity1);
+    test_int(ctx.e[1], Entity2);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(EcsPrefab));
+    test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
 }

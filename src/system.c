@@ -162,6 +162,8 @@ ecs_entity_t new_row_system(
 
     ecs_system_compute_and_families(world, &system_data->base);
 
+    ecs_system_init_base(world, &system_data->base);
+
     if (needs_tables) {
         match_families(world, result, system_data);
     }
@@ -170,6 +172,45 @@ ecs_entity_t new_row_system(
 }
 
 /* -- Private API -- */
+
+void ecs_system_init_base(
+    ecs_world_t *world,
+    EcsSystem *base_data)
+{
+    int i, count = ecs_vector_count(base_data->columns);
+    ecs_system_column_t *columns = ecs_vector_first(base_data->columns);
+
+    for (i = 0; i < count; i ++) {
+        ecs_system_column_t *column = &columns[i];
+        ecs_system_expr_oper_kind_t oper = column->oper_kind; 
+
+        if (oper == EcsOperOr) {
+            if (ecs_type_has_entity_intern(
+                world, &world->main_stage, column->is.type, 
+                ecs_entity(EcsDisabled), false))
+            {
+                base_data->match_disabled = true;
+            }
+
+            if (ecs_type_has_entity_intern(
+                world, &world->main_stage, column->is.type, 
+                ecs_entity(EcsPrefab), false))
+            {
+                base_data->match_prefab = true;
+            }            
+        } else if (oper == EcsOperAnd || oper == EcsOperOptional) {
+            if (column->is.component == ecs_entity(EcsDisabled)) {
+                base_data->match_disabled = true;
+            } else if (column->is.component == ecs_entity(EcsPrefab)) {
+                base_data->match_prefab = true;
+            }
+        }
+
+        if (base_data->match_prefab && base_data->match_disabled) {
+            break;
+        }
+    }
+}
 
 void ecs_system_compute_and_families(
     ecs_world_t *world,
@@ -488,10 +529,6 @@ ecs_entity_t ecs_new_system(
     if (!system_data->has_refs) {
         system_data->has_refs = has_refs(system_data);
     }
-
-    system_data->match_prefab = ecs_type_has_entity_intern(
-        world, &world->main_stage, system_data->and_from_entity, 
-        ecs_entity(EcsPrefab), false);
 
     /* If system contains FromSystem params, add them tot the system */
     ecs_type_t type = system_data->and_from_system;
