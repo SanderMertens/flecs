@@ -4,7 +4,7 @@
 
 void MoveSquare(ecs_rows_t *rows) {
     EcsInput *input = ecs_column(rows, EcsInput, 1);
-    EcsPosition2D *position = ecs_shared(rows, EcsPosition2D, 2);
+    EcsPosition2D *position = ecs_column(rows, EcsPosition2D, 2);
 
     int x_v = input->keys[ECS_KEY_D].state || input->keys[ECS_KEY_RIGHT].state;
         x_v -= input->keys[ECS_KEY_A].state || input->keys[ECS_KEY_LEFT].state;
