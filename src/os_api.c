@@ -179,7 +179,7 @@ void ecs_os_enable_dbg(bool enable) {
     ecs_os_api_debug_enabled = enable;
 }
 
-void ecs_os_gettime(ecs_time_t* timeOut)
+void ecs_os_gettime(ecs_time_t *timeOut)
 {
     uint64_t now = ecs_os_time_now();
     timeOut->sec = now / 1000000000;
@@ -215,12 +215,11 @@ void ecs_os_set_api_defaults(void)
     _ecs_os_api->cond_broadcast = bake_cond_broadcast;
     _ecs_os_api->cond_wait = bake_cond_wait;
 
-    _ecs_os_api->sleep = ut_sleep;
-
     ut_log_handlerRegister(bake_log, NULL);
 
 #endif
-     _ecs_os_api->get_time = ecs_os_gettime;
+    _ecs_os_api->sleep = ecs_os_time_sleep;
+    _ecs_os_api->get_time = ecs_os_gettime;
 
     _ecs_os_api->log = ecs_log;
     _ecs_os_api->log_error = ecs_log_error;

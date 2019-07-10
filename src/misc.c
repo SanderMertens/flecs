@@ -155,7 +155,7 @@ void ecs_os_time_sleep(
         ecs_os_err("nanosleep failed");
     }
 #else
-	Sleep(sec + nanosec / 1000000000);
+	Sleep(sec * 1000 + nanosec / 1000000);
 #endif
 }
 
