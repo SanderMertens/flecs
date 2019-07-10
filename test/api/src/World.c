@@ -683,7 +683,7 @@ void World_control_fps() {
         count ++;
     } while ((now - start) < 1.0);
 
-    test_assert(count >= 60);
+    test_assert(count >= 50);
     test_assert(count < 65);
 
     ecs_fini(world);
@@ -725,7 +725,9 @@ void World_control_fps_busy_system() {
         count ++;
     } while ((now - start) < 1.0);
 
-    test_assert(count >= 60);
+    /* FPS control relies on sleep, which relies on the OS scheduler. Therefore
+     * pick a wide enough range to avoid tests failing at random. */
+    test_assert(count >= 50);
     test_assert(count < 65);
 
     ecs_fini(world);
@@ -751,7 +753,9 @@ void World_control_fps_busy_app() {
         busy_wait(0.014);
     } while ((now - start) < 1.0);
 
-    test_assert(count >= 60);
+    /* FPS control relies on sleep, which relies on the OS scheduler. Therefore
+     * pick a wide enough range to avoid tests failing at random. */
+    test_assert(count >= 50);
     test_assert(count < 65);
 
     ecs_fini(world);
@@ -784,7 +788,9 @@ void World_control_fps_random_system() {
         count ++;
     } while ((now - start) < 1.0);
 
-    test_assert(count >= 60);
+    /* FPS control relies on sleep, which relies on the OS scheduler. Therefore
+     * pick a wide enough range to avoid tests failing at random. */
+    test_assert(count >= 50);
     test_assert(count < 65);
 
     ecs_fini(world);
@@ -811,7 +817,9 @@ void World_control_fps_random_app() {
         busy_wait(rnd_time);
     } while ((now - start) < 1.0);
 
-    test_assert(count >= 60);
+    /* FPS control relies on sleep, which relies on the OS scheduler. Therefore
+     * pick a wide enough range to avoid tests failing at random. */
+    test_assert(count >= 55);
     test_assert(count < 65);
 
     ecs_fini(world);
