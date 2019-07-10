@@ -1579,7 +1579,7 @@ void *_ecs_field(
     uint32_t row);
 
 #define ecs_field(rows, type, column, row)\
-    _ecs_field(rows, sizeof(type), column, row)
+    ((type*)_ecs_field(rows, sizeof(type), column, row))
 
 /** Obtain the source of a column from inside a system.
  * This operation lets you obtain the entity from which the column data was
