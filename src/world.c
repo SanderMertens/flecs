@@ -1103,16 +1103,23 @@ float start_measure_frame(
     float delta_time = 0;
 
     if (world->measure_frame_time || !user_delta_time) {
-        if (world->frame_start.sec) {
-            delta_time = ecs_time_measure(&world->frame_start);
-        } else {
-            ecs_time_measure(&world->frame_start);
-            if (world->target_fps) {
-                delta_time = 1.0 / world->target_fps;
+        ecs_time_t t = world->frame_start;
+        do {
+            if (world->frame_start.sec) {
+                delta_time = ecs_time_measure(&t);
             } else {
-                delta_time = 1.0 / 60.0; /* Best guess */
+                ecs_time_measure(&t);
+                if (world->target_fps) {
+                    delta_time = 1.0 / world->target_fps;
+                } else {
+                    delta_time = 1.0 / 60.0; /* Best guess */
+                }
             }
-        }
+        
+        /* Keep trying until delta_time is zero */
+        } while (delta_time == 0);
+
+        world->frame_start = t;  
     }
 
     return delta_time;
@@ -1125,21 +1132,20 @@ void stop_measure_frame(
 {
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start;
-        world->frame_time += ecs_time_measure(&t);
+        double frame_time = ecs_time_measure(&t);
+        world->frame_time += frame_time;
 
         /* Sleep if processing faster than target FPS */
         float target_fps = world->target_fps;
         if (target_fps) {
             float sleep = (1.0 / target_fps) - delta_time + world->fps_sleep;
-            if (sleep < 0) {
-                sleep = 0;
-            }
-            world->fps_sleep = sleep;
 
-            if (sleep > 0.005) {
+            if (sleep > 0.01) {
                 ecs_sleepf(sleep);
             }
-        }
+
+            world->fps_sleep = sleep;
+        }        
     }
 }
 

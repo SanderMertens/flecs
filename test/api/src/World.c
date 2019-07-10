@@ -636,8 +636,7 @@ void World_phases_w_merging() {
 }
 
 static
-void TimeCheck(ecs_rows_t *rows) {    
-    test_assert(rows->delta_time != 0);
+void TimeCheck(ecs_rows_t *rows) {
     test_assert(rows->delta_time > 0);
 }
 
@@ -652,7 +651,7 @@ void World_measure_time() {
     test_assert(e != 0);
 
     int i = 0;
-    for (i = 0; i < 100; i ++) {
+    for (i = 0; i < 1000; i ++) {
         ecs_progress(world, 0);
     }
 
@@ -669,23 +668,151 @@ void World_control_fps() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
-    ecs_time_t start, temp;
+    double start, now = 0;
     ecs_set_target_fps(world, 60);
-    ecs_os_get_time(&start);
 
     /* Run for one second */
     int count = 0;
     do {    
         ecs_progress(world, 0);
-        temp = start;
+        if (!count) {
+            start = ecs_get_delta_time(world);
+        }
+
+        now += ecs_get_delta_time(world);
         count ++;
-    } while (ecs_time_measure(&temp) < 1.0);
+    } while ((now - start) < 1.0);
 
-    /* Allow for one frame overshoot */
-    test_assert(count <= 61);
+    test_assert(count >= 60);
+    test_assert(count < 65);
 
-    /* Allow for one frame undershoot */
-    test_assert(count >= 59);
+    ecs_fini(world);
+}
+
+static
+void busy_wait(float wait_time) {
+    ecs_time_t start, t;
+    ecs_os_get_time(&start);
+
+    do {
+        t = start;
+    } while (ecs_time_measure(&t) < wait_time);
+}
+
+static
+void BusySystem(ecs_rows_t *rows) {
+    /* Spend 14msec doing something */
+    busy_wait(0.014);
+}
+
+void World_control_fps_busy_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_SYSTEM(world, BusySystem, EcsOnUpdate, 0);
+
+    double start, now = 0;
+    ecs_set_target_fps(world, 60);
+
+    /* Run for one second */
+    int count = 0;
+    do {    
+        ecs_progress(world, 0);
+        if (!count) {
+            start = ecs_get_delta_time(world);
+        }
+
+        now += ecs_get_delta_time(world);
+        count ++;
+    } while ((now - start) < 1.0);
+
+    test_assert(count >= 60);
+    test_assert(count < 65);
+
+    ecs_fini(world);
+}
+
+void World_control_fps_busy_app() {
+    ecs_world_t *world = ecs_init();
+
+    double start, now = 0;
+    ecs_set_target_fps(world, 60);
+
+    /* Run for one second */
+    int count = 0;
+    do {    
+        ecs_progress(world, 0);
+        if (!count) {
+            start = ecs_get_delta_time(world);
+        }
+
+        now += ecs_get_delta_time(world);
+        count ++;
+
+        busy_wait(0.014);
+    } while ((now - start) < 1.0);
+
+    test_assert(count >= 60);
+    test_assert(count < 65);
+
+    ecs_fini(world);
+}
+
+static
+void RandomSystem(ecs_rows_t *rows) {
+    /* wait at most 16msec */
+    float rnd_time = ((float)rand() / (float)RAND_MAX) * 0.016;
+    busy_wait(rnd_time);
+}
+
+void World_control_fps_random_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_SYSTEM(world, RandomSystem, EcsOnUpdate, 0);
+
+    double start, now = 0;
+    ecs_set_target_fps(world, 60);
+
+    /* Run for one second */
+    int count = 0;
+    do {    
+        ecs_progress(world, 0);
+        if (!count) {
+            start = ecs_get_delta_time(world);
+        }
+
+        now += ecs_get_delta_time(world);
+        count ++;
+    } while ((now - start) < 1.0);
+
+    test_assert(count >= 60);
+    test_assert(count < 65);
+
+    ecs_fini(world);
+}
+
+void World_control_fps_random_app() {
+    ecs_world_t *world = ecs_init();
+
+    double start, now = 0;
+    ecs_set_target_fps(world, 60);
+
+    /* Run for one second */
+    int count = 0;
+    do {    
+        ecs_progress(world, 0);
+        if (!count) {
+            start = ecs_get_delta_time(world);
+        }
+
+        now += ecs_get_delta_time(world);
+        count ++;
+
+        float rnd_time = ((float)rand() / (float)RAND_MAX) * 0.016;
+        busy_wait(rnd_time);
+    } while ((now - start) < 1.0);
+
+    test_assert(count >= 60);
+    test_assert(count < 65);
 
     ecs_fini(world);
 }

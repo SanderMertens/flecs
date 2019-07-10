@@ -1284,9 +1284,9 @@ void SystemOnFrame_on_period() {
 
     ecs_set_period(world, OnPeriodSystem, 0.5);
 
-    double start, now = 0;
     ecs_set_target_fps(world, 60);
-    ecs_os_get_time(&start);
+
+    double start, now = 0;
 
     /* Run for one second */
     int count = 0;
