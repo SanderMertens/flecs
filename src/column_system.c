@@ -24,7 +24,7 @@ ecs_entity_t components_contains(
             ecs_assert(row != 0, ECS_INTERNAL_ERROR, NULL);
 
             ecs_entity_t component = ecs_type_contains(
-                world, &world->main_stage, row->type, type, match_all, true);
+                world, row->type, type, match_all, true);
 
             if (component != 0) {
                 if (entity_out) *entity_out = entity;
@@ -65,7 +65,6 @@ ecs_reference_t* get_ref_data(
 /* Get actual entity on which specified component is stored */
 ecs_entity_t ecs_get_entity_for_component(
     ecs_world_t *world,
-    bool new_table,
     ecs_entity_t entity,
     ecs_type_t type,
     ecs_entity_t component)
@@ -153,7 +152,7 @@ void add_table(
                 component = column->is.component;
             } else if (oper_kind == EcsOperOr) {
                 component = ecs_type_contains(
-                    world, &world->main_stage, table_type, column->is.type, 
+                    world, table_type, column->is.type, 
                     false, true);
             }
 
@@ -227,7 +226,7 @@ void add_table(
         if (oper_kind == EcsOperOptional) {
             /* If table doesn't have the field, mark it as no data */
             if (!ecs_type_has_entity_intern(
-                world, &world->main_stage, table_type, component, true))
+                world, table_type, component, true))
             {
                 table_data[i] = 0;
             }
@@ -269,7 +268,7 @@ void add_table(
                         e = entity;
                     } else {
                         e = ecs_get_entity_for_component(
-                            world, false, entity, table_type, component);
+                            world, entity, table_type, component);
 
                         if (kind != EcsCascade) {
                             ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
@@ -413,17 +412,19 @@ bool match_table(
     ecs_entity_t system,
     EcsColSystem *system_data)
 {
+    (void)system; /* useful for debugging */
+
     ecs_type_t type, table_type = table->type;
 
     if (!system_data->base.match_disabled && ecs_type_has_entity_intern(
-        world, &world->main_stage, table_type, EEcsDisabled, false))
+        world, table_type, EEcsDisabled, false))
     {
         /* Don't match disabled entities */
         return false;
     }
 
     if (!system_data->base.match_prefab && ecs_type_has_entity_intern(
-        world, &world->main_stage, table_type, EEcsPrefab, false))
+        world, table_type, EEcsPrefab, false))
     {
         /* Don't match prefab entities */
         return false;
@@ -432,7 +433,7 @@ bool match_table(
     type = system_data->base.and_from_entity;
 
     if (type && !ecs_type_contains(
-        world, &world->main_stage, table_type, type, true, true))
+        world, table_type, type, true, true))
     {
         return false;
     }
@@ -464,7 +465,7 @@ bool match_table(
             type = elem->is.type;
             if (elem_kind == EcsFromSelf) {
                 if (!ecs_type_contains(
-                    world, &world->main_stage, table_type, type, false, true))
+                    world, table_type, type, false, true))
                 {
                     return false;
                 }
@@ -488,7 +489,7 @@ bool match_table(
 
     type = system_data->base.not_from_entity;
     if (type && ecs_type_contains(
-        world, &world->main_stage, table_type, type, false, true))
+        world, table_type, type, false, true))
     {
         return false;
     }
@@ -943,7 +944,7 @@ ecs_entity_t _ecs_run_w_filter(
         return 0;
     }
 
-    ecs_stage_t *stage = ecs_get_stage(&real_world);
+    ecs_get_stage(&real_world);
 
     float system_delta_time = delta_time + system_data->time_passed;
     float period = system_data->period;
@@ -999,7 +1000,7 @@ ecs_entity_t _ecs_run_w_filter(
 
         if (filter) {
             if (!ecs_type_contains(
-                real_world, stage, w_table->type, filter, true, true))
+                real_world, w_table->type, filter, true, true))
             {
                 continue;
             }

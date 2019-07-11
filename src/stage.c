@@ -58,10 +58,12 @@ void merge_commits(
 }
 
 static
-void clean_families(
+void clean_types(
     ecs_stage_t *stage)
 {
-    /* ecs_map_free(stage->type_index);  */
+    (void)stage;
+    
+    /* TODO: clean types */
 }
 
 static
@@ -133,7 +135,7 @@ void ecs_stage_deinit(
     ecs_map_free(stage->table_index);
 
     if (!is_temp_stage) {
-        clean_families(stage);
+        clean_types(stage);
     }
 
     if (!is_main_stage) {
