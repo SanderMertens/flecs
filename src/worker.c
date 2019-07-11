@@ -139,9 +139,7 @@ void start_threads(
 
         if (i != 0) {
             thread->thread = ecs_os_thread_new(ecs_worker, thread);
-            if (!thread->thread) {
-                ecs_abort(ECS_THREAD_ERROR, NULL);
-            }
+            ecs_assert(thread->thread != 0, ECS_THREAD_ERROR, NULL);
         }
     }
 }

@@ -20,6 +20,7 @@ void New_tag(void);
 void New_type_w_tag(void);
 void New_type_w_2_tags(void);
 void New_type_w_tag_mixed(void);
+void New_redefine_component(void);
 
 // Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
@@ -100,7 +101,11 @@ void Has_any_of_3_of_2(void);
 void Has_any_of_2_of_1(void);
 void Has_any_of_1_of_0(void);
 void Has_any_2_of_2_disjunct(void);
+void Has_any_of_0_0(void);
+void Has_any_of_0_1(void);
+void Has_any_of_0_zero_entity(void);
 void Has_has_in_progress(void);
+void Has_has_of_zero(void);
 
 // Testsuite 'Count'
 void Count_count_empty(void);
@@ -152,6 +157,10 @@ void Lookup_lookup_child(void);
 void Lookup_lookup_child_w_component(void);
 void Lookup_lookup_in_progress(void);
 void Lookup_lookup_child_in_progress(void);
+void Lookup_lookup_w_null_id(void);
+void Lookup_get_id(void);
+void Lookup_get_id_no_id(void);
+void Lookup_get_id_from_empty(void);
 
 // Testsuite 'Singleton'
 void Singleton_set(void);
@@ -177,6 +186,31 @@ void Clone_tag(void);
 void Clone_tag_w_value(void);
 void Clone_1_tag_1_component(void);
 void Clone_1_tag_1_component_w_value(void);
+
+// Testsuite 'SystemMisc'
+void SystemMisc_invalid_not_without_id(void);
+void SystemMisc_invalid_optional_without_id(void);
+void SystemMisc_invalid_system_without_id(void);
+void SystemMisc_invalid_container_without_id(void);
+void SystemMisc_invalid_cascade_without_id(void);
+void SystemMisc_invalid_entity_without_id(void);
+void SystemMisc_invalid_empty_without_id(void);
+void SystemMisc_invalid_singleton_without_id(void);
+void SystemMisc_invalid_empty_element(void);
+void SystemMisc_invalid_empty_element_w_space(void);
+void SystemMisc_invalid_empty_or(void);
+void SystemMisc_invalid_empty_or_w_space(void);
+void SystemMisc_invalid_or_w_not(void);
+void SystemMisc_invalid_not_w_or(void);
+void SystemMisc_invalid_0_w_and(void);
+void SystemMisc_invalid_0_w_from_system(void);
+void SystemMisc_invalid_0_w_from_container(void);
+void SystemMisc_invalid_0_w_from_cascade(void);
+void SystemMisc_invalid_0_w_from_entity(void);
+void SystemMisc_invalid_0_w_from_empty(void);
+void SystemMisc_invalid_0_w_from_singleton(void);
+void SystemMisc_invalid_or_w_empty(void);
+void SystemMisc_invalid_phase(void);
 
 // Testsuite 'SystemOnAdd'
 void SystemOnAdd_new_match_1_of_1(void);
@@ -315,6 +349,10 @@ void Container_orphan_twice(void);
 void Container_adopt_orphan(void);
 void Container_adopt_2_orphan_1(void);
 void Container_get_ptr_container(void);
+void Container_get_parent(void);
+void Container_get_parent_no_matching_comp(void);
+void Container_get_parent_two_parents(void);
+void Container_get_parent_no_parent(void);
 
 // Testsuite 'Prefab'
 void Prefab_new_w_prefab(void);
@@ -416,6 +454,7 @@ void World_entity_range_limit_out_of_range(void);
 void World_entity_range_add_existing_in_progress(void);
 void World_entity_range_add_in_range_in_progress(void);
 void World_entity_range_add_out_of_range_in_progress(void);
+void World_entity_range_out_of_range_check_disabled(void);
 void World_dim(void);
 void World_dim_type(void);
 void World_dim_dim_type(void);
@@ -433,6 +472,9 @@ void World_quit(void);
 void World_get_delta_time(void);
 void World_get_delta_time_auto(void);
 void World_recreate_world(void);
+void World_init_w_args_set_threads(void);
+void World_init_w_args_set_fps(void);
+void World_init_w_args_enable_dbg(void);
 
 // Testsuite 'Type'
 void Type_type_of_1_tostr(void);
@@ -467,6 +509,15 @@ void Type_invalid_container_type_expression(void);
 void Type_invalid_system_type_expression(void);
 void Type_type_from_empty_entity(void);
 void Type_type_from_empty_entity_in_progress(void);
+void Type_get_type(void);
+void Type_get_type_from_empty(void);
+void Type_get_type_from_0(void);
+void Type_entity_from_type(void);
+void Type_entity_from_empty_type(void);
+void Type_entity_from_type_w_2_elements(void);
+void Type_type_from_entity(void);
+void Type_type_from_empty(void);
+void Type_type_from_0(void);
 
 // Testsuite 'Run'
 void Run_run(void);
@@ -491,6 +542,7 @@ void Run_run_w_type_filter_of_2(void);
 void Run_run_w_container_filter(void);
 void Run_run_comb_10_entities_1_type(void);
 void Run_run_comb_10_entities_2_types(void);
+void Run_run_w_interrupt(void);
 
 // Testsuite 'MultiThread'
 void MultiThread_2_thread_1_entity(void);
@@ -523,6 +575,7 @@ void MultiThread_3_thread_test_combs_100_entity_2_types(void);
 void MultiThread_4_thread_test_combs_100_entity_2_types(void);
 void MultiThread_5_thread_test_combs_100_entity_2_types(void);
 void MultiThread_6_thread_test_combs_100_entity_2_types(void);
+void MultiThread_change_thread_count(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_new_empty(void);
@@ -614,7 +667,7 @@ void Internals_activate_deactivate_activate_other(void);
 static bake_test_suite suites[] = {
     {
         .id = "New",
-        .testcase_count = 11,
+        .testcase_count = 12,
         .testcases = (bake_test_case[]){
             {
                 .id = "empty",
@@ -659,6 +712,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_w_tag_mixed",
                 .function = New_type_w_tag_mixed
+            },
+            {
+                .id = "redefine_component",
+                .function = New_redefine_component
             }
         }
     },
@@ -902,7 +959,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Has",
-        .testcase_count = 18,
+        .testcase_count = 22,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -973,8 +1030,24 @@ static bake_test_suite suites[] = {
                 .function = Has_any_2_of_2_disjunct
             },
             {
+                .id = "any_of_0_0",
+                .function = Has_any_of_0_0
+            },
+            {
+                .id = "any_of_0_1",
+                .function = Has_any_of_0_1
+            },
+            {
+                .id = "any_of_0_zero_entity",
+                .function = Has_any_of_0_zero_entity
+            },
+            {
                 .id = "has_in_progress",
                 .function = Has_has_in_progress
+            },
+            {
+                .id = "has_of_zero",
+                .function = Has_has_of_zero
             }
         }
     },
@@ -1140,7 +1213,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Lookup",
-        .testcase_count = 7,
+        .testcase_count = 11,
         .testcases = (bake_test_case[]){
             {
                 .id = "lookup",
@@ -1169,6 +1242,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "lookup_child_in_progress",
                 .function = Lookup_lookup_child_in_progress
+            },
+            {
+                .id = "lookup_w_null_id",
+                .function = Lookup_lookup_w_null_id
+            },
+            {
+                .id = "get_id",
+                .function = Lookup_get_id
+            },
+            {
+                .id = "get_id_no_id",
+                .function = Lookup_get_id_no_id
+            },
+            {
+                .id = "get_id_from_empty",
+                .function = Lookup_get_id_from_empty
             }
         }
     },
@@ -1265,6 +1354,104 @@ static bake_test_suite suites[] = {
             {
                 .id = "1_tag_1_component_w_value",
                 .function = Clone_1_tag_1_component_w_value
+            }
+        }
+    },
+    {
+        .id = "SystemMisc",
+        .testcase_count = 23,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "invalid_not_without_id",
+                .function = SystemMisc_invalid_not_without_id
+            },
+            {
+                .id = "invalid_optional_without_id",
+                .function = SystemMisc_invalid_optional_without_id
+            },
+            {
+                .id = "invalid_system_without_id",
+                .function = SystemMisc_invalid_system_without_id
+            },
+            {
+                .id = "invalid_container_without_id",
+                .function = SystemMisc_invalid_container_without_id
+            },
+            {
+                .id = "invalid_cascade_without_id",
+                .function = SystemMisc_invalid_cascade_without_id
+            },
+            {
+                .id = "invalid_entity_without_id",
+                .function = SystemMisc_invalid_entity_without_id
+            },
+            {
+                .id = "invalid_empty_without_id",
+                .function = SystemMisc_invalid_empty_without_id
+            },
+            {
+                .id = "invalid_singleton_without_id",
+                .function = SystemMisc_invalid_singleton_without_id
+            },
+            {
+                .id = "invalid_empty_element",
+                .function = SystemMisc_invalid_empty_element
+            },
+            {
+                .id = "invalid_empty_element_w_space",
+                .function = SystemMisc_invalid_empty_element_w_space
+            },
+            {
+                .id = "invalid_empty_or",
+                .function = SystemMisc_invalid_empty_or
+            },
+            {
+                .id = "invalid_empty_or_w_space",
+                .function = SystemMisc_invalid_empty_or_w_space
+            },
+            {
+                .id = "invalid_or_w_not",
+                .function = SystemMisc_invalid_or_w_not
+            },
+            {
+                .id = "invalid_not_w_or",
+                .function = SystemMisc_invalid_not_w_or
+            },
+            {
+                .id = "invalid_0_w_and",
+                .function = SystemMisc_invalid_0_w_and
+            },
+            {
+                .id = "invalid_0_w_from_system",
+                .function = SystemMisc_invalid_0_w_from_system
+            },
+            {
+                .id = "invalid_0_w_from_container",
+                .function = SystemMisc_invalid_0_w_from_container
+            },
+            {
+                .id = "invalid_0_w_from_cascade",
+                .function = SystemMisc_invalid_0_w_from_cascade
+            },
+            {
+                .id = "invalid_0_w_from_entity",
+                .function = SystemMisc_invalid_0_w_from_entity
+            },
+            {
+                .id = "invalid_0_w_from_empty",
+                .function = SystemMisc_invalid_0_w_from_empty
+            },
+            {
+                .id = "invalid_0_w_from_singleton",
+                .function = SystemMisc_invalid_0_w_from_singleton
+            },
+            {
+                .id = "invalid_or_w_empty",
+                .function = SystemMisc_invalid_or_w_empty
+            },
+            {
+                .id = "invalid_phase",
+                .function = SystemMisc_invalid_phase
             }
         }
     },
@@ -1712,7 +1899,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Container",
-        .testcase_count = 22,
+        .testcase_count = 26,
         .testcases = (bake_test_case[]){
             {
                 .id = "child",
@@ -1801,6 +1988,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_ptr_container",
                 .function = Container_get_ptr_container
+            },
+            {
+                .id = "get_parent",
+                .function = Container_get_parent
+            },
+            {
+                .id = "get_parent_no_matching_comp",
+                .function = Container_get_parent_no_matching_comp
+            },
+            {
+                .id = "get_parent_two_parents",
+                .function = Container_get_parent_two_parents
+            },
+            {
+                .id = "get_parent_no_parent",
+                .function = Container_get_parent_no_parent
             }
         }
     },
@@ -2156,7 +2359,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 26,
+        .testcase_count = 30,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -2193,6 +2396,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "entity_range_add_out_of_range_in_progress",
                 .function = World_entity_range_add_out_of_range_in_progress
+            },
+            {
+                .id = "entity_range_out_of_range_check_disabled",
+                .function = World_entity_range_out_of_range_check_disabled
             },
             {
                 .id = "dim",
@@ -2261,12 +2468,24 @@ static bake_test_suite suites[] = {
             {
                 .id = "recreate_world",
                 .function = World_recreate_world
+            },
+            {
+                .id = "init_w_args_set_threads",
+                .function = World_init_w_args_set_threads
+            },
+            {
+                .id = "init_w_args_set_fps",
+                .function = World_init_w_args_set_fps
+            },
+            {
+                .id = "init_w_args_enable_dbg",
+                .function = World_init_w_args_enable_dbg
             }
         }
     },
     {
         .id = "Type",
-        .testcase_count = 32,
+        .testcase_count = 41,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_of_1_tostr",
@@ -2395,12 +2614,48 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_from_empty_entity_in_progress",
                 .function = Type_type_from_empty_entity_in_progress
+            },
+            {
+                .id = "get_type",
+                .function = Type_get_type
+            },
+            {
+                .id = "get_type_from_empty",
+                .function = Type_get_type_from_empty
+            },
+            {
+                .id = "get_type_from_0",
+                .function = Type_get_type_from_0
+            },
+            {
+                .id = "entity_from_type",
+                .function = Type_entity_from_type
+            },
+            {
+                .id = "entity_from_empty_type",
+                .function = Type_entity_from_empty_type
+            },
+            {
+                .id = "entity_from_type_w_2_elements",
+                .function = Type_entity_from_type_w_2_elements
+            },
+            {
+                .id = "type_from_entity",
+                .function = Type_type_from_entity
+            },
+            {
+                .id = "type_from_empty",
+                .function = Type_type_from_empty
+            },
+            {
+                .id = "type_from_0",
+                .function = Type_type_from_0
             }
         }
     },
     {
         .id = "Run",
-        .testcase_count = 22,
+        .testcase_count = 23,
         .testcases = (bake_test_case[]){
             {
                 .id = "run",
@@ -2489,12 +2744,16 @@ static bake_test_suite suites[] = {
             {
                 .id = "run_comb_10_entities_2_types",
                 .function = Run_run_comb_10_entities_2_types
+            },
+            {
+                .id = "run_w_interrupt",
+                .function = Run_run_w_interrupt
             }
         }
     },
     {
         .id = "MultiThread",
-        .testcase_count = 30,
+        .testcase_count = 31,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_thread_1_entity",
@@ -2615,6 +2874,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "6_thread_test_combs_100_entity_2_types",
                 .function = MultiThread_6_thread_test_combs_100_entity_2_types
+            },
+            {
+                .id = "change_thread_count",
+                .function = MultiThread_change_thread_count
             }
         }
     },
@@ -2962,5 +3225,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 33);
+    return bake_test_run("api", argc, argv, suites, 34);
 }

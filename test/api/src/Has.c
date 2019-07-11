@@ -251,6 +251,39 @@ void Has_any_2_of_2_disjunct() {
     ecs_fini(world);
 }
 
+void Has_any_of_0_0() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    test_assert(ecs_has_any(world, e, 0));
+    
+    ecs_fini(world);
+}
+
+void Has_any_of_0_1() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    test_assert(ecs_has_any(world, e, 0));
+    
+    ecs_fini(world);
+}
+
+void Has_any_of_0_zero_entity() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(!ecs_has_any(world, 0, 0));
+    
+    ecs_fini(world);
+}
+
 void TestHas(ecs_rows_t *rows) {
     ecs_type_t ecs_type(Position) = ecs_column_type(rows, 1);
 
@@ -271,6 +304,14 @@ void Has_has_in_progress() {
     test_assert( ecs_has(world, e, Position));
 
     ecs_progress(world, 1);
+    
+    ecs_fini(world);
+}
+
+void Has_has_of_zero() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(!ecs_has(world, 0, 0));
     
     ecs_fini(world);
 }

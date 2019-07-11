@@ -1203,3 +1203,38 @@ void Run_run_comb_10_entities_2_types() {
 
     ecs_fini(world);
 }
+
+static
+void Interrupt(ecs_rows_t *rows) {
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        if (i == 2) {
+            rows->interrupted_by = rows->entities[i];
+            break;
+        }
+    }
+}
+
+void Run_run_w_interrupt() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e_1, Position, Velocity);
+    ECS_ENTITY(world, e_2, Position, Velocity);
+    ECS_ENTITY(world, e_3, Position, Velocity);
+    ECS_ENTITY(world, e_4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e_6, Position, Velocity, Mass, Rotation);
+    ECS_ENTITY(world, e_7, Position);
+
+    ECS_SYSTEM(world, Interrupt, EcsManual, Position);
+
+    ecs_entity_t e = ecs_run(world, Interrupt, 0, NULL);
+    test_int(e, e_3);
+ 
+    ecs_fini(world);
+}

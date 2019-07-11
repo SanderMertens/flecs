@@ -931,3 +931,44 @@ void MultiThread_6_thread_test_combs_100_entity_2_types() {
 
     ecs_fini(world);
 }
+
+void MultiThread_change_thread_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_SYSTEM(world, TestSubset, EcsManual, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
+
+    int i, ENTITIES = 100;
+
+    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES / 2);
+    ecs_new_w_count(world, Type, ENTITIES / 2);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        ecs_set(world, e + i, Position, {1, 2});
+    }
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        Position *p = ecs_get_ptr(world, e + i, Position);
+        test_int(p->x, ENTITIES - i);
+        p->x = 1;
+    }    
+
+    ecs_set_threads(world, 3);
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        Position *p = ecs_get_ptr(world, e + i, Position);
+        test_int(p->x, ENTITIES - i);
+    }    
+
+    ecs_fini(world);
+}

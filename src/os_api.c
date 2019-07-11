@@ -179,6 +179,10 @@ void ecs_os_enable_dbg(bool enable) {
     ecs_os_api_debug_enabled = enable;
 }
 
+bool ecs_os_dbg_enabled(void) {
+    return ecs_os_api_debug_enabled;
+}
+
 void ecs_os_gettime(ecs_time_t *timeOut)
 {
     uint64_t now = ecs_os_time_now();

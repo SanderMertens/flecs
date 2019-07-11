@@ -147,9 +147,7 @@ uint32_t ecs_table_insert(
 
     /* Fist add entity to column with entity ids */
     ecs_entity_t *e = ecs_vector_add(&columns[0].data, &handle_arr_params);
-    if (!e) {
-        return -1;
-    }
+    ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
 
     *e = entity;
 
@@ -163,9 +161,7 @@ uint32_t ecs_table_insert(
             ecs_vector_params_t params = {.element_size = size};
             void *old_vector = columns[i].data;
 
-            if (!ecs_vector_add(&columns[i].data, &params)) {
-                return -1;
-            }
+            ecs_vector_add(&columns[i].data, &params);
             
             if (old_vector != columns[i].data) {
                 reallocd = true;
@@ -262,9 +258,7 @@ uint32_t ecs_table_grow(
 
     /* Fist add entity to column with entity ids */
     ecs_entity_t *e = ecs_vector_addn(&columns[0].data, &handle_arr_params, count);
-    if (!e) {
-        return -1;
-    }
+    ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
 
     uint32_t i;
     for (i = 0; i < count; i ++) {
@@ -281,9 +275,7 @@ uint32_t ecs_table_grow(
         }
         void *old_vector = columns[i].data;
 
-        if (!ecs_vector_addn(&columns[i].data, &params, count)) {
-            return -1;
-        }
+        ecs_vector_addn(&columns[i].data, &params, count);
 
         if (old_vector != columns[i].data) {
             reallocd = true;
@@ -310,16 +302,17 @@ int16_t ecs_table_dim(
     ecs_table_column_t *columns = table->columns;
     uint32_t column_count = ecs_vector_count(table->type);
 
-    if (!ecs_vector_set_size(&columns[0].data, &handle_arr_params, count)) {
-        return -1;
-    }
+    uint32_t size = ecs_vector_set_size(
+        &columns[0].data, &handle_arr_params, count);
+    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
 
     uint32_t i;
     for (i = 1; i < column_count + 1; i ++) {
         ecs_vector_params_t params = {.element_size = columns[i].size};
-        if (!ecs_vector_set_size(&columns[i].data, &params, count)) {
-            return -1;
-        }
+        uint32_t size = ecs_vector_set_size(&columns[i].data, &params, count);
+        ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
+        (void)size;
     }
 
     return 0;
@@ -329,23 +322,4 @@ uint64_t ecs_table_count(
     ecs_table_t *table)
 {
     return ecs_vector_count(table->columns[0].data);
-}
-
-uint32_t ecs_table_row_size(
-    ecs_table_t *table)
-{
-    uint32_t i, count = ecs_vector_count(table->type);
-    uint32_t size = 0;
-
-    for (i = 0; i < count; i ++) {
-        size += table->columns[i].size;
-    }
-
-    return size;
-}
-
-uint32_t ecs_table_rows_dimensioned(
-    ecs_table_t *table)
-{
-    return ecs_vector_size(table->columns[0].data);
 }

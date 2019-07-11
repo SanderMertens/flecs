@@ -245,7 +245,7 @@ void mark_parents(
         ecs_entity_t e = array[i];
 
         if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {
-            ecs_set_watching(world, e & ECS_ENTITY_MASK, true);
+            ecs_set_watch(world, e & ECS_ENTITY_MASK);
         } else if (!(e & ECS_ENTITY_FLAGS_MASK)) {
             break;
         }
@@ -888,7 +888,7 @@ ecs_entity_t ecs_new_prefab(
     const char *id,
     const char *expr)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
    
     EcsTypeComponent type = type_from_expr(world, expr);
     type.resolved = ecs_type_merge_intern(
@@ -912,7 +912,7 @@ ecs_entity_t ecs_new_entity(
     const char *id,
     const char *expr)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
    
     EcsTypeComponent type = type_from_expr(world, expr);
 
@@ -972,7 +972,7 @@ ecs_entity_t ecs_type_get_entity(
     ecs_type_t type,
     uint32_t index)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!type) {
         return 0;

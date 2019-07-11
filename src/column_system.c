@@ -141,6 +141,10 @@ void add_table(
         ecs_system_expr_elem_kind_t kind = column->kind;
         ecs_system_expr_oper_kind_t oper_kind = column->oper_kind;
 
+        /* NOT operators are converted to EcsFromEmpty */
+        ecs_assert(oper_kind != EcsOperNot || kind == EcsFromEmpty, 
+            ECS_INTERNAL_ERROR, NULL);
+
         /* Column that retrieves data from self or a fixed entity */
         if (kind == EcsFromSelf || kind == EcsFromEntity) {
             if (oper_kind == EcsOperAnd) {
@@ -158,7 +162,7 @@ void add_table(
             }
 
         /* Column that just passes a handle to the system (no data) */
-        } else if (kind == EcsFromId) {
+        } else if (kind == EcsFromEmpty) {
             component = column->is.component;
             table_data[i] = 0;
 
@@ -194,7 +198,7 @@ void add_table(
 
         /* This column does not retrieve data from a static entity (either
          * EcsFromSystem or EcsFromContainer) and is not just a handle */
-        if (!entity && kind != EcsFromId) {
+        if (!entity && kind != EcsFromEmpty) {
             if (component) {
                 /* Retrieve offset for component */
                 table_data[i] = ecs_type_index_of(table->type, component);
@@ -217,9 +221,6 @@ void add_table(
                 /* ecs_table_column_offset may return -1 if the component comes
                  * from a prefab. If so, the component will be resolved as a
                  * reference (see below) */
-            } else {
-                /* Columns with a NOT expression have no data */
-                table_data[i] = 0;
             }
         }
 
@@ -291,7 +292,7 @@ void add_table(
                             false,
                             true);
 
-                        ecs_set_watching(world, e, true);                     
+                        ecs_set_watch(world, e);                     
                     } else {
                         ref_data[ref].cached_ptr = NULL;
                     }
@@ -816,9 +817,8 @@ ecs_entity_t ecs_new_col_system(
     ecs_system_action_t action)
 {
     uint32_t count = ecs_columns_count(sig);
-    if (!count) {
-        assert(0);
-    }
+
+    ecs_assert(count != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = _ecs_new(
         world, world->t_col_system);
@@ -850,11 +850,8 @@ ecs_entity_t ecs_new_col_system(
     system_data->inactive_tables = ecs_vector_new(
         &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
 
-    if (ecs_parse_component_expr(
-        world, sig, ecs_parse_signature_action, system_data) != 0)
-    {
-        assert(0);
-    }
+    ecs_parse_component_expr(
+        world, sig, ecs_parse_signature_action, system_data);
 
     ecs_system_compute_and_families(world, &system_data->base);
 
@@ -885,9 +882,11 @@ ecs_entity_t ecs_new_col_system(
             elem = ecs_vector_add(&world->pre_store_systems, &handle_arr_params);
         } else if (kind == EcsOnStore) {
             elem = ecs_vector_add(&world->on_store_systems, &handle_arr_params);
-        } else {
-            ecs_abort(ECS_INVALID_PARAMETERS, NULL);
         }
+
+        /* Parameter checking happened before this, kind must have been one of
+         * the checked values. */
+        ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     *elem = result;

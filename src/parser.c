@@ -38,7 +38,7 @@ char* parse_complex_elem(
     char *dot = strchr(bptr, '.');
     if (dot) {
         if (bptr == dot) {
-            *elem_kind = EcsFromId;
+            *elem_kind = EcsFromEmpty;
         } else if (!strncmp(bptr, "CONTAINER", dot - bptr)) {
             *elem_kind = EcsFromContainer;
         } else if (!strncmp(bptr, "SYSTEM", dot - bptr)) {
@@ -55,7 +55,7 @@ char* parse_complex_elem(
         bptr = dot + 1;
 
         if (!bptr[0]) {
-            ecs_abort(ECS_INVALID_EXPRESSION, bptr);
+            return NULL;
         }
     }
 
@@ -123,6 +123,7 @@ int ecs_parse_component_expr(
     ecs_assert(buffer != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     bool complex_expr = false;
+    bool prev_is_0 = false;
     ecs_system_expr_elem_kind_t elem_kind = EcsFromSelf;
     ecs_system_expr_oper_kind_t oper_kind = EcsOperAnd;
     const char *source;
@@ -130,6 +131,11 @@ int ecs_parse_component_expr(
     for (bptr = buffer, ch = sig[0], ptr = sig; ch; ptr++) {
         ptr = skip_space(ptr);
         ch = *ptr;
+
+        if (prev_is_0) {
+            /* 0 can only apppear by itself */
+            ecs_abort(ECS_INVALID_SIGNATURE, sig);
+        }
 
         if (ch == ',' || ch == '|' || ch == '\0') {
             if (bptr == buffer) {
@@ -142,29 +148,32 @@ int ecs_parse_component_expr(
             source = NULL;
 
             if (complex_expr) {
+                ecs_system_expr_oper_kind_t prev_oper_kind = oper_kind;
                 bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source);
                 if (!bptr) {
                     ecs_abort(ECS_INVALID_EXPRESSION, sig);
                 }
+
+                if (oper_kind == EcsOperNot && prev_oper_kind == EcsOperOr) {
+                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
+                }
             }
 
-            if (oper_kind == EcsOperNot && ch == '|') {
-                /* Cannot combine OR and NOT */
-                ecs_abort(ECS_INVALID_EXPRESSION, sig);
-            }
+           if (oper_kind == EcsOperOr) {
+                if (elem_kind == EcsFromEmpty) {
+                    /* Cannot OR handles */
+                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
+                }
+            }            
 
             if (!strcmp(bptr, "0")) {
-                if (oper_kind != EcsOperAnd) {
-                    /* Cannot combine 0 component with operators */
+                if (bptr != buffer) {
+                    /* 0 can only appear by itself */
                     ecs_abort(ECS_INVALID_EXPRESSION, sig);
                 }
 
-                if (elem_kind != EcsFromSelf) {
-                    /* Cannot get 0 component from anything other than entity */
-                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
-                }
-
-                elem_kind = EcsFromId;
+                elem_kind = EcsFromEmpty;
+                prev_is_0 = true;
             }
 
             char *source_id = NULL;
@@ -192,10 +201,6 @@ int ecs_parse_component_expr(
             elem_kind = EcsFromSelf;
 
             if (ch == '|') {
-                if (elem_kind == EcsFromId) {
-                    /* Cannot OR handles */
-                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
-                }
                 oper_kind = EcsOperOr;
             } else {
                 oper_kind = EcsOperAnd;

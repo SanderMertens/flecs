@@ -25,7 +25,7 @@ void match_type(
         } else if (kind == EcsOnSet) {
             index = world->type_sys_set_index;
         } else {
-            ecs_abort(ECS_INVALID_PARAMETERS, NULL);
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
         ecs_vector_t *systems = NULL;
@@ -65,12 +65,12 @@ bool has_refs(
     for (i = 0; i < count; i ++) {
         ecs_system_expr_elem_kind_t elem_kind = columns[i].kind;
 
-        if (columns[i].oper_kind == EcsOperNot && elem_kind == EcsFromId) {
+        if (columns[i].oper_kind == EcsOperNot && elem_kind == EcsFromEmpty) {
             /* Special case: if oper kind is Not and the query contained a
              * shared expression, the expression is translated to FromId to
              * prevent resolving the ref */
             return true;
-        } else if (elem_kind != EcsFromSelf && elem_kind != EcsFromId) {
+        } else if (elem_kind != EcsFromSelf && elem_kind != EcsFromEmpty) {
             /* If the component is not from the entity being iterated over, and
              * the column is not just passing an id, it must be a reference to
              * another entity. */
@@ -132,7 +132,7 @@ ecs_entity_t new_row_system(
         ecs_system_column_t *column = &buffer[i];
         *h = column->is.component;
 
-        if (column->kind != EcsFromId) {
+        if (column->kind != EcsFromEmpty) {
             type_id = ecs_type_add_intern(
                 world, NULL, type_id, column->is.component);
         }
@@ -285,7 +285,7 @@ int ecs_parse_signature_action(
                 ecs_abort(ECS_UNRESOLVED_IDENTIFIER, source_id);
             }
 
-            ecs_set_watching(world, elem->source, true);
+            ecs_set_watch(world, elem->source);
         }
 
     /* OR columns store a type id instead of a single component */
@@ -311,7 +311,7 @@ int ecs_parse_signature_action(
      * ecs_type_contains. */
     } else if (oper_kind == EcsOperNot) {
         elem = ecs_vector_add(&system_data->columns, &column_arr_params);
-        elem->kind = EcsFromId; /* Just pass handle to system */
+        elem->kind = EcsFromEmpty; /* Just pass handle to system */
         elem->oper_kind = EcsOperNot;
         elem->is.component = component;
 
@@ -460,7 +460,7 @@ ecs_type_t ecs_notify_row_system(
 }
 
 /** Run a task. A task is a system that contains no columns that can be matched
- * against a table. Examples of such columns are EcsFromSystem or EcsFromId.
+ * against a table. Examples of such columns are EcsFromSystem or EcsFromEmpty.
  * Tasks are ran once every frame. */
 void ecs_run_task(
     ecs_world_t *world,
@@ -490,17 +490,31 @@ ecs_entity_t ecs_new_system(
     const char *sig,
     ecs_system_action_t action)
 {
-    ecs_entity_t result = ecs_lookup(world, id);
-    if (result) {
-        return result;
-    }
+    ecs_assert(kind == EcsManual ||
+               kind == EcsOnLoad ||
+               kind == EcsPostLoad ||
+               kind == EcsPreUpdate ||
+               kind == EcsOnUpdate ||
+               kind == EcsOnValidate ||
+               kind == EcsPostUpdate ||
+               kind == EcsPreStore ||
+               kind == EcsOnStore ||
+               kind == EcsOnAdd ||
+               kind == EcsOnRemove ||
+               kind == EcsOnSet,
+               ECS_INVALID_PARAMETER, NULL);
 
     bool needs_tables = ecs_needs_tables(world, sig);
 
     if (!needs_tables && (kind == EcsOnAdd ||
         kind == EcsOnSet))
     {
-        ecs_abort(ECS_INVALID_PARAMETERS, 0);
+        ecs_abort(ECS_INVALID_PARAMETER, 0);
+    }
+
+    ecs_entity_t result = ecs_lookup(world, id);
+    if (result) {
+        return result;
     }
 
     if (needs_tables && (kind == EcsOnLoad || kind == EcsPostLoad ||
@@ -515,7 +529,7 @@ ecs_entity_t ecs_new_system(
     {
         result = new_row_system(world, id, kind, needs_tables, sig, action);
     } else {
-        ecs_abort(ECS_INVALID_PARAMETERS, 0);
+        ecs_abort(ECS_INVALID_PARAMETER, 0);
     }
 
     EcsSystem *system_data = ecs_get_ptr(world, result, EcsColSystem);

@@ -601,4 +601,121 @@ void Type_type_from_empty_entity_in_progress() {
     ecs_fini(world);
 }
 
+void Type_get_type() {
+    ecs_world_t *world = ecs_init();
 
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_type_t t = ecs_get_type(world, e);
+    test_assert(t != NULL);
+    test_int(ecs_vector_count(t), 1);
+    
+    ecs_entity_t *type_array = ecs_vector_first(t);
+    test_assert(type_array != NULL);
+    test_int(type_array[0], ecs_entity(Position));
+
+    ecs_fini(world);
+}
+
+void Type_get_type_from_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_type_t t = ecs_get_type(world, e);
+    test_assert(t == NULL);
+
+    ecs_fini(world);
+}
+
+void Type_get_type_from_0() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_type_t t = ecs_get_type(world, 0);
+    test_assert(t == NULL);
+
+    ecs_fini(world);
+}
+
+void Type_entity_from_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TYPE(world, MyType, Position);
+
+    ecs_entity_t e = ecs_type_to_entity(world, ecs_type(MyType));
+    test_assert(e != 0);
+    test_assert(e == ecs_entity(Position));
+
+    ecs_fini(world);
+}
+
+void Type_entity_from_empty_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TYPE(world, MyType, 0);
+
+    ecs_entity_t e = ecs_type_to_entity(world, ecs_type(MyType));
+    test_assert(e == 0);
+
+    ecs_fini(world);
+}
+
+void Type_entity_from_type_w_2_elements() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, MyType, Position, Velocity);
+    
+    test_expect_abort();
+
+    ecs_type_to_entity(world, ecs_type(MyType));
+
+    ecs_fini(world);
+}
+
+void Type_type_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, Entity, Position);
+
+    ecs_type_t t = ecs_type_from_entity(world, Entity);
+    test_assert(t != NULL);
+    test_int(ecs_vector_count(t), 1);
+
+    ecs_entity_t *type_array = ecs_vector_first(t);
+    test_int(type_array[0], Entity);
+
+    ecs_fini(world);
+}
+
+void Type_type_from_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Entity, 0);
+
+    ecs_type_t t = ecs_type_from_entity(world, Entity);
+    test_assert(t != NULL);
+    test_int(ecs_vector_count(t), 1);
+
+    ecs_entity_t *type_array = ecs_vector_first(t);
+    test_int(type_array[0], Entity);
+
+    ecs_fini(world);
+}
+
+void Type_type_from_0() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_type_t t = ecs_type_from_entity(world, 0);
+    test_assert(t == NULL);
+
+    ecs_fini(world);
+}

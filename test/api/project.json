@@ -24,7 +24,8 @@
                 "tag",
                 "type_w_tag",
                 "type_w_2_tags",
-                "type_w_tag_mixed"
+                "type_w_tag_mixed",
+                "redefine_component"
             ]
         }, {
             "id": "New_w_Count",
@@ -113,7 +114,11 @@
                 "any_of_2_of_1",
                 "any_of_1_of_0",
                 "any_2_of_2_disjunct",
-                "has_in_progress"
+                "any_of_0_0",
+                "any_of_0_1",
+                "any_of_0_zero_entity",
+                "has_in_progress",
+                "has_of_zero"
             ]
         }, {
             "id": "Count",
@@ -174,7 +179,11 @@
                 "lookup_child",
                 "lookup_child_w_component",
                 "lookup_in_progress",
-                "lookup_child_in_progress"
+                "lookup_child_in_progress",
+                "lookup_w_null_id",
+                "get_id",
+                "get_id_no_id",
+                "get_id_from_empty"
             ]
         }, {
             "id": "Singleton",
@@ -204,6 +213,33 @@
                 "tag_w_value",
                 "1_tag_1_component",
                 "1_tag_1_component_w_value"
+            ]
+        }, {
+            "id": "SystemMisc",
+            "testcases": [
+                "invalid_not_without_id",
+                "invalid_optional_without_id",
+                "invalid_system_without_id",
+                "invalid_container_without_id",
+                "invalid_cascade_without_id",
+                "invalid_entity_without_id",
+                "invalid_empty_without_id",
+                "invalid_singleton_without_id",
+                "invalid_empty_element",
+                "invalid_empty_element_w_space",
+                "invalid_empty_or",
+                "invalid_empty_or_w_space",
+                "invalid_or_w_not",
+                "invalid_not_w_or",
+                "invalid_0_w_and",
+                "invalid_0_w_from_system",
+                "invalid_0_w_from_container",
+                "invalid_0_w_from_cascade",
+                "invalid_0_w_from_entity",
+                "invalid_0_w_from_empty",
+                "invalid_0_w_from_singleton",
+                "invalid_or_w_empty",
+                "invalid_phase"
             ]
         }, {
             "id": "SystemOnAdd",
@@ -357,7 +393,11 @@
                 "orphan_twice",
                 "adopt_orphan",
                 "adopt_2_orphan_1",
-                "get_ptr_container"
+                "get_ptr_container",
+                "get_parent",
+                "get_parent_no_matching_comp",
+                "get_parent_two_parents",
+                "get_parent_no_parent"
             ]
         }, {
             "id": "Prefab",
@@ -471,6 +511,7 @@
                 "entity_range_add_existing_in_progress",
                 "entity_range_add_in_range_in_progress",
                 "entity_range_add_out_of_range_in_progress",
+                "entity_range_out_of_range_check_disabled",
                 "dim",
                 "dim_type",
                 "dim_dim_type",
@@ -487,7 +528,10 @@
                 "quit",
                 "get_delta_time",
                 "get_delta_time_auto",
-                "recreate_world"
+                "recreate_world",
+                "init_w_args_set_threads",
+                "init_w_args_set_fps",
+                "init_w_args_enable_dbg"
             ]
         }, {
             "id": "Type",
@@ -523,9 +567,18 @@
                 "invalid_container_type_expression",
                 "invalid_system_type_expression",
                 "type_from_empty_entity",
-                "type_from_empty_entity_in_progress"
+                "type_from_empty_entity_in_progress",
+                "get_type",
+                "get_type_from_empty",
+                "get_type_from_0",
+                "entity_from_type",
+                "entity_from_empty_type",
+                "entity_from_type_w_2_elements",
+                "type_from_entity",
+                "type_from_empty",
+                "type_from_0"
             ]
-        }, { 
+        }, {
             "id": "Run",
             "testcases": [
                 "run",
@@ -549,7 +602,8 @@
                 "run_w_type_filter_of_2",
                 "run_w_container_filter",
                 "run_comb_10_entities_1_type",
-                "run_comb_10_entities_2_types"
+                "run_comb_10_entities_2_types",
+                "run_w_interrupt"
             ]
         }, {
             "id": "MultiThread",
@@ -583,7 +637,8 @@
                 "3_thread_test_combs_100_entity_2_types",
                 "4_thread_test_combs_100_entity_2_types",
                 "5_thread_test_combs_100_entity_2_types",
-                "6_thread_test_combs_100_entity_2_types"
+                "6_thread_test_combs_100_entity_2_types",
+                "change_thread_count"
             ]
         }, {
             "id": "SingleThreadStaging",

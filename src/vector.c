@@ -34,18 +34,6 @@ ecs_vector_t* ecs_vector_new(
     return result;
 }
 
-ecs_vector_t* ecs_vector_new_from_buffer(
-    const ecs_vector_params_t *params,
-    uint32_t size,
-    void *buffer)
-{
-    ecs_vector_t *result = ecs_vector_new(params, size);
-    void *my_buffer = ARRAY_BUFFER(result);
-    memcpy(my_buffer, buffer, size * params->element_size);
-    result->count = size;
-    return result;
-}
-
 void ecs_vector_free(
     ecs_vector_t *array)
 {
@@ -158,9 +146,7 @@ uint32_t ecs_vector_remove_index(
     void *buffer = ARRAY_BUFFER(array);
     void *elem = ECS_OFFSET(buffer, index * element_size);
 
-    if (index >= count) {
-        return count;
-    }
+    ecs_assert(index < count, ECS_INVALID_PARAMETER, NULL);
 
     if (index != (count - 1)) {
         void *last_elem = ECS_OFFSET(buffer, element_size * (count - 1));
@@ -282,9 +268,7 @@ uint32_t ecs_vector_get_index(
     const ecs_vector_params_t *params,
     void *elem)
 {
-    if (!elem) {
-        return 0;
-    }
+    ecs_assert(elem != NULL, ECS_INVALID_PARAMETER, NULL);
     uint32_t element_size = params->element_size;
     void *buffer = ARRAY_BUFFER(array);
     return ((char*)elem - (char*)buffer) / element_size;

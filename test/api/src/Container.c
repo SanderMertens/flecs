@@ -344,3 +344,60 @@ void Container_child_w_count_w_type() {
 
     ecs_fini(world);
 }
+
+void Container_get_parent() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, Parent, Position);
+    ECS_ENTITY(world, Entity, CHILDOF | Parent);
+
+    ecs_entity_t parent = ecs_get_parent(world, Entity, Position);
+    test_assert(parent == Parent);
+
+    ecs_fini(world);
+}
+
+void Container_get_parent_no_matching_comp() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_ENTITY(world, Parent, Position);
+    ECS_ENTITY(world, Entity, CHILDOF | Parent);
+
+    ecs_entity_t parent = ecs_get_parent(world, Entity, Velocity);
+    test_assert(parent == 0);
+
+    ecs_fini(world);
+}
+
+void Container_get_parent_two_parents() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_ENTITY(world, Parent1, Position);
+    ECS_ENTITY(world, Parent2, Velocity);
+    ECS_ENTITY(world, Entity, CHILDOF | Parent1, CHILDOF | Parent2);
+
+    ecs_entity_t parent = ecs_get_parent(world, Entity, Position);
+    test_assert(parent == Parent1);
+
+    parent = ecs_get_parent(world, Entity, Velocity);
+    test_assert(parent == Parent2);
+
+    ecs_fini(world);
+}
+
+void Container_get_parent_no_parent() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, Entity, Position);
+
+    ecs_entity_t parent = ecs_get_parent(world, Entity, Position);
+    test_assert(parent == 0);
+
+    ecs_fini(world);
+}

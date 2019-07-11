@@ -1966,7 +1966,7 @@ void AddPrefabInProgress(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, Prefab, 2);
     ECS_COLUMN_COMPONENT(rows, Velocity, 3);
 
-    ecs_entity_t Prefab = ecs_entity_from_type(rows->world, ecs_type(Prefab));
+    ecs_entity_t Prefab = ecs_type_to_entity(rows->world, ecs_type(Prefab));
 
     int i;
     for (i = 0; i < rows->count; i ++) {

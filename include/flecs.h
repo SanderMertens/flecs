@@ -427,6 +427,11 @@ void ecs_set_threads(
     ecs_world_t *world,
     uint32_t threads);
 
+/** Get number of configured threads */
+FLECS_EXPORT
+uint32_t ecs_get_threads(
+    ecs_world_t *world);
+
 /** Get index of current worker thread */
 FLECS_EXPORT
 uint16_t ecs_get_thread_index(
@@ -457,6 +462,11 @@ FLECS_EXPORT
 void ecs_set_target_fps(
     ecs_world_t *world,
     float fps);
+
+/** Get number of configured threads */
+FLECS_EXPORT
+uint32_t ecs_get_target_fps(
+    ecs_world_t *world);
 
 /** Enables admin web server
  * This operation allows an profile and enable/disable registered systems
@@ -1076,10 +1086,13 @@ bool ecs_contains(
  * @param component The component which the resovled container should have.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_get_parent(
+ecs_entity_t _ecs_get_parent(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
+
+#define ecs_get_parent(world, entity, component)\
+    _ecs_get_parent(world, entity, ecs_entity(component))
 
 /** Get type of entity.
  * This operation returns the entity type, which is a handle to the a list of
@@ -1226,7 +1239,7 @@ ecs_type_t ecs_type_from_entity(
  * @returns The entity associated with the type.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_entity_from_type(
+ecs_entity_t ecs_type_to_entity(
     ecs_world_t *world,
     ecs_type_t type);
 
@@ -1866,7 +1879,7 @@ void _ecs_assert(
 #endif
 
 #define ECS_INVALID_HANDLE (1)
-#define ECS_INVALID_PARAMETERS (2)
+#define ECS_INVALID_PARAMETER (2)
 #define ECS_INVALID_COMPONENT_ID (3)
 #define ECS_INVALID_EXPRESSION (4)
 #define ECS_INVALID_TYPE_EXPRESSION (5)
@@ -1897,7 +1910,7 @@ void _ecs_assert(
 #define ECS_THREAD_ERROR (30)
 #define ECS_MISSING_OS_API (31)
 #define ECS_TYPE_TOO_LARGE (32)
-#define ECS_INVALID_PREAFB_CHILD_TYPE (33)
+#define ECS_INVALID_PREFAB_CHILD_TYPE (33)
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */
 

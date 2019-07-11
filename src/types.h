@@ -95,7 +95,7 @@ typedef enum ecs_system_expr_elem_kind_t {
     EcsFromSelf,            /* Get component from self (default) */
     EcsFromContainer,       /* Get component from container */
     EcsFromSystem,          /* Get component from system */
-    EcsFromId,              /* Get entity handle by id */
+    EcsFromEmpty,              /* Get entity handle by id */
     EcsFromEntity,          /* Get component from other entity */
     EcsCascade              /* Walk component in cascading (hierarchy) order */
 } ecs_system_expr_elem_kind_t;

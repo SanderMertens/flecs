@@ -12,6 +12,21 @@ void Lookup_lookup() {
     ecs_fini(world);
 }
 
+void Lookup_lookup_w_null_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, MyEntity, 0);
+
+    /* Ensure this doesn't crash the lookup function */
+    ecs_set(world, 0, EcsId, {NULL});
+
+    ecs_entity_t lookup = ecs_lookup(world, "MyEntity");
+    test_assert(lookup != 0);
+    test_assert(lookup == MyEntity);
+
+    ecs_fini(world);
+}
+
 void Lookup_lookup_component() {
     ecs_world_t *world = ecs_init();
 
@@ -125,6 +140,42 @@ void Lookup_lookup_child_in_progress() {
     ECS_SYSTEM(world, LookupChildSystem, EcsOnUpdate, 0);
 
     ecs_progress(world, 1);
+
+    ecs_fini(world);
+}
+
+void Lookup_get_id() {
+    ecs_world_t *world = ecs_init();
+
+    /* Ensure this doesn't crash the lookup function */
+    ecs_entity_t e = ecs_set(world, 0, EcsId, {"Entity"});
+    const char *id = ecs_get_id(world, e);
+    test_assert(id != NULL);
+    test_str(id, "Entity");
+
+    ecs_fini(world);
+}
+
+void Lookup_get_id_no_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    /* Ensure this doesn't crash the lookup function */
+    ecs_entity_t e = ecs_new(world, Position);
+    const char *id = ecs_get_id(world, e);
+    test_assert(id == NULL);
+
+    ecs_fini(world);
+}
+
+void Lookup_get_id_from_empty() {
+    ecs_world_t *world = ecs_init();
+
+    /* Ensure this doesn't crash the lookup function */
+    ecs_entity_t e = ecs_new(world, 0);
+    const char *id = ecs_get_id(world, e);
+    test_assert(id == NULL);
 
     ecs_fini(world);
 }

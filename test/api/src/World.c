@@ -139,6 +139,31 @@ void World_entity_range_limit_out_of_range() {
     ecs_fini(world);
 }
 
+void World_entity_range_out_of_range_check_disabled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_enable_range_check(world, false);
+    ecs_set_entity_range(world, 50, 100);
+
+    /* Validate that range is being used when issuing new ids */
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(e, 50);
+
+    /* Validate that application does not abort when changing out of range */
+    ecs_entity_t e2 = ecs_set(world, 49, Position, {10, 20});
+    test_int(e2, 49);
+    test_assert( ecs_has(world, e2, Position));
+    
+    Position *p = ecs_get_ptr(world, e2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
 void AddToExisting(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, Velocity, 2);
 
@@ -831,6 +856,11 @@ void Dummy(ecs_rows_t *rows) { }
 void World_basic_stats() {
     ecs_world_t *world = ecs_init();
 
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_measure_frame_time(world, true);
+    ecs_measure_system_time(world, true);
+
     ecs_world_stats_t stats = {0};
 
     ecs_get_stats(world, &stats);
@@ -839,6 +869,7 @@ void World_basic_stats() {
     int init_table_count = stats.table_count;
     int init_component_count = stats.component_count;
     int init_entity_count = stats.entity_count;
+
 
     ecs_get_stats(world, &stats);
 
@@ -866,7 +897,7 @@ void World_basic_stats() {
     test_int(stats.component_count - init_component_count, 1);
     test_int(stats.entity_count - init_entity_count, 2);
 
-    ECS_SYSTEM(world, Move, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     ecs_get_stats(world, &stats);
 
@@ -901,6 +932,13 @@ void World_basic_stats() {
     test_int(stats.table_count - init_table_count, 3);
     test_int(stats.component_count - init_component_count, 3);
     test_int(stats.entity_count - init_entity_count, 6);
+
+    ecs_progress(world, 0);
+
+    ecs_get_stats(world, &stats);
+
+    test_assert(stats.system_time != 0);
+    test_assert(stats.frame_time != 0);
 
     ecs_free_stats(&stats);
 
@@ -955,3 +993,46 @@ void World_recreate_world() {
 
     test_assert(ecs_fini(world) == 0);
 }
+
+void World_init_w_args_set_threads() {
+    ecs_world_t *world = ecs_init_w_args(3, ((char*[]){
+        "test",
+        "--threads", "4",
+        NULL
+    }));
+
+    test_assert(world != NULL);
+
+    test_int(ecs_get_threads(world), 4);
+
+    ecs_fini(world);
+}
+
+void World_init_w_args_set_fps() {
+    ecs_world_t *world = ecs_init_w_args(3, ((char*[]){
+        "test",
+        "--fps", "60",
+        NULL
+    }));
+
+    test_assert(world != NULL);
+
+    test_int(ecs_get_target_fps(world), 60);
+
+    ecs_fini(world);
+}
+
+void World_init_w_args_enable_dbg() {
+    ecs_world_t *world = ecs_init_w_args(2, ((char*[]){
+        "test",
+        "--debug",
+        NULL
+    }));
+
+    test_assert(world != NULL);
+
+    test_assert(ecs_os_dbg_enabled() == true);
+
+    ecs_fini(world);
+}
+

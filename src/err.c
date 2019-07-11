@@ -42,7 +42,7 @@ const char* ecs_strerror(
     switch (error_code) {
     case ECS_INVALID_HANDLE:
         return "invalid handle";
-    case ECS_INVALID_PARAMETERS:
+    case ECS_INVALID_PARAMETER:
         return "invalid parameters";
     case ECS_INVALID_COMPONENT_ID:
         return "invalid component id";
@@ -104,7 +104,7 @@ const char* ecs_strerror(
         return "missing implementation for OS API function";
     case ECS_TYPE_TOO_LARGE:
         return "type contains too many entities";
-    case ECS_INVALID_PREAFB_CHILD_TYPE:
+    case ECS_INVALID_PREFAB_CHILD_TYPE:
         return "a prefab child type must have at least one INSTANCEOF element";
     }
 

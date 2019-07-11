@@ -300,9 +300,9 @@ ecs_vector_t** frame_system_array(
         return &world->on_store_systems;
     } else if (kind == EcsManual) {
         return &world->on_demand_systems;        
-    } else {
-        ecs_abort(ECS_INTERNAL_ERROR, 0);
     }
+    
+    ecs_abort(ECS_INTERNAL_ERROR, 0);
 
     return NULL;
 }
@@ -358,27 +358,6 @@ void ecs_world_activate_system(
     }
 }
 
-union RowUnion {
-    ecs_row_t row;
-    uint64_t value;
-};
-
-/** Utility to translate from uint64 to ecs_row_t */
-ecs_row_t ecs_to_row(
-    uint64_t value)
-{
-    union RowUnion u = {.value = value};
-    return u.row;
-}
-
-/** Utility to translate from ecs_row_t to uint64 */
-uint64_t ecs_from_row(
-    ecs_row_t row)
-{
-    union RowUnion u = {.row = row};
-    return u.value;
-}
-
 ecs_stage_t *ecs_get_stage(
     ecs_world_t **world_ptr)
 {
@@ -393,9 +372,9 @@ ecs_stage_t *ecs_get_stage(
         ecs_thread_t *thread = (ecs_thread_t*)world;
         *world_ptr = thread->world;
         return thread->stage;
-    } else {
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+
+    ecs_abort(ECS_INTERNAL_ERROR, NULL);
     
     return NULL;
 }
@@ -494,9 +473,9 @@ void add_prefab_child_to_builder(
 
         ecs_entity_t *array = ecs_vector_first(type);
         uint32_t count = ecs_vector_count(type);
-        if (!(array[count - 1] & ECS_INSTANCEOF)) {
-            ecs_abort(ECS_INVALID_PREAFB_CHILD_TYPE, NULL);
-        }
+
+        ecs_assert((array[count - 1] & ECS_INSTANCEOF) != 0, 
+            ECS_INVALID_PREFAB_CHILD_TYPE, NULL);
     } else {
         ecs_entity_t array[] = {
             child | ECS_INSTANCEOF,
@@ -753,10 +732,11 @@ ecs_world_t* ecs_init_w_args(
     for (i = 1; i < argc; i ++) {
         if (argv[i][0] == '-') {
             bool parsed = false;
+            int threads;
             
             ARG(0, "threads", 
-                world->arg_threads = atoi(argv[i + 1]); 
-                ecs_set_threads(world, world->arg_threads);
+                threads = atoi(argv[i + 1]); 
+                ecs_set_threads(world, threads);
                 i ++;
             );
 
@@ -1358,8 +1338,8 @@ void ecs_set_entity_range(
     ecs_entity_t id_end)
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(!id_end || id_end > id_start, ECS_INVALID_PARAMETERS, NULL);
-    ecs_assert(!id_end || id_end > world->last_handle, ECS_INVALID_PARAMETERS, NULL);
+    ecs_assert(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!id_end || id_end > world->last_handle, ECS_INVALID_PARAMETER, NULL);
 
     if (world->last_handle < id_start) {
         world->last_handle = id_start - 1;
@@ -1494,4 +1474,16 @@ uint16_t ecs_get_thread_index(
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
+}
+
+uint32_t ecs_get_threads(
+    ecs_world_t *world)
+{
+    return ecs_vector_count(world->worker_threads);
+}
+
+uint32_t ecs_get_target_fps(
+    ecs_world_t *world)
+{
+    return world->target_fps;
 }
