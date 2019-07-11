@@ -365,3 +365,55 @@ void MultiThreadStaging_stress_set_entity_random_components() {
 
     ecs_fini(world);
 }
+
+static
+void InitVelocity(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Velocity, v, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        v[i].x = 10;
+        v[i].y = 20;
+    }
+}
+
+static
+void AddVelocity(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Velocity);
+    }
+}
+
+void MultiThreadStaging_2_threads_on_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
+    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, .Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new_w_count(world, Position, 10);
+    test_assert(e != 0);
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 0);
+
+    ecs_entity_t i;
+    for (i = e; i < e + 10; i ++) {
+        test_assert( ecs_has(world, i, Velocity));
+        Velocity *v = ecs_get_ptr(world, i, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 10);
+        test_int(v->y, 20);
+    }
+
+    ecs_fini(world);
+}

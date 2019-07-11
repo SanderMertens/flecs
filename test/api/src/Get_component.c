@@ -98,7 +98,14 @@ void Get_component_get_1_from_2_in_progress_from_main_stage() {
 static
 void Add_in_progress(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, Position, 1);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    ecs_entity_t ecs_entity(Velocity) = 0;
+    ecs_type_t ecs_type(Velocity) = NULL;
+
+    if (rows->column_count >= 2) {
+        ecs_entity(Velocity) = ecs_column_entity(rows, 2);
+        ecs_type(Velocity) = ecs_column_type(rows, 2);
+    }
 
     for (int i = 0; i < rows->count; i ++) {
         ecs_entity_t e = rows->entities[i];

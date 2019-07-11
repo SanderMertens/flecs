@@ -282,6 +282,18 @@ ecs_vector_t** frame_system_array(
     ecs_world_t *world,
     EcsSystemKind kind)
 {
+    ecs_assert(kind == EcsOnUpdate ||
+               kind == EcsOnValidate ||
+               kind == EcsPreUpdate ||
+               kind == EcsPostUpdate ||
+               kind == EcsPostLoad ||
+               kind == EcsOnLoad ||
+               kind == EcsPreStore ||
+               kind == EcsOnStore ||
+               kind == EcsManual,
+               ECS_INTERNAL_ERROR,
+               NULL);
+
     if (kind == EcsOnUpdate) {
         return &world->on_update_systems;
     } else if (kind == EcsOnValidate) {
@@ -302,8 +314,6 @@ ecs_vector_t** frame_system_array(
         return &world->on_demand_systems;        
     }
     
-    ecs_abort(ECS_INTERNAL_ERROR, 0);
-
     return NULL;
 }
 
@@ -362,6 +372,12 @@ ecs_stage_t *ecs_get_stage(
     ecs_world_t **world_ptr)
 {
     ecs_world_t *world = *world_ptr;
+
+    ecs_assert(world->magic == ECS_WORLD_MAGIC ||
+               world->magic == ECS_THREAD_MAGIC,
+               ECS_INTERNAL_ERROR,
+               NULL);
+
     if (world->magic == ECS_WORLD_MAGIC) {
         if (world->in_progress) {
             return &world->temp_stage;
@@ -373,8 +389,6 @@ ecs_stage_t *ecs_get_stage(
         *world_ptr = thread->world;
         return thread->stage;
     }
-
-    ecs_abort(ECS_INTERNAL_ERROR, NULL);
     
     return NULL;
 }

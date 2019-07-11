@@ -210,7 +210,14 @@ void SystemMisc_invalid_0_w_from_entity(void);
 void SystemMisc_invalid_0_w_from_empty(void);
 void SystemMisc_invalid_0_w_from_singleton(void);
 void SystemMisc_invalid_or_w_empty(void);
+void SystemMisc_invalid_component_id(void);
+void SystemMisc_invalid_entity_id(void);
+void SystemMisc_invalid_or_from_system(void);
 void SystemMisc_invalid_phase(void);
+void SystemMisc_redefine_row_system(void);
+void SystemMisc_system_w_or_prefab(void);
+void SystemMisc_system_w_or_disabled(void);
+void SystemMisc_system_w_or_disabled_and_prefab(void);
 
 // Testsuite 'SystemOnAdd'
 void SystemOnAdd_new_match_1_of_1(void);
@@ -239,6 +246,7 @@ void SystemOnAdd_override_after_add_in_on_add(void);
 void SystemOnAdd_set_after_add_in_on_add(void);
 void SystemOnAdd_add_again_in_progress(void);
 void SystemOnAdd_add_in_progress_before_system_def(void);
+void SystemOnAdd_disabled_system(void);
 
 // Testsuite 'SystemOnRemove'
 void SystemOnRemove_remove_match_1_of_1(void);
@@ -255,6 +263,7 @@ void SystemOnRemove_delete_match_2_of_3(void);
 void SystemOnRemove_delete_no_match_1(void);
 void SystemOnRemove_delete_no_match_2_of_1(void);
 void SystemOnRemove_delete_no_match_2_of_3(void);
+void SystemOnRemove_disabled_system(void);
 
 // Testsuite 'SystemOnSet'
 void SystemOnSet_set(void);
@@ -272,6 +281,7 @@ void SystemOnSet_on_set_after_override(void);
 void SystemOnSet_on_set_after_override_w_new(void);
 void SystemOnSet_on_set_after_override_w_new_w_count(void);
 void SystemOnSet_on_set_after_override_1_of_2_overridden(void);
+void SystemOnSet_disabled_system(void);
 
 // Testsuite 'SystemOnFrame'
 void SystemOnFrame_1_type_1_component(void);
@@ -307,6 +317,7 @@ void SystemOnFrame_match_disabled(void);
 void SystemOnFrame_match_disabled_and_enabled(void);
 void SystemOnFrame_match_prefab(void);
 void SystemOnFrame_match_prefab_and_normal(void);
+void SystemOnFrame_is_shared_on_column_not_set(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -475,6 +486,9 @@ void World_recreate_world(void);
 void World_init_w_args_set_threads(void);
 void World_init_w_args_set_fps(void);
 void World_init_w_args_enable_dbg(void);
+void World_no_threading(void);
+void World_no_time(void);
+void World_is_entity_enabled(void);
 
 // Testsuite 'Type'
 void Type_type_of_1_tostr(void);
@@ -649,6 +663,7 @@ void MultiThreadStaging_5_threads_add_to_current(void);
 void MultiThreadStaging_6_threads_add_to_current(void);
 void MultiThreadStaging_stress_create_delete_entity_random_components(void);
 void MultiThreadStaging_stress_set_entity_random_components(void);
+void MultiThreadStaging_2_threads_on_add(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
@@ -1359,7 +1374,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 23,
+        .testcase_count = 30,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -1450,14 +1465,42 @@ static bake_test_suite suites[] = {
                 .function = SystemMisc_invalid_or_w_empty
             },
             {
+                .id = "invalid_component_id",
+                .function = SystemMisc_invalid_component_id
+            },
+            {
+                .id = "invalid_entity_id",
+                .function = SystemMisc_invalid_entity_id
+            },
+            {
+                .id = "invalid_or_from_system",
+                .function = SystemMisc_invalid_or_from_system
+            },
+            {
                 .id = "invalid_phase",
                 .function = SystemMisc_invalid_phase
+            },
+            {
+                .id = "redefine_row_system",
+                .function = SystemMisc_redefine_row_system
+            },
+            {
+                .id = "system_w_or_prefab",
+                .function = SystemMisc_system_w_or_prefab
+            },
+            {
+                .id = "system_w_or_disabled",
+                .function = SystemMisc_system_w_or_disabled
+            },
+            {
+                .id = "system_w_or_disabled_and_prefab",
+                .function = SystemMisc_system_w_or_disabled_and_prefab
             }
         }
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 26,
+        .testcase_count = 27,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -1562,12 +1605,16 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_in_progress_before_system_def",
                 .function = SystemOnAdd_add_in_progress_before_system_def
+            },
+            {
+                .id = "disabled_system",
+                .function = SystemOnAdd_disabled_system
             }
         }
     },
     {
         .id = "SystemOnRemove",
-        .testcase_count = 14,
+        .testcase_count = 15,
         .testcases = (bake_test_case[]){
             {
                 .id = "remove_match_1_of_1",
@@ -1624,12 +1671,16 @@ static bake_test_suite suites[] = {
             {
                 .id = "delete_no_match_2_of_3",
                 .function = SystemOnRemove_delete_no_match_2_of_3
+            },
+            {
+                .id = "disabled_system",
+                .function = SystemOnRemove_disabled_system
             }
         }
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 15,
+        .testcase_count = 16,
         .testcases = (bake_test_case[]){
             {
                 .id = "set",
@@ -1690,12 +1741,16 @@ static bake_test_suite suites[] = {
             {
                 .id = "on_set_after_override_1_of_2_overridden",
                 .function = SystemOnSet_on_set_after_override_1_of_2_overridden
+            },
+            {
+                .id = "disabled_system",
+                .function = SystemOnSet_disabled_system
             }
         }
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 33,
+        .testcase_count = 34,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -1828,6 +1883,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "match_prefab_and_normal",
                 .function = SystemOnFrame_match_prefab_and_normal
+            },
+            {
+                .id = "is_shared_on_column_not_set",
+                .function = SystemOnFrame_is_shared_on_column_not_set
             }
         }
     },
@@ -2359,7 +2418,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 30,
+        .testcase_count = 33,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -2480,6 +2539,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "init_w_args_enable_dbg",
                 .function = World_init_w_args_enable_dbg
+            },
+            {
+                .id = "no_threading",
+                .function = World_no_threading
+            },
+            {
+                .id = "no_time",
+                .function = World_no_time
+            },
+            {
+                .id = "is_entity_enabled",
+                .function = World_is_entity_enabled
             }
         }
     },
@@ -3137,7 +3208,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "MultiThreadStaging",
-        .testcase_count = 7,
+        .testcase_count = 8,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_threads_add_to_current",
@@ -3166,6 +3237,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "stress_set_entity_random_components",
                 .function = MultiThreadStaging_stress_set_entity_random_components
+            },
+            {
+                .id = "2_threads_on_add",
+                .function = MultiThreadStaging_2_threads_on_add
             }
         }
     },

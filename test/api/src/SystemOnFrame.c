@@ -1,6 +1,14 @@
 #include <api.h>
 
 static
+void install_test_abort() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.abort = test_abort;
+    ecs_os_set_api(&os_api);
+}
+
+static
 void Iter(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     Velocity *v = NULL;
@@ -1619,3 +1627,28 @@ void SystemOnFrame_match_prefab_and_normal() {
 
     ecs_fini(world);
 }
+
+static
+void TestIsSharedOnNotSet(ecs_rows_t *rows) {
+    ecs_is_shared(rows, 2);
+}
+
+void SystemOnFrame_is_shared_on_column_not_set() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, Entity, Position);
+
+    ECS_SYSTEM(world, TestIsSharedOnNotSet, EcsOnUpdate, Position, ?Velocity);
+    
+    test_expect_abort();
+
+    ecs_progress(world, 0);
+
+    ecs_fini(world);
+}
+

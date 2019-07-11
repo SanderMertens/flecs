@@ -239,7 +239,14 @@
                 "invalid_0_w_from_empty",
                 "invalid_0_w_from_singleton",
                 "invalid_or_w_empty",
-                "invalid_phase"
+                "invalid_component_id",
+                "invalid_entity_id",
+                "invalid_or_from_system",
+                "invalid_phase",
+                "redefine_row_system",
+                "system_w_or_prefab",
+                "system_w_or_disabled",
+                "system_w_or_disabled_and_prefab"
             ]
         }, {
             "id": "SystemOnAdd",
@@ -269,7 +276,8 @@
                 "override_after_add_in_on_add",
                 "set_after_add_in_on_add",
                 "add_again_in_progress",
-                "add_in_progress_before_system_def"
+                "add_in_progress_before_system_def",
+                "disabled_system"
             ]
         }, {
             "id": "SystemOnRemove",
@@ -287,7 +295,8 @@
                 "delete_match_2_of_3",
                 "delete_no_match_1",
                 "delete_no_match_2_of_1",
-                "delete_no_match_2_of_3"
+                "delete_no_match_2_of_3",
+                "disabled_system"
             ]
         }, {
             "id": "SystemOnSet",
@@ -306,7 +315,8 @@
                 "on_set_after_override",
                 "on_set_after_override_w_new",
                 "on_set_after_override_w_new_w_count",
-                "on_set_after_override_1_of_2_overridden"
+                "on_set_after_override_1_of_2_overridden",
+                "disabled_system"
             ]
         }, {
             "id": "SystemOnFrame",
@@ -343,7 +353,8 @@
                 "match_disabled",
                 "match_disabled_and_enabled",
                 "match_prefab",
-                "match_prefab_and_normal"
+                "match_prefab_and_normal",
+                "is_shared_on_column_not_set"
             ]
         }, {
             "id": "SystemCascade",
@@ -531,7 +542,10 @@
                 "recreate_world",
                 "init_w_args_set_threads",
                 "init_w_args_set_fps",
-                "init_w_args_enable_dbg"
+                "init_w_args_enable_dbg",
+                "no_threading",
+                "no_time",
+                "is_entity_enabled"
             ]
         }, {
             "id": "Type",
@@ -715,7 +729,8 @@
                 "5_threads_add_to_current",
                 "6_threads_add_to_current",
                 "stress_create_delete_entity_random_components",
-                "stress_set_entity_random_components"
+                "stress_set_entity_random_components",
+                "2_threads_on_add"
             ]
         }, {
             "id": "Modules",

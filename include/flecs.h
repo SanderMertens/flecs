@@ -1613,16 +1613,9 @@ void *_ecs_field(
  * @return The source entity for the column. 
  */
 FLECS_EXPORT
-ecs_entity_t _ecs_column_source(
+ecs_entity_t ecs_column_source(
     ecs_rows_t *rows,
-    uint32_t column,
-    bool test);
-
-#define ecs_column_source(rows, column)\
-        _ecs_column_source(rows, column, false)
-
-#define ecs_column_source_test(rows, column)\
-        _ecs_column_source(rows, column, true)
+    uint32_t column);
 
 /** Obtain the component for a column inside a system.
  * This operation obtains the component handle for a column in the system. This
@@ -1643,16 +1636,9 @@ ecs_entity_t _ecs_column_source(
  * @return The component for the specified column, or 0 if failed.
  */
 FLECS_EXPORT
-ecs_entity_t _ecs_column_entity(
+ecs_entity_t ecs_column_entity(
     ecs_rows_t *rows,
-    uint32_t column,
-    bool test);
-
-#define ecs_column_entity(rows, column)\
-        _ecs_column_entity(rows, column, false)
-
-#define ecs_column_entity_test(rows, column)\
-        _ecs_column_entity(rows, column, true)
+    uint32_t column);
 
 /** Obtain the type of a column from inside a system. 
  * This operation is equivalent to ecs_column_entity, except that it returns
@@ -1676,17 +1662,9 @@ ecs_entity_t _ecs_column_entity(
  * @return The type for the specified column, or 0 if failed.
  */ 
 FLECS_EXPORT
-ecs_type_t _ecs_column_type(
+ecs_type_t ecs_column_type(
     ecs_rows_t *rows,
-    uint32_t column,
-    bool test);
-
-#define ecs_column_type(rows, column)\
-        _ecs_column_type(rows, column, false)
-
-#define ecs_column_type_test(rows, column)\
-        _ecs_column_type(rows, column, true)
-
+    uint32_t column);
 
 /* -- Functions used in convenience macro's -- */
 

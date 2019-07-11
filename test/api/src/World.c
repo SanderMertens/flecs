@@ -1036,3 +1036,35 @@ void World_init_w_args_enable_dbg() {
     ecs_fini(world);
 }
 
+
+void World_no_threading() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.mutex_new = NULL;
+    ecs_os_set_api(&os_api);
+
+    ecs_world_t *world = ecs_init();
+    test_assert(world != NULL);
+    ecs_fini(world);
+}
+
+void World_no_time() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.get_time = NULL;
+    ecs_os_set_api(&os_api);
+
+    ecs_world_t *world = ecs_init();
+    test_assert(world != NULL);
+    ecs_fini(world);
+}
+
+void World_is_entity_enabled() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    test_assert( ecs_is_enabled(world, e) == true);
+
+    ecs_fini(world);
+}

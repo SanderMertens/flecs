@@ -819,3 +819,30 @@ void SystemOnAdd_add_in_progress_before_system_def() {
 
     ecs_fini(world);
 }
+
+static int is_invoked;
+
+static
+void IsInvoked(ecs_rows_t *rows) {
+    is_invoked ++;
+}
+
+void SystemOnAdd_disabled_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, IsInvoked, EcsOnAdd, Position);
+
+    ecs_enable(world, IsInvoked, false);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    test_int(is_invoked, 0);
+
+    ecs_fini(world);
+}
