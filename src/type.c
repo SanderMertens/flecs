@@ -207,7 +207,7 @@ ecs_type_t ecs_type_from_array_normalize(
     ecs_entity_t *dst_array = ecs_os_alloca(ecs_entity_t, count);
     uint32_t dst_count = 0;
     
-    int i, j;
+    uint32_t i, j;
     for (i = 0; i < count; i ++) {
         ecs_entity_t ie = array[i];
         ecs_entity_t ie_e = ie & ECS_ENTITY_MASK;
@@ -520,7 +520,7 @@ ecs_type_t ecs_type_add_intern(
 
     ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
 
-    int i, pos = 0;
+    uint32_t i, pos = 0;
     bool in_type = false;
     for (i = 0; i < count; i ++) {
         ecs_entity_t elem = old_array[i];
@@ -675,7 +675,6 @@ ecs_type_t ecs_type_merge_intern(
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
 ecs_entity_t ecs_type_contains(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_type_t type_1,
     ecs_type_t type_2,
     bool match_all,
@@ -747,7 +746,6 @@ ecs_entity_t ecs_type_contains(
 
 bool ecs_type_has_entity_intern(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_type_t type,
     ecs_entity_t entity,
     bool match_prefab)
@@ -992,8 +990,7 @@ bool ecs_type_has_entity(
     ecs_type_t type,
     ecs_entity_t entity)
 {
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    return ecs_type_has_entity_intern(world, stage, type, entity, false);
+    return ecs_type_has_entity_intern(world, type, entity, false);
 }
 
 ecs_type_t ecs_expr_to_type(

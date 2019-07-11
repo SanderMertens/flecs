@@ -57,7 +57,6 @@ void* ecs_get_ptr_intern(
 
 ecs_entity_t ecs_get_entity_for_component(
     ecs_world_t *world,
-    bool new_table,
     ecs_entity_t entity,
     ecs_type_t type_id,
     ecs_entity_t component);
@@ -123,7 +122,6 @@ ecs_type_t ecs_type_merge_intern(
 /* Test if type_id_1 contains type_id_2 */
 ecs_entity_t ecs_type_contains(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_type_t type_id_1,
     ecs_type_t type_id_2,
     bool match_all,
@@ -132,7 +130,6 @@ ecs_entity_t ecs_type_contains(
 /* Test if type contains component */
 bool ecs_type_has_entity_intern(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_type_t type,
     ecs_entity_t component,
     bool match_prefab);

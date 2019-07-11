@@ -709,9 +709,6 @@ ecs_entity_t _ecs_new_child_w_count(
  * This operation returns a new entity that shares components with the provided 
  * base entity.
  * 
- * This operation is equivalent to calling:
- * ecs_commit(world, 0, base, 0, ECS_INSTANCEOF);
- * 
  * @param world The world.
  * @param base The base entity.
  * @return A new entity that is an instance of base.

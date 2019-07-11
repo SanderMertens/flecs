@@ -18,6 +18,12 @@ void calculate_type_stats(
     uint32_t *allocd,
     uint32_t *used)
 {
+    (void)world;
+    (void)allocd;
+    (void)used;
+
+    /* TODO: compute memory for type storage */
+
     /*ecs_map_iter_t it = ecs_map_iter(world->main_stage.type_index);
     while (ecs_map_hasnext(&it)) {
         ecs_vector_t *type = ecs_map_next_ptr(&it);

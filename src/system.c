@@ -3,7 +3,6 @@
 static
 void match_type(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t system,
     EcsRowSystem *system_data,
     ecs_type_t type)
@@ -11,7 +10,7 @@ void match_type(
     /* Test if the components of the system are equal or a subset of the 
      * components of the type */
     ecs_entity_t match = ecs_type_contains(
-        world, stage, type, system_data->base.and_from_entity, true, false);
+        world, type, system_data->base.and_from_entity, true, false);
 
     /* If there is a match, add the system to the type-row_system index */
     if (match) {
@@ -51,7 +50,7 @@ void match_families(
     ecs_type_link_t *link = &world->main_stage.type_root.link;
 
     do {
-        match_type(world, NULL, system, system_data, link->type);
+        match_type(world, system, system_data, link->type);
     } while ((link = link->next));
 }
 
@@ -181,14 +180,14 @@ void ecs_system_init_base(
 
         if (oper == EcsOperOr) {
             if (ecs_type_has_entity_intern(
-                world, &world->main_stage, column->is.type, 
+                world, column->is.type, 
                 ecs_entity(EcsDisabled), false))
             {
                 base_data->match_disabled = true;
             }
 
             if (ecs_type_has_entity_intern(
-                world, &world->main_stage, column->is.type, 
+                world, column->is.type, 
                 ecs_entity(EcsPrefab), false))
             {
                 base_data->match_prefab = true;
@@ -378,9 +377,8 @@ ecs_type_t ecs_notify_row_system(
                 /* If column is not found, it could come from a prefab. Look for
                  * components of components */
 
-                bool new_table = table->flags & EcsTableIsStaged;
                 entity = ecs_get_entity_for_component(
-                    world, new_table, 0, table->type, buffer[i].is.component);
+                    world, 0, table->type, buffer[i].is.component);
 
                 ecs_assert(entity != 0 || 
                            buffer[i].oper_kind == EcsOperOptional, 
@@ -466,9 +464,10 @@ void ecs_row_system_notify_of_type(
     ecs_entity_t system,
     ecs_type_t type)
 {
-    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
+    (void)stage;
 
-    match_type(world, stage, system, system_data, type);
+    EcsRowSystem *system_data = ecs_get_ptr(world, system, EcsRowSystem);
+    match_type(world, system, system_data, type);
 }
 
 /* -- Public API -- */
@@ -745,7 +744,7 @@ ecs_entity_t ecs_column_source(
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
 
     /* Index 0 (entity array) does not have a source */
-    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_assert(rows->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -768,7 +767,7 @@ ecs_type_t ecs_column_type(
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
 
     /* Index 0 (entity array) does not have a type */
-    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_assert(rows->components != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -783,7 +782,7 @@ ecs_entity_t ecs_column_entity(
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
 
     /* Index 0 (entity array) does not have a type */
-    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_assert(rows->components != NULL, ECS_INTERNAL_ERROR, NULL);
     return rows->components[index - 1];
