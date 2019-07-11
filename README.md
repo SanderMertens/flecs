@@ -91,14 +91,17 @@ bake clone https://github.com/SanderMertens/flecs
 ### Building notes
 
 #### Operating system abstraction API
-Flecs does not contain any platform-specific code. For threading (amongst others) it relies on a platform abstraction API that needs to be populated by the application. When Flecs is built with bake, this API is populated automatically by the bake runtime. When building with CMake or Meson, applications will have to do this manually if they rely on any of these features:
+Most of Flecs can run without relying on operating system specific functionality. However, some features require threading and timing, amongst others. Out of the box, Flecs implements abstractions for these functions for common platforms. If you however want to run Flecs on a platform that is not implemented, you can easily provide Flecs with a platform specific set of functions through the OS API interface.
 
+The OS API is an interface that contains function pointers for all the functions Flecs needs from the underlying platform which can be easily overridden by an application. These functions include support for:
+
+- Heap memory management
 - Threading
-- FPS control
-- Automatic time management (delta_time)
-- System / frame profiling
+- Timing
+- Logging
+- Exception handling
 
-[This section of the manual](Manual.md#operating-system-abstraction-api) describes how to set the OS API.
+[This section of the manual](Manual.md#operating-system-abstraction-api) describes how to override functions in OS API.
 
 #### Modules
 Flecs has optional [modules](#modules) which are created as bake packages. It is possible to use modules in a non-bake environment, but this is still a work in progress and likely requires manual labor. 
