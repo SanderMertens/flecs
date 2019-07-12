@@ -136,6 +136,29 @@ void ecs_vector_remove_last(
     if (array->count) array->count --;
 }
 
+bool ecs_vector_pop(
+    ecs_vector_t *array,
+    const ecs_vector_params_t *params,
+    void *value)
+{
+    uint32_t count = array->count;
+    if (!count) {
+        return false;
+    }
+
+    void *buffer = ARRAY_BUFFER(array);
+    uint32_t element_size = params->element_size;
+    void *elem = ECS_OFFSET(buffer, (count - 1) * element_size);
+
+    if (value) {
+        memcpy(value, elem, element_size);
+    }
+
+    ecs_vector_remove_last(array);
+
+    return true;
+}
+
 uint32_t ecs_vector_remove_index(
     ecs_vector_t *array,
     const ecs_vector_params_t *params,
