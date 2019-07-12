@@ -376,13 +376,12 @@ ecs_type_t ecs_notify_row_system(
             if (!columns[i] && table) {
                 /* If column is not found, it could come from a prefab. Look for
                  * components of components */
-
                 entity = ecs_get_entity_for_component(
                     world, 0, table->type, buffer[i].is.component);
 
                 ecs_assert(entity != 0 || 
                            buffer[i].oper_kind == EcsOperOptional, 
-                                ECS_INTERNAL_ERROR, NULL);
+                                ECS_INTERNAL_ERROR, ecs_get_id(world, buffer[i].is.component));
             }
         }
 
