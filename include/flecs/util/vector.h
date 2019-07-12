@@ -84,6 +84,12 @@ void ecs_vector_remove_last(
     ecs_vector_t *array);
 
 FLECS_EXPORT
+bool ecs_vector_pop(
+    ecs_vector_t *array,
+    const ecs_vector_params_t *params,
+    void *value);
+
+FLECS_EXPORT
 uint32_t ecs_vector_move_index(
     ecs_vector_t **dst_array,
     ecs_vector_t *src_array,
