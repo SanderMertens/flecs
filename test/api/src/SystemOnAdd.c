@@ -846,3 +846,57 @@ void SystemOnAdd_disabled_system() {
 
     ecs_fini(world);
 }
+
+void SystemA(ecs_rows_t *rows) {
+    int i, tag;
+    for (i = 0; i < rows->count; i ++) {
+        for (tag = 1000; tag < 1100; tag ++) {
+            _ecs_add(
+                rows->world, 
+                rows->entities[i], 
+                ecs_type_from_entity(rows->world, tag));
+        }
+    }
+}
+
+void SystemB(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_has(rows->world, rows->entities[i], Position);
+    }
+}
+
+void SystemOnAdd_2_systems_w_table_creation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, SystemA, EcsOnAdd, Position);
+    ECS_SYSTEM(world, SystemB, EcsOnAdd, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);    
+
+    ecs_fini(world);
+}
+
+void NewWithPosition(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    ecs_entity_t e = ecs_new(rows->world, Position);
+    test_assert(e != 0); 
+}
+
+void SystemOnAdd_2_systems_w_table_creation_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, SystemA, EcsOnAdd, Position);
+    ECS_SYSTEM(world, SystemB, EcsOnAdd, Position);
+    ECS_SYSTEM(world, NewWithPosition, EcsOnUpdate, .Position);
+
+    ecs_progress(world, 1);   
+
+    ecs_fini(world);
+}

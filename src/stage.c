@@ -16,16 +16,17 @@ void merge_families(
 }
 
 static
-void eval_table_columns(
+void notify_new_tables(
     ecs_world_t *world, 
     uint32_t old_table_count, 
     uint32_t new_table_count) 
 {
-    ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
-
+    ecs_chunked_t *tables = world->main_stage.tables;
     uint32_t i;
+
     for (i = old_table_count; i < new_table_count; i ++) {
-        ecs_notify_systems_of_table(world, &tables[i]);
+        ecs_table_t *t = ecs_chunked_get(tables, ecs_table_t, i);
+        ecs_notify_systems_of_table(world, t);
     }
 }
 
@@ -71,15 +72,14 @@ void clean_tables(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_table_t *buffer = ecs_vector_first(stage->tables);
-    int32_t i, count = ecs_vector_count(stage->tables);
+    uint32_t i, count = ecs_chunked_count(stage->tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = &buffer[i];
-        ecs_table_free(world, table);
+        ecs_table_t *t = ecs_chunked_get(stage->tables, ecs_table_t, i);
+        ecs_table_free(world, t);
     }
 
-    ecs_vector_free(stage->tables);
+    ecs_chunked_free(stage->tables);
 }
 
 /* -- Private functions -- */
@@ -103,12 +103,11 @@ void ecs_stage_init(
     } else {
     }
     
-
-    stage->table_index = ecs_map_new(0, sizeof(int32_t));
+    stage->table_index = ecs_map_new(0, sizeof(ecs_table_t*));
     if (is_main_stage) {
-        stage->tables = ecs_vector_new(&table_arr_params, 8);
+        stage->tables = ecs_chunked_new(ecs_table_t, 64, 1);
     } else {
-        stage->tables = ecs_vector_new(&table_arr_params, 0);
+        stage->tables = ecs_chunked_new(ecs_table_t, 8, 0);
     }
 
     if (!is_main_stage) {
@@ -151,7 +150,7 @@ void ecs_stage_merge(
     assert(stage != &world->main_stage);
     
     /* Keep track of old number of tables so we know how many have been added */
-    uint32_t old_table_count = ecs_vector_count(world->main_stage.tables);
+    uint32_t old_table_count = ecs_chunked_count(world->main_stage.tables);
     
     /* Merge any new families */
     merge_families(world, stage);
@@ -161,13 +160,13 @@ void ecs_stage_merge(
     merge_commits(world, stage);
 
     /* Clear temporary tables used by stage */
-    ecs_vector_clear(stage->tables);
+    ecs_chunked_clear(stage->tables);
     ecs_map_clear(stage->table_index);
 
     /* Now that all data has been merged, evaluate columns of added tables. This
      * step updates the world for special columns, like prefab components */
-    uint32_t new_table_count = ecs_vector_count(world->main_stage.tables);
+    uint32_t new_table_count = ecs_chunked_count(world->main_stage.tables);
     if (old_table_count != new_table_count) {
-        eval_table_columns(world, old_table_count, new_table_count);
+        notify_new_tables(world, old_table_count, new_table_count);
     }
 }

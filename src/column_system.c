@@ -1,7 +1,19 @@
 #include "flecs_private.h"
 
-const ecs_vector_params_t column_arr_params = {
+const ecs_vector_params_t matched_table_params = {
+    .element_size = sizeof(ecs_matched_table_t)
+};
+
+const ecs_vector_params_t system_column_params = {
     .element_size = sizeof(ecs_system_column_t)
+};
+
+const ecs_vector_params_t reference_params = {
+    .element_size = sizeof(ecs_reference_t)
+};
+
+const ecs_vector_params_t matched_column_params = {
+    .element_size = sizeof(uint32_t)
 };
 
 static
@@ -34,32 +46,6 @@ ecs_entity_t components_contains(
     }
 
     return 0;
-}
-
-/* Special indexes in table_data array */
-#define TABLE_INDEX (0)
-#define REFS_INDEX (1)
-#define REFS_COUNT (2)
-#define COMPONENTS_INDEX (3)
-#define DEPTH_INDEX (4)
-#define COLUMNS_INDEX (5)
-
-/* Get ref array for system table */
-static
-ecs_reference_t* get_ref_data(
-    EcsColSystem *system_data,
-    int32_t *table_data)
-{
-    if (!system_data->refs) {
-        system_data->refs = ecs_vector_new(&system_data->ref_params, 1);
-    }
-
-    ecs_reference_t *ref_data = ecs_vector_add(
-        &system_data->refs, &system_data->ref_params);
-        
-    table_data[REFS_INDEX] = ecs_vector_count(system_data->refs);
-
-    return ref_data;
 }
 
 /* Get actual entity on which specified component is stored */
@@ -99,36 +85,24 @@ void add_table(
     EcsColSystem *system_data,
     ecs_table_t *table)
 {
-    int32_t *table_data;
-    ecs_reference_t *ref_data = NULL;
+    ecs_matched_table_t *table_data;
     ecs_type_t table_type = table->type;
-    uint32_t i = COLUMNS_INDEX;
-    uint32_t ref = 0;
     uint32_t column_count = ecs_vector_count(system_data->base.columns);
 
     /* Initially always add table to inactive group. If the system is registered
      * with the table and the table is not empty, the table will send an
      * activate signal to the system. */
     table_data = ecs_vector_add(
-        &system_data->inactive_tables, &system_data->table_params);
+        &system_data->inactive_tables, &matched_table_params);
+    table_data->table = table;
+    table_data->references = NULL;
 
-    /* Add element to array that contains components for this table. Tables
-     * typically share the same component list, unless the system contains OR
-     * expressions in the signature. In that case, the system can match against
-     * tables that have different components for a column. */
-    ecs_entity_t *component_data = ecs_vector_add(
-        &system_data->components, &system_data->component_params);
+    /* Array that contains the system column to table column mapping */
+    table_data->columns = ecs_os_malloc(sizeof(uint32_t) * column_count);
 
-    /* Table index is at element 0 */
-    table_data[TABLE_INDEX] = ecs_vector_get_index(
-        world->main_stage.tables, &table_arr_params, table);
-
-    /* Index in ref array is at element 1 (0 means no refs) */
-    table_data[REFS_INDEX] = 0;
-    table_data[REFS_COUNT] = 0;
-
-    /* Index in components array is at element 2 */
-    table_data[COMPONENTS_INDEX] = ecs_vector_count(system_data->components) - 1;
+    /* Store the components of the matched table. In the case of OR expressions,
+     * components may differ per matched table. */
+    table_data->components = ecs_os_malloc(sizeof(ecs_entity_t) * column_count);
 
     /* Walk columns parsed from the system signature */
     ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
@@ -163,7 +137,7 @@ void add_table(
         /* Column that just passes a handle to the system (no data) */
         } else if (kind == EcsFromEmpty) {
             component = column->is.component;
-            table_data[i] = 0;
+            table_data->columns[c] = 0;
 
         /* Column that retrieves data from a dynamic entity */
         } else if (kind == EcsFromContainer || kind == EcsCascade) {
@@ -191,8 +165,6 @@ void add_table(
             }
 
             entity = system;
-
-        /* Column that retrieves singleton components */
         }
 
         /* This column does not retrieve data from a static entity (either
@@ -200,12 +172,12 @@ void add_table(
         if (!entity && kind != EcsFromEmpty) {
             if (component) {
                 /* Retrieve offset for component */
-                table_data[i] = ecs_type_index_of(table->type, component);
+                table_data->columns[c] = ecs_type_index_of(table->type, component);
 
                 /* If column is found, add one to the index, as column zero in
                  * a table is reserved for entity id's */
-                if (table_data[i] != -1) {
-                    table_data[i] ++;
+                if (table_data->columns[c] != -1) {
+                    table_data->columns[c] ++;
 
                     /* Check if component is a tag. If it is, set table_data to
                      * zero, so that a system won't try to access the data */
@@ -213,7 +185,7 @@ void add_table(
                         world, component, EcsComponent);
 
                     if (!data || !data->size) {
-                        table_data[i] = 0;
+                        table_data->columns[c] = 0;
                     }
                 }
                 
@@ -228,7 +200,7 @@ void add_table(
             if (!ecs_type_has_entity_intern(
                 world, table_type, component, true))
             {
-                table_data[i] = 0;
+                table_data->columns[c] = 0;
             }
         }
 
@@ -250,18 +222,15 @@ void add_table(
          * reference. Having the reference already linked to the system table
          * makes changing this administation easier when the change happens.
          * */
-        if (entity || table_data[i] == -1 || kind == EcsCascade) {
+        if (entity || table_data->columns[c] == -1 || kind == EcsCascade) {
             if (ecs_has(world, component, EcsComponent)) {
                 EcsComponent *component_data = ecs_get_ptr(
                         world, component, EcsComponent);
                 
                 if (component_data->size) {
                     ecs_entity_t e;
-
-                    if (!ref_data) {
-                        ref_data = get_ref_data(system_data, table_data);
-                        table_data[REFS_COUNT] = 0;
-                    }
+                    ecs_reference_t *ref = ecs_vector_add(
+                            &table_data->references, &reference_params);
 
                     /* Find the entity for the component */
                     if (kind == EcsFromEntity) {
@@ -277,13 +246,13 @@ void add_table(
                         }
                     }
 
-                    ref_data[ref].entity = e;
-                    ref_data[ref].component = component;
+                    ref->entity = e;
+                    ref->component = component;
                     
                     if (e != ECS_INVALID_ENTITY) {
                         ecs_entity_info_t info = {.entity = e};
 
-                        ref_data[ref].cached_ptr = ecs_get_ptr_intern(
+                        ref->cached_ptr = ecs_get_ptr_intern(
                             world, 
                             &world->main_stage,
                             &info,
@@ -293,94 +262,21 @@ void add_table(
 
                         ecs_set_watch(world, e);                     
                     } else {
-                        ref_data[ref].cached_ptr = NULL;
+                        ref->cached_ptr = NULL;
                     }
 
-                    ref ++;
                     /* Negative number indicates ref instead of offset to ecs_data */
-                    table_data[i] = -ref;
-                    table_data[REFS_COUNT] ++;
-
+                    table_data->columns[c] = -ecs_vector_count(table_data->references);
                     system_data->base.has_refs = true;
                 }
             }
         }
 
         /* component_data index is not offset by anything */
-        component_data[i - COLUMNS_INDEX] = component;
-
-        i ++;
-    }
-
-    if (ref_data && ref < column_count) {
-        ref_data[ref].entity = 0;
+        table_data->components[c] = component;
     }
 
     ecs_table_register_system(world, table, system);
-}
-
-/* Utility function to update an index to a new value after a table has been
- * removed from the system */
-static
-bool update_table_index(
-    EcsColSystem *system_data,
-    ecs_vector_t *tables,
-    uint32_t data_index,
-    uint32_t old_index,
-    uint32_t new_index)
-{
-    int32_t *table = ecs_vector_first(tables);
-    uint32_t i, count = ecs_vector_count(tables);
-
-    for (i = 0; i < count; i ++) {
-        if (table[data_index] == (int32_t)old_index) {
-            table[data_index] = (int32_t)new_index;
-            return true;
-        }
-
-        table = ECS_OFFSET(
-            table, system_data->table_params.element_size);
-    }
-
-    return false;
-}
-
-static
-void update_table_data(
-    EcsColSystem *system_data,
-    int32_t *table_data,
-    uint32_t data_index,
-    ecs_vector_t *data_array,
-    ecs_vector_params_t *data_params)
-{
-    uint32_t index = table_data[data_index];
-    if (index) {
-        uint32_t count = ecs_vector_count(data_array);
-
-        if (index == count) {
-            ecs_vector_remove_last(data_array);
-        } else {
-            /* Removing the refs for this table will cause the ref index for
-             * another table to become invalid. Find the table for the last
-             * reference array, and change it to ref_index */
-            if (!update_table_index(
-                system_data, 
-                system_data->tables, 
-                data_index, 
-                count, 
-                index)) 
-            {
-                update_table_index(
-                    system_data, 
-                    system_data->inactive_tables, 
-                    data_index, 
-                    count, 
-                    index);
-            }
-
-            ecs_vector_remove_index(data_array, data_params, index);
-        }
-    }
 }
 
 /* Remove table */
@@ -390,18 +286,7 @@ void remove_table(
     ecs_vector_t *tables,
     int32_t index)
 {
-    int32_t *table_data = ecs_vector_get(
-        tables, &system_data->table_params, index);
-
-    update_table_data(
-        system_data, table_data, REFS_INDEX, system_data->refs, 
-        &system_data->ref_params);
-
-    update_table_data(
-        system_data, table_data, COMPONENTS_INDEX, system_data->components, 
-        &system_data->component_params);        
-
-    ecs_vector_remove(tables, &system_data->table_params, table_data);
+    ecs_vector_remove_index(tables, &matched_table_params, index);
 }
 
 /* Match table with system */
@@ -506,13 +391,13 @@ bool match_table(
 
 static
 int table_compare(
-    const void *table_1,
-    const void *table_2)
+    const void *t1,
+    const void *t2)
 {
-    const int32_t *table_1_data = table_1;
-    const int32_t *table_2_data = table_2;
+    const ecs_matched_table_t *table_1 = t1;
+    const ecs_matched_table_t *table_2 = t2;
 
-    return table_1_data[DEPTH_INDEX] - table_2_data[DEPTH_INDEX];
+    return table_1->depth - table_2->depth;
 }
 
 static
@@ -532,15 +417,15 @@ void order_cascade_tables(
     ecs_entity_t cascade_component = get_cascade_component(system_data);
 
     for (i = 0; i < count; i ++) {
-        int32_t *table_data = ecs_vector_get(
-            system_data->tables, &system_data->table_params, i);
-        ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
-        ecs_type_t type = tables[table_data[TABLE_INDEX]].type;
-        table_data[DEPTH_INDEX] = ecs_type_container_depth(
+        ecs_matched_table_t *table_data = ecs_vector_get(
+            system_data->tables, &matched_table_params, i);
+
+        ecs_type_t type = table_data->table->type;
+        table_data->depth = ecs_type_container_depth(
             world, type, cascade_component);
     }
 
-    ecs_vector_sort(system_data->tables, &system_data->table_params, table_compare);
+    ecs_vector_sort(system_data->tables, &matched_table_params, table_compare);
 }
 
 /** Match existing tables against system (table is created before system) */
@@ -550,11 +435,12 @@ void match_tables(
     ecs_entity_t system,
     EcsColSystem *system_data)
 {
-    ecs_table_t *buffer = ecs_vector_first(world->main_stage.tables);
-    uint32_t i, count = ecs_vector_count(world->main_stage.tables);
+    uint32_t i, count = ecs_chunked_count(world->main_stage.tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = &buffer[i];
+        ecs_table_t *table = ecs_chunked_get(
+            world->main_stage.tables, ecs_table_t, i);
+
         if (match_table(world, table, system, system_data)) {
             add_table(world, system, system_data, table);
         }
@@ -570,23 +456,19 @@ static
 int32_t table_matched(
     EcsColSystem *system_data,
     ecs_vector_t *tables,
-    uint32_t table_index)
+    ecs_table_t *table)
 {
     uint32_t i, count = ecs_vector_count(tables);
-    int32_t *table_data = ecs_vector_first(tables);
-    uint32_t elem_size = system_data->table_params.element_size;
+    ecs_matched_table_t *table_data = ecs_vector_first(tables);
 
     for (i = 0; i < count; i ++) {
-        if (*table_data == (int32_t)table_index) {
+        if (table_data[i].table == table) {
             return i;
         }
-
-        table_data = ECS_OFFSET(table_data, elem_size);
     }
 
     return -1;
 }
-
 
 static
 void resolve_cascade_container(
@@ -595,19 +477,18 @@ void resolve_cascade_container(
     int32_t table_data_index,
     ecs_type_t table_type)
 {
-    int32_t *table_data = ecs_vector_get(
-        system_data->tables, &system_data->table_params, table_data_index);
+    ecs_matched_table_t *table_data = ecs_vector_get(
+        system_data->tables, &matched_table_params, table_data_index);
     
-    ecs_assert(table_data[REFS_INDEX] != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table_data->references != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Obtain reference index */
-    int32_t *column_indices = &table_data[COLUMNS_INDEX];
+    int32_t *column_indices = table_data->columns;
     int32_t column = system_data->base.cascade_by - 1;
     int32_t ref_index = -column_indices[column] - 1;
 
     /* Obtain pointer to the reference data */
-    ecs_reference_t *references = ecs_vector_get(
-        system_data->refs, &system_data->ref_params, table_data[REFS_INDEX]-1);
+    ecs_reference_t *references = ecs_vector_first(table_data->references);
     ecs_reference_t *ref = &references[ref_index];
     ecs_assert(ref->component == get_cascade_component(system_data), 
         ECS_INTERNAL_ERROR, NULL);
@@ -639,19 +520,18 @@ void ecs_rematch_system(
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, 0);
 
-    ecs_vector_t *tables = world->main_stage.tables;
-    uint32_t i, count = ecs_vector_count(tables);
-    ecs_table_t *buffer = ecs_vector_first(tables);
+    ecs_chunked_t *tables = world->main_stage.tables;
+    uint32_t i, count = ecs_chunked_count(tables);
 
     for (i = 0; i < count; i ++) {
         /* Is the system currently matched with the table? */
-        int32_t match = table_matched(system_data, system_data->tables, i);
-        ecs_table_t *table = &buffer[i];
+        ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, i);
+        int32_t match = table_matched(system_data, system_data->tables, table);
 
         if (match_table(world, table, system, system_data)) {
             /* If the table matches, and it is not currently matched, add */
             if (match == -1) {
-                if (table_matched(system_data, system_data->inactive_tables, i) == -1) {
+                if (table_matched(system_data, system_data->inactive_tables, table) == -1) {
                     add_table(world, system, system_data, table);
                 }
 
@@ -669,7 +549,7 @@ void ecs_rematch_system(
             } else {
                 /* Make sure the table is removed if it was inactive */
                 match = table_matched(
-                    system_data, system_data->inactive_tables, i);
+                    system_data, system_data->inactive_tables, table);
                 if (match != -1) {
                     remove_table(
                         system_data, system_data->inactive_tables, match);
@@ -698,27 +578,22 @@ void ecs_revalidate_system_refs(
     }
 
     uint32_t i, count = ecs_vector_count(system_data->tables);
+    ecs_matched_table_t *table_data = ecs_vector_first(system_data->tables);
 
     for (i = 0; i < count; i ++) {
-        if (!system_data->refs) {
+        if (!table_data[i].references) {
             continue;
         }
 
+        uint32_t r, ref_count = ecs_vector_count(table_data[i].references);
+        ecs_reference_t *refs = ecs_vector_first(table_data[i].references);
 
-        uint32_t *table_data = ecs_vector_get(system_data->tables, &system_data->table_params, i);
-        uint32_t r, ref_count = table_data[REFS_COUNT];
-
-        ecs_reference_t *refs = NULL;
-        
-        if (ref_count) {
-            refs = ecs_vector_get(system_data->refs, &system_data->ref_params, table_data[REFS_INDEX] - 1);
-            for (r = 0; r < ref_count; r ++) {
-                ecs_reference_t ref = refs[r];
-                ecs_entity_info_t info = {.entity = ref.entity};
-                refs[r].cached_ptr = ecs_get_ptr_intern(
-                    world, &world->main_stage, &info, ref.component, false, true);
-            }            
-        }
+        for (r = 0; r < ref_count; r ++) {
+            ecs_reference_t ref = refs[r];
+            ecs_entity_info_t info = {.entity = ref.entity};
+            refs[r].cached_ptr = ecs_get_ptr_intern(
+                world, &world->main_stage, &info, ref.component, false, true);
+        }            
     }
 }
 
@@ -736,6 +611,7 @@ void ecs_col_system_notify_of_table(
     }
 }
 
+/** Get index of table in system's matched tables */
 static
 int32_t get_table_param_index(
     ecs_world_t *world,
@@ -743,15 +619,11 @@ int32_t get_table_param_index(
     ecs_table_t *table,
     ecs_vector_t *tables)
 {
-    uint32_t table_index = ecs_vector_get_index(
-        world->main_stage.tables, &table_arr_params, table);
-
     uint32_t i, count = ecs_vector_count(tables);
+    ecs_matched_table_t *table_data = ecs_vector_first(tables);
 
     for (i = 0; i < count; i ++) {
-        uint32_t *index = ecs_vector_get(
-            tables, &system_data->table_params, i);
-        if (*index == table_index) {
+        if (table_data[i].table == table) {
             break;
         }
     }
@@ -788,7 +660,7 @@ void ecs_system_activate_table(
     ecs_assert(i != -1, ECS_INTERNAL_ERROR, "cannot find table to (de)activate");
 
     uint32_t src_count = ecs_vector_move_index(
-        &dst_array, src_array, &system_data->table_params, i);
+        &dst_array, src_array, &matched_table_params, i);
 
     if (active) {
         uint32_t dst_count = ecs_vector_count(dst_array);
@@ -833,23 +705,21 @@ ecs_entity_t ecs_new_col_system(
     system_data->base.enabled = true;
     system_data->base.signature = sig;
     system_data->base.time_spent = 0;
-    system_data->base.columns = ecs_vector_new(&column_arr_params, count);
+    system_data->base.columns = ecs_vector_new(&system_column_params, count);
     system_data->base.kind = kind;
     system_data->base.cascade_by = 0;
     system_data->base.has_refs = false;
 
-    system_data->table_params.element_size = sizeof(int32_t) * (count + COLUMNS_INDEX);
+    system_data->column_params.element_size = sizeof(int32_t) * (count);
     system_data->ref_params.element_size = sizeof(ecs_reference_t) * count;
     system_data->component_params.element_size = sizeof(ecs_entity_t) * count;
     system_data->period = 0;
     system_data->entity = result;
 
-    system_data->components = ecs_vector_new(
-        &system_data->component_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     system_data->tables = ecs_vector_new(
-        &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
+        &matched_table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     system_data->inactive_tables = ecs_vector_new(
-        &system_data->table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
+        &matched_table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
 
     ecs_parse_component_expr(
         world, sig, ecs_parse_signature_action, system_data);
@@ -950,12 +820,10 @@ ecs_entity_t _ecs_run_w_filter(
     float period = system_data->period;
     bool measure_time = real_world->measure_system_time;
 
-    ecs_vector_t *tables = system_data->tables;
-    uint32_t tables_size = system_data->table_params.element_size;
-    int32_t *table_first = ecs_vector_first(tables);
-    int32_t *table_last = ECS_OFFSET(table_first, tables_size * ecs_vector_count(tables));
+    ecs_matched_table_t *tables = ecs_vector_first(system_data->tables);
+    uint32_t i, table_count = ecs_vector_count(system_data->tables);
 
-    if (table_first == table_last) {
+    if (!table_count) {
         return 0;
     }
 
@@ -971,8 +839,6 @@ ecs_entity_t _ecs_run_w_filter(
     }
 
     uint32_t column_count = ecs_vector_count(system_data->base.columns);
-    uint32_t components_size = system_data->component_params.element_size;
-    char *components = ecs_vector_first(system_data->components);
     ecs_entity_t interrupted_by = 0;
     ecs_system_action_t action = system_data->base.action;
     bool offset_limit = (offset | limit) != 0;
@@ -987,20 +853,16 @@ ecs_entity_t _ecs_run_w_filter(
         .frame_offset = offset
     };
 
-    int32_t *table = table_first;
-    for (; table < table_last; table = ECS_OFFSET(table, tables_size)) {
-        int32_t table_index = table[TABLE_INDEX];
+    for (i = 0; i < table_count; i ++) {
+        ecs_matched_table_t *table = &tables[i];
 
-        /* A system may introduce a new table if in the main thread. Make sure
-         * world_tables points to the valid memory */
-        ecs_table_t *world_tables = ecs_vector_first(real_world->main_stage.tables);
-        ecs_table_t *w_table = &world_tables[table_index];
-        ecs_table_column_t *table_columns = w_table->columns;
-        uint32_t first = 0, count = ecs_table_count(w_table);
+        ecs_table_t *world_table = table->table;
+        ecs_table_column_t *table_data = world_table->columns;
+        uint32_t first = 0, count = ecs_table_count(world_table);
 
         if (filter) {
             if (!ecs_type_contains(
-                real_world, w_table->type, filter, true, true))
+                real_world, world_table->type, filter, true, true))
             {
                 continue;
             }
@@ -1034,20 +896,16 @@ ecs_entity_t _ecs_run_w_filter(
             continue;
         }
 
-        uint32_t ref_index = table[REFS_INDEX];
-
-        if (ref_index) {
-            info.references = ecs_vector_get(
-                system_data->refs, &system_data->ref_params, ref_index - 1);
+        if (table->references) {
+            info.references = ecs_vector_first(table->references);
         } else {
             info.references = NULL;
         }
 
-        info.columns =  &table[COLUMNS_INDEX];
-        info.table = w_table;
-        info.table_columns = table_columns;
-        info.components = ECS_OFFSET(components,
-            components_size * table[COMPONENTS_INDEX]);
+        info.columns =  table->columns;
+        info.table = world_table;
+        info.table_columns = table_data;
+        info.components = table->components;
         info.offset = first;
         info.count = count;
 

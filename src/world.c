@@ -52,11 +52,11 @@ int compare_handle(
 }
 
 static
-uint32_t lookup_table_id(
+ecs_table_t* get_table(
     ecs_stage_t *stage,
     ecs_type_t type)
 {
-    uint32_t result;
+    ecs_table_t* result;
 
     if (ecs_map_has(stage->table_index, (uintptr_t)type, &result)) {
         return result;
@@ -66,12 +66,12 @@ uint32_t lookup_table_id(
 }
 
 static
-void set_table_id(
+void set_table(
     ecs_stage_t *stage,
     ecs_type_t type,
-    uint32_t table_id)
+    ecs_table_t *table)
 {
-    ecs_map_set(stage->table_index, (uintptr_t)type, &(int32_t){table_id});
+    ecs_map_set(stage->table_index, (uintptr_t)type, &table);
 }
 
 /** Bootstrap builtin component types and commonly used types */
@@ -115,7 +115,7 @@ ecs_table_t* bootstrap_component_table(
     ecs_assert(world->t_component != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_stage_t *stage = &world->main_stage;
-    ecs_table_t *result = ecs_vector_add(&stage->tables, &table_arr_params);
+    ecs_table_t *result = ecs_chunked_add(stage->tables, ecs_table_t);
     result->type = world->t_component;
     result->frame_systems = NULL;
     result->flags = 0;
@@ -130,12 +130,7 @@ ecs_table_t* bootstrap_component_table(
     result->columns[2].data = ecs_vector_new(&handle_arr_params, 12);
     result->columns[2].size = sizeof(EcsId);
 
-    ecs_assert(
-        ecs_vector_get_index(
-            stage->tables, &table_arr_params, result) == 0, ECS_INTERNAL_ERROR, 
-            "first table index must be 0");
-
-    set_table_id(stage, world->t_component, 1);
+    set_table(stage, world->t_component, result);
 
     return result;
 }
@@ -205,7 +200,7 @@ ecs_table_t* create_table(
     ecs_type_t type)
 {
     /* Add and initialize table */
-    ecs_table_t *result = ecs_vector_add(&stage->tables, &table_arr_params);
+    ecs_table_t *result = ecs_chunked_add(stage->tables, ecs_table_t);
     
     result->type = type;
 
@@ -215,9 +210,7 @@ ecs_table_t* create_table(
         result->flags |= EcsTableIsStaged;
     }
 
-    uint32_t index = ecs_vector_get_index(stage->tables, &table_arr_params, result);
-
-    set_table_id(stage, type, index + 1);
+    set_table(stage, type, result);
 
     if (stage == &world->main_stage && !world->is_merging) {
         ecs_notify_systems_of_table(world, result);
@@ -246,35 +239,28 @@ void no_time(
 
 /* -- Private functions -- */
 
-/** Get pointer to table data from type id */
+/** Find or create table from type */
 ecs_table_t* ecs_world_get_table(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t type)
 {
-    ecs_stage_t *main_stage = &world->main_stage;
-    uint32_t table_id = lookup_table_id(main_stage, type);
-
     ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_vector_count(type) < ECS_MAX_ENTITIES_IN_TYPE, ECS_INTERNAL_ERROR, NULL);
 
-    if (!table_id && world->in_progress) {
+    ecs_stage_t *main_stage = &world->main_stage;
+    ecs_table_t* table = get_table(main_stage, type);
+
+    if (!table && world->in_progress) {
         assert(stage != NULL);
-        table_id = lookup_table_id(stage, type);
-        if (table_id) {
-            return ecs_vector_get(
-                stage->tables, &table_arr_params, table_id - 1);
-        }
+        table = get_table(stage, type);
     }
 
-    if (table_id) {
-        return ecs_vector_get(
-            main_stage->tables, &table_arr_params, table_id - 1);
-    } else {
-        return create_table(world, stage, type);
+    if (!table) {
+        table = create_table(world, stage, type);
     }
 
-    return NULL;
+    return table;
 }
 
 static
@@ -404,11 +390,9 @@ void col_systems_deinit(
     for (i = 0; i < count; i ++) {
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
         ecs_vector_free(ptr->base.columns);
-        ecs_vector_free(ptr->components);
-        ecs_vector_free(ptr->inactive_tables);
         ecs_vector_free(ptr->jobs);
         ecs_vector_free(ptr->tables);
-        ecs_vector_free(ptr->refs);
+        ecs_vector_free(ptr->inactive_tables);
     }
 }
 
@@ -445,11 +429,12 @@ static
 void deinit_tables(
     ecs_world_t *world)
 {
-    ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
-    int i, count = ecs_vector_count(world->main_stage.tables);
+    ecs_chunked_t *tables = world->main_stage.tables;
+    uint32_t i, count = ecs_chunked_count(tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_deinit(world, &tables[i]);
+        ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, i);
+        ecs_table_deinit(world, table);
     }
 }
 
@@ -923,12 +908,13 @@ ecs_entity_t ecs_lookup_child(
     }
 
     if (!result) {
-        ecs_table_t *tables = ecs_vector_first(world->main_stage.tables);
-        uint32_t t, count = ecs_vector_count(world->main_stage.tables);
+        ecs_chunked_t *tables = world->main_stage.tables;
+        uint32_t t, count = ecs_chunked_count(tables);
 
         for (t = 0; t < count; t ++) {
+            ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, t);
             result = ecs_lookup_child_in_columns(
-                tables[t].type, tables[t].columns, parent, id);
+                table->type, table->columns, parent, id);
             if (result) {
                 break;
             }
