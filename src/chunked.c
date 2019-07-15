@@ -1,9 +1,9 @@
 #include "types.h"
 
-struct ecs_chunk_t {
+typedef struct chunk_t {
     void *data;
     uint32_t count;
-};
+} chunk_t;
 
 typedef struct sparse_elem_t {
     uint32_t dense;
@@ -14,7 +14,7 @@ typedef struct ecs_chunked_t {
     ecs_vector_t *chunks;
     ecs_vector_t *dense;
     ecs_vector_t *sparse;
-    ecs_vector_t *free_elems;
+    ecs_vector_t *free_stack;
     uint32_t element_size;
     uint32_t chunk_size;
 } ecs_chunked_t;
@@ -22,14 +22,14 @@ typedef struct ecs_chunked_t {
 static ecs_vector_params_t free_param = {.element_size = sizeof(uint32_t)};
 static ecs_vector_params_t dense_param = {.element_size = sizeof(uint32_t)};
 static ecs_vector_params_t sparse_param = {.element_size = sizeof(sparse_elem_t)};
-static ecs_vector_params_t chunk_param = {.element_size = sizeof(ecs_chunk_t)};
+static ecs_vector_params_t chunk_param = {.element_size = sizeof(chunk_t)};
 
 static
 void add_chunk(
     ecs_chunked_t *chunked)
 {
     /* Add chunk to chunked instance */
-    ecs_chunk_t *chunk = ecs_vector_add(&chunked->chunks, &chunk_param);
+    chunk_t *chunk = ecs_vector_add(&chunked->chunks, &chunk_param);
     uint32_t chunk_size = chunked->chunk_size;
     uint32_t element_size = chunked->element_size;
 
@@ -39,11 +39,15 @@ void add_chunk(
 
     /* Create room in sparse array for chunk */
     uint32_t chunk_count = ecs_vector_count(chunked->chunks);
-    ecs_vector_set_size(&chunked->sparse, &sparse_param, 
+    ecs_vector_set_count(&chunked->sparse, &sparse_param, 
         chunk_count * chunk_size);
+
+    ecs_assert(chunked->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Prepare cached pointers to chunk elements in sparse array */
     sparse_elem_t *sparse_array = ecs_vector_first(chunked->sparse);
+    ecs_assert(sparse_array != NULL, ECS_INTERNAL_ERROR, NULL);
+
     sparse_array = &sparse_array[(chunk_count - 1) * chunk_size];
 
     int i;
@@ -53,7 +57,7 @@ void add_chunk(
 }
 
 static
-ecs_chunk_t* last_chunk(
+chunk_t* last_chunk(
     const ecs_chunked_t *chunked)
 {
     return ecs_vector_last(chunked->chunks, &chunk_param);
@@ -93,7 +97,7 @@ void* get_sparse(
         ecs_vector_remove_last(chunked->dense);
     }
 
-    return sparse->ptr;  
+    return sparse[index].ptr;  
 }
 
 ecs_chunked_t* _ecs_chunked_new(
@@ -119,32 +123,38 @@ void ecs_chunked_free(
     ecs_chunked_t *chunked)
 {
     int i, count = ecs_vector_count(chunked->chunks);
-    ecs_chunk_t *array = ecs_vector_first(chunked->chunks);
+    chunk_t *array = ecs_vector_first(chunked->chunks);
 
     for (i = 0; i < count; i ++) {
         ecs_os_free(array[i].data);
     }
 
     ecs_vector_free(chunked->chunks);
-    ecs_vector_free(chunked->free_elems);
+    ecs_vector_free(chunked->free_stack);
     ecs_vector_free(chunked->sparse);
     ecs_vector_free(chunked->dense);
 
     ecs_os_free(chunked);
 }
 
+FLECS_EXPORT
+void ecs_chunked_clear(
+    ecs_chunked_t *chunked)
+{
+    ecs_vector_clear(chunked->dense);
+}
+
 void* _ecs_chunked_add(
     ecs_chunked_t *chunked,
-    uint32_t element_size,
-    const void *elem)
+    uint32_t element_size)
 {
     ecs_assert(
         element_size == chunked->element_size, ECS_INVALID_PARAMETER, NULL);
 
     uint32_t index = 0;
     
-    if (!ecs_vector_pop(chunked->free_elems, &free_param, &index)) {
-        ecs_chunk_t *chunk = last_chunk(chunked);
+    if (!ecs_vector_pop(chunked->free_stack, &free_param, &index)) {
+        chunk_t *chunk = last_chunk(chunked);
         if (!chunk) {
             add_chunk(chunked);
             chunk = last_chunk(chunked);
@@ -155,7 +165,7 @@ void* _ecs_chunked_add(
         if (chunk->count == chunked->chunk_size) {
             add_chunk(chunked);
             chunk = last_chunk(chunked);
-        }        
+        }
 
         ecs_assert(chunk->count < chunked->chunk_size, ECS_INTERNAL_ERROR, NULL);
 
@@ -177,7 +187,7 @@ void* _ecs_chunked_remove(
 {   
     ecs_assert(element_size == chunked->element_size, ECS_INVALID_PARAMETER, NULL);
 
-    uint32_t *free_elem = ecs_vector_add(&chunked->free_elems, &free_param);
+    uint32_t *free_elem = ecs_vector_add(&chunked->free_stack, &free_param);
     *free_elem = index;
 
     return get_sparse(chunked, index, true);
@@ -188,14 +198,65 @@ void* _ecs_chunked_get(
     uint32_t element_size,
     uint32_t index)
 {
+    ecs_assert(index < ecs_vector_count(chunked->dense), 
+        ECS_INVALID_PARAMETER, NULL);
+    
     ecs_assert(element_size == chunked->element_size, 
         ECS_INVALID_PARAMETER, NULL);
+
+    const uint32_t *it = ecs_vector_first(chunked->dense);
+
+    return get_sparse(chunked, it[index], false);
+}
+
+void* _ecs_chunked_get_sparse(
+    const ecs_chunked_t *chunked,
+    uint32_t element_size,
+    uint32_t index)
+{
+    ecs_assert(element_size == chunked->element_size, 
+        ECS_INVALID_PARAMETER, NULL);
+
     return get_sparse(chunked, index, false);
 }
 
 uint32_t ecs_chunked_count(
-    const ecs_chunked_t *chunked,
-    uint32_t index)
+    const ecs_chunked_t *chunked)
 {
     return ecs_vector_count(chunked->dense);
+}
+
+const uint32_t* ecs_chunked_indices(
+    const ecs_chunked_t *chunked)
+{
+    return ecs_vector_first(chunked->dense);
+}
+
+void ecs_chunked_memory(
+    ecs_chunked_t *chunked,
+    uint32_t *allocd,
+    uint32_t *used)
+{
+    if (!chunked) {
+        return;
+    }
+
+    ecs_vector_memory(chunked->chunks, &chunk_param, allocd, used);
+    ecs_vector_memory(chunked->dense, &dense_param, allocd, used);
+    ecs_vector_memory(chunked->sparse, &sparse_param, allocd, used);
+    ecs_vector_memory(chunked->free_stack, &free_param, allocd, used);
+
+    uint32_t data_total = chunked->chunk_size * 
+        chunked->element_size * ecs_vector_count(chunked->chunks);
+
+    uint32_t data_not_used = ecs_vector_count(chunked->free_stack) * 
+        chunked->element_size;
+
+    if (allocd) {
+        *allocd += data_total;
+    }
+
+    if (used) {
+        *used += data_total - data_not_used;
+    }
 }

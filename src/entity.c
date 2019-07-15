@@ -604,12 +604,7 @@ uint32_t commit(
     /* If the new type contains components (that is, it is not 0) obtain the new
      * table and new columns. */
     if (type) {
-        ecs_vector_t *old_table_db = stage->tables;
         new_table = ecs_world_get_table(world, stage, type);
-
-        if (old_table && old_table_db != stage->tables) {
-            old_table = ecs_world_get_table(world, stage, info->type);
-        }
 
         /* This operation will automatically obtain components from the stage if
          * the application is iterating. */
@@ -1573,15 +1568,14 @@ uint32_t _ecs_count(
         return 0;
     }
 
-    ecs_vector_t *table_array = world->main_stage.tables;
-    
-    ecs_table_t *tables = ecs_vector_first(table_array);
-    uint32_t i, count = ecs_vector_count(table_array);
+    ecs_chunked_t *tables = world->main_stage.tables;
+    uint32_t i, count = ecs_chunked_count(tables);
     uint32_t result = 0;
 
     for (i = 0; i < count; i ++) {
-        if (ecs_type_contains(world, tables[i].type, type, true, true)) {
-            result += ecs_vector_count(tables[i].columns[0].data);
+        ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, i);
+        if (ecs_type_contains(world, table->type, type, true, true)) {
+            result += ecs_vector_count(table->columns[0].data);
         }
     }
     

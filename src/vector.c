@@ -43,7 +43,9 @@ void ecs_vector_free(
 void ecs_vector_clear(
     ecs_vector_t *array)
 {
-    array->count = 0;
+    if (array) {
+        array->count = 0;
+    }
 }
 
 void* ecs_vector_addn(
@@ -141,6 +143,10 @@ bool ecs_vector_pop(
     const ecs_vector_params_t *params,
     void *value)
 {
+    if (!array) {
+        return false;
+    }
+
     uint32_t count = array->count;
     if (!count) {
         return false;
@@ -301,9 +307,13 @@ void* ecs_vector_last(
     const ecs_vector_t *array,
     const ecs_vector_params_t *params)
 {
-    uint32_t count = array->count;
-    uint32_t element_size = params->element_size;
-    return ECS_OFFSET(ARRAY_BUFFER(array), element_size * (count - 1));
+    if (array) {
+        uint32_t count = array->count;
+        uint32_t element_size = params->element_size;
+        return ECS_OFFSET(ARRAY_BUFFER(array), element_size * (count - 1));
+    } else {
+        return NULL;
+    }
 }
 
 void ecs_vector_sort(

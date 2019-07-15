@@ -277,7 +277,9 @@
                 "set_after_add_in_on_add",
                 "add_again_in_progress",
                 "add_in_progress_before_system_def",
-                "disabled_system"
+                "disabled_system",
+                "2_systems_w_table_creation",
+                "2_systems_w_table_creation_in_progress"
             ]
         }, {
             "id": "SystemOnRemove",

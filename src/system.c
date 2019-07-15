@@ -268,7 +268,7 @@ int ecs_parse_signature_action(
 
     /* AND (default) and optional columns are stored the same way */
     if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
-        elem = ecs_vector_add(&system_data->columns, &column_arr_params);
+        elem = ecs_vector_add(&system_data->columns, &system_column_params);
         elem->kind = elem_kind;
         elem->oper_kind = oper_kind;
         elem->is.component = component;
@@ -284,7 +284,7 @@ int ecs_parse_signature_action(
 
     /* OR columns store a type id instead of a single component */
     } else if (oper_kind == EcsOperOr) {
-        elem = ecs_vector_last(system_data->columns, &column_arr_params);
+        elem = ecs_vector_last(system_data->columns, &system_column_params);
         if (elem->oper_kind == EcsOperAnd) {
             elem->is.type = ecs_type_add_intern(
                 world, NULL, 0, elem->is.component);
@@ -304,7 +304,7 @@ int ecs_parse_signature_action(
      * These can be quickly & efficiently used to exclude tables with
      * ecs_type_contains. */
     } else if (oper_kind == EcsOperNot) {
-        elem = ecs_vector_add(&system_data->columns, &column_arr_params);
+        elem = ecs_vector_add(&system_data->columns, &system_column_params);
         elem->kind = EcsFromEmpty; /* Just pass handle to system */
         elem->oper_kind = EcsOperNot;
         elem->is.component = component;

@@ -174,14 +174,11 @@ void ecs_schedule_jobs(
     uint32_t thread_count = ecs_vector_count(world->worker_threads);
     uint32_t total_rows = 0;
 
-    void *ptr = ecs_vector_first(system_data->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(system_data->tables);
     uint32_t i, count = ecs_vector_count(system_data->tables);
-    size_t size = system_data->table_params.element_size;
 
-    for (i = 0; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
-        uint32_t table_index = *(uint32_t*)ptr;
-        ecs_table_t *table = ecs_vector_get(
-            world->main_stage.tables, &table_arr_params, table_index);
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *table = tables[i].table;
         total_rows += ecs_vector_count(table->columns[0].data);
     }
 

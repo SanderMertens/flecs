@@ -247,6 +247,8 @@ void SystemOnAdd_set_after_add_in_on_add(void);
 void SystemOnAdd_add_again_in_progress(void);
 void SystemOnAdd_add_in_progress_before_system_def(void);
 void SystemOnAdd_disabled_system(void);
+void SystemOnAdd_2_systems_w_table_creation(void);
+void SystemOnAdd_2_systems_w_table_creation_in_progress(void);
 
 // Testsuite 'SystemOnRemove'
 void SystemOnRemove_remove_match_1_of_1(void);
@@ -1500,7 +1502,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 27,
+        .testcase_count = 29,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -1609,6 +1611,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "disabled_system",
                 .function = SystemOnAdd_disabled_system
+            },
+            {
+                .id = "2_systems_w_table_creation",
+                .function = SystemOnAdd_2_systems_w_table_creation
+            },
+            {
+                .id = "2_systems_w_table_creation_in_progress",
+                .function = SystemOnAdd_2_systems_w_table_creation_in_progress
             }
         }
     },
