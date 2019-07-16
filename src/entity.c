@@ -1525,7 +1525,7 @@ ecs_entity_t ecs_type_to_entity(
     ecs_world_t *world, 
     ecs_type_t type)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    (void)world;
 
     if (!type) {
         return 0;

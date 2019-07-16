@@ -970,6 +970,7 @@ ecs_entity_t ecs_type_get_entity(
     ecs_type_t type,
     uint32_t index)
 {
+    (void)world;
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!type) {

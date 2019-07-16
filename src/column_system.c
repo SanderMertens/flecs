@@ -286,6 +286,7 @@ void remove_table(
     ecs_vector_t *tables,
     int32_t index)
 {
+    (void)system_data;
     ecs_vector_remove_index(tables, &matched_table_params, index);
 }
 
@@ -460,6 +461,7 @@ int32_t table_matched(
 {
     uint32_t i, count = ecs_vector_count(tables);
     ecs_matched_table_t *table_data = ecs_vector_first(tables);
+    (void)system_data;
 
     for (i = 0; i < count; i ++) {
         if (table_data[i].table == table) {
@@ -621,6 +623,8 @@ int32_t get_table_param_index(
 {
     uint32_t i, count = ecs_vector_count(tables);
     ecs_matched_table_t *table_data = ecs_vector_first(tables);
+    (void)world;
+    (void)system_data;
 
     for (i = 0; i < count; i ++) {
         if (table_data[i].table == table) {

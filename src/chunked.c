@@ -10,14 +10,14 @@ typedef struct sparse_elem_t {
     void *ptr;
 } sparse_elem_t;
 
-typedef struct ecs_chunked_t {
+struct ecs_chunked_t {
     ecs_vector_t *chunks;
     ecs_vector_t *dense;
     ecs_vector_t *sparse;
     ecs_vector_t *free_stack;
     uint32_t element_size;
     uint32_t chunk_size;
-} ecs_chunked_t;
+};
 
 static ecs_vector_params_t free_param = {.element_size = sizeof(uint32_t)};
 static ecs_vector_params_t dense_param = {.element_size = sizeof(uint32_t)};
@@ -50,7 +50,7 @@ void add_chunk(
 
     sparse_array = &sparse_array[(chunk_count - 1) * chunk_size];
 
-    int i;
+    uint32_t i;
     for (i = 0; i < chunk_size; i ++) {
         sparse_array[i].ptr = ECS_OFFSET(chunk->data, i * element_size);
     }
@@ -111,7 +111,7 @@ ecs_chunked_t* _ecs_chunked_new(
     result->element_size = element_size;
     result->chunk_size = chunk_size;
 
-    int i;
+    uint32_t i;
     for (i = 0; i < chunk_count; i ++) {
         add_chunk(result);
     }
@@ -148,6 +148,7 @@ void* _ecs_chunked_add(
     ecs_chunked_t *chunked,
     uint32_t element_size)
 {
+    (void)element_size;
     ecs_assert(
         element_size == chunked->element_size, ECS_INVALID_PARAMETER, NULL);
 
@@ -185,6 +186,7 @@ void* _ecs_chunked_remove(
     uint32_t element_size,
     uint32_t index)
 {   
+    (void)element_size;
     ecs_assert(element_size == chunked->element_size, ECS_INVALID_PARAMETER, NULL);
 
     uint32_t *free_elem = ecs_vector_add(&chunked->free_stack, &free_param);
@@ -198,6 +200,7 @@ void* _ecs_chunked_get(
     uint32_t element_size,
     uint32_t index)
 {
+    (void)element_size;
     ecs_assert(index < ecs_vector_count(chunked->dense), 
         ECS_INVALID_PARAMETER, NULL);
     
@@ -214,6 +217,7 @@ void* _ecs_chunked_get_sparse(
     uint32_t element_size,
     uint32_t index)
 {
+    (void)element_size;
     ecs_assert(element_size == chunked->element_size, 
         ECS_INVALID_PARAMETER, NULL);
 
