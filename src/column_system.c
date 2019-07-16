@@ -260,7 +260,7 @@ void add_table(
                             false,
                             true);
 
-                        ecs_set_watch(world, e);                     
+                        ecs_set_watch(world, &world->main_stage, e);                     
                     } else {
                         ref->cached_ptr = NULL;
                     }

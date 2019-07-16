@@ -237,6 +237,7 @@ ecs_type_t ecs_type_from_array_normalize(
 static
 void mark_parents(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_entity_t *array,
     uint32_t count)
 {
@@ -245,7 +246,7 @@ void mark_parents(
         ecs_entity_t e = array[i];
 
         if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {
-            ecs_set_watch(world, e & ECS_ENTITY_MASK);
+            ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
         } else if (!(e & ECS_ENTITY_FLAGS_MASK)) {
             break;
         }
@@ -273,7 +274,7 @@ ecs_type_t register_type(
         result = ecs_type_from_array(array, count);
 
         if (has_flags) {
-            mark_parents(world, array, count);
+            mark_parents(world, stage, array, count);
         }
     }
 

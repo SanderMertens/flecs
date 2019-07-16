@@ -2833,3 +2833,28 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
     ecs_fini(world);
 }
 
+static
+void Task(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+    ecs_entity_t *e = ecs_get_context(rows->world);
+
+    ecs_add(rows->world, *e, Position);
+}
+
+void SingleThreadStaging_merge_after_tasks() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ECS_SYSTEM(world, Task, EcsOnUpdate, .Position);
+
+    ecs_set_context(world, &e);
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
