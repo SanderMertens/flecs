@@ -2239,7 +2239,7 @@ void Prefab_cyclic_inheritance() {
     /* Override Velocity from e_1 */
     ecs_remove(world, e_2, Velocity);
     ecs_add(world, e_2, Velocity);
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    Velocity *v = ecs_get_ptr(world, e_2, Velocity);
     test_int(v->x, 1);
     test_int(v->y, 2);
 
