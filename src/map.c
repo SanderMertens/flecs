@@ -304,6 +304,7 @@ void* _ecs_map_set(
     const void *data,
     uint32_t size)
 {
+    (void)size;
     ecs_assert(ecs_map_data_size(map) == size, ECS_INVALID_PARAMETER, NULL);
 
     uint32_t bucket_count = map->bucket_count;
@@ -401,6 +402,8 @@ bool _ecs_map_has(
     void *value_out,
     uint32_t size)
 {
+    (void)size;
+
     if (!map) {
         return false;
     }
@@ -533,6 +536,8 @@ void* ecs_map_next_w_key_w_size(
     uint64_t *key_out,
     size_t size)
 {
+    (void)size;
+
     ecs_map_t *map = iter_data->map;
     ecs_assert(!size || data_size(map) == size, ECS_INTERNAL_ERROR, NULL);
 

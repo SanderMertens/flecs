@@ -630,6 +630,7 @@ void* get_owned_column(
     int32_t table_column)
 {
     ecs_assert(rows->table_columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
 
     ecs_table_column_t *column = &((ecs_table_column_t*)rows->table_columns)[table_column];
     ecs_assert(column->size != 0, ECS_COLUMN_HAS_NO_DATA, NULL);
@@ -645,6 +646,7 @@ void* get_shared_column(
     int32_t table_column)
 {
     ecs_assert(rows->references != NULL, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
 
 #ifndef NDEBUG
     if (size) {
