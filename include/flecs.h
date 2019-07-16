@@ -1055,6 +1055,12 @@ bool _ecs_has_any(
 #define ecs_has_any(world, entity, type)\
     _ecs_has_any(world, entity, T##type)
 
+FLECS_EXPORT
+bool ecs_has_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component);
+
 /** Check if parent entity contains child entity.
  * This function tests if the specified parent entity has been added to the
  * specified child entity.

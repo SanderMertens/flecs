@@ -847,7 +847,12 @@ void ecs_merge_entity(
     ecs_table_t *old_table = NULL;
     
     if (stage_has_entity(&world->main_stage, entity, &old_row)) {
-        old_table = ecs_world_get_table(world, stage, old_row.type);
+        if (old_row.type) {
+            /* It is possible that an entity exists in the main stage but does
+             * not have a type. This happens when an empty entity is being 
+             * watched, in which case it will have -1 as index, but no type. */
+            old_table = ecs_world_get_table(world, stage, old_row.type);
+        }
     }
 
     ecs_type_t to_remove = NULL;
@@ -887,9 +892,10 @@ void ecs_merge_entity(
 
 void ecs_set_watch(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_entity_t entity)
 {    
-    ecs_row_t row = row_from_stage(&world->main_stage, entity);
+    ecs_row_t row = row_from_stage(stage, entity);
 
     if (row.index > 0) {
         row.index *= -1;
@@ -900,7 +906,7 @@ void ecs_set_watch(
         row.type = NULL;
     }
 
-    ecs_map_set(world->main_stage.entity_index, entity, &row);
+    ecs_map_set(stage->entity_index, entity, &row);
 }
 
 bool ecs_components_contains_component(
@@ -1419,6 +1425,26 @@ bool _ecs_has_any(
     ecs_world_t *world_arg = world;
     ecs_type_t entity_type = ecs_get_type(world_arg, entity);
     return ecs_type_contains(world, entity_type, type, false, true);
+}
+
+bool ecs_has_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!entity) {
+        return false;
+    }
+
+    if (!component) {
+        return false;
+    }
+
+    ecs_world_t *world_arg = world;
+    ecs_type_t entity_type = ecs_get_type(world_arg, entity);
+    return ecs_type_has_entity(world, entity_type, component);
 }
 
 bool ecs_contains(

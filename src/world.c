@@ -1069,6 +1069,12 @@ void run_tasks(
         for (i = 0; i < system_count; i ++) {
             ecs_run_task(world, buffer[i]);
         }
+
+        if (world->auto_merge) {
+            world->in_progress = false;
+            ecs_merge(world);
+            world->in_progress = true;
+        }
     }
 }
 

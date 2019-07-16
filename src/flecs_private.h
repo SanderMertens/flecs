@@ -37,6 +37,7 @@ ecs_type_t ecs_notify(
  * when entities used in system expressions change their components. */
 void ecs_set_watch(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_entity_t entity);
 
 /* Does one of the entity containers has specified component */

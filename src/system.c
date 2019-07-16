@@ -279,7 +279,7 @@ int ecs_parse_signature_action(
                 ecs_abort(ECS_UNRESOLVED_IDENTIFIER, source_id);
             }
 
-            ecs_set_watch(world, elem->source);
+            ecs_set_watch(world, &world->main_stage, elem->source);
         }
 
     /* OR columns store a type id instead of a single component */

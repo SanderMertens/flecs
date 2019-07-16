@@ -464,7 +464,9 @@
                 "match_base",
                 "match_base_after_add_in_prev_phase",
                 "override_watched_prefab",
-                "rematch_twice"
+                "rematch_twice",
+                "inherit_in_system",
+                "add_to_empty_base_in_system"
             ]
         }, {
             "id": "System_w_FromContainer",
@@ -720,7 +722,8 @@
                 "match_table_created_w_new_in_on_set",
                 "merge_table_w_container_added_in_progress",
                 "merge_table_w_container_added_on_set",
-                "merge_table_w_container_added_on_set_reverse"
+                "merge_table_w_container_added_on_set_reverse",
+                "merge_after_tasks"
             ]
         }, {
             "id": "MultiThreadStaging",

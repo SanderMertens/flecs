@@ -418,6 +418,8 @@ void Prefab_match_base(void);
 void Prefab_match_base_after_add_in_prev_phase(void);
 void Prefab_override_watched_prefab(void);
 void Prefab_rematch_twice(void);
+void Prefab_inherit_in_system(void);
+void Prefab_add_to_empty_base_in_system(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -656,6 +658,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set(void);
 void SingleThreadStaging_merge_table_w_container_added_in_progress(void);
 void SingleThreadStaging_merge_table_w_container_added_on_set(void);
 void SingleThreadStaging_merge_table_w_container_added_on_set_reverse(void);
+void SingleThreadStaging_merge_after_tasks(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_2_threads_add_to_current(void);
@@ -2078,7 +2081,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 50,
+        .testcase_count = 52,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -2279,6 +2282,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "rematch_twice",
                 .function = Prefab_rematch_twice
+            },
+            {
+                .id = "inherit_in_system",
+                .function = Prefab_inherit_in_system
+            },
+            {
+                .id = "add_to_empty_base_in_system",
+                .function = Prefab_add_to_empty_base_in_system
             }
         }
     },
@@ -2964,7 +2975,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 62,
+        .testcase_count = 63,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -3213,6 +3224,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "merge_table_w_container_added_on_set_reverse",
                 .function = SingleThreadStaging_merge_table_w_container_added_on_set_reverse
+            },
+            {
+                .id = "merge_after_tasks",
+                .function = SingleThreadStaging_merge_after_tasks
             }
         }
     },
