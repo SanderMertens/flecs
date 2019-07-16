@@ -306,3 +306,25 @@ void Vector_set_size_smaller_than_count() {
 
     ecs_vector_free(vector);
 }
+
+void Vector_pop_elements() {
+    ecs_vector_t *array = ecs_vector_new(&arr_params, 4);
+    array = fill_array(array);
+    int value;
+
+    test_assert( ecs_vector_pop(array, &arr_params, &value));
+    test_int(value, 3);
+
+    test_assert( ecs_vector_pop(array, &arr_params, &value));
+    test_int(value, 2);
+
+    test_assert( ecs_vector_pop(array, &arr_params, &value));
+    test_int(value, 1);
+
+    test_assert( ecs_vector_pop(array, &arr_params, &value));
+    test_int(value, 0);
+
+    test_assert( !ecs_vector_pop(array, &arr_params, &value));
+
+    ecs_vector_free(array);
+}
