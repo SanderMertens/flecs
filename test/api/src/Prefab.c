@@ -2207,3 +2207,41 @@ void Prefab_add_to_empty_base_in_system() {
 
     ecs_fini(world);
 }
+
+void Prefab_cyclic_inheritance() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e_1, Velocity, {1, 2});
+    ecs_entity_t e_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_set(world, e_2, Velocity, {3, 4});
+
+    ecs_inherit(world, e_1, e_2);
+    ecs_inherit(world, e_2, e_1);
+
+    test_assert( ecs_has(world, e_1, Position));
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( ecs_has_entity(world, e_1, e_2 | ECS_INSTANCEOF));
+    test_assert( ecs_has(world, e_2, Position));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has_entity(world, e_2, e_1 | ECS_INSTANCEOF));
+
+    /* Override Position from e_2 */
+    ecs_remove(world, e_1, Position);
+    ecs_add(world, e_1, Position);
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    /* Override Velocity from e_1 */
+    ecs_remove(world, e_2, Velocity);
+    ecs_add(world, e_2, Velocity);
+    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}

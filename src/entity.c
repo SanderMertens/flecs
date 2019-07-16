@@ -858,7 +858,7 @@ void ecs_merge_entity(
     ecs_type_t to_remove = NULL;
     ecs_map_has(stage->remove_merge, entity, &to_remove);
 
-    ecs_type_t staged_id = staged_row->type;    
+    ecs_type_t staged_type = staged_row->type;    
     ecs_type_t type = ecs_type_merge_intern(
         world, stage, old_row.type, staged_row->type, to_remove);
 
@@ -876,11 +876,11 @@ void ecs_merge_entity(
     int32_t new_index = commit(
         world, &world->main_stage, &info, type, 0, to_remove, false);
     
-    if (type && staged_id) {
+    if (type && staged_type) {
         ecs_table_t *new_table = ecs_world_get_table(world, stage, type);
         assert(new_table != NULL);
 
-        ecs_table_t *staged_table = ecs_world_get_table(world, stage, staged_id);
+        ecs_table_t *staged_table = ecs_world_get_table(world, stage, staged_type);
         ecs_table_column_t *staged_columns = NULL;
         ecs_map_has(stage->data_stage, (uintptr_t)staged_row->type, &staged_columns);
         ecs_assert(staged_columns != NULL, ECS_INTERNAL_ERROR, NULL);

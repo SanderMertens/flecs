@@ -466,7 +466,8 @@
                 "override_watched_prefab",
                 "rematch_twice",
                 "inherit_in_system",
-                "add_to_empty_base_in_system"
+                "add_to_empty_base_in_system",
+                "cyclic_inheritance"
             ]
         }, {
             "id": "System_w_FromContainer",
