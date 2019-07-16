@@ -2245,3 +2245,26 @@ void Prefab_cyclic_inheritance() {
 
     ecs_fini(world);
 }
+
+void Prefab_dont_inherit_disabled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e_1 = ecs_new(world, Position);
+    ecs_entity_t e_2 = ecs_new(world, Velocity);
+    
+    ecs_add(world, e_2, EcsDisabled);
+    ecs_inherit(world, e_1, e_2);
+
+    test_assert( ecs_has(world, e_1, Position));
+    test_assert( ecs_has(world, e_1, Velocity));
+    test_assert( !ecs_has(world, e_1, EcsDisabled));
+    test_assert( ecs_has_entity(world, e_1, e_2 | ECS_INSTANCEOF));
+    test_assert( !ecs_has(world, e_2, Position));
+    test_assert( ecs_has(world, e_2, Velocity));
+    test_assert( ecs_has(world, e_2, EcsDisabled));
+
+    ecs_fini(world);
+}

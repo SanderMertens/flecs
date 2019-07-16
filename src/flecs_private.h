@@ -12,7 +12,7 @@ void ecs_merge_entity(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_row_t *staged_row);
+    ecs_row_t staged_row);
 
 /* Get prefab from type, even if type was introduced while in progress */
 ecs_entity_t ecs_get_prefab_from_type(

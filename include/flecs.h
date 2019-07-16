@@ -927,7 +927,7 @@ void ecs_disinherit(
  * NULL.
  *
  * Note that the returned pointer has temporary validity. Operations such as
- * delete and commit may invalidate the pointer as data is potentially moved
+ * delete and add/remove may invalidate the pointer as data is potentially moved
  * to different locations. After one of these operations is invoked, the pointer
  * will have to be re-obtained.
  *

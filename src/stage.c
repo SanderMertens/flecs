@@ -44,7 +44,7 @@ void merge_commits(
     while (ecs_map_hasnext(&it)) {
         ecs_entity_t entity;
         ecs_row_t *row = ecs_map_next_w_key(&it, &entity);
-        ecs_merge_entity(world, stage, entity, row);
+        ecs_merge_entity(world, stage, entity, *row);
     }
 
     it = ecs_map_iter(stage->data_stage);

@@ -718,7 +718,7 @@ ecs_entity_t ecs_type_contains(
         }
 
         if (e1 != e2) {
-            if (match_prefab && e2 != EEcsId && e2 != EEcsPrefab) {
+            if (match_prefab && e2 != EEcsId && e2 != EEcsPrefab && e2 != EEcsDisabled) {
                 if (ecs_find_entity_in_prefabs(world, type_1, e2)) {
                     e1 = e2;
                 }

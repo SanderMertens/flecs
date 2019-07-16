@@ -841,7 +841,7 @@ void ecs_merge_entity(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_row_t *staged_row)
+    ecs_row_t staged_row)
 {
     ecs_row_t old_row = {0};
     ecs_table_t *old_table = NULL;
@@ -858,9 +858,9 @@ void ecs_merge_entity(
     ecs_type_t to_remove = NULL;
     ecs_map_has(stage->remove_merge, entity, &to_remove);
 
-    ecs_type_t staged_type = staged_row->type;    
+    ecs_type_t staged_type = staged_row.type;    
     ecs_type_t type = ecs_type_merge_intern(
-        world, stage, old_row.type, staged_row->type, to_remove);
+        world, stage, old_row.type, staged_row.type, to_remove);
 
     ecs_entity_info_t info = {
         .entity = entity,
@@ -882,11 +882,11 @@ void ecs_merge_entity(
 
         ecs_table_t *staged_table = ecs_world_get_table(world, stage, staged_type);
         ecs_table_column_t *staged_columns = NULL;
-        ecs_map_has(stage->data_stage, (uintptr_t)staged_row->type, &staged_columns);
+        ecs_map_has(stage->data_stage, (uintptr_t)staged_row.type, &staged_columns);
         ecs_assert(staged_columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
         copy_row( new_table->type, new_table->columns, new_index,
-                  staged_table->type, staged_columns, staged_row->index); 
+                  staged_table->type, staged_columns, staged_row.index); 
     }
 }
 
