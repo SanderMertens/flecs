@@ -648,6 +648,7 @@ ecs_world_t *ecs_init(void) {
 
     world->frame_start = (ecs_time_t){0, 0};
     world->frame_time = 0;
+    world->world_time = 0;
     world->merge_time = 0;
     world->system_time = 0;
     world->target_fps = 0;
@@ -1147,6 +1148,7 @@ bool ecs_progress(
     }
 
     world->delta_time = user_delta_time;
+    world->world_time += user_delta_time;
     world->merge_time = 0;
 
     bool has_threads = ecs_vector_count(world->worker_threads) != 0;

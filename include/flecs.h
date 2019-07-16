@@ -115,6 +115,7 @@ typedef struct ecs_rows_t {
 
     void *param;                 /* Userdata passed to on-demand system */
     float delta_time;            /* Time elapsed since last frame */
+    float world_time;            /* Time elapsed since start of simulation */
     uint32_t frame_offset;       /* Offset relative to frame */
     uint32_t offset;             /* Offset relative to current table */
     uint32_t count;              /* Number of rows to process by system */

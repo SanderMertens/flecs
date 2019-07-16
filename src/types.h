@@ -431,6 +431,7 @@ struct ecs_world {
     float merge_time;             /* Time spent on merging */
     float target_fps;             /* Target fps */
     float fps_sleep;              /* Sleep time to prevent fps overshoot */
+    float world_time;             /* Time since start of simulation */
 
 
     /* -- Settings from command line arguments -- */
