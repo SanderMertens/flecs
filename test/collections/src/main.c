@@ -32,6 +32,7 @@ void Vector_sort_empty(void);
 void Vector_size_of_null(void);
 void Vector_remove_index_w_move(void);
 void Vector_set_size_smaller_than_count(void);
+void Vector_pop_elements(void);
 
 // Testsuite 'Map'
 void Map_setup(void);
@@ -54,7 +55,7 @@ void Map_remove_unknown(void);
 static bake_test_suite suites[] = {
     {
         .id = "Vector",
-        .testcase_count = 22,
+        .testcase_count = 23,
         .setup = Vector_setup,
         .testcases = (bake_test_case[]){
             {
@@ -144,6 +145,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_size_smaller_than_count",
                 .function = Vector_set_size_smaller_than_count
+            },
+            {
+                .id = "pop_elements",
+                .function = Vector_pop_elements
             }
         }
     },
