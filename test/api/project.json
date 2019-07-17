@@ -468,7 +468,8 @@
                 "inherit_in_system",
                 "add_to_empty_base_in_system",
                 "cyclic_inheritance",
-                "dont_inherit_disabled"
+                "cyclic_inheritance_get_unavailable",
+                "cyclic_inheritance_has_unavailable"
             ]
         }, {
             "id": "System_w_FromContainer",

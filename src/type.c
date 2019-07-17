@@ -445,10 +445,11 @@ ecs_type_t find_or_create_type(
 
 ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_world_t *world,
+    ecs_entity_t entity,
     ecs_type_t type,
-    ecs_entity_t entity)
+    ecs_entity_t component,
+    ecs_entity_t previous)
 {
-    ecs_type_t entity_type = ecs_type_from_entity(world, entity);
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type);
 
@@ -456,10 +457,25 @@ ecs_entity_t ecs_find_entity_in_prefabs(
      * at the end of the type. */
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = array[i];
+
         if (e & ECS_INSTANCEOF) {
             ecs_entity_t prefab = e & ECS_ENTITY_MASK;
-            if (_ecs_has(world, prefab, entity_type)) {
+            ecs_type_t prefab_type = ecs_get_type(world, prefab);
+
+            if (prefab == previous) {
+                continue;
+            }
+
+            if (ecs_type_has_entity_intern(
+                world, prefab_type, component, false)) 
+            {
                 return prefab;
+            } else {
+                prefab = ecs_find_entity_in_prefabs(
+                    world, prefab, prefab_type, component, entity);
+                if (prefab) {
+                    return prefab;
+                }
             }
         } else {
             /* If this is not a prefab, the following entities won't
@@ -719,7 +735,7 @@ ecs_entity_t ecs_type_contains(
 
         if (e1 != e2) {
             if (match_prefab && e2 != EEcsId && e2 != EEcsPrefab && e2 != EEcsDisabled) {
-                if (ecs_find_entity_in_prefabs(world, type_1, e2)) {
+                if (ecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
                     e1 = e2;
                 }
             }
@@ -762,7 +778,7 @@ bool ecs_type_has_entity_intern(
     }
 
     if (match_prefab) {
-        if (ecs_find_entity_in_prefabs(world, type, entity)) {
+        if (ecs_find_entity_in_prefabs(world, 0, type, entity, 0)) {
             return true;
         }
     }

@@ -71,7 +71,7 @@ ecs_entity_t ecs_get_entity_for_component(
     }
 
     if (i == count) {
-        entity = ecs_find_entity_in_prefabs(world, type, component);
+        entity = ecs_find_entity_in_prefabs(world, entity, type, component, 0);
     }
 
     return entity;

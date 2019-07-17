@@ -161,8 +161,10 @@ int32_t ecs_type_get_prefab(
 /* Find entity in prefabs of type */
 ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_world_t *world,
+    ecs_entity_t entity,
     ecs_type_t type,
-    ecs_entity_t entity);
+    ecs_entity_t component,
+    ecs_entity_t previous);
 
 /* -- Table API -- */
 

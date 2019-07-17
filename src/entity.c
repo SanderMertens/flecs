@@ -41,6 +41,8 @@ void copy_row(
     ecs_entity_t *new_components = ecs_vector_first(new_type);
     ecs_entity_t *old_components = ecs_vector_first(old_type);
 
+    ecs_assert(new_index >= 0, ECS_INTERNAL_ERROR, NULL);
+
     ecs_assert(old_columns->data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_columns->data != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -715,6 +717,7 @@ void* get_ptr_from_prefab(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_info_t *info,
+    ecs_entity_t previous,
     ecs_entity_t component)
 {
     ecs_type_t type = info->table->type;
@@ -725,13 +728,19 @@ void* get_ptr_from_prefab(
     while (!ptr && (p = ecs_type_get_prefab(type, p)) != -1) {
         ecs_entity_t prefab = type_buffer[p] & ECS_ENTITY_MASK;
 
+        /* Detect cycles with two entities */
+        if (prefab == previous) {
+            continue;
+        }
+
         ecs_entity_info_t prefab_info = {.entity = prefab};
         if (populate_info(world, &world->main_stage, &prefab_info)) {
             ptr = get_row_ptr(prefab_info.table->type, prefab_info.columns, 
                 prefab_info.index, component);
             
             if (!ptr) {
-                ptr = get_ptr_from_prefab(world, stage, &prefab_info, component);
+                ptr = get_ptr_from_prefab(
+                    world, stage, &prefab_info, info->entity, component);
             }
         }
     }
@@ -791,13 +800,13 @@ void* ecs_get_ptr_intern(
 
     if (search_prefab && component != EEcsId && component != EEcsPrefab) {
         if (main_info.table) {
-            ptr = get_ptr_from_prefab(world, stage, &main_info, component);
+            ptr = get_ptr_from_prefab(world, stage, &main_info, 0, component);
         }
 
         if (ptr) return ptr;
 
         if (staged_info.table) {
-            ptr = get_ptr_from_prefab(world, stage, &staged_info, component);
+            ptr = get_ptr_from_prefab(world, stage, &staged_info, 0, component);
         }
     }
 
