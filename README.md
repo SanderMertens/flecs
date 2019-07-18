@@ -155,6 +155,9 @@ An nbody simulation that uses flecs multithreading.
 #### [ecs_collisions](https://github.com/SanderMertens/ecs_collisions)
 A simple application demonstrating collision detection with flecs.
 
+#### [ecs_inheritance](https://github.com/SanderMertens/ecs_inheritance)
+A simple application demonstrating inheritance with flecs.
+
 #### [ecs_pong](https://github.com/SanderMertens/ecs_pong)
 An implementation of pong in flecs.
 
