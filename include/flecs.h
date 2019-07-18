@@ -1034,6 +1034,17 @@ bool _ecs_has(
 #define ecs_has(world, entity, type)\
     _ecs_has(world, entity, T##type)
 
+/** Same as ecs_has, but only returns true if entity owns the component(s). */
+FLECS_EXPORT
+bool _ecs_has_owned(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_type_t type);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_has_owned(world, entity, type)\
+    _ecs_has_owned(world, entity, T##type)
+
 /** Check if entity has any of the components in the specified type.
  * This operation checks if the entity has any of the components associated with
  * the specified type. It accepts component handles, families and prefabs.
@@ -1055,6 +1066,17 @@ bool _ecs_has_any(
 
 #define ecs_has_any(world, entity, type)\
     _ecs_has_any(world, entity, T##type)
+
+/** Same as ecs_has_any, but only returns true if entity owns the component(s). */
+FLECS_EXPORT
+bool _ecs_has_any_owned(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_type_t type);
+
+/* Macro to ensure you don't accidentally pass a non-type into the function */
+#define ecs_has_any_owned(world, entity, type)\
+    _ecs_has_any_owned(world, entity, T##type)
 
 FLECS_EXPORT
 bool ecs_has_entity(

@@ -670,6 +670,7 @@ void SingleThreadStaging_merge_table_w_container_added_in_progress(void);
 void SingleThreadStaging_merge_table_w_container_added_on_set(void);
 void SingleThreadStaging_merge_table_w_container_added_on_set_reverse(void);
 void SingleThreadStaging_merge_after_tasks(void);
+void SingleThreadStaging_override_after_remove_in_progress(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_2_threads_add_to_current(void);
@@ -3030,7 +3031,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 63,
+        .testcase_count = 64,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -3283,6 +3284,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "merge_after_tasks",
                 .function = SingleThreadStaging_merge_after_tasks
+            },
+            {
+                .id = "override_after_remove_in_progress",
+                .function = SingleThreadStaging_override_after_remove_in_progress
             }
         }
     },
