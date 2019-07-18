@@ -360,7 +360,9 @@
                 "owned_column",
                 "owned_not_column",
                 "shared_column",
-                "shared_not_column"
+                "shared_not_column",
+                "container_dont_match_inheritance",
+                "cascade_dont_match_inheritance"
             ]
         }, {
             "id": "SystemCascade",

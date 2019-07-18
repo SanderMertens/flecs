@@ -854,7 +854,7 @@ void ecs_merge_entity(
 {
     ecs_row_t old_row = {0};
     ecs_table_t *old_table = NULL;
-    
+
     if (stage_has_entity(&world->main_stage, entity, &old_row)) {
         if (old_row.type) {
             /* It is possible that an entity exists in the main stage but does
@@ -922,12 +922,19 @@ bool ecs_components_contains_component(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t component,
+    ecs_entity_t flags,
     ecs_entity_t *entity_out)
 {
     uint32_t i, count = ecs_vector_count(type);
     ecs_entity_t *type_buffer = ecs_vector_first(type);
 
     for (i = 0; i < count; i ++) {
+        if (flags) {
+            if ((type_buffer[i] & flags) != flags) {
+                continue;
+            }
+        }
+
         ecs_entity_t e = type_buffer[i] & ECS_ENTITY_MASK;
         ecs_row_t row = row_from_stage(&world->main_stage, e);
 
@@ -1492,7 +1499,7 @@ ecs_entity_t _ecs_get_parent(
     ecs_type_t type = ecs_get_type(world, entity);
     
     ecs_components_contains_component(
-        world, type, component, &parent);
+        world, type, component, 0, &parent);
 
     return parent;
 }

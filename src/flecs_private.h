@@ -45,6 +45,7 @@ bool ecs_components_contains_component(
     ecs_world_t *world,
     ecs_type_t table_type,
     ecs_entity_t component,
+    ecs_entity_t flags,
     ecs_entity_t *entity_out);
 
 /* Get pointer to a component */
