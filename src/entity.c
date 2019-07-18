@@ -1154,6 +1154,52 @@ void ecs_delete(
     }
 }
 
+static
+ecs_entity_t copy_from_stage(
+    ecs_world_t *world,
+    ecs_stage_t *src_stage,
+    ecs_entity_t src_entity,
+    ecs_entity_t dst_entity,
+    bool copy_value)
+{
+    if (!src_entity) {
+        return 0;
+    }
+
+    ecs_world_t *world_arg = world;
+    ecs_stage_t *stage = ecs_get_stage(&world);    
+
+    ecs_entity_info_t src_info = {.entity = src_entity};
+
+    if (populate_info(world, src_stage, &src_info)) {
+        ecs_type_t new_type = NULL;
+        if (!dst_entity) {
+            dst_entity = ++ world->last_handle;
+            new_type = src_info.type;
+        } else {
+            /* TODO */
+            ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        }
+
+        ecs_entity_info_t info = {
+            .entity = dst_entity
+        };
+
+        commit(world, stage, &info, new_type, src_info.type, 0, false);
+
+        if (copy_value) {
+            copy_row(info.table->type, info.columns, info.index,
+                src_info.type, src_info.columns, src_info.index);
+
+            ecs_notify(
+                world_arg, stage, world->type_sys_set_index, 
+                info.type, info.table, info.columns, info.index - 1, 1);                
+        }
+    }
+
+    return dst_entity;
+}
+
 ecs_entity_t ecs_clone(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -1161,54 +1207,18 @@ ecs_entity_t ecs_clone(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
 
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
 
-    ecs_entity_t result = ++ world->last_handle;
-    if (entity) {
-        ecs_row_t row;
-        if (stage_has_entity(&world->main_stage, entity, &row)) {
-            ecs_type_t type = row.type;
-            ecs_entity_info_t info = {
-                .entity = result,
-                .type = 0,
-                .index = row.index
-            };
+    ecs_entity_t result = copy_from_stage(world, &world->main_stage, entity, 0, copy_value);
 
-            commit(world, stage, &info, type, type, 0, false);
+    if (stage != &world->main_stage) {
+        result = copy_from_stage(world, stage, entity, result, copy_value);
+    }
 
-            if (copy_value) {
-                ecs_table_t *from_table = ecs_world_get_table(world, stage, type);
-                ecs_table_column_t *to_columns = NULL, *from_columns = from_table->columns;
-                ecs_table_t *to_table = ecs_world_get_table(world, stage, type);
-
-                if (world->in_progress) {
-                    ecs_map_has(stage->data_stage, (uintptr_t)type, &to_columns);
-                } else {
-                    to_columns = to_table->columns;
-                }
-
-                ecs_assert(to_table != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(to_columns != NULL, ECS_INTERNAL_ERROR, NULL);  
-
-                ecs_row_t to_row;
-                bool has_entity = stage_has_entity(stage, result, &to_row);
-                (void)has_entity;
-                /* Entity was just committed to stage, so should be available */
-                ecs_assert(has_entity == true, ECS_INTERNAL_ERROR, NULL);
-
-                copy_row(to_table->type, to_columns, to_row.index,
-                    from_table->type, from_columns, row.index);
-
-                /* A clone with value is equivalent to a set */
-                ecs_notify(
-                    world_arg, stage, world->type_sys_set_index, 
-                    from_table->type, to_table, to_columns, to_row.index - 1, 
-                    1);
-            }
-        }
+    if (!result) {
+        result = ++ world->last_handle;
     }
 
     return result;

@@ -420,9 +420,11 @@ void Prefab_override_watched_prefab(void);
 void Prefab_rematch_twice(void);
 void Prefab_inherit_in_system(void);
 void Prefab_add_to_empty_base_in_system(void);
+void Prefab_dont_inherit_disabled(void);
 void Prefab_cyclic_inheritance(void);
 void Prefab_cyclic_inheritance_get_unavailable(void);
 void Prefab_cyclic_inheritance_has_unavailable(void);
+void Prefab_clone_after_inherit_in_on_add(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -2084,7 +2086,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 55,
+        .testcase_count = 57,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -2295,6 +2297,10 @@ static bake_test_suite suites[] = {
                 .function = Prefab_add_to_empty_base_in_system
             },
             {
+                .id = "dont_inherit_disabled",
+                .function = Prefab_dont_inherit_disabled
+            },
+            {
                 .id = "cyclic_inheritance",
                 .function = Prefab_cyclic_inheritance
             },
@@ -2305,6 +2311,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "cyclic_inheritance_has_unavailable",
                 .function = Prefab_cyclic_inheritance_has_unavailable
+            },
+            {
+                .id = "clone_after_inherit_in_on_add",
+                .function = Prefab_clone_after_inherit_in_on_add
             }
         }
     },

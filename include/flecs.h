@@ -1364,6 +1364,7 @@ bool ecs_type_has_entity(
  * @param expr The type expression.
  * @returns A type if the expression is valid, otherwise NULL.
  */
+FLECS_EXPORT
 ecs_type_t ecs_expr_to_type(
     ecs_world_t *world,
     const char *expr);

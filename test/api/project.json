@@ -467,9 +467,11 @@
                 "rematch_twice",
                 "inherit_in_system",
                 "add_to_empty_base_in_system",
+                "dont_inherit_disabled",
                 "cyclic_inheritance",
                 "cyclic_inheritance_get_unavailable",
-                "cyclic_inheritance_has_unavailable"
+                "cyclic_inheritance_has_unavailable",
+                "clone_after_inherit_in_on_add"
             ]
         }, {
             "id": "System_w_FromContainer",

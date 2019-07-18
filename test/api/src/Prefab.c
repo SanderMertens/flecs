@@ -2303,3 +2303,52 @@ void Prefab_cyclic_inheritance_has_unavailable() {
 
     ecs_fini(world);
 }
+
+static bool has_cloned = false;
+
+static
+void CloneInOnAdd(ecs_rows_t *rows)
+{
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        bool has_cloned_test = has_cloned;
+
+        /* Prevent recursive OnAdd calls */
+        has_cloned = true;
+
+        p[i].x = 10;
+        p[i].y = 20;
+
+        if (!has_cloned_test) {
+            ecs_entity_t clone = ecs_clone(rows->world, rows->entities[i], true);
+            test_assert( ecs_has(rows->world, clone, Position));
+
+            Position *p_clone = ecs_get_ptr(rows->world, clone, Position);
+            test_int(p_clone->x, 10);
+            test_int(p_clone->y, 20);
+
+            ecs_inherit(rows->world, clone, rows->entities[i]);
+        }
+    }
+}
+
+void Prefab_clone_after_inherit_in_on_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, CloneInOnAdd, EcsOnAdd, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(has_cloned == true);
+
+    ecs_fini(world);
+}
