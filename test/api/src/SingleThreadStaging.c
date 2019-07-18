@@ -2858,3 +2858,60 @@ void SingleThreadStaging_merge_after_tasks() {
 
     ecs_fini(world);
 }
+
+static
+void OverrideAfterRemove(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        test_int(p[i].x, 30);
+        test_int(p[i].y, 40);
+
+        ecs_remove(rows->world, rows->entities[i], Position);
+
+        /* The entity still has Position, because it inherits it from base */
+        test_assert(ecs_has(rows->world, rows->entities[i], Position));
+
+        /* The entity does not own Position */
+        test_assert(!ecs_has_owned(rows->world, rows->entities[i], Position));
+
+        ecs_add(rows->world, rows->entities[i], Position);
+        test_assert(ecs_has(rows->world, rows->entities[i], Position));
+
+        Position *p_ptr = ecs_get_ptr(rows->world, rows->entities[i], Position);
+        test_assert(p_ptr != NULL);
+        test_int(p_ptr->x, 10);
+        test_int(p_ptr->y, 20);
+
+        /* Main stage at this point still has old values */
+        test_int(p[i].x, 30);
+        test_int(p[i].y, 40);        
+    }
+}
+
+void SingleThreadStaging_override_after_remove_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, base, Position, EcsDisabled);
+    ECS_ENTITY(world, e, Position, INSTANCEOF | base);
+
+    ECS_SYSTEM(world, OverrideAfterRemove, EcsOnUpdate, Position);
+
+    ecs_set(world, base, Position, {10, 20});
+    ecs_set(world, e, Position, {30, 40});
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e, Position));
+    Position *p_ptr = ecs_get_ptr(world, e, Position);
+    test_assert(p_ptr != NULL);
+    test_int(p_ptr->x, 10);
+    test_int(p_ptr->y, 20);    
+
+    ecs_fini(world);
+}
