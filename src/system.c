@@ -10,7 +10,7 @@ void match_type(
     /* Test if the components of the system are equal or a subset of the 
      * components of the type */
     ecs_entity_t match = ecs_type_contains(
-        world, type, system_data->base.and_from_entity, true, false);
+        world, type, system_data->base.and_from_self, true, false);
 
     /* If there is a match, add the system to the type-row_system index */
     if (match) {
@@ -220,14 +220,34 @@ void ecs_system_compute_and_families(
 
         if (elem_kind == EcsFromSelf) {
             if (oper_kind == EcsOperAnd) {
-                system_data->and_from_entity = ecs_type_add_intern(
-                 world, NULL, system_data->and_from_entity, elem->is.component);
+                system_data->and_from_self = ecs_type_add_intern(
+                  world, NULL, system_data->and_from_self, elem->is.component);
             }
+
+        } else if (elem_kind == EcsFromOwned) {
+            if (oper_kind == EcsOperAnd) {
+                system_data->and_from_owned = ecs_type_add_intern(
+                  world, NULL, system_data->and_from_owned, elem->is.component);
+            } else if (oper_kind == EcsOperNot) {
+                system_data->not_from_owned = ecs_type_add_intern(
+                  world, NULL, system_data->not_from_owned, elem->is.component);
+            }
+
+        } else if (elem_kind == EcsFromShared) {
+            if (oper_kind == EcsOperAnd) {
+                system_data->and_from_shared = ecs_type_add_intern(
+                 world, NULL, system_data->and_from_shared, elem->is.component);
+            } else if (oper_kind == EcsOperNot) {
+                system_data->not_from_shared = ecs_type_add_intern(
+                 world, NULL, system_data->not_from_shared, elem->is.component);
+            }
+
         } else if (elem_kind == EcsFromSystem) {
             if (oper_kind == EcsOperAnd) {
                 system_data->and_from_system = ecs_type_add_intern(
-                  world, NULL, system_data->and_from_system, elem->is.component);
+                 world, NULL, system_data->and_from_system, elem->is.component);
             }
+
         } else if (elem_kind == EcsCascade) {
             system_data->cascade_by = i + 1;
         }
@@ -310,9 +330,17 @@ int ecs_parse_signature_action(
         elem->is.component = component;
 
         if (elem_kind == EcsFromSelf) {
-            system_data->not_from_entity =
+            system_data->not_from_self =
                 ecs_type_add_intern(
-                    world, NULL, system_data->not_from_entity, component);
+                    world, NULL, system_data->not_from_self, component);
+        } else if (elem_kind == EcsFromOwned) {
+            system_data->not_from_owned =
+                ecs_type_add_intern(
+                    world, NULL, system_data->not_from_owned, component);
+        } else if (elem_kind == EcsFromShared) {
+            system_data->not_from_shared =
+                ecs_type_add_intern(
+                    world, NULL, system_data->not_from_shared, component);                    
         } else if (elem_kind == EcsFromEntity) {
             elem->kind = EcsFromEntity;
             elem->source = ecs_lookup(world, source_id);
@@ -443,7 +471,7 @@ ecs_type_t ecs_notify_row_system(
     action(&rows);
 
     /* Return the components that the system promised to init/read/fini */
-    return system_data->base.and_from_entity;
+    return system_data->base.and_from_self;
 }
 
 /** Run a task. A task is a system that contains no columns that can be matched

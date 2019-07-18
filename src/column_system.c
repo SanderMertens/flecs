@@ -119,7 +119,9 @@ void add_table(
             ECS_INTERNAL_ERROR, NULL);
 
         /* Column that retrieves data from self or a fixed entity */
-        if (kind == EcsFromSelf || kind == EcsFromEntity) {
+        if (kind == EcsFromSelf || kind == EcsFromEntity || 
+            kind == EcsFromOwned || kind == EcsFromShared) 
+        {
             if (oper_kind == EcsOperAnd) {
                 component = column->is.component;
             } else if (oper_kind == EcsOperOptional) {
@@ -316,9 +318,29 @@ bool match_table(
         return false;
     }
 
-    type = system_data->base.and_from_entity;
-
+    /* Test if table has SELF columns in either owned or inherited components */
+    type = system_data->base.and_from_self;
     if (type && !ecs_type_contains(
+        world, table_type, type, true, true))
+    {
+        return false;
+    }
+
+    /* Test if table has OWNED columns in owned components */
+    type = system_data->base.and_from_owned;
+    if (type && !ecs_type_contains(
+        world, table_type, type, true, false))
+    {
+        return false;
+    }  
+
+    /* Test if table has SHARED columns in shared components */
+    type = system_data->base.and_from_shared;
+    if (type && ecs_type_contains(
+        world, table_type, type, true, false))
+    {
+        return false;
+    } else if (type && !ecs_type_contains(
         world, table_type, type, true, true))
     {
         return false;
@@ -333,7 +355,9 @@ bool match_table(
         ecs_system_expr_oper_kind_t oper_kind = elem->oper_kind;
 
         if (oper_kind == EcsOperAnd) {
-            if (elem_kind == EcsFromSelf) {
+            if (elem_kind == EcsFromSelf || elem_kind == EcsFromOwned || 
+                elem_kind == EcsFromShared) 
+            {
                 /* Already validated */
             } else if (elem_kind == EcsFromContainer) {
                 if (!ecs_components_contains_component(
@@ -368,17 +392,29 @@ bool match_table(
                 if (ecs_type_has_entity(world, type, elem->is.component)) {
                     return false;
                 }
-
             }
         }
     }
 
-    type = system_data->base.not_from_entity;
-    if (type && ecs_type_contains(
-        world, table_type, type, false, true))
+    type = system_data->base.not_from_self;
+    if (type && ecs_type_contains(world, table_type, type, false, true))
     {
         return false;
     }
+
+    type = system_data->base.not_from_owned;
+    if (type && ecs_type_contains(world, table_type, type, false, false))
+    {
+        return false;
+    }
+
+    type = system_data->base.not_from_shared;
+    if (type && !ecs_type_contains(world, table_type, type, false, false))
+    {
+        if (ecs_type_contains(world, table_type, type, false, true)) {
+            return false;
+        }
+    }        
 
     type = system_data->base.not_from_component;
     if (type && components_contains(

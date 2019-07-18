@@ -356,7 +356,11 @@
                 "match_disabled_and_enabled",
                 "match_prefab",
                 "match_prefab_and_normal",
-                "is_shared_on_column_not_set"
+                "is_shared_on_column_not_set",
+                "owned_column",
+                "owned_not_column",
+                "shared_column",
+                "shared_not_column"
             ]
         }, {
             "id": "SystemCascade",

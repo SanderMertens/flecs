@@ -45,6 +45,10 @@ char* parse_complex_elem(
             *elem_kind = EcsFromSystem;
         } else if (!strncmp(bptr, "SELF", dot - bptr)) {
             /* default */
+        } else if (!strncmp(bptr, "OWNED", dot - bptr)) {
+            *elem_kind = EcsFromOwned;
+        } else if (!strncmp(bptr, "SHARED", dot - bptr)) {
+            *elem_kind = EcsFromShared;
         } else if (!strncmp(bptr, "CASCADE", dot - bptr)) {
             *elem_kind = EcsCascade;   
         } else {

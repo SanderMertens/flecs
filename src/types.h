@@ -93,9 +93,11 @@ typedef struct EcsPrefabBuilder {
 /** Type that is used by systems to indicate where to fetch a component from */
 typedef enum ecs_system_expr_elem_kind_t {
     EcsFromSelf,            /* Get component from self (default) */
+    EcsFromOwned,           /* Get owned component from self */
+    EcsFromShared,          /* Get shared component from self */
     EcsFromContainer,       /* Get component from container */
     EcsFromSystem,          /* Get component from system */
-    EcsFromEmpty,              /* Get entity handle by id */
+    EcsFromEmpty,           /* Get entity handle by id */
     EcsFromEntity,          /* Get component from other entity */
     EcsCascade              /* Walk component in cascading (hierarchy) order */
 } ecs_system_expr_elem_kind_t;
@@ -164,10 +166,17 @@ typedef struct EcsSystem {
     ecs_system_action_t action;    /* Callback to be invoked for matching rows */
     const char *signature;         /* Signature with which system was created */
     ecs_vector_t *columns;         /* Column components */
-    ecs_type_t not_from_entity;    /* Exclude components from entity */
+
+    /* Precomputed types for quick comparisons */
+    ecs_type_t not_from_self;      /* Exclude components from self */
+    ecs_type_t not_from_owned;     /* Exclude components from self only if owned */
+    ecs_type_t not_from_shared;     /* Exclude components from self only if shared */
     ecs_type_t not_from_component; /* Exclude components from components */
-    ecs_type_t and_from_entity;    /* Which components are required from entity */
+    ecs_type_t and_from_self;      /* Which components are required from entity */
+    ecs_type_t and_from_owned;      /* Which components are required from entity */
+    ecs_type_t and_from_shared;      /* Which components are required from entity */
     ecs_type_t and_from_system;    /* Used to auto-add components to system */
+    
     int32_t cascade_by;            /* CASCADE column index */
     EcsSystemKind kind;            /* Kind of system */
     float time_spent;              /* Time spent on running system */

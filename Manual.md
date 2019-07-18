@@ -929,7 +929,25 @@ This is the default modifier, and is implied when no modifiers are explicitly sp
 Position, Velocity
 ```
 
-This system will match with any entities that have the `Position, Velocity` components. The components will be available to the system as owned (non-shared) columns, _except_ when a component is provided by a Prefab, in which case the component will be shared.
+This system will match with any entities that have the `Position, Velocity` components. The components will be available to the system as owned (non-shared) columns, except when a component is provided by an inherited entity, in which case the component will be shared.
+
+##### OWNED modifier
+This modifier is the same as the SELF modifier, but will only match entities that own the component. An example of the OWNED modifier is:
+
+```
+Position, OWNED.Velocity
+```
+
+This system will match with any entities that have the `Position, Velocity` components. The `Position` component can be either owned or shared, where the `Velocity` component is guaranteed to be owned by the entity, and cannot come from an inherited entity.
+
+##### SHARED modifier
+This modifier is the same as the SELF modifier, but will only match entities that share the component from another entity. An example of the SHARED modifier is:
+
+```
+Position, SHARED.Velocity
+```
+
+This system will match with any entities that have the `Position, Velocity` components. The `Position` component can be either owned or shared, where the `Velocity` component is guaranteed to be shared, and will come from an inherited entity.
 
 ##### EMPTY modifier
 The empty modifier lets an application pass handles to components or other systems to a system. This is frequently useful, as systems may need component handles to add or set components on entities that may not be part of the entity yet. Another use case for this feature is passing a handle to another `EcsManual` system to the system, which the system can then execute. This is frequently used when a system needs to evaluate a set of entities for every matching entity. An example of the empty modifier is:

@@ -1652,3 +1652,123 @@ void SystemOnFrame_is_shared_on_column_not_set() {
     ecs_fini(world);
 }
 
+
+void SystemOnFrame_owned_column() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, base, Velocity);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, OWNED.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.s[0][1], 0);
+    test_int(ctx.e[0], e1);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_owned_not_column() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, base, Velocity);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !OWNED.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.s[0][1], 0);
+    test_int(ctx.e[0], e2);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_shared_column() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, base, Velocity);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SHARED.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.s[0][1], base);
+    test_int(ctx.e[0], e2);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_shared_not_column() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, base, Velocity);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !SHARED.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.s[0][1], 0);
+    test_int(ctx.e[0], e1);
+
+    ecs_fini(world);
+}
