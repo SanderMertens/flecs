@@ -320,6 +320,10 @@ void SystemOnFrame_match_disabled_and_enabled(void);
 void SystemOnFrame_match_prefab(void);
 void SystemOnFrame_match_prefab_and_normal(void);
 void SystemOnFrame_is_shared_on_column_not_set(void);
+void SystemOnFrame_owned_column(void);
+void SystemOnFrame_owned_not_column(void);
+void SystemOnFrame_shared_column(void);
+void SystemOnFrame_shared_not_column(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -1768,7 +1772,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 34,
+        .testcase_count = 38,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -1905,6 +1909,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "is_shared_on_column_not_set",
                 .function = SystemOnFrame_is_shared_on_column_not_set
+            },
+            {
+                .id = "owned_column",
+                .function = SystemOnFrame_owned_column
+            },
+            {
+                .id = "owned_not_column",
+                .function = SystemOnFrame_owned_not_column
+            },
+            {
+                .id = "shared_column",
+                .function = SystemOnFrame_shared_column
+            },
+            {
+                .id = "shared_not_column",
+                .function = SystemOnFrame_shared_not_column
             }
         }
     },
