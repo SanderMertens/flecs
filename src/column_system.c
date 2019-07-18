@@ -149,7 +149,7 @@ void add_table(
                 component = column->is.component;
 
                 ecs_components_contains_component(
-                    world, table_type, component, &entity);
+                    world, table_type, component, ECS_CHILDOF, &entity);
 
             } else if (oper_kind == EcsOperOr) {
                 component = components_contains(
@@ -236,6 +236,8 @@ void add_table(
 
                     /* Find the entity for the component */
                     if (kind == EcsFromEntity) {
+                        e = entity;
+                    } else if (kind == EcsCascade) {
                         e = entity;
                     } else {
                         e = ecs_get_entity_for_component(
@@ -361,7 +363,7 @@ bool match_table(
                 /* Already validated */
             } else if (elem_kind == EcsFromContainer) {
                 if (!ecs_components_contains_component(
-                    world, table_type, elem->is.component, NULL))
+                    world, table_type, elem->is.component, ECS_CHILDOF, NULL))
                 {
                     return false;
                 }
@@ -534,7 +536,7 @@ void resolve_cascade_container(
     /* Resolve container entity */
     ecs_entity_t container = 0;
     ecs_components_contains_component(
-        world, table_type, ref->component, &container);        
+        world, table_type, ref->component, ECS_CHILDOF, &container);        
 
     /* If container was found, update the reference */
     if (container) {

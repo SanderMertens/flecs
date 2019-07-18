@@ -324,6 +324,8 @@ void SystemOnFrame_owned_column(void);
 void SystemOnFrame_owned_not_column(void);
 void SystemOnFrame_shared_column(void);
 void SystemOnFrame_shared_not_column(void);
+void SystemOnFrame_container_dont_match_inheritance(void);
+void SystemOnFrame_cascade_dont_match_inheritance(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -1772,7 +1774,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 38,
+        .testcase_count = 40,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -1925,6 +1927,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "shared_not_column",
                 .function = SystemOnFrame_shared_not_column
+            },
+            {
+                .id = "container_dont_match_inheritance",
+                .function = SystemOnFrame_container_dont_match_inheritance
+            },
+            {
+                .id = "cascade_dont_match_inheritance",
+                .function = SystemOnFrame_cascade_dont_match_inheritance
             }
         }
     },

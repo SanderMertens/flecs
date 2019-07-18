@@ -1688,7 +1688,6 @@ void SystemOnFrame_owned_not_column() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
@@ -1718,7 +1717,6 @@ void SystemOnFrame_shared_column() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
@@ -1748,7 +1746,6 @@ void SystemOnFrame_shared_not_column() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
@@ -1769,6 +1766,69 @@ void SystemOnFrame_shared_not_column() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
     test_int(ctx.e[0], e1);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_container_dont_match_inheritance() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, base, Velocity);
+    ECS_ENTITY(world, e1, Position, INSTANCEOF | base);
+    ECS_ENTITY(world, e2, Position, CHILDOF | base);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CONTAINER.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.s[0][1], base);
+    test_int(ctx.e[0], e2);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_cascade_dont_match_inheritance() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, base, Velocity);
+    ECS_ENTITY(world, e1, Position, INSTANCEOF | base);
+    ECS_ENTITY(world, e2, Position, CHILDOF | base);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.s[0][1], 0);
+    test_int(ctx.c[1][0], ecs_entity(Position));
+    test_int(ctx.s[1][0], 0);
+    test_int(ctx.c[1][1], ecs_entity(Velocity));
+    test_int(ctx.s[1][1], base);    
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
 
     ecs_fini(world);
 }
