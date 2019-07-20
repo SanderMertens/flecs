@@ -428,6 +428,7 @@ void Prefab_inherit_in_system(void);
 void Prefab_add_to_empty_base_in_system(void);
 void Prefab_dont_inherit_disabled(void);
 void Prefab_cyclic_inheritance(void);
+void Prefab_cyclic_inheritance_w_clone_in_progress(void);
 void Prefab_cyclic_inheritance_get_unavailable(void);
 void Prefab_cyclic_inheritance_has_unavailable(void);
 void Prefab_clone_after_inherit_in_on_add(void);
@@ -2117,7 +2118,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 57,
+        .testcase_count = 58,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -2334,6 +2335,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "cyclic_inheritance",
                 .function = Prefab_cyclic_inheritance
+            },
+            {
+                .id = "cyclic_inheritance_w_clone_in_progress",
+                .function = Prefab_cyclic_inheritance_w_clone_in_progress
             },
             {
                 .id = "cyclic_inheritance_get_unavailable",

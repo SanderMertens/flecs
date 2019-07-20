@@ -2246,6 +2246,64 @@ void Prefab_cyclic_inheritance() {
     ecs_fini(world);
 }
 
+typedef struct Backup {
+    ecs_entity_t backup;
+} Backup;
+
+void CloneInProgress(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Backup, 2);
+    ECS_COLUMN_COMPONENT(rows, Position, 3);
+    ECS_COLUMN_COMPONENT(rows, Velocity, 4);
+
+    ecs_world_t *world = rows->world;
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_entity_t e = rows->entities[i];
+
+        ecs_entity_t backup = ecs_clone(world, e, true);
+        test_assert( ecs_has(world, backup, Position));
+        test_assert( ecs_has(world, backup, Velocity));
+
+        ecs_inherit(world, e, backup);
+        ecs_inherit(world, backup, e);
+
+        test_assert( ecs_has_entity(world, e, backup));
+        test_assert( ecs_has_entity(world, backup, e));
+
+        ecs_set(world, e, Backup, { backup });
+    }
+}
+
+void Prefab_cyclic_inheritance_w_clone_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Backup);
+    ECS_TAG(world, NeedsBackup);
+
+    ECS_SYSTEM(world, CloneInProgress, EcsOnUpdate, NeedsBackup, !Backup, .Position, .Velocity);
+
+    ecs_entity_t e = ecs_new(world, NeedsBackup);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e, Backup));
+    Backup *b = ecs_get_ptr(world, e, Backup);
+    test_assert(b != NULL);
+
+    ecs_entity_t backup = b->backup;
+    test_assert(backup != 0);
+    test_assert( ecs_has_owned(world, backup, Position));
+    test_assert( ecs_has_owned(world, backup, Velocity));
+    test_assert( ecs_has_entity(world, backup, e));
+
+    ecs_fini(world);
+}
+
 void Prefab_dont_inherit_disabled() {
     ecs_world_t *world = ecs_init();
 
