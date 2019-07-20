@@ -106,6 +106,11 @@ void Has_any_of_0_1(void);
 void Has_any_of_0_zero_entity(void);
 void Has_has_in_progress(void);
 void Has_has_of_zero(void);
+void Has_has_owned(void);
+void Has_has_owned_any(void);
+void Has_has_entity(void);
+void Has_has_entity_0(void);
+void Has_has_entity_0_component(void);
 
 // Testsuite 'Count'
 void Count_count_empty(void);
@@ -992,7 +997,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Has",
-        .testcase_count = 22,
+        .testcase_count = 27,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -1081,6 +1086,26 @@ static bake_test_suite suites[] = {
             {
                 .id = "has_of_zero",
                 .function = Has_has_of_zero
+            },
+            {
+                .id = "has_owned",
+                .function = Has_has_owned
+            },
+            {
+                .id = "has_owned_any",
+                .function = Has_has_owned_any
+            },
+            {
+                .id = "has_entity",
+                .function = Has_has_entity
+            },
+            {
+                .id = "has_entity_0",
+                .function = Has_has_entity_0
+            },
+            {
+                .id = "has_entity_0_component",
+                .function = Has_has_entity_0_component
             }
         }
     },

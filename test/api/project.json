@@ -118,7 +118,12 @@
                 "any_of_0_1",
                 "any_of_0_zero_entity",
                 "has_in_progress",
-                "has_of_zero"
+                "has_of_zero",
+                "has_owned",
+                "has_owned_any",
+                "has_entity",
+                "has_entity_0",
+                "has_entity_0_component"
             ]
         }, {
             "id": "Count",
