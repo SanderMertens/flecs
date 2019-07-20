@@ -475,6 +475,7 @@
                 "add_to_empty_base_in_system",
                 "dont_inherit_disabled",
                 "cyclic_inheritance",
+                "cyclic_inheritance_w_clone_in_progress",
                 "cyclic_inheritance_get_unavailable",
                 "cyclic_inheritance_has_unavailable",
                 "clone_after_inherit_in_on_add"
