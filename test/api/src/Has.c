@@ -315,3 +315,93 @@ void Has_has_of_zero() {
     
     ecs_fini(world);
 }
+
+void Has_has_owned() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+    test_assert( ecs_has_owned(world, e, Position));
+
+    ecs_entity_t base = ecs_new(world, Velocity);
+    test_assert( ecs_has(world, base, Velocity));
+    test_assert( ecs_has_owned(world, base, Velocity));
+
+    ecs_inherit(world, e, base);
+    test_assert( ecs_has(world, e, Velocity));
+    test_assert( !ecs_has_owned(world, e, Velocity));
+ 
+    ecs_fini(world);
+}
+
+void Has_has_owned_any() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+    test_assert( ecs_has_owned(world, e, Position));
+    test_assert( ecs_has_any(world, e, Position));
+    test_assert( ecs_has_any_owned(world, e, Position));
+
+    ecs_entity_t base = ecs_new(world, Velocity);
+    test_assert( ecs_has(world, base, Velocity));
+    test_assert( ecs_has_owned(world, base, Velocity));
+    test_assert( ecs_has_any(world, base, Velocity));
+    test_assert( ecs_has_any_owned(world, base, Velocity));
+
+    ecs_inherit(world, e, base);
+    test_assert( ecs_has(world, e, Velocity));
+    test_assert( ecs_has_any(world, e, Velocity));
+    test_assert( !ecs_has_any_owned(world, e, Velocity));
+    test_assert( ecs_has_any(world, e, Type));
+    test_assert( ecs_has_any_owned(world, e, Type));
+ 
+    ecs_fini(world);
+}
+
+void Has_has_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    ecs_entity_t base = ecs_new(world, 0);
+    test_assert(base != 0);
+
+    ecs_inherit(world, e, base);
+    test_assert( ecs_has_entity(world, e, base));
+ 
+    ecs_fini(world);
+}
+
+void Has_has_entity_0() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_new(world, 0);
+    test_assert(base != 0);
+
+    test_assert( !ecs_has_entity(world, 0, base));
+ 
+    ecs_fini(world);
+}
+
+void Has_has_entity_0_component() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    test_assert( ecs_has_entity(world, e, 0));
+ 
+    ecs_fini(world);
+}

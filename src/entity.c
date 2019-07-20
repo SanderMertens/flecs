@@ -1491,7 +1491,7 @@ bool ecs_has_entity(
     }
 
     if (!component) {
-        return false;
+        return true;
     }
 
     ecs_world_t *world_arg = world;
