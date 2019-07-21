@@ -13,6 +13,7 @@ void _ecs_abort(
     } else {
         ecs_os_err("abort %s:%d: %s", file, line, ecs_strerror(error_code));
     }
+
     ecs_os_abort();
 }
 

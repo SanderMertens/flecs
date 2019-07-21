@@ -773,6 +773,22 @@
                 "activate_deactivate_reactive",
                 "activate_deactivate_activate_other"
             ]
+        }, {
+            "id": "Error",
+            "setup": true,
+            "testcases": [
+                "abort",
+                "abort_w_param",
+                "override_abort",
+                "assert_true",
+                "assert_false",
+                "assert_false_w_param",
+                "error_codes",
+                "log_dbg",
+                "log_log",
+                "log_warning",
+                "log_error"
+            ]
         }]
     }
 }

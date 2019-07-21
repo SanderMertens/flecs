@@ -702,6 +702,20 @@ void Internals_activate_deactivate_table(void);
 void Internals_activate_deactivate_reactive(void);
 void Internals_activate_deactivate_activate_other(void);
 
+// Testsuite 'Error'
+void Error_setup(void);
+void Error_abort(void);
+void Error_abort_w_param(void);
+void Error_override_abort(void);
+void Error_assert_true(void);
+void Error_assert_false(void);
+void Error_assert_false_w_param(void);
+void Error_error_codes(void);
+void Error_log_dbg(void);
+void Error_log_log(void);
+void Error_log_warning(void);
+void Error_log_error(void);
+
 static bake_test_suite suites[] = {
     {
         .id = "New",
@@ -3410,10 +3424,61 @@ static bake_test_suite suites[] = {
                 .function = Internals_activate_deactivate_activate_other
             }
         }
+    },
+    {
+        .id = "Error",
+        .testcase_count = 11,
+        .setup = Error_setup,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "abort",
+                .function = Error_abort
+            },
+            {
+                .id = "abort_w_param",
+                .function = Error_abort_w_param
+            },
+            {
+                .id = "override_abort",
+                .function = Error_override_abort
+            },
+            {
+                .id = "assert_true",
+                .function = Error_assert_true
+            },
+            {
+                .id = "assert_false",
+                .function = Error_assert_false
+            },
+            {
+                .id = "assert_false_w_param",
+                .function = Error_assert_false_w_param
+            },
+            {
+                .id = "error_codes",
+                .function = Error_error_codes
+            },
+            {
+                .id = "log_dbg",
+                .function = Error_log_dbg
+            },
+            {
+                .id = "log_log",
+                .function = Error_log_log
+            },
+            {
+                .id = "log_warning",
+                .function = Error_log_warning
+            },
+            {
+                .id = "log_error",
+                .function = Error_log_error
+            }
+        }
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 34);
+    return bake_test_run("api", argc, argv, suites, 35);
 }
