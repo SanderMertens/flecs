@@ -2,6 +2,9 @@
 
 void Error_setup() {
     ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.abort = test_abort;
+    ecs_os_set_api(&os_api);
 }
 
 void Error_abort() {
@@ -21,12 +24,13 @@ void my_abort() {
 }
 
 void Error_override_abort() {
-    ecs_os_api_t api = ecs_os_api;
-    api.abort = my_abort;
-    ecs_os_set_api(&api);
+    /* The real reason this tests exists is to achieve 100% coverage. Without
+     * this test, the last line of the 'abort' function would never be covered
+     * because abort always exits before it gets there. */
 
+    /* hack, because the setup already set the OS API */
+    ((ecs_os_api_t*)&ecs_os_api)->abort = my_abort;
     _ecs_abort(ECS_INTERNAL_ERROR, NULL, __FILE__, __LINE__);
-
     test_assert(my_abort_called == true);
 }
 
