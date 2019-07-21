@@ -524,14 +524,14 @@ ecs_inherit(world, my_instance, my_base);
 If the inheritance relationship was already added to the entity, this operation will have no effects.
 
 #### Removing inheritance relationships
-Inheritance relationships can be removed after they have been added with the `ecs_deinherit` method. Consider:
+Inheritance relationships can be removed after they have been added with the `ecs_disinherit` method. Consider:
 
 ```c
 ecs_entity_t my_base = ecs_new(world, Position);
 ecs_entity_t my_instance = ecs_new_instance(world, my_base, Velocity);
 
 // Remove inheritance relationship
-ecs_deinherit(world, my_instance, my_base);
+ecs_disinherit(world, my_instance, my_base);
 ```
 
 If the inheritance relationship was not added to the entity, this operation will have no effects.
