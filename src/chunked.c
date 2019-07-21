@@ -93,7 +93,9 @@ void* get_sparse(
     ecs_assert(dense_array[dense] == index, ECS_INVALID_PARAMETER, NULL);
 
     if (remove) {
-        dense_array[dense] = dense_array[dense_count - 1];
+        int32_t last_sparse_index = dense_array[dense_count - 1];
+        dense_array[dense] = last_sparse_index;
+        sparse[last_sparse_index].dense = dense;
         ecs_vector_remove_last(chunked->dense);
     }
 

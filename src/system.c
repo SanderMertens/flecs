@@ -228,18 +228,12 @@ void ecs_system_compute_and_families(
             if (oper_kind == EcsOperAnd) {
                 system_data->and_from_owned = ecs_type_add_intern(
                   world, NULL, system_data->and_from_owned, elem->is.component);
-            } else if (oper_kind == EcsOperNot) {
-                system_data->not_from_owned = ecs_type_add_intern(
-                  world, NULL, system_data->not_from_owned, elem->is.component);
             }
 
         } else if (elem_kind == EcsFromShared) {
             if (oper_kind == EcsOperAnd) {
                 system_data->and_from_shared = ecs_type_add_intern(
                  world, NULL, system_data->and_from_shared, elem->is.component);
-            } else if (oper_kind == EcsOperNot) {
-                system_data->not_from_shared = ecs_type_add_intern(
-                 world, NULL, system_data->not_from_shared, elem->is.component);
             }
 
         } else if (elem_kind == EcsFromSystem) {

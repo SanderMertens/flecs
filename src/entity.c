@@ -1192,13 +1192,11 @@ ecs_entity_t copy_from_stage(
 
     if (populate_info(world, src_stage, &src_info)) {
         ecs_type_t new_type = NULL;
-        if (!dst_entity) {
-            dst_entity = ++ world->last_handle;
-            new_type = src_info.type;
-        } else {
-            /* TODO */
-            ecs_abort(ECS_INTERNAL_ERROR, NULL);
-        }
+
+        ecs_assert(!dst_entity, ECS_INTERNAL_ERROR, NULL);
+
+        dst_entity = ++ world->last_handle;
+        new_type = src_info.type;
 
         ecs_entity_info_t info = {
             .entity = dst_entity
