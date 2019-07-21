@@ -1721,6 +1721,7 @@ void SystemOnFrame_shared_column() {
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
+    ECS_ENTITY(world, e3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SHARED.Velocity);
 

@@ -245,8 +245,6 @@ void add_table(
 
                         if (kind != EcsCascade) {
                             ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
-                        } else if (!e) {
-                            e = ECS_INVALID_ENTITY;
                         }
                     }
 
@@ -341,10 +339,14 @@ bool match_table(
     if (type && ecs_type_contains(
         world, table_type, type, true, false))
     {
+        /* If table has owned components that override the SHARED component, the
+         * table won't match. */
         return false;
     } else if (type && !ecs_type_contains(
         world, table_type, type, true, true))
     {
+        /* If the table does not have owned components, ensure that a SHARED
+         * component can be found in prefabs. If not, the table doesn't match. */
         return false;
     }
 
@@ -670,11 +672,9 @@ int32_t get_table_param_index(
         }
     }
 
-    if (i == count) {
-        return -1;
-    } else {
-        return i;
-    }
+    ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
+
+    return i;
 }
 
 /** Table activation happens when a table was or becomes empty. Deactivated
@@ -698,8 +698,6 @@ void ecs_system_activate_table(
     }
 
     int32_t i = get_table_param_index(world, system_data, table, src_array);
-
-    ecs_assert(i != -1, ECS_INTERNAL_ERROR, "cannot find table to (de)activate");
 
     uint32_t src_count = ecs_vector_move_index(
         &dst_array, src_array, &matched_table_params, i);
