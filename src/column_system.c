@@ -114,16 +114,13 @@ void add_table(
         ecs_system_expr_elem_kind_t kind = column->kind;
         ecs_system_expr_oper_kind_t oper_kind = column->oper_kind;
 
-        /* NOT operators are converted to EcsFromEmpty */
-        ecs_assert(oper_kind != EcsOperNot || kind == EcsFromEmpty, 
-            ECS_INTERNAL_ERROR, NULL);
-
         /* Column that retrieves data from self or a fixed entity */
         if (kind == EcsFromSelf || kind == EcsFromEntity || 
             kind == EcsFromOwned || kind == EcsFromShared) 
         {
-            if (oper_kind == EcsOperAnd) {
+            if (oper_kind == EcsOperAnd || oper_kind == EcsOperNot) {
                 component = column->is.component;
+                table_data->columns[c] = 0;
             } else if (oper_kind == EcsOperOptional) {
                 component = column->is.component;
             } else if (oper_kind == EcsOperOr) {

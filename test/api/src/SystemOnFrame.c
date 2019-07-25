@@ -1833,3 +1833,56 @@ void SystemOnFrame_cascade_dont_match_inheritance() {
 
     ecs_fini(world);
 }
+
+void SystemOnFrame_not_from_singleton() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !$.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+
+    ecs_add(world, ECS_SINGLETON, Velocity);
+
+    ecs_progress(world, 1);
+    
+    test_int(ctx.count, 1);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_not_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, e, Position);
+    ECS_ENTITY(world, e2, 0);
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !e2.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 1);
+
+    ecs_add(world, e2, Velocity);
+
+    ecs_progress(world, 1);
+    
+    test_int(ctx.count, 1);
+
+    ecs_fini(world);
+}

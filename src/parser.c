@@ -215,7 +215,7 @@ int ecs_parse_component_expr(
             *bptr = ch;
             bptr ++;
 
-            if (ch == '.' || ch == '!' || ch == '?' || ch == '$') {
+            if (ch == '.' || ch == '!' || ch == '?') {
                 complex_expr = true;
             }
         }

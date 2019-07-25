@@ -367,7 +367,9 @@
                 "shared_column",
                 "shared_not_column",
                 "container_dont_match_inheritance",
-                "cascade_dont_match_inheritance"
+                "cascade_dont_match_inheritance",
+                "not_from_singleton",
+                "not_from_entity"
             ]
         }, {
             "id": "SystemCascade",
