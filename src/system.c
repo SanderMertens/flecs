@@ -447,7 +447,8 @@ ecs_type_t ecs_notify_row_system(
         .components = ecs_vector_first(system_data->components),
         .frame_offset = 0,
         .offset = offset,
-        .count = limit
+        .count = limit,
+        .param = system_data->base.ctx
     };
 
     /* Set references metadata if system has references */
@@ -809,4 +810,45 @@ ecs_entity_t ecs_column_entity(
 
     ecs_assert(rows->components != NULL, ECS_INTERNAL_ERROR, NULL);
     return rows->components[index - 1];
+}
+
+static
+EcsSystem* get_system_ptr(
+    ecs_world_t *world,
+    ecs_entity_t system)
+{
+    EcsColSystem *cs = ecs_get_ptr(world, system, EcsColSystem);
+    if (cs) {
+        return (EcsSystem*)cs;
+    } else {
+        EcsRowSystem *rs = ecs_get_ptr(world, system, EcsRowSystem);
+        if (rs) {
+            return (EcsSystem*)rs;
+        }
+    }
+
+    return NULL;
+}
+
+void ecs_set_system_context(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    const void *ctx)
+{
+    EcsSystem *system_data = get_system_ptr(world, system);
+
+    ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    system_data->ctx = (void*)ctx;
+}
+
+void* ecs_get_system_context(
+    ecs_world_t *world,
+    ecs_entity_t system)
+{
+    EcsSystem *system_data = get_system_ptr(world, system);
+
+    ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    return system_data->ctx;
 }

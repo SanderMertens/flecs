@@ -851,6 +851,10 @@ ecs_entity_t _ecs_run_w_filter(
         return 0;
     }
 
+    if (!param) {
+        param = system_data->base.ctx;
+    }
+
     ecs_get_stage(&real_world);
 
     float system_delta_time = delta_time + system_data->time_passed;

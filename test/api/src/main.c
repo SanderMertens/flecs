@@ -254,6 +254,8 @@ void SystemOnAdd_add_in_progress_before_system_def(void);
 void SystemOnAdd_disabled_system(void);
 void SystemOnAdd_2_systems_w_table_creation(void);
 void SystemOnAdd_2_systems_w_table_creation_in_progress(void);
+void SystemOnAdd_sys_context(void);
+void SystemOnAdd_get_sys_context_from_param(void);
 
 // Testsuite 'SystemOnRemove'
 void SystemOnRemove_remove_match_1_of_1(void);
@@ -333,6 +335,8 @@ void SystemOnFrame_container_dont_match_inheritance(void);
 void SystemOnFrame_cascade_dont_match_inheritance(void);
 void SystemOnFrame_not_from_singleton(void);
 void SystemOnFrame_not_from_entity(void);
+void SystemOnFrame_sys_context(void);
+void SystemOnFrame_get_sys_context_from_param(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -1559,7 +1563,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 29,
+        .testcase_count = 31,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -1676,6 +1680,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "2_systems_w_table_creation_in_progress",
                 .function = SystemOnAdd_2_systems_w_table_creation_in_progress
+            },
+            {
+                .id = "sys_context",
+                .function = SystemOnAdd_sys_context
+            },
+            {
+                .id = "get_sys_context_from_param",
+                .function = SystemOnAdd_get_sys_context_from_param
             }
         }
     },
@@ -1817,7 +1829,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 42,
+        .testcase_count = 44,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -1986,6 +1998,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "not_from_entity",
                 .function = SystemOnFrame_not_from_entity
+            },
+            {
+                .id = "sys_context",
+                .function = SystemOnFrame_sys_context
+            },
+            {
+                .id = "get_sys_context_from_param",
+                .function = SystemOnFrame_get_sys_context_from_param
             }
         }
     },

@@ -1886,3 +1886,46 @@ void SystemOnFrame_not_from_entity() {
 
     ecs_fini(world);
 }
+
+static
+void TestContext(ecs_rows_t *rows) {
+    void *world_ctx = ecs_get_context(rows->world);
+    test_assert(world_ctx == rows->param);
+    uint32_t *param = rows->param;
+    (*param) ++;
+}
+
+void SystemOnFrame_sys_context() {
+    ecs_world_t *world = ecs_init();
+    uint32_t param = 0;
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, TestContext, EcsOnUpdate, Position);
+
+    ecs_set_system_context(world, TestContext, &param);
+
+    test_assert(ecs_get_system_context(world, TestContext) == &param);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_get_sys_context_from_param() {
+    ecs_world_t *world = ecs_init();
+    uint32_t param = 0;
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, TestContext, EcsOnUpdate, Position);
+
+    /* Set world context so system can compare if pointer is correct */
+    ecs_set_context(world, &param);
+    ecs_set_system_context(world, TestContext, &param);
+
+    ecs_progress(world, 1);
+
+    test_int(param, 1);
+
+    ecs_fini(world);
+}

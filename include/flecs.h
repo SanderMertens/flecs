@@ -1540,6 +1540,34 @@ ecs_entity_t _ecs_run_w_filter(
 #define ecs_run_w_filter(world, system, delta_time, offset, limit, type, param)\
     _ecs_run_w_filter(world, system, delta_time, offset, limit, T##type, param)
 
+/** Set system context.
+ * This operation allows an application to register custom data with a system.
+ * This data can be accessed using the ecs_get_system_context operation, or
+ * through the 'param' field in the ecs_rows_t parameter passed into the system
+ * callback.
+ *
+ * @param world The world.
+ * @param system The system on which to set the context.
+ * @param ctx A pointer to a user defined structure.
+ */
+FLECS_EXPORT
+void ecs_set_system_context(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    const void *ctx);
+
+/** Get system context.
+ * Get custom data from a system previously set with ecs_set_system_context.
+ *
+ * @param world The world.
+ * @param system The system of which to obtain the context.
+ * @returns The system context.
+ */
+FLECS_EXPORT
+void* ecs_get_system_context(
+    ecs_world_t *world,
+    ecs_entity_t system);
+
 /** Obtain a pointer to column data. 
  * This function is to be used inside a system to obtain data from a column in
  * the system signature. The provided index corresponds with the index of the

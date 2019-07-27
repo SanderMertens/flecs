@@ -166,6 +166,7 @@ typedef struct EcsSystem {
     ecs_system_action_t action;    /* Callback to be invoked for matching rows */
     const char *signature;         /* Signature with which system was created */
     ecs_vector_t *columns;         /* Column components */
+    void *ctx;                     /* User data */
 
     /* Precomputed types for quick comparisons */
     ecs_type_t not_from_self;      /* Exclude components from self */

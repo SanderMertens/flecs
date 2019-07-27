@@ -284,7 +284,9 @@
                 "add_in_progress_before_system_def",
                 "disabled_system",
                 "2_systems_w_table_creation",
-                "2_systems_w_table_creation_in_progress"
+                "2_systems_w_table_creation_in_progress",
+                "sys_context",
+                "get_sys_context_from_param"
             ]
         }, {
             "id": "SystemOnRemove",
@@ -369,7 +371,9 @@
                 "container_dont_match_inheritance",
                 "cascade_dont_match_inheritance",
                 "not_from_singleton",
-                "not_from_entity"
+                "not_from_entity",
+                "sys_context",
+                "get_sys_context_from_param"
             ]
         }, {
             "id": "SystemCascade",
