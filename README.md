@@ -52,7 +52,7 @@ You can build flecs with either CMake, Meson, [Bake](https://github.com/SanderMe
 Flecs can be easily embedded into projects, as it does not require complex build instructions. The following build instructions are enough to build a functioning Flecs library with gcc:
 
 ```
-gcc src/*.c -I. --shared -o libflecs.so
+gcc src/*.c -Iinclude --shared -o libflecs.so
 ```
 
 ### CMake
