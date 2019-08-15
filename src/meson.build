@@ -1,4 +1,6 @@
 flecs_src += files([
+    'chunked.c',
+    'column_system.c',
     'entity.c',
     'err.c',
     'map.c',
@@ -8,7 +10,6 @@ flecs_src += files([
     'stage.c',
     'stats.c',
     'system.c',
-    'table_system.c',
     'table.c',
     'type.c',
     'vector.c',
