@@ -648,32 +648,27 @@ uint32_t commit(
     }
 
     if (!in_progress) {
-        bool merged = false;
-
         /* Invoke the OnRemove callbacks when there are components to remove,
          * but only when not in progress. If we are currently in progress, the
          * OnRemove handlers will be invoked during the merge at the end of the
          * frame, to ensure that no data is cleaned up while we are still
          * iterating. 
          * 
-         * Note that this action is performanced *after* the entity index has
+         * Note that this action is performed *after* the entity index has
          * been updated. An OnRemove action can itself contain operations that
          * update the entity index, so we need to make sure the index is up to
          * date before invoking the callback.
          */
         if (to_remove && old_index) {
-            merged = notify_post_merge(
+            notify_post_merge(
                 world, stage, old_table, old_columns, old_index - 1, 1, to_remove);
         }
 
         /* After the cleanup code has been invoked we can finally remove the
-         * entity from the old table. If an OnRemove handler was invoked, it did
-         * already trigger a merge. Since the entity index was already updated
-         * to reflect the removed component, the merge will already have removed
-         * the entity from the table. In that case, we won't have to do it
-         * again. Additionally, if the entity was not stored in any table before
-         * this commit, we also don't need to perform the delete. */
-        if (!merged && old_type) {
+         * entity from the old table. If the entity was not stored in any table 
+         * before this commit, we also don't need to perform the delete. */
+
+        if (old_type) {
             ecs_table_delete(world, old_table, old_index);
         }
     }

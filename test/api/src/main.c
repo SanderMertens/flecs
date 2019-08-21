@@ -139,6 +139,7 @@ void Delete_delete_1st_of_3(void);
 void Delete_delete_2nd_of_3(void);
 void Delete_delete_2_of_3(void);
 void Delete_delete_3_of_3(void);
+void Delete_delete_w_on_remove(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -1199,7 +1200,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Delete",
-        .testcase_count = 8,
+        .testcase_count = 9,
         .testcases = (bake_test_case[]){
             {
                 .id = "delete_1",
@@ -1232,6 +1233,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "delete_3_of_3",
                 .function = Delete_delete_3_of_3
+            },
+            {
+                .id = "delete_w_on_remove",
+                .function = Delete_delete_w_on_remove
             }
         }
     },

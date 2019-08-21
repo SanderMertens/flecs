@@ -157,7 +157,8 @@
                 "delete_1st_of_3",
                 "delete_2nd_of_3",
                 "delete_2_of_3",
-                "delete_3_of_3"
+                "delete_3_of_3",
+                "delete_w_on_remove"
             ]
         }, {
             "id": "Set",
