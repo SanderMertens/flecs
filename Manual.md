@@ -106,6 +106,7 @@
   - [Archetypes](#archetypes)
   - [System internals](#system-internals)
   - [Type internals](#type-internals)
+  - [Entity internals](#entity-internals)
 - [Operating system abstraction API](#operating-system-abstraction-api)
 
 ## Design Goals
@@ -1775,6 +1776,19 @@ A type with a `CHILDOF` flag could look like `[Position, Velocity, CHILDOF | my_
 Similarly, a type with an `INSTANCEOF` flag looks like `[Position, Velocity, INSTANCEOF | my_base]`, where `my_base` can be any regular entity. This indicates to flecs that components of `my_base` should be shared with entities of this type (see [Inheritance](#inheritance)).
 
 Types are like the DNA of entities. They are used extensively throughout application and Flecs code, and provide a cheap mechanism for learning everything there is to know about a specific entity.
+
+#### Entity internals
+Entities are stored in archetypes which lets them to be iterated with systems, but that does not allow them to be accessed randomly. For example, an application may want to get or set component values on one specific entity using the `ecs_get` or `ecs_set` APIs. To enable this functionality, Flecs has the entity index, which is a data structure that maps entity identifiers to where they are stored in an archetype.
+
+In Flecs the entity index is implemented as a sparse set, where the entity identifier is the index in the sparse array. The dense array of the sparse set is used to test if an entity identifier is alive, and allows for iterating all entities. The data stored in the sparse set is a pointer to the archetype the entity is stored in, combined with an _row_ (array index) that points to where in the component arrays the entity is stored.
+
+Flecs has a mechanism whereby it can monitor specific entities for changes. This is required for ensuring that the set of archetypes matched with systems that have `CONTAINER` columns remains correct and up to date. For example, a system with `CONTAINER.Position` column can unmatch a previously matched archetype when the `Position` component is removed from one of the parents of the entities matched with the system. It would be expensive to reevaluate matched archetypes after updating _any_ entity, so instead Flecs needs a mechanism to monitor specific entities for updates. Monitored entities are stored with a negative row in the entity index. The actual index of an entity can be found by multiplying the row with -1. This allows Flecs to monitor entities for changes efficiently without having to do additional lookups.
+
+Systems will occasionally need access to the entity identifier. Because systems access the entities directly from the archetypes and not from the entity index, they need to obtain the entity identifier in another way. Flecs accomplishes this by storing the entity identifiers as an additional column columns in an archetype. Applications can access the entity identifiers using `row->entities`, or by requesting the column at index 0:
+
+```c
+ECS_COLUMN(rows, ecs_entity_t, entities, 0);
+```
 
 ### Operating system abstraction API
 Flecs relies on functionality that is not standardized across platforms, like threading and measuring high resolution time. While the essential features of Flecs work out of the box, some of its features require additional effort. To keep Flecs as portable as possible, it does not contain any platform-specific API calls. Instead, it requires the application to provide them.
