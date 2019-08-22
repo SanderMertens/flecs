@@ -100,7 +100,7 @@
     - [Module content handles](#module-content-handles)
     - [Dynamic imports](#dynamic-imports)
   - [Creating modules](#creating-modules)
-- [Internals]
+- [Internals](#internals)
   - [Archetypes](#archetypes)
   - [System internals](#system-internals)
   - [Type internals](#type-internals)
