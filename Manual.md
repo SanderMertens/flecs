@@ -100,6 +100,10 @@
     - [Module content handles](#module-content-handles)
     - [Dynamic imports](#dynamic-imports)
   - [Creating modules](#creating-modules)
+- [Internals]
+  - [Archetypes](#archetypes)
+  - [System internals](#system-internals)
+  - [Type internals](#type-internals)
 - [Operating system abstraction API](#operating-system-abstraction-api)
 
 ## Design Goals
@@ -1720,6 +1724,55 @@ void MyTransformModuleImport(ecs_world_t *world, int flags)
 ```
 
 Prefabs, types and tags can all be exported with the ECS_EXPORT_ENTITY macro.
+
+### Internals
+There is a lot of variation between different ECS frameworks. As with any data structure or library, understanding the characteristics of a particular implementation will let you write code that runs faster, occupies less memory and behaves more predictably. This section is interesting for someone who already knows how to write ECS code, but wants to know more about the framework actually does.
+
+#### Archetypes
+Flecs is a variation of a so called "archetype" based entity component system. The name "archetypes" is used to indicate that entities that have the same "type" are stored together, where a type is the set of components an entity has. Types are created dynamically, based on the components an application adds and removes from entities. A simple example: consider an application with 10 entities containing `[Position]`, and 10 entities containing `[Position, Velocity]`. `[Position]` and `[Position, Velocity]` are the two archetypes, and entities belonging to the same archetype are stored together. In practice, the actual storage will look something like this:
+
+```c
+struct Archetype1 {
+    Position position[10];
+};
+
+struct Archetype2 {
+    Position position[10];
+    Velocity velocity[10];
+};
+```
+
+This approach to storing data is often referred to as "structs of arrays", or SoA. There are several advantages and disadvantages to storing entities this way. Lets start with the biggest benefit: entity data can always be stored in tightly packed arrays, which allows for efficient loading of data from RAM into the CPU caches. As the index for an entity is the same for each component array, it is easy and cheap to iterate over multiple components at the same time.
+
+Archetype-based implementations are unique in that they guarantee direct array access for any combination of entities and components. Other approaches to implementing an ECS have either arrays with gaps, or have arrays where components for one entity are stored on different indices. These approaches rely on additional data structures to find the set of components for a specific entity. Hybrid approaches exist such as EnTT groups, which rely on sorting entities with a certain archetype to offer direct array access.
+
+There are two noteworthy downsides to using archetypes that cannot be avoided. The first one is that when components are added and removed to an entity, it has to be moved from one archetype to another archetype, which involves copying memory between arrays. The second downside is that in applications with lots of different combinations of components, the large number of archetypes creates many arrays for the same component, which fragments the data space. Excessive fragmentation is bad, as each time an application has to switch from one array to another, it is likely to incur a cache miss.
+
+These downsides can be easily mitigated once understood. Applications should avoid frequently adding/removing components to entities with lots of data. In such cases, performance can be hugely improved by splitting components over multiple entities. Fragmentation is seldomly a problem except in extreme cases, where there is only a handful of entities per archetype, and there are hundreds, if not thousands of archetypes that share the same component(s).
+
+When properly used, archetypes based implementations are easily one of the fastest ways to implement an Entity Component System. Their ability to self-organize the entity storage for speed makes it easy to write applications that perform well. This combination of speed and usability is why Flecs has adopted the archetypes-based approach.
+
+#### System internals
+In an archetypes-based implementation, systems are matched with a set of archetypes that matches a system interest expression. Flecs systems are no exception to this rule. When a system is created in Flecs, it is matched with the existing archetypes. The matching archetypes are stored in administration that belongs to the system, so that when the system is invoked, there is no need to perform the matching again. When new archetypes are created, they are matched with the existing systems, so that at any point in time, each system has the full set of matching archetypes independent of the order in which they are defined.
+
+Systems in Flecs keep track of which archetypes are empty and which archetypes are not. Empty archetypes are marked as inactive by systems so that they are not evaluated in the main loop. This improves performance as there often can be empty archetypes that served as an intermediate, if multiple components were added or removed from an entity.
+
+Similarly, Flecs keeps track of systems that have no matching entities. If a system does not match with any archetypes, or all of its archetypes are empty, the system is marked as inactive which will also cause Flecs to not evaluate it in the `ecs_progress` call. This is particularly useful, as Flecs modules can define many systems that are not active, and may never be active for the set of entities in an application.
+
+#### Type internals
+Types in Flecs are the data structure that describes a set of components, or more accurately, a set of _entities_. Types are a simple yet powerful mechanism in Flecs that enables many features, from plain ECS, to hierarchies, to shared components. Understanding how to use types can greatly improve efficiency of code, and will let applications do things that are ordinarily not possible in ECS frameworks.
+
+An example of a type is `[Position, Velocity]`. They are internally stored as a vector (`ecs_vector_t`) where the element type is an entity id (`ecs_entity_t`). Components in Flecs are stored as entities with the `EcsComponent` component. This causes their handle to be of the `ecs_entity_t` type, and as a result, types are vectors of `ecs_entity_t`. The type of an entity dynamically changes when components are added and removed from an entity.
+
+Because the elements in a type are of `ecs_entity_t`, it is possible to add regular entities, instead of just components, to a type. When a regular entity is added to a type, it will act as a component without data, which is equivalent to a tag. Entities in a type can however be annotated with a so called "type flag". A type flag indicates a special kind of role that the entity in a type has. Flecs uses this role to indicate if an entity is used as a parent or as a base.
+
+There are currently two type flags in Flecs: `CHILDOF` and `INSTANCEOF`. The values of these flags are single bits, starting from the MSB and counting backwards. This makes the addressing space for type flags limited: with each new flag the entity addressing space is halved. However, since the `ecs_entity_t` type is a 64-bit integer, this will not quickly become an issue.
+
+A type with a `CHILDOF` flag could look like `[Position, Velocity, CHILDOF | my_parent]`, where `my_parent` can be any regular entity. This indicates to Flecs that `my_parent` should be treated as a parent of entities of this type. This knowledge is used to optimize storage for hierarchies, and to implement certain features like `CONTAINER` and `CASCADE` columns in queries (see [Hierarchies](#hierarches)).
+
+Similarly, a type with an `INSTANCEOF` flag looks like `[Position, Velocity, INSTANCEOF | my_base]`, where `my_base` can be any regular entity. This indicates to flecs that components of `my_base` should be shared with entities of this type (see [Inheritance](#inheritance)).
+
+Types are like the DNA of entities. They are used extensively throughout application and Flecs code, and provide a cheap mechanism for learning everything there is to know about a specific entity.
 
 ### Operating system abstraction API
 Flecs relies on functionality that is not standardized across platforms, like threading and measuring high resolution time. While the essential features of Flecs work out of the box, some of its features require additional effort. To keep Flecs as portable as possible, it does not contain any platform-specific API calls. Instead, it requires the application to provide them.
