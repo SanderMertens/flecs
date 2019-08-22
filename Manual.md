@@ -880,16 +880,16 @@ Flecs uses a set of builtin components to implement some of its features. Some o
 
 Name | Description | Access
 -----|-------------|-------
-EEcsComponent | Stores the size of a component | Read
-EEcsTypeComponent | Stores information about a named type | Opaque 
-EEcsPrefab | Indicates that entity can be used as prefab, stores optional prefab parent | Read/write
-EEcsPrefabParent | Internal data for prefab parents | Opaque 
-EEcsPrefabBuilder | Internal data for prefab parents | Opaque 
-EEcsRowSystem | Internal data for row systems | Opaque
-EEcsColSystem | Internal data for column systems | Opaque
-EEcsId | Stores the name of an entity | Read / Write
-EEcsHidden | Tag that indicates an entity should be hidden by UIs | Read / Write
-EEcsDisabled | Tag that indicates an entity should not be matched with systems | Read / Write
+EcsComponent | Stores the size of a component | Read
+EcsTypeComponent | Stores information about a named type | Opaque 
+EcsPrefab | Indicates that entity can be used as prefab, stores optional prefab parent | Read/write
+EcsPrefabParent | Internal data for prefab parents | Opaque 
+EcsPrefabBuilder | Internal data for prefab parents | Opaque 
+EcsRowSystem | Internal data for row systems | Opaque
+EcsColSystem | Internal data for column systems | Opaque
+EcsId | Stores the name of an entity | Read / Write
+EcsHidden | Tag that indicates an entity should be hidden by UIs | Read / Write
+EcsDisabled | Tag that indicates an entity should not be matched with systems | Read / Write
 
 Builtin components can be get/set just like normal components. Writing a component that is read only can however cause undefined behavior.
 
