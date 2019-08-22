@@ -61,6 +61,8 @@
        - [Optional operator](#optional-operator)
      - [Column source modifiers](#column-source-modifiers)
        - [SELF modifier](#id-modifier)
+       - [OWNED modifier](#owned-modifier)
+       - [SHARED modifier](#shared-modifier)
        - [EMPTY modifier](#id-modifier)
        - [CONTAINER modifier](#container-modifier)
        - [CASCADE modifier](#cascade-modifier)
@@ -886,7 +888,7 @@ Name | Description | Access
 -----|-------------|-------
 EcsComponent | Stores the size of a component | Read
 EcsTypeComponent | Stores information about a named type | Opaque 
-EcsPrefab | Indicates that entity can be used as prefab, stores optional prefab parent | Read/write
+EcsPrefab | Indicates that entity can be used as prefab, stores optional prefab parent | Read / Write
 EcsPrefabParent | Internal data for prefab parents | Opaque 
 EcsPrefabBuilder | Internal data for prefab parents | Opaque 
 EcsRowSystem | Internal data for row systems | Opaque
@@ -1726,7 +1728,7 @@ void MyTransformModuleImport(ecs_world_t *world, int flags)
 Prefabs, types and tags can all be exported with the ECS_EXPORT_ENTITY macro.
 
 ### Internals
-There is a lot of variation between different ECS frameworks. As with any data structure or library, understanding the characteristics of a particular implementation will let you write code that runs faster, occupies less memory and behaves more predictably. This section is interesting for someone who already knows how to write ECS code, but wants to know more about the framework actually does.
+There is a lot of variation between different ECS frameworks. As with any data structure or library, understanding the characteristics of a particular implementation will let you write code that runs faster, occupies less memory and behaves more predictably. This section is interesting for someone who already knows how to write ECS code, but wants to know more about what Flecs does behind the scenes.
 
 #### Archetypes
 Flecs is a variation of a so called "archetype" based entity component system. The name "archetypes" is used to indicate that entities that have the same "type" are stored together, where a type is the set of components an entity has. Types are created dynamically, based on the components an application adds and removes from entities. A simple example: consider an application with 10 entities containing `[Position]`, and 10 entities containing `[Position, Velocity]`. `[Position]` and `[Position, Velocity]` are the two archetypes, and entities belonging to the same archetype are stored together. In practice, the actual storage will look something like this:
