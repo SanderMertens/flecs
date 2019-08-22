@@ -968,7 +968,7 @@ void* _ecs_get_ptr(
  *
  * This function can be used like this:
  * Foo value = {.x = 10, .y = 20};
- * ecs_set_ptr(world, e, tFoo, &value);
+ * ecs_set_ptr(world, e, ecs_type(Foo), &value);
  *
  * This function is wrapped by the ecs_set convenience macro, which can be used
  * like this:
@@ -2111,20 +2111,20 @@ void _ecs_assert(
     ECS_TYPE_VAR(entity)
 
 /** Utility macro for setting a component in a module function */
-#define ECS_SET_COMPONENT(handles, type)\
+#define ECS_SET_COMPONENT(type)\
     if (handles) handles->ecs_entity(type) = ecs_entity(type);\
     if (handles) handles->ecs_type(type) = ecs_type(type)
 
 #define ECS_EXPORT_COMPONENT(type)\
-    ECS_SET_COMPONENT(handles, type)
+    ECS_SET_COMPONENT(type)
 
 /** Utility macro for setting a system in a module function */
-#define ECS_SET_ENTITY(handles, entity)\
+#define ECS_SET_ENTITY(entity)\
     if (handles) handles->entity = entity;\
     if (handles) handles->ecs_type(entity) = ecs_type(entity)
 
 #define ECS_EXPORT_ENTITY(type)\
-    ECS_SET_ENTITY(handles, type)
+    ECS_SET_ENTITY(type)
 
 /** Utility macro for declaring handles by modules */
 #define ECS_IMPORT_COMPONENT(handles, type)\

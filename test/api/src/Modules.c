@@ -20,8 +20,8 @@ void SimpleModuleImport(
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SET_COMPONENT(handles, Position);
-    ECS_SET_COMPONENT(handles, Velocity);
+    ECS_SET_COMPONENT(Position);
+    ECS_SET_COMPONENT(Velocity);
 }
 
 /* -- End module code -- */
