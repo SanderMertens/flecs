@@ -52,6 +52,7 @@
   - [Remove components](#remove-components)
   - [Set components](#set-components)
   - [Tags](#tags)
+  - [Builtin components](#builtin-components)
 - [Systems](#systems)
    - [System signatures](#system-signatures)
      - [Column operators](#column-operators)
@@ -874,6 +875,23 @@ void Foo(ecs_rows_t *rows) {
     }
 }
 ```
+### Builtin components
+Flecs uses a set of builtin components to implement some of its features. Some of these components can be accessed by the application, while others have opaque data types. The builtin components are:
+
+Name | Description | Access
+-----|-------------|-------
+EEcsComponent | Stores the size of a component | Read
+EEcsTypeComponent | Stores information about a named type | Opaque 
+EEcsPrefab | Indicates that entity can be used as prefab, stores optional prefab parent | Read/write
+EEcsPrefabParent | Internal data for prefab parents | Opaque 
+EEcsPrefabBuilder | Internal data for prefab parents | Opaque 
+EEcsRowSystem | Internal data for row systems | Opaque
+EEcsColSystem | Internal data for column systems | Opaque
+EEcsId | Stores the name of an entity | Read / Write
+EEcsHidden | Tag that indicates an entity should be hidden by UIs | Read / Write
+EEcsDisabled | Tag that indicates an entity should not be matched with systems | Read / Write
+
+Builtin components can be get/set just like normal components. Writing a component that is read only can however cause undefined behavior.
 
 ## Systems
 Systems let applications execute logic on a set of entities that matches a certain component expression. The matching process is continuous, when new entities (or rather, new _entity types_) are created, systems will be automatically matched with those. Systems can be ran by Flecs as part of the built-in frame loop, or by invoking them individually using the Flecs API.
