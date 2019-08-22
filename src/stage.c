@@ -31,6 +31,32 @@ void notify_new_tables(
 }
 
 static
+void clean_data_stage(
+    ecs_stage_t *stage)
+{
+    ecs_map_iter_t it = ecs_map_iter(stage->data_stage);
+    while (ecs_map_hasnext(&it)) {
+        uint64_t keyval;
+        ecs_table_column_t *columns = 
+            *(ecs_table_column_t**)ecs_map_next_w_key(&it, &keyval);
+        
+        ecs_type_t type = (ecs_type_t)(uintptr_t)keyval;
+        uint32_t count = ecs_vector_count(type);
+        
+        int i;
+        for(i = 0; i < count + 1; i ++) {
+            ecs_vector_free(columns[i].data);
+        }
+
+        ecs_os_free(columns);
+    }
+
+    ecs_map_clear(stage->entity_index);
+    ecs_map_clear(stage->remove_merge);
+    ecs_map_clear(stage->data_stage);
+}
+
+static
 void merge_commits(
     ecs_world_t *world,
     ecs_stage_t *stage)
@@ -46,16 +72,8 @@ void merge_commits(
         ecs_row_t *row = ecs_map_next_w_key(&it, &entity);
         ecs_merge_entity(world, stage, entity, *row);
     }
-
-    it = ecs_map_iter(stage->data_stage);
-    while (ecs_map_hasnext(&it)) {
-        ecs_vector_t *stage = ecs_map_nextptr(&it);
-        ecs_vector_free(stage);
-    }
-
-    ecs_map_clear(stage->entity_index);
-    ecs_map_clear(stage->remove_merge);
-    ecs_map_clear(stage->data_stage);
+    
+    clean_data_stage(stage);
 }
 
 static
@@ -78,8 +96,6 @@ void clean_tables(
         ecs_table_t *t = ecs_chunked_get(stage->tables, ecs_table_t, i);
         ecs_table_free(world, t);
     }
-
-    ecs_chunked_free(stage->tables);
 }
 
 /* -- Private functions -- */
@@ -128,19 +144,20 @@ void ecs_stage_deinit(
     bool is_main_stage = stage == &world->main_stage;
     bool is_temp_stage = stage == &world->temp_stage;
 
-    ecs_map_free(stage->entity_index);
-
-    clean_tables(world, stage);
-    ecs_map_free(stage->table_index);
-
     if (!is_temp_stage) {
         clean_types(stage);
     }
 
     if (!is_main_stage) {
+        clean_data_stage(stage);
         ecs_map_free(stage->data_stage);
         ecs_map_free(stage->remove_merge);
     }
+
+    clean_tables(world, stage);
+    ecs_chunked_free(stage->tables);
+    ecs_map_free(stage->table_index);
+    ecs_map_free(stage->entity_index);
 }
 
 void ecs_stage_merge(
@@ -160,6 +177,7 @@ void ecs_stage_merge(
     merge_commits(world, stage);
 
     /* Clear temporary tables used by stage */
+    clean_tables(world, stage);
     ecs_chunked_clear(stage->tables);
     ecs_map_clear(stage->table_index);
 

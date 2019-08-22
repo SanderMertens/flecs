@@ -391,8 +391,22 @@ void col_systems_deinit(
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
         ecs_vector_free(ptr->base.columns);
         ecs_vector_free(ptr->jobs);
-        ecs_vector_free(ptr->tables);
+
+        uint32_t t;
+        ecs_matched_table_t *tables = ecs_vector_first(ptr->inactive_tables);
+        for (t = 0; t < ecs_vector_count(ptr->inactive_tables); t ++) {
+            ecs_os_free(tables[t].columns);
+            ecs_os_free(tables[t].components);
+        }
+
+        tables = ecs_vector_first(ptr->tables);
+        for (t = 0; t < ecs_vector_count(ptr->tables); t ++) {
+            ecs_os_free(tables[t].columns);
+            ecs_os_free(tables[t].components);
+        }
+
         ecs_vector_free(ptr->inactive_tables);
+        ecs_vector_free(ptr->tables);
     }
 }
 
@@ -796,10 +810,13 @@ int ecs_fini(
     row_systems_deinit(world, world->add_systems);
     row_systems_deinit(world, world->remove_systems);
     row_systems_deinit(world, world->set_systems);
+    row_systems_deinit(world, world->tasks);
 
     row_index_deinit(world->type_sys_add_index);
     row_index_deinit(world->type_sys_remove_index);
     row_index_deinit(world->type_sys_set_index);
+    ecs_map_free(world->type_handles);
+    ecs_map_free(world->prefab_parent_index);
 
     ecs_stage_deinit(world, &world->main_stage);
     ecs_stage_deinit(world, &world->temp_stage);
@@ -821,8 +838,6 @@ int ecs_fini(
     ecs_vector_free(world->add_systems);
     ecs_vector_free(world->remove_systems);
     ecs_vector_free(world->set_systems);
-
-    ecs_map_free(world->type_handles);
 
     world->magic = 0;
 
