@@ -444,6 +444,7 @@ void Prefab_cyclic_inheritance_w_clone_in_progress(void);
 void Prefab_cyclic_inheritance_get_unavailable(void);
 void Prefab_cyclic_inheritance_has_unavailable(void);
 void Prefab_clone_after_inherit_in_on_add(void);
+void Prefab_override_from_nested(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -2192,7 +2193,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 58,
+        .testcase_count = 59,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -2425,6 +2426,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "clone_after_inherit_in_on_add",
                 .function = Prefab_clone_after_inherit_in_on_add
+            },
+            {
+                .id = "override_from_nested",
+                .function = Prefab_override_from_nested
             }
         }
     },

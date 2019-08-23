@@ -450,11 +450,20 @@ ecs_type_t copy_from_prefabs(
     ecs_entity_info_t *info,
     uint32_t offset,
     uint32_t limit,
+    ecs_entity_t sub_prefab,
+    ecs_type_t src_type,
     ecs_type_t to_add,
     ecs_type_t modified)
 {
     /* Use get_type, so we have the combined staged/unstaged entity type */
-    ecs_type_t type = ecs_get_type(world, info->entity);
+    ecs_type_t type;
+
+    if (src_type) {
+        type = src_type;
+    } else {
+        type = ecs_get_type(world, info->entity);
+    }
+
     ecs_entity_t *type_buffer = ecs_vector_first(type);
     int32_t i = -1;
 
@@ -462,7 +471,23 @@ ecs_type_t copy_from_prefabs(
         ecs_entity_t prefab = type_buffer[i] & ECS_ENTITY_MASK;
         ecs_entity_info_t prefab_info = {.entity = prefab};
 
+        /* Detect small cycles */
+        if (sub_prefab == prefab) {
+            continue;
+        }
+
         if (populate_info(world, &world->main_stage, &prefab_info)) {
+            ecs_entity_t sub = sub_prefab;
+            if (!sub) {
+                sub = prefab;
+            }
+
+            /* Walk over prefab components in case there are base prefabs */
+            modified = copy_from_prefabs(
+                world, stage, info, offset, limit, sub, prefab_info.type, 
+                to_add, modified);
+
+            /* Copy from current prefab */
             modified = copy_from_prefab(
                 world, stage, &prefab_info, info, offset, limit, to_add, 
                 modified);                
@@ -491,7 +516,7 @@ bool notify_after_commit(
     populate_info(world, stage, info);
 
     modified = copy_from_prefabs(
-        world, stage, info, offset, limit, to_add_id, modified);
+        world, stage, info, offset, limit, 0, NULL, to_add_id, modified);
 
     populate_info(world, stage, info);
     

@@ -2410,3 +2410,39 @@ void Prefab_clone_after_inherit_in_on_add() {
 
     ecs_fini(world);
 }
+
+void Prefab_override_from_nested() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ECS_PREFAB(world, BasePrefab, Position);
+    ecs_set(world, BasePrefab, Position, {10, 20});
+
+    ECS_PREFAB(world, SubPrefab, INSTANCEOF | BasePrefab, Velocity);
+    ecs_set(world, SubPrefab, Velocity, {30, 40});
+
+    ECS_TYPE(world, Sub, INSTANCEOF | SubPrefab, Position, Velocity);
+
+    ecs_entity_t e_1 = ecs_new(world, Sub);
+    test_assert(e_1 != 0);
+    test_assert( ecs_has_owned(world, e_1, Position));
+    test_assert( ecs_has_owned(world, e_1, Velocity));
+    test_assert( ecs_has_owned(world, e_1, Position));
+    test_assert( ecs_has_owned(world, e_1, Velocity));
+    test_assert( ecs_has(world, e_1, SubPrefab));
+    test_assert( ecs_has(world, e_1, BasePrefab));
+
+    Position *p = ecs_get_ptr(world, e_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 30);
+    test_int(v->y, 40);
+
+    ecs_fini(world);
+}

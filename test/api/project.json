@@ -490,7 +490,8 @@
                 "cyclic_inheritance_w_clone_in_progress",
                 "cyclic_inheritance_get_unavailable",
                 "cyclic_inheritance_has_unavailable",
-                "clone_after_inherit_in_on_add"
+                "clone_after_inherit_in_on_add",
+                "override_from_nested"
             ]
         }, {
             "id": "System_w_FromContainer",
