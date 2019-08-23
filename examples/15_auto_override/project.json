@@ -1,10 +1,9 @@
 {
-    "id": "inheritance",
+    "id": "auto_override",
     "type": "application",
     "value": {
         "author": "Jane Doe",
         "description": "A simple hello world flecs application",
-        "public": false,
         "use": [
             "flecs"
         ]

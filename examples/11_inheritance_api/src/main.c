@@ -50,10 +50,10 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Force, Mass);
 
     /* Create two base entities */
-    ECS_ENTITY(world, HeavyEntity, Mass);
+    ecs_entity_t HeavyEntity = ecs_new(world, 0);
     ecs_set(world, HeavyEntity, Mass, {100});
 
-    ECS_ENTITY(world, LightEntity, Mass);
+    ecs_entity_t LightEntity = ecs_new(world, 0);
     ecs_set(world, LightEntity, Mass, {10});
 
     /* Create regular entity with Position, Force and Mass */
