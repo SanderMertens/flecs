@@ -398,7 +398,8 @@
                 "from_system",
                 "on_remove_no_components",
                 "on_remove_one_tag",
-                "on_remove_from_system"
+                "on_remove_from_system",
+                "tasks_in_phases"
             ]
         }, {
             "id": "Container",

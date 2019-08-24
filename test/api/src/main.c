@@ -356,6 +356,7 @@ void Tasks_from_system(void);
 void Tasks_on_remove_no_components(void);
 void Tasks_on_remove_one_tag(void);
 void Tasks_on_remove_from_system(void);
+void Tasks_tasks_in_phases(void);
 
 // Testsuite 'Container'
 void Container_child(void);
@@ -2053,7 +2054,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Tasks",
-        .testcase_count = 6,
+        .testcase_count = 7,
         .testcases = (bake_test_case[]){
             {
                 .id = "no_components",
@@ -2078,6 +2079,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "on_remove_from_system",
                 .function = Tasks_on_remove_from_system
+            },
+            {
+                .id = "tasks_in_phases",
+                .function = Tasks_tasks_in_phases
             }
         }
     },

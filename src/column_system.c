@@ -86,14 +86,25 @@ void add_table(
     ecs_table_t *table)
 {
     ecs_matched_table_t *table_data;
-    ecs_type_t table_type = table->type;
+    ecs_type_t table_type = table ? table->type : NULL;
     uint32_t column_count = ecs_vector_count(system_data->base.columns);
 
     /* Initially always add table to inactive group. If the system is registered
      * with the table and the table is not empty, the table will send an
      * activate signal to the system. */
-    table_data = ecs_vector_add(
-        &system_data->inactive_tables, &matched_table_params);
+    if (table) {
+        table_data = ecs_vector_add(
+            &system_data->inactive_tables, &matched_table_params);
+    } else {
+        /* If no table is provided to function, this is a system that contains
+         * no columns that require table matching. In this case, the system will
+         * only have one "dummy" table that caches data from the system columns.
+         * Always add this dummy table to the list of active tables, since it
+         * would never get activated otherwise. */
+        table_data = ecs_vector_add(
+            &system_data->tables, &matched_table_params);
+    }
+
     table_data->table = table;
     table_data->references = NULL;
 
@@ -171,7 +182,7 @@ void add_table(
         if (!entity && kind != EcsFromEmpty) {
             if (component) {
                 /* Retrieve offset for component */
-                table_data->columns[c] = ecs_type_index_of(table->type, component);
+                table_data->columns[c] = ecs_type_index_of(table_type, component);
 
                 /* If column is found, add one to the index, as column zero in
                  * a table is reserved for entity id's */
@@ -236,6 +247,8 @@ void add_table(
                         e = entity;
                     } else if (kind == EcsCascade) {
                         e = entity;
+                    } else if (kind == EcsFromSystem) {
+                        e = entity;
                     } else {
                         e = ecs_get_entity_for_component(
                             world, entity, table_type, component);
@@ -275,7 +288,9 @@ void add_table(
         table_data->components[c] = component;
     }
 
-    ecs_table_register_system(world, table, system);
+    if (table) {
+        ecs_table_register_system(world, table, system);
+    }
 }
 
 /* Remove table */
@@ -298,6 +313,10 @@ bool match_table(
     EcsColSystem *system_data)
 {
     (void)system; /* useful for debugging */
+
+    if (!system_data->base.needs_tables) {
+        return false;
+    }
 
     ecs_type_t type, table_type = table->type;
 
@@ -746,6 +765,7 @@ ecs_entity_t ecs_new_col_system(
     system_data->base.kind = kind;
     system_data->base.cascade_by = 0;
     system_data->base.has_refs = false;
+    system_data->base.needs_tables = ecs_needs_tables(world, sig);
 
     system_data->column_params.element_size = sizeof(int32_t) * (count);
     system_data->ref_params.element_size = sizeof(ecs_reference_t) * count;
@@ -765,7 +785,15 @@ ecs_entity_t ecs_new_col_system(
 
     ecs_system_init_base(world, &system_data->base);
 
-    match_tables(world, result, system_data);
+    if (system_data->base.needs_tables) {
+        match_tables(world, result, system_data);
+    } else {
+        /* If this system does not match with tables, for example, because it
+         * does not have any SELF columns, add a single "matched" table that
+         * caches the data for the columns, but does not have a reference to an
+         * actual table. */
+        add_table(world, result, system_data, NULL /* table is NULL */);
+    }
 
     ecs_entity_t *elem = NULL;
 
@@ -897,45 +925,53 @@ ecs_entity_t _ecs_run_w_filter(
 
     for (i = 0; i < table_count; i ++) {
         ecs_matched_table_t *table = &tables[i];
-
         ecs_table_t *world_table = table->table;
-        ecs_table_column_t *table_data = world_table->columns;
-        uint32_t first = 0, count = ecs_table_count(world_table);
+        ecs_table_column_t *table_data = NULL;
+        uint32_t first = 0, count = 0;
 
-        if (filter) {
-            if (!ecs_type_contains(
-                real_world, world_table->type, filter, true, true))
-            {
+        if (world_table) {
+            table_data = world_table->columns;
+            count = ecs_table_count(world_table);
+
+            if (filter) {
+                if (!ecs_type_contains(
+                    real_world, world_table->type, filter, true, true))
+                {
+                    continue;
+                }
+            }
+
+            if (offset_limit) {
+                if (offset) {
+                    if (offset > count) {
+                        offset -= count;
+                        continue;
+                    } else {
+                        first += offset;
+                        count -= offset;
+                        offset = 0;
+                    }
+                }
+
+                if (limit) {
+                    if (limit > count) {
+                        limit -= count;
+                    } else {
+                        count = limit;
+                        limit = 0;
+                    }
+                } else if (limit_set) {
+                    break;
+                }
+            }
+
+            if (!count) {
                 continue;
             }
-        }
 
-        if (offset_limit) {
-            if (offset) {
-                if (offset > count) {
-                    offset -= count;
-                    continue;
-                } else {
-                    first += offset;
-                    count -= offset;
-                    offset = 0;
-                }
-            }
-
-            if (limit) {
-                if (limit > count) {
-                    limit -= count;
-                } else {
-                    count = limit;
-                    limit = 0;
-                }
-            } else if (limit_set) {
-                break;
-            }
-        }
-
-        if (!count) {
-            continue;
+            ecs_entity_t *entity_buffer = 
+                    ecs_vector_first(table_data[0].data);
+            info.entities = &entity_buffer[first];            
         }
 
         if (table->references) {
@@ -944,16 +980,12 @@ ecs_entity_t _ecs_run_w_filter(
             info.references = NULL;
         }
 
-        info.columns =  table->columns;
+        info.columns = table->columns;
         info.table = world_table;
         info.table_columns = table_data;
         info.components = table->components;
         info.offset = first;
         info.count = count;
-
-        ecs_entity_t *entity_buffer = 
-                ecs_vector_first(((ecs_table_column_t*)info.table_columns)[0].data);
-        info.entities = &entity_buffer[first];
         
         action(&info);
 

@@ -263,8 +263,7 @@ ecs_table_t* ecs_world_get_table(
     return table;
 }
 
-static
-ecs_vector_t** frame_system_array(
+ecs_vector_t** ecs_system_array(
     ecs_world_t *world,
     EcsSystemKind kind)
 {
@@ -321,9 +320,9 @@ void ecs_world_activate_system(
 
     if (active) {
         src_array = world->inactive_systems;
-        dst_array = *frame_system_array(world, kind);
+        dst_array = *ecs_system_array(world, kind);
      } else {
-        src_array = *frame_system_array(world, kind);
+        src_array = *ecs_system_array(world, kind);
         dst_array = world->inactive_systems;
     }
 
@@ -344,7 +343,7 @@ void ecs_world_activate_system(
         &dst_array, src_array, &handle_arr_params, i);
 
     if (active) {
-         *frame_system_array(world, kind) = dst_array;
+         *ecs_system_array(world, kind) = dst_array;
          qsort(dst_array, ecs_vector_count(dst_array) + 1,
           sizeof(ecs_entity_t), compare_handle);
     } else {
@@ -636,7 +635,6 @@ ecs_world_t *ecs_init(void) {
     world->add_systems = ecs_vector_new(&handle_arr_params, 0);
     world->remove_systems = ecs_vector_new(&handle_arr_params, 0);
     world->set_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->tasks = ecs_vector_new(&handle_arr_params, 0);
     world->fini_tasks = ecs_vector_new(&handle_arr_params, 0);
 
     world->type_sys_add_index = ecs_map_new(0, sizeof(ecs_vector_t*));
@@ -810,7 +808,6 @@ int ecs_fini(
     row_systems_deinit(world, world->add_systems);
     row_systems_deinit(world, world->remove_systems);
     row_systems_deinit(world, world->set_systems);
-    row_systems_deinit(world, world->tasks);
 
     row_index_deinit(world->type_sys_add_index);
     row_index_deinit(world->type_sys_remove_index);
@@ -832,7 +829,6 @@ int ecs_fini(
 
     ecs_vector_free(world->inactive_systems);
     ecs_vector_free(world->on_demand_systems);
-    ecs_vector_free(world->tasks);
     ecs_vector_free(world->fini_tasks);
 
     ecs_vector_free(world->add_systems);
@@ -1073,28 +1069,6 @@ void run_multi_thread_stage(
 }
 
 static
-void run_tasks(
-    ecs_world_t *world)
-{
-    /* Run periodic row systems (not matched to any entity) */
-    uint32_t i, system_count = ecs_vector_count(world->tasks);
-    if (system_count) {
-        world->in_progress = true;
-
-        ecs_entity_t *buffer = ecs_vector_first(world->tasks);
-        for (i = 0; i < system_count; i ++) {
-            ecs_run_task(world, buffer[i]);
-        }
-
-        if (world->auto_merge) {
-            world->in_progress = false;
-            ecs_merge(world);
-            world->in_progress = true;
-        }
-    }
-}
-
-static
 float start_measure_frame(
     ecs_world_t *world,
     float user_delta_time)
@@ -1194,8 +1168,6 @@ bool ecs_progress(
         run_single_thread_stage(world, world->on_validate_systems);
         run_single_thread_stage(world, world->post_update_systems);
     }
-
-    run_tasks(world);
 
     run_single_thread_stage(world, world->pre_store_systems);
     run_single_thread_stage(world, world->on_store_systems);

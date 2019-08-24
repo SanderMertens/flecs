@@ -158,7 +158,6 @@ void get_memory_stats(
     ecs_vector_memory(world->post_update_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_vector_memory(world->pre_store_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_vector_memory(world->on_store_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_vector_memory(world->tasks, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_vector_memory(world->inactive_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_vector_memory(world->on_demand_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
 
@@ -170,7 +169,6 @@ void get_memory_stats(
     calculate_systems_stats(world, world->post_update_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_systems_stats(world, world->pre_store_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_systems_stats(world, world->on_store_systems, &memory->systems.allocd, &memory->systems.used);
-    calculate_systems_stats(world, world->tasks, &memory->systems.allocd, &memory->systems.used);
     calculate_systems_stats(world, world->inactive_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_systems_stats(world, world->on_demand_systems, &memory->systems.allocd, &memory->systems.used);
 
@@ -466,8 +464,6 @@ void ecs_get_stats(
         world, &stats->pre_store_systems, world->pre_store_systems);
     stats->system_count += system_stats_arr(
         world, &stats->on_store_systems, world->on_store_systems);
-    stats->system_count += system_stats_arr(
-        world, &stats->task_systems, world->tasks);
     stats->system_count += system_stats_arr(
         world, &stats->on_demand_systems, world->on_demand_systems);
 

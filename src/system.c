@@ -134,12 +134,8 @@ ecs_entity_t new_row_system(
 
     ecs_entity_t *elem = NULL;
 
-    if (!needs_tables) {
-        if (kind == EcsOnUpdate) {
-            elem = ecs_vector_add(&world->tasks, &handle_arr_params);
-        } else if (kind == EcsOnRemove) {
-            elem = ecs_vector_add(&world->fini_tasks, &handle_arr_params);
-        }
+    if (!needs_tables && kind == EcsOnRemove) {
+        elem = ecs_vector_add(&world->fini_tasks, &handle_arr_params);
     } else {
         if (kind == EcsOnAdd) {
             elem = ecs_vector_add(&world->add_systems, &handle_arr_params);
@@ -525,7 +521,7 @@ ecs_entity_t ecs_new_system(
         return result;
     }
 
-    if (needs_tables && (kind == EcsOnLoad || kind == EcsPostLoad ||
+    if ((kind == EcsOnLoad || kind == EcsPostLoad ||
                          kind == EcsPreUpdate || kind == EcsOnUpdate ||
                          kind == EcsOnValidate || kind == EcsPostUpdate ||
                          kind == EcsPreStore || kind == EcsOnStore ||
@@ -817,17 +813,18 @@ EcsSystem* get_system_ptr(
     ecs_world_t *world,
     ecs_entity_t system)
 {
+    EcsSystem *result = NULL;
     EcsColSystem *cs = ecs_get_ptr(world, system, EcsColSystem);
     if (cs) {
-        return (EcsSystem*)cs;
+        result = (EcsSystem*)cs;
     } else {
         EcsRowSystem *rs = ecs_get_ptr(world, system, EcsRowSystem);
         if (rs) {
-            return (EcsSystem*)rs;
+            result = (EcsSystem*)rs;
         }
     }
 
-    return NULL;
+    return result;
 }
 
 void ecs_set_system_context(

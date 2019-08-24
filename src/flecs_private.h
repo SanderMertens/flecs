@@ -88,6 +88,11 @@ void ecs_world_activate_system(
 ecs_stage_t *ecs_get_stage(
     ecs_world_t **world_ptr);
 
+/* Get array for system kind */
+ecs_vector_t** ecs_system_array(
+    ecs_world_t *world,
+    EcsSystemKind kind);
+
 /* -- Stage API -- */
 
 /* Initialize stage data structures */

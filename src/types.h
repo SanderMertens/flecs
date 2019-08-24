@@ -183,6 +183,7 @@ typedef struct EcsSystem {
     float time_spent;              /* Time spent on running system */
     bool enabled;                  /* Is system enabled or not */
     bool has_refs;                 /* Does the system have reference columns */
+    bool needs_tables;             /* Does the system need table matching */
     bool match_prefab;             /* Should this system match prefabs */
     bool match_disabled;           /* Should this system match disabled entities */
 } EcsSystem;
@@ -388,7 +389,6 @@ struct ecs_world {
 
     /* -- Tasks -- */
 
-    ecs_vector_t *tasks;              /* Periodic actions not invoked on entities */
     ecs_vector_t *fini_tasks;         /* Tasks to execute on ecs_fini */
 
 
