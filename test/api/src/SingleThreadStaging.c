@@ -1630,6 +1630,7 @@ void Set_current(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     
     ecs_type_t ecs_type(Rotation) = ctx->component;
+    ecs_entity_t ecs_entity(Rotation) = ecs_type_to_entity(rows->world, ecs_type(Rotation));
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -1693,6 +1694,7 @@ void Set_new_empty(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     
     ecs_type_t ecs_type(Rotation) = ctx->component;
+    ecs_entity_t ecs_entity(Rotation) = ecs_type_to_entity(rows->world, ecs_type(Rotation));
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -1753,7 +1755,9 @@ void Set_new_w_component(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     
     ecs_type_t ecs_type(Position) = ctx->component;
+
     ecs_type_t ecs_type(Rotation) = ctx->component_2;
+    ecs_entity_t ecs_entity(Rotation) = ecs_type_to_entity(rows->world, ecs_type(Rotation));
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -1816,6 +1820,7 @@ void Set_existing_new_w_component(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     
     ecs_type_t ecs_type(Position) = ctx->component;
+    ecs_entity_t ecs_entity(Position) = ecs_type_to_entity(rows->world, ecs_type(Position));
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -1875,6 +1880,7 @@ void Set_new_after_add(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     
     ecs_type_t ecs_type(Position) = ctx->component;
+    ecs_entity_t ecs_entity(Position) = ecs_type_to_entity(rows->world, ecs_type(Position));
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -1937,6 +1943,7 @@ void Remove_after_set(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     
     ecs_type_t ecs_type(Position) = ctx->component;
+    ecs_entity_t ecs_entity(Position) = ecs_type_to_entity(rows->world, ecs_type(Position));
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -2001,6 +2008,7 @@ void Delete_after_set(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     
     ecs_type_t ecs_type(Position) = ctx->component;
+    ecs_entity_t ecs_entity(Position) = ecs_type_to_entity(rows->world, ecs_type(Position));
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -2575,6 +2583,7 @@ static
 void Set_velocity(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     ecs_type_t ecs_type(Velocity) = ctx->component;
+    ecs_entity_t ecs_entity(Velocity) = ecs_type_to_entity(rows->world, ecs_type(Velocity));
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -2624,6 +2633,7 @@ static
 void Set_velocity_on_new(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     ecs_type_t ecs_type(Velocity) = ctx->component;
+    ecs_entity_t ecs_entity(Velocity) = ecs_type_to_entity(rows->world, ecs_type(Velocity));
 
     int i;
     for (i = 0; i < rows->count; i ++) {

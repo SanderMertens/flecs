@@ -983,31 +983,31 @@ FLECS_EXPORT
 ecs_entity_t _ecs_set_ptr(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_type_t type,
+    ecs_entity_t component,
     size_t size,
     void *ptr);
 
 FLECS_EXPORT
 ecs_entity_t _ecs_set_singleton_ptr(
     ecs_world_t *world,
-    ecs_type_t type,
+    ecs_entity_t component,
     size_t size,
     void *ptr);
 
-#define ecs_set_ptr(world, entity, type, ptr)\
-    _ecs_set_ptr(world, entity, T##type, sizeof(type), ptr)
+#define ecs_set_ptr(world, entity, component, ptr)\
+    _ecs_set_ptr(world, entity, ecs_entity(component), sizeof(component), ptr)
 
 /* Conditionally skip macro's as compound literals are not supported in C89 */
 #ifndef __BAKE_LEGACY__
-#define ecs_set(world, entity, type, ...)\
-    _ecs_set_ptr(world, entity, T##type, sizeof(type), &(type)__VA_ARGS__)
+#define ecs_set(world, entity, component, ...)\
+    _ecs_set_ptr(world, entity, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
 
-#define ecs_set_singleton(world, type, ...)\
-    _ecs_set_singleton_ptr(world, T##type, sizeof(type), &(type)__VA_ARGS__)
+#define ecs_set_singleton(world, component, ...)\
+    _ecs_set_singleton_ptr(world, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
 #endif
 
-#define ecs_set_singleton_ptr(world, type, ptr)\
-    _ecs_set_singleton_ptr(world, T##type, sizeof(type), ptr)
+#define ecs_set_singleton_ptr(world, component, ptr)\
+    _ecs_set_singleton_ptr(world, ecs_entity(component), sizeof(component), ptr)
 
 
 /** Check if entity has the specified type.

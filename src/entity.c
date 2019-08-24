@@ -1371,20 +1371,16 @@ static
 ecs_entity_t _ecs_set_ptr_intern(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_type_t type,
+    ecs_entity_t component,
     size_t size,
     void *ptr)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
-
+    ecs_type_t type = ecs_type_from_entity(world, component);
     ecs_entity_info_t info = {.entity = entity};
-
-    /* Set only accepts types that hold a single component */
-    ecs_entity_t component = ecs_type_to_entity(world_arg, type);
 
     /* If component hasn't been added to entity yet, add it */
     int *dst = ecs_get_ptr_intern(world, stage, &info, component, true, false);
@@ -1419,7 +1415,7 @@ ecs_entity_t _ecs_set_ptr_intern(
 ecs_entity_t _ecs_set_ptr(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_type_t type,
+    ecs_entity_t component,
     size_t size,
     void *ptr)
 {
@@ -1427,19 +1423,20 @@ ecs_entity_t _ecs_set_ptr(
 
     /* If no entity is specified, create one */
     if (!entity) {
+        ecs_type_t type = ecs_type_from_entity(world, component);
         entity = _ecs_new(world, type);
     }
 
-    return _ecs_set_ptr_intern(world, entity, type, size, ptr);
+    return _ecs_set_ptr_intern(world, entity, component, size, ptr);
 }
 
 ecs_entity_t _ecs_set_singleton_ptr(
     ecs_world_t *world,
-    ecs_type_t type,
+    ecs_entity_t component,
     size_t size,
     void *ptr)
 {
-    return _ecs_set_ptr_intern(world, ECS_SINGLETON, type, size, ptr);
+    return _ecs_set_ptr_intern(world, ECS_SINGLETON, component, size, ptr);
 }
 
 static

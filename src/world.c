@@ -1298,8 +1298,7 @@ int ecs_enable_admin(
     ecs_measure_system_time(world, true);
 
     /* Create admin instance */
-    ecs_entity_t admin = ecs_lookup(world, "EcsAdmin");
-    ecs_type_t TEcsAdmin = ecs_type_from_entity(world, admin);
+    ecs_entity_t EEcsAdmin = ecs_lookup(world, "EcsAdmin");
     ecs_set(world, 0, EcsAdmin, {port});
 
     ecs_os_log("Admin is running on port %d", port);

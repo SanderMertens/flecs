@@ -296,8 +296,13 @@ void Set_random(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
 
     ecs_type_t ecs_type(Position) = ctx->component;
+    ecs_entity_t ecs_entity(Position) = ecs_type_to_entity(rows->world, ecs_type(Position));
+
     ecs_type_t ecs_type(Velocity) = ctx->component_2;
+    ecs_entity_t ecs_entity(Velocity) = ecs_type_to_entity(rows->world, ecs_type(Velocity));
+ 
     ecs_type_t ecs_type(Rotation) = ctx->component_3;
+    ecs_entity_t ecs_entity(Rotation) = ecs_type_to_entity(rows->world, ecs_type(Rotation));
 
     int i;
     for (i = 0; i < rows->count; i ++) {
