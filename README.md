@@ -5,7 +5,7 @@
 
 ![flecs](https://user-images.githubusercontent.com/9919222/54175082-b107f900-4446-11e9-9cbc-91c096f7c0b1.png)
 
-Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/flecs/edit/master/README.md#what-is-ecs)). Flecs packs as much punch as possible into a small library with a tiny C99 API and zero dependencies. Here are some of the things it can do:
+Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](#what-is-an-entity-component-system)). Flecs packs as much punch as possible into a small library with a tiny C99 API and zero dependencies. Here are some of the things it can do:
 
 - Process entites on multiple threads with a lock-free, zero-overhead staging architecture [[learn more](Manual.md#staging)]
 - Organize components & systems in reusable, library-friendly modules [[learn more](Manual.md#modules)]
@@ -28,7 +28,7 @@ ECS (Entity Component System) is a way to organize code that is mostly used in g
 - Has _components_ that are plain data types which can be added to entities
 - Has _systems_ that are functions which are matched against entities with a set of components
 
-If you want to learn more, check [the Entity Component System FAQ](https://github.com/SanderMertens/ecs-faq):
+For more information, check [the Entity Component System FAQ](https://github.com/SanderMertens/ecs-faq)!
 
 ## Manual
 [Click here](Manual.md) to view the Flecs manual.
