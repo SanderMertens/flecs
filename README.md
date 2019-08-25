@@ -206,8 +206,8 @@ typedef struct Position {
 typedef int32_t Speed;
 
 void Move(ecs_rows_t *rows) {
-    Position *p = ecs_column(rows, Position, 1);
-    Speed *s = ecs_column(rows, Speed, 2);
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN(rows, Speed, s, 2);
     
     for (int i = 0; i < rows->count; i ++) {
         p[i].x += s[i] * rows->delta_time;
@@ -216,7 +216,7 @@ void Move(ecs_rows_t *rows) {
 }
 
 int main(int argc, char *argv[]) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     /* Register components and systems */
     ECS_COMPONENT(world, Position);
