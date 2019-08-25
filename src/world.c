@@ -1395,9 +1395,19 @@ ecs_entity_t ecs_import_from_library(
     const char *module_name,
     int flags)
 {
-#ifdef __BAKE__
     char *import_func = (char*)module_name; /* safe */
     char *module = (char*)module_name;
+
+    if (!ecs_os_api.module_to_dl || 
+        !ecs_os_api.dlopen || 
+        !ecs_os_api.dlproc || 
+        !ecs_os_api.dlclose) 
+    {
+        ecs_os_err(
+            "library loading not supported, set module_to_dl, dlopen, dlclose "
+            "and dlproc os API callbacks first");
+        return ECS_INVALID_ENTITY;
+    }
 
     /* If no module name is specified, try default naming convention for loading
      * the main module from the library */
@@ -1427,16 +1437,36 @@ ecs_entity_t ecs_import_from_library(
         strcat(bptr, "Import");
     }
 
-    /* Find civetweb module & entry point */
-    ecs_module_init_action_t action = (ecs_module_init_action_t)ut_load_proc(
-            library_name, NULL, import_func);
+    char *library_filename = ecs_os_module_to_dl(library_name);
+    if (!library_filename) {
+        ecs_os_err("failed to find library file for '%s'", library_name);
+        return ECS_INVALID_ENTITY;
+    } else {
+        ecs_os_dbg("found file '%s' for library '%s'", 
+            library_filename, library_name);
+    }
+
+    ecs_os_dl_t dl = ecs_os_dlopen(library_filename);
+    if (!dl) {
+        ecs_os_err("failed to load library '%s' ('%s')", 
+            library_name, library_filename);
+        free(library_filename);
+        return ECS_INVALID_ENTITY;
+    } else {
+        ecs_os_dbg("library '%s' ('%s') loaded", 
+            library_name, library_filename);
+    }
+
+    ecs_module_init_action_t action = (ecs_module_init_action_t)
+        ecs_os_dlproc(dl, import_func);
     if (!action) {
         ecs_os_err("failed to load import function %s from library %s",
             import_func, library_name);
-        ut_raise();
+        free(library_filename);
+        ecs_os_dlclose(dl);            
         return ECS_INVALID_ENTITY;
     } else {
-        ecs_os_dbg("found import function %s in library %s for module %s",
+        ecs_os_dbg("found import function '%s' in library '%s' for module '%s'",
             import_func, library_name, module);
     }
 
@@ -1451,12 +1481,9 @@ ecs_entity_t ecs_import_from_library(
         free(module);
     }
 
+    free(library_filename);
+
     return result;
-#else
-    ecs_os_err(
-        "sorry, loading libraries is only possible if flecs is built with bake :(");
-    return ECS_INVALID_ENTITY;
-#endif
 }
 
 uint16_t ecs_get_thread_index(

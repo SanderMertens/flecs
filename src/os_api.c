@@ -18,7 +18,7 @@ void ecs_os_set_api(
     }
 }
 
-/* When flecs is built with bake, use threading functions from bake.util */
+/* When flecs is built with bake, use functions from bake.util */
 #ifdef __BAKE__
 
 static
@@ -103,6 +103,47 @@ void bake_log(
         ecs_os_log("%s", msg);
     }
 }
+
+static
+ecs_os_dl_t bake_dlopen(
+    const char *dlname)
+{
+    return (ecs_os_dl_t)ut_dl_open(dlname);
+}
+
+static
+void bake_dlclose(
+    ecs_os_dl_t dl)
+{
+    ut_dl_close((ut_dl)dl);
+}
+
+static
+ecs_os_proc_t bake_dlproc(
+    ecs_os_dl_t dl,
+    const char *procname)
+{
+    ecs_os_proc_t result = (ecs_os_proc_t)ut_dl_proc((ut_dl)dl, procname);
+    if (!result) {
+        ut_raise();
+    }
+    return result;
+}
+
+static
+char* bake_module_to_dl(
+    const char *module_id)
+{
+    const char *result = ut_locate(module_id, NULL, UT_LOCATE_LIB);
+    if (result) {
+        return ut_strdup(result);
+    } else {
+        return NULL;
+    }
+}
+
+
+/* __BAKE__ */
 #endif
 
 static
@@ -219,9 +260,16 @@ void ecs_os_set_api_defaults(void)
     _ecs_os_api->cond_broadcast = bake_cond_broadcast;
     _ecs_os_api->cond_wait = bake_cond_wait;
 
-    ut_log_handlerRegister(bake_log, NULL);
+    _ecs_os_api->dlopen = bake_dlopen;
+    _ecs_os_api->dlproc = bake_dlproc;
+    _ecs_os_api->dlclose = bake_dlclose;
 
+    _ecs_os_api->module_to_dl = bake_module_to_dl;
+
+    ut_log_handlerRegister(bake_log, NULL);
+/* __BAKE__ */
 #endif
+
     _ecs_os_api->sleep = ecs_os_time_sleep;
     _ecs_os_api->get_time = ecs_os_gettime;
 

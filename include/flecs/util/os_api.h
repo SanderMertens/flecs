@@ -17,6 +17,10 @@ extern "C" {
 typedef uintptr_t ecs_os_thread_t;
 typedef uintptr_t ecs_os_cond_t;
 typedef uintptr_t ecs_os_mutex_t;
+typedef uintptr_t ecs_os_dl_t;
+
+/* Generic function pointer type */
+typedef void (*ecs_os_proc_t)(void);
 
 /* Memory management */
 typedef 
@@ -113,6 +117,24 @@ typedef
 void (*ecs_os_api_abort_t)(
     void);
 
+/* Dynamic libraries */
+typedef
+ecs_os_dl_t (*ecs_os_api_dlopen_t)(
+    const char *libname);
+
+typedef
+ecs_os_proc_t (*ecs_os_api_dlproc_t)(
+    ecs_os_dl_t lib,
+    const char *procname);
+
+typedef
+void (*ecs_os_api_dlclose_t)(
+    ecs_os_dl_t lib);
+
+typedef
+char* (*ecs_os_api_module_to_dl_t)(
+    const char *module_id);
+
 typedef struct ecs_os_api_t {
     /* Memory management */
     ecs_os_api_malloc_t malloc;
@@ -149,6 +171,15 @@ typedef struct ecs_os_api_t {
 
     /* Application termination */
     ecs_os_api_abort_t abort;
+
+    /* Dynamic library loading */
+    ecs_os_api_dlopen_t dlopen;
+    ecs_os_api_dlproc_t dlproc;
+    ecs_os_api_dlclose_t dlclose;
+
+    /* Overridable function that translates from a logical module id to the
+     * a shared library filename */
+    ecs_os_api_module_to_dl_t module_to_dl;
 } ecs_os_api_t;
 
 FLECS_EXPORT
@@ -215,6 +246,14 @@ bool ecs_os_dbg_enabled(void);
 
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort()
+
+/* Dynamic libraries */
+#define ecs_os_dlopen(libname) ecs_os_api.dlopen(libname)
+#define ecs_os_dlproc(lib, procname) ecs_os_api.dlproc(lib, procname)
+#define ecs_os_dlclose(lib) ecs_os_api.dlclose(lib)
+
+/* Module id translation */
+#define ecs_os_module_to_dl(lib) ecs_os_api.module_to_dl(lib)
 
 /* Sleep with floating point time */
 FLECS_EXPORT
