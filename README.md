@@ -5,12 +5,11 @@
 
 ![flecs](https://user-images.githubusercontent.com/9919222/54175082-b107f900-4446-11e9-9cbc-91c096f7c0b1.png)
 
-Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/ecs-faq)). Flecs packs as much punch as possible into a small library with a tiny C99 API and zero dependencies. Here are some of the things it can do:
+Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](https://github.com/SanderMertens/flecs/edit/master/README.md#what-is-ecs)). Flecs packs as much punch as possible into a small library with a tiny C99 API and zero dependencies. Here are some of the things it can do:
 
 - Process entites on multiple threads with a lock-free, zero-overhead staging architecture [[learn more](Manual.md#staging)]
 - Organize components & systems in reusable, library-friendly modules [[learn more](Manual.md#modules)]
 - Run systems every frame, periodically, on demand or on change events [[learn more](Manual.md#reactive-systems)]
-- Report runtime statistics on memory usage, performance and more [[learn more](https://github.com/SanderMertens/flecs/blob/master/include/util/stats.h)]
 
 Additionally, flecs has a flexible engine that lets you do many things, like:
 
@@ -22,7 +21,14 @@ Make sure to check the flecs [dashboard](https://github.com/SanderMertens/flecs-
 
 ![dashboard](https://user-images.githubusercontent.com/9919222/54180572-309ec380-4459-11e9-9e48-1a08de57ff91.png)
 
-See [here](#getting-started-with-the-dashboard) for how to create an application with the dashboard.
+## What is an Entity Component System?
+ECS (Entity Component System) is a way to organize code that is mostly used in gaming and simulation projects. ECS code generally performs better than traditional OOP, and is typically easier to reuse. The main differences between ECS and OOP are composition is a first class citizen in ECS, and that data is represented as plain data types rather than encapsulated classes.  A framework is an Entity Component System if it:
+
+- Has _entities_ that are unique identifiers (integers)
+- Has _components_ that are plain data types which can be added to entities
+- Has _systems_ that are functions which are matched against entities with a set of components
+
+If you want to learn more, check [the Entity Component System FAQ](https://github.com/SanderMertens/ecs-faq):
 
 ## Manual
 [Click here](Manual.md) to view the Flecs manual.
