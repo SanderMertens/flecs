@@ -431,3 +431,48 @@ void SystemMisc_system_w_or_disabled_and_prefab() {
 
     ecs_fini(world);
 }
+
+static
+void TableColumns(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN(rows, Velocity, v, 2);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    ecs_type_t type = ecs_table_type(rows);
+    test_int(2, ecs_vector_count(type));
+
+    ecs_entity_t *components = ecs_vector_first(type);
+    test_int(components[0], ecs_entity(Position));
+    test_int(components[1], ecs_entity(Velocity));
+
+    void *column_0 = ecs_table_column(rows, 0);
+    test_assert(column_0 == p);
+
+    void *column_1 = ecs_table_column(rows, 1);
+    test_assert(column_1 == v);
+
+    is_invoked ++;
+}
+
+void SystemMisc_table_columns_access() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ECS_SYSTEM(world, TableColumns, EcsOnUpdate, Position, Velocity);
+
+    test_int(is_invoked, 0);
+
+    ecs_progress(world, 1);
+
+    test_int(is_invoked, 1);
+    is_invoked = false;
+
+    ecs_fini(world);
+}

@@ -1722,6 +1722,17 @@ ecs_type_t ecs_column_type(
     ecs_rows_t *rows,
     uint32_t column);
 
+/** Get type of table that system is currently iterating over. */
+FLECS_EXPORT
+ecs_type_t ecs_table_type(
+    ecs_rows_t *rows);
+
+/** Get type of table that system is currently iterating over. */
+FLECS_EXPORT
+void* ecs_table_column(
+    ecs_rows_t *rows,
+    uint32_t column);
+
 /* -- Functions used in convenience macro's -- */
 
 /** Convenience function to create an entity with id and component expression.

@@ -224,6 +224,7 @@ void SystemMisc_redefine_row_system(void);
 void SystemMisc_system_w_or_prefab(void);
 void SystemMisc_system_w_or_disabled(void);
 void SystemMisc_system_w_or_disabled_and_prefab(void);
+void SystemMisc_table_columns_access(void);
 
 // Testsuite 'SystemOnAdd'
 void SystemOnAdd_new_match_1_of_1(void);
@@ -1444,7 +1445,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 30,
+        .testcase_count = 31,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -1565,6 +1566,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "system_w_or_disabled_and_prefab",
                 .function = SystemMisc_system_w_or_disabled_and_prefab
+            },
+            {
+                .id = "table_columns_access",
+                .function = SystemMisc_table_columns_access
             }
         }
     },

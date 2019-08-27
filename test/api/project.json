@@ -252,7 +252,8 @@
                 "redefine_row_system",
                 "system_w_or_prefab",
                 "system_w_or_disabled",
-                "system_w_or_disabled_and_prefab"
+                "system_w_or_disabled_and_prefab",
+                "table_columns_access"
             ]
         }, {
             "id": "SystemOnAdd",

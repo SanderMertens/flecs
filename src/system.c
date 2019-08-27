@@ -808,6 +808,21 @@ ecs_entity_t ecs_column_entity(
     return rows->components[index - 1];
 }
 
+ecs_type_t ecs_table_type(
+    ecs_rows_t *rows)
+{
+    ecs_table_t *table = rows->table;
+    return table->type;
+}
+
+void* ecs_table_column(
+    ecs_rows_t *rows,
+    uint32_t column)
+{
+    ecs_table_t *table = rows->table;
+    return ecs_vector_first(table->columns[column + 1].data);
+}
+
 static
 EcsSystem* get_system_ptr(
     ecs_world_t *world,
