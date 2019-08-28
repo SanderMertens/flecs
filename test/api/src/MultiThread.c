@@ -972,3 +972,24 @@ void MultiThread_change_thread_count() {
 
     ecs_fini(world);
 }
+
+static
+void QuitSystem(ecs_rows_t *rows) {
+    ecs_quit(rows->world);
+}
+
+void MultiThread_multithread_quit() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, QuitSystem, EcsOnUpdate, Position);
+
+    ecs_entity_t e = ecs_new_w_count(world, Position, 100);
+
+    ecs_set_threads(world, 2);
+
+    test_assert( ecs_progress(world, 0) == 0);
+
+    ecs_fini(world);
+}

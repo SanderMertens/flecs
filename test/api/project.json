@@ -683,7 +683,8 @@
                 "4_thread_test_combs_100_entity_2_types",
                 "5_thread_test_combs_100_entity_2_types",
                 "6_thread_test_combs_100_entity_2_types",
-                "change_thread_count"
+                "change_thread_count",
+                "multithread_quit"
             ]
         }, {
             "id": "SingleThreadStaging",

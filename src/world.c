@@ -1195,6 +1195,7 @@ float ecs_get_delta_time(
 void ecs_quit(
     ecs_world_t *world)
 {
+    ecs_get_stage(&world);
     world->should_quit = true;
 }
 
