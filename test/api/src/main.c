@@ -622,6 +622,7 @@ void MultiThread_5_thread_test_combs_100_entity_2_types(void);
 void MultiThread_6_thread_test_combs_100_entity_2_types(void);
 void MultiThread_change_thread_count(void);
 void MultiThread_multithread_quit(void);
+void MultiThread_schedule_w_tasks(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_new_empty(void);
@@ -2996,7 +2997,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "MultiThread",
-        .testcase_count = 32,
+        .testcase_count = 33,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_thread_1_entity",
@@ -3125,6 +3126,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "multithread_quit",
                 .function = MultiThread_multithread_quit
+            },
+            {
+                .id = "schedule_w_tasks",
+                .function = MultiThread_schedule_w_tasks
             }
         }
     },

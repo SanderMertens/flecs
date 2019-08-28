@@ -173,16 +173,26 @@ void ecs_schedule_jobs(
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     uint32_t thread_count = ecs_vector_count(world->worker_threads);
     uint32_t total_rows = 0;
+    bool is_task = false;
 
     ecs_matched_table_t *tables = ecs_vector_first(system_data->tables);
     uint32_t i, count = ecs_vector_count(system_data->tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = tables[i].table;
-        total_rows += ecs_vector_count(table->columns[0].data);
+        if (table) {
+            total_rows += ecs_vector_count(table->columns[0].data);
+        } else {
+            is_task = true;
+        }
+
+        /* Task systems should only have one matched table which is empty */
+        ecs_assert(!is_task || !i, ECS_INTERNAL_ERROR, NULL);
     }
 
-    if (total_rows < thread_count) {
+    if (is_task) {
+        thread_count = 1; /* Tasks are always scheduled to the main thread */
+    } else if (total_rows < thread_count) {
         thread_count = total_rows;
     }
 

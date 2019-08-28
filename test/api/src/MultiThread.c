@@ -985,11 +985,32 @@ void MultiThread_multithread_quit() {
 
     ECS_SYSTEM(world, QuitSystem, EcsOnUpdate, Position);
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, 100);
+    ecs_new_w_count(world, Position, 100);
 
     ecs_set_threads(world, 2);
 
     test_assert( ecs_progress(world, 0) == 0);
+
+    ecs_fini(world);
+}
+
+static bool has_ran;
+
+static
+void MtTask(ecs_rows_t *rows) {
+    has_ran = true;
+}
+
+void MultiThread_schedule_w_tasks() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_SYSTEM(world, MtTask, EcsOnUpdate, 0);
+
+    ecs_set_threads(world, 2);
+
+    test_assert( ecs_progress(world, 0) != 0);
+
+    test_assert( has_ran == true);
 
     ecs_fini(world);
 }
