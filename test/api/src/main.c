@@ -699,6 +699,7 @@ void MultiThreadStaging_6_threads_add_to_current(void);
 void MultiThreadStaging_stress_create_delete_entity_random_components(void);
 void MultiThreadStaging_stress_set_entity_random_components(void);
 void MultiThreadStaging_2_threads_on_add(void);
+void MultiThreadStaging_new_w_count(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
@@ -3397,7 +3398,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "MultiThreadStaging",
-        .testcase_count = 8,
+        .testcase_count = 9,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_threads_add_to_current",
@@ -3430,6 +3431,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "2_threads_on_add",
                 .function = MultiThreadStaging_2_threads_on_add
+            },
+            {
+                .id = "new_w_count",
+                .function = MultiThreadStaging_new_w_count
             }
         }
     },

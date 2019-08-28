@@ -508,9 +508,11 @@ bool notify_after_commit(
     bool do_set)
 {
     uint32_t index = info->index - 1;
+    ecs_world_t *world_arg = world;
+    ecs_get_stage(&world);
 
     ecs_type_t modified = notify_pre_merge (
-        world, stage, info->table, info->columns, index + offset, limit, to_add_id, 
+        world_arg, stage, info->table, info->columns, index + offset, limit, to_add_id, 
         world->type_sys_add_index);
 
     populate_info(world, stage, info);
@@ -523,7 +525,7 @@ bool notify_after_commit(
     /* Invoke OnSet handlers if components received their first value */
     if (do_set && modified) {
         notify_pre_merge (
-            world, stage, info->table, info->columns, index + offset, limit, 
+            world_arg, stage, info->table, info->columns, index + offset, limit, 
             modified, world->type_sys_set_index);
     }
 

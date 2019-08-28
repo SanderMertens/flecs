@@ -422,3 +422,27 @@ void MultiThreadStaging_2_threads_on_add() {
 
     ecs_fini(world);
 }
+
+static
+void New_w_count(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+
+    ecs_new_w_count(rows->world, Position, 10);
+}
+
+
+void MultiThreadStaging_new_w_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, New_w_count, EcsOnUpdate, .Position);
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 0);
+
+    test_int( ecs_count(world, Position), 10);
+
+    ecs_fini(world);
+}

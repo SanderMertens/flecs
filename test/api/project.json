@@ -765,7 +765,9 @@
                 "6_threads_add_to_current",
                 "stress_create_delete_entity_random_components",
                 "stress_set_entity_random_components",
-                "2_threads_on_add"
+                "2_threads_on_add",
+                "new_w_count"
+                
             ]
         }, {
             "id": "Modules",
