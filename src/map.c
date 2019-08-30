@@ -143,6 +143,10 @@ void set_node_data(
     ecs_map_node_t *node,
     const void *data)
 {
+    if (!data) {
+        return;
+    }
+    
     void *node_data = get_node_data(node);
     if (data != node_data) { 
         if (data) {

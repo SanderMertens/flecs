@@ -323,3 +323,106 @@ uint64_t ecs_table_count(
 {
     return ecs_vector_count(table->columns[0].data);
 }
+
+void ecs_table_swap(
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_table_column_t *columns,
+    uint32_t row_1,
+    uint32_t row_2,
+    ecs_row_t *row_ptr_1,
+    ecs_row_t *row_ptr_2)
+{    
+    if (row_1 == row_2) {
+        return;
+    }
+
+    ecs_entity_t *entities = ecs_vector_first(columns[0].data);
+    ecs_entity_t e1 = entities[row_1];
+    ecs_entity_t e2 = entities[row_2];
+
+    /* Get pointers to records in entity index */
+    if (!row_ptr_1) {
+        row_ptr_1 = ecs_map_get_ptr(stage->entity_index, e1);
+    }
+
+    if (!row_ptr_2) {
+        row_ptr_2 = ecs_map_get_ptr(stage->entity_index, e2);
+    }
+
+    /* Swap entities */
+    entities[row_1] = e2;
+    entities[row_2] = e1;
+    row_ptr_1->index = row_2;
+    row_ptr_2->index = row_1;
+
+    /* Swap columns */
+    uint32_t i, column_count = ecs_vector_count(table->type);
+    
+    for (i = 0; i < column_count; i ++) {
+        void *data = ecs_vector_first(columns[i + 1].data);
+        uint32_t size = columns[i + 1].size;
+
+        if (size) {
+            void *tmp = _ecs_os_alloca(size, 1);
+
+            void *el_1 = ECS_OFFSET(data, size * row_1);
+            void *el_2 = ECS_OFFSET(data, size * row_2);
+
+            memcpy(tmp, el_1, size);
+            memcpy(el_1, el_2, size);
+            memcpy(el_2, tmp, size);
+        }
+    }
+}
+
+void ecs_table_move_back_and_swap(
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_table_column_t *columns,
+    uint32_t row,
+    uint32_t count)
+{
+    ecs_entity_t *entities = ecs_vector_first(columns[0].data);
+    uint32_t i;
+
+
+    /* First move back and swap entities */
+    ecs_entity_t e = entities[row - 1];
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t cur = entities[row + i];
+        entities[row + i - 1] = cur;
+
+        ecs_row_t *row_ptr = ecs_map_get_ptr(stage->entity_index, cur);
+        row_ptr->index = row + i;
+    }
+    entities[row + count - 1] = e;
+    ecs_row_t *row_ptr = ecs_map_get_ptr(stage->entity_index, e);
+    row_ptr->index = row + count - 1;
+
+    /* Move back and swap columns */
+    uint32_t column_count = ecs_vector_count(table->type);
+    
+    for (i = 0; i < column_count; i ++) {
+        void *data = ecs_vector_first(columns[i + 1].data);
+        uint32_t size = columns[i + 1].size;
+
+        if (size) {
+            /* Backup first element */
+            void *tmp = _ecs_os_alloca(size, 1);
+            void *el = ECS_OFFSET(data, size * row);
+            memcpy(tmp, el, size);
+
+            /* Move component values */
+            for (i = 0; i < count; i ++) {
+                void *dst = ECS_OFFSET(data, size * (row + i - 1));
+                void *src = ECS_OFFSET(data, size * (row + i));
+                memcpy(dst, src, size);
+            }
+
+            /* Move first element to last element */
+            void *dst = ECS_OFFSET(data, size * (row + count - 1));
+            memcpy(dst, tmp, size);
+        }
+    }
+}

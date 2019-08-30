@@ -200,8 +200,10 @@ void ecs_os_set_api_defaults(void);
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #define ecs_os_alloca(type, count) _alloca(sizeof(type) * (count))
+#define _ecs_os_alloca(size, count) _alloca((size) * (count))
 #else
 #define ecs_os_alloca(type, count) alloca(sizeof(type) * (count))
+#define _ecs_os_alloca(size, count) alloca((size) * (count))
 #endif
 
 /* Threads */

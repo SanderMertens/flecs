@@ -663,6 +663,53 @@ ecs_entity_t _ecs_new_w_count(
 #define ecs_new_w_count(world, type, count)\
     _ecs_new_w_count(world, T##type, count)
 
+typedef void* ecs_table_columns_t;
+
+typedef struct ecs_table_data_t {
+    uint32_t row_count;
+    uint32_t column_count;
+    ecs_entity_t *entities;
+    ecs_entity_t *components;
+    ecs_table_columns_t *columns;
+} ecs_table_data_t;
+
+/** Insert data in bulk.
+ * This operation allows applications to insert data in bulk by providing the
+ * entity and component data as arrays. The data is passed in using the
+ * ecs_table_data_t type, which has to be populated with the data that has to be
+ * inserted.
+ * 
+ * The application must at least provide the row_count, column_count and 
+ * components fields. The latter is an array of component identifiers that
+ * identifies the components to be added to the entitiy.
+ *
+ * The entities array must be populated with the entity identifiers to set. If
+ * this field is left NULL, Flecs will create row_count new entities.
+ *
+ * The component data must be provided in the columns field. This is an array of
+ * component arrays. The component arrays must be provided in the same order as
+ * the components have been provided in the components array. For example, if
+ * the components array is set to {ecs_entity(Position), ecs_entity(Velocity)},
+ * the columns must first specify the Position, and then the Velocity array. If
+ * no component data is provided, the components will be left uninitialized.
+ *
+ * Both the entities array and the component data arrays in columns must contain
+ * exactly row_count elements. The columns array must contain exactly 
+ * column_count elements.
+ *
+ * The operation allows for efficient insertion of data for the same set of
+ * entities, provided that the entities are specified in the same order for
+ * every invocation of this function. After executing this operation, entities
+ * will be ordered in the same order specified in the entities array.
+ *
+ * If entities already exist in another table, they will be deleted from that
+ * table and inserted into the new table. 
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_set_w_data(
+    ecs_world_t *world,
+    ecs_table_data_t *data);
+
 /** Create a new child entity.
  * Child entities are equivalent to normal entities, but can additionally be 
  * created with a container entity. Container entities allow for the creation of

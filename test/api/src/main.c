@@ -35,6 +35,16 @@ void New_w_Count_type_w_tag(void);
 void New_w_Count_type_w_2_tags(void);
 void New_w_Count_type_w_tag_mixed(void);
 
+// Testsuite 'Set_w_data'
+void Set_w_data_1_column_3_rows(void);
+void Set_w_data_2_columns_3_rows(void);
+void Set_w_data_1_column_3_rows_w_entities(void);
+void Set_w_data_2_columns_3_rows_w_entities(void);
+void Set_w_data_1_column_3_rows_overwrite_entities(void);
+void Set_w_data_2_columns_3_rows_overwrite_entities(void);
+void Set_w_data_overwrite_different_order(void);
+void Set_w_data_overwrite_different_type(void);
+
 // Testsuite 'Add'
 void Add_zero(void);
 void Add_component(void);
@@ -831,6 +841,44 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_w_tag_mixed",
                 .function = New_w_Count_type_w_tag_mixed
+            }
+        }
+    },
+    {
+        .id = "Set_w_data",
+        .testcase_count = 8,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "1_column_3_rows",
+                .function = Set_w_data_1_column_3_rows
+            },
+            {
+                .id = "2_columns_3_rows",
+                .function = Set_w_data_2_columns_3_rows
+            },
+            {
+                .id = "1_column_3_rows_w_entities",
+                .function = Set_w_data_1_column_3_rows_w_entities
+            },
+            {
+                .id = "2_columns_3_rows_w_entities",
+                .function = Set_w_data_2_columns_3_rows_w_entities
+            },
+            {
+                .id = "1_column_3_rows_overwrite_entities",
+                .function = Set_w_data_1_column_3_rows_overwrite_entities
+            },
+            {
+                .id = "2_columns_3_rows_overwrite_entities",
+                .function = Set_w_data_2_columns_3_rows_overwrite_entities
+            },
+            {
+                .id = "overwrite_different_order",
+                .function = Set_w_data_overwrite_different_order
+            },
+            {
+                .id = "overwrite_different_type",
+                .function = Set_w_data_overwrite_different_type
             }
         }
     },
@@ -3545,5 +3593,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 35);
+    return bake_test_run("api", argc, argv, suites, 36);
 }

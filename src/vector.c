@@ -270,7 +270,7 @@ uint32_t ecs_vector_set_count(
 void* ecs_vector_first(
     const ecs_vector_t *array)
 {
-    if (array && array->count) {
+    if (array && array->size) {
         return ARRAY_BUFFER(array);
     } else {
         return NULL;

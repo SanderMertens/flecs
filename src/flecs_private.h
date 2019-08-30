@@ -255,6 +255,22 @@ void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table);
 
+void ecs_table_swap(
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_table_column_t *columns,
+    uint32_t row_1,
+    uint32_t row_2,
+    ecs_row_t *row_ptr_1,
+    ecs_row_t *row_ptr_2);
+
+void ecs_table_move_back_and_swap(
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_table_column_t *columns,
+    uint32_t row,
+    uint32_t count);
+
 /* -- System API -- */
 
 void ecs_system_init_base(

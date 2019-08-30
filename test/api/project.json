@@ -43,6 +43,18 @@
                 "type_w_tag_mixed"
             ]
         }, {
+            "id": "Set_w_data",
+            "testcases": [
+                "1_column_3_rows",
+                "2_columns_3_rows",
+                "1_column_3_rows_w_entities",
+                "2_columns_3_rows_w_entities",
+                "1_column_3_rows_overwrite_entities",
+                "2_columns_3_rows_overwrite_entities",
+                "overwrite_different_order",
+                "overwrite_different_type"
+            ]
+        }, {
             "id": "Add",
             "testcases": [
                 "zero",
