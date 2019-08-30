@@ -1232,6 +1232,11 @@ ecs_entity_t set_w_data_intern(
             uint32_t i;
             for (i = 0; i < data->column_count; i ++) {
                 ecs_entity_t component = data->components[i];
+                if (component & ECS_ENTITY_FLAGS_MASK) {
+                    /* If this is a base or parent, don't copy anything */
+                    continue;
+                }
+
                 int32_t column = ecs_type_index_of(type, component);
                 ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
 

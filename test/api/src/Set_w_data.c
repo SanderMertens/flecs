@@ -491,11 +491,105 @@ void Set_w_data_2_columns_3_rows_1_tag() {
 }
 
 void Set_w_data_2_columns_3_rows_1_parent() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_ENTITY(world, Parent, 0);
+    ECS_TYPE(world, Type, Position, Velocity, CHILDOF | Parent);
+
+    ecs_entity_t e = ecs_set_w_data(world, &(ecs_table_data_t){
+        .column_count = 3,
+        .row_count = 3,
+        .entities = NULL,
+        .components = (ecs_entity_t[]){ecs_entity(Position), ECS_CHILDOF | Parent, ecs_entity(Velocity)},
+        .columns = (ecs_table_columns_t[]){
+            (Position[]) {
+                {10, 20},
+                {11, 21},
+                {12, 22}
+            },
+            NULL,
+            (Velocity[]) {
+                {30, 40},
+                {31, 41},
+                {32, 42}
+            }
+        }
+    });
+
+    test_assert(e != 0);
+    test_int(ecs_count(world, Type), 3);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+        test_assert(ecs_has(world, e + i, Velocity));
+        test_assert(ecs_contains(world, Parent, e + i));
+
+        Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10 + i);
+        test_int(p->y, 20 + i);
+
+        Velocity *v = ecs_get_ptr(world, e + i, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 30 + i);
+        test_int(v->y, 40 + i);        
+    }
+
+    ecs_fini(world);
 }
 
 void Set_w_data_2_columns_3_rows_1_base() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_ENTITY(world, Base, 0);
+    ECS_TYPE(world, Type, Position, Velocity, INSTANCEOF | Base);
+
+    ecs_entity_t e = ecs_set_w_data(world, &(ecs_table_data_t){
+        .column_count = 3,
+        .row_count = 3,
+        .entities = NULL,
+        .components = (ecs_entity_t[]){ecs_entity(Position), ECS_INSTANCEOF | Base, ecs_entity(Velocity)},
+        .columns = (ecs_table_columns_t[]){
+            (Position[]) {
+                {10, 20},
+                {11, 21},
+                {12, 22}
+            },
+            NULL,
+            (Velocity[]) {
+                {30, 40},
+                {31, 41},
+                {32, 42}
+            }
+        }
+    });
+
+    test_assert(e != 0);
+    test_int(ecs_count(world, Type), 3);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+        test_assert(ecs_has(world, e + i, Velocity));
+        test_assert(ecs_has(world, e + i, Base));
+
+        Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10 + i);
+        test_int(p->y, 20 + i);
+
+        Velocity *v = ecs_get_ptr(world, e + i, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 30 + i);
+        test_int(v->y, 40 + i);        
+    }
+
+    ecs_fini(world);
 }
 
 void Set_w_data_2_columns_3_rows_1_nested_prefab() {
