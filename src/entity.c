@@ -1279,7 +1279,10 @@ ecs_entity_t ecs_set_w_data(
     ecs_world_t *world,
     ecs_table_data_t *data)
 {
-    ecs_type_t type = ecs_type_find(world, data->components, data->column_count);
+    /* Create copy of components array as ecs_type_find orders the array */
+    ecs_entity_t *components = ecs_os_alloca(ecs_entity_t, data->column_count);
+    memcpy(components, data->components, data->column_count * sizeof(ecs_entity_t));
+    ecs_type_t type = ecs_type_find(world, components, data->column_count);
     return set_w_data_intern(world, type, data);
 }
 

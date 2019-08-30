@@ -52,7 +52,13 @@
                 "1_column_3_rows_overwrite_entities",
                 "2_columns_3_rows_overwrite_entities",
                 "overwrite_different_order",
-                "overwrite_different_type"
+                "overwrite_different_type",
+                "2_columns_3_rows_no_data",
+                "2_columns_3_rows_1_tag",
+                "2_columns_3_rows_1_parent",
+                "2_columns_3_rows_1_base",
+                "2_columns_3_rows_1_nested_prefab",
+                "2_columns_3_rows_component_order"
             ]
         }, {
             "id": "Add",
