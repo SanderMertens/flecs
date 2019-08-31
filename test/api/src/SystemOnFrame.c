@@ -1144,7 +1144,7 @@ void TestOptional_w_field(ecs_rows_t *rows) {
     }
 }
 
-void SystemOnFrame_ensure_optional_is_null_column() {
+void SystemOnFrame_ensure_optional_is_unset_column() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

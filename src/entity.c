@@ -1036,6 +1036,40 @@ ecs_entity_t _ecs_new(
 }
 
 static
+bool has_unset_columns(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_table_column_t *columns,
+    ecs_table_data_t *data)
+{
+    if (!data->columns) {
+        return true;
+    }
+
+    int i;
+    for (i = 0; i < data->column_count; i ++) {
+        /* If no column is provided for component, skip it */
+        ecs_entity_t component = data->components[i];
+        if (component & ECS_ENTITY_FLAGS_MASK) {
+            /* If this is a base or parent, don't copy anything */
+            continue;
+        }
+
+        int32_t column = ecs_type_index_of(type, component);
+        ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
+
+        uint32_t size = columns[column + 1].size;
+        if (size) { 
+            if (!data->columns[i]) {
+                return true;
+            }
+        }
+    }    
+
+    return false;
+}
+
+static
 ecs_entity_t set_w_data_intern(
     ecs_world_t *world,
     ecs_type_t type,
@@ -1047,6 +1081,7 @@ ecs_entity_t set_w_data_intern(
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_t result = world->last_handle + 1;
     uint32_t count = data->row_count;
+    bool has_unset = false, tested_for_unset = false;
     
     world->last_handle += count;
 
@@ -1148,7 +1183,7 @@ ecs_entity_t set_w_data_intern(
                     if (row_ptr->type != type) {
                         ecs_table_t *old_table = ecs_world_get_table(
                             world, stage, row_ptr->type);
-                        ecs_table_delete(world, old_table, entity_row);
+                        ecs_table_column_t *old_columns = ecs_table_get_columns(world, stage, old_table);
 
                         /* Insert new row into destination table */
                         uint32_t row = ecs_table_insert(
@@ -1156,6 +1191,21 @@ ecs_entity_t set_w_data_intern(
                         if (!i) {
                             start_row = row;
                         }
+
+                        /* If the data structure has columns that are unset data
+                         * must be copied from the old table to the new table */
+                        if (!tested_for_unset) {
+                            has_unset = has_unset_columns(
+                                world, type, columns, data);
+                        }
+
+                        if (has_unset) {
+                            copy_row(type, columns, row + 1, 
+                                old_table->type, old_columns, row_ptr->index);
+                        }
+
+                        /* Delete column from old table */
+                        ecs_table_delete(world, old_table, entity_row);
 
                         /* Entities array may have been reallocated */
                         entities = ecs_vector_first(columns[0].data);
@@ -1231,6 +1281,11 @@ ecs_entity_t set_w_data_intern(
         if (data->columns) {
             uint32_t i;
             for (i = 0; i < data->column_count; i ++) {
+                /* If no column is provided for component, skip it */
+                if (!data->columns[i]) {
+                    continue;
+                }
+
                 ecs_entity_t component = data->components[i];
                 if (component & ECS_ENTITY_FLAGS_MASK) {
                     /* If this is a base or parent, don't copy anything */

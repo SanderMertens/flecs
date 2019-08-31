@@ -58,7 +58,9 @@
                 "2_columns_3_rows_1_parent",
                 "2_columns_3_rows_1_base",
                 "2_columns_3_rows_1_nested_prefab",
-                "2_columns_3_rows_component_order"
+                "2_columns_3_rows_component_order",
+                "overwrite_w_unset_column",
+                "overwrite_from_other_type_w_unset_column"
             ]
         }, {
             "id": "Add",
@@ -365,7 +367,7 @@
                 "2_type_1_and_1_optional",
                 "2_type_2_and_1_optional",
                 "6_type_1_and_2_optional",
-                "ensure_optional_is_null_column",
+                "ensure_optional_is_unset_column",
                 "ensure_optional_is_null_shared",
                 "ensure_optional_is_null_field_owned",
                 "ensure_optional_is_null_field_shared",

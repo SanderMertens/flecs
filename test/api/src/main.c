@@ -50,6 +50,8 @@ void Set_w_data_2_columns_3_rows_1_parent(void);
 void Set_w_data_2_columns_3_rows_1_base(void);
 void Set_w_data_2_columns_3_rows_1_nested_prefab(void);
 void Set_w_data_2_columns_3_rows_component_order(void);
+void Set_w_data_overwrite_w_unset_column(void);
+void Set_w_data_overwrite_from_other_type_w_unset_column(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -326,7 +328,7 @@ void SystemOnFrame_1_type_1_and_1_or(void);
 void SystemOnFrame_2_type_1_and_1_optional(void);
 void SystemOnFrame_2_type_2_and_1_optional(void);
 void SystemOnFrame_6_type_1_and_2_optional(void);
-void SystemOnFrame_ensure_optional_is_null_column(void);
+void SystemOnFrame_ensure_optional_is_unset_column(void);
 void SystemOnFrame_ensure_optional_is_null_shared(void);
 void SystemOnFrame_ensure_optional_is_null_field_owned(void);
 void SystemOnFrame_ensure_optional_is_null_field_shared(void);
@@ -852,7 +854,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Set_w_data",
-        .testcase_count = 14,
+        .testcase_count = 16,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_column_3_rows",
@@ -909,6 +911,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "2_columns_3_rows_component_order",
                 .function = Set_w_data_2_columns_3_rows_component_order
+            },
+            {
+                .id = "overwrite_w_unset_column",
+                .function = Set_w_data_overwrite_w_unset_column
+            },
+            {
+                .id = "overwrite_from_other_type_w_unset_column",
+                .function = Set_w_data_overwrite_from_other_type_w_unset_column
             }
         }
     },
@@ -1985,8 +1995,8 @@ static bake_test_suite suites[] = {
                 .function = SystemOnFrame_6_type_1_and_2_optional
             },
             {
-                .id = "ensure_optional_is_null_column",
-                .function = SystemOnFrame_ensure_optional_is_null_column
+                .id = "ensure_optional_is_unset_column",
+                .function = SystemOnFrame_ensure_optional_is_unset_column
             },
             {
                 .id = "ensure_optional_is_null_shared",
