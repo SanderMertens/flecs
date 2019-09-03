@@ -1070,6 +1070,219 @@ bool has_unset_columns(
 }
 
 static
+void copy_column_data(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_table_column_t *columns,
+    uint32_t start_row,
+    ecs_table_data_t *data)
+{
+    uint32_t i;
+    for (i = 0; i < data->column_count; i ++) {
+        /* If no column is provided for component, skip it */
+        if (!data->columns[i]) {
+            continue;
+        }
+
+        ecs_entity_t component = data->components[i];
+        if (component & ECS_ENTITY_FLAGS_MASK) {
+            /* If this is a base or parent, don't copy anything */
+            continue;
+        }
+
+        int32_t column = ecs_type_index_of(type, component);
+        ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
+
+        uint32_t size = columns[column + 1].size;
+        if (size) { 
+            void *column_data = ecs_vector_first(columns[column + 1].data);
+
+            memcpy(
+                ECS_OFFSET(column_data, (start_row) * size),
+                data->columns[i],
+                data->row_count * size
+            );
+        }
+    }
+}
+
+static
+uint32_t update_entity_index(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_type_t type,
+    ecs_table_t *table,
+    ecs_table_column_t *columns,
+    uint32_t result,
+    ecs_table_data_t *data)
+{
+    bool has_unset = false, tested_for_unset = false;
+    uint32_t i, start_row = 0;
+    uint32_t count = data->row_count;
+    ecs_entity_t *entities = ecs_vector_first(columns[0].data);
+    uint32_t row_count = ecs_vector_count(columns[0].data);
+
+    /* Obtain the entity index in the current stage */
+    ecs_map_t *entity_index = stage->entity_index;
+
+    /* We need to commit each entity individually in order to populate
+     * the entity index */
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e;
+
+        /* If existing array with entities was provided, use entity ids from
+            * that array. Otherwise use new entity id */
+        if(data->entities) {
+            e = data->entities[i];
+
+            /* If this is not the first entity, check if the next entity in
+             * the table is the next entity to set. If so, there is no need 
+             * to update the entity index. This is the fast path that is
+             * taken if all entities in the table are in the same order as
+             * provided in the data argument. */
+            if (i) {
+                if (entities) {
+                    if (start_row + i < row_count) {
+                        if (entities[start_row + i] == e) {
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            /* Ensure that the last issued handle will always be ahead of the
+             * entities created by this operation */
+            if (e > world->last_handle) {
+                world->last_handle = e + 1;
+            }                            
+        } else {
+            e = i + result;
+        }
+
+        ecs_row_t *row_ptr = ecs_map_get_ptr(entity_index, e);
+        if (row_ptr) {
+            bool is_monitored = false;
+            uint32_t entity_row = row_ptr->index;
+            if (entity_row < 0) {
+                entity_row *= -1;
+                is_monitored = true;
+            }
+
+            /* If entity exists, and this is the first entity being iterated
+             * set the start index to the current index of the entity. The
+             * start_index indicates the start of where the to be added
+             * entities will be stored. 
+             * In the ideal scenario, the subsequent entities to be added
+             * will be provided in the same order after the first entity, so
+             * that the entity index does not need to be updated. */
+            if (!i && row_ptr->type == type) {
+                start_row = entity_row - 1;
+            
+            } else {
+                /* If the entity exists but it is not the first entity, 
+                 * check if it is in the same table. If not, delete the 
+                 * entity from the other table */                        
+                if (row_ptr->type != type) {
+                    ecs_table_t *old_table = ecs_world_get_table(
+                        world, stage, row_ptr->type);
+                    ecs_table_column_t *old_columns = ecs_table_get_columns(world, stage, old_table);
+
+                    /* Insert new row into destination table */
+                    uint32_t row = ecs_table_insert(
+                        world, table, columns, e) - 1;
+                    if (!i) {
+                        start_row = row;
+                    }
+
+                    /* If the data structure has columns that are unset data
+                     * must be copied from the old table to the new table */
+                    if (!tested_for_unset) {
+                        has_unset = has_unset_columns(
+                            world, type, columns, data);
+                    }
+
+                    if (has_unset) {
+                        copy_row(type, columns, row + 1, 
+                            old_table->type, old_columns, row_ptr->index);
+                    }
+
+                    /* Delete column from old table */
+                    ecs_table_delete(world, old_table, entity_row);
+
+                    /* Entities array may have been reallocated */
+                    entities = ecs_vector_first(columns[0].data);
+
+                /* If entity exists in the same table but not on the right
+                 * index (if so, we would've found out by now) we need to
+                 * move things around. This will ensure that entities are
+                 * ordered in exactly the same way as they are provided in
+                 * the data argument, so that the subsequent time this
+                 * operation is invoked with entities in the same order, 
+                 * insertion can be much faster. This also allows the data
+                 * from columns in data to be inserted with a single
+                 * memcpy per column. */
+                } else {
+                    /* If we're not at the top of the table, simply swap the
+                     * next entity with the one that we want at this row. */
+                    if (row_count > (start_row + i)) {
+                        ecs_table_swap(stage, table, columns, 
+                            entity_row, start_row + i, row_ptr, NULL);
+
+                    /* We are at the top of the table and the entity is in
+                     * the table. This scenario is a bit nasty, since we
+                     * need to now move the added entities back one position
+                     * and swap the entity preceding them with the current
+                     * entity. This should only happen in rare cases, as any
+                     * subsequent calls with the same set of entities should
+                     * find the entities in the table to be in the right 
+                     * order. 
+                     * We could just have swapped the order in which the
+                     * entities are inserted, but then subsequent calls
+                     * would still be expensive, and we couldn't just memcpy
+                     * the component data into the columns. */
+                    } else {
+                        /* First, swap the entity preceding the start of the
+                         * added entities with the entity that we want at
+                         * the end of the block */
+                        ecs_table_swap(stage, table, columns, 
+                            entity_row, start_row - 1, row_ptr, NULL);
+
+                        /* Now move back the whole block back one position, 
+                         * while moving the entity before the start to the 
+                         * row right after the block */
+                        ecs_table_move_back_and_swap(
+                            stage, table, columns, start_row, i);
+
+                        start_row --;
+                    }
+                }
+            }
+
+            /* Update entity index with the new table / row */
+            row_ptr->type = type;
+            row_ptr->index = start_row + i + 1;
+            
+            if (is_monitored) {
+                row_ptr->index *= -1;
+            }
+        } else {
+            ecs_row_t new_row = (ecs_row_t){.type = type, .index = start_row + i + 1};
+                            
+            ecs_map_set(entity_index, e, &new_row);
+
+            if (data->entities) {
+                ecs_table_insert(world, table, columns, e);
+
+                /* Entities array may have been reallocated */
+                entities = ecs_vector_first(columns[0].data);                    
+            }
+        }
+    }
+
+    return start_row;
+}
+
+static
 ecs_entity_t set_w_data_intern(
     ecs_world_t *world,
     ecs_type_t type,
@@ -1081,7 +1294,6 @@ ecs_entity_t set_w_data_intern(
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_t result = world->last_handle + 1;
     uint32_t count = data->row_count;
-    bool has_unset = false, tested_for_unset = false;
     
     world->last_handle += count;
 
@@ -1096,7 +1308,7 @@ ecs_entity_t set_w_data_intern(
         ecs_table_column_t *columns = ecs_table_get_columns(
                 world, stage, table);
         ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, 0);
-        uint32_t i, start_row = 0;
+        uint32_t start_row = 0;
 
         /* Obtain the entity index in the current stage */
         ecs_map_t *entity_index = stage->entity_index;
@@ -1112,7 +1324,6 @@ ecs_entity_t set_w_data_intern(
 
         /* Obtain list of entities */
         ecs_entity_t *entities = ecs_vector_first(columns[0].data);
-        uint32_t row_count = ecs_vector_count(columns[0].data);
 
         /* If the entity array is NULL, we can safely allocate space for
          * row_count number of rows, which will give a perf boost the first time
@@ -1123,189 +1334,11 @@ ecs_entity_t set_w_data_intern(
             ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
-        /* We need to commit each entity individually in order to populate
-         * the entity index */
-        for (i = 0; i < count; i ++) {
-            ecs_entity_t e;
-
-            /* If existing array with entities was provided, use entity ids from
-             * that array. Otherwise use new entity id */
-            if(data->entities) {
-                e = data->entities[i];
-
-                /* If this is not the first entity, check if the next entity in
-                 * the table is the next entity to set. If so, there is no need 
-                 * to update the entity index. This is the fast path that is
-                 * taken if all entities in the table are in the same order as
-                 * provided in the data argument. */
-                if (i) {
-                    if (entities) {
-                        if (start_row + i < row_count) {
-                            if (entities[start_row + i] == e) {
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                /* Ensure that the last issued handle will always be ahead of the
-                 * entities created by this operation */
-                if (e > world->last_handle) {
-                    world->last_handle = e + 1;
-                }                            
-            } else {
-                e = i + result;
-            }
-
-            ecs_row_t *row_ptr = ecs_map_get_ptr(entity_index, e);
-            if (row_ptr) {
-                bool is_monitored = false;
-                uint32_t entity_row = row_ptr->index;
-                if (entity_row < 0) {
-                    entity_row *= -1;
-                    is_monitored = true;
-                }
-
-                /* If entity exists, and this is the first entity being iterated
-                 * set the start index to the current index of the entity. The
-                 * start_index indicates the start of where the to be added
-                 * entities will be stored. 
-                 * In the ideal scenario, the subsequent entities to be added
-                 * will be provided in the same order after the first entity, so
-                 * that the entity index does not need to be updated. */
-                if (!i && row_ptr->type == type) {
-                    start_row = entity_row - 1;
-                
-                } else {
-                    /* If the entity exists but it is not the first entity, 
-                     * check if it is in the same table. If not, delete the 
-                     * entity from the other table */                        
-                    if (row_ptr->type != type) {
-                        ecs_table_t *old_table = ecs_world_get_table(
-                            world, stage, row_ptr->type);
-                        ecs_table_column_t *old_columns = ecs_table_get_columns(world, stage, old_table);
-
-                        /* Insert new row into destination table */
-                        uint32_t row = ecs_table_insert(
-                            world, table, columns, e) - 1;
-                        if (!i) {
-                            start_row = row;
-                        }
-
-                        /* If the data structure has columns that are unset data
-                         * must be copied from the old table to the new table */
-                        if (!tested_for_unset) {
-                            has_unset = has_unset_columns(
-                                world, type, columns, data);
-                        }
-
-                        if (has_unset) {
-                            copy_row(type, columns, row + 1, 
-                                old_table->type, old_columns, row_ptr->index);
-                        }
-
-                        /* Delete column from old table */
-                        ecs_table_delete(world, old_table, entity_row);
-
-                        /* Entities array may have been reallocated */
-                        entities = ecs_vector_first(columns[0].data);
-
-                    /* If entity exists in the same table but not on the right
-                     * index (if so, we would've found out by now) we need to
-                     * move things around. This will ensure that entities are
-                     * ordered in exactly the same way as they are provided in
-                     * the data argument, so that the subsequent time this
-                     * operation is invoked with entities in the same order, 
-                     * insertion can be much faster. This also allows the data
-                     * from columns in data to be inserted with a single
-                     * memcpy per column. */
-                    } else {
-                        /* If we're not at the top of the table, simply swap the
-                         * next entity with the one that we want at this row. */
-                        if (row_count > (start_row + i)) {
-                            ecs_table_swap(stage, table, columns, 
-                                entity_row, start_row + i, row_ptr, NULL);
-
-                        /* We are at the top of the table and the entity is in
-                         * the table. This scenario is a bit nasty, since we
-                         * need to now move the added entities back one position
-                         * and swap the entity preceding them with the current
-                         * entity. This should only happen in rare cases, as any
-                         * subsequent calls with the same set of entities should
-                         * find the entities in the table to be in the right 
-                         * order. 
-                         * We could just have swapped the order in which the
-                         * entities are inserted, but then subsequent calls
-                         * would still be expensive, and we couldn't just memcpy
-                         * the component data into the columns. */
-                        } else {
-                            /* First, swap the entity preceding the start of the
-                             * added entities with the entity that we want at
-                             * the end of the block */
-                            ecs_table_swap(stage, table, columns, 
-                                entity_row, start_row - 1, row_ptr, NULL);
-
-                            /* Now move back the whole block back one position, 
-                             * while moving the entity before the start to the 
-                             * row right after the block */
-                            ecs_table_move_back_and_swap(
-                                stage, table, columns, start_row, i);
-
-                            start_row --;
-                        }
-                    }
-                }
-
-                /* Update entity index with the new table / row */
-                row_ptr->type = type;
-                row_ptr->index = start_row + i + 1;
-                
-                if (is_monitored) {
-                    row_ptr->index *= -1;
-                }
-            } else {
-                ecs_row_t new_row = (ecs_row_t){.type = type, .index = start_row + i + 1};
-                                
-                ecs_map_set(entity_index, e, &new_row);
-
-                if (data->entities) {
-                    ecs_table_insert(world, table, columns, e);
-
-                    /* Entities array may have been reallocated */
-                    entities = ecs_vector_first(columns[0].data);                    
-                }
-            }
-        }
+        start_row = update_entity_index(world, stage, type, table, columns, result, data);    
 
         /* If columns were provided, copy data from columns into table */
         if (data->columns) {
-            uint32_t i;
-            for (i = 0; i < data->column_count; i ++) {
-                /* If no column is provided for component, skip it */
-                if (!data->columns[i]) {
-                    continue;
-                }
-
-                ecs_entity_t component = data->components[i];
-                if (component & ECS_ENTITY_FLAGS_MASK) {
-                    /* If this is a base or parent, don't copy anything */
-                    continue;
-                }
-
-                int32_t column = ecs_type_index_of(type, component);
-                ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
-
-                uint32_t size = columns[column + 1].size;
-                if (size) { 
-                    void *column_data = ecs_vector_first(columns[column + 1].data);
-
-                    memcpy(
-                        ECS_OFFSET(column_data, (start_row) * size),
-                        data->columns[i],
-                        data->row_count * size
-                    );
-                }
-            }
+            copy_column_data(world, type, columns, start_row, data);
         }
 
         ecs_entity_info_t info = {
