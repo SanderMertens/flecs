@@ -1483,6 +1483,40 @@ void ecs_delete(
     }
 }
 
+void _ecs_delete_w_type(
+    ecs_world_t *world,
+    ecs_type_t to_delete,
+    ecs_type_t except)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_t *stage = ecs_get_stage(&world);
+
+    ecs_assert(stage == &world->main_stage, ECS_UNSUPPORTED, 
+        "delete_w_type currently only supported on main stage");
+
+    uint32_t i, count = ecs_chunked_count(stage->tables);
+
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *table = ecs_chunked_get(stage->tables, ecs_table_t, i);
+        ecs_type_t type = table->type;
+
+        if (to_delete) {
+            if (!ecs_type_contains(world, type, to_delete, true, false)) {
+                continue;
+            }
+        }
+
+        if (except) {
+            if (ecs_type_contains(world, type, except, false, false)) {
+                continue;
+            }
+        }
+
+        /* Both filters passed, clear table */
+        ecs_table_clear(world, table);
+    }
+}
+
 static
 ecs_entity_t copy_from_stage(
     ecs_world_t *world,

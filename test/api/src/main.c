@@ -159,6 +159,14 @@ void Delete_delete_2_of_3(void);
 void Delete_delete_3_of_3(void);
 void Delete_delete_w_on_remove(void);
 
+// Testsuite 'Delete_w_type'
+void Delete_w_type_delete_1(void);
+void Delete_w_type_delete_2(void);
+void Delete_w_type_delete_1_2_types(void);
+void Delete_w_type_delete_2_2_types(void);
+void Delete_w_type_delete_except_1(void);
+void Delete_w_type_delete_except_2(void);
+
 // Testsuite 'Set'
 void Set_set_empty(void);
 void Set_set_nonempty(void);
@@ -1331,6 +1339,36 @@ static bake_test_suite suites[] = {
             {
                 .id = "delete_w_on_remove",
                 .function = Delete_delete_w_on_remove
+            }
+        }
+    },
+    {
+        .id = "Delete_w_type",
+        .testcase_count = 6,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "delete_1",
+                .function = Delete_w_type_delete_1
+            },
+            {
+                .id = "delete_2",
+                .function = Delete_w_type_delete_2
+            },
+            {
+                .id = "delete_1_2_types",
+                .function = Delete_w_type_delete_1_2_types
+            },
+            {
+                .id = "delete_2_2_types",
+                .function = Delete_w_type_delete_2_2_types
+            },
+            {
+                .id = "delete_except_1",
+                .function = Delete_w_type_delete_except_1
+            },
+            {
+                .id = "delete_except_2",
+                .function = Delete_w_type_delete_except_2
             }
         }
     },
@@ -3633,5 +3671,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 36);
+    return bake_test_run("api", argc, argv, suites, 37);
 }

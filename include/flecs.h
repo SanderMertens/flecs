@@ -830,6 +830,31 @@ void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Delete all entities containing a (set of) component(s). 
+ * This operation provides a more efficient alternative to deleting entities one
+ * by one by deleting an entire table or set of tables in a single operation.
+ * The operation will clear all tables that have all of the components in the
+ * provided to_delete type, while skipping tables that have any of the 
+ * components in the provided except type.
+ * 
+ * For example, if to_delete is [Position, Velocity] and except is 
+ * [Mass, Rotation], [Position, Velocity] will be deleted, but 
+ * [Position, Velocity, Mass] and [Position, Velocity, Rotation] will not be
+ * deleted.
+ * 
+ * @param world The world.
+ * @param to_delete Tables with this set of components will be cleared.
+ * @param except Tables with any of these components will not be cleared.
+ */
+FLECS_EXPORT
+void _ecs_delete_w_type(
+    ecs_world_t *world,
+    ecs_type_t to_delete,
+    ecs_type_t except);
+
+#define ecs_delete_w_type(world, to_delete, except)\
+    _ecs_delete_w_type(world, T##to_delete, T##except)
+
 /** Add a type to an entity.
  * This operation will add one or more components (as per the specified type) to
  * an entity. If the entity already contains a subset of the components in the
@@ -2003,6 +2028,7 @@ void _ecs_assert(
 #define ECS_MISSING_OS_API (31)
 #define ECS_TYPE_TOO_LARGE (32)
 #define ECS_INVALID_PREFAB_CHILD_TYPE (33)
+#define ECS_UNSUPPORTED (34)
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */
 

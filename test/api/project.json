@@ -181,6 +181,16 @@
                 "delete_w_on_remove"
             ]
         }, {
+            "id": "Delete_w_type",
+            "testcases": [
+                "delete_1",
+                "delete_2",
+                "delete_1_2_types",
+                "delete_2_2_types",
+                "delete_except_1",
+                "delete_except_2"
+            ]
+        }, {
             "id": "Set",
             "testcases": [
                 "set_empty",

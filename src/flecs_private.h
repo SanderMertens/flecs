@@ -255,6 +255,11 @@ void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table);
 
+/* Clear table data */
+void ecs_table_clear(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
 void ecs_table_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,

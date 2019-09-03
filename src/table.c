@@ -107,19 +107,32 @@ void ecs_table_deinit(
     }
 }
 
+static
+void ecs_table_free_columns(
+    ecs_table_t *table)
+{
+    uint32_t i, column_count = ecs_vector_count(table->type);
+    
+    for (i = 0; i < column_count + 1; i ++) {
+        ecs_vector_free(table->columns[i].data);
+        table->columns[i].data = NULL;
+    }
+}
+
+void ecs_table_clear(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_table_deinit(world, table);
+    ecs_table_free_columns(table);
+}
+
 void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    uint32_t i, column_count = ecs_vector_count(table->type);
-    (void)world;
-    
-    for (i = 0; i < column_count + 1; i ++) {
-        ecs_vector_free(table->columns[i].data);
-    }
-
+    ecs_table_free_columns(table);
     ecs_os_free(table->columns);
-
     ecs_vector_free(table->frame_systems);
 }
 
