@@ -159,13 +159,17 @@ void Delete_delete_2_of_3(void);
 void Delete_delete_3_of_3(void);
 void Delete_delete_w_on_remove(void);
 
-// Testsuite 'Delete_w_type'
-void Delete_w_type_delete_1(void);
-void Delete_w_type_delete_2(void);
-void Delete_w_type_delete_1_2_types(void);
-void Delete_w_type_delete_2_2_types(void);
-void Delete_w_type_delete_except_1(void);
-void Delete_w_type_delete_except_2(void);
+// Testsuite 'Delete_w_filter'
+void Delete_w_filter_delete_1(void);
+void Delete_w_filter_delete_2(void);
+void Delete_w_filter_delete_1_2_types(void);
+void Delete_w_filter_delete_2_2_types(void);
+void Delete_w_filter_delete_except_1(void);
+void Delete_w_filter_delete_except_2(void);
+void Delete_w_filter_delete_with_any_of_2(void);
+void Delete_w_filter_delete_except_all_of_2(void);
+void Delete_w_filter_include_exact(void);
+void Delete_w_filter_exclude_exact(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -1343,32 +1347,48 @@ static bake_test_suite suites[] = {
         }
     },
     {
-        .id = "Delete_w_type",
-        .testcase_count = 6,
+        .id = "Delete_w_filter",
+        .testcase_count = 10,
         .testcases = (bake_test_case[]){
             {
                 .id = "delete_1",
-                .function = Delete_w_type_delete_1
+                .function = Delete_w_filter_delete_1
             },
             {
                 .id = "delete_2",
-                .function = Delete_w_type_delete_2
+                .function = Delete_w_filter_delete_2
             },
             {
                 .id = "delete_1_2_types",
-                .function = Delete_w_type_delete_1_2_types
+                .function = Delete_w_filter_delete_1_2_types
             },
             {
                 .id = "delete_2_2_types",
-                .function = Delete_w_type_delete_2_2_types
+                .function = Delete_w_filter_delete_2_2_types
             },
             {
                 .id = "delete_except_1",
-                .function = Delete_w_type_delete_except_1
+                .function = Delete_w_filter_delete_except_1
             },
             {
                 .id = "delete_except_2",
-                .function = Delete_w_type_delete_except_2
+                .function = Delete_w_filter_delete_except_2
+            },
+            {
+                .id = "delete_with_any_of_2",
+                .function = Delete_w_filter_delete_with_any_of_2
+            },
+            {
+                .id = "delete_except_all_of_2",
+                .function = Delete_w_filter_delete_except_all_of_2
+            },
+            {
+                .id = "include_exact",
+                .function = Delete_w_filter_include_exact
+            },
+            {
+                .id = "exclude_exact",
+                .function = Delete_w_filter_exclude_exact
             }
         }
     },

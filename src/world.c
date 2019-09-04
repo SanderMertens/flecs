@@ -701,6 +701,12 @@ ecs_world_t *ecs_init(void) {
     ecs_new_system(world, "EcsInitPrefab", EcsOnAdd, "EcsPrefab", EcsInitPrefab);
     ecs_new_system(world, "EcsSetPrefab", EcsOnSet, "EcsPrefab", EcsSetPrefab);
 
+    /* Create type that allows for quickly checking if a type contains builtin
+     * components. */
+    world->t_builtins = ecs_expr_to_type(world,
+        "EcsComponent, EcsTypeComponent, EcsPrefab, EcsPrefabParent"
+        ", EcsPrefabBuilder, EcsRowSystem, EcsColSystem");
+
     return world;
 }
 

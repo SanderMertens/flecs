@@ -430,6 +430,7 @@ struct ecs_world {
     ecs_type_t t_prefab;
     ecs_type_t t_row_system;
     ecs_type_t t_col_system;
+    ecs_type_t t_builtins;
 
 
     /* -- Time management -- */
