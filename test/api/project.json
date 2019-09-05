@@ -115,6 +115,20 @@
                 "not_added"
             ]
         }, {
+            "id": "Remove_w_filter",
+            "testcases": [
+                "remove_1_no_filter",
+                "remove_2_no_filter",
+                "remove_1_to_empty_no_filter",
+                "remove_2_to_empty_no_filter",
+                "remove_1_all_no_filter",
+                "remove_2_all_no_filter",
+                "remove_1_exclude_1",
+                "remove_1_exclude_2",
+                "remove_1_include_1",
+                "remove_1_include_2"                
+            ]
+        }, {
             "id": "Has",
             "testcases": [
                 "zero",

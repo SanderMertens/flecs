@@ -101,6 +101,18 @@ void Remove_1_from_empty(void);
 void Remove_type_from_empty(void);
 void Remove_not_added(void);
 
+// Testsuite 'Remove_w_filter'
+void Remove_w_filter_remove_1_no_filter(void);
+void Remove_w_filter_remove_2_no_filter(void);
+void Remove_w_filter_remove_1_to_empty_no_filter(void);
+void Remove_w_filter_remove_2_to_empty_no_filter(void);
+void Remove_w_filter_remove_1_all_no_filter(void);
+void Remove_w_filter_remove_2_all_no_filter(void);
+void Remove_w_filter_remove_1_exclude_1(void);
+void Remove_w_filter_remove_1_exclude_2(void);
+void Remove_w_filter_remove_1_include_1(void);
+void Remove_w_filter_remove_1_include_2(void);
+
 // Testsuite 'Has'
 void Has_zero(void);
 void Has_zero_from_nonzero(void);
@@ -1119,6 +1131,52 @@ static bake_test_suite suites[] = {
             {
                 .id = "not_added",
                 .function = Remove_not_added
+            }
+        }
+    },
+    {
+        .id = "Remove_w_filter",
+        .testcase_count = 10,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "remove_1_no_filter",
+                .function = Remove_w_filter_remove_1_no_filter
+            },
+            {
+                .id = "remove_2_no_filter",
+                .function = Remove_w_filter_remove_2_no_filter
+            },
+            {
+                .id = "remove_1_to_empty_no_filter",
+                .function = Remove_w_filter_remove_1_to_empty_no_filter
+            },
+            {
+                .id = "remove_2_to_empty_no_filter",
+                .function = Remove_w_filter_remove_2_to_empty_no_filter
+            },
+            {
+                .id = "remove_1_all_no_filter",
+                .function = Remove_w_filter_remove_1_all_no_filter
+            },
+            {
+                .id = "remove_2_all_no_filter",
+                .function = Remove_w_filter_remove_2_all_no_filter
+            },
+            {
+                .id = "remove_1_exclude_1",
+                .function = Remove_w_filter_remove_1_exclude_1
+            },
+            {
+                .id = "remove_1_exclude_2",
+                .function = Remove_w_filter_remove_1_exclude_2
+            },
+            {
+                .id = "remove_1_include_1",
+                .function = Remove_w_filter_remove_1_include_1
+            },
+            {
+                .id = "remove_1_include_2",
+                .function = Remove_w_filter_remove_1_include_2
             }
         }
     },
@@ -3691,5 +3749,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 37);
+    return bake_test_run("api", argc, argv, suites, 38);
 }

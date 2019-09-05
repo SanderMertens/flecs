@@ -260,6 +260,12 @@ void ecs_table_clear(
     ecs_world_t *world,
     ecs_table_t *table);
 
+/* Merge data of one table into another table */
+void ecs_table_merge(
+    ecs_world_t *world,
+    ecs_table_t *new_table,
+    ecs_table_t *old_table);
+
 void ecs_table_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,

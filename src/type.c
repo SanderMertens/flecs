@@ -1080,3 +1080,55 @@ char* ecs_type_to_expr(
     ecs_vector_free(chbuf);
     return result;
 }
+
+bool ecs_type_match_w_filter(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_type_filter_t *filter)
+{
+    if (!filter) {
+        return true;
+    }
+    
+    if (filter->include) {
+        /* If filter kind is exact, types must be the same */
+        if (filter->include_kind == EcsMatchExact) {
+            if (type != filter->include) {
+                return false;
+            }
+
+        /* Default for include_kind is MatchAll */
+        } else if (!ecs_type_contains(world, type, filter->include, 
+            filter->include_kind != EcsMatchAny, false)) 
+        {
+            return false;
+        }
+    
+    /* If no include filter is specified, make sure that builtin components
+        * aren't matched by default. */
+    } else {
+        if (ecs_type_contains(
+            world, type, world->t_builtins, false, false))
+        {
+            /* Continue if table contains any of the builtin components */
+            return false;
+        }
+    }
+
+    if (filter->exclude) {
+        /* If filter kind is exact, types must be the same */
+        if (filter->exclude_kind == EcsMatchExact) {
+            if (type == filter->exclude) {
+                return false;
+            }
+        
+        /* Default for exclude_kind is MatchAny */                
+        } else if (ecs_type_contains(world, type, filter->exclude, 
+            filter->exclude_kind == EcsMatchAll, false))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}

@@ -1491,7 +1491,7 @@ void ecs_delete_w_filter(
     ecs_stage_t *stage = ecs_get_stage(&world);
 
     ecs_assert(stage == &world->main_stage, ECS_UNSUPPORTED, 
-        "delete_w_type currently only supported on main stage");
+        "delete_w_filter currently only supported on main stage");
 
     uint32_t i, count = ecs_chunked_count(stage->tables);
 
@@ -1499,49 +1499,54 @@ void ecs_delete_w_filter(
         ecs_table_t *table = ecs_chunked_get(stage->tables, ecs_table_t, i);
         ecs_type_t type = table->type;
 
-        if (filter->include) {
-            /* If filter kind is exact, types must be the same */
-            if (filter->include_kind == EcsMatchExact) {
-                if (type != filter->include) {
-                    continue;
-                }
-
-            /* Default for include_kind is MatchAll */
-            } else if (!ecs_type_contains(world, type, filter->include, 
-                filter->include_kind != EcsMatchAny, false)) 
-            {
-                continue;
-            }
-        
-        /* If no include filter is specified, make sure that builtin components
-         * aren't matched by default. */
-        } else {
-            if (ecs_type_contains(
-                world, type, world->t_builtins, false, false))
-            {
-                /* Continue if table contains any of the builtin components */
-                continue;
-            }
-        }
-
-        if (filter->exclude) {
-            /* If filter kind is exact, types must be the same */
-            if (filter->exclude_kind == EcsMatchExact) {
-                if (type == filter->exclude) {
-                    continue;
-                }
-            
-            /* Default for exclude_kind is MatchAny */                
-            } else if (ecs_type_contains(world, type, filter->exclude, 
-                filter->exclude_kind == EcsMatchAll, false))
-            {
-                continue;
-            }
+        if (!ecs_type_match_w_filter(world, type, filter)) {
+            continue;
         }
 
         /* Both filters passed, clear table */
         ecs_table_clear(world, table);
     }
+}
+
+void _ecs_remove_w_filter(
+    ecs_world_t *world,
+    ecs_type_t to_remove,
+    ecs_type_filter_t *filter)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_t *stage = ecs_get_stage(&world);
+
+    ecs_assert(stage == &world->main_stage, ECS_UNSUPPORTED, 
+        "remove_w_filter currently only supported on main stage");
+
+    uint32_t i, count = ecs_chunked_count(stage->tables);
+
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *table = ecs_chunked_get(stage->tables, ecs_table_t, i);
+        ecs_type_t type = table->type;
+
+        /* Skip if the type contains none of the components in to_remove */
+        if (!ecs_type_contains(world, type, to_remove, false, false)) {
+            continue;
+        }
+
+        if (!ecs_type_match_w_filter(world, type, filter)) {
+            continue;
+        }
+
+        /* Component(s) must be removed, find table */
+        ecs_type_t dst_type = ecs_type_merge(world, type, NULL, to_remove);
+        if (!dst_type) {
+            /* If this removes all components, clear table */
+            ecs_table_merge(world, NULL, table);
+        } else {
+            ecs_table_t *dst_table = ecs_world_get_table(world, stage, dst_type);
+            ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            /* Merge table into dst_table */
+            ecs_table_merge(world, dst_table, table);
+        }
+    }    
 }
 
 static

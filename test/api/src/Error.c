@@ -91,6 +91,7 @@ void Error_error_codes() {
     test_assert(ecs_strerror(ECS_MISSING_OS_API) != NULL);
     test_assert(ecs_strerror(ECS_TYPE_TOO_LARGE) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_PREFAB_CHILD_TYPE) != NULL);
+    test_assert(ecs_strerror(ECS_UNSUPPORTED) != NULL);
 }
 
 void Error_log_dbg() {
