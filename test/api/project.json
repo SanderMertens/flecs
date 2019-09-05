@@ -61,7 +61,10 @@
                 "2_columns_3_rows_1_nested_prefab",
                 "2_columns_3_rows_component_order",
                 "overwrite_w_unset_column",
-                "overwrite_from_other_type_w_unset_column"
+                "overwrite_from_other_type_w_unset_column",
+                "staged_1_column_3_rows",
+                "staged_1_column_3_rows_w_entities",
+                "staged_1_column_3_rows_w_entities_w_base"
             ]
         }, {
             "id": "Add",

@@ -1329,7 +1329,7 @@ ecs_entity_t set_w_data_intern(
          * row_count number of rows, which will give a perf boost the first time
          * the entities are inserted. */
         if (!entities) {
-            ecs_table_dim(table, count);
+            ecs_table_dim(table, columns, count);
             entities = ecs_vector_first(columns[0].data);
             ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
         }

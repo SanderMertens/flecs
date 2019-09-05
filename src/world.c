@@ -869,7 +869,7 @@ void _ecs_dim_type(
     if (type) {
         ecs_table_t *table = ecs_world_get_table(world, &world->main_stage, type);
         if (table) {
-            ecs_table_dim(table, entity_count);
+            ecs_table_dim(table, NULL, entity_count);
         }
     }
 }

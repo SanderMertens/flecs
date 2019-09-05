@@ -53,6 +53,9 @@ void Set_w_data_2_columns_3_rows_1_nested_prefab(void);
 void Set_w_data_2_columns_3_rows_component_order(void);
 void Set_w_data_overwrite_w_unset_column(void);
 void Set_w_data_overwrite_from_other_type_w_unset_column(void);
+void Set_w_data_staged_1_column_3_rows(void);
+void Set_w_data_staged_1_column_3_rows_w_entities(void);
+void Set_w_data_staged_1_column_3_rows_w_entities_w_base(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -882,7 +885,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Set_w_data",
-        .testcase_count = 17,
+        .testcase_count = 20,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_column_3_rows",
@@ -951,6 +954,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "overwrite_from_other_type_w_unset_column",
                 .function = Set_w_data_overwrite_from_other_type_w_unset_column
+            },
+            {
+                .id = "staged_1_column_3_rows",
+                .function = Set_w_data_staged_1_column_3_rows
+            },
+            {
+                .id = "staged_1_column_3_rows_w_entities",
+                .function = Set_w_data_staged_1_column_3_rows_w_entities
+            },
+            {
+                .id = "staged_1_column_3_rows_w_entities_w_base",
+                .function = Set_w_data_staged_1_column_3_rows_w_entities_w_base
             }
         }
     },

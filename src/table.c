@@ -310,9 +310,13 @@ uint32_t ecs_table_grow(
 
 int16_t ecs_table_dim(
     ecs_table_t *table,
+    ecs_table_column_t *columns,
     uint32_t count)
 {
-    ecs_table_column_t *columns = table->columns;
+    if (!columns) {
+        columns = table->columns;
+    }
+
     uint32_t column_count = ecs_vector_count(table->type);
 
     uint32_t size = ecs_vector_set_size(

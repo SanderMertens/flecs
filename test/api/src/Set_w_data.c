@@ -878,3 +878,132 @@ void Set_w_data_overwrite_from_other_type_w_unset_column() {
 
     ecs_fini(world);
 }
+
+static ecs_entity_t e_result;
+
+static
+void Set_w_data(ecs_rows_t *rows) {
+    ecs_table_data_t *data = ecs_get_context(rows->world);
+    ecs_entity_t e = ecs_set_w_data(rows->world, data);
+    test_assert(e != 0);
+
+    e_result = e;
+}
+
+void Set_w_data_staged_1_column_3_rows() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Set_w_data, EcsOnUpdate, .Position);
+
+    ecs_table_data_t data = {
+        .column_count = 1,
+        .row_count = 3,
+        .entities = NULL,
+        .components = (ecs_entity_t[]){ecs_entity(Position)},
+        .columns = (ecs_table_columns_t[]){
+            (Position[]) {
+                {10, 20},
+                {11, 21},
+                {12, 22}
+            }
+        }
+    };
+
+    ecs_set_context(world, &data);
+
+    ecs_progress(world, 1);
+    test_int(ecs_count(world, Position), 3);
+
+    ecs_entity_t e = e_result;
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+
+        Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10 + i);
+        test_int(p->y, 20 + i);
+    }
+
+    ecs_fini(world);
+}
+
+void Set_w_data_staged_1_column_3_rows_w_entities() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Set_w_data, EcsOnUpdate, .Position);
+
+    ecs_table_data_t data = {
+        .column_count = 1,
+        .row_count = 3,
+        .entities = (ecs_entity_t[]){5000, 5001, 5002},
+        .components = (ecs_entity_t[]){ecs_entity(Position)},
+        .columns = (ecs_table_columns_t[]){
+            (Position[]) {
+                {10, 20},
+                {11, 21},
+                {12, 22}
+            }
+        }
+    };
+
+    ecs_set_context(world, &data);
+
+    ecs_progress(world, 1);
+    test_int(ecs_count(world, Position), 3);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        test_assert(ecs_has(world, 5000 + i, Position));
+
+        Position *p = ecs_get_ptr(world, 5000 + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10 + i);
+        test_int(p->y, 20 + i);
+    }
+
+    ecs_fini(world);
+}
+
+void Set_w_data_staged_1_column_3_rows_w_entities_w_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Set_w_data, EcsOnUpdate, .Position);
+    ECS_ENTITY(world, Base, 0);
+
+    ecs_table_data_t data = {
+        .column_count = 2,
+        .row_count = 3,
+        .entities = (ecs_entity_t[]){5000, 5001, 5002},
+        .components = (ecs_entity_t[]){ecs_entity(Position), ECS_INSTANCEOF | Base},
+        .columns = (ecs_table_columns_t[]){
+            (Position[]) {
+                {10, 20},
+                {11, 21},
+                {12, 22}
+            },
+            NULL
+        }
+    };
+
+    ecs_set_context(world, &data);
+
+    ecs_progress(world, 1);
+    test_int(ecs_count(world, Position), 3);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        test_assert(ecs_has(world, 5000 + i, Position));
+
+        Position *p = ecs_get_ptr(world, 5000 + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10 + i);
+        test_int(p->y, 20 + i);
+    }
+
+    ecs_fini(world);
+}

@@ -214,6 +214,7 @@ uint32_t ecs_table_grow(
 /* Dimension array to have n rows (doesn't add entities) */
 int16_t ecs_table_dim(
     ecs_table_t *table,
+    ecs_table_column_t *columns,
     uint32_t count);
 
 /* Return number of entities in table */
