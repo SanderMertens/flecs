@@ -733,7 +733,8 @@
                 "6_thread_test_combs_100_entity_2_types",
                 "change_thread_count",
                 "multithread_quit",
-                "schedule_w_tasks"
+                "schedule_w_tasks",
+                "reactive_system"
             ]
         }, {
             "id": "SingleThreadStaging",

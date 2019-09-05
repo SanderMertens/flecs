@@ -231,7 +231,7 @@ ecs_type_t notify_pre_merge(
     real_world->in_progress = true;
 
     ecs_type_t result = ecs_notify(
-        world, stage, systems, to_init, table, table_columns, offset, limit);
+        real_world, stage, systems, to_init, table, table_columns, offset, limit);
 
     real_world->in_progress = in_progress;
     if (result && !in_progress) {

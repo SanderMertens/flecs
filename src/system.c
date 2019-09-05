@@ -356,10 +356,12 @@ ecs_type_t ecs_notify_row_system(
     uint32_t offset,
     uint32_t limit)
 {
+    ecs_world_t *real_world = world;
+    ecs_stage_t *stage = ecs_get_stage(&real_world);
     ecs_entity_info_t info = {.entity = system};
 
     EcsRowSystem *system_data = ecs_get_ptr_intern(
-        world, &world->main_stage, &info, EEcsRowSystem, false, true);
+        real_world, &real_world->main_stage, &info, EEcsRowSystem, false, true);
     
     assert(system_data != NULL);
 
@@ -395,11 +397,12 @@ ecs_type_t ecs_notify_row_system(
                 /* If column is not found, it could come from a prefab. Look for
                  * components of components */
                 entity = ecs_get_entity_for_component(
-                    world, 0, table->type, buffer[i].is.component);
+                    real_world, 0, table->type, buffer[i].is.component);
 
                 ecs_assert(entity != 0 || 
                            buffer[i].oper_kind == EcsOperOptional, 
-                                ECS_INTERNAL_ERROR, ecs_get_id(world, buffer[i].is.component));
+                                ECS_INTERNAL_ERROR, 
+                                ecs_get_id(real_world, buffer[i].is.component));
             }
         }
 
@@ -422,7 +425,7 @@ ecs_type_t ecs_notify_row_system(
             references[ref_id] = (ecs_reference_t){
                 .entity = entity, 
                 .component = component,
-                .cached_ptr = ecs_get_ptr_intern(world, &world->main_stage, 
+                .cached_ptr = ecs_get_ptr_intern(real_world, &real_world->main_stage, 
                                 &info, component, false, true)
             };
 

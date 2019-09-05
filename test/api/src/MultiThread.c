@@ -1014,3 +1014,38 @@ void MultiThread_schedule_w_tasks() {
 
     ecs_fini(world);
 }
+
+static
+void ReactiveDummySystem(ecs_rows_t * rows) {
+    has_ran = true;
+}
+
+static
+void PeriodicDummySystem(ecs_rows_t * rows) {
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+    
+    int i;
+    for (i = 0; i < rows->count; i++ ) {
+        ecs_set(rows->world, rows->entities[i], Position, {0});
+        test_assert(has_ran == true);
+    }
+}
+
+void MultiThread_reactive_system() {    
+    ecs_world_t * world = ecs_init();
+
+    ECS_COMPONENT(world, Position);        
+    ECS_SYSTEM(world, PeriodicDummySystem, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, ReactiveDummySystem, EcsOnSet, Position);
+
+    ecs_new_w_count(world, Position, 2);
+    ecs_set_threads(world, 2);
+
+    test_assert(has_ran == false);
+
+    ecs_progress(world, 0);
+
+    test_assert(has_ran == true);
+
+    ecs_fini(world);
+}
