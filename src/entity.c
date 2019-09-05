@@ -1508,8 +1508,9 @@ void ecs_delete_w_filter(
     }
 }
 
-void _ecs_remove_w_filter(
+void _ecs_add_remove_w_filter(
     ecs_world_t *world,
+    ecs_type_t to_add,
     ecs_type_t to_remove,
     ecs_type_filter_t *filter)
 {
@@ -1526,8 +1527,17 @@ void _ecs_remove_w_filter(
         ecs_type_t type = table->type;
 
         /* Skip if the type contains none of the components in to_remove */
-        if (!ecs_type_contains(world, type, to_remove, false, false)) {
-            continue;
+        if (to_remove) {
+            if (!ecs_type_contains(world, type, to_remove, false, false)) {
+                continue;
+            }
+        }
+
+        /* Skip if the type already contains all of the components in to_add */
+        if (to_add) {
+            if (ecs_type_contains(world, type, to_add, true, false)) {
+                continue;
+            }            
         }
 
         if (!ecs_type_match_w_filter(world, type, filter)) {
@@ -1535,7 +1545,7 @@ void _ecs_remove_w_filter(
         }
 
         /* Component(s) must be removed, find table */
-        ecs_type_t dst_type = ecs_type_merge(world, type, NULL, to_remove);
+        ecs_type_t dst_type = ecs_type_merge(world, type, to_add, to_remove);
         if (!dst_type) {
             /* If this removes all components, clear table */
             ecs_table_merge(world, NULL, table);

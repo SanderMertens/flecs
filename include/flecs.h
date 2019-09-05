@@ -1031,31 +1031,34 @@ void ecs_disinherit(
     ecs_entity_t entity,
     ecs_entity_t base);
 
-/** Remove one or more components from a set of tables.
- * This operation removes one or more components from a set of tables matching
- * a filter. This operation is more efficient than calling ecs_remove on the
- * individual entities.
+/** Add/remove one or more components from a set of tables.
+ * This operation adds/removes one or more components from a set of tables 
+ * matching a filter. This operation is more efficient than calling ecs_add 
+ * or ecs_remove on the individual entities.
  *
- * If no filter is provided, the component(s) will be removed from all the
- * tables in which it occurs.
+ * If no filter is provided, the component(s) will be added/removed from all the
+ * tables in which it/they (not) occur(s).
  *
  * After this operation it is guaranteed that no tables matching the filter
- * will have the components in to_remove. If to_remove has multiple components
+ * will have the components in to_remove, and similarly, all will have the
+ * components in to_add. If to_add or to_remove has multiple components
  * and only one of the components occurs in a table, that component will be
- * removed from the entities in the table.
+ * added/removed from the entities in the table.
  *
  * @param world The world.
+ * @param to_add The components to add.
  * @param to_remove The components to remove.
  * @param filter Filter that matches zero or more tables.
  */
 FLECS_EXPORT
-void _ecs_remove_w_filter(
+void _ecs_add_remove_w_filter(
     ecs_world_t *world,
+    ecs_type_t to_add,
     ecs_type_t to_remove,
     ecs_type_filter_t *filter);
 
-#define ecs_remove_w_filter(world, to_remove, filter)\
-    _ecs_remove_w_filter(world, ecs_type(to_remove), filter)
+#define ecs_add_remove_w_filter(world, to_add, to_remove, filter)\
+    _ecs_add_remove_w_filter(world, ecs_type(to_add), ecs_type(to_remove), filter)
 
 /** Get pointer to component data.
  * This operation obtains a pointer to the component data of an entity. If the

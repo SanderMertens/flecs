@@ -115,7 +115,7 @@
                 "not_added"
             ]
         }, {
-            "id": "Remove_w_filter",
+            "id": "Add_remove_w_filter",
             "testcases": [
                 "remove_1_no_filter",
                 "remove_2_no_filter",
@@ -126,7 +126,9 @@
                 "remove_1_exclude_1",
                 "remove_1_exclude_2",
                 "remove_1_include_1",
-                "remove_1_include_2"                
+                "remove_1_include_2",
+                "add_1",
+                "add_2"                           
             ]
         }, {
             "id": "Has",

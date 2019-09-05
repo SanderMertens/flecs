@@ -356,9 +356,9 @@ ecs_type_t ecs_notify_row_system(
     uint32_t offset,
     uint32_t limit)
 {
-    ecs_world_t *real_world = world;
-    ecs_stage_t *stage = ecs_get_stage(&real_world);
     ecs_entity_info_t info = {.entity = system};
+    ecs_world_t *real_world = world;
+    ecs_get_stage(&real_world);
 
     EcsRowSystem *system_data = ecs_get_ptr_intern(
         real_world, &real_world->main_stage, &info, EEcsRowSystem, false, true);
