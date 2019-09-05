@@ -25,9 +25,10 @@ ecs_vector_t* ecs_vector_new(
     const ecs_vector_params_t *params,
     uint32_t size)
 {
+    ecs_assert(params->element_size != 0, ECS_INTERNAL_ERROR, NULL);
+    
     ecs_vector_t *result = ecs_os_malloc(sizeof(ecs_vector_t) + size * params->element_size);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
-    ecs_assert(params->element_size != 0, ECS_INTERNAL_ERROR, NULL);
 
     result->count = 0;
     result->size = size;

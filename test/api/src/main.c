@@ -48,6 +48,7 @@ void Set_w_data_2_columns_3_rows_no_data(void);
 void Set_w_data_2_columns_3_rows_1_tag(void);
 void Set_w_data_2_columns_3_rows_1_parent(void);
 void Set_w_data_2_columns_3_rows_1_base(void);
+void Set_w_data_2_columns_3_rows_1_base_w_entities(void);
 void Set_w_data_2_columns_3_rows_1_nested_prefab(void);
 void Set_w_data_2_columns_3_rows_component_order(void);
 void Set_w_data_overwrite_w_unset_column(void);
@@ -881,7 +882,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Set_w_data",
-        .testcase_count = 16,
+        .testcase_count = 17,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_column_3_rows",
@@ -930,6 +931,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "2_columns_3_rows_1_base",
                 .function = Set_w_data_2_columns_3_rows_1_base
+            },
+            {
+                .id = "2_columns_3_rows_1_base_w_entities",
+                .function = Set_w_data_2_columns_3_rows_1_base_w_entities
             },
             {
                 .id = "2_columns_3_rows_1_nested_prefab",

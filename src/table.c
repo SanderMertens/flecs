@@ -322,10 +322,16 @@ int16_t ecs_table_dim(
 
     uint32_t i;
     for (i = 1; i < column_count + 1; i ++) {
-        ecs_vector_params_t params = {.element_size = columns[i].size};
-        uint32_t size = ecs_vector_set_size(&columns[i].data, &params, count);
-        ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-        (void)size;
+        uint32_t column_size = columns[i].size;
+
+        if (column_size) {
+            ecs_vector_params_t params = {.element_size = column_size};
+            uint32_t size = ecs_vector_set_size(&columns[i].data, &params, count);
+            ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
+            (void)size;
+        } else {
+            ecs_assert(columns[i].data == NULL, ECS_INTERNAL_ERROR, NULL);
+        }
     }
 
     return 0;
