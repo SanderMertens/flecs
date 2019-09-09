@@ -131,6 +131,7 @@ void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    (void)world;
     ecs_table_free_columns(table);
     ecs_os_free(table->columns);
     ecs_vector_free(table->frame_systems);

@@ -939,6 +939,7 @@ void ecs_set_watch(
     ecs_stage_t *stage,
     ecs_entity_t entity)
 {    
+    (void)world;
     ecs_row_t row = row_from_stage(stage, entity);
 
     if (row.index > 0) {
@@ -1037,7 +1038,6 @@ ecs_entity_t _ecs_new(
 
 static
 bool has_unset_columns(
-    ecs_world_t *world,
     ecs_type_t type,
     ecs_table_column_t *columns,
     ecs_table_data_t *data)
@@ -1046,7 +1046,7 @@ bool has_unset_columns(
         return true;
     }
 
-    int i;
+    uint32_t i;
     for (i = 0; i < data->column_count; i ++) {
         /* If no column is provided for component, skip it */
         ecs_entity_t component = data->components[i];
@@ -1071,7 +1071,6 @@ bool has_unset_columns(
 
 static
 void copy_column_data(
-    ecs_world_t *world,
     ecs_type_t type,
     ecs_table_column_t *columns,
     uint32_t start_row,
@@ -1198,7 +1197,7 @@ uint32_t update_entity_index(
                      * must be copied from the old table to the new table */
                     if (!tested_for_unset) {
                         has_unset = has_unset_columns(
-                            world, type, columns, data);
+                            type, columns, data);
                     }
 
                     if (has_unset) {
@@ -1338,7 +1337,7 @@ ecs_entity_t set_w_data_intern(
 
         /* If columns were provided, copy data from columns into table */
         if (data->columns) {
-            copy_column_data(world, type, columns, start_row, data);
+            copy_column_data(type, columns, start_row, data);
         }
 
         ecs_entity_info_t info = {

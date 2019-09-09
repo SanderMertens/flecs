@@ -41,9 +41,8 @@ void clean_data_stage(
             *(ecs_table_column_t**)ecs_map_next_w_key(&it, &keyval);
         
         ecs_type_t type = (ecs_type_t)(uintptr_t)keyval;
-        uint32_t count = ecs_vector_count(type);
+        uint32_t i, count = ecs_vector_count(type);
         
-        int i;
         for(i = 0; i < count + 1; i ++) {
             ecs_vector_free(columns[i].data);
         }

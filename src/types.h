@@ -180,7 +180,7 @@ typedef struct EcsSystem {
     
     int32_t cascade_by;            /* CASCADE column index */
     EcsSystemKind kind;            /* Kind of system */
-    float time_spent;              /* Time spent on running system */
+    double time_spent;              /* Time spent on running system */
     bool enabled;                  /* Is system enabled or not */
     bool has_refs;                 /* Does the system have reference columns */
     bool needs_tables;             /* Does the system need table matching */
