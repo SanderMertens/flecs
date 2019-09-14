@@ -3,17 +3,13 @@
 static bool ecs_os_api_initialized = false;
 static bool ecs_os_api_debug_enabled = false;
 
-const ecs_os_api_t ecs_os_api;
-
-/* Allow access to API only in local translation unit */
-static
-ecs_os_api_t *_ecs_os_api = (ecs_os_api_t*)&ecs_os_api;
+ecs_os_api_t ecs_os_api;
 
 void ecs_os_set_api(
     ecs_os_api_t *os_api)
 {
     if (!ecs_os_api_initialized) {
-        *_ecs_os_api = *os_api;
+        ecs_os_api = *os_api;
         ecs_os_api_initialized = true;
     }
 }
@@ -240,43 +236,43 @@ void ecs_os_set_api_defaults(void)
 
     ecs_os_time_setup();
     
-    _ecs_os_api->malloc = malloc;
-    _ecs_os_api->free = free;
-    _ecs_os_api->realloc = realloc;
-    _ecs_os_api->calloc = calloc;
+    ecs_os_api.malloc = malloc;
+    ecs_os_api.free = free;
+    ecs_os_api.realloc = realloc;
+    ecs_os_api.calloc = calloc;
 
 #ifdef __BAKE__
-    _ecs_os_api->thread_new = bake_thread_new;
-    _ecs_os_api->thread_join = bake_thread_join;
+    ecs_os_api.thread_new = bake_thread_new;
+    ecs_os_api.thread_join = bake_thread_join;
 
-    _ecs_os_api->mutex_new = bake_mutex_new;
-    _ecs_os_api->mutex_free = bake_mutex_free;
-    _ecs_os_api->mutex_lock = bake_mutex_lock;
-    _ecs_os_api->mutex_unlock = bake_mutex_unlock;
+    ecs_os_api.mutex_new = bake_mutex_new;
+    ecs_os_api.mutex_free = bake_mutex_free;
+    ecs_os_api.mutex_lock = bake_mutex_lock;
+    ecs_os_api.mutex_unlock = bake_mutex_unlock;
 
-    _ecs_os_api->cond_new = bake_cond_new;
-    _ecs_os_api->cond_free = bake_cond_free;
-    _ecs_os_api->cond_signal = bake_cond_signal;
-    _ecs_os_api->cond_broadcast = bake_cond_broadcast;
-    _ecs_os_api->cond_wait = bake_cond_wait;
+    ecs_os_api.cond_new = bake_cond_new;
+    ecs_os_api.cond_free = bake_cond_free;
+    ecs_os_api.cond_signal = bake_cond_signal;
+    ecs_os_api.cond_broadcast = bake_cond_broadcast;
+    ecs_os_api.cond_wait = bake_cond_wait;
 
-    _ecs_os_api->dlopen = bake_dlopen;
-    _ecs_os_api->dlproc = bake_dlproc;
-    _ecs_os_api->dlclose = bake_dlclose;
+    ecs_os_api.dlopen = bake_dlopen;
+    ecs_os_api.dlproc = bake_dlproc;
+    ecs_os_api.dlclose = bake_dlclose;
 
-    _ecs_os_api->module_to_dl = bake_module_to_dl;
+    ecs_os_api.module_to_dl = bake_module_to_dl;
 
     ut_log_handlerRegister(bake_log, NULL);
 /* __BAKE__ */
 #endif
 
-    _ecs_os_api->sleep = ecs_os_time_sleep;
-    _ecs_os_api->get_time = ecs_os_gettime;
+    ecs_os_api.sleep = ecs_os_time_sleep;
+    ecs_os_api.get_time = ecs_os_gettime;
 
-    _ecs_os_api->log = ecs_log;
-    _ecs_os_api->log_error = ecs_log_error;
-    _ecs_os_api->log_debug = ecs_log_debug;
-    _ecs_os_api->log_warning = ecs_log_warning;
+    ecs_os_api.log = ecs_log;
+    ecs_os_api.log_error = ecs_log_error;
+    ecs_os_api.log_debug = ecs_log_debug;
+    ecs_os_api.log_warning = ecs_log_warning;
 
-    _ecs_os_api->abort = abort;
+    ecs_os_api.abort = abort;
 }

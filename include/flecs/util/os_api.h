@@ -183,7 +183,7 @@ typedef struct ecs_os_api_t {
 } ecs_os_api_t;
 
 FLECS_EXPORT
-extern const ecs_os_api_t ecs_os_api;
+extern ecs_os_api_t ecs_os_api;
 
 FLECS_EXPORT
 void ecs_os_set_api(
