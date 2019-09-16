@@ -64,7 +64,20 @@
                 "overwrite_from_other_type_w_unset_column",
                 "staged_1_column_3_rows",
                 "staged_1_column_3_rows_w_entities",
-                "staged_1_column_3_rows_w_entities_w_base"
+                "staged_1_column_3_rows_w_entities_w_base",
+                "staged_set_existing_in_stage",
+                "on_add",
+                "on_add_w_entities",
+                "on_add_w_entities_again",
+                "on_set",
+                "on_set_w_entities",
+                "on_set_no_data_after_on_add",
+                "on_remove_existing",
+                "on_add_different_origin",
+                "on_add_different_overlapping_origin",
+                "on_add_different_overlapping_origin_reorder",
+                "on_set_different_origin",
+                "on_remove_different_origin"
             ]
         }, {
             "id": "Add",

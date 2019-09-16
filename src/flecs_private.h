@@ -232,7 +232,9 @@ uint32_t ecs_table_rows_dimensioned(
 /* Delete row from table */
 void ecs_table_delete(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_table_t *table,
+    ecs_table_column_t *columns,
     int32_t index);
 
 /* Get row from table (or stage) */
@@ -271,8 +273,8 @@ void ecs_table_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_table_column_t *columns,
-    uint32_t row_1,
-    uint32_t row_2,
+    int32_t row_1,
+    int32_t row_2,
     ecs_row_t *row_ptr_1,
     ecs_row_t *row_ptr_2);
 

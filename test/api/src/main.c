@@ -56,6 +56,19 @@ void Set_w_data_overwrite_from_other_type_w_unset_column(void);
 void Set_w_data_staged_1_column_3_rows(void);
 void Set_w_data_staged_1_column_3_rows_w_entities(void);
 void Set_w_data_staged_1_column_3_rows_w_entities_w_base(void);
+void Set_w_data_staged_set_existing_in_stage(void);
+void Set_w_data_on_add(void);
+void Set_w_data_on_add_w_entities(void);
+void Set_w_data_on_add_w_entities_again(void);
+void Set_w_data_on_set(void);
+void Set_w_data_on_set_w_entities(void);
+void Set_w_data_on_set_no_data_after_on_add(void);
+void Set_w_data_on_remove_existing(void);
+void Set_w_data_on_add_different_origin(void);
+void Set_w_data_on_add_different_overlapping_origin(void);
+void Set_w_data_on_add_different_overlapping_origin_reorder(void);
+void Set_w_data_on_set_different_origin(void);
+void Set_w_data_on_remove_different_origin(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -885,7 +898,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Set_w_data",
-        .testcase_count = 20,
+        .testcase_count = 33,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_column_3_rows",
@@ -966,6 +979,58 @@ static bake_test_suite suites[] = {
             {
                 .id = "staged_1_column_3_rows_w_entities_w_base",
                 .function = Set_w_data_staged_1_column_3_rows_w_entities_w_base
+            },
+            {
+                .id = "staged_set_existing_in_stage",
+                .function = Set_w_data_staged_set_existing_in_stage
+            },
+            {
+                .id = "on_add",
+                .function = Set_w_data_on_add
+            },
+            {
+                .id = "on_add_w_entities",
+                .function = Set_w_data_on_add_w_entities
+            },
+            {
+                .id = "on_add_w_entities_again",
+                .function = Set_w_data_on_add_w_entities_again
+            },
+            {
+                .id = "on_set",
+                .function = Set_w_data_on_set
+            },
+            {
+                .id = "on_set_w_entities",
+                .function = Set_w_data_on_set_w_entities
+            },
+            {
+                .id = "on_set_no_data_after_on_add",
+                .function = Set_w_data_on_set_no_data_after_on_add
+            },
+            {
+                .id = "on_remove_existing",
+                .function = Set_w_data_on_remove_existing
+            },
+            {
+                .id = "on_add_different_origin",
+                .function = Set_w_data_on_add_different_origin
+            },
+            {
+                .id = "on_add_different_overlapping_origin",
+                .function = Set_w_data_on_add_different_overlapping_origin
+            },
+            {
+                .id = "on_add_different_overlapping_origin_reorder",
+                .function = Set_w_data_on_add_different_overlapping_origin_reorder
+            },
+            {
+                .id = "on_set_different_origin",
+                .function = Set_w_data_on_set_different_origin
+            },
+            {
+                .id = "on_remove_different_origin",
+                .function = Set_w_data_on_remove_different_origin
             }
         }
     },

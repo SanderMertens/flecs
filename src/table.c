@@ -199,10 +199,18 @@ uint32_t ecs_table_insert(
 
 void ecs_table_delete(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_table_t *table,
+    ecs_table_column_t *columns,
     int32_t sindex)
 {
-    ecs_table_column_t *columns = table->columns;
+    if (!stage) {
+        stage = &world->main_stage;
+    }
+    if (!columns) {
+        columns = table->columns;
+    }
+
     ecs_vector_t *entity_column = columns[0].data;
     uint32_t index, count = ecs_vector_count(entity_column);
 
@@ -240,7 +248,7 @@ void ecs_table_delete(
         ecs_row_t row;
         row.type = table->type;
         row.index = index + 1;
-        ecs_map_set(world->main_stage.entity_index, to_move, &row);
+        ecs_map_set(stage->entity_index, to_move, &row);
 
         /* Decrease size of entity column */
         ecs_vector_remove_last(entity_column);
@@ -352,11 +360,14 @@ void ecs_table_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_table_column_t *columns,
-    uint32_t row_1,
-    uint32_t row_2,
+    int32_t row_1,
+    int32_t row_2,
     ecs_row_t *row_ptr_1,
     ecs_row_t *row_ptr_2)
 {    
+    ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
+
     if (row_1 == row_2) {
         return;
     }
@@ -364,7 +375,7 @@ void ecs_table_swap(
     ecs_entity_t *entities = ecs_vector_first(columns[0].data);
     ecs_entity_t e1 = entities[row_1];
     ecs_entity_t e2 = entities[row_2];
-
+    
     /* Get pointers to records in entity index */
     if (!row_ptr_1) {
         row_ptr_1 = ecs_map_get_ptr(stage->entity_index, e1);
@@ -377,8 +388,8 @@ void ecs_table_swap(
     /* Swap entities */
     entities[row_1] = e2;
     entities[row_2] = e1;
-    row_ptr_1->index = row_2;
-    row_ptr_2->index = row_1;
+    row_ptr_1->index = row_2 + 1;
+    row_ptr_2->index = row_1 + 1;
 
     /* Swap columns */
     uint32_t i, column_count = ecs_vector_count(table->type);
@@ -410,7 +421,6 @@ void ecs_table_move_back_and_swap(
     ecs_entity_t *entities = ecs_vector_first(columns[0].data);
     uint32_t i;
 
-
     /* First move back and swap entities */
     ecs_entity_t e = entities[row - 1];
     for (i = 0; i < count; i ++) {
@@ -420,9 +430,10 @@ void ecs_table_move_back_and_swap(
         ecs_row_t *row_ptr = ecs_map_get_ptr(stage->entity_index, cur);
         row_ptr->index = row + i;
     }
+
     entities[row + count - 1] = e;
     ecs_row_t *row_ptr = ecs_map_get_ptr(stage->entity_index, e);
-    row_ptr->index = row + count - 1;
+    row_ptr->index = row + count;
 
     /* Move back and swap columns */
     uint32_t column_count = ecs_vector_count(table->type);
@@ -434,7 +445,7 @@ void ecs_table_move_back_and_swap(
         if (size) {
             /* Backup first element */
             void *tmp = _ecs_os_alloca(size, 1);
-            void *el = ECS_OFFSET(data, size * row);
+            void *el = ECS_OFFSET(data, size * (row - 1));
             memcpy(tmp, el, size);
 
             /* Move component values */

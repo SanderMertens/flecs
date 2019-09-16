@@ -523,7 +523,6 @@ void EcsSetPrefab(ecs_rows_t *rows) {
     uint32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_entity_t parent = prefab[i].parent;
-
         ecs_entity_t e = rows->entities[i];
         ecs_table_t *table = rows->table;
 
