@@ -269,7 +269,7 @@ ecs_type_t register_type(
     bool has_flags = (array[count - 1] & ECS_ENTITY_FLAGS_MASK) != 0;
     
     if (!normalized && has_flags) {
-        result = ecs_type_from_array_normalize(world, stage, array, count);
+        return ecs_type_from_array_normalize(world, stage, array, count);
     } else {
         result = ecs_type_from_array(array, count);
 
@@ -285,6 +285,7 @@ ecs_type_t register_type(
     }
 
     ecs_assert(stage->last_link != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage->last_link->type != result, ECS_INTERNAL_ERROR, NULL);
 
     stage->last_link->next = link;
     stage->last_link = link;

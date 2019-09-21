@@ -548,6 +548,7 @@
                 "no_instantiate_on_2nd_add",
                 "no_instantiate_on_2nd_add_in_progress",
                 "nested_prefab_in_progress_w_count",
+                "nested_prefab_in_progress_w_count_set_after_override",
                 "get_ptr_from_prefab_from_new_table_in_progress",
                 "match_base",
                 "match_base_after_add_in_prev_phase",

@@ -2012,6 +2012,69 @@ void Prefab_nested_prefab_in_progress_w_count() {
     ecs_fini(world);
 }
 
+static
+void OnSetVelocity(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Velocity, v, 1);
+    ECS_COLUMN_COMPONENT(rows, Velocity, 1);
+
+    static int invoked = 0;
+    invoked ++;
+    test_int(invoked, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Velocity);
+        Velocity *staged_v = ecs_get_ptr(rows->world, rows->entities[i], Velocity);
+        staged_v->x = v->x + 1;
+        staged_v->y = v->y + 1;
+    }
+}
+
+void Prefab_nested_prefab_in_progress_w_count_set_after_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_PREFAB(world, Prefab, Position);
+        ecs_set(world, Prefab, Position, {1, 2});
+
+        ECS_PREFAB(world, ChildPrefab, Velocity);
+            ecs_set(world, ChildPrefab, EcsPrefab, {.parent = Prefab});
+            ecs_set(world, ChildPrefab, Velocity, {3, 4});
+
+    ECS_SYSTEM(world, NewPrefab_w_count, EcsOnUpdate, .Prefab);
+    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+
+    ecs_entity_t result = 0;
+    ecs_set_context(world, &result);
+
+    ecs_progress(world, 1);
+
+    test_assert(result != 0);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        ecs_has(world, result + i, Prefab);
+
+        Position *p = ecs_get_ptr(world, result + i, Position);
+        test_assert(p != NULL); 
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+
+        ecs_entity_t child = ecs_lookup_child(world, result + i, "ChildPrefab");
+        test_assert(child != 0);
+
+        Velocity *v = ecs_get_ptr(world, child, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 3 + 1);
+        test_int(v->y, 4 + 1);
+    }
+    
+    ecs_fini(world);
+}
+
 void AddPrefabInProgress(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, Prefab, 2);
     ECS_COLUMN_COMPONENT(rows, Velocity, 3);
@@ -2496,3 +2559,4 @@ void Prefab_override_from_nested() {
 
     ecs_fini(world);
 }
+
