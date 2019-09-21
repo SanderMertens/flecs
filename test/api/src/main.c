@@ -494,6 +494,7 @@ void Prefab_no_overwrite_on_2nd_add(void);
 void Prefab_no_overwrite_on_2nd_add_in_progress(void);
 void Prefab_no_instantiate_on_2nd_add(void);
 void Prefab_no_instantiate_on_2nd_add_in_progress(void);
+void Prefab_nested_prefab_in_progress_w_count(void);
 void Prefab_get_ptr_from_prefab_from_new_table_in_progress(void);
 void Prefab_match_base(void);
 void Prefab_match_base_after_add_in_prev_phase(void);
@@ -2506,7 +2507,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 59,
+        .testcase_count = 60,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -2687,6 +2688,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "no_instantiate_on_2nd_add_in_progress",
                 .function = Prefab_no_instantiate_on_2nd_add_in_progress
+            },
+            {
+                .id = "nested_prefab_in_progress_w_count",
+                .function = Prefab_nested_prefab_in_progress_w_count
             },
             {
                 .id = "get_ptr_from_prefab_from_new_table_in_progress",

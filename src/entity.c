@@ -292,7 +292,6 @@ ecs_type_t instantiate_prefab(
 
             for (i = 0; i < count; i ++) {
                 ecs_builder_op_t *op = &ops[i];
-                
                 ecs_entity_t child = _ecs_new_w_count(
                     world, op->type, limit);
 
@@ -468,7 +467,7 @@ ecs_type_t copy_from_prefabs(
     if (src_type) {
         type = src_type;
     } else {
-        if (world->in_progress || !info->type) {
+        if (world->in_progress && info->entity) {
             type = ecs_get_type(world, info->entity);
         } else {
             type = info->type;
