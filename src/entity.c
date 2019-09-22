@@ -1194,11 +1194,12 @@ uint32_t update_entity_index(
     ecs_type_t type,
     ecs_table_t *table,
     ecs_table_column_t *columns,
-    uint32_t result,
+    ecs_entity_t start_entity,
+    int32_t start_row,
     ecs_table_data_t *data)
 {
     bool has_unset = false, tested_for_unset = false;
-    uint32_t i, dst_start_row = 0;
+    uint32_t i, dst_start_row = start_row;
     uint32_t count = data->row_count;
     ecs_entity_t *entities = ecs_vector_first(columns[0].data);
     uint32_t row_count = ecs_vector_count(columns[0].data);
@@ -1214,7 +1215,7 @@ uint32_t update_entity_index(
      * vs individual entities as much as possible. */
     bool same_origin = true;
     ecs_type_t src_type = NULL, prev_src_type = NULL;
-    uint32_t src_row = 0, prev_src_row = 0, dst_first_contiguous_row = 0;
+    uint32_t src_row = 0, prev_src_row = 0, dst_first_contiguous_row = start_row;
     uint32_t src_first_contiguous_row = 0;
 
     /* Obtain the entity index in the current stage */
@@ -1251,7 +1252,7 @@ uint32_t update_entity_index(
                 world->last_handle = e + 1;
             }                            
         } else {
-            e = i + result;
+            e = i + start_entity;
         }
 
         ecs_row_t *row_ptr = ecs_map_get_ptr(entity_index, e);
@@ -1546,7 +1547,7 @@ ecs_entity_t set_w_data_intern(
          * systems must be executed.
          */
         start_row = update_entity_index(
-            world, stage, type, table, columns, result, data);    
+            world, stage, type, table, columns, result, start_row, data);    
 
         /* If columns were provided, copy data from columns into table. This is
          * where a lot of the performance benefits can be achieved: now that all
