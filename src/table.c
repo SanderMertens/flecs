@@ -353,6 +353,10 @@ int16_t ecs_table_dim(
 uint64_t ecs_table_count(
     ecs_table_t *table)
 {
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->columns[0].data != NULL, ECS_INTERNAL_ERROR, NULL);
+
     return ecs_vector_count(table->columns[0].data);
 }
 

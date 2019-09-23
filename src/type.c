@@ -269,7 +269,7 @@ ecs_type_t register_type(
     bool has_flags = (array[count - 1] & ECS_ENTITY_FLAGS_MASK) != 0;
     
     if (!normalized && has_flags) {
-        return ecs_type_from_array_normalize(world, stage, array, count);
+        result = ecs_type_from_array_normalize(world, stage, array, count);
     } else {
         result = ecs_type_from_array(array, count);
 
@@ -285,14 +285,16 @@ ecs_type_t register_type(
     }
 
     ecs_assert(stage->last_link != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(stage->last_link->type != result, ECS_INTERNAL_ERROR, NULL);
 
     stage->last_link->next = link;
     stage->last_link = link;
 
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    notify_systems_of_type(world, stage, result);
+    if (normalized) {
+        /* Only notify systems of normalized type */
+        notify_systems_of_type(world, stage, result);
+    }
     
     return result;
 }
@@ -340,7 +342,8 @@ ecs_type_t find_type_in_vector(
     if (create) {
         ecs_type_link_t **link = ecs_vector_add(vector, &link_params);
         *link = ecs_os_calloc(1, sizeof(ecs_type_link_t));
-        return register_type(world, stage, *link, array, count, normalized);
+        ecs_type_t result = register_type(world, stage, *link, array, count, normalized);
+        return result;
     }
     
     return NULL;

@@ -235,7 +235,9 @@ void set_system_stats(
         sstats->entities_matched = 0;
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = tables[i].table;
-            sstats->entities_matched += ecs_table_count(table);
+            if (table) {
+                sstats->entities_matched += ecs_table_count(table);
+            }
         }
 
         sstats->period = col_system->period;
