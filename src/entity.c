@@ -1394,7 +1394,7 @@ uint32_t update_entity_index(
         if (i) {
             ecs_assert(dst_first_contiguous_row >= dst_start_row, ECS_INTERNAL_ERROR, NULL);
 
-            if (prev_src_type != src_type || (src_row && prev_src_row != (src_row - 1))) {
+            if (prev_src_type != src_type || (src_row != prev_src_row && prev_src_row != (src_row - 1))) {
                 /* If either the previous type is different from the current
                  * type, or the previous index is not one before the current,
                  * entities are not from the same origin or they are not stored

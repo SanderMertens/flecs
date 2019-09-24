@@ -1657,3 +1657,66 @@ void Set_w_data_on_set_different_origin() {
 void Set_w_data_on_remove_different_origin() {
     // Implement testcase
 }
+
+void Set_w_data_existing_different_type_out_of_order() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_SYSTEM(world, OnAddData, EcsOnAdd, Position);
+
+    ecs_entity_t src_entities[] = {
+        5001,
+        5002,
+        5003
+    };
+
+    ecs_entity_t dst_entities[] = {
+        5002,
+        5001,
+        5003
+    };    
+
+    /* Put entities in different tables */
+    ecs_add(world, src_entities[0], Velocity);
+    ecs_add(world, src_entities[1], Velocity);
+    ecs_add(world, src_entities[2], Velocity);
+
+    test_int( ecs_count(world, Position), 0);
+    test_int( ecs_count(world, Velocity), 3);
+    test_int( ecs_count(world, Mass), 0);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_set_w_data(world, &(ecs_table_data_t){
+        .column_count = 1,
+        .row_count = 3,
+        .entities = dst_entities,
+        .components = (ecs_entity_t[]){ecs_entity(Position)}
+    });
+
+    test_assert(e != 0);
+    test_int( ecs_count(world, Position), 3);
+    test_int( ecs_count(world, Velocity), 0);
+    test_int( ecs_count(world, Mass), 0);
+
+    Position *p = ecs_get_ptr(world, dst_entities[0], Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_ptr(world, dst_entities[1], Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get_ptr(world, dst_entities[2], Position);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 21);
+
+    ecs_fini(world);
+}

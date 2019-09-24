@@ -77,7 +77,8 @@
                 "on_add_different_overlapping_origin",
                 "on_add_different_overlapping_origin_reorder",
                 "on_set_different_origin",
-                "on_remove_different_origin"
+                "on_remove_different_origin",
+                "existing_different_type_out_of_order"
             ]
         }, {
             "id": "Add",
