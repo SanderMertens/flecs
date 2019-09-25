@@ -291,7 +291,7 @@ ecs_type_t register_type(
 
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (normalized) {
+    if (normalized || !has_flags) {
         /* Only notify systems of normalized type */
         notify_systems_of_type(world, stage, result);
     }
