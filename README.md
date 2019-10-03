@@ -69,6 +69,7 @@ int main(int argc, char *argv[]) {
     return ecs_fini(world);
 }
 ```
+For more examples, go to [the flecs examples folder](https://github.com/SanderMertens/flecs/tree/master/examples) or the [flecs-hub organization](https://github.com/flecs-hub).
 
 ## Manual
 [Click here](Manual.md) to view the Flecs manual.
