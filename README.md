@@ -13,9 +13,9 @@ Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweigh
 
 Additionally, flecs has a flexible engine that lets you do many things, like:
 
-- An expressive prefab system with prefab variants, component overrides and nested prefabs [[learn more](Manual.md#prefabs)]
-- Create specific system expressions with AND, OR, NOT and optional operators [[learn more](Manual.md#system-queries)]
-- Create hierarchies, indexes and DAGs with container entities [[learn more](Manual.md#containers)]
+- A prefab system with variants, overrides and prefab nesting [[learn more](Manual.md#prefabs)]
+- Create system expressions with AND, OR, NOT and optional operators [[learn more](Manual.md#system-signatures)]
+- Create hierarchies, indexes and [DAGs](https://en.wikipedia.org/wiki/Directed_acyclic_graph) with container entities [[learn more](Manual.md#containers)]
 
 Make sure to check the flecs [dashboard](https://github.com/SanderMertens/flecs-systems-admin):
 
@@ -30,6 +30,46 @@ ECS (Entity Component System) is a way to organize code that is mostly used in g
 
 For more information, check [the Entity Component System FAQ](https://github.com/SanderMertens/ecs-faq)!
 
+## Example
+The following code shows a simple flecs application:
+
+```c
+typedef struct Position {
+    float x;
+    float y;
+} Position;
+
+typedef int32_t Speed;
+
+void Move(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN(rows, Speed, s, 2);
+    
+    for (int i = 0; i < rows->count; i ++) {
+        p[i].x += s[i] * rows->delta_time;
+        p[i].y += s[i] * rows->delta_time;
+    }
+}
+
+int main(int argc, char *argv[]) {
+    ecs_world_t *world = ecs_init_w_args(argc, argv);
+
+    /* Register components and systems */
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Speed);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Speed);
+    ECS_ENTITY(world, MyEntity, Position, Speed);
+
+    /* Limit application to 60 FPS */
+    ecs_set_target_fps(world, 60);
+
+    /* Progress world in main loop (invokes Move system) */
+    while (ecs_progress(world, 0));
+
+    return ecs_fini(world);
+}
+```
+
 ## Manual
 [Click here](Manual.md) to view the Flecs manual.
 
@@ -38,7 +78,6 @@ For more information, check [the Entity Component System FAQ](https://github.com
 * [Getting started](#getting-started)
 * [Built with flecs](#built-with-flecs)
 * [Modules](#modules)
-* [Example](#example)
 * [Concepts](#concepts)
   * [entity](#entity)
   * [component](#component)
@@ -193,46 +232,6 @@ Module      | Description
 [flecs.systems.sdl2](https://github.com/SanderMertens/flecs-systems-sdl2) | An SDL2-based renderer
 [flecs.math](https://github.com/SanderMertens/flecs-math) | Matrix and vector math functions
 [flecs.util](https://github.com/SanderMertens/flecs-util) | Utility functions and datastructures
-
-## Example
-The following code shows a simple flecs application:
-
-```c
-typedef struct Position {
-    float x;
-    float y;
-} Position;
-
-typedef int32_t Speed;
-
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Speed, s, 2);
-    
-    for (int i = 0; i < rows->count; i ++) {
-        p[i].x += s[i] * rows->delta_time;
-        p[i].y += s[i] * rows->delta_time;
-    }
-}
-
-int main(int argc, char *argv[]) {
-    ecs_world_t *world = ecs_init_w_args(argc, argv);
-
-    /* Register components and systems */
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Speed);
-    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Speed);
-    ECS_ENTITY(world, MyEntity, Position, Speed);
-
-    /* Limit application to 60 FPS */
-    ecs_set_target_fps(world, 60);
-
-    /* Progress world in main loop (invokes Move system) */
-    while (ecs_progress(world, 0));
-
-    return ecs_fini(world);
-}
-```
 
 ## Concepts
 This section describes the high-level concepts used in flecs, and how they are represented in the API. Rather than providing an exhaustive overview of the API behavior, this section is intended as an introduction to the different API features of flecs.
