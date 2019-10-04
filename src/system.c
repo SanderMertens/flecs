@@ -646,10 +646,11 @@ void ecs_set_period(
 }
 
 static
-void* get_owned_column(
+void* get_owned_column_ptr(
     ecs_rows_t *rows,
     size_t size,
-    int32_t table_column)
+    int32_t table_column,
+    int32_t row)
 {
     ecs_assert(rows->table_columns != NULL, ECS_INTERNAL_ERROR, NULL);
     (void)size;
@@ -658,7 +659,7 @@ void* get_owned_column(
     ecs_assert(column->size != 0, ECS_COLUMN_HAS_NO_DATA, NULL);
     ecs_assert(!size || column->size == size, ECS_COLUMN_TYPE_MISMATCH, NULL);
     void *buffer = ecs_vector_first(column->data);
-    return ECS_OFFSET(buffer, column->size * rows->offset);
+    return ECS_OFFSET(buffer, column->size * (rows->offset + row));
 }
 
 static
@@ -724,7 +725,7 @@ void* get_column(
     if (table_column < 0) {
         return get_shared_column(rows, size, table_column);
     } else {
-        return ECS_OFFSET(get_owned_column(rows, size, table_column), size  * row);
+        return get_owned_column_ptr(rows, size, table_column, row);
     }
 }
 

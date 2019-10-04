@@ -1929,3 +1929,27 @@ void SystemOnFrame_get_sys_context_from_param() {
 
     ecs_fini(world);
 }
+
+static bool Test_feld_w_zero_size_invoked = false;
+
+static
+void Test_feld_w_zero_size(ecs_rows_t *rows) {
+    test_assert(_ecs_field(rows, 0, 1, 0) != _ecs_field(rows, 0, 1, 1));
+    Test_feld_w_zero_size_invoked = true;
+}
+
+void SystemOnFrame_use_field_w_0_size() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, e1, Position);
+    ECS_ENTITY(world, e2, Position);
+
+    ECS_SYSTEM(world, Test_feld_w_zero_size, EcsOnUpdate, Position);
+
+    ecs_progress(world, 1);
+
+    test_assert(Test_feld_w_zero_size_invoked == true);
+
+    ecs_fini(world);
+}
