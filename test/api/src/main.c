@@ -402,6 +402,8 @@ void SystemOnFrame_not_from_entity(void);
 void SystemOnFrame_sys_context(void);
 void SystemOnFrame_get_sys_context_from_param(void);
 void SystemOnFrame_use_field_w_0_size(void);
+void SystemOnFrame_owned_only(void);
+void SystemOnFrame_shared_only(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -2154,7 +2156,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 45,
+        .testcase_count = 47,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -2335,6 +2337,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "use_field_w_0_size",
                 .function = SystemOnFrame_use_field_w_0_size
+            },
+            {
+                .id = "owned_only",
+                .function = SystemOnFrame_owned_only
+            },
+            {
+                .id = "shared_only",
+                .function = SystemOnFrame_shared_only
             }
         }
     },

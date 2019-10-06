@@ -444,7 +444,9 @@
                 "not_from_entity",
                 "sys_context",
                 "get_sys_context_from_param",
-                "use_field_w_0_size"
+                "use_field_w_0_size",
+                "owned_only",
+                "shared_only"
             ]
         }, {
             "id": "SystemCascade",

@@ -81,7 +81,11 @@ int has_tables(
     (void)source_id;
     
     bool *needs_matching = data;
-    if (elem_kind == EcsFromSelf || elem_kind == EcsFromContainer) {
+    if (elem_kind == EcsFromSelf || 
+        elem_kind == EcsFromOwned ||
+        elem_kind == EcsFromShared ||
+        elem_kind == EcsFromContainer) 
+    {
         *needs_matching = true;
     }
 
