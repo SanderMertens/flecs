@@ -18,6 +18,10 @@ const ecs_vector_params_t builder_params = {
     .element_size = sizeof(ecs_builder_op_t)
 };
 
+const ecs_vector_params_t ptr_params = {
+    .element_size = sizeof(void*)
+};
+
 /* -- Global variables -- */
 
 ecs_type_t TEcsComponent;
@@ -30,6 +34,7 @@ ecs_type_t TEcsColSystem;
 ecs_type_t TEcsId;
 ecs_type_t TEcsHidden;
 ecs_type_t TEcsDisabled;
+ecs_type_t TEcsOnDemand;
 
 const char *ECS_COMPONENT_ID =      "EcsComponent";
 const char *ECS_TYPE_COMPONENT_ID = "EcsTypeComponent";
@@ -41,6 +46,7 @@ const char *ECS_COL_SYSTEM_ID =     "EcsColSystem";
 const char *ECS_ID_ID =             "EcsId";
 const char *ECS_HIDDEN_ID =         "EcsHidden";
 const char *ECS_DISABLED_ID =       "EcsDisabled";
+const char *ECS_ON_DEMAND_ID =      "EcsOnDemand";
 
 /** Comparator function for handles */
 static
@@ -91,6 +97,7 @@ void bootstrap_types(
     TEcsId = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsId}, 1);
     TEcsHidden = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsHidden}, 1);
     TEcsDisabled = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsDisabled}, 1);
+    TEcsOnDemand = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsOnDemand}, 1);
 
     world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsId, 0);
     world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsId, 0);
@@ -123,11 +130,11 @@ ecs_table_t* bootstrap_component_table(
     
     ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    result->columns[0].data = ecs_vector_new(&handle_arr_params, 12);
+    result->columns[0].data = ecs_vector_new(&handle_arr_params, 16);
     result->columns[0].size = sizeof(ecs_entity_t);
-    result->columns[1].data = ecs_vector_new(&handle_arr_params, 12);
+    result->columns[1].data = ecs_vector_new(&handle_arr_params, 16);
     result->columns[1].size = sizeof(EcsComponent);
-    result->columns[2].data = ecs_vector_new(&handle_arr_params, 12);
+    result->columns[2].data = ecs_vector_new(&handle_arr_params, 16);
     result->columns[2].size = sizeof(EcsId);
 
     set_table(stage, world->t_component, result);
@@ -188,7 +195,7 @@ void ecs_notify_systems_of_table(
     notify_create_table(world, world->on_validate_systems, table);
     notify_create_table(world, world->on_update_systems, table);
     notify_create_table(world, world->inactive_systems, table);
-    notify_create_table(world, world->on_demand_systems, table);
+    notify_create_table(world, world->manual_systems, table);
 }
 
 /** Create a new table and register it with the world and systems. A table in
@@ -296,7 +303,7 @@ ecs_vector_t** ecs_system_array(
     } else if (kind == EcsOnStore) {
         return &world->on_store_systems;
     } else if (kind == EcsManual) {
-        return &world->on_demand_systems;        
+        return &world->manual_systems;        
     }
     
     return NULL;
@@ -336,7 +343,7 @@ void ecs_world_activate_system(
     }
 
     if (i == count) {
-        return; /* System is disabled */
+        return; /* System is already in the right array */
     }
 
     ecs_vector_move_index(
@@ -351,6 +358,11 @@ void ecs_world_activate_system(
         qsort(src_array, ecs_vector_count(src_array) + 1,
           sizeof(ecs_entity_t), compare_handle);
     }
+
+    /* Signal that system has been either activated or deactivated */
+    ecs_system_activate(world, system, active);
+
+    return;
 }
 
 ecs_stage_t *ecs_get_stage(
@@ -388,6 +400,17 @@ void col_systems_deinit(
 
     for (i = 0; i < count; i ++) {
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
+
+        /* Invoke Deactivated action for active systems */
+        if (ecs_vector_count(ptr->tables)) {
+            ecs_invoke_status_action(world, buffer[i], ptr, EcsSystemDeactivated);
+        }
+
+        /* Invoke Disabled action for enabled systems */
+        if (ptr->base.enabled) {
+            ecs_invoke_status_action(world, buffer[i], ptr, EcsSystemDisabled);
+        }
+
         ecs_vector_free(ptr->base.columns);
         ecs_vector_free(ptr->jobs);
 
@@ -629,7 +652,7 @@ ecs_world_t *ecs_init(void) {
     world->pre_store_systems = ecs_vector_new( &handle_arr_params, 0);
     world->on_store_systems = ecs_vector_new( &handle_arr_params, 0);
     world->inactive_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->on_demand_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->manual_systems = ecs_vector_new(&handle_arr_params, 0);
 
     world->add_systems = ecs_vector_new(&handle_arr_params, 0);
     world->remove_systems = ecs_vector_new(&handle_arr_params, 0);
@@ -641,6 +664,7 @@ ecs_world_t *ecs_init(void) {
     world->type_sys_set_index = ecs_map_new(0, sizeof(ecs_vector_t*));
     world->type_handles = ecs_map_new(0, sizeof(ecs_entity_t));
     world->prefab_parent_index = ecs_map_new(0, sizeof(ecs_entity_t));
+    world->on_demand_components = ecs_map_new(0, sizeof(ecs_on_demand_in_t));
 
     world->worker_stages = NULL;
     world->worker_threads = NULL;
@@ -692,8 +716,9 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsId, ECS_ID_ID, sizeof(EcsId));
     bootstrap_component(world, table, EEcsHidden, ECS_HIDDEN_ID, 0);
     bootstrap_component(world, table, EEcsDisabled, ECS_DISABLED_ID, 0);
+    bootstrap_component(world, table, EEcsOnDemand, ECS_ON_DEMAND_ID, 0);
 
-    world->last_handle = EEcsDisabled + 1;
+    world->last_handle = EEcsOnDemand + 1;
     world->min_handle = 0;
     world->max_handle = 0;
 
@@ -807,7 +832,7 @@ int ecs_fini(
     col_systems_deinit(world, world->post_load_systems);
     col_systems_deinit(world, world->pre_store_systems);
     col_systems_deinit(world, world->on_store_systems);
-    col_systems_deinit(world, world->on_demand_systems);
+    col_systems_deinit(world, world->manual_systems);
     col_systems_deinit(world, world->inactive_systems);
 
     row_systems_deinit(world, world->add_systems);
@@ -833,7 +858,7 @@ int ecs_fini(
     ecs_vector_free(world->on_store_systems);
 
     ecs_vector_free(world->inactive_systems);
-    ecs_vector_free(world->on_demand_systems);
+    ecs_vector_free(world->manual_systems);
     ecs_vector_free(world->fini_tasks);
 
     ecs_vector_free(world->add_systems);

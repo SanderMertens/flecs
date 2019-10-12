@@ -90,6 +90,12 @@ typedef struct EcsPrefabBuilder {
     ecs_vector_t *ops; /* ecs_builder_op_t */
 } EcsPrefabBuilder;
 
+typedef enum ecs_system_expr_inout_kind_t {
+    EcsInOut,
+    EcsIn,
+    EcsOut
+} ecs_system_expr_inout_kind_t;
+
 /** Type that is used by systems to indicate where to fetch a component from */
 typedef enum ecs_system_expr_elem_kind_t {
     EcsFromSelf,            /* Get component from self (default) */
@@ -116,6 +122,7 @@ typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
+    ecs_system_expr_inout_kind_t inout_kind,
     const char *component,
     const char *source,
     void *ctx);
@@ -124,6 +131,7 @@ typedef int (*ecs_parse_action_t)(
 typedef struct ecs_system_column_t {
     ecs_system_expr_elem_kind_t kind;       /* Element kind (Entity, Component) */
     ecs_system_expr_oper_kind_t oper_kind;  /* Operator kind (AND, OR, NOT) */
+    ecs_system_expr_inout_kind_t inout_kind;     /* Is component read or written */
     union {
         ecs_type_t type;             /* Used for OR operator */
         ecs_entity_t component;      /* Used for AND operator */
@@ -160,6 +168,19 @@ typedef struct ecs_matched_table_t {
     ecs_vector_t *references;       /* Reference columns and cached pointers */
     int32_t depth;                  /* Depth of table (when using CASCADE) */
 } ecs_matched_table_t;
+
+/** Keep track of how many [in] columns are active for [out] columns of OnDemand
+ * systems. */
+typedef struct ecs_on_demand_out_t {
+    ecs_entity_t system;    /* Handle to system */
+    uint32_t count;         /* Total number of times [out] columns are used */
+} ecs_on_demand_out_t;
+
+/** Keep track of which OnDemand systems are matched with which [in] columns */
+typedef struct ecs_on_demand_in_t {
+    uint32_t count;         /* Number of active systems with [in] column */
+    ecs_vector_t *systems;  /* Systems that have this column as [out] column */
+} ecs_on_demand_in_t;
 
 /** Base type for a system */
 typedef struct EcsSystem {
@@ -232,6 +253,9 @@ typedef struct EcsColSystem {
     ecs_vector_t *jobs;                   /* Jobs for this system */
     ecs_vector_t *tables;                 /* Vector with matched tables */
     ecs_vector_t *inactive_tables;        /* Inactive tables */
+    ecs_on_demand_out_t *on_demand;       /* Keep track of [out] column refs */
+    ecs_system_status_action_t status_action; /* Status action */
+    void *status_ctx;                     /* User data for status action */
     ecs_vector_params_t column_params;    /* Parameters for table_columns */
     ecs_vector_params_t component_params; /* Parameters for components */
     ecs_vector_params_t ref_params;       /* Parameters for refs */
@@ -359,6 +383,8 @@ typedef struct ecs_thread_t {
     uint16_t index;                           /* Index of thread */
 } ecs_thread_t;
 
+
+
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world {
@@ -376,8 +402,11 @@ struct ecs_world {
     ecs_vector_t *post_update_systems; 
     ecs_vector_t *pre_store_systems; 
     ecs_vector_t *on_store_systems;   
-    ecs_vector_t *on_demand_systems;  
-    ecs_vector_t *inactive_systems;   
+    ecs_vector_t *manual_systems;  
+    ecs_vector_t *inactive_systems;
+
+    /* -- Keep track of in columns for OnDemand systems -- */
+    ecs_map_t *on_demand_components;
 
 
     /* -- Row systems -- */
@@ -477,5 +506,6 @@ extern const ecs_vector_params_t system_column_params;
 extern const ecs_vector_params_t matched_table_params;
 extern const ecs_vector_params_t matched_column_params;
 extern const ecs_vector_params_t reference_params;
+extern const ecs_vector_params_t ptr_params;
 
 #endif

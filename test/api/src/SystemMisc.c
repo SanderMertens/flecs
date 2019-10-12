@@ -476,3 +476,235 @@ void SystemMisc_table_columns_access() {
 
     ecs_fini(world);
 }
+
+static bool system_status_action_invoked = false;
+static ecs_system_status_t enable_status = EcsSystemStatusNone;
+static ecs_system_status_t active_status = EcsSystemStatusNone;
+
+static
+void status_action(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_system_status_t status,
+    void *ctx)
+{
+    system_status_action_invoked = true;
+
+    if (status == EcsSystemEnabled || status == EcsSystemDisabled) {
+        enable_status = status;
+    } else if (status == EcsSystemActivated || status == EcsSystemDeactivated) {
+        active_status = status;
+    }
+}
+
+static
+void reset_status() {
+    system_status_action_invoked = false;
+    enable_status = EcsSystemStatusNone;
+    active_status = EcsSystemStatusNone;
+}
+
+void SystemMisc_status_enable_after_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+
+    /* Setting the status action should have triggered the enabled status since
+     * the system is already enabled. There are no entities, so the system
+     * should not be active */
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemEnabled);
+    test_assert(active_status == EcsSystemStatusNone);
+
+    /* Enable enabled system. Should not trigger status. */
+    reset_status();
+    ecs_enable(world, Dummy, true);
+    test_assert(system_status_action_invoked == false);
+    test_assert(enable_status == EcsSystemStatusNone);
+    test_assert(active_status == EcsSystemStatusNone); 
+
+    /* After cleaning up the world, the Disabled status should have been
+     * triggered. There were no entities, so the Deactivated status shouldn't */
+    reset_status();
+    ecs_fini(world);
+
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemDisabled);
+    test_assert(active_status == EcsSystemStatusNone);   
+}
+
+void SystemMisc_status_enable_after_disable() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+
+    /* Setting the status action should have triggered the enabled status since
+     * the system is already enabled. There are no entities, so the system
+     * should not be active */
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemEnabled);
+    test_assert(active_status == EcsSystemStatusNone);
+
+    /* Disable system, should trigger status */
+    reset_status();
+    ecs_enable(world, Dummy, false);
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemDisabled);
+    test_assert(active_status == EcsSystemStatusNone);
+
+    /* Enable enabled system. Should trigger status. */
+    reset_status();
+    ecs_enable(world, Dummy, true);
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemEnabled);
+    test_assert(active_status == EcsSystemStatusNone);
+
+    /* After cleaning up the world, the Disabled status should have been
+     * triggered. There were no entities, so the Deactivated status shouldn't */
+    reset_status();
+    ecs_fini(world);
+
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemDisabled);
+    test_assert(active_status == EcsSystemStatusNone);  
+}
+
+void SystemMisc_status_disable_after_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+
+    /* Setting the status action should have triggered the enabled status since
+     * the system is already enabled. There are no entities, so the system
+     * should not be active */
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemEnabled);
+    test_assert(active_status == EcsSystemStatusNone);
+
+    /* Disable system, should trigger status action */
+    reset_status();
+    ecs_enable(world, Dummy, false);
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemDisabled);
+    test_assert(active_status == EcsSystemStatusNone);
+
+    /* Since the system is already disabled, no status should be triggered */
+    reset_status();
+    ecs_fini(world);
+
+    test_assert(system_status_action_invoked == false);
+    test_assert(enable_status == EcsSystemStatusNone);
+    test_assert(active_status == EcsSystemStatusNone);  
+}
+
+void SystemMisc_status_disable_after_disable() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+
+    /* Setting the status action should have triggered the enabled status since
+     * the system is already enabled. There are no entities, so the system
+     * should not be active */
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemEnabled);
+    test_assert(active_status == EcsSystemStatusNone);
+
+    /* Disable system, should trigger status action */
+    reset_status();
+    ecs_enable(world, Dummy, false);
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemDisabled);
+    test_assert(active_status == EcsSystemStatusNone);
+
+    /* Disable system again, should not trigger status action */
+    reset_status();
+    ecs_enable(world, Dummy, false);
+    test_assert(system_status_action_invoked == false);
+    test_assert(enable_status == EcsSystemStatusNone);
+    test_assert(active_status == EcsSystemStatusNone);    
+
+    /* Since the system is already disabled, no status should be triggered */
+    ecs_fini(world);
+
+    test_assert(system_status_action_invoked == false);
+    test_assert(enable_status == EcsSystemStatusNone);
+    test_assert(active_status == EcsSystemStatusNone);  
+}
+
+void SystemMisc_status_activate_after_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+
+    /* Setting the status action should have triggered the enabled status since
+     * the system is already enabled. There are no entities, so the system
+     * should not be active */
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemEnabled);
+    test_assert(active_status == EcsSystemStatusNone);
+
+    /* Add entity with Position. Should activate system. */
+    reset_status();
+    ecs_new(world, Position);
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemStatusNone);
+    test_assert(active_status == EcsSystemActivated);
+
+    /* After cleaning up the world, the Disabled and Deactivated status should 
+     * have been triggered. */
+    reset_status();
+    ecs_fini(world);
+
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemDisabled);
+    test_assert(active_status == EcsSystemDeactivated);
+}
+
+void SystemMisc_status_deactivate_after_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_set_system_status_action(world, Dummy, status_action, NULL);
+
+    /* Setting the status action should have triggered the enabled status since
+     * the system is already enabled. The system should be active since it has
+     * been matched with an entity. */
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemEnabled);
+    test_assert(active_status == EcsSystemActivated);
+
+    /* Delete the entity. Should trigger the Deactivated status */
+    reset_status();
+    ecs_delete(world, e);
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemStatusNone);
+    test_assert(active_status == EcsSystemDeactivated);
+
+    /* After cleaning up the world, the Disabled status should have been
+     * triggered. */
+    reset_status();
+    ecs_fini(world);
+
+    test_assert(system_status_action_invoked == true);
+    test_assert(enable_status == EcsSystemDisabled);
+    test_assert(active_status == EcsSystemStatusNone);
+}

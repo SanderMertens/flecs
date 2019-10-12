@@ -807,6 +807,7 @@ void* ecs_get_ptr_intern(
     void *ptr = NULL;
 
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (world->in_progress && stage != &world->main_stage) {
         if (populate_info(world, stage, info)) {

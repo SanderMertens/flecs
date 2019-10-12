@@ -2529,9 +2529,9 @@ void SingleThreadStaging_match_table_created_in_progress() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_2);
-    test_int(ctx.e[1], e_3);
-    test_int(ctx.e[2], e_1);
+    test_int(ctx.e[0], e_1);
+    test_int(ctx.e[1], e_2);
+    test_int(ctx.e[2], e_3);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_entity(Velocity));

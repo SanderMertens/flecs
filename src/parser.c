@@ -1,5 +1,7 @@
 #include "flecs_private.h"
 
+#define ECS_ANNOTATION_LENGTH_MAX (16)
+
 /** Skip spaces when parsing signature */
 static
 const char *skip_space(
@@ -71,12 +73,14 @@ int has_tables(
     ecs_world_t *world,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
+    ecs_system_expr_inout_kind_t inout_kind,
     const char *component_id,
     const char *source_id,
     void *data)
 {
     (void)world;
     (void)oper_kind;
+    (void)inout_kind;
     (void)component_id;
     (void)source_id;
     
@@ -118,6 +122,55 @@ uint32_t ecs_columns_count(
     return count;
 }
 
+static
+const char* parse_annotation(
+    const char *ptr, 
+    ecs_system_expr_inout_kind_t *inout_kind_out)
+{
+    char *bptr, buffer[ECS_ANNOTATION_LENGTH_MAX + 1];
+    char ch;
+
+    ptr = skip_space(ptr);
+
+    for (bptr = buffer; (ch = ptr[0]); ptr ++) {        
+        if (ch == ',' || ch == ']') {
+            /* Even though currently only one simultaneous annotation is 
+             * useful, more annotations may be added in the future. */
+            bptr[0] = '\0';
+
+            if (!strcmp(buffer, "in")) {
+                *inout_kind_out = EcsIn;
+            } else if (!strcmp(buffer, "out")) {
+                *inout_kind_out = EcsOut;
+            } else if (!strcmp(buffer, "inout")) {
+                *inout_kind_out = EcsInOut;
+            }
+
+            if (ch == ']') {
+                break;
+            } else {
+                ptr = skip_space(ptr + 1);
+            }
+
+            bptr = buffer;
+        } else {
+            if (bptr - buffer >= ECS_ANNOTATION_LENGTH_MAX) {
+                return NULL;
+            }
+
+            bptr[0] = ch;
+            bptr ++;
+        }
+    }
+
+    if (!ch) {
+        /* Annotation expression cannot be end of column expression */
+        return NULL;
+    }
+
+    return ptr;
+}
+
 /** Parse component expression */
 int ecs_parse_component_expr(
     ecs_world_t *world,
@@ -134,6 +187,7 @@ int ecs_parse_component_expr(
     bool prev_is_0 = false;
     ecs_system_expr_elem_kind_t elem_kind = EcsFromSelf;
     ecs_system_expr_oper_kind_t oper_kind = EcsOperAnd;
+    ecs_system_expr_inout_kind_t inout_kind = EcsInOut;
     const char *source;
 
     for (bptr = buffer, ch = sig[0], ptr = sig; ch; ptr++) {
@@ -145,7 +199,19 @@ int ecs_parse_component_expr(
             ecs_abort(ECS_INVALID_SIGNATURE, sig);
         }
 
-        if (ch == ',' || ch == '|' || ch == '\0') {
+        if (ch == '[') {
+            /* Annotations should appear at the beginning of a column */
+            if (bptr != buffer) {
+                ecs_abort(ECS_INVALID_SIGNATURE, sig);
+            }
+
+            ptr = parse_annotation(ptr + 1, &inout_kind);
+            if (!bptr) {
+                ecs_abort(ECS_INVALID_SIGNATURE, sig);
+            }
+        
+        } else if (ch == ',' || ch == '|' || ch == '\0') {
+            /* Separators should not appear after an empty column */
             if (bptr == buffer) {
                 ecs_abort(ECS_INVALID_SIGNATURE, sig);
             }
@@ -196,7 +262,7 @@ int ecs_parse_component_expr(
 
             int ret;
             if ((ret = action(
-                world, elem_kind, oper_kind, bptr, source_id, ctx))) 
+                world, elem_kind, oper_kind, inout_kind, bptr, source_id, ctx))) 
             {
                 ecs_abort(ret, sig);
             }
@@ -205,6 +271,7 @@ int ecs_parse_component_expr(
                 ecs_os_free(source_id);
             }
 
+            /* Reset variables for next column */
             complex_expr = false;
             elem_kind = EcsFromSelf;
 
@@ -213,6 +280,8 @@ int ecs_parse_component_expr(
             } else {
                 oper_kind = EcsOperAnd;
             }
+
+            inout_kind = EcsInOut;
 
             bptr = buffer;
         } else {

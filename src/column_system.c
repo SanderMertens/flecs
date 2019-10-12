@@ -749,8 +749,7 @@ ecs_entity_t ecs_new_col_system(
 
     ecs_assert(count != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entity_t result = _ecs_new(
-        world, world->t_col_system);
+    ecs_entity_t result = _ecs_new(world, world->t_col_system);
 
     EcsId *id_data = ecs_get_ptr(world, result, EcsId);
     *id_data = id;
@@ -798,7 +797,7 @@ ecs_entity_t ecs_new_col_system(
     ecs_entity_t *elem = NULL;
 
     if (kind == EcsManual) {
-        elem = ecs_vector_add(&world->on_demand_systems, &handle_arr_params);
+        elem = ecs_vector_add(&world->manual_systems, &handle_arr_params);
     } else if (!ecs_vector_count(system_data->tables)) {
         elem = ecs_vector_add(&world->inactive_systems, &handle_arr_params);
     } else {

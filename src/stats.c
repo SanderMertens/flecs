@@ -159,7 +159,7 @@ void get_memory_stats(
     ecs_vector_memory(world->pre_store_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_vector_memory(world->on_store_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
     ecs_vector_memory(world->inactive_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
-    ecs_vector_memory(world->on_demand_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
+    ecs_vector_memory(world->manual_systems, &handle_arr_params, &memory->systems.allocd, &memory->systems.used);
 
     calculate_systems_stats(world, world->on_load_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_systems_stats(world, world->post_load_systems, &memory->systems.allocd, &memory->systems.used);
@@ -170,7 +170,7 @@ void get_memory_stats(
     calculate_systems_stats(world, world->pre_store_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_systems_stats(world, world->on_store_systems, &memory->systems.allocd, &memory->systems.used);
     calculate_systems_stats(world, world->inactive_systems, &memory->systems.allocd, &memory->systems.used);
-    calculate_systems_stats(world, world->on_demand_systems, &memory->systems.allocd, &memory->systems.used);
+    calculate_systems_stats(world, world->manual_systems, &memory->systems.allocd, &memory->systems.used);
 
     ecs_map_memory(world->type_handles, &memory->families.allocd, &memory->families.used);
     calculate_type_stats(world, &memory->families.allocd, &memory->families.used);
@@ -312,7 +312,7 @@ int system_stats_arr_inactive(
         } else if (data->base.kind == EcsOnStore) {
             stats_array = &stats->on_store_systems;
         } else if (data->base.kind == EcsManual) {
-            stats_array = &stats->on_demand_systems;
+            stats_array = &stats->manual_systems;
         }
 
         set_system_stats(world, stats_array, handles[i], false);
@@ -467,7 +467,7 @@ void ecs_get_stats(
     stats->system_count += system_stats_arr(
         world, &stats->on_store_systems, world->on_store_systems);
     stats->system_count += system_stats_arr(
-        world, &stats->on_demand_systems, world->on_demand_systems);
+        world, &stats->manual_systems, world->manual_systems);
 
     uint32_t table_sys_count = stats->system_count;
 
@@ -538,7 +538,7 @@ void ecs_free_stats(
     ecs_vector_free(stats->post_update_systems);
     ecs_vector_free(stats->pre_store_systems);
     ecs_vector_free(stats->on_store_systems);
-    ecs_vector_free(stats->on_demand_systems);
+    ecs_vector_free(stats->manual_systems);
     ecs_vector_free(stats->on_add_systems);
     ecs_vector_free(stats->on_set_systems);
     ecs_vector_free(stats->on_remove_systems);

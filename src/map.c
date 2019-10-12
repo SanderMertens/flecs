@@ -317,7 +317,7 @@ void* _ecs_map_set(
         bucket_count = map->bucket_count;
     }
 
-    if (((float)map->count + 1) / (float)bucket_count > FLECS_LOAD_FACTOR) {
+    if ((((float)map->count) / (float)bucket_count) > FLECS_LOAD_FACTOR) {
         resize_map(map, bucket_count * 2);
     }
 
