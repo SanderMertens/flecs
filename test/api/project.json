@@ -501,7 +501,8 @@
                 "get_parent",
                 "get_parent_no_matching_comp",
                 "get_parent_two_parents",
-                "get_parent_no_parent"
+                "get_parent_no_parent",
+                "singleton_as_container"
             ]
         }, {
             "id": "Prefab",

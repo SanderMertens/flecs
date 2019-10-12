@@ -451,6 +451,7 @@ void Container_get_parent(void);
 void Container_get_parent_no_matching_comp(void);
 void Container_get_parent_two_parents(void);
 void Container_get_parent_no_parent(void);
+void Container_singleton_as_container(void);
 
 // Testsuite 'Prefab'
 void Prefab_new_w_prefab(void);
@@ -2420,7 +2421,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Container",
-        .testcase_count = 26,
+        .testcase_count = 27,
         .testcases = (bake_test_case[]){
             {
                 .id = "child",
@@ -2525,6 +2526,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_parent_no_parent",
                 .function = Container_get_parent_no_parent
+            },
+            {
+                .id = "singleton_as_container",
+                .function = Container_singleton_as_container
             }
         }
     },

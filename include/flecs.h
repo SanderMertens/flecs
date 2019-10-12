@@ -212,7 +212,7 @@ extern ecs_type_t
 #define ECS_CHILDOF ((ecs_entity_t)1 << 62)
 #define ECS_ENTITY_FLAGS_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF))
 #define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ENTITY_FLAGS_MASK)
-#define ECS_SINGLETON ((ecs_entity_t)(ECS_ENTITY_FLAGS_MASK - 1))
+#define ECS_SINGLETON ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
 #define ECS_INVALID_ENTITY (0)
 
 /* This allows passing 0 as type to functions that accept types */
