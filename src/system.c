@@ -161,7 +161,123 @@ ecs_entity_t new_row_system(
     return result;
 }
 
+static
+ecs_on_demand_in_t* get_in_component(
+    ecs_world_t *world,
+    ecs_entity_t component)
+{
+    ecs_on_demand_in_t *in = ecs_map_get_ptr(
+        world->on_demand_components, component);
+
+    if (!in) {
+        ecs_on_demand_in_t in_value = {0};
+        in = ecs_map_set(world->on_demand_components, component, &in_value);
+        ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    return in;
+}
+
+static
+void activate_in_columns(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    EcsColSystem *system_data,
+    bool activate)
+{
+    ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
+    uint32_t i, count = ecs_vector_count(system_data->base.columns);
+
+    for (i = 0; i < count; i ++) {
+        if (columns[i].inout_kind == EcsIn) {
+            ecs_on_demand_in_t *in = get_in_component(world, columns[i].is.component);
+            ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            in->count += activate ? 1 : -1;
+
+            ecs_assert(in->count >= 0, ECS_INTERNAL_ERROR, NULL);
+
+            /* If this is the first system that registers the in component, walk
+             * over all already registered systems to enable them */
+            if (in->systems && 
+               ((activate && in->count == 1) || 
+                (!activate && !in->count))) 
+            {
+                ecs_on_demand_out_t **out = ecs_vector_first(in->systems);
+                uint32_t i, count = ecs_vector_count(in->systems);
+
+                for (i = 0; i < count; i ++) {
+                    /* Increase the count of the system with the out params */
+                    out[i]->count += activate ? 1 : -1;
+                    
+                    /* If this is the first out column that is requested from
+                     * the OnDemand system, enable it */
+                    if (activate && out[i]->count == 1) {
+                        ecs_enable(world, out[i]->system, true);
+                    } else if (!activate && !out[i]->count) {
+                        ecs_enable(world, out[i]->system, false);
+                    }
+                }
+            }
+        }
+    }    
+}
+
+static
+void register_out_column(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_entity_t component,
+    ecs_on_demand_out_t *on_demand_out)
+{
+    ecs_on_demand_in_t *in = get_in_component(world, component);
+    ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    on_demand_out->count += in->count;
+    ecs_on_demand_out_t **elem = ecs_vector_add(&in->systems, &ptr_params);
+    *elem = on_demand_out;
+}
+
+static
+void register_out_columns(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    EcsColSystem *system_data)
+{
+    ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
+    uint32_t i, out_count = 0, count = ecs_vector_count(system_data->base.columns);
+
+    for (i = 0; i < count; i ++) {
+        if (columns[i].inout_kind == EcsOut) {
+            if (!system_data->on_demand) {
+                system_data->on_demand = ecs_os_malloc(sizeof(ecs_on_demand_out_t));
+                system_data->on_demand->system = system;
+                system_data->on_demand->count = 0;
+            }
+
+            register_out_column(world, system, columns[i].is.component, system_data->on_demand);
+            out_count ++;
+        }
+    }
+
+    /* If there are no out columns in the on-demand system, the system will
+     * never be enabled */
+    ecs_assert(out_count != 0, ECS_NO_OUT_COLUMNS, ecs_get_id(world, system));
+}
+
 /* -- Private API -- */
+
+void ecs_invoke_status_action(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    EcsColSystem *system_data,
+    ecs_system_status_t status)
+{
+    ecs_system_status_action_t action = system_data->status_action;
+    if (action) {
+        action(world, system, status, system_data->status_ctx);
+    }
+}
 
 void ecs_system_init_base(
     ecs_world_t *world,
@@ -249,6 +365,7 @@ int ecs_parse_signature_action(
     ecs_world_t *world,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
+    ecs_system_expr_inout_kind_t inout_kind,
     const char *component_id,
     const char *source_id,
     void *data)
@@ -281,6 +398,7 @@ int ecs_parse_signature_action(
         elem = ecs_vector_add(&system_data->columns, &system_column_params);
         elem->kind = elem_kind;
         elem->oper_kind = oper_kind;
+        elem->inout_kind = inout_kind;
         elem->is.component = component;
 
         if (elem_kind == EcsFromEntity) {
@@ -491,6 +609,23 @@ void ecs_row_system_notify_of_type(
     match_type(world, system, system_data, type);
 }
 
+/* Invoked when system becomes active or inactive */
+void ecs_system_activate(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    bool activate)
+{
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* If system contains in columns, signal that they are now in use */
+    activate_in_columns(world, system, system_data, activate);
+
+    /* Invoke system status action */
+    ecs_invoke_status_action(world, system, system_data, 
+        activate ? EcsSystemActivated : EcsSystemDeactivated);
+}
+
 /* -- Public API -- */
 
 ecs_entity_t ecs_new_system(
@@ -515,6 +650,7 @@ ecs_entity_t ecs_new_system(
                ECS_INVALID_PARAMETER, NULL);
 
     bool needs_tables = ecs_needs_tables(world, sig);
+    bool is_reactive = false;
 
     ecs_assert(needs_tables || !((kind == EcsOnAdd) || (kind == EcsOnSet || (kind == EcsOnSet))),
         ECS_INVALID_PARAMETER, NULL);
@@ -535,6 +671,7 @@ ecs_entity_t ecs_new_system(
         (kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet))
     {
         result = new_row_system(world, id, kind, needs_tables, sig, action);
+        is_reactive = true;
     }
 
     ecs_assert(result != 0, ECS_INVALID_PARAMETER, NULL);
@@ -560,6 +697,34 @@ ecs_entity_t ecs_new_system(
         }
     }
 
+    /* If this is an OnDemand system, register its [out] columns */
+    if (ecs_has(world, result, EcsOnDemand)) {
+        ecs_assert(is_reactive == false, ECS_INVALID_PARAMETER, NULL);
+        EcsColSystem *col_system_data = (EcsColSystem*)system_data;
+
+        register_out_columns(world, result, col_system_data);
+
+        ecs_assert(col_system_data->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* If there are no systems currently interested in any of the [out]
+         * columns of the on demand system, disable it */
+        if (!col_system_data->on_demand->count) {
+            ecs_enable(world, result, false);
+        }
+    }
+
+    /* If system has any pure [in] columns, register them with world */
+    if (is_reactive == false) {
+        EcsColSystem *col_system_data = (EcsColSystem*)system_data;
+
+        /* If tables have been matched with this system it is active, and we
+         * should activate the in-columns, if any. This will ensure that any
+         * OnDemand systems get enabled. */
+        if (ecs_vector_count(col_system_data->tables)) {
+            ecs_system_activate(world, result, true);
+        }
+    }
+
     return result;
 }
 
@@ -582,24 +747,23 @@ void ecs_enable(
     if (system_data) {
         if (col_system) {
             EcsColSystem *col_system = (EcsColSystem*)system_data;
-            if (enabled) {
-                if (!system_data->enabled) {
-                    if (ecs_vector_count(col_system->tables)) {
-                        ecs_world_activate_system(
-                            world, system, col_system->base.kind, true);
-                    }
-                }
-            } else {
-                if (system_data->enabled) {
-                    if (ecs_vector_count(col_system->tables)) {
-                        ecs_world_activate_system(
-                            world, system, col_system->base.kind, false);
-                    }
-                }
-            }
-        }
 
-        system_data->enabled = enabled;
+            if (system_data->enabled != enabled) {
+                system_data->enabled = enabled;
+
+                if (ecs_vector_count(col_system->tables)) {
+                    /* Only (de)activate system if it has non-empty tables. */
+                    ecs_world_activate_system(
+                        world, system, col_system->base.kind, enabled);
+                }
+                
+                ecs_invoke_status_action(
+                    world, system, col_system, 
+                    enabled ? EcsSystemEnabled : EcsSystemDisabled);
+            }
+        } else {
+            system_data->enabled = enabled;
+        }
     } else {
         /* If entity is neither ColSystem nor RowSystem, it should be a type */
         EcsTypeComponent *type_data = ecs_get_ptr(
@@ -867,4 +1031,31 @@ void* ecs_get_system_context(
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     return system_data->ctx;
+}
+
+void ecs_set_system_status_action(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_system_status_action_t action,
+    const void *ctx)
+{
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    system_data->status_action = action;
+    system_data->status_ctx = (void*)ctx;
+
+    if (system_data->base.enabled) {
+        /* If system is already enabled, generate enable status. The API 
+         * should guarantee that it exactly matches enable-disable 
+         * notifications and activate-deactivate notifications. */
+        ecs_invoke_status_action(world, system, system_data, EcsSystemEnabled);
+
+        /* If column system has active (non-empty) tables, also generate the
+         * activate status. */
+        if (ecs_vector_count(system_data->tables)) {
+            ecs_invoke_status_action(
+                world, system, system_data, EcsSystemActivated);
+        }
+    }
 }

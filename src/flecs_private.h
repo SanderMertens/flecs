@@ -296,6 +296,19 @@ void ecs_system_compute_and_families(
     ecs_world_t *world,
     EcsSystem *system_data);
 
+/* Invoked when system becomes active / inactive */
+void ecs_system_activate(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    bool activate);
+
+/* Invoke status action */
+void ecs_invoke_status_action(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    EcsColSystem *system_data,
+    ecs_system_status_t status);
+
 /* Create new table system */
 ecs_entity_t ecs_new_col_system(
     ecs_world_t *world,
@@ -344,6 +357,7 @@ int ecs_parse_signature_action(
     ecs_world_t *world,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
+    ecs_system_expr_inout_kind_t inout_kind,
     const char *component_id,
     const char *source_id,
     void *data);

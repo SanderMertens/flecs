@@ -8,10 +8,6 @@ const ecs_vector_params_t type_node_params = {
     .element_size = sizeof(ecs_type_node_t)
 };
 
-const ecs_vector_params_t ptr_params = {
-    .element_size = sizeof(void*)
-};
-
 const ecs_vector_params_t link_params = {
     .element_size = sizeof(ecs_type_link_t*)
 };
@@ -32,6 +28,7 @@ int parse_type_action(
     ecs_world_t *world,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
+    ecs_system_expr_inout_kind_t inout_kind,
     const char *entity_id,
     const char *source_id,
     void *data)

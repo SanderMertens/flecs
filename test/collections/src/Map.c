@@ -18,8 +18,34 @@ void fill_map(
     }
 }
 
+static int32_t malloc_count;
+
+static
+void *test_malloc(size_t size) {
+    malloc_count ++;
+    return malloc(size);
+}
+
+static
+void *test_calloc(size_t size, size_t n) {
+    malloc_count ++;
+    return calloc(size, n);
+}
+
+static
+void *test_realloc(void *old_ptr, size_t size) {
+    malloc_count ++;
+    return realloc(old_ptr, size);
+}
+
+
 void Map_setup() {
     ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.malloc = test_malloc;
+    os_api.calloc = test_calloc;
+    os_api.realloc = test_realloc;
+    ecs_os_set_api(&os_api);    
 }
 
 void Map_count() {
@@ -181,3 +207,22 @@ void Map_remove_unknown() {
     ecs_map_free(map);
 }
 
+void Map_grow() {
+    ecs_map_t *map = ecs_map_new(0, sizeof(char*));
+    
+    ecs_map_grow(map, 10);
+
+    malloc_count = 0;
+
+    const char *v = "foo";
+    int i;
+    for(i = 0; i < 10; i ++) {
+        ecs_map_set(map, i, &v);
+    }
+
+    test_int(malloc_count, 0);
+
+    ecs_map_set(map, i, &v);
+
+    test_int(malloc_count, 2);
+}

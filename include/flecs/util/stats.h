@@ -74,7 +74,7 @@ typedef struct ecs_world_stats_t {
     ecs_vector_t *on_store_systems;
     ecs_vector_t *task_systems;
     ecs_vector_t *inactive_systems;
-    ecs_vector_t *on_demand_systems;
+    ecs_vector_t *manual_systems;
     ecs_vector_t *on_add_systems;
     ecs_vector_t *on_remove_systems;
     ecs_vector_t *on_set_systems;

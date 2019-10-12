@@ -57,7 +57,8 @@
                 "iter_zero_buckets",
                 "remove",
                 "remove_empty",
-                "remove_unknown"
+                "remove_unknown",
+                "grow"
             ]
         }, {
             "id": "Chunked",

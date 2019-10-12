@@ -287,6 +287,12 @@ void SystemMisc_system_w_or_prefab(void);
 void SystemMisc_system_w_or_disabled(void);
 void SystemMisc_system_w_or_disabled_and_prefab(void);
 void SystemMisc_table_columns_access(void);
+void SystemMisc_status_enable_after_new(void);
+void SystemMisc_status_enable_after_disable(void);
+void SystemMisc_status_disable_after_new(void);
+void SystemMisc_status_disable_after_disable(void);
+void SystemMisc_status_activate_after_new(void);
+void SystemMisc_status_deactivate_after_delete(void);
 
 // Testsuite 'SystemOnAdd'
 void SystemOnAdd_new_match_1_of_1(void);
@@ -404,6 +410,29 @@ void SystemOnFrame_get_sys_context_from_param(void);
 void SystemOnFrame_use_field_w_0_size(void);
 void SystemOnFrame_owned_only(void);
 void SystemOnFrame_shared_only(void);
+
+// Testsuite 'SystemOnDemand'
+void SystemOnDemand_enable_out_after_in(void);
+void SystemOnDemand_enable_in_after_out(void);
+void SystemOnDemand_enable_out_after_in_2_out_1_in(void);
+void SystemOnDemand_enable_out_after_in_1_out_2_in(void);
+void SystemOnDemand_enable_in_after_out_2_out_1_in(void);
+void SystemOnDemand_enable_in_after_out_1_out_2_in(void);
+void SystemOnDemand_disable_after_disable_in(void);
+void SystemOnDemand_disable_after_disable_in_2_out_1_in(void);
+void SystemOnDemand_disable_after_disable_in_1_out_2_in(void);
+void SystemOnDemand_table_after_out(void);
+void SystemOnDemand_table_after_out_and_in(void);
+void SystemOnDemand_table_after_out_and_in_overlapping_columns(void);
+void SystemOnDemand_1_out_system_2_in_systems(void);
+void SystemOnDemand_1_out_system_2_in_systems_different_columns(void);
+void SystemOnDemand_1_out_system_2_in_systems_overlapping_columns(void);
+void SystemOnDemand_disable_after_inactive_in_system(void);
+void SystemOnDemand_disable_after_2_inactive_in_systems(void);
+void SystemOnDemand_disable_after_2_inactive_in_systems_different_columns(void);
+void SystemOnDemand_enable_2_output_1_input_system(void);
+void SystemOnDemand_enable_2_output_1_input_system_different_columns(void);
+void SystemOnDemand_enable_2_output_1_input_system_overlapping_columns(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -1761,7 +1790,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 31,
+        .testcase_count = 37,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -1886,6 +1915,30 @@ static bake_test_suite suites[] = {
             {
                 .id = "table_columns_access",
                 .function = SystemMisc_table_columns_access
+            },
+            {
+                .id = "status_enable_after_new",
+                .function = SystemMisc_status_enable_after_new
+            },
+            {
+                .id = "status_enable_after_disable",
+                .function = SystemMisc_status_enable_after_disable
+            },
+            {
+                .id = "status_disable_after_new",
+                .function = SystemMisc_status_disable_after_new
+            },
+            {
+                .id = "status_disable_after_disable",
+                .function = SystemMisc_status_disable_after_disable
+            },
+            {
+                .id = "status_activate_after_new",
+                .function = SystemMisc_status_activate_after_new
+            },
+            {
+                .id = "status_deactivate_after_delete",
+                .function = SystemMisc_status_deactivate_after_delete
             }
         }
     },
@@ -2346,6 +2399,96 @@ static bake_test_suite suites[] = {
             {
                 .id = "shared_only",
                 .function = SystemOnFrame_shared_only
+            }
+        }
+    },
+    {
+        .id = "SystemOnDemand",
+        .testcase_count = 21,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "enable_out_after_in",
+                .function = SystemOnDemand_enable_out_after_in
+            },
+            {
+                .id = "enable_in_after_out",
+                .function = SystemOnDemand_enable_in_after_out
+            },
+            {
+                .id = "enable_out_after_in_2_out_1_in",
+                .function = SystemOnDemand_enable_out_after_in_2_out_1_in
+            },
+            {
+                .id = "enable_out_after_in_1_out_2_in",
+                .function = SystemOnDemand_enable_out_after_in_1_out_2_in
+            },
+            {
+                .id = "enable_in_after_out_2_out_1_in",
+                .function = SystemOnDemand_enable_in_after_out_2_out_1_in
+            },
+            {
+                .id = "enable_in_after_out_1_out_2_in",
+                .function = SystemOnDemand_enable_in_after_out_1_out_2_in
+            },
+            {
+                .id = "disable_after_disable_in",
+                .function = SystemOnDemand_disable_after_disable_in
+            },
+            {
+                .id = "disable_after_disable_in_2_out_1_in",
+                .function = SystemOnDemand_disable_after_disable_in_2_out_1_in
+            },
+            {
+                .id = "disable_after_disable_in_1_out_2_in",
+                .function = SystemOnDemand_disable_after_disable_in_1_out_2_in
+            },
+            {
+                .id = "table_after_out",
+                .function = SystemOnDemand_table_after_out
+            },
+            {
+                .id = "table_after_out_and_in",
+                .function = SystemOnDemand_table_after_out_and_in
+            },
+            {
+                .id = "table_after_out_and_in_overlapping_columns",
+                .function = SystemOnDemand_table_after_out_and_in_overlapping_columns
+            },
+            {
+                .id = "1_out_system_2_in_systems",
+                .function = SystemOnDemand_1_out_system_2_in_systems
+            },
+            {
+                .id = "1_out_system_2_in_systems_different_columns",
+                .function = SystemOnDemand_1_out_system_2_in_systems_different_columns
+            },
+            {
+                .id = "1_out_system_2_in_systems_overlapping_columns",
+                .function = SystemOnDemand_1_out_system_2_in_systems_overlapping_columns
+            },
+            {
+                .id = "disable_after_inactive_in_system",
+                .function = SystemOnDemand_disable_after_inactive_in_system
+            },
+            {
+                .id = "disable_after_2_inactive_in_systems",
+                .function = SystemOnDemand_disable_after_2_inactive_in_systems
+            },
+            {
+                .id = "disable_after_2_inactive_in_systems_different_columns",
+                .function = SystemOnDemand_disable_after_2_inactive_in_systems_different_columns
+            },
+            {
+                .id = "enable_2_output_1_input_system",
+                .function = SystemOnDemand_enable_2_output_1_input_system
+            },
+            {
+                .id = "enable_2_output_1_input_system_different_columns",
+                .function = SystemOnDemand_enable_2_output_1_input_system_different_columns
+            },
+            {
+                .id = "enable_2_output_1_input_system_overlapping_columns",
+                .function = SystemOnDemand_enable_2_output_1_input_system_overlapping_columns
             }
         }
     },
@@ -3894,5 +4037,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 38);
+    return bake_test_run("api", argc, argv, suites, 39);
 }

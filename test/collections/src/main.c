@@ -51,6 +51,7 @@ void Map_iter_zero_buckets(void);
 void Map_remove(void);
 void Map_remove_empty(void);
 void Map_remove_unknown(void);
+void Map_grow(void);
 
 // Testsuite 'Chunked'
 void Chunked_setup(void);
@@ -172,7 +173,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Map",
-        .testcase_count = 15,
+        .testcase_count = 16,
         .setup = Map_setup,
         .testcases = (bake_test_case[]){
             {
@@ -234,6 +235,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "remove_unknown",
                 .function = Map_remove_unknown
+            },
+            {
+                .id = "grow",
+                .function = Map_grow
             }
         }
     },

@@ -290,13 +290,17 @@ void World_dim() {
 
     ECS_COMPONENT(world, Position);
 
+    /* Create single entity so that the table exists. This makes the allocation
+     * counts more predictable, as new_w_count won't trigger table creation */
+    ecs_new(world, Position);
+
     ecs_dim(world, 1100);
 
     malloc_count = 0;
 
     ecs_new_w_count(world, Position, 500);
 
-    test_int(malloc_count, 6);
+    test_int(malloc_count, 2);
 
     malloc_count = 0;
 
@@ -331,7 +335,7 @@ void World_dim_type() {
 
     ecs_new_w_count(world, Position, 400);
 
-    test_int(malloc_count, 3);
+    test_int(malloc_count, 2);
 
     ecs_fini(world);
 }
