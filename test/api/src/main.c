@@ -433,6 +433,7 @@ void SystemOnDemand_disable_after_2_inactive_in_systems_different_columns(void);
 void SystemOnDemand_enable_2_output_1_input_system(void);
 void SystemOnDemand_enable_2_output_1_input_system_different_columns(void);
 void SystemOnDemand_enable_2_output_1_input_system_overlapping_columns(void);
+void SystemOnDemand_out_not_column(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -2404,7 +2405,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnDemand",
-        .testcase_count = 21,
+        .testcase_count = 22,
         .testcases = (bake_test_case[]){
             {
                 .id = "enable_out_after_in",
@@ -2489,6 +2490,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "enable_2_output_1_input_system_overlapping_columns",
                 .function = SystemOnDemand_enable_2_output_1_input_system_overlapping_columns
+            },
+            {
+                .id = "out_not_column",
+                .function = SystemOnDemand_out_not_column
             }
         }
     },

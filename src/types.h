@@ -405,8 +405,10 @@ struct ecs_world {
     ecs_vector_t *manual_systems;  
     ecs_vector_t *inactive_systems;
 
-    /* -- Keep track of in columns for OnDemand systems -- */
-    ecs_map_t *on_demand_components;
+    /* -- OnDemand systems -- */
+    
+    ecs_map_t *on_activate_components; /* Trigger on activate of [in] column */
+    ecs_map_t *on_enable_components; /* Trigger on enable of [in] column */
 
 
     /* -- Row systems -- */

@@ -164,14 +164,15 @@ ecs_entity_t new_row_system(
 static
 ecs_on_demand_in_t* get_in_component(
     ecs_world_t *world,
+    ecs_map_t *component_map,
     ecs_entity_t component)
 {
     ecs_on_demand_in_t *in = ecs_map_get_ptr(
-        world->on_demand_components, component);
+        component_map, component);
 
     if (!in) {
         ecs_on_demand_in_t in_value = {0};
-        in = ecs_map_set(world->on_demand_components, component, &in_value);
+        in = ecs_map_set(component_map, component, &in_value);
         ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -183,6 +184,7 @@ void activate_in_columns(
     ecs_world_t *world,
     ecs_entity_t system,
     EcsColSystem *system_data,
+    ecs_map_t *component_map,
     bool activate)
 {
     ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
@@ -190,7 +192,9 @@ void activate_in_columns(
 
     for (i = 0; i < count; i ++) {
         if (columns[i].inout_kind == EcsIn) {
-            ecs_on_demand_in_t *in = get_in_component(world, columns[i].is.component);
+            ecs_on_demand_in_t *in = get_in_component(
+                world, component_map, columns[i].is.component);
+
             ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
 
             in->count += activate ? 1 : -1;
@@ -227,10 +231,11 @@ static
 void register_out_column(
     ecs_world_t *world,
     ecs_entity_t system,
+    ecs_map_t *component_map,
     ecs_entity_t component,
     ecs_on_demand_out_t *on_demand_out)
 {
-    ecs_on_demand_in_t *in = get_in_component(world, component);
+    ecs_on_demand_in_t *in = get_in_component(world, component_map, component);
     ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
 
     on_demand_out->count += in->count;
@@ -255,7 +260,24 @@ void register_out_columns(
                 system_data->on_demand->count = 0;
             }
 
-            register_out_column(world, system, columns[i].is.component, system_data->on_demand);
+            /* If column operator is NOT and the inout kind is [out], the system
+             * explicitly states that it will create the component (it is not
+             * there, yet it is an out column). In this case it doesn't make
+             * sense to wait until [in] columns get activated (matched with
+             * entities) since the component is not there yet. Therefore add it
+             * to the on_enable_components list, so this system will be enabled
+             * when a [in] column is enabled, rather than activated */
+            ecs_map_t *component_map;
+            if (columns[i].oper_kind == EcsOperNot) {
+                component_map = world->on_enable_components;
+            } else {
+                component_map = world->on_activate_components;
+            }
+
+            register_out_column(
+                world, system, component_map, columns[i].is.component, 
+                system_data->on_demand);
+
             out_count ++;
         }
     }
@@ -412,6 +434,8 @@ int ecs_parse_signature_action(
 
     /* OR columns store a type id instead of a single component */
     } else if (oper_kind == EcsOperOr) {
+        ecs_assert(inout_kind != EcsOut, ECS_INVALID_SIGNATURE, NULL);
+
         elem = ecs_vector_last(system_data->columns, &system_column_params);
         if (elem->oper_kind == EcsOperAnd) {
             elem->is.type = ecs_type_add_intern(
@@ -435,6 +459,7 @@ int ecs_parse_signature_action(
         elem = ecs_vector_add(&system_data->columns, &system_column_params);
         elem->kind = EcsFromEmpty; /* Just pass handle to system */
         elem->oper_kind = EcsOperNot;
+        elem->inout_kind = inout_kind;
         elem->is.component = component;
 
         if (elem_kind == EcsFromSelf) {
@@ -619,7 +644,7 @@ void ecs_system_activate(
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* If system contains in columns, signal that they are now in use */
-    activate_in_columns(world, system, system_data, activate);
+    activate_in_columns(world, system, system_data, world->on_activate_components, activate);
 
     /* Invoke system status action */
     ecs_invoke_status_action(world, system, system_data, 
@@ -713,7 +738,6 @@ ecs_entity_t ecs_new_system(
         }
     }
 
-    /* If system has any pure [in] columns, register them with world */
     if (is_reactive == false) {
         EcsColSystem *col_system_data = (EcsColSystem*)system_data;
 
@@ -722,6 +746,13 @@ ecs_entity_t ecs_new_system(
          * OnDemand systems get enabled. */
         if (ecs_vector_count(col_system_data->tables)) {
             ecs_system_activate(world, result, true);
+        }
+
+        /* If system is enabled, trigger enable components */
+        if (system_data->enabled) {
+            activate_in_columns(
+                world, result, col_system_data, 
+                world->on_enable_components, true);   
         }
     }
 
@@ -756,7 +787,16 @@ void ecs_enable(
                     ecs_world_activate_system(
                         world, system, col_system->base.kind, enabled);
                 }
+
+                /* Enable/disable systems that trigger on [in] enablement */
+                activate_in_columns(
+                    world, 
+                    system, 
+                    col_system, 
+                    world->on_enable_components, 
+                    enabled);
                 
+                /* Invoke action for enable/disable status */
                 ecs_invoke_status_action(
                     world, system, col_system, 
                     enabled ? EcsSystemEnabled : EcsSystemDisabled);

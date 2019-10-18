@@ -41,7 +41,6 @@ typedef struct ecs_time_t {
 #include <flecs/util/vector.h>
 #include <flecs/util/chunked.h>
 #include <flecs/util/map.h>
-#include <flecs/util/stats.h>
 #include <flecs/util/os_api.h>
 
 /** -- Builtin module flags -- */
@@ -117,6 +116,7 @@ typedef struct ecs_rows_t {
     float delta_time;            /* Time elapsed since last frame */
     float world_time;            /* Time elapsed since start of simulation */
     uint32_t frame_offset;       /* Offset relative to frame */
+    uint32_t table_offset;       /* Current active table being processed */
     uint32_t offset;             /* Offset relative to current table */
     uint32_t count;              /* Number of rows to process by system */
 
@@ -2356,6 +2356,10 @@ void _ecs_assert(
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
+
+
+/* Include stats at the end so it gets all the declarations */
+#include <flecs/util/stats.h>
 
 #ifdef __cplusplus
 }

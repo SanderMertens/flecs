@@ -919,7 +919,8 @@ ecs_entity_t _ecs_run_w_filter(
         .column_count = column_count,
         .delta_time = system_delta_time,
         .world_time = world->world_time,
-        .frame_offset = offset
+        .frame_offset = offset,
+        .table_offset = 0
     };
 
     for (i = 0; i < table_count; i ++) {
@@ -989,6 +990,7 @@ ecs_entity_t _ecs_run_w_filter(
         action(&info);
 
         info.frame_offset += count;
+        info.table_offset ++;
 
         if (info.interrupted_by) {
             interrupted_by = info.interrupted_by;

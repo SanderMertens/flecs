@@ -664,7 +664,8 @@ ecs_world_t *ecs_init(void) {
     world->type_sys_set_index = ecs_map_new(0, sizeof(ecs_vector_t*));
     world->type_handles = ecs_map_new(0, sizeof(ecs_entity_t));
     world->prefab_parent_index = ecs_map_new(0, sizeof(ecs_entity_t));
-    world->on_demand_components = ecs_map_new(0, sizeof(ecs_on_demand_in_t));
+    world->on_activate_components = ecs_map_new(0, sizeof(ecs_on_demand_in_t));
+    world->on_enable_components = ecs_map_new(0, sizeof(ecs_on_demand_in_t));
 
     world->worker_stages = NULL;
     world->worker_threads = NULL;
