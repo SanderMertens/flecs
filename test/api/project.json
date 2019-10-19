@@ -478,7 +478,9 @@
                 "enable_2_output_1_input_system",
                 "enable_2_output_1_input_system_different_columns",
                 "enable_2_output_1_input_system_overlapping_columns",
-                "out_not_column"
+                "out_not_column",
+                "trigger_on_manual",
+                "trigger_on_manual_not_column"
             ]
         }, {
             "id": "SystemCascade",
@@ -492,7 +494,8 @@
             "id": "SystemManual",
             "testcases": [
                 "1_type_1_component",
-                "disabled"
+                "disabled",
+                "activate_status"
             ]
         }, {
             "id": "Tasks",
@@ -894,7 +897,8 @@
                 "activate_table",
                 "activate_deactivate_table",
                 "activate_deactivate_reactive",
-                "activate_deactivate_activate_other"
+                "activate_deactivate_activate_other",
+                "no_double_system_table_after_merge"
             ]
         }, {
             "id": "Error",

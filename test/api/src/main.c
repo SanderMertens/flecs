@@ -434,6 +434,8 @@ void SystemOnDemand_enable_2_output_1_input_system(void);
 void SystemOnDemand_enable_2_output_1_input_system_different_columns(void);
 void SystemOnDemand_enable_2_output_1_input_system_overlapping_columns(void);
 void SystemOnDemand_out_not_column(void);
+void SystemOnDemand_trigger_on_manual(void);
+void SystemOnDemand_trigger_on_manual_not_column(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -444,6 +446,7 @@ void SystemCascade_adopt_after_match(void);
 // Testsuite 'SystemManual'
 void SystemManual_1_type_1_component(void);
 void SystemManual_disabled(void);
+void SystemManual_activate_status(void);
 
 // Testsuite 'Tasks'
 void Tasks_no_components(void);
@@ -815,6 +818,7 @@ void Internals_activate_table(void);
 void Internals_activate_deactivate_table(void);
 void Internals_activate_deactivate_reactive(void);
 void Internals_activate_deactivate_activate_other(void);
+void Internals_no_double_system_table_after_merge(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
@@ -2405,7 +2409,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnDemand",
-        .testcase_count = 22,
+        .testcase_count = 24,
         .testcases = (bake_test_case[]){
             {
                 .id = "enable_out_after_in",
@@ -2494,6 +2498,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "out_not_column",
                 .function = SystemOnDemand_out_not_column
+            },
+            {
+                .id = "trigger_on_manual",
+                .function = SystemOnDemand_trigger_on_manual
+            },
+            {
+                .id = "trigger_on_manual_not_column",
+                .function = SystemOnDemand_trigger_on_manual_not_column
             }
         }
     },
@@ -2521,7 +2533,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemManual",
-        .testcase_count = 2,
+        .testcase_count = 3,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -2530,6 +2542,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "disabled",
                 .function = SystemManual_disabled
+            },
+            {
+                .id = "activate_status",
+                .function = SystemManual_activate_status
             }
         }
     },
@@ -3963,7 +3979,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Internals",
-        .testcase_count = 5,
+        .testcase_count = 6,
         .testcases = (bake_test_case[]){
             {
                 .id = "deactivate_table",
@@ -3984,6 +4000,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "activate_deactivate_activate_other",
                 .function = Internals_activate_deactivate_activate_other
+            },
+            {
+                .id = "no_double_system_table_after_merge",
+                .function = Internals_no_double_system_table_after_merge
             }
         }
     },

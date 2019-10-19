@@ -131,3 +131,53 @@ void Internals_activate_deactivate_activate_other() {
 
     ecs_fini(world);
 }
+
+static int invoked = 0;
+
+static
+void CreateNewTable(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    uint32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Velocity);
+    }
+}
+
+static
+void ManualSystem(ecs_rows_t *rows) {
+    invoked ++;
+}
+
+void Internals_no_double_system_table_after_merge() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, CreateNewTable, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, ManualSystem, EcsManual, Position, Velocity);
+
+    /* CreateNewTable system created a new, non-empty table. This will be merged
+     * which will trigger activation of ManualSystem. This will cause the system
+     * to go from the inactive_systems array to the manual_systems array. This
+     * happens as systems are notified of new tables (during the merge). Because
+     * the manual_systems array was evaluated after the inactive_systems array,
+     * a table could be added to a system twice. */
+    ecs_progress(world, 0);
+
+    /* Validate that the CreateNewTable system has ran */
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    /* Now run the ManualSystem, and make sure it is only invoked once. If it is
+     * invoked twice, the table has been registered with the system twice, which
+     * is wrong. */
+    ecs_run(world, ManualSystem, 0, NULL);
+
+    test_int(invoked, 1);
+
+    ecs_fini(world);
+}

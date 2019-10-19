@@ -693,3 +693,56 @@ void SystemOnDemand_out_not_column() {
 
     ecs_fini(world);
 }
+
+void SystemOnDemand_trigger_on_manual() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_new(world, Position);
+
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+
+    test_assert(ecs_is_enabled(world, OutSystem) == false);
+    ecs_progress(world, 0);
+    test_assert(invoked == false);
+
+    ECS_SYSTEM(world, InSystem, EcsManual, [in] Position);
+
+    test_assert(ecs_is_enabled(world, OutSystem) == true);
+    ecs_progress(world, 0);
+    test_assert(invoked == true);
+
+    ecs_fini(world);
+}
+
+void SystemOnDemand_trigger_on_manual_not_column() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_new(world, Position);
+
+    /* If a system has a NOT column that is also an [out] column, the system
+     * explicitly states that it will create the component. Therefore the system
+     * will always be enabled if there are enabled input systems, even if those
+     * input systems are not active (no matched entities). This way, OutSystem
+     * can become enabled even though there are no entities with Velocity yet */
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, Position, [out] !Velocity, SYSTEM.EcsOnDemand);
+
+    test_assert(ecs_is_enabled(world, OutSystem) == false);
+    ecs_progress(world, 0);
+    test_assert(invoked == false);
+
+    ECS_SYSTEM(world, InSystem, EcsManual, Position, [in] Velocity);
+
+    /* There are no matching entities with the InSystem, but the OutSystem
+     * will be enabled nonetheless, as it explicitly stated it will create the
+     * Velocity component. */
+    test_assert(ecs_is_enabled(world, OutSystem) == true);
+    ecs_progress(world, 0);
+    test_assert(invoked == true);
+
+    ecs_fini(world);
+}

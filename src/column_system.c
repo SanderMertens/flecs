@@ -720,19 +720,15 @@ void ecs_system_activate_table(
 
     if (active) {
         uint32_t dst_count = ecs_vector_count(dst_array);
-        if (kind != EcsManual) {
-            if (dst_count == 1 && system_data->base.enabled) {
-                ecs_world_activate_system(
-                    world, system, kind, true);
-            }
+        if (dst_count == 1 && system_data->base.enabled) {
+            ecs_world_activate_system(
+                world, system, kind, true);
         }
         system_data->tables = dst_array;
     } else {
-        if (kind != EcsManual) {
-            if (src_count == 0) {
-                ecs_world_activate_system(
-                    world, system, kind, false);
-            }
+        if (src_count == 0) {
+            ecs_world_activate_system(
+                world, system, kind, false);
         }
         system_data->inactive_tables = dst_array;
     }
@@ -796,9 +792,7 @@ ecs_entity_t ecs_new_col_system(
 
     ecs_entity_t *elem = NULL;
 
-    if (kind == EcsManual) {
-        elem = ecs_vector_add(&world->manual_systems, &handle_arr_params);
-    } else if (!ecs_vector_count(system_data->tables)) {
+    if (!ecs_vector_count(system_data->tables)) {
         elem = ecs_vector_add(&world->inactive_systems, &handle_arr_params);
     } else {
         if (kind == EcsOnUpdate) {
@@ -817,6 +811,8 @@ ecs_entity_t ecs_new_col_system(
             elem = ecs_vector_add(&world->pre_store_systems, &handle_arr_params);
         } else if (kind == EcsOnStore) {
             elem = ecs_vector_add(&world->on_store_systems, &handle_arr_params);
+        } else if (kind == EcsManual) {
+            elem = ecs_vector_add(&world->manual_systems, &handle_arr_params);
         }
 
         /* Parameter checking happened before this, kind must have been one of

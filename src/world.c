@@ -194,8 +194,8 @@ void ecs_notify_systems_of_table(
     notify_create_table(world, world->on_store_systems, table);
     notify_create_table(world, world->on_validate_systems, table);
     notify_create_table(world, world->on_update_systems, table);
-    notify_create_table(world, world->inactive_systems, table);
     notify_create_table(world, world->manual_systems, table);
+    notify_create_table(world, world->inactive_systems, table);
 }
 
 /** Create a new table and register it with the world and systems. A table in
@@ -357,7 +357,7 @@ void ecs_world_activate_system(
         world->inactive_systems = dst_array;
         qsort(src_array, ecs_vector_count(src_array) + 1,
           sizeof(ecs_entity_t), compare_handle);
-    }
+    } 
 
     /* Signal that system has been either activated or deactivated */
     ecs_system_activate(world, system, active);

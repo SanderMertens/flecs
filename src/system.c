@@ -179,6 +179,8 @@ ecs_on_demand_in_t* get_in_component(
     return in;
 }
 
+static int indent = 0;
+
 static
 void activate_in_columns(
     ecs_world_t *world,
@@ -208,19 +210,23 @@ void activate_in_columns(
                 (!activate && !in->count))) 
             {
                 ecs_on_demand_out_t **out = ecs_vector_first(in->systems);
-                uint32_t i, count = ecs_vector_count(in->systems);
+                uint32_t s, count = ecs_vector_count(in->systems);
 
-                for (i = 0; i < count; i ++) {
+                for (s = 0; s < count; s ++) {
                     /* Increase the count of the system with the out params */
-                    out[i]->count += activate ? 1 : -1;
+                    out[s]->count += activate ? 1 : -1;
+
+                    indent ++;
                     
                     /* If this is the first out column that is requested from
                      * the OnDemand system, enable it */
-                    if (activate && out[i]->count == 1) {
-                        ecs_enable(world, out[i]->system, true);
-                    } else if (!activate && !out[i]->count) {
-                        ecs_enable(world, out[i]->system, false);
+                    if (activate && out[s]->count == 1) {
+                        ecs_enable(world, out[s]->system, true);
+                    } else if (!activate && !out[s]->count) {                
+                        ecs_enable(world, out[s]->system, false);
                     }
+
+                    indent --;
                 }
             }
         }
