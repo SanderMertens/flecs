@@ -9,6 +9,7 @@ typedef struct EcsSystemStats {
     ecs_entity_t handle;
     const char *id;
     const char *signature;
+    EcsSystemKind kind;
     uint32_t tables_matched;
     uint32_t entities_matched;
     float period;
@@ -33,7 +34,7 @@ typedef struct EcsComponentStats {
     uint32_t memory_used;
     uint32_t memory_allocd;
     uint32_t entities;
-    uint32_t tables;    
+    uint32_t tables;
 } EcsComponentStats;
 
 typedef struct EcsMemoryStat {
@@ -51,6 +52,18 @@ typedef struct EcsMemoryStats {
     EcsMemoryStat stage;
     EcsMemoryStat world;
 } EcsMemoryStats;
+
+typedef struct EcsWorldStats {
+    uint32_t system_count;
+    uint32_t table_count;
+    uint32_t component_count;
+    uint32_t entity_count;
+    uint32_t thread_count;
+    uint32_t tick_count;
+    double system_time;
+    double frame_time;
+    double merge_time;
+} EcsWorldStats;
 
 typedef struct ecs_world_stats_t {
     uint32_t system_count;
@@ -101,6 +114,27 @@ FLECS_EXPORT
 void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable);
+
+
+/* Stats module component */
+typedef struct FlecsStats {
+    ECS_DECLARE_COMPONENT(EcsSystemStats);
+    ECS_DECLARE_COMPONENT(EcsFeatureStats);
+    ECS_DECLARE_COMPONENT(EcsComponentStats);
+    ECS_DECLARE_COMPONENT(EcsMemoryStats);
+    ECS_DECLARE_COMPONENT(EcsWorldStats);
+} FlecsStats;
+
+void FlecsStatsImport(
+    ecs_world_t *world,
+    int flags);
+
+#define FlecsStatsImportHandles(handles)\
+    ECS_IMPORT_COMPONENT(handles, EcsSystemStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsFeatureStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsComponentStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsMemoryStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsWorldStats);
 
 #ifdef __cplusplus
 }
