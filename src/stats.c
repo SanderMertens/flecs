@@ -543,3 +543,172 @@ void ecs_free_stats(
     ecs_vector_free(stats->on_set_systems);
     ecs_vector_free(stats->on_remove_systems);
 }
+
+
+
+/* ---- */
+
+static
+void AddSystemStats(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, EcsSystemStats, 2);
+    
+    uint32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], EcsSystemStats);
+    }
+}
+
+static
+void AddComponentStats(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, EcsComponentStats, 2);
+    
+    uint32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], EcsComponentStats);
+    }
+}
+
+static
+void CollectSystemStats_StatusAction(
+    ecs_world_t *world, 
+    ecs_entity_t system,
+    ecs_system_status_t status, 
+    void *ctx)
+{
+    if (status == EcsSystemActivated) {
+        ecs_measure_system_time(world, true);
+    } else if (status == EcsSystemDeactivated) {
+        ecs_measure_system_time(world, false);
+    }
+}
+
+static
+uint32_t system_tables_matched(EcsColSystem *system) {
+    return ecs_vector_count(system->tables) +
+           ecs_vector_count(system->inactive_tables);
+}
+
+static
+uint32_t system_entities_matched(EcsColSystem *system) {
+    ecs_matched_table_t *tables = ecs_vector_first(system->tables);
+    uint32_t i, total = 0, count = ecs_vector_count(system->tables);
+
+    for (i = 0; i < count; i ++) {
+        if (tables[i].table) {
+            total += ecs_table_count(tables[i].table);
+        }
+    }
+
+    return total;
+}
+
+static
+void CollectSystemStats(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, EcsColSystem, system, 1);
+    ECS_COLUMN(rows, EcsSystemStats, stats, 2);
+
+    uint32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_entity_t entity = rows->entities[i];
+
+        stats[i].id = ecs_get_id(rows->world, entity);
+        stats[i].handle = entity;
+        stats[i].signature = system[i].base.signature;
+        stats[i].kind = system[i].base.kind;
+        stats[i].enabled = system[i].base.enabled;
+        stats[i].active = ecs_vector_count(system[i].tables);
+        stats[i].is_hidden = ecs_has(rows->world, entity, EcsHidden);
+        stats[i].tables_matched = system_tables_matched(&system[i]);
+        stats[i].entities_matched = system_entities_matched(&system[i]);
+        stats[i].period = system[i].period;
+        stats[i].time_spent = system[i].base.time_spent;
+
+        /* Reset time_spent between measuremen=t intervals */
+        system[i].base.time_spent = 0;
+    }
+}
+
+static
+void CollectComponentStats(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, EcsComponent, component, 1);
+    ECS_COLUMN(rows, EcsComponentStats, stats, 2);
+
+    uint32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_entity_t entity = rows->entities[i];
+
+        stats[i].id = ecs_get_id(rows->world, entity);
+        stats[i].handle = entity;
+        stats[i].size = component[i].size;
+        
+        /* Reset values */
+        stats[i].tables = 0;
+        stats[i].entities = 0;
+        stats[i].memory_allocd = 0;
+        stats[i].memory_used = 0;
+
+        /* Walk tables to collect memory and entity stats per component */
+        ecs_chunked_t *tables = rows->world->main_stage.tables;
+        uint32_t t, count = ecs_chunked_count(rows->world->main_stage.tables);
+
+        for (t = 0; t < count; t ++) {
+            ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, t);
+            ecs_entity_t *components = ecs_vector_first(table->type);
+            uint32_t c, c_count = ecs_vector_count(table->type);
+
+            /* Iterate over table columns until component is found */
+            for (c = 0; c < c_count; c ++) {
+                if (components[c] == entity) {
+                    ecs_vector_t *column = table->columns[c].data;
+                    stats[i].tables ++;
+                    stats[i].entities += ecs_vector_count(column);
+                    ecs_vector_params_t param = {.element_size = stats[i].size};
+                    ecs_vector_memory(column, &param, 
+                        &stats[i].memory_allocd, &stats[i].memory_used);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void FlecsStatsImport(
+    ecs_world_t *world,
+    int flags)
+{
+    ECS_MODULE(world, FlecsStats);
+
+    ECS_COMPONENT(world, EcsSystemStats);
+    ECS_COMPONENT(world, EcsFeatureStats);
+    ECS_COMPONENT(world, EcsComponentStats);
+    ECS_COMPONENT(world, EcsMemoryStats);
+    ECS_COMPONENT(world, EcsWorldStats);
+    ECS_TAG(world, EcsStatsSkipCollect);
+
+    ECS_SYSTEM(world, AddSystemStats, EcsOnStore,
+        EcsColSystem, [out] !EcsSystemStats,
+        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden, 
+        SYSTEM.EcsStatsSkipCollect, !EcsStatsSkipCollect);
+
+    ECS_SYSTEM(world, AddComponentStats, EcsOnStore,
+        EcsComponent, [out] !EcsComponentStats,
+        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden, 
+        SYSTEM.EcsStatsSkipCollect, !EcsStatsSkipCollect);
+
+    ECS_SYSTEM(world, CollectSystemStats, EcsPostLoad,
+        EcsColSystem, [out] EcsSystemStats,
+        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+
+    ecs_set_system_status_action(
+        world, CollectSystemStats, CollectSystemStats_StatusAction, NULL);
+
+    ECS_SYSTEM(world, CollectComponentStats, EcsPostLoad,
+        EcsComponent, [out] EcsComponentStats,
+        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+    
+    ECS_EXPORT_COMPONENT(EcsSystemStats);
+    ECS_EXPORT_COMPONENT(EcsFeatureStats);
+    ECS_EXPORT_COMPONENT(EcsComponentStats);
+    ECS_EXPORT_COMPONENT(EcsMemoryStats);
+    ECS_EXPORT_COMPONENT(EcsWorldStats);
+}
