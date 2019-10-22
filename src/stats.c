@@ -500,9 +500,9 @@ void ecs_get_stats(
     stats->memory.families.allocd += type_memory; */
 
     stats->entity_count = ecs_map_count(world->main_stage.entity_index);
-    stats->tick_count = world->tick;
+    stats->tick_count = world->tick_count;
 
-    if (world->tick) {
+    if (world->tick_count) {
         stats->frame_time = world->frame_time;
         stats->system_time = world->system_time;
         stats->merge_time = world->merge_time;
@@ -514,7 +514,7 @@ void ecs_get_stats(
     stats->frame_profiling = world->measure_frame_time;
     stats->system_profiling = world->measure_system_time;
 
-    world->tick = 0;
+    world->tick_count = 0;
     world->frame_time = 0;
     world->system_time = 0;
 }
@@ -549,6 +549,13 @@ void ecs_free_stats(
 /* ---- */
 
 static
+void AddWorldStats(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, EcsWorldStats, 1);
+
+    ecs_add(rows->world, EcsWorld, EcsWorldStats);
+}
+
+static
 void AddSystemStats(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, EcsSystemStats, 2);
     
@@ -566,6 +573,42 @@ void AddComponentStats(ecs_rows_t *rows) {
     for (i = 0; i < rows->count; i ++) {
         ecs_add(rows->world, rows->entities[i], EcsComponentStats);
     }
+}
+
+static
+void CollectWorldStats_StatusAction(
+    ecs_world_t *world, 
+    ecs_entity_t system,
+    ecs_system_status_t status, 
+    void *ctx)
+{
+    if (status == EcsSystemActivated) {
+        ecs_measure_frame_time(world, true);
+    } else if (status == EcsSystemDeactivated) {
+        ecs_measure_frame_time(world, false);
+    }
+}
+
+static
+void CollectWorldStats(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, EcsWorldStats, stats, 1);
+
+    ecs_world_t *world = rows->world;
+
+    stats->entity_count = ecs_map_count(world->main_stage.entity_index);
+    stats->table_count = ecs_chunked_count(world->main_stage.tables);
+    stats->component_count = ecs_count(world, EcsComponent);
+    stats->thread_count = ecs_vector_count(world->worker_threads);
+    stats->frame_time = world->frame_time;
+    stats->system_time = world->system_time;
+    stats->merge_time = world->merge_time;
+    stats->world_time = world->world_time;
+    stats->target_fps = world->target_fps;
+    stats->tick_count = world->tick_count;
+
+    world->frame_time = 0;
+    world->system_time = 0;
+    world->merge_time = 0;
 }
 
 static
@@ -685,6 +728,9 @@ void FlecsStatsImport(
     ECS_COMPONENT(world, EcsWorldStats);
     ECS_TAG(world, EcsStatsSkipCollect);
 
+    ECS_SYSTEM(world, AddWorldStats, EcsOnStore, [out] !EcsWorld.EcsWorldStats, 
+        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+
     ECS_SYSTEM(world, AddSystemStats, EcsOnStore,
         EcsColSystem, [out] !EcsSystemStats,
         SYSTEM.EcsOnDemand, SYSTEM.EcsHidden, 
@@ -692,8 +738,14 @@ void FlecsStatsImport(
 
     ECS_SYSTEM(world, AddComponentStats, EcsOnStore,
         EcsComponent, [out] !EcsComponentStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden, 
-        SYSTEM.EcsStatsSkipCollect, !EcsStatsSkipCollect);
+        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+
+    ECS_SYSTEM(world, CollectWorldStats, EcsPostLoad,
+        [out] EcsWorldStats, 
+        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+
+    ecs_set_system_status_action(
+        world, CollectWorldStats, CollectWorldStats_StatusAction, NULL);
 
     ECS_SYSTEM(world, CollectSystemStats, EcsPostLoad,
         EcsColSystem, [out] EcsSystemStats,

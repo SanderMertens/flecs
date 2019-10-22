@@ -54,7 +54,6 @@ typedef struct EcsMemoryStats {
 } EcsMemoryStats;
 
 typedef struct EcsWorldStats {
-    uint32_t system_count;
     uint32_t table_count;
     uint32_t component_count;
     uint32_t entity_count;
@@ -63,6 +62,8 @@ typedef struct EcsWorldStats {
     double system_time;
     double frame_time;
     double merge_time;
+    double world_time;
+    double target_fps;
 } EcsWorldStats;
 
 typedef struct ecs_world_stats_t {
