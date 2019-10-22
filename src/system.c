@@ -295,6 +295,37 @@ void register_out_columns(
 
 /* -- Private API -- */
 
+/* Check if system meets constraints of non-table columns */
+bool ecs_check_column_constraints(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    EcsSystem *system_data)
+{
+    uint32_t i, column_count = ecs_vector_count(system_data->columns);
+    ecs_system_column_t *buffer = ecs_vector_first(system_data->columns);
+
+    for (i = 0; i < column_count; i ++) {
+        ecs_system_column_t *elem = &buffer[i];
+        ecs_system_expr_elem_kind_t elem_kind = elem->kind;
+        ecs_system_expr_oper_kind_t oper_kind = elem->oper_kind;
+
+        if (elem_kind == EcsFromEntity) {
+            ecs_type_t type = ecs_get_type(world, elem->source);
+            if (ecs_type_has_entity(world, type, elem->is.component)) {
+                if (oper_kind == EcsOperNot) {
+                    return false;
+                }
+            } else {
+                if (oper_kind != EcsOperNot) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 void ecs_invoke_status_action(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -726,6 +757,12 @@ ecs_entity_t ecs_new_system(
             ecs_type_t type = ecs_type_from_entity(world, array[i]);
             _ecs_add(world, result, type);
         }
+    }
+
+    /* Check if all non-table column constraints are met. If not, disable
+     * system (system will be enabled once constraints are met) */
+    if (!ecs_check_column_constraints(world, result, system_data)) {
+        ecs_enable(world, result, false);
     }
 
     /* If this is an OnDemand system, register its [out] columns */

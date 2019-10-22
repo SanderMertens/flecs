@@ -408,10 +408,7 @@ bool match_table(
             }
         } else if (oper_kind == EcsOperNot) {
             if (elem_kind == EcsFromEntity) {
-                ecs_type_t type = ecs_get_type(world, elem->source);
-                if (ecs_type_has_entity(world, type, elem->is.component)) {
-                    return false;
-                }
+                /* Not a table column constraint, is verified by other logic */
             }
         }
     }
@@ -621,6 +618,11 @@ void ecs_rematch_system(
     if (system_data->base.cascade_by) {
         order_cascade_tables(world, system_data);
     }
+
+    /* Enable/disable system if constraints are (not) met. If the system is
+     * already dis/enabled this operation has no side effects. */
+    ecs_enable(world, system, 
+        ecs_check_column_constraints(world, system, (EcsSystem*)system_data));
 }
 
 /** Revalidate references after a realloc occurred in a table */
