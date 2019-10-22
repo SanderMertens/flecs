@@ -746,3 +746,73 @@ void SystemOnDemand_trigger_on_manual_not_column() {
 
     ecs_fini(world);
 }
+
+void SystemOnDemand_on_demand_task_w_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ECS_ENTITY(world, MyEntity, Position);
+
+    /* If a system has an out column that matches an entity, it should still
+     * behave like an OnDemand system, only enabling when there is interest for
+     * the component in the [out] column. */
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] MyEntity.Position, SYSTEM.EcsOnDemand);
+
+    test_assert(ecs_is_enabled(world, OutSystem) == false);
+    ecs_progress(world, 0);
+    test_assert(invoked == false);
+
+    ECS_SYSTEM(world, InSystem, EcsManual, [in] Position);
+
+    /* There are no matching entities with the InSystem, but the OutSystem
+     * will be enabled nonetheless, as it explicitly stated it will create the
+     * Velocity component. */
+    test_assert(ecs_is_enabled(world, OutSystem) == true);
+    ecs_progress(world, 0);
+    test_assert(invoked == true);
+
+    /* When Position is removed from MyEntity, the system must be disabled */
+    invoked = false;
+    ecs_remove(world, MyEntity, Position);
+    test_assert(ecs_is_enabled(world, OutSystem) == false);
+    ecs_progress(world, 0);
+    test_assert(invoked == false);
+
+    ecs_fini(world);
+}
+
+void SystemOnDemand_on_demand_task_w_not_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ECS_ENTITY(world, MyEntity, 0);
+
+    /* If a system has an out column that matches an entity, it should still
+     * behave like an OnDemand system, only enabling when there is interest for
+     * the component in the [out] column, even if that column has a NOT operator */
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] !MyEntity.Position, SYSTEM.EcsOnDemand);
+
+    test_assert(ecs_is_enabled(world, OutSystem) == false);
+    ecs_progress(world, 0);
+    test_assert(invoked == false);
+
+    ECS_SYSTEM(world, InSystem, EcsManual, [in] Position);
+
+    /* There are no matching entities with the InSystem, but the OutSystem
+     * will be enabled nonetheless, as it explicitly stated it will create the
+     * Velocity component. */
+    test_assert(ecs_is_enabled(world, OutSystem) == true);
+    ecs_progress(world, 0);
+    test_assert(invoked == true);
+
+    /* When Position is added to MyEntity, the system must be disabled */
+    invoked = false;
+    ecs_add(world, MyEntity, Position);
+    ecs_progress(world, 0);
+    test_assert(ecs_is_enabled(world, OutSystem) == false);
+    test_assert(invoked == false);
+
+    ecs_fini(world);
+}

@@ -73,3 +73,69 @@ void System_w_FromEntity_2_column_1_from_entity() {
 
     ecs_fini(world);
 }
+
+static bool dummy_invoked = 0;
+static ecs_entity_t dummy_component = 0;
+static ecs_entity_t dummy_source = 0;
+
+static
+void dummy_reset() {
+    dummy_invoked = false;
+    dummy_component = 0;
+    dummy_source = 0;
+}
+
+static
+void Dummy(ecs_rows_t *rows) {
+    dummy_invoked = 1;
+    dummy_component = ecs_column_entity(rows, 1);
+    dummy_source = ecs_column_source(rows, 1);
+}
+
+void System_w_FromEntity_task_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e_1, Position);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, e_1.Position);
+
+    ecs_progress(world, 1);
+
+    test_bool(dummy_invoked, true);
+    test_assert(dummy_component == ecs_entity(Position));
+    test_assert(dummy_source == e_1);
+
+    dummy_reset();
+    ecs_remove(world, e_1, Position);
+
+    ecs_progress(world, 1);
+    test_bool(dummy_invoked, false);
+
+    ecs_fini(world);
+}
+
+void System_w_FromEntity_task_not_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e_1, Position);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !e_1.Position);
+
+    ecs_progress(world, 1);
+
+    test_bool(dummy_invoked, false);
+
+    ecs_remove(world, e_1, Position);
+
+    ecs_progress(world, 1);
+
+    test_bool(dummy_invoked, true);
+    test_assert(dummy_component == ecs_entity(Position));
+    test_assert(dummy_source == e_1);
+
+    ecs_fini(world);
+}

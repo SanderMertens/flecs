@@ -480,7 +480,9 @@
                 "enable_2_output_1_input_system_overlapping_columns",
                 "out_not_column",
                 "trigger_on_manual",
-                "trigger_on_manual_not_column"
+                "trigger_on_manual_not_column",
+                "on_demand_task_w_from_entity",
+                "on_demand_task_w_not_from_entity"
             ]
         }, {
             "id": "SystemCascade",
@@ -650,7 +652,9 @@
         }, {
             "id": "System_w_FromEntity",
             "testcases": [
-                "2_column_1_from_entity"
+                "2_column_1_from_entity",
+                "task_from_entity",
+                "task_not_from_entity"
             ]
         }, {
             "id": "World",

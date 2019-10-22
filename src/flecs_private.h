@@ -309,6 +309,12 @@ void ecs_invoke_status_action(
     EcsColSystem *system_data,
     ecs_system_status_t status);
 
+/* Check if all non-table column constraints are met */
+bool ecs_check_column_constraints(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    EcsSystem *system_data);
+
 /* Create new table system */
 ecs_entity_t ecs_new_col_system(
     ecs_world_t *world,

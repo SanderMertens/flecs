@@ -103,12 +103,6 @@ void Singleton_system_w_not_singleton() {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, !$.Velocity);
 
-    ecs_set_singleton(world, Velocity, {1, 2});
-    test_assert( ecs_has(world, ECS_SINGLETON, Velocity));
-
-    ecs_set(world, 0, Position, {10, 20});
-    test_assert( !ecs_has(world, ECS_SINGLETON, Position));
-
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
