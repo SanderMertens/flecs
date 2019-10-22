@@ -466,7 +466,7 @@ struct ecs_world {
 
     /* -- Time management -- */
 
-    uint32_t tick;                /* Number of computed frames by world */
+    uint32_t tick_count;          /* Number of computed frames by world */
     ecs_time_t frame_start;       /* Starting timestamp of frame */
     float frame_time;             /* Time spent processing a frame */
     float system_time;            /* Time spent processing systems */

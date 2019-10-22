@@ -196,6 +196,13 @@ typedef void (*ecs_module_init_action_t)(
     ecs_world_t *world,
     int flags);
 
+#define ECS_INSTANCEOF ((ecs_entity_t)1 << 63)
+#define ECS_CHILDOF ((ecs_entity_t)1 << 62)
+#define ECS_ENTITY_FLAGS_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF))
+#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ENTITY_FLAGS_MASK)
+#define ECS_SINGLETON ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
+#define ECS_INVALID_ENTITY (0)    
+
 /** Handles to builtin components */
 #define EEcsComponent (1)
 #define EEcsTypeComponent (2)
@@ -208,6 +215,12 @@ typedef void (*ecs_module_init_action_t)(
 #define EEcsHidden (9)
 #define EEcsDisabled (10)
 #define EEcsOnDemand (11)
+
+/* World entity */
+#define EcsWorld (12)
+
+/* Singleton entity */
+#define EcsSingleton (ECS_SINGLETON)
 
 /* Type handles to builtin components */
 FLECS_EXPORT
@@ -223,13 +236,6 @@ extern ecs_type_t
     TEcsHidden,
     TEcsDisabled,
     TEcsOnDemand;
-
-#define ECS_INSTANCEOF ((ecs_entity_t)1 << 63)
-#define ECS_CHILDOF ((ecs_entity_t)1 << 62)
-#define ECS_ENTITY_FLAGS_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF))
-#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ENTITY_FLAGS_MASK)
-#define ECS_SINGLETON ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
-#define ECS_INVALID_ENTITY (0)
 
 /* This allows passing 0 as type to functions that accept types */
 #define T0 (0)

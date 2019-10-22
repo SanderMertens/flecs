@@ -689,7 +689,7 @@ ecs_world_t *ecs_init(void) {
     world->system_time = 0;
     world->target_fps = 0;
     world->fps_sleep = 0;
-    world->tick = 0;
+    world->tick_count = 0;
 
     world->context = NULL;
 
@@ -719,7 +719,10 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsDisabled, ECS_DISABLED_ID, 0);
     bootstrap_component(world, table, EEcsOnDemand, ECS_ON_DEMAND_ID, 0);
 
-    world->last_handle = EEcsOnDemand + 1;
+    /* Initialize EcsWorld */
+    ecs_set(world, EcsWorld, EcsId, {"EcsWorld"});
+
+    world->last_handle = EcsWorld + 1;
     world->min_handle = 0;
     world->max_handle = 0;
 
@@ -1208,7 +1211,7 @@ bool ecs_progress(
 
     /* -- System execution stops here -- */
 
-    world->tick ++;
+    world->tick_count ++;
     
     stop_measure_frame(world, delta_time);
     
@@ -1352,7 +1355,7 @@ uint32_t ecs_get_tick(
     ecs_world_t *world)
 {
     ecs_get_stage(&world);
-    return world->tick;    
+    return world->tick_count;
 }
 
 void ecs_set_context(
