@@ -13,6 +13,12 @@
 extern "C" {
 #endif
 
+/* Allocation counters (not thread safe) */
+extern uint64_t ecs_os_api_malloc_count;
+extern uint64_t ecs_os_api_realloc_count;
+extern uint64_t ecs_os_api_calloc_count;
+extern uint64_t ecs_os_api_free_count;
+
 /* Use handle types that _at least_ can store pointers */
 typedef uintptr_t ecs_os_thread_t;
 typedef uintptr_t ecs_os_cond_t;

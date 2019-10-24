@@ -759,6 +759,7 @@ ecs_entity_t ecs_new_col_system(
     system_data->base.signature = sig;
     system_data->base.time_spent = 0;
     system_data->base.columns = ecs_vector_new(&system_column_params, count);
+    system_data->base.invoke_count = 0;
     system_data->base.kind = kind;
     system_data->base.cascade_by = 0;
     system_data->base.has_refs = false;
@@ -999,6 +1000,8 @@ ecs_entity_t _ecs_run_w_filter(
     if (measure_time) {
         system_data->base.time_spent += ecs_time_measure(&time_start);
     }
+    
+    system_data->base.invoke_count ++;
 
     return interrupted_by;
 }

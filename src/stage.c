@@ -168,7 +168,7 @@ void ecs_stage_merge(
     /* Keep track of old number of tables so we know how many have been added */
     uint32_t old_table_count = ecs_chunked_count(world->main_stage.tables);
     
-    /* Merge any new families */
+    /* Merge any new types */
     merge_families(world, stage);
     
     /* Merge entities. This can create tables if a new combination of components

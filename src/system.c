@@ -40,7 +40,7 @@ void match_type(
     }
 }
 
-/* Match system against existing families to build the type-rowsys index */
+/* Match system against existing types to build the type-rowsys index */
 static
 void match_families(
     ecs_world_t *world,
@@ -107,6 +107,7 @@ ecs_entity_t new_row_system(
     system_data->base.action = action;
     system_data->base.signature = sig;
     system_data->base.enabled = true;
+    system_data->base.invoke_count = 0;
     system_data->base.kind = kind;
     system_data->base.cascade_by = 0;
     system_data->base.has_refs = false;

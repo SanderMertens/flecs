@@ -699,7 +699,7 @@ ecs_world_t *ecs_init(void) {
     ecs_stage_init(world, &world->main_stage);
     ecs_stage_init(world, &world->temp_stage);
 
-    /* Initialize families for builtin types */
+    /* Initialize types for builtin types */
     bootstrap_types(world);
 
     /* Create table that will hold components (EcsComponent, EcsId) */

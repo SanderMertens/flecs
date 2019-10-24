@@ -326,7 +326,7 @@ Additionally, applications can define entities with the `ECS_ENTITY` macro, whic
 ECS_ENTITY(world, MyEntity, Point);
 ```
 
-Components, systems, tasks, families and prefabs automatically register the `EcsId` component when they are created, and can thus be looked up with `ecs_lookup`.
+Components, systems, tasks, types and prefabs automatically register the `EcsId` component when they are created, and can thus be looked up with `ecs_lookup`.
 
 ### Task
 A task is a system that has no interest expression. Tasks are run once every frame. Tasks are defined the same way as normal systems, but instead of an interest expression, you specify `0`:
