@@ -118,7 +118,7 @@ ecs_type_t ecs_type_find_intern(
     ecs_entity_t *buf,
     uint32_t count);
 
-/* Merge add/remove families */
+/* Merge add/remove types */
 ecs_type_t ecs_type_merge_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -377,6 +377,14 @@ void ecs_rematch_system(
 void ecs_revalidate_system_refs(
     ecs_world_t *world,
     ecs_entity_t system);
+
+void ecs_measure_frame_time(
+    ecs_world_t *world,
+    bool enable);
+
+void ecs_measure_system_time(
+    ecs_world_t *world,
+    bool enable);
 
 /* -- Worker API -- */
 

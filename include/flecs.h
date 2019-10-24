@@ -217,7 +217,7 @@ typedef void (*ecs_module_init_action_t)(
 #define EEcsOnDemand (11)
 
 /* World entity */
-#define EcsWorld (12)
+#define EcsWorld (13)
 
 /* Singleton entity */
 #define EcsSingleton (ECS_SINGLETON)
@@ -1173,7 +1173,7 @@ ecs_entity_t _ecs_set_singleton_ptr(
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the
- * specified type. It accepts component handles, families and prefabs.
+ * specified type. It accepts component handles, types and prefabs.
  *
  * For example, if an entity has component 'Foo' and a type has 'Foo, Bar'
  * invoking this function with the entity and type as type will return false
@@ -1208,7 +1208,7 @@ bool _ecs_has_owned(
 
 /** Check if entity has any of the components in the specified type.
  * This operation checks if the entity has any of the components associated with
- * the specified type. It accepts component handles, families and prefabs.
+ * the specified type. It accepts component handles, types and prefabs.
  *
  * For example, if an entity has component 'Foo' and a type has 'Foo, Bar'
  * invoking this function with the entity and type as type will return true
@@ -2060,7 +2060,7 @@ ecs_entity_t ecs_new_type(
  *
  * Entities can override components from a prefab by adding the component with
  * ecs_add. When a component is overridden, its value will be copied from the
- * prefab. This technique can be combined with families to automatically
+ * prefab. This technique can be combined with types to automatically
  * initialize entities, like this:
  *
  * ECS_PREFAB(world, MyPrefab, Foo);
