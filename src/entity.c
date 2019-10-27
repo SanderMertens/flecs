@@ -628,6 +628,7 @@ uint32_t commit(
          * Therefore it is not possible to check while in progress if the entity
          * already existed. Instead, the check will be applied when the entity
          * is merged, which will invoke commit again. */
+
         if (stage->range_check_enabled) {
             ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, 0);
             ecs_assert(entity >= world->min_handle, ECS_OUT_OF_RANGE, 0);

@@ -681,7 +681,7 @@
                 "control_fps_busy_app",
                 "control_fps_random_system",
                 "control_fps_random_app",
-                "basic_stats",
+                "world_stats",
                 "quit",
                 "get_delta_time",
                 "get_delta_time_auto",

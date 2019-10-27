@@ -1,7 +1,6 @@
 #include "flecs_private.h"
 
 /** Convert time to double */
-static
 double ecs_time_to_double(
     ecs_time_t t)
 {
@@ -10,7 +9,6 @@ double ecs_time_to_double(
     return result + (double)t.nanosec / (double)1000000000;;
 }
 
-static
 ecs_time_t ecs_time_sub(
     ecs_time_t t1,
     ecs_time_t t2)
