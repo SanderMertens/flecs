@@ -917,7 +917,7 @@ ecs_entity_t _ecs_run_w_filter(
         .param = param,
         .column_count = column_count,
         .delta_time = system_delta_time,
-        .world_time = world->world_time,
+        .world_time = world->world_time_total,
         .frame_offset = offset,
         .table_offset = 0
     };

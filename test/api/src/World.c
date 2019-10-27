@@ -857,94 +857,104 @@ void World_control_fps_random_app() {
 static
 void Dummy(ecs_rows_t *rows) { }
 
-void World_basic_stats() {
+void World_world_stats() {
     ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsStats, 0);
 
     ECS_COMPONENT(world, Velocity);
 
-    ecs_measure_frame_time(world, true);
-    ecs_measure_system_time(world, true);
+    /* Make sure that stats are collected by requiring EcsWorldStats */
+    ecs_new_system(world, "CollectWorldStats", EcsManual, "[in] EcsWorldStats", NULL);
 
-    ecs_world_stats_t stats = {0};
+    EcsWorldStats stats = {0};
 
-    ecs_get_stats(world, &stats);
+    ecs_progress(world, 1);
+    ecs_progress(world, 1);
+    ecs_progress(world, 1);
 
-    int init_system_count = stats.system_count;
-    int init_table_count = stats.table_count;
-    int init_component_count = stats.component_count;
-    int init_entity_count = stats.entity_count;
+    stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
+    int init_system_count = stats.col_systems_count;
+    int init_table_count = stats.tables_count;
+    int init_component_count = stats.components_count;
+    int init_entity_count = stats.entities_count;
 
-    ecs_get_stats(world, &stats);
+    ecs_progress(world, 1);
 
-    test_int(stats.system_count - init_system_count, 0);
-    test_int(stats.table_count - init_table_count, 0);
-    test_int(stats.component_count - init_component_count, 0);
-    test_int(stats.entity_count - init_entity_count, 0);
+    stats = ecs_get(world, EcsWorld, EcsWorldStats);
+
+    test_int(stats.col_systems_count - init_system_count, 0);
+    test_int(stats.tables_count - init_table_count, 0);
+    test_int(stats.components_count - init_component_count, 0);
+    test_int(stats.entities_count - init_entity_count, 0);
 
     ECS_COMPONENT(world, Position);
 
-    ecs_get_stats(world, &stats);
+    ecs_progress(world, 1);
+    stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
-    test_int(stats.system_count - init_system_count, 0);
-    test_int(stats.table_count - init_table_count, 0);
-    test_int(stats.component_count - init_component_count, 0);
-    test_int(stats.entity_count - init_entity_count, 1);
+    test_int(stats.col_systems_count - init_system_count, 0);
+    test_int(stats.tables_count - init_table_count, 0);
+    test_int(stats.components_count - init_component_count, 1);
+    test_int(stats.entities_count - init_entity_count, 1);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
-    ecs_get_stats(world, &stats);
+    ecs_progress(world, 1);
+    stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
-    test_int(stats.system_count - init_system_count, 0);
-    test_int(stats.table_count - init_table_count, 1);
-    test_int(stats.component_count - init_component_count, 1);
-    test_int(stats.entity_count - init_entity_count, 2);
+    test_int(stats.col_systems_count - init_system_count, 0);
+    test_int(stats.tables_count - init_table_count, 1);
+    test_int(stats.components_count - init_component_count, 1);
+    test_int(stats.entities_count - init_entity_count, 2);
 
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
-    ecs_get_stats(world, &stats);
+    ecs_progress(world, 1);
+    stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
-    test_int(stats.system_count - init_system_count, 1);
-    test_int(stats.table_count - init_table_count, 2);
-    test_int(stats.component_count - init_component_count, 2);
-    test_int(stats.entity_count - init_entity_count, 3);
+    test_int(stats.col_systems_count - init_system_count, 1);
+    test_int(stats.tables_count - init_table_count, 1);
+    test_int(stats.components_count - init_component_count, 1);
+    test_int(stats.entities_count - init_entity_count, 3);
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    ecs_get_stats(world, &stats);
+    ecs_progress(world, 1);
+    stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
-    test_int(stats.system_count - init_system_count, 2);
-    test_int(stats.table_count - init_table_count, 2);
-    test_int(stats.component_count - init_component_count, 2);
-    test_int(stats.entity_count - init_entity_count, 4);
+    test_int(stats.col_systems_count - init_system_count, 2);
+    test_int(stats.tables_count - init_table_count, 1);
+    test_int(stats.components_count - init_component_count, 1);
+    test_int(stats.entities_count - init_entity_count, 4);
 
     ECS_TYPE(world, Type, Position);
 
-    ecs_get_stats(world, &stats);
+    ecs_progress(world, 1);
+    stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
-    test_int(stats.system_count - init_system_count, 2);
-    test_int(stats.table_count - init_table_count, 3);
-    test_int(stats.component_count - init_component_count, 3);
-    test_int(stats.entity_count - init_entity_count, 5);
+    test_int(stats.col_systems_count - init_system_count, 2);
+    test_int(stats.tables_count - init_table_count, 2);
+    test_int(stats.components_count - init_component_count, 1);
+    test_int(stats.entities_count - init_entity_count, 5);
 
     ECS_TYPE(world, Feature, Move, Dummy);
 
-    ecs_get_stats(world, &stats);
+    ecs_progress(world, 1);
+    stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
-    test_int(stats.system_count - init_system_count, 2);
-    test_int(stats.table_count - init_table_count, 3);
-    test_int(stats.component_count - init_component_count, 3);
-    test_int(stats.entity_count - init_entity_count, 6);
+    test_int(stats.col_systems_count - init_system_count, 2);
+    test_int(stats.tables_count - init_table_count, 3);
+    test_int(stats.components_count - init_component_count, 1);
+    test_int(stats.entities_count - init_entity_count, 6);
 
     ecs_progress(world, 0);
+    stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
-    ecs_get_stats(world, &stats);
-
-    test_assert(stats.system_time != 0);
-    test_assert(stats.frame_time != 0);
-
-    ecs_free_stats(&stats);
+    test_assert(stats.system_seconds_total != 0);
+    test_assert(stats.frame_seconds_total != 0);
 
     ecs_fini(world);
 }

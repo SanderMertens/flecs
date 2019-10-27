@@ -273,6 +273,17 @@ FLECS_EXPORT
 double ecs_time_measure(
     ecs_time_t *start);
 
+/* Calculate difference between two timestamps */
+FLECS_EXPORT
+ecs_time_t ecs_time_sub(
+    ecs_time_t t1,
+    ecs_time_t t2);
+
+/* Convert time value to a double */
+FLECS_EXPORT
+double ecs_time_to_double(
+    ecs_time_t t);
+
 #ifdef __cplusplus
 }
 #endif

@@ -467,14 +467,19 @@ struct ecs_world {
 
     /* -- Time management -- */
 
-    uint32_t tick_count;          /* Number of computed frames by world */
-    ecs_time_t frame_start;       /* Starting timestamp of frame */
-    float frame_time;             /* Time spent processing a frame */
-    float system_time;            /* Time spent processing systems */
-    float merge_time;             /* Time spent on merging */
+    ecs_time_t world_start_time;  /* Timestamp of simulation start */
+    ecs_time_t frame_start_time;  /* Timestamp of frame start */
     float target_fps;             /* Target fps */
     float fps_sleep;              /* Sleep time to prevent fps overshoot */
-    float world_time;             /* Time since start of simulation */
+
+
+    /* -- Metrics -- */
+
+    double frame_time_total;      /* Total time spent in processing a frame */
+    double system_time_total;     /* Total time spent in periodic systems */
+    double merge_time_total;      /* Total time spent in merges */
+    double world_time_total;      /* Time elapsed since first frame */
+    uint32_t frame_count_total;   /* Total number of frames */
 
 
     /* -- Settings from command line arguments -- */

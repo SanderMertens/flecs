@@ -682,14 +682,15 @@ ecs_world_t *ecs_init(void) {
     world->should_quit = false;
     world->should_match = false;
 
-    world->frame_start = (ecs_time_t){0, 0};
-    world->frame_time = 0;
-    world->world_time = 0;
-    world->merge_time = 0;
-    world->system_time = 0;
+    world->frame_start_time = (ecs_time_t){0, 0};
+    world->world_start_time = (ecs_time_t){0, 0};
     world->target_fps = 0;
     world->fps_sleep = 0;
-    world->tick_count = 0;
+
+    world->frame_time_total = 0;
+    world->system_time_total = 0;
+    world->merge_time_total = 0;
+    world->frame_count_total = 0;
 
     world->context = NULL;
 
@@ -719,9 +720,6 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsDisabled, ECS_DISABLED_ID, 0);
     bootstrap_component(world, table, EEcsOnDemand, ECS_ON_DEMAND_ID, 0);
 
-    /* Initialize EcsWorld */
-    ecs_set(world, EcsWorld, EcsId, {"EcsWorld"});
-
     world->last_handle = EcsWorld + 1;
     world->min_handle = 0;
     world->max_handle = 0;
@@ -734,6 +732,9 @@ ecs_world_t *ecs_init(void) {
     world->t_builtins = ecs_expr_to_type(world,
         "EcsComponent, EcsTypeComponent, EcsPrefab, EcsPrefabParent"
         ", EcsPrefabBuilder, EcsRowSystem, EcsColSystem");
+
+    /* Initialize EcsWorld */
+    ecs_set(world, EcsWorld, EcsId, {"EcsWorld"});
 
     return world;
 }
@@ -1064,9 +1065,14 @@ void run_single_thread_stage(
             world->in_progress = true;
         }
 
+        ecs_time_t start = {0};
+        ecs_time_measure(&start);
+
         for (i = 0; i < system_count; i ++) {
             ecs_run(world, buffer[i], world->delta_time, NULL);
         }
+
+        world->system_time_total += ecs_time_measure(&start);
 
         if (staged && world->auto_merge) {
             world->in_progress = false;
@@ -1095,7 +1101,13 @@ void run_multi_thread_stage(
             }
             ecs_prepare_jobs(world, buffer[i]);
         }
+
+        ecs_time_t start;
+        ecs_time_measure(&start);
+
         ecs_run_jobs(world);
+
+        world->system_time_total += ecs_time_measure(&start);
 
         if (world->auto_merge) {
             world->in_progress = false;
@@ -1113,9 +1125,9 @@ float start_measure_frame(
     float delta_time = 0;
 
     if (world->measure_frame_time || !user_delta_time) {
-        ecs_time_t t = world->frame_start;
+        ecs_time_t t = world->frame_start_time;
         do {
-            if (world->frame_start.sec) {
+            if (world->frame_start_time.sec) {
                 delta_time = ecs_time_measure(&t);
             } else {
                 ecs_time_measure(&t);
@@ -1126,10 +1138,14 @@ float start_measure_frame(
                 }
             }
         
-        /* Keep trying until delta_time is zero */
+        /* Keep trying while delta_time is zero */
         } while (delta_time == 0);
 
-        world->frame_start = t;  
+        world->frame_start_time = t;  
+
+        /* Compute total time passed since start of simulation */
+        ecs_time_t diff = ecs_time_sub(t, world->world_start_time);
+        world->world_time_total = ecs_time_to_double(diff);
     }
 
     return delta_time;
@@ -1141,9 +1157,9 @@ void stop_measure_frame(
     float delta_time)
 {
     if (world->measure_frame_time) {
-        ecs_time_t t = world->frame_start;
+        ecs_time_t t = world->frame_start_time;
         double frame_time = ecs_time_measure(&t);
-        world->frame_time += frame_time;
+        world->frame_time_total += frame_time;
 
         /* Sleep if processing faster than target FPS */
         float target_fps = world->target_fps;
@@ -1174,8 +1190,7 @@ bool ecs_progress(
     }
 
     world->delta_time = user_delta_time;
-    world->world_time += user_delta_time;
-    world->merge_time = 0;
+    world->frame_time_total += user_delta_time;
 
     bool has_threads = ecs_vector_count(world->worker_threads) != 0;
 
@@ -1211,12 +1226,9 @@ bool ecs_progress(
 
     /* -- System execution stops here -- */
 
-    world->tick_count ++;
+    world->frame_count_total ++;
     
     stop_measure_frame(world, delta_time);
-    
-    /* Time spent on systems is time spent on frame minus merge time */
-    world->system_time = world->frame_time - world->merge_time;
 
     world->in_progress = false;
 
@@ -1262,7 +1274,7 @@ void ecs_merge(
     }
 
     if (measure_frame_time) {
-        world->merge_time += ecs_time_measure(&t_start);
+        world->merge_time_total += ecs_time_measure(&t_start);
     }
 
     world->is_merging = false;
@@ -1355,7 +1367,7 @@ uint32_t ecs_get_tick(
     ecs_world_t *world)
 {
     ecs_get_stage(&world);
-    return world->tick_count;
+    return world->frame_count_total;
 }
 
 void ecs_set_context(
