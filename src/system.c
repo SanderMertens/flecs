@@ -925,7 +925,8 @@ void* get_shared_column(
             rows->world, rows->references[-table_column - 1].component, 
             EcsComponent);
         ecs_assert(cdata != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(cdata->size == size, ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(cdata->size == size, ECS_COLUMN_TYPE_MISMATCH, 
+            ecs_get_id(rows->world, rows->system));
     }
 #endif
 

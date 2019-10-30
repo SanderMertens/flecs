@@ -349,15 +349,20 @@ void ecs_world_activate_system(
     ecs_vector_move_index(
         &dst_array, src_array, &handle_arr_params, i);
 
+    ecs_entity_t *to_sort;
+    uint32_t sort_count;
+
     if (active) {
          *ecs_system_array(world, kind) = dst_array;
-         qsort(dst_array, ecs_vector_count(dst_array) + 1,
-          sizeof(ecs_entity_t), compare_handle);
+         to_sort = ecs_vector_first(dst_array);
+         sort_count = ecs_vector_count(dst_array);
     } else {
         world->inactive_systems = dst_array;
-        qsort(src_array, ecs_vector_count(src_array) + 1,
-          sizeof(ecs_entity_t), compare_handle);
+        to_sort = ecs_vector_first(src_array);
+        sort_count = ecs_vector_count(src_array);        
     } 
+
+    qsort(to_sort, sort_count, sizeof(ecs_entity_t), compare_handle);    
 
     /* Signal that system has been either activated or deactivated */
     ecs_system_activate(world, system, active);

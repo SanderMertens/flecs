@@ -258,9 +258,6 @@ void StatsCollectSystemStats(ecs_rows_t *rows) {
         stats[i].is_enabled = system[i].base.enabled;
         stats[i].is_active = ecs_vector_count(system[i].tables);
         stats[i].is_hidden = ecs_has(rows->world, entity, EcsHidden);
-
-        /* Reset time_spent between measuremen=t intervals */
-        system[i].base.time_spent = 0;
     }
 }
 
@@ -497,7 +494,8 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
 
     uint32_t i;
     for (i = 0; i < rows->count; i ++) {
-        stats[i].id = ecs_get_id(world, rows->entities[i]);
+        stats[i].name = ecs_get_id(world, rows->entities[i]);
+        stats[i].entity = rows->entities[i];
         stats[i].type = type_component[i].type;
         stats[i].normalized_type = type_component[i].resolved;
         stats[i].is_hidden = ecs_has(world, rows->entities[i], EcsHidden);
@@ -509,6 +507,7 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
         stats[i].row_systems_count = 0;
         stats[i].enabled_systems_count = 0;
         stats[i].active_systems_count = 0;
+        stats[i].instance_count = _ecs_count(world, type_component[i].resolved);
 
         uint32_t j, count = ecs_vector_count(type_component[i].resolved);
         ecs_entity_t *entities = ecs_vector_first(type_component[i].resolved);

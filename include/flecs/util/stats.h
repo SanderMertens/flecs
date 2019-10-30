@@ -78,7 +78,7 @@ typedef struct EcsSystemStats {
     uint32_t tables_matched_count;          /* Number of tables matched */
     uint32_t entities_matched_count;        /* Number of entities matched */
     uint64_t invoke_count_total;            /* Number of times system got invoked */
-    float seconds_total;         /* Total time spent in system */
+    float seconds_total;                    /* Total time spent in system */
     bool is_enabled;                        /* Is system enabled */
     bool is_active;                         /* Is system active */
     bool is_hidden;                         /* Is system hidden */
@@ -87,7 +87,7 @@ typedef struct EcsSystemStats {
 /* Type statistics (only for named types, created with ECS_TYPE) */
 typedef struct EcsTypeStats {
     ecs_entity_t entity;                    /* Entity handle of type */
-    const char *id;                         /* Type name */
+    const char *name;                         /* Type name */
     ecs_type_t type;                        /* Reference to type with nesting intact */
     ecs_type_t normalized_type;             /* Reference to normalized type */
     uint32_t entities_count;                /* Number of plain entities in type */  
@@ -98,6 +98,7 @@ typedef struct EcsTypeStats {
     uint32_t row_systems_count;             /* Number of row (reactive) systems in type */
     uint32_t enabled_systems_count;         /* Number of enabled systems in type */
     uint32_t active_systems_count;          /* Number of active systems in type */
+    uint32_t instance_count;                /* Number of instances of this type */
     bool is_hidden;                         /* Is type hidden */
 } EcsTypeStats; 
 
