@@ -81,6 +81,8 @@ void* ecs_vector_addn(
 
     array->count = count;
 
+    ecs_assert(array->size >= array->count, ECS_INTERNAL_ERROR, NULL);
+
     return ECS_OFFSET(ARRAY_BUFFER(array), element_size * old_count);
 }
 
@@ -99,8 +101,10 @@ uint32_t ecs_vector_move_index(
 {
     void *dst_elem = ecs_vector_add(dst_array, params);
     void *src_elem = ecs_vector_get(src_array, params, index);
-
     memcpy(dst_elem, src_elem, params->element_size);
+
+    ecs_assert((*dst_array)->size >= (*dst_array)->count, ECS_INTERNAL_ERROR, NULL);
+
     return ecs_vector_remove_index(src_array, params, index);
 }
 
@@ -129,6 +133,8 @@ uint32_t ecs_vector_remove(
 
     count --;
     array->count = count;
+
+    ecs_assert(array->size >= array->count, ECS_INTERNAL_ERROR, NULL);
 
     return count;
 }
@@ -163,6 +169,8 @@ bool ecs_vector_pop(
 
     ecs_vector_remove_last(array);
 
+    ecs_assert(array->size >= array->count, ECS_INTERNAL_ERROR, NULL);
+
     return true;
 }
 
@@ -190,6 +198,8 @@ uint32_t ecs_vector_remove_index(
     count --;
     array->count = count;
 
+    ecs_assert(array->size >= count, ECS_INTERNAL_ERROR, NULL);
+
     return count;
 }
 
@@ -208,6 +218,8 @@ void ecs_vector_reclaim(
         array->size = size;
         *array_inout = array;
     }
+
+    ecs_assert(array->size >= array->count, ECS_INTERNAL_ERROR, NULL);    
 }
 
 uint32_t ecs_vector_count(
@@ -249,6 +261,8 @@ uint32_t ecs_vector_set_size(
             array->size = size;
             *array_inout = array;
             result = size;
+
+            ecs_assert(array->size >= array->count, ECS_INTERNAL_ERROR, NULL);  
         }
 
         return result;
@@ -265,6 +279,9 @@ uint32_t ecs_vector_set_count(
     }
     (*array_inout)->count = count;
     uint32_t size = ecs_vector_set_size(array_inout, params, count);
+
+    ecs_assert(size >= count, ECS_INTERNAL_ERROR, NULL);
+
     return size;
 }
 
@@ -286,6 +303,8 @@ void* ecs_vector_get(
     uint32_t count = array->count;
     uint32_t element_size = params->element_size;
 
+    ecs_assert(array->size >= array->count, ECS_INTERNAL_ERROR, NULL);
+
     if (index >= count) {
         return NULL;
     }
@@ -299,6 +318,8 @@ uint32_t ecs_vector_get_index(
     void *elem)
 {
     ecs_assert(elem != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(array->size >= array->count, ECS_INTERNAL_ERROR, NULL);
+
     uint32_t element_size = params->element_size;
     void *buffer = ARRAY_BUFFER(array);
     return ((char*)elem - (char*)buffer) / element_size;
@@ -309,6 +330,7 @@ void* ecs_vector_last(
     const ecs_vector_params_t *params)
 {
     if (array) {
+        ecs_assert(array->size >= array->count, ECS_INTERNAL_ERROR, NULL);
         uint32_t count = array->count;
         uint32_t element_size = params->element_size;
         return ECS_OFFSET(ARRAY_BUFFER(array), element_size * (count - 1));
@@ -325,6 +347,7 @@ void ecs_vector_sort(
     if (!array)
         return;
 
+    ecs_assert(array->size >= array->count, ECS_INTERNAL_ERROR, NULL);
     uint32_t count = array->count;
     uint32_t element_size = params->element_size;
     void *buffer = ARRAY_BUFFER(array);
@@ -341,6 +364,9 @@ void ecs_vector_memory(
     uint32_t *used)
 {
     if (!array) return;
+    
+    ecs_assert(array->size >= array->count, ECS_INTERNAL_ERROR, NULL);
+
     if (allocd) {
         *allocd += array->size * params->element_size + sizeof(ecs_vector_t);
     }
