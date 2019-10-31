@@ -1162,7 +1162,7 @@ void invoke_reactive_systems(
         /* Delete column from old table. Delete in reverse, as entity indexes of
          * entities after the deletion point change as a result of the delete. */
 
-        int i;
+        uint32_t i;
         for (i = 0; i < count; i ++) {
             ecs_table_delete(
                 world, stage, src_table, src_columns, src_index + count - i);

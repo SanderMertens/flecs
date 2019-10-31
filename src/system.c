@@ -164,7 +164,6 @@ ecs_entity_t new_row_system(
 
 static
 ecs_on_demand_in_t* get_in_component(
-    ecs_world_t *world,
     ecs_map_t *component_map,
     ecs_entity_t component)
 {
@@ -185,7 +184,6 @@ static int indent = 0;
 static
 void activate_in_columns(
     ecs_world_t *world,
-    ecs_entity_t system,
     EcsColSystem *system_data,
     ecs_map_t *component_map,
     bool activate)
@@ -196,7 +194,7 @@ void activate_in_columns(
     for (i = 0; i < count; i ++) {
         if (columns[i].inout_kind == EcsIn) {
             ecs_on_demand_in_t *in = get_in_component(
-                world, component_map, columns[i].is.component);
+                component_map, columns[i].is.component);
 
             ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -236,13 +234,11 @@ void activate_in_columns(
 
 static
 void register_out_column(
-    ecs_world_t *world,
-    ecs_entity_t system,
     ecs_map_t *component_map,
     ecs_entity_t component,
     ecs_on_demand_out_t *on_demand_out)
 {
-    ecs_on_demand_in_t *in = get_in_component(world, component_map, component);
+    ecs_on_demand_in_t *in = get_in_component(component_map, component);
     ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
 
     on_demand_out->count += in->count;
@@ -282,7 +278,7 @@ void register_out_columns(
             }
 
             register_out_column(
-                world, system, component_map, columns[i].is.component, 
+                component_map, columns[i].is.component, 
                 system_data->on_demand);
 
             out_count ++;
@@ -299,7 +295,6 @@ void register_out_columns(
 /* Check if system meets constraints of non-table columns */
 bool ecs_check_column_constraints(
     ecs_world_t *world,
-    ecs_entity_t entity,
     EcsSystem *system_data)
 {
     uint32_t i, column_count = ecs_vector_count(system_data->columns);
@@ -682,7 +677,7 @@ void ecs_system_activate(
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* If system contains in columns, signal that they are now in use */
-    activate_in_columns(world, system, system_data, world->on_activate_components, activate);
+    activate_in_columns(world, system_data, world->on_activate_components, activate);
 
     /* Invoke system status action */
     ecs_invoke_status_action(world, system, system_data, 
@@ -762,7 +757,7 @@ ecs_entity_t ecs_new_system(
 
     /* Check if all non-table column constraints are met. If not, disable
      * system (system will be enabled once constraints are met) */
-    if (!ecs_check_column_constraints(world, result, system_data)) {
+    if (!ecs_check_column_constraints(world, system_data)) {
         ecs_enable(world, result, false);
     }
 
@@ -795,7 +790,7 @@ ecs_entity_t ecs_new_system(
         /* If system is enabled, trigger enable components */
         if (system_data->enabled) {
             activate_in_columns(
-                world, result, col_system_data, 
+                world, col_system_data, 
                 world->on_enable_components, true);   
         }
     }
@@ -835,7 +830,6 @@ void ecs_enable(
                 /* Enable/disable systems that trigger on [in] enablement */
                 activate_in_columns(
                     world, 
-                    system, 
                     col_system, 
                     world->on_enable_components, 
                     enabled);

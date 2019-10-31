@@ -96,6 +96,9 @@ void StatsCollectWorldStats_StatusAction(
     ecs_system_status_t status, 
     void *ctx)
 {
+    (void)system;
+    (void)ctx;
+
     if (status == EcsSystemActivated) {
         ecs_measure_frame_time(world, true);
     } else if (status == EcsSystemDeactivated) {
@@ -342,6 +345,9 @@ void StatsCollectSystemStats_StatusAction(
     ecs_system_status_t status, 
     void *ctx)
 {
+    (void)system;
+    (void)ctx;
+
     if (status == EcsSystemActivated) {
         ecs_measure_system_time(world, true);
     } else if (status == EcsSystemDeactivated) {
@@ -545,6 +551,8 @@ void StatsCollectTableStats_StatusAction(
     ecs_type_t ecs_type(EcsTablePtr) = ctx;
     ecs_entity_t ecs_entity(EcsTablePtr) = ecs_type_to_entity(world, ecs_type(EcsTablePtr));
 
+    (void)system;
+
     if (status == EcsSystemEnabled) {
         /* Create an entity for every table */
         ecs_chunked_t *tables = world->main_stage.tables;
@@ -688,6 +696,8 @@ void FlecsStatsImport(
     ecs_world_t *world,
     int flags)
 {
+    (void)flags;
+    
     ECS_MODULE(world, FlecsStats);
 
     ECS_COMPONENT(world, EcsAllocStats);
