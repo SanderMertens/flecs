@@ -146,6 +146,7 @@ typedef struct FlecsStats {
     ECS_DECLARE_COMPONENT(EcsTypeStats);
 } FlecsStats;
 
+FLECS_EXPORT
 void FlecsStatsImport(
     ecs_world_t *world,
     int flags);
