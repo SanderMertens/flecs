@@ -35,6 +35,7 @@ int parse_type_action(
 {
     ecs_vector_t **array = data;
     (void)source_id;
+    (void)inout_kind;
 
     if (strcmp(entity_id, "0")) {
         ecs_entity_t entity = 0;

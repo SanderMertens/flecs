@@ -622,7 +622,7 @@ void ecs_rematch_system(
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
     ecs_enable(world, system, 
-        ecs_check_column_constraints(world, system, (EcsSystem*)system_data));
+        ecs_check_column_constraints(world, (EcsSystem*)system_data));
 }
 
 /** Revalidate references after a realloc occurred in a table */

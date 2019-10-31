@@ -48,6 +48,7 @@ typedef struct EcsColSystemMemoryStats {
 
 /* Memory statistics for a world */
 typedef struct EcsMemoryStats {
+    uint32_t __dummy;                       /* Allow for {0} initialization */
     ecs_memory_stat_t total_memory;         /* Total amount of memory in use */
     ecs_memory_stat_t entities_memory;      /* Memory in use for entities */
     ecs_memory_stat_t components_memory;    /* Memory in use for components */
