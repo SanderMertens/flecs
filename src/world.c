@@ -1195,7 +1195,6 @@ bool ecs_progress(
     }
 
     world->delta_time = user_delta_time;
-    world->frame_time_total += user_delta_time;
 
     bool has_threads = ecs_vector_count(world->worker_threads) != 0;
 
