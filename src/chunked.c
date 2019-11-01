@@ -143,6 +143,13 @@ FLECS_EXPORT
 void ecs_chunked_clear(
     ecs_chunked_t *chunked)
 {
+    uint32_t i, count = ecs_vector_count(chunked->dense);
+    uint32_t *dense = ecs_vector_first(chunked->dense);
+
+    for (i = 0; i < count; i ++) {
+        _ecs_chunked_remove(chunked, 0, dense[i]);
+    }
+
     ecs_vector_clear(chunked->dense);
 }
 
@@ -189,7 +196,8 @@ void* _ecs_chunked_remove(
     uint32_t index)
 {   
     (void)element_size;
-    ecs_assert(element_size == chunked->element_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!element_size || element_size == chunked->element_size, 
+        ECS_INVALID_PARAMETER, NULL);
 
     uint32_t *free_elem = ecs_vector_add(&chunked->free_stack, &free_param);
     *free_elem = index;
