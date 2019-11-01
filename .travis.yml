@@ -67,7 +67,13 @@ install:
   - git clone https://github.com/SanderMertens/bake
   - make -C bake/build-$(uname)
   - bake/bake setup
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+  - cd ..
   - bake
+  - bake examples
 
 script:
   - bake test
