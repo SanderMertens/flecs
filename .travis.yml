@@ -8,6 +8,10 @@ compiler:
   - gcc
   - clang
 
+os:
+  - linux
+  - osx
+
 dist:
   - precise
   - trusty
