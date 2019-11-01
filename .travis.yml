@@ -1,26 +1,67 @@
 language: c
 
-arch:
-  - amd64
-  - arm64
-
-compiler:
-  - gcc
-  - clang
-
-os:
-  - linux
-  - osx
-
-dist:
-  - precise
-  - trusty
-  - xenial
-  - bionic
-
-osx_image:
-  - xcode6.4
-  - xcode11.2
+matrix:
+  include:
+  - os: linux
+    sudo: required
+    dist: precise
+    compiler: gcc
+    arch: amd64
+    env: BUILD=amd64-precise-gcc
+  - os: linux
+    sudo: required
+    dist: precise
+    compiler: clang
+    arch: amd64
+    env: BUILD=amd64-precise-clang
+  - os: linux
+    sudo: required
+    dist: precise
+    compiler: gcc
+    arch: arm64
+    env: BUILD=arm64-precise-gcc
+  - os: linux
+    sudo: required
+    dist: xenial
+    compiler: gcc
+    arch: amd64
+    env: BUILD=amd64-xenial-gcc   
+  - os: linux
+    sudo: required
+    dist: bionic
+    compiler: gcc
+    arch: amd64
+    env: BUILD=amd64-bionic-gcc
+  - os: linux
+    sudo: required
+    dist: bionic
+    compiler: clang
+    arch: amd64
+    env: BUILD=amd64-bionic-clang
+  - os: linux
+    sudo: required
+    dist: bionic
+    compiler: gcc
+    arch: arm64
+    env: BUILD=arm64-bionic-gcc
+  - os: osx
+    sudo: required
+    osx_image: xcode11.2
+    compiler: clang
+    arch: amd64
+    env: BUILD=amd64-xcode11.2-clang
+  - os: osx
+    sudo: required
+    osx_image: xcode11.2
+    compiler: clang
+    arch: arm64
+    env: BUILD=arm64-xcode11.2-clang
+  - os: osx
+    sudo: required
+    osx_image: xcode6.4
+    compiler: clang
+    arch: amd64
+    env: BUILD=amd64-xcode6.4-clang
 
 install:
   - git clone https://github.com/SanderMertens/bake
