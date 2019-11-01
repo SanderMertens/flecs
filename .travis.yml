@@ -4,32 +4,76 @@ matrix:
   include:
   - os: linux
     sudo: required
-    dist: trusty
+    dist: precise
     compiler: gcc
+    arch: amd64
+    env: BUILD=amd64-precise-gcc
   - os: linux
     sudo: required
-    dist: trusty
+    dist: xenial
+    compiler: gcc
+    arch: amd64
+    env: BUILD=amd64-xenial-gcc   
+  - os: linux
+    sudo: required
+    dist: xenial
     compiler: clang
+    arch: amd64
+    env: BUILD=amd64-xenial-clang   
   - os: linux
     sudo: required
     dist: xenial
     compiler: gcc
+    arch: arm64
+    env: BUILD=arm64-xenial-gcc
   - os: linux
     sudo: required
-    dist: xenial
-    compiler: clang
-  - os: osx
-    sudo: required
+    dist: bionic
     compiler: gcc
+    arch: amd64
+    env: BUILD=amd64-bionic-gcc
+  - os: linux
+    sudo: required
+    dist: bionic
+    compiler: clang
+    arch: amd64
+    env: BUILD=amd64-bionic-clang
+  - os: linux
+    sudo: required
+    dist: bionic
+    compiler: gcc
+    arch: arm64
+    env: BUILD=arm64-bionic-gcc
   - os: osx
     sudo: required
+    osx_image: xcode11.2
     compiler: clang
+    arch: amd64
+    env: BUILD=amd64-xcode11.2-clang
+  - os: osx
+    sudo: required
+    osx_image: xcode11.2
+    compiler: clang
+    arch: arm64
+    env: BUILD=arm64-xcode11.2-clang
+  - os: osx
+    sudo: required
+    osx_image: xcode6.4
+    compiler: clang
+    arch: amd64
+    env: BUILD=amd64-xcode6.4-clang
 
 install:
   - git clone https://github.com/SanderMertens/bake
   - make -C bake/build-$(uname)
   - bake/bake setup
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+  - cd ..
   - bake
+  - bake examples
 
 script:
   - bake test
