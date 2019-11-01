@@ -1,29 +1,22 @@
 language: c
 
-matrix:
-  include:
-  - os: linux
-    sudo: required
-    dist: trusty
-    compiler: gcc
-  - os: linux
-    sudo: required
-    dist: trusty
-    compiler: clang
-  - os: linux
-    sudo: required
-    dist: xenial
-    compiler: gcc
-  - os: linux
-    sudo: required
-    dist: xenial
-    compiler: clang
-  - os: osx
-    sudo: required
-    compiler: gcc
-  - os: osx
-    sudo: required
-    compiler: clang
+arch:
+  - amd64
+  - arm64
+
+compiler:
+  - gcc
+  - clang
+
+dist:
+  - precise
+  - trusty
+  - xenial
+  - bionic
+
+osx_image:
+  - xcode6.4
+  - xcode11.2
 
 install:
   - git clone https://github.com/SanderMertens/bake
