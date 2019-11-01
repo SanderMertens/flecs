@@ -172,16 +172,18 @@ int main(int argc, char *argv[]) {
     ECS_ENTITY(world, MyEntity, Position, Velocity);
     
     // Imperative macro's (function wrappers) use snake_case
-    ecs_set(world, MyEntity, Position, {10, 20});
+    ecs_add(world, MyEntity, Position);
     
     return ecs_fini(world);
 }
 ```
 
-#### Handles
-The Flecs API creates and uses handles to refer to entities, systems and components. Most of the times these handles are transparently created and used by the API, and most code can be written without explicitly being aware of how they are managed. However, in some cases the API may need to access the handles directly, in which case it is useful to know their conventions.
+Flecs symbols and macro's use the `ecs_`, `ECS_` and `Ecs` prefixes.
 
-The Flecs API has entity handles (of type `ecs_entity_t`) and type handles (of type `ecs_type_t`). Entity handles are used to refer to a single entity. Systems and components (amongst others) obtain identifiers from the same id pool as entities, thus handles to systems and components are also of type `ecs_entity_t`. Types are vectors of entity identifiers that are used to describe which components an entity has (components are identified by entity identifiers), amongst others.
+#### Handles
+The API creates and uses handles to refer to entities, systems and components. Most of the times these handles are transparently created and used by the API, and most code can be written without explicitly being aware of how they are managed. However, in some cases the API may need to access the handles directly, in which case it is useful to know their conventions.
+
+The API has entity handles (of type `ecs_entity_t`) and type handles (of type `ecs_type_t`). Entity handles are used to refer to a single entity. Systems and components (amongst others) obtain identifiers from the same id pool as entities, thus handles to systems and components are also of type `ecs_entity_t`. Types are vectors of entity identifiers that are used to describe which components an entity has (components are identified by entity identifiers), amongst others.
 
 Type handles are automatically created by API macro's like `ECS_COMPONENT`, `ECS_TYPE` and `ECS_PREFAB`. To obtain a handle to a type, use the `ecs_type` macro and provide as argument the identifier of the component or entity. Entity handles in most cases have the same identifier that is provided to the macro. For example:
 
