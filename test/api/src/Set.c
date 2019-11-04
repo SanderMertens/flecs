@@ -302,3 +302,21 @@ void Set_set_and_new() {
 
     ecs_fini(world);
 }
+
+void Set_set_null() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_set_ptr(world, e, Position, NULL);
+    test_assert(e != 0);
+
+    test_assert(ecs_has(world, e, Position));
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+    test_int(p->y, 0);
+
+    ecs_fini(world);
+}

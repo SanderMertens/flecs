@@ -216,6 +216,7 @@ void Set_set_remove(void);
 void Set_set_remove_other(void);
 void Set_set_remove_twice(void);
 void Set_set_and_new(void);
+void Set_set_null(void);
 
 // Testsuite 'Lookup'
 void Lookup_lookup(void);
@@ -1599,7 +1600,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Set",
-        .testcase_count = 12,
+        .testcase_count = 13,
         .testcases = (bake_test_case[]){
             {
                 .id = "set_empty",
@@ -1648,6 +1649,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_and_new",
                 .function = Set_set_and_new
+            },
+            {
+                .id = "set_null",
+                .function = Set_set_null
             }
         }
     },

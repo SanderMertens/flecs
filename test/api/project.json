@@ -242,7 +242,8 @@
                 "set_remove",
                 "set_remove_other",
                 "set_remove_twice",
-                "set_and_new"
+                "set_and_new",
+                "set_null"
             ]
         }, {
             "id": "Lookup",

@@ -1962,7 +1962,6 @@ ecs_entity_t _ecs_set_ptr_intern(
     void *ptr)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!size || ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_type_t type = ecs_type_from_entity(world, component);
@@ -1988,7 +1987,11 @@ ecs_entity_t _ecs_set_ptr_intern(
 #endif
 
     if (dst != ptr) {
-        memcpy(dst, ptr, size);
+        if (ptr) {
+            memcpy(dst, ptr, size);
+        } else if (size) {
+            memset(dst, 0, size);
+        }
     }
 
     notify_pre_merge(

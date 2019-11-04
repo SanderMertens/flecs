@@ -1111,7 +1111,7 @@ void* _ecs_get_ptr(
 
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_get_ptr(world, entity, type)\
-    _ecs_get_ptr(world, entity, T##type)
+    (type*)_ecs_get_ptr(world, entity, T##type)
 
 /* Convenienve macro for returning a value instead of a pointer */
 #define ecs_get(world, entity, type)\
@@ -1121,7 +1121,7 @@ void* _ecs_get_ptr(
     (*(type*)_ecs_get_ptr(world, ECS_SINGLETON, T##type))
 
 #define ecs_get_singleton_ptr(world, type)\
-    _ecs_get_ptr(world, ECS_SINGLETON, T##type)
+    (type*)_ecs_get_ptr(world, ECS_SINGLETON, T##type)
 
 /* Set value of component.
  * This function sets the value of a component on the specified entity. If the
@@ -2264,8 +2264,8 @@ void _ecs_assert(
  */
 #define ECS_MODULE(world, id)\
     ECS_COMPONENT(world, id);\
-    ecs_set_singleton(world, id, {0});\
-    id *handles = ecs_get_singleton_ptr(world, id);\
+    ecs_set_singleton_ptr(world, id, NULL);\
+    id *handles = (id*)ecs_get_singleton_ptr(world, id);\
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can

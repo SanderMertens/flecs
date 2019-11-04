@@ -734,7 +734,7 @@ ecs_entity_t ecs_new_system(
 
     ecs_assert(result != 0, ECS_INVALID_PARAMETER, NULL);
 
-    EcsSystem *system_data = ecs_get_ptr(world, result, EcsColSystem);
+    EcsSystem *system_data = (EcsSystem*)ecs_get_ptr(world, result, EcsColSystem);
     if (!system_data) {
         system_data = _ecs_get_ptr(world, result, TEcsRowSystem);
         ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -807,9 +807,9 @@ void ecs_enable(
     bool col_system = false;
 
     /* Try to get either ColSystem or RowSystem data */
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    EcsSystem *system_data = (EcsSystem*)ecs_get_ptr(world, system, EcsColSystem);
     if (!system_data) {
-        system_data = ecs_get_ptr(world, system, EcsRowSystem);
+        system_data = (EcsSystem*)ecs_get_ptr(world, system, EcsRowSystem);
     } else {
         col_system = true;
     }
@@ -863,9 +863,9 @@ bool ecs_is_enabled(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    EcsSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    EcsSystem *system_data = (EcsSystem*)ecs_get_ptr(world, system, EcsColSystem);
     if (!system_data) {
-        system_data = ecs_get_ptr(world, system, EcsRowSystem);
+        system_data = (EcsSystem*)ecs_get_ptr(world, system, EcsRowSystem);
     }
 
     if (system_data) {
