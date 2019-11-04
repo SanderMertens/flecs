@@ -1,3 +1,4 @@
+#include <execinfo.h>
 #include "flecs_private.h"
 
 static
@@ -114,7 +115,7 @@ ecs_entity_t new_row_system(
     system_data->components = ecs_vector_new(&handle_arr_params, count);
 
     ecs_parse_component_expr(
-        world, sig, ecs_parse_signature_action, system_data);
+        world, sig, ecs_parse_signature_action, system_data, id);
 
     ecs_type_t type_id = 0;
     uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
@@ -434,6 +435,14 @@ int ecs_parse_signature_action(
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
         if (strcmp(component_id, "0")) {
+            void *array[10];
+            size_t size = backtrace(array, 10);
+            char **trace = backtrace_symbols(array, size);
+
+            for(size_t i = 0; i < size; i++){
+                printf("%s\n", trace[i]);
+            }
+            free(trace);
             ecs_abort(ECS_INVALID_COMPONENT_ID, component_id);
         } else {
             /* Don't add 0 component to signature */
@@ -707,7 +716,7 @@ ecs_entity_t ecs_new_system(
                kind == EcsOnSet,
                ECS_INVALID_PARAMETER, NULL);
 
-    bool needs_tables = ecs_needs_tables(world, sig);
+    bool needs_tables = ecs_needs_tables(world, sig, id);
     bool is_reactive = false;
 
     ecs_assert(needs_tables || !((kind == EcsOnAdd) || (kind == EcsOnSet || (kind == EcsOnSet))),

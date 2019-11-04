@@ -101,10 +101,11 @@ int has_tables(
 /* Does expression require that a system matches with tables */
 bool ecs_needs_tables(
     ecs_world_t *world,
-    const char *signature)
+    const char *signature,
+    const char *systen_id)
 {
     bool needs_matching = false;
-    ecs_parse_component_expr(world, signature, has_tables, &needs_matching);
+    ecs_parse_component_expr(world, signature, has_tables, &needs_matching, systen_id);
     return needs_matching;
 }
 
@@ -170,13 +171,18 @@ const char* parse_annotation(
 
     return ptr;
 }
+/** Build error string*/
+void build_error_string(char *error, const char* signature, long position, const char *system_id){
+    sprintf(error, "\"%s\" at position %ld. System \"%s\"", signature, position, system_id);
+}
 
 /** Parse component expression */
 int ecs_parse_component_expr(
     ecs_world_t *world,
     const char *sig,
     ecs_parse_action_t action,
-    void *ctx)
+    void *ctx,
+    const char *system_id)
 {
     size_t len = strlen(sig);
     const char *ptr;
@@ -196,7 +202,10 @@ int ecs_parse_component_expr(
 
         if (prev_is_0) {
             /* 0 can only apppear by itself */
-            ecs_abort(ECS_INVALID_SIGNATURE, sig);
+            char err[50] = "/0";
+            build_error_string(err, sig, ptr - sig, system_id);
+
+            ecs_abort(ECS_INVALID_SIGNATURE, err);
         }
 
         if (ch == '[') {
@@ -225,25 +234,33 @@ int ecs_parse_component_expr(
                 ecs_system_expr_oper_kind_t prev_oper_kind = oper_kind;
                 bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source);
                 if (!bptr) {
-                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
+                    char err[50] = "/0";
+                    build_error_string(err, sig, ptr - sig, system_id);
+                    ecs_abort(ECS_INVALID_EXPRESSION, err);
                 }
 
                 if (oper_kind == EcsOperNot && prev_oper_kind == EcsOperOr) {
-                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
+                    char err[50] = "/0";
+                    build_error_string(err, sig, ptr - sig, system_id);
+                    ecs_abort(ECS_INVALID_EXPRESSION, err);
                 }
             }
 
            if (oper_kind == EcsOperOr) {
                 if (elem_kind == EcsFromEmpty) {
                     /* Cannot OR handles */
-                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
+                    char err[50] = "/0";
+                    build_error_string(err, sig, ptr - sig, system_id);
+                    ecs_abort(ECS_INVALID_EXPRESSION, err);
                 }
             }            
 
             if (!strcmp(bptr, "0")) {
                 if (bptr != buffer) {
                     /* 0 can only appear by itself */
-                    ecs_abort(ECS_INVALID_EXPRESSION, sig);
+                    char err[50] = "/0";
+                    build_error_string(err, sig, ptr - sig, system_id);
+                    ecs_abort(ECS_INVALID_EXPRESSION, err);
                 }
 
                 elem_kind = EcsFromEmpty;

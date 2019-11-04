@@ -425,17 +425,22 @@ ecs_row_t ecs_to_row(
 uint64_t ecs_from_row(
     ecs_row_t row);
 
+/* Utility that build a descriptive error string*/
+void build_error_string(char *error, const char* signature, long position, const char *system_id);
+
 /* Utility that parses system signature */
 int ecs_parse_component_expr(
     ecs_world_t *world,
     const char *sig,
     ecs_parse_action_t action,
-    void *ctx);
+    void *ctx,
+    const char *system_id);
 
 /* Test whether signature has columns that must be retrieved from a table */
 bool ecs_needs_tables(
     ecs_world_t *world,
-    const char *signature);
+    const char *signature,
+    const char *system_id);
 
 /* Count number of columns signature */
 uint32_t ecs_columns_count(
