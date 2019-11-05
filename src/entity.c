@@ -1201,7 +1201,7 @@ uint32_t update_entity_index(
     ecs_table_data_t *data)
 {
     bool has_unset = false, tested_for_unset = false;
-    uint32_t i, dst_start_row = start_row;
+    int32_t i, dst_start_row = start_row;
     uint32_t count = data->row_count;
     ecs_entity_t *entities = ecs_vector_first(columns[0].data);
     uint32_t row_count = ecs_vector_count(columns[0].data);
@@ -1217,7 +1217,7 @@ uint32_t update_entity_index(
      * vs individual entities as much as possible. */
     bool same_origin = true;
     ecs_type_t src_type = NULL, prev_src_type = NULL;
-    uint32_t src_row = 0, prev_src_row = 0, dst_first_contiguous_row = start_row;
+    int32_t src_row = 0, prev_src_row = 0, dst_first_contiguous_row = start_row;
     uint32_t src_first_contiguous_row = 0;
 
     /* Obtain the entity index in the current stage */
@@ -1260,7 +1260,7 @@ uint32_t update_entity_index(
         ecs_row_t *row_ptr = ecs_map_get_ptr(entity_index, e);
         if (row_ptr) {
             src_row = row_ptr->index;
-            uint8_t is_monitored = 1 - (src_row < 0) * 2;
+            int8_t is_monitored = (src_row < 0) ? -1 : 1;
             src_row = (src_row * is_monitored) - 1;
 
             ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);

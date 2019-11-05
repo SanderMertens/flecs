@@ -3,3 +3,6 @@ bin
 .bake_cache
 .vscode
 gcov
+/Intermediate/
+/.vs
+*.pdb

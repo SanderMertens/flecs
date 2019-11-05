@@ -7,6 +7,8 @@
         "use": ["bake.util"]
     },
     "lang.c": {
+		"cflags": ["/Z7","/Ob0","/Od","/RTC1"],
+        "ldflags": ["/DEBUG:FULL"],
         "${os linux}": {
             "lib": ["rt"]
         }

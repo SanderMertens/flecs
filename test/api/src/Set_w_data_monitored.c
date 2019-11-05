@@ -5,15 +5,29 @@ void MonitorEntityDummy(ecs_rows_t* rows) {
 
 }
 
+static
+void MonitorEntityInstance(ecs_rows_t* rows) {
+
+}
+
 void Set_w_data_monitored_1_column_3_rows_w_entities() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    
-    ecs_add(world, 5000, Position);
-    ecs_set(world, 5000, EcsId, { "e_1" });
+    ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, MonitorEntityDummy, EcsOnUpdate, e_1.Position);
+    ecs_add(world, 5000, Position);
+    //ecs_set(world, 5000, EcsId, { "e_1" });
+    
+    ecs_add(world, 5001, Position, Velocity);
+    ecs_inherit(world, 5001, 5000);
+    ecs_adopt(world, 5001, 5000);
+    //ECS_ENTITY(world, e_2, Position);
+    //ECS_ENTITY(world, e_3, INSTANCEOF | e_2);
+    ECS_SYSTEM(world, MonitorEntityInstance, EcsOnUpdate, Position);
+
+    //ECS_SYSTEM(world, MonitorEntityDummy, EcsOnUpdate, e_1.Position);
+
 
 
     ecs_entity_t e = ecs_set_w_data(world, &(ecs_table_data_t){
