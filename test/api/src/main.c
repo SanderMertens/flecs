@@ -71,6 +71,9 @@ void Set_w_data_on_set_different_origin(void);
 void Set_w_data_on_remove_different_origin(void);
 void Set_w_data_existing_different_type_out_of_order(void);
 
+// Testsuite 'Set_w_data_monitored'
+void Set_w_data_monitored_1_column_3_rows_w_entities(void);
+
 // Testsuite 'Add'
 void Add_zero(void);
 void Add_component(void);
@@ -1082,6 +1085,16 @@ static bake_test_suite suites[] = {
             {
                 .id = "existing_different_type_out_of_order",
                 .function = Set_w_data_existing_different_type_out_of_order
+            }
+        }
+    },
+    {
+        .id = "Set_w_data_monitored",
+        .testcase_count = 1,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "1_column_3_rows_w_entities",
+                .function = Set_w_data_monitored_1_column_3_rows_w_entities
             }
         }
     },
@@ -4082,5 +4095,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 39);
+    return bake_test_run("api", argc, argv, suites, 40);
 }

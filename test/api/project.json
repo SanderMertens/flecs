@@ -81,6 +81,11 @@
                 "existing_different_type_out_of_order"
             ]
         }, {
+            "id": "Set_w_data_monitored",
+            "testcases": [
+                "1_column_3_rows_w_entities"
+            ]
+        }, {
             "id": "Add",
             "testcases": [
                 "zero",
@@ -146,7 +151,7 @@
                 "remove_1_include_1",
                 "remove_1_include_2",
                 "add_1",
-                "add_2"                           
+                "add_2"
             ]
         }, {
             "id": "Has",
@@ -883,7 +888,7 @@
                 "stress_set_entity_random_components",
                 "2_threads_on_add",
                 "new_w_count"
-                
+
             ]
         }, {
             "id": "Modules",
