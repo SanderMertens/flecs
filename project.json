@@ -5,5 +5,10 @@
         "author": "Sander Mertens",
         "description": "Multithreaded Entity Component System written in C99",
         "use": ["bake.util"]
+    },
+    "lang.c": {
+        "${os linux}": {
+            "lib": ["rt"]
+        }
     }
 }
