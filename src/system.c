@@ -115,7 +115,7 @@ ecs_entity_t new_row_system(
     system_data->components = ecs_vector_new(&handle_arr_params, count);
 
     ecs_parse_component_expr(
-        world, sig, ecs_parse_signature_action, system_data, id);
+        world, sig, ecs_parse_signature_action, result, system_data);
 
     ecs_type_t type_id = 0;
     uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
@@ -716,16 +716,18 @@ ecs_entity_t ecs_new_system(
                kind == EcsOnSet,
                ECS_INVALID_PARAMETER, NULL);
 
-    bool needs_tables = ecs_needs_tables(world, sig, id);
+    ecs_entity_t result = ecs_lookup(world, id);
+    if (result) {
+        return result;
+    }
+
+    bool needs_tables = ecs_needs_tables(world, sig, result);
     bool is_reactive = false;
 
     ecs_assert(needs_tables || !((kind == EcsOnAdd) || (kind == EcsOnSet || (kind == EcsOnSet))),
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entity_t result = ecs_lookup(world, id);
-    if (result) {
-        return result;
-    }
+
 
     if ((kind == EcsOnLoad || kind == EcsPostLoad ||
                          kind == EcsPreUpdate || kind == EcsOnUpdate ||

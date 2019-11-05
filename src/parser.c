@@ -102,10 +102,10 @@ int has_tables(
 bool ecs_needs_tables(
     ecs_world_t *world,
     const char *signature,
-    const char *systen_id)
+    ecs_entity_t entity_id)
 {
     bool needs_matching = false;
-    ecs_parse_component_expr(world, signature, has_tables, &needs_matching, systen_id);
+    ecs_parse_component_expr(world, signature, has_tables, entity_id, &needs_matching);
     return needs_matching;
 }
 
@@ -181,8 +181,8 @@ int ecs_parse_component_expr(
     ecs_world_t *world,
     const char *sig,
     ecs_parse_action_t action,
-    void *ctx,
-    const char *system_id)
+    ecs_entity_t entity_id,
+    void *ctx)
 {
     size_t len = strlen(sig);
     const char *ptr;
@@ -203,6 +203,7 @@ int ecs_parse_component_expr(
         if (prev_is_0) {
             /* 0 can only apppear by itself */
             char err[50] = "/0";
+            const char* system_id = ecs_get(world, entity_id, EcsId);
             build_error_string(err, sig, ptr - sig, system_id);
 
             ecs_abort(ECS_INVALID_SIGNATURE, err);
@@ -235,12 +236,14 @@ int ecs_parse_component_expr(
                 bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source);
                 if (!bptr) {
                     char err[50] = "/0";
+                    const char* system_id = ecs_get(world, entity_id, EcsId);
                     build_error_string(err, sig, ptr - sig, system_id);
                     ecs_abort(ECS_INVALID_EXPRESSION, err);
                 }
 
                 if (oper_kind == EcsOperNot && prev_oper_kind == EcsOperOr) {
                     char err[50] = "/0";
+                    const char* system_id = ecs_get(world, entity_id, EcsId);
                     build_error_string(err, sig, ptr - sig, system_id);
                     ecs_abort(ECS_INVALID_EXPRESSION, err);
                 }
@@ -250,6 +253,7 @@ int ecs_parse_component_expr(
                 if (elem_kind == EcsFromEmpty) {
                     /* Cannot OR handles */
                     char err[50] = "/0";
+                    const char* system_id = ecs_get(world, entity_id, EcsId);
                     build_error_string(err, sig, ptr - sig, system_id);
                     ecs_abort(ECS_INVALID_EXPRESSION, err);
                 }
@@ -259,6 +263,7 @@ int ecs_parse_component_expr(
                 if (bptr != buffer) {
                     /* 0 can only appear by itself */
                     char err[50] = "/0";
+                    const char* system_id = ecs_get(world, entity_id, EcsId);
                     build_error_string(err, sig, ptr - sig, system_id);
                     ecs_abort(ECS_INVALID_EXPRESSION, err);
                 }
