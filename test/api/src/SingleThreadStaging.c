@@ -2927,3 +2927,43 @@ void SingleThreadStaging_override_after_remove_in_progress() {
 
     ecs_fini(world);
 }
+
+static
+void GetParentInProgress(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+    
+    ecs_world_t *world = rows->world;
+
+    /* Create parent */
+    ecs_entity_t parent = ecs_new(world, Velocity);
+    ecs_type_t ecs_type(parent) = ecs_type_from_entity(world, parent);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_entity_t e = rows->entities[i];
+
+        ecs_adopt(world, e, parent);
+        test_assert( ecs_has(world, e, parent));
+
+        ecs_entity_t test_parent = ecs_get_parent(world, e, Velocity);
+        test_assert(test_parent != 0);
+    }
+}
+
+void SingleThreadStaging_get_parent_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, GetParentInProgress, EcsOnUpdate, Position, .Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_progress(world, 1);
+
+    ecs_entity_t parent = ecs_get_parent(world, e, Velocity);
+    test_assert(parent != 0);
+
+    ecs_fini(world);
+}

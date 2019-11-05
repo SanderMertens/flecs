@@ -870,7 +870,8 @@
                 "merge_table_w_container_added_on_set",
                 "merge_table_w_container_added_on_set_reverse",
                 "merge_after_tasks",
-                "override_after_remove_in_progress"
+                "override_after_remove_in_progress",
+                "get_parent_in_progress"
             ]
         }, {
             "id": "MultiThreadStaging",

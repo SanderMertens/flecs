@@ -932,7 +932,7 @@ void ecs_merge_entity(
         world, &world->main_stage, &info, type, 0, to_remove, false);
     
     if (type && staged_type) {
-        ecs_table_t *new_table = ecs_world_get_table(world, stage, type);
+        ecs_table_t *new_table = ecs_world_get_table(world, &world->main_stage, type);
         assert(new_table != NULL);
 
         ecs_table_t *staged_table = ecs_world_get_table(world, stage, staged_type);
@@ -941,7 +941,7 @@ void ecs_merge_entity(
         ecs_assert(staged_columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
         copy_row( new_table->type, new_table->columns, new_index,
-                  staged_table->type, staged_columns, staged_row.index); 
+                staged_table->type, staged_columns, staged_row.index); 
     }
 }
 
@@ -983,10 +983,10 @@ bool ecs_components_contains_component(
         }
 
         ecs_entity_t e = type_buffer[i] & ECS_ENTITY_MASK;
-        ecs_row_t row = row_from_stage(&world->main_stage, e);
+        ecs_type_t type = ecs_get_type(world, e);
 
         bool result = ecs_type_has_entity_intern(
-            world, row.type, component, true);
+            world, type, component, true);
         if (result) {
             if (entity_out) *entity_out = e;
             return true;
