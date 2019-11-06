@@ -406,6 +406,8 @@ void col_systems_deinit(
     for (i = 0; i < count; i ++) {
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
 
+        ecs_os_free(ptr->base.signature);
+
         /* Invoke Deactivated action for active systems */
         if (ecs_vector_count(ptr->tables)) {
             ecs_invoke_status_action(world, buffer[i], ptr, EcsSystemDeactivated);
@@ -447,6 +449,7 @@ void row_systems_deinit(
 
     for (i = 0; i < count; i ++) {
         EcsRowSystem *ptr = ecs_get_ptr(world, buffer[i], EcsRowSystem);
+        ecs_os_free(ptr->base.signature);
         ecs_vector_free(ptr->base.columns);
         ecs_vector_free(ptr->components);
     }

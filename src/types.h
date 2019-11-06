@@ -185,7 +185,7 @@ typedef struct ecs_on_demand_in_t {
 /** Base type for a system */
 typedef struct EcsSystem {
     ecs_system_action_t action;    /* Callback to be invoked for matching rows */
-    const char *signature;         /* Signature with which system was created */
+    char *signature;         /* Signature with which system was created */
     ecs_vector_t *columns;         /* Column components */
     void *ctx;                     /* User data */
 
