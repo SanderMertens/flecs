@@ -813,6 +813,20 @@ ecs_world_t* ecs_init_w_args(
     return world;
 }
 
+static
+void on_demand_in_map_deinit(
+    ecs_map_t *map)
+{
+    ecs_map_iter_t it = ecs_map_iter(map);
+
+    while (ecs_map_hasnext(&it)) {
+        ecs_on_demand_in_t *elem = ecs_map_next(&it);
+        ecs_vector_free(elem->systems);
+    }
+
+    ecs_map_free(map);
+}
+
 int ecs_fini(
     ecs_world_t *world)
 {
@@ -858,6 +872,9 @@ int ecs_fini(
     ecs_stage_deinit(world, &world->main_stage);
     ecs_stage_deinit(world, &world->temp_stage);
 
+    on_demand_in_map_deinit(world->on_activate_components);
+    on_demand_in_map_deinit(world->on_enable_components);
+
     ecs_vector_free(world->on_update_systems);
     ecs_vector_free(world->on_validate_systems);
     ecs_vector_free(world->pre_update_systems);
@@ -874,6 +891,8 @@ int ecs_fini(
     ecs_vector_free(world->add_systems);
     ecs_vector_free(world->remove_systems);
     ecs_vector_free(world->set_systems);
+
+
 
     world->magic = 0;
 
