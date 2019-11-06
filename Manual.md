@@ -60,15 +60,15 @@
        - [NOT operator](#not-operator)
        - [Optional operator](#optional-operator)
      - [Column source modifiers](#column-source-modifiers)
-       - [SELF modifier](#id-modifier)
-       - [OWNED modifier](#owned-modifier)
-       - [SHARED modifier](#shared-modifier)
-       - [EMPTY modifier](#id-modifier)
-       - [CONTAINER modifier](#container-modifier)
-       - [CASCADE modifier](#cascade-modifier)
-       - [SYSTEM modifier](#system-modifier)
-       - [SINGLETON modifier](#singleton-modifier)
-       - [ENTITY modifier](#entity-modifier)
+       - [SELF source](#self-source)
+       - [OWNED source](#owned-source)
+       - [SHARED source](#shared-source)
+       - [NOTHING source](#nothing-source)
+       - [CONTAINER source](#container-source)
+       - [CASCADE source](#cascade-source)
+       - [SYSTEM source](#system-source)
+       - [SINGLETON source](#singleton-source)
+       - [ENTITY source](#entity-source)
    - [System API](#system-api)
      - [The ECS_COLUMN macro](#the-ecs_column-macro)
      - [The ECS_COLUMN_COMPONENT macro](#the-ecs_column_component-macro)
@@ -351,7 +351,7 @@ You may find that certain things cannot be expressed through declarative stateme
 It is much more efficient to [create entities in bulk](#create-entities-in-bulk) (using the `ecs_new_w_count` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
 
 ### Limit usage of ecs_lookup
-You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsId` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `EMPTY` modifier, like so:
+You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsId` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `NOTHING` modifier, like so:
 
 ```c
 ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, .MyEntity);
@@ -949,8 +949,8 @@ Inside the system implementation, an application will be able to check whether t
 #### Column source modifiers
 System signatures can request components from a variety of sources. The most common and default source is from an entity. When a system specifies `Position, Velocity` as its signature, it will match _entities_ that have `Position, Velocity`. A system may however require components from other entities than the one being iterated over. To streamline this use case, reduce `ecs_get` API calls within systems, and prevent excessive checking on whether components are available on external entities, the system signature can capture these requirements. A signature may contain the folllowing modifiers:
 
-##### SELF modifier
-This is the default modifier, and is implied when no modifiers are explicitly specified. An example of the `SELF` modifier is:
+##### SELF source
+This is the default source, and is implied when no source is explicitly provided. A system will match SELF components against the entities to be iterated over. An example of a signature with `SELF` as source is:
 
 ```
 Position, Velocity
@@ -958,37 +958,118 @@ Position, Velocity
 
 This system will match with any entities that have the `Position, Velocity` components. The components will be available to the system as owned (non-shared) columns, except when a component is provided by an inherited entity, in which case the component will be shared.
 
-##### OWNED modifier
-This modifier is the same as the SELF modifier, but will only match entities that own the component. An example of the OWNED modifier is:
+The `SELF` source gives no guarantees about whether the component is owned or shared. Therefore the component data passed into the system may be either an array or a pointer to a single value. If a system does not know in advance whether a for example `Velocity` is owned or shared, it can use the following code to safely access the component data:
+
+```c
+ECS_COLUMN(rows, Position, p, 1);
+ECS_COLUMN(rows, Velocity, v, 2);
+
+if (ecs_is_shared(rows, 2)) {
+    for (int i = 0; i < rows->count; i ++) {
+        p[i].x += v->x;
+        p[i].y += v->x;
+    }
+} else {
+    for (int i = 0; i < rows->count; i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].x;
+    }
+}
+```
+
+Alternatively a system can use the `ecs_field` function, which abstracts away the difference between owned and shared columns:
+
+```c
+ECS_COLUMN(rows, Position, p, 1);
+
+for (int i = 0; i < rows->count; i ++) {
+    Velocity *v = ecs_field(rows, Velocity, 2, i);
+    p[i].x += v->x;
+    p[i].y += v->x;
+}
+```
+
+##### OWNED source
+OWNED is similar to SELF in that the component is matched with the entities to be iterated over, but will only match entities that own the component. Components from base entities (added either with `ecs_new_instance` or `ecs_inherit`) will not be matched.
 
 ```
 Position, OWNED.Velocity
 ```
 
-This system will match with any entities that have the `Position, Velocity` components. The `Position` component can be either owned or shared, where the `Velocity` component is guaranteed to be owned by the entity, and cannot come from an inherited entity.
+This system will match with any entities that have the `Position, Velocity` components. The `Position` component can be either owned or shared, where the `Velocity` component is guaranteed to be owned by the entity, and cannot come from a base entity.
 
-##### SHARED modifier
-This modifier is the same as the SELF modifier, but will only match entities that share the component from another entity. An example of the SHARED modifier is:
+An owned column is passed as an array into a system, and can always be safely accessed like this:
+
+```c
+ECS_COLUMN(rows, Position, p, 1);
+ECS_COLUMN(rows, Velocity, v, 2);
+
+for (int i = 0; i < rows->count; i ++) {
+    p[i].x += v[i].x;
+    p[i].y += v[i].x;
+}
+```
+
+##### SHARED source
+SHARED is similar to SELF in that the component is matched with the entities to be iterated over, but will only match entities that do not own the component. Only components from base entities (added either with `ecs_new_instance` or `ecs_inherit`) will be matched.
 
 ```
 Position, SHARED.Velocity
 ```
 
-This system will match with any entities that have the `Position, Velocity` components. The `Position` component can be either owned or shared, where the `Velocity` component is guaranteed to be shared, and will come from an inherited entity.
+This system will match with any entities that have the `Position, Velocity` components. The `Position` component can be either owned or shared, where the `Velocity` component is guaranteed to be shared, and will come from a base entity.
 
-##### EMPTY modifier
-The empty modifier lets an application pass handles to components or other systems to a system. This is frequently useful, as systems may need component handles to add or set components on entities that may not be part of the entity yet. Another use case for this feature is passing a handle to another `EcsManual` system to the system, which the system can then execute. This is frequently used when a system needs to evaluate a set of entities for every matching entity. An example of the empty modifier is:
+A shared column is passed in as a pointer into the system, and can always be safely accessed like this:
+
+```c
+ECS_COLUMN(rows, Position, p, 1);
+ECS_COLUMN(rows, Velocity, v, 2);
+
+for (int i = 0; i < rows->count; i ++) {
+    p[i].x += v->x;
+    p[i].y += v->y;
+}
+```
+
+##### NOTHING source
+The NOTHING source passes components to a system that are not matched with any entities. This is a convenient method for passing component/entity handles into systems. If for example a system wants to add the `Velocity` component to entities with `Position`, the `Velocity` handle can be passed into the system like this:
 
 ```
 Position, .Velocity
 ```
 
-This will match any entity that has the `Position` component, and pass the handle to the `Velocity` component to the system. This allows the system implementation to add or set the `Velocity` component on the matching entities.
+A component passed in with a `NOTHING` source can be accessed like this:
+
+```c 
+ECS_COLUMN(rows, Position, p, 1);
+ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+for (int i = 0; i < rows->count; i ++) {
+    ecs_add(rows->world, rows->entities[i], Velocity);
+}
+```
+
+Any entity identifier can be passed into a system with a `NOTHING` modifier. This can often be useful when combined with manual systems:
+
+```
+Position, .MyManualSystem
+```
+
+`MyManualSystem` can be accessed like this:
+
+```c
+ECS_COLUMN(rows, Position, p, 1);
+ECS_COLUMN_ENTITY(rows, MyManualSystem, 2);
+
+for (int i = 0; i < rows->count; i ++) {
+    ecs_run(rows->world, MyManualSystem, rows->delta_time, &rows->entities[i]);
+}
+```
 
 Empty columns have no data, and as such should not be accessed as owned or shared columns. Instead, the system should only attempt to obtain the handle to the component or component type.
 
-##### CONTAINER modifier
-The `CONTAINER` modifier allows a system to select a component from the entity that contains the currently iterated over entity. An example of the `CONTAINER` modifier is:
+##### CONTAINER source
+The `CONTAINER` source allows a system to select a component from the entity that contains the currently iterated over entity. An example of the `CONTAINER` modifier is:
 
 ```
 CONTAINER.Position, Position, Velocity
@@ -996,10 +1077,10 @@ CONTAINER.Position, Position, Velocity
 
 This will match all entities that have `Position, Velocity`, _and_ that have a container (parent) entity that has the `Position` component. This facilitates building systems that must traverse entities in a hierarchical manner.
 
-`CONTAINER` columns are available to the system as a shared columns.
+`CONTAINER` columns can be accessed the same way as `SHARED` columns.
 
-##### CASCADE modifier
-The `CASCADE` modifier is similar to an optional `CONTAINER` column, but in addition it ensures that entities are iterated over in the order of the container hierarchy. 
+##### CASCADE source
+The `CASCADE` source is similar to an _optional_ `CONTAINER` column, but in addition it ensures that entities are iterated over in the order of the container hierarchy. 
 
 For a hierarchy like this:
 
@@ -1019,35 +1100,52 @@ CASCADE.Position, Position, Velocity
 
 The order will be determined by the container that has the specified component (`Position` in the example). Containers of the entity that do not have this component will be ignored. 
 
-`CASCADE` columns are available to the system as an optional shared columns.
+`CASCADE` columns can be accessed the same way as `SHARED` columns.
 
-##### SYSTEM modifier
-In some cases it is useful to have stateful systems that either track progress in some way, or contain information pointing to an external source of data (like a database connection). The `SYSTEM` modifier allows for an easy way to access data associated with the system. An example of the `SYSTEM` modifier is:
-
-```
-SYSTEM.DbConnection, Position, Velocity
-```
-
-This will match all entities with `Position, Velocity`, and automatically add the `DbConnection` component to the system. Often this pattern is paired with an `EcsOnAdd` system for the `DbConnection` component, which would be immediately executed when the system is defined, and set up the database connection (or other functionality) accordingly.
-
-`SYSTEM` columns are available to the system as a shared columns.
-
-##### ENTITY modifier
-In some cases, it is useful to get a component from a specific entity. In this case, the source modifier can specify the name of a named entity (that has the `EcsId` component) to obtain a component from that entity. An example of the `ENTITY` modifier is:
+##### SYSTEM source
+The `SYSTEM` modifier adds components or tags to a system and passes them into the system. This can be useful when a system needs additional context. An example:
 
 ```
-Position, SomeEntity.Velocity
+Position, Velocity, SYSTEM.DbConnection
 ```
 
-This will match all antities with the `Position` component, and pass the `Velocity` component of `SomeEntity` to the system. The equivalent of this functionality would be to pass handles to `SomeEntity` and `Velocity` as empty columns, and then do an `ecs_get` from within the system. The system modifier would then look like this:
+This will match all entities with `Position, Velocity`, and automatically add the `DbConnection` component to the system. Often this pattern is paired with an `EcsOnAdd` system for the `DbConnection` component, which would be immediately executed when the system is defined, and set up the database connection (or any functionality) accordingly.
+
+Another common pattern is to add the `EcsHidden` tag to a system, which is used to hide a system from UIs (if the UI supports it) and is often added to private systems in a module:
 
 ```
-Position, .SomeEntity, .Velocity
+Position, Velocity, SYSTEM.EcsHidden
 ```
 
-Using the `ENTITY` modifier is however much less verbose, and can potentially also be optimized as the framework may use a more efficient version of `ecs_get` as flecs can cache the component value inbetween iterations.
+Another common tag to add is the `EcsOnDemand` tag, which marks the system as an on-demand system, meaning it will only be enabled if its outputs are required by another system:
 
-`ENTITY` columns are available to the system as a shared columns.
+```
+[out] Position, Velocity, SYSTEM.EcsOnDemand
+```
+
+`SYSTEM` columns can be accessed the same way as `SHARED` columns.
+
+##### SINGLETON source
+The `SINGLETON` source (`$`) enables passing in components from the singleton entity. It can be used like this:
+
+```
+Position, $.Velocity
+```
+
+The system will only be invoked if the singleton entity has the `Velocity` component.
+
+`SINGLETON` columns can be accessed the same way as `SHARED` columns.
+
+##### ENTITY source
+The `ENTITY` source enables passing in components from arbitrary entiites. It can be used like this:
+
+```
+Position, MyEntity.Velocity
+```
+
+The system will only be invoked if the entity has the `Velocity` component.
+
+`ENTITY` columns can be accessed the same way as `SHARED` columns.
 
 ### System API
 Now that you now how to specify system signatures, it is time to find out how to use the columns specified in a signature in the system itself! First of all, lets take a look at the anatomy of a system. Suppose we define a system like this in our application `main`:
@@ -1167,7 +1265,7 @@ void Move(ecs_rows_t *rows) {
 
 This code may look a bit weird as it introduces a few things that haven't been covered yet. First of all, note how the `world` object is passed into the system through the `rows` parameter. This lets a system call Flecs API functions, as all functions at least require a reference to an `ecs_world_t` instance. Secondly, note how the system obtains the entity id of the currently iterated over entity with `rows->entities`. Finally, note how the `ecs_set` function is able to use the `Position` component. The function requires a handle to the `Position` component to be defined, or it will result in a compiler error (try removing the `ECS_COLUMN_COMPONENT` macro).
 
-This macro can also be used when a column uses the `EMPTY` modifier. For example, if a system has the following signature:
+This macro can also be used when a column uses the `NOTHING` modifier. For example, if a system has the following signature:
 
 ```
 Position, .Velocity
