@@ -1,4 +1,3 @@
-#include <execinfo.h>
 #include "flecs_private.h"
 
 static
@@ -435,14 +434,6 @@ int ecs_parse_signature_action(
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
         if (strcmp(component_id, "0")) {
-            void *array[10];
-            size_t size = backtrace(array, 10);
-            char **trace = backtrace_symbols(array, size);
-
-            for(size_t i = 0; i < size; i++){
-                printf("%s\n", trace[i]);
-            }
-            free(trace);
             ecs_abort(ECS_INVALID_COMPONENT_ID, component_id);
         } else {
             /* Don't add 0 component to signature */

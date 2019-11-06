@@ -776,8 +776,6 @@ ecs_entity_t ecs_new_col_system(
     system_data->inactive_tables = ecs_vector_new(
         &matched_table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
 
-    printf("System name %s\n", *id_data);
-    // TODO: This funciton should return -1 and the component error should be handled here.
     ecs_parse_component_expr(
         world, sig, ecs_parse_signature_action, result, system_data);
 

@@ -857,7 +857,8 @@ EcsTypeComponent type_from_expr(
 {
     ecs_vector_t *vec = ecs_vector_new(&handle_arr_params, 1);
     EcsTypeComponent result = type_from_vec(world, vec);
-    ecs_parse_component_expr(world, expr, parse_type_action, &vec, result.type);
+    // TODO: Whick entity_id should use to call this function?
+    ecs_parse_component_expr(world, expr, parse_type_action, 0, &vec);
     ecs_vector_free(vec);
     return result;
 }
