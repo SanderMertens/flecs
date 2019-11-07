@@ -756,7 +756,7 @@ ecs_entity_t ecs_new_col_system(
     memset(system_data, 0, sizeof(EcsColSystem));
     system_data->base.action = action;
     system_data->base.enabled = true;
-    system_data->base.signature = strdup(sig);
+    system_data->base.signature = ecs_os_strdup(sig);
     system_data->base.time_spent = 0;
     system_data->base.columns = ecs_vector_new(&system_column_params, count);
     system_data->base.invoke_count = 0;

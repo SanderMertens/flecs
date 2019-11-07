@@ -105,7 +105,7 @@ ecs_entity_t new_row_system(
     EcsRowSystem *system_data = ecs_get_ptr(world, result, EcsRowSystem);
     memset(system_data, 0, sizeof(EcsRowSystem));
     system_data->base.action = action;
-    system_data->base.signature = strdup(sig);
+    system_data->base.signature = ecs_os_strdup(sig);
     system_data->base.enabled = true;
     system_data->base.invoke_count = 0;
     system_data->base.kind = kind;

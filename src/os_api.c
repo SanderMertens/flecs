@@ -263,6 +263,14 @@ void ecs_os_api_free(void *ptr) {
     free(ptr);
 }
 
+static
+char* ecs_os_api_strdup(const char *str) {
+    int len = strlen(str);
+    char *result = ecs_os_api_malloc(len + 1);
+    strcpy(result, str);
+    return result;
+}
+
 void ecs_os_set_api_defaults(void)
 {
     /* Don't overwrite if already initialized */
@@ -276,6 +284,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.free = ecs_os_api_free;
     ecs_os_api.realloc = ecs_os_api_realloc;
     ecs_os_api.calloc = ecs_os_api_calloc;
+    ecs_os_api.strdup = ecs_os_api_strdup;
 
 #ifdef __BAKE__
     ecs_os_api.thread_new = bake_thread_new;
