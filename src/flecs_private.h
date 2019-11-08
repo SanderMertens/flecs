@@ -218,7 +218,7 @@ int16_t ecs_table_dim(
     uint32_t count);
 
 /* Return number of entities in table */
-uint64_t ecs_table_count(
+uint32_t ecs_table_count(
     ecs_table_t *table);
 
 /* Return size of table row */

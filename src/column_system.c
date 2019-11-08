@@ -278,7 +278,7 @@ void add_table(
                     }
 
                     /* Negative number indicates ref instead of offset to ecs_data */
-                    table_data->columns[c] = -ecs_vector_count(table_data->references);
+                    table_data->columns[c] = -(int32_t)(ecs_vector_count(table_data->references));
                     system_data->base.has_refs = true;
                 }
             }

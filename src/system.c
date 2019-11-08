@@ -259,8 +259,10 @@ void register_out_columns(
         if (columns[i].inout_kind == EcsOut) {
             if (!system_data->on_demand) {
                 system_data->on_demand = ecs_os_malloc(sizeof(ecs_on_demand_out_t));
-                system_data->on_demand->system = system;
-                system_data->on_demand->count = 0;
+				if (system_data->on_demand != NULL) {
+					system_data->on_demand->system = system;
+					system_data->on_demand->count = 0;
+				}
             }
 
             /* If column operator is NOT and the inout kind is [out], the system
@@ -558,7 +560,7 @@ ecs_type_t ecs_notify_row_system(
     int32_t *columns = ecs_os_alloca(int32_t, column_count);
     ecs_reference_t *references = ecs_os_alloca(ecs_reference_t, column_count);
 
-    uint32_t ref_id = 0;
+    int32_t ref_id = 0;
 
     /* Iterate over system columns, resolve data from table or references */
 

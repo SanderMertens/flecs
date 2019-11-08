@@ -5,6 +5,7 @@
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
+#pragma warning(disable:4996) // disable _CRT_SECURE_NO_WARNINGS in MSVC 
 #else
 #include <alloca.h>
 #endif
@@ -210,8 +211,10 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_strdup(str) ecs_os_api.strdup(str)
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
-#define ecs_os_alloca(type, count) _alloca(sizeof(type) * (count))
-#define _ecs_os_alloca(size, count) _alloca((size) * (count))
+#define ecs_os_alloca(type, count) _alloca(sizeof(type) * (count)) \
+	__pragma(warning(disable:6255))
+#define _ecs_os_alloca(size, count) _alloca((size) * (count)) \
+	__pragma(warning(disable:6255))
 #else
 #define ecs_os_alloca(type, count) alloca(sizeof(type) * (count))
 #define _ecs_os_alloca(size, count) alloca((size) * (count))

@@ -114,11 +114,11 @@ typedef struct ecs_rows_t {
 
     void *param;                 /* Userdata passed to on-demand system */
     float delta_time;            /* Time elapsed since last frame */
-    float world_time;            /* Time elapsed since start of simulation */
+    double world_time;            /* Time elapsed since start of simulation */
     uint32_t frame_offset;       /* Offset relative to frame */
-    uint32_t table_offset;       /* Current active table being processed */
-    uint32_t offset;             /* Offset relative to current table */
-    uint32_t count;              /* Number of rows to process by system */
+	uint32_t table_offset;       /* Current active table being processed */
+	uint32_t offset;             /* Offset relative to current table */
+	uint32_t count;              /* Number of rows to process by system */
 
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
 } ecs_rows_t;
@@ -1146,7 +1146,7 @@ ecs_entity_t _ecs_set_ptr(
     ecs_entity_t entity,
     ecs_entity_t component,
     size_t size,
-    void *ptr);
+    const void *ptr);
 
 FLECS_EXPORT
 ecs_entity_t _ecs_set_singleton_ptr(

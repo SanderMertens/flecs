@@ -300,7 +300,7 @@ ecs_type_t instantiate_prefab(
                     uint32_t index = entity_info->index + j - 1;
                     ecs_entity_t entity = entity_ids[index];
                     ecs_adopt(world, child + j, entity);
-                    ecs_set(world, child + j, EcsId, {op->id});
+                    ecs_set(world, child + j, EcsId, op->id);
                 }
             }
         }
@@ -412,12 +412,12 @@ ecs_type_t copy_from_prefab(
         }
 
         ecs_table_column_t *src_column = &prefab_columns[p + 1];
-        uint32_t size = src_column->size;
+        uint64_t size = src_column->size;
 
         if (size) {
             void *src_column_data = ecs_vector_first(src_column->data);
             void *src_ptr = ECS_OFFSET(
-                src_column_data, size * (prefab_index - 1));
+                src_column_data, size * ((uint64_t)prefab_index - 1));
 
             uint32_t dst_col_index;
             if (info->type == to_add) {
@@ -429,7 +429,7 @@ ecs_type_t copy_from_prefab(
             ecs_table_column_t *dst_column = &columns[dst_col_index + 1];
             void *dst_column_data = ecs_vector_first(dst_column->data);
             void *dst_ptr = ECS_OFFSET(
-                dst_column_data, size * (info->index - 1 + offset));
+                dst_column_data, size * ((uint64_t)info->index - 1 + (uint64_t)offset));
 
             uint32_t i;
             for (i = 0; i < limit; i ++) {
@@ -777,17 +777,19 @@ void* get_ptr_from_prefab(
         if (prefab == previous) {
             continue;
         }
+		ecs_entity_info_t prefab_info = { .entity = prefab };
+		if (populate_info(world, &world->main_stage, &prefab_info)) {
+			if (prefab_info.table != NULL) {
+				ptr = get_row_ptr(prefab_info.table->type, prefab_info.columns,
+					prefab_info.index, component);
 
-        ecs_entity_info_t prefab_info = {.entity = prefab};
-        if (populate_info(world, &world->main_stage, &prefab_info)) {
-            ptr = get_row_ptr(prefab_info.table->type, prefab_info.columns, 
-                prefab_info.index, component);
-            
-            if (!ptr) {
-                ptr = get_ptr_from_prefab(
-                    world, stage, &prefab_info, info->entity, component);
-            }
-        }
+				if (!ptr) {
+					ptr = get_ptr_from_prefab(
+						world, stage, &prefab_info, info->entity, component);
+				}
+			}
+		}
+		
     }
 
     return ptr;
@@ -1108,9 +1110,9 @@ void copy_column_data(
             void *column_data = ecs_vector_first(columns[column + 1].data);
 
             memcpy(
-                ECS_OFFSET(column_data, (start_row) * size),
+                ECS_OFFSET(column_data, (uint64_t)(start_row) * size),
                 data->columns[i],
-                data->row_count * size
+                (uint64_t)data->row_count * size
             );
         }
     }
@@ -1959,7 +1961,7 @@ ecs_entity_t _ecs_set_ptr_intern(
     ecs_entity_t entity,
     ecs_entity_t component,
     size_t size,
-    void *ptr)
+    const void *ptr)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_world_t *world_arg = world;
@@ -2006,7 +2008,7 @@ ecs_entity_t _ecs_set_ptr(
     ecs_entity_t entity,
     ecs_entity_t component,
     size_t size,
-    void *ptr)
+    const void *ptr)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -2278,8 +2280,7 @@ ecs_entity_t ecs_new_component(
     }
 
     result = _ecs_new(world, world->t_component);
-    ecs_set(world, result, EcsComponent, {.size = size});
+    ecs_set(world, result, EcsComponent, {.size = (const uint32_t)size});
     ecs_set(world, result, EcsId, {id});
-
     return result;
 }

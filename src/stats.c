@@ -391,7 +391,7 @@ void StatsCollectSystemStats(ecs_rows_t *rows) {
         stats[i].tables_matched_count = system_tables_matched(&system[i]);
         stats[i].entities_matched_count = system_entities_matched(&system[i]);
         stats[i].period_seconds = system[i].period;
-        stats[i].seconds_total = system[i].base.time_spent;
+        stats[i].seconds_total = (float)(system[i].base.time_spent);
         stats[i].invoke_count_total = system[i].base.invoke_count;
         stats[i].is_enabled = system[i].base.enabled;
         stats[i].is_active = ecs_vector_count(system[i].tables);

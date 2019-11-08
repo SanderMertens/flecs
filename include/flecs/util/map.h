@@ -68,7 +68,7 @@ FLECS_EXPORT
 bool _ecs_map_has(
     ecs_map_t *map,
     uint64_t key_hash,
-    void *value_out,
+    const void *value_out,
     uint32_t size);
 
 #define ecs_map_has(map, key, data)\

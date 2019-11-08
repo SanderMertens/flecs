@@ -202,7 +202,7 @@ void ecs_schedule_jobs(
 
     float rows_per_thread = (float)total_rows / (float)thread_count;
     float residual = 0;
-    int32_t rows_per_thread_i = rows_per_thread;
+    int32_t rows_per_thread_i = (int32_t)rows_per_thread;
 
     uint32_t start_index = 0;
 

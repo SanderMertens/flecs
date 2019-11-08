@@ -54,7 +54,7 @@ int compare_handle(
     const void *p1,
     const void *p2)
 {
-    return *(ecs_entity_t*)p1 - *(ecs_entity_t*)p2;
+    return (int)(*(ecs_entity_t*)p1 - *(ecs_entity_t*)p2);
 }
 
 static
@@ -164,7 +164,7 @@ void bootstrap_component(
     EcsComponent *component_data = ecs_vector_first(table->columns[1].data);
     EcsId *id_data = ecs_vector_first(table->columns[2].data);
     
-    component_data[index - 1].size = size;
+    component_data[index - 1].size = (uint32_t)size;
     id_data[index - 1] = id;
 }
 
@@ -798,8 +798,8 @@ ecs_world_t* ecs_init_w_args(
             );
 
             ARG(0, "fps", 
-                ecs_set_target_fps(world, atoi(argv[i + 1]));
-                world->arg_fps = world->target_fps; 
+                ecs_set_target_fps(world, (float)atoi(argv[i + 1]));
+                world->arg_fps = (int)world->target_fps; 
                 i ++);
 
             ARG(0, "admin", 
@@ -1155,13 +1155,13 @@ float start_measure_frame(
         ecs_time_t t = world->frame_start_time;
         do {
             if (world->frame_start_time.sec) {
-                delta_time = ecs_time_measure(&t);
+                delta_time = (float)ecs_time_measure(&t);
             } else {
                 ecs_time_measure(&t);
                 if (world->target_fps) {
-                    delta_time = 1.0 / world->target_fps;
+                    delta_time = 1.0f / world->target_fps;
                 } else {
-                    delta_time = 1.0 / 60.0; /* Best guess */
+					delta_time = 1.0f / 60.0f; /* Best guess */
                 }
             }
         
@@ -1191,7 +1191,7 @@ void stop_measure_frame(
         /* Sleep if processing faster than target FPS */
         float target_fps = world->target_fps;
         if (target_fps) {
-            float sleep = (1.0 / target_fps) - delta_time + world->fps_sleep;
+            float sleep = (1.0f / target_fps) - delta_time + world->fps_sleep;
 
             if (sleep > 0.01) {
                 ecs_sleepf(sleep);
@@ -1584,5 +1584,5 @@ uint32_t ecs_get_threads(
 uint32_t ecs_get_target_fps(
     ecs_world_t *world)
 {
-    return world->target_fps;
+    return (uint32_t)world->target_fps;
 }

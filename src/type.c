@@ -220,7 +220,9 @@ ecs_type_t ecs_type_from_array_normalize(
                 break;
             }
         }
-
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#pragma warning(disable:6386)
+#endif
         if (!found) {
             dst_array[dst_count ++] = ie;
         } else {
@@ -533,7 +535,7 @@ ecs_type_t ecs_type_add_intern(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     uint32_t count = ecs_vector_count(type);
-    ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, count + 1);
+    ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, (uint64_t)count + 1);
     ecs_entity_t *old_array = ecs_vector_first(type);
     void *new_buffer = new_array;
 
@@ -613,7 +615,7 @@ ecs_type_t ecs_type_merge_intern(
     ecs_entity_t *buf_new = NULL; 
     if (cur_count + add_count) {
         ecs_assert((cur_count + add_count) < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
-        buf_new = ecs_os_alloca(ecs_entity_t, cur_count + add_count);
+        buf_new = ecs_os_alloca(ecs_entity_t, (size_t)cur_count + (size_t)add_count);
     }
 
     uint32_t new_count = 0;
@@ -1067,11 +1069,11 @@ char* ecs_type_to_expr(
         if (id) {
             str = *id;
         } else {
-            int h_int = h;
+            int h_int = (int)h;
             sprintf(buf, "%u", h_int);
             str = buf;
         }
-        len = strlen(str);
+        len = (uint32_t)(strlen(str));
         dst = ecs_vector_addn(&chbuf, &char_arr_params, len);
         memcpy(dst, str, len);
     }

@@ -228,8 +228,8 @@ bool ecs_os_dbg_enabled(void) {
 void ecs_os_gettime(ecs_time_t *timeOut)
 {
     uint64_t now = ecs_os_time_now();
-    timeOut->sec = now / 1000000000;
-    timeOut->nanosec = now - timeOut->sec * 1000000000;
+    timeOut->sec = (uint32_t)(now / 1000000000);
+    timeOut->nanosec = (uint32_t)(now - (uint64_t)(timeOut->sec * 1000000000ULL));
 }
 
 static
@@ -265,7 +265,7 @@ void ecs_os_api_free(void *ptr) {
 
 static
 char* ecs_os_api_strdup(const char *str) {
-    int len = strlen(str);
+    size_t len = strlen(str);
     char *result = ecs_os_api_malloc(len + 1);
     strcpy(result, str);
     return result;

@@ -127,7 +127,7 @@ uint32_t next_bucket(
         }
     }
 
-    return i;
+    return (uint32_t)i;
 }
 
 static
@@ -232,7 +232,7 @@ void resize_map(
     uint32_t bucket_count)
 {
     uint32_t *old_buckets = map->buckets;
-    uint32_t old_bucket_count = map->bucket_count;
+    uint32_t old_bucket_count = (uint32_t)map->bucket_count;
 
     alloc_buffer(map, bucket_count);
     map->count = 0;
@@ -269,13 +269,13 @@ ecs_map_t* ecs_map_new(
     if (!data_size) {
         data_size = sizeof(uint64_t);
     }
-    return alloc_map((float)size / FLECS_LOAD_FACTOR, data_size);
+    return alloc_map((uint32_t)(size / FLECS_LOAD_FACTOR), data_size);
 }
 
 void ecs_map_clear(
     ecs_map_t *map)
 {
-    uint32_t target_size = (float)map->count / FLECS_LOAD_FACTOR;
+    uint32_t target_size = (uint32_t)((float)map->count / FLECS_LOAD_FACTOR);
 
     if (target_size < map->min) {
         target_size = map->min;
@@ -311,10 +311,10 @@ void* _ecs_map_set(
     (void)size;
     ecs_assert(ecs_map_data_size(map) == size, ECS_INVALID_PARAMETER, NULL);
 
-    uint32_t bucket_count = map->bucket_count;
+    uint32_t bucket_count = (uint32_t)(map->bucket_count);
     if (!bucket_count) {
         alloc_buffer(map, 2);
-        bucket_count = map->bucket_count;
+        bucket_count = (uint32_t)(map->bucket_count);
     }
 
     if ((((float)map->count) / (float)bucket_count) > FLECS_LOAD_FACTOR) {
@@ -441,7 +441,7 @@ uint32_t ecs_map_count(
 uint32_t ecs_map_bucket_count(
     ecs_map_t *map)
 {
-    return map->bucket_count;
+    return (uint32_t)map->bucket_count;
 }
 
 uint32_t ecs_map_set_size(
@@ -449,7 +449,7 @@ uint32_t ecs_map_set_size(
     uint32_t size)
 {
     uint32_t result = ecs_vector_set_size(&map->nodes, &map->node_params, size);
-    resize_map(map, size / FLECS_LOAD_FACTOR);
+    resize_map(map, (uint32_t)(size / FLECS_LOAD_FACTOR));
     return result;
 }
 
@@ -475,7 +475,7 @@ void ecs_map_memory(
 
     if (total) {
 
-        *total += map->bucket_count * sizeof(uint32_t) + sizeof(ecs_map_t);
+        *total += (uint32_t)(map->bucket_count) * (uint32_t)(sizeof(uint32_t) + sizeof(ecs_map_t));
         ecs_vector_memory(map->nodes, &map->node_params, total, NULL);
     }
 
@@ -574,5 +574,5 @@ void* ecs_map_next_w_size(
 uint32_t ecs_map_data_size(
     ecs_map_t *map)
 {
-    return data_size(map);
+    return (uint32_t)(data_size(map));
 }
