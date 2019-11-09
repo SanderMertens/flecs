@@ -763,7 +763,7 @@ ecs_entity_t ecs_new_col_system(
     system_data->base.kind = kind;
     system_data->base.cascade_by = 0;
     system_data->base.has_refs = false;
-    system_data->base.needs_tables = ecs_needs_tables(world, sig, result);
+    system_data->base.needs_tables = ecs_needs_tables(world, sig, id);
 
     system_data->column_params.element_size = sizeof(int32_t) * (count);
     system_data->ref_params.element_size = sizeof(ecs_reference_t) * count;
@@ -777,7 +777,7 @@ ecs_entity_t ecs_new_col_system(
         &matched_table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
 
     ecs_parse_component_expr(
-        world, sig, ecs_parse_signature_action, result, system_data);
+        world, sig, ecs_parse_signature_action, id, system_data);
 
     ecs_system_compute_and_families(world, &system_data->base);
 

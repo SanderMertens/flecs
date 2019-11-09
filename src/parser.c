@@ -19,17 +19,22 @@ char* parse_complex_elem(
     char *bptr,
     ecs_system_expr_elem_kind_t *elem_kind,
     ecs_system_expr_oper_kind_t *oper_kind,
-    const char * *source)
+    const char * *source,
+    const char *system_id)
 {
     if (bptr[0] == '!') {
         *oper_kind = EcsOperNot;
         if (!bptr[1]) {
+            // TODO: #90 show description of the error here.
+            ecs_print_error_string("parse_complex_elem function failed", "", 0, system_id);
             ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
         bptr ++;
     } else if (bptr[0] == '?') {
         *oper_kind = EcsOperOptional;
         if (!bptr[1]) {
+            // TODO: #90 Show description of the error here.
+            ecs_print_error_string("parse_complex_elem function failed", "", 0, system_id);
             ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
         bptr ++;
@@ -61,6 +66,7 @@ char* parse_complex_elem(
         bptr = dot + 1;
 
         if (!bptr[0]) {
+
             return NULL;
         }
     }
@@ -102,10 +108,10 @@ int has_tables(
 bool ecs_needs_tables(
     ecs_world_t *world,
     const char *signature,
-    ecs_entity_t entity_id)
+    const char *system_id)
 {
     bool needs_matching = false;
-    ecs_parse_component_expr(world, signature, has_tables, entity_id, &needs_matching);
+    ecs_parse_component_expr(world, signature, has_tables, system_id, &needs_matching);
     return needs_matching;
 }
 
@@ -171,9 +177,13 @@ const char* parse_annotation(
 
     return ptr;
 }
-/** Build error string*/
-void build_error_string(char *error, const char* signature, long position, const char *system_id){
-    sprintf(error, "\"%s\" at position %ld. System \"%s\"", signature, position, system_id);
+// TODO : Make this function more generic. What happens if we don't have a component name?
+void ecs_print_error_string(const char *error_description, const char* signature, long position, const char *system_id){
+    int argument_number = 1;
+    char component_description[50] = "fake_component";
+    char error_string[100] = "";
+    sprintf(error_string, "%s: %d: %s \"%s\"\n%s\n~~~^\n", system_id, argument_number, error_description, component_description, signature);
+    printf("%s", error_string);
 }
 
 /** Parse component expression */
@@ -181,7 +191,7 @@ int ecs_parse_component_expr(
     ecs_world_t *world,
     const char *sig,
     ecs_parse_action_t action,
-    ecs_entity_t entity_id,
+    const char *system_id,
     void *ctx)
 {
     size_t len = strlen(sig);
@@ -202,9 +212,8 @@ int ecs_parse_component_expr(
 
         if (prev_is_0) {
             /* 0 can only apppear by itself */
-            char err[50] = "/0";
-            const char* system_id = ecs_get(world, entity_id, EcsId);
-            build_error_string(err, sig, ptr - sig, system_id);
+            char err[50] = "0 can only apppear by itself";
+            ecs_print_error_string(err, sig, ptr - sig, system_id);
 
             ecs_abort(ECS_INVALID_SIGNATURE, err);
         }
@@ -233,39 +242,27 @@ int ecs_parse_component_expr(
 
             if (complex_expr) {
                 ecs_system_expr_oper_kind_t prev_oper_kind = oper_kind;
-                bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source);
-                if (!bptr) {
-                    char err[50] = "/0";
-                    const char* system_id = ecs_get(world, entity_id, EcsId);
-                    build_error_string(err, sig, ptr - sig, system_id);
-                    ecs_abort(ECS_INVALID_EXPRESSION, err);
-                }
+                bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source, system_id);
 
                 if (oper_kind == EcsOperNot && prev_oper_kind == EcsOperOr) {
-                    char err[50] = "/0";
-                    const char* system_id = ecs_get(world, entity_id, EcsId);
-                    build_error_string(err, sig, ptr - sig, system_id);
-                    ecs_abort(ECS_INVALID_EXPRESSION, err);
+                    ecs_print_error_string(ecs_strerror(ECS_CANT_USE_NOT_IN_OR_EXPRESSION), sig, ptr - sig, system_id);
+                    ecs_abort(ECS_INVALID_EXPRESSION, NULL);
                 }
             }
 
            if (oper_kind == EcsOperOr) {
                 if (elem_kind == EcsFromEmpty) {
                     /* Cannot OR handles */
-                    char err[50] = "/0";
-                    const char* system_id = ecs_get(world, entity_id, EcsId);
-                    build_error_string(err, sig, ptr - sig, system_id);
-                    ecs_abort(ECS_INVALID_EXPRESSION, err);
+                    ecs_print_error_string(ecs_strerror(ECS_CANT_USE_OR_WITH_EMPTY_FROM_EXPRESSION), sig, ptr - sig, system_id);
+                    ecs_abort(ECS_INVALID_EXPRESSION, NULL);
                 }
             }            
 
             if (!strcmp(bptr, "0")) {
                 if (bptr != buffer) {
                     /* 0 can only appear by itself */
-                    char err[50] = "/0";
-                    const char* system_id = ecs_get(world, entity_id, EcsId);
-                    build_error_string(err, sig, ptr - sig, system_id);
-                    ecs_abort(ECS_INVALID_EXPRESSION, err);
+                    ecs_print_error_string(ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF), sig, ptr - sig, system_id);
+                    ecs_abort(ECS_INVALID_EXPRESSION, NULL);
                 }
 
                 elem_kind = EcsFromEmpty;

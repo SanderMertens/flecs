@@ -2154,6 +2154,9 @@ void _ecs_assert(
 #define ECS_INVALID_PREFAB_CHILD_TYPE (33)
 #define ECS_UNSUPPORTED (34)
 #define ECS_NO_OUT_COLUMNS (35)
+#define ECS_CANT_USE_NOT_IN_OR_EXPRESSION (36)
+#define ECS_CANT_USE_OR_WITH_EMPTY_FROM_EXPRESSION (37)
+#define ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF (38)
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */
 

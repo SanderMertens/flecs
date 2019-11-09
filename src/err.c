@@ -112,6 +112,12 @@ const char* ecs_strerror(
         return "operation is unsupported";
     case ECS_NO_OUT_COLUMNS:
         return "on demand system has no out columns";
+    case ECS_CANT_USE_NOT_IN_OR_EXPRESSION:
+        return "cannot use NOT (!) operator in an OR (|) expression";
+    case ECS_CANT_USE_OR_WITH_EMPTY_FROM_EXPRESSION:
+        return "cannot use OR (|) operator in combination with an empty FROM (.) expression";
+    case ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF:
+        return "0 can only appear by itself";
     }
 
     return "unknown error code";
