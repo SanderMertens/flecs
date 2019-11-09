@@ -403,7 +403,7 @@ void* ecs_map_get_ptr(
 bool _ecs_map_has(
     ecs_map_t *map,
     uint64_t key_hash,
-    void *value_out,
+    const void *value_out,
     uint32_t size)
 {
     (void)size;
