@@ -20,13 +20,14 @@ char* parse_complex_elem(
     ecs_system_expr_elem_kind_t *elem_kind,
     ecs_system_expr_oper_kind_t *oper_kind,
     const char * *source,
-    const char *system_id)
+    const char *system_id,
+    const char *signature)
 {
     if (bptr[0] == '!') {
         *oper_kind = EcsOperNot;
         if (!bptr[1]) {
             // TODO: #90 show description of the error here.
-            ecs_print_error_string("parse_complex_elem function failed", "", 0, system_id);
+            ecs_print_error_string(ecs_strerror(ECS_INVALID_EXPRESSION), signature, system_id, bptr);
             ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
         bptr ++;
@@ -34,7 +35,7 @@ char* parse_complex_elem(
         *oper_kind = EcsOperOptional;
         if (!bptr[1]) {
             // TODO: #90 Show description of the error here.
-            ecs_print_error_string("parse_complex_elem function failed", "", 0, system_id);
+            ecs_print_error_string(ecs_strerror(ECS_INVALID_EXPRESSION), signature, system_id, bptr);
             ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
         bptr ++;
@@ -66,8 +67,8 @@ char* parse_complex_elem(
         bptr = dot + 1;
 
         if (!bptr[0]) {
-
-            return NULL;
+            ecs_print_error_string(ecs_strerror(ECS_INVALID_EXPRESSION), signature, system_id, bptr);
+            ecs_abort(ECS_INVALID_EXPRESSION, signature);
         }
     }
 
@@ -82,6 +83,7 @@ int has_tables(
     ecs_system_expr_inout_kind_t inout_kind,
     const char *component_id,
     const char *source_id,
+    const char *system_id,// TODO: This var is not being used.
     void *data)
 {
     (void)world;
@@ -177,14 +179,6 @@ const char* parse_annotation(
 
     return ptr;
 }
-// TODO : Make this function more generic. What happens if we don't have a component name?
-void ecs_print_error_string(const char *error_description, const char* signature, long position, const char *system_id){
-    int argument_number = 1;
-    char component_description[50] = "fake_component";
-    char error_string[100] = "";
-    sprintf(error_string, "%s: %d: %s \"%s\"\n%s\n~~~^\n", system_id, argument_number, error_description, component_description, signature);
-    printf("%s", error_string);
-}
 
 /** Parse component expression */
 int ecs_parse_component_expr(
@@ -213,7 +207,7 @@ int ecs_parse_component_expr(
         if (prev_is_0) {
             /* 0 can only apppear by itself */
             char err[50] = "0 can only apppear by itself";
-            ecs_print_error_string(err, sig, ptr - sig, system_id);
+            ecs_print_error_string(err, sig, system_id, bptr);
 
             ecs_abort(ECS_INVALID_SIGNATURE, err);
         }
@@ -242,10 +236,10 @@ int ecs_parse_component_expr(
 
             if (complex_expr) {
                 ecs_system_expr_oper_kind_t prev_oper_kind = oper_kind;
-                bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source, system_id);
+                bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source, system_id, sig);
 
                 if (oper_kind == EcsOperNot && prev_oper_kind == EcsOperOr) {
-                    ecs_print_error_string(ecs_strerror(ECS_CANT_USE_NOT_IN_OR_EXPRESSION), sig, ptr - sig, system_id);
+                    ecs_print_error_string(ecs_strerror(ECS_CANT_USE_NOT_IN_OR_EXPRESSION), sig, system_id, bptr);
                     ecs_abort(ECS_INVALID_EXPRESSION, NULL);
                 }
             }
@@ -253,7 +247,7 @@ int ecs_parse_component_expr(
            if (oper_kind == EcsOperOr) {
                 if (elem_kind == EcsFromEmpty) {
                     /* Cannot OR handles */
-                    ecs_print_error_string(ecs_strerror(ECS_CANT_USE_OR_WITH_EMPTY_FROM_EXPRESSION), sig, ptr - sig, system_id);
+                    ecs_print_error_string(ecs_strerror(ECS_CANT_USE_OR_WITH_EMPTY_FROM_EXPRESSION), sig, system_id, bptr);
                     ecs_abort(ECS_INVALID_EXPRESSION, NULL);
                 }
             }            
@@ -261,7 +255,7 @@ int ecs_parse_component_expr(
             if (!strcmp(bptr, "0")) {
                 if (bptr != buffer) {
                     /* 0 can only appear by itself */
-                    ecs_print_error_string(ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF), sig, ptr - sig, system_id);
+                    ecs_print_error_string(ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF), sig, system_id, bptr);
                     ecs_abort(ECS_INVALID_EXPRESSION, NULL);
                 }
 
@@ -279,9 +273,16 @@ int ecs_parse_component_expr(
                 source_id[dot - source] = '\0';
             }
 
+            /* Lookup component handly by string identifier */
+            ecs_entity_t component = ecs_lookup(world, bptr);
+            if (!component) {
+                // TODO: COMPONENT DOES NOT EXIST!!! ABORT!!!
+                ecs_print_error_string(ecs_strerror(ECS_INVALID_COMPONENT_ID), sig, system_id, bptr);
+                ecs_abort(ECS_INVALID_COMPONENT_ID, bptr);
+            }
             int ret;
             if ((ret = action(
-                world, elem_kind, oper_kind, inout_kind, bptr, source_id, ctx))) 
+                world, elem_kind, oper_kind, inout_kind, bptr, source_id, system_id, ctx)))
             {
                 ecs_abort(ret, sig);
             }

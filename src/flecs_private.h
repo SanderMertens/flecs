@@ -365,6 +365,7 @@ int ecs_parse_signature_action(
     ecs_system_expr_inout_kind_t inout_kind,
     const char *component_id,
     const char *source_id,
+    const char *system_id,
     void *data);
 
 /* Trigger rematch of system */
@@ -426,7 +427,7 @@ uint64_t ecs_from_row(
     ecs_row_t row);
 
 /* Utility that print a descriptive error string*/
-void ecs_print_error_string(const char *error_description, const char* signature, long position, const char *system_id);
+void ecs_print_error_string(const char *error_description, const char* signature, const char* system_id, const char* component_id);
 
 /* Utility that parses system signature */
 int ecs_parse_component_expr(

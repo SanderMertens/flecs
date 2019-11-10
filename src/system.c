@@ -423,6 +423,7 @@ int ecs_parse_signature_action(
     ecs_system_expr_inout_kind_t inout_kind,
     const char *component_id,
     const char *source_id,
+    const char *system_id,
     void *data)
 {
     EcsSystem *system_data = data;
@@ -434,8 +435,8 @@ int ecs_parse_signature_action(
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
         if (strcmp(component_id, "0")) {
-            // TODO: Need to show a meaningfull error here
-            printf("Error trying to parse signature action: %s::%s\n", source_id, component_id);
+//            // TODO: Need to show a meaningfull error here
+            ecs_print_error_string(ecs_strerror(ECS_INVALID_COMPONENT_ID), "", system_id, component_id);
             ecs_abort(ECS_INVALID_COMPONENT_ID, component_id);
         } else {
             /* Don't add 0 component to signature */
@@ -461,8 +462,8 @@ int ecs_parse_signature_action(
         if (elem_kind == EcsFromEntity) {
             elem->source = ecs_lookup(world, source_id);
             if (!elem->source) {
-                // TODO: Need to show a meaningfull error here
-                printf("Element source can't be NULL: %s::%s\n", source_id, component_id);
+                // TODO: Need to show a meaningfull error here. component_id should be system_id
+                ecs_print_error_string("Element source can't be NULL", "", "fake_system_name",component_id);
                 ecs_abort(ECS_UNRESOLVED_IDENTIFIER, source_id);
             }
 
