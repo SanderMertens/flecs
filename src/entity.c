@@ -300,7 +300,8 @@ ecs_type_t instantiate_prefab(
                     uint32_t index = entity_info->index + j - 1;
                     ecs_entity_t entity = entity_ids[index];
                     ecs_adopt(world, child + j, entity);
-                    ecs_set(world, child + j, EcsId, op->id);
+					_ecs_set_ptr(world, child + j, ecs_entity(EcsId), sizeof(EcsId), &((EcsId)op->id));
+                    //ecs_set(world, child + j, EcsId, op->id);
                 }
             }
         }
