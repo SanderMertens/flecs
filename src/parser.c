@@ -26,7 +26,6 @@ char* parse_complex_elem(
     if (bptr[0] == '!') {
         *oper_kind = EcsOperNot;
         if (!bptr[1]) {
-            // TODO: #90 show description of the error here.
             ecs_print_error_string(ecs_strerror(ECS_INVALID_EXPRESSION), signature, system_id, bptr);
             ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
@@ -34,7 +33,6 @@ char* parse_complex_elem(
     } else if (bptr[0] == '?') {
         *oper_kind = EcsOperOptional;
         if (!bptr[1]) {
-            // TODO: #90 Show description of the error here.
             ecs_print_error_string(ecs_strerror(ECS_INVALID_EXPRESSION), signature, system_id, bptr);
             ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
@@ -226,6 +224,7 @@ int ecs_parse_component_expr(
         } else if (ch == ',' || ch == '|' || ch == '\0') {
             /* Separators should not appear after an empty column */
             if (bptr == buffer) {
+                ecs_print_error_string(ecs_strerror(ECS_INVALID_SIGNATURE), sig, system_id, bptr);
                 ecs_abort(ECS_INVALID_SIGNATURE, sig);
             }
 
@@ -276,7 +275,6 @@ int ecs_parse_component_expr(
             /* Lookup component handly by string identifier */
             ecs_entity_t component = ecs_lookup(world, bptr);
             if (!component) {
-                // TODO: COMPONENT DOES NOT EXIST!!! ABORT!!!
                 ecs_print_error_string(ecs_strerror(ECS_INVALID_COMPONENT_ID), sig, system_id, bptr);
                 ecs_abort(ECS_INVALID_COMPONENT_ID, bptr);
             }

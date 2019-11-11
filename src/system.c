@@ -435,7 +435,6 @@ int ecs_parse_signature_action(
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
         if (strcmp(component_id, "0")) {
-//            // TODO: Need to show a meaningfull error here
             ecs_print_error_string(ecs_strerror(ECS_INVALID_COMPONENT_ID), "", system_id, component_id);
             ecs_abort(ECS_INVALID_COMPONENT_ID, component_id);
         } else {
@@ -462,8 +461,7 @@ int ecs_parse_signature_action(
         if (elem_kind == EcsFromEntity) {
             elem->source = ecs_lookup(world, source_id);
             if (!elem->source) {
-                // TODO: Need to show a meaningfull error here. component_id should be system_id
-                ecs_print_error_string("Element source can't be NULL", "", "fake_system_name",component_id);
+                ecs_print_error_string(ecs_strerror(ECS_UNRESOLVED_IDENTIFIER), "", system_id, component_id);
                 ecs_abort(ECS_UNRESOLVED_IDENTIFIER, source_id);
             }
 
