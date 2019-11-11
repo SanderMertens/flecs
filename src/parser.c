@@ -81,7 +81,6 @@ int has_tables(
     ecs_system_expr_inout_kind_t inout_kind,
     const char *component_id,
     const char *source_id,
-    const char *system_id,// TODO: This var is not being used.
     void *data)
 {
     (void)world;
@@ -280,7 +279,7 @@ int ecs_parse_component_expr(
             }
             int ret;
             if ((ret = action(
-                world, elem_kind, oper_kind, inout_kind, bptr, source_id, system_id, ctx)))
+                world, elem_kind, oper_kind, inout_kind, bptr, source_id, ctx)))
             {
                 ecs_abort(ret, sig);
             }

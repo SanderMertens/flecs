@@ -125,7 +125,6 @@ typedef int (*ecs_parse_action_t)(
     ecs_system_expr_inout_kind_t inout_kind,
     const char *component,
     const char *source,
-    const char *system_id,
     void *ctx);
 
 /** Type that describes a single column in the system signature */

@@ -31,7 +31,6 @@ int parse_type_action(
     ecs_system_expr_inout_kind_t inout_kind,
     const char *entity_id,
     const char *source_id,
-    const char *system_id,// TODO: This variable is not being used
     void *data)
 {
     ecs_vector_t **array = data;

@@ -423,7 +423,6 @@ int ecs_parse_signature_action(
     ecs_system_expr_inout_kind_t inout_kind,
     const char *component_id,
     const char *source_id,
-    const char *system_id,
     void *data)
 {
     EcsSystem *system_data = data;
@@ -435,7 +434,6 @@ int ecs_parse_signature_action(
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
         if (strcmp(component_id, "0")) {
-            ecs_print_error_string(ecs_strerror(ECS_INVALID_COMPONENT_ID), "", system_id, component_id);
             ecs_abort(ECS_INVALID_COMPONENT_ID, component_id);
         } else {
             /* Don't add 0 component to signature */
@@ -461,7 +459,6 @@ int ecs_parse_signature_action(
         if (elem_kind == EcsFromEntity) {
             elem->source = ecs_lookup(world, source_id);
             if (!elem->source) {
-                ecs_print_error_string(ecs_strerror(ECS_UNRESOLVED_IDENTIFIER), "", system_id, component_id);
                 ecs_abort(ECS_UNRESOLVED_IDENTIFIER, source_id);
             }
 

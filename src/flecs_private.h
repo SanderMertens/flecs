@@ -365,7 +365,6 @@ int ecs_parse_signature_action(
     ecs_system_expr_inout_kind_t inout_kind,
     const char *component_id,
     const char *source_id,
-    const char *system_id,
     void *data);
 
 /* Trigger rematch of system */
