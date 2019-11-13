@@ -80,7 +80,7 @@ void move_node(
 static
 void alloc_buffer(
     ecs_map_t *map,
-    uint32_t bucket_count)
+    size_t bucket_count)
 {
     if (bucket_count) {
         map->buckets = ecs_os_calloc(bucket_count * sizeof(uint32_t), 1);
@@ -229,10 +229,10 @@ ecs_map_node_t *get_node(
 static
 void resize_map(
     ecs_map_t *map,
-    uint32_t bucket_count)
+    size_t bucket_count)
 {
     uint32_t *old_buckets = map->buckets;
-    uint32_t old_bucket_count = (uint32_t)map->bucket_count;
+    size_t old_bucket_count = map->bucket_count;
 
     alloc_buffer(map, bucket_count);
     map->count = 0;
@@ -311,10 +311,10 @@ void* _ecs_map_set(
     (void)size;
     ecs_assert(ecs_map_data_size(map) == size, ECS_INVALID_PARAMETER, NULL);
 
-    uint32_t bucket_count = (uint32_t)(map->bucket_count);
+    size_t bucket_count = map->bucket_count;
     if (!bucket_count) {
         alloc_buffer(map, 2);
-        bucket_count = (uint32_t)(map->bucket_count);
+        bucket_count = map->bucket_count;
     }
 
     if ((((float)map->count) / (float)bucket_count) > FLECS_LOAD_FACTOR) {
@@ -438,10 +438,10 @@ uint32_t ecs_map_count(
     return map->count;
 }
 
-uint32_t ecs_map_bucket_count(
+size_t ecs_map_bucket_count(
     ecs_map_t *map)
 {
-    return (uint32_t)map->bucket_count;
+    return map->bucket_count;
 }
 
 uint32_t ecs_map_set_size(
@@ -571,8 +571,8 @@ void* ecs_map_next_w_size(
     return ecs_map_next_w_key_w_size(iter_data, NULL, size);
 }
 
-uint32_t ecs_map_data_size(
+size_t ecs_map_data_size(
     ecs_map_t *map)
 {
-    return (uint32_t)(data_size(map));
+    return data_size(map);
 }

@@ -31,7 +31,7 @@ ecs_table_column_t* new_columns(
     ecs_type_t type)
 {
     ecs_table_column_t *result = ecs_os_calloc(
-        sizeof(ecs_table_column_t), (uint64_t)ecs_vector_count(type) + 1);
+        sizeof(ecs_table_column_t), (size_t)ecs_vector_count(type) + 1);
 
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 

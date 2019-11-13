@@ -539,7 +539,7 @@ void ecs_set_target_fps(
 
 /** Get number of configured threads */
 FLECS_EXPORT
-uint32_t ecs_get_target_fps(
+float ecs_get_target_fps(
     ecs_world_t *world);
 
 /** Enables admin web server

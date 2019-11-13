@@ -1581,8 +1581,8 @@ uint32_t ecs_get_threads(
     return ecs_vector_count(world->worker_threads);
 }
 
-uint32_t ecs_get_target_fps(
+float ecs_get_target_fps(
     ecs_world_t *world)
 {
-    return (uint32_t)world->target_fps;
+    return world->target_fps;
 }

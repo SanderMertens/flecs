@@ -38,7 +38,7 @@ uint32_t ecs_map_set_size(
     uint32_t size);
 
 FLECS_EXPORT
-uint32_t ecs_map_data_size(
+size_t ecs_map_data_size(
     ecs_map_t *map);
 
 FLECS_EXPORT
@@ -47,7 +47,7 @@ uint32_t ecs_map_grow(
     uint32_t size);
 
 FLECS_EXPORT
-uint32_t ecs_map_bucket_count(
+size_t ecs_map_bucket_count(
     ecs_map_t *map);
 
 FLECS_EXPORT

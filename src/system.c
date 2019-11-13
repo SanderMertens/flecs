@@ -259,10 +259,10 @@ void register_out_columns(
         if (columns[i].inout_kind == EcsOut) {
             if (!system_data->on_demand) {
                 system_data->on_demand = ecs_os_malloc(sizeof(ecs_on_demand_out_t));
-				if (system_data->on_demand != NULL) {
+					ecs_assert(system_data->on_demand != NULL, ECS_OUT_OF_MEMORY, NULL);
 					system_data->on_demand->system = system;
 					system_data->on_demand->count = 0;
-				}
+
             }
 
             /* If column operator is NOT and the inout kind is [out], the system
@@ -712,7 +712,7 @@ ecs_entity_t ecs_new_system(
     bool needs_tables = ecs_needs_tables(world, sig);
     bool is_reactive = false;
 
-    ecs_assert(needs_tables || !((kind == EcsOnAdd) || (kind == EcsOnSet || (kind == EcsOnSet))),
+    ecs_assert(needs_tables || !((kind == EcsOnAdd) || (kind == EcsOnSet)),
         ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_lookup(world, id);

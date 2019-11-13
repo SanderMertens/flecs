@@ -535,7 +535,7 @@ ecs_type_t ecs_type_add_intern(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     uint32_t count = ecs_vector_count(type);
-    ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, (uint64_t)count + 1);
+    ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, (size_t)count + 1);
     ecs_entity_t *old_array = ecs_vector_first(type);
     void *new_buffer = new_array;
 
@@ -1038,7 +1038,7 @@ char* ecs_type_to_expr(
 {
     ecs_vector_t *chbuf = ecs_vector_new(&char_arr_params, 32);
     char *dst;
-    uint32_t len;
+    size_t len;
     char buf[15];
 
     ecs_entity_t *handles = ecs_vector_first(type);
@@ -1073,8 +1073,8 @@ char* ecs_type_to_expr(
             sprintf(buf, "%u", h_int);
             str = buf;
         }
-        len = (uint32_t)(strlen(str));
-        dst = ecs_vector_addn(&chbuf, &char_arr_params, len);
+        len = strlen(str);
+        dst = ecs_vector_addn(&chbuf, &char_arr_params, (uint32_t)len);
         memcpy(dst, str, len);
     }
 
