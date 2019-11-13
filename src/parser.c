@@ -203,10 +203,8 @@ int ecs_parse_component_expr(
 
         if (prev_is_0) {
             /* 0 can only apppear by itself */
-            char err[50] = "0 can only apppear by itself";
-            ecs_print_error_string(err, sig, system_id, bptr);
-
-            ecs_abort(ECS_INVALID_SIGNATURE, err);
+            ecs_print_error_string(ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF), sig, system_id, bptr);
+            ecs_abort(ECS_INVALID_SIGNATURE, ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF));
         }
 
         if (ch == '[') {
