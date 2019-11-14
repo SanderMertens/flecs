@@ -118,42 +118,9 @@ const char* ecs_strerror(
         return "cannot use OR (|) operator in combination with an empty FROM (.) expression";
     case ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF:
         return "0 can only appear by itself";
+    case ECS_UNSESOLVED_COMPONENT_NAME:
+        return "unresolved component name '%s'";
     }
 
     return "unknown error code";
-}
-
-void ecs_print_error_string(const char *error_description, const char* signature, const char *system_id, const char *component_id)
-{
-    int argument_number = 1;
-    char error_string[200] = "";
-    char error_indicator[200] = "";
-    uint position = 0;
-    int i = 0;
-
-    if(component_id){
-        if(strlen(component_id) == 0){
-            position = strlen(signature) - 1;
-        } else {
-            char* pointer_to_string = strstr(signature, component_id);
-            position = pointer_to_string - signature;
-        }
-    } else {
-        component_id = signature;
-    }
-
-
-
-    for(; i < position; i++){
-        // Check the argument number
-        if(signature[i] == ',') argument_number++;
-        error_indicator[i] = '~';
-    }
-
-    error_indicator[i] = '^';
-    error_indicator[++i] = '\0';
-
-
-    sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id, argument_number, error_description, signature, error_indicator);
-    printf("%s", error_string);
 }

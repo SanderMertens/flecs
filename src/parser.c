@@ -26,14 +26,14 @@ char* parse_complex_elem(
     if (bptr[0] == '!') {
         *oper_kind = EcsOperNot;
         if (!bptr[1]) {
-            ecs_print_error_string(ecs_strerror(ECS_INVALID_EXPRESSION), signature, system_id, bptr);
+            ecs_print_error_string(signature, system_id,ecs_strerror(ECS_INVALID_EXPRESSION), bptr);
             ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
         bptr ++;
     } else if (bptr[0] == '?') {
         *oper_kind = EcsOperOptional;
         if (!bptr[1]) {
-            ecs_print_error_string(ecs_strerror(ECS_INVALID_EXPRESSION), signature, system_id, bptr);
+            ecs_print_error_string(signature, system_id, ecs_strerror(ECS_INVALID_EXPRESSION), bptr);
             ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
         bptr ++;
@@ -65,7 +65,7 @@ char* parse_complex_elem(
         bptr = dot + 1;
 
         if (!bptr[0]) {
-            ecs_print_error_string(ecs_strerror(ECS_INVALID_EXPRESSION), signature, system_id, bptr);
+            ecs_print_error_string(signature, system_id, ecs_strerror(ECS_INVALID_EXPRESSION), bptr);
             ecs_abort(ECS_INVALID_EXPRESSION, signature);
         }
     }
@@ -203,7 +203,7 @@ int ecs_parse_component_expr(
 
         if (prev_is_0) {
             /* 0 can only apppear by itself */
-            ecs_print_error_string(ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF), sig, system_id, bptr);
+            ecs_print_error_string(sig, system_id,ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF), bptr);
             ecs_abort(ECS_INVALID_SIGNATURE, ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF));
         }
 
@@ -221,7 +221,7 @@ int ecs_parse_component_expr(
         } else if (ch == ',' || ch == '|' || ch == '\0') {
             /* Separators should not appear after an empty column */
             if (bptr == buffer) {
-                ecs_print_error_string(ecs_strerror(ECS_INVALID_SIGNATURE), sig, system_id, bptr);
+                ecs_print_error_string(sig, system_id, ecs_strerror(ECS_INVALID_SIGNATURE), bptr);
                 ecs_abort(ECS_INVALID_SIGNATURE, sig);
             }
 
@@ -235,7 +235,7 @@ int ecs_parse_component_expr(
                 bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source, system_id, sig);
 
                 if (oper_kind == EcsOperNot && prev_oper_kind == EcsOperOr) {
-                    ecs_print_error_string(ecs_strerror(ECS_CANT_USE_NOT_IN_OR_EXPRESSION), sig, system_id, bptr);
+                    ecs_print_error_string( sig, system_id,ecs_strerror(ECS_CANT_USE_NOT_IN_OR_EXPRESSION), bptr);
                     ecs_abort(ECS_INVALID_EXPRESSION, NULL);
                 }
             }
@@ -243,7 +243,7 @@ int ecs_parse_component_expr(
            if (oper_kind == EcsOperOr) {
                 if (elem_kind == EcsFromEmpty) {
                     /* Cannot OR handles */
-                    ecs_print_error_string(ecs_strerror(ECS_CANT_USE_OR_WITH_EMPTY_FROM_EXPRESSION), sig, system_id, bptr);
+                    ecs_print_error_string(sig, system_id,ecs_strerror(ECS_CANT_USE_OR_WITH_EMPTY_FROM_EXPRESSION), bptr);
                     ecs_abort(ECS_INVALID_EXPRESSION, NULL);
                 }
             }            
@@ -251,7 +251,7 @@ int ecs_parse_component_expr(
             if (!strcmp(bptr, "0")) {
                 if (bptr != buffer) {
                     /* 0 can only appear by itself */
-                    ecs_print_error_string(ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF), sig, system_id, bptr);
+                    ecs_print_error_string(sig, system_id, ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF), bptr);
                     ecs_abort(ECS_INVALID_EXPRESSION, NULL);
                 }
 
@@ -272,7 +272,7 @@ int ecs_parse_component_expr(
             /* Lookup component handly by string identifier */
             ecs_entity_t component = ecs_lookup(world, bptr);
             if (!component) {
-                ecs_print_error_string(ecs_strerror(ECS_INVALID_COMPONENT_ID), sig, system_id, bptr);
+                ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNSESOLVED_COMPONENT_NAME), bptr);
                 ecs_abort(ECS_INVALID_COMPONENT_ID, bptr);
             }
             int ret;

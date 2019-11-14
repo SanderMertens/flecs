@@ -426,7 +426,8 @@ uint64_t ecs_from_row(
     ecs_row_t row);
 
 /* Utility that print a descriptive error string*/
-void ecs_print_error_string(const char *error_description, const char* signature, const char* system_id, const char* component_id);
+//void ecs_print_error_string(const char *error_description, const char* signature, const char* system_id, const char* component_id);
+//void ecs_print_error_string(const char* signature, const char *system_id, const char *error_description, const char *component_id);
 
 /* Utility that parses system signature */
 int ecs_parse_component_expr(

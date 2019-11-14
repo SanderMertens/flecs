@@ -2157,6 +2157,7 @@ void _ecs_assert(
 #define ECS_CANT_USE_NOT_IN_OR_EXPRESSION (36)
 #define ECS_CANT_USE_OR_WITH_EMPTY_FROM_EXPRESSION (37)
 #define ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF (38)
+#define ECS_UNSESOLVED_COMPONENT_NAME (39)
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */
 
@@ -2365,7 +2366,38 @@ void _ecs_assert(
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
-
+#define is_empty(...) ( sizeof( (char[]){#__VA_ARGS__} ) == 1 )
+#define ecs_print_error_string(signature, system_id, error_description, component_id, ...)\
+    int argument_number = 1;\
+    char error_string[200] = "";\
+    char error_indicator[200] = "";\
+    char custom_error_message[200] = "";\
+    const char* component_id_internal;\
+    uint position = 0;\
+    int i = 0;\
+    if(component_id){\
+        component_id_internal = component_id;\
+        if(strlen(component_id) == 0){\
+            position = strlen(signature) - 1;\
+        } else {\
+            char* pointer_to_string = strstr(signature, component_id);\
+            position = pointer_to_string - signature;\
+        }\
+    } else {\
+        component_id_internal = signature;\
+    }\
+    for(; i < position; i++){\
+        if(signature[i] == ',') argument_number++;\
+        error_indicator[i] = '~';\
+    }\
+    error_indicator[i] = '^';\
+    error_indicator[++i] = '\0';\
+    if(!is_empty(##__VA_ARGS__))\
+        sprintf(custom_error_message, error_description, component_id_internal, ##__VA_ARGS__);\
+    else\
+       sprintf(custom_error_message, error_description, component_id_internal);\
+    sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id, argument_number, custom_error_message, signature, error_indicator);\
+    printf("%s", error_string);\
 
 /* Include stats at the end so it gets all the declarations */
 #include <flecs/util/stats.h>
