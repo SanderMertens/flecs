@@ -691,7 +691,7 @@ ecs_world_t *ecs_init(void) {
     world->should_match = false;
 
     world->frame_start_time = (ecs_time_t){0, 0};
-    world->world_start_time = (ecs_time_t){0, 0};
+    ecs_os_get_time(&world->world_start_time);
     world->target_fps = 0;
     world->fps_sleep = 0;
 
@@ -699,6 +699,7 @@ ecs_world_t *ecs_init(void) {
     world->system_time_total = 0;
     world->merge_time_total = 0;
     world->frame_count_total = 0;
+    world->world_time_total = 0;
 
     world->context = NULL;
 
