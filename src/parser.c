@@ -257,6 +257,13 @@ int ecs_parse_component_expr(
 
                 elem_kind = EcsFromEmpty;
                 prev_is_0 = true;
+//            } else if(strcmp(bptr, "CHILDOF") && strcmp(bptr, "INSTANCEOF")){
+//                /* Lookup component handly by string identifier */
+//                ecs_entity_t component = ecs_lookup(world, bptr);
+//                if (!component) {
+//                    ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNSESOLVED_COMPONENT_NAME), bptr);
+//                    ecs_abort(ECS_INVALID_COMPONENT_ID, bptr);
+//                }
             }
 
             char *source_id = NULL;
@@ -269,12 +276,6 @@ int ecs_parse_component_expr(
                 source_id[dot - source] = '\0';
             }
 
-            /* Lookup component handly by string identifier */
-            ecs_entity_t component = ecs_lookup(world, bptr);
-            if (!component) {
-                ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNSESOLVED_COMPONENT_NAME), bptr);
-                ecs_abort(ECS_INVALID_COMPONENT_ID, bptr);
-            }
             int ret;
             if ((ret = action(
                 world, elem_kind, oper_kind, inout_kind, bptr, source_id, ctx)))

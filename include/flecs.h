@@ -25,6 +25,7 @@ typedef char bool;
 #define true !false
 #endif
 
+#define uint unsigned int
 /* The flecs world object */
 typedef struct ecs_world ecs_world_t;
 
@@ -2396,7 +2397,7 @@ void _ecs_assert(
         sprintf(custom_error_message, error_description, component_id_internal, ##__VA_ARGS__);\
     else\
        sprintf(custom_error_message, error_description, component_id_internal);\
-    sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id, argument_number, custom_error_message, signature, error_indicator);\
+    sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id ? system_id : __FUNCTION__ , argument_number, custom_error_message, signature, error_indicator);\
     printf("%s", error_string);\
 
 /* Include stats at the end so it gets all the declarations */
