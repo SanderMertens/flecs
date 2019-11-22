@@ -26,7 +26,38 @@ char* parse_complex_elem(
     if (bptr[0] == '!') {
         *oper_kind = EcsOperNot;
         if (!bptr[1]) {
-            ecs_print_error_string(signature, system_id,ecs_strerror(ECS_INVALID_EXPRESSION), bptr);
+            //ecs_print_error_string(signature, system_id,ecs_strerror(ECS_INVALID_EXPRESSION), bptr);
+
+            int argument_number = 1;
+            char error_string[200] = "";
+            char error_indicator[200] = "";
+            char custom_error_message[200] = "";
+            const char *component_id_internal;
+            uint position = 0;
+            unsigned int i = 0;
+            if (bptr) {
+                component_id_internal = bptr;
+                if (strlen(bptr) == 0) {
+                    position = strlen(signature) - 1;
+                } else {
+                    char *pointer_to_string = strstr(signature, bptr);
+                    position = pointer_to_string - signature;
+                }
+            } else {
+                component_id_internal = signature;
+            }
+            for (; i < position; i++) {
+                if (signature[i] == ',') argument_number++;
+                error_indicator[i] = '~';
+            }
+            error_indicator[i] = '^';
+            error_indicator[++i] = '\0';
+
+            sprintf(custom_error_message, ecs_strerror(ECS_INVALID_EXPRESSION), component_id_internal);
+            sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id ? system_id : __FUNCTION__,
+                    argument_number, custom_error_message, signature, error_indicator);
+            printf("%s", error_string);
+
             ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
         bptr ++;
