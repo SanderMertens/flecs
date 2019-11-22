@@ -2393,10 +2393,11 @@ void _ecs_assert(
     }\
     error_indicator[i] = '^';\
     error_indicator[++i] = '\0';\
-    if(!is_empty(##__VA_ARGS__))\
+    if(!is_empty(##__VA_ARGS__)) {\
         sprintf(custom_error_message, error_description, component_id_internal, ##__VA_ARGS__);\
-    else\
+    } else {\
        sprintf(custom_error_message, error_description, component_id_internal);\
+    }\
     sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id ? system_id : __FUNCTION__ , argument_number, custom_error_message, signature, error_indicator);\
     printf("%s", error_string);\
 
