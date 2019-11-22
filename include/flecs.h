@@ -2375,7 +2375,7 @@ void _ecs_assert(
     char custom_error_message[200] = "";\
     const char* component_id_internal;\
     uint position = 0;\
-    int i = 0;\
+    unsigned int i = 0;\
     if(component_id){\
         component_id_internal = component_id;\
         if(strlen(component_id) == 0){\
@@ -2399,7 +2399,7 @@ void _ecs_assert(
        sprintf(custom_error_message, error_description, component_id_internal);\
     }\
     sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id ? system_id : __FUNCTION__ , argument_number, custom_error_message, signature, error_indicator);\
-    printf("%s", error_string);\
+    printf("%s", error_string)
 
 /* Include stats at the end so it gets all the declarations */
 #include <flecs/util/stats.h>
