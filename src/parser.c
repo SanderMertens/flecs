@@ -26,7 +26,7 @@ char* parse_complex_elem(
     if (bptr[0] == '!') {
         *oper_kind = EcsOperNot;
         if (!bptr[1]) {
-            ecs_print_error_string(signature, system_id,ecs_strerror(ECS_INVALID_EXPRESSION), bptr);
+            ecs_print_error_string(signature, system_id, ecs_strerror(ECS_INVALID_EXPRESSION), bptr);
             ecs_abort(ECS_INVALID_EXPRESSION, bptr);
         }
         bptr ++;

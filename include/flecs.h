@@ -2373,15 +2373,15 @@ void _ecs_assert(
     char error_string[200] = "";\
     char error_indicator[200] = "";\
     char custom_error_message[200] = "";\
-    unsigned int component_id_internal;\
+    char* component_id_internal;\
     char* pointer_to_string;\
     uint position = 0;\
     unsigned int i = 0;\
-    (component_id)?\
-        (component_id_internal = component_id && \
+    component_id?\
+        ((component_id_internal = component_id) && \
         ((strlen(component_id) == 0)?\
             position = strlen(signature) - 1:\
-            ((pointer_to_string = (char *)strstr(signature, component_id)) && \
+            ((pointer_to_string = strstr(signature, component_id)) && \
             (position = (uint)(pointer_to_string - signature)))))\
     :(component_id_internal = signature);\
     for(; i < position; i++){\
