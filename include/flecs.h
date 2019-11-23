@@ -2373,20 +2373,17 @@ void _ecs_assert(
     char error_string[200] = "";\
     char error_indicator[200] = "";\
     char custom_error_message[200] = "";\
-    const char* component_id_internal;\
+    unsigned int component_id_internal;\
+    char* pointer_to_string;\
     uint position = 0;\
     unsigned int i = 0;\
-    if(component_id){\
-        component_id_internal = component_id;\
-        if(strlen(component_id) == 0){\
-            position = strlen(signature) - 1;\
-        } else {\
-            char* pointer_to_string = strstr(signature, component_id);\
-            position = pointer_to_string - signature;\
-        }\
-    } else {\
-        component_id_internal = signature;\
-    }\
+    (component_id)?\
+        (component_id_internal = component_id && \
+        ((strlen(component_id) == 0)?\
+            position = strlen(signature) - 1:\
+            ((pointer_to_string = (char *)strstr(signature, component_id)) && \
+            (position = (uint)(pointer_to_string - signature)))))\
+    :(component_id_internal = signature);\
     for(; i < position; i++){\
         if(signature[i] == ',') argument_number++;\
         error_indicator[i] = '~';\
