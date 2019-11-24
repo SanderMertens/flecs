@@ -2368,33 +2368,39 @@ void _ecs_assert(
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
 #define is_empty(...) ( sizeof( (char[]){#__VA_ARGS__} ) == 1 )
+
+const char* if_encapsulation(const char * component_id, const char* signature, uint *position) {
+
+    if(component_id){
+        if(strlen(component_id) == 0){
+            *position = strlen(signature) - 1;
+        } else {
+            char* pointer_to_string = strstr(signature, component_id);
+            *position = pointer_to_string - signature;
+        }
+        return component_id;
+    }
+
+    return signature;
+}
+
 #define ecs_print_error_string(signature, system_id, error_description, component_id, ...)\
     int argument_number = 1;\
     char error_string[200] = "";\
     char error_indicator[200] = "";\
     char custom_error_message[200] = "";\
-    char* component_id_internal;\
-    char* pointer_to_string;\
     uint position = 0;\
     unsigned int i = 0;\
-    component_id?\
-        ((component_id_internal = component_id) && \
-        ((strlen(component_id) == 0)?\
-            position = strlen(signature) - 1:\
-            ((pointer_to_string = strstr(signature, component_id)) && \
-            (position = (uint)(pointer_to_string - signature)))))\
-    :(component_id_internal = signature);\
+    const char* component_id_internal = if_encapsulation(component_id, signature, &position);\
     for(; i < position; i++){\
         if(signature[i] == ',') argument_number++;\
         error_indicator[i] = '~';\
     }\
     error_indicator[i] = '^';\
     error_indicator[++i] = '\0';\
-    if(!is_empty(##__VA_ARGS__)) {\
-        sprintf(custom_error_message, error_description, component_id_internal, ##__VA_ARGS__);\
-    } else {\
-       sprintf(custom_error_message, error_description, component_id_internal);\
-    }\
+    (!is_empty(##__VA_ARGS__))?\
+        sprintf(custom_error_message, error_description, component_id_internal, ##__VA_ARGS__):\
+        sprintf(custom_error_message, error_description, component_id_internal);\
     sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id ? system_id : __FUNCTION__ , argument_number, custom_error_message, signature, error_indicator);\
     printf("%s", error_string)
 
