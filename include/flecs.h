@@ -2393,7 +2393,7 @@ const char* if_encapsulation(const char * component_id, const char* signature, u
     unsigned int i = 0;\
     const char* component_id_internal = if_encapsulation(component_id, signature, &position);\
     while(i < position){\
-        if(signature[i] == ',') argument_number++;\
+        signature[i] == ','?argument_number++:NULL;\
         error_indicator[i] = '~';\
         position++;\
     }\
