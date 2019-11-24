@@ -2396,7 +2396,7 @@ const char* if_encapsulation(const char * component_id, const char* signature, u
         (signature[i] == ','?argument_number++ || true:true) && \
         (error_indicator[i] = '~') &&\
         (position++ || true)\
-    )\
+    );\
     error_indicator[i] = '^';\
     error_indicator[++i] = '\0';\
     (!is_empty(##__VA_ARGS__))?\
