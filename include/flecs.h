@@ -2392,11 +2392,11 @@ const char* if_encapsulation(const char * component_id, const char* signature, u
     uint position = 0;\
     unsigned int i = 0;\
     const char* component_id_internal = if_encapsulation(component_id, signature, &position);\
-    while(i < position){\
-        signature[i] == ','?argument_number++:NULL;\
-        error_indicator[i] = '~';\
-        position++;\
-    }\
+    while(i < position && \
+        (signature[i] == ','?argument_number++ || true:true) && \
+        (error_indicator[i] = '~') &&\
+        (position++ || true)\
+    )\
     error_indicator[i] = '^';\
     error_indicator[++i] = '\0';\
     (!is_empty(##__VA_ARGS__))?\
