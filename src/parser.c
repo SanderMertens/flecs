@@ -262,21 +262,21 @@ int ecs_parse_component_expr(
 
                 elem_kind = EcsFromEmpty;
                 prev_is_0 = true;
-            }
+            } else {
+                if (strcmp(bptr, "CHILDOF") &&  strcmp(bptr, "INSTANCEOF")) {
+                    /* Lookup component handly by string identifier */
+                    ecs_entity_t component = ecs_lookup(world, bptr);
+                    if (!component) {
+                        if(is_child_or_instance) {
+                            ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNRESOLVED_ENTITY_NAME), bptr, 0);
+                        } else {
+                            ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNSESOLVED_COMPONENT_NAME), bptr, 0);
+                        }
 
-//           if (strcmp(bptr, "CHILDOF") &&  strcmp(bptr, "INSTANCEOF")) {
-//                /* Lookup component handly by string identifier */
-//                ecs_entity_t component = ecs_lookup(world, bptr);
-//                if (!component) {
-//                    if(is_child_or_instance) {
-//                        ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNRESOLVED_ENTITY_NAME), bptr, 0);
-//                    } else {
-//                        ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNSESOLVED_COMPONENT_NAME), bptr, 0);
-//                    }
-//
-//                    ecs_abort(ECS_INVALID_COMPONENT_ID, bptr);
-//                }
-//            }
+                        ecs_abort(ECS_INVALID_COMPONENT_ID, bptr);
+                    }
+                }
+            }
 
             char *source_id = NULL;
             if (source) {
