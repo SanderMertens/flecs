@@ -120,7 +120,47 @@ const char* ecs_strerror(
         return "0 can only appear by itself";
     case ECS_UNSESOLVED_COMPONENT_NAME:
         return "unresolved component name '%s'";
+    case ECS_UNRESOLVED_ENTITY_NAME:
+        return "unresolved entity name '%s'";
     }
 
     return "unknown error code";
+}
+
+
+void ecs_print_error_string(const char *signature, const char *system_id, const char *error_description, char *component_id, int count, ...) {
+    int argument_number = 1;
+    char error_string[200] = "";
+    char error_indicator[200] = "";
+    char custom_error_message[200] = "";
+    uint position = 0;
+    int i;
+
+    va_list valist;
+    va_start(valist, count);
+
+    if(component_id){
+        if(strlen(component_id) == 0){
+            position = strlen(signature) - 1;
+        } else {
+            char* pointer_to_string = strstr(signature, component_id);
+            position = pointer_to_string - signature;
+        }
+    }
+
+    for(i = 0; i < position; i++){
+        if(signature[i] == ',') argument_number++;
+        error_indicator[i] = '~';
+    }
+    error_indicator[i] = '^';
+    error_indicator[++i] = '\0';
+    if (count > 0) {
+        vsprintf(custom_error_message, error_description, valist);
+    } else {
+        sprintf(custom_error_message, error_description, component_id);
+    }
+
+    sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id ? system_id : "Error" , argument_number, custom_error_message, signature, error_indicator);
+    printf("%s", error_string);
+    va_end(valist);
 }
