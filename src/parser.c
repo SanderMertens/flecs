@@ -226,7 +226,7 @@ int ecs_parse_component_expr(
         } else if (ch == ',' || ch == '|' || ch == '\0') {
             /* Separators should not appear after an empty column */
             if (bptr == buffer) {
-//                ecs_print_error_string(sig, system_id, ecs_strerror(ECS_INVALID_SIGNATURE), bptr, 0);
+                ecs_print_error_string(sig, system_id, ecs_strerror(ECS_INVALID_SIGNATURE), bptr, 0);
                 ecs_abort(ECS_INVALID_SIGNATURE, sig);
             }
 
