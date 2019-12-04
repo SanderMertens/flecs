@@ -160,7 +160,7 @@ void ecs_print_error_string(const char *signature, const char *system_id, const 
         sprintf(custom_error_message, error_description, component_id);
     }
 
-//    sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id ? system_id : "Error" , argument_number, custom_error_message, signature, error_indicator);
-//    printf("%s", error_string);
-//    va_end(valist);
+    sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id ? system_id : "Error" , argument_number, custom_error_message, signature, error_indicator, "\0");
+    printf("%s", error_string);
+    va_end(valist);
 }
