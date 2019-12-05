@@ -1,13 +1,11 @@
-#ifndef FLECS_DBGTOOLS_H
-#define FLECS_DBGTOOLS_H
+#ifndef FLECS_DBG_H
+#define FLECS_DBG_H
 
 #include <flecs.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* -- Debug API -- */
 
 typedef struct ecs_table_t ecs_table_t;
 

@@ -807,6 +807,8 @@ ecs_world_t* ecs_init_w_args(
 				ecs_enable_admin(world, atoi(argv[i + 1]));
                 i ++);
 
+            ARG(0, "console", ecs_enable_console(world));
+
             /* Ignore arguments that were not parsed */
             (void)parsed;
         } else {
@@ -1349,8 +1351,10 @@ void ecs_set_target_fps(
     }
 }
 
-/* Spoof EcsAdmin type (needed until we have proper reflection) */
+/* Mock types so we don't have to depend on them. 
+ * TODO: Need a better workaround */
 typedef uint16_t EcsAdmin;
+typedef uint32_t EcsConsole;
 
 int ecs_enable_admin(
 	ecs_world_t* world,
@@ -1378,7 +1382,24 @@ int ecs_enable_admin(
     ecs_entity_t EEcsAdmin = ecs_lookup(world, "EcsAdmin");
     ecs_set(world, 0, EcsAdmin, {port});
 
-    ecs_os_log("Admin is running on port %d", port);
+    ecs_os_log("admin is running on port %d", port);
+
+    return 0;
+}
+
+int ecs_enable_console(
+	ecs_world_t* world)
+{
+    if (ecs_import_from_library(
+        world, "flecs.systems.console", NULL, 0) == ECS_INVALID_ENTITY) 
+    {
+        ecs_os_err("Failed to load flecs.systems.console");
+        return 1;
+    }
+
+    /* Create console instance */
+    ecs_entity_t EEcsConsole = ecs_lookup(world, "EcsConsole");
+    ecs_set(world, 0, EcsConsole, {0});
 
     return 0;
 }
