@@ -24,6 +24,7 @@
 #endif
 
 #include <flecs.h>
+#include <flecs/util/dbg.h>
 
 #define ECS_WORLD_INITIAL_TABLE_COUNT (2)
 #define ECS_WORLD_INITIAL_ENTITY_COUNT (2)
@@ -153,12 +154,12 @@ typedef struct ecs_table_column_t {
  * with a specific set of components. Tables are automatically created when an
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
-typedef struct ecs_table_t {
+struct ecs_table_t {
     ecs_table_column_t *columns;      /* Columns storing components of array */
     ecs_vector_t *frame_systems;      /* Frame systems matched with table */
     ecs_type_t type;                  /* Identifies table type in type_index */
     uint32_t flags;                   /* Flags for testing table properties */
- } ecs_table_t;
+};
 
 /** Type containing data for a table matched with a system */
 typedef struct ecs_matched_table_t {
