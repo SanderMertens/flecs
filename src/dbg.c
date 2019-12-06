@@ -167,3 +167,36 @@ ecs_table_t* ecs_dbg_inactive_table(
     
     return table->table;    
 }
+
+ecs_type_t ecs_dbg_get_column_type(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    uint32_t column_index)
+{
+    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    if (!system_data) {
+        return NULL;
+    }
+    
+    ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
+    uint32_t count = ecs_vector_count(system_data->base.columns);
+
+    if (count < column_index) {
+        return NULL;
+    }
+
+    ecs_system_column_t *column = &columns[column_index - 1];
+    ecs_system_expr_oper_kind_t oper_kind = column->oper_kind;
+    ecs_type_t result;
+
+    switch(oper_kind) {
+    case EcsOperOr:
+        result = column->is.type;
+        break;
+    default:
+        result = ecs_type_from_entity(world, column->is.component);
+        break;
+    }
+    
+    return result;
+}

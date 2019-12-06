@@ -28,6 +28,9 @@ typedef char bool;
 /* The flecs world object */
 typedef struct ecs_world ecs_world_t;
 
+/* A world snapshot */
+typedef struct ecs_snapshot_t ecs_snapshot_t;
+
 /** A handle identifies an entity */
 typedef uint64_t ecs_entity_t;
 
@@ -218,6 +221,9 @@ typedef void (*ecs_module_init_action_t)(
 
 /* World entity */
 #define EcsWorld (13)
+
+/* Used to quickly check if component is builtin */
+#define EcsLastBuiltin (EEcsColSystem)
 
 /* Singleton entity */
 #define EcsSingleton (ECS_SINGLETON)
@@ -2096,6 +2102,22 @@ ecs_entity_t ecs_new_prefab(
     const char *id,
     const char *sig);
 
+/** Create a snapshot */
+FLECS_EXPORT
+ecs_snapshot_t* ecs_snapshot_take(
+    ecs_world_t *world);
+
+/** Restore a snapshot */
+FLECS_EXPORT
+void ecs_snapshot_restore(
+    ecs_world_t *world,
+    ecs_snapshot_t *snapshot);
+
+/** Free snapshot resources */
+FLECS_EXPORT
+void ecs_snapshot_free(
+    ecs_world_t *world,
+    ecs_snapshot_t *snapshot);
 
 /* -- Error handling & error codes -- */
 

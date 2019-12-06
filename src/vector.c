@@ -374,3 +374,16 @@ void ecs_vector_memory(
         *used += array->count * params->element_size;
     }
 }
+
+ecs_vector_t* ecs_vector_copy(
+    const ecs_vector_t *src,
+    const ecs_vector_params_t *params)
+{
+    if (!src) {
+        return NULL;
+    }
+
+    ecs_vector_t *dst = ecs_vector_new(params, src->size);
+    memcpy(dst, src, sizeof(ecs_vector_t) + params->element_size * src->count);
+    return dst;
+}

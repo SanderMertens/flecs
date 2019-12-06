@@ -474,7 +474,6 @@ void ecs_map_memory(
     }
 
     if (total) {
-
         *total += map->bucket_count * sizeof(uint32_t) + sizeof(ecs_map_t);
         ecs_vector_memory(map->nodes, &map->node_params, total, NULL);
     }
@@ -483,6 +482,18 @@ void ecs_map_memory(
         *used += map->count * sizeof(uint32_t);
         ecs_vector_memory(map->nodes, &map->node_params, NULL, used);
     }
+}
+
+ecs_map_t* ecs_map_copy(
+    const ecs_map_t *map)
+{
+    ecs_map_t *dst = ecs_os_memdup(map, sizeof(ecs_map_t));
+    dst->buckets = ecs_os_memdup(
+        map->buckets, map->bucket_count * sizeof(uint32_t));
+    
+    dst->nodes = ecs_vector_copy(map->nodes, &map->node_params);
+
+    return dst;
 }
 
 ecs_map_iter_t ecs_map_iter(

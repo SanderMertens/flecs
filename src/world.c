@@ -220,6 +220,14 @@ ecs_table_t* create_table(
     set_table(stage, type, result);
 
     if (stage == &world->main_stage && !world->is_merging) {
+        int32_t i;
+        printf("\n============================== %p\n", stage->tables);
+        for (i = 0; i < ecs_chunked_count(stage->tables); i++) {
+            ecs_table_t *table = ecs_chunked_get(stage->tables, ecs_table_t, i);
+            printf("[%d: %s]\n", i, ecs_type_to_expr(world, table->type));
+        }
+        printf("==============================\n\n");
+
         ecs_notify_systems_of_table(world, result);
     }
 
