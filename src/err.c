@@ -130,7 +130,7 @@ const char* ecs_strerror(
 
 void ecs_print_error_string(const char *signature, const char *system_id, const char *error_description, char *component_id, int count, ...) {
     int argument_number = 1;
-    char error_string[500] = "";
+    char error_string[300] = "";
     char error_indicator[200] = "";
     char custom_error_message[200] = "";
     uint position = 0;
