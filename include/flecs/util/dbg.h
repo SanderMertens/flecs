@@ -40,6 +40,7 @@ typedef struct ecs_dbg_col_system_t {
 
 typedef enum EcsDbgMatchFailureReason {
     EcsMatchOk,
+    EcsMatchNotASystem,
     EcsMatchSystemIsATask,
     EcsMatchEntityIsDisabled,
     EcsMatchEntityIsPrefab,
@@ -106,6 +107,12 @@ ecs_table_t* ecs_dbg_get_inactive_table(
     ecs_world_t *world,
     ecs_dbg_col_system_t *dbg,
     uint32_t index);
+
+FLECS_EXPORT
+ecs_type_t ecs_dbg_get_column_type(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    uint32_t column_index);
 
 FLECS_EXPORT
 bool ecs_dbg_match_entity(

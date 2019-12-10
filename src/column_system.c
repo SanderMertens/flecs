@@ -322,7 +322,7 @@ bool match_table(
     }
 
     failure_info->reason = EcsMatchOk;
-    failure_info->column = -1;
+    failure_info->column = 0;
 
     if (!system_data->base.needs_tables) {
         failure_info->reason = EcsMatchSystemIsATask;
@@ -347,40 +347,40 @@ bool match_table(
         return false;
     }
 
-    /* Test if table has SELF columns in either owned or inherited components */
-    type = system_data->base.and_from_self;
-    if (type && !ecs_type_contains(
-        world, table_type, type, true, true))
-    {
-        failure_info->reason = EcsMatchFromSelf;
-        return false;
-    }
+    /* Only do quick checks if failure info is not requested. These checks do
+     * not provide information about which column caused the match failure. */
+    if (failure_info == &tmp_failure_info) {
+        /* Test if table has SELF columns in either owned or inherited components */
+        type = system_data->base.and_from_self;
+        if (type && !ecs_type_contains(
+            world, table_type, type, true, true))
+        {
+            return false;
+        }
 
-    /* Test if table has OWNED columns in owned components */
-    type = system_data->base.and_from_owned;
-    if (type && !ecs_type_contains(
-        world, table_type, type, true, false))
-    {
-        failure_info->reason = EcsMatchFromOwned;
-        return false;
-    }  
+        /* Test if table has OWNED columns in owned components */
+        type = system_data->base.and_from_owned;
+        if (type && !ecs_type_contains(
+            world, table_type, type, true, false))
+        {
+            return false;
+        }  
 
-    /* Test if table has SHARED columns in shared components */
-    type = system_data->base.and_from_shared;
-    if (type && ecs_type_contains(
-        world, table_type, type, true, false))
-    {
-        /* If table has owned components that override the SHARED component, the
-         * table won't match. */
-        failure_info->reason = EcsMatchFromShared;
-        return false;
-    } else if (type && !ecs_type_contains(
-        world, table_type, type, true, true))
-    {
-        /* If the table does not have owned components, ensure that a SHARED
-         * component can be found in prefabs. If not, the table doesn't match. */
-        failure_info->reason = EcsMatchFromShared;
-        return false;
+        /* Test if table has SHARED columns in shared components */
+        type = system_data->base.and_from_shared;
+        if (type && ecs_type_contains(
+            world, table_type, type, true, false))
+        {
+            /* If table has owned components that override the SHARED component, the
+            * table won't match. */
+            return false;
+        } else if (type && !ecs_type_contains(
+            world, table_type, type, true, true))
+        {
+            /* If the table does not have owned components, ensure that a SHARED
+            * component can be found in prefabs. If not, the table doesn't match. */
+            return false;
+        }
     }
 
     uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
@@ -392,23 +392,50 @@ bool match_table(
         ecs_system_expr_oper_kind_t oper_kind = elem->oper_kind;
 
         if (oper_kind == EcsOperAnd) {
-            if (elem_kind == EcsFromSelf || elem_kind == EcsFromOwned || 
-                elem_kind == EcsFromShared) 
-            {
-                /* Already validated */
+            if (elem_kind == EcsFromSelf) {
+                if (!ecs_type_has_entity_intern(
+                        world, table_type, elem->is.component, true))
+                {
+                    failure_info->reason = EcsMatchFromSelf;
+                    failure_info->column = i + 1;
+                    return false;
+                }
+            } else if (elem_kind == EcsFromOwned) {
+                if (!ecs_type_has_entity_intern(
+                        world, table_type, elem->is.component, false))
+                {
+                    failure_info->reason = EcsMatchFromOwned;
+                    failure_info->column = i + 1;
+                    return false;
+                }                
+            } else if (elem_kind == EcsFromShared) {
+                if (ecs_type_has_entity_intern(
+                        world, table_type, elem->is.component, false))
+                {
+                    failure_info->reason = EcsMatchFromSelf;
+                    failure_info->column = i + 1;
+                    return false;
+                } else
+                if (!ecs_type_has_entity_intern(
+                    world, table_type, elem->is.component, true))
+                {
+                    failure_info->reason = EcsMatchFromSelf;
+                    failure_info->column = i + 1;
+                    return false;                    
+                }
             } else if (elem_kind == EcsFromContainer) {
                 if (!ecs_components_contains_component(
                     world, table_type, elem->is.component, ECS_CHILDOF, NULL))
                 {
                     failure_info->reason = EcsMatchFromContainer;
-                    failure_info->column = i;
+                    failure_info->column = i + 1;
                     return false;
                 }
             } else if (elem_kind == EcsFromEntity) {
                 ecs_type_t type = ecs_get_type(world, elem->source);
                 if (!ecs_type_has_entity(world, type, elem->is.component)) {
                     failure_info->reason = EcsMatchFromEntity;
-                    failure_info->column = i;
+                    failure_info->column = i + 1;
                     return false;
                 }
             }
@@ -419,7 +446,7 @@ bool match_table(
                     world, table_type, type, false, true))
                 {
                     failure_info->reason = EcsMatchOrFromSelf;
-                    failure_info->column = i;
+                    failure_info->column = i + 1;
                     return false;
                 }
             } else if (elem_kind == EcsFromContainer) {
@@ -427,7 +454,7 @@ bool match_table(
                     world, table_type, type, NULL, false))
                 {
                     failure_info->reason = EcsMatchOrFromContainer;
-                    failure_info->column = i;
+                    failure_info->column = i + 1;
                     return false;
                 }
             }
@@ -1056,7 +1083,11 @@ bool ecs_dbg_match_entity(
     ecs_dbg_entity(world, entity, &dbg);
 
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
-    ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (!system_data) {
+        failure_info_out->reason = EcsMatchNotASystem;
+        failure_info_out->column = -1;
+        return false;
+    }
 
     return match_table(
         world, dbg.table, system, system_data, failure_info_out);
