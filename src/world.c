@@ -220,14 +220,6 @@ ecs_table_t* create_table(
     set_table(stage, type, result);
 
     if (stage == &world->main_stage && !world->is_merging) {
-        int32_t i;
-        printf("\n============================== %p\n", stage->tables);
-        for (i = 0; i < ecs_chunked_count(stage->tables); i++) {
-            ecs_table_t *table = ecs_chunked_get(stage->tables, ecs_table_t, i);
-            printf("[%d: %s]\n", i, ecs_type_to_expr(world, table->type));
-        }
-        printf("==============================\n\n");
-
         ecs_notify_systems_of_table(world, result);
     }
 
@@ -699,7 +691,9 @@ ecs_world_t *ecs_init(void) {
     world->should_match = false;
 
     world->frame_start_time = (ecs_time_t){0, 0};
-    ecs_os_get_time(&world->world_start_time);
+    if (time_ok) {
+        ecs_os_get_time(&world->world_start_time);
+    }
     world->target_fps = 0;
     world->fps_sleep = 0;
 

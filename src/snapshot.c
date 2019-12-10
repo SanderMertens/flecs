@@ -31,12 +31,9 @@ ecs_snapshot_t* ecs_snapshot_take(
 
     /* We need to dup the table data, because right now the copied tables are
      * still pointing to columns in the main stage. */
-    printf("=== tables = %p\n", world->main_stage.tables);
     uint32_t i, count = ecs_chunked_count(result->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_chunked_get(result->tables, ecs_table_t, i);
-
-        printf("i = %d, count = %d - %d, [%s]\n", i, count, ecs_chunked_count(world->main_stage.tables), ecs_type_to_expr(world, table->type));
 
         if (table->flags & EcsTableHasBuiltins) {
             continue;
@@ -79,11 +76,12 @@ void ecs_snapshot_restore(
     }
 
     ecs_chunked_free(snapshot->tables);
-    ecs_os_free(snapshot);
 
     world->should_match = true;
     world->should_resolve = true;
     world->last_handle = snapshot->last_handle;
+
+    ecs_os_free(snapshot);    
 }
 
 /** Cleanup snapshot */

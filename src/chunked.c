@@ -266,7 +266,7 @@ ecs_chunked_t* ecs_chunked_copy(
         
         uint32_t j;
         for (j = 0; j < dst->chunk_size; j ++) {
-            sparse_array[j].ptr = 
+            sparse_array[i * dst->chunk_size + j].ptr = 
                 ECS_OFFSET(chunks[i].data, j * dst->element_size);
         }
     }
