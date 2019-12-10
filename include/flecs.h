@@ -543,7 +543,9 @@ uint32_t ecs_get_target_fps(
     ecs_world_t *world);
 
 /** Enables admin web server
- * This operation allows an profile and enable/disable registered systems
+ * This operation allows an profile and enable/disable registered systems. If
+ * the flecs.systems.civetweb or flecs.systems.admin modules cannot be found,
+ * the operation will fail.
  *
  * @param world The world.
  * @param port A port number for server.
@@ -557,6 +559,15 @@ FLECS_EXPORT
 int ecs_enable_admin(
 	ecs_world_t* world,
 	uint16_t port);
+
+/** Enable command line console for inspecting Flecs internals.
+ * If the flecs.systems.console module cannot be found, the operation will fail.
+ *
+ * @param world The world.
+ * @returns 0 if success, nonzero if failed.  
+ */
+int ecs_enable_console(
+	ecs_world_t* world);    
 
 /** Get last used delta time from world */
 FLECS_EXPORT

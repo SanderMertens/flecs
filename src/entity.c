@@ -2283,3 +2283,21 @@ ecs_entity_t ecs_new_component(
 
     return result;
 }
+
+/* -- Debug functionality -- */
+
+void ecs_dbg_entity(
+    ecs_world_t *world, 
+    ecs_entity_t entity, 
+    ecs_dbg_entity_t *dbg_out)
+{
+    *dbg_out = (ecs_dbg_entity_t){.entity = entity};
+    
+    ecs_entity_info_t info = {.entity = entity};
+    if (populate_info(world, &world->main_stage, &info)) {
+        dbg_out->table = info.table;
+        dbg_out->row = info.index;
+        dbg_out->is_watched = info.is_watched;
+        dbg_out->type = info.type;
+    }
+}
