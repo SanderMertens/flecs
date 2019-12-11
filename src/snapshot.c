@@ -21,7 +21,8 @@ void dup_table(
 
 /** Create a snapshot */
 ecs_snapshot_t* ecs_snapshot_take(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    ecs_type_filter_t *filter)
 {
     ecs_snapshot_t *result = ecs_os_malloc(sizeof(ecs_snapshot_t));
 
@@ -35,11 +36,22 @@ ecs_snapshot_t* ecs_snapshot_take(
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_chunked_get(result->tables, ecs_table_t, i);
 
+        /* Skip tables with builtin components to avoid dropping critical data
+         * like systems or components when restoring the snapshot */
         if (table->flags & EcsTableHasBuiltins) {
             continue;
         }
 
-        dup_table(world, table);
+        if (!filter || ecs_type_match_w_filter(world, table->type, filter)) {
+            dup_table(world, table);
+        } else {
+            /* If the table does not match the filter, instead of copying just
+             * set the columns to NULL. This way the restore will ignore the
+             * table. 
+             * Note that this does not cause a memory leak, as at this point the
+             * columns member still points to the live data. */
+            table->columns = NULL;
+        }
     }
 
     result->last_handle = world->last_handle;
@@ -61,6 +73,12 @@ void ecs_snapshot_restore(
     for (i = 0; i < count; i ++) {
         ecs_table_t *src = ecs_chunked_get(snapshot->tables, ecs_table_t, i);
         if (src->flags & EcsTableHasBuiltins) {
+            continue;
+        }
+
+        /* If table has no columns, it was filtered out and should not be
+         * restored. */
+        if (!src->columns) {
             continue;
         }
 

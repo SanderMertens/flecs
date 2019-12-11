@@ -2105,7 +2105,8 @@ ecs_entity_t ecs_new_prefab(
 /** Create a snapshot */
 FLECS_EXPORT
 ecs_snapshot_t* ecs_snapshot_take(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_type_filter_t *filter);
 
 /** Restore a snapshot */
 FLECS_EXPORT
