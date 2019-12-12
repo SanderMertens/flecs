@@ -820,6 +820,9 @@ void Snapshot_snapshot_after_add(void);
 void Snapshot_snapshot_after_remove(void);
 void Snapshot_snapshot_w_include_filter(void);
 void Snapshot_snapshot_w_exclude_filter(void);
+void Snapshot_snapshot_w_filter_after_new(void);
+void Snapshot_snapshot_w_filter_after_delete(void);
+void Snapshot_snapshot_free(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
@@ -3993,7 +3996,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Snapshot",
-        .testcase_count = 8,
+        .testcase_count = 11,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_snapshot",
@@ -4026,6 +4029,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "snapshot_w_exclude_filter",
                 .function = Snapshot_snapshot_w_exclude_filter
+            },
+            {
+                .id = "snapshot_w_filter_after_new",
+                .function = Snapshot_snapshot_w_filter_after_new
+            },
+            {
+                .id = "snapshot_w_filter_after_delete",
+                .function = Snapshot_snapshot_w_filter_after_delete
+            },
+            {
+                .id = "snapshot_free",
+                .function = Snapshot_snapshot_free
             }
         }
     },

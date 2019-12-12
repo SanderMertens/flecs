@@ -391,6 +391,7 @@ struct ecs_snapshot_t {
     ecs_map_t *entity_index;
     ecs_chunked_t *tables;
     ecs_entity_t last_handle;
+    ecs_type_filter_t filter;
 };
 
 /** The world stores and manages all ECS data. An application can have more than

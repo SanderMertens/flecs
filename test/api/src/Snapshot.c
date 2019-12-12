@@ -216,6 +216,8 @@ void Snapshot_snapshot_w_include_filter() {
     test_int(v->x, 26); 
     test_int(v->y, 36);
 
+    test_assert(ecs_new(world, 0) > e3);
+
     ecs_fini(world);
 }
 
@@ -286,6 +288,102 @@ void Snapshot_snapshot_w_exclude_filter() {
     test_assert(v != NULL);
     test_int(v->x, 25); 
     test_int(v->y, 35);
+
+    test_assert(ecs_new(world, 0) > e3);
+
+    ecs_fini(world);
+}
+
+void Snapshot_snapshot_w_filter_after_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
+    test_assert(e1 != 0);
+    test_assert(ecs_has(world, e1, Position));
+
+    ecs_entity_t e2 = ecs_set(world, 0, Velocity, {3, 4});
+    test_assert(e2 != 0);
+    test_assert(ecs_has(world, e2, Velocity));
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_type_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    ecs_set(world, e1, Position, {5, 6});
+    ecs_set(world, e2, Velocity, {7, 8});
+
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {33, 44});
+    test_assert(e3 != 0);
+    test_assert(ecs_has(world, e3, Position));
+
+    ecs_entity_t e4 = ecs_set(world, 0, Velocity, {33, 44});
+    test_assert(e4 != 0);
+    test_assert(ecs_has(world, e4, Velocity));
+
+    ecs_snapshot_restore(world, s);
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e2, Velocity));
+    test_assert(ecs_is_empty(world, e3));
+    test_assert(ecs_has(world, e4, Velocity));
+
+    
+
+    ecs_fini(world);
+}
+
+void Snapshot_snapshot_w_filter_after_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
+    test_assert(e1 != 0);
+    test_assert(ecs_has(world, e1, Position));
+
+    ecs_entity_t e2 = ecs_set(world, 0, Velocity, {3, 4});
+    test_assert(e2 != 0);
+    test_assert(ecs_has(world, e2, Velocity));
+
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {1, 2});
+    test_assert(e3 != 0);
+    test_assert(ecs_has(world, e3, Position)); 
+
+    ecs_entity_t e4 = ecs_set(world, 0, Velocity, {3, 4});
+    test_assert(e4 != 0);
+    test_assert(ecs_has(world, e4, Velocity));
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_type_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    ecs_delete(world, e3);
+    ecs_delete(world, e4);
+
+    test_assert( ecs_is_empty(world, e3));
+    test_assert( ecs_is_empty(world, e4));
+
+    ecs_snapshot_restore(world, s);
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e2, Velocity));
+    test_assert(ecs_has(world, e3, Position));
+    test_assert(ecs_is_empty(world, e4));
+
+    ecs_fini(world);
+}
+
+void Snapshot_snapshot_free() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    test_assert(s != NULL);
+
+    ecs_snapshot_free(world, s);
 
     ecs_fini(world);
 }

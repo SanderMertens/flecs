@@ -26,9 +26,16 @@ ecs_snapshot_t* ecs_snapshot_take(
 {
     ecs_snapshot_t *result = ecs_os_malloc(sizeof(ecs_snapshot_t));
 
-    /* Copy high-level data structures */
-    result->entity_index = ecs_map_copy(world->main_stage.entity_index);
+    /* Copy tables from world */
     result->tables = ecs_chunked_copy(world->main_stage.tables);
+    
+    if (filter) {
+        result->filter = *filter;
+        result->entity_index = NULL;
+    } else {
+        result->filter = (ecs_type_filter_t){0};
+        result->entity_index = ecs_map_copy(world->main_stage.entity_index);
+    }
 
     /* We need to dup the table data, because right now the copied tables are
      * still pointing to columns in the main stage. */
@@ -64,9 +71,19 @@ void ecs_snapshot_restore(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    /* Replace entity index with snapshot entity index */
-    ecs_map_free(world->main_stage.entity_index);
-    world->main_stage.entity_index = snapshot->entity_index;
+    ecs_type_filter_t filter = snapshot->filter;
+    bool filter_used = false;
+
+    /* If a filter was used, clear all data that matches the filter */
+    if (filter.include || filter.exclude) {
+        ecs_clear_w_filter(world, &filter);
+        filter_used = true;
+    } else {
+        /* If no filter was used, the entity index will be an exact copy of what
+         * it was before taking the snapshot */
+        ecs_map_free(world->main_stage.entity_index);
+        world->main_stage.entity_index = snapshot->entity_index;
+    }   
 
     /* Move snapshot data to table */
     uint32_t i, count = ecs_chunked_count(snapshot->tables);
@@ -79,11 +96,28 @@ void ecs_snapshot_restore(
         /* If table has no columns, it was filtered out and should not be
          * restored. */
         if (!src->columns) {
+            filter_used = true;
             continue;
         }
 
         ecs_table_t *dst = ecs_chunked_get(world->main_stage.tables, ecs_table_t, i);
         ecs_table_replace_columns(world, dst, src->columns);
+
+        /* If a filter was used, we need to fix the entity index one by one */
+        if (filter_used) {
+            ecs_vector_t *entities = dst->columns[0].data;
+            ecs_entity_t *array = ecs_vector_first(entities);
+            uint32_t j, row_count = ecs_vector_count(entities);
+            ecs_map_t *entity_index = world->main_stage.entity_index;
+            
+            for (j = 0; j < row_count; j ++) {
+                ecs_row_t row = {
+                    .type = dst->type,
+                    .index = j + 1
+                };
+                ecs_map_set(entity_index, array[j], &row);
+            } 
+        }
     }
 
     /* Clear data from remaining tables */
@@ -97,7 +131,10 @@ void ecs_snapshot_restore(
 
     world->should_match = true;
     world->should_resolve = true;
-    world->last_handle = snapshot->last_handle;
+
+    if (!filter_used) {
+        world->last_handle = snapshot->last_handle;
+    }
 
     ecs_os_free(snapshot);    
 }

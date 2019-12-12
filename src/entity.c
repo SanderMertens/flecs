@@ -1703,9 +1703,10 @@ void ecs_delete(
     }
 }
 
-void ecs_delete_w_filter(
+void ecs_delete_w_filter_intern(
     ecs_world_t *world,
-    ecs_type_filter_t *filter)
+    ecs_type_filter_t *filter,
+    bool is_delete)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
@@ -1723,9 +1724,35 @@ void ecs_delete_w_filter(
             continue;
         }
 
+        /* Remove entities from index */
+        ecs_vector_t *entities = table->columns[0].data;
+        ecs_entity_t *array = ecs_vector_first(entities);
+        uint32_t j, row_count = ecs_vector_count(entities);
+        for (j = 0; j < row_count; j ++) {
+            ecs_map_remove(world->main_stage.entity_index, array[j]);
+        }
+
         /* Both filters passed, clear table */
-        ecs_table_clear(world, table);
+        if (is_delete) {
+            ecs_table_delete_all(world, table);
+        } else {
+            ecs_table_clear(table);
+        }
     }
+}
+
+void ecs_delete_w_filter(
+    ecs_world_t *world,
+    ecs_type_filter_t *filter)
+{
+    ecs_delete_w_filter_intern(world, filter, true);
+}
+
+void ecs_clear_w_filter(
+    ecs_world_t *world,
+    ecs_type_filter_t *filter)
+{
+    ecs_delete_w_filter_intern(world, filter, false);
 }
 
 void _ecs_add_remove_w_filter(

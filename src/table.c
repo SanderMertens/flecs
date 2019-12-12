@@ -111,8 +111,7 @@ void ecs_table_deinit(
     }
 }
 
-static
-void ecs_table_clear_columns(
+void ecs_table_clear(
     ecs_table_t *table)
 {
     uint32_t i, column_count = ecs_vector_count(table->type);
@@ -130,7 +129,7 @@ void ecs_table_replace_columns(
 {
     uint32_t prev_count = ecs_vector_count(table->columns[0].data);
 
-    ecs_table_clear_columns(table);
+    ecs_table_clear(table);
     if (columns) {
         ecs_os_free(table->columns);
         table->columns = columns;
@@ -145,12 +144,12 @@ void ecs_table_replace_columns(
     }
 }
 
-void ecs_table_clear(
+void ecs_table_delete_all(
     ecs_world_t *world,
     ecs_table_t *table)
 {
     ecs_table_deinit(world, table);
-    ecs_table_clear_columns(table);
+    ecs_table_clear(table);
 }
 
 void ecs_table_free(
@@ -158,7 +157,7 @@ void ecs_table_free(
     ecs_table_t *table)
 {
     (void)world;
-    ecs_table_clear_columns(table);
+    ecs_table_clear(table);
     ecs_os_free(table->columns);
     ecs_vector_free(table->frame_systems);
 }
@@ -523,7 +522,7 @@ void ecs_table_merge(
     }
 
     if (!new_table) {
-        ecs_table_clear(world, old_table);
+        ecs_table_delete_all(world, old_table);
         return;
     }
 
