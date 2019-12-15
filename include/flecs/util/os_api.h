@@ -289,6 +289,11 @@ FLECS_EXPORT
 double ecs_time_to_double(
     ecs_time_t t);
 
+FLECS_EXPORT
+void* ecs_os_memdup(
+    const void *src, 
+    size_t size);
+
 #ifdef __cplusplus
 }
 #endif

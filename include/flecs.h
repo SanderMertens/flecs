@@ -28,6 +28,9 @@ typedef char bool;
 /* The flecs world object */
 typedef struct ecs_world ecs_world_t;
 
+/* A world snapshot */
+typedef struct ecs_snapshot_t ecs_snapshot_t;
+
 /** A handle identifies an entity */
 typedef uint64_t ecs_entity_t;
 
@@ -218,6 +221,9 @@ typedef void (*ecs_module_init_action_t)(
 
 /* World entity */
 #define EcsWorld (13)
+
+/* Used to quickly check if component is builtin */
+#define EcsLastBuiltin (EEcsColSystem)
 
 /* Singleton entity */
 #define EcsSingleton (ECS_SINGLETON)
@@ -695,6 +701,49 @@ FLECS_EXPORT
 bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable);
+
+/** Create a snapshot.
+ * This operation makes a copy of all component in the world that matches the 
+ * specified filter.
+ *
+ * @param world The world to snapshot.
+ * @param filter A filter that specifies which components to snapshot.
+ * @param return The snapshot.
+ */
+FLECS_EXPORT
+ecs_snapshot_t* ecs_snapshot_take(
+    ecs_world_t *world,
+    ecs_type_filter_t *filter);
+
+/** Restore a snapshot.
+ * This operation restores the world to the state it was in when the specified
+ * snapshot was taken. A snapshot can only be used once for restoring, as its
+ * data replaces the data that is currently in the world.
+ * This operation also resets the last issued entity handle, so any calls to
+ * ecs_new may return entity ids that have been issued before restoring the 
+ * snapshot.
+ *
+ * The world in which the snapshot is restored must be the same as the world in
+ * which the snapshot is taken.
+ *
+ * @param world The world to restore the snapshot to.
+ * @param snapshot The snapshot to restore. 
+ */
+FLECS_EXPORT
+void ecs_snapshot_restore(
+    ecs_world_t *world,
+    ecs_snapshot_t *snapshot);
+
+/** Free snapshot resources.
+ * This frees resources associated with a snapshot without restoring it.
+ *
+ * @param world The world.
+ * @param snapshot The snapshot to free. 
+ */
+FLECS_EXPORT
+void ecs_snapshot_free(
+    ecs_world_t *world,
+    ecs_snapshot_t *snapshot);
 
 /* -- Entity API -- */
 
@@ -2095,7 +2144,6 @@ ecs_entity_t ecs_new_prefab(
     ecs_world_t *world,
     const char *id,
     const char *sig);
-
 
 /* -- Error handling & error codes -- */
 

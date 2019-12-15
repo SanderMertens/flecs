@@ -691,7 +691,9 @@ ecs_world_t *ecs_init(void) {
     world->should_match = false;
 
     world->frame_start_time = (ecs_time_t){0, 0};
-    ecs_os_get_time(&world->world_start_time);
+    if (time_ok) {
+        ecs_os_get_time(&world->world_start_time);
+    }
     world->target_fps = 0;
     world->fps_sleep = 0;
 

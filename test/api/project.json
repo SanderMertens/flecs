@@ -888,6 +888,21 @@
                 
             ]
         }, {
+            "id": "Snapshot",
+            "testcases": [
+                "simple_snapshot",
+                "snapshot_after_new",
+                "snapshot_after_delete",
+                "snapshot_after_new_type",
+                "snapshot_after_add",
+                "snapshot_after_remove",
+                "snapshot_w_include_filter",
+                "snapshot_w_exclude_filter",
+                "snapshot_w_filter_after_new",
+                "snapshot_w_filter_after_delete",
+                "snapshot_free"
+            ]
+        }, {
             "id": "Modules",
             "testcases": [
                 "simple_module",

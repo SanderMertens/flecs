@@ -6,8 +6,8 @@ void Delete_w_filter_delete_1() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ecs_new_w_count(world, Position, 3);
-    ecs_new_w_count(world, Mass, 3);
+    ecs_entity_t e1 = ecs_new_w_count(world, Position, 3);
+    ecs_entity_t e2 = ecs_new_w_count(world, Mass, 3);
 
     test_int( ecs_count(world, Position), 3);
     test_int( ecs_count(world, Mass), 3);
@@ -18,6 +18,9 @@ void Delete_w_filter_delete_1() {
 
     test_int( ecs_count(world, Position), 0);
     test_int( ecs_count(world, Mass), 3);
+
+    test_assert( ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Position);
@@ -35,8 +38,8 @@ void Delete_w_filter_delete_2() {
 
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_new_w_count(world, Type, 3);
-    ecs_new_w_count(world, Mass, 3);
+    ecs_entity_t e1 = ecs_new_w_count(world, Type, 3);
+    ecs_entity_t e2 = ecs_new_w_count(world, Mass, 3);
 
     test_int( ecs_count(world, Type), 3);
     test_int( ecs_count(world, Mass), 3);
@@ -47,6 +50,9 @@ void Delete_w_filter_delete_2() {
 
     test_int( ecs_count(world, Type), 0);
     test_int( ecs_count(world, Mass), 3);
+
+    test_assert( ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));    
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type);
@@ -65,9 +71,9 @@ void Delete_w_filter_delete_1_2_types() {
     ECS_TYPE(world, Type_1, Position);
     ECS_TYPE(world, Type_2, Position, Velocity);
 
-    ecs_new_w_count(world, Type_1, 3);
-    ecs_new_w_count(world, Type_2, 3);
-    ecs_new_w_count(world, Mass, 3);
+    ecs_entity_t e1 = ecs_new_w_count(world, Type_1, 3);
+    ecs_entity_t e2 = ecs_new_w_count(world, Type_2, 3);
+    ecs_entity_t e3 = ecs_new_w_count(world, Mass, 3);
 
     /* Type_1 is superset of Type_2 */
     test_int( ecs_count(world, Type_1), 6);
@@ -82,6 +88,10 @@ void Delete_w_filter_delete_1_2_types() {
     test_int( ecs_count(world, Type_1), 0);
     test_int( ecs_count(world, Type_2), 0);
     test_int( ecs_count(world, Mass), 3);
+
+    test_assert( ecs_is_empty(world, e1));
+    test_assert( ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -102,9 +112,9 @@ void Delete_w_filter_delete_2_2_types() {
     ECS_TYPE(world, Type_1, Position, Velocity);
     ECS_TYPE(world, Type_2, Position, Velocity, Mass);
 
-    ecs_new_w_count(world, Type_1, 3);
-    ecs_new_w_count(world, Type_2, 3);
-    ecs_new_w_count(world, Mass, 3);
+    ecs_entity_t e1 = ecs_new_w_count(world, Type_1, 3);
+    ecs_entity_t e2 = ecs_new_w_count(world, Type_2, 3);
+    ecs_entity_t e3 = ecs_new_w_count(world, Mass, 3);
 
     /* Type_1 is superset of Type_2 */
     test_int( ecs_count(world, Type_1), 6);
@@ -121,6 +131,10 @@ void Delete_w_filter_delete_2_2_types() {
     test_int( ecs_count(world, Type_1), 0);
     test_int( ecs_count(world, Type_2), 0);
     test_int( ecs_count(world, Mass), 3);
+
+    test_assert( ecs_is_empty(world, e1));
+    test_assert( ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -143,10 +157,10 @@ void Delete_w_filter_delete_except_1() {
     ECS_TYPE(world, Type_2, Position, Velocity, Mass);
     ECS_TYPE(world, Type_3, Position, Velocity, Rotation);
 
-    ecs_new_w_count(world, Type_1, 3);
-    ecs_new_w_count(world, Type_2, 3);
-    ecs_new_w_count(world, Type_3, 3);
-    ecs_new_w_count(world, Mass, 3);
+    ecs_entity_t e1 = ecs_new_w_count(world, Type_1, 3);
+    ecs_entity_t e2 = ecs_new_w_count(world, Type_2, 3);
+    ecs_entity_t e3 = ecs_new_w_count(world, Type_3, 3);
+    ecs_entity_t e4 = ecs_new_w_count(world, Mass, 3);
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -166,6 +180,11 @@ void Delete_w_filter_delete_except_1() {
     test_int( ecs_count(world, Type_2), 3); /* Type_2 has Mass so not deleted */
     test_int( ecs_count(world, Type_3), 0);
     test_int( ecs_count(world, Mass), 6);
+
+    test_assert( ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));
+    test_assert( ecs_is_empty(world, e3));
+    test_assert( !ecs_is_empty(world, e4));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -190,10 +209,10 @@ void Delete_w_filter_delete_except_2() {
     ECS_TYPE(world, Type_3, Position, Velocity, Rotation);
     ECS_TYPE(world, Except, Mass, Rotation);
 
-    ecs_new_w_count(world, Type_1, 3);
-    ecs_new_w_count(world, Type_2, 3);
-    ecs_new_w_count(world, Type_3, 3);
-    ecs_new_w_count(world, Mass, 3);
+    ecs_entity_t e1 = ecs_new_w_count(world, Type_1, 3);
+    ecs_entity_t e2 = ecs_new_w_count(world, Type_2, 3);
+    ecs_entity_t e3 = ecs_new_w_count(world, Type_3, 3);
+    ecs_entity_t e4 = ecs_new_w_count(world, Mass, 3);
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -203,7 +222,7 @@ void Delete_w_filter_delete_except_2() {
     /* Mass is also in Type_2 */
     test_int( ecs_count(world, Mass), 6);
 
-    /* Delete both entities of Type_1 and Type_3 but not Type_3 */
+    /* Delete both entities of Type_1 */
     ecs_delete_w_filter(world, &(ecs_type_filter_t){
         .include = ecs_type(Type_1),
         .exclude = ecs_type(Except)
@@ -213,6 +232,11 @@ void Delete_w_filter_delete_except_2() {
     test_int( ecs_count(world, Type_2), 3); /* Type_2 has Mass so not deleted */
     test_int( ecs_count(world, Type_3), 3);
     test_int( ecs_count(world, Mass), 6);
+
+    test_assert( ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
+    test_assert( !ecs_is_empty(world, e4));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -236,10 +260,10 @@ void Delete_w_filter_delete_with_any_of_2() {
     ECS_TYPE(world, Type_3, Position, Velocity, Rotation);
     ECS_TYPE(world, Include, Mass, Rotation);
 
-    ecs_new_w_count(world, Type_1, 3);
-    ecs_new_w_count(world, Type_2, 3);
-    ecs_new_w_count(world, Type_3, 3);
-    ecs_new_w_count(world, Mass, 3);
+    ecs_entity_t e1 = ecs_new_w_count(world, Type_1, 3);
+    ecs_entity_t e2 = ecs_new_w_count(world, Type_2, 3);
+    ecs_entity_t e3 = ecs_new_w_count(world, Type_3, 3);
+    ecs_entity_t e4 = ecs_new_w_count(world, Mass, 3);
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -259,6 +283,11 @@ void Delete_w_filter_delete_with_any_of_2() {
     test_int( ecs_count(world, Type_2), 0); /* Type_2 has Mass so not deleted */
     test_int( ecs_count(world, Type_3), 0);
     test_int( ecs_count(world, Mass), 0);
+
+    test_assert( !ecs_is_empty(world, e1));
+    test_assert( ecs_is_empty(world, e2));
+    test_assert( ecs_is_empty(world, e3));
+    test_assert( ecs_is_empty(world, e4));
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_2);
@@ -285,10 +314,10 @@ void Delete_w_filter_delete_except_all_of_2() {
     ECS_TYPE(world, Type_3, Position, Velocity, Mass, Rotation);
     ECS_TYPE(world, Exclude, Mass, Rotation);
 
-    ecs_new_w_count(world, Type_1, 3);
-    ecs_new_w_count(world, Type_2, 3);
-    ecs_new_w_count(world, Type_3, 3);
-    ecs_new_w_count(world, Mass, 3);
+    ecs_entity_t e1 = ecs_new_w_count(world, Type_1, 3);
+    ecs_entity_t e2 = ecs_new_w_count(world, Type_2, 3);
+    ecs_entity_t e3 = ecs_new_w_count(world, Type_3, 3);
+    ecs_entity_t e4 = ecs_new_w_count(world, Mass, 3);
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -308,6 +337,11 @@ void Delete_w_filter_delete_except_all_of_2() {
     test_int( ecs_count(world, Type_2), 3); /* Type_2 is superset of Type_3 */
     test_int( ecs_count(world, Type_3), 3);
     test_int( ecs_count(world, Mass), 3);
+
+    test_assert( ecs_is_empty(world, e1));
+    test_assert( ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
+    test_assert( ecs_is_empty(world, e4));    
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);
@@ -334,10 +368,10 @@ void Delete_w_filter_include_exact() {
     ECS_TYPE(world, Type_2, Position, Velocity, Mass);
     ECS_TYPE(world, Type_3, Position, Velocity, Mass, Rotation);
 
-    ecs_new_w_count(world, Type_1, 3);
-    ecs_new_w_count(world, Type_2, 3);
-    ecs_new_w_count(world, Type_3, 3);
-    ecs_new_w_count(world, Mass, 3);
+    ecs_entity_t e1 = ecs_new_w_count(world, Type_1, 3);
+    ecs_entity_t e2 = ecs_new_w_count(world, Type_2, 3);
+    ecs_entity_t e3 = ecs_new_w_count(world, Type_3, 3);
+    ecs_entity_t e4 = ecs_new_w_count(world, Mass, 3);
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -357,6 +391,11 @@ void Delete_w_filter_include_exact() {
     test_int( ecs_count(world, Type_2), 3); /* Type_2 is superset of Type_3 */
     test_int( ecs_count(world, Type_3), 3);
     test_int( ecs_count(world, Mass), 6);
+
+    test_assert( !ecs_is_empty(world, e1));
+    test_assert( ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
+    test_assert( !ecs_is_empty(world, e4));       
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_2);
@@ -381,10 +420,10 @@ void Delete_w_filter_exclude_exact() {
     ECS_TYPE(world, Type_2, Position, Velocity, Mass);
     ECS_TYPE(world, Type_3, Position, Velocity, Mass, Rotation);
 
-    ecs_new_w_count(world, Type_1, 3);
-    ecs_new_w_count(world, Type_2, 3);
-    ecs_new_w_count(world, Type_3, 3);
-    ecs_new_w_count(world, Mass, 3);
+    ecs_entity_t e1 = ecs_new_w_count(world, Type_1, 3);
+    ecs_entity_t e2 = ecs_new_w_count(world, Type_2, 3);
+    ecs_entity_t e3 = ecs_new_w_count(world, Type_3, 3);
+    ecs_entity_t e4 = ecs_new_w_count(world, Mass, 3);
 
     /* Type_1 is superset of Type_2 and Type_3 */
     test_int( ecs_count(world, Type_1), 9);
@@ -404,6 +443,11 @@ void Delete_w_filter_exclude_exact() {
     test_int( ecs_count(world, Type_2), 3); /* Type_2 is superset of Type_3 */
     test_int( ecs_count(world, Type_3), 0);
     test_int( ecs_count(world, Mass), 3);
+
+    test_assert( ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));
+    test_assert( ecs_is_empty(world, e3));
+    test_assert( ecs_is_empty(world, e4));    
 
     /* Test if table is left in a state that can be repopulated */
     ecs_new(world, Type_1);

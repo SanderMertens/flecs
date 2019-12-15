@@ -54,6 +54,10 @@ ecs_table_column_t* new_columns(
             }
         }
 
+        if (table && buf[i] <= EcsLastBuiltin) {
+            table->flags |= EcsTableHasBuiltins;
+        }        
+
         if (table && buf[i] == EEcsPrefab) {
             table->flags |= EcsTableIsPrefab;
         }
@@ -107,8 +111,7 @@ void ecs_table_deinit(
     }
 }
 
-static
-void ecs_table_free_columns(
+void ecs_table_clear(
     ecs_table_t *table)
 {
     uint32_t i, column_count = ecs_vector_count(table->type);
@@ -119,12 +122,34 @@ void ecs_table_free_columns(
     }
 }
 
-void ecs_table_clear(
+void ecs_table_replace_columns(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_column_t *columns)
+{
+    uint32_t prev_count = ecs_vector_count(table->columns[0].data);
+
+    ecs_table_clear(table);
+    if (columns) {
+        ecs_os_free(table->columns);
+        table->columns = columns;
+    }
+
+    uint32_t count = ecs_vector_count(table->columns[0].data);
+
+    if (!prev_count && count) {
+        activate_table(world, table, 0, true);
+    } else if (prev_count && !count) {
+        activate_table(world, table, 0, false);
+    }
+}
+
+void ecs_table_delete_all(
     ecs_world_t *world,
     ecs_table_t *table)
 {
     ecs_table_deinit(world, table);
-    ecs_table_free_columns(table);
+    ecs_table_clear(table);
 }
 
 void ecs_table_free(
@@ -132,7 +157,7 @@ void ecs_table_free(
     ecs_table_t *table)
 {
     (void)world;
-    ecs_table_free_columns(table);
+    ecs_table_clear(table);
     ecs_os_free(table->columns);
     ecs_vector_free(table->frame_systems);
 }
@@ -497,7 +522,7 @@ void ecs_table_merge(
     }
 
     if (!new_table) {
-        ecs_table_clear(world, old_table);
+        ecs_table_delete_all(world, old_table);
         return;
     }
 

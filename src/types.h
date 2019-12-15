@@ -149,6 +149,7 @@ typedef struct ecs_table_column_t {
 #define EcsTableIsStaged  (1)
 #define EcsTableIsPrefab (2)
 #define EcsTableHasPrefab (4)
+#define EcsTableHasBuiltins (8)
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
@@ -385,7 +386,13 @@ typedef struct ecs_thread_t {
     uint16_t index;                           /* Index of thread */
 } ecs_thread_t;
 
-
+/* World snapshot */
+struct ecs_snapshot_t {
+    ecs_map_t *entity_index;
+    ecs_chunked_t *tables;
+    ecs_entity_t last_handle;
+    ecs_type_filter_t filter;
+};
 
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */

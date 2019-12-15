@@ -63,6 +63,9 @@ ecs_entity_t ecs_get_entity_for_component(
     ecs_type_t type_id,
     ecs_entity_t component);
 
+void ecs_clear_w_filter(
+    ecs_world_t *world,
+    ecs_type_filter_t *filter);
 
 /* -- World API -- */
 
@@ -259,10 +262,19 @@ void ecs_table_free(
     ecs_table_t *table);
 
 /* Clear table data */
-void ecs_table_clear(
+void ecs_table_delete_all(
     ecs_world_t *world,
     ecs_table_t *table);
 
+void ecs_table_clear(
+    ecs_table_t *table);    
+
+/* Clear data in columns */
+void ecs_table_replace_columns(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_column_t *columns);
+    
 /* Merge data of one table into another table */
 void ecs_table_merge(
     ecs_world_t *world,
