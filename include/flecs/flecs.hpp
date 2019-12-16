@@ -118,11 +118,14 @@ public:
         return ecs_is_readonly(m_rows, column);
     }
 
+    /* Obtain entity being iterated over for row */
+    flecs::entity entity(uint32_t row) const;
+
     /* Obtain column source (0 if self) */
-    entity column_source(uint32_t column) const;
+    flecs::entity column_source(uint32_t column) const;
 
     /* Obtain component/tag entity of column */
-    entity column_entity(uint32_t column) const;
+    flecs::entity column_entity(uint32_t column) const;
 
     /* Obtain type of column */
     flecs::type column_type(uint32_t column) const;
@@ -734,14 +737,19 @@ entity world::lookup_child(const entity& parent, const char *name) const {
 
 /* -- rows implementation -- */
 
+flecs::entity rows::entity(uint32_t row) const {
+    ecs_assert(row < m_rows->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+    return flecs::entity(m_rows->world, m_rows->entities[row]);
+}
+
 /* Obtain column source (0 if self) */
-entity rows::column_source(uint32_t column) const {
-    return entity(m_rows->world, ecs_column_source(m_rows, column));
+flecs::entity rows::column_source(uint32_t column) const {
+    return flecs::entity(m_rows->world, ecs_column_source(m_rows, column));
 }
 
 /* Obtain component/tag entity of column */
-entity rows::column_entity(uint32_t column) const {
-    return entity(m_rows->world, ecs_column_entity(m_rows, column));
+flecs::entity rows::column_entity(uint32_t column) const {
+    return flecs::entity(m_rows->world, ecs_column_entity(m_rows, column));
 }
 
 /* Obtain type of column */

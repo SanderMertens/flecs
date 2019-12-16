@@ -982,6 +982,10 @@ ecs_entity_t ecs_lookup_child_in_columns(
     uint32_t i, count = ecs_vector_count(column->data);
     
     for (i = 0; i < count; i ++) {
+        if (!buffer[i]) {
+            continue;
+        }
+        
         if (!strcmp(buffer[i], id)) {
             return *(ecs_entity_t*)ecs_vector_get(
                 columns[0].data, &handle_arr_params, i);
