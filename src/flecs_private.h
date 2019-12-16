@@ -267,6 +267,7 @@ void ecs_table_delete_all(
     ecs_table_t *table);
 
 void ecs_table_clear(
+    ecs_world_t *world,
     ecs_table_t *table);    
 
 /* Clear data in columns */

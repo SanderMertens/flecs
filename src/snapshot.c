@@ -74,7 +74,8 @@ void ecs_snapshot_restore(
     ecs_type_filter_t filter = snapshot->filter;
     bool filter_used = false;
 
-    /* If a filter was used, clear all data that matches the filter */
+    /* If a filter was used, clear all data that matches the filter, except the
+     * tables for which the snapshot has data */
     if (filter.include || filter.exclude) {
         ecs_clear_w_filter(world, &filter);
         filter_used = true;

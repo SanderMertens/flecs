@@ -1,0 +1,9 @@
+{
+    "id": "snapshot",
+    "type": "application",
+    "value": {
+        "author": "Jane Doe",
+        "description": "Photo sharing for coders",
+        "use": ["flecs"]
+    }
+}

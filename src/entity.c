@@ -1720,6 +1720,10 @@ void ecs_delete_w_filter_intern(
         ecs_table_t *table = ecs_chunked_get(stage->tables, ecs_table_t, i);
         ecs_type_t type = table->type;
 
+        if (table->flags & EcsTableHasBuiltins) {
+            continue;
+        }
+
         if (!ecs_type_match_w_filter(world, type, filter)) {
             continue;
         }
@@ -1736,7 +1740,7 @@ void ecs_delete_w_filter_intern(
         if (is_delete) {
             ecs_table_delete_all(world, table);
         } else {
-            ecs_table_clear(table);
+            ecs_table_clear(world, table);
         }
     }
 }

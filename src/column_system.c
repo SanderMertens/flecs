@@ -760,7 +760,10 @@ void ecs_system_activate_table(
     bool active)
 {
     ecs_vector_t *src_array, *dst_array;
+
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     EcsSystemKind kind = system_data->base.kind;
 
     if (active) {

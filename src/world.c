@@ -127,6 +127,7 @@ ecs_table_t* bootstrap_component_table(
     result->frame_systems = NULL;
     result->flags = 0;
     result->columns = ecs_os_malloc(sizeof(ecs_table_column_t) * 3);
+    result->flags |= EcsTableHasBuiltins;
     
     ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
@@ -396,6 +397,29 @@ ecs_stage_t *ecs_get_stage(
 }
 
 static
+void col_systems_deinit_handlers(
+    ecs_world_t *world,
+    ecs_vector_t *systems)
+{
+    uint32_t i, count = ecs_vector_count(systems);
+    ecs_entity_t *buffer = ecs_vector_first(systems);
+
+    for (i = 0; i < count; i ++) {
+        EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
+
+        /* Invoke Deactivated action for active systems */
+        if (ecs_vector_count(ptr->tables)) {
+            ecs_invoke_status_action(world, buffer[i], ptr, EcsSystemDeactivated);
+        }
+
+        /* Invoke Disabled action for enabled systems */
+        if (ptr->base.enabled) {
+            ecs_invoke_status_action(world, buffer[i], ptr, EcsSystemDisabled);
+        }    
+    }
+}
+
+static
 void col_systems_deinit(
     ecs_world_t *world,
     ecs_vector_t *systems)
@@ -407,16 +431,6 @@ void col_systems_deinit(
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
 
         ecs_os_free(ptr->base.signature);
-
-        /* Invoke Deactivated action for active systems */
-        if (ecs_vector_count(ptr->tables)) {
-            ecs_invoke_status_action(world, buffer[i], ptr, EcsSystemDeactivated);
-        }
-
-        /* Invoke Disabled action for enabled systems */
-        if (ptr->base.enabled) {
-            ecs_invoke_status_action(world, buffer[i], ptr, EcsSystemDisabled);
-        }
 
         ecs_vector_free(ptr->base.columns);
         ecs_vector_free(ptr->jobs);
@@ -855,6 +869,17 @@ int ecs_fini(
     }
 
     deinit_tables(world);
+
+    col_systems_deinit_handlers(world, world->on_update_systems);
+    col_systems_deinit_handlers(world, world->on_validate_systems);
+    col_systems_deinit_handlers(world, world->pre_update_systems);
+    col_systems_deinit_handlers(world, world->post_update_systems);
+    col_systems_deinit_handlers(world, world->on_load_systems);
+    col_systems_deinit_handlers(world, world->post_load_systems);
+    col_systems_deinit_handlers(world, world->pre_store_systems);
+    col_systems_deinit_handlers(world, world->on_store_systems);
+    col_systems_deinit_handlers(world, world->manual_systems);
+    col_systems_deinit_handlers(world, world->inactive_systems);
 
     col_systems_deinit(world, world->on_update_systems);
     col_systems_deinit(world, world->on_validate_systems);

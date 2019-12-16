@@ -202,6 +202,8 @@ void Delete_w_filter_delete_with_any_of_2(void);
 void Delete_w_filter_delete_except_all_of_2(void);
 void Delete_w_filter_include_exact(void);
 void Delete_w_filter_exclude_exact(void);
+void Delete_w_filter_system_activate_test(void);
+void Delete_w_filter_skip_builtin_tables(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -823,6 +825,7 @@ void Snapshot_snapshot_w_exclude_filter(void);
 void Snapshot_snapshot_w_filter_after_new(void);
 void Snapshot_snapshot_w_filter_after_delete(void);
 void Snapshot_snapshot_free(void);
+void Snapshot_snapshot_activate_table_w_filter(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
@@ -1568,7 +1571,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Delete_w_filter",
-        .testcase_count = 10,
+        .testcase_count = 12,
         .testcases = (bake_test_case[]){
             {
                 .id = "delete_1",
@@ -1609,6 +1612,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "exclude_exact",
                 .function = Delete_w_filter_exclude_exact
+            },
+            {
+                .id = "system_activate_test",
+                .function = Delete_w_filter_system_activate_test
+            },
+            {
+                .id = "skip_builtin_tables",
+                .function = Delete_w_filter_skip_builtin_tables
             }
         }
     },
@@ -3996,7 +4007,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Snapshot",
-        .testcase_count = 11,
+        .testcase_count = 12,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_snapshot",
@@ -4041,6 +4052,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "snapshot_free",
                 .function = Snapshot_snapshot_free
+            },
+            {
+                .id = "snapshot_activate_table_w_filter",
+                .function = Snapshot_snapshot_activate_table_w_filter
             }
         }
     },

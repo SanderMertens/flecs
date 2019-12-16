@@ -111,7 +111,8 @@ void ecs_table_deinit(
     }
 }
 
-void ecs_table_clear(
+/* Utility function to free column data */
+void clear_columns(
     ecs_table_t *table)
 {
     uint32_t i, column_count = ecs_vector_count(table->type);
@@ -122,6 +123,23 @@ void ecs_table_clear(
     }
 }
 
+/* Clear columns. Deactivate table in systems if necessary, but do not invoke
+ * OnRemove handlers. This is typically used when restoring a table to a
+ * previous state. */
+void ecs_table_clear(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    uint32_t count = ecs_vector_count(table->columns[0].data);
+    
+    clear_columns(table);
+
+    if (count) {
+        activate_table(world, table, 0, false);
+    }
+}
+
+/* Replace columns. Activate / deactivate table with systems if necessary. */
 void ecs_table_replace_columns(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -129,7 +147,7 @@ void ecs_table_replace_columns(
 {
     uint32_t prev_count = ecs_vector_count(table->columns[0].data);
 
-    ecs_table_clear(table);
+    clear_columns(table);
     if (columns) {
         ecs_os_free(table->columns);
         table->columns = columns;
@@ -144,20 +162,25 @@ void ecs_table_replace_columns(
     }
 }
 
+/* Delete all entities in table, invoke OnRemove handlers. This function is used
+ * when an application invokes delete_w_filter. Use ecs_table_clear, as the
+ * table may have to be deactivated with systems. */
 void ecs_table_delete_all(
     ecs_world_t *world,
     ecs_table_t *table)
 {
     ecs_table_deinit(world, table);
-    ecs_table_clear(table);
+    ecs_table_clear(world, table);
 }
 
+/* Free table resources. Do not invoke handlers and do not activate/deactivate
+ * table with systems. This function is used when the world is freed. */
 void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table)
 {
     (void)world;
-    ecs_table_clear(table);
+    clear_columns(table);
     ecs_os_free(table->columns);
     ecs_vector_free(table->frame_systems);
 }

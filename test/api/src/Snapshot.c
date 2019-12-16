@@ -387,3 +387,35 @@ void Snapshot_snapshot_free() {
 
     ecs_fini(world);
 }
+
+static bool invoked = false;
+
+static
+void Dummy(ecs_rows_t *rows) {
+    invoked = true;
+}
+
+void Snapshot_snapshot_activate_table_w_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
+    test_assert(e != 0);
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_type_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    ecs_snapshot_restore(world, s);
+
+    test_assert(ecs_has(world, e, Position));
+    
+    ecs_progress(world, 0);
+    test_bool(invoked, true);
+
+    /* Cleanup */
+    ecs_fini(world);
+}

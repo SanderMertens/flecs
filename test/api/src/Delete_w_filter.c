@@ -460,3 +460,70 @@ void Delete_w_filter_exclude_exact() {
 
     ecs_fini(world);
 }
+
+static bool invoked = false;
+
+static
+void Dummy(ecs_rows_t *rows) {
+    invoked = true;
+}
+
+void Delete_w_filter_system_activate_test() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_entity_t e1 = ecs_new_w_count(world, Position, 3);
+
+    test_int( ecs_count(world, Position), 3);
+
+    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+        ecs_type(Position)
+    });
+
+    test_int( ecs_count(world, Position), 0);
+    test_assert( ecs_is_empty(world, e1));
+
+    /* Test if table is left in a state that can be repopulated */
+    ecs_new(world, Position);
+    test_int( ecs_count(world, Position), 1);
+
+    /* Test if system is properly reactivated */
+    ecs_progress(world, 0);
+    test_bool(invoked, true);
+
+    ecs_fini(world);
+}
+
+
+void Delete_w_filter_skip_builtin_tables() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    ecs_entity_t e1 = ecs_new_w_count(world, Position, 3);
+
+    test_int( ecs_count(world, Position), 3);
+
+    ecs_delete_w_filter(world, NULL);
+
+    test_int( ecs_count(world, Position), 0);
+    test_assert( ecs_is_empty(world, e1));
+
+    test_assert(!ecs_is_empty(world, ecs_entity(Position)));
+    test_assert(!ecs_is_empty(world, Dummy));
+
+    /* Test if table is left in a state that can be repopulated */
+    ecs_new(world, Position);
+    test_int( ecs_count(world, Position), 1);
+
+    /* Test if system is properly reactivated */
+    ecs_progress(world, 0);
+    test_bool(invoked, true);
+
+    ecs_fini(world);
+}
