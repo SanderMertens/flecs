@@ -978,7 +978,8 @@ ecs_entity_t _ecs_run_w_filter(
         .delta_time = system_delta_time,
         .world_time = world->world_time_total,
         .frame_offset = offset,
-        .table_offset = 0
+        .table_offset = 0,
+        .system_data = &system_data->base
     };
 
     for (i = 0; i < table_count; i ++) {

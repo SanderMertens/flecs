@@ -112,6 +112,8 @@ const char* ecs_strerror(
         return "operation is unsupported";
     case ECS_NO_OUT_COLUMNS:
         return "on demand system has no out columns";
+    case ECS_COLUMN_ACCESS_VIOLATION:
+        return "invalid access to readonly column (use const)";
     }
 
     return "unknown error code";

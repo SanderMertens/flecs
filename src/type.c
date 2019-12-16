@@ -855,11 +855,15 @@ EcsTypeComponent type_from_expr(
     ecs_world_t *world,
     const char *expr)
 {
-    ecs_vector_t *vec = ecs_vector_new(&handle_arr_params, 1);
-    ecs_parse_component_expr(world, expr, parse_type_action, &vec);
-    EcsTypeComponent result = type_from_vec(world, vec);
-    ecs_vector_free(vec);
-    return result;
+    if (expr) {
+        ecs_vector_t *vec = ecs_vector_new(&handle_arr_params, 1);
+        ecs_parse_component_expr(world, expr, parse_type_action, &vec);
+        EcsTypeComponent result = type_from_vec(world, vec);
+        ecs_vector_free(vec);
+        return result;
+    } else {
+        return (EcsTypeComponent){0, 0};
+    }
 }
 
 /* -- Public API -- */

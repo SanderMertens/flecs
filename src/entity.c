@@ -1887,6 +1887,15 @@ void _ecs_add(
     ecs_add_remove_intern(world, &info, type, 0, true);
 }
 
+void ecs_add_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t to_add)
+{
+    ecs_type_t type = ecs_type_from_entity(world, to_add);
+    _ecs_add(world, entity, type);
+}
+
 void _ecs_remove(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -1894,6 +1903,15 @@ void _ecs_remove(
 {
     ecs_entity_info_t info = {.entity = entity};
     ecs_add_remove_intern(world, &info, 0, type, false);
+}
+
+void ecs_remove_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t to_add)
+{
+    ecs_type_t type = ecs_type_from_entity(world, to_add);
+    _ecs_remove(world, entity, type);
 }
 
 void _ecs_add_remove(
@@ -1990,7 +2008,7 @@ ecs_entity_t _ecs_set_ptr_intern(
     ecs_entity_t entity,
     ecs_entity_t component,
     size_t size,
-    void *ptr)
+    const void *ptr)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_world_t *world_arg = world;
@@ -2037,7 +2055,7 @@ ecs_entity_t _ecs_set_ptr(
     ecs_entity_t entity,
     ecs_entity_t component,
     size_t size,
-    void *ptr)
+    const void *ptr)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -2054,7 +2072,7 @@ ecs_entity_t _ecs_set_singleton_ptr(
     ecs_world_t *world,
     ecs_entity_t component,
     size_t size,
-    void *ptr)
+    const void *ptr)
 {
     return _ecs_set_ptr_intern(world, ECS_SINGLETON, component, size, ptr);
 }

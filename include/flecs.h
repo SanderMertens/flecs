@@ -15,7 +15,6 @@
 #include <flecs/bake_config.h>
 
 /* -- The API uses the native bool type in C++, or a custom one in C -- */
-
 #ifndef __cplusplus
 #undef bool
 #undef true
@@ -69,6 +68,12 @@ typedef struct EcsComponent {
     uint32_t size;
 } EcsComponent;
 
+/** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
+typedef struct EcsTypeComponent {
+    ecs_type_t type;    /* Preserved nested types */
+    ecs_type_t resolved;  /* Resolved nested types */
+} EcsTypeComponent;
+
 /** Prefab component */
 typedef struct EcsPrefab {
     ecs_entity_t parent;
@@ -111,6 +116,7 @@ typedef struct ecs_rows_t {
     uint16_t column_count;       /* Number of columns for system */
     void *table;                 /* Opaque structure with reference to table */
     void *table_columns;         /* Opaque structure with table column data */
+    void *system_data;           /* Opaque strucutre with system internals */
     ecs_reference_t *references; /* References to other entities */
     ecs_entity_t *components;    /* System-table specific list of components */
     ecs_entity_t *entities;      /* Entity row */
@@ -998,6 +1004,13 @@ void _ecs_add(
 #define ecs_add(world, entity, type)\
     _ecs_add(world, entity, T##type)
 
+/** Add single entity to entity */
+FLECS_EXPORT
+void ecs_add_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t to_add);
+
 /** Remove a type from an entity.
  * This operation will remove one or more components (as per the specified type)
  * from an entity. If the entity contained a subset of the components in the
@@ -1020,6 +1033,13 @@ void _ecs_remove(
 /* Macro to ensure you don't accidentally pass a non-type into the function */
 #define ecs_remove(world, entity, type)\
     _ecs_remove(world, entity, T##type)
+
+/** Add single entity to entity */
+FLECS_EXPORT
+void ecs_remove_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t to_remove);
 
 /** Add and remove types from an entity.
  * This operation is a combination of ecs_add and ecs_remove. The operation
@@ -1206,14 +1226,14 @@ ecs_entity_t _ecs_set_ptr(
     ecs_entity_t entity,
     ecs_entity_t component,
     size_t size,
-    void *ptr);
+    const void *ptr);
 
 FLECS_EXPORT
 ecs_entity_t _ecs_set_singleton_ptr(
     ecs_world_t *world,
     ecs_entity_t component,
     size_t size,
-    void *ptr);
+    const void *ptr);
 
 #define ecs_set_ptr(world, entity, component, ptr)\
     _ecs_set_ptr(world, entity, ecs_entity(component), sizeof(component), ptr)
@@ -1848,7 +1868,7 @@ void ecs_set_system_status_action(
  */
 FLECS_EXPORT
 void* _ecs_column(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     size_t size,
     uint32_t column);
 
@@ -1878,8 +1898,14 @@ void* _ecs_column(
  */
 FLECS_EXPORT
 bool ecs_is_shared(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t column);
+
+/** Is column readonly */
+FLECS_EXPORT
+bool ecs_is_readonly(
+    const ecs_rows_t *rows,
+    uint32_t column);    
 
 /** Obtain a single field. 
  * This is an alternative method to ecs_column to access data in a system, which
@@ -1898,7 +1924,7 @@ bool ecs_is_shared(
  */
 FLECS_EXPORT
 void *_ecs_field(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     size_t size,
     uint32_t column,
     uint32_t row);
@@ -1926,7 +1952,7 @@ void *_ecs_field(
  */
 FLECS_EXPORT
 ecs_entity_t ecs_column_source(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t column);
 
 /** Obtain the component for a column inside a system.
@@ -1949,7 +1975,7 @@ ecs_entity_t ecs_column_source(
  */
 FLECS_EXPORT
 ecs_entity_t ecs_column_entity(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t column);
 
 /** Obtain the type of a column from inside a system. 
@@ -1975,18 +2001,18 @@ ecs_entity_t ecs_column_entity(
  */ 
 FLECS_EXPORT
 ecs_type_t ecs_column_type(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t column);
 
 /** Get type of table that system is currently iterating over. */
 FLECS_EXPORT
 ecs_type_t ecs_table_type(
-    ecs_rows_t *rows);
+    const ecs_rows_t *rows);
 
 /** Get type of table that system is currently iterating over. */
 FLECS_EXPORT
 void* ecs_table_column(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t column);
 
 /* -- Functions used in convenience macro's -- */
@@ -2213,6 +2239,7 @@ void _ecs_assert(
 #define ECS_INVALID_PREFAB_CHILD_TYPE (33)
 #define ECS_UNSUPPORTED (34)
 #define ECS_NO_OUT_COLUMNS (35)
+#define ECS_COLUMN_ACCESS_VIOLATION (36)
 
 /* -- Convenience macro's for wrapping around generated types and entities -- */
 
@@ -2428,6 +2455,7 @@ void _ecs_assert(
 
 #ifdef __cplusplus
 }
+
 #endif
 
 #endif

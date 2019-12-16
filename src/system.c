@@ -623,7 +623,8 @@ ecs_type_t ecs_notify_row_system(
         .frame_offset = 0,
         .offset = offset,
         .count = limit,
-        .param = system_data->base.ctx
+        .param = system_data->base.ctx,
+        .system_data = &system_data->base
     };
 
     /* Set references metadata if system has references */
@@ -713,9 +714,13 @@ ecs_entity_t ecs_new_system(
     ecs_assert(needs_tables || !((kind == EcsOnAdd) || (kind == EcsOnSet || (kind == EcsOnSet))),
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entity_t result = ecs_lookup(world, id);
-    if (result) {
-        return result;
+    ecs_entity_t result;
+
+    if (id) {
+        result = ecs_lookup(world, id);
+        if (result) {
+            return result;
+        }
     }
 
     if ((kind == EcsOnLoad || kind == EcsPostLoad ||
@@ -889,7 +894,7 @@ void ecs_set_period(
 
 static
 void* get_owned_column_ptr(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     size_t size,
     int32_t table_column,
     int32_t row)
@@ -906,7 +911,7 @@ void* get_owned_column_ptr(
 
 static
 void* get_shared_column(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     size_t size,
     int32_t table_column)
 {
@@ -929,7 +934,7 @@ void* get_shared_column(
 
 static
 bool get_table_column(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t column,
     int32_t *table_column_out)
 {
@@ -954,7 +959,7 @@ bool get_table_column(
 
 static
 void* get_column(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     size_t size,
     uint32_t column,
     uint32_t row)
@@ -973,7 +978,7 @@ void* get_column(
 }
 
 void* _ecs_column(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     size_t size,
     uint32_t column)
 {
@@ -981,7 +986,7 @@ void* _ecs_column(
 }
 
 void* _ecs_field(
-    ecs_rows_t *rows, 
+    const ecs_rows_t *rows, 
     size_t size,
     uint32_t column,
     uint32_t row)
@@ -990,7 +995,7 @@ void* _ecs_field(
 }
 
 bool ecs_is_shared(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t column)
 {
     int32_t table_column;
@@ -1004,8 +1009,25 @@ bool ecs_is_shared(
     return table_column < 0;
 }
 
+bool ecs_is_readonly(
+    const ecs_rows_t *rows,
+    uint32_t column)
+{
+    if (ecs_is_shared(rows, column)) {
+        return true;
+    }
+
+    EcsSystem *system = rows->system_data;
+
+    ecs_system_column_t *column_data = ecs_vector_get(
+        system->columns, &system_column_params, column - 1);
+
+    return column_data->inout_kind == EcsIn;
+
+}
+
 ecs_entity_t ecs_column_source(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t index)
 {
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
@@ -1028,7 +1050,7 @@ ecs_entity_t ecs_column_source(
 }
 
 ecs_type_t ecs_column_type(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t index)
 {
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
@@ -1043,7 +1065,7 @@ ecs_type_t ecs_column_type(
 }
 
 ecs_entity_t ecs_column_entity(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t index)
 {
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
@@ -1056,14 +1078,14 @@ ecs_entity_t ecs_column_entity(
 }
 
 ecs_type_t ecs_table_type(
-    ecs_rows_t *rows)
+    const ecs_rows_t *rows)
 {
     ecs_table_t *table = rows->table;
     return table->type;
 }
 
 void* ecs_table_column(
-    ecs_rows_t *rows,
+    const ecs_rows_t *rows,
     uint32_t column)
 {
     ecs_table_t *table = rows->table;
