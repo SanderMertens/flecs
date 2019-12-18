@@ -460,47 +460,6 @@ bool ecs_progress(
     ecs_world_t *world,
     float delta_time);
 
-/** Set number of worker threads.
- * This operation sets the number of worker threads to which to distribute the
- * processing load. If this function is called multiple times, the total number
- * of threads running will reflect the number specified in the last call.
- *
- * This function should not be called while processing an iteration, but should
- * only be called before or after calling ecs_progress.
- *
- * The initial value is zero, which means that ecs_progress will only use the
- * mainthread.
- *
- * @param world The world.
- * @param threads: The number of threads.
- * @return 0 if successful, or -1 if failed.
- */
-FLECS_EXPORT
-void ecs_set_threads(
-    ecs_world_t *world,
-    uint32_t threads);
-
-/** Get number of configured threads.
- * This operation will return the number of threads set with ecs_set_threads.
- *
- * @param world The world.
- * @return The number of threads.
- */
-FLECS_EXPORT
-uint32_t ecs_get_threads(
-    ecs_world_t *world);
-
-/** Get index of current worker thread.
- * While iterting, a system can invoke this operation to obtain a number that
- * uniquely identifies the thread from which the operation is invoked.
- *
- * @param world The world.
- * @return The thread index.
- */
-FLECS_EXPORT
-uint16_t ecs_get_thread_index(
-    ecs_world_t *world);
-
 /** Set target frames per second (FPS) for application.
  * Setting the target FPS ensures that ecs_progress is not invoked faster than
  * the specified FPS. When enabled, ecs_progress tracks the time passed since
@@ -663,46 +622,6 @@ FLECS_EXPORT
 bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable);
-
-/** Merge staged data.
- * This operation merges data from one or more stages (if there are multiple
- * threads) to the world state. By default, this happens every time ecs_progress
- * is called. To change this to manual merging, call ecs_set_automerge.
- *
- * Calling ecs_merge manually is a performance optimization which trades
- * consistency for speed. By default thread-specific staging areas are merged
- * automatically after each time ecs_progress is called. For some applications
- * this may impact performance too much, in which case manual merging may be
- * used.
- *
- * Manual merging requires that the application logic is capable of handling
- * application state that is out of sync for multiple iterations.
- *
- * @param world The world.
- */
-FLECS_EXPORT
-void ecs_merge(
-    ecs_world_t *world);
-
-/** Set whether the world should merge data each frame.
- * By default, ecs_progress merges data each frame. With this operation that
- * behavior can be changed to merge manually, using ecs_merge.
- *
- * Merging is an expensive task, and having to merge each time ecs_progress is
- * called can slow down the application. If ecs_progress is invoked at high
- * frequencies, it may be sufficient to merge at a reduced rate.
- *
- * As a result of delayed merging, any operation that requires adding or
- * removing components from an entity will not be visible to all threads until
- * the merge occurs.
- *
- * @param world The world.
- * @param auto_merge: When true, ecs_progress performs merging.
- */
-FLECS_EXPORT
-void ecs_set_automerge(
-    ecs_world_t *world,
-    bool auto_merge);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2136,6 +2055,91 @@ bool ecs_type_match_w_filter(
     ecs_type_t type,
     ecs_filter_t *filter);
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Threading / Staging API
+////////////////////////////////////////////////////////////////////////////////
+
+/** Set number of worker threads.
+ * This operation sets the number of worker threads to which to distribute the
+ * processing load. If this function is called multiple times, the total number
+ * of threads running will reflect the number specified in the last call.
+ *
+ * This function should not be called while processing an iteration, but should
+ * only be called before or after calling ecs_progress.
+ *
+ * The initial value is zero, which means that ecs_progress will only use the
+ * mainthread.
+ *
+ * @param world The world.
+ * @param threads: The number of threads.
+ * @return 0 if successful, or -1 if failed.
+ */
+FLECS_EXPORT
+void ecs_set_threads(
+    ecs_world_t *world,
+    uint32_t threads);
+
+/** Get number of configured threads.
+ * This operation will return the number of threads set with ecs_set_threads.
+ *
+ * @param world The world.
+ * @return The number of threads.
+ */
+FLECS_EXPORT
+uint32_t ecs_get_threads(
+    ecs_world_t *world);
+
+/** Get index of current worker thread.
+ * While iterting, a system can invoke this operation to obtain a number that
+ * uniquely identifies the thread from which the operation is invoked.
+ *
+ * @param world The world.
+ * @return The thread index.
+ */
+FLECS_EXPORT
+uint16_t ecs_get_thread_index(
+    ecs_world_t *world);
+
+/** Merge staged data.
+ * This operation merges data from one or more stages (if there are multiple
+ * threads) to the world state. By default, this happens every time ecs_progress
+ * is called. To change this to manual merging, call ecs_set_automerge.
+ *
+ * Calling ecs_merge manually is a performance optimization which trades
+ * consistency for speed. By default thread-specific staging areas are merged
+ * automatically after each time ecs_progress is called. For some applications
+ * this may impact performance too much, in which case manual merging may be
+ * used.
+ *
+ * Manual merging requires that the application logic is capable of handling
+ * application state that is out of sync for multiple iterations.
+ *
+ * @param world The world.
+ */
+FLECS_EXPORT
+void ecs_merge(
+    ecs_world_t *world);
+
+/** Set whether the world should merge data each frame.
+ * By default, ecs_progress merges data each frame. With this operation that
+ * behavior can be changed to merge manually, using ecs_merge.
+ *
+ * Merging is an expensive task, and having to merge each time ecs_progress is
+ * called can slow down the application. If ecs_progress is invoked at high
+ * frequencies, it may be sufficient to merge at a reduced rate.
+ *
+ * As a result of delayed merging, any operation that requires adding or
+ * removing components from an entity will not be visible to all threads until
+ * the merge occurs.
+ *
+ * @param world The world.
+ * @param auto_merge: When true, ecs_progress performs merging.
+ */
+FLECS_EXPORT
+void ecs_set_automerge(
+    ecs_world_t *world,
+    bool auto_merge);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
