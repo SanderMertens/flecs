@@ -1086,7 +1086,7 @@ char* ecs_type_to_expr(
 bool ecs_type_match_w_filter(
     ecs_world_t *world,
     ecs_type_t type,
-    ecs_type_filter_t *filter)
+    ecs_filter_t *filter)
 {
     if (!filter) {
         return true;

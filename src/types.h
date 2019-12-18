@@ -162,6 +162,13 @@ struct ecs_table_t {
     uint32_t flags;                   /* Flags for testing table properties */
 };
 
+/** Cached reference to a component in an entity */
+struct ecs_reference_t {
+    ecs_entity_t entity;
+    ecs_entity_t component;
+    void *cached_ptr;
+};
+
 /** Type containing data for a table matched with a system */
 typedef struct ecs_matched_table_t {
     ecs_table_t *table;             /* Reference to the table */
@@ -391,12 +398,12 @@ struct ecs_snapshot_t {
     ecs_map_t *entity_index;
     ecs_chunked_t *tables;
     ecs_entity_t last_handle;
-    ecs_type_filter_t filter;
+    ecs_filter_t filter;
 };
 
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
-struct ecs_world {
+struct ecs_world_t {
     uint32_t magic;               /* Magic number to verify world pointer */
     float delta_time;             /* Time passed to or computed by ecs_progress */
     void *context;                /* Application context */

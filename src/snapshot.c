@@ -22,7 +22,7 @@ void dup_table(
 /** Create a snapshot */
 ecs_snapshot_t* ecs_snapshot_take(
     ecs_world_t *world,
-    ecs_type_filter_t *filter)
+    ecs_filter_t *filter)
 {
     ecs_snapshot_t *result = ecs_os_malloc(sizeof(ecs_snapshot_t));
 
@@ -33,7 +33,7 @@ ecs_snapshot_t* ecs_snapshot_take(
         result->filter = *filter;
         result->entity_index = NULL;
     } else {
-        result->filter = (ecs_type_filter_t){0};
+        result->filter = (ecs_filter_t){0};
         result->entity_index = ecs_map_copy(world->main_stage.entity_index);
     }
 
@@ -71,7 +71,7 @@ void ecs_snapshot_restore(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    ecs_type_filter_t filter = snapshot->filter;
+    ecs_filter_t filter = snapshot->filter;
     bool filter_used = false;
 
     /* If a filter was used, clear all data that matches the filter, except the

@@ -168,7 +168,7 @@ void Snapshot_snapshot_w_include_filter() {
     test_assert(e3 != 0);
     test_assert(ecs_has(world, e3, Velocity));
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_type_filter_t){
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
@@ -241,7 +241,7 @@ void Snapshot_snapshot_w_exclude_filter() {
     test_assert(e3 != 0);
     test_assert(ecs_has(world, e3, Velocity));
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_type_filter_t){
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t){
         .exclude = ecs_type(Position)
     });
 
@@ -308,7 +308,7 @@ void Snapshot_snapshot_w_filter_after_new() {
     test_assert(e2 != 0);
     test_assert(ecs_has(world, e2, Velocity));
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_type_filter_t){
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
@@ -357,7 +357,7 @@ void Snapshot_snapshot_w_filter_after_delete() {
     test_assert(e4 != 0);
     test_assert(ecs_has(world, e4, Velocity));
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_type_filter_t){
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
@@ -405,7 +405,7 @@ void Snapshot_snapshot_activate_table_w_filter() {
     ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
     test_assert(e != 0);
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_type_filter_t){
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 

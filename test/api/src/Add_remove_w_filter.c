@@ -228,7 +228,7 @@ void Add_remove_w_filter_remove_1_exclude_1() {
     test_int( ecs_count(world, Type_3), 6);
 
     /* Remove component Mass */
-    ecs_add_remove_w_filter(world, 0, Mass, &(ecs_type_filter_t){
+    ecs_add_remove_w_filter(world, 0, Mass, &(ecs_filter_t){
         .exclude = ecs_type(Velocity)
     });
 
@@ -280,7 +280,7 @@ void Add_remove_w_filter_remove_1_exclude_2() {
     test_int( ecs_count(world, Type_4), 9);
 
     /* Remove component Mass */
-    ecs_add_remove_w_filter(world, 0, Mass, &(ecs_type_filter_t){
+    ecs_add_remove_w_filter(world, 0, Mass, &(ecs_filter_t){
         .exclude = ecs_type(Exclude)
     });
 
@@ -332,7 +332,7 @@ void Add_remove_w_filter_remove_1_include_1() {
     test_int( ecs_count(world, Type_3), 6);
 
     /* Remove component Mass */
-    ecs_add_remove_w_filter(world, 0, Mass, &(ecs_type_filter_t){
+    ecs_add_remove_w_filter(world, 0, Mass, &(ecs_filter_t){
         .include = ecs_type(Velocity)
     });
 
@@ -385,7 +385,7 @@ void Add_remove_w_filter_remove_1_include_2() {
     test_int( ecs_count(world, Type_4), 9);
 
     /* Remove component Mass */
-    ecs_add_remove_w_filter(world, 0, Mass, (&(ecs_type_filter_t){
+    ecs_add_remove_w_filter(world, 0, Mass, (&(ecs_filter_t){
         .include = ecs_type(Include),
         .include_kind = EcsMatchAny
     }));
@@ -435,7 +435,7 @@ void Add_remove_w_filter_add_1() {
     test_int( ecs_count(world, Type_2), 3);
 
     /* Remove component Mass */
-    ecs_add_remove_w_filter(world, Mass, 0, &(ecs_type_filter_t){
+    ecs_add_remove_w_filter(world, Mass, 0, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
@@ -475,7 +475,7 @@ void Add_remove_w_filter_add_2() {
     test_int( ecs_count(world, Type_2), 3);
 
     /* Remove component Mass */
-    ecs_add_remove_w_filter(world, ToAdd, 0, &(ecs_type_filter_t){
+    ecs_add_remove_w_filter(world, ToAdd, 0, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 

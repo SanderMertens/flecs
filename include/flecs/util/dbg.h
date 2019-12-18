@@ -82,7 +82,7 @@ FLECS_EXPORT
 bool ecs_dbg_filter_table(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_type_filter_t *filter);
+    ecs_filter_t *filter);
 
 FLECS_EXPORT
 void ecs_dbg_table(
