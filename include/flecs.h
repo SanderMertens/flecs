@@ -230,6 +230,151 @@ extern ecs_type_t
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Declarative macro's
+////////////////////////////////////////////////////////////////////////////////
+
+#ifndef __BAKE_LEGACY__
+
+/** Declare a named entity.
+ * This macro will declare a new entity with the provided id and components. The
+ * components are specified as a comma-separated list of identifiers, optionally
+ * with type flags. The order in which components are specified does not matter.
+ *
+ * Examples:
+ * ECS_ENTITY(world, MyEntity, Position, Velocity);
+ * ECS_ENTITY(world, MyEntity 0);
+ * ECS_ENTITY(world, MyEntity, Position, Velocity, CHILDOF | MyParentEntity);
+ */ 
+#define ECS_ENTITY(world, id, ...)\
+    ecs_entity_t id = ecs_new_entity(world, #id, #__VA_ARGS__);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
+    (void)id;\
+    (void)ecs_type(id);
+
+/** Declare a prefab.
+ * This macro will declare a new prefab with the provided id and components. The
+ * order in which components are specified does not matter. A prefab is similar 
+ * to an entity except that prefabs are typically used in combination with 
+ * INSTANCEOF to serve as entity templates. Prefabs are by default not matched 
+ * with systems.
+ *
+ * Examples:
+ * ECS_PREFAB(world, MyPrefab, Position, Velocity);
+ * ECS_PREFAB(world, MyPrefab, 0);
+ * ECS_PREFAB(world, MyPrefab, Position, Velocity, INSTANCEOF | MyBasePrefab);
+ *
+ * Prefabs can be used with ECS_ENTITY:
+ * ECS_ENTITY(world, MyEntity, Position, Velocity, INSTANCEOF | MyPrefab);
+ */
+#define ECS_PREFAB(world, id, ...) \
+    ecs_entity_t id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
+    (void)id;\
+    (void)ecs_type(id);\
+
+/** Declare a component.
+ * This macro declares a new component with the provided type. The type must be 
+ * a valid C type or typedef. A type must first be registered as a component 
+ * before it can be added to entities.
+ *
+ * Example:
+ * ECS_COMPONENT(world, Position);
+ * 
+ * Components can be used with ECS_ENTITY:
+ * ECS_ENTITY(world, MyEntity, Position);
+ */
+#define ECS_COMPONENT(world, id) \
+    ECS_ENTITY_VAR(id) = ecs_new_component(world, #id, sizeof(id));\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id);\
+
+/** Declare a tag. 
+ * This macro declares a tag with the provided id. Tags are the similar to 
+ * components in that they can be added to an entity, but have no C type 
+ * associated with them. 
+ *
+ * Example:
+ * ECS_TAG(world, MyTag);
+ * 
+ * Components can be used with ECS_ENTITY:
+ * ECS_ENTITY(world, MyEntity, MyTag);
+ */
+#define ECS_TAG(world, id) \
+    ecs_entity_t id = ecs_new_component(world, #id, 0);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
+    (void)id;\
+    (void)ecs_type(id);\
+
+/** Declare a type.
+ * This macro declares a type with the provided id and components. Types are
+ * similar to components in that they can be added to an entity, but instead of
+ * adding just one component, a type can add multiple components at once.
+ * 
+ * The components are specified as a comma-separated list of identifiers,
+ * optionally with type flags.
+ *
+ * Examples:
+ * ECS_ENTITY(world, MyType, Position, Velocity);
+ * ECS_ENTITY(world, MyType 0);
+ * ECS_ENTITY(world, MyType, Position, Velocity, CHILDOF | MyParentEntity);
+ *
+ * Types can be used in combination with ECS_ENTITY like this:
+ *
+ * ECS_ENTITY(world, MyEntity, Position, MyType);
+ */
+#define ECS_TYPE(world, id, ...) \
+    ecs_entity_t id = ecs_new_type(world, #id, #__VA_ARGS__);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
+    (void)id;\
+    (void)ecs_type(id);\
+
+/** Declare a systen.
+ * This macro declares a system with the specified function, kind and signature. 
+ * Systems are matched with entities that match the system signature. The system
+ * signature is specified as a comma-separated list of column expressions, where
+ * a column expression can be any of the following: 
+ *
+ * - A simple component identifier ('Position')
+ * - An OR expression ('Position | Velocity')
+ * - An optional expression ('?Position')
+ * - A NOT expression ('!Position')
+ * - An OWNED expression ('OWNED.Position')
+ * - A SHARED expression ('SHARED.Position')
+ * - A CONTAINER expression ('CONTAINER.Position')
+ * - A CASCADE expression ('CASCADE.Position')
+ * - An entity expression ('MyEntity.Position')
+ * - An empty expression ('.Position')
+ * 
+ * The systen kind specifies the phase in which the system is ran.
+ *
+ * Examples:
+ * ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity, !AngularVelocity);
+ * ECS_SYSTEM(world, Transform, EcsPostUpdate, CONTAINER.Transform, Transform);
+ *
+ * In these examples, 'Move' and 'Transform' must be valid identifiers to a C
+ * function of the following signature:
+ *
+ * void Move(ecs_rows_t *rows) { ... }
+ *
+ * Inside this function the system can access the data from the signature with
+ * the ECS_COLUMN macro:
+ *
+ * ECS_COLUMN(rows, Position, p, 1);
+ * ECS_COLUMN(rows, Velocity, v, 2);
+ *
+ * For more details on system signatures and phases see the Flecs manual.
+ */
+#define ECS_SYSTEM(world, id, kind, ...) \
+    ecs_entity_t F##id = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
+    ecs_entity_t id = F##id;\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
+    (void)id;\
+    (void)ecs_type(id);
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
 //// World API
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2032,91 +2177,6 @@ int ecs_enable_console(
 
 /** Translate module name into handles struct */
 #define ecs_module(type) M##type
-
-
-
-#ifndef __BAKE_LEGACY__
-
-/** Wrapper around ecs_new_entity. */ 
-#define ECS_ENTITY(world, id, ...)\
-    ecs_entity_t id = ecs_new_entity(world, #id, #__VA_ARGS__);\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
-    (void)id;\
-    (void)ecs_type(id);
-
-/** Wrapper around ecs_new_component.
- * This macro provides a convenient way to register components with a world. It
- * can be used like this:
- *
- * ECS_COMPONENT(world, Position);
- * ecs_entity_t e = ecs_new(world, Position);
- *
- * In this example, "Position" must be a valid C type name. The macro will 
- * define two local variables, one for a type handle and one for an entity
- * handle. These handles can be accessed with ecs_type(Position) and 
- * ecs_entity(Position). */
-#define ECS_COMPONENT(world, id) \
-    ECS_ENTITY_VAR(id) = ecs_new_component(world, #id, sizeof(id));\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
-    (void)ecs_entity(id);\
-    (void)ecs_type(id);\
-
-/** Same as component, but no size */
-#define ECS_TAG(world, id) \
-    ecs_entity_t id = ecs_new_component(world, #id, 0);\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
-    (void)id;\
-    (void)ecs_type(id);\
-
-/** Wrapper around ecs_new_type.
- * This macro provides a convenient way to register a type with the world.
- * It can be used like this:
- *
- * ECS_TYPE(world, MyType, Position, Velocity);
- * ecs_entity_t e = ecs_new(world, MyType);
- *
- * Creating a type and using it with ecs_new/ecs_add is faster
- * than calling ecs_add multiple types. */
-#define ECS_TYPE(world, id, ...) \
-    ecs_entity_t id = ecs_new_type(world, #id, #__VA_ARGS__);\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
-    (void)id;\
-    (void)ecs_type(id);\
-
-/** Wrapper around ecs_new_prefab.
- * This macro provides a convenient way to register a prefab with the world. It
- * can be used like this:
- *
- * ECS_PREFAB(world, MyPrefab, Position, Velocity);
- * ecs_entity_t e = ecs_new_instance(world, MyPrefab);
- *
- * For more specifics, see description of ecs_new_prefab. */
-#define ECS_PREFAB(world, id, ...) \
-    ecs_entity_t id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
-    (void)id;\
-    (void)ecs_type(id);\
-
-/** Wrapper around ecs_new_system.
- * This macro provides a convenient way to register systems with a world. It can
- * be used like this:
- *
- * ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
- *
- * In this example, "Move" must be the identifier to a C function that matches
- * the signature of ecs_system_action_t. The signature of this component will be
- * "Location, Speed".
- *
- * After the macro, the application will have access to a Move entity variable 
- * which can be accessed through ecs_entity(Move). */
-#define ECS_SYSTEM(world, id, kind, ...) \
-    ecs_entity_t F##id = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
-    ecs_entity_t id = F##id;\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
-    (void)id;\
-    (void)ecs_type(id);
-
-#endif
 
 /* Include stats at the end so it gets all the declarations */
 #include <flecs/util/stats.h>
