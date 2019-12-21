@@ -635,6 +635,8 @@ ecs_world_t *ecs_init(void) {
     ecs_assert(ecs_os_api.realloc != NULL, ECS_MISSING_OS_API, "realloc");
     ecs_assert(ecs_os_api.calloc != NULL, ECS_MISSING_OS_API, "calloc");
 
+    bool time_ok = true;
+
 #ifndef NDEBUG
     bool thr_ok = true;
     if (!ecs_os_api.mutex_new) {thr_ok = false; no_threading("mutex_new");}
@@ -652,7 +654,6 @@ ecs_world_t *ecs_init(void) {
         ecs_os_dbg("threading available");
     }
 
-    bool time_ok = true;
     if (!ecs_os_api.get_time) {time_ok = false; no_time("get_time");}
     if (!ecs_os_api.sleep) {time_ok = false; no_time("sleep");}
     if (time_ok) {

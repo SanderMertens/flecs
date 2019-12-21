@@ -901,8 +901,21 @@
                 "snapshot_w_exclude_filter",
                 "snapshot_w_filter_after_new",
                 "snapshot_w_filter_after_delete",
+                "snapshot_free_empty",
                 "snapshot_free",
+                "snapshot_free_filtered",
                 "snapshot_activate_table_w_filter"
+            ]
+        }, {
+            "id": "FilterIter",
+            "testcases": [
+                "iter_one_table",
+                "iter_two_tables",
+                "iter_two_comps",
+                "iter_snapshot_one_table",
+                "iter_snapshot_two_tables",
+                "iter_snapshot_two_comps",
+                "iter_snapshot_filtered_table"
             ]
         }, {
             "id": "Modules",

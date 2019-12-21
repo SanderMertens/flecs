@@ -1478,6 +1478,62 @@ void* ecs_table_column(
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Filter iterator API
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct ecs_filter_iter_t {
+    ecs_filter_t *filter;
+    ecs_chunked_t *tables;
+    uint32_t index;
+    ecs_rows_t rows;
+} ecs_filter_iter_t;
+
+/** Create iterator that matches world tables with specified filter.
+ * This operation allows applications to query entities ad hoc with a filter. 
+ * Combined with the ecs_filter_next function an application can iterate over a
+ * set of tables that matches the provided filter, for which the ecs_filter_next
+ * function will populate an ecs_rows_t object, which can be used to iterate the
+ * entities in the table.
+ * 
+ * @param world The world.
+ * @param filter The filter.
+ * @return An iterator that can be used with ecs_filter_next.
+ */
+FLECS_EXPORT
+ecs_filter_iter_t ecs_filter_iter(
+    ecs_world_t *world,
+    ecs_filter_t *filter);
+
+/** Same as ecs_filter_iter, but for iterating snapshots tables. */
+FLECS_EXPORT
+ecs_filter_iter_t ecs_snapshot_filter_iter(
+    ecs_world_t *world,
+    ecs_snapshot_t *snapshot,
+    ecs_filter_t *filter);    
+
+/** Iterate tables matched by filter.
+ * This operation can be called repeatedly for an iterator until it returns
+ * false, in which case there are no more tables that matched the filter.
+ *
+ * When the operation returns true, the contents of the table can be accessed
+ * through the "rows" member of the iterator, which is of type ecs_rows_t. To
+ * get the component data, an application has to first obtain the table type
+ * with ecs_table_type(iter.rows). This type contains the ordered list of
+ * components stored in the table.
+ *
+ * An application can then obtain a specific component by first retrieving the
+ * index of the component in the table type with column = 
+ * ecs_type_index_of(table_type, Component), followed by 
+ * ecs_table_column(rows, column) to obtain a pointer to the component array.
+ * 
+ * @param iter The iterator.
+ */
+FLECS_EXPORT
+bool ecs_filter_next(
+    ecs_filter_iter_t *iter);
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// System API
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2055,6 +2111,10 @@ bool ecs_type_match_w_filter(
     ecs_type_t type,
     ecs_filter_t *filter);
 
+FLECS_EXPORT
+int16_t ecs_type_index_of(
+    ecs_type_t type,
+    ecs_entity_t entity);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Threading / Staging API

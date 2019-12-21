@@ -145,7 +145,9 @@ void ecs_snapshot_free(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    ecs_map_free(snapshot->entity_index);
+    if (snapshot->entity_index) {
+        ecs_map_free(snapshot->entity_index);
+    }
 
     uint32_t i, count = ecs_chunked_count(snapshot->tables);
     for (i = 0; i < count; i ++) {

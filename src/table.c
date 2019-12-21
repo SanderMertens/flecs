@@ -47,7 +47,7 @@ ecs_table_column_t* new_columns(
         EcsComponent *component = ecs_get_ptr_intern(
             world, stage, &info, EEcsComponent, false, false);
 
-        if (component) {
+        if (component) {    
             if (component->size) {
                 /* Regular column data */
                 result[i + 1].size = component->size;
@@ -145,15 +145,22 @@ void ecs_table_replace_columns(
     ecs_table_t *table,
     ecs_table_column_t *columns)
 {
-    uint32_t prev_count = ecs_vector_count(table->columns[0].data);
+    uint32_t prev_count = 0;
 
-    clear_columns(table);
+    if (table->columns) {
+        prev_count = ecs_vector_count(table->columns[0].data);
+        clear_columns(table);
+    }
+
     if (columns) {
         ecs_os_free(table->columns);
         table->columns = columns;
     }
 
-    uint32_t count = ecs_vector_count(table->columns[0].data);
+    uint32_t count = 0;
+    if (table->columns) {
+        count = ecs_vector_count(table->columns[0].data);
+    }
 
     if (!prev_count && count) {
         activate_table(world, table, 0, true);

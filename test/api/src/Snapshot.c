@@ -377,10 +377,46 @@ void Snapshot_snapshot_w_filter_after_delete() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_free() {
+void Snapshot_snapshot_free_empty() {
     ecs_world_t *world = ecs_init();
 
     ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    test_assert(s != NULL);
+
+    ecs_snapshot_free(world, s);
+
+    ecs_fini(world);
+}
+
+void Snapshot_snapshot_free() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    test_assert( ecs_new(world, Position) != 0);
+    test_assert( ecs_new(world, Velocity) != 0);
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    test_assert(s != NULL);
+
+    ecs_snapshot_free(world, s);
+
+    ecs_fini(world);
+}
+
+void Snapshot_snapshot_free_filtered() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    test_assert( ecs_new(world, Position) != 0);
+    test_assert( ecs_new(world, Velocity) != 0);
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
     test_assert(s != NULL);
 
     ecs_snapshot_free(world, s);
