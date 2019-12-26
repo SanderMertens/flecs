@@ -24,6 +24,24 @@ class rows;
 template <typename T>
 class component_base;
 
+/* -- Constants -- */
+
+static const entity_t Component = EEcsComponent;
+static const entity_t TypeComponent = EEcsTypeComponent;
+static const entity_t Prefab = EEcsPrefab;
+static const entity_t PrefabParent = EEcsPrefabParent;
+static const entity_t PrefabBuilder = EEcsPrefabBuilder;
+static const entity_t RowSystem = EEcsRowSystem;
+static const entity_t ColSystem = EEcsColSystem;
+static const entity_t Id = EEcsId;
+static const entity_t Hidden = EEcsHidden;
+static const entity_t Disabled = EEcsDisabled;
+static const entity_t OnDemand = EEcsOnDemand;
+
+static const entity_t World = EcsWorld;
+static const entity_t Singleton = EcsSingleton;
+static const entity_t Invalid = EcsInvalid;
+
 /* -- Types -- */
 
 enum system_kind {
@@ -421,6 +439,8 @@ public:
         return *static_cast<base_type*>(this);         
     }
 
+    base_type& remove(flecs::type type) const;
+
     /* -- adopt -- */
 
     base_type& adopt(entity_t parent) const {
@@ -716,8 +736,18 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(const e
 }
 
 template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(flecs::type type) const {
+    return add(type.c());
+}
+
+template <typename base>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(const entity& entity) const {
     return remove(entity.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(flecs::type type) const {
+    return remove(type.c());
 }
 
 template <typename base>
