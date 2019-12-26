@@ -19,6 +19,7 @@ using type_t = ecs_type_t;
 
 class entity;
 class type;
+class rows;
 
 template <typename T>
 class component_base;
@@ -48,11 +49,21 @@ public:
         : m_array(array)
         , m_count(count) {}
 
+    column(flecs::rows &rows, int column);
+
     T& operator[](size_t index) {
         ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return m_array[index];
     }
 
+    T* operator->() {
+        ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+        return m_array;
+    }
+
+    bool is_set() {
+        return m_array != nullptr;
+    }
 private:
     T* m_array;
     size_t m_count;
@@ -215,6 +226,11 @@ private:
     uint32_t m_begin;
     uint32_t m_end;
 };
+
+template <typename T>
+inline column<T>::column(flecs::rows &rows, int column) {
+    *this = rows.column<T>(column);
+}
 
 /** Wrapper around world_t */
 class world final {
