@@ -13,6 +13,11 @@
 extern "C" {
 #endif
 
+typedef struct ecs_time_t {
+    int32_t sec;
+    uint32_t nanosec;
+} ecs_time_t;
+
 /* Allocation counters (not thread safe) */
 extern uint64_t ecs_os_api_malloc_count;
 extern uint64_t ecs_os_api_realloc_count;

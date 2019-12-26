@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 
     /* Take a snapshot that records the current state of the entity. Filter out
      * any entities that have the 'Mass' component. */
-    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_type_filter_t){
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t){
         .exclude = ecs_type(Mass)
     });
 

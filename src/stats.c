@@ -564,7 +564,7 @@ void StatsCollectTableStats_StatusAction(
         }
     } else if (status == EcsSystemDisabled) {
         /* Delete all entities with EcsTable tag */
-        ecs_delete_w_filter(world, &(ecs_type_filter_t){
+        ecs_delete_w_filter(world, &(ecs_filter_t){
             .include = ecs_type(EcsTablePtr),
             .include_kind = EcsMatchAny
         });

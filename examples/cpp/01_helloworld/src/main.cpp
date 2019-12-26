@@ -6,6 +6,8 @@ int main(int argc, char *argv[]) {
      * or for starting the admin dashboard (see flecs.h for details). */
     flecs::world world(argc, argv);
 
+    flecs::import<SimpleModule>(world);
+
     world.set_target_fps(60);
 
     std::cout << "Application helloworld is running, press CTRL-C to exit..." << std::endl;

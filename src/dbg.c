@@ -95,7 +95,7 @@ ecs_table_t* ecs_dbg_get_table(
 bool ecs_dbg_filter_table(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_type_filter_t *filter)
+    ecs_filter_t *filter)
 {
     return ecs_type_match_w_filter(world, table->type, filter);
 }

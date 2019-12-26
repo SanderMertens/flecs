@@ -1705,7 +1705,7 @@ void ecs_delete(
 
 void ecs_delete_w_filter_intern(
     ecs_world_t *world,
-    ecs_type_filter_t *filter,
+    ecs_filter_t *filter,
     bool is_delete)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -1747,14 +1747,14 @@ void ecs_delete_w_filter_intern(
 
 void ecs_delete_w_filter(
     ecs_world_t *world,
-    ecs_type_filter_t *filter)
+    ecs_filter_t *filter)
 {
     ecs_delete_w_filter_intern(world, filter, true);
 }
 
 void ecs_clear_w_filter(
     ecs_world_t *world,
-    ecs_type_filter_t *filter)
+    ecs_filter_t *filter)
 {
     ecs_delete_w_filter_intern(world, filter, false);
 }
@@ -1763,7 +1763,7 @@ void _ecs_add_remove_w_filter(
     ecs_world_t *world,
     ecs_type_t to_add,
     ecs_type_t to_remove,
-    ecs_type_filter_t *filter)
+    ecs_filter_t *filter)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
@@ -2068,15 +2068,6 @@ ecs_entity_t _ecs_set_ptr(
     return _ecs_set_ptr_intern(world, entity, component, size, ptr);
 }
 
-ecs_entity_t _ecs_set_singleton_ptr(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    size_t size,
-    const void *ptr)
-{
-    return _ecs_set_ptr_intern(world, ECS_SINGLETON, component, size, ptr);
-}
-
 static
 bool ecs_has_intern(
     ecs_world_t *world,
@@ -2197,13 +2188,6 @@ const char* ecs_get_id(
     } else {
         return NULL;
     }
-}
-
-bool ecs_is_empty(
-    ecs_world_t *world,
-    ecs_entity_t entity)
-{
-    return ecs_get_type(world, entity) == NULL;
 }
 
 ecs_type_t ecs_type_from_entity(

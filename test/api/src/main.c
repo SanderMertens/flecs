@@ -824,8 +824,19 @@ void Snapshot_snapshot_w_include_filter(void);
 void Snapshot_snapshot_w_exclude_filter(void);
 void Snapshot_snapshot_w_filter_after_new(void);
 void Snapshot_snapshot_w_filter_after_delete(void);
+void Snapshot_snapshot_free_empty(void);
 void Snapshot_snapshot_free(void);
+void Snapshot_snapshot_free_filtered(void);
 void Snapshot_snapshot_activate_table_w_filter(void);
+
+// Testsuite 'FilterIter'
+void FilterIter_iter_one_table(void);
+void FilterIter_iter_two_tables(void);
+void FilterIter_iter_two_comps(void);
+void FilterIter_iter_snapshot_one_table(void);
+void FilterIter_iter_snapshot_two_tables(void);
+void FilterIter_iter_snapshot_two_comps(void);
+void FilterIter_iter_snapshot_filtered_table(void);
 
 // Testsuite 'Modules'
 void Modules_simple_module(void);
@@ -4007,7 +4018,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Snapshot",
-        .testcase_count = 12,
+        .testcase_count = 14,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_snapshot",
@@ -4050,12 +4061,54 @@ static bake_test_suite suites[] = {
                 .function = Snapshot_snapshot_w_filter_after_delete
             },
             {
+                .id = "snapshot_free_empty",
+                .function = Snapshot_snapshot_free_empty
+            },
+            {
                 .id = "snapshot_free",
                 .function = Snapshot_snapshot_free
             },
             {
+                .id = "snapshot_free_filtered",
+                .function = Snapshot_snapshot_free_filtered
+            },
+            {
                 .id = "snapshot_activate_table_w_filter",
                 .function = Snapshot_snapshot_activate_table_w_filter
+            }
+        }
+    },
+    {
+        .id = "FilterIter",
+        .testcase_count = 7,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "iter_one_table",
+                .function = FilterIter_iter_one_table
+            },
+            {
+                .id = "iter_two_tables",
+                .function = FilterIter_iter_two_tables
+            },
+            {
+                .id = "iter_two_comps",
+                .function = FilterIter_iter_two_comps
+            },
+            {
+                .id = "iter_snapshot_one_table",
+                .function = FilterIter_iter_snapshot_one_table
+            },
+            {
+                .id = "iter_snapshot_two_tables",
+                .function = FilterIter_iter_snapshot_two_tables
+            },
+            {
+                .id = "iter_snapshot_two_comps",
+                .function = FilterIter_iter_snapshot_two_comps
+            },
+            {
+                .id = "iter_snapshot_filtered_table",
+                .function = FilterIter_iter_snapshot_filtered_table
             }
         }
     },
@@ -4170,5 +4223,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 40);
+    return bake_test_run("api", argc, argv, suites, 41);
 }

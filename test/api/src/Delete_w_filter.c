@@ -12,7 +12,7 @@ void Delete_w_filter_delete_1() {
     test_int( ecs_count(world, Position), 3);
     test_int( ecs_count(world, Mass), 3);
 
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         ecs_type(Position)
     });
 
@@ -44,7 +44,7 @@ void Delete_w_filter_delete_2() {
     test_int( ecs_count(world, Type), 3);
     test_int( ecs_count(world, Mass), 3);
 
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         ecs_type(Type)
     });
 
@@ -81,7 +81,7 @@ void Delete_w_filter_delete_1_2_types() {
     test_int( ecs_count(world, Mass), 3);
 
     /* Delete both entities of Type_1 and Type_2 */
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         ecs_type(Type_1)
     });
 
@@ -124,7 +124,7 @@ void Delete_w_filter_delete_2_2_types() {
     test_int( ecs_count(world, Mass), 6);
 
     /* Delete both entities of Type_1 and Type_2 */
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         ecs_type(Type_1)
     });
 
@@ -171,7 +171,7 @@ void Delete_w_filter_delete_except_1() {
     test_int( ecs_count(world, Mass), 6);
 
     /* Delete both entities of Type_1 and Type_3 but not Type_3 */
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         .include = ecs_type(Type_1),
         .exclude = ecs_type(Mass)
     });
@@ -223,7 +223,7 @@ void Delete_w_filter_delete_except_2() {
     test_int( ecs_count(world, Mass), 6);
 
     /* Delete both entities of Type_1 */
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         .include = ecs_type(Type_1),
         .exclude = ecs_type(Except)
     });
@@ -274,7 +274,7 @@ void Delete_w_filter_delete_with_any_of_2() {
     test_int( ecs_count(world, Mass), 6);
 
     /* Delete both entities of Type_1 and Type_3 but not Type_3 */
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         .include = ecs_type(Include),
         .include_kind = EcsMatchAny
     });
@@ -328,7 +328,7 @@ void Delete_w_filter_delete_except_all_of_2() {
     test_int( ecs_count(world, Mass), 9);
 
     /* Delete everything but Type_3 */
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         .exclude = ecs_type(Exclude),
         .exclude_kind = EcsMatchAll
     });
@@ -382,7 +382,7 @@ void Delete_w_filter_include_exact() {
     test_int( ecs_count(world, Mass), 9);
 
     /* Delete only Type_2 */
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         .include = ecs_type(Type_2),
         .include_kind = EcsMatchExact
     });
@@ -434,7 +434,7 @@ void Delete_w_filter_exclude_exact() {
     test_int( ecs_count(world, Mass), 9);
 
     /* Delete everything but Type_2 */
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         .exclude = ecs_type(Type_2),
         .exclude_kind = EcsMatchExact
     });
@@ -479,7 +479,7 @@ void Delete_w_filter_system_activate_test() {
 
     test_int( ecs_count(world, Position), 3);
 
-    ecs_delete_w_filter(world, &(ecs_type_filter_t){
+    ecs_delete_w_filter(world, &(ecs_filter_t){
         ecs_type(Position)
     });
 
