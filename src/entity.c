@@ -2143,6 +2143,26 @@ bool ecs_has_entity(
     return ecs_type_has_entity(world, entity_type, component);
 }
 
+bool ecs_has_entity_owned(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!entity) {
+        return false;
+    }
+
+    if (!component) {
+        return true;
+    }
+
+    ecs_world_t *world_arg = world;
+    ecs_type_t entity_type = ecs_get_type(world_arg, entity);
+    return ecs_type_has_entity_intern(world, entity_type, component, false);
+}
+
 bool ecs_contains(
     ecs_world_t *world,
     ecs_entity_t parent,

@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     /* Register components */
     ECS_COMPONENT(world, Mass);
 
-    /* Create two base entities */
+    /* Create base entity */
     ecs_entity_t base = ecs_new(world, 0);
     ecs_set(world, base, Mass, {10});
 

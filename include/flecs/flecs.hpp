@@ -526,7 +526,7 @@ public:
 
     template<typename T>
     T get() const {
-        return _ecs_get(m_world, m_id, component_base<T>::s_type);
+        return *(T*)_ecs_get_ptr(m_world, m_id, component_base<T>::s_type);
     }
 
     template<typename T>
@@ -562,6 +562,23 @@ public:
     bool has() const {
         return has(component_base<T>::s_entity);
     }
+
+    bool has_owned(entity_t id) const {
+        return ecs_has_entity_owned(m_world, m_id, id);
+    }
+
+    bool has_owned(flecs::type_t type) const {
+        return _ecs_has_owned(m_world, m_id, type);
+    }
+
+    bool has_owned(const entity& entity) const {
+        return has_owned(entity.id());
+    }
+
+    template <typename T>
+    bool has_owned() const {
+        return has_owned(component_base<T>::s_entity);
+    }    
 
 protected:
     world_t *m_world;

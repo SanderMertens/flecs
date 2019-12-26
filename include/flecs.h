@@ -1171,6 +1171,12 @@ bool ecs_has_entity(
     ecs_entity_t entity,
     ecs_entity_t component);
 
+FLECS_EXPORT
+bool ecs_has_entity_owned(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component);    
+
 /** Check if parent entity contains child entity.
  * This function tests if the specified parent entity has been added to the
  * specified child entity.
