@@ -45,9 +45,10 @@ enum system_kind {
 template <typename T>
 class column final {
 public:
-    column(T* array, size_t count)
+    column(T* array, size_t count, bool is_shared = false)
         : m_array(array)
-        , m_count(count) {}
+        , m_count(count) 
+        , m_is_shared(is_shared) {}
 
     column(flecs::rows &rows, int column);
 
@@ -64,9 +65,14 @@ public:
     bool is_set() {
         return m_array != nullptr;
     }
+
+    bool is_shared() {
+        return m_is_shared;
+    }
 private:
     T* m_array;
     size_t m_count;
+    bool m_is_shared;
 };
 
 /** Provides an integer range to iterate over */
@@ -200,11 +206,12 @@ private:
     flecs::column<T> get_column(uint32_t column_id) const {
         ecs_assert(ecs_column_entity(m_rows, column_id) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
         uint32_t count;
+        bool is_shared = ecs_is_shared(m_rows, column_id);
 
         /* If a shared column is retrieved with 'column', there will only be a
          * single value. Ensure that the application does not accidentally read
          * out of bounds. */
-        if (ecs_is_shared(m_rows, column_id)) {
+        if (is_shared) {
             count = 1;
         } else {
             /* If column is owned, there will be as many values as there are
@@ -212,7 +219,7 @@ private:
             count = m_rows->count;
         }
 
-        return flecs::column<T>(static_cast<T*>(_ecs_column(m_rows, sizeof(T), column_id)), count);
+        return flecs::column<T>(static_cast<T*>(_ecs_column(m_rows, sizeof(T), column_id)), count, is_shared);
     }   
 
     /* Get single field, check if correct type is used */
