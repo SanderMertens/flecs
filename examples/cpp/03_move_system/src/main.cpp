@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
                 p[row].x += v[row].x;
                 p[row].y += v[row].y;
 
-                std::cout << "Moved " << rows.entity(row).name() << "to {" <<
+                std::cout << "Moved " << rows.entity(row).name() << " to {" <<
                     p[row].x << ", " << p[row].y << "}" << std::endl;
             }
         });

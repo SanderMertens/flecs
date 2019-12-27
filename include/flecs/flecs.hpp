@@ -1034,7 +1034,9 @@ class system final : public entity {
 public:
     system(world world, const char *name = nullptr)
         : m_kind(static_cast<EcsSystemKind>(OnUpdate))
-        , m_name(name) { 
+        , m_name(name) 
+        , m_on_demand(false)
+        , m_hidden(false) { 
             m_world = world.c();
         }
 
@@ -1045,6 +1047,16 @@ public:
 
     system& kind(system_kind kind) {
         m_kind = static_cast<EcsSystemKind>(kind);
+        return *this;
+    }
+
+    system& on_demand() {
+        m_on_demand = true;
+        return *this;
+    }
+
+    system& hidden() {
+        m_hidden = true;
         return *this;
     }
 
@@ -1100,7 +1112,7 @@ public:
             str << inout_modifiers[i];
             str << id;
             i ++;
-        }
+        }           
 
         if (m_signature) {
             if (i) {
@@ -1108,7 +1120,24 @@ public:
             }
 
             str << m_signature;
+            i++;
         }
+
+        if (m_hidden) {
+            if (i) {
+                str << ",";
+            }            
+            str << "SYSTEM.EcsHidden";
+            i ++;
+        }    
+
+        if (m_on_demand) {
+            if (i) {
+                str << ",";
+            }            
+            str << "SYSTEM.EcsOnDemand";
+            i ++;
+        }         
 
         std::string signature = str.str();
 
@@ -1151,6 +1180,8 @@ private:
     EcsSystemKind m_kind;
     const char *m_name;
     const char *m_signature = nullptr;
+    bool m_on_demand;
+    bool m_hidden;
 };
 
 /* Class that imports a module */

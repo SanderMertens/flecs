@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Printable);
 
     /* The 'Move' system has the 'EcsOnDemand' tag which means Flecs will only
      * run this system if there is interest in any of its [out] columns. In this
@@ -46,27 +47,34 @@ int main(int argc, char *argv[]) {
      * that the system will not write Position, and relies on another system to
      * provide a value for it. If there are any OnDemand systems that provide
      * 'Position' as an output, they will be enabled. */
-    ECS_SYSTEM(world, PrintPosition, EcsOnUpdate, [in]  Position);
+    ECS_SYSTEM(world, PrintPosition, EcsOnUpdate, [in]  Position, Printable);
 
     /* Create entity, set components */
     ecs_entity_t e = 
-    ecs_set(world, 0, Position, {0, 0});
+    ecs_set(world, 0, Position, {10, 20});
     ecs_set(world, e, Velocity, {1, 2});
 
-    /* If this line is uncommented, the PrintPosition system will be disabled.
-     * As a result there will be no more enabled systems with interest in the 
-     * 'Position' component, and therefore the 'Move' system will be disabled
-     * as a result as well. */
+    /* No systems will be executed. The PrintPosition system is enabled, but it
+     * has no matching entities. As a result, there is no demand for the 
+     * Position component, and the Move system won't be executed either, even
+     * though the entity does match with it. */
+    printf("First iteration: PrintPosition is inactive\n");
+    ecs_progress(world, 0);
 
-    //ecs_enable(world, PrintPosition, false);
+    /* Add Printable to the entity */
+    ecs_add(world, e, Printable);
 
-    /* Run slowly so we won't flood the console */
-    ecs_set_target_fps(world, 1);
+    /* Both systems will now be executed. The entity matches with PrintPosition
+     * meaning there is demand for Position, and thus the Move system will be
+     * enabled. */
+    printf("\nSecond iteration: PrintPosition is active\n");
+    ecs_progress(world, 0);
 
-    printf("Application on_demand_system is running, press CTRL-C to exit...\n");
-
-    /* Run systems */
-    while ( ecs_progress(world, 0));
+    /* Disable the PrintPosition system. Now there is no longer demand for the
+     * Position component, so the Move on-demand system will be disabled. */
+    printf("\nThird iteration: PrintPosition is disabled\n");
+    ecs_enable(world, PrintPosition, false);
+    ecs_progress(world, 0);   
 
     /* Cleanup */
     return ecs_fini(world);
