@@ -16,6 +16,7 @@ namespace flecs {
 using world_t = ecs_world_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
+using snapshot_t = ecs_snapshot_t;
 
 class entity;
 class type;
@@ -884,6 +885,41 @@ inline void world::init_builtin_components() {
     flecs::component<flecs::Prefab>(*this, "EcsPrefab");
     flecs::component<flecs::Id>(*this, "EcsId");
 }
+
+/* Class that encapsulates a snapshot */
+class snapshot final {
+public:
+    snapshot(flecs::world world)
+        : m_world( world.c() )
+        , m_snapshot( nullptr )
+        { 
+            take();
+        }
+
+    void take() {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_world, m_snapshot);
+        }
+
+        m_snapshot = ecs_snapshot_take(m_world, nullptr);
+    }
+
+    void restore() {
+        if (m_snapshot) {
+            ecs_snapshot_restore(m_world, m_snapshot);
+            m_snapshot = nullptr;
+        }
+    }
+
+    ~snapshot() {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_world, m_snapshot);
+        }
+    }
+private:
+    world_t *m_world;
+    snapshot_t *m_snapshot;
+};
 
 /** Class that represens a type filter */
 class filter {
