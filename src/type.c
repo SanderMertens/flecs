@@ -566,6 +566,36 @@ ecs_type_t ecs_type_add_intern(
     return result;
 }
 
+/** Remove entity from type */
+ecs_type_t ecs_type_remove_intern(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_type_t type,
+    ecs_entity_t e)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    uint32_t count = ecs_vector_count(type);
+    ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, count);
+    ecs_entity_t *old_array = ecs_vector_first(type);
+    void *new_buffer = new_array;
+
+    ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+
+    uint32_t i, pos = 0;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t elem = old_array[i];
+        if (elem != e) {
+            new_array[pos ++] = elem;
+        }
+    }
+
+    ecs_type_t result = ecs_type_find_intern(world, stage, new_buffer, pos);
+    ecs_assert(ecs_vector_count(result) == pos, ECS_INTERNAL_ERROR, NULL);
+
+    return result;
+}
+
 ecs_type_t ecs_type_merge_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -1032,6 +1062,15 @@ ecs_type_t ecs_type_add(
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     return ecs_type_add_intern(world, stage, type, e);
+}
+
+ecs_type_t ecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t e)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    return ecs_type_remove_intern(world, stage, type, e);
 }
 
 char* ecs_type_to_expr(

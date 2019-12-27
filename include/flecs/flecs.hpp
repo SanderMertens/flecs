@@ -361,23 +361,7 @@ public:
         ecs_enable_range_check(m_world, enabled);
     }
 
-    void enable(const entity& system, bool enabled = true) const;
-
-    bool is_enabled(const entity& system) const;
-
-    void set_period(const entity& system, float period) const;
-
-    void set_system_context(const entity& system, void *ctx) const;
-    
-    void* get_system_context(const entity& system) const;
-
-    entity run(const entity& system, float delta_time = 0, void *param = nullptr) const;
-
-    entity run(const entity& system, float delta_time, std::uint32_t offset, std::uint32_t limit, flecs::type_t filter, void *param) const;
-
     entity lookup(const char *name) const;
-
-    entity lookup_child(const entity& parent, const char *name) const;
 
 private:
     void init_builtin_components();
@@ -811,52 +795,8 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_inst
     return remove_instanceof(entity.id());
 }
 
-/* -- world implementation -- */
-
-inline void world::enable(const entity& system, bool enabled) const {
-    ecs_enable(m_world, system.id(), enabled);
-}
-
-inline bool world::is_enabled(const entity& system) const {
-    return ecs_is_enabled(m_world, system.id());
-}
-
-inline void world::set_period(const entity& system, float period) const {
-    ecs_set_period(m_world, system.id(), period);
-}
-
-inline void world::set_system_context(const entity& system, void *ctx) const {
-    ecs_set_system_context(m_world, system.id(), ctx);
-}
-
-inline void* world::get_system_context(const entity& system) const {
-    return ecs_get_system_context(m_world, system.id());
-}
-
-inline entity world::run(const entity& system, float delta_time, void *param) const {
-    return entity(
-        *this,
-        ecs_run(m_world, system.id(), delta_time, param)
-    );
-}
-
-inline entity world::run(const entity& system, float delta_time, std::uint32_t offset, std::uint32_t limit, flecs::type_t filter, void *param) const {
-    return entity(
-        *this,
-        _ecs_run_w_filter(
-            m_world, system.id(), delta_time, offset, limit, filter, param
-        )
-    );
-}
-
 inline entity world::lookup(const char *name) const {
     auto id = ecs_lookup(m_world, name);
-    return entity(*this, id);
-}
-
-inline entity world::lookup_child(const entity& parent, const char *name) const {
-    auto parent_id = parent.id();
-    auto id = ecs_lookup_child(m_world, parent_id, name);
     return entity(*this, id);
 }
 
@@ -937,6 +877,65 @@ public:
     }
 };
 
+/* Register builtin components with C++ API */
+inline void world::init_builtin_components() {
+    flecs::component<flecs::Component>(*this, "EcsComponent");
+    flecs::component<flecs::TypeComponent>(*this, "EcsTypeComponent");
+    flecs::component<flecs::Prefab>(*this, "EcsPrefab");
+    flecs::component<flecs::Id>(*this, "EcsId");
+}
+
+/** Class that represens a type filter */
+class filter {
+public:
+    filter(world world) 
+        : m_world( world.c() )
+        , m_filter{} { }
+
+    filter& include(flecs::type type) {
+        m_filter.include = ecs_type_merge(m_world, m_filter.include, type.c(), nullptr);
+        return *this;
+    }
+
+    filter& include(flecs::entity entity) {
+        m_filter.include = ecs_type_add(m_world, m_filter.include, entity.id());
+        return *this;
+    }
+
+    template <typename T>
+    filter& include() {
+        include(component_base<T>::s_entity);
+        return *this;
+    }
+
+    flecs::type include() {
+        return flecs::type(m_world, m_filter.include);
+    }
+
+    filter& exclude(flecs::type type) {
+        m_filter.exclude = ecs_type_merge(m_world, m_filter.exclude, nullptr, type.c());
+        return *this;
+    }
+
+    filter exclude(flecs::entity entity) {
+        m_filter.exclude = ecs_type_remove(m_world, m_filter.exclude, entity.id());
+        return *this;
+    }
+
+    template <typename T>
+    filter& exclude() {
+        exclude(component_base<T>::s_entity);
+        return *this;
+    }   
+ 
+    flecs::type exclude() {
+        return flecs::type(m_world, m_filter.exclude);
+    }
+private:
+    ecs_world_t *m_world;
+    ecs_type_filter_t m_filter;
+};
+
 /** Class that wraps around compile-time type safe system callbacks */
 template <typename Func, typename ... Components>
 class system_ctx {
@@ -988,6 +987,47 @@ private:
     Func m_func;
 };
 
+class system_runner {
+public:
+    system_runner(world_t *world, entity_t id, float delta_time, void *param)
+        : m_world(world)
+        , m_id(id)
+        , m_delta_time(delta_time)
+        , m_param(param)
+        , m_filter(nullptr)
+        , m_offset(0)
+        , m_limit(0) { }
+
+    system_runner& filter(flecs::filter filter) {
+        ecs_assert(filter.exclude().c() == nullptr, ECS_UNSUPPORTED, NULL);
+        m_filter = filter.include().c();
+        return *this;
+    }
+
+    system_runner& offset(std::int32_t offset) {
+        m_offset = offset;
+        return *this;
+    }
+
+    system_runner& limit(std::int32_t limit) {
+        m_limit = limit;
+        return *this;
+    }
+
+    ~system_runner() {
+        _ecs_run_w_filter(
+            m_world, m_id, m_delta_time, m_offset, m_limit, m_filter, m_param);
+    }
+private:
+    world_t *m_world;
+    entity_t m_id;
+    float m_delta_time;
+    void *m_param;
+    ecs_type_t m_filter;
+    std::int32_t m_offset;
+    std::int32_t m_limit;
+};
+
 /** Helper class that constructs a new system */
 template<typename ... Components>
 class system final : public entity {
@@ -1014,6 +1054,26 @@ public:
 
     void disable() {
         ecs_enable(m_world, m_id, false);
+    }
+
+    bool is_enabled() const {
+        return ecs_is_enabled(m_world, m_id);
+    }
+
+    void set_period(float period) const {
+        ecs_set_period(m_world, m_id, period);
+    }
+
+    void set_context(void *ctx) const {
+        ecs_set_system_context(m_world, m_id, ctx);
+    }
+
+    void* get_context() const {
+        return ecs_get_system_context(m_world, m_id);
+    }
+
+    system_runner run(float delta_time = 0.0f, void *param = nullptr) const {
+        return system_runner(m_world, m_id, delta_time, param);
     }
 
     /* Action is mandatory and always the last thing that is added in the fluent
@@ -1093,6 +1153,7 @@ private:
     const char *m_signature = nullptr;
 };
 
+/* Class that imports a module */
 template <typename T>
 class import {
 public:
@@ -1107,17 +1168,11 @@ public:
     }
 };
 
+/* Class that defines a module */
 template <typename T>
 class module final : public component<T> {
 public:
     module(flecs::world world, const char *name) : component<T>(world, name) { }
 };
-
-inline void world::init_builtin_components() {
-    flecs::component<flecs::Component>(*this, "EcsComponent");
-    flecs::component<flecs::TypeComponent>(*this, "EcsTypeComponent");
-    flecs::component<flecs::Prefab>(*this, "EcsPrefab");
-    flecs::component<flecs::Id>(*this, "EcsId");
-}
 
 }

@@ -187,6 +187,7 @@ typedef struct EcsPrefab {
     ecs_entity_t parent;
 } EcsPrefab;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Public constants
 ////////////////////////////////////////////////////////////////////////////////
@@ -2021,6 +2022,22 @@ ecs_type_t ecs_type_add(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity);
+
+/** Find or create type from existing type and removed entity. 
+ * This operation removes the specified entity from the specified type, and returns a
+ * new or existing type without the specified entity. The provided type will not 
+ * be altered.
+ * 
+ * @param world The world.
+ * @param type The type from which to remove the entity.
+ * @param entity The entity to remove from the type.
+ * @return A type that does not have the specified entity.
+ */
+FLECS_EXPORT
+ecs_type_t ecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity);    
 
 /** Find or create type that is the union of two types. 
  * This operation will return a type that contains exactly the components in the
