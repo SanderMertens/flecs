@@ -1001,9 +1001,7 @@ bool ecs_is_shared(
     int32_t table_column;
 
     if (!get_table_column(rows, column, &table_column)) {
-        /* If column is not set, it cannot be determined if it is shared or
-         * not.  */
-        ecs_abort(ECS_COLUMN_IS_NOT_SET, NULL);
+        return false;
     }
 
     return table_column < 0;
