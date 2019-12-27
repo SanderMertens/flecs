@@ -528,6 +528,8 @@ void add_prefab_child_to_builder(
     if (ecs_has(world, child, EcsTypeComponent)) {
         type = ecs_type_from_entity(world, child); 
 
+        ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
+
         ecs_entity_t *array = ecs_vector_first(type);
         (void)array;
         uint32_t count = ecs_vector_count(type);

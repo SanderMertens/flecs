@@ -668,6 +668,13 @@ public:
         sync_from_flecs();
     }
 
+    type(const world& world, const char *name, entity parent, const char *expr)
+        : entity(world, ecs_new_type(world.c(), name, expr))
+    { 
+        this->set<EcsPrefab>({parent.id()});
+        sync_from_flecs();
+    }
+
     type(const world& world, type_t type)
         : entity(world)
         , m_type( type )

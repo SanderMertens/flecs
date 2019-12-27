@@ -7,7 +7,6 @@ typedef struct Vector2D {
 } Vector2D;
 
 typedef Vector2D Position;
-typedef Vector2D Velocity;
 
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps

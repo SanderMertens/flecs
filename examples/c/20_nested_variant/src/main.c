@@ -22,8 +22,7 @@ int main(int argc, char *argv[]) {
     ECS_PREFAB(world, BasePrefab, Position);
         ecs_set(world, BasePrefab, Position, {10, 20});
 
-    /* Create a prefab with a child entity. When this prefab is instantiated, 
-     * the child will be instantiated too as a child of the instance.  */
+    /* Create the root of the prefab hierarchy  */
     ECS_PREFAB(world, RootPrefab, Position);
         ecs_set(world, RootPrefab, Position, {10, 20});
 
@@ -32,7 +31,6 @@ int main(int argc, char *argv[]) {
             ecs_set(world, Child1, EcsPrefab, {.parent = RootPrefab});
             ecs_set(world, Child1, Velocity, {30, 40});
 
-        /* Create two child prefabs that inherit from BasePrefab */
         ECS_PREFAB(world, Child2, INSTANCEOF | BasePrefab, Velocity);
             ecs_set(world, Child2, EcsPrefab, {.parent = RootPrefab});
             ecs_set(world, Child2, Velocity, {50, 60});
@@ -47,9 +45,12 @@ int main(int argc, char *argv[]) {
     ecs_entity_t child2 = ecs_lookup_child(world, e, "Child2");
     printf("Child2 type = [%s]\n", ecs_type_to_expr(world, ecs_get_type(world, child2)));
 
+    /* e shares Position from RootPrefab */
     Position *p = ecs_get_ptr(world, e, Position);
     printf("Position of e = {%f, %f}\n", p->x, p->y);
 
+    /* Children will share Position from ChildBase and Velocity from the Child1
+     * and Child2 prefabs respectively */
     p = ecs_get_ptr(world, child1, Position);
     Velocity *v = ecs_get_ptr(world, child1, Velocity);
     printf("Child1 Position = {%f, %f}, Velocity = {%f, %f}\n", p->x, p->y, v->x, v->y);
