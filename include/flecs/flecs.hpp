@@ -26,14 +26,14 @@ class component_base;
 
 /* -- Constants -- */
 
-static const entity_t Component = EEcsComponent;
-static const entity_t TypeComponent = EEcsTypeComponent;
-static const entity_t Prefab = EEcsPrefab;
+using Component = EcsComponent;
+using TypeComponent = EcsTypeComponent;
+using Prefab = EcsPrefab;
 static const entity_t PrefabParent = EEcsPrefabParent;
 static const entity_t PrefabBuilder = EEcsPrefabBuilder;
 static const entity_t RowSystem = EEcsRowSystem;
 static const entity_t ColSystem = EEcsColSystem;
-static const entity_t Id = EEcsId;
+using Id = EcsId;
 static const entity_t Hidden = EEcsHidden;
 static const entity_t Disabled = EEcsDisabled;
 static const entity_t OnDemand = EEcsOnDemand;
@@ -262,15 +262,15 @@ class world final {
 public:
     world() 
         : m_world( ecs_init() )
-        , m_owner( true ) { }
+        , m_owner( true ) { init_builtin_components(); }
 
     world(int argc, char *argv[])
         : m_world( ecs_init_w_args(argc, argv) )
-        , m_owner( true ) { }
+        , m_owner( true ) { init_builtin_components(); }
 
     world(world_t *world) 
         : m_world( world )
-        , m_owner( false ) { }
+        , m_owner( false ) { init_builtin_components(); }
 
     world(const world& obj) {
         m_world = obj.m_world;
@@ -377,6 +377,8 @@ public:
     entity lookup_child(const entity& parent, const char *name) const;
 
 private:
+    void init_builtin_components();
+
     world_t *m_world;
     bool m_owner;
 };
@@ -443,7 +445,7 @@ public:
 
     /* -- adopt -- */
 
-    base_type& adopt(entity_t parent) const {
+    base_type& add_childof(entity_t parent) const {
         static_cast<base_type*>(this)->invoke(
         [parent](world_t *world, entity_t id) {
             ecs_adopt(world, id, parent);
@@ -451,11 +453,11 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
-    base_type& adopt(const entity& parent) const;
+    base_type& add_childof(const entity& parent) const;
 
     /* -- orphan -- */
 
-    base_type& orphan(entity_t parent) const {
+    base_type& remove_childof(entity_t parent) const {
         static_cast<base_type*>(this)->invoke(
         [parent](world_t *world, entity_t id) {
             ecs_orphan(world, id, parent);
@@ -463,11 +465,11 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
-    base_type& orphan(const entity& parent) const;
+    base_type& remove_childof(const entity& parent) const;
 
     /* -- inherit -- */
 
-    base_type& inherit(entity_t base_entity) const {
+    base_type& add_instanceof(entity_t base_entity) const {
         static_cast<base_type*>(this)->invoke(
         [base_entity](world_t *world, entity_t id) {
             ecs_inherit(world, id, base_entity);
@@ -475,11 +477,11 @@ public:
         return *static_cast<base_type*>(this);  
     }
 
-    base_type& inherit(const entity& base_entity) const;  
+    base_type& add_instanceof(const entity& base_entity) const;  
 
     /* -- disinherit -- */
 
-    base_type& disinherit(entity_t base_entity) const {
+    base_type& remove_instanceof(entity_t base_entity) const {
         static_cast<base_type*>(this)->invoke(
         [base_entity](world_t *world, entity_t id) {
             ecs_disinherit(world, id, base_entity);
@@ -487,7 +489,7 @@ public:
         return *static_cast<base_type*>(this);
     }
 
-    base_type& disinherit(const entity& base_entity) const;
+    base_type& remove_instanceof(const entity& base_entity) const;
 
     /* -- set -- */
 
@@ -564,6 +566,11 @@ public:
         ecs_delete(m_world, m_id);
     }
 
+    entity lookup(const char *name) const {
+        auto id = ecs_lookup_child(m_world, m_id, name);
+        return entity(m_world, id);
+    }
+
     /* -- has -- */
 
     bool has(entity_t id) const {
@@ -603,6 +610,22 @@ public:
 protected:
     world_t *m_world;
     entity_t m_id; 
+};
+
+/** Prefab class */
+class prefab final : public entity {
+public:
+    prefab(const world& world, const char *name) 
+        : entity(world, name)
+    {
+        this->add<flecs::Prefab>();
+    }
+
+    prefab(const world& world, const char *name, entity parent)
+        : entity(world, name)
+    {
+        this->set<flecs::Prefab>({parent.id()});
+    }
 };
 
 /** Entity range class */
@@ -751,23 +774,23 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(flec
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::adopt(const entity& entity) const {
-    return adopt(entity.id());
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_childof(const entity& entity) const {
+    return add_childof(entity.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::orphan(const entity& entity) const {
-    return orphan(entity.id());
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_childof(const entity& entity) const {
+    return remove_childof(entity.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::inherit(const entity& entity) const {
-    return inherit(entity.id());
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_instanceof(const entity& entity) const {
+    return add_instanceof(entity.id());
 }
 
 template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::disinherit(const entity& entity) const {
-    return disinherit(entity.id());
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_instanceof(const entity& entity) const {
+    return remove_instanceof(entity.id());
 }
 
 /* -- world implementation -- */
@@ -1059,5 +1082,12 @@ class module final : public component<T> {
 public:
     module(flecs::world world, const char *name) : component<T>(world, name) { }
 };
+
+inline void world::init_builtin_components() {
+    flecs::component<flecs::Component>(*this, "EcsComponent");
+    flecs::component<flecs::TypeComponent>(*this, "EcsTypeComponent");
+    flecs::component<flecs::Prefab>(*this, "EcsPrefab");
+    flecs::component<flecs::Id>(*this, "EcsId");
+}
 
 }

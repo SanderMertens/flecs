@@ -63,12 +63,12 @@ int main(int argc, char *argv[]) {
 
     /* Create entities which share the Mass component from a base */
     flecs::entity(world, "MyInstance1")
-        .inherit(LightEntity)
+        .add_instanceof(LightEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10});
 
     flecs::entity(world, "MyInstance2")
-        .inherit(HeavyEntity)
+        .add_instanceof(HeavyEntity)
         .set<Position>({0, 0})
         .set<Force>({10, 10});        
 

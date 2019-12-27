@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
     /* Create instances which share the Mass component from a base */
     auto instance = flecs::entity(world)
-        .inherit(base);
+        .add_instanceof(base);
 
     /* Add component without setting it. This will initialize the new component
      * with the value from the base, which is a common approach to initializing

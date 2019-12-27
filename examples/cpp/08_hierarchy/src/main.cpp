@@ -94,22 +94,22 @@ int main(int argc, char *argv[]) {
         .set<Velocity>({1, 2});
 
         auto Child1 = flecs::entity(world, "Child1")
-            .adopt(Root)
+            .add_childof(Root)
             .add<WorldPosition>()
             .set<Position>({100, 100});
 
             flecs::entity(world, "GChild1")
-                .adopt(Child1)
+                .add_childof(Child1)
                 .add<WorldPosition>()
                 .set<Position>({1000, 1000});
 
         auto Child2 = flecs::entity(world, "Child2")
-            .adopt(Root)
+            .add_childof(Root)
             .add<WorldPosition>()
             .set<Position>({200, 200});
 
             flecs::entity(world, "GChild2")
-                .adopt(Child2)
+                .add_childof(Child2)
                 .add<WorldPosition>()
                 .set<Position>({2000, 2000});
 

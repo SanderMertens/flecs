@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 
     /* Create instances which share the Mass component from a base */
     auto instance = flecs::entity(world)
-        .inherit(base);
+        .add_instanceof(base);
 
     /* Print value before overriding Mass. The component is not owned, as it is
      * shared with the base entity. */
