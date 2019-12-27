@@ -138,6 +138,9 @@ public:
         return row_iterator(m_end);
     }
 
+    /* Obtain handle to current system */
+    flecs::entity system() const;
+
     /* Number of entities to iterate over */
     uint32_t count() const {
         return m_rows->count;
@@ -731,6 +734,14 @@ public:
         return m_normalized;
     }
 
+    void enable() {
+        ecs_enable(m_world, m_id, true);
+    }
+
+    void disable() {
+        ecs_enable(m_world, m_id, false);
+    }
+
 private:
     void sync_from_me() {
         EcsTypeComponent *tc = ecs_get_ptr(m_world, m_id, EcsTypeComponent);
@@ -850,6 +861,10 @@ inline entity world::lookup_child(const entity& parent, const char *name) const 
 }
 
 /* -- rows implementation -- */
+
+inline flecs::entity rows::system() const {
+    return flecs::entity(m_rows->world, m_rows->system);
+}
 
 inline flecs::entity rows::entity(uint32_t row) const {
     ecs_assert(row < m_rows->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
@@ -978,9 +993,10 @@ template<typename ... Components>
 class system final : public entity {
 public:
     system(world world, const char *name = nullptr)
-        : m_world(world.c())
-        , m_kind(static_cast<EcsSystemKind>(OnUpdate))
-        , m_name(name) { }
+        : m_kind(static_cast<EcsSystemKind>(OnUpdate))
+        , m_name(name) { 
+            m_world = world.c();
+        }
 
     system& signature(const char *signature) {
         m_signature = signature;
@@ -990,6 +1006,14 @@ public:
     system& kind(system_kind kind) {
         m_kind = static_cast<EcsSystemKind>(kind);
         return *this;
+    }
+
+    void enable() {
+        ecs_enable(m_world, m_id, true);
+    }
+
+    void disable() {
+        ecs_enable(m_world, m_id, false);
     }
 
     /* Action is mandatory and always the last thing that is added in the fluent
@@ -1028,16 +1052,16 @@ public:
 
         std::string signature = str.str();
 
-        entity_t system = ecs_new_system(
+        entity_t e = ecs_new_system(
             m_world, 
             m_name, 
             m_kind, 
             signature.c_str(), 
             system_ctx<Func, Components...>::run);
 
-        ecs_set_system_context(m_world, system, ctx);
+        ecs_set_system_context(m_world, e, ctx);
 
-        entity(m_world, system);
+        m_id = e;
 
         return *this;
     }
@@ -1064,7 +1088,6 @@ private:
         return "";
     }
 
-    world_t *m_world;
     EcsSystemKind m_kind;
     const char *m_name;
     const char *m_signature = nullptr;
