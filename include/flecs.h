@@ -124,18 +124,18 @@ typedef void (*ecs_module_init_action_t)(
  * When the kind is left to EcsMatchDefault, the include_kind will be set to
  * EcsMatchAll, while the exclude_kind will be set to EcsMatchAny.
  */
-typedef enum ecs_filter_kind_t {
+typedef enum ecs_match_kind_t {
     EcsMatchDefault = 0,
     EcsMatchAll,
     EcsMatchAny,
     EcsMatchExact
-} ecs_filter_kind_t;
+} ecs_match_kind_t;
 
 typedef struct ecs_filter_t {
     ecs_type_t include;
     ecs_type_t exclude;
-    ecs_filter_kind_t include_kind;
-    ecs_filter_kind_t exclude_kind;
+    ecs_match_kind_t include_kind;
+    ecs_match_kind_t exclude_kind;
 } ecs_filter_t;
 
 /** The ecs_rows_t struct passes data from a system to a system callback.  */
@@ -1521,7 +1521,7 @@ void* ecs_table_column(
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct ecs_filter_iter_t {
-    ecs_filter_t *filter;
+    const ecs_filter_t *filter;
     ecs_chunked_t *tables;
     uint32_t index;
     ecs_rows_t rows;
@@ -1541,14 +1541,14 @@ typedef struct ecs_filter_iter_t {
 FLECS_EXPORT
 ecs_filter_iter_t ecs_filter_iter(
     ecs_world_t *world,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 /** Same as ecs_filter_iter, but for iterating snapshots tables. */
 FLECS_EXPORT
 ecs_filter_iter_t ecs_snapshot_filter_iter(
     ecs_world_t *world,
-    ecs_snapshot_t *snapshot,
-    ecs_filter_t *filter);    
+    const ecs_snapshot_t *snapshot,
+    const ecs_filter_t *filter);    
 
 /** Iterate tables matched by filter.
  * This operation can be called repeatedly for an iterator until it returns
@@ -2164,7 +2164,7 @@ FLECS_EXPORT
 bool ecs_type_match_w_filter(
     ecs_world_t *world,
     ecs_type_t type,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 FLECS_EXPORT
 int16_t ecs_type_index_of(

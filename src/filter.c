@@ -3,7 +3,7 @@
 
 ecs_filter_iter_t ecs_filter_iter(
     ecs_world_t *world,
-    ecs_filter_t *filter)
+    const ecs_filter_t *filter)
 {
    return (ecs_filter_iter_t){
         .filter = filter,
@@ -17,8 +17,8 @@ ecs_filter_iter_t ecs_filter_iter(
 
 ecs_filter_iter_t ecs_snapshot_filter_iter(
     ecs_world_t *world,
-    ecs_snapshot_t *snapshot,
-    ecs_filter_t *filter)
+    const ecs_snapshot_t *snapshot,
+    const ecs_filter_t *filter)
 {
    return (ecs_filter_iter_t){
         .filter = filter,

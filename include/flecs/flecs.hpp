@@ -18,10 +18,13 @@ using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using snapshot_t = ecs_snapshot_t;
 using filter_t = ecs_filter_t;
+using filter_iter_t = ecs_filter_iter_t;
 
 class entity;
 class type;
 class rows;
+class filter;
+class filter_iterator;
 
 template <typename T>
 class component_base;
@@ -59,6 +62,13 @@ enum system_kind {
     OnAdd = EcsOnAdd,
     OnRemove = EcsOnRemove,
     OnSet = EcsOnSet
+};
+
+enum match_kind {
+    MatchDefault = EcsMatchDefault,
+    MatchAll = EcsMatchAll,
+    MatchAny = EcsMatchAny,
+    MatchExact = EcsMatchExact
 };
 
 /** Utility to protect against out of bound reads on component arrays */
@@ -176,7 +186,16 @@ public:
     /* Obtain untyped pointer to table column */
     void* table_column(uint32_t table_column) {
         return ecs_table_column(m_rows, table_column);
-    }   
+    }
+
+    /* Obtain typed pointer to table column */
+    template <typename T>
+    flecs::column<T> table_column() {
+        auto type = ecs_table_type(m_rows);
+        auto column = ecs_type_index_of(type, component_base<T>::s_entity);
+        ecs_assert(column != -1, ECS_INVALID_PARAMETER, NULL);
+        return flecs::column<T>(static_cast<T*>(ecs_table_column(m_rows, column)), m_rows->count, false);
+    }
 
     /* Obtain column with a const type */
     template <typename T,
@@ -910,6 +929,11 @@ public:
         return *this;
     }
 
+    filter& include_kind(flecs::match_kind kind) {
+        m_filter.include_kind = static_cast<ecs_match_kind_t>(kind);
+        return *this;
+    }
+
     flecs::type include() {
         return flecs::type(m_world, m_filter.include);
     }
@@ -930,17 +954,68 @@ public:
         return *this;
     }
  
+    filter& exclude_kind(flecs::match_kind kind) {
+        m_filter.exclude_kind = static_cast<ecs_match_kind_t>(kind);
+        return *this;
+    }  
+
     flecs::type exclude() {
         return flecs::type(m_world, m_filter.exclude);
-    }
+    }  
 
     filter_t* c() {
         return &m_filter;
     }
+
+    filter_iterator begin();
+
+    filter_iterator end();
 private:
     world_t *m_world;
     filter_t m_filter;
 };
+
+/** Iterate over a filter */
+class filter_iterator
+{
+public:
+    filter_iterator()
+        : m_world(nullptr)
+        , m_has_next(false) { }
+
+    filter_iterator(world world, filter& filter)
+        : m_world( world.c() )
+        , m_iter( ecs_filter_iter(m_world, filter.c()) ) 
+    { 
+        m_has_next = ecs_filter_next(&m_iter);
+    }
+
+    bool operator!=(filter_iterator const& other) const {
+        return m_has_next != other.m_has_next;
+    }
+
+    flecs::rows const operator*() const {
+        return flecs::rows(&m_iter.rows);
+    }
+
+    filter_iterator& operator++() {
+        m_has_next = ecs_filter_next(&m_iter);
+        return *this;
+    }
+
+private:
+    world_t *m_world;
+    bool m_has_next;
+    filter_iter_t m_iter;
+};
+
+inline filter_iterator filter::begin() {
+    return filter_iterator(m_world, *this);
+}
+
+inline filter_iterator filter::end() {
+    return filter_iterator();
+}
 
 /* Class that encapsulates a snapshot */
 class snapshot final {
