@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     ecs_entity_t MyEntity = _ecs_new(world, 0);
 
     /* Set entity identifier using builtin component */
-    _ecs_set_ptr(world, MyEntity, TEcsId, sizeof(EcsId), &(EcsId){"MyEntity"});
+    _ecs_set_ptr(world, MyEntity, EEcsId, sizeof(EcsId), &(EcsId){"MyEntity"});
 
     /* Components are automatically added when doing an ecs_set, but this is for
      * demonstration purposes. The ecs_add operation accepts a type variable, as
@@ -57,8 +57,8 @@ int main(int argc, char *argv[]) {
     _ecs_add(world, MyEntity, TVelocity);
 
     /* Set values for entity. */
-    _ecs_set_ptr(world, MyEntity, TPosition, sizeof(Position), &(Position){0, 0});
-    _ecs_set_ptr(world, MyEntity, TVelocity, sizeof(Velocity), &(Velocity){1, 1});
+    _ecs_set_ptr(world, MyEntity, EPosition, sizeof(Position), &(Position){0, 0});
+    _ecs_set_ptr(world, MyEntity, EVelocity, sizeof(Velocity), &(Velocity){1, 1});
 
     /* Set target FPS for main loop to 1 frame per second */
     ecs_set_target_fps(world, 1);

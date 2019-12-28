@@ -1,4 +1,4 @@
-#include <snapshot.h>
+#include <snapshot_w_filter.h>
 #include "flecs/flecs.hpp"
 
 /* Component types */
@@ -12,6 +12,10 @@ struct Velocity {
     float y;
 };
 
+struct Mass {
+    float value;
+};
+
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
@@ -19,6 +23,7 @@ int main(int argc, char *argv[]) {
 
     flecs::component<Position>(world, "Position");
     flecs::component<Velocity>(world, "Velocity");
+    flecs::component<Mass>(world, "Mass");
 
     flecs::system<Position, Velocity>(world)
         .action([](const flecs::rows& rows, 
@@ -34,23 +39,30 @@ int main(int argc, char *argv[]) {
             }
         });
 
-    flecs::entity(world, "MyEntity")
-        .set<Position>({0, 0})
+    flecs::entity(world, "E1")
+        .set<Position>({10, 20})
         .set<Velocity>({1, 1});
 
-    /* Take a snapshot of the world */
+    flecs::entity(world, "E2")
+        .set<Position>({30, 40})
+        .set<Velocity>({1, 1})
+        .set<Mass>({1});
+
+    /* Take a snapshot that records the current state of the entity. Filter out
+     * any entities that have the 'Mass' component. */
     std::cout << "Take snapshot" << std::endl;
     flecs::snapshot s(world);
-    s.take();
+    s.take(flecs::filter(world).exclude<Mass>());
 
     /* Progress the world a few times, updates position */
     world.progress();
     world.progress();
     world.progress();
 
-    /* Restore snapshot */
+    /* Restore snapshot. This will only restore the state for entity E1. */
     std::cout << std::endl << "Restore snapshot" << std::endl;
     s.restore();
 
+    /* Progress the world again, note that the state of E1 has been restored */
     world.progress();
 }

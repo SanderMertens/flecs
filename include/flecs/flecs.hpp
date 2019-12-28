@@ -17,6 +17,7 @@ using world_t = ecs_world_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using snapshot_t = ecs_snapshot_t;
+using filter_t = ecs_filter_t;
 
 class entity;
 class type;
@@ -886,41 +887,6 @@ inline void world::init_builtin_components() {
     flecs::component<flecs::Id>(*this, "EcsId");
 }
 
-/* Class that encapsulates a snapshot */
-class snapshot final {
-public:
-    snapshot(flecs::world world)
-        : m_world( world.c() )
-        , m_snapshot( nullptr )
-        { 
-            take();
-        }
-
-    void take() {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_world, m_snapshot);
-        }
-
-        m_snapshot = ecs_snapshot_take(m_world, nullptr);
-    }
-
-    void restore() {
-        if (m_snapshot) {
-            ecs_snapshot_restore(m_world, m_snapshot);
-            m_snapshot = nullptr;
-        }
-    }
-
-    ~snapshot() {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_world, m_snapshot);
-        }
-    }
-private:
-    world_t *m_world;
-    snapshot_t *m_snapshot;
-};
-
 /** Class that represens a type filter */
 class filter {
 public:
@@ -940,7 +906,7 @@ public:
 
     template <typename T>
     filter& include() {
-        include(component_base<T>::s_entity);
+        m_filter.include = ecs_type_add(m_world, m_filter.include, component_base<T>::s_entity);
         return *this;
     }
 
@@ -949,27 +915,72 @@ public:
     }
 
     filter& exclude(flecs::type type) {
-        m_filter.exclude = ecs_type_merge(m_world, m_filter.exclude, nullptr, type.c());
+        m_filter.exclude = ecs_type_merge(m_world, m_filter.exclude, type.c(), nullptr);
         return *this;
     }
 
     filter exclude(flecs::entity entity) {
-        m_filter.exclude = ecs_type_remove(m_world, m_filter.exclude, entity.id());
+        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, entity.id());
         return *this;
     }
 
     template <typename T>
     filter& exclude() {
-        exclude(component_base<T>::s_entity);
+        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, component_base<T>::s_entity);
         return *this;
-    }   
+    }
  
     flecs::type exclude() {
         return flecs::type(m_world, m_filter.exclude);
     }
+
+    filter_t* c() {
+        return &m_filter;
+    }
 private:
-    ecs_world_t *m_world;
-    ecs_type_filter_t m_filter;
+    world_t *m_world;
+    filter_t m_filter;
+};
+
+/* Class that encapsulates a snapshot */
+class snapshot final {
+public:
+    snapshot(flecs::world world)
+        : m_world( world.c() )
+        , m_snapshot( nullptr )
+        { }
+
+    void take() {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_world, m_snapshot);
+        }
+
+        m_snapshot = ecs_snapshot_take(m_world, nullptr);
+    }
+
+    void take(flecs::filter filter) {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_world, m_snapshot);
+        }
+
+        m_snapshot = ecs_snapshot_take(m_world, filter.c());
+    }
+
+    void restore() {
+        if (m_snapshot) {
+            ecs_snapshot_restore(m_world, m_snapshot);
+            m_snapshot = nullptr;
+        }
+    }
+
+    ~snapshot() {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_world, m_snapshot);
+        }
+    }
+private:
+    world_t *m_world;
+    snapshot_t *m_snapshot;
 };
 
 /** Class that wraps around compile-time type safe system callbacks */
