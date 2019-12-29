@@ -143,6 +143,8 @@ ecs_table_t* ecs_dbg_active_table(
     ecs_dbg_col_system_t *dbg,
     uint32_t index)
 {
+    (void)world;
+
     EcsColSystem *system_data = dbg->system_data;
     ecs_matched_table_t *table = ecs_vector_get(
         system_data->tables, &matched_table_params, index);
@@ -158,6 +160,8 @@ ecs_table_t* ecs_dbg_inactive_table(
     ecs_dbg_col_system_t *dbg,
     uint32_t index)
 {
+    (void)world;
+
     EcsColSystem *system_data = dbg->system_data;
     ecs_matched_table_t *table = ecs_vector_get(
         system_data->inactive_tables, &matched_table_params, index);

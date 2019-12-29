@@ -3,10 +3,10 @@
 
 ecs_filter_iter_t ecs_filter_iter(
     ecs_world_t *world,
-    ecs_filter_t *filter)
+    const ecs_filter_t *filter)
 {
-   return (ecs_filter_iter_t){
-        .filter = filter,
+    return (ecs_filter_iter_t){
+        .filter = filter ? *filter : (ecs_filter_t){0},
         .tables = world->main_stage.tables,
         .index = 0,
         .rows = {
@@ -17,11 +17,11 @@ ecs_filter_iter_t ecs_filter_iter(
 
 ecs_filter_iter_t ecs_snapshot_filter_iter(
     ecs_world_t *world,
-    ecs_snapshot_t *snapshot,
-    ecs_filter_t *filter)
+    const ecs_snapshot_t *snapshot,
+    const ecs_filter_t *filter)
 {
-   return (ecs_filter_iter_t){
-        .filter = filter,
+    return (ecs_filter_iter_t){
+        .filter = filter ? *filter : (ecs_filter_t){0},
         .tables = snapshot->tables,
         .index = 0,
         .rows = {
@@ -44,7 +44,7 @@ bool ecs_filter_next(
             continue;
         }
 
-        if (!ecs_type_match_w_filter(iter->rows.world, table->type, iter->filter)) {
+        if (!ecs_type_match_w_filter(iter->rows.world, table->type, &iter->filter)) {
             continue;
         }
 

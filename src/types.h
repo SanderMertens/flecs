@@ -53,12 +53,6 @@
 
 /* -- Builtin component types -- */
 
-/** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
-typedef struct EcsTypeComponent {
-    ecs_type_t type;    /* Preserved nested types */
-    ecs_type_t resolved;  /* Resolved nested types */
-} EcsTypeComponent;
-
 /* For prefabs with child entities, the parent prefab must be marked so that
  * flecs knows not to share components from it, as adding a prefab as a parent
  * is stored in the same way as adding a prefab for sharing components.
@@ -187,7 +181,7 @@ typedef struct ecs_on_demand_out_t {
 
 /** Keep track of which OnDemand systems are matched with which [in] columns */
 typedef struct ecs_on_demand_in_t {
-    uint32_t count;         /* Number of active systems with [in] column */
+    int32_t count;         /* Number of active systems with [in] column */
     ecs_vector_t *systems;  /* Systems that have this column as [out] column */
 } ecs_on_demand_in_t;
 

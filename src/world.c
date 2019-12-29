@@ -126,9 +126,8 @@ ecs_table_t* bootstrap_component_table(
     result->type = world->t_component;
     result->frame_systems = NULL;
     result->flags = 0;
-    result->columns = ecs_os_malloc(sizeof(ecs_table_column_t) * 3);
     result->flags |= EcsTableHasBuiltins;
-    
+    result->columns = ecs_os_malloc(sizeof(ecs_table_column_t) * 3);
     ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->columns[0].data = ecs_vector_new(&handle_arr_params, 16);
@@ -209,6 +208,7 @@ ecs_table_t* create_table(
 {
     /* Add and initialize table */
     ecs_table_t *result = ecs_chunked_add(stage->tables, ecs_table_t);
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     
     result->type = type;
 
@@ -223,8 +223,6 @@ ecs_table_t* create_table(
     if (stage == &world->main_stage && !world->is_merging) {
         ecs_notify_systems_of_table(world, result);
     }
-
-    assert(result != NULL);
 
     return result;
 }
@@ -528,6 +526,8 @@ void add_prefab_child_to_builder(
     if (ecs_has(world, child, EcsTypeComponent)) {
         type = ecs_type_from_entity(world, child); 
 
+        ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
+
         ecs_entity_t *array = ecs_vector_first(type);
         (void)array;
         uint32_t count = ecs_vector_count(type);
@@ -802,6 +802,7 @@ ecs_world_t* ecs_init_w_args(
     }
 
     ecs_world_t *world = ecs_init();
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Parse remaining arguments */
     for (i = 1; i < argc; i ++) {
@@ -983,6 +984,10 @@ ecs_entity_t ecs_lookup_child_in_columns(
     uint32_t i, count = ecs_vector_count(column->data);
     
     for (i = 0; i < count; i ++) {
+        if (!buffer[i]) {
+            continue;
+        }
+        
         if (!strcmp(buffer[i], id)) {
             return *(ecs_entity_t*)ecs_vector_get(
                 columns[0].data, &handle_arr_params, i);
@@ -1483,7 +1488,7 @@ bool ecs_enable_range_check(
 
 ecs_entity_t _ecs_import(
     ecs_world_t *world,
-    ecs_module_init_action_t module,
+    ecs_module_init_action_t init_action,
     const char *module_name,
     int flags,
     void *handles_out,
@@ -1492,7 +1497,7 @@ ecs_entity_t _ecs_import(
     ecs_entity_t e = ecs_lookup(world, module_name);
     if (!e) {
         /* Load module */
-        module(world, flags);
+        init_action(world, flags);
 
         /* Lookup module component (must be registered by module) */
         e = ecs_lookup(world, module_name);
@@ -1521,6 +1526,9 @@ ecs_entity_t ecs_import_from_library(
     const char *module_name,
     int flags)
 {
+    ecs_assert(library_name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(module_name != NULL, ECS_INVALID_PARAMETER, NULL);
+
     char *import_func = (char*)module_name; /* safe */
     char *module = (char*)module_name;
 
@@ -1539,6 +1547,8 @@ ecs_entity_t ecs_import_from_library(
      * the main module from the library */
     if (!import_func) {
         import_func = ecs_os_malloc(strlen(library_name) + sizeof("Import"));
+        ecs_assert(import_func != NULL, ECS_OUT_OF_MEMORY, NULL);
+        
         const char *ptr;
         char ch, *bptr = import_func;
         bool capitalize = true;
@@ -1556,9 +1566,11 @@ ecs_entity_t ecs_import_from_library(
                 }
             }
         }
+
         *bptr = '\0';
 
-        module = strdup(import_func);
+        module = ecs_os_strdup(import_func);
+        ecs_assert(module != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         strcat(bptr, "Import");
     }
@@ -1566,7 +1578,10 @@ ecs_entity_t ecs_import_from_library(
     char *library_filename = ecs_os_module_to_dl(library_name);
     if (!library_filename) {
         ecs_os_err("failed to find library file for '%s'", library_name);
-        return ECS_INVALID_ENTITY;
+        if (module != module_name) {
+            ecs_os_free(module);
+        }
+        return 0;
     } else {
         ecs_os_dbg("found file '%s' for library '%s'", 
             library_filename, library_name);
@@ -1576,8 +1591,14 @@ ecs_entity_t ecs_import_from_library(
     if (!dl) {
         ecs_os_err("failed to load library '%s' ('%s')", 
             library_name, library_filename);
-        free(library_filename);
-        return ECS_INVALID_ENTITY;
+        
+        ecs_os_free(library_filename);
+
+        if (module != module_name) {
+            ecs_os_free(module);
+        }    
+
+        return 0;
     } else {
         ecs_os_dbg("library '%s' ('%s') loaded", 
             library_name, library_filename);
@@ -1600,11 +1621,11 @@ ecs_entity_t ecs_import_from_library(
     ecs_entity_t result = _ecs_import(world, action, module, flags, NULL, 0);
 
     if (import_func != module_name) {
-        free(import_func);
+        ecs_os_free(import_func);
     }
 
     if (module != module_name) {
-        free(module);
+        ecs_os_free(module);
     }
 
     free(library_filename);

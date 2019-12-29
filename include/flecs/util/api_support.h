@@ -156,6 +156,7 @@ void _ecs_assert(
 #define ECS_INVALID_PREFAB_CHILD_TYPE (33)
 #define ECS_UNSUPPORTED (34)
 #define ECS_NO_OUT_COLUMNS (35)
+#define ECS_COLUMN_ACCESS_VIOLATION (36)
 
 /** Declare type variable */
 #define ECS_TYPE_VAR(type)\

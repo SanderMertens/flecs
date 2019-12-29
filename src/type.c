@@ -431,7 +431,7 @@ ecs_type_t find_or_create_type(
                 break;
             }
 
-            if (create && !type) {
+            if (create) {
                 return NULL;
             }
         }
@@ -562,6 +562,36 @@ ecs_type_t ecs_type_add_intern(
     ecs_type_t result = ecs_type_find_intern(world, stage, new_buffer, pos);
     ecs_assert(ecs_vector_count(result) == pos, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pos - count <= 1, ECS_INTERNAL_ERROR, NULL);
+
+    return result;
+}
+
+/** Remove entity from type */
+ecs_type_t ecs_type_remove_intern(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_type_t type,
+    ecs_entity_t e)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    uint32_t count = ecs_vector_count(type);
+    ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, count);
+    ecs_entity_t *old_array = ecs_vector_first(type);
+    void *new_buffer = new_array;
+
+    ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+
+    uint32_t i, pos = 0;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t elem = old_array[i];
+        if (elem != e) {
+            new_array[pos ++] = elem;
+        }
+    }
+
+    ecs_type_t result = ecs_type_find_intern(world, stage, new_buffer, pos);
+    ecs_assert(ecs_vector_count(result) == pos, ECS_INTERNAL_ERROR, NULL);
 
     return result;
 }
@@ -713,6 +743,10 @@ ecs_entity_t ecs_type_contains(
     ecs_entity_t e1 = 0;
     ecs_entity_t *t1_array = ecs_vector_first(type_1);
     ecs_entity_t *t2_array = ecs_vector_first(type_2);
+
+    ecs_assert(t1_array != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(t2_array != NULL, ECS_INTERNAL_ERROR, NULL);
+
     uint32_t t1_count = ecs_vector_count(type_1);
     uint32_t t2_count = ecs_vector_count(type_2);
 
@@ -855,11 +889,15 @@ EcsTypeComponent type_from_expr(
     ecs_world_t *world,
     const char *expr)
 {
-    ecs_vector_t *vec = ecs_vector_new(&handle_arr_params, 1);
-    ecs_parse_component_expr(world, expr, parse_type_action, &vec);
-    EcsTypeComponent result = type_from_vec(world, vec);
-    ecs_vector_free(vec);
-    return result;
+    if (expr) {
+        ecs_vector_t *vec = ecs_vector_new(&handle_arr_params, 1);
+        ecs_parse_component_expr(world, expr, parse_type_action, &vec);
+        EcsTypeComponent result = type_from_vec(world, vec);
+        ecs_vector_free(vec);
+        return result;
+    } else {
+        return (EcsTypeComponent){0, 0};
+    }
 }
 
 /* -- Public API -- */
@@ -1030,6 +1068,15 @@ ecs_type_t ecs_type_add(
     return ecs_type_add_intern(world, stage, type, e);
 }
 
+ecs_type_t ecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t e)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    return ecs_type_remove_intern(world, stage, type, e);
+}
+
 char* ecs_type_to_expr(
     ecs_world_t *world,
     ecs_type_t type)
@@ -1086,7 +1133,7 @@ char* ecs_type_to_expr(
 bool ecs_type_match_w_filter(
     ecs_world_t *world,
     ecs_type_t type,
-    ecs_filter_t *filter)
+    const ecs_filter_t *filter)
 {
     if (!filter) {
         return true;

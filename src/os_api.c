@@ -267,6 +267,7 @@ static
 char* ecs_os_api_strdup(const char *str) {
     int len = strlen(str);
     char *result = ecs_os_api_malloc(len + 1);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
     strcpy(result, str);
     return result;
 }

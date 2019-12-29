@@ -1630,7 +1630,7 @@ void SystemOnFrame_match_prefab_and_normal() {
 
 static
 void TestIsSharedOnNotSet(ecs_rows_t *rows) {
-    ecs_is_shared(rows, 2);
+    test_assert(ecs_is_shared(rows, 2) == false);
 }
 
 void SystemOnFrame_is_shared_on_column_not_set() {
@@ -1644,8 +1644,6 @@ void SystemOnFrame_is_shared_on_column_not_set() {
     ECS_ENTITY(world, Entity, Position);
 
     ECS_SYSTEM(world, TestIsSharedOnNotSet, EcsOnUpdate, Position, ?Velocity);
-    
-    test_expect_abort();
 
     ecs_progress(world, 0);
 
