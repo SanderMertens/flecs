@@ -120,7 +120,7 @@ template <typename T>
 class range_iterator
 {
 public:
-    range_iterator(T value)
+    explicit range_iterator(T value)
         : m_value(value){}
 
     bool operator!=(range_iterator const& other) const
@@ -308,7 +308,7 @@ public:
     world(int argc, char *argv[])
         : m_world( ecs_init_w_args(argc, argv) ) { init_builtin_components(); }
 
-    world(world_t *world) 
+    explicit world(world_t *world) 
         : m_world( world ) { init_builtin_components(); }
 
     /* Not allowed to copy a world. May only take a reference */
@@ -554,17 +554,25 @@ public:
 
 class entity : public entity_fluent<entity> {
 public:
-    entity(const world& world) 
+    explicit entity(const world& world) 
         : m_world( world.c() )
         , m_id( _ecs_new(m_world, 0) ) { }
+
+    explicit entity(world_t *world) 
+        : m_world( world )
+        , m_id( _ecs_new(m_world, 0) ) { }
+
+    entity(const world& world, const char *name) 
+        : m_world( world.c() )
+        , m_id( ecs_new_entity(m_world, name, 0) ) { }
 
     entity(const world& world, entity_t id) 
         : m_world( world.c() )
         , m_id(id) { }
 
-    entity(const world& world, const char *name) 
-        : m_world( world.c() )
-        , m_id( ecs_new_entity(m_world, name, 0) ) { }
+    entity(world_t *world, entity_t id) 
+        : m_world( world )
+        , m_id(id) { }
 
     entity() 
         : m_world(nullptr)
@@ -724,7 +732,12 @@ public:
     }
 
     type(const world& world, type_t type)
-        : entity(world)
+        : entity( world )
+        , m_type( type )
+        , m_normalized( type ) { }
+
+    type(world_t *world, type_t type)
+        : entity( world )
         , m_type( type )
         , m_normalized( type ) { }
 
@@ -900,7 +913,7 @@ public:
  
 class filter {
 public:
-    filter(const world& world) 
+    explicit filter(const world& world) 
         : m_world( world.c() )
         , m_filter{ } { }
 
@@ -970,7 +983,7 @@ private:
 
 class snapshot final {
 public:
-    snapshot(const world& world)
+    explicit snapshot(const world& world)
         : m_world( world )
         , m_snapshot( nullptr ) { }
 
@@ -1052,7 +1065,7 @@ class system_ctx {
     using columns = std::array<void*, sizeof...(Components)>;
 
 public:
-    system_ctx(Func func) : m_func(func) { }
+    explicit system_ctx(Func func) : m_func(func) { }
 
     /* Dummy function when last component has been added */
     static void populate_columns(ecs_rows_t *rows, int index, columns& columns) { }
@@ -1554,7 +1567,7 @@ inline flecs::world_filter world::filter(const flecs::filter& filter) {
 }
 
 inline filter_iterator world::begin() {
-    return filter_iterator(m_world, flecs::filter(*this));
+    return filter_iterator(*this, flecs::filter(*this));
 }
 
 inline filter_iterator world::end() {

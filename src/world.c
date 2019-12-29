@@ -209,6 +209,7 @@ ecs_table_t* create_table(
 {
     /* Add and initialize table */
     ecs_table_t *result = ecs_chunked_add(stage->tables, ecs_table_t);
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     
     result->type = type;
 
@@ -223,8 +224,6 @@ ecs_table_t* create_table(
     if (stage == &world->main_stage && !world->is_merging) {
         ecs_notify_systems_of_table(world, result);
     }
-
-    assert(result != NULL);
 
     return result;
 }
