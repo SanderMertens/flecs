@@ -7,7 +7,9 @@ matrix:
     dist: precise
     compiler: gcc
     arch: amd64
-    env: BUILD=amd64-precise-gcc
+    env: 
+      - BUILD=amd64-precise-gcc
+      - NO_CPP=true
   - os: linux
     sudo: required
     dist: xenial
@@ -73,7 +75,8 @@ install:
   - make
   - cd ..
   - bake
-  - bake examples
+  - bake examples/c
+  - if [[ -z "$NO_CPP" ]]; then bake examples/cpp; fi
 
 script:
   - bake test
