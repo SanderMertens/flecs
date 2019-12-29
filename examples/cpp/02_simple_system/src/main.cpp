@@ -1,5 +1,4 @@
 #include <simple_system.h>
-#include "flecs/flecs.hpp"
 
 /* Component type */
 struct Message {

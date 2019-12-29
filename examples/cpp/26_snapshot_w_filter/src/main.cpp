@@ -1,5 +1,4 @@
 #include <snapshot_w_filter.h>
-#include "flecs/flecs.hpp"
 
 /* Component types */
 struct Position {

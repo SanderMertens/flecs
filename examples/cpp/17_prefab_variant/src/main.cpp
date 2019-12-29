@@ -1,5 +1,4 @@
 #include <prefab_variant.h>
-#include "flecs/flecs.hpp"
 
 struct Position {
     float x;

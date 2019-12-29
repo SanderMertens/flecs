@@ -1,5 +1,4 @@
 #include <snapshot.h>
-#include "flecs/flecs.hpp"
 
 /* Component types */
 struct Position {

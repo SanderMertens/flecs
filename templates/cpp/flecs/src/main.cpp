@@ -1,5 +1,4 @@
 #include <${id underscore}.h>
-#include "flecs/flecs.hpp"
 
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps

@@ -1705,7 +1705,7 @@ void ecs_delete(
 
 void ecs_delete_w_filter_intern(
     ecs_world_t *world,
-    ecs_filter_t *filter,
+    const ecs_filter_t *filter,
     bool is_delete)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -1747,14 +1747,14 @@ void ecs_delete_w_filter_intern(
 
 void ecs_delete_w_filter(
     ecs_world_t *world,
-    ecs_filter_t *filter)
+    const ecs_filter_t *filter)
 {
     ecs_delete_w_filter_intern(world, filter, true);
 }
 
 void ecs_clear_w_filter(
     ecs_world_t *world,
-    ecs_filter_t *filter)
+    const ecs_filter_t *filter)
 {
     ecs_delete_w_filter_intern(world, filter, false);
 }
@@ -1763,7 +1763,7 @@ void _ecs_add_remove_w_filter(
     ecs_world_t *world,
     ecs_type_t to_add,
     ecs_type_t to_remove,
-    ecs_filter_t *filter)
+    const ecs_filter_t *filter)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);

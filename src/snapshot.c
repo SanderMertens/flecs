@@ -21,9 +21,9 @@ void dup_table(
 static
 ecs_snapshot_t* snapshot_create(
     ecs_world_t *world,
-    ecs_map_t *entity_index,
-    ecs_chunked_t *tables,
-    ecs_filter_t *filter)
+    const ecs_map_t *entity_index,
+    const ecs_chunked_t *tables,
+    const ecs_filter_t *filter)
 {
     ecs_snapshot_t *result = ecs_os_malloc(sizeof(ecs_snapshot_t));
 
@@ -73,7 +73,7 @@ ecs_snapshot_t* snapshot_create(
 /** Create a snapshot */
 ecs_snapshot_t* ecs_snapshot_take(
     ecs_world_t *world,
-    ecs_filter_t *filter)
+    const ecs_filter_t *filter)
 {
     ecs_snapshot_t *result = snapshot_create(
             world,
@@ -89,8 +89,8 @@ ecs_snapshot_t* ecs_snapshot_take(
 /** Copy a snapshot */
 ecs_snapshot_t* ecs_snapshot_copy(
     ecs_world_t *world,
-    ecs_snapshot_t *snapshot,
-    ecs_filter_t *filter)
+    const ecs_snapshot_t *snapshot,
+    const ecs_filter_t *filter)
 {
     ecs_snapshot_t *result = snapshot_create(
             world,

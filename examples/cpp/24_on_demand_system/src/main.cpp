@@ -1,5 +1,4 @@
 #include <on_demand_system.h>
-#include "flecs/flecs.hpp"
 
 struct Position {
     float x;

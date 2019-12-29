@@ -65,7 +65,7 @@ ecs_entity_t ecs_get_entity_for_component(
 
 void ecs_clear_w_filter(
     ecs_world_t *world,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 /* -- World API -- */
 

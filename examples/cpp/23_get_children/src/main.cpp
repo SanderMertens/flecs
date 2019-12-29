@@ -1,5 +1,4 @@
 #include <get_children.h>
-#include "flecs/flecs.hpp"
 
 struct Foo {
     float value;

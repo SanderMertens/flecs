@@ -854,7 +854,7 @@ void ecs_delete(
 FLECS_EXPORT
 void ecs_delete_w_filter(
     ecs_world_t *world,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 /** Add a type to an entity.
  * This operation will add one or more components (as per the specified type) to
@@ -1030,7 +1030,7 @@ void _ecs_add_remove_w_filter(
     ecs_world_t *world,
     ecs_type_t to_add,
     ecs_type_t to_remove,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 #define ecs_add_remove_w_filter(world, to_add, to_remove, filter)\
     _ecs_add_remove_w_filter(world, ecs_type(to_add), ecs_type(to_remove), filter)
@@ -1795,7 +1795,7 @@ void ecs_set_system_status_action(
 FLECS_EXPORT
 ecs_snapshot_t* ecs_snapshot_take(
     ecs_world_t *world,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 /** Restore a snapshot.
  * This operation restores the world to the state it was in when the specified
@@ -1828,8 +1828,8 @@ void ecs_snapshot_restore(
 FLECS_EXPORT
 ecs_snapshot_t* ecs_snapshot_copy(
     ecs_world_t *world,
-    ecs_snapshot_t *snapshot,
-    ecs_filter_t *filter);
+    const ecs_snapshot_t *snapshot,
+    const ecs_filter_t *filter);
 
 /** Free snapshot resources.
  * This frees resources associated with a snapshot without restoring it.
@@ -2186,6 +2186,7 @@ int16_t ecs_type_index_of(
     ecs_type_t type,
     ecs_entity_t entity);
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Threading / Staging API
 ////////////////////////////////////////////////////////////////////////////////
@@ -2271,6 +2272,7 @@ void ecs_set_automerge(
     ecs_world_t *world,
     bool auto_merge);
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
@@ -2317,6 +2319,12 @@ int ecs_enable_console(
 
 #ifdef __cplusplus
 }
+
+#ifndef FLECS_NO_CPP
+#ifndef __BAKE_LEGACY__
+#include <flecs/flecs.hpp>
+#endif
+#endif
 
 #endif
 

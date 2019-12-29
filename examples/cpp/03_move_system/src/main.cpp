@@ -1,5 +1,4 @@
 #include <move_system.h>
-#include "flecs/flecs.hpp"
 
 /* Component types */
 struct Position {

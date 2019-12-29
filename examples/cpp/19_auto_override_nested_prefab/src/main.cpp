@@ -1,5 +1,4 @@
 #include <auto_override_nested_prefab.h>
-#include "flecs/flecs.hpp"
 
 struct Position {
     float x;

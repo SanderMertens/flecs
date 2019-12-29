@@ -5,7 +5,7 @@ ecs_filter_iter_t ecs_filter_iter(
     ecs_world_t *world,
     const ecs_filter_t *filter)
 {
-   return (ecs_filter_iter_t){
+    return (ecs_filter_iter_t){
         .filter = filter ? *filter : (ecs_filter_t){0},
         .tables = world->main_stage.tables,
         .index = 0,
@@ -20,7 +20,7 @@ ecs_filter_iter_t ecs_snapshot_filter_iter(
     const ecs_snapshot_t *snapshot,
     const ecs_filter_t *filter)
 {
-   return (ecs_filter_iter_t){
+    return (ecs_filter_iter_t){
         .filter = filter ? *filter : (ecs_filter_t){0},
         .tables = snapshot->tables,
         .index = 0,

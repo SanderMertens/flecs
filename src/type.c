@@ -743,6 +743,10 @@ ecs_entity_t ecs_type_contains(
     ecs_entity_t e1 = 0;
     ecs_entity_t *t1_array = ecs_vector_first(type_1);
     ecs_entity_t *t2_array = ecs_vector_first(type_2);
+
+    ecs_assert(t1_array != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(t2_array != NULL, ECS_INTERNAL_ERROR, NULL);
+
     uint32_t t1_count = ecs_vector_count(type_1);
     uint32_t t2_count = ecs_vector_count(type_2);
 

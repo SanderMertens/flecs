@@ -1,5 +1,4 @@
 #include <override.h>
-#include "flecs/flecs.hpp"
 
 struct Mass {
     float value;

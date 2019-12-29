@@ -3,7 +3,6 @@
 
 /* This generated file contains includes for project dependencies */
 #include "simple_module/bake_config.h"
-#include "flecs/flecs.hpp"
 
 struct Position {
     float x;
@@ -16,7 +15,7 @@ struct Velocity {
 };
 
 struct SimpleModule {
-    SimpleModule(flecs::world world, int flags);
+    SimpleModule(flecs::world& world, int flags);
     flecs::entity position;
     flecs::entity velocity;
     flecs::entity move;

@@ -1,5 +1,4 @@
 #include <optional.h>
-#include "flecs/flecs.hpp"
 
 struct Health {
     float value;

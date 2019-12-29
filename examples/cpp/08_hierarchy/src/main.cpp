@@ -1,5 +1,4 @@
 #include <hierarchy.h>
-#include "flecs/flecs.hpp"
 
 struct Position {
     float x;

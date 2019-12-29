@@ -1,5 +1,4 @@
 #include <filter_iter.h>
-#include "flecs/flecs.hpp"
 
 /* Component types */
 struct Position {
@@ -32,7 +31,7 @@ int main(int argc, char *argv[]) {
     flecs::entity(world, "E2")
         .set<Position>({30, 40})
         .set<Velocity>({1, 1})
-        .set<Mass>({1});    
+        .set<Mass>({1});
 
     auto f = flecs::filter(world)
         .include<Position>()
