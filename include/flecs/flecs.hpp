@@ -81,7 +81,7 @@ static const entity_t Invalid = EcsInvalid;
 template <typename T>
 class column final {
 public:
-    column(T* array, size_t count, bool is_shared = false)
+    column(T* array, std::size_t count, bool is_shared = false)
         : m_array(array)
         , m_count(count) 
         , m_is_shared(is_shared) {}
@@ -98,11 +98,11 @@ public:
         return m_array;
     }
 
-    bool is_set() {
+    bool is_set() const {
         return m_array != nullptr;
     }
 
-    bool is_shared() {
+    bool is_shared() const {
         return m_is_shared;
     }
 private:
@@ -198,13 +198,13 @@ public:
     type table_type() const;
 
     /* Obtain untyped pointer to table column */
-    void* table_column(uint32_t table_column) {
+    void* table_column(uint32_t table_column) const {
         return ecs_table_column(m_rows, table_column);
     }
 
     /* Obtain typed pointer to table column */
     template <typename T>
-    flecs::column<T> table_column() {
+    flecs::column<T> table_column() const {
         auto type = ecs_table_type(m_rows);
         auto column = ecs_type_index_of(type, component_base<T>::s_entity);
         ecs_assert(column != -1, ECS_INVALID_PARAMETER, NULL);
@@ -330,7 +330,7 @@ public:
         ecs_fini(m_world); 
     }
 
-    world_t* c() const {
+    world_t* c_ptr() const {
         return m_world;
     }
 
@@ -338,6 +338,7 @@ public:
         return ecs_progress(m_world, delta_time);
     }
 
+    /* Threading */
     void set_threads(std::uint32_t threads) const {
         ecs_set_threads(m_world, threads);
     }
@@ -350,6 +351,7 @@ public:
         return ecs_get_thread_index(m_world);
     }
 
+    /* Time management */
     void set_target_fps(std::uint32_t target_fps) const {
         ecs_set_target_fps(m_world, target_fps);
     }
@@ -358,6 +360,11 @@ public:
         return ecs_get_target_fps(m_world);
     }
 
+    std::uint32_t get_tick() const {
+        return ecs_get_tick(m_world);
+    }
+
+    /* Get/set user-context */
     void set_context(void* ctx) const {
         ecs_set_context(m_world, ctx);
     }
@@ -366,10 +373,7 @@ public:
         return ecs_get_context(m_world);
     }
 
-    std::uint32_t get_tick() const {
-        return ecs_get_tick(m_world);
-    }
-
+    /* Preallocating memory */
     void dim(std::int32_t entity_count) const {
         ecs_dim(m_world, entity_count);
     }
@@ -378,6 +382,7 @@ public:
         _ecs_dim_type(m_world, type, entity_count);
     }
 
+    /* Entity ranges */
     void set_entity_range(entity_t min, entity_t max) const {
         ecs_set_entity_range(m_world, min, max);
     }
@@ -386,31 +391,30 @@ public:
         ecs_enable_range_check(m_world, enabled);
     }
 
+    /* Lookup by name */
     entity lookup(const char *name) const;
 
-    void delete_entities(flecs::filter filter);
+    /* Bulk operations */
+    void delete_entities(flecs::filter filter) const;
 
     template <typename T>
-    void add(flecs::filter filter);
-
-    void add(type type, flecs::filter filter);
-
-    void add(entity entity, flecs::filter filter);
+    void add(flecs::filter filter) const;
+    void add(type type, flecs::filter filter) const;
+    void add(entity entity, flecs::filter filter) const;
 
     template <typename T>
-    void remove(flecs::filter filter);
+    void remove(flecs::filter filter) const;
+    void remove(type type, flecs::filter filter) const;
+    void remove(entity entity, flecs::filter filter) const;
 
-    void remove(type type, flecs::filter filter);
-
-    void remove(entity entity, flecs::filter filter);
-
-    world_filter filter(const flecs::filter& filter);
-
-    filter_iterator begin();
-
-    filter_iterator end();
+    /* Iterate world tables */
+    world_filter filter(const flecs::filter& filter) const;
+    filter_iterator begin() const;
+    filter_iterator end() const;
+    
 private:
     void init_builtin_components();
+
     world_t *m_world;
 };
 
@@ -462,7 +466,7 @@ public:
     }    
 
     template <typename T>
-    base_type& remove() {
+    base_type& remove() const {
         return remove(component_base<T>::s_entity);
     }
 
@@ -555,7 +559,7 @@ public:
 class entity : public entity_fluent<entity> {
 public:
     explicit entity(const world& world) 
-        : m_world( world.c() )
+        : m_world( world.c_ptr() )
         , m_id( _ecs_new(m_world, 0) ) { }
 
     explicit entity(world_t *world) 
@@ -563,11 +567,11 @@ public:
         , m_id( _ecs_new(m_world, 0) ) { }
 
     entity(const world& world, const char *name) 
-        : m_world( world.c() )
+        : m_world( world.c_ptr() )
         , m_id( ecs_new_entity(m_world, name, 0) ) { }
 
     entity(const world& world, entity_t id) 
-        : m_world( world.c() )
+        : m_world( world.c_ptr() )
         , m_id(id) { }
 
     entity(world_t *world, entity_t id) 
@@ -686,7 +690,7 @@ class entity_range final : entity_fluent<entity_range> {
     using entity_iterator = range_iterator<entity_t>;
 public:
     entity_range(const world& world, std::int32_t count) 
-        : m_world(world.c())
+        : m_world(world.c_ptr())
         , m_id_start( _ecs_new_w_count(m_world, nullptr, count))
         , m_count(count) { }
 
@@ -719,13 +723,13 @@ private:
 class type final : entity {
 public:
     type(const world& world, const char *name, const char *expr = nullptr)
-        : entity(world, ecs_new_type(world.c(), name, expr))
+        : entity(world, ecs_new_type(world.c_ptr(), name, expr))
     { 
         sync_from_flecs();
     }
 
     type(const world& world, const char *name, entity parent, const char *expr)
-        : entity(world, ecs_new_type(world.c(), name, expr))
+        : entity(world, ecs_new_type(world.c_ptr(), name, expr))
     { 
         this->set<EcsPrefab>({parent.id()});
         sync_from_flecs();
@@ -743,7 +747,7 @@ public:
 
     type& add(const type& type) {
         m_type = ecs_type_add(m_world, m_type, type.id());
-        m_normalized = ecs_type_merge(m_world, m_normalized, type.c(), nullptr);
+        m_normalized = ecs_type_merge(m_world, m_normalized, type.c_ptr(), nullptr);
         sync_from_me();
         return *this;
     }
@@ -784,7 +788,7 @@ public:
         return result;
     }
 
-    type_t c() const {
+    type_t c_ptr() const {
         return m_type;
     }
 
@@ -830,8 +834,8 @@ template <typename T>
 class component_base final {
 public:
     static void init(const world& world, const char *name) {
-        s_entity = ecs_new_component(world.c(), name, sizeof(T));
-        s_type = ecs_type_from_entity(world.c(), s_entity);
+        s_entity = ecs_new_component(world.c_ptr(), name, sizeof(T));
+        s_type = ecs_type_from_entity(world.c_ptr(), s_entity);
         s_name = name;
     }
 
@@ -914,11 +918,11 @@ public:
 class filter {
 public:
     explicit filter(const world& world) 
-        : m_world( world.c() )
+        : m_world( world.c_ptr() )
         , m_filter{ } { }
 
     filter& include(type type) {
-        m_filter.include = ecs_type_merge(m_world, m_filter.include, type.c(), nullptr);
+        m_filter.include = ecs_type_merge(m_world, m_filter.include, type.c_ptr(), nullptr);
         return *this;
     }
 
@@ -943,7 +947,7 @@ public:
     }
 
     filter& exclude(type type) {
-        m_filter.exclude = ecs_type_merge(m_world, m_filter.exclude, type.c(), nullptr);
+        m_filter.exclude = ecs_type_merge(m_world, m_filter.exclude, type.c_ptr(), nullptr);
         return *this;
     }
 
@@ -967,7 +971,7 @@ public:
         return type(m_world, m_filter.exclude);
     }  
 
-    const filter_t* c() const {
+    const filter_t* c_ptr() const {
         return &m_filter;
     }
 
@@ -989,7 +993,7 @@ public:
 
     snapshot(const snapshot& obj) 
         : m_world( obj.m_world )
-        , m_snapshot( ecs_snapshot_copy(m_world.c(), obj.m_snapshot, nullptr) )
+        , m_snapshot( ecs_snapshot_copy(m_world.c_ptr(), obj.m_snapshot, nullptr) )
     { }
 
     snapshot(snapshot&& obj) 
@@ -1000,13 +1004,13 @@ public:
     }
 
     snapshot& operator=(const snapshot& obj) {
-        ecs_assert(m_world.c() == obj.m_world.c(), ECS_INVALID_PARAMETER, NULL);
-        m_snapshot = ecs_snapshot_copy(m_world.c(), obj.m_snapshot, nullptr);
+        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
+        m_snapshot = ecs_snapshot_copy(m_world.c_ptr(), obj.m_snapshot, nullptr);
         return *this;
     }
 
     snapshot& operator=(snapshot&& obj) {
-        ecs_assert(m_world.c() == obj.m_world.c(), ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
         m_snapshot = obj.m_snapshot;
         obj.m_snapshot = nullptr;
         return *this;
@@ -1014,34 +1018,34 @@ public:
 
     void take() {
         if (m_snapshot) {
-            ecs_snapshot_free(m_world.c(), m_snapshot);
+            ecs_snapshot_free(m_world.c_ptr(), m_snapshot);
         }
 
-        m_snapshot = ecs_snapshot_take(m_world.c(), nullptr);
+        m_snapshot = ecs_snapshot_take(m_world.c_ptr(), nullptr);
     }
 
     void take(flecs::filter filter) {
         if (m_snapshot) {
-            ecs_snapshot_free(m_world.c(), m_snapshot);
+            ecs_snapshot_free(m_world.c_ptr(), m_snapshot);
         }
 
-        m_snapshot = ecs_snapshot_take(m_world.c(), filter.c());
+        m_snapshot = ecs_snapshot_take(m_world.c_ptr(), filter.c_ptr());
     }
 
     void restore() {
         if (m_snapshot) {
-            ecs_snapshot_restore(m_world.c(), m_snapshot);
+            ecs_snapshot_restore(m_world.c_ptr(), m_snapshot);
             m_snapshot = nullptr;
         }
     }
 
     ~snapshot() {
         if (m_snapshot) {
-            ecs_snapshot_free(m_world.c(), m_snapshot);
+            ecs_snapshot_free(m_world.c_ptr(), m_snapshot);
         }
     }
 
-    snapshot_t* c() const {
+    snapshot_t* c_ptr() const {
         return m_snapshot;
     }
 
@@ -1127,8 +1131,8 @@ public:
         , m_limit(0) { }
 
     system_runner_fluent& filter(filter filter) {
-        ecs_assert(filter.exclude().c() == nullptr, ECS_UNSUPPORTED, NULL);
-        m_filter = filter.include().c();
+        ecs_assert(filter.exclude().c_ptr() == nullptr, ECS_UNSUPPORTED, NULL);
+        m_filter = filter.include().c_ptr();
         return *this;
     }
 
@@ -1169,7 +1173,7 @@ public:
         , m_name(name) 
         , m_on_demand(false)
         , m_hidden(false) { 
-            m_world = world.c();
+            m_world = world.c_ptr();
         }
 
     system& signature(const char *signature) {
@@ -1330,15 +1334,15 @@ public:
         , m_iter{ } { }
 
     filter_iterator(const world& world, const filter& filter)
-        : m_world( world.c() )
-        , m_iter( ecs_filter_iter(m_world, filter.c()) ) 
+        : m_world( world.c_ptr() )
+        , m_iter( ecs_filter_iter(m_world, filter.c_ptr()) ) 
     { 
         m_has_next = ecs_filter_next(&m_iter);
     }
 
     filter_iterator(const world& world, const snapshot& snapshot, const filter& filter) 
-        : m_world( world.c() )
-        , m_iter( ecs_snapshot_filter_iter(m_world, snapshot.c(), filter.c()) )
+        : m_world( world.c_ptr() )
+        , m_iter( ecs_snapshot_filter_iter(m_world, snapshot.c_ptr(), filter.c_ptr()) )
     {
         m_has_next = ecs_filter_next(&m_iter);
     }
@@ -1455,7 +1459,7 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(const e
 
 template <typename base>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(type type) const {
-    return add(type.c());
+    return add(type.c_ptr());
 }
 
 template <typename base>
@@ -1465,7 +1469,7 @@ inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(cons
 
 template <typename base>
 inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(type type) const {
-    return remove(type.c());
+    return remove(type.c_ptr());
 }
 
 template <typename base>
@@ -1532,45 +1536,45 @@ inline type rows::table_type() const {
 //// World fwd declared functions
 ////////////////////////////////////////////////////////////////////////////////
 
-inline void world::delete_entities(flecs::filter filter) {
-    ecs_delete_w_filter(m_world, filter.c());
+inline void world::delete_entities(flecs::filter filter) const {
+    ecs_delete_w_filter(m_world, filter.c_ptr());
 }
 
 template <typename T>
-inline void world::add(flecs::filter filter) {
-    _ecs_add_remove_w_filter(m_world, component_base<T>::s_type, nullptr, filter.c());
+inline void world::add(flecs::filter filter) const {
+    _ecs_add_remove_w_filter(m_world, component_base<T>::s_type, nullptr, filter.c_ptr());
 }
 
-inline void world::add(type type, flecs::filter filter) {
-    _ecs_add_remove_w_filter(m_world, type.c(), nullptr, filter.c());
+inline void world::add(type type, flecs::filter filter) const {
+    _ecs_add_remove_w_filter(m_world, type.c_ptr(), nullptr, filter.c_ptr());
 }
 
-inline void world::add(entity entity, flecs::filter filter) {
-    _ecs_add_remove_w_filter(m_world, entity.to_type().c(), nullptr, filter.c());
+inline void world::add(entity entity, flecs::filter filter) const {
+    _ecs_add_remove_w_filter(m_world, entity.to_type().c_ptr(), nullptr, filter.c_ptr());
 }
 
 template <typename T>
-inline void world::remove(flecs::filter filter) {
-    _ecs_add_remove_w_filter(m_world, nullptr, component_base<T>::s_type, filter.c());
+inline void world::remove(flecs::filter filter) const {
+    _ecs_add_remove_w_filter(m_world, nullptr, component_base<T>::s_type, filter.c_ptr());
 }
 
-inline void world::remove(type type, flecs::filter filter) {
-    _ecs_add_remove_w_filter(m_world, nullptr, type.c(), filter.c());
+inline void world::remove(type type, flecs::filter filter) const {
+    _ecs_add_remove_w_filter(m_world, nullptr, type.c_ptr(), filter.c_ptr());
 }
 
-inline void world::remove(entity entity, flecs::filter filter) {
-    _ecs_add_remove_w_filter(m_world, nullptr, entity.to_type().c(), filter.c());
+inline void world::remove(entity entity, flecs::filter filter) const {
+    _ecs_add_remove_w_filter(m_world, nullptr, entity.to_type().c_ptr(), filter.c_ptr());
 }
 
-inline flecs::world_filter world::filter(const flecs::filter& filter) {
+inline flecs::world_filter world::filter(const flecs::filter& filter) const {
     return flecs::world_filter(*this, filter);
 }
 
-inline filter_iterator world::begin() {
+inline filter_iterator world::begin() const {
     return filter_iterator(*this, flecs::filter(*this));
 }
 
-inline filter_iterator world::end() {
+inline filter_iterator world::end() const {
     return filter_iterator();
 }
 
