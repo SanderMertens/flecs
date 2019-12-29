@@ -1,4 +1,5 @@
 #include <system_features.h>
+#include <iostream>
 
 void Action(flecs::rows& rows) {
     std::cout << rows.system().name() << " called!" << std::endl;

@@ -1,4 +1,5 @@
 #include <optional.h>
+#include <iostream>
 
 struct Health {
     float value;

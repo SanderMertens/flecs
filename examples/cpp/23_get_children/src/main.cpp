@@ -1,4 +1,6 @@
 #include <get_children.h>
+#include <iostream>
+#include <vector>
 
 struct Foo {
     float value;

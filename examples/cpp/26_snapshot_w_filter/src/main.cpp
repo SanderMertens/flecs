@@ -1,4 +1,5 @@
 #include <snapshot_w_filter.h>
+#include <iostream>
 
 /* Component types */
 struct Position {

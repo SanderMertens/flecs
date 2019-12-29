@@ -1,4 +1,5 @@
 #include <snapshot_iter.h>
+#include <iostream>
 
 /* Component types */
 struct Position {

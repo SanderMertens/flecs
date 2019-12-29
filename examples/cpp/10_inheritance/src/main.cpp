@@ -1,4 +1,5 @@
 #include <inheritance.h>
+#include <iostream>
 
 /* Component types */
 struct Position {

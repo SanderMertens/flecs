@@ -1,4 +1,5 @@
 #include <simple_module.h>
+#include <iostream>
 
 SimpleModule::SimpleModule(flecs::world& world, int flags) 
 {

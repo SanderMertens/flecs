@@ -1,4 +1,5 @@
 #include <nested_prefab.h>
+#include <iostream>
 
 struct Position {
     float x;

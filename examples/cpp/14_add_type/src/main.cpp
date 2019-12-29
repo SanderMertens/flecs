@@ -1,4 +1,5 @@
 #include <add_type.h>
+#include <iostream>
 
 struct Position {
     float x;

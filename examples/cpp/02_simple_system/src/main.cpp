@@ -1,4 +1,5 @@
 #include <simple_system.h>
+#include <iostream>
 
 /* Component type */
 struct Message {

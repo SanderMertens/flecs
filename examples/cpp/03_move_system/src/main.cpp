@@ -1,4 +1,5 @@
 #include <move_system.h>
+#include <iostream>
 
 /* Component types */
 struct Position {

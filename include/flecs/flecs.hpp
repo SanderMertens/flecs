@@ -3,14 +3,8 @@
 #include <string>
 #include <sstream>
 #include <array>
-#include <vector>
-#include <iostream>
-#include <type_traits>
-#include <memory>
-#include <cstdint>
 
 namespace flecs {
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Forward declarations and types

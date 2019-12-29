@@ -1,4 +1,5 @@
 #include <filter_iter.h>
+#include <iostream>
 
 /* Component types */
 struct Position {

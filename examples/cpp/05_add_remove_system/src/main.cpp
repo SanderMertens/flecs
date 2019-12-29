@@ -1,4 +1,5 @@
 #include <add_remove_system.h>
+#include <iostream>
 
 struct Position {
     float x;
@@ -10,15 +11,15 @@ void AddPosition(flecs::rows& rows, flecs::column<Position> p) {
     for (auto row : rows) {
         p[row].x = 10;
         p[row].y = 20;
-        printf("Position added\n");
+        std::cout << "Position added" << std::endl;
     }
 }
 
 /* This system will be called when Position is removed */
 void RemovePosition(flecs::rows& rows, flecs::column<Position> p) {
     for (auto row : rows) {
-        printf("Position removed -> {%f, %f}\n",
-            p[row].x, p[row].y);
+        std::cout << "Position removed -> {" 
+                  << p[row].x << ", " << p[row].y << "}" << std::endl;
     }
 }
 

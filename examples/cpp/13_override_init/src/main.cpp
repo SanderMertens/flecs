@@ -1,4 +1,5 @@
 #include <override_init.h>
+#include <iostream>
 
 struct Mass {
     float value;

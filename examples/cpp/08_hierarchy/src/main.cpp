@@ -1,4 +1,5 @@
 #include <hierarchy.h>
+#include <iostream>
 
 struct Position {
     float x;

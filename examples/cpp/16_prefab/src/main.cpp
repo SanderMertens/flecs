@@ -1,4 +1,5 @@
 #include <prefab.h>
+#include <iostream>
 
 struct Position {
     float x;

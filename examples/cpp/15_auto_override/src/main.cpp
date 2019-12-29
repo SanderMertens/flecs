@@ -1,4 +1,5 @@
 #include <auto_override.h>
+#include <iostream>
 
 struct Position {
     float x;

@@ -1,4 +1,5 @@
 #include <nested_variant.h>
+#include <iostream>
 
 struct Position {
     float x;
