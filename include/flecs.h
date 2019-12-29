@@ -86,8 +86,6 @@ typedef void (*ecs_module_init_action_t)(
     ecs_world_t *world,
     int flags);    
 
-#include <flecs/util/api_support.h>
-
 /** Types that describe a type filter.
  * Filters provide a quick mechanism to query entities or run operations on
  * entities of one or more types. Filters contain a components to include and
@@ -186,6 +184,8 @@ typedef struct EcsTypeComponent {
 typedef struct EcsPrefab {
     ecs_entity_t parent;
 } EcsPrefab;
+
+#include <flecs/util/api_support.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1841,6 +1841,32 @@ FLECS_EXPORT
 void ecs_snapshot_free(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Snapshot stream API
+////////////////////////////////////////////////////////////////////////////////
+
+FLECS_EXPORT
+ecs_stream_t ecs_stream_open(
+    ecs_world_t *world,
+    ecs_snapshot_t *snapshot);
+
+FLECS_EXPORT
+void ecs_stream_close(
+    ecs_stream_t *stream);
+
+FLECS_EXPORT
+size_t ecs_stream_read(
+    void *buffer,
+    size_t size,
+    ecs_stream_t *stream);
+
+FLECS_EXPORT
+size_t ecs_stream_write(
+    void *buffer,
+    size_t size,
+    ecs_stream_t *stream);
 
 
 ////////////////////////////////////////////////////////////////////////////////

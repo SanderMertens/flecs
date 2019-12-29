@@ -10,6 +10,63 @@ extern "C" {
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Private datatypes
+////////////////////////////////////////////////////////////////////////////////
+
+typedef enum ecs_segment_kind_t {
+    EcsComponentSegment,
+    EcsTableSegment
+} ecs_segment_kind_t;
+
+typedef enum ecs_component_segment_kind_t {
+    EcsComponentHeader,
+    EcsComponentId,
+    EcsComponentSize,
+    EcsComponentNameLength,
+    EcsComponentName
+} ecs_component_segment_kind_t;
+
+typedef enum ecs_table_segment_kind_t {
+    EcsTableHeader,
+    EcsTableType,
+    EcsTableSize,
+    EcsTableColumn
+} ecs_table_segment_kind_t;
+
+typedef struct ecs_component_reader_t {
+    ecs_component_segment_kind_t cur;
+
+    /* Component data fetched from the world */
+    ecs_entity_t *id_column;
+    EcsComponent *data_column;
+    EcsId *name_column;
+
+    /* Current component & total number of components */
+    int32_t index;
+    int32_t count;
+
+    /* Keep track how much of the component name has been written */
+    const char *name;
+    size_t len;
+    size_t written;
+} ecs_component_reader_t;
+
+typedef struct ecs_stream_reader_t {
+    ecs_segment_kind_t cur;
+    union {
+        ecs_component_reader_t component;
+        struct {
+            int dummy;
+        } table;
+    } is;
+} ecs_stream_reader_t;
+
+typedef struct ecs_stream_t {
+    ecs_world_t *world;
+    ecs_stream_reader_t reader;
+} ecs_stream_t;
+
+////////////////////////////////////////////////////////////////////////////////
 //// Error API
 ////////////////////////////////////////////////////////////////////////////////
 
