@@ -508,9 +508,10 @@ void ecs_table_move_back_and_swap(
             memcpy(tmp, el, size);
 
             /* Move component values */
-            for (i = 0; i < count; i ++) {
-                void *dst = ECS_OFFSET(data, size * (row + i - 1));
-                void *src = ECS_OFFSET(data, size * (row + i));
+            uint32_t j;
+            for (j = 0; j < count; j ++) {
+                void *dst = ECS_OFFSET(data, size * (row + j - 1));
+                void *src = ECS_OFFSET(data, size * (row + j));
                 memcpy(dst, src, size);
             }
 
@@ -591,6 +592,7 @@ void ecs_table_merge(
         if (new_component == old_component) {
             /* If the new table is empty, move column to new table */
             if (!new_count) {
+                ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, NULL);
                 if (new_columns[i_new].data) {
                     ecs_vector_free(new_columns[i_new].data);
                 }

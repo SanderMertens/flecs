@@ -1201,10 +1201,10 @@ uint32_t update_entity_index(
     ecs_table_data_t *data)
 {
     bool has_unset = false, tested_for_unset = false;
-    uint32_t i, dst_start_row = start_row;
-    uint32_t count = data->row_count;
+    int32_t i, dst_start_row = start_row;
+    int32_t count = data->row_count;
     ecs_entity_t *entities = ecs_vector_first(columns[0].data);
-    uint32_t row_count = ecs_vector_count(columns[0].data);
+    int32_t row_count = ecs_vector_count(columns[0].data);
 
     /* While we're updating the entity index we may need to invoke reactive
      * systems (OnRemove, OnAdd) in case the origin of the entities is not the
@@ -1217,8 +1217,8 @@ uint32_t update_entity_index(
      * vs individual entities as much as possible. */
     bool same_origin = true;
     ecs_type_t src_type = NULL, prev_src_type = NULL;
-    uint32_t src_row = 0, prev_src_row = 0, dst_first_contiguous_row = start_row;
-    uint32_t src_first_contiguous_row = 0;
+    int32_t src_row = 0, prev_src_row = 0, dst_first_contiguous_row = start_row;
+    int32_t src_first_contiguous_row = 0;
 
     /* Obtain the entity index in the current stage */
     ecs_map_t *entity_index = stage->entity_index;
@@ -1313,6 +1313,7 @@ uint32_t update_entity_index(
                     if (!tested_for_unset) {
                         has_unset = has_unset_columns(
                             type, columns, data);
+                        tested_for_unset = true;
                     }
 
                     if (has_unset) {
@@ -1560,7 +1561,7 @@ ecs_entity_t set_w_data_intern(
         }
 
         /* Invoke OnSet systems */
-        if (type && data->columns) {
+        if (data->columns) {
             notify_pre_merge(
                 world_arg,
                 stage,

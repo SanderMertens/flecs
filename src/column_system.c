@@ -110,10 +110,12 @@ void add_table(
 
     /* Array that contains the system column to table column mapping */
     table_data->columns = ecs_os_malloc(sizeof(uint32_t) * column_count);
+    ecs_assert(table_data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     /* Store the components of the matched table. In the case of OR expressions,
      * components may differ per matched table. */
     table_data->components = ecs_os_malloc(sizeof(ecs_entity_t) * column_count);
+    ecs_assert(table_data->components != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     /* Walk columns parsed from the system signature */
     ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
@@ -252,12 +254,12 @@ void add_table(
                     } else {
                         e = ecs_get_entity_for_component(
                             world, entity, table_type, component);
-
-                        if (kind != EcsCascade) {
-                            ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
-                        }
                     }
 
+                    if (kind != EcsCascade) {
+                        ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+                    }
+                    
                     ref->entity = e;
                     ref->component = component;
                     

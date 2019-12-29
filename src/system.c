@@ -259,6 +259,8 @@ void register_out_columns(
         if (columns[i].inout_kind == EcsOut) {
             if (!system_data->on_demand) {
                 system_data->on_demand = ecs_os_malloc(sizeof(ecs_on_demand_out_t));
+                ecs_assert(system_data->on_demand != NULL, ECS_OUT_OF_MEMORY, NULL);
+
                 system_data->on_demand->system = system;
                 system_data->on_demand->count = 0;
             }
@@ -711,10 +713,11 @@ ecs_entity_t ecs_new_system(
     bool needs_tables = ecs_needs_tables(world, sig);
     bool is_reactive = false;
 
-    ecs_assert(needs_tables || !((kind == EcsOnAdd) || (kind == EcsOnSet || (kind == EcsOnSet))),
+    ecs_assert(needs_tables || 
+        !((kind == EcsOnAdd) || (kind == EcsOnSet)),
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entity_t result;
+    ecs_entity_t result = 0;
 
     if (id) {
         result = ecs_lookup(world, id);
@@ -724,10 +727,10 @@ ecs_entity_t ecs_new_system(
     }
 
     if ((kind == EcsOnLoad || kind == EcsPostLoad ||
-                         kind == EcsPreUpdate || kind == EcsOnUpdate ||
-                         kind == EcsOnValidate || kind == EcsPostUpdate ||
-                         kind == EcsPreStore || kind == EcsOnStore ||
-                         kind == EcsManual))
+        kind == EcsPreUpdate || kind == EcsOnUpdate ||
+        kind == EcsOnValidate || kind == EcsPostUpdate ||
+        kind == EcsPreStore || kind == EcsOnStore ||
+        kind == EcsManual))
     {
         result = ecs_new_col_system(world, id, kind, sig, action);
     } else if (!needs_tables ||
@@ -760,28 +763,6 @@ ecs_entity_t ecs_new_system(
         }
     }
 
-    /* Check if all non-table column constraints are met. If not, disable
-     * system (system will be enabled once constraints are met) */
-    if (!ecs_check_column_constraints(world, system_data)) {
-        ecs_enable(world, result, false);
-    }
-
-    /* If this is an OnDemand system, register its [out] columns */
-    if (ecs_has(world, result, EcsOnDemand)) {
-        ecs_assert(is_reactive == false, ECS_INVALID_PARAMETER, NULL);
-        EcsColSystem *col_system_data = (EcsColSystem*)system_data;
-
-        register_out_columns(world, result, col_system_data);
-
-        ecs_assert(col_system_data->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        /* If there are no systems currently interested in any of the [out]
-         * columns of the on demand system, disable it */
-        if (!col_system_data->on_demand->count) {
-            ecs_enable(world, result, false);
-        }
-    }
-
     if (is_reactive == false) {
         EcsColSystem *col_system_data = (EcsColSystem*)system_data;
 
@@ -797,6 +778,28 @@ ecs_entity_t ecs_new_system(
             activate_in_columns(
                 world, col_system_data, 
                 world->on_enable_components, true);   
+        }  
+
+        /* Check if all non-table column constraints are met. If not, disable
+        * system (system will be enabled once constraints are met) */
+        if (!ecs_check_column_constraints(world, system_data)) {
+            ecs_enable(world, result, false);
+        }               
+    }
+
+    /* If this is an OnDemand system, register its [out] columns */
+    if (ecs_has(world, result, EcsOnDemand)) {
+        ecs_assert(is_reactive == false, ECS_INVALID_PARAMETER, NULL);
+        EcsColSystem *col_system_data = (EcsColSystem*)system_data;
+
+        register_out_columns(world, result, col_system_data);
+
+        ecs_assert(col_system_data->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* If there are no systems currently interested in any of the [out]
+         * columns of the on demand system, disable it */
+        if (!col_system_data->on_demand->count) {
+            ecs_enable(world, result, false);
         }
     }
 

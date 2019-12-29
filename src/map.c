@@ -143,10 +143,6 @@ void set_node_data(
     ecs_map_node_t *node,
     const void *data)
 {
-    if (!data) {
-        return;
-    }
-    
     void *node_data = get_node_data(node);
     if (data != node_data) { 
         if (data) {
@@ -231,6 +227,8 @@ void resize_map(
     ecs_map_t *map,
     uint32_t bucket_count)
 {
+    ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
+
     uint32_t *old_buckets = map->buckets;
     uint32_t old_bucket_count = map->bucket_count;
 
@@ -275,6 +273,8 @@ ecs_map_t* ecs_map_new(
 void ecs_map_clear(
     ecs_map_t *map)
 {
+    ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
+
     uint32_t target_size = (float)map->count / FLECS_LOAD_FACTOR;
 
     if (target_size < map->min) {
@@ -308,6 +308,8 @@ void* _ecs_map_set(
     const void *data,
     uint32_t size)
 {
+    ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
+
     (void)size;
     ecs_assert(ecs_map_data_size(map) == size, ECS_INVALID_PARAMETER, NULL);
 

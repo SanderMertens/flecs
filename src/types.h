@@ -181,7 +181,7 @@ typedef struct ecs_on_demand_out_t {
 
 /** Keep track of which OnDemand systems are matched with which [in] columns */
 typedef struct ecs_on_demand_in_t {
-    uint32_t count;         /* Number of active systems with [in] column */
+    int32_t count;         /* Number of active systems with [in] column */
     ecs_vector_t *systems;  /* Systems that have this column as [out] column */
 } ecs_on_demand_in_t;
 

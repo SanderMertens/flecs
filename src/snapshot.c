@@ -26,12 +26,13 @@ ecs_snapshot_t* snapshot_create(
     const ecs_filter_t *filter)
 {
     ecs_snapshot_t *result = ecs_os_malloc(sizeof(ecs_snapshot_t));
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     /* Copy tables from world */
     result->tables = ecs_chunked_copy(tables);
     
     if (filter || !entity_index) {
-        result->filter = *filter;
+        result->filter = filter ? *filter : (ecs_filter_t){0};
         result->entity_index = NULL;
     } else {
         result->filter = (ecs_filter_t){0};

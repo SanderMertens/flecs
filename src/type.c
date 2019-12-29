@@ -431,7 +431,7 @@ ecs_type_t find_or_create_type(
                 break;
             }
 
-            if (create && !type) {
+            if (create) {
                 return NULL;
             }
         }
