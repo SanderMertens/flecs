@@ -1521,7 +1521,7 @@ void* ecs_table_column(
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct ecs_filter_iter_t {
-    const ecs_filter_t *filter;
+    ecs_filter_t filter;
     ecs_chunked_t *tables;
     uint32_t index;
     ecs_rows_t rows;
@@ -1815,6 +1815,21 @@ FLECS_EXPORT
 void ecs_snapshot_restore(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot);
+
+/** Copy a snapshot.
+ * This operation creates a copy of the provided snapshot. An application can
+ * optionally filter the tables to copy.
+ *
+ * @param world The world.
+ * @param snapshot The snapshot to copy.
+ * @param filter Filter to apply to the copy (optional)
+ * @return The duplicated snapshot.
+ */
+FLECS_EXPORT
+ecs_snapshot_t* ecs_snapshot_copy(
+    ecs_world_t *world,
+    ecs_snapshot_t *snapshot,
+    ecs_filter_t *filter);
 
 /** Free snapshot resources.
  * This frees resources associated with a snapshot without restoring it.

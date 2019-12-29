@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
         .include_kind = EcsMatchAll
     };
 
-    /* Delete entities from world to prove we're iterating the snapshot */
+    /* Delete matching entities from world to prove we're using snapshot data */
     ecs_delete_w_filter(world, &f);
 
     /* Create iterator for snapshot */

@@ -2,7 +2,6 @@
 
 static
 void dup_table(
-    ecs_world_t *world, 
     ecs_table_t *table)
 {
     uint32_t c, column_count = ecs_vector_count(table->type);
@@ -19,22 +18,24 @@ void dup_table(
     }
 }
 
-/** Create a snapshot */
-ecs_snapshot_t* ecs_snapshot_take(
+static
+ecs_snapshot_t* snapshot_create(
     ecs_world_t *world,
+    ecs_map_t *entity_index,
+    ecs_chunked_t *tables,
     ecs_filter_t *filter)
 {
     ecs_snapshot_t *result = ecs_os_malloc(sizeof(ecs_snapshot_t));
 
     /* Copy tables from world */
-    result->tables = ecs_chunked_copy(world->main_stage.tables);
+    result->tables = ecs_chunked_copy(tables);
     
-    if (filter) {
+    if (filter || !entity_index) {
         result->filter = *filter;
         result->entity_index = NULL;
     } else {
         result->filter = (ecs_filter_t){0};
-        result->entity_index = ecs_map_copy(world->main_stage.entity_index);
+        result->entity_index = ecs_map_copy(entity_index);
     }
 
     /* We need to dup the table data, because right now the copied tables are
@@ -49,8 +50,13 @@ ecs_snapshot_t* ecs_snapshot_take(
             continue;
         }
 
+        /* Skip tables that are already filtered out */
+        if (!table->columns) {
+            continue;
+        }
+
         if (!filter || ecs_type_match_w_filter(world, table->type, filter)) {
-            dup_table(world, table);
+            dup_table(table);
         } else {
             /* If the table does not match the filter, instead of copying just
              * set the columns to NULL. This way the restore will ignore the
@@ -61,7 +67,38 @@ ecs_snapshot_t* ecs_snapshot_take(
         }
     }
 
+    return result;
+}
+
+/** Create a snapshot */
+ecs_snapshot_t* ecs_snapshot_take(
+    ecs_world_t *world,
+    ecs_filter_t *filter)
+{
+    ecs_snapshot_t *result = snapshot_create(
+            world,
+            world->main_stage.entity_index,
+            world->main_stage.tables,
+            filter);
+
     result->last_handle = world->last_handle;
+
+    return result;
+}
+
+/** Copy a snapshot */
+ecs_snapshot_t* ecs_snapshot_copy(
+    ecs_world_t *world,
+    ecs_snapshot_t *snapshot,
+    ecs_filter_t *filter)
+{
+    ecs_snapshot_t *result = snapshot_create(
+            world,
+            snapshot->entity_index,
+            snapshot->tables,
+            filter);
+
+    result->last_handle = snapshot->last_handle;
 
     return result;
 }

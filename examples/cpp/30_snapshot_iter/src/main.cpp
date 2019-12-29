@@ -1,4 +1,4 @@
-#include <filter_iter.h>
+#include <snapshot_iter.h>
 #include "flecs/flecs.hpp"
 
 /* Component types */
@@ -12,10 +12,6 @@ struct Velocity {
     float y;
 };
 
-struct Mass {
-    float value;
-};
-
 int main(int argc, char *argv[]) {
     /* Create the world, pass arguments for overriding the number of threads,fps
      * or for starting the admin dashboard (see flecs.h for details). */
@@ -23,7 +19,6 @@ int main(int argc, char *argv[]) {
 
     flecs::component<Position>(world, "Position");
     flecs::component<Velocity>(world, "Velocity");
-    flecs::component<Mass>(world, "Mass");
 
     flecs::entity(world, "E1")
         .set<Position>({10, 20})
@@ -31,25 +26,21 @@ int main(int argc, char *argv[]) {
 
     flecs::entity(world, "E2")
         .set<Position>({30, 40})
-        .set<Velocity>({1, 1})
-        .set<Mass>({1});    
+        .set<Velocity>({1, 1});
 
+    /* Create filter that matches all entities with [Position, Velocity] */
     auto f = flecs::filter(world)
         .include<Position>()
         .include<Velocity>()
-        .include_kind(flecs::MatchAll);
+        .include_kind(flecs::MatchAll);    
 
-    for (auto rows : f) {
-        /* Get the Position and Velocity columns from the current table */
-        auto p = rows.table_column<Position>();
-        auto v = rows.table_column<Velocity>();
+    /* Take a filtered snapshot of the current state */
+    flecs::snapshot s(world);
+    s.take(f);
 
-        for (auto row : rows) {
-            p[row].x += v[row].x;
-            p[row].y += v[row].y;
-
-            std::cout << "Moved " << rows.entity(row).name() << " to {" <<
-                p[row].x << ", " << p[row].y << "}" << std::endl;
-        }
+    for (auto rows : s) {
+        flecs::type table_type = rows.table_type();
+        std::cout << "Iterating table [" << table_type.str() << "]" 
+                  << " (" << rows.count() << " entities)" << std::endl;
     }
 }

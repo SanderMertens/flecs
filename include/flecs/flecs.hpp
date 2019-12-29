@@ -20,11 +20,15 @@ using snapshot_t = ecs_snapshot_t;
 using filter_t = ecs_filter_t;
 using filter_iter_t = ecs_filter_iter_t;
 
+class world;
+class snapshot;
 class entity;
 class type;
 class rows;
 class filter;
 class filter_iterator;
+class world_filter;
+class snapshot_filter;
 
 template <typename T>
 class component_base;
@@ -38,7 +42,7 @@ static const entity_t PrefabParent = EEcsPrefabParent;
 static const entity_t PrefabBuilder = EEcsPrefabBuilder;
 static const entity_t RowSystem = EEcsRowSystem;
 static const entity_t ColSystem = EEcsColSystem;
-using Id = EcsId;
+using Name = EcsId;
 static const entity_t Hidden = EEcsHidden;
 static const entity_t Disabled = EEcsDisabled;
 static const entity_t OnDemand = EEcsOnDemand;
@@ -384,6 +388,27 @@ public:
 
     entity lookup(const char *name) const;
 
+    void delete_entities(flecs::filter filter);
+
+    template <typename T>
+    void add(flecs::filter filter);
+
+    void add(flecs::type type, flecs::filter filter);
+
+    void add(flecs::entity entity, flecs::filter filter);
+
+    template <typename T>
+    void remove(flecs::filter filter);
+
+    void remove(flecs::type type, flecs::filter filter);
+
+    void remove(flecs::entity entity, flecs::filter filter);
+
+    flecs::world_filter filter(flecs::filter filter);
+
+    flecs::filter_iterator begin();
+
+    flecs::filter_iterator end();
 private:
     void init_builtin_components();
 
@@ -554,6 +579,8 @@ public:
 
     flecs::type type() const;
 
+    flecs::type to_type() const;
+
     template<typename T>
     T get() const {
         return *(T*)_ecs_get_ptr(m_world, m_id, component_base<T>::s_type);
@@ -667,7 +694,6 @@ private:
 };
 
 /** Type */
-
 class type final : entity {
 public:
     type(const world& world, const char *name, const char *expr = nullptr)
@@ -768,150 +794,12 @@ private:
     type_t m_normalized;
 };
 
-/* -- entity implementation -- */
-
-inline flecs::type entity::type() const {
-    return flecs::type(world(m_world), ecs_get_type(m_world, m_id));
-}
-
-/* -- entity_fluent implementation -- */
-
-template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(const entity& entity) const {
-    return add(entity.id());
-}
-
-template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(flecs::type type) const {
-    return add(type.c());
-}
-
-template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(const entity& entity) const {
-    return remove(entity.id());
-}
-
-template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(flecs::type type) const {
-    return remove(type.c());
-}
-
-template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_childof(const entity& entity) const {
-    return add_childof(entity.id());
-}
-
-template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_childof(const entity& entity) const {
-    return remove_childof(entity.id());
-}
-
-template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_instanceof(const entity& entity) const {
-    return add_instanceof(entity.id());
-}
-
-template <typename base>
-inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_instanceof(const entity& entity) const {
-    return remove_instanceof(entity.id());
-}
-
-inline entity world::lookup(const char *name) const {
-    auto id = ecs_lookup(m_world, name);
-    return entity(*this, id);
-}
-
-/* -- rows implementation -- */
-
-inline flecs::entity rows::system() const {
-    return flecs::entity(m_rows->world, m_rows->system);
-}
-
-inline flecs::entity rows::entity(uint32_t row) const {
-    ecs_assert(row < m_rows->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-    return flecs::entity(m_rows->world, m_rows->entities[row]);
-}
-
-/* Obtain column source (0 if self) */
-inline flecs::entity rows::column_source(uint32_t column) const {
-    return flecs::entity(m_rows->world, ecs_column_source(m_rows, column));
-}
-
-/* Obtain component/tag entity of column */
-inline flecs::entity rows::column_entity(uint32_t column) const {
-    return flecs::entity(m_rows->world, ecs_column_entity(m_rows, column));
-}
-
-/* Obtain type of column */
-inline flecs::type rows::column_type(uint32_t column) const {
-    return flecs::type(m_rows->world, ecs_column_type(m_rows, column));
-}
-
-/* Obtain type of table being iterated over */
-inline flecs::type rows::table_type() const {
-    return flecs::type(m_rows->world, ecs_table_type(m_rows));
-}
-
-/** Register component, provide global access to component handles / metadata */
-template <typename T>
-class component_base final {
-public:
-    static void init(const world& world, const char *name) {
-        s_entity = ecs_new_component(world.c(), name, sizeof(T));
-        s_type = ecs_type_from_entity(world.c(), s_entity);
-        s_name = name;
-    }
-
-    static void init_existing(entity_t entity, flecs::type_t type, const char *name) {
-        s_entity = entity;
-        s_type = type;
-        s_name = name;
-    }
-
-    static entity_t s_entity;
-    static flecs::type_t s_type;
-    static const char *s_name;
-};
-
-template <typename T> entity_t component_base<T>::s_entity( 0 );
-template <typename T> flecs::type_t component_base<T>::s_type( nullptr );
-template <typename T> const char* component_base<T>::s_name( nullptr );
-
-template <typename T>
-class component : public entity {
-public:
-    component(world world, const char *name) { 
-        component_base<T>::init(world, name);
-
-        /* Register as well for both const and reference versions of type */
-        component_base<const T>::init_existing(
-            component_base<T>::s_entity, 
-            component_base<T>::s_type, 
-            component_base<T>::s_name);
-
-        component_base<T&>::init_existing(
-            component_base<T>::s_entity, 
-            component_base<T>::s_type, 
-            component_base<T>::s_name);    
-
-        entity(world, component_base<T>::s_entity);
-    }
-};
-
-/* Register builtin components with C++ API */
-inline void world::init_builtin_components() {
-    flecs::component<flecs::Component>(*this, "EcsComponent");
-    flecs::component<flecs::TypeComponent>(*this, "EcsTypeComponent");
-    flecs::component<flecs::Prefab>(*this, "EcsPrefab");
-    flecs::component<flecs::Id>(*this, "EcsId");
-}
-
 /** Class that represens a type filter */
 class filter {
 public:
     filter(world world) 
         : m_world( world.c() )
-        , m_filter{} { }
+        , m_filter{ } { }
 
     filter& include(flecs::type type) {
         m_filter.include = ecs_type_merge(m_world, m_filter.include, type.c(), nullptr);
@@ -967,12 +855,84 @@ public:
         return &m_filter;
     }
 
-    filter_iterator begin();
-
-    filter_iterator end();
 private:
     world_t *m_world;
     filter_t m_filter;
+};
+
+/* Class that encapsulates a snapshot */
+class snapshot final {
+public:
+    snapshot(flecs::world world)
+        : m_world( world )
+        , m_snapshot( nullptr )
+        { }
+
+    snapshot(const snapshot& obj) {
+        m_world = obj.m_world;
+        m_snapshot = ecs_snapshot_copy(m_world.c(), obj.m_snapshot, nullptr);
+    }
+
+    snapshot(snapshot&& obj) {
+        m_world = obj.m_world;
+        m_snapshot = obj.m_snapshot;
+        obj.m_snapshot = nullptr;
+    }
+
+    snapshot& operator=(const snapshot& obj) {
+        m_world = obj.m_world;
+        m_snapshot = ecs_snapshot_copy(m_world.c(), obj.m_snapshot, nullptr);
+        return *this;
+    }
+
+    snapshot& operator=(snapshot&& obj) {
+        m_world = obj.m_world;
+        m_snapshot = obj.m_snapshot;
+        obj.m_snapshot = nullptr;
+        return *this;
+    }
+
+    void take() {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_world.c(), m_snapshot);
+        }
+
+        m_snapshot = ecs_snapshot_take(m_world.c(), nullptr);
+    }
+
+    void take(flecs::filter filter) {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_world.c(), m_snapshot);
+        }
+
+        m_snapshot = ecs_snapshot_take(m_world.c(), filter.c());
+    }
+
+    void restore() {
+        if (m_snapshot) {
+            ecs_snapshot_restore(m_world.c(), m_snapshot);
+            m_snapshot = nullptr;
+        }
+    }
+
+    ~snapshot() {
+        if (m_snapshot) {
+            ecs_snapshot_free(m_world.c(), m_snapshot);
+        }
+    }
+
+    snapshot_t* c() {
+        return m_snapshot;
+    }
+
+    flecs::snapshot_filter filter(flecs::filter filter);
+
+    flecs::filter_iterator begin();
+
+    flecs::filter_iterator end();
+private:
+    flecs::world m_world;
+    snapshot_t *m_snapshot;
 };
 
 /** Iterate over a filter */
@@ -981,12 +941,20 @@ class filter_iterator
 public:
     filter_iterator()
         : m_world(nullptr)
-        , m_has_next(false) { }
+        , m_has_next(false)
+        , m_iter{ } { }
 
-    filter_iterator(world world, filter& filter)
+    filter_iterator(world world, filter filter)
         : m_world( world.c() )
         , m_iter( ecs_filter_iter(m_world, filter.c()) ) 
     { 
+        m_has_next = ecs_filter_next(&m_iter);
+    }
+
+    filter_iterator(world world, snapshot& snapshot, filter filter) 
+        : m_world( world.c() )
+        , m_iter( ecs_snapshot_filter_iter(m_world, snapshot.c(), filter.c()) )
+    {
         m_has_next = ecs_filter_next(&m_iter);
     }
 
@@ -1009,54 +977,255 @@ private:
     filter_iter_t m_iter;
 };
 
-inline filter_iterator filter::begin() {
-    return filter_iterator(m_world, *this);
+/** Select subset of entities in a world */
+class world_filter {
+public:
+    world_filter(world world, filter filter) 
+        : m_world( world )
+        , m_filter( filter ) { }
+
+    inline filter_iterator begin() {
+        return filter_iterator(m_world, m_filter);
+    }
+
+    inline filter_iterator end() {
+        return filter_iterator();
+    }
+
+private:
+    world m_world;
+    const filter m_filter;
+};
+
+/** Select subset of entities in a snapshot */
+class snapshot_filter {
+public:
+    snapshot_filter(world world, snapshot& snapshot, filter filter) 
+        : m_world( world )
+        , m_snapshot( snapshot )
+        , m_filter( filter ) { }
+
+    inline filter_iterator begin() {
+        return filter_iterator(m_world, m_snapshot, m_filter);
+    }
+
+    inline filter_iterator end() {
+        return filter_iterator();
+    }
+
+private:
+    world m_world;
+    snapshot& m_snapshot;
+    const filter m_filter;
+};
+
+
+/* -- snapshot implementation -- */
+
+inline flecs::snapshot_filter snapshot::filter(flecs::filter filter) {
+    return flecs::snapshot_filter(m_world, *this, filter);
 }
 
-inline filter_iterator filter::end() {
+inline filter_iterator snapshot::begin() {
+    return filter_iterator(m_world, *this, flecs::filter(m_world));
+}
+
+inline filter_iterator snapshot::end() {
     return filter_iterator();
 }
 
-/* Class that encapsulates a snapshot */
-class snapshot final {
+
+
+/* -- entity implementation -- */
+
+inline flecs::type entity::type() const {
+    return flecs::type(world(m_world), ecs_get_type(m_world, m_id));
+}
+
+inline flecs::type entity::to_type() const {
+    ecs_type_t type = ecs_type_from_entity(m_world, m_id);
+    return flecs::type(m_world, type);
+}
+
+
+/* -- entity_fluent implementation -- */
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(const entity& entity) const {
+    return add(entity.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add(flecs::type type) const {
+    return add(type.c());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(const entity& entity) const {
+    return remove(entity.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove(flecs::type type) const {
+    return remove(type.c());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_childof(const entity& entity) const {
+    return add_childof(entity.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_childof(const entity& entity) const {
+    return remove_childof(entity.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::add_instanceof(const entity& entity) const {
+    return add_instanceof(entity.id());
+}
+
+template <typename base>
+inline typename entity_fluent<base>::base_type& entity_fluent<base>::remove_instanceof(const entity& entity) const {
+    return remove_instanceof(entity.id());
+}
+
+inline entity world::lookup(const char *name) const {
+    auto id = ecs_lookup(m_world, name);
+    return entity(*this, id);
+}
+
+
+/* -- rows implementation -- */
+
+inline flecs::entity rows::system() const {
+    return flecs::entity(m_rows->world, m_rows->system);
+}
+
+inline flecs::entity rows::entity(uint32_t row) const {
+    ecs_assert(row < m_rows->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+    return flecs::entity(m_rows->world, m_rows->entities[row]);
+}
+
+/* Obtain column source (0 if self) */
+inline flecs::entity rows::column_source(uint32_t column) const {
+    return flecs::entity(m_rows->world, ecs_column_source(m_rows, column));
+}
+
+/* Obtain component/tag entity of column */
+inline flecs::entity rows::column_entity(uint32_t column) const {
+    return flecs::entity(m_rows->world, ecs_column_entity(m_rows, column));
+}
+
+/* Obtain type of column */
+inline flecs::type rows::column_type(uint32_t column) const {
+    return flecs::type(m_rows->world, ecs_column_type(m_rows, column));
+}
+
+/* Obtain type of table being iterated over */
+inline flecs::type rows::table_type() const {
+    return flecs::type(m_rows->world, ecs_table_type(m_rows));
+}
+
+
+/* -- world implementation -- */
+
+inline void world::delete_entities(flecs::filter filter) {
+    ecs_delete_w_filter(m_world, filter.c());
+}
+
+template <typename T>
+inline void world::add(flecs::filter filter) {
+    _ecs_add_remove_w_filter(m_world, component_base<T>::s_type, nullptr, filter.c());
+}
+
+inline void world::add(flecs::type type, flecs::filter filter) {
+    _ecs_add_remove_w_filter(m_world, type.c(), nullptr, filter.c());
+}
+
+inline void world::add(flecs::entity entity, flecs::filter filter) {
+    _ecs_add_remove_w_filter(m_world, entity.to_type().c(), nullptr, filter.c());
+}
+
+template <typename T>
+inline void world::remove(flecs::filter filter) {
+    _ecs_add_remove_w_filter(m_world, nullptr, component_base<T>::s_type, filter.c());
+}
+
+inline void world::remove(flecs::type type, flecs::filter filter) {
+    _ecs_add_remove_w_filter(m_world, nullptr, type.c(), filter.c());
+}
+
+inline void world::remove(flecs::entity entity, flecs::filter filter) {
+    _ecs_add_remove_w_filter(m_world, nullptr, entity.to_type().c(), filter.c());
+}
+
+inline flecs::world_filter world::filter(flecs::filter filter) {
+    return flecs::world_filter(*this, filter);
+}
+
+inline filter_iterator world::begin() {
+    return filter_iterator(m_world, flecs::filter(*this));
+}
+
+inline filter_iterator world::end() {
+    return filter_iterator();
+}
+
+
+/** Register component, provide global access to component handles / metadata */
+template <typename T>
+class component_base final {
 public:
-    snapshot(flecs::world world)
-        : m_world( world.c() )
-        , m_snapshot( nullptr )
-        { }
-
-    void take() {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_world, m_snapshot);
-        }
-
-        m_snapshot = ecs_snapshot_take(m_world, nullptr);
+    static void init(const world& world, const char *name) {
+        s_entity = ecs_new_component(world.c(), name, sizeof(T));
+        s_type = ecs_type_from_entity(world.c(), s_entity);
+        s_name = name;
     }
 
-    void take(flecs::filter filter) {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_world, m_snapshot);
-        }
-
-        m_snapshot = ecs_snapshot_take(m_world, filter.c());
+    static void init_existing(entity_t entity, flecs::type_t type, const char *name) {
+        s_entity = entity;
+        s_type = type;
+        s_name = name;
     }
 
-    void restore() {
-        if (m_snapshot) {
-            ecs_snapshot_restore(m_world, m_snapshot);
-            m_snapshot = nullptr;
-        }
-    }
-
-    ~snapshot() {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_world, m_snapshot);
-        }
-    }
-private:
-    world_t *m_world;
-    snapshot_t *m_snapshot;
+    static entity_t s_entity;
+    static flecs::type_t s_type;
+    static const char *s_name;
 };
+
+template <typename T> entity_t component_base<T>::s_entity( 0 );
+template <typename T> flecs::type_t component_base<T>::s_type( nullptr );
+template <typename T> const char* component_base<T>::s_name( nullptr );
+
+template <typename T>
+class component : public entity {
+public:
+    component(world world, const char *name) { 
+        component_base<T>::init(world, name);
+
+        /* Register as well for both const and reference versions of type */
+        component_base<const T>::init_existing(
+            component_base<T>::s_entity, 
+            component_base<T>::s_type, 
+            component_base<T>::s_name);
+
+        component_base<T&>::init_existing(
+            component_base<T>::s_entity, 
+            component_base<T>::s_type, 
+            component_base<T>::s_name);    
+
+        entity(world, component_base<T>::s_entity);
+    }
+};
+
+/* Register builtin components with C++ API */
+inline void world::init_builtin_components() {
+    flecs::component<flecs::Component>(*this, "EcsComponent");
+    flecs::component<flecs::TypeComponent>(*this, "EcsTypeComponent");
+    flecs::component<flecs::Prefab>(*this, "EcsPrefab");
+    flecs::component<flecs::Name>(*this, "EcsId");
+}
 
 /** Class that wraps around compile-time type safe system callbacks */
 template <typename Func, typename ... Components>
