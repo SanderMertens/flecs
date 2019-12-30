@@ -42,7 +42,9 @@ void ecs_component_reader_next(
         reader->cur = EcsComponentId;
         if (!reader->id_column) {
             ecs_component_reader_fetch_component_data(stream);
-            reader->index = 0;
+            /* Start from EcsOnDemand. Everything before that is the same for
+             * every world */
+            reader->index = EEcsOnDemand;
         }
         break;
 
@@ -144,29 +146,46 @@ size_t ecs_component_reader(
 }
 
 static
-bool ecs_table_reader_next(
+void ecs_table_reader_next(
     ecs_stream_t *stream)
 {
     ecs_table_reader_t *reader = &stream->reader.table;
     ecs_chunked_t *tables = stream->reader.tables;
 
     switch(reader->cur) {
-    case EcsTableHeader:
+    case EcsTableHeader: {
+        bool table_found = false;
+
         reader->cur = EcsTableTypeSize;
 
         do {
-            reader->table = ecs_chunked_get(tables, ecs_table_t, reader->table_index);
-            reader->columns = reader->table->columns;
+            ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, reader->table_index);
+            reader->table = table;
+            reader->columns = table->columns;
             reader->table_index ++;
 
-            /* Keep looping until a table is found that isn't filtered out */
-        } while (!reader->columns);
+            /* If a table is filtered out by the snapshot, does not have any
+             * entities or contains builtin data, skip it */
+            if (reader->columns &&
+                 ecs_vector_count(reader->columns[0].data) &&
+                 !(reader->table->flags & EcsTableHasBuiltins))
+            {
+                table_found = true;
+                break;
+            }
+        } while (reader->table_index != ecs_chunked_count(tables));
 
-        reader->type = reader->table->type;
-        reader->type_index = 0;
-        reader->total_columns = ecs_vector_count(reader->type) + 1;
-        reader->column_index = 0;
+        if (!table_found) {
+            stream->reader.cur = EcsFooterSegment;
+            break;
+        } else {
+            reader->type = reader->table->type;
+            reader->type_index = 0;
+            reader->total_columns = ecs_vector_count(reader->type) + 1;
+            reader->column_index = 0;
+        }
         break;
+    }
 
     case EcsTableTypeSize:
         reader->cur = EcsTableType;
@@ -212,7 +231,7 @@ bool ecs_table_reader_next(
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 
-    return true;
+    return;
 }
 
 static
