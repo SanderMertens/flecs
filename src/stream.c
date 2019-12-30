@@ -183,6 +183,7 @@ void ecs_table_reader_next(
             reader->type_index = 0;
             reader->total_columns = ecs_vector_count(reader->type) + 1;
             reader->column_index = 0;
+            reader->row_count = ecs_vector_count(reader->columns[0].data);
         }
         break;
     }
@@ -198,9 +199,10 @@ void ecs_table_reader_next(
         }
         break;
 
-    case EcsTableSize:
+    case EcsTableSize: {
         reader->cur = EcsTableColumnHeader;
         break;
+    }
 
     case EcsTableColumnHeader:
         reader->cur = EcsTableColumnSize;
@@ -215,6 +217,34 @@ void ecs_table_reader_next(
         reader->column_written = 0;
         break;
 
+    case EcsTableColumnNameHeader:
+        reader->cur = EcsTableColumnNameLength;
+        reader->column = &reader->columns[reader->column_index];
+        reader->column_data = ecs_vector_first(reader->column->data);
+        reader->row_index = 0;
+        reader->name = ((EcsId*)reader->column_data)[0];
+        reader->name_len = strlen(reader->name);
+        reader->name_written = 0;
+        break;
+
+    case EcsTableColumnNameLength:
+        reader->cur = EcsTableColumnName;
+        if (reader->row_index < reader->row_count) {
+            reader->name = ((EcsId*)reader->column_data)[reader->row_index];
+            reader->name_len = strlen(reader->name) + 1;
+            reader->name_written = 0;
+        }
+        reader->row_index ++;
+        break;
+
+    case EcsTableColumnName:
+        if (reader->row_index < reader->row_count) {
+            reader->cur = EcsTableColumnNameLength;
+            break;
+        } else {
+            /* Fallthrough on purpose */
+        }
+
     case EcsTableColumnData:
         reader->column_index ++;
         if (reader->column_index == reader->total_columns) {
@@ -223,7 +253,18 @@ void ecs_table_reader_next(
                 stream->reader.cur = EcsFooterSegment;
             }            
         } else {
-            reader->cur = EcsTableColumnHeader;
+            ecs_entity_t *type_buffer = ecs_vector_first(reader->type);
+            if (reader->column_index >= 1) {
+                ecs_entity_t e = type_buffer[reader->column_index - 1];
+                
+                if (e != EEcsId) {
+                    reader->cur = EcsTableColumnHeader;
+                } else {
+                    reader->cur = EcsTableColumnNameHeader;
+                }
+            } else {
+                reader->cur = EcsTableColumnHeader;
+            }            
         }
         break;
 
@@ -306,6 +347,34 @@ size_t ecs_table_reader(
         ecs_assert(reader->column_written <= reader->column_size, ECS_INTERNAL_ERROR, NULL);
 
         if (reader->column_written == reader->column_size) {
+            ecs_table_reader_next(stream);
+        }
+        break;
+
+    case EcsTableColumnNameHeader:
+        *(ecs_blob_header_kind_t*)buffer = EcsTableColumnNameHeader;
+        read = sizeof(ecs_blob_header_kind_t);
+        ecs_table_reader_next(stream);
+        break;
+
+    case EcsTableColumnNameLength:
+        *(int32_t*)buffer = EcsTableColumnNameHeader;
+        read = sizeof(int32_t);
+        ecs_table_reader_next(stream);    
+        break;
+
+    case EcsTableColumnName:    
+        read = reader->name_len - reader->name_written;
+        if (read > size) {
+            read = size;
+        }
+        
+        memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
+        reader->name_written += read;
+
+        ecs_assert(reader->name_written <= reader->name_len, ECS_INTERNAL_ERROR, NULL);
+
+        if (reader->name_written == reader->name_len) {
             ecs_table_reader_next(stream);
         }
         break;

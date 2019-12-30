@@ -38,6 +38,11 @@ typedef enum ecs_blob_header_kind_t {
     EcsTableColumnSize,
     EcsTableColumnData,
 
+    /* Name column (EcsId) */
+    EcsTableColumnNameHeader,
+    EcsTableColumnNameLength,
+    EcsTableColumnName,
+
     /* Footer segment */
     EcsFooterHeader  
 } ecs_blob_header_kind_t;
@@ -80,6 +85,15 @@ typedef struct ecs_table_reader_t {
     void *column_data;
     size_t column_size;
     size_t column_written;
+
+    /* Keep track of row when writing non-blittable data */
+    int32_t row_index;
+    uint32_t row_count;
+
+    /* Keep track of how much of an entity name has been written */
+    const char *name;
+    size_t name_len;
+    size_t name_written;
 } ecs_table_reader_t;
 
 typedef struct ecs_stream_reader_t {
@@ -93,6 +107,7 @@ typedef struct ecs_stream_t {
     ecs_world_t *world;
     ecs_stream_reader_t reader;
 } ecs_stream_t;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Error API
