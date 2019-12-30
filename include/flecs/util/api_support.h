@@ -9,32 +9,41 @@
 extern "C" {
 #endif
 
+typedef struct ecs_table_t ecs_table_t;
+typedef struct ecs_table_column_t ecs_table_column_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Private datatypes
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef enum ecs_segment_kind_t {
+typedef enum ecs_blob_header_kind_t {
+    /* Segment headers */
     EcsComponentSegment,
-    EcsTableSegment
-} ecs_segment_kind_t;
+    EcsTableSegment,
+    EcsFooterSegment,
 
-typedef enum ecs_component_segment_kind_t {
+    /* Component segment */
     EcsComponentHeader,
     EcsComponentId,
     EcsComponentSize,
     EcsComponentNameLength,
-    EcsComponentName
-} ecs_component_segment_kind_t;
+    EcsComponentName,
 
-typedef enum ecs_table_segment_kind_t {
+    /* Table segment */
     EcsTableHeader,
+    EcsTableTypeSize,
     EcsTableType,
     EcsTableSize,
-    EcsTableColumn
-} ecs_table_segment_kind_t;
+    EcsTableColumnHeader,
+    EcsTableColumnSize,
+    EcsTableColumnData,
+
+    /* Footer segment */
+    EcsFooterHeader  
+} ecs_blob_header_kind_t;
 
 typedef struct ecs_component_reader_t {
-    ecs_component_segment_kind_t cur;
+    ecs_blob_header_kind_t cur;
 
     /* Component data fetched from the world */
     ecs_entity_t *id_column;
@@ -51,14 +60,33 @@ typedef struct ecs_component_reader_t {
     size_t written;
 } ecs_component_reader_t;
 
+typedef struct ecs_table_reader_t {
+    ecs_blob_header_kind_t cur;
+
+    uint32_t table_index;
+    ecs_table_t *table;
+    ecs_table_column_t *columns;
+
+    /* Current index in type */
+    int32_t type_index;
+    ecs_type_t type;
+
+    /* Current column */
+    ecs_table_column_t *column;
+    int32_t column_index;
+    int32_t total_columns;
+
+    /* Keep track of how much of the component column has been written */
+    void *column_data;
+    size_t column_size;
+    size_t column_written;
+} ecs_table_reader_t;
+
 typedef struct ecs_stream_reader_t {
-    ecs_segment_kind_t cur;
-    union {
-        ecs_component_reader_t component;
-        struct {
-            int dummy;
-        } table;
-    } is;
+    ecs_blob_header_kind_t cur;
+    ecs_chunked_t *tables;
+    ecs_component_reader_t component;
+    ecs_table_reader_t table;
 } ecs_stream_reader_t;
 
 typedef struct ecs_stream_t {

@@ -6,21 +6,20 @@ ecs_stream_t ecs_stream_open(
 {
     return (ecs_stream_t){
         .world = world,
-        .reader.cur = EcsComponentSegment
+        .reader.cur = EcsComponentSegment,
+        .reader.tables = snapshot->tables
     };
 }
 
 void ecs_stream_close(
     ecs_stream_t *stream)
-{
-
-}
+{ }
 
 static
 void ecs_component_reader_fetch_component_data(
     ecs_stream_t *stream)
 {
-    ecs_component_reader_t *reader = &stream->reader.is.component;
+    ecs_component_reader_t *reader = &stream->reader.component;
     ecs_world_t *world = stream->world;
     ecs_chunked_t *tables = world->main_stage.tables;
 
@@ -36,7 +35,7 @@ static
 void ecs_component_reader_next(
     ecs_stream_t *stream)
 {
-    ecs_component_reader_t *reader = &stream->reader.is.component;
+    ecs_component_reader_t *reader = &stream->reader.component;
 
     switch(reader->cur) {
     case EcsComponentHeader:  
@@ -46,20 +45,32 @@ void ecs_component_reader_next(
             reader->index = 0;
         }
         break;
+
     case EcsComponentId:
         reader->cur = EcsComponentSize;
         break;
+
     case EcsComponentSize:
         reader->cur = EcsComponentNameLength;
         reader->name = reader->name_column[reader->index];
         reader->len = strlen(reader->name) + 1; 
-        break;        
+        break;
+
     case EcsComponentNameLength:
         reader->cur = EcsComponentName;
         reader->written = 0;
         break;
+
     case EcsComponentName:
+        reader->cur = EcsComponentHeader;    
+        reader->index ++;
+        if (reader->index == reader->count) {
+            stream->reader.cur = EcsTableSegment;
+        }
         break;
+
+    default:
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);        
     }
 }
 
@@ -77,13 +88,17 @@ size_t ecs_component_reader(
         return -1;
     }
 
-    ecs_component_reader_t *reader = &stream->reader.is.component;
+    ecs_component_reader_t *reader = &stream->reader.component;
     size_t read = 0;
+
+    if (!reader->cur) {
+        reader->cur = EcsComponentHeader;
+    }
 
     switch(reader->cur) {
     case EcsComponentHeader:  
-        *(ecs_segment_kind_t*)buffer = EcsComponentSegment;
-        read = sizeof(ecs_segment_kind_t);
+        *(ecs_blob_header_kind_t*)buffer = EcsComponentHeader;
+        read = sizeof(ecs_blob_header_kind_t);
         ecs_component_reader_next(stream);
         break;
 
@@ -105,12 +120,12 @@ size_t ecs_component_reader(
         ecs_component_reader_next(stream);    
         break;
 
-    case EcsComponentName: {
+    case EcsComponentName:
         read = reader->len - reader->written;
         if (read > size) {
             read = size;
         }
-
+        
         memcpy(buffer, ECS_OFFSET(reader->name, reader->written), read);
         reader->written += read;
 
@@ -120,10 +135,84 @@ size_t ecs_component_reader(
             ecs_component_reader_next(stream);
         }
         break;
-    }
+
+    default:
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 
     return read;
+}
+
+static
+bool ecs_table_reader_next(
+    ecs_stream_t *stream)
+{
+    ecs_table_reader_t *reader = &stream->reader.table;
+    ecs_chunked_t *tables = stream->reader.tables;
+
+    switch(reader->cur) {
+    case EcsTableHeader:
+        reader->cur = EcsTableTypeSize;
+
+        do {
+            reader->table = ecs_chunked_get(tables, ecs_table_t, reader->table_index);
+            reader->columns = reader->table->columns;
+            reader->table_index ++;
+
+            /* Keep looping until a table is found that isn't filtered out */
+        } while (!reader->columns);
+
+        reader->type = reader->table->type;
+        reader->type_index = 0;
+        reader->total_columns = ecs_vector_count(reader->type) + 1;
+        reader->column_index = 0;
+        break;
+
+    case EcsTableTypeSize:
+        reader->cur = EcsTableType;
+        break;
+
+    case EcsTableType:
+        reader->type_index ++;
+        if (reader->type_index == ecs_vector_count(reader->type)) {
+            reader->cur = EcsTableSize;
+        }
+        break;
+
+    case EcsTableSize:
+        reader->cur = EcsTableColumnHeader;
+        break;
+
+    case EcsTableColumnHeader:
+        reader->cur = EcsTableColumnSize;
+        reader->column = &reader->columns[reader->column_index];
+        reader->column_size = 
+            ecs_vector_count(reader->column->data) * reader->column->size;
+        break;
+
+    case EcsTableColumnSize:
+        reader->cur = EcsTableColumnData;
+        reader->column_data = ecs_vector_first(reader->column->data);
+        reader->column_written = 0;
+        break;
+
+    case EcsTableColumnData:
+        reader->column_index ++;
+        if (reader->column_index == reader->total_columns) {
+            reader->cur = EcsTableHeader;
+            if (reader->table_index == ecs_chunked_count(tables)) {
+                stream->reader.cur = EcsFooterSegment;
+            }            
+        } else {
+            reader->cur = EcsTableColumnHeader;
+        }
+        break;
+
+    default:
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    }
+
+    return true;
 }
 
 static
@@ -132,7 +221,81 @@ size_t ecs_table_reader(
     size_t size,
     ecs_stream_t *stream)
 {
-    return 0;
+    if (!size) {
+        return 0;
+    }
+
+    if (size < sizeof(int32_t)) {
+        return -1;
+    }
+
+    ecs_table_reader_t *reader = &stream->reader.table;
+    size_t read = 0;
+
+    if (!reader->cur) {
+        reader->cur = EcsTableHeader;
+    }
+
+    switch(reader->cur) {
+    case EcsTableHeader:  
+        *(ecs_blob_header_kind_t*)buffer = EcsTableHeader;
+        read = sizeof(ecs_blob_header_kind_t);
+        ecs_table_reader_next(stream);
+        break;
+
+    case EcsTableTypeSize:  
+        *(int32_t*)buffer = ecs_vector_count(reader->type);
+        read = sizeof(int32_t);
+        ecs_table_reader_next(stream);
+        break;  
+
+    case EcsTableType: {
+        ecs_vector_params_t params = {.element_size = sizeof(ecs_entity_t)};
+        *(int32_t*)buffer = *(int32_t*)ecs_vector_get(reader->type, &params, reader->type_index);
+        read = sizeof(int32_t);
+        ecs_table_reader_next(stream);
+        break;                
+    }
+
+    case EcsTableSize:
+        *(int32_t*)buffer = ecs_vector_count(reader->table->columns[0].data);
+        read = sizeof(int32_t);
+        ecs_table_reader_next(stream);
+        break;
+
+    case EcsTableColumnHeader:
+        *(ecs_blob_header_kind_t*)buffer = EcsTableColumnHeader;
+        read = sizeof(ecs_blob_header_kind_t);
+        ecs_table_reader_next(stream);
+        break; 
+
+    case EcsTableColumnSize:
+        *(int32_t*)buffer = reader->column_size;
+        read = sizeof(ecs_blob_header_kind_t);
+        ecs_table_reader_next(stream);
+        break; 
+
+    case EcsTableColumnData:
+        read = reader->column_size - reader->column_written;
+        if (read > size) {
+            read = size;
+        }
+
+        memcpy(buffer, ECS_OFFSET(reader->column_data, reader->column_written), read);
+        reader->column_written += read;
+
+        ecs_assert(reader->column_written <= reader->column_size, ECS_INTERNAL_ERROR, NULL);
+
+        if (reader->column_written == reader->column_size) {
+            ecs_table_reader_next(stream);
+        }
+        break;
+
+    default:
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    }
+
+    return read;
 }
 
 size_t ecs_stream_read(
@@ -157,6 +320,10 @@ size_t ecs_stream_read(
 
             remaining -= read;
             total_read += read;
+
+            if (reader->cur != EcsComponentSegment) {
+                break;
+            }
         }
 
         if (read == -1) {
@@ -172,8 +339,12 @@ size_t ecs_stream_read(
         while ((read = ecs_table_reader(ECS_OFFSET(buffer, total_read), remaining, stream))) {
             remaining -= read;
             total_read += read;
+
+            if (reader->cur != EcsTableSegment) {
+                break;
+            }            
         }
-    }
+    }  
 
     return total_read;
 }
