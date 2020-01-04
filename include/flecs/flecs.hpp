@@ -172,6 +172,11 @@ public:
         return m_rows->count;
     }
 
+    /* Return delta_time of current frame */
+    float delta_time() const {
+        return m_rows->delta_time;
+    }
+
     /* Is column shared */
     bool is_shared(uint32_t column) const {
         return ecs_is_shared(m_rows, column);
