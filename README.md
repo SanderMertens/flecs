@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     flecs::component<Position>(world, "Position");
     flecs::component<Speed>(world, "Speed");
 
-    flecs::system<Position, Velocity>(world)
+    flecs::system<Position, Speed>(world)
         .action([](const flecs::rows& rows, 
             flecs::column<Position> p, 
             flecs::column<Speed> s) 
