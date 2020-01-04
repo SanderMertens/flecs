@@ -6,7 +6,7 @@ ecs_stream_t ecs_stream_open(
 {
     return (ecs_stream_t){
         .world = world,
-        .reader.cur = EcsComponentSegment,
+        .reader.state = EcsComponentSegment,
         .reader.tables = snapshot->tables
     };
 }
@@ -37,9 +37,9 @@ void ecs_component_reader_next(
 {
     ecs_component_reader_t *reader = &stream->reader.component;
 
-    switch(reader->cur) {
+    switch(reader->state) {
     case EcsComponentHeader:  
-        reader->cur = EcsComponentId;
+        reader->state = EcsComponentId;
         if (!reader->id_column) {
             ecs_component_reader_fetch_component_data(stream);
             /* Start from EcsOnDemand. Everything before that is the same for
@@ -49,25 +49,25 @@ void ecs_component_reader_next(
         break;
 
     case EcsComponentId:
-        reader->cur = EcsComponentSize;
+        reader->state = EcsComponentSize;
         break;
 
     case EcsComponentSize:
-        reader->cur = EcsComponentNameLength;
+        reader->state = EcsComponentNameLength;
         reader->name = reader->name_column[reader->index];
         reader->len = strlen(reader->name) + 1; 
         break;
 
     case EcsComponentNameLength:
-        reader->cur = EcsComponentName;
+        reader->state = EcsComponentName;
         reader->written = 0;
         break;
 
     case EcsComponentName:
-        reader->cur = EcsComponentHeader;    
+        reader->state = EcsComponentHeader;    
         reader->index ++;
         if (reader->index == reader->count) {
-            stream->reader.cur = EcsTableSegment;
+            stream->reader.state = EcsTableSegment;
         }
         break;
 
@@ -93,11 +93,11 @@ size_t ecs_component_reader(
     ecs_component_reader_t *reader = &stream->reader.component;
     size_t read = 0;
 
-    if (!reader->cur) {
-        reader->cur = EcsComponentHeader;
+    if (!reader->state) {
+        reader->state = EcsComponentHeader;
     }
 
-    switch(reader->cur) {
+    switch(reader->state) {
     case EcsComponentHeader:  
         *(ecs_blob_header_kind_t*)buffer = EcsComponentHeader;
         read = sizeof(ecs_blob_header_kind_t);
@@ -124,14 +124,16 @@ size_t ecs_component_reader(
 
     case EcsComponentName:
         read = reader->len - reader->written;
-        if (read > size) {
-            read = size;
+        if (read >= sizeof(int32_t)) {
+            *(int32_t*)buffer = *(int32_t*)ECS_OFFSET(reader->name, reader->written);
+            reader->written += sizeof(int32_t);
+        } else {
+            memcpy(buffer, ECS_OFFSET(reader->name, reader->written), read);
+            reader->written += read;
         }
-        
-        memcpy(buffer, ECS_OFFSET(reader->name, reader->written), read);
-        reader->written += read;
 
-        ecs_assert(reader->written <= reader->len, ECS_INTERNAL_ERROR, NULL);
+        /* Always align buffer to multiples of 4 bytes */
+        read = sizeof(int32_t);
 
         if (reader->written == reader->len) {
             ecs_component_reader_next(stream);
@@ -152,11 +154,11 @@ void ecs_table_reader_next(
     ecs_table_reader_t *reader = &stream->reader.table;
     ecs_chunked_t *tables = stream->reader.tables;
 
-    switch(reader->cur) {
+    switch(reader->state) {
     case EcsTableHeader: {
         bool table_found = false;
 
-        reader->cur = EcsTableTypeSize;
+        reader->state = EcsTableTypeSize;
 
         do {
             ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, reader->table_index);
@@ -176,7 +178,7 @@ void ecs_table_reader_next(
         } while (reader->table_index != ecs_chunked_count(tables));
 
         if (!table_found) {
-            stream->reader.cur = EcsFooterSegment;
+            stream->reader.state = EcsFooterSegment;
             break;
         } else {
             reader->type = reader->table->type;
@@ -189,36 +191,36 @@ void ecs_table_reader_next(
     }
 
     case EcsTableTypeSize:
-        reader->cur = EcsTableType;
+        reader->state = EcsTableType;
         break;
 
     case EcsTableType:
         reader->type_index ++;
         if (reader->type_index == ecs_vector_count(reader->type)) {
-            reader->cur = EcsTableSize;
+            reader->state = EcsTableSize;
         }
         break;
 
     case EcsTableSize: {
-        reader->cur = EcsTableColumnHeader;
+        reader->state = EcsTableColumnHeader;
         break;
     }
 
     case EcsTableColumnHeader:
-        reader->cur = EcsTableColumnSize;
+        reader->state = EcsTableColumnSize;
         reader->column = &reader->columns[reader->column_index];
         reader->column_size = 
             ecs_vector_count(reader->column->data) * reader->column->size;
         break;
 
     case EcsTableColumnSize:
-        reader->cur = EcsTableColumnData;
+        reader->state = EcsTableColumnData;
         reader->column_data = ecs_vector_first(reader->column->data);
         reader->column_written = 0;
         break;
 
     case EcsTableColumnNameHeader:
-        reader->cur = EcsTableColumnNameLength;
+        reader->state = EcsTableColumnNameLength;
         reader->column = &reader->columns[reader->column_index];
         reader->column_data = ecs_vector_first(reader->column->data);
         reader->row_index = 0;
@@ -228,7 +230,7 @@ void ecs_table_reader_next(
         break;
 
     case EcsTableColumnNameLength:
-        reader->cur = EcsTableColumnName;
+        reader->state = EcsTableColumnName;
         if (reader->row_index < reader->row_count) {
             reader->name = ((EcsId*)reader->column_data)[reader->row_index];
             reader->name_len = strlen(reader->name) + 1;
@@ -239,7 +241,7 @@ void ecs_table_reader_next(
 
     case EcsTableColumnName:
         if (reader->row_index < reader->row_count) {
-            reader->cur = EcsTableColumnNameLength;
+            reader->state = EcsTableColumnNameLength;
             break;
         } else {
             /* Fallthrough on purpose */
@@ -248,9 +250,9 @@ void ecs_table_reader_next(
     case EcsTableColumnData:
         reader->column_index ++;
         if (reader->column_index == reader->total_columns) {
-            reader->cur = EcsTableHeader;
+            reader->state = EcsTableHeader;
             if (reader->table_index == ecs_chunked_count(tables)) {
-                stream->reader.cur = EcsFooterSegment;
+                stream->reader.state = EcsFooterSegment;
             }            
         } else {
             ecs_entity_t *type_buffer = ecs_vector_first(reader->type);
@@ -258,12 +260,12 @@ void ecs_table_reader_next(
                 ecs_entity_t e = type_buffer[reader->column_index - 1];
                 
                 if (e != EEcsId) {
-                    reader->cur = EcsTableColumnHeader;
+                    reader->state = EcsTableColumnHeader;
                 } else {
-                    reader->cur = EcsTableColumnNameHeader;
+                    reader->state = EcsTableColumnNameHeader;
                 }
             } else {
-                reader->cur = EcsTableColumnHeader;
+                reader->state = EcsTableColumnHeader;
             }            
         }
         break;
@@ -292,11 +294,11 @@ size_t ecs_table_reader(
     ecs_table_reader_t *reader = &stream->reader.table;
     size_t read = 0;
 
-    if (!reader->cur) {
-        reader->cur = EcsTableHeader;
+    if (!reader->state) {
+        reader->state = EcsTableHeader;
     }
 
-    switch(reader->cur) {
+    switch(reader->state) {
     case EcsTableHeader:  
         *(ecs_blob_header_kind_t*)buffer = EcsTableHeader;
         read = sizeof(ecs_blob_header_kind_t);
@@ -363,20 +365,23 @@ size_t ecs_table_reader(
         ecs_table_reader_next(stream);    
         break;
 
-    case EcsTableColumnName:    
+    case EcsTableColumnName:   
         read = reader->name_len - reader->name_written;
-        if (read > size) {
-            read = size;
+        if (read >= sizeof(int32_t)) {
+            *(int32_t*)buffer = *(int32_t*)ECS_OFFSET(reader->name, reader->name_written);
+            reader->name_written += sizeof(int32_t);
+        } else {
+            memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
+            reader->name_written += read;
         }
-        
-        memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
-        reader->name_written += read;
 
-        ecs_assert(reader->name_written <= reader->name_len, ECS_INTERNAL_ERROR, NULL);
+        /* Always align buffer to multiples of 4 bytes */
+        read = sizeof(int32_t);
 
         if (reader->name_written == reader->name_len) {
             ecs_table_reader_next(stream);
         }
+
         break;
 
     default:
@@ -400,7 +405,7 @@ size_t ecs_stream_read(
 
     ecs_assert(size >= sizeof(int32_t), ECS_INVALID_PARAMETER, NULL);
 
-    if (reader->cur == EcsComponentSegment) {
+    if (reader->state == EcsComponentSegment) {
         while ((read = ecs_component_reader(ECS_OFFSET(buffer, total_read), remaining, stream))) {
             if (read == -1) {
                 break;
@@ -409,7 +414,7 @@ size_t ecs_stream_read(
             remaining -= read;
             total_read += read;
 
-            if (reader->cur != EcsComponentSegment) {
+            if (reader->state != EcsComponentSegment) {
                 break;
             }
         }
@@ -419,16 +424,16 @@ size_t ecs_stream_read(
         }
 
         if (!read && remaining) {
-            reader->cur = EcsTableSegment;
+            reader->state = EcsTableSegment;
         }
     }
 
-    if (reader->cur == EcsTableSegment) {
+    if (reader->state == EcsTableSegment) {
         while ((read = ecs_table_reader(ECS_OFFSET(buffer, total_read), remaining, stream))) {
             remaining -= read;
             total_read += read;
 
-            if (reader->cur != EcsTableSegment) {
+            if (reader->state != EcsTableSegment) {
                 break;
             }            
         }

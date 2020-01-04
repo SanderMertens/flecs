@@ -17,7 +17,9 @@ typedef struct ecs_table_column_t ecs_table_column_t;
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef enum ecs_blob_header_kind_t {
-    /* Segment headers */
+    EcsStreamHeader,
+
+    /* Stream states */
     EcsComponentSegment,
     EcsTableSegment,
     EcsFooterSegment,
@@ -43,12 +45,11 @@ typedef enum ecs_blob_header_kind_t {
     EcsTableColumnNameLength,
     EcsTableColumnName,
 
-    /* Footer segment */
-    EcsFooterHeader  
+    EcsStreamFooter  
 } ecs_blob_header_kind_t;
 
 typedef struct ecs_component_reader_t {
-    ecs_blob_header_kind_t cur;
+    ecs_blob_header_kind_t state;
 
     /* Component data fetched from the world */
     ecs_entity_t *id_column;
@@ -66,7 +67,7 @@ typedef struct ecs_component_reader_t {
 } ecs_component_reader_t;
 
 typedef struct ecs_table_reader_t {
-    ecs_blob_header_kind_t cur;
+    ecs_blob_header_kind_t state;
 
     uint32_t table_index;
     ecs_table_t *table;
@@ -97,15 +98,42 @@ typedef struct ecs_table_reader_t {
 } ecs_table_reader_t;
 
 typedef struct ecs_stream_reader_t {
-    ecs_blob_header_kind_t cur;
+    ecs_blob_header_kind_t state;
     ecs_chunked_t *tables;
     ecs_component_reader_t component;
     ecs_table_reader_t table;
 } ecs_stream_reader_t;
 
+typedef struct ecs_stream_component_t {
+    ecs_entity_t local_id;
+    ecs_entity_t world_id;
+    size_t size;
+    char *id;
+} ecs_stream_component_t;
+
+typedef struct ecs_component_writer_t {
+    ecs_blob_header_kind_t state;
+    ecs_map_t *components;
+    ecs_chunked_t *tables;
+
+    int32_t id;
+    size_t size;
+    char *name;
+    int32_t name_written;
+    int32_t name_len;
+} ecs_component_writer_t;
+
+typedef struct ecs_stream_writer_t {
+    ecs_blob_header_kind_t state;
+    ecs_map_t *components;
+    ecs_chunked_t *tables;
+    ecs_component_writer_t component;
+} ecs_stream_writer_t;
+
 typedef struct ecs_stream_t {
     ecs_world_t *world;
     ecs_stream_reader_t reader;
+    ecs_stream_writer_t writer;
 } ecs_stream_t;
 
 
