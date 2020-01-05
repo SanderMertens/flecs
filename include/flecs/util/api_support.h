@@ -36,6 +36,7 @@ typedef enum ecs_blob_header_kind_t {
     EcsTableTypeSize,
     EcsTableType,
     EcsTableSize,
+    EcsTableColumn,
     EcsTableColumnHeader,
     EcsTableColumnSize,
     EcsTableColumnData,
@@ -104,30 +105,47 @@ typedef struct ecs_stream_reader_t {
     ecs_table_reader_t table;
 } ecs_stream_reader_t;
 
-typedef struct ecs_stream_component_t {
-    ecs_entity_t local_id;
-    ecs_entity_t world_id;
-    size_t size;
-    char *id;
-} ecs_stream_component_t;
+typedef struct ecs_name_writer_t {
+    char *name;
+    int32_t written;
+    int32_t len;
+    int32_t max_len;
+} ecs_name_writer_t;
 
 typedef struct ecs_component_writer_t {
     ecs_blob_header_kind_t state;
-    ecs_map_t *components;
-    ecs_chunked_t *tables;
 
     int32_t id;
     size_t size;
-    char *name;
-    int32_t name_written;
-    int32_t name_len;
+    ecs_name_writer_t name;
 } ecs_component_writer_t;
+
+typedef struct ecs_table_writer_t {
+    ecs_blob_header_kind_t state;
+
+    ecs_table_t *table;
+    ecs_table_column_t *column;
+
+    /* Keep state for parsing type */
+    uint32_t type_len;
+    uint32_t type_max_len;
+    uint32_t type_current;
+    ecs_entity_t *type_array;
+    
+    uint32_t table_count;
+    uint32_t column_index;
+    uint32_t column_size;
+    uint32_t column_written;
+    void *column_data;
+
+    int32_t column_row;
+    ecs_name_writer_t name; 
+} ecs_table_writer_t;
 
 typedef struct ecs_stream_writer_t {
     ecs_blob_header_kind_t state;
-    ecs_map_t *components;
-    ecs_chunked_t *tables;
     ecs_component_writer_t component;
+    ecs_table_writer_t table;
 } ecs_stream_writer_t;
 
 typedef struct ecs_stream_t {
@@ -285,6 +303,9 @@ void _ecs_assert(
 #define ECS_UNSUPPORTED (34)
 #define ECS_NO_OUT_COLUMNS (35)
 #define ECS_COLUMN_ACCESS_VIOLATION (36)
+#define ECS_DESERIALIZE_COMPONENT_ID_CONFLICT (37)
+#define ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT (38)
+#define ECS_DESERIALIZE_FORMAT_ERROR (39)
 
 /** Declare type variable */
 #define ECS_TYPE_VAR(type)\
