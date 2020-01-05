@@ -209,7 +209,18 @@ void ecs_table_writer_finalize_table(
     int32_t i, count = ecs_vector_count(entity_vector);
 
     for (i = 0; i < count; i ++) {
-        ecs_row_t row = {
+        ecs_row_t row;
+        if (ecs_map_has(world->main_stage.entity_index, entities[i], &row)) {
+            if (row.type != writer->table->type) {
+                ecs_table_t *table = ecs_world_get_table(world, &world->main_stage, row.type);
+                ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                ecs_table_delete(world, &world->main_stage, 
+                    table, table->columns, row.index);
+            }
+        }
+
+        row = (ecs_row_t){
             .index = i + 1,
             .type = writer->table->type
         };

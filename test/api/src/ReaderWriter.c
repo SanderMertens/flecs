@@ -53,11 +53,11 @@ int vector_read(
 }
 
 static
-ecs_world_t* deserialize_from_vector(
+ecs_world_t* deserialize_from_vector_to_existing(
     ecs_vector_t *v,
-    int buffer_size)
+    int buffer_size,
+    ecs_world_t *world)
 {
-    ecs_world_t *world = ecs_init();
     ecs_writer_t writer = ecs_writer_init(world);
     int v_ptr = 0, read;
     char *buffer = ecs_os_malloc(buffer_size);
@@ -72,6 +72,15 @@ ecs_world_t* deserialize_from_vector(
     ecs_os_free(buffer);
     
     return world;
+}
+
+static
+ecs_world_t* deserialize_from_vector(
+    ecs_vector_t *v,
+    int buffer_size)
+{
+    ecs_world_t *world = ecs_init();
+    return deserialize_from_vector_to_existing(v, buffer_size, world);
 }
 
 static
@@ -1020,4 +1029,54 @@ void ReaderWriter_deserialize_twice() {
     for (i = 8; i < total * 2; i += 4) {
         deserialize_twice_test(i);
     }
+}
+
+void ReaderWriter_entity_conflict() {
+    ecs_entity_t e1;
+    ecs_vector_t *v;
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ECS_COMPONENT(world, Position);
+        ECS_COMPONENT(world, Velocity);
+        
+        e1 = ecs_set(world, 0, Position, {1, 2});
+        v = serialize_to_vector(world, 32);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ECS_COMPONENT(world, Position);
+        ECS_COMPONENT(world, Velocity);
+
+        /* Add entity with different component */
+        ecs_add(world, e1, Velocity);
+
+        deserialize_from_vector_to_existing(v, 32, world);
+
+        test_int( ecs_count(world, Position), 1);
+        test_int( ecs_count(world, Velocity), 0);
+
+        test_assert( !ecs_is_empty(world, e1));
+        test_assert( ecs_has(world, e1, Position));
+        test_assert( !ecs_has(world, e1, Velocity));
+
+        Position *p = ecs_get_ptr(world, e1, Position);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+
+        ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+        SysTestData ctx = {0};
+        ecs_set_context(world, &ctx);      
+        ecs_progress(world, 0);
+        test_int(ctx.count, 1);
+
+        ecs_fini(world);
+    }
+
+    ecs_vector_free(v);
 }

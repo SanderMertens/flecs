@@ -922,7 +922,8 @@
                 "simple_w_parent",
                 "inheritance",
                 "simple_w_inheritance",
-                "deserialize_twice"
+                "deserialize_twice",
+                "entity_conflict"
             ]
         }, {
             "id": "FilterIter",

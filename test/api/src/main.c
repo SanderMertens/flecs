@@ -844,6 +844,7 @@ void ReaderWriter_simple_w_parent(void);
 void ReaderWriter_inheritance(void);
 void ReaderWriter_simple_w_inheritance(void);
 void ReaderWriter_deserialize_twice(void);
+void ReaderWriter_entity_conflict(void);
 
 // Testsuite 'FilterIter'
 void FilterIter_iter_one_table(void);
@@ -4096,7 +4097,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "ReaderWriter",
-        .testcase_count = 14,
+        .testcase_count = 15,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple",
@@ -4153,6 +4154,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "deserialize_twice",
                 .function = ReaderWriter_deserialize_twice
+            },
+            {
+                .id = "entity_conflict",
+                .function = ReaderWriter_entity_conflict
             }
         }
     },
