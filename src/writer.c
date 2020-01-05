@@ -25,7 +25,7 @@ bool ecs_name_writer_write(
     if (written >= sizeof(int32_t)) {
         *(int32_t*)name_ptr = *(int32_t*)buffer;
         writer->written += sizeof(int32_t);
-        return written != sizeof(int32_t);
+        return writer->written != writer->len;
     } else {
         memcpy(name_ptr, buffer, written);
         writer->written += written;
@@ -435,6 +435,7 @@ int ecs_writer_write(
     }
 
     ecs_assert(size >= sizeof(uint32_t), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(size % 4 == 0, ECS_INVALID_PARAMETER, NULL);
 
     while (total_written < size) {
         if (writer->state == EcsStreamHeader) {
@@ -443,6 +444,7 @@ int ecs_writer_write(
             if (writer->state != EcsComponentHeader &&
                 writer->state != EcsTableHeader)
             {
+                printf("Invalid stream header\n");
                 writer->error = ECS_DESERIALIZE_FORMAT_ERROR;
                 goto error;
             }

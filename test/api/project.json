@@ -912,7 +912,11 @@
                 "simple_w_4_byte_buffer",
                 "simple_w_exact_buffer",
                 "simple_w_smaller_buffer",
-                "simple_w_larger_buffer"
+                "simple_w_larger_buffer",
+                "id_w_4_byte_buffer",
+                "id_w_exact_buffer",
+                "id_w_smaller_buffer",
+                "id_w_larger_buffer"               
             ]
         }, {
             "id": "FilterIter",

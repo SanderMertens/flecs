@@ -130,6 +130,8 @@ size_t ecs_component_reader(
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 
+    ecs_assert(read % 4 == 0, ECS_INTERNAL_ERROR, NULL);
+
     return read;
 }
 
@@ -209,18 +211,10 @@ void ecs_table_reader_next(
         reader->column = &reader->columns[reader->column_index];
         reader->column_data = ecs_vector_first(reader->column->data);
         reader->row_index = 0;
-        reader->name = ((EcsId*)reader->column_data)[0];
-        reader->name_len = strlen(reader->name);
-        reader->name_written = 0;
         break;
 
     case EcsTableColumnNameLength:
         reader->state = EcsTableColumnName;
-        if (reader->row_index < reader->row_count) {
-            reader->name = ((EcsId*)reader->column_data)[reader->row_index];
-            reader->name_len = strlen(reader->name) + 1;
-            reader->name_written = 0;
-        }
         reader->row_index ++;
         break;
 
@@ -341,6 +335,8 @@ size_t ecs_table_reader(
             /* Set read to align so that data is always aligned to 4 bytes */
             read = align;
 
+            printf("read = %d, size = %d\n", read, size);
+
             /* Buffer sizes are expected to be aligned to 4 bytes and the rest
              * of the serialized data is aligned to 4 bytes. Should never happen
              * that adding padding bytes exceeds the size. */
@@ -360,7 +356,10 @@ size_t ecs_table_reader(
         break;
 
     case EcsTableColumnNameLength:
-        *(int32_t*)buffer = strlen(reader->name) + 1;
+        reader->name = ((EcsId*)reader->column_data)[reader->row_index];
+        reader->name_len = strlen(reader->name) + 1;
+        reader->name_written = 0;
+        *(int32_t*)buffer = reader->name_len;
         read = sizeof(int32_t);
         ecs_table_reader_next(stream);    
         break;
@@ -389,6 +388,8 @@ size_t ecs_table_reader(
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 
+    ecs_assert(read % 4 == 0, ECS_INTERNAL_ERROR, NULL);
+
     return read;
 }
 
@@ -404,6 +405,7 @@ size_t ecs_reader_read(
     }
 
     ecs_assert(size >= sizeof(int32_t), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(size % 4 == 0, ECS_INVALID_PARAMETER, NULL);
 
     if (reader->state == EcsComponentSegment) {
         while ((read = ecs_component_reader(ECS_OFFSET(buffer, total_read), remaining, reader))) {
@@ -417,6 +419,8 @@ size_t ecs_reader_read(
             if (reader->state != EcsComponentSegment) {
                 break;
             }
+
+            ecs_assert(remaining % 4 == 0, ECS_INTERNAL_ERROR, NULL);
         }
 
         if (read == -1) {
@@ -435,7 +439,9 @@ size_t ecs_reader_read(
 
             if (reader->state != EcsTableSegment) {
                 break;
-            }            
+            }
+
+            ecs_assert(remaining % 4 == 0, ECS_INTERNAL_ERROR, NULL);        
         }
     }  
     
