@@ -1,25 +1,10 @@
 #include "flecs_private.h"
 
-ecs_stream_t ecs_stream_open(
-    ecs_world_t *world,
-    ecs_snapshot_t *snapshot)
-{
-    return (ecs_stream_t){
-        .world = world,
-        .reader.state = EcsComponentSegment,
-        .reader.tables = snapshot->tables
-    };
-}
-
-void ecs_stream_close(
-    ecs_stream_t *stream)
-{ }
-
 static
 void ecs_component_reader_fetch_component_data(
-    ecs_stream_t *stream)
+    ecs_reader_t *stream)
 {
-    ecs_component_reader_t *reader = &stream->reader.component;
+    ecs_component_reader_t *reader = &stream->component;
     ecs_world_t *world = stream->world;
     ecs_chunked_t *tables = world->main_stage.tables;
 
@@ -33,9 +18,9 @@ void ecs_component_reader_fetch_component_data(
 
 static
 void ecs_component_reader_next(
-    ecs_stream_t *stream)
+    ecs_reader_t *stream)
 {
-    ecs_component_reader_t *reader = &stream->reader.component;
+    ecs_component_reader_t *reader = &stream->component;
 
     switch(reader->state) {
     case EcsComponentHeader:  
@@ -67,7 +52,7 @@ void ecs_component_reader_next(
         reader->state = EcsComponentHeader;    
         reader->index ++;
         if (reader->index == reader->count) {
-            stream->reader.state = EcsTableSegment;
+            stream->state = EcsTableSegment;
         }
         break;
 
@@ -80,7 +65,7 @@ static
 size_t ecs_component_reader(
     void *buffer,
     size_t size,
-    ecs_stream_t *stream)
+    ecs_reader_t *stream)
 {
     if (!size) {
         return 0;
@@ -90,7 +75,7 @@ size_t ecs_component_reader(
         return -1;
     }
 
-    ecs_component_reader_t *reader = &stream->reader.component;
+    ecs_component_reader_t *reader = &stream->component;
     size_t read = 0;
 
     if (!reader->state) {
@@ -149,10 +134,10 @@ size_t ecs_component_reader(
 
 static
 void ecs_table_reader_next(
-    ecs_stream_t *stream)
+    ecs_reader_t *stream)
 {
-    ecs_table_reader_t *reader = &stream->reader.table;
-    ecs_chunked_t *tables = stream->reader.tables;
+    ecs_table_reader_t *reader = &stream->table;
+    ecs_chunked_t *tables = stream->tables;
 
     switch(reader->state) {
     case EcsTableHeader: {
@@ -178,7 +163,7 @@ void ecs_table_reader_next(
         } while (reader->table_index != ecs_chunked_count(tables));
 
         if (!table_found) {
-            stream->reader.state = EcsFooterSegment;
+            stream->state = EcsFooterSegment;
             break;
         } else {
             reader->type = reader->table->type;
@@ -251,7 +236,7 @@ void ecs_table_reader_next(
         if (reader->column_index == reader->total_columns) {
             reader->state = EcsTableHeader;
             if (reader->table_index == ecs_chunked_count(tables)) {
-                stream->reader.state = EcsFooterSegment;
+                stream->state = EcsFooterSegment;
             }            
         } else {
             ecs_entity_t *type_buffer = ecs_vector_first(reader->type);
@@ -280,7 +265,7 @@ static
 size_t ecs_table_reader(
     void *buffer,
     size_t size,
-    ecs_stream_t *stream)
+    ecs_reader_t *stream)
 {
     if (!size) {
         return 0;
@@ -290,7 +275,7 @@ size_t ecs_table_reader(
         return -1;
     }
 
-    ecs_table_reader_t *reader = &stream->reader.table;
+    ecs_table_reader_t *reader = &stream->table;
     size_t read = 0;
 
     if (!reader->state) {
@@ -344,7 +329,7 @@ size_t ecs_table_reader(
         }
 
         memcpy(buffer, ECS_OFFSET(reader->column_data, reader->column_written), read);
-        reader->column_written += read;
+        reader->column_written += read;       
 
         ecs_assert(reader->column_written <= column_bytes, ECS_INTERNAL_ERROR, NULL);
 
@@ -392,12 +377,11 @@ size_t ecs_table_reader(
     return read;
 }
 
-size_t ecs_stream_read(
+size_t ecs_reader_read(
     void *buffer,
     size_t size,
-    ecs_stream_t *stream)
+    ecs_reader_t *reader)
 {
-    ecs_stream_reader_t *reader = &stream->reader;
     size_t read, total_read = 0, remaining = size;
 
     if (!size) {
@@ -407,7 +391,7 @@ size_t ecs_stream_read(
     ecs_assert(size >= sizeof(int32_t), ECS_INVALID_PARAMETER, NULL);
 
     if (reader->state == EcsComponentSegment) {
-        while ((read = ecs_component_reader(ECS_OFFSET(buffer, total_read), remaining, stream))) {
+        while ((read = ecs_component_reader(ECS_OFFSET(buffer, total_read), remaining, reader))) {
             if (read == -1) {
                 break;
             }
@@ -430,7 +414,7 @@ size_t ecs_stream_read(
     }
 
     if (reader->state == EcsTableSegment) {
-        while ((read = ecs_table_reader(ECS_OFFSET(buffer, total_read), remaining, stream))) {
+        while ((read = ecs_table_reader(ECS_OFFSET(buffer, total_read), remaining, reader))) {
             remaining -= read;
             total_read += read;
 
@@ -439,6 +423,27 @@ size_t ecs_stream_read(
             }            
         }
     }  
-
+    
     return total_read;
+}
+
+ecs_reader_t ecs_reader_init(
+    ecs_world_t *world)
+{
+    return (ecs_reader_t){
+        .world = world,
+        .state = EcsComponentSegment,
+        .tables = world->main_stage.tables
+    };
+}
+
+ecs_reader_t ecs_snapshot_reader_init(
+    ecs_world_t *world,
+    ecs_snapshot_t *snapshot)
+{
+    return (ecs_reader_t){
+        .world = world,
+        .state = EcsComponentSegment,
+        .tables = snapshot->tables
+    };
 }

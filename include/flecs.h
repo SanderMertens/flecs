@@ -1844,30 +1844,34 @@ void ecs_snapshot_free(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Snapshot stream API
+//// Reader/writer API
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_EXPORT
-ecs_stream_t ecs_stream_open(
+ecs_reader_t ecs_reader_init(
+    ecs_world_t *world);
+
+FLECS_EXPORT
+ecs_reader_t ecs_snapshot_reader_init(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot);
 
 FLECS_EXPORT
-void ecs_stream_close(
-    ecs_stream_t *stream);
-
-FLECS_EXPORT
-size_t ecs_stream_read(
+size_t ecs_reader_read(
     void *buffer,
     size_t size,
-    ecs_stream_t *stream);
+    ecs_reader_t *reader);
 
 FLECS_EXPORT
-size_t ecs_stream_write(
+ecs_writer_t ecs_writer_init(
+    ecs_world_t *world);
+
+FLECS_EXPORT
+int ecs_writer_write(
     void *buffer,
     size_t size,
-    ecs_stream_t *stream);
-
+    ecs_writer_t *writer);
+    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module API

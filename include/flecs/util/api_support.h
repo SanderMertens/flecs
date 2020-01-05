@@ -98,12 +98,13 @@ typedef struct ecs_table_reader_t {
     size_t name_written;
 } ecs_table_reader_t;
 
-typedef struct ecs_stream_reader_t {
+typedef struct ecs_reader_t {
+    ecs_world_t *world;
     ecs_blob_header_kind_t state;
     ecs_chunked_t *tables;
     ecs_component_reader_t component;
     ecs_table_reader_t table;
-} ecs_stream_reader_t;
+} ecs_reader_t;
 
 typedef struct ecs_name_writer_t {
     char *name;
@@ -127,33 +128,28 @@ typedef struct ecs_table_writer_t {
     ecs_table_column_t *column;
 
     /* Keep state for parsing type */
-    uint32_t type_len;
-    uint32_t type_max_len;
-    uint32_t type_current;
+    uint32_t type_count;
+    uint32_t type_max_count;
+    uint32_t type_index;
     ecs_entity_t *type_array;
     
-    uint32_t table_count;
     uint32_t column_index;
     uint32_t column_size;
     uint32_t column_written;
     void *column_data;
 
-    int32_t column_row;
+    uint32_t row_count;
+    int32_t row_index;
     ecs_name_writer_t name; 
 } ecs_table_writer_t;
 
-typedef struct ecs_stream_writer_t {
+typedef struct ecs_writer_t {
+    ecs_world_t *world;
     ecs_blob_header_kind_t state;
     ecs_component_writer_t component;
     ecs_table_writer_t table;
-} ecs_stream_writer_t;
-
-typedef struct ecs_stream_t {
-    ecs_world_t *world;
-    ecs_stream_reader_t reader;
-    ecs_stream_writer_t writer;
-} ecs_stream_t;
-
+    int error;
+} ecs_writer_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Error API
