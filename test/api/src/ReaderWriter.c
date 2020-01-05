@@ -1,11 +1,6 @@
 #include <api.h>
 
 static
-int align(int value, int align_to) {
-    return (((value - 1) / align_to) + 1) * align_to;
-}
-
-static
 ecs_vector_t* serialize_to_vector(
     ecs_world_t *world, 
     int buffer_size) 
@@ -115,30 +110,15 @@ int simple_test(int buffer_size) {
     return total;
 }
 
-void ReaderWriter_simple_w_4_byte_buffer() {
-    simple_test(4);
-}
+void ReaderWriter_simple() {
+    int i, total = simple_test(4);
 
-void ReaderWriter_simple_w_exact_buffer() {
-    int total = simple_test(4);
     test_assert(total > 4);
     test_assert(total % 4 == 0);
-    simple_test(total);
-}
 
-void ReaderWriter_simple_w_smaller_buffer() {
-    int total = simple_test(4);
-    test_assert(total > 4);
-    test_assert(total % 4 == 0);
-    int smaller = align(total / 2, 4);
-    simple_test(smaller);
-}
-
-void ReaderWriter_simple_w_larger_buffer() {
-    int total = simple_test(4);
-    test_assert(total > 4);
-    test_assert(total % 4 == 0);
-    simple_test(total * 2);
+    for (i = 8; i < total * 2; i += 4) {
+        simple_test(i);
+    }
 }
 
 static
@@ -196,30 +176,15 @@ int id_test(int buffer_size) {
     return total;
 }
 
-void ReaderWriter_id_w_4_byte_buffer() {
-    id_test(4);
-}
+void ReaderWriter_id() {
+    int i, total = id_test(4);
 
-void ReaderWriter_id_w_exact_buffer() {
-    int total = id_test(4);
     test_assert(total > 4);
     test_assert(total % 4 == 0);
-    id_test(total);
-}
 
-void ReaderWriter_id_w_smaller_buffer() {
-    int total = id_test(4);
-    test_assert(total > 4);
-    test_assert(total % 4 == 0);
-    int smaller = align(total / 2, 4);
-    id_test(smaller);
-}
-
-void ReaderWriter_id_w_larger_buffer() {
-    int total = id_test(4);
-    test_assert(total > 4);
-    test_assert(total % 4 == 0);
-    id_test(total * 2);
+    for (i = 8; i < total * 2; i += 4) {
+        id_test(i);
+    }
 }
 
 static
@@ -344,28 +309,59 @@ int id_w_simple_test(int buffer_size) {
     return total;
 }
 
-void ReaderWriter_id_w_simple_4_byte_buffer() {
-    id_w_simple_test(4);
-}
+void ReaderWriter_id_w_simple() {
+    int i, total = id_w_simple_test(4);
 
-void ReaderWriter_id_w_simple_exact_buffer() {
-    int total = id_w_simple_test(4);
     test_assert(total > 4);
     test_assert(total % 4 == 0);
-    id_w_simple_test(total);
+
+    for (i = 8; i < total * 2; i += 4) {
+        id_w_simple_test(i);
+    }
 }
 
-void ReaderWriter_id_w_simple_smaller_buffer() {
-    int total = id_w_simple_test(4);
-    test_assert(total > 4);
-    test_assert(total % 4 == 0);
-    int smaller = align(total / 2, 4);
-    id_w_simple_test(smaller);
+typedef char Byte;
+
+static
+int unaligned_test(int buffer_size, int entity_count) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Byte);
+
+    ecs_entity_t first = 0;
+    int i;
+    for (i = 0; i < entity_count; i ++) {
+        ecs_entity_t e = ecs_set(world, 0, Byte, {i});
+        if (!i) {
+            first = e;
+        }
+    }
+
+    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+
+    ecs_fini(world);
+
+    world = deserialize_from_vector(v, buffer_size);
+
+    for (i = 0; i < entity_count; i ++) {
+        test_assert( !ecs_is_empty(world, first + i));
+        test_assert( ecs_has(world, first + i, Byte));
+        Byte *b = ecs_get_ptr(world, first + i, Byte);
+        test_int(*b, i);
+    }
+
+    int total = ecs_vector_count(v);
+    ecs_vector_free(v);
+    return total;
 }
 
-void ReaderWriter_id_w_simple_larger_buffer() {
-    int total = id_w_simple_test(4);
-    test_assert(total > 4);
-    test_assert(total % 4 == 0);
-    id_w_simple_test(total * 2);
+void ReaderWriter_unaligned() {
+    int size, count;
+    for (count = 0; count < 64; count ++) {
+        int total = unaligned_test(4, count);
+
+        for (size = 8; size < total * 2; size += 8) {
+            unaligned_test(size, count);
+        }
+    }
 }

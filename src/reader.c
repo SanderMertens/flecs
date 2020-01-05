@@ -334,8 +334,6 @@ size_t ecs_table_reader(
             /* Set read to align so that data is always aligned to 4 bytes */
             read = align;
 
-            printf("read = %d, size = %d\n", read, size);
-
             /* Buffer sizes are expected to be aligned to 4 bytes and the rest
              * of the serialized data is aligned to 4 bytes. Should never happen
              * that adding padding bytes exceeds the size. */
