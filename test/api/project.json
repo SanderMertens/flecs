@@ -907,6 +907,14 @@
                 "snapshot_activate_table_w_filter"
             ]
         }, {
+            "id": "ReaderWriter",
+            "testcases": [
+                "simple_w_4_byte_buffer",
+                "simple_w_exact_buffer",
+                "simple_w_smaller_buffer",
+                "simple_w_larger_buffer"
+            ]
+        }, {
             "id": "FilterIter",
             "testcases": [
                 "iter_one_table",

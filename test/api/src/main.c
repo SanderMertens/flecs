@@ -829,6 +829,12 @@ void Snapshot_snapshot_free(void);
 void Snapshot_snapshot_free_filtered(void);
 void Snapshot_snapshot_activate_table_w_filter(void);
 
+// Testsuite 'ReaderWriter'
+void ReaderWriter_simple_w_4_byte_buffer(void);
+void ReaderWriter_simple_w_exact_buffer(void);
+void ReaderWriter_simple_w_smaller_buffer(void);
+void ReaderWriter_simple_w_larger_buffer(void);
+
 // Testsuite 'FilterIter'
 void FilterIter_iter_one_table(void);
 void FilterIter_iter_two_tables(void);
@@ -4079,6 +4085,28 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "ReaderWriter",
+        .testcase_count = 4,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "simple_w_4_byte_buffer",
+                .function = ReaderWriter_simple_w_4_byte_buffer
+            },
+            {
+                .id = "simple_w_exact_buffer",
+                .function = ReaderWriter_simple_w_exact_buffer
+            },
+            {
+                .id = "simple_w_smaller_buffer",
+                .function = ReaderWriter_simple_w_smaller_buffer
+            },
+            {
+                .id = "simple_w_larger_buffer",
+                .function = ReaderWriter_simple_w_larger_buffer
+            }
+        }
+    },
+    {
         .id = "FilterIter",
         .testcase_count = 7,
         .testcases = (bake_test_case[]){
@@ -4223,5 +4251,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 41);
+    return bake_test_run("api", argc, argv, suites, 42);
 }
