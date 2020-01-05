@@ -53,7 +53,7 @@ void load_from_file(
     char buffer[BUFFER_SIZE];
     size_t read;    
     while ((read = fread(buffer, 1, BUFFER_SIZE, savegame))) {
-        if (ecs_writer_write(buffer, BUFFER_SIZE, &writer)) {
+        if (ecs_writer_write(buffer, read, &writer)) {
             printf("error: %s\n", ecs_strerror(writer.error));
             break;
         }

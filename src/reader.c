@@ -114,6 +114,7 @@ size_t ecs_component_reader(
             reader->written += sizeof(int32_t);
         } else {
             memcpy(buffer, ECS_OFFSET(reader->name, reader->written), read);
+            memset(ECS_OFFSET(buffer, read), 0, sizeof(int32_t) - read);
             reader->written += read;
         }
 
@@ -329,9 +330,22 @@ size_t ecs_table_reader(
         }
 
         memcpy(buffer, ECS_OFFSET(reader->column_data, reader->column_written), read);
-        reader->column_written += read;       
-
+        reader->column_written += read;
         ecs_assert(reader->column_written <= column_bytes, ECS_INTERNAL_ERROR, NULL);
+
+        int32_t align = (((read - 1) / sizeof(int32_t)) + 1) * sizeof(int32_t);
+        if (align != read) {
+            /* Initialize padding bytes to 0 to keep valgrind happy */
+            memset(ECS_OFFSET(buffer, read), 0, align - read);
+
+            /* Set read to align so that data is always aligned to 4 bytes */
+            read = align;
+
+            /* Buffer sizes are expected to be aligned to 4 bytes and the rest
+             * of the serialized data is aligned to 4 bytes. Should never happen
+             * that adding padding bytes exceeds the size. */
+            ecs_assert(read <= size, ECS_INTERNAL_ERROR, NULL);
+        }
 
         if (reader->column_written == column_bytes) {
             ecs_table_reader_next(stream);
@@ -358,6 +372,7 @@ size_t ecs_table_reader(
             reader->name_written += sizeof(int32_t);
         } else {
             memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
+            memset(ECS_OFFSET(buffer, read), 0, sizeof(int32_t) - read);
             reader->name_written += read;
         }
 

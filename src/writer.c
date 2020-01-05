@@ -25,7 +25,7 @@ bool ecs_name_writer_write(
     if (written >= sizeof(int32_t)) {
         *(int32_t*)name_ptr = *(int32_t*)buffer;
         writer->written += sizeof(int32_t);
-        return true;
+        return written != sizeof(int32_t);
     } else {
         memcpy(name_ptr, buffer, written);
         writer->written += written;
@@ -329,8 +329,8 @@ size_t ecs_table_writer(
             ecs_os_free(writer->type_array);
             writer->type_array = ecs_os_malloc(writer->type_count * sizeof(ecs_entity_t));
             writer->type_max_count = writer->type_count;
-            writer->type_index = 0;
         }
+        writer->type_index = 0;
         written = sizeof(int32_t);
         ecs_table_writer_next(stream);
         break;
@@ -377,6 +377,7 @@ size_t ecs_table_writer(
 
         memcpy(ECS_OFFSET(writer->column_data, writer->column_written), buffer, written);
         writer->column_written += written;
+        written = (((written - 1) / sizeof(int32_t)) + 1) * sizeof(int32_t);
 
         if (writer->column_written == writer->row_count * writer->column_size) {
             if (writer->column_index == writer->type_count) {
@@ -438,10 +439,18 @@ int ecs_writer_write(
     while (total_written < size) {
         if (writer->state == EcsStreamHeader) {
             writer->state = *(ecs_blob_header_kind_t*)ECS_OFFSET(buffer, total_written);
+
+            if (writer->state != EcsComponentHeader &&
+                writer->state != EcsTableHeader)
+            {
+                writer->error = ECS_DESERIALIZE_FORMAT_ERROR;
+                goto error;
+            }
+
             written = sizeof(ecs_blob_header_kind_t);
         } else
         if (writer->state == EcsComponentHeader) {
-            written = ecs_component_writer(ECS_OFFSET(buffer, total_written), remaining, writer);          
+            written = ecs_component_writer(ECS_OFFSET(buffer, total_written), remaining, writer);        
         } else
         if (writer->state == EcsTableHeader) {
             written = ecs_table_writer(ECS_OFFSET(buffer, total_written), remaining, writer);
