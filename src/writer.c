@@ -17,7 +17,7 @@ void ecs_name_writer_alloc(
 static
 bool ecs_name_writer_write(
     ecs_name_writer_t *writer,
-    void *buffer)
+    const char *buffer)
 {
     int32_t written = writer->len - writer->written;
     char *name_ptr = ECS_OFFSET(writer->name, writer->written);
@@ -115,7 +115,7 @@ void ecs_component_writer_next(
 
 static
 size_t ecs_component_writer(
-    void *buffer,
+    const char *buffer,
     size_t size,
     ecs_writer_t *stream)
 {
@@ -307,7 +307,7 @@ void ecs_table_writer_next(
 
 static
 size_t ecs_table_writer(
-    void *buffer,
+    const char *buffer,
     size_t size,
     ecs_writer_t *stream)
 {
@@ -433,7 +433,7 @@ error:
 }
 
 int ecs_writer_write(
-    void *buffer,
+    const char *buffer,
     size_t size,
     ecs_writer_t *writer)
 {

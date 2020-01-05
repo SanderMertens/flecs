@@ -1889,7 +1889,7 @@ ecs_reader_t ecs_snapshot_reader_init(
  */ 
 FLECS_EXPORT
 size_t ecs_reader_read(
-    void *buffer,
+    char *buffer,
     size_t size,
     ecs_reader_t *reader);
 
@@ -1920,9 +1920,9 @@ ecs_writer_t ecs_writer_init(
  * The data contained in the buffers must have been serialized with the
  * ecs_reader_read operation. If the data does not match the expected format, or
  * the data contains conflicts with the world, the operation will fail. The
- * buffers must be provided in the same order as produced by ecs_reader_read,
+ * data must be provided in the same order as produced by ecs_reader_read,
  * but the used buffer size does not have to be the same as the one used by
- * ecs_reader_read.
+ * ecs_reader_read. The buffer size must be a multiple of 4.
  * 
  * @param buffer The buffer to deserialize.
  * @param size The maximum number of bytes.
@@ -1931,10 +1931,10 @@ ecs_writer_t ecs_writer_init(
  */
 FLECS_EXPORT
 int ecs_writer_write(
-    void *buffer,
+    const char *buffer,
     size_t size,
     ecs_writer_t *writer);
-    
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module API

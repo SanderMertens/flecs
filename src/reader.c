@@ -62,7 +62,7 @@ void ecs_component_reader_next(
 
 static
 size_t ecs_component_reader(
-    void *buffer,
+    char *buffer,
     size_t size,
     ecs_reader_t *stream)
 {
@@ -254,7 +254,7 @@ void ecs_table_reader_next(
 
 static
 size_t ecs_table_reader(
-    void *buffer,
+    char *buffer,
     size_t size,
     ecs_reader_t *stream)
 {
@@ -396,7 +396,7 @@ size_t ecs_table_reader(
 }
 
 size_t ecs_reader_read(
-    void *buffer,
+    char *buffer,
     size_t size,
     ecs_reader_t *reader)
 {

@@ -30,16 +30,16 @@ void save_to_file(
     const char *filename)
 {
     ecs_reader_t reader = ecs_reader_init(world);
-    FILE *savegame = fopen(filename, "wb");
+    FILE *file = fopen(filename, "wb");
 
     /* Read data from flecs in BUFFER_SIZE chunks */
     char buffer[BUFFER_SIZE];
     size_t read;
     while ((read = ecs_reader_read(buffer, BUFFER_SIZE, &reader))) {
-        fwrite(buffer, 1, read, savegame);
+        fwrite(buffer, 1, read, file);
     }
 
-    fclose(savegame);
+    fclose(file);
 }
 
 void load_from_file(
@@ -47,19 +47,19 @@ void load_from_file(
     const char *filename)
 {
     ecs_writer_t writer = ecs_writer_init(world);
-    FILE* savegame = fopen(filename, "r");
+    FILE* file = fopen(filename, "r");
 
     /* Write data to flecs in BUFFER_SIZE chunks */
     char buffer[BUFFER_SIZE];
     size_t read;    
-    while ((read = fread(buffer, 1, BUFFER_SIZE, savegame))) {
+    while ((read = fread(buffer, 1, BUFFER_SIZE, file))) {
         if (ecs_writer_write(buffer, read, &writer)) {
             printf("error: %s\n", ecs_strerror(writer.error));
             break;
         }
     }
 
-    fclose(savegame);
+    fclose(file);
 }
 
 int main(int argc, char *argv[]) {
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     load_from_file(world, FILENAME);
 
     /* Note that components don't have to be redefined, they are restored by the
-     * writer in the load_from_file function. */
+     * writer. */
 
     /* Create and run a system on the loaded data */
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);

@@ -1418,6 +1418,48 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Reader for world/snapshot serialization
+////////////////////////////////////////////////////////////////////////////////
+
+class reader final {
+public:
+    reader(world& world) {
+        m_reader = ecs_reader_init(world.c_ptr());
+    }
+
+    reader(world& world, snapshot& snapshot) {
+        m_reader = ecs_snapshot_reader_init(world.c_ptr(), snapshot.c_ptr());
+    }
+
+    std::size_t read(char *buffer, std::size_t size) {
+        return ecs_reader_read(buffer, size, &m_reader);
+    }
+
+private:
+    ecs_reader_t m_reader;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Writer for world deserialization
+////////////////////////////////////////////////////////////////////////////////
+
+class writer final {
+public:
+    writer(world& world) {
+        m_writer = ecs_writer_init(world.c_ptr());
+    }
+
+    int write(const char *buffer, std::size_t size) {
+        return ecs_writer_write(buffer, size, &m_writer);
+    }
+
+private:
+    ecs_writer_t m_writer;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Filter fwd declared functions
 ////////////////////////////////////////////////////////////////////////////////
 
