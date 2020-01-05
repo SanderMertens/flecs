@@ -944,7 +944,6 @@ int simple_w_inheritance_test(int buffer_size) {
     return total;    
 }
 
-
 void ReaderWriter_simple_w_inheritance() {
     int i, total = simple_w_inheritance_test(4);
 

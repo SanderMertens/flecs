@@ -472,7 +472,7 @@ ecs_reader_t ecs_reader_init(
 
 ecs_reader_t ecs_snapshot_reader_init(
     ecs_world_t *world,
-    ecs_snapshot_t *snapshot)
+    const ecs_snapshot_t *snapshot)
 {
     ecs_reader_t result = {
         .world = world,
