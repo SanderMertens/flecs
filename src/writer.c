@@ -232,8 +232,11 @@ void ecs_table_writer_prepare_column(
     writer->column = &writer->table->columns[writer->column_index];
     writer->column_size = size;
 
-    ecs_vector_params_t params = {.element_size = writer->column_size};
-    ecs_vector_set_count(&writer->column->data, &params, writer->row_count);
+    if (size) {
+        ecs_vector_params_t params = {.element_size = writer->column_size};
+        ecs_vector_set_count(&writer->column->data, &params, writer->row_count);
+    }
+
     writer->column_data = ecs_vector_first(writer->column->data);
     writer->column_written = 0;
 }
@@ -368,17 +371,26 @@ size_t ecs_table_writer(
 
         written += sizeof(int32_t);
         ecs_table_writer_next(stream);
+
+        /* If column has no size, there will be no column data, so skip to the
+         * next state. */
+        if (!writer->column_size) {
+            ecs_table_writer_next(stream);
+        }
+
         break;
 
     case EcsTableColumnData: {
-        written = writer->row_count * writer->column_size - writer->column_written;
-        if (written > size) {
-            written = size;
-        }
+        if (writer->column_size) {
+            written = writer->row_count * writer->column_size - writer->column_written;
+            if (written > size) {
+                written = size;
+            }
 
-        memcpy(ECS_OFFSET(writer->column_data, writer->column_written), buffer, written);
-        writer->column_written += written;
-        written = (((written - 1) / sizeof(int32_t)) + 1) * sizeof(int32_t);
+            memcpy(ECS_OFFSET(writer->column_data, writer->column_written), buffer, written);
+            writer->column_written += written;
+            written = (((written - 1) / sizeof(int32_t)) + 1) * sizeof(int32_t);
+        }
 
         if (writer->column_written == writer->row_count * writer->column_size) {
             ecs_table_writer_next(stream);

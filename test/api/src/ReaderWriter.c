@@ -365,3 +365,61 @@ void ReaderWriter_unaligned() {
         }
     }
 }
+
+void ReaderWriter_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vector_t *v = serialize_to_vector(world, 4);
+
+    ecs_fini(world);
+
+    world = deserialize_from_vector(v, 4);     
+
+    ecs_fini(world);
+
+    test_assert(true); // Not much to test besides it not crashing
+
+    ecs_vector_free(v);
+}
+
+static
+int tag_test(int buffer_size) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
+
+    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+
+    ecs_fini(world);
+
+    world = deserialize_from_vector(v, buffer_size);
+
+    test_assert( !ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
+
+    test_assert( ecs_has(world, e1, Tag));
+    test_assert( ecs_has(world, e2, Tag));
+    test_assert( ecs_has(world, e3, Tag));     
+
+    ecs_fini(world);
+
+    int total = ecs_vector_count(v);
+    ecs_vector_free(v);
+    return total;
+}
+
+void ReaderWriter_tag() {
+    int i, total = tag_test(4);
+
+    test_assert(total > 4);
+    test_assert(total % 4 == 0);
+
+    for (i = 8; i < total * 2; i += 4) {
+        tag_test(i);
+    }
+}

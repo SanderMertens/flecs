@@ -834,6 +834,8 @@ void ReaderWriter_simple(void);
 void ReaderWriter_id(void);
 void ReaderWriter_id_w_simple(void);
 void ReaderWriter_unaligned(void);
+void ReaderWriter_empty(void);
+void ReaderWriter_tag(void);
 
 // Testsuite 'FilterIter'
 void FilterIter_iter_one_table(void);
@@ -4086,7 +4088,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "ReaderWriter",
-        .testcase_count = 4,
+        .testcase_count = 6,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple",
@@ -4103,6 +4105,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "unaligned",
                 .function = ReaderWriter_unaligned
+            },
+            {
+                .id = "empty",
+                .function = ReaderWriter_empty
+            },
+            {
+                .id = "tag",
+                .function = ReaderWriter_tag
             }
         }
     },

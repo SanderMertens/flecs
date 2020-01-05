@@ -912,7 +912,9 @@
                 "simple",
                 "id",
                 "id_w_simple",
-                "unaligned"
+                "unaligned",
+                "empty",
+                "tag"
             ]
         }, {
             "id": "FilterIter",
