@@ -169,7 +169,6 @@ void ecs_table_reader_next(
             break;
         } else {
             reader->type = reader->table->type;
-            reader->type_index = 0;
             reader->total_columns = ecs_vector_count(reader->type) + 1;
             reader->column_index = 0;
             reader->row_count = ecs_vector_count(reader->columns[0].data);
@@ -179,13 +178,11 @@ void ecs_table_reader_next(
 
     case EcsTableTypeSize:
         reader->state = EcsTableType;
+        reader->type_written = 0;
         break;
 
     case EcsTableType:
-        reader->type_index ++;
-        if (reader->type_index == ecs_vector_count(reader->type)) {
-            reader->state = EcsTableSize;
-        }
+        reader->state = EcsTableSize;
         break;
 
     case EcsTableSize: {
@@ -290,10 +287,14 @@ size_t ecs_table_reader(
         break;  
 
     case EcsTableType: {
-        ecs_vector_params_t params = {.element_size = sizeof(ecs_entity_t)};
-        *(int32_t*)buffer = *(int32_t*)ecs_vector_get(reader->type, &params, reader->type_index);
+        ecs_entity_t *type_array = ecs_vector_first(reader->type);
+        *(int32_t*)buffer = *(int32_t*)ECS_OFFSET(type_array, reader->type_written);
+        reader->type_written += sizeof(int32_t);
         read = sizeof(int32_t);
-        ecs_table_reader_next(stream);
+
+        if (reader->type_written == ecs_vector_count(reader->type) * sizeof(ecs_entity_t)) {
+            ecs_table_reader_next(stream);
+        }
         break;                
     }
 
@@ -313,6 +314,10 @@ size_t ecs_table_reader(
         *(int32_t*)buffer = reader->column_size;
         read = sizeof(ecs_blob_header_kind_t);
         ecs_table_reader_next(stream);
+
+        if (!reader->column_size) {
+            ecs_table_reader_next(stream);
+        }
         break; 
 
     case EcsTableColumnData: {

@@ -332,16 +332,17 @@ size_t ecs_table_writer(
             writer->type_array = ecs_os_malloc(writer->type_count * sizeof(ecs_entity_t));
             writer->type_max_count = writer->type_count;
         }
-        writer->type_index = 0;
+        writer->type_written = 0;
         written = sizeof(int32_t);
         ecs_table_writer_next(stream);
         break;
 
     case EcsTableType:
-        writer->type_array[writer->type_index] = *(int32_t*)buffer;
-        writer->type_index ++;
-        written += sizeof(int32_t);
-        if (writer->type_index == writer->type_count) {
+        *(int32_t*)ECS_OFFSET(writer->type_array, writer->type_written) = *(int32_t*)buffer;
+        written = sizeof(int32_t);
+        writer->type_written += written;
+
+        if (writer->type_written == writer->type_count * sizeof(ecs_entity_t)) {
             ecs_table_writer_register_table(stream);
             ecs_table_writer_next(stream);
         }
@@ -381,16 +382,14 @@ size_t ecs_table_writer(
         break;
 
     case EcsTableColumnData: {
-        if (writer->column_size) {
-            written = writer->row_count * writer->column_size - writer->column_written;
-            if (written > size) {
-                written = size;
-            }
-
-            memcpy(ECS_OFFSET(writer->column_data, writer->column_written), buffer, written);
-            writer->column_written += written;
-            written = (((written - 1) / sizeof(int32_t)) + 1) * sizeof(int32_t);
+        written = writer->row_count * writer->column_size - writer->column_written;
+        if (written > size) {
+            written = size;
         }
+
+        memcpy(ECS_OFFSET(writer->column_data, writer->column_written), buffer, written);
+        writer->column_written += written;
+        written = (((written - 1) / sizeof(int32_t)) + 1) * sizeof(int32_t);
 
         if (writer->column_written == writer->row_count * writer->column_size) {
             ecs_table_writer_next(stream);

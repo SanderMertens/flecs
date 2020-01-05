@@ -914,7 +914,12 @@
                 "id_w_simple",
                 "unaligned",
                 "empty",
-                "tag"
+                "tag",
+                "simple_w_tag",
+                "tag_w_simple",
+                "empty_parent",
+                "parent",
+                "simple_w_parent"
             ]
         }, {
             "id": "FilterIter",

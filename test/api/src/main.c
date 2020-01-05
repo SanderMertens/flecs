@@ -836,6 +836,11 @@ void ReaderWriter_id_w_simple(void);
 void ReaderWriter_unaligned(void);
 void ReaderWriter_empty(void);
 void ReaderWriter_tag(void);
+void ReaderWriter_simple_w_tag(void);
+void ReaderWriter_tag_w_simple(void);
+void ReaderWriter_empty_parent(void);
+void ReaderWriter_parent(void);
+void ReaderWriter_simple_w_parent(void);
 
 // Testsuite 'FilterIter'
 void FilterIter_iter_one_table(void);
@@ -4088,7 +4093,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "ReaderWriter",
-        .testcase_count = 6,
+        .testcase_count = 11,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple",
@@ -4113,6 +4118,26 @@ static bake_test_suite suites[] = {
             {
                 .id = "tag",
                 .function = ReaderWriter_tag
+            },
+            {
+                .id = "simple_w_tag",
+                .function = ReaderWriter_simple_w_tag
+            },
+            {
+                .id = "tag_w_simple",
+                .function = ReaderWriter_tag_w_simple
+            },
+            {
+                .id = "empty_parent",
+                .function = ReaderWriter_empty_parent
+            },
+            {
+                .id = "parent",
+                .function = ReaderWriter_parent
+            },
+            {
+                .id = "simple_w_parent",
+                .function = ReaderWriter_simple_w_parent
             }
         }
     },

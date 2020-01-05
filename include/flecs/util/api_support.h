@@ -75,7 +75,7 @@ typedef struct ecs_table_reader_t {
     ecs_table_column_t *columns;
 
     /* Current index in type */
-    int32_t type_index;
+    int32_t type_written;
     ecs_type_t type;
 
     /* Current column */
@@ -130,7 +130,7 @@ typedef struct ecs_table_writer_t {
     /* Keep state for parsing type */
     uint32_t type_count;
     uint32_t type_max_count;
-    uint32_t type_index;
+    uint32_t type_written;
     ecs_entity_t *type_array;
     
     uint32_t column_index;
