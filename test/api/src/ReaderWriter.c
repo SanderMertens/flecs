@@ -13,13 +13,15 @@ ecs_vector_t* serialize_to_vector(
     ecs_vector_t *v = ecs_vector_new(&params, 0);
 
     ecs_reader_t reader = ecs_reader_init(world);
-    char buffer[buffer_size];
+    char *buffer = ecs_os_malloc(buffer_size);
     int read;
 
     while ((read = ecs_reader_read(buffer, buffer_size, &reader))) {
         void *ptr = ecs_vector_addn(&v, &params, read);
         memcpy(ptr, buffer, read);
     }
+
+    ecs_os_free(buffer);
 
     return v;
 }
@@ -58,7 +60,7 @@ ecs_world_t* deserialize_from_vector(
     ecs_world_t *world = ecs_init();
     ecs_writer_t writer = ecs_writer_init(world);
     int v_ptr = 0, read;
-    char buffer[buffer_size];
+    char *buffer = ecs_os_malloc(buffer_size);
 
     while ((read = vector_read(buffer, buffer_size, v, &v_ptr))) {
         if (ecs_writer_write(buffer, read, &writer)) {
@@ -66,6 +68,8 @@ ecs_world_t* deserialize_from_vector(
             test_assert(false);
         }
     }
+
+    ecs_os_free(buffer);
     
     return world;
 }
