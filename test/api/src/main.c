@@ -838,6 +838,10 @@ void ReaderWriter_id_w_4_byte_buffer(void);
 void ReaderWriter_id_w_exact_buffer(void);
 void ReaderWriter_id_w_smaller_buffer(void);
 void ReaderWriter_id_w_larger_buffer(void);
+void ReaderWriter_id_w_simple_4_byte_buffer(void);
+void ReaderWriter_id_w_simple_exact_buffer(void);
+void ReaderWriter_id_w_simple_smaller_buffer(void);
+void ReaderWriter_id_w_simple_larger_buffer(void);
 
 // Testsuite 'FilterIter'
 void FilterIter_iter_one_table(void);
@@ -4090,7 +4094,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "ReaderWriter",
-        .testcase_count = 8,
+        .testcase_count = 12,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_w_4_byte_buffer",
@@ -4123,6 +4127,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "id_w_larger_buffer",
                 .function = ReaderWriter_id_w_larger_buffer
+            },
+            {
+                .id = "id_w_simple_4_byte_buffer",
+                .function = ReaderWriter_id_w_simple_4_byte_buffer
+            },
+            {
+                .id = "id_w_simple_exact_buffer",
+                .function = ReaderWriter_id_w_simple_exact_buffer
+            },
+            {
+                .id = "id_w_simple_smaller_buffer",
+                .function = ReaderWriter_id_w_simple_smaller_buffer
+            },
+            {
+                .id = "id_w_simple_larger_buffer",
+                .function = ReaderWriter_id_w_simple_larger_buffer
             }
         }
     },

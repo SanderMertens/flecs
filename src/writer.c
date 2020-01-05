@@ -174,69 +174,6 @@ error:
 }
 
 static
-void ecs_table_writer_next(
-    ecs_writer_t *stream)
-{
-    ecs_table_writer_t *writer = &stream->table;
-
-    switch(writer->state) {
-    case EcsTableTypeSize:
-        writer->state = EcsTableType;
-        break;
-
-    case EcsTableType:
-        writer->state = EcsTableSize;
-        break;
-
-    case EcsTableSize:
-        writer->state = EcsTableColumn;
-        break;
-
-    case EcsTableColumnHeader:
-        writer->state = EcsTableColumnSize;
-        break;
-
-    case EcsTableColumnSize:
-        writer->state = EcsTableColumnData;
-        break;
-
-    case EcsTableColumnNameHeader:
-        writer->state = EcsTableColumnNameLength;
-        break;
-
-    case EcsTableColumnNameLength:
-        writer->state = EcsTableColumnName;
-        break;
-
-    case EcsTableColumnName:
-        writer->row_index ++;
-        if (writer->row_index < writer->row_count) {
-            writer->state = EcsTableColumnNameLength;
-            break;
-        } else {
-            /* Fallthrough on purpose */
-        }
-
-    case EcsTableColumnData:
-        writer->column_index ++;
-        if (writer->column_index > writer->type_count) {
-            stream->state = EcsStreamHeader;
-            writer->column_written = 0;
-            writer->state = 0;
-            writer->column_index = 0;
-            writer->row_index = 0;
-        } else {
-            writer->state = EcsTableColumn;
-        }
-        break;
-
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-        break;
-    }
-}
-
-static
 void ecs_table_writer_register_table(
     ecs_writer_t *stream)
 {
@@ -299,8 +236,70 @@ void ecs_table_writer_prepare_column(
     ecs_vector_set_count(&writer->column->data, &params, writer->row_count);
     writer->column_data = ecs_vector_first(writer->column->data);
     writer->column_written = 0;
+}
 
-    ecs_table_writer_next(stream);
+static
+void ecs_table_writer_next(
+    ecs_writer_t *stream)
+{
+    ecs_table_writer_t *writer = &stream->table;
+
+    switch(writer->state) {
+    case EcsTableTypeSize:
+        writer->state = EcsTableType;
+        break;
+
+    case EcsTableType:
+        writer->state = EcsTableSize;
+        break;
+
+    case EcsTableSize:
+        writer->state = EcsTableColumn;
+        break;
+
+    case EcsTableColumnHeader:
+        writer->state = EcsTableColumnSize;
+        break;
+
+    case EcsTableColumnSize:
+        writer->state = EcsTableColumnData;
+        break;
+
+    case EcsTableColumnNameHeader:
+        writer->state = EcsTableColumnNameLength;
+        break;
+
+    case EcsTableColumnNameLength:
+        writer->state = EcsTableColumnName;
+        break;
+
+    case EcsTableColumnName:
+        writer->row_index ++;
+        if (writer->row_index < writer->row_count) {
+            writer->state = EcsTableColumnNameLength;
+            break;
+        } else {
+            /* Fallthrough on purpose */
+        }
+
+    case EcsTableColumnData:
+        writer->column_index ++;
+        if (writer->column_index > writer->type_count) {
+            ecs_table_writer_finalize_table(stream);
+            stream->state = EcsStreamHeader;
+            writer->column_written = 0;
+            writer->state = 0;
+            writer->column_index = 0;
+            writer->row_index = 0;
+        } else {
+            writer->state = EcsTableColumn;
+        }
+        break;
+
+    default:
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        break;
+    }
 }
 
 static
@@ -365,6 +364,8 @@ size_t ecs_table_writer(
     case EcsTableColumnHeader:
     case EcsTableColumnSize:
         ecs_table_writer_prepare_column(stream, *(int32_t*)buffer);
+        ecs_table_writer_next(stream);
+
         written += sizeof(int32_t);
         ecs_table_writer_next(stream);
         break;
@@ -380,10 +381,6 @@ size_t ecs_table_writer(
         written = (((written - 1) / sizeof(int32_t)) + 1) * sizeof(int32_t);
 
         if (writer->column_written == writer->row_count * writer->column_size) {
-            if (writer->column_index == writer->type_count) {
-                ecs_table_writer_finalize_table(stream);
-            }
-
             ecs_table_writer_next(stream);
         }
         break;
@@ -391,6 +388,7 @@ size_t ecs_table_writer(
 
     case EcsTableColumnNameHeader:
         ecs_table_writer_prepare_column(stream, sizeof(EcsId));
+        ecs_table_writer_next(stream);
 
     case EcsTableColumnNameLength:
         ecs_name_writer_alloc(&writer->name, *(int32_t*)buffer);
@@ -444,7 +442,6 @@ int ecs_writer_write(
             if (writer->state != EcsComponentHeader &&
                 writer->state != EcsTableHeader)
             {
-                printf("Invalid stream header\n");
                 writer->error = ECS_DESERIALIZE_FORMAT_ERROR;
                 goto error;
             }

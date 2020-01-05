@@ -26,7 +26,6 @@ void ecs_component_reader_next(
     case EcsComponentHeader:  
         reader->state = EcsComponentId;
         if (!reader->id_column) {
-            ecs_component_reader_fetch_component_data(stream);
             /* Start from EcsOnDemand. Everything before that is the same for
              * every world */
             reader->index = EEcsOnDemand;
@@ -40,7 +39,7 @@ void ecs_component_reader_next(
     case EcsComponentSize:
         reader->state = EcsComponentNameLength;
         reader->name = reader->name_column[reader->index];
-        reader->len = strlen(reader->name) + 1; 
+        reader->len = strlen(reader->name) + 1;
         break;
 
     case EcsComponentNameLength:
@@ -451,20 +450,40 @@ size_t ecs_reader_read(
 ecs_reader_t ecs_reader_init(
     ecs_world_t *world)
 {
-    return (ecs_reader_t){
+    ecs_reader_t result = {
         .world = world,
         .state = EcsComponentSegment,
         .tables = world->main_stage.tables
     };
+
+    ecs_component_reader_fetch_component_data(&result);
+
+    /* If the world does not contain components besides the built-in ones, go
+     * straight to serializing tables */
+    if (result.component.count == EEcsOnDemand) {
+        result.state = EcsTableSegment;
+    }
+
+    return result;
 }
 
 ecs_reader_t ecs_snapshot_reader_init(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    return (ecs_reader_t){
+    ecs_reader_t result = {
         .world = world,
         .state = EcsComponentSegment,
         .tables = snapshot->tables
     };
+
+    ecs_component_reader_fetch_component_data(&result);
+
+    /* If the world does not contain components besides the built-in ones, go
+     * straight to serializing tables */
+    if (result.component.count == EEcsOnDemand) {
+        result.state = EcsTableSegment;
+    }
+
+    return result;
 }
