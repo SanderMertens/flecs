@@ -919,7 +919,10 @@
                 "tag_w_simple",
                 "empty_parent",
                 "parent",
-                "simple_w_parent"
+                "simple_w_parent",
+                "inheritance",
+                "simple_w_inheritance",
+                "deserialize_twice"
             ]
         }, {
             "id": "FilterIter",

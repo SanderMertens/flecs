@@ -810,3 +810,211 @@ void ReaderWriter_simple_w_parent() {
         simple_w_parent_test(i);
     }
 }
+
+int inheritance_test(int buffer_size) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {1, 2});
+    ecs_type_t ecs_type(base) = ecs_type_from_entity(world, base);
+
+    ecs_entity_t e1 = ecs_new_instance(world, base, 0);
+    ecs_entity_t e2 = ecs_new_instance(world, base, 0);
+    ecs_entity_t e3 = ecs_new_instance(world, base, 0);
+
+    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+
+    ecs_fini(world);
+
+    world = deserialize_from_vector(v, buffer_size);
+
+    test_int( ecs_count(world, Position), 4);
+    test_int( ecs_count(world, base), 3);
+
+    test_assert( !ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
+
+    test_assert( ecs_has(world, e1, base));
+    test_assert( ecs_has(world, e2, base));
+    test_assert( ecs_has(world, e3, base));
+
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
+
+    test_assert( !ecs_has_owned(world, e1, Position));
+    test_assert( !ecs_has_owned(world, e2, Position));
+    test_assert( !ecs_has_owned(world, e3, Position));
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);      
+    ecs_progress(world, 0);
+    test_int(ctx.count, 4);
+
+    ecs_fini(world);
+
+    int total = ecs_vector_count(v);
+    ecs_vector_free(v);
+    return total;    
+}
+
+void ReaderWriter_inheritance() {
+    int i, total = inheritance_test(4);
+
+    test_assert(total > 4);
+    test_assert(total % 4 == 0);
+
+    for (i = 8; i < total * 2; i += 4) {
+        inheritance_test(i);
+    }
+}
+
+int simple_w_inheritance_test(int buffer_size) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {1, 2});
+    ecs_type_t ecs_type(base) = ecs_type_from_entity(world, base);
+
+    ecs_entity_t e1 = ecs_new_instance(world, base, 0);
+    ecs_set(world, e1, Velocity, {3, 4});
+    ecs_entity_t e2 = ecs_new_instance(world, base, 0);
+    ecs_set(world, e2, Velocity, {5, 6});
+    ecs_entity_t e3 = ecs_new_instance(world, base, 0);
+    ecs_set(world, e3, Velocity, {7, 8});
+
+    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+
+    ecs_fini(world);
+
+    world = deserialize_from_vector(v, buffer_size);
+
+    test_int( ecs_count(world, Position), 4);
+    test_int( ecs_count(world, Velocity), 3);
+    test_int( ecs_count(world, base), 3);
+
+    test_assert( !ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
+
+    test_assert( ecs_has(world, e1, base));
+    test_assert( ecs_has(world, e2, base));
+    test_assert( ecs_has(world, e3, base));
+
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
+
+    test_assert( ecs_has(world, e1, Velocity));
+    test_assert( ecs_has(world, e2, Velocity));
+    test_assert( ecs_has(world, e3, Velocity));
+
+    test_assert( !ecs_has_owned(world, e1, Position));
+    test_assert( !ecs_has_owned(world, e2, Position));
+    test_assert( !ecs_has_owned(world, e3, Position));
+
+    Velocity *
+    p = ecs_get_ptr(world, e1, Velocity);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    p = ecs_get_ptr(world, e2, Velocity);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    p = ecs_get_ptr(world, e3, Velocity);
+    test_int(p->x, 7);
+    test_int(p->y, 8); 
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position, Velocity);
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);      
+    ecs_progress(world, 0);
+    test_int(ctx.count, 3);
+
+    ecs_fini(world);
+
+    int total = ecs_vector_count(v);
+    ecs_vector_free(v);
+    return total;    
+}
+
+
+void ReaderWriter_simple_w_inheritance() {
+    int i, total = simple_w_inheritance_test(4);
+
+    test_assert(total > 4);
+    test_assert(total % 4 == 0);
+
+    for (i = 8; i < total * 2; i += 4) {
+        simple_w_inheritance_test(i);
+    }
+}
+
+int deserialize_twice_test(int buffer_size) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 4});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 6});
+
+    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+
+    ecs_fini(world);
+
+    world = deserialize_from_vector(v, buffer_size);
+    world = deserialize_from_vector(v, buffer_size);
+
+    test_int( ecs_count(world, Position), 3);
+
+    test_assert( !ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
+
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
+
+    Position *
+    p = ecs_get_ptr(world, e1, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    p = ecs_get_ptr(world, e2, Position);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    p = ecs_get_ptr(world, e3, Position);
+    test_int(p->x, 5);
+    test_int(p->y, 6); 
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);      
+    ecs_progress(world, 0);
+    test_int(ctx.count, 3);
+
+    ecs_fini(world);
+
+    int total = ecs_vector_count(v);
+    ecs_vector_free(v);
+    return total;
+}
+
+void ReaderWriter_deserialize_twice() {
+    int i, total = deserialize_twice_test(4);
+
+    test_assert(total > 4);
+    test_assert(total % 4 == 0);
+
+    for (i = 8; i < total * 2; i += 4) {
+        deserialize_twice_test(i);
+    }
+}
