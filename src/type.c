@@ -1152,7 +1152,7 @@ bool ecs_type_match_w_filter(
 
         /* Default for include_kind is MatchAll */
         } else if (!ecs_type_contains(world, type, filter->include, 
-            filter->include_kind != EcsMatchAny, false)) 
+            filter->include_kind != EcsMatchAny, true)) 
         {
             return false;
         }
@@ -1177,7 +1177,7 @@ bool ecs_type_match_w_filter(
         
         /* Default for exclude_kind is MatchAny */                
         } else if (ecs_type_contains(world, type, filter->exclude, 
-            filter->exclude_kind == EcsMatchAll, false))
+            filter->exclude_kind == EcsMatchAll, true))
         {
             return false;
         }

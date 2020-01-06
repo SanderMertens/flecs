@@ -2296,13 +2296,11 @@ ecs_type_t ecs_get_type(
     return result;
 }
 
-uint32_t _ecs_count(
+uint32_t ecs_count_w_filter(
     ecs_world_t *world,
-    ecs_type_t type)
+    const ecs_filter_t *filter)
 {
-    if (!type) {
-        return 0;
-    }
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_chunked_t *tables = world->main_stage.tables;
     uint32_t i, count = ecs_chunked_count(tables);
@@ -2310,12 +2308,26 @@ uint32_t _ecs_count(
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, i);
-        if (ecs_type_contains(world, table->type, type, true, true)) {
-            result += ecs_vector_count(table->columns[0].data);
+
+        if (!filter || ecs_type_match_w_filter(world, table->type, filter)) {
+            result += ecs_vector_count(table->columns[0].data); 
         }
     }
     
     return result;
+}
+
+uint32_t _ecs_count(
+    ecs_world_t *world,
+    ecs_type_t type)
+{    
+    if (!type) {
+        return 0;
+    }
+
+    return ecs_count_w_filter(world, &(ecs_filter_t){
+        .include = type
+    });
 }
 
 ecs_entity_t ecs_new_component(

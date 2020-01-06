@@ -1270,6 +1270,12 @@ uint32_t _ecs_count(
 
 #define ecs_count(world, type) _ecs_count(world, ecs_type(type))
 
+/** Same as ecs_count but with a filter */
+FLECS_EXPORT
+uint32_t ecs_count_w_filter(
+    ecs_world_t *world,
+    const ecs_filter_t *filter);
+
 /** Lookup an entity by id.
  * This operation is a convenient way to lookup entities by string identifier
  * that have the EcsId component. It is recommended to cache the result of this
