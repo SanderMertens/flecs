@@ -255,7 +255,16 @@ void _ecs_assert(
     const char *file,
     uint32_t line);
 
+/** Parse error */
+void _ecs_parser_error(
+    const char *name,
+    const char *expr, 
+    int column,
+    const char *fmt,
+    ...);
+
 #define ecs_abort(error_code, param) _ecs_abort(error_code, param, __FILE__, __LINE__); abort()
+#define ecs_parser_error(name, expr, column, ...) _ecs_parser_error(name, expr, column, __VA_ARGS__); abort()
 
 #ifdef NDEBUG
 #define ecs_assert(condition, error_code, param)
