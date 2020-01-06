@@ -119,7 +119,7 @@ ecs_type_t ecs_type_find_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t *buf,
-    uint32_t count);
+    int32_t count);
 
 /* Merge add/remove types */
 ecs_type_t ecs_type_merge_intern(
@@ -200,36 +200,36 @@ void ecs_table_register_system(
     ecs_entity_t system);    
 
 /* Insert row into table (or stage) */
-uint32_t ecs_table_insert(
+int32_t ecs_table_insert(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_column_t *columns,
     ecs_entity_t entity);
 
 /* Insert multiple rows into table (or stage) */
-uint32_t ecs_table_grow(
+int32_t ecs_table_grow(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_column_t *columns,
-    uint32_t count,
+    int32_t count,
     ecs_entity_t first_entity);
 
 /* Dimension array to have n rows (doesn't add entities) */
 int16_t ecs_table_dim(
     ecs_table_t *table,
     ecs_table_column_t *columns,
-    uint32_t count);
+    int32_t count);
 
 /* Return number of entities in table */
 uint64_t ecs_table_count(
     ecs_table_t *table);
 
 /* Return size of table row */
-uint32_t ecs_table_row_size(
+int32_t ecs_table_row_size(
     ecs_table_t *table);
 
 /* Return size of table row */
-uint32_t ecs_table_rows_dimensioned(
+int32_t ecs_table_rows_dimensioned(
     ecs_table_t *table);    
 
 /* Delete row from table */
@@ -244,7 +244,7 @@ void ecs_table_delete(
 void* ecs_table_get(
     ecs_table_t *table,
     ecs_vector_t *rows,
-    uint32_t index);
+    int32_t index);
 
 /* Test if table has component */
 bool ecs_table_has_components(
@@ -295,8 +295,8 @@ void ecs_table_move_back_and_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_table_column_t *columns,
-    uint32_t row,
-    uint32_t count);
+    int32_t row,
+    int32_t count);
 
 /* -- System API -- */
 
@@ -367,8 +367,8 @@ ecs_type_t ecs_notify_row_system(
     ecs_type_t type,
     ecs_table_t *table,
     ecs_table_column_t *table_columns,
-    uint32_t offset,
-    uint32_t limit);
+    int32_t offset,
+    int32_t limit);
 
 /* Callback for parse_component_expr that stores result as ecs_system_column_t's */
 int ecs_parse_signature_action(
@@ -421,7 +421,7 @@ void ecs_run_jobs(
 
 void ecs_os_time_setup(void);
 uint64_t ecs_os_time_now(void);
-void ecs_os_time_sleep(unsigned int sec, unsigned int nanosec);
+void ecs_os_time_sleep(int32_t sec, int32_t nanosec);
 
 
 /* -- Private utilities -- */
@@ -460,7 +460,7 @@ bool ecs_needs_tables(
     const char *system_id);
 
 /* Count number of columns signature */
-uint32_t ecs_columns_count(
+int32_t ecs_columns_count(
     const char *sig);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
@@ -468,7 +468,7 @@ void _assert_func(
     bool cond,
     const char *cond_str,
     const char *file,
-    uint32_t line,
+    int32_t line,
     const char *func);
 
 #endif

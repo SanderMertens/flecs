@@ -6,7 +6,7 @@ ecs_type_t find_or_create_type(
     ecs_stage_t *stage,
     ecs_type_node_t *root,
     ecs_entity_t *array,
-    uint32_t count,
+    int32_t count,
     bool create,
     bool normalized);
 
@@ -98,10 +98,10 @@ int compare_handle(
 static
 uint32_t hash_array(
     ecs_entity_t* array,
-    uint32_t count)
+    int32_t count)
 {
     uint32_t hash = 0;
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_hash(&array[i], sizeof(ecs_entity_t), &hash);
     }
@@ -116,7 +116,7 @@ void notify_systems_array_of_type(
     ecs_type_t type)
 {
     ecs_entity_t *buffer = ecs_vector_first(systems);
-    uint32_t i, count = ecs_vector_count(systems);
+    int32_t i, count = ecs_vector_count(systems);
 
     for (i = 0; i < count; i ++) {
         ecs_row_system_notify_of_type(world, stage, buffer[i], type);
@@ -146,7 +146,7 @@ ecs_entity_t split_entity_id(
 static
 ecs_type_t ecs_type_from_array(
     ecs_entity_t *array,
-    uint32_t count)
+    int32_t count)
 {
     ecs_vector_t *vector = ecs_vector_new(ecs_entity_t, count);
     ecs_vector_set_count(&vector, ecs_entity_t, count);
@@ -198,12 +198,12 @@ ecs_type_t ecs_type_from_array_normalize(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t *array,
-    uint32_t count)
+    int32_t count)
 {
     ecs_entity_t *dst_array = ecs_os_alloca(ecs_entity_t, count);
-    uint32_t dst_count = 0;
+    int32_t dst_count = 0;
     
-    uint32_t i, j;
+    int32_t i, j;
     for (i = 0; i < count; i ++) {
         ecs_entity_t ie = array[i];
         ecs_entity_t ie_e = ie & ECS_ENTITY_MASK;
@@ -235,7 +235,7 @@ void mark_parents(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t *array,
-    uint32_t count)
+    int32_t count)
 {
     int i;
     for (i = count - 1; i >= 0; i --) {
@@ -255,7 +255,7 @@ ecs_type_t register_type(
     ecs_stage_t *stage,
     ecs_type_link_t *link,
     ecs_entity_t *array,
-    uint32_t count,
+    int32_t count,
     bool normalized)
 {
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -301,11 +301,11 @@ ecs_type_t find_type_in_vector(
     ecs_stage_t *stage,
     ecs_vector_t **vector,
     ecs_entity_t *array,
-    uint32_t count,
+    int32_t count,
     bool create,
     bool normalized)
 {
-    uint32_t i, types_count = ecs_vector_count(*vector);
+    int32_t i, types_count = ecs_vector_count(*vector);
     ecs_type_link_t **type_array = ecs_vector_first(*vector);
 
     for (i = 0; i < types_count; i ++) {
@@ -314,7 +314,7 @@ ecs_type_t find_type_in_vector(
             continue;
         }
 
-        uint32_t type_count = ecs_vector_count(type);
+        int32_t type_count = ecs_vector_count(type);
 
         if (type_count != count) {
             continue;
@@ -322,7 +322,7 @@ ecs_type_t find_type_in_vector(
 
         ecs_entity_t *type_array = ecs_vector_first(type);
 
-        uint32_t j;
+        int32_t j;
         for (j = 0; j < type_count; j ++) {
             if (type_array[j] != array[j]) {
                 break;
@@ -351,14 +351,14 @@ ecs_type_t find_or_create_type(
     ecs_stage_t *stage,
     ecs_type_node_t *root,
     ecs_entity_t *array,
-    uint32_t count,
+    int32_t count,
     bool create,
     bool normalized)
 {
     ecs_type_node_t *node = root;
     ecs_type_t type = NULL;
     ecs_entity_t offset = 0;
-    uint32_t i;
+    int32_t i;
 
     ecs_assert(count < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
 
@@ -411,7 +411,7 @@ ecs_type_t find_or_create_type(
             }
 
             uint32_t hash = hash_array(&array[i], count - i);
-            uint32_t index = hash % ECS_TYPE_DB_BUCKET_COUNT;
+            int32_t index = hash % ECS_TYPE_DB_BUCKET_COUNT;
 
             if (!node->types[index]) {
                 if (create) {
@@ -495,7 +495,7 @@ ecs_type_t ecs_type_find_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t *array,
-    uint32_t count)
+    int32_t count)
 {
     ecs_type_t type = NULL;
 
@@ -530,14 +530,14 @@ ecs_type_t ecs_type_add_intern(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t count = ecs_vector_count(type);
+    int32_t count = ecs_vector_count(type);
     ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, count + 1);
     ecs_entity_t *old_array = ecs_vector_first(type);
     void *new_buffer = new_array;
 
     ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t i, pos = 0;
+    int32_t i, pos = 0;
     bool in_type = false;
     for (i = 0; i < count; i ++) {
         ecs_entity_t elem = old_array[i];
@@ -577,14 +577,14 @@ ecs_type_t ecs_type_remove_intern(
         return NULL;
     }
 
-    uint32_t count = ecs_vector_count(type);
+    int32_t count = ecs_vector_count(type);
     ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, count);
     ecs_entity_t *old_array = ecs_vector_first(type);
     void *new_buffer = new_array;
 
     ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t i, pos = 0;
+    int32_t i, pos = 0;
     for (i = 0; i < count; i ++) {
         ecs_entity_t elem = old_array[i];
         if (elem != e) {
@@ -621,8 +621,8 @@ ecs_type_t ecs_type_merge_intern(
 
     ecs_entity_t *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
     ecs_entity_t cur = 0, add = 0, del = 0;
-    uint32_t i_cur = 0, i_add = 0, i_del = 0;
-    uint32_t cur_count = 0, add_count = 0, del_count = 0;
+    int32_t i_cur = 0, i_add = 0, i_del = 0;
+    int32_t cur_count = 0, add_count = 0, del_count = 0;
 
     del_count = ecs_vector_count(to_del);
     if (del_count) {
@@ -648,7 +648,7 @@ ecs_type_t ecs_type_merge_intern(
         buf_new = ecs_os_alloca(ecs_entity_t, cur_count + add_count);
     }
 
-    uint32_t new_count = 0;
+    int32_t new_count = 0;
 
     do {
         if (add && (!cur || add < cur)) {
@@ -741,7 +741,7 @@ ecs_entity_t ecs_type_contains(
         return *(ecs_entity_t*)ecs_vector_first(type_1);
     }
 
-    uint32_t i_2, i_1 = 0;
+    int32_t i_2, i_1 = 0;
     ecs_entity_t e1 = 0;
     ecs_entity_t *t1_array = ecs_vector_first(type_1);
     ecs_entity_t *t2_array = ecs_vector_first(type_2);
@@ -749,8 +749,8 @@ ecs_entity_t ecs_type_contains(
     ecs_assert(t1_array != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(t2_array != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t t1_count = ecs_vector_count(type_1);
-    uint32_t t2_count = ecs_vector_count(type_2);
+    int32_t t1_count = ecs_vector_count(type_1);
+    int32_t t2_count = ecs_vector_count(type_2);
 
     for (i_2 = 0; i_2 < t2_count; i_2 ++) {
         ecs_entity_t e2 = t2_array[i_2] & ECS_ENTITY_MASK;
@@ -806,7 +806,7 @@ bool ecs_type_has_entity_intern(
     bool match_prefab)
 {
     ecs_entity_t *array = ecs_vector_first(type);
-    uint32_t i, count = ecs_vector_count(type);
+    int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i++) {
         ecs_entity_t e = array[i];
@@ -867,7 +867,7 @@ EcsTypeComponent type_from_vec(
 {
     EcsTypeComponent result = {0, 0};
     ecs_entity_t *array = ecs_vector_first(vec);
-    uint32_t i, count = ecs_vector_count(vec);
+    int32_t i, count = ecs_vector_count(vec);
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t entity = array[i];
@@ -1016,7 +1016,7 @@ ecs_type_t ecs_type_merge(
 ecs_type_t ecs_type_find(
     ecs_world_t *world,
     ecs_entity_t *array,
-    uint32_t count)
+    int32_t count)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
 
@@ -1028,7 +1028,7 @@ ecs_type_t ecs_type_find(
 ecs_entity_t ecs_type_get_entity(
     ecs_world_t *world,
     ecs_type_t type,
-    uint32_t index)
+    int32_t index)
 {
     (void)world;
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -1086,11 +1086,11 @@ char* ecs_type_to_expr(
 {
     ecs_vector_t *chbuf = ecs_vector_new(char, 32);
     char *dst;
-    uint32_t len;
+    int32_t len;
     char buf[15];
 
     ecs_entity_t *handles = ecs_vector_first(type);
-    uint32_t i, count = ecs_vector_count(type);
+    int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t h;

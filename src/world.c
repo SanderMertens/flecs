@@ -153,7 +153,7 @@ void notify_create_table(
     ecs_table_t *table)
 {
     ecs_entity_t *buffer = ecs_vector_first(systems);
-    uint32_t i, count = ecs_vector_count(systems);
+    int32_t i, count = ecs_vector_count(systems);
 
     for (i = 0; i < count; i ++) {
         ecs_col_system_notify_of_table(world, buffer[i], table);
@@ -310,7 +310,7 @@ void ecs_world_activate_system(
         dst_array = world->inactive_systems;
     }
 
-    uint32_t i, count = ecs_vector_count(src_array);
+    int32_t i, count = ecs_vector_count(src_array);
     for (i = 0; i < count; i ++) {
         ecs_entity_t *h = ecs_vector_get(
             src_array, ecs_entity_t, i);
@@ -327,7 +327,7 @@ void ecs_world_activate_system(
         &dst_array, src_array, ecs_entity_t, i);
 
     ecs_entity_t *to_sort;
-    uint32_t sort_count;
+    int32_t sort_count;
 
     if (active) {
          *ecs_system_array(world, kind) = dst_array;
@@ -377,7 +377,7 @@ void col_systems_deinit_handlers(
     ecs_world_t *world,
     ecs_vector_t *systems)
 {
-    uint32_t i, count = ecs_vector_count(systems);
+    int32_t i, count = ecs_vector_count(systems);
     ecs_entity_t *buffer = ecs_vector_first(systems);
 
     for (i = 0; i < count; i ++) {
@@ -400,7 +400,7 @@ void col_systems_deinit(
     ecs_world_t *world,
     ecs_vector_t *systems)
 {
-    uint32_t i, count = ecs_vector_count(systems);
+    int32_t i, count = ecs_vector_count(systems);
     ecs_entity_t *buffer = ecs_vector_first(systems);
 
     for (i = 0; i < count; i ++) {
@@ -411,7 +411,7 @@ void col_systems_deinit(
         ecs_vector_free(ptr->base.columns);
         ecs_vector_free(ptr->jobs);
 
-        uint32_t t;
+        int32_t t;
         ecs_matched_table_t *tables = ecs_vector_first(ptr->inactive_tables);
         for (t = 0; t < ecs_vector_count(ptr->inactive_tables); t ++) {
             ecs_os_free(tables[t].columns);
@@ -434,7 +434,7 @@ void row_systems_deinit(
     ecs_world_t *world,
     ecs_vector_t *systems)
 {
-    uint32_t i, count = ecs_vector_count(systems);
+    int32_t i, count = ecs_vector_count(systems);
     ecs_entity_t *buffer = ecs_vector_first(systems);
 
     for (i = 0; i < count; i ++) {
@@ -464,7 +464,7 @@ void deinit_tables(
     ecs_world_t *world)
 {
     ecs_sparse_t *tables = world->main_stage.tables;
-    uint32_t i, count = ecs_sparse_count(tables);
+    int32_t i, count = ecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
@@ -508,7 +508,7 @@ void add_prefab_child_to_builder(
 
         ecs_entity_t *array = ecs_vector_first(type);
         (void)array;
-        uint32_t count = ecs_vector_count(type);
+        int32_t count = ecs_vector_count(type);
         (void)count;
 
         ecs_assert((array[count - 1] & ECS_INSTANCEOF) != 0, 
@@ -532,7 +532,7 @@ void add_prefab_child_to_builder(
 void EcsInitPrefab(ecs_rows_t *rows) {
     ECS_COLUMN(rows, EcsPrefab, prefab, 1);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         prefab[i].parent = 0;
     }
@@ -543,14 +543,14 @@ void EcsSetPrefab(ecs_rows_t *rows) {
 
     ECS_COLUMN(rows, EcsPrefab, prefab, 1);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_entity_t parent = prefab[i].parent;
         ecs_entity_t e = rows->entities[i];
         ecs_table_t *table = rows->table;
 
         ecs_entity_t *type = ecs_vector_first(table->type);
-        uint32_t t, t_count = ecs_vector_count(table->type);
+        int32_t t, t_count = ecs_vector_count(table->type);
 
         bool prefab_parent_flag_added = false;
         bool prefab_parent_added = false;
@@ -836,7 +836,7 @@ int ecs_fini(
     assert(!world->in_progress);
     assert(!world->is_merging);
 
-    uint32_t i, system_count = ecs_vector_count(world->fini_tasks);
+    int32_t i, system_count = ecs_vector_count(world->fini_tasks);
     if (system_count) {
         ecs_entity_t *buffer = ecs_vector_first(world->fini_tasks);
         for (i = 0; i < system_count; i ++) {
@@ -920,7 +920,7 @@ int ecs_fini(
 
 void ecs_dim(
     ecs_world_t *world,
-    uint32_t entity_count)
+    int32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     ecs_map_set_size(world->main_stage.entity_index, entity_count);
@@ -929,7 +929,7 @@ void ecs_dim(
 void _ecs_dim_type(
     ecs_world_t *world,
     ecs_type_t type,
-    uint32_t entity_count)
+    int32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     if (type) {
@@ -959,7 +959,7 @@ ecs_entity_t ecs_lookup_child_in_columns(
 
     ecs_table_column_t *column = &columns[column_index + 1];
     EcsId *buffer = ecs_vector_first(column->data);
-    uint32_t i, count = ecs_vector_count(column->data);
+    int32_t i, count = ecs_vector_count(column->data);
     
     for (i = 0; i < count; i ++) {
         if (!buffer[i]) {
@@ -999,7 +999,7 @@ ecs_entity_t ecs_lookup_child(
 
     if (!result) {
         ecs_sparse_t *tables = world->main_stage.tables;
-        uint32_t t, count = ecs_sparse_count(tables);
+        int32_t t, count = ecs_sparse_count(tables);
 
         for (t = 0; t < count; t ++) {
             ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
@@ -1030,7 +1030,7 @@ void rematch_system_array(
     ecs_world_t *world,
     ecs_vector_t *systems)
 {
-    uint32_t i, count = ecs_vector_count(systems);
+    int32_t i, count = ecs_vector_count(systems);
     ecs_entity_t *buffer = ecs_vector_first(systems);
 
     for (i = 0; i < count; i ++) {
@@ -1067,7 +1067,7 @@ void revalidate_system_array(
     ecs_world_t *world,
     ecs_vector_t *systems)
 {
-    uint32_t i, count = ecs_vector_count(systems);
+    int32_t i, count = ecs_vector_count(systems);
     ecs_entity_t *buffer = ecs_vector_first(systems);
 
     for (i = 0; i < count; i ++) {
@@ -1097,7 +1097,7 @@ void run_single_thread_stage(
     ecs_vector_t *systems,
     bool staged)
 {
-    uint32_t i, system_count = ecs_vector_count(systems);
+    int32_t i, system_count = ecs_vector_count(systems);
 
     if (system_count) {
         ecs_entity_t *buffer = ecs_vector_first(systems);
@@ -1129,7 +1129,7 @@ void run_multi_thread_stage(
     ecs_vector_t *systems)
 {
     /* Run periodic table systems */
-    uint32_t i, system_count = ecs_vector_count(systems);
+    int32_t i, system_count = ecs_vector_count(systems);
     if (system_count) {
         bool valid_schedule = world->valid_schedule;
         ecs_entity_t *buffer = ecs_vector_first(systems);
@@ -1305,7 +1305,7 @@ void ecs_merge(
 
     ecs_stage_merge(world, &world->temp_stage);
 
-    uint32_t i, count = ecs_vector_count(world->worker_stages);
+    int32_t i, count = ecs_vector_count(world->worker_stages);
     if (count) {
         ecs_stage_t *buffer = ecs_vector_first(world->worker_stages);
         for (i = 0; i < count; i ++) {
@@ -1365,7 +1365,7 @@ void ecs_set_target_fps(
 /* Mock types so we don't have to depend on them. 
  * TODO: Need a better workaround */
 typedef uint16_t EcsAdmin;
-typedef uint32_t EcsConsole;
+typedef int32_t EcsConsole;
 
 int ecs_enable_admin(
 	ecs_world_t* world,
@@ -1422,7 +1422,7 @@ void* ecs_get_context(
     return world->context;
 }
 
-uint32_t ecs_get_tick(
+int32_t ecs_get_tick(
     ecs_world_t *world)
 {
     ecs_get_stage(&world);
@@ -1624,13 +1624,13 @@ uint16_t ecs_get_thread_index(
     }
 }
 
-uint32_t ecs_get_threads(
+int32_t ecs_get_threads(
     ecs_world_t *world)
 {
     return ecs_vector_count(world->worker_threads);
 }
 
-uint32_t ecs_get_target_fps(
+int32_t ecs_get_target_fps(
     ecs_world_t *world)
 {
     return world->target_fps;

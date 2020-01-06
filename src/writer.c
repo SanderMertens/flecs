@@ -19,7 +19,7 @@ bool ecs_name_writer_write(
     ecs_name_writer_t *writer,
     const char *buffer)
 {
-    int32_t written = writer->len - writer->written;
+    size_t written = writer->len - writer->written;
     char *name_ptr = ECS_OFFSET(writer->name, writer->written);
 
     if (written >= sizeof(int32_t)) {
@@ -123,7 +123,7 @@ size_t ecs_component_writer(
     size_t written = 0;
 
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size >= sizeof(uint32_t), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(size >= sizeof(int32_t), ECS_INVALID_PARAMETER, NULL);
 
     if (!writer->state) {
         writer->state = EcsComponentId;
@@ -325,7 +325,7 @@ size_t ecs_table_writer(
     size_t written = 0;
 
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size >= sizeof(uint32_t), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(size >= sizeof(int32_t), ECS_INVALID_PARAMETER, NULL);
 
     if (!writer->state) {
         writer->state = EcsTableTypeSize;
@@ -450,7 +450,7 @@ int ecs_writer_write(
         return 0;
     }
 
-    ecs_assert(size >= sizeof(uint32_t), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(size >= sizeof(int32_t), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(size % 4 == 0, ECS_INVALID_PARAMETER, NULL);
 
     while (total_written < size) {
@@ -477,7 +477,7 @@ int ecs_writer_write(
             break;
         }
 
-        if (written == -1) {
+        if (written == (size_t)-1) {
             goto error;
         }
 

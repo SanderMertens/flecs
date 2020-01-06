@@ -14,10 +14,10 @@ typedef int (*ecs_comparator_t)(
 FLECS_EXPORT
 ecs_vector_t* _ecs_vector_new(
     size_t elem_size,
-    size_t size);
+    int32_t elem_count);
 
-#define ecs_vector_new(T, size) \
-    _ecs_vector_new(sizeof(T), size)
+#define ecs_vector_new(T, elem_count) \
+    _ecs_vector_new(sizeof(T), elem_count)
 
 FLECS_EXPORT
 void ecs_vector_free(
@@ -39,10 +39,10 @@ FLECS_EXPORT
 void* _ecs_vector_addn(
     ecs_vector_t **array_inout,
     size_t elem_size,
-    uint32_t count);
+    int32_t elem_count);
 
-#define ecs_vector_addn(vector, T, count) \
-    (T*)_ecs_vector_addn(vector, sizeof(T), count)
+#define ecs_vector_addn(vector, T, elem_count) \
+    (T*)_ecs_vector_addn(vector, sizeof(T), elem_count)
 
 FLECS_EXPORT
 void* _ecs_vector_get(
@@ -62,7 +62,7 @@ void* _ecs_vector_last(
     _ecs_vector_last(vector, sizeof(T))
 
 FLECS_EXPORT
-uint32_t _ecs_vector_remove(
+int32_t _ecs_vector_remove(
     ecs_vector_t *vector,
     size_t elem_size,
     void *elem);
@@ -84,20 +84,20 @@ bool _ecs_vector_pop(
     _ecs_vector_pop(vector, sizeof(*value), value)
 
 FLECS_EXPORT
-uint32_t _ecs_vector_move_index(
+int32_t _ecs_vector_move_index(
     ecs_vector_t **dst,
     ecs_vector_t *src,
     size_t elem_size,
-    uint32_t index);
+    int32_t index);
 
 #define ecs_vector_move_index(dst, src, T, index) \
     _ecs_vector_move_index(dst, src, sizeof(T), index)
 
 FLECS_EXPORT
-uint32_t _ecs_vector_remove_index(
+int32_t _ecs_vector_remove_index(
     ecs_vector_t *vector,
     size_t elem_size,
-    uint32_t index);
+    int32_t index);
 
 #define ecs_vector_remove_index(vector, T, index) \
     _ecs_vector_remove_index(vector, sizeof(T), index)
@@ -111,47 +111,47 @@ void _ecs_vector_reclaim(
     _ecs_vector_reclaim(vector, sizeof(T))
 
 FLECS_EXPORT
-uint32_t _ecs_vector_grow(
+int32_t _ecs_vector_grow(
     ecs_vector_t **vector,
     size_t elem_size,
-    size_t size);
+    int32_t elem_count);
 
 #define ecs_vector_grow(vector, T, size) \
     _ecs_vector_grow(vector, sizeof(T), size)
 
 FLECS_EXPORT
-uint32_t _ecs_vector_set_size(
+int32_t _ecs_vector_set_size(
     ecs_vector_t **vector,
     size_t elem_size,
-    size_t size);
+    int32_t elem_count);
 
 #define ecs_vector_set_size(vector, T, size) \
     _ecs_vector_set_size(vector, sizeof(T), size)
 
 FLECS_EXPORT
-uint32_t _ecs_vector_set_count(
+int32_t _ecs_vector_set_count(
     ecs_vector_t **vector,
     size_t elem_size,
-    uint32_t count);
+    int32_t elem_count);
 
 #define ecs_vector_set_count(vector, T, size) \
     _ecs_vector_set_count(vector, sizeof(T), size)
 
 FLECS_EXPORT
-uint32_t _ecs_vector_set_min_size(
+int32_t _ecs_vector_set_min_size(
     ecs_vector_t **array_inout,
     size_t elem_size,
-    uint32_t min_size);
+    int32_t elem_count);
 
 #define ecs_vector_set_min_size(vector, T, size) \
     _ecs_vector_set_min_size(vector, sizeof(T), size)
 
 FLECS_EXPORT
-uint32_t ecs_vector_count(
+int32_t ecs_vector_count(
     const ecs_vector_t *vector);
 
 FLECS_EXPORT
-uint32_t ecs_vector_size(
+int32_t ecs_vector_size(
     const ecs_vector_t *vector);
 
 FLECS_EXPORT
@@ -171,8 +171,8 @@ FLECS_EXPORT
 void _ecs_vector_memory(
     const ecs_vector_t *vector,
     size_t elem_size,
-    uint32_t *allocd,
-    uint32_t *used);
+    int32_t *allocd,
+    int32_t *used);
 
 #define ecs_vector_memory(vector, T, allocd, used) \
     _ecs_vector_memory(vector, sizeof(T), allocd, used)

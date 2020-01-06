@@ -4,7 +4,7 @@ static
 void dup_table(
     ecs_table_t *table)
 {
-    uint32_t c, column_count = ecs_vector_count(table->type);
+    int32_t c, column_count = ecs_vector_count(table->type);
 
     /* First create a copy of columns structure */
     table->columns = ecs_os_memdup(
@@ -40,7 +40,7 @@ ecs_snapshot_t* snapshot_create(
 
     /* We need to dup the table data, because right now the copied tables are
      * still pointing to columns in the main stage. */
-    uint32_t i, count = ecs_sparse_count(result->tables);
+    int32_t i, count = ecs_sparse_count(result->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(result->tables, ecs_table_t, i);
 
@@ -128,7 +128,7 @@ void ecs_snapshot_restore(
     }   
 
     /* Move snapshot data to table */
-    uint32_t i, count = ecs_sparse_count(snapshot->tables);
+    int32_t i, count = ecs_sparse_count(snapshot->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *src = ecs_sparse_get(snapshot->tables, ecs_table_t, i);
         if (src->flags & EcsTableHasBuiltins) {
@@ -149,7 +149,7 @@ void ecs_snapshot_restore(
         if (filter_used) {
             ecs_vector_t *entities = dst->columns[0].data;
             ecs_entity_t *array = ecs_vector_first(entities);
-            uint32_t j, row_count = ecs_vector_count(entities);
+            int32_t j, row_count = ecs_vector_count(entities);
             ecs_map_t *entity_index = world->main_stage.entity_index;
             
             for (j = 0; j < row_count; j ++) {
@@ -163,7 +163,7 @@ void ecs_snapshot_restore(
     }
 
     /* Clear data from remaining tables */
-    uint32_t world_count = ecs_sparse_count(world->main_stage.tables);
+    int32_t world_count = ecs_sparse_count(world->main_stage.tables);
     for (; i < world_count; i ++) {
         ecs_table_t *table = ecs_sparse_get(world->main_stage.tables, ecs_table_t, i);
         ecs_table_replace_columns(world, table, NULL);
@@ -190,7 +190,7 @@ void ecs_snapshot_free(
         ecs_map_free(snapshot->entity_index);
     }
 
-    uint32_t i, count = ecs_sparse_count(snapshot->tables);
+    int32_t i, count = ecs_sparse_count(snapshot->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *src = ecs_sparse_get(snapshot->tables, ecs_table_t, i);
         if (src->flags & EcsTableHasBuiltins) {

@@ -10,7 +10,7 @@ void copy_column(
 {
     ecs_assert(new_index > 0, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t size = new_column->size;
+    int32_t size = new_column->size;
 
     if (size) {
         size_t column_size = new_column->size;
@@ -217,8 +217,8 @@ ecs_type_t notify_pre_merge(
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_table_column_t *table_columns,
-    uint32_t offset,
-    uint32_t limit,
+    int32_t offset,
+    int32_t limit,
     ecs_type_t to_init,
     ecs_map_t *systems)
 {
@@ -247,8 +247,8 @@ bool notify_post_merge(
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_table_column_t *table_columns,
-    uint32_t offset,
-    uint32_t limit,
+    int32_t offset,
+    int32_t limit,
     ecs_type_t to_deinit)
 {
     /* This will trigger asserts when operations are invoked during a merge that
@@ -272,7 +272,7 @@ ecs_type_t instantiate_prefab(
     ecs_entity_info_t *entity_info,
     bool is_prefab,
     ecs_entity_info_t *prefab_info,
-    uint32_t limit,
+    int32_t limit,
     ecs_type_t modified)
 {
     ecs_type_t prefab_type = prefab_info->type;
@@ -295,9 +295,9 @@ ecs_type_t instantiate_prefab(
                 ecs_entity_t child = _ecs_new_w_count(
                     world, op->type, limit);
 
-                uint32_t j;
+                int32_t j;
                 for (j = 0; j < limit; j ++) {
-                    uint32_t index = entity_info->index + j - 1;
+                    int32_t index = entity_info->index + j - 1;
                     ecs_entity_t entity = entity_ids[index];
                     ecs_adopt(world, child + j, entity);
                     ecs_set(world, child + j, EcsId, {op->id});
@@ -312,7 +312,7 @@ ecs_type_t instantiate_prefab(
     /* If the current entity is also prefab, do not add children to
      * it. Instead, add children (if any) of its base to its ops */
     } else if (builder) {
-        uint32_t index = entity_info->index - 1;
+        int32_t index = entity_info->index - 1;
         ecs_entity_t entity = entity_ids[index];
         ecs_entity_info_t info = {.entity = entity};
         EcsPrefabBuilder *entity_builder = ecs_get_ptr_intern(world, 
@@ -324,7 +324,7 @@ ecs_type_t instantiate_prefab(
             entity_builder->ops = NULL;
         }
 
-        uint32_t count = ecs_vector_count(builder->ops);
+        int32_t count = ecs_vector_count(builder->ops);
         void *new_ops = ecs_vector_addn(
             &entity_builder->ops, ecs_builder_op_t, count);
         
@@ -358,8 +358,8 @@ ecs_type_t copy_from_prefab(
     ecs_stage_t *stage,
     ecs_entity_info_t *prefab_info,
     ecs_entity_info_t *info,
-    uint32_t offset,
-    uint32_t limit,
+    int32_t offset,
+    int32_t limit,
     ecs_type_t to_add,
     ecs_type_t modified)
 {
@@ -372,8 +372,8 @@ ecs_type_t copy_from_prefab(
     ecs_assert(prefab_index != -1, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(info->index != -1, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t e, add_count = ecs_vector_count(to_add);
-    uint32_t p = 0, prefab_count = ecs_vector_count(prefab_type);
+    int32_t e, add_count = ecs_vector_count(to_add);
+    int32_t p = 0, prefab_count = ecs_vector_count(prefab_type);
     ecs_entity_t *to_add_buffer = ecs_vector_first(to_add);
     ecs_entity_t *prefab_type_buffer = ecs_vector_first(prefab_type);
 
@@ -412,14 +412,14 @@ ecs_type_t copy_from_prefab(
         }
 
         ecs_table_column_t *src_column = &prefab_columns[p + 1];
-        uint32_t size = src_column->size;
+        int32_t size = src_column->size;
 
         if (size) {
             void *src_column_data = ecs_vector_first(src_column->data);
             void *src_ptr = ECS_OFFSET(
                 src_column_data, size * (prefab_index - 1));
 
-            uint32_t dst_col_index;
+            int32_t dst_col_index;
             if (info->type == to_add) {
                 dst_col_index = e;
             } else {
@@ -431,7 +431,7 @@ ecs_type_t copy_from_prefab(
             void *dst_ptr = ECS_OFFSET(
                 dst_column_data, size * (info->index - 1 + offset));
 
-            uint32_t i;
+            int32_t i;
             for (i = 0; i < limit; i ++) {
                 memcpy(dst_ptr, src_ptr, size);
                 dst_ptr = ECS_OFFSET(dst_ptr, size);
@@ -454,8 +454,8 @@ ecs_type_t copy_from_prefabs(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_info_t *info,
-    uint32_t offset,
-    uint32_t limit,
+    int32_t offset,
+    int32_t limit,
     ecs_entity_t sub_prefab,
     ecs_type_t src_type,
     ecs_type_t to_add,
@@ -512,12 +512,12 @@ bool notify_after_commit(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_info_t *info,
-    uint32_t offset,
-    uint32_t limit,
+    int32_t offset,
+    int32_t limit,
     ecs_type_t to_add_id,
     bool do_set)
 {
-    uint32_t index = info->index - 1;
+    int32_t index = info->index - 1;
     ecs_world_t *world_arg = world;
     ecs_get_stage(&world);
 
@@ -545,7 +545,7 @@ bool notify_after_commit(
 /** Commit an entity with a specified type to a table (probably the most 
  * important function in flecs). */
 static
-uint32_t commit(
+int32_t commit(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_info_t *info,
@@ -711,7 +711,7 @@ uint32_t commit(
         }
     }
 
-    uint32_t last_count = ++ stage->commit_count;
+    int32_t last_count = ++ stage->commit_count;
     stage->from_type = old_type;
     stage->to_type = type;
 
@@ -874,7 +874,7 @@ ecs_type_t ecs_notify(
 
     if (ecs_map_has(index, (uintptr_t)type, &systems)) {
         ecs_entity_t *buffer = ecs_vector_first(systems);
-        uint32_t i, count = ecs_vector_count(systems);
+        int32_t i, count = ecs_vector_count(systems);
 
         for (i = 0; i < count; i ++) {
             ecs_type_t m = ecs_notify_row_system(
@@ -972,7 +972,7 @@ bool ecs_components_contains_component(
     ecs_entity_t flags,
     ecs_entity_t *entity_out)
 {
-    uint32_t i, count = ecs_vector_count(type);
+    int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *type_buffer = ecs_vector_first(type);
 
     for (i = 0; i < count; i ++) {
@@ -1057,7 +1057,7 @@ bool has_unset_columns(
         return true;
     }
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < data->column_count; i ++) {
         /* If no column is provided for component, skip it */
         ecs_entity_t component = data->components[i];
@@ -1069,7 +1069,7 @@ bool has_unset_columns(
         int32_t column = ecs_type_index_of(type, component);
         ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
 
-        uint32_t size = columns[column + 1].size;
+        int32_t size = columns[column + 1].size;
         if (size) { 
             if (!data->columns[i]) {
                 return true;
@@ -1084,10 +1084,10 @@ static
 void copy_column_data(
     ecs_type_t type,
     ecs_table_column_t *columns,
-    uint32_t start_row,
+    int32_t start_row,
     ecs_table_data_t *data)
 {
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < data->column_count; i ++) {
         /* If no column is provided for component, skip it */
         if (!data->columns[i]) {
@@ -1103,7 +1103,7 @@ void copy_column_data(
         int32_t column = ecs_type_index_of(type, component);
         ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
 
-        uint32_t size = columns[column + 1].size;
+        int32_t size = columns[column + 1].size;
         if (size) { 
             void *column_data = ecs_vector_first(columns[column + 1].data);
 
@@ -1126,9 +1126,9 @@ void invoke_reactive_systems(
     ecs_table_column_t *src_columns,
     ecs_table_t *dst_table,
     ecs_table_column_t *dst_columns,
-    uint32_t src_index,
-    uint32_t dst_index,
-    uint32_t count,
+    int32_t src_index,
+    int32_t dst_index,
+    int32_t count,
     bool do_set)
 {
     ecs_type_t to_remove = NULL; 
@@ -1162,7 +1162,7 @@ void invoke_reactive_systems(
         /* Delete column from old table. Delete in reverse, as entity indexes of
          * entities after the deletion point change as a result of the delete. */
 
-        uint32_t i;
+        int32_t i;
         for (i = 0; i < count; i ++) {
             ecs_table_delete(
                 world, stage, src_table, src_columns, src_index + count - i);
@@ -1190,7 +1190,7 @@ void invoke_reactive_systems(
 }
 
 static
-uint32_t update_entity_index(
+int32_t update_entity_index(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t type,
@@ -1300,7 +1300,7 @@ uint32_t update_entity_index(
                         world, stage, old_table);
 
                     /* Insert new row into destination table */
-                    uint32_t dst_row = ecs_table_insert(
+                    int32_t dst_row = ecs_table_insert(
                         world, table, columns, e) - 1;
                     if (!i) {
                         dst_start_row = dst_row;
@@ -1442,7 +1442,7 @@ uint32_t update_entity_index(
      * all entities are from the same origin, this will cover all entities. */
     ecs_table_t *src_table = NULL;
     ecs_table_column_t *src_columns = NULL;
-    uint32_t contiguous_count = 0;
+    int32_t contiguous_count = 0;
 
     if (same_origin) {
         contiguous_count = count;
@@ -1485,7 +1485,7 @@ ecs_entity_t set_w_data_intern(
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_t result;
-    uint32_t count = data->row_count;
+    int32_t count = data->row_count;
 
     if (data->entities) {
         result = data->entities[0];
@@ -1505,7 +1505,7 @@ ecs_entity_t set_w_data_intern(
         ecs_table_column_t *columns = ecs_table_get_columns(
                 world, stage, table);
         ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, 0);
-        uint32_t start_row = 0;
+        int32_t start_row = 0;
 
         /* Obtain the entity index in the current stage */
         ecs_map_t *entity_index = stage->entity_index;
@@ -1578,7 +1578,7 @@ ecs_entity_t set_w_data_intern(
 ecs_entity_t _ecs_new_w_count(
     ecs_world_t *world,
     ecs_type_t type,
-    uint32_t count)
+    int32_t count)
 {
     ecs_table_data_t table_data = {
         .row_count = count
@@ -1618,7 +1618,7 @@ ecs_entity_t _ecs_new_child_w_count(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_type_t type,
-    uint32_t count)
+    int32_t count)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -1651,7 +1651,7 @@ ecs_entity_t _ecs_new_instance_w_count(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_type_t type,
-    uint32_t count)
+    int32_t count)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -1713,7 +1713,7 @@ void ecs_delete_w_filter_intern(
     ecs_assert(stage == &world->main_stage, ECS_UNSUPPORTED, 
         "delete_w_filter currently only supported on main stage");
 
-    uint32_t i, count = ecs_sparse_count(stage->tables);
+    int32_t i, count = ecs_sparse_count(stage->tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
@@ -1730,7 +1730,7 @@ void ecs_delete_w_filter_intern(
         /* Remove entities from index */
         ecs_vector_t *entities = table->columns[0].data;
         ecs_entity_t *array = ecs_vector_first(entities);
-        uint32_t j, row_count = ecs_vector_count(entities);
+        int32_t j, row_count = ecs_vector_count(entities);
         for (j = 0; j < row_count; j ++) {
             ecs_map_remove(world->main_stage.entity_index, array[j]);
         }
@@ -1770,7 +1770,7 @@ void _ecs_add_remove_w_filter(
     ecs_assert(stage == &world->main_stage, ECS_UNSUPPORTED, 
         "remove_w_filter currently only supported on main stage");
 
-    uint32_t i, count = ecs_sparse_count(stage->tables);
+    int32_t i, count = ecs_sparse_count(stage->tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
@@ -2222,7 +2222,7 @@ ecs_type_t ecs_type_from_entity(
     ecs_stage_t *stage = ecs_get_stage(&world);   
     ecs_table_t *table = NULL;
     ecs_table_column_t *columns = NULL;
-    uint32_t index = 0;
+    int32_t index = 0;
     ecs_entity_t component = 0;
     ecs_type_t type = 0;
     ecs_row_t row = {0};
@@ -2293,15 +2293,15 @@ ecs_type_t ecs_get_type(
     return result;
 }
 
-uint32_t ecs_count_w_filter(
+int32_t ecs_count_w_filter(
     ecs_world_t *world,
     const ecs_filter_t *filter)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_sparse_t *tables = world->main_stage.tables;
-    uint32_t i, count = ecs_sparse_count(tables);
-    uint32_t result = 0;
+    int32_t i, count = ecs_sparse_count(tables);
+    int32_t result = 0;
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
@@ -2314,7 +2314,7 @@ uint32_t ecs_count_w_filter(
     return result;
 }
 
-uint32_t _ecs_count(
+int32_t _ecs_count(
     ecs_world_t *world,
     ecs_type_t type)
 {    

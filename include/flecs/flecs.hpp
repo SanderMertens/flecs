@@ -168,7 +168,7 @@ public:
     flecs::entity system() const;
 
     /* Number of entities to iterate over */
-    uint32_t count() const {
+    int32_t count() const {
         return m_rows->count;
     }
 
@@ -178,32 +178,32 @@ public:
     }
 
     /* Is column shared */
-    bool is_shared(uint32_t column) const {
+    bool is_shared(int32_t column) const {
         return ecs_is_shared(m_rows, column);
     }
 
     /* Is column readonly */
-    bool is_readonly(uint32_t column) const {
+    bool is_readonly(int32_t column) const {
         return ecs_is_readonly(m_rows, column);
     }
 
     /* Obtain entity being iterated over for row */
-    flecs::entity entity(uint32_t row) const;
+    flecs::entity entity(int32_t row) const;
 
     /* Obtain column source (0 if self) */
-    flecs::entity column_source(uint32_t column) const;
+    flecs::entity column_source(int32_t column) const;
 
     /* Obtain component/tag entity of column */
-    flecs::entity column_entity(uint32_t column) const;
+    flecs::entity column_entity(int32_t column) const;
 
     /* Obtain type of column */
-    type column_type(uint32_t column) const;
+    type column_type(int32_t column) const;
 
     /* Obtain type of table being iterated over */
     type table_type() const;
 
     /* Obtain untyped pointer to table column */
-    void* table_column(uint32_t table_column) const {
+    void* table_column(int32_t table_column) const {
         return ecs_table_column(m_rows, table_column);
     }
 
@@ -226,21 +226,21 @@ public:
     /* Obtain column with non-const type. Ensure that column is not readonly */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value == false, void>::type* = nullptr>
-    flecs::column<T> column(uint32_t column) const {
+    flecs::column<T> column(int32_t column) const {
         ecs_assert(!ecs_is_readonly(m_rows, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
         return get_column<T>(column);
     }
 
     /* Get owned */
     template <typename T>
-    flecs::column<T> owned(uint32_t column) const {
+    flecs::column<T> owned(int32_t column) const {
         ecs_assert(!ecs_is_shared(m_rows, column), ECS_COLUMN_IS_SHARED, NULL);
         return this->column<T>(column);
     }
 
     /* Get shared */
     template <typename T>
-    const T& shared(uint32_t column) const {
+    const T& shared(int32_t column) const {
         ecs_assert(ecs_column_entity(m_rows, column) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
         ecs_assert(ecs_is_shared(m_rows, column), ECS_COLUMN_IS_NOT_SHARED, NULL);
         return *static_cast<T*>(_ecs_column(m_rows, sizeof(T), column));
@@ -249,14 +249,14 @@ public:
     /* Get single field of a const type */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>    
-    T& field(uint32_t column, uint32_t row) const {
+    T& field(int32_t column, int32_t row) const {
         return get_field<T>(column, row);
     }
 
     /* Get single field of a non-const type. Ensure that column is not readonly */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value == false, void>::type* = nullptr>
-    T& field(uint32_t column, uint32_t row) const {
+    T& field(int32_t column, int32_t row) const {
         ecs_assert(!ecs_is_readonly(m_rows, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
         return get_field<T>(column, row);
     }
@@ -264,9 +264,9 @@ public:
 private:
     /* Get column, check if correct type is used */
     template <typename T>
-    flecs::column<T> get_column(uint32_t column_id) const {
+    flecs::column<T> get_column(int32_t column_id) const {
         ecs_assert(ecs_column_entity(m_rows, column_id) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
-        uint32_t count;
+        int32_t count;
         bool is_shared = ecs_is_shared(m_rows, column_id);
 
         /* If a shared column is retrieved with 'column', there will only be a
@@ -285,14 +285,14 @@ private:
 
     /* Get single field, check if correct type is used */
     template <typename T>
-    T& get_field(uint32_t column, uint32_t row) const {
+    T& get_field(int32_t column, int32_t row) const {
         ecs_assert(ecs_column_entity(m_rows, column) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
         return *static_cast<T*>(_ecs_field(m_rows, sizeof(T), column, row));
     }       
 
     const ecs_rows_t *m_rows;
-    uint32_t m_begin;
-    uint32_t m_end;
+    int32_t m_begin;
+    int32_t m_end;
 };
 
 template <typename T>
@@ -344,28 +344,28 @@ public:
     }
 
     /* Threading */
-    void set_threads(std::uint32_t threads) const {
+    void set_threads(std::int32_t threads) const {
         ecs_set_threads(m_world, threads);
     }
 
-    std::uint32_t get_threads() const {
+    std::int32_t get_threads() const {
         return ecs_get_threads(m_world);
     }
 
-    std::uint32_t get_thread_index() const {
+    std::int32_t get_thread_index() const {
         return ecs_get_thread_index(m_world);
     }
 
     /* Time management */
-    void set_target_fps(std::uint32_t target_fps) const {
+    void set_target_fps(std::int32_t target_fps) const {
         ecs_set_target_fps(m_world, target_fps);
     }
 
-    std::uint32_t get_target_fps() const {
+    std::int32_t get_target_fps() const {
         return ecs_get_target_fps(m_world);
     }
 
-    std::uint32_t get_tick() const {
+    std::int32_t get_tick() const {
         return ecs_get_tick(m_world);
     }
 
@@ -1561,23 +1561,23 @@ inline flecs::entity rows::system() const {
     return flecs::entity(m_rows->world, m_rows->system);
 }
 
-inline flecs::entity rows::entity(uint32_t row) const {
+inline flecs::entity rows::entity(int32_t row) const {
     ecs_assert(row < m_rows->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
     return flecs::entity(m_rows->world, m_rows->entities[row]);
 }
 
 /* Obtain column source (0 if self) */
-inline flecs::entity rows::column_source(uint32_t column) const {
+inline flecs::entity rows::column_source(int32_t column) const {
     return flecs::entity(m_rows->world, ecs_column_source(m_rows, column));
 }
 
 /* Obtain component/tag entity of column */
-inline flecs::entity rows::column_entity(uint32_t column) const {
+inline flecs::entity rows::column_entity(int32_t column) const {
     return flecs::entity(m_rows->world, ecs_column_entity(m_rows, column));
 }
 
 /* Obtain type of column */
-inline type rows::column_type(uint32_t column) const {
+inline type rows::column_type(int32_t column) const {
     return flecs::type(m_rows->world, ecs_column_type(m_rows, column));
 }
 

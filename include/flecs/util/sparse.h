@@ -9,8 +9,8 @@ typedef struct ecs_sparse_t ecs_sparse_t;
 
 FLECS_EXPORT
 ecs_sparse_t* _ecs_sparse_new(
-    uint32_t element_size,
-    uint32_t element_count);
+    size_t elem_size,
+    int32_t element_count);
 
 #define ecs_sparse_new(type, element_count)\
     _ecs_sparse_new(sizeof(type), element_count)
@@ -26,7 +26,7 @@ void ecs_sparse_clear(
 FLECS_EXPORT
 void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
-    uint32_t size);
+    size_t elem_size);
 
 #define ecs_sparse_add(sparse, type)\
     ((type*)_ecs_sparse_add(sparse, sizeof(type)))
@@ -34,8 +34,8 @@ void* _ecs_sparse_add(
 FLECS_EXPORT
 void* _ecs_sparse_remove(
     ecs_sparse_t *sparse,
-    uint32_t size,
-    uint32_t index);
+    size_t elem_size,
+    int32_t index);
 
 #define ecs_sparse_remove(sparse, type, index)\
     ((type*)_ecs_sparse_remove(sparse, sizeof(type), index))
@@ -43,25 +43,25 @@ void* _ecs_sparse_remove(
 FLECS_EXPORT
 void* _ecs_sparse_get(
     const ecs_sparse_t *sparse,
-    uint32_t size,
-    uint32_t index);
+    size_t elem_size,
+    int32_t index);
 
 #define ecs_sparse_get(sparse, type, index)\
     ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
 
 FLECS_EXPORT
-uint32_t ecs_sparse_count(
+int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
 
 FLECS_EXPORT
-uint32_t ecs_sparse_size(
+int32_t ecs_sparse_size(
     const ecs_sparse_t *sparse);
 
 FLECS_EXPORT
 void* _ecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
-    uint32_t size,
-    uint32_t index);
+    size_t elem_size,
+    int32_t index);
 
 #define ecs_sparse_get_sparse(sparse, type, index)\
     ((type*)_ecs_sparse_get_sparse(sparse, sizeof(type), index))
@@ -69,26 +69,26 @@ void* _ecs_sparse_get_sparse(
 FLECS_EXPORT
 void* _ecs_sparse_get_or_set_sparse(
     ecs_sparse_t *sparse,
-    uint32_t element_size,
-    uint32_t index,
+    size_t elem_size,
+    int32_t index,
     bool *is_new);
 
 #define ecs_sparse_get_or_set_sparse(sparse, type, index, is_new)\
     ((type*)_ecs_sparse_get_or_set_sparse(sparse, sizeof(type), index, is_new))
 
 FLECS_EXPORT
-const uint32_t* ecs_sparse_indices(
+const int32_t* ecs_sparse_indices(
     const ecs_sparse_t *sparse);
 
 FLECS_EXPORT
 void ecs_sparse_set_size(
     ecs_sparse_t *sparse,
-    uint32_t size);
+    int32_t elem_count);
 
 FLECS_EXPORT
 void ecs_sparse_grow(
     ecs_sparse_t *sparse,
-    uint32_t count);
+    int32_t count);
 
 FLECS_EXPORT
 ecs_sparse_t* ecs_sparse_copy(
@@ -97,8 +97,8 @@ ecs_sparse_t* ecs_sparse_copy(
 FLECS_EXPORT
 void ecs_sparse_memory(
     ecs_sparse_t *sparse,
-    uint32_t *allocd,
-    uint32_t *used);
+    int32_t *allocd,
+    int32_t *used);
 
 #ifdef __cplusplus
 }

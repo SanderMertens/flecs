@@ -70,12 +70,12 @@ typedef struct ecs_component_reader_t {
 typedef struct ecs_table_reader_t {
     ecs_blob_header_kind_t state;
 
-    uint32_t table_index;
+    int32_t table_index;
     ecs_table_t *table;
     ecs_table_column_t *columns;
 
     /* Current index in type */
-    int32_t type_written;
+    size_t type_written;
     ecs_type_t type;
 
     /* Current column */
@@ -90,7 +90,7 @@ typedef struct ecs_table_reader_t {
 
     /* Keep track of row when writing non-blittable data */
     int32_t row_index;
-    uint32_t row_count;
+    int32_t row_count;
 
     /* Keep track of how much of an entity name has been written */
     const char *name;
@@ -128,17 +128,17 @@ typedef struct ecs_table_writer_t {
     ecs_table_column_t *column;
 
     /* Keep state for parsing type */
-    uint32_t type_count;
-    uint32_t type_max_count;
-    uint32_t type_written;
+    int32_t type_count;
+    int32_t type_max_count;
+    size_t type_written;
     ecs_entity_t *type_array;
     
-    uint32_t column_index;
-    uint32_t column_size;
-    uint32_t column_written;
+    int32_t column_index;
+    size_t column_size;
+    size_t column_written;
     void *column_data;
 
-    uint32_t row_count;
+    int32_t row_count;
     int32_t row_index;
     ecs_name_writer_t name; 
 } ecs_table_writer_t;
@@ -235,25 +235,25 @@ ecs_entity_t ecs_new_prefab(
 /** Get description for error code */
 FLECS_EXPORT
 const char* ecs_strerror(
-    uint32_t error_code);
+    int32_t error_code);
 
 /** Abort */
 FLECS_EXPORT
 void _ecs_abort(
-    uint32_t error_code,
+    int32_t error_code,
     const char *param,
     const char *file,
-    uint32_t line);
+    int32_t line);
 
 /** Assert */
 FLECS_EXPORT
 void _ecs_assert(
     bool condition,
-    uint32_t error_code,
+    int32_t error_code,
     const char *param,
     const char *condition_str,
     const char *file,
-    uint32_t line);
+    int32_t line);
 
 /** Parse error */
 void _ecs_parser_error(

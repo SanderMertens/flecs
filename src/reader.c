@@ -321,7 +321,7 @@ size_t ecs_table_reader(
         break; 
 
     case EcsTableColumnData: {
-        int32_t column_bytes = reader->column_size * reader->row_count;
+        size_t column_bytes = reader->column_size * reader->row_count;
         read = column_bytes - reader->column_written;
         if (read > size) {
             read = size;
@@ -331,7 +331,7 @@ size_t ecs_table_reader(
         reader->column_written += read;
         ecs_assert(reader->column_written <= column_bytes, ECS_INTERNAL_ERROR, NULL);
 
-        int32_t align = (((read - 1) / sizeof(int32_t)) + 1) * sizeof(int32_t);
+        size_t align = (((read - 1) / sizeof(int32_t)) + 1) * sizeof(int32_t);
         if (align != read) {
             /* Initialize padding bytes to 0 to keep valgrind happy */
             memset(ECS_OFFSET(buffer, read), 0, align - read);
@@ -411,7 +411,7 @@ size_t ecs_reader_read(
 
     if (reader->state == EcsComponentSegment) {
         while ((read = ecs_component_reader(ECS_OFFSET(buffer, total_read), remaining, reader))) {
-            if (read == -1) {
+            if (read == (size_t)-1) {
                 break;
             }
 
@@ -425,7 +425,7 @@ size_t ecs_reader_read(
             ecs_assert(remaining % 4 == 0, ECS_INTERNAL_ERROR, NULL);
         }
 
-        if (read == -1) {
+        if (read == (size_t)-1) {
             return total_read;
         }
 

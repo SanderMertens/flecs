@@ -31,7 +31,7 @@ static
 void StatsAddSystemStats(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, EcsSystemStats, 2);
     
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_set(rows->world, rows->entities[i], EcsSystemStats, {0});
     }
@@ -41,7 +41,7 @@ static
 void StatsAddRowSystemMemoryStats(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, EcsRowSystemMemoryStats, 2);
     
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_set(rows->world, rows->entities[i], EcsRowSystemMemoryStats, {0});
     }
@@ -51,7 +51,7 @@ static
 void StatsAddColSystemMemoryStats(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, EcsColSystemMemoryStats, 2);
     
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_set(rows->world, rows->entities[i], EcsColSystemMemoryStats, {0});
     }
@@ -61,7 +61,7 @@ static
 void StatsAddComponentStats(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, EcsComponentStats, 2);
     
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_set(rows->world, rows->entities[i], EcsComponentStats, {0});
     }
@@ -71,7 +71,7 @@ static
 void StatsAddTableStats(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, EcsTableStats, 2);
     
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_set(rows->world, rows->entities[i], EcsTableStats, {0});
     }
@@ -81,7 +81,7 @@ static
 void StatsAddTypeStats(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, EcsTypeStats, 2);
     
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_set(rows->world, rows->entities[i], EcsTypeStats, {0});
     }
@@ -143,7 +143,7 @@ void StatsCollectColSystemMemoryTotals(ecs_rows_t *rows) {
 
     ecs_memory_stat_t *stat = rows->param;
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         stat->allocd_bytes += 
             stats[i].base_memory_bytes +
@@ -169,7 +169,7 @@ void StatsCollectTableMemoryTotals(ecs_rows_t *rows) {
 
     EcsMemoryStats *world_stats = rows->param;
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         world_stats->components_memory.used_bytes += stats[i].component_memory.used_bytes;
         world_stats->components_memory.allocd_bytes += stats[i].component_memory.allocd_bytes;
@@ -282,7 +282,7 @@ void compute_world_memory(
     stats->stages_memory.allocd_bytes += sizeof(ecs_stage_t);    
 
     /* Compute memory used in thread stages */
-    uint32_t i, count = ecs_vector_count(world->worker_stages);
+    int32_t i, count = ecs_vector_count(world->worker_stages);
     ecs_stage_t *stages = ecs_vector_first(world->worker_stages);
 
     for (i = 0; i < count; i ++) {
@@ -356,15 +356,15 @@ void StatsCollectSystemStats_StatusAction(
 }
 
 static
-uint32_t system_tables_matched(EcsColSystem *system) {
+int32_t system_tables_matched(EcsColSystem *system) {
     return ecs_vector_count(system->tables) +
            ecs_vector_count(system->inactive_tables);
 }
 
 static
-uint32_t system_entities_matched(EcsColSystem *system) {
+int32_t system_entities_matched(EcsColSystem *system) {
     ecs_matched_table_t *tables = ecs_vector_first(system->tables);
-    uint32_t i, total = 0, count = ecs_vector_count(system->tables);
+    int32_t i, total = 0, count = ecs_vector_count(system->tables);
 
     for (i = 0; i < count; i ++) {
         if (tables[i].table) {
@@ -380,7 +380,7 @@ void StatsCollectSystemStats(ecs_rows_t *rows) {
     ECS_COLUMN(rows, EcsColSystem, system, 1);
     ECS_COLUMN(rows, EcsSystemStats, stats, 2);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_entity_t entity = rows->entities[i];
 
@@ -405,17 +405,17 @@ void collect_system_table_metrics(
     ecs_vector_t *tables,
     ecs_memory_stat_t *stat)
 {
-    uint32_t column_count = ecs_vector_count(system->base.columns);
+    int32_t column_count = ecs_vector_count(system->base.columns);
 
     ecs_vector_memory(tables, ecs_matched_table_t, 
         &stat->allocd_bytes, &stat->used_bytes);
 
     ecs_matched_table_t *tables_buffer = ecs_vector_first(tables);
-    uint32_t i, count = ecs_vector_count(tables);
+    int32_t i, count = ecs_vector_count(tables);
 
     /* The 'column' member in ecs_matched_table_t */
-    stat->allocd_bytes += (sizeof(uint32_t) * column_count) * count;
-    stat->used_bytes += (sizeof(uint32_t) * column_count) * count;
+    stat->allocd_bytes += (sizeof(int32_t) * column_count) * count;
+    stat->used_bytes += (sizeof(int32_t) * column_count) * count;
 
     /* The 'components' member of ecs_matched_table_t */
     stat->allocd_bytes += (sizeof(ecs_entity_t) * column_count) * count;
@@ -434,7 +434,7 @@ void StatsCollectColSystemMemoryStats(ecs_rows_t *rows) {
     ECS_COLUMN(rows, EcsColSystem, system, 1);
     ECS_COLUMN(rows, EcsColSystemMemoryStats, stats, 2);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         stats[i].base_memory_bytes = sizeof(EcsColSystem);
         stats[i].columns_memory = (ecs_memory_stat_t){0};
@@ -468,7 +468,7 @@ void StatsCollectRowSystemMemoryStats(ecs_rows_t *rows) {
     ECS_COLUMN(rows, EcsRowSystem, system, 1);
     ECS_COLUMN(rows, EcsRowSystemMemoryStats, stats, 2);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         stats[i].base_memory_bytes = sizeof(EcsColSystem);
         stats[i].columns_memory = (ecs_memory_stat_t){0};
@@ -489,7 +489,7 @@ void StatsCollectComponentStats(ecs_rows_t *rows) {
     ECS_COLUMN(rows, EcsComponent, component, 1);
     ECS_COLUMN(rows, EcsComponentStats, stats, 2);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_entity_t entity = rows->entities[i];
 
@@ -504,12 +504,12 @@ void StatsCollectComponentStats(ecs_rows_t *rows) {
 
         /* Walk tables to collect memory and entity stats per component */
         ecs_sparse_t *tables = rows->world->main_stage.tables;
-        uint32_t t, count = ecs_sparse_count(rows->world->main_stage.tables);
+        int32_t t, count = ecs_sparse_count(rows->world->main_stage.tables);
 
         for (t = 0; t < count; t ++) {
             ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
             ecs_entity_t *components = ecs_vector_first(table->type);
-            uint32_t c, c_count = ecs_vector_count(table->type);
+            int32_t c, c_count = ecs_vector_count(table->type);
 
             /* Iterate over table columns until component is found */
             for (c = 0; c < c_count; c ++) {
@@ -542,7 +542,7 @@ void StatsCollectTableStats_StatusAction(
     if (status == EcsSystemEnabled) {
         /* Create an entity for every table */
         ecs_sparse_t *tables = world->main_stage.tables;
-        uint32_t i, count = ecs_sparse_count(tables);
+        int32_t i, count = ecs_sparse_count(tables);
 
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
@@ -562,7 +562,7 @@ void collect_table_data_memory(
     ecs_table_t *table,
     EcsTableStats *stats)
 {
-    uint32_t i, count = ecs_vector_count(table->type);
+    int32_t i, count = ecs_vector_count(table->type);
     ecs_table_column_t *columns = table->columns;
 
     stats->entity_memory = (ecs_memory_stat_t){0};
@@ -585,7 +585,7 @@ void StatsCollectTableStats(ecs_rows_t *rows) {
     ECS_COLUMN(rows, EcsTablePtr, table_ptr, 1);
     ECS_COLUMN(rows, EcsTableStats, stats, 2);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_table_t *table = table_ptr[i].table;
         ecs_table_column_t *columns = table->columns;
@@ -609,7 +609,7 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
 
     ecs_world_t *world = rows->world;
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         stats[i].name = ecs_get_id(world, rows->entities[i]);
         stats[i].entity = rows->entities[i];
@@ -626,7 +626,7 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
         stats[i].active_systems_count = 0;
         stats[i].instance_count = _ecs_count(world, type_component[i].resolved);
 
-        uint32_t j, count = ecs_vector_count(type_component[i].resolved);
+        int32_t j, count = ecs_vector_count(type_component[i].resolved);
         ecs_entity_t *entities = ecs_vector_first(type_component[i].resolved);
         for (j = 0; j < count; j ++) {
             ecs_entity_t e = entities[j];

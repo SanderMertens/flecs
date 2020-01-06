@@ -5,7 +5,7 @@ static
 void* ecs_worker(void *arg) {
     ecs_thread_t *thread = arg;
     ecs_world_t *world = thread->world;
-    uint32_t i;
+    int32_t i;
 
     ecs_os_mutex_lock(world->thread_mutex);
     world->threads_running ++;
@@ -17,7 +17,7 @@ void* ecs_worker(void *arg) {
         }
 
         ecs_job_t **jobs = thread->jobs;
-        uint32_t job_count = thread->job_count;
+        int32_t job_count = thread->job_count;
         ecs_os_mutex_unlock(world->thread_mutex);
 
         for (i = 0; i < job_count; i ++) {
@@ -52,7 +52,7 @@ static
 void wait_for_threads(
     ecs_world_t *world)
 {
-    uint32_t thread_count = ecs_vector_count(world->worker_threads) - 1;
+    int32_t thread_count = ecs_vector_count(world->worker_threads) - 1;
     bool wait = true;
 
     do {
@@ -69,7 +69,7 @@ static
 void wait_for_jobs(
     ecs_world_t *world)
 {
-    uint32_t thread_count = ecs_vector_count(world->worker_threads) - 1;
+    int32_t thread_count = ecs_vector_count(world->worker_threads) - 1;
 
     ecs_os_mutex_lock(world->job_mutex);
     if (world->jobs_finished != thread_count) {
@@ -91,7 +91,7 @@ void ecs_stop_threads(
     ecs_os_mutex_unlock(world->thread_mutex);
 
     ecs_thread_t *buffer = ecs_vector_first(world->worker_threads);
-    uint32_t i, count = ecs_vector_count(world->worker_threads);
+    int32_t i, count = ecs_vector_count(world->worker_threads);
     for (i = 1; i < count; i ++) {
         ecs_os_thread_join(buffer[i].thread);
         ecs_stage_deinit(world, buffer[i].stage);
@@ -108,14 +108,14 @@ void ecs_stop_threads(
 /** Start worker threads, wait until they are running */
 void start_threads(
     ecs_world_t *world,
-    uint32_t threads)
+    int32_t threads)
 {
     ecs_assert(world->worker_threads == NULL, ECS_INTERNAL_ERROR, NULL);
 
     world->worker_threads = ecs_vector_new(ecs_thread_t, threads);
     world->worker_stages = ecs_vector_new(ecs_stage_t, threads);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < threads; i ++) {
         ecs_thread_t *thread =
             ecs_vector_add(&world->worker_threads, ecs_thread_t);
@@ -140,7 +140,7 @@ void start_threads(
 static
 void create_jobs(
     EcsColSystem *system_data,
-    uint32_t thread_count)
+    int32_t thread_count)
 {
     if (system_data->jobs) {
         ecs_vector_free(system_data->jobs);
@@ -148,7 +148,7 @@ void create_jobs(
 
     system_data->jobs = ecs_vector_new(ecs_job_t, thread_count);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < thread_count; i ++) {
         ecs_vector_add(&system_data->jobs, ecs_job_t);
     }
@@ -163,12 +163,12 @@ void ecs_schedule_jobs(
     ecs_entity_t system)
 {
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
-    uint32_t thread_count = ecs_vector_count(world->worker_threads);
-    uint32_t total_rows = 0;
+    int32_t thread_count = ecs_vector_count(world->worker_threads);
+    int32_t total_rows = 0;
     bool is_task = false;
 
     ecs_matched_table_t *tables = ecs_vector_first(system_data->tables);
-    uint32_t i, count = ecs_vector_count(system_data->tables);
+    int32_t i, count = ecs_vector_count(system_data->tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = tables[i].table;
@@ -195,8 +195,7 @@ void ecs_schedule_jobs(
     float rows_per_thread = (float)total_rows / (float)thread_count;
     float residual = 0;
     int32_t rows_per_thread_i = rows_per_thread;
-
-    uint32_t start_index = 0;
+    int32_t start_index = 0;
 
     ecs_job_t *job = NULL;
 
@@ -230,13 +229,13 @@ void ecs_prepare_jobs(
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     ecs_vector_t *threads = world->worker_threads;
     ecs_vector_t *jobs = system_data->jobs;
-    uint32_t i;
+    int32_t i;
 
-    uint32_t thread_count = ecs_vector_count(jobs);
+    int32_t thread_count = ecs_vector_count(jobs);
 
     for (i = 0; i < thread_count; i++) {
         ecs_thread_t *thr = ecs_vector_get(threads, ecs_thread_t, i);
-        uint32_t job_count = thr->job_count;
+        int32_t job_count = thr->job_count;
         thr->jobs[job_count] = ecs_vector_get(jobs, ecs_job_t, i);
         thr->job_count = job_count + 1;
     }
@@ -256,7 +255,7 @@ void ecs_run_jobs(
     /* Run job for thread 0 in main thread */
     ecs_thread_t *thread = ecs_vector_first(world->worker_threads);
     ecs_job_t **jobs = thread->jobs;
-    uint32_t i, job_count = thread->job_count;
+    int32_t i, job_count = thread->job_count;
 
     for (i = 0; i < job_count; i ++) {
         ecs_run_w_filter(
@@ -274,7 +273,7 @@ void ecs_run_jobs(
 
 void ecs_set_threads(
     ecs_world_t *world,
-    uint32_t threads)
+    int32_t threads)
 {
     ecs_assert(!threads || ecs_os_api.thread_new, ECS_MISSING_OS_API, "thread_new");
     ecs_assert(!threads || ecs_os_api.thread_join, ECS_MISSING_OS_API, "thread_join");

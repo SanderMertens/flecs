@@ -18,11 +18,11 @@ void merge_families(
 static
 void notify_new_tables(
     ecs_world_t *world, 
-    uint32_t old_table_count, 
-    uint32_t new_table_count) 
+    int32_t old_table_count, 
+    int32_t new_table_count) 
 {
     ecs_sparse_t *tables = world->main_stage.tables;
-    uint32_t i;
+    int32_t i;
 
     for (i = old_table_count; i < new_table_count; i ++) {
         ecs_table_t *t = ecs_sparse_get(tables, ecs_table_t, i);
@@ -40,7 +40,7 @@ void clean_data_stage(
 
     while ((columns = ecs_map_next_ptr(&it, ecs_table_column_t*, &keyval))) {
         ecs_type_t type = (ecs_type_t)(uintptr_t)keyval;
-        uint32_t i, count = ecs_vector_count(type);
+        int32_t i, count = ecs_vector_count(type);
         
         for(i = 0; i < count + 1; i ++) {
             ecs_vector_free(columns[i].data);
@@ -88,7 +88,7 @@ void clean_tables(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    uint32_t i, count = ecs_sparse_count(stage->tables);
+    int32_t i, count = ecs_sparse_count(stage->tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *t = ecs_sparse_get(stage->tables, ecs_table_t, i);
@@ -165,7 +165,7 @@ void ecs_stage_merge(
     assert(stage != &world->main_stage);
     
     /* Keep track of old number of tables so we know how many have been added */
-    uint32_t old_table_count = ecs_sparse_count(world->main_stage.tables);
+    int32_t old_table_count = ecs_sparse_count(world->main_stage.tables);
     
     /* Merge any new types */
     merge_families(world, stage);
@@ -181,7 +181,7 @@ void ecs_stage_merge(
 
     /* Now that all data has been merged, evaluate columns of added tables. This
      * step updates the world for special columns, like prefab components */
-    uint32_t new_table_count = ecs_sparse_count(world->main_stage.tables);
+    int32_t new_table_count = ecs_sparse_count(world->main_stage.tables);
     if (old_table_count != new_table_count) {
         notify_new_tables(world, old_table_count, new_table_count);
     }

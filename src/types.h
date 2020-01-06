@@ -138,10 +138,10 @@ typedef struct ecs_system_column_t {
 } ecs_system_column_t;
 
 /** A table column describes a single column in a table (archetype) */
-typedef struct ecs_table_column_t {
+struct ecs_table_column_t {
     ecs_vector_t *data;              /* Column data */
     uint16_t size;                   /* Column size (saves component lookups) */
-} ecs_table_column_t;
+};
 
 #define EcsTableIsStaged  (1)
 #define EcsTableIsPrefab (2)
@@ -156,7 +156,7 @@ struct ecs_table_t {
     ecs_table_column_t *columns;      /* Columns storing components of array */
     ecs_vector_t *frame_systems;      /* Frame systems matched with table */
     ecs_type_t type;                  /* Identifies table type in type_index */
-    uint32_t flags;                   /* Flags for testing table properties */
+    int32_t flags;                   /* Flags for testing table properties */
 };
 
 /** Cached reference to a component in an entity */
@@ -179,7 +179,7 @@ typedef struct ecs_matched_table_t {
  * systems. */
 typedef struct ecs_on_demand_out_t {
     ecs_entity_t system;    /* Handle to system */
-    uint32_t count;         /* Total number of times [out] columns are used */
+    int32_t count;         /* Total number of times [out] columns are used */
 } ecs_on_demand_out_t;
 
 /** Keep track of which OnDemand systems are matched with which [in] columns */
@@ -339,7 +339,7 @@ typedef struct ecs_stage_t {
     /* Keep track of changes so
      * code knows when entity
      * info is invalidated */
-    uint32_t commit_count;
+    int32_t commit_count;
     ecs_type_t from_type;
     ecs_type_t to_type;
     
@@ -359,15 +359,15 @@ typedef struct ecs_entity_info_t {
 
     /* Used for determining if ecs_entity_info_t should be invalidated */
     ecs_stage_t *stage;
-    uint32_t commit_count;
+    int32_t commit_count;
 } ecs_entity_info_t;
 
 /** A type describing a unit of work to be executed by a worker thread. */ 
 typedef struct ecs_job_t {
     ecs_entity_t system;          /* System handle */
     EcsColSystem *system_data;    /* System to run */
-    uint32_t offset;              /* Start index in row chunk */
-    uint32_t limit;               /* Total number of rows to process */
+    int32_t offset;              /* Start index in row chunk */
+    int32_t limit;               /* Total number of rows to process */
 } ecs_job_t;
 
 /** A type desribing a worker thread. When a system is invoked by a worker
@@ -378,8 +378,8 @@ typedef struct ecs_job_t {
  * API to transparently resolve the stage to which updates should be written,
  * without requiring different API calls when working in multi threaded mode. */
 typedef struct ecs_thread_t {
-    uint32_t magic;                           /* Magic number to verify thread pointer */
-    uint32_t job_count;                       /* Number of jobs scheduled for thread */
+    int32_t magic;                           /* Magic number to verify thread pointer */
+    int32_t job_count;                       /* Number of jobs scheduled for thread */
     ecs_world_t *world;                       /* Reference to world */
     ecs_job_t *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
     ecs_stage_t *stage;                       /* Stage for thread */
@@ -398,7 +398,7 @@ struct ecs_snapshot_t {
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
-    uint32_t magic;               /* Magic number to verify world pointer */
+    int32_t magic;               /* Magic number to verify world pointer */
     float delta_time;             /* Time passed to or computed by ecs_progress */
     void *context;                /* Application context */
 
@@ -457,8 +457,8 @@ struct ecs_world_t {
     ecs_os_mutex_t thread_mutex;     /* Mutex for thread condition */
     ecs_os_cond_t job_cond;          /* Signal that worker thread job is done */
     ecs_os_mutex_t job_mutex;        /* Mutex for protecting job counter */
-    uint32_t jobs_finished;          /* Number of jobs finished */
-    uint32_t threads_running;        /* Number of threads running */
+    int32_t jobs_finished;          /* Number of jobs finished */
+    int32_t threads_running;        /* Number of threads running */
 
     ecs_entity_t last_handle;        /* Last issued handle */
     ecs_entity_t min_handle;         /* First allowed handle */
@@ -489,7 +489,7 @@ struct ecs_world_t {
     double system_time_total;     /* Total time spent in periodic systems */
     double merge_time_total;      /* Total time spent in merges */
     double world_time_total;      /* Time elapsed since first frame */
-    uint32_t frame_count_total;   /* Total number of frames */
+    int32_t frame_count_total;   /* Total number of frames */
 
 
     /* -- Settings from command line arguments -- */

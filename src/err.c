@@ -2,10 +2,10 @@
 #include <string.h>
 
 void _ecs_abort(
-    uint32_t error_code,
+    int32_t error_code,
     const char *param,
     const char *file,
-    uint32_t line)
+    int32_t line)
 {
     if (param) {
         ecs_os_err("abort %s:%d: %s (%s)",
@@ -19,11 +19,11 @@ void _ecs_abort(
 
 void _ecs_assert(
     bool condition,
-    uint32_t error_code,
+    int32_t error_code,
     const char *param,
     const char *condition_str,
     const char *file,
-    uint32_t line)
+    int32_t line)
 {
     if (!condition) {
         if (param) {
@@ -74,7 +74,7 @@ void _ecs_parser_error(
 }
 
 const char* ecs_strerror(
-    uint32_t error_code)
+    int32_t error_code)
 {
     switch (error_code) {
     case ECS_INVALID_HANDLE:

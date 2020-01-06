@@ -7,8 +7,6 @@
 extern "C" {
 #endif
 
-typedef struct ecs_table_t ecs_table_t;
-
 typedef struct ecs_dbg_entity_t {
     ecs_entity_t entity;
     ecs_table_t *table;
@@ -26,14 +24,14 @@ typedef struct ecs_dbg_table_t {
     ecs_type_t base_entities;     
     ecs_vector_t *systems_matched;
     ecs_entity_t *entities;
-    uint32_t entities_count;
+    int32_t entities_count;
 } ecs_dbg_table_t;
 
 typedef struct ecs_dbg_col_system_t {
     ecs_entity_t system;   
-    uint32_t entities_matched_count;
-    uint32_t active_table_count;
-    uint32_t inactive_table_count;
+    int32_t entities_matched_count;
+    int32_t active_table_count;
+    int32_t inactive_table_count;
     bool enabled;
     void *system_data;
 } ecs_dbg_col_system_t;
@@ -76,7 +74,7 @@ ecs_table_t *ecs_dbg_find_table(
 FLECS_EXPORT
 ecs_table_t *ecs_dbg_get_table(
     ecs_world_t *world,
-    uint32_t index);
+    int32_t index);
 
 FLECS_EXPORT
 bool ecs_dbg_filter_table(
@@ -100,19 +98,19 @@ FLECS_EXPORT
 ecs_table_t* ecs_dbg_get_active_table(
     ecs_world_t *world,
     ecs_dbg_col_system_t *dbg,
-    uint32_t index);
+    int32_t index);
 
 FLECS_EXPORT
 ecs_table_t* ecs_dbg_get_inactive_table(
     ecs_world_t *world,
     ecs_dbg_col_system_t *dbg,
-    uint32_t index);
+    int32_t index);
 
 FLECS_EXPORT
 ecs_type_t ecs_dbg_get_column_type(
     ecs_world_t *world,
     ecs_entity_t system,
-    uint32_t column_index);
+    int32_t column_index);
 
 FLECS_EXPORT
 bool ecs_dbg_match_entity(

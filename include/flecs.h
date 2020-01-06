@@ -153,10 +153,10 @@ struct ecs_rows_t {
     void *param;                 /* Userdata passed to on-demand system */
     float delta_time;            /* Time elapsed since last frame */
     float world_time;            /* Time elapsed since start of simulation */
-    uint32_t frame_offset;       /* Offset relative to frame */
-    uint32_t table_offset;       /* Current active table being processed */
-    uint32_t offset;             /* Offset relative to current table */
-    uint32_t count;              /* Number of rows to process by system */
+    int32_t frame_offset;       /* Offset relative to frame */
+    int32_t table_offset;       /* Current active table being processed */
+    int32_t offset;             /* Offset relative to current table */
+    int32_t count;              /* Number of rows to process by system */
 
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
 };
@@ -171,7 +171,7 @@ typedef const char *EcsId;
 
 /** Component that contains metadata about a component */
 typedef struct EcsComponent {
-    uint32_t size;
+    size_t size;
 } EcsComponent;
 
 /** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
@@ -494,7 +494,7 @@ void ecs_set_target_fps(
  * @param return The current target FPS.
  */
 FLECS_EXPORT
-uint32_t ecs_get_target_fps(
+int32_t ecs_get_target_fps(
     ecs_world_t *world);   
 
 /** Get last delta time from world.
@@ -544,7 +544,7 @@ void* ecs_get_context(
  * @return The current tick.
  */
 FLECS_EXPORT
-uint32_t ecs_get_tick(
+int32_t ecs_get_tick(
     ecs_world_t *world);
 
 /** Dimension the world for a specified number of entities.
@@ -567,7 +567,7 @@ uint32_t ecs_get_tick(
 FLECS_EXPORT
 void ecs_dim(
     ecs_world_t *world,
-    uint32_t entity_count);
+    int32_t entity_count);
 
 /** Dimension a type for a specified number of entities.
  * This operation will preallocate memory for a type (table) for the
@@ -590,7 +590,7 @@ FLECS_EXPORT
 void _ecs_dim_type(
     ecs_world_t *world,
     ecs_type_t type,
-    uint32_t entity_count);
+    int32_t entity_count);
 
 #define ecs_dim_type(world, type, entity_count)\
     _ecs_dim_type(world, T##type, entity_count)
@@ -672,7 +672,7 @@ FLECS_EXPORT
 ecs_entity_t _ecs_new_w_count(
     ecs_world_t *world,
     ecs_type_t type,
-    uint32_t count);
+    int32_t count);
 
 #define ecs_new_w_count(world, type, count)\
     _ecs_new_w_count(world, T##type, count)
@@ -680,8 +680,8 @@ ecs_entity_t _ecs_new_w_count(
 typedef void* ecs_table_columns_t;
 
 typedef struct ecs_table_data_t {
-    uint32_t row_count;
-    uint32_t column_count;
+    int32_t row_count;
+    int32_t column_count;
     ecs_entity_t *entities;
     ecs_entity_t *components;
     ecs_table_columns_t *columns;
@@ -761,7 +761,7 @@ ecs_entity_t _ecs_new_child_w_count(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_type_t type,
-    uint32_t count);
+    int32_t count);
 
 #define ecs_new_child_w_count(world, parent, type, count)\
     _ecs_new_child_w_count(world, parent, T##type, count)
@@ -797,7 +797,7 @@ ecs_entity_t _ecs_new_instance_w_count(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_type_t type,
-    uint32_t count);
+    int32_t count);
 
 #define ecs_new_instance_w_count(world, base, type, count)\
     _ecs_new_instance_w_count(world, base, T##type, count)
@@ -1264,7 +1264,7 @@ const char* ecs_get_id(
  * @param type The type used to match entities.
  */
 FLECS_EXPORT
-uint32_t _ecs_count(
+int32_t _ecs_count(
     ecs_world_t *world,
     ecs_type_t type);
 
@@ -1272,7 +1272,7 @@ uint32_t _ecs_count(
 
 /** Same as ecs_count but with a filter */
 FLECS_EXPORT
-uint32_t ecs_count_w_filter(
+int32_t ecs_count_w_filter(
     ecs_world_t *world,
     const ecs_filter_t *filter);
 
@@ -1344,7 +1344,7 @@ FLECS_EXPORT
 void* _ecs_column(
     const ecs_rows_t *rows,
     size_t size,
-    uint32_t column);
+    int32_t column);
 
 #define ecs_column(rows, type, column)\
     ((type*)_ecs_column(rows, sizeof(type), column))
@@ -1373,7 +1373,7 @@ void* _ecs_column(
 FLECS_EXPORT
 bool ecs_is_shared(
     const ecs_rows_t *rows,
-    uint32_t column);
+    int32_t column);
 
 /** Obtain a single field. 
  * This is an alternative method to ecs_column to access data in a system, which
@@ -1394,8 +1394,8 @@ FLECS_EXPORT
 void *_ecs_field(
     const ecs_rows_t *rows,
     size_t size,
-    uint32_t column,
-    uint32_t row);
+    int32_t column,
+    int32_t row);
 
 #define ecs_field(rows, type, column, row)\
     ((type*)_ecs_field(rows, sizeof(type), column, row))
@@ -1421,7 +1421,7 @@ void *_ecs_field(
 FLECS_EXPORT
 ecs_entity_t ecs_column_source(
     const ecs_rows_t *rows,
-    uint32_t column);
+    int32_t column);
 
 /** Obtain the component for a column inside a system.
  * This operation obtains the component handle for a column in the system. This
@@ -1444,7 +1444,7 @@ ecs_entity_t ecs_column_source(
 FLECS_EXPORT
 ecs_entity_t ecs_column_entity(
     const ecs_rows_t *rows,
-    uint32_t column);
+    int32_t column);
 
 /** Obtain the type of a column from inside a system. 
  * This operation is equivalent to ecs_column_entity, except that it returns
@@ -1470,7 +1470,7 @@ ecs_entity_t ecs_column_entity(
 FLECS_EXPORT
 ecs_type_t ecs_column_type(
     const ecs_rows_t *rows,
-    uint32_t column);
+    int32_t column);
 
 /** Is the column readonly.
  * This operation returns if the column is a readonly column. Readonly columns
@@ -1482,7 +1482,7 @@ ecs_type_t ecs_column_type(
 FLECS_EXPORT
 bool ecs_is_readonly(
     const ecs_rows_t *rows,
-    uint32_t column);
+    int32_t column);
 
 /** Get type of table that system is currently iterating over. */
 FLECS_EXPORT
@@ -1493,7 +1493,7 @@ ecs_type_t ecs_table_type(
 FLECS_EXPORT
 void* ecs_table_column(
     const ecs_rows_t *rows,
-    uint32_t column);
+    int32_t column);
 
 /** Get a strongly typed pointer to a column (owned or shared). */
 #define ECS_COLUMN(rows, type, id, column)\
@@ -1529,7 +1529,7 @@ void* ecs_table_column(
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
     ecs_sparse_t *tables;
-    uint32_t index;
+    int32_t index;
     ecs_rows_t rows;
 } ecs_filter_iter_t;
 
@@ -1704,8 +1704,8 @@ ecs_entity_t _ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
     float delta_time,
-    uint32_t offset,
-    uint32_t limit,
+    int32_t offset,
+    int32_t limit,
     ecs_type_t filter,
     void *param);
 
@@ -2188,7 +2188,7 @@ FLECS_EXPORT
 ecs_type_t ecs_type_find(
     ecs_world_t *world,
     ecs_entity_t *array,
-    uint32_t count);
+    int32_t count);
 
 /** Get component from type at index. 
  * This operation returns the components (or entities) that are contained in the
@@ -2203,7 +2203,7 @@ FLECS_EXPORT
 ecs_entity_t ecs_type_get_entity(
     ecs_world_t *world,
     ecs_type_t type,
-    uint32_t index);
+    int32_t index);
 
 /** Check if type has entity.
  * This operation returns whether a type has a specified entity.
@@ -2308,7 +2308,7 @@ int16_t ecs_type_index_of(
 FLECS_EXPORT
 void ecs_set_threads(
     ecs_world_t *world,
-    uint32_t threads);
+    int32_t threads);
 
 /** Get number of configured threads.
  * This operation will return the number of threads set with ecs_set_threads.
@@ -2317,7 +2317,7 @@ void ecs_set_threads(
  * @return The number of threads.
  */
 FLECS_EXPORT
-uint32_t ecs_get_threads(
+int32_t ecs_get_threads(
     ecs_world_t *world);
 
 /** Get index of current worker thread.

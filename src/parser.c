@@ -123,11 +123,11 @@ bool ecs_needs_tables(
 }
 
 /** Count components in a signature */
-uint32_t ecs_columns_count(
+int32_t ecs_columns_count(
     const char *sig)
 {
     const char *ptr = sig;
-    uint32_t count = 1;
+    int32_t count = 1;
 
     while ((ptr = strchr(ptr + 1, ','))) {
         count ++;

@@ -19,7 +19,7 @@ void ecs_dbg_table(
 
     /* Determine components from parent/base entities */
     ecs_entity_t *entities = ecs_vector_first(table->type);
-    uint32_t i, count = ecs_vector_count(table->type);
+    int32_t i, count = ecs_vector_count(table->type);
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
@@ -82,7 +82,7 @@ void ecs_dbg_table(
 
 ecs_table_t* ecs_dbg_get_table(
     ecs_world_t *world,
-    uint32_t index)
+    int32_t index)
 {
     if (ecs_sparse_count(world->main_stage.tables) <= index) {
         return NULL;
@@ -122,7 +122,7 @@ int ecs_dbg_col_system(
     dbg_out->enabled = system_data->base.enabled;
 
     ecs_matched_table_t *mt = ecs_vector_first(system_data->tables);
-    uint32_t i, count = ecs_vector_count(system_data->tables);
+    int32_t i, count = ecs_vector_count(system_data->tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = mt[i].table;
@@ -141,7 +141,7 @@ int ecs_dbg_col_system(
 ecs_table_t* ecs_dbg_active_table(
     ecs_world_t *world,
     ecs_dbg_col_system_t *dbg,
-    uint32_t index)
+    int32_t index)
 {
     (void)world;
 
@@ -158,7 +158,7 @@ ecs_table_t* ecs_dbg_active_table(
 ecs_table_t* ecs_dbg_inactive_table(
     ecs_world_t *world,
     ecs_dbg_col_system_t *dbg,
-    uint32_t index)
+    int32_t index)
 {
     (void)world;
 
@@ -175,7 +175,7 @@ ecs_table_t* ecs_dbg_inactive_table(
 ecs_type_t ecs_dbg_get_column_type(
     ecs_world_t *world,
     ecs_entity_t system,
-    uint32_t column_index)
+    int32_t column_index)
 {
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     if (!system_data) {
@@ -183,7 +183,7 @@ ecs_type_t ecs_dbg_get_column_type(
     }
     
     ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
-    uint32_t count = ecs_vector_count(system_data->base.columns);
+    int32_t count = ecs_vector_count(system_data->base.columns);
 
     if (count < column_index) {
         return NULL;

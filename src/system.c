@@ -58,7 +58,7 @@ static
 bool has_refs(
     EcsSystem *system_data)
 {
-    uint32_t i, count = ecs_vector_count(system_data->columns);
+    int32_t i, count = ecs_vector_count(system_data->columns);
     ecs_system_column_t *columns = ecs_vector_first(system_data->columns);
 
     for (i = 0; i < count; i ++) {
@@ -92,7 +92,7 @@ ecs_entity_t new_row_system(
     const char *sig,
     ecs_system_action_t action)
 {
-    uint32_t count = ecs_columns_count(sig);
+    int32_t count = ecs_columns_count(sig);
     ecs_assert(count != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = _ecs_new(world, world->t_row_system);
@@ -117,7 +117,7 @@ ecs_entity_t new_row_system(
         world, sig, ecs_parse_signature_action, id, system_data);
 
     ecs_type_t type_id = 0;
-    uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
+    int32_t i, column_count = ecs_vector_count(system_data->base.columns);
     ecs_system_column_t *buffer = ecs_vector_first(system_data->base.columns);
 
     for (i = 0; i < column_count; i ++) {
@@ -189,7 +189,7 @@ void activate_in_columns(
     bool activate)
 {
     ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
-    uint32_t i, count = ecs_vector_count(system_data->base.columns);
+    int32_t i, count = ecs_vector_count(system_data->base.columns);
 
     for (i = 0; i < count; i ++) {
         if (columns[i].inout_kind == EcsIn) {
@@ -209,7 +209,7 @@ void activate_in_columns(
                 (!activate && !in->count))) 
             {
                 ecs_on_demand_out_t **out = ecs_vector_first(in->systems);
-                uint32_t s, count = ecs_vector_count(in->systems);
+                int32_t s, count = ecs_vector_count(in->systems);
 
                 for (s = 0; s < count; s ++) {
                     /* Increase the count of the system with the out params */
@@ -253,7 +253,7 @@ void register_out_columns(
     EcsColSystem *system_data)
 {
     ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
-    uint32_t i, out_count = 0, count = ecs_vector_count(system_data->base.columns);
+    int32_t i, out_count = 0, count = ecs_vector_count(system_data->base.columns);
 
     for (i = 0; i < count; i ++) {
         if (columns[i].inout_kind == EcsOut) {
@@ -299,7 +299,7 @@ bool ecs_check_column_constraints(
     ecs_world_t *world,
     EcsSystem *system_data)
 {
-    uint32_t i, column_count = ecs_vector_count(system_data->columns);
+    int32_t i, column_count = ecs_vector_count(system_data->columns);
     ecs_system_column_t *buffer = ecs_vector_first(system_data->columns);
 
     for (i = 0; i < column_count; i ++) {
@@ -379,7 +379,7 @@ void ecs_system_compute_and_families(
     ecs_world_t *world,
     EcsSystem *system_data)
 {
-    uint32_t i, column_count = ecs_vector_count(system_data->columns);
+    int32_t i, column_count = ecs_vector_count(system_data->columns);
     ecs_system_column_t *buffer = ecs_vector_first(system_data->columns);
 
     for (i = 0; i < column_count; i ++) {
@@ -531,8 +531,8 @@ ecs_type_t ecs_notify_row_system(
     ecs_type_t type,
     ecs_table_t *table,
     ecs_table_column_t *table_columns,
-    uint32_t offset,
-    uint32_t limit)
+    int32_t offset,
+    int32_t limit)
 {
     ecs_entity_info_t info = {.entity = system};
     ecs_world_t *real_world = world;
@@ -555,12 +555,12 @@ ecs_type_t ecs_notify_row_system(
 
     ecs_system_action_t action = system_data->base.action;
 
-    uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
+    int32_t i, column_count = ecs_vector_count(system_data->base.columns);
     ecs_system_column_t *buffer = ecs_vector_first(system_data->base.columns);
     int32_t *columns = ecs_os_alloca(int32_t, column_count);
     ecs_reference_t *references = ecs_os_alloca(ecs_reference_t, column_count);
 
-    uint32_t ref_id = 0;
+    int32_t ref_id = 0;
 
     /* Iterate over system columns, resolve data from table or references */
 
@@ -756,7 +756,7 @@ ecs_entity_t ecs_new_system(
     ecs_type_t type = system_data->and_from_system;
     if (type) {
         ecs_entity_t *array = ecs_vector_first(type);
-        uint32_t i, count = ecs_vector_count(type);
+        int32_t i, count = ecs_vector_count(type);
         for (i = 0; i < count; i ++) {
             ecs_type_t type = ecs_type_from_entity(world, array[i]);
             _ecs_add(world, result, type);
@@ -859,7 +859,7 @@ void ecs_enable(
 
         ecs_type_t type = type_data->type;
         ecs_entity_t *array = ecs_vector_first(type);
-        uint32_t i, count = ecs_vector_count(type);
+        int32_t i, count = ecs_vector_count(type);
         for (i = 0; i < count; i ++) {
             /* Enable/disable all systems in type */
             ecs_enable(world, array[i], enabled);
@@ -938,7 +938,7 @@ void* get_shared_column(
 static
 bool get_table_column(
     const ecs_rows_t *rows,
-    uint32_t column,
+    int32_t column,
     int32_t *table_column_out)
 {
     ecs_assert(column <= rows->column_count, ECS_INTERNAL_ERROR, NULL);
@@ -964,8 +964,8 @@ static
 void* get_column(
     const ecs_rows_t *rows,
     size_t size,
-    uint32_t column,
-    uint32_t row)
+    int32_t column,
+    int32_t row)
 {
     int32_t table_column;
 
@@ -983,7 +983,7 @@ void* get_column(
 void* _ecs_column(
     const ecs_rows_t *rows,
     size_t size,
-    uint32_t column)
+    int32_t column)
 {
     return get_column(rows, size, column, 0);
 }
@@ -991,15 +991,15 @@ void* _ecs_column(
 void* _ecs_field(
     const ecs_rows_t *rows, 
     size_t size,
-    uint32_t column,
-    uint32_t row)
+    int32_t column,
+    int32_t row)
 {
     return get_column(rows, size, column, row);
 }
 
 bool ecs_is_shared(
     const ecs_rows_t *rows,
-    uint32_t column)
+    int32_t column)
 {
     int32_t table_column;
 
@@ -1012,7 +1012,7 @@ bool ecs_is_shared(
 
 bool ecs_is_readonly(
     const ecs_rows_t *rows,
-    uint32_t column)
+    int32_t column)
 {
     if (ecs_is_shared(rows, column)) {
         return true;
@@ -1029,7 +1029,7 @@ bool ecs_is_readonly(
 
 ecs_entity_t ecs_column_source(
     const ecs_rows_t *rows,
-    uint32_t index)
+    int32_t index)
 {
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
 
@@ -1052,7 +1052,7 @@ ecs_entity_t ecs_column_source(
 
 ecs_type_t ecs_column_type(
     const ecs_rows_t *rows,
-    uint32_t index)
+    int32_t index)
 {
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
 
@@ -1067,7 +1067,7 @@ ecs_type_t ecs_column_type(
 
 ecs_entity_t ecs_column_entity(
     const ecs_rows_t *rows,
-    uint32_t index)
+    int32_t index)
 {
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
 
@@ -1087,7 +1087,7 @@ ecs_type_t ecs_table_type(
 
 void* ecs_table_column(
     const ecs_rows_t *rows,
-    uint32_t column)
+    int32_t column)
 {
     ecs_table_t *table = rows->table;
     return ecs_vector_first(table->columns[column + 1].data);

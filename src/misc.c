@@ -148,8 +148,8 @@ uint64_t ecs_os_time_now(void) {
 }
 
 void ecs_os_time_sleep(
-    unsigned int sec, 
-    unsigned int nanosec) 
+    int32_t sec, 
+    int32_t nanosec) 
 {
 #ifndef _WIN32
     struct timespec sleepTime;
