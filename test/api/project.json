@@ -111,7 +111,9 @@
                 "add_remove",
                 "add_remove_same",
                 "add_2_remove",
-                "on_add_after_new_type_in_progress"
+                "on_add_after_new_type_in_progress",
+                "add_entity",
+                "remove_entity"
             ]
         }, {
             "id": "Remove",
@@ -177,7 +179,10 @@
                 "has_owned_any",
                 "has_entity",
                 "has_entity_0",
-                "has_entity_0_component"
+                "has_entity_0_component",
+                "has_entity_owned",
+                "has_entity_owned_0",
+                "has_entity_owned_0_component"
             ]
         }, {
             "id": "Count",
@@ -226,7 +231,9 @@
                 "delete_with_any_of_2",
                 "delete_except_all_of_2",
                 "include_exact",
-                "exclude_exact"
+                "exclude_exact",
+                "system_activate_test",
+                "skip_builtin_tables"
             ]
         }, {
             "id": "Set",
@@ -242,7 +249,8 @@
                 "set_remove",
                 "set_remove_other",
                 "set_remove_twice",
-                "set_and_new"
+                "set_and_new",
+                "set_null"
             ]
         }, {
             "id": "Lookup",
@@ -452,7 +460,8 @@
                 "get_sys_context_from_param",
                 "use_field_w_0_size",
                 "owned_only",
-                "shared_only"
+                "shared_only",
+                "is_in_readonly"
             ]
         }, {
             "id": "SystemOnDemand",
@@ -720,6 +729,9 @@
                 "type_add_existing",
                 "type_add_empty_existing",
                 "type_add_out_of_order_existing",
+                "type_remove",
+                "type_remove_empty",
+                "type_remove_non_existing",
                 "type_of_2_add",
                 "type_of_3_add_entity_again",
                 "invalid_entity_type_expression",
@@ -736,7 +748,11 @@
                 "entity_from_type_w_2_elements",
                 "type_from_entity",
                 "type_from_empty",
-                "type_from_0"
+                "type_from_0",
+                "type_to_expr_1_comp",
+                "type_to_expr_2_comp",
+                "type_to_expr_instanceof",
+                "type_to_expr_childof"
             ]
         }, {
             "id": "Run",
@@ -869,7 +885,8 @@
                 "merge_table_w_container_added_on_set",
                 "merge_table_w_container_added_on_set_reverse",
                 "merge_after_tasks",
-                "override_after_remove_in_progress"
+                "override_after_remove_in_progress",
+                "get_parent_in_progress"
             ]
         }, {
             "id": "MultiThreadStaging",
@@ -882,8 +899,66 @@
                 "stress_create_delete_entity_random_components",
                 "stress_set_entity_random_components",
                 "2_threads_on_add",
-                "new_w_count"
-                
+                "new_w_count"   
+            ]
+        }, {
+            "id": "Snapshot",
+            "testcases": [
+                "simple_snapshot",
+                "snapshot_after_new",
+                "snapshot_after_delete",
+                "snapshot_after_new_type",
+                "snapshot_after_add",
+                "snapshot_after_remove",
+                "snapshot_w_include_filter",
+                "snapshot_w_exclude_filter",
+                "snapshot_w_filter_after_new",
+                "snapshot_w_filter_after_delete",
+                "snapshot_free_empty",
+                "snapshot_free",
+                "snapshot_free_filtered",
+                "snapshot_activate_table_w_filter",
+                "snapshot_copy",
+                "snapshot_copy_filtered",
+                "snapshot_copy_w_filter"
+            ]
+        }, {
+            "id": "ReaderWriter",
+            "testcases": [
+                "simple",
+                "id",
+                "id_w_simple",
+                "unaligned",
+                "empty",
+                "tag",
+                "simple_w_tag",
+                "tag_w_simple",
+                "empty_parent",
+                "parent",
+                "simple_w_parent",
+                "inheritance",
+                "simple_w_inheritance",
+                "deserialize_twice",
+                "entity_conflict",
+                "snapshot_reader_simple",
+                "snapshot_reader_id",
+                "component_id_conflict_w_component",
+                "component_id_conflict_w_entity",
+                "component_size_conflict",
+                "read_zero_size",
+                "write_zero_size",
+                "invalid_header"
+            ]
+        }, {
+            "id": "FilterIter",
+            "testcases": [
+                "iter_one_table",
+                "iter_two_tables",
+                "iter_two_comps",
+                "iter_snapshot_one_table",
+                "iter_snapshot_two_tables",
+                "iter_snapshot_two_comps",
+                "iter_snapshot_filtered_table"
             ]
         }, {
             "id": "Modules",

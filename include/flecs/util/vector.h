@@ -144,6 +144,11 @@ void ecs_vector_memory(
     uint32_t *allocd,
     uint32_t *used);
 
+FLECS_EXPORT
+ecs_vector_t* ecs_vector_copy(
+    const ecs_vector_t *src,
+    const ecs_vector_params_t *params);
+
 #ifdef __cplusplus
 }
 #endif

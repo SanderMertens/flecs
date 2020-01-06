@@ -394,7 +394,7 @@ void StatsCollectSystemStats(ecs_rows_t *rows) {
         stats[i].seconds_total = system[i].base.time_spent;
         stats[i].invoke_count_total = system[i].base.invoke_count;
         stats[i].is_enabled = system[i].base.enabled;
-        stats[i].is_active = ecs_vector_count(system[i].tables);
+        stats[i].is_active = ecs_vector_count(system[i].tables) != 0;
         stats[i].is_hidden = ecs_has(rows->world, entity, EcsHidden);
     }
 }
@@ -564,7 +564,7 @@ void StatsCollectTableStats_StatusAction(
         }
     } else if (status == EcsSystemDisabled) {
         /* Delete all entities with EcsTable tag */
-        ecs_delete_w_filter(world, &(ecs_type_filter_t){
+        ecs_delete_w_filter(world, &(ecs_filter_t){
             .include = ecs_type(EcsTablePtr),
             .include_kind = EcsMatchAny
         });

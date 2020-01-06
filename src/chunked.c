@@ -246,6 +246,34 @@ const uint32_t* ecs_chunked_indices(
     return ecs_vector_first(chunked->dense);
 }
 
+ecs_chunked_t* ecs_chunked_copy(
+    const ecs_chunked_t *src)
+{
+    ecs_chunked_t *dst = ecs_os_memdup(src, sizeof(ecs_chunked_t));
+    dst->chunks = ecs_vector_copy(src->chunks, &chunk_param);
+    dst->dense = ecs_vector_copy(src->dense, &dense_param);
+    dst->sparse = ecs_vector_copy(src->sparse, &sparse_param);
+    dst->free_stack = ecs_vector_copy(src->free_stack, &free_param);
+
+    /* Iterate chunks, copy data */
+    sparse_elem_t *sparse_array = ecs_vector_first(dst->sparse);
+    chunk_t *chunks = ecs_vector_first(dst->chunks);
+    uint32_t i, count = ecs_vector_count(dst->chunks);
+
+    for (i = 0; i < count; i ++) {
+        chunks[i].data = ecs_os_memdup(
+            chunks[i].data, dst->chunk_size * dst->element_size);
+        
+        uint32_t j;
+        for (j = 0; j < dst->chunk_size; j ++) {
+            sparse_array[i * dst->chunk_size + j].ptr = 
+                ECS_OFFSET(chunks[i].data, j * dst->element_size);
+        }
+    }
+
+    return dst;
+}
+
 void ecs_chunked_memory(
     ecs_chunked_t *chunked,
     uint32_t *allocd,

@@ -24,6 +24,7 @@
 #endif
 
 #include <flecs.h>
+#include <flecs/util/dbg.h>
 
 #define ECS_WORLD_INITIAL_TABLE_COUNT (2)
 #define ECS_WORLD_INITIAL_ENTITY_COUNT (2)
@@ -51,12 +52,6 @@
 
 
 /* -- Builtin component types -- */
-
-/** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
-typedef struct EcsTypeComponent {
-    ecs_type_t type;    /* Preserved nested types */
-    ecs_type_t resolved;  /* Resolved nested types */
-} EcsTypeComponent;
 
 /* For prefabs with child entities, the parent prefab must be marked so that
  * flecs knows not to share components from it, as adding a prefab as a parent
@@ -148,17 +143,25 @@ typedef struct ecs_table_column_t {
 #define EcsTableIsStaged  (1)
 #define EcsTableIsPrefab (2)
 #define EcsTableHasPrefab (4)
+#define EcsTableHasBuiltins (8)
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
-typedef struct ecs_table_t {
+struct ecs_table_t {
     ecs_table_column_t *columns;      /* Columns storing components of array */
     ecs_vector_t *frame_systems;      /* Frame systems matched with table */
     ecs_type_t type;                  /* Identifies table type in type_index */
     uint32_t flags;                   /* Flags for testing table properties */
- } ecs_table_t;
+};
+
+/** Cached reference to a component in an entity */
+struct ecs_reference_t {
+    ecs_entity_t entity;
+    ecs_entity_t component;
+    void *cached_ptr;
+};
 
 /** Type containing data for a table matched with a system */
 typedef struct ecs_matched_table_t {
@@ -178,14 +181,14 @@ typedef struct ecs_on_demand_out_t {
 
 /** Keep track of which OnDemand systems are matched with which [in] columns */
 typedef struct ecs_on_demand_in_t {
-    uint32_t count;         /* Number of active systems with [in] column */
+    int32_t count;         /* Number of active systems with [in] column */
     ecs_vector_t *systems;  /* Systems that have this column as [out] column */
 } ecs_on_demand_in_t;
 
 /** Base type for a system */
 typedef struct EcsSystem {
     ecs_system_action_t action;    /* Callback to be invoked for matching rows */
-    const char *signature;         /* Signature with which system was created */
+    char *signature;         /* Signature with which system was created */
     ecs_vector_t *columns;         /* Column components */
     void *ctx;                     /* User data */
 
@@ -384,11 +387,17 @@ typedef struct ecs_thread_t {
     uint16_t index;                           /* Index of thread */
 } ecs_thread_t;
 
-
+/* World snapshot */
+struct ecs_snapshot_t {
+    ecs_map_t *entity_index;
+    ecs_chunked_t *tables;
+    ecs_entity_t last_handle;
+    ecs_filter_t filter;
+};
 
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
-struct ecs_world {
+struct ecs_world_t {
     uint32_t magic;               /* Magic number to verify world pointer */
     float delta_time;             /* Time passed to or computed by ecs_progress */
     void *context;                /* Application context */

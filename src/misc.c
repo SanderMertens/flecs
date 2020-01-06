@@ -47,6 +47,13 @@ double ecs_time_measure(
     return ecs_time_to_double(stop);
 }
 
+void* ecs_os_memdup(const void *src, size_t size) {
+    void *dst = ecs_os_malloc(size);
+    ecs_assert(dst != NULL, ECS_OUT_OF_MEMORY, NULL);
+    memcpy(dst, src, size);  
+    return dst;  
+}
+
 /*
     This code was taken from sokol_time.h 
     

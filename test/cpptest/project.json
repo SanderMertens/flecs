@@ -1,0 +1,22 @@
+{
+    "id": "cpptest",
+    "type": "application",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "C++ test project for flecs",
+        "public": false,
+        "coverage": false,
+        "language": "c++",
+        "use": [
+            "flecs"
+        ]
+    },
+    "test": {
+        "testsuites": [{
+            "id": "Api",
+            "testcases": [
+                "module"
+            ]
+        }]
+    }
+}

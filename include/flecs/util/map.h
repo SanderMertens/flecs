@@ -85,6 +85,10 @@ int ecs_map_remove(
     uint64_t key_hash);
 
 FLECS_EXPORT
+ecs_map_t* ecs_map_copy(
+    const ecs_map_t *map);
+
+FLECS_EXPORT
 ecs_map_iter_t ecs_map_iter(
     ecs_map_t *map);
 

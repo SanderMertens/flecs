@@ -122,6 +122,14 @@ const char* ecs_strerror(
         return "unresolved component name '%s'";
     case ECS_UNRESOLVED_ENTITY_NAME:
         return "unresolved entity name '%s'";
+    case ECS_COLUMN_ACCESS_VIOLATION:
+        return "invalid access to readonly column (use const)";
+    case ECS_DESERIALIZE_COMPONENT_ID_CONFLICT:
+        return "serialized data contains conflicting component id";
+    case ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT:
+        return "serialized data contains conflicting component size";   
+    case ECS_DESERIALIZE_FORMAT_ERROR:
+        return "serialized data has invalid format";
     }
 
     return "unknown error code";
@@ -133,7 +141,7 @@ void ecs_print_error_string(const char *signature, const char *system_id, const 
     char error_string[300] = "";
     char error_indicator[200] = "";
     char custom_error_message[200] = "";
-    uint position = 0;
+    uint32_t position = 0;
     int i;
 
     va_list valist;

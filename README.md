@@ -1,5 +1,5 @@
 [![Join the chat at https://gitter.im/flecsdev/community](https://badges.gitter.im/flecsdev/community.svg)](https://gitter.im/flecsdev/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/) [![Build Status](https://travis-ci.org/SanderMertens/flecs.svg?branch=master)](https://travis-ci.org/SanderMertens/flecs)
+[![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/MRSAZqb) [![Build Status](https://travis-ci.org/SanderMertens/flecs.svg?branch=master)](https://travis-ci.org/SanderMertens/flecs)
 [![Build status](https://ci.appveyor.com/api/projects/status/t99p1per439ctg1a/branch/master?svg=true)](https://ci.appveyor.com/project/SanderMertens/flecs/branch/master)
 [![codecov](https://codecov.io/gh/SanderMertens/flecs/branch/master/graph/badge.svg)](https://codecov.io/gh/SanderMertens/flecs)
 
@@ -31,7 +31,7 @@ ECS (Entity Component System) is a way to organize code that is mostly used in g
 For more information, check [the Entity Component System FAQ](https://github.com/SanderMertens/ecs-faq)!
 
 ## Example
-The following code shows a simple flecs application:
+This is a simple flecs example using the C99 API:
 
 ```c
 typedef struct Position {
@@ -39,7 +39,7 @@ typedef struct Position {
     float y;
 } Position;
 
-typedef int32_t Speed;
+typedef float Speed;
 
 void Move(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
@@ -54,21 +54,57 @@ void Move(ecs_rows_t *rows) {
 int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
-    /* Register components and systems */
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Speed);
     ECS_ENTITY(world, MyEntity, Position, Speed);
-
-    /* Limit application to 60 FPS */
-    ecs_set_target_fps(world, 60);
-
-    /* Progress world in main loop (invokes Move system) */
+    
+    ecs_set(world, MyEntity, Position, {0, 0});
+    ecs_set(world, MyEntity, Speed, {1});
+    
     while (ecs_progress(world, 0));
 
     return ecs_fini(world);
 }
 ```
+
+This is the same example in the C++11 API:
+
+```c++
+struct Position {
+    float x;
+    float y;
+};
+
+struct Speed {
+    float value;
+};
+
+int main(int argc, char *argv[]) {
+    flecs::world world(argc, argv);
+
+    flecs::component<Position>(world, "Position");
+    flecs::component<Speed>(world, "Speed");
+
+    flecs::system<Position, Speed>(world)
+        .action([](const flecs::rows& rows, 
+            flecs::column<Position> p, 
+            flecs::column<Speed> s) 
+        {    
+            for (auto row : rows) {
+                p[row].x += s[row].value * rows.delta_time();
+                p[row].y += s[row].value * rows.delta_time();
+            }
+        });
+
+    flecs::entity(world, "MyEntity")
+        .set<Position>({0, 0})
+        .set<Speed>({1});
+
+    while (world.progress()) { }
+}
+```
+
 For more examples, go to [the flecs examples folder](https://github.com/SanderMertens/flecs/tree/master/examples) or the [flecs-hub organization](https://github.com/flecs-hub).
 
 ## Manual

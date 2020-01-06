@@ -47,12 +47,16 @@ ecs_table_column_t* new_columns(
         EcsComponent *component = ecs_get_ptr_intern(
             world, stage, &info, EEcsComponent, false, false);
 
-        if (component) {
+        if (component) {    
             if (component->size) {
                 /* Regular column data */
                 result[i + 1].size = component->size;
             }
         }
+
+        if (table && buf[i] <= EcsLastBuiltin) {
+            table->flags |= EcsTableHasBuiltins;
+        }        
 
         if (table && buf[i] == EEcsPrefab) {
             table->flags |= EcsTableIsPrefab;
@@ -107,8 +111,8 @@ void ecs_table_deinit(
     }
 }
 
-static
-void ecs_table_free_columns(
+/* Utility function to free column data */
+void clear_columns(
     ecs_table_t *table)
 {
     uint32_t i, column_count = ecs_vector_count(table->type);
@@ -119,20 +123,71 @@ void ecs_table_free_columns(
     }
 }
 
+/* Clear columns. Deactivate table in systems if necessary, but do not invoke
+ * OnRemove handlers. This is typically used when restoring a table to a
+ * previous state. */
 void ecs_table_clear(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_table_deinit(world, table);
-    ecs_table_free_columns(table);
+    uint32_t count = ecs_vector_count(table->columns[0].data);
+    
+    clear_columns(table);
+
+    if (count) {
+        activate_table(world, table, 0, false);
+    }
 }
 
+/* Replace columns. Activate / deactivate table with systems if necessary. */
+void ecs_table_replace_columns(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_column_t *columns)
+{
+    uint32_t prev_count = 0;
+
+    if (table->columns) {
+        prev_count = ecs_vector_count(table->columns[0].data);
+        clear_columns(table);
+    }
+
+    if (columns) {
+        ecs_os_free(table->columns);
+        table->columns = columns;
+    }
+
+    uint32_t count = 0;
+    if (table->columns) {
+        count = ecs_vector_count(table->columns[0].data);
+    }
+
+    if (!prev_count && count) {
+        activate_table(world, table, 0, true);
+    } else if (prev_count && !count) {
+        activate_table(world, table, 0, false);
+    }
+}
+
+/* Delete all entities in table, invoke OnRemove handlers. This function is used
+ * when an application invokes delete_w_filter. Use ecs_table_clear, as the
+ * table may have to be deactivated with systems. */
+void ecs_table_delete_all(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_table_deinit(world, table);
+    ecs_table_clear(world, table);
+}
+
+/* Free table resources. Do not invoke handlers and do not activate/deactivate
+ * table with systems. This function is used when the world is freed. */
 void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table)
 {
     (void)world;
-    ecs_table_free_columns(table);
+    clear_columns(table);
     ecs_os_free(table->columns);
     ecs_vector_free(table->frame_systems);
 }
@@ -453,9 +508,10 @@ void ecs_table_move_back_and_swap(
             memcpy(tmp, el, size);
 
             /* Move component values */
-            for (i = 0; i < count; i ++) {
-                void *dst = ECS_OFFSET(data, size * (row + i - 1));
-                void *src = ECS_OFFSET(data, size * (row + i));
+            uint32_t j;
+            for (j = 0; j < count; j ++) {
+                void *dst = ECS_OFFSET(data, size * (row + j - 1));
+                void *src = ECS_OFFSET(data, size * (row + j));
                 memcpy(dst, src, size);
             }
 
@@ -497,7 +553,7 @@ void ecs_table_merge(
     }
 
     if (!new_table) {
-        ecs_table_clear(world, old_table);
+        ecs_table_delete_all(world, old_table);
         return;
     }
 
@@ -536,6 +592,7 @@ void ecs_table_merge(
         if (new_component == old_component) {
             /* If the new table is empty, move column to new table */
             if (!new_count) {
+                ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, NULL);
                 if (new_columns[i_new].data) {
                     ecs_vector_free(new_columns[i_new].data);
                 }

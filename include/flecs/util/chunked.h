@@ -68,6 +68,10 @@ const uint32_t* ecs_chunked_indices(
     const ecs_chunked_t *chunked);
 
 FLECS_EXPORT
+ecs_chunked_t* ecs_chunked_copy(
+    const ecs_chunked_t *src);
+
+FLECS_EXPORT
 void ecs_chunked_memory(
     ecs_chunked_t *chunked,
     uint32_t *allocd,
