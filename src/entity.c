@@ -2141,7 +2141,7 @@ bool ecs_has_entity(
 
     ecs_world_t *world_arg = world;
     ecs_type_t entity_type = ecs_get_type(world_arg, entity);
-    return ecs_type_has_entity(world, entity_type, component);
+    return ecs_type_has_entity_intern(world, entity_type, component, true);
 }
 
 bool ecs_has_entity_owned(

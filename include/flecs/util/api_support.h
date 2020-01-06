@@ -9,6 +9,148 @@
 extern "C" {
 #endif
 
+typedef struct ecs_table_t ecs_table_t;
+typedef struct ecs_table_column_t ecs_table_column_t;
+
+////////////////////////////////////////////////////////////////////////////////
+//// Private datatypes
+////////////////////////////////////////////////////////////////////////////////
+
+typedef enum ecs_blob_header_kind_t {
+    EcsStreamHeader,
+
+    /* Stream states */
+    EcsComponentSegment,
+    EcsTableSegment,
+    EcsFooterSegment,
+
+    /* Component segment */
+    EcsComponentHeader,
+    EcsComponentId,
+    EcsComponentSize,
+    EcsComponentNameLength,
+    EcsComponentName,
+
+    /* Table segment */
+    EcsTableHeader,
+    EcsTableTypeSize,
+    EcsTableType,
+    EcsTableSize,
+    EcsTableColumn,
+    EcsTableColumnHeader,
+    EcsTableColumnSize,
+    EcsTableColumnData,
+
+    /* Name column (EcsId) */
+    EcsTableColumnNameHeader,
+    EcsTableColumnNameLength,
+    EcsTableColumnName,
+
+    EcsStreamFooter  
+} ecs_blob_header_kind_t;
+
+typedef struct ecs_component_reader_t {
+    ecs_blob_header_kind_t state;
+
+    /* Component data fetched from the world */
+    ecs_entity_t *id_column;
+    EcsComponent *data_column;
+    EcsId *name_column;
+
+    /* Current component & total number of components */
+    int32_t index;
+    int32_t count;
+
+    /* Keep track how much of the component name has been written */
+    const char *name;
+    size_t len;
+    size_t written;
+} ecs_component_reader_t;
+
+typedef struct ecs_table_reader_t {
+    ecs_blob_header_kind_t state;
+
+    uint32_t table_index;
+    ecs_table_t *table;
+    ecs_table_column_t *columns;
+
+    /* Current index in type */
+    int32_t type_written;
+    ecs_type_t type;
+
+    /* Current column */
+    ecs_table_column_t *column;
+    int32_t column_index;
+    int32_t total_columns;
+
+    /* Keep track of how much of the component column has been written */
+    void *column_data;
+    size_t column_size;
+    size_t column_written;
+
+    /* Keep track of row when writing non-blittable data */
+    int32_t row_index;
+    uint32_t row_count;
+
+    /* Keep track of how much of an entity name has been written */
+    const char *name;
+    size_t name_len;
+    size_t name_written;
+} ecs_table_reader_t;
+
+typedef struct ecs_reader_t {
+    ecs_world_t *world;
+    ecs_blob_header_kind_t state;
+    ecs_chunked_t *tables;
+    ecs_component_reader_t component;
+    ecs_table_reader_t table;
+} ecs_reader_t;
+
+typedef struct ecs_name_writer_t {
+    char *name;
+    int32_t written;
+    int32_t len;
+    int32_t max_len;
+} ecs_name_writer_t;
+
+typedef struct ecs_component_writer_t {
+    ecs_blob_header_kind_t state;
+
+    int32_t id;
+    size_t size;
+    ecs_name_writer_t name;
+} ecs_component_writer_t;
+
+typedef struct ecs_table_writer_t {
+    ecs_blob_header_kind_t state;
+
+    ecs_table_t *table;
+    ecs_table_column_t *column;
+
+    /* Keep state for parsing type */
+    uint32_t type_count;
+    uint32_t type_max_count;
+    uint32_t type_written;
+    ecs_entity_t *type_array;
+    
+    uint32_t column_index;
+    uint32_t column_size;
+    uint32_t column_written;
+    void *column_data;
+
+    uint32_t row_count;
+    int32_t row_index;
+    ecs_name_writer_t name; 
+} ecs_table_writer_t;
+
+typedef struct ecs_writer_t {
+    ecs_world_t *world;
+    ecs_blob_header_kind_t state;
+    ecs_component_writer_t component;
+    ecs_table_writer_t table;
+    int error;
+} ecs_writer_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Error API
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +299,9 @@ void _ecs_assert(
 #define ECS_UNSUPPORTED (34)
 #define ECS_NO_OUT_COLUMNS (35)
 #define ECS_COLUMN_ACCESS_VIOLATION (36)
+#define ECS_DESERIALIZE_COMPONENT_ID_CONFLICT (37)
+#define ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT (38)
+#define ECS_DESERIALIZE_FORMAT_ERROR (39)
 
 /** Declare type variable */
 #define ECS_TYPE_VAR(type)\

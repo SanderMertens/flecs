@@ -99,6 +99,10 @@ ecs_snapshot_t* ecs_snapshot_copy(
             snapshot->tables,
             filter);
 
+    if (!filter) {
+        result->filter = snapshot->filter;
+    }
+
     result->last_handle = snapshot->last_handle;
 
     return result;

@@ -559,3 +559,40 @@ void Add_on_add_after_new_type_in_progress() {
 
     ecs_fini(world);
 }
+
+void Add_add_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    ecs_entity_t f = ecs_new(world, 0);
+    test_assert(f != 0);
+
+    ecs_add_entity(world, e, f);
+    test_assert(ecs_has_entity(world, e, f));
+    
+    ecs_fini(world);
+}
+
+void Add_remove_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    ecs_entity_t f = ecs_new(world, 0);
+    test_assert(f != 0);
+
+    ecs_add_entity(world, e, f);
+    test_assert(ecs_has_entity(world, e, f));
+
+    ecs_remove_entity(world, e, f);
+    test_assert(!ecs_has_entity(world, e, f));
+    
+    ecs_fini(world);
+}

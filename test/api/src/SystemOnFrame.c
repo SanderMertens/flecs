@@ -1975,15 +1975,38 @@ void SystemOnFrame_owned_only() {
     ecs_fini(world);
 }
 
+static void AssertReadonly(ecs_rows_t *rows) {
+    test_assert(dummy_invoked == 0);
+    dummy_invoked = rows->entities[0];
+
+    test_assert( ecs_is_readonly(rows, 1) == true);
+}
+
 void SystemOnFrame_shared_only() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SHARED.Position);
+    ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, SHARED.Position);
 
     ecs_entity_t base = ecs_new(world, Position);
     ecs_entity_t e = ecs_new_instance(world, base, 0);
+
+    ecs_progress(world, 0);
+
+    test_assert(dummy_invoked == e);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_is_in_readonly() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, [in] Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
 
     ecs_progress(world, 0);
 
