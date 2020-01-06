@@ -3,17 +3,13 @@
 typedef int Foo;
 typedef int Bar;
 
-ecs_vector_params_t entity_params = {
-    .element_size = sizeof(ecs_entity_t)
-};
-
 void GetChildren(ecs_rows_t *rows) {
     ecs_vector_t **children = rows->param;
 
     for (int i = 0; i < rows->count; i ++) {
         ecs_entity_t *elem = ecs_vector_add(
             children, 
-            &entity_params);
+            ecs_entity_t);
         
         *elem = rows->entities[i];
     }
@@ -59,7 +55,7 @@ int main(int argc, char *argv[]) {
     ecs_set(world, child_2_2, EcsId, {"child_2_2"});
 
     /* Create vector to store child entities */
-    ecs_vector_t *children = ecs_vector_new(&entity_params, 0);
+    ecs_vector_t *children = ecs_vector_new(ecs_entity_t, 0);
 
     /* Collect children for parent_1 */
     ecs_run_w_filter(world, GetChildren, 0, 0, 0, 
