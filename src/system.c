@@ -114,7 +114,7 @@ ecs_entity_t new_row_system(
     system_data->components = ecs_vector_new(&handle_arr_params, count);
 
     ecs_parse_component_expr(
-        world, sig, ecs_parse_signature_action, system_data);
+        world, sig, ecs_parse_signature_action, id, system_data);
 
     ecs_type_t type_id = 0;
     uint32_t i, column_count = ecs_vector_count(system_data->base.columns);
@@ -420,6 +420,9 @@ void ecs_system_compute_and_families(
 /** Parse callback that adds component to the components array for a system */
 int ecs_parse_signature_action(
     ecs_world_t *world,
+    const char *system_id,
+    const char *sig,
+    int column,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
     ecs_system_expr_inout_kind_t inout_kind,
@@ -436,18 +439,12 @@ int ecs_parse_signature_action(
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
         if (strcmp(component_id, "0")) {
-            ecs_abort(ECS_INVALID_COMPONENT_ID, component_id);
+            ecs_parser_error(system_id, sig, column, 
+                "unresolved component identifier '%s'", component_id);
         } else {
-            /* Don't add 0 component to signature */
+            /* No need to add 0 component to signature */
             return 0;
         }
-    }
-
-    /* If retrieving a component from a system, only the AND operator is
-     * supported. The set of system components is expected to be constant, and
-     * thus no conditional operators are needed. */
-    if (elem_kind == EcsFromSystem && oper_kind != EcsOperAnd) {
-        return ECS_INVALID_SIGNATURE;
     }
 
     /* AND (default) and optional columns are stored the same way */
@@ -461,7 +458,8 @@ int ecs_parse_signature_action(
         if (elem_kind == EcsFromEntity) {
             elem->source = ecs_lookup(world, source_id);
             if (!elem->source) {
-                ecs_abort(ECS_UNRESOLVED_IDENTIFIER, source_id);
+                ecs_parser_error(system_id, sig, column, 
+                    "unresolved source identifier '%s'", source_id);
             }
 
             ecs_set_watch(world, &world->main_stage, elem->source);
@@ -478,6 +476,8 @@ int ecs_parse_signature_action(
         } else {
             if (elem->kind != elem_kind) {
                 /* Cannot mix FromEntity and FromComponent in OR */
+                ecs_parser_error(system_id, sig, column, 
+                    "cannot use mixed source kinds in | expression");
                 goto error;
             }
         }
@@ -710,7 +710,7 @@ ecs_entity_t ecs_new_system(
                kind == EcsOnSet,
                ECS_INVALID_PARAMETER, NULL);
 
-    bool needs_tables = ecs_needs_tables(world, sig);
+    bool needs_tables = ecs_needs_tables(world, sig, id);
     bool is_reactive = false;
 
     ecs_assert(needs_tables || 

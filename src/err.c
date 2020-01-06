@@ -1,5 +1,5 @@
-
 #include "flecs_private.h"
+#include <string.h>
 
 void _ecs_abort(
     uint32_t error_code,
@@ -36,6 +36,41 @@ void _ecs_assert(
 
         ecs_os_abort();
     }
+}
+
+void _ecs_parser_error(
+    const char *name,
+    const char *expr, 
+    int column,
+    const char *fmt,
+    ...)
+{
+    va_list valist;
+    va_start(valist, fmt);
+
+    /* Most messages should fit in 80 characters, but if not, allocate a string
+     * that is large enough */
+    char *msg, msg_buf[80];
+    int required = vsnprintf(msg_buf, 80, fmt, valist);
+    if (required > 80) {
+        msg = ecs_os_malloc(required + 1);
+        int written = vsnprintf(msg, required, fmt, valist);
+        ecs_assert(written == required, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        msg = msg_buf;
+    }
+
+    va_end(valist);
+
+    fprintf(stderr, "%s:%d: error: %s\n", name, column + 1, msg);
+    fprintf(stderr, "    %s\n", expr);
+    fprintf(stderr, "    %*s^\n", column, "");
+
+    if (msg != msg_buf) {
+        ecs_os_free(msg);
+    }
+
+    ecs_os_abort();
 }
 
 const char* ecs_strerror(

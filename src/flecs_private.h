@@ -373,6 +373,9 @@ ecs_type_t ecs_notify_row_system(
 /* Callback for parse_component_expr that stores result as ecs_system_column_t's */
 int ecs_parse_signature_action(
     ecs_world_t *world,
+    const char *system_id,
+    const char *sig,
+    int column,    
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
     ecs_system_expr_inout_kind_t inout_kind,
@@ -438,17 +441,23 @@ ecs_row_t ecs_to_row(
 uint64_t ecs_from_row(
     ecs_row_t row);
 
+/* Utility that print a descriptive error string*/
+//void ecs_print_error_string(const char *error_description, const char* signature, const char* system_id, const char* component_id);
+//void ecs_print_error_string(const char* signature, const char *system_id, const char *error_description, const char *component_id);
+
 /* Utility that parses system signature */
 int ecs_parse_component_expr(
     ecs_world_t *world,
     const char *sig,
     ecs_parse_action_t action,
+    const char *system_id,
     void *ctx);
 
 /* Test whether signature has columns that must be retrieved from a table */
 bool ecs_needs_tables(
     ecs_world_t *world,
-    const char *signature);
+    const char *signature,
+    const char *system_id);
 
 /* Count number of columns signature */
 uint32_t ecs_columns_count(

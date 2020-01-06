@@ -115,6 +115,9 @@ typedef enum ecs_system_expr_oper_kind_t {
 /** Callback used by the system signature expression parser */
 typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,
+    const char *id,
+    const char *expr,
+    int column,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
     ecs_system_expr_inout_kind_t inout_kind,
