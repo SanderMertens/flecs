@@ -38,6 +38,41 @@ void _ecs_assert(
     }
 }
 
+void _ecs_parser_error(
+    const char *name,
+    const char *expr, 
+    int column,
+    const char *fmt,
+    ...)
+{
+    va_list valist;
+    va_start(valist, fmt);
+
+    /* Most messages should fit in 80 characters, but if not, allocate a string
+     * that is large enough */
+    char *msg, msg_buf[80];
+    int required = vsnprintf(msg_buf, 80, fmt, valist);
+    if (required > 80) {
+        msg = ecs_os_malloc(required + 1);
+        int written = vsnprintf(msg, required, fmt, valist);
+        ecs_assert(written == required, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        msg = msg_buf;
+    }
+
+    va_end(valist);
+
+    fprintf(stderr, "%s:%d: error: %s\n", name, column + 1, msg);
+    fprintf(stderr, "    %s\n", expr);
+    fprintf(stderr, "    %*s^\n", column, "");
+
+    if (msg != msg_buf) {
+        ecs_os_free(msg);
+    }
+
+    ecs_os_abort();
+}
+
 const char* ecs_strerror(
     uint32_t error_code)
 {
@@ -112,16 +147,6 @@ const char* ecs_strerror(
         return "operation is unsupported";
     case ECS_NO_OUT_COLUMNS:
         return "on demand system has no out columns";
-    case ECS_CANT_USE_NOT_IN_OR_EXPRESSION:
-        return "cannot use NOT (!) operator in an OR (|) expression";
-    case ECS_CANT_USE_OR_WITH_EMPTY_FROM_EXPRESSION:
-        return "cannot use OR (|) operator in combination with an empty FROM (.) expression";
-    case ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF:
-        return "0 can only appear by itself";
-    case ECS_UNSESOLVED_COMPONENT_NAME:
-        return "unresolved component name '%s'";
-    case ECS_UNRESOLVED_ENTITY_NAME:
-        return "unresolved entity name '%s'";
     case ECS_COLUMN_ACCESS_VIOLATION:
         return "invalid access to readonly column (use const)";
     case ECS_DESERIALIZE_COMPONENT_ID_CONFLICT:
@@ -133,42 +158,4 @@ const char* ecs_strerror(
     }
 
     return "unknown error code";
-}
-
-
-void ecs_print_error_string(const char *signature, const char *system_id, const char *error_description, char *component_id, int count, ...) {
-    int argument_number = 1;
-    char error_string[300] = "";
-    char error_indicator[200] = "";
-    char custom_error_message[200] = "";
-    uint32_t position = 0;
-    int i;
-
-    va_list valist;
-    va_start(valist, count);
-
-    if(component_id){
-        if(strlen(component_id) == 0){
-            position = strlen(signature) - 1;
-        } else {
-            char* pointer_to_string = strstr(signature, component_id);
-            position = pointer_to_string - signature;
-        }
-    }
-
-    for(i = 0; i < position; i++){
-        if(signature[i] == ',') argument_number++;
-        error_indicator[i] = '~';
-    }
-    error_indicator[i] = '^';
-    error_indicator[++i] = '\0';
-    if (count > 0) {
-        vsprintf(custom_error_message, error_description, valist);
-    } else {
-        sprintf(custom_error_message, error_description, component_id);
-    }
-
-    sprintf(error_string, "%s at argument #%d. Error: \"%s\"\n%s\n%s\n", system_id ? system_id : "Error" , argument_number, custom_error_message, signature, error_indicator);
-    printf("%s", error_string);
-    va_end(valist);
 }

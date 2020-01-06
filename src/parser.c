@@ -16,25 +16,25 @@ const char *skip_space(
 /** Parse element with a dot-separated qualifier ('CONTAINER.Foo') */
 static
 char* parse_complex_elem(
-    char *bptr,
+    const char *system_id,
+    const char *sig,
+    int column,
+    char *ptr,
     ecs_system_expr_elem_kind_t *elem_kind,
     ecs_system_expr_oper_kind_t *oper_kind,
-    const char * *source,
-    const char *system_id,
-    const char *signature)
+    const char * *source)
 {
+    char *bptr = ptr;
     if (bptr[0] == '!') {
         *oper_kind = EcsOperNot;
         if (!bptr[1]) {
-            ecs_print_error_string(signature, system_id,ecs_strerror(ECS_INVALID_EXPRESSION), bptr, 0);
-            ecs_abort(ECS_INVALID_EXPRESSION, bptr);
+            ecs_parser_error(system_id, sig, column, "! must be followed by an identifier");
         }
         bptr ++;
     } else if (bptr[0] == '?') {
         *oper_kind = EcsOperOptional;
         if (!bptr[1]) {
-            ecs_print_error_string(signature, system_id, ecs_strerror(ECS_INVALID_EXPRESSION), bptr, 0);
-            ecs_abort(ECS_INVALID_EXPRESSION, bptr);
+            ecs_parser_error(system_id, sig, column, "? must be followed by an identifier");
         }
         bptr ++;
     }
@@ -65,8 +65,10 @@ char* parse_complex_elem(
         bptr = dot + 1;
 
         if (!bptr[0]) {
-            ecs_print_error_string(signature, system_id, ecs_strerror(ECS_INVALID_EXPRESSION), bptr, 0);
-            ecs_abort(ECS_INVALID_EXPRESSION, signature);
+            ecs_parser_error(
+                system_id, sig, column + dot - bptr,
+                 "%s must be followed by an identifier", 
+                 ptr);
         }
     }
 
@@ -76,6 +78,9 @@ char* parse_complex_elem(
 static
 int has_tables(
     ecs_world_t *world,
+    const char *system_id,
+    const char *sig,
+    int column,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
     ecs_system_expr_inout_kind_t inout_kind,
@@ -84,6 +89,9 @@ int has_tables(
     void *data)
 {
     (void)world;
+    (void)system_id;
+    (void)sig;
+    (void)column;
     (void)oper_kind;
     (void)inout_kind;
     (void)component_id;
@@ -130,6 +138,9 @@ uint32_t ecs_columns_count(
 
 static
 const char* parse_annotation(
+    const char *system_id,
+    const char *sig,
+    int column,
     const char *ptr, 
     ecs_system_expr_inout_kind_t *inout_kind_out)
 {
@@ -150,6 +161,9 @@ const char* parse_annotation(
                 *inout_kind_out = EcsOut;
             } else if (!strcmp(buffer, "inout")) {
                 *inout_kind_out = EcsInOut;
+            } else {
+                ecs_parser_error(
+                    system_id, sig, column, "unknown annotation '%s'", buffer);
             }
 
             if (ch == ']') {
@@ -161,7 +175,8 @@ const char* parse_annotation(
             bptr = buffer;
         } else {
             if (bptr - buffer >= ECS_ANNOTATION_LENGTH_MAX) {
-                return NULL;
+                ecs_parser_error(
+                    system_id, sig, column, "annotation is too long");
             }
 
             bptr[0] = ch;
@@ -170,8 +185,8 @@ const char* parse_annotation(
     }
 
     if (!ch) {
-        /* Annotation expression cannot be end of column expression */
-        return NULL;
+        ecs_parser_error(system_id, sig, column,
+            "annotation cannot appear at end of a column");
     }
 
     return ptr;
@@ -185,7 +200,6 @@ int ecs_parse_component_expr(
     const char *system_id,
     void *ctx)
 {
-    bool is_child_or_instance = false;
     size_t len = strlen(sig);
     const char *ptr;
     char ch, *bptr, *buffer = ecs_os_malloc(len + 1);
@@ -198,36 +212,34 @@ int ecs_parse_component_expr(
     ecs_system_expr_inout_kind_t inout_kind = EcsInOut;
     const char *source;
 
-    if(strstr(sig, "CHILDOF") != NULL ||  strstr(sig, "INSTANCEOF") != NULL) {
-        is_child_or_instance = true;
-    }
-
     for (bptr = buffer, ch = sig[0], ptr = sig; ch; ptr++) {
         ptr = skip_space(ptr);
         ch = *ptr;
 
         if (prev_is_0) {
             /* 0 can only apppear by itself */
-            ecs_print_error_string(sig, system_id,ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF), bptr, 0);
-            ecs_abort(ECS_INVALID_SIGNATURE, ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF));
+            ecs_parser_error(system_id, sig, ptr - sig, "0 can only appear by itself");
         }
 
         if (ch == '[') {
             /* Annotations should appear at the beginning of a column */
             if (bptr != buffer) {
-                ecs_abort(ECS_INVALID_SIGNATURE, sig);
+                ecs_parser_error(system_id, sig, ptr - sig, "[...] should appear at start of column");
             }
 
-            ptr = parse_annotation(ptr + 1, &inout_kind);
-            if (!bptr) {
-                ecs_abort(ECS_INVALID_SIGNATURE, sig);
-            }
-        
+            ptr = parse_annotation(system_id, sig, ptr - sig, ptr + 1, &inout_kind);
+            ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
         } else if (ch == ',' || ch == '|' || ch == '\0') {
             /* Separators should not appear after an empty column */
             if (bptr == buffer) {
-                ecs_print_error_string(sig, system_id, ecs_strerror(ECS_INVALID_SIGNATURE), bptr, 0);
-                ecs_abort(ECS_INVALID_SIGNATURE, sig);
+                if (ch) {
+                    ecs_parser_error(
+                        system_id, sig, ptr - sig, "%c unexpected here", ch);
+                } else {
+                    ecs_parser_error(
+                        system_id, sig, ptr - sig, "unexpected end of expression");
+                }
             }
 
             *bptr = '\0';
@@ -236,47 +248,38 @@ int ecs_parse_component_expr(
             source = NULL;
 
             if (complex_expr) {
-                ecs_system_expr_oper_kind_t prev_oper_kind = oper_kind;
-                bptr = parse_complex_elem(bptr, &elem_kind, &oper_kind, &source, system_id, sig);
+                ecs_system_expr_oper_kind_t prev = oper_kind;
+                bptr = parse_complex_elem(system_id, sig, ptr - sig, bptr, &elem_kind, &oper_kind, &source);
 
-                if (oper_kind == EcsOperNot && prev_oper_kind == EcsOperOr) {
-                    ecs_print_error_string( sig, system_id,ecs_strerror(ECS_CANT_USE_NOT_IN_OR_EXPRESSION), bptr, 0);
-                    ecs_abort(ECS_INVALID_EXPRESSION, NULL);
+                if (oper_kind == EcsOperNot && prev == EcsOperOr) {
+                    ecs_parser_error(system_id, sig, ptr - sig, "cannot use ! in | expression");
                 }
             }
 
             if (oper_kind == EcsOperOr) {
                 if (elem_kind == EcsFromEmpty) {
                     /* Cannot OR handles */
-                    ecs_print_error_string(sig, system_id,ecs_strerror(ECS_CANT_USE_OR_WITH_EMPTY_FROM_EXPRESSION), bptr, 0);
-                    ecs_abort(ECS_INVALID_EXPRESSION, NULL);
+                    ecs_parser_error(system_id, sig, ptr - sig, "cannot use | on columns without a source");
                 }
             }
 
             if (!strcmp(bptr, "0")) {
                 if (bptr != buffer) {
                     /* 0 can only appear by itself */
-                    ecs_print_error_string(sig, system_id, ecs_strerror(ECS_ZERO_CAN_ONLY_APPEAR_BY_ITSELF), bptr, 0);
-                    ecs_abort(ECS_INVALID_EXPRESSION, NULL);
+                    ecs_parser_error(system_id, sig, ptr - sig, "0 can only appear by itself");
                 }
 
                 elem_kind = EcsFromEmpty;
                 prev_is_0 = true;
-            } else {
-                if (strcmp(bptr, "CHILDOF") &&  strcmp(bptr, "INSTANCEOF")) {
-                    /* Lookup component handly by string identifier */
-                    ecs_entity_t component = ecs_lookup(world, bptr);
-                    if (!component) {
-                        if(is_child_or_instance) {
-                            ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNRESOLVED_ENTITY_NAME), bptr, 0);
-                        } else {
-                            ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNSESOLVED_COMPONENT_NAME), bptr, 0);
-                        }
-
-                        ecs_abort(ECS_INVALID_COMPONENT_ID, bptr);
-                    }
-                }
             }
+
+            /* If retrieving a component from a system, only the AND operator is
+             * supported. The set of system components is expected to be constant, and
+             * thus no conditional operators are needed. */
+            if (elem_kind == EcsFromSystem && oper_kind != EcsOperAnd) {
+                ecs_parser_error(system_id, sig, ptr - sig,
+                    "invalid operator for SYSTEM column");
+            }     
 
             char *source_id = NULL;
             if (source) {
@@ -288,16 +291,10 @@ int ecs_parse_component_expr(
                 source_id[dot - source] = '\0';
             }
 
-            int ret;
-            if ((ret = action(
-                world, elem_kind, oper_kind, inout_kind, bptr, source_id, ctx)))
+            if (action(world, system_id, sig, ptr - sig, 
+                elem_kind, oper_kind, inout_kind, bptr, source_id, ctx)) 
             {
-                if(is_child_or_instance) {
-                    ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNRESOLVED_ENTITY_NAME), bptr, 0);
-                } else {
-                    ecs_print_error_string(sig, system_id, ecs_strerror(ECS_UNSESOLVED_COMPONENT_NAME), bptr, 0);
-                }
-                ecs_abort(ret, sig);
+                ecs_abort(ECS_INVALID_SIGNATURE, sig);
             }
 
             if (source_id) {
@@ -309,6 +306,10 @@ int ecs_parse_component_expr(
             elem_kind = EcsFromSelf;
 
             if (ch == '|') {
+                if (oper_kind == EcsOperNot) {
+                    ecs_parser_error(system_id, sig, ptr - sig, 
+                        "cannot use ! in | expression");
+                }
                 oper_kind = EcsOperOr;
             } else {
                 oper_kind = EcsOperAnd;

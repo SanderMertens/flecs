@@ -26,6 +26,9 @@ ecs_type_t find_or_create_type(
 static
 int parse_type_action(
     ecs_world_t *world,
+    const char *system_id,
+    const char *sig,
+    int column,
     ecs_system_expr_elem_kind_t elem_kind,
     ecs_system_expr_oper_kind_t oper_kind,
     ecs_system_expr_inout_kind_t inout_kind,
@@ -41,7 +44,9 @@ int parse_type_action(
         ecs_entity_t entity = 0;
 
         if (elem_kind != EcsFromSelf) {
-            return ECS_INVALID_TYPE_EXPRESSION;
+            ecs_parser_error(system_id, sig, column, 
+                "source modifiers not supported for type expressions");
+            return -1;
         }
 
         if (!strcmp(entity_id, "INSTANCEOF")) {
@@ -53,8 +58,9 @@ int parse_type_action(
         }
         
         if (!entity) {
-            ecs_os_err("%s not found", entity_id);
-            return ECS_INVALID_TYPE_EXPRESSION;
+            ecs_parser_error(system_id, sig, column, 
+                "unresolved identifier '%s'", entity_id);
+            return -1;
         }
 
         if (oper_kind == EcsOperAnd) {
@@ -71,14 +77,18 @@ int parse_type_action(
                 if (entity & ECS_ENTITY_MASK) {
                     /* An expression should not OR entity ids, only entities +
                      * entity flags. */
-                    return ECS_INVALID_TYPE_EXPRESSION;
+                    ecs_parser_error(system_id, sig, column, 
+                        "| operator unsupported in type expression");
+                    return -1;
                 }
             }
 
             *e_ptr |= entity;
         } else {
             /* Only AND and OR operators are supported for type expressions */
-            return ECS_INVALID_TYPE_EXPRESSION;
+            ecs_parser_error(system_id, sig, column, 
+                "invalid operator for type expression");
+            return -1;
         }
     }
 
@@ -891,11 +901,12 @@ EcsTypeComponent type_from_vec(
 static
 EcsTypeComponent type_from_expr(
     ecs_world_t *world,
+    const char *id,
     const char *expr)
 {
     if (expr) {
         ecs_vector_t *vec = ecs_vector_new(&handle_arr_params, 1);
-        ecs_parse_component_expr(world, expr, parse_type_action, NULL, &vec);
+        ecs_parse_component_expr(world, expr, parse_type_action, id, &vec);
         EcsTypeComponent result = type_from_vec(world, vec);
         ecs_vector_free(vec);
         return result;
@@ -913,7 +924,7 @@ ecs_entity_t ecs_new_type(
 {
     assert(world->magic == ECS_WORLD_MAGIC);  
 
-    EcsTypeComponent type = type_from_expr(world, expr);
+    EcsTypeComponent type = type_from_expr(world, id, expr);
     ecs_entity_t result = ecs_lookup(world, id);
 
     if (result) {
@@ -949,7 +960,7 @@ ecs_entity_t ecs_new_prefab(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
    
-    EcsTypeComponent type = type_from_expr(world, expr);
+    EcsTypeComponent type = type_from_expr(world, id, expr);
     type.resolved = ecs_type_merge_intern(
         world, NULL, world->t_prefab, type.resolved, 0);
 
@@ -973,7 +984,7 @@ ecs_entity_t ecs_new_entity(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
    
-    EcsTypeComponent type = type_from_expr(world, expr);
+    EcsTypeComponent type = type_from_expr(world, id, expr);
 
     ecs_entity_t result = ecs_lookup(world, id);
     if (result) {
@@ -1059,7 +1070,7 @@ ecs_type_t ecs_expr_to_type(
     ecs_world_t *world,
     const char *expr)
 {
-    EcsTypeComponent type = type_from_expr(world, expr);
+    EcsTypeComponent type = type_from_expr(world, "<type>", expr);
     return type.resolved;
 }
 
