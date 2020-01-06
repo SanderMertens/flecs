@@ -10,14 +10,13 @@ ecs_vector_t* serialize_reader_to_vector(
     int buffer_size,
     ecs_reader_t *reader) 
 {
-    ecs_vector_params_t params = {.element_size = 1};
-    ecs_vector_t *v = ecs_vector_new(&params, 0);
+    ecs_vector_t *v = ecs_vector_new(char, 1);
 
     char *buffer = ecs_os_malloc(buffer_size);
     int read;
 
     while ((read = ecs_reader_read(buffer, buffer_size, reader))) {
-        void *ptr = ecs_vector_addn(&v, &params, read);
+        void *ptr = ecs_vector_addn(&v, char, read);
         memcpy(ptr, buffer, read);
     }
 
@@ -52,7 +51,6 @@ int vector_read(
     ecs_vector_t *v,
     int *v_ptr)
 {
-    ecs_vector_params_t params = {.element_size = 1};
     int count = ecs_vector_count(v);
     int read = count - *v_ptr;
 
@@ -64,7 +62,7 @@ int vector_read(
         return 0;
     }
 
-    void *ptr = ecs_vector_get(v, &params, *v_ptr);
+    void *ptr = ecs_vector_get(v, char, *v_ptr);
     memcpy(buffer, ptr, read);
     (*v_ptr) += read;
 

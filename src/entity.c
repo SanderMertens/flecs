@@ -13,17 +13,17 @@ void copy_column(
     uint32_t size = new_column->size;
 
     if (size) {
-        ecs_vector_params_t param = {.element_size = new_column->size};
+        size_t column_size = new_column->size;
 
         if (old_index < 0) old_index *= -1;
         
-        void *dst = ecs_vector_get(new_column->data, &param, new_index - 1);
-        void *src = ecs_vector_get(old_column->data, &param, old_index - 1);
+        void *dst = _ecs_vector_get(new_column->data, column_size, new_index - 1);
+        void *src = _ecs_vector_get(old_column->data, column_size, old_index - 1);
             
         ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        memcpy(dst, src, param.element_size);
+        memcpy(dst, src, column_size);
     }
 }
 
@@ -89,12 +89,12 @@ void* get_row_ptr(
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_column_t *column = &columns[column_index + 1];
-    ecs_vector_params_t param = {.element_size = column->size};
+    size_t column_size = column->size;
 
-    if (param.element_size) {
+    if (column_size) {
         ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        void *ptr = ecs_vector_get(column->data, &param, index - 1);
+        void *ptr = _ecs_vector_get(column->data, column_size, index - 1);
         return ptr;
     } else {
         return NULL;
@@ -326,7 +326,7 @@ ecs_type_t instantiate_prefab(
 
         uint32_t count = ecs_vector_count(builder->ops);
         void *new_ops = ecs_vector_addn(
-            &entity_builder->ops, &builder_params, count);
+            &entity_builder->ops, ecs_builder_op_t, count);
         
         memcpy(new_ops, ecs_vector_first(builder->ops), 
             sizeof(ecs_builder_op_t) * count);
@@ -573,7 +573,7 @@ uint32_t commit(
      * stage once the merge takes place. */
     if (in_progress) {
         /* Update remove type. Add to_remove, and subtract to_add. */
-        ecs_type_t *rm_type_ptr = ecs_map_get_ptr(stage->remove_merge, entity);
+        ecs_type_t *rm_type_ptr = ecs_map_get(stage->remove_merge, ecs_type_t, entity);
         remove_type = rm_type_ptr ? *rm_type_ptr : NULL;
         last_remove_type = remove_type;
 
@@ -1257,7 +1257,7 @@ uint32_t update_entity_index(
             e = i + start_entity;
         }
 
-        ecs_row_t *row_ptr = ecs_map_get_ptr(entity_index, e);
+        ecs_row_t *row_ptr = ecs_map_get(entity_index, ecs_row_t, e);
         if (row_ptr) {
             src_row = row_ptr->index;
             uint8_t is_monitored = 1 - (src_row < 0) * 2;
@@ -1491,9 +1491,8 @@ ecs_entity_t set_w_data_intern(
         result = data->entities[0];
     } else {
         result = world->last_handle + 1;        
+        world->last_handle += count;
     }
-
-    world->last_handle += count;
 
     ecs_assert(!world->max_handle || world->last_handle <= world->max_handle, 
         ECS_OUT_OF_RANGE, NULL);
@@ -1514,10 +1513,9 @@ ecs_entity_t set_w_data_intern(
         /* Grow world entity index only if no entity ids are provided. If ids
          * are provided, it is possible that they already appear in the entity
          * index, in which case they will be overwritten. */
-        uint32_t cur_index_count = ecs_map_count(entity_index);
         if (!data->entities) {
             start_row = ecs_table_grow(world, table, columns, count, result) - 1;
-            ecs_map_grow(entity_index, cur_index_count + count);
+            ecs_map_grow(entity_index, count);
         }
 
         /* Obtain list of entities */
@@ -1715,10 +1713,10 @@ void ecs_delete_w_filter_intern(
     ecs_assert(stage == &world->main_stage, ECS_UNSUPPORTED, 
         "delete_w_filter currently only supported on main stage");
 
-    uint32_t i, count = ecs_chunked_count(stage->tables);
+    uint32_t i, count = ecs_sparse_count(stage->tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_chunked_get(stage->tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
         ecs_type_t type = table->type;
 
         if (table->flags & EcsTableHasBuiltins) {
@@ -1772,10 +1770,10 @@ void _ecs_add_remove_w_filter(
     ecs_assert(stage == &world->main_stage, ECS_UNSUPPORTED, 
         "remove_w_filter currently only supported on main stage");
 
-    uint32_t i, count = ecs_chunked_count(stage->tables);
+    uint32_t i, count = ecs_sparse_count(stage->tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_chunked_get(stage->tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
         ecs_type_t type = table->type;
 
         /* Skip if the type contains none of the components in to_remove */
@@ -2247,8 +2245,7 @@ ecs_type_t ecs_type_from_entity(
     }
 
     if (component == EEcsTypeComponent) {
-        ecs_vector_params_t params = {.element_size = sizeof(EcsTypeComponent)};
-        EcsTypeComponent *fe = ecs_vector_get(columns[1].data, &params, index);
+        EcsTypeComponent *fe = ecs_vector_get(columns[1].data, EcsTypeComponent, index);
         type = fe->resolved;
     } else {
         type = ecs_type_find_intern(world, stage, &entity, 1);
@@ -2302,12 +2299,12 @@ uint32_t ecs_count_w_filter(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_chunked_t *tables = world->main_stage.tables;
-    uint32_t i, count = ecs_chunked_count(tables);
+    ecs_sparse_t *tables = world->main_stage.tables;
+    uint32_t i, count = ecs_sparse_count(tables);
     uint32_t result = 0;
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
 
         if (!filter || ecs_type_match_w_filter(world, table->type, filter)) {
             result += ecs_vector_count(table->columns[0].data); 

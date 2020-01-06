@@ -1,17 +1,5 @@
 #include "flecs_private.h"
 
-const ecs_vector_params_t char_arr_params = {
-    .element_size = sizeof(char)
-};
-
-const ecs_vector_params_t type_node_params = {
-    .element_size = sizeof(ecs_type_node_t)
-};
-
-const ecs_vector_params_t link_params = {
-    .element_size = sizeof(ecs_type_link_t*)
-};
-
 static
 ecs_type_t find_or_create_type(
     ecs_world_t *world,
@@ -64,10 +52,10 @@ int parse_type_action(
         }
 
         if (oper_kind == EcsOperAnd) {
-            ecs_entity_t* e_ptr = ecs_vector_add(array, &handle_arr_params);
+            ecs_entity_t* e_ptr = ecs_vector_add(array, ecs_entity_t);
             *e_ptr = entity;
         } else if (oper_kind == EcsOperOr) {
-            ecs_entity_t *e_ptr = ecs_vector_last(*array, &handle_arr_params);
+            ecs_entity_t *e_ptr = ecs_vector_last(*array, ecs_entity_t);
 
             /* If using an OR operator, the array should at least have one 
              * element. */
@@ -160,8 +148,8 @@ ecs_type_t ecs_type_from_array(
     ecs_entity_t *array,
     uint32_t count)
 {
-    ecs_vector_t *vector = ecs_vector_new(&handle_arr_params, count);
-    ecs_vector_set_count(&vector, &handle_arr_params, count);
+    ecs_vector_t *vector = ecs_vector_new(ecs_entity_t, count);
+    ecs_vector_set_count(&vector, ecs_entity_t, count);
     ecs_entity_t *vector_first = ecs_vector_first(vector);
     memcpy(vector_first, array, sizeof(ecs_entity_t) * count);
 
@@ -348,7 +336,7 @@ ecs_type_t find_type_in_vector(
 
     /* Type has not been found, add it */
     if (create) {
-        ecs_type_link_t **link = ecs_vector_add(vector, &link_params);
+        ecs_type_link_t **link = ecs_vector_add(vector, ecs_type_link_t*);
         *link = ecs_os_calloc(1, sizeof(ecs_type_link_t));
         ecs_type_t result = register_type(world, stage, *link, array, count, normalized);
         return result;
@@ -384,7 +372,7 @@ ecs_type_t find_or_create_type(
 
             if (!node->nodes && create) {
                 /* Create vector */
-                ecs_vector_set_count(&node->nodes, &type_node_params, 
+                ecs_vector_set_count(&node->nodes, ecs_type_node_t, 
                     ECS_TYPE_DB_MAX_CHILD_NODES);
 
                 node_array = ecs_vector_first(node->nodes);
@@ -427,7 +415,7 @@ ecs_type_t find_or_create_type(
 
             if (!node->types[index]) {
                 if (create) {
-                    node->types[index] = ecs_vector_new(&link_params, 1);
+                    node->types[index] = ecs_vector_new(ecs_type_link_t*, 1);
                 } else {
                     return NULL;
                 }
@@ -905,7 +893,7 @@ EcsTypeComponent type_from_expr(
     const char *expr)
 {
     if (expr) {
-        ecs_vector_t *vec = ecs_vector_new(&handle_arr_params, 1);
+        ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
         ecs_parse_component_expr(world, expr, parse_type_action, id, &vec);
         EcsTypeComponent result = type_from_vec(world, vec);
         ecs_vector_free(vec);
@@ -1096,7 +1084,7 @@ char* ecs_type_to_expr(
     ecs_world_t *world,
     ecs_type_t type)
 {
-    ecs_vector_t *chbuf = ecs_vector_new(&char_arr_params, 32);
+    ecs_vector_t *chbuf = ecs_vector_new(char, 32);
     char *dst;
     uint32_t len;
     char buf[15];
@@ -1109,18 +1097,18 @@ char* ecs_type_to_expr(
         ecs_entity_t flags = split_entity_id(handles[i], &h) & ECS_ENTITY_FLAGS_MASK;
 
         if (i) {
-            *(char*)ecs_vector_add(&chbuf, &char_arr_params) = ',';
+            *(char*)ecs_vector_add(&chbuf, char) = ',';
         }
 
         if (flags & ECS_INSTANCEOF) {
             int len = sizeof("INSTANCEOF|") - 1;
-            dst = ecs_vector_addn(&chbuf, &char_arr_params, len);
+            dst = ecs_vector_addn(&chbuf, char, len);
             memcpy(dst, "INSTANCEOF|", len);
         }
 
         if (flags & ECS_CHILDOF) {
             int len = sizeof("CHILDOF|") - 1;
-            dst = ecs_vector_addn(&chbuf, &char_arr_params, len);
+            dst = ecs_vector_addn(&chbuf, char, len);
             memcpy(dst, "CHILDOF|", len);
         }
 
@@ -1134,11 +1122,11 @@ char* ecs_type_to_expr(
             str = buf;
         }
         len = strlen(str);
-        dst = ecs_vector_addn(&chbuf, &char_arr_params, len);
+        dst = ecs_vector_addn(&chbuf, char, len);
         memcpy(dst, str, len);
     }
 
-    *(char*)ecs_vector_add(&chbuf, &char_arr_params) = '\0';
+    *(char*)ecs_vector_add(&chbuf, char) = '\0';
 
     char *result = strdup(ecs_vector_first(chbuf));
     ecs_vector_free(chbuf);

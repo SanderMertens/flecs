@@ -13,8 +13,7 @@ void dup_table(
     /* Now copy each column separately */
     for (c = 0; c < column_count + 1; c ++) {
         ecs_table_column_t *column = &table->columns[c];
-        ecs_vector_params_t column_params = {.element_size = column->size};
-        column->data = ecs_vector_copy(column->data, &column_params);
+        column->data = _ecs_vector_copy(column->data, column->size);
     }
 }
 
@@ -22,14 +21,14 @@ static
 ecs_snapshot_t* snapshot_create(
     ecs_world_t *world,
     const ecs_map_t *entity_index,
-    const ecs_chunked_t *tables,
+    const ecs_sparse_t *tables,
     const ecs_filter_t *filter)
 {
     ecs_snapshot_t *result = ecs_os_malloc(sizeof(ecs_snapshot_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     /* Copy tables from world */
-    result->tables = ecs_chunked_copy(tables);
+    result->tables = ecs_sparse_copy(tables);
     
     if (filter || !entity_index) {
         result->filter = filter ? *filter : (ecs_filter_t){0};
@@ -41,9 +40,9 @@ ecs_snapshot_t* snapshot_create(
 
     /* We need to dup the table data, because right now the copied tables are
      * still pointing to columns in the main stage. */
-    uint32_t i, count = ecs_chunked_count(result->tables);
+    uint32_t i, count = ecs_sparse_count(result->tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_chunked_get(result->tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(result->tables, ecs_table_t, i);
 
         /* Skip tables with builtin components to avoid dropping critical data
          * like systems or components when restoring the snapshot */
@@ -129,9 +128,9 @@ void ecs_snapshot_restore(
     }   
 
     /* Move snapshot data to table */
-    uint32_t i, count = ecs_chunked_count(snapshot->tables);
+    uint32_t i, count = ecs_sparse_count(snapshot->tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *src = ecs_chunked_get(snapshot->tables, ecs_table_t, i);
+        ecs_table_t *src = ecs_sparse_get(snapshot->tables, ecs_table_t, i);
         if (src->flags & EcsTableHasBuiltins) {
             continue;
         }
@@ -143,7 +142,7 @@ void ecs_snapshot_restore(
             continue;
         }
 
-        ecs_table_t *dst = ecs_chunked_get(world->main_stage.tables, ecs_table_t, i);
+        ecs_table_t *dst = ecs_sparse_get(world->main_stage.tables, ecs_table_t, i);
         ecs_table_replace_columns(world, dst, src->columns);
 
         /* If a filter was used, we need to fix the entity index one by one */
@@ -164,13 +163,13 @@ void ecs_snapshot_restore(
     }
 
     /* Clear data from remaining tables */
-    uint32_t world_count = ecs_chunked_count(world->main_stage.tables);
+    uint32_t world_count = ecs_sparse_count(world->main_stage.tables);
     for (; i < world_count; i ++) {
-        ecs_table_t *table = ecs_chunked_get(world->main_stage.tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(world->main_stage.tables, ecs_table_t, i);
         ecs_table_replace_columns(world, table, NULL);
     }
 
-    ecs_chunked_free(snapshot->tables);
+    ecs_sparse_free(snapshot->tables);
 
     world->should_match = true;
     world->should_resolve = true;
@@ -191,9 +190,9 @@ void ecs_snapshot_free(
         ecs_map_free(snapshot->entity_index);
     }
 
-    uint32_t i, count = ecs_chunked_count(snapshot->tables);
+    uint32_t i, count = ecs_sparse_count(snapshot->tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *src = ecs_chunked_get(snapshot->tables, ecs_table_t, i);
+        ecs_table_t *src = ecs_sparse_get(snapshot->tables, ecs_table_t, i);
         if (src->flags & EcsTableHasBuiltins) {
             continue;
         }
@@ -202,6 +201,6 @@ void ecs_snapshot_free(
         ecs_os_free(src->columns);
     }    
 
-    ecs_chunked_free(snapshot->tables);
+    ecs_sparse_free(snapshot->tables);
     ecs_os_free(snapshot);
 }

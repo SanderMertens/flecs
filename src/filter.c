@@ -33,12 +33,12 @@ ecs_filter_iter_t ecs_snapshot_filter_iter(
 bool ecs_filter_next(
     ecs_filter_iter_t *iter)
 {
-    ecs_chunked_t *tables = iter->tables;
-    int32_t count = ecs_chunked_count(tables);
+    ecs_sparse_t *tables = iter->tables;
+    int32_t count = ecs_sparse_count(tables);
     int32_t i;
 
     for (i = iter->index; i < count; i ++) {
-        ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
 
         if (!table->columns) {
             continue;

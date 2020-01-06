@@ -614,7 +614,6 @@ void World_entity_range_add_in_range_in_progress(void);
 void World_entity_range_add_out_of_range_in_progress(void);
 void World_entity_range_out_of_range_check_disabled(void);
 void World_dim(void);
-void World_dim_type(void);
 void World_dim_dim_type(void);
 void World_phases(void);
 void World_phases_w_merging(void);
@@ -3227,7 +3226,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 33,
+        .testcase_count = 32,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -3272,10 +3271,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "dim",
                 .function = World_dim
-            },
-            {
-                .id = "dim_type",
-                .function = World_dim_type
             },
             {
                 .id = "dim_dim_type",

@@ -1,21 +1,5 @@
 #include "flecs_private.h"
 
-const ecs_vector_params_t matched_table_params = {
-    .element_size = sizeof(ecs_matched_table_t)
-};
-
-const ecs_vector_params_t system_column_params = {
-    .element_size = sizeof(ecs_system_column_t)
-};
-
-const ecs_vector_params_t reference_params = {
-    .element_size = sizeof(ecs_reference_t)
-};
-
-const ecs_vector_params_t matched_column_params = {
-    .element_size = sizeof(uint32_t)
-};
-
 static
 ecs_entity_t components_contains(
     ecs_world_t *world,
@@ -32,7 +16,7 @@ ecs_entity_t components_contains(
 
         if (entity & ECS_CHILDOF) {
             entity &= ECS_ENTITY_MASK;
-            ecs_row_t *row = ecs_map_get_ptr(world->main_stage.entity_index, entity);
+            ecs_row_t *row = ecs_map_get(world->main_stage.entity_index, ecs_row_t, entity);
             ecs_assert(row != 0, ECS_INTERNAL_ERROR, NULL);
 
             ecs_entity_t component = ecs_type_contains(
@@ -56,7 +40,7 @@ ecs_entity_t ecs_get_entity_for_component(
     ecs_entity_t component)
 {
     if (entity) {
-        ecs_row_t *row = ecs_map_get_ptr(world->main_stage.entity_index, entity);
+        ecs_row_t *row = ecs_map_get(world->main_stage.entity_index, ecs_row_t, entity);
         ecs_assert(row != NULL, ECS_INTERNAL_ERROR, NULL);
         type = row->type;
     }
@@ -94,7 +78,7 @@ void add_table(
      * activate signal to the system. */
     if (table) {
         table_data = ecs_vector_add(
-            &system_data->inactive_tables, &matched_table_params);
+            &system_data->inactive_tables, ecs_matched_table_t);
     } else {
         /* If no table is provided to function, this is a system that contains
          * no columns that require table matching. In this case, the system will
@@ -102,7 +86,7 @@ void add_table(
          * Always add this dummy table to the list of active tables, since it
          * would never get activated otherwise. */
         table_data = ecs_vector_add(
-            &system_data->tables, &matched_table_params);
+            &system_data->tables, ecs_matched_table_t);
     }
 
     table_data->table = table;
@@ -242,7 +226,7 @@ void add_table(
                 if (component_data->size) {
                     ecs_entity_t e;
                     ecs_reference_t *ref = ecs_vector_add(
-                            &table_data->references, &reference_params);
+                            &table_data->references, ecs_reference_t);
 
                     /* Find the entity for the component */
                     if (kind == EcsFromEntity) {
@@ -303,7 +287,7 @@ void remove_table(
     int32_t index)
 {
     (void)system_data;
-    ecs_vector_remove_index(tables, &matched_table_params, index);
+    ecs_vector_remove_index(tables, ecs_matched_table_t, index);
 }
 
 /* Match table with system */
@@ -530,14 +514,14 @@ void order_cascade_tables(
 
     for (i = 0; i < count; i ++) {
         ecs_matched_table_t *table_data = ecs_vector_get(
-            system_data->tables, &matched_table_params, i);
+            system_data->tables, ecs_matched_table_t, i);
 
         ecs_type_t type = table_data->table->type;
         table_data->depth = ecs_type_container_depth(
             world, type, cascade_component);
     }
 
-    ecs_vector_sort(system_data->tables, &matched_table_params, table_compare);
+    ecs_vector_sort(system_data->tables, ecs_matched_table_t, table_compare);
 }
 
 /** Match existing tables against system (table is created before system) */
@@ -547,10 +531,10 @@ void match_tables(
     ecs_entity_t system,
     EcsColSystem *system_data)
 {
-    uint32_t i, count = ecs_chunked_count(world->main_stage.tables);
+    uint32_t i, count = ecs_sparse_count(world->main_stage.tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_chunked_get(
+        ecs_table_t *table = ecs_sparse_get(
             world->main_stage.tables, ecs_table_t, i);
 
         if (match_table(world, table, system, system_data, NULL)) {
@@ -591,7 +575,7 @@ void resolve_cascade_container(
     ecs_type_t table_type)
 {
     ecs_matched_table_t *table_data = ecs_vector_get(
-        system_data->tables, &matched_table_params, table_data_index);
+        system_data->tables, ecs_matched_table_t, table_data_index);
     
     ecs_assert(table_data->references != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -633,12 +617,12 @@ void ecs_rematch_system(
     EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, 0);
 
-    ecs_chunked_t *tables = world->main_stage.tables;
-    uint32_t i, count = ecs_chunked_count(tables);
+    ecs_sparse_t *tables = world->main_stage.tables;
+    uint32_t i, count = ecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
         /* Is the system currently matched with the table? */
-        ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         int32_t match = table_matched(system_data, system_data->tables, table);
 
         if (match_table(world, table, system, system_data, NULL)) {
@@ -779,7 +763,7 @@ void ecs_system_activate_table(
     int32_t i = get_table_param_index(world, system_data, table, src_array);
 
     uint32_t src_count = ecs_vector_move_index(
-        &dst_array, src_array, &matched_table_params, i);
+        &dst_array, src_array, ecs_matched_table_t, i);
 
     if (active) {
         uint32_t dst_count = ecs_vector_count(dst_array);
@@ -819,23 +803,20 @@ ecs_entity_t ecs_new_col_system(
     system_data->base.enabled = true;
     system_data->base.signature = ecs_os_strdup(sig);
     system_data->base.time_spent = 0;
-    system_data->base.columns = ecs_vector_new(&system_column_params, count);
+    system_data->base.columns = ecs_vector_new(ecs_system_column_t, count);
     system_data->base.invoke_count = 0;
     system_data->base.kind = kind;
     system_data->base.cascade_by = 0;
     system_data->base.has_refs = false;
     system_data->base.needs_tables = ecs_needs_tables(world, sig, id);
 
-    system_data->column_params.element_size = sizeof(int32_t) * (count);
-    system_data->ref_params.element_size = sizeof(ecs_reference_t) * count;
-    system_data->component_params.element_size = sizeof(ecs_entity_t) * count;
     system_data->period = 0;
     system_data->entity = result;
 
     system_data->tables = ecs_vector_new(
-        &matched_table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
+        ecs_matched_table_t, ECS_SYSTEM_INITIAL_TABLE_COUNT);
     system_data->inactive_tables = ecs_vector_new(
-        &matched_table_params, ECS_SYSTEM_INITIAL_TABLE_COUNT);
+        ecs_matched_table_t, ECS_SYSTEM_INITIAL_TABLE_COUNT);
 
     ecs_parse_component_expr(
         world, sig, ecs_parse_signature_action, id, system_data);
@@ -857,26 +838,26 @@ ecs_entity_t ecs_new_col_system(
     ecs_entity_t *elem = NULL;
 
     if (!ecs_vector_count(system_data->tables)) {
-        elem = ecs_vector_add(&world->inactive_systems, &handle_arr_params);
+        elem = ecs_vector_add(&world->inactive_systems, ecs_entity_t);
     } else {
         if (kind == EcsOnUpdate) {
-            elem = ecs_vector_add(&world->on_update_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->on_update_systems, ecs_entity_t);
         } else if (kind == EcsOnValidate) {
-            elem = ecs_vector_add(&world->on_validate_systems, &handle_arr_params);            
+            elem = ecs_vector_add(&world->on_validate_systems, ecs_entity_t);            
         } else if (kind == EcsPreUpdate) {
-            elem = ecs_vector_add(&world->pre_update_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->pre_update_systems, ecs_entity_t);
         } else if (kind == EcsPostUpdate) {
-            elem = ecs_vector_add(&world->post_update_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->post_update_systems, ecs_entity_t);
         } else if (kind == EcsOnLoad) {
-            elem = ecs_vector_add(&world->on_load_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->on_load_systems, ecs_entity_t);
         } else if (kind == EcsPostLoad) {
-            elem = ecs_vector_add(&world->post_load_systems, &handle_arr_params);            
+            elem = ecs_vector_add(&world->post_load_systems, ecs_entity_t);            
         } else if (kind == EcsPreStore) {
-            elem = ecs_vector_add(&world->pre_store_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->pre_store_systems, ecs_entity_t);
         } else if (kind == EcsOnStore) {
-            elem = ecs_vector_add(&world->on_store_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->on_store_systems, ecs_entity_t);
         } else if (kind == EcsManual) {
-            elem = ecs_vector_add(&world->manual_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->manual_systems, ecs_entity_t);
         }
 
         /* Parameter checking happened before this, kind must have been one of

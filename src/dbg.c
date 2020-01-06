@@ -84,11 +84,11 @@ ecs_table_t* ecs_dbg_get_table(
     ecs_world_t *world,
     uint32_t index)
 {
-    if (ecs_chunked_count(world->main_stage.tables) <= index) {
+    if (ecs_sparse_count(world->main_stage.tables) <= index) {
         return NULL;
     }
 
-    return ecs_chunked_get(
+    return ecs_sparse_get(
         world->main_stage.tables, ecs_table_t, index);
 }
 
@@ -147,7 +147,7 @@ ecs_table_t* ecs_dbg_active_table(
 
     EcsColSystem *system_data = dbg->system_data;
     ecs_matched_table_t *table = ecs_vector_get(
-        system_data->tables, &matched_table_params, index);
+        system_data->tables, ecs_matched_table_t, index);
     if (!table) {
         return NULL;
     }
@@ -164,7 +164,7 @@ ecs_table_t* ecs_dbg_inactive_table(
 
     EcsColSystem *system_data = dbg->system_data;
     ecs_matched_table_t *table = ecs_vector_get(
-        system_data->inactive_tables, &matched_table_params, index);
+        system_data->inactive_tables, ecs_matched_table_t, index);
     if (!table) {
         return NULL;
     }

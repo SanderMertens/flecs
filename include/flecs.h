@@ -27,7 +27,7 @@ typedef char bool;
 
 #include <flecs/util/os_api.h>
 #include <flecs/util/vector.h>
-#include <flecs/util/chunked.h>
+#include <flecs/util/sparse.h>
 #include <flecs/util/map.h>
 #include <flecs/util/os_api.h>
 
@@ -1528,7 +1528,7 @@ void* ecs_table_column(
 
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
-    ecs_chunked_t *tables;
+    ecs_sparse_t *tables;
     uint32_t index;
     ecs_rows_t rows;
 } ecs_filter_iter_t;

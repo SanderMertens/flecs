@@ -6,10 +6,10 @@ void ecs_component_reader_fetch_component_data(
 {
     ecs_component_reader_t *reader = &stream->component;
     ecs_world_t *world = stream->world;
-    ecs_chunked_t *tables = world->main_stage.tables;
+    ecs_sparse_t *tables = world->main_stage.tables;
 
     /* Component table is the first table in the world */
-    ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, 0);
+    ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, 0);
     reader->id_column = ecs_vector_first(table->columns[0].data);
     reader->data_column = ecs_vector_first(table->columns[1].data);
     reader->name_column = ecs_vector_first(table->columns[2].data);
@@ -139,7 +139,7 @@ void ecs_table_reader_next(
     ecs_reader_t *stream)
 {
     ecs_table_reader_t *reader = &stream->table;
-    ecs_chunked_t *tables = stream->tables;
+    ecs_sparse_t *tables = stream->tables;
 
     switch(reader->state) {
     case EcsTableHeader: {
@@ -148,7 +148,7 @@ void ecs_table_reader_next(
         reader->state = EcsTableTypeSize;
 
         do {
-            ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, reader->table_index);
+            ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, reader->table_index);
             reader->table = table;
             reader->columns = table->columns;
             reader->table_index ++;
@@ -162,7 +162,7 @@ void ecs_table_reader_next(
                 table_found = true;
                 break;
             }
-        } while (reader->table_index != ecs_chunked_count(tables));
+        } while (reader->table_index != ecs_sparse_count(tables));
 
         if (!table_found) {
             stream->state = EcsFooterSegment;
@@ -226,7 +226,7 @@ void ecs_table_reader_next(
         reader->column_index ++;
         if (reader->column_index == reader->total_columns) {
             reader->state = EcsTableHeader;
-            if (reader->table_index == ecs_chunked_count(tables)) {
+            if (reader->table_index == ecs_sparse_count(tables)) {
                 stream->state = EcsFooterSegment;
             }            
         } else {

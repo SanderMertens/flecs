@@ -1,13 +1,5 @@
 #include "flecs_private.h"
 
-const ecs_vector_params_t thread_arr_params = {
-    .element_size = sizeof(ecs_thread_t)
-};
-
-const ecs_vector_params_t job_arr_params = {
-    .element_size = sizeof(ecs_job_t)
-};
-
 /** Worker thread code. Processes a job for one system */
 static
 void* ecs_worker(void *arg) {
@@ -120,13 +112,13 @@ void start_threads(
 {
     ecs_assert(world->worker_threads == NULL, ECS_INTERNAL_ERROR, NULL);
 
-    world->worker_threads = ecs_vector_new(&thread_arr_params, threads);
-    world->worker_stages = ecs_vector_new(&stage_arr_params, threads);
+    world->worker_threads = ecs_vector_new(ecs_thread_t, threads);
+    world->worker_stages = ecs_vector_new(ecs_stage_t, threads);
 
     uint32_t i;
     for (i = 0; i < threads; i ++) {
         ecs_thread_t *thread =
-            ecs_vector_add(&world->worker_threads, &thread_arr_params);
+            ecs_vector_add(&world->worker_threads, ecs_thread_t);
 
         thread->magic = ECS_THREAD_MAGIC;
         thread->world = world;
@@ -134,7 +126,7 @@ void start_threads(
         thread->job_count = 0;
         thread->index = i;
 
-        thread->stage = ecs_vector_add(&world->worker_stages, &stage_arr_params);
+        thread->stage = ecs_vector_add(&world->worker_stages, ecs_stage_t);
         ecs_stage_init(world, thread->stage);
 
         if (i != 0) {
@@ -154,11 +146,11 @@ void create_jobs(
         ecs_vector_free(system_data->jobs);
     }
 
-    system_data->jobs = ecs_vector_new(&job_arr_params, thread_count);
+    system_data->jobs = ecs_vector_new(ecs_job_t, thread_count);
 
     uint32_t i;
     for (i = 0; i < thread_count; i ++) {
-        ecs_vector_add(&system_data->jobs, &job_arr_params);
+        ecs_vector_add(&system_data->jobs, ecs_job_t);
     }
 }
 
@@ -209,7 +201,7 @@ void ecs_schedule_jobs(
     ecs_job_t *job = NULL;
 
     for (i = 0; i < thread_count; i ++) {
-        job = ecs_vector_get(system_data->jobs, &job_arr_params, i);
+        job = ecs_vector_get(system_data->jobs, ecs_job_t, i);
         int32_t rows_per_job = rows_per_thread_i;
         residual += rows_per_thread - rows_per_job;
         if (residual > 1) {
@@ -243,9 +235,9 @@ void ecs_prepare_jobs(
     uint32_t thread_count = ecs_vector_count(jobs);
 
     for (i = 0; i < thread_count; i++) {
-        ecs_thread_t *thr = ecs_vector_get(threads, &thread_arr_params, i);
+        ecs_thread_t *thr = ecs_vector_get(threads, ecs_thread_t, i);
         uint32_t job_count = thr->job_count;
-        thr->jobs[job_count] = ecs_vector_get(jobs, &job_arr_params, i);
+        thr->jobs[job_count] = ecs_vector_get(jobs, ecs_job_t, i);
         thr->job_count = job_count + 1;
     }
 }

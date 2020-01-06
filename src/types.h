@@ -263,9 +263,6 @@ typedef struct EcsColSystem {
     ecs_on_demand_out_t *on_demand;       /* Keep track of [out] column refs */
     ecs_system_status_action_t status_action; /* Status action */
     void *status_ctx;                     /* User data for status action */
-    ecs_vector_params_t column_params;    /* Parameters for table_columns */
-    ecs_vector_params_t component_params; /* Parameters for components */
-    ecs_vector_params_t ref_params;       /* Parameters for refs */
     float period;                         /* Minimum period inbetween system invocations */
     float time_passed;                    /* Time passed since last invocation */
 } EcsColSystem;
@@ -330,7 +327,7 @@ typedef struct ecs_stage_t {
      * as the main stage */
     ecs_type_node_t type_root;     /* Hierarchical type store (& first link) */
     ecs_type_link_t *last_link;    /* Link to last registered type */
-    ecs_chunked_t *tables;         /* Tables created while >1 threads running */
+    ecs_sparse_t *tables;         /* Tables created while >1 threads running */
     ecs_map_t *table_index;        /* Lookup table by type */
 
     /* These occur only in
@@ -393,7 +390,7 @@ typedef struct ecs_thread_t {
 /* World snapshot */
 struct ecs_snapshot_t {
     ecs_map_t *entity_index;
-    ecs_chunked_t *tables;
+    ecs_sparse_t *tables;
     ecs_entity_t last_handle;
     ecs_filter_t filter;
 };
@@ -513,20 +510,6 @@ struct ecs_world_t {
     bool should_quit;             /* Did a system signal that app should quit */
     bool should_match;            /* Should tablea be rematched */
     bool should_resolve;          /* If a table reallocd, resolve system refs */
-}; 
-
-
-/* Parameters for various array types */
-extern const ecs_vector_params_t handle_arr_params;
-extern const ecs_vector_params_t stage_arr_params;
-extern const ecs_vector_params_t table_arr_params;
-extern const ecs_vector_params_t thread_arr_params;
-extern const ecs_vector_params_t job_arr_params;
-extern const ecs_vector_params_t builder_params;
-extern const ecs_vector_params_t system_column_params;
-extern const ecs_vector_params_t matched_table_params;
-extern const ecs_vector_params_t matched_column_params;
-extern const ecs_vector_params_t reference_params;
-extern const ecs_vector_params_t ptr_params;
+};
 
 #endif

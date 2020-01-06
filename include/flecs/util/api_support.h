@@ -101,7 +101,7 @@ typedef struct ecs_table_reader_t {
 typedef struct ecs_reader_t {
     ecs_world_t *world;
     ecs_blob_header_kind_t state;
-    ecs_chunked_t *tables;
+    ecs_sparse_t *tables;
     ecs_component_reader_t component;
     ecs_table_reader_t table;
 } ecs_reader_t;

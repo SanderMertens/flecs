@@ -29,10 +29,10 @@ void match_type(
 
         ecs_vector_t *systems = NULL;
         if (!ecs_map_has(index, (uintptr_t)type, &systems)) {
-            systems = ecs_vector_new(&handle_arr_params, 1);
+            systems = ecs_vector_new(ecs_entity_t, 1);
         }
 
-        ecs_entity_t *new_elem = ecs_vector_add(&systems, &handle_arr_params);
+        ecs_entity_t *new_elem = ecs_vector_add(&systems, ecs_entity_t);
         *new_elem = system;
 
         /* Always set the system entry, as array may have been realloc'd */
@@ -111,7 +111,7 @@ ecs_entity_t new_row_system(
     system_data->base.kind = kind;
     system_data->base.cascade_by = 0;
     system_data->base.has_refs = false;
-    system_data->components = ecs_vector_new(&handle_arr_params, count);
+    system_data->components = ecs_vector_new(ecs_entity_t, count);
 
     ecs_parse_component_expr(
         world, sig, ecs_parse_signature_action, id, system_data);
@@ -122,7 +122,7 @@ ecs_entity_t new_row_system(
 
     for (i = 0; i < column_count; i ++) {
         ecs_entity_t *h = ecs_vector_add(
-            &system_data->components, &handle_arr_params);
+            &system_data->components, ecs_entity_t);
 
         ecs_system_column_t *column = &buffer[i];
         *h = column->is.component;
@@ -136,14 +136,14 @@ ecs_entity_t new_row_system(
     ecs_entity_t *elem = NULL;
 
     if (!needs_tables && kind == EcsOnRemove) {
-        elem = ecs_vector_add(&world->fini_tasks, &handle_arr_params);
+        elem = ecs_vector_add(&world->fini_tasks, ecs_entity_t);
     } else {
         if (kind == EcsOnAdd) {
-            elem = ecs_vector_add(&world->add_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->add_systems, ecs_entity_t);
         } else if (kind == EcsOnRemove) {
-            elem = ecs_vector_add(&world->remove_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->remove_systems, ecs_entity_t);
         } else if (kind == EcsOnSet) {
-            elem = ecs_vector_add(&world->set_systems, &handle_arr_params);
+            elem = ecs_vector_add(&world->set_systems, ecs_entity_t);
         }
     }
 
@@ -167,12 +167,12 @@ ecs_on_demand_in_t* get_in_component(
     ecs_map_t *component_map,
     ecs_entity_t component)
 {
-    ecs_on_demand_in_t *in = ecs_map_get_ptr(
-        component_map, component);
-
+    ecs_on_demand_in_t *in = ecs_map_get(
+        component_map, ecs_on_demand_in_t, component);
     if (!in) {
         ecs_on_demand_in_t in_value = {0};
-        in = ecs_map_set(component_map, component, &in_value);
+        ecs_map_set(component_map, component, &in_value);
+        in = ecs_map_get(component_map, ecs_on_demand_in_t, component);
         ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -242,7 +242,7 @@ void register_out_column(
     ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
 
     on_demand_out->count += in->count;
-    ecs_on_demand_out_t **elem = ecs_vector_add(&in->systems, &ptr_params);
+    ecs_on_demand_out_t **elem = ecs_vector_add(&in->systems, ecs_on_demand_out_t*);
     *elem = on_demand_out;
 }
 
@@ -449,7 +449,7 @@ int ecs_parse_signature_action(
 
     /* AND (default) and optional columns are stored the same way */
     if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
-        elem = ecs_vector_add(&system_data->columns, &system_column_params);
+        elem = ecs_vector_add(&system_data->columns, ecs_system_column_t);
         elem->kind = elem_kind;
         elem->oper_kind = oper_kind;
         elem->inout_kind = inout_kind;
@@ -469,7 +469,7 @@ int ecs_parse_signature_action(
     } else if (oper_kind == EcsOperOr) {
         ecs_assert(inout_kind != EcsOut, ECS_INVALID_SIGNATURE, NULL);
 
-        elem = ecs_vector_last(system_data->columns, &system_column_params);
+        elem = ecs_vector_last(system_data->columns, ecs_system_column_t);
         if (elem->oper_kind == EcsOperAnd) {
             elem->is.type = ecs_type_add_intern(
                 world, NULL, 0, elem->is.component);
@@ -491,7 +491,7 @@ int ecs_parse_signature_action(
      * These can be quickly & efficiently used to exclude tables with
      * ecs_type_contains. */
     } else if (oper_kind == EcsOperNot) {
-        elem = ecs_vector_add(&system_data->columns, &system_column_params);
+        elem = ecs_vector_add(&system_data->columns, ecs_system_column_t);
         elem->kind = EcsFromEmpty; /* Just pass handle to system */
         elem->oper_kind = EcsOperNot;
         elem->inout_kind = inout_kind;
@@ -1021,7 +1021,7 @@ bool ecs_is_readonly(
     EcsSystem *system = rows->system_data;
 
     ecs_system_column_t *column_data = ecs_vector_get(
-        system->columns, &system_column_params, column - 1);
+        system->columns, ecs_system_column_t, column - 1);
 
     return column_data->inout_kind == EcsIn;
 

@@ -1,27 +1,5 @@
 #include "flecs_private.h"
 
-/* -- Global array parameters -- */
-
-const ecs_vector_params_t table_arr_params = {
-    .element_size = sizeof(ecs_table_t)
-};
-
-const ecs_vector_params_t handle_arr_params = {
-    .element_size = sizeof(ecs_entity_t)
-};
-
-const ecs_vector_params_t stage_arr_params = {
-    .element_size = sizeof(ecs_stage_t)
-};
-
-const ecs_vector_params_t builder_params = {
-    .element_size = sizeof(ecs_builder_op_t)
-};
-
-const ecs_vector_params_t ptr_params = {
-    .element_size = sizeof(void*)
-};
-
 /* -- Global variables -- */
 
 ecs_type_t TEcsComponent;
@@ -122,7 +100,7 @@ ecs_table_t* bootstrap_component_table(
     ecs_assert(world->t_component != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_stage_t *stage = &world->main_stage;
-    ecs_table_t *result = ecs_chunked_add(stage->tables, ecs_table_t);
+    ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
     result->type = world->t_component;
     result->frame_systems = NULL;
     result->flags = 0;
@@ -130,11 +108,11 @@ ecs_table_t* bootstrap_component_table(
     result->columns = ecs_os_malloc(sizeof(ecs_table_column_t) * 3);
     ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    result->columns[0].data = ecs_vector_new(&handle_arr_params, 16);
+    result->columns[0].data = ecs_vector_new(ecs_entity_t, 16);
     result->columns[0].size = sizeof(ecs_entity_t);
-    result->columns[1].data = ecs_vector_new(&handle_arr_params, 16);
+    result->columns[1].data = ecs_vector_new(EcsComponent, 16);
     result->columns[1].size = sizeof(EcsComponent);
-    result->columns[2].data = ecs_vector_new(&handle_arr_params, 16);
+    result->columns[2].data = ecs_vector_new(EcsId, 16);
     result->columns[2].size = sizeof(EcsId);
 
     set_table(stage, world->t_component, result);
@@ -207,7 +185,7 @@ ecs_table_t* create_table(
     ecs_type_t type)
 {
     /* Add and initialize table */
-    ecs_table_t *result = ecs_chunked_add(stage->tables, ecs_table_t);
+    ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     
     result->type = type;
@@ -335,7 +313,7 @@ void ecs_world_activate_system(
     uint32_t i, count = ecs_vector_count(src_array);
     for (i = 0; i < count; i ++) {
         ecs_entity_t *h = ecs_vector_get(
-            src_array, &handle_arr_params, i);
+            src_array, ecs_entity_t, i);
         if (*h == system) {
             break;
         }
@@ -346,7 +324,7 @@ void ecs_world_activate_system(
     }
 
     ecs_vector_move_index(
-        &dst_array, src_array, &handle_arr_params, i);
+        &dst_array, src_array, ecs_entity_t, i);
 
     ecs_entity_t *to_sort;
     uint32_t sort_count;
@@ -472,9 +450,9 @@ void row_index_deinit(
     ecs_map_t *sys_index)
 {
     ecs_map_iter_t it = ecs_map_iter(sys_index);
+    ecs_vector_t *v;
 
-    while (ecs_map_hasnext(&it)) {
-        ecs_vector_t *v = ecs_map_nextptr(&it);
+    while ((v = ecs_map_next_ptr(&it, ecs_vector_t*, NULL))) {
         ecs_vector_free(v);
     }
 
@@ -485,11 +463,11 @@ static
 void deinit_tables(
     ecs_world_t *world)
 {
-    ecs_chunked_t *tables = world->main_stage.tables;
-    uint32_t i, count = ecs_chunked_count(tables);
+    ecs_sparse_t *tables = world->main_stage.tables;
+    uint32_t i, count = ecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         ecs_table_deinit(world, table);
     }
 }
@@ -519,7 +497,7 @@ void add_prefab_child_to_builder(
     if (!builder) {
         ecs_add(world, prefab, EcsPrefabBuilder);
         builder = ecs_get_ptr(world, prefab, EcsPrefabBuilder);
-        builder->ops = ecs_vector_new(&builder_params, 1);
+        builder->ops = ecs_vector_new(ecs_builder_op_t, 1);
     }
 
     ecs_type_t type = NULL;
@@ -546,7 +524,7 @@ void add_prefab_child_to_builder(
 
     /* If there are no child ops, this is the first time that this child is
      * added to this parent prefab. Simply add it to the vector */
-    ecs_builder_op_t *op = ecs_vector_add(&builder->ops, &builder_params);
+    ecs_builder_op_t *op = ecs_vector_add(&builder->ops, ecs_builder_op_t);
     op->id = ecs_get_id(world, child);
     op->type = type;
 }
@@ -666,29 +644,29 @@ ecs_world_t *ecs_init(void) {
 
     world->magic = ECS_WORLD_MAGIC;
 
-    world->on_update_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->on_validate_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->pre_update_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->post_update_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->post_load_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->on_load_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->pre_store_systems = ecs_vector_new( &handle_arr_params, 0);
-    world->on_store_systems = ecs_vector_new( &handle_arr_params, 0);
-    world->inactive_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->manual_systems = ecs_vector_new(&handle_arr_params, 0);
+    world->on_update_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->on_validate_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->pre_update_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->post_update_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->post_load_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->on_load_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->pre_store_systems = ecs_vector_new( ecs_entity_t, 0);
+    world->on_store_systems = ecs_vector_new( ecs_entity_t, 0);
+    world->inactive_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->manual_systems = ecs_vector_new(ecs_entity_t, 0);
 
-    world->add_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->remove_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->set_systems = ecs_vector_new(&handle_arr_params, 0);
-    world->fini_tasks = ecs_vector_new(&handle_arr_params, 0);
+    world->add_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->remove_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->set_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
 
-    world->type_sys_add_index = ecs_map_new(0, sizeof(ecs_vector_t*));
-    world->type_sys_remove_index = ecs_map_new(0, sizeof(ecs_vector_t*));
-    world->type_sys_set_index = ecs_map_new(0, sizeof(ecs_vector_t*));
-    world->type_handles = ecs_map_new(0, sizeof(ecs_entity_t));
-    world->prefab_parent_index = ecs_map_new(0, sizeof(ecs_entity_t));
-    world->on_activate_components = ecs_map_new(0, sizeof(ecs_on_demand_in_t));
-    world->on_enable_components = ecs_map_new(0, sizeof(ecs_on_demand_in_t));
+    world->type_sys_add_index = ecs_map_new(ecs_vector_t*, 0);
+    world->type_sys_remove_index = ecs_map_new(ecs_vector_t*, 0);
+    world->type_sys_set_index = ecs_map_new(ecs_vector_t*, 0);
+    world->type_handles = ecs_map_new(ecs_entity_t, 0);
+    world->prefab_parent_index = ecs_map_new(ecs_entity_t, 0);
+    world->on_activate_components = ecs_map_new(ecs_on_demand_in_t, 0);
+    world->on_enable_components = ecs_map_new(ecs_on_demand_in_t, 0);
 
     world->worker_stages = NULL;
     world->worker_threads = NULL;
@@ -842,9 +820,9 @@ void on_demand_in_map_deinit(
     ecs_map_t *map)
 {
     ecs_map_iter_t it = ecs_map_iter(map);
+    ecs_on_demand_in_t *elem;
 
-    while (ecs_map_hasnext(&it)) {
-        ecs_on_demand_in_t *elem = ecs_map_next(&it);
+    while ((elem = ecs_map_next(&it, ecs_on_demand_in_t, NULL))) {
         ecs_vector_free(elem->systems);
     }
 
@@ -990,7 +968,7 @@ ecs_entity_t ecs_lookup_child_in_columns(
         
         if (!strcmp(buffer[i], id)) {
             return *(ecs_entity_t*)ecs_vector_get(
-                columns[0].data, &handle_arr_params, i);
+                columns[0].data, ecs_entity_t, i);
         }
     }
 
@@ -1007,10 +985,10 @@ ecs_entity_t ecs_lookup_child(
 
     if (stage != &world->main_stage) {
         ecs_map_iter_t it = ecs_map_iter(stage->data_stage);
+        ecs_table_column_t *columns;
+        ecs_map_key_t key;
 
-        while (ecs_map_hasnext(&it)) {
-            uint64_t key;
-            ecs_table_column_t *columns = ecs_map_nextptr_w_key(&it, &key);
+        while ((columns = ecs_map_next_ptr(&it, ecs_table_column_t*, &key))) {
             ecs_type_t key_type = (ecs_type_t)(uintptr_t)key;
             result = ecs_lookup_child_in_columns(key_type, columns, parent, id);
             if (result) {
@@ -1020,11 +998,11 @@ ecs_entity_t ecs_lookup_child(
     }
 
     if (!result) {
-        ecs_chunked_t *tables = world->main_stage.tables;
-        uint32_t t, count = ecs_chunked_count(tables);
+        ecs_sparse_t *tables = world->main_stage.tables;
+        uint32_t t, count = ecs_sparse_count(tables);
 
         for (t = 0; t < count; t ++) {
-            ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, t);
+            ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
             result = ecs_lookup_child_in_columns(
                 table->type, table->columns, parent, id);
             if (result) {
