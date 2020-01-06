@@ -455,3 +455,122 @@ void Snapshot_snapshot_activate_table_w_filter() {
     /* Cleanup */
     ecs_fini(world);
 }
+
+void Snapshot_snapshot_copy() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *s_copy = ecs_snapshot_copy(world, s, NULL);
+    ecs_snapshot_free(world, s);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p->x ++;
+    p->y ++;
+
+    ecs_snapshot_restore(world, s_copy);
+
+    test_assert(ecs_has(world, e, Position));
+    p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);    
+
+    ecs_fini(world);
+}
+
+void Snapshot_snapshot_copy_filtered() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e1 != 0);
+    test_assert(ecs_has(world, e1, Position));
+
+    ecs_entity_t e2 = ecs_set(world, 0, Velocity, {10, 20});
+    test_assert(e2 != 0);
+    test_assert(ecs_has(world, e2, Velocity));
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t) {
+        .include = ecs_type(Position)
+    });
+
+    ecs_snapshot_t *s_copy = ecs_snapshot_copy(world, s, NULL);
+    ecs_snapshot_free(world, s);
+
+    Position *p = ecs_get_ptr(world, e1, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p->x ++;
+    p->y ++;
+
+    ecs_delete(world, e2);
+
+    ecs_snapshot_restore(world, s_copy);
+
+    test_int( ecs_count(world, Position), 1);
+    test_int( ecs_count(world, Velocity), 0);
+    test_assert( !ecs_is_empty(world, e1));
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_is_empty(world, e2));    
+
+    p = ecs_get_ptr(world, e1, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);    
+
+    ecs_fini(world);
+}
+
+void Snapshot_snapshot_copy_w_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e1 != 0);
+    test_assert(ecs_has(world, e1, Position));
+
+    ecs_entity_t e2 = ecs_set(world, 0, Velocity, {10, 20});
+    test_assert(e2 != 0);
+    test_assert(ecs_has(world, e2, Velocity));
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *s_copy = ecs_snapshot_copy(world, s, &(ecs_filter_t) {
+        .include = ecs_type(Position)
+    });
+    ecs_snapshot_free(world, s);
+
+    Position *p = ecs_get_ptr(world, e1, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p->x ++;
+    p->y ++;
+
+    ecs_delete(world, e2);
+
+    ecs_snapshot_restore(world, s_copy);
+
+    test_int( ecs_count(world, Position), 1);
+    test_int( ecs_count(world, Velocity), 0);
+    test_assert( !ecs_is_empty(world, e1));
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_is_empty(world, e2));    
+
+    p = ecs_get_ptr(world, e1, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);    
+
+    ecs_fini(world);
+}

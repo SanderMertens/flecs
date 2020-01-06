@@ -575,6 +575,10 @@ ecs_type_t ecs_type_remove_intern(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (!type) {
+        return NULL;
+    }
+
     uint32_t count = ecs_vector_count(type);
     ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, count);
     ecs_entity_t *old_array = ecs_vector_first(type);

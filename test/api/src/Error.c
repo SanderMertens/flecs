@@ -93,6 +93,10 @@ void Error_error_codes() {
     test_assert(ecs_strerror(ECS_INVALID_PREFAB_CHILD_TYPE) != NULL);
     test_assert(ecs_strerror(ECS_UNSUPPORTED) != NULL);
     test_assert(ecs_strerror(ECS_NO_OUT_COLUMNS) != NULL);
+    test_assert(ecs_strerror(ECS_COLUMN_ACCESS_VIOLATION) != NULL);
+    test_assert(ecs_strerror(ECS_DESERIALIZE_COMPONENT_ID_CONFLICT) != NULL);
+    test_assert(ecs_strerror(ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT) != NULL);
+    test_assert(ecs_strerror(ECS_DESERIALIZE_FORMAT_ERROR) != NULL);
 }
 
 void Error_log_dbg() {

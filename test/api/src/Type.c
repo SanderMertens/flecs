@@ -719,3 +719,104 @@ void Type_type_from_0() {
 
     ecs_fini(world);
 }
+
+void Type_type_remove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ecs_type_t new_type = ecs_type_remove(world, ecs_type(Type), ecs_entity(Velocity));
+    test_assert(new_type != NULL);
+    test_assert(new_type != ecs_type(Type));
+
+    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    test_assert(type_array != NULL);
+    test_int(ecs_vector_count(new_type), 1);
+    test_int(type_array[0], ecs_entity(Position));
+
+    ecs_fini(world);
+}
+
+void Type_type_remove_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TYPE(world, Type, 0);
+
+    ecs_type_t new_type = ecs_type_remove(world, ecs_type(Type), ecs_entity(Position));
+    test_assert(new_type == NULL);
+
+    ecs_fini(world);
+}
+
+void Type_type_remove_non_existing() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position);
+
+    ecs_type_t new_type = ecs_type_remove(world, ecs_type(Type), ecs_entity(Velocity));
+    test_assert(new_type != NULL);
+    test_assert(new_type == ecs_type(Type));
+
+    ecs_fini(world);
+}
+
+void Type_type_to_expr_1_comp() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position);
+
+    char *expr = ecs_type_to_expr(world, ecs_type(Type));
+    test_str(expr, "Position");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void Type_type_to_expr_2_comp() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    char *expr = ecs_type_to_expr(world, ecs_type(Type));
+    test_str(expr, "Position,Velocity");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void Type_type_to_expr_instanceof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, INSTANCEOF | Position);
+
+    char *expr = ecs_type_to_expr(world, ecs_type(Type));
+    test_str(expr, "INSTANCEOF|Position");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void Type_type_to_expr_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, CHILDOF | Position);
+
+    char *expr = ecs_type_to_expr(world, ecs_type(Type));
+    test_str(expr, "CHILDOF|Position");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}

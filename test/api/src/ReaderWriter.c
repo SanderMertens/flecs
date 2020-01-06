@@ -5,18 +5,18 @@ void Dummy(ecs_rows_t *rows) {
 }
 
 static
-ecs_vector_t* serialize_to_vector(
+ecs_vector_t* serialize_reader_to_vector(
     ecs_world_t *world, 
-    int buffer_size) 
+    int buffer_size,
+    ecs_reader_t *reader) 
 {
     ecs_vector_params_t params = {.element_size = 1};
     ecs_vector_t *v = ecs_vector_new(&params, 0);
 
-    ecs_reader_t reader = ecs_reader_init(world);
     char *buffer = ecs_os_malloc(buffer_size);
     int read;
 
-    while ((read = ecs_reader_read(buffer, buffer_size, &reader))) {
+    while ((read = ecs_reader_read(buffer, buffer_size, reader))) {
         void *ptr = ecs_vector_addn(&v, &params, read);
         memcpy(ptr, buffer, read);
     }
@@ -24,6 +24,25 @@ ecs_vector_t* serialize_to_vector(
     ecs_os_free(buffer);
 
     return v;
+}
+
+static
+ecs_vector_t* serialize_to_vector(
+    ecs_world_t *world, 
+    int buffer_size) 
+{
+    ecs_reader_t reader = ecs_reader_init(world);
+    return serialize_reader_to_vector(world, buffer_size, &reader);
+}
+
+static
+ecs_vector_t* serialize_snapshot_to_vector(
+    ecs_world_t *world, 
+    int buffer_size,
+    ecs_snapshot_t *snapshot) 
+{
+    ecs_reader_t reader = ecs_snapshot_reader_init(world, snapshot);
+    return serialize_reader_to_vector(world, buffer_size, &reader);
 }
 
 static
@@ -53,10 +72,11 @@ int vector_read(
 }
 
 static
-ecs_world_t* deserialize_from_vector_to_existing(
+ecs_world_t* deserialize_from_vector_to_existing_expect(
     ecs_vector_t *v,
     int buffer_size,
-    ecs_world_t *world)
+    ecs_world_t *world,
+    int expect)
 {
     ecs_writer_t writer = ecs_writer_init(world);
     int v_ptr = 0, read;
@@ -64,14 +84,30 @@ ecs_world_t* deserialize_from_vector_to_existing(
 
     while ((read = vector_read(buffer, buffer_size, v, &v_ptr))) {
         if (ecs_writer_write(buffer, read, &writer)) {
-            printf("deserialize_from_vector: %s\n", ecs_strerror(writer.error));
-            test_assert(false);
+            if (expect) {
+                test_assert(expect == writer.error);
+                goto error;
+            } else {
+                printf("deserialize_from_vector: %s\n", ecs_strerror(writer.error));
+                test_assert(false);
+            }
         }
     }
 
     ecs_os_free(buffer);
     
     return world;
+error:
+    return NULL;
+}
+
+static
+ecs_world_t* deserialize_from_vector_to_existing(
+    ecs_vector_t *v,
+    int buffer_size,
+    ecs_world_t *world)
+{    
+    return deserialize_from_vector_to_existing_expect(v, buffer_size, world, 0);
 }
 
 static
@@ -1079,4 +1115,235 @@ void ReaderWriter_entity_conflict() {
     }
 
     ecs_vector_free(v);
+}
+
+void ReaderWriter_snapshot_reader_simple() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 4});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 6});
+
+    ecs_snapshot_t *snapshot = ecs_snapshot_take(world, NULL);
+
+    ecs_vector_t *v = serialize_snapshot_to_vector(world, 36, snapshot);
+
+    ecs_snapshot_free(world, snapshot);
+
+    ecs_fini(world);
+
+    world = deserialize_from_vector(v, 36);
+
+    test_int( ecs_count(world, Position), 3);
+
+    test_assert( !ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
+
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e2, Position));
+    test_assert( ecs_has(world, e3, Position));
+
+    Position *
+    p = ecs_get_ptr(world, e1, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    p = ecs_get_ptr(world, e2, Position);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    p = ecs_get_ptr(world, e3, Position);
+    test_int(p->x, 5);
+    test_int(p->y, 6); 
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);      
+    ecs_progress(world, 0);
+    test_int(ctx.count, 3);
+
+    ecs_fini(world);
+
+    ecs_vector_free(v);
+}
+
+void ReaderWriter_snapshot_reader_id() {
+    ecs_world_t *world = ecs_init();
+    
+    int base_id_count = ecs_count(world, EcsId);
+
+    /* Entities with different name lengths to test if alignment & fragmentation
+     * works properly */
+    ecs_entity_t e1 = ecs_set(world, 0, EcsId, {""});
+    ecs_entity_t e2 = ecs_set(world, 0, EcsId, {"E"});
+    ecs_entity_t e3 = ecs_set(world, 0, EcsId, {"E3"});
+    ecs_entity_t e4 = ecs_set(world, 0, EcsId, {"E4E"});
+    ecs_entity_t e5 = ecs_set(world, 0, EcsId, {"E5E5"});
+    ecs_entity_t e6 = ecs_set(world, 0, EcsId, {"E6E6E"});
+    ecs_entity_t e7 = ecs_set(world, 0, EcsId, {"E7E7E7E"});
+    ecs_entity_t e8 = ecs_set(world, 0, EcsId, {"E8E8E8E8"});
+
+    ecs_snapshot_t *snapshot = ecs_snapshot_take(world, NULL);
+    ecs_vector_t *v = serialize_snapshot_to_vector(world, 36, snapshot);
+    ecs_snapshot_free(world, snapshot);
+
+    int id_count = ecs_count(world, EcsId);
+
+    test_assert(id_count == (base_id_count + 8));
+
+    ecs_fini(world);
+
+    world = deserialize_from_vector(v, 36);
+
+    test_int( ecs_count(world, EcsId), id_count);
+
+    test_assert( !ecs_is_empty(world, e1));
+    test_assert( !ecs_is_empty(world, e2));
+    test_assert( !ecs_is_empty(world, e3));
+    test_assert( !ecs_is_empty(world, e4));
+    test_assert( !ecs_is_empty(world, e5));
+    test_assert( !ecs_is_empty(world, e6));
+    test_assert( !ecs_is_empty(world, e7));
+    test_assert( !ecs_is_empty(world, e8));
+
+    test_assert( ecs_has(world, e1, EcsId));
+    test_assert( ecs_has(world, e2, EcsId));
+    test_assert( ecs_has(world, e3, EcsId));
+    test_assert( ecs_has(world, e4, EcsId));
+    test_assert( ecs_has(world, e5, EcsId));
+    test_assert( ecs_has(world, e6, EcsId));
+    test_assert( ecs_has(world, e7, EcsId));
+    test_assert( ecs_has(world, e8, EcsId));    
+
+    test_str( ecs_get_id(world, e1), "");
+    test_str( ecs_get_id(world, e2), "E");
+    test_str( ecs_get_id(world, e3), "E3");
+    test_str( ecs_get_id(world, e4), "E4E");
+    test_str( ecs_get_id(world, e5), "E5E5");
+    test_str( ecs_get_id(world, e6), "E6E6E");
+    test_str( ecs_get_id(world, e7), "E7E7E7E");
+    test_str( ecs_get_id(world, e8), "E8E8E8E8");
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, EcsId);
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);      
+    ecs_progress(world, 0);
+    test_int(ctx.count, id_count + 1); /* System itself also has EcsId */
+
+    ecs_fini(world);
+
+    ecs_vector_free(v);
+}
+
+void ReaderWriter_component_id_conflict_w_component() {
+    ecs_world_t *world = ecs_init();
+    {
+        ECS_COMPONENT(world, Position);
+        ECS_COMPONENT(world, Velocity);
+    }
+
+    ecs_vector_t *v = serialize_to_vector(world, 36);
+
+    ecs_fini(world);
+
+    world = ecs_init();
+    {
+        ECS_COMPONENT(world, Velocity);
+        ECS_COMPONENT(world, Position);
+    }
+
+    ecs_world_t *result = deserialize_from_vector_to_existing_expect(
+        v, 36, world, ECS_DESERIALIZE_COMPONENT_ID_CONFLICT);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+
+    ecs_vector_free(v);
+}
+
+void ReaderWriter_component_id_conflict_w_entity() {
+    ecs_world_t *world = ecs_init();
+    {
+        ECS_COMPONENT(world, Position);
+        ECS_COMPONENT(world, Velocity);
+    }
+
+    ecs_vector_t *v = serialize_to_vector(world, 36);
+
+    ecs_fini(world);
+
+    world = ecs_init();
+    {
+        ECS_COMPONENT(world, Position);
+        ecs_new(world, Position);
+    }
+
+    ecs_world_t *result = deserialize_from_vector_to_existing_expect(
+        v, 36, world, ECS_DESERIALIZE_COMPONENT_ID_CONFLICT);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+
+    ecs_vector_free(v);
+}
+
+void ReaderWriter_component_size_conflict() {
+    ecs_world_t *world = ecs_init();
+    {
+        ECS_COMPONENT(world, Position);
+    }
+
+    ecs_vector_t *v = serialize_to_vector(world, 36);
+
+    ecs_fini(world);
+
+    world = ecs_init();
+    {
+        ecs_new_component(world, "Position", sizeof(bool));
+    }
+
+    ecs_world_t *result = deserialize_from_vector_to_existing_expect(
+        v, 36, world, ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT);
+    test_assert(result == NULL);
+
+    ecs_fini(world);
+
+    ecs_vector_free(v);
+}
+
+void ReaderWriter_read_zero_size() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_reader_t reader = ecs_reader_init(world);
+
+    test_assert( ecs_reader_read(NULL, 0, &reader) == 0);
+
+    ecs_fini(world);
+}
+
+void ReaderWriter_write_zero_size() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_writer_t writer = ecs_writer_init(world);
+
+    test_assert( ecs_writer_write(NULL, 0, &writer) == 0);
+
+    ecs_fini(world);
+}
+
+void ReaderWriter_invalid_header() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_writer_t writer = ecs_writer_init(world);
+
+    char b = 42; // nonsense data
+
+    test_assert( ecs_writer_write(&b, 4, &writer) != 0);
+
+    test_assert( writer.error == ECS_DESERIALIZE_FORMAT_ERROR);
+
+    ecs_fini(world);
 }

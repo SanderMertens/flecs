@@ -122,10 +122,7 @@ size_t ecs_component_writer(
     ecs_component_writer_t *writer = &stream->component;
     size_t written = 0;
 
-    if (!size) {
-        return 0;
-    }
-
+    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size >= sizeof(uint32_t), ECS_INVALID_PARAMETER, NULL);
 
     if (!writer->state) {
@@ -325,10 +322,7 @@ size_t ecs_table_writer(
     ecs_table_writer_t *writer = &stream->table;
     size_t written = 0;
 
-    if (!size) {
-        return 0;
-    }
-
+    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size >= sizeof(uint32_t), ECS_INVALID_PARAMETER, NULL);
 
     if (!writer->state) {
