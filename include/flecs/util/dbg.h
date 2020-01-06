@@ -7,8 +7,6 @@
 extern "C" {
 #endif
 
-typedef struct ecs_table_t ecs_table_t;
-
 typedef struct ecs_dbg_entity_t {
     ecs_entity_t entity;
     ecs_table_t *table;

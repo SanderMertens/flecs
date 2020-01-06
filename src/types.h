@@ -138,10 +138,10 @@ typedef struct ecs_system_column_t {
 } ecs_system_column_t;
 
 /** A table column describes a single column in a table (archetype) */
-typedef struct ecs_table_column_t {
+struct ecs_table_column_t {
     ecs_vector_t *data;              /* Column data */
     uint16_t size;                   /* Column size (saves component lookups) */
-} ecs_table_column_t;
+};
 
 #define EcsTableIsStaged  (1)
 #define EcsTableIsPrefab (2)
