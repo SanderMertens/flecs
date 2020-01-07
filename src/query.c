@@ -8,7 +8,7 @@ ecs_entity_t components_contains(
     ecs_entity_t *entity_out,
     bool match_all)
 {
-    uint32_t i, count = ecs_vector_count(table_type);
+    int32_t i, count = ecs_vector_count(table_type);
     ecs_entity_t *array = ecs_vector_first(table_type);
 
     for (i = 0; i < count; i ++) {
@@ -49,7 +49,7 @@ ecs_entity_t ecs_get_entity_for_component(
     }
 
     ecs_entity_t *array = ecs_vector_first(type);
-    uint32_t i, count = ecs_vector_count(type);
+    int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
         if (array[i] == component) {
@@ -73,7 +73,7 @@ void add_table(
 {
     ecs_matched_table_t *table_data;
     ecs_type_t table_type = NULL;
-    uint32_t column_count = ecs_vector_count(query->sig.columns);
+    int32_t column_count = ecs_vector_count(query->sig.columns);
 
     /* Initially always add table to inactive group. If the system is registered
      * with the table and the table is not empty, the table will send an
@@ -96,7 +96,7 @@ void add_table(
     table_data->references = NULL;
 
     /* Array that contains the system column to table column mapping */
-    table_data->columns = ecs_os_malloc(sizeof(uint32_t) * column_count);
+    table_data->columns = ecs_os_malloc(sizeof(int32_t) * column_count);
 
     /* Store the components of the matched table. In the case of OR expressions,
      * components may differ per matched table. */
@@ -104,7 +104,7 @@ void add_table(
 
     /* Walk columns parsed from the system signature */
     ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns);
-    uint32_t c, count = ecs_vector_count(query->sig.columns);
+    int32_t c, count = ecs_vector_count(query->sig.columns);
 
     for (c = 0; c < count; c ++) {
         ecs_sig_column_t *column = &columns[c];
@@ -347,7 +347,7 @@ bool match_table(
         }
     }
 
-    uint32_t i, column_count = ecs_vector_count(query->sig.columns);
+    int32_t i, column_count = ecs_vector_count(query->sig.columns);
     ecs_sig_column_t *buffer = ecs_vector_first(query->sig.columns);
 
     for (i = 0; i < column_count; i ++) {
@@ -508,7 +508,7 @@ void match_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    uint32_t i, count = ecs_sparse_count(world->main_stage.tables);
+    int32_t i, count = ecs_sparse_count(world->main_stage.tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(
@@ -561,7 +561,7 @@ int32_t table_matched(
     ecs_vector_t *tables,
     ecs_table_t *table)
 {
-    uint32_t i, count = ecs_vector_count(tables);
+    int32_t i, count = ecs_vector_count(tables);
     ecs_matched_table_t *table_data = ecs_vector_first(tables);
 
     for (i = 0; i < count; i ++) {
@@ -692,7 +692,7 @@ void ecs_rematch_query(
     ecs_query_t *query)
 {
     ecs_sparse_t *tables = world->main_stage.tables;
-    uint32_t i, count = ecs_sparse_count(tables);
+    int32_t i, count = ecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
         /* Is the system currently matched with the table? */
@@ -751,7 +751,7 @@ void ecs_revalidate_query_refs(
         return;
     }
 
-    uint32_t i, count = ecs_vector_count(query->tables);
+    int32_t i, count = ecs_vector_count(query->tables);
     ecs_matched_table_t *table_data = ecs_vector_first(query->tables);
 
     for (i = 0; i < count; i ++) {
@@ -759,7 +759,7 @@ void ecs_revalidate_query_refs(
             continue;
         }
 
-        uint32_t r, ref_count = ecs_vector_count(table_data[i].references);
+        int32_t r, ref_count = ecs_vector_count(table_data[i].references);
         ecs_reference_t *refs = ecs_vector_first(table_data[i].references);
 
         for (r = 0; r < ref_count; r ++) {
@@ -826,8 +826,8 @@ void ecs_query_free(
 /* Create query iterator */
 ecs_query_iter_t ecs_query_iter(
     ecs_query_t *query,
-    uint32_t offset,
-    uint32_t limit)
+    int32_t offset,
+    int32_t limit)
 {
     return (ecs_query_iter_t){
         .query = query,
@@ -837,6 +837,7 @@ ecs_query_iter_t ecs_query_iter(
         .index = 0,
         .rows = {
             .world = query->world,
+            .query = query,
             .column_count = ecs_vector_count(query->sig.columns)
         }
     };

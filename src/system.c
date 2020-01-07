@@ -229,7 +229,6 @@ ecs_type_t ecs_notify_row_system(
         .offset = offset,
         .count = limit,
         .param = system_data->base.ctx,
-        .system_data = &system_data->base
     };
 
     /* Set references metadata if system has references */

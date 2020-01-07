@@ -410,7 +410,6 @@ ecs_entity_t _ecs_run_w_filter(
     ecs_query_iter_t qiter = ecs_query_iter(system_data->query, offset, limit);
     qiter.rows.world = world;
     qiter.rows.system = system;
-    qiter.rows.system_data = system_data;
     qiter.rows.delta_time = delta_time + system_data->time_passed;
     qiter.rows.world_time = world->world_time_total;
     qiter.rows.frame_offset = offset;

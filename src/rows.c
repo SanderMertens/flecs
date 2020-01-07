@@ -126,10 +126,8 @@ bool ecs_is_readonly(
         return true;
     }
 
-    EcsColSystem *system = rows->system_data;
-
     ecs_sig_column_t *column_data = ecs_vector_get(
-        system->query->sig.columns, ecs_sig_column_t, column - 1);
+        rows->query->sig.columns, ecs_sig_column_t, column - 1);
 
     return column_data->inout_kind == EcsIn;
 }

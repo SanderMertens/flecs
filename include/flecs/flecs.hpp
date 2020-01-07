@@ -16,6 +16,8 @@ using type_t = ecs_type_t;
 using snapshot_t = ecs_snapshot_t;
 using filter_t = ecs_filter_t;
 using filter_iter_t = ecs_filter_iter_t;
+using query_t = ecs_query_t;
+using query_iter_t = ecs_query_iter_t;
 
 class world;
 class snapshot;
@@ -26,6 +28,8 @@ class filter;
 class filter_iterator;
 class world_filter;
 class snapshot_filter;
+class query;
+class query_iterator;
 
 template <typename T>
 class component_base;
@@ -600,7 +604,7 @@ public:
     }
 
     std::string name() const {
-        EcsId *name = (EcsId*)_ecs_get_ptr(m_world, m_id, TEcsId);
+        EcsId *name = (EcsId*)_ecs_get_ptr(m_world, m_id, EEcsId);
         if (name) {
             return std::string(*name);
         } else {
@@ -614,13 +618,13 @@ public:
 
     template<typename T>
     T get() const {
-        return *(T*)_ecs_get_ptr(m_world, m_id, component_base<T>::s_type);
+        return *(T*)_ecs_get_ptr(m_world, m_id, component_base<T>::s_entity);
     }
 
     template<typename T>
     T* get_ptr() const {
         return static_cast<T*>(
-            _ecs_get_ptr(m_world, m_id, component_base<T>::s_type));
+            _ecs_get_ptr(m_world, m_id, component_base<T>::s_entity));
     }
 
     template <typename Func>
@@ -995,6 +999,29 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Persistent queries
+////////////////////////////////////////////////////////////////////////////////
+
+class query final {
+public:
+    explicit query(world& world, const char *expr) {
+        m_query = ecs_query_new(world.c_ptr(), expr);
+    }
+
+    query_iterator begin() const;
+
+    query_iterator end() const;
+
+    query_t* c_ptr() const {
+        return m_query;
+    }
+
+private:
+    query_t *m_query;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Snapshots make a copy of the world state that can be restored
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1335,6 +1362,42 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Persistent queries
+////////////////////////////////////////////////////////////////////////////////
+
+class query_iterator
+{
+public:
+    query_iterator()
+        : m_has_next(false)
+        , m_iter{ } { }
+
+    query_iterator(const query& query) 
+        : m_iter( ecs_query_iter(query.c_ptr(), 0, 0) )
+    {
+        m_has_next = ecs_query_next(&m_iter);
+    }
+
+    bool operator!=(query_iterator const& other) const {
+        return m_has_next != other.m_has_next;
+    }
+
+    flecs::rows const operator*() const {
+        return flecs::rows(&m_iter.rows);
+    }
+
+    query_iterator& operator++() {
+        m_has_next = ecs_query_next(&m_iter);
+        return *this;
+    }
+
+private:
+    bool m_has_next;
+    query_iter_t m_iter;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Utility for iterating over tables that match a filter
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1486,6 +1549,19 @@ inline filter_iterator snapshot::begin() {
 
 inline filter_iterator snapshot::end() {
     return filter_iterator();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Query fwd declared functions
+////////////////////////////////////////////////////////////////////////////////
+
+inline query_iterator query::begin() const {
+    return query_iterator(*this);
+}
+
+inline query_iterator query::end() const {
+    return query_iterator();
 }
 
 

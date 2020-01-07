@@ -148,7 +148,7 @@ struct ecs_rows_t {
     uint16_t column_count;       /* Number of columns for system */
     void *table;                 /* Opaque structure with reference to table */
     void *table_columns;         /* Opaque structure with table column data */
-    void *system_data;           /* Opaque strucutre with system internals */
+    ecs_query_t *query;          /* Query being evaluated */
     ecs_reference_t *references; /* References to other entities */
     ecs_entity_t *components;    /* System-table specific list of components */
     ecs_entity_t *entities;      /* Entity row */
@@ -1795,10 +1795,10 @@ void ecs_set_system_status_action(
 
 typedef struct ecs_query_iter_t {
     ecs_query_t *query;
-    uint32_t offset;
-    uint32_t limit;
-    uint32_t remaining;
-    uint32_t index;
+    int32_t offset;
+    int32_t limit;
+    int32_t remaining;
+    int32_t index;
     ecs_rows_t rows;
 } ecs_query_iter_t;
 
@@ -1814,8 +1814,8 @@ void ecs_query_free(
 FLECS_EXPORT
 ecs_query_iter_t ecs_query_iter(
     ecs_query_t *query,
-    uint32_t offset,
-    uint32_t limit);  
+    int32_t offset,
+    int32_t limit);  
 
 FLECS_EXPORT
 bool ecs_query_next(
