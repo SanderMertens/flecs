@@ -276,8 +276,8 @@ ecs_entity_t ecs_new_col_system(
     return result;
 }
 
-/* -- Public API -- */
 
+/* -- Public API -- */
 
 void ecs_enable(
     ecs_world_t *world,
@@ -391,22 +391,23 @@ ecs_entity_t _ecs_run_w_filter(
 
     ecs_get_stage(&real_world);
 
+    /* If system should run at a fixed time interval, test if system should run
+     * this iteration */
     float period = system_data->period;
-    bool measure_time = real_world->measure_system_time;
-
     if (period) {
         if (!should_run(system_data, period, delta_time)) {
             return 0;
         }
     }
 
+    /* If system profiling is enabled, record the time spent in the system */
     ecs_time_t time_start;
+    bool measure_time = real_world->measure_system_time;
     if (measure_time) {
         ecs_os_get_time(&time_start);
     }
 
-    ecs_system_action_t action = system_data->base.action;
-    
+    /* Prepare the query iterator */
     ecs_query_iter_t qiter = ecs_query_iter(system_data->query, offset, limit);
     qiter.rows.world = world;
     qiter.rows.system = system;
@@ -414,13 +415,16 @@ ecs_entity_t _ecs_run_w_filter(
     qiter.rows.world_time = world->world_time_total;
     qiter.rows.frame_offset = offset;
     
+    /* Set param if provided, otherwise use system context */
     if (param) {
         qiter.rows.param = param;
     } else {
         qiter.rows.param = system_data->base.ctx;
     }
 
-    /* If system is a task, invoke callback once */
+    ecs_system_action_t action = system_data->base.action;
+
+    /* If no filter is provided, just iterate tables & invoke action */
     if (!filter) {
         while (ecs_query_next(&qiter)) {
             action(&qiter.rows);

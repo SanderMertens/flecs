@@ -1799,24 +1799,78 @@ typedef struct ecs_query_iter_t {
     int32_t limit;
     int32_t remaining;
     int32_t index;
+
+    /* This member can be read by the application to obtain component columns.
+     * Columns can be obtained the same way as with normal systems, with the
+     * ECS_COLUMN macro and by providing the correct index of the column in the
+     * query signature expression. */
     ecs_rows_t rows;
 } ecs_query_iter_t;
 
+/** Create a query.
+ * This operation creates a query. Queries are used to iterate over entities
+ * that match a signature expression.
+ * 
+ * Queries are 'persistent' meaning they are registered with
+ * the world and continuously matched with new entities (tables). Queries
+ * are the fastest way to iterate over entities, as a lot of processing is
+ * done when entities are matched, outside of the main loop.
+ *
+ * Queries are the mechanism used by systems, and as such both accept the
+ * same signature expressions, and have similar performance. 
+ *
+ * Queries, like systems, iterate over component data from the main stage.
+ * This means that when an application is iterating a query outside of a system,
+ * care must be taken when adding/removing components or creating/deleting
+ * entities, as this may corrupt the iteration.
+ *
+ * When a query is iterated over inside a system normal staging applies, and an
+ * application can safely update entities.
+ *
+ * @param world The world.
+ * @param expr The query signature expression.
+ * @return The new query.
+ */
 FLECS_EXPORT
 ecs_query_t* ecs_query_new(
     ecs_world_t *world,
     const char *sig);
 
+/** Cleanup a query.
+ * This operation frees a query.
+ *
+ * @param query The query.
+ */
 FLECS_EXPORT
 void ecs_query_free(
     ecs_query_t *query);
 
+/** Iterate over a query.
+ * This operation returns an iterator to a query. Multiple iterators can be
+ * created per query. It is safe to iterate over a query from multiple threads,
+ * as long as each thread uses its own iterator.
+ *
+ * The iterator contains an ecs_rows_t struct which can be read by the 
+ * application to obtain the component data, just like with systems.
+ *
+ * @param query The query to iterate.
+ * @param offset The number of entities to skip.
+ * @param limit The maximum number of entities to iterate.
+ * @return The query iterator.
+ */
 FLECS_EXPORT
 ecs_query_iter_t ecs_query_iter(
     ecs_query_t *query,
     int32_t offset,
     int32_t limit);  
 
+/** Progress the query iterator.
+ * This operation progresses the iterator. The iterator will return once for
+ * each matched table (entity type). 
+ *
+ * @param iter The iterator.
+ * @return true if more data is available, false if no more data is available.
+ */
 FLECS_EXPORT
 bool ecs_query_next(
     ecs_query_iter_t *iter);      

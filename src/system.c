@@ -55,8 +55,7 @@ void match_families(
 }
 
 /** Create a new row system. A row system is a system executed on a single row,
- * typically as a result of a ADD, REMOVE or SET trigger.
- */
+ * typically as a result of a OnAdd, OnRemove or OnSet trigger. */
 static
 ecs_entity_t new_row_system(
     ecs_world_t *world,
@@ -125,6 +124,7 @@ ecs_entity_t new_row_system(
 
     return result;
 }
+
 
 /* -- Private API -- */
 
