@@ -5,33 +5,33 @@ static
 void activate_table(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entity_t system,
+    ecs_query_t *query,
     bool activate)
 {
-    if (system) {
-        ecs_system_activate_table(world, system, table, activate);
+    if (query) {
+        ecs_query_activate_table(world, query, table, activate);
     } else {
-        ecs_vector_t *systems = table->frame_systems;
+        ecs_vector_t *queries = table->queries;
         
-        if (systems) {
-            ecs_entity_t *buffer = ecs_vector_first(systems);
-            int32_t i, count = ecs_vector_count(systems);
+        if (queries) {
+            ecs_query_t **buffer = ecs_vector_first(queries);
+            int32_t i, count = ecs_vector_count(queries);
             for (i = 0; i < count; i ++) {
-                ecs_system_activate_table(world, buffer[i], table, activate);
+                ecs_query_activate_table(world, buffer[i], table, activate);
             }
         }
     }
 }
 
 static
-ecs_table_column_t* new_columns(
+ecs_column_t* new_columns(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_type_t type)
 {
-    ecs_table_column_t *result = ecs_os_calloc(
-        sizeof(ecs_table_column_t), ecs_vector_count(type) + 1);
+    ecs_column_t *result = ecs_os_calloc(
+        sizeof(ecs_column_t), ecs_vector_count(type) + 1);
 
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
@@ -68,7 +68,7 @@ ecs_table_column_t* new_columns(
 
 /* -- Private functions -- */
 
-ecs_table_column_t* ecs_table_get_columns(
+ecs_column_t* ecs_table_get_columns(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table)
@@ -77,7 +77,7 @@ ecs_table_column_t* ecs_table_get_columns(
         return table->columns;
     } else {
         ecs_type_t type = table->type;
-        ecs_table_column_t *columns;
+        ecs_column_t *columns;
 
         if (!ecs_map_has(stage->data_stage, (uintptr_t)type, &columns)) {
             ecs_type_t type = table->type;
@@ -94,7 +94,7 @@ void ecs_table_init(
     ecs_stage_t *stage,
     ecs_table_t *table)
 {
-    table->frame_systems = NULL;
+    table->queries = NULL;
     table->flags = 0;
     table->columns = new_columns(world, stage, table, table->type);
 }
@@ -143,7 +143,7 @@ void ecs_table_clear(
 void ecs_table_replace_columns(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_column_t *columns)
+    ecs_column_t *columns)
 {
     int32_t prev_count = 0;
 
@@ -189,27 +189,27 @@ void ecs_table_free(
     (void)world;
     clear_columns(table);
     ecs_os_free(table->columns);
-    ecs_vector_free(table->frame_systems);
+    ecs_vector_free(table->queries);
 }
 
-void ecs_table_register_system(
+void ecs_table_register_query(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entity_t system)
+    ecs_query_t *query)
 {
     /* Register system with the table */
-    ecs_entity_t *h = ecs_vector_add(&table->frame_systems, ecs_entity_t);
-    if (h) *h = system;
+    ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
+    if (q) *q = query;
 
     if (ecs_vector_count(table->columns[0].data)) {
-        activate_table(world, table, system, true);
+        activate_table(world, table, query, true);
     }
 }
 
 int32_t ecs_table_insert(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     ecs_entity_t entity)
 {
     int32_t column_count = ecs_vector_count(table->type);
@@ -255,7 +255,7 @@ void ecs_table_delete(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     int32_t sindex)
 {
     if (!stage) {
@@ -325,7 +325,7 @@ void ecs_table_delete(
 int32_t ecs_table_grow(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     int32_t count,
     ecs_entity_t first_entity)
 {
@@ -373,7 +373,7 @@ int32_t ecs_table_grow(
 
 int16_t ecs_table_dim(
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     int32_t count)
 {
     if (!columns) {
@@ -416,7 +416,7 @@ uint64_t ecs_table_count(
 void ecs_table_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     int32_t row_1,
     int32_t row_2,
     ecs_row_t *row_ptr_1,
@@ -471,7 +471,7 @@ void ecs_table_swap(
 void ecs_table_move_back_and_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     int32_t row,
     int32_t count)
 {
@@ -532,8 +532,8 @@ void ecs_table_merge(
     ecs_type_t old_type = old_table->type;
     ecs_assert(new_type != old_type, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_column_t *new_columns = new_table ? new_table->columns : NULL;
-    ecs_table_column_t *old_columns = old_table->columns;
+    ecs_column_t *new_columns = new_table ? new_table->columns : NULL;
+    ecs_column_t *old_columns = old_table->columns;
     ecs_assert(old_columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t old_count = old_columns->data ? ecs_vector_count(old_columns->data) : 0;

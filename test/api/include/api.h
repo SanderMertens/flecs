@@ -25,9 +25,9 @@ typedef struct SysTestData {
 } SysTestData;
 
 typedef struct IterData {
-    ecs_type_t component;
-    ecs_type_t component_2;
-    ecs_type_t component_3;
+    ecs_entity_t component;
+    ecs_entity_t component_2;
+    ecs_entity_t component_3;
     ecs_entity_t new_entities[MAX_ENTITIES];
     uint32_t entity_count;
 } IterData;

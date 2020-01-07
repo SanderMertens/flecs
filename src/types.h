@@ -85,14 +85,14 @@ typedef struct EcsPrefabBuilder {
     ecs_vector_t *ops; /* ecs_builder_op_t */
 } EcsPrefabBuilder;
 
-typedef enum ecs_system_expr_inout_kind_t {
+typedef enum ecs_sig_inout_kind_t {
     EcsInOut,
     EcsIn,
     EcsOut
-} ecs_system_expr_inout_kind_t;
+} ecs_sig_inout_kind_t;
 
 /** Type that is used by systems to indicate where to fetch a component from */
-typedef enum ecs_system_expr_elem_kind_t {
+typedef enum ecs_sig_from_kind_t {
     EcsFromSelf,            /* Get component from self (default) */
     EcsFromOwned,           /* Get owned component from self */
     EcsFromShared,          /* Get shared component from self */
@@ -101,16 +101,16 @@ typedef enum ecs_system_expr_elem_kind_t {
     EcsFromEmpty,           /* Get entity handle by id */
     EcsFromEntity,          /* Get component from other entity */
     EcsCascade              /* Walk component in cascading (hierarchy) order */
-} ecs_system_expr_elem_kind_t;
+} ecs_sig_from_kind_t;
 
 /** Type describing an operator used in an signature of a system signature */
-typedef enum ecs_system_expr_oper_kind_t {
+typedef enum ecs_sig_oper_kind_t {
     EcsOperAnd = 0,
     EcsOperOr = 1,
     EcsOperNot = 2,
     EcsOperOptional = 3,
     EcsOperLast = 4
-} ecs_system_expr_oper_kind_t;
+} ecs_sig_oper_kind_t;
 
 /** Callback used by the system signature expression parser */
 typedef int (*ecs_parse_action_t)(
@@ -118,27 +118,27 @@ typedef int (*ecs_parse_action_t)(
     const char *id,
     const char *expr,
     int column,
-    ecs_system_expr_elem_kind_t elem_kind,
-    ecs_system_expr_oper_kind_t oper_kind,
-    ecs_system_expr_inout_kind_t inout_kind,
+    ecs_sig_from_kind_t from_kind,
+    ecs_sig_oper_kind_t oper_kind,
+    ecs_sig_inout_kind_t inout_kind,
     const char *component,
     const char *source,
     void *ctx);
 
 /** Type that describes a single column in the system signature */
-typedef struct ecs_system_column_t {
-    ecs_system_expr_elem_kind_t kind;       /* Element kind (Entity, Component) */
-    ecs_system_expr_oper_kind_t oper_kind;  /* Operator kind (AND, OR, NOT) */
-    ecs_system_expr_inout_kind_t inout_kind;     /* Is component read or written */
+typedef struct ecs_sig_column_t {
+    ecs_sig_from_kind_t from_kind;        /* Element kind (Entity, Component) */
+    ecs_sig_oper_kind_t oper_kind;   /* Operator kind (AND, OR, NOT) */
+    ecs_sig_inout_kind_t inout_kind; /* Is component read or written */
     union {
         ecs_type_t type;             /* Used for OR operator */
         ecs_entity_t component;      /* Used for AND operator */
     } is;
     ecs_entity_t source;             /* Source entity (used with FromEntity) */
-} ecs_system_column_t;
+} ecs_sig_column_t;
 
 /** A table column describes a single column in a table (archetype) */
-struct ecs_table_column_t {
+struct ecs_column_t {
     ecs_vector_t *data;              /* Column data */
     uint16_t size;                   /* Column size (saves component lookups) */
 };
@@ -153,10 +153,10 @@ struct ecs_table_column_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
 struct ecs_table_t {
-    ecs_table_column_t *columns;      /* Columns storing components of array */
-    ecs_vector_t *frame_systems;      /* Frame systems matched with table */
+    ecs_column_t *columns;            /* Columns storing components of array */
+    ecs_vector_t *queries;            /* Queries matched with table */
     ecs_type_t type;                  /* Identifies table type in type_index */
-    int32_t flags;                   /* Flags for testing table properties */
+    int32_t flags;                    /* Flags for testing table properties */
 };
 
 /** Cached reference to a component in an entity */
@@ -188,32 +188,52 @@ typedef struct ecs_on_demand_in_t {
     ecs_vector_t *systems;  /* Systems that have this column as [out] column */
 } ecs_on_demand_in_t;
 
-/** Base type for a system */
-typedef struct EcsSystem {
-    ecs_system_action_t action;    /* Callback to be invoked for matching rows */
-    char *signature;         /* Signature with which system was created */
-    ecs_vector_t *columns;         /* Column components */
-    void *ctx;                     /* User data */
+/** Type that stores a parsed signature */
+typedef struct ecs_sig_t {
+    char *expr;                 /* Original expression string */
+    ecs_vector_t *columns;      /* Columns that contain parsed data */
+    int32_t cascade_by;         /* Identify CASCADE column */
+    bool match_prefab;          /* Does signature match prefabs */
+    bool match_disabled;        /* Does signature match disabled */
+    bool has_refs;              /* Does signature have references */
+    bool needs_tables;          /* Does signature match with columns */
 
     /* Precomputed types for quick comparisons */
     ecs_type_t not_from_self;      /* Exclude components from self */
     ecs_type_t not_from_owned;     /* Exclude components from self only if owned */
-    ecs_type_t not_from_shared;     /* Exclude components from self only if shared */
-    ecs_type_t not_from_component; /* Exclude components from components */
+    ecs_type_t not_from_shared;    /* Exclude components from self only if shared */
+    ecs_type_t not_from_container; /* Exclude components from components */
     ecs_type_t and_from_self;      /* Which components are required from entity */
-    ecs_type_t and_from_owned;      /* Which components are required from entity */
-    ecs_type_t and_from_shared;      /* Which components are required from entity */
+    ecs_type_t and_from_owned;     /* Which components are required from entity */
+    ecs_type_t and_from_shared;    /* Which components are required from entity */
     ecs_type_t and_from_system;    /* Used to auto-add components to system */
-    
-    EcsSystemKind kind;            /* Kind of system */
-    int32_t cascade_by;            /* CASCADE column index */
-    int64_t invoke_count;          /* Number of times system was invoked */
-    double time_spent;             /* Time spent on running system */
+    ecs_type_t and_from_container; /* Used to auto-add components to system */
+} ecs_sig_t;
+
+/** Query that is automatically matched against active tables */
+struct ecs_query_t {
+    /* Signature of query */
+    ecs_sig_t sig;
+
+    /* Reference to world */
+    ecs_world_t *world;
+
+    /* Tables matched with query */
+    ecs_vector_t *tables;
+    ecs_vector_t *inactive_tables;
+
+    /* Handle to system (optional) */
+    ecs_entity_t system;
+};
+
+/** Base type for a system */
+typedef struct EcsSystem {
+    ecs_system_action_t action;    /* Callback to be invoked for matching rows */
+    void *ctx;                     /* Userdata for system */
+    ecs_system_kind_t kind;        /* Kind of system */
+    float time_spent;              /* Time spent on running system */
+    int32_t invoke_count;          /* Number of times system is invoked */
     bool enabled;                  /* Is system enabled or not */
-    bool has_refs;                 /* Does the system have reference columns */
-    bool needs_tables;             /* Does the system need table matching */
-    bool match_prefab;             /* Should this system match prefabs */
-    bool match_disabled;           /* Should this system match disabled entities */
 } EcsSystem;
 
 /** A column system is a system that is ran periodically (default = every frame)
@@ -257,12 +277,14 @@ typedef struct EcsSystem {
 typedef struct EcsColSystem {
     EcsSystem base;
     ecs_entity_t entity;                  /* Entity id of system, used for ordering */
+    ecs_query_t *query;                   /* System query */
     ecs_vector_t *jobs;                   /* Jobs for this system */
-    ecs_vector_t *tables;                 /* Vector with matched tables */
-    ecs_vector_t *inactive_tables;        /* Inactive tables */
     ecs_on_demand_out_t *on_demand;       /* Keep track of [out] column refs */
     ecs_system_status_action_t status_action; /* Status action */
-    void *status_ctx;                     /* User data for status action */
+    void *status_ctx;                     /* User data for status action */    
+    uint32_t column_size;                 /* Parameters for type_columns */
+    uint32_t component_size;              /* Parameters for components */
+    uint32_t ref_size;                    /* Parameters for refs */
     float period;                         /* Minimum period inbetween system invocations */
     float time_passed;                    /* Time passed since last invocation */
 } EcsColSystem;
@@ -273,6 +295,7 @@ typedef struct EcsColSystem {
  * ecs_remove and ecs_set. */
 typedef struct EcsRowSystem {
     EcsSystem base;
+    ecs_sig_t sig;            /* System signature */
     ecs_vector_t *components;       /* Components in order of signature */
 } EcsRowSystem;
  
@@ -354,7 +377,7 @@ typedef struct ecs_entity_info_t {
     ecs_type_t type;
     int32_t index;
     ecs_table_t *table;
-    ecs_table_column_t *columns;
+    ecs_column_t *columns;
     bool is_watched;
 
     /* Used for determining if ecs_entity_info_t should be invalidated */
@@ -414,6 +437,10 @@ struct ecs_world_t {
     ecs_vector_t *on_store_systems;   
     ecs_vector_t *manual_systems;  
     ecs_vector_t *inactive_systems;
+
+    /* --  Queries -- */
+
+    ecs_sparse_t *queries;    
 
     /* -- OnDemand systems -- */
     

@@ -56,8 +56,11 @@ typedef uint64_t ecs_entity_t;
 /* A vector containing component identifiers used to describe an entity type. */
 typedef const ecs_vector_t* ecs_type_t;
 
+/** Queries match a signature with tables */
+typedef struct ecs_query_t ecs_query_t;
+
 /** System kinds that determine when and how systems are ran */
-typedef enum EcsSystemKind {
+typedef enum ecs_system_kind_t {
     /* Periodic systems */
     EcsOnLoad,
     EcsPostLoad,
@@ -75,7 +78,7 @@ typedef enum EcsSystemKind {
     EcsOnAdd,
     EcsOnRemove,
     EcsOnSet
-} EcsSystemKind;
+} ecs_system_kind_t;
 
 /** System action callback */
 typedef void (*ecs_system_action_t)(
@@ -1059,13 +1062,13 @@ FLECS_EXPORT
 void* _ecs_get_ptr(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_type_t type);
+    ecs_entity_t component);
 
-#define ecs_get_ptr(world, entity, type)\
-    (type*)_ecs_get_ptr(world, entity, T##type)
+#define ecs_get_ptr(world, entity, component)\
+    (component*)_ecs_get_ptr(world, entity, E##component)
 
-#define ecs_get(world, entity, type)\
-  (*(type*)_ecs_get_ptr(world, entity, T##type))
+#define ecs_get(world, entity, component)\
+  (*(component*)_ecs_get_ptr(world, entity, E##component))
 
 /* Set value of component.
  * This function sets the value of a component on the specified entity. If the
@@ -1784,6 +1787,39 @@ void ecs_set_system_status_action(
     ecs_entity_t system,
     ecs_system_status_action_t action,
     const void *ctx);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Query API
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct ecs_query_iter_t {
+    ecs_query_t *query;
+    uint32_t offset;
+    uint32_t limit;
+    uint32_t remaining;
+    uint32_t index;
+    ecs_rows_t rows;
+} ecs_query_iter_t;
+
+FLECS_EXPORT
+ecs_query_t* ecs_query_new(
+    ecs_world_t *world,
+    const char *sig);
+
+FLECS_EXPORT
+void ecs_query_free(
+    ecs_query_t *query);
+
+FLECS_EXPORT
+ecs_query_iter_t ecs_query_iter(
+    ecs_query_t *query,
+    uint32_t offset,
+    uint32_t limit);  
+
+FLECS_EXPORT
+bool ecs_query_next(
+    ecs_query_iter_t *iter);      
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1182,7 +1182,7 @@ template<typename ... Components>
 class system final : public entity {
 public:
     system(const world& world, const char *name = nullptr)
-        : m_kind(static_cast<EcsSystemKind>(OnUpdate))
+        : m_kind(static_cast<ecs_system_kind_t>(OnUpdate))
         , m_name(name) 
         , m_on_demand(false)
         , m_hidden(false) { 
@@ -1195,7 +1195,7 @@ public:
     }
 
     system& kind(system_kind kind) {
-        m_kind = static_cast<EcsSystemKind>(kind);
+        m_kind = static_cast<ecs_system_kind_t>(kind);
         return *this;
     }
 
@@ -1326,7 +1326,7 @@ private:
         return "";
     }
 
-    EcsSystemKind m_kind;
+    ecs_system_kind_t m_kind;
     const char *m_name;
     const char *m_signature = nullptr;
     bool m_on_demand;

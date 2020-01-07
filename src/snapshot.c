@@ -8,11 +8,11 @@ void dup_table(
 
     /* First create a copy of columns structure */
     table->columns = ecs_os_memdup(
-        table->columns, sizeof(ecs_table_column_t) * (column_count + 1));
+        table->columns, sizeof(ecs_column_t) * (column_count + 1));
     
     /* Now copy each column separately */
     for (c = 0; c < column_count + 1; c ++) {
-        ecs_table_column_t *column = &table->columns[c];
+        ecs_column_t *column = &table->columns[c];
         column->data = _ecs_vector_copy(column->data, column->size);
     }
 }

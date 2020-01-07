@@ -17,9 +17,9 @@ int parse_type_action(
     const char *system_id,
     const char *sig,
     int column,
-    ecs_system_expr_elem_kind_t elem_kind,
-    ecs_system_expr_oper_kind_t oper_kind,
-    ecs_system_expr_inout_kind_t inout_kind,
+    ecs_sig_from_kind_t from_kind,
+    ecs_sig_oper_kind_t oper_kind,
+    ecs_sig_inout_kind_t inout_kind,
     const char *entity_id,
     const char *source_id,
     void *data)
@@ -31,7 +31,7 @@ int parse_type_action(
     if (strcmp(entity_id, "0")) {
         ecs_entity_t entity = 0;
 
-        if (elem_kind != EcsFromSelf) {
+        if (from_kind != EcsFromSelf) {
             ecs_parser_error(system_id, sig, column, 
                 "source modifiers not supported for type expressions");
             return -1;
@@ -894,7 +894,7 @@ EcsTypeComponent type_from_expr(
 {
     if (expr) {
         ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_parse_component_expr(world, expr, parse_type_action, id, &vec);
+        ecs_parse_expr(world, expr, parse_type_action, id, &vec);
         EcsTypeComponent result = type_from_vec(world, vec);
         ecs_vector_free(vec);
         return result;
