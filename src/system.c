@@ -60,21 +60,18 @@ void match_families(
 static
 ecs_entity_t new_row_system(
     ecs_world_t *world,
-    const char *id,
+    const char *name,
     ecs_system_kind_t kind,
-    bool needs_tables,
-    const char *sig,
+    ecs_sig_t *sig,
     ecs_system_action_t action)
 {
-    int32_t count = ecs_columns_count(sig);
-    ecs_assert(count != 0, ECS_INVALID_PARAMETER, NULL);
+    int32_t column_count = ecs_vector_count(sig->columns);
 
     ecs_entity_t result = _ecs_new(world, world->t_row_system);
 
     EcsId *id_data = ecs_get_ptr(world, result, EcsId);
     ecs_assert(id_data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    *id_data = id;
+    *id_data = name;
 
     EcsRowSystem *system_data = ecs_get_ptr(world, result, EcsRowSystem);
     memset(system_data, 0, sizeof(EcsRowSystem));
@@ -82,14 +79,13 @@ ecs_entity_t new_row_system(
     system_data->base.enabled = true;
     system_data->base.invoke_count = 0;
     system_data->base.kind = kind;
-    system_data->components = ecs_vector_new(ecs_entity_t, count);
-
-    ecs_sig_init(world, sig, &system_data->sig);
+    system_data->components = ecs_vector_new(ecs_entity_t, column_count);
+    system_data->sig = *sig;
 
     ecs_type_t type_id = 0;
-    int32_t i, column_count = ecs_vector_count(system_data->sig.columns);
     ecs_sig_column_t *buffer = ecs_vector_first(system_data->sig.columns);
 
+    int32_t i;
     for (i = 0; i < column_count; i ++) {
         ecs_entity_t *h = ecs_vector_add(
             &system_data->components, ecs_entity_t);
@@ -105,7 +101,7 @@ ecs_entity_t new_row_system(
 
     ecs_entity_t *elem = NULL;
 
-    if (!needs_tables && kind == EcsOnRemove) {
+    if (!sig->needs_tables && kind == EcsOnRemove) {
         elem = ecs_vector_add(&world->fini_tasks, ecs_entity_t);
     } else {
         if (kind == EcsOnAdd) {
@@ -114,6 +110,8 @@ ecs_entity_t new_row_system(
             elem = ecs_vector_add(&world->remove_systems, ecs_entity_t);
         } else if (kind == EcsOnSet) {
             elem = ecs_vector_add(&world->set_systems, ecs_entity_t);
+        } else {
+            ecs_abort(ECS_INTERNAL_ERROR, NULL);
         }
     }
 
@@ -121,7 +119,7 @@ ecs_entity_t new_row_system(
         *elem = result;
     }
 
-    if (needs_tables) {
+    if (sig->needs_tables) {
         match_families(world, result, system_data);
     }
 
@@ -279,53 +277,56 @@ void ecs_row_system_notify_of_type(
 
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
-    const char *id,
+    const char *name,
     ecs_system_kind_t kind,
-    const char *sig,
+    const char *expr,
     ecs_system_action_t action)
 {
-    ecs_assert(kind == EcsManual ||
-               kind == EcsOnLoad ||
-               kind == EcsPostLoad ||
-               kind == EcsPreUpdate ||
-               kind == EcsOnUpdate ||
-               kind == EcsOnValidate ||
-               kind == EcsPostUpdate ||
-               kind == EcsPreStore ||
-               kind == EcsOnStore ||
-               kind == EcsOnAdd ||
-               kind == EcsOnRemove ||
-               kind == EcsOnSet,
-               ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(kind == EcsManual || kind == EcsOnLoad || kind == EcsPostLoad ||
+        kind == EcsPreUpdate || kind == EcsOnUpdate || kind == EcsOnValidate ||
+        kind == EcsPostUpdate || kind == EcsPreStore || kind == EcsOnStore ||
+        kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet,
+        ECS_INVALID_PARAMETER, NULL);
+    
+    /* Parse signature */
+    ecs_sig_t sig = {0};
+    ecs_sig_init(world, name, expr, &sig);
 
-    bool needs_tables = ecs_needs_tables(world, sig, id);
-    bool is_reactive = false;
-
-    ecs_assert(needs_tables || 
+    ecs_assert(sig.needs_tables || 
         !((kind == EcsOnAdd) || (kind == EcsOnSet)),
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entity_t result = 0;
+    /* Is system reactive or periodic */
+    bool is_reactive;
+    if ((kind == EcsOnLoad || kind == EcsPostLoad || kind == EcsPreUpdate || 
+        kind == EcsOnUpdate || kind == EcsOnValidate || kind == EcsPostUpdate ||
+        kind == EcsPreStore || kind == EcsOnStore || kind == EcsManual))
+    {
+        is_reactive = false;
+        
+    } else if (!sig.needs_tables ||
+        (kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet))
+    {
+        is_reactive = true;
 
-    if (id) {
-        result = ecs_lookup(world, id);
+    } else {
+        ecs_abort(ECS_INVALID_PARAMETER, NULL);
+    }
+
+    /* Check if system is already registered */
+    ecs_entity_t result = 0;
+    if (name) {
+        result = ecs_lookup(world, name);
         if (result) {
             return result;
         }
     }
 
-    if ((kind == EcsOnLoad || kind == EcsPostLoad ||
-        kind == EcsPreUpdate || kind == EcsOnUpdate ||
-        kind == EcsOnValidate || kind == EcsPostUpdate ||
-        kind == EcsPreStore || kind == EcsOnStore ||
-        kind == EcsManual))
-    {
-        result = ecs_new_col_system(world, id, kind, sig, action);
-    } else if (!needs_tables ||
-        (kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet))
-    {
-        result = new_row_system(world, id, kind, needs_tables, sig, action);
-        is_reactive = true;
+    /* Create system */
+    if (is_reactive) {
+        result = new_row_system(world, name, kind, &sig, action);
+    } else {
+        result = ecs_new_col_system(world, name, kind, &sig, action);
     }
 
     ecs_assert(result != 0, ECS_INVALID_PARAMETER, NULL);
@@ -334,6 +335,7 @@ ecs_entity_t ecs_new_system(
     EcsSystem *system_data;
     EcsColSystem* col_sys = ecs_get_ptr(world, result, EcsColSystem);
 
+    /* Obtain common data for systems */
     if (col_sys) {
         system_data = &col_sys->base;
         and_from_system = col_sys->query->sig.and_from_system;

@@ -76,40 +76,6 @@ char* parse_complex_elem(
 }
 
 static
-int has_tables(
-    ecs_world_t *world,
-    const char *system_id,
-    const char *sig,
-    int column,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    const char *component_id,
-    const char *source_id,
-    void *data)
-{
-    (void)world;
-    (void)system_id;
-    (void)sig;
-    (void)column;
-    (void)oper_kind;
-    (void)inout_kind;
-    (void)component_id;
-    (void)source_id;
-    
-    bool *needs_matching = data;
-    if (from_kind == EcsFromSelf || 
-        from_kind == EcsFromOwned ||
-        from_kind == EcsFromShared ||
-        from_kind == EcsFromContainer) 
-    {
-        *needs_matching = true;
-    }
-
-    return 0;
-}
-
-static
 bool has_refs(
     ecs_sig_t *sig)
 {
@@ -258,17 +224,6 @@ void postprocess(
 }
 
 /* -- Private functions -- */
-
-/* Does expression require that a system matches with tables */
-bool ecs_needs_tables(
-    ecs_world_t *world,
-    const char *signature,
-    const char *system_id)
-{
-    bool needs_matching = false;
-    ecs_parse_expr(world, signature, has_tables, system_id, &needs_matching);
-    return needs_matching;
-}
 
 /** Count components in a signature */
 int32_t ecs_columns_count(
@@ -496,6 +451,14 @@ int ecs_parse_signature_action(
     ecs_sig_t *sig = data;
     ecs_sig_column_t *elem;
 
+    if (from_kind == EcsFromSelf || 
+        from_kind == EcsFromOwned ||
+        from_kind == EcsFromShared ||
+        from_kind == EcsFromContainer) 
+    {
+        sig->needs_tables = true;
+    }
+
     /* Lookup component handly by string identifier */
     ecs_entity_t component = ecs_lookup(world, component_id);
     if (!component) {
@@ -549,15 +512,15 @@ int ecs_parse_signature_action(
         elem->is.type = ecs_type_add_intern(
             world, NULL, elem->is.type, component);
         elem->from_kind = from_kind;
-        elem->oper_kind = EcsOperOr;
+        elem->oper_kind = oper_kind;
 
     /* A system stores two NOT familes; one for entities and one for components.
      * These can be quickly & efficiently used to exclude tables with
      * ecs_type_contains. */
     } else if (oper_kind == EcsOperNot) {
         elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
-        elem->from_kind = EcsFromEmpty; /* Just pass handle to system */
-        elem->oper_kind = EcsOperNot;
+        elem->from_kind = EcsFromEmpty;
+        elem->oper_kind = oper_kind;
         elem->inout_kind = inout_kind;
         elem->is.component = component;
 
@@ -591,13 +554,14 @@ error:
 
 void ecs_sig_init(
     ecs_world_t *world,
+    const char *name,
     const char *expr,
     ecs_sig_t *sig)
 {
     sig->expr = ecs_os_strdup(expr);
 
     ecs_parse_expr(
-        world, expr, ecs_parse_signature_action, NULL, sig);
+        world, expr, ecs_parse_signature_action, name, sig);
 
     postprocess(world, sig);
 }

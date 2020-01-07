@@ -640,10 +640,12 @@ ecs_world_t *ecs_init(void) {
     world->post_update_systems = ecs_vector_new(ecs_entity_t, 0);
     world->post_load_systems = ecs_vector_new(ecs_entity_t, 0);
     world->on_load_systems = ecs_vector_new(ecs_entity_t, 0);
-    world->pre_store_systems = ecs_vector_new( ecs_entity_t, 0);
-    world->on_store_systems = ecs_vector_new( ecs_entity_t, 0);
+    world->pre_store_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->on_store_systems = ecs_vector_new(ecs_entity_t, 0);
     world->inactive_systems = ecs_vector_new(ecs_entity_t, 0);
     world->manual_systems = ecs_vector_new(ecs_entity_t, 0);
+
+    world->queries = ecs_sparse_new(ecs_query_t, 0);
 
     world->add_systems = ecs_vector_new(ecs_entity_t, 0);
     world->remove_systems = ecs_vector_new(ecs_entity_t, 0);

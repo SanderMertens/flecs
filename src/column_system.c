@@ -190,7 +190,7 @@ ecs_entity_t ecs_new_col_system(
     ecs_world_t *world,
     const char *id,
     ecs_system_kind_t kind,
-    const char *sig,
+    ecs_sig_t *sig,
     ecs_system_action_t action)
 {
     ecs_entity_t result = _ecs_new(
@@ -205,7 +205,7 @@ ecs_entity_t ecs_new_col_system(
     system_data->base.enabled = true;
     system_data->base.time_spent = 0;
     system_data->base.kind = kind;
-    system_data->query = ecs_query_new(world, sig);
+    system_data->query = ecs_query_new_w_sig(world, result, sig);
     ecs_assert(system_data->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
     uint32_t column_count = ecs_vector_count(system_data->query->sig.columns);
@@ -218,24 +218,28 @@ ecs_entity_t ecs_new_col_system(
 
     ecs_entity_t *elem = NULL;
 
-    if (kind == EcsManual) {
-        elem = ecs_vector_add(&world->manual_systems, ecs_entity_t);
-    } else if (kind == EcsOnUpdate) {
-        elem = ecs_vector_add(&world->on_update_systems, ecs_entity_t);
-    } else if (kind == EcsOnValidate) {
-        elem = ecs_vector_add(&world->on_validate_systems, ecs_entity_t);            
-    } else if (kind == EcsPreUpdate) {
-        elem = ecs_vector_add(&world->pre_update_systems, ecs_entity_t);
-    } else if (kind == EcsPostUpdate) {
-        elem = ecs_vector_add(&world->post_update_systems, ecs_entity_t);
-    } else if (kind == EcsOnLoad) {
-        elem = ecs_vector_add(&world->on_load_systems, ecs_entity_t);
-    } else if (kind == EcsPostLoad) {
-        elem = ecs_vector_add(&world->post_load_systems, ecs_entity_t);            
-    } else if (kind == EcsPreStore) {
-        elem = ecs_vector_add(&world->pre_store_systems, ecs_entity_t);
-    } else if (kind == EcsOnStore) {
-        elem = ecs_vector_add(&world->on_store_systems, ecs_entity_t);
+    if (!ecs_vector_count(system_data->query->tables)) {
+        elem = ecs_vector_add(&world->inactive_systems, ecs_entity_t);
+    } else {
+        if (kind == EcsManual) {
+            elem = ecs_vector_add(&world->manual_systems, ecs_entity_t);
+        } else if (kind == EcsOnUpdate) {
+            elem = ecs_vector_add(&world->on_update_systems, ecs_entity_t);
+        } else if (kind == EcsOnValidate) {
+            elem = ecs_vector_add(&world->on_validate_systems, ecs_entity_t);            
+        } else if (kind == EcsPreUpdate) {
+            elem = ecs_vector_add(&world->pre_update_systems, ecs_entity_t);
+        } else if (kind == EcsPostUpdate) {
+            elem = ecs_vector_add(&world->post_update_systems, ecs_entity_t);
+        } else if (kind == EcsOnLoad) {
+            elem = ecs_vector_add(&world->on_load_systems, ecs_entity_t);
+        } else if (kind == EcsPostLoad) {
+            elem = ecs_vector_add(&world->post_load_systems, ecs_entity_t);            
+        } else if (kind == EcsPreStore) {
+            elem = ecs_vector_add(&world->pre_store_systems, ecs_entity_t);
+        } else if (kind == EcsOnStore) {
+            elem = ecs_vector_add(&world->on_store_systems, ecs_entity_t);
+        }
     }
 
     *elem = result;
@@ -406,16 +410,24 @@ ecs_entity_t _ecs_run_w_filter(
     ecs_query_iter_t qiter = ecs_query_iter(system_data->query, offset, limit);
     qiter.rows.world = world;
     qiter.rows.system = system;
-    qiter.rows.param = param;
     qiter.rows.system_data = system_data;
     qiter.rows.delta_time = delta_time + system_data->time_passed;
     qiter.rows.world_time = world->world_time_total;
     qiter.rows.frame_offset = offset;
+    
+    if (param) {
+        qiter.rows.param = param;
+    } else {
+        qiter.rows.param = system_data->base.ctx;
+    }
 
+    /* If system is a task, invoke callback once */
     if (!filter) {
         while (ecs_query_next(&qiter)) {
             action(&qiter.rows);
         }
+
+    /* If filter is provided, match each table with the provided filter */
     } else {
         while (ecs_query_next(&qiter)) {
             ecs_table_t *table = qiter.rows.table;

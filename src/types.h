@@ -190,13 +190,14 @@ typedef struct ecs_on_demand_in_t {
 
 /** Type that stores a parsed signature */
 typedef struct ecs_sig_t {
+    const char *name;           /* Optional name used for debugging */
     char *expr;                 /* Original expression string */
     ecs_vector_t *columns;      /* Columns that contain parsed data */
     int32_t cascade_by;         /* Identify CASCADE column */
     bool match_prefab;          /* Does signature match prefabs */
     bool match_disabled;        /* Does signature match disabled */
     bool has_refs;              /* Does signature have references */
-    bool needs_tables;          /* Does signature match with columns */
+    bool needs_tables;          /* Does signature match with tables */
 
     /* Precomputed types for quick comparisons */
     ecs_type_t not_from_self;      /* Exclude components from self */
@@ -223,7 +224,7 @@ struct ecs_query_t {
     ecs_vector_t *inactive_tables;
 
     /* Handle to system (optional) */
-    ecs_entity_t system;
+    ecs_entity_t system;        
 };
 
 /** Base type for a system */

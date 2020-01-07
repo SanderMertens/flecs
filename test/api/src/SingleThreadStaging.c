@@ -45,9 +45,8 @@ void New_w_component(ecs_rows_t *rows) {
         ecs_type_t type = ecs_type_from_entity(rows->world, ctx->component);
         ecs_entity_t e = _ecs_new(rows->world, type);
         ctx->new_entities[ctx->entity_count] = e;
-
         test_assert( !ecs_is_empty(rows->world, e));
-        test_assert( ecs_has_entity(rows->world, e, ctx->component));
+        test_assert( _ecs_has(rows->world, e, type));
 
         ctx->entity_count ++;
     }

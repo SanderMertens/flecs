@@ -323,6 +323,11 @@ void ecs_table_move_back_and_swap(
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
 
+ecs_query_t*  ecs_query_new_w_sig(
+    ecs_world_t *world,
+    ecs_entity_t system, 
+    ecs_sig_t *sig);
+
 void ecs_query_activate_table(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -336,7 +341,8 @@ void ecs_query_activate_table(
 
 void ecs_sig_init(
     ecs_world_t *world,
-    const char *signature,
+    const char *name,
+    const char *expr,
     ecs_sig_t *sig);
 
 void ecs_sig_deinit(
@@ -377,9 +383,9 @@ bool ecs_sig_check_constraints(
 /* Create new table system */
 ecs_entity_t ecs_new_col_system(
     ecs_world_t *world,
-    const char *id,
+    const char *name,
     ecs_system_kind_t kind,
-    const char *sig,
+    ecs_sig_t *sig,
     ecs_system_action_t action);
 
 /* Notify column system of a new table, which initiates system-table matching */

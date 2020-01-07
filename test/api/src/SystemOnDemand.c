@@ -32,6 +32,7 @@ void SystemOnDemand_enable_out_after_in() {
     /* Create dummy entity so system won't be disabled all the time */
     ecs_new(world, Position);
 
+
     test_assert(ecs_is_enabled(world, OutSystem) == true);
     ecs_progress(world, 0);
     test_assert(invoked == true);
