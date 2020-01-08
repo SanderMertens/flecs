@@ -879,8 +879,8 @@ EcsTypeComponent type_from_vec(
         result.type = ecs_type_merge_intern(
             world, &world->main_stage, result.type, entity_type, 0);
 
-        result.resolved = ecs_type_merge_intern(
-            world, &world->main_stage, result.resolved, resolved_type, 0);
+        result.normalized = ecs_type_merge_intern(
+            world, &world->main_stage, result.normalized, resolved_type, 0);
     }
 
     return result;
@@ -919,7 +919,7 @@ ecs_entity_t ecs_new_type(
         EcsTypeComponent *type_ptr = ecs_get_ptr(world, result, EcsTypeComponent);
         if (type_ptr) {
             if (type_ptr->type != type.type || 
-                type_ptr->resolved != type.resolved) 
+                type_ptr->normalized != type.normalized) 
             {
                 ecs_abort(ECS_ALREADY_DEFINED, id);
             }
@@ -930,7 +930,7 @@ ecs_entity_t ecs_new_type(
         result = _ecs_new(world, world->t_type);
         ecs_set(world, result, EcsId, {id});
         ecs_set(world, result, EcsTypeComponent, {
-            .type = type.type, .resolved = type.resolved
+            .type = type.type, .normalized = type.normalized
         });
 
         /* Register named types with world, so applications can automatically
@@ -949,16 +949,16 @@ ecs_entity_t ecs_new_prefab(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
    
     EcsTypeComponent type = type_from_expr(world, id, expr);
-    type.resolved = ecs_type_merge_intern(
-        world, NULL, world->t_prefab, type.resolved, 0);
+    type.normalized = ecs_type_merge_intern(
+        world, NULL, world->t_prefab, type.normalized, 0);
 
     ecs_entity_t result = ecs_lookup(world, id);
     if (result) {
-        if (ecs_get_type(world, result) != type.resolved) {
+        if (ecs_get_type(world, result) != type.normalized) {
             ecs_abort(ECS_ALREADY_DEFINED, id);
         }
     } else {
-        result = _ecs_new(world, type.resolved);
+        result = _ecs_new(world, type.normalized);
         ecs_set(world, result, EcsId, {id});
     }
 
@@ -976,11 +976,11 @@ ecs_entity_t ecs_new_entity(
 
     ecs_entity_t result = ecs_lookup(world, id);
     if (result) {
-        if (ecs_get_type(world, result) != type.resolved) {
+        if (ecs_get_type(world, result) != type.normalized) {
             ecs_abort(ECS_ALREADY_DEFINED, id);
         }
     } else {
-        result = _ecs_new(world, type.resolved);
+        result = _ecs_new(world, type.normalized);
         ecs_set(world, result, EcsId, {id});
     }
 
@@ -1059,7 +1059,7 @@ ecs_type_t ecs_expr_to_type(
     const char *expr)
 {
     EcsTypeComponent type = type_from_expr(world, "<type>", expr);
-    return type.resolved;
+    return type.normalized;
 }
 
 ecs_type_t ecs_type_add(

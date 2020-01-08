@@ -43,9 +43,8 @@ ecs_column_t* new_columns(
     result[0].data = NULL;
 
     for (i = 0; i < count; i ++) {
-        ecs_entity_info_t info = {.entity = buf[i]};
         EcsComponent *component = ecs_get_ptr_intern(
-            world, stage, &info, EEcsComponent, false, false);
+            world, stage, buf[i], EEcsComponent, false, false);
 
         if (component) {    
             if (component->size) {

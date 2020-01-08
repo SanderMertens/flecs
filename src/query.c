@@ -608,10 +608,9 @@ void resolve_cascade_container(
 
     /* If container was found, update the reference */
     if (container) {
-        ecs_entity_info_t info = {.entity = container};
         references[ref_index].entity = container;
         references[ref_index].cached_ptr = ecs_get_ptr_intern(
-            world, &world->main_stage, &info, ref->component, false, true);
+            world, &world->main_stage, container, ref->component, false, true);
     } else {
         references[ref_index].entity = ECS_INVALID_ENTITY;
         references[ref_index].cached_ptr = NULL;
@@ -769,9 +768,8 @@ void ecs_revalidate_query_refs(
 
         for (r = 0; r < ref_count; r ++) {
             ecs_reference_t ref = refs[r];
-            ecs_entity_info_t info = {.entity = ref.entity};
             refs[r].cached_ptr = ecs_get_ptr_intern(
-                world, &world->main_stage, &info, ref.component, false, true);
+                world, &world->main_stage, ref.entity, ref.component, false, true);
         }            
     }
 }

@@ -15,6 +15,42 @@ ecs_record_t* ecs_get_entity(
     ecs_stage_t *stage,
     ecs_entity_t entity);
 
+/* Get entity info */
+bool ecs_get_info(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_info_t *info);
+
+/* Set entity */
+void ecs_set_entity(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_record_t *record);  
+
+/* Set entity in main stage */
+ecs_record_t* ecs_set_entity_in_main(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+/* Delete entity from stage */
+void ecs_delete_entity(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity);
+
+/* Grow entity index */
+void ecs_grow_entities(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    uint32_t count);
+
+/* Count entities in stage */
+uint32_t ecs_count_entities(
+    ecs_world_t *world,
+    ecs_stage_t *stage);      
+
 /* Merge entity with stage */
 void ecs_merge_entity(
     ecs_world_t *world,
@@ -60,7 +96,7 @@ bool ecs_components_contains_component(
 void* ecs_get_ptr_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_entity_info_t *info,
+    ecs_entity_t entity,
     ecs_entity_t component,
     bool staged_only,
     bool search_prefab);

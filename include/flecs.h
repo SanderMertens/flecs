@@ -180,8 +180,8 @@ typedef struct EcsComponent {
 
 /** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
 typedef struct EcsTypeComponent {
-    ecs_type_t type;    /* Preserved nested types */
-    ecs_type_t resolved;  /* Resolved nested types */
+    ecs_type_t type;        /* Preserved nested types */
+    ecs_type_t normalized;  /* Resolved nested types */
 } EcsTypeComponent;
 
 /** Component used to create prefabs and prefab hierarchies */

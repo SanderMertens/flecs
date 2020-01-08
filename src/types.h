@@ -371,19 +371,13 @@ typedef struct ecs_stage_t {
     bool range_check_enabled;
 } ecs_stage_t;
 
-/** Supporting type that internal functions pass around to ensure that data
- * related to an entity is only looked up once. */
+/** Supporting type to store looked up or derived entity data */
 typedef struct ecs_entity_info_t {
-    ecs_entity_t entity;
-    ecs_type_t type;
-    int32_t index;
-    ecs_table_t *table;
-    ecs_column_t *columns;
-    bool is_watched;
-
-    /* Used for determining if ecs_entity_info_t should be invalidated */
-    ecs_stage_t *stage;
-    int32_t commit_count;
+    ecs_record_t *record;       /* Main stage record in entity index */
+    ecs_table_t *table;         /* Table. Not set if entity is empty */
+    ecs_column_t *columns;      /* Stage-specific table columns */
+    int32_t row;                /* Actual row (stripped from is_watched bit) */
+    bool is_watched;            /* Is entity being watched */
 } ecs_entity_info_t;
 
 /** A type describing a unit of work to be executed by a worker thread. */ 
@@ -470,6 +464,9 @@ struct ecs_world_t {
     ecs_map_t *prefab_parent_index;   /* Index to find flag for prefab parent */
     ecs_map_t *type_handles;          /* Handles to named types */
 
+    /* -- Singleton record -- */
+
+    ecs_record_t singleton;
 
     /* -- Staging -- */
 

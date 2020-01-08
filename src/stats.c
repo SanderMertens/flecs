@@ -614,7 +614,7 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
         stats[i].name = ecs_get_id(world, rows->entities[i]);
         stats[i].entity = rows->entities[i];
         stats[i].type = type_component[i].type;
-        stats[i].normalized_type = type_component[i].resolved;
+        stats[i].normalized_type = type_component[i].normalized;
         stats[i].is_hidden = ecs_has(world, rows->entities[i], EcsHidden);
         stats[i].entities_count = 0;
         stats[i].entities_childof_count = 0;
@@ -624,10 +624,10 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
         stats[i].row_systems_count = 0;
         stats[i].enabled_systems_count = 0;
         stats[i].active_systems_count = 0;
-        stats[i].instance_count = _ecs_count(world, type_component[i].resolved);
+        stats[i].instance_count = _ecs_count(world, type_component[i].normalized);
 
-        int32_t j, count = ecs_vector_count(type_component[i].resolved);
-        ecs_entity_t *entities = ecs_vector_first(type_component[i].resolved);
+        int32_t j, count = ecs_vector_count(type_component[i].normalized);
+        ecs_entity_t *entities = ecs_vector_first(type_component[i].normalized);
         for (j = 0; j < count; j ++) {
             ecs_entity_t e = entities[j];
             bool has_flags = false;

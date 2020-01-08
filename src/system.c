@@ -138,12 +138,11 @@ ecs_type_t ecs_notify_row_system(
     int32_t offset,
     int32_t limit)
 {
-    ecs_entity_info_t info = {.entity = system};
     ecs_world_t *real_world = world;
     ecs_get_stage(&real_world);
 
     EcsRowSystem *system_data = ecs_get_ptr_intern(
-        real_world, &real_world->main_stage, &info, EEcsRowSystem, false, true);
+        real_world, &real_world->main_stage, system, EEcsRowSystem, false, true);
     
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -202,12 +201,11 @@ ecs_type_t ecs_notify_row_system(
             }
 
             /* Store the reference data so the system callback can access it */
-            info = (ecs_entity_info_t){.entity = entity};
             references[ref_id] = (ecs_reference_t){
                 .entity = entity, 
                 .component = component,
                 .cached_ptr = ecs_get_ptr_intern(real_world, 
-                    &real_world->main_stage, &info, component, false, true)
+                    &real_world->main_stage, entity, component, false, true)
             };
 
             /* Update the column vector with the entry to the ref vector */
