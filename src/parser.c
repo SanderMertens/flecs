@@ -201,6 +201,8 @@ int ecs_parse_component_expr(
     void *ctx)
 {
     size_t len = strlen(sig);
+    ecs_assert(len > 0, ECS_INVALID_SIGNATURE, NULL);
+    
     const char *ptr;
     char ch, *bptr, *buffer = ecs_os_malloc(len + 1);
     ecs_assert(buffer != NULL, ECS_OUT_OF_MEMORY, NULL);

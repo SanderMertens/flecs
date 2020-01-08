@@ -710,6 +710,8 @@ ecs_entity_t ecs_new_system(
                kind == EcsOnSet,
                ECS_INVALID_PARAMETER, NULL);
 
+    ecs_assert(sig != NULL, ECS_INVALID_PARAMETER, NULL);
+
     bool needs_tables = ecs_needs_tables(world, sig, id);
     bool is_reactive = false;
 

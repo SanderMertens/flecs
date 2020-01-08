@@ -107,21 +107,25 @@ void add_table(
 
     table_data->table = table;
     table_data->references = NULL;
+    table_data->columns = NULL;
+    table_data->components = NULL;
 
-    /* Array that contains the system column to table column mapping */
-    table_data->columns = ecs_os_malloc(sizeof(uint32_t) * column_count);
-    ecs_assert(table_data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
+    if (column_count) {
+        /* Array that contains the system column to table column mapping */
+        table_data->columns = ecs_os_malloc(sizeof(uint32_t) * column_count);
+        ecs_assert(table_data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    /* Store the components of the matched table. In the case of OR expressions,
-     * components may differ per matched table. */
-    table_data->components = ecs_os_malloc(sizeof(ecs_entity_t) * column_count);
-    ecs_assert(table_data->components != NULL, ECS_OUT_OF_MEMORY, NULL);
+        /* Store the components of the matched table. In the case of OR expressions,
+        * components may differ per matched table. */
+        table_data->components = ecs_os_malloc(sizeof(ecs_entity_t) * column_count);
+        ecs_assert(table_data->components != NULL, ECS_OUT_OF_MEMORY, NULL);
+    }
 
     /* Walk columns parsed from the system signature */
     ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
-    uint32_t c, count = ecs_vector_count(system_data->base.columns);
+    uint32_t c;
 
-    for (c = 0; c < count; c ++) {
+    for (c = 0; c < column_count; c ++) {
         ecs_system_column_t *column = &columns[c];
         ecs_entity_t entity = 0, component = 0;
         ecs_system_expr_elem_kind_t kind = column->kind;

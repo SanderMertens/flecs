@@ -235,23 +235,29 @@ void ecs_os_gettime(ecs_time_t *timeOut)
 static
 void* ecs_os_api_malloc(size_t size) {
     ecs_os_api_malloc_count ++;
+    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
     return malloc(size);
 }
 
 static
 void* ecs_os_api_calloc(size_t num, size_t size) {
     ecs_os_api_calloc_count ++;
+    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(num != 0, ECS_INVALID_PARAMETER, NULL);
     return calloc(num, size);
 }
 
 static
 void* ecs_os_api_realloc(void *ptr, size_t size) {
+    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
+
     if (ptr) {
         ecs_os_api_realloc_count ++;
     } else {
         /* If not actually reallocing, treat as malloc */
         ecs_os_api_malloc_count ++; 
     }
+    
     return realloc(ptr, size);
 }
 

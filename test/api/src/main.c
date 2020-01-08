@@ -290,6 +290,9 @@ void SystemMisc_invalid_component_id(void);
 void SystemMisc_invalid_entity_id(void);
 void SystemMisc_invalid_or_from_system(void);
 void SystemMisc_invalid_phase(void);
+void SystemMisc_invalid_null_string(void);
+void SystemMisc_invalid_empty_string(void);
+void SystemMisc_invalid_empty_string_w_space(void);
 void SystemMisc_redefine_row_system(void);
 void SystemMisc_system_w_or_prefab(void);
 void SystemMisc_system_w_or_disabled(void);
@@ -1901,7 +1904,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 37,
+        .testcase_count = 40,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -2006,6 +2009,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "invalid_phase",
                 .function = SystemMisc_invalid_phase
+            },
+            {
+                .id = "invalid_null_string",
+                .function = SystemMisc_invalid_null_string
+            },
+            {
+                .id = "invalid_empty_string",
+                .function = SystemMisc_invalid_empty_string
+            },
+            {
+                .id = "invalid_empty_string_w_space",
+                .function = SystemMisc_invalid_empty_string_w_space
             },
             {
                 .id = "redefine_row_system",
