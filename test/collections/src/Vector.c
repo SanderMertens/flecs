@@ -314,6 +314,3 @@ void Vector_grow() {
 
     ecs_vector_free(array);
 }
-void Vector_remove_index_w_move() {
-    // Implement testcase
-}

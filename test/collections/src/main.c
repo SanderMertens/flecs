@@ -30,7 +30,6 @@ void Vector_sort_rnd(void);
 void Vector_sort_sorted(void);
 void Vector_sort_empty(void);
 void Vector_size_of_null(void);
-void Vector_remove_index_w_move(void);
 void Vector_set_size_smaller_than_count(void);
 void Vector_pop_elements(void);
 
@@ -74,7 +73,7 @@ void Chunked_memory_null(void);
 static bake_test_suite suites[] = {
     {
         .id = "Vector",
-        .testcase_count = 23,
+        .testcase_count = 22,
         .setup = Vector_setup,
         .testcases = (bake_test_case[]){
             {
@@ -156,10 +155,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "size_of_null",
                 .function = Vector_size_of_null
-            },
-            {
-                .id = "remove_index_w_move",
-                .function = Vector_remove_index_w_move
             },
             {
                 .id = "set_size_smaller_than_count",

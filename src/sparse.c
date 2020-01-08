@@ -128,6 +128,7 @@ void* get_or_set_sparse(
 
     if (dense >= dense_count || dense_array[dense] != index) {
         ecs_assert(index < ecs_vector_count(sparse->sparse), ECS_INVALID_PARAMETER, NULL);
+
         ecs_vector_add(&sparse->dense, int32_t);
 
         dense_array = ecs_vector_first(sparse->dense);
@@ -152,9 +153,7 @@ ecs_sparse_t* _ecs_sparse_new(
     result->chunk_size = CHUNK_ALLOC_SIZE / elem_size;
     result->elem_size = elem_size;
 
-    while (ecs_sparse_size(result) < element_count) {
-        add_chunk(result);
-    }
+    ecs_sparse_set_size(result, element_count);
 
     return result;
 }
@@ -373,14 +372,17 @@ void ecs_sparse_set_size(
     int32_t to_add = elem_count - current;
 
     if (to_add > 0) {
-        ecs_vector_set_size(&sparse->dense, int32_t, elem_count);
         ecs_vector_set_size(&sparse->sparse, sparse_elem_t, elem_count);
         int32_t cur = ecs_vector_count(sparse->chunks) * sparse->chunk_size;
-
+        
         while (cur < elem_count) {
             add_chunk(sparse);
             cur += sparse->chunk_size;
         }
+    }
+
+    if (ecs_vector_size(sparse->dense) < elem_count) {
+        ecs_vector_set_size(&sparse->dense, int32_t, elem_count);
     }
 }
 

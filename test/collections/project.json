@@ -35,7 +35,6 @@
                 "sort_sorted",
                 "sort_empty",
                 "size_of_null",
-                "remove_index_w_move",
                 "set_size_smaller_than_count",
                 "pop_elements"
             ]
