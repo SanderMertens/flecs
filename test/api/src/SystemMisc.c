@@ -353,6 +353,42 @@ void SystemMisc_invalid_or_from_system() {
     ecs_fini(world);
 }
 
+void SystemMisc_invalid_null_string() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    test_expect_abort();
+
+    ecs_new_system(world, "Dummy", EcsOnUpdate, NULL, Dummy);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_invalid_empty_string() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    test_expect_abort();
+
+    ecs_new_system(world, "Dummy", EcsOnUpdate, "", Dummy);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_invalid_empty_string_w_space() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    test_expect_abort();
+
+    ecs_new_system(world, "Dummy", EcsOnUpdate, "  ", Dummy);
+
+    ecs_fini(world);
+}
+
 void SystemMisc_redefine_row_system() {
     ecs_world_t *world = ecs_init();
 
