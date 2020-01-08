@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 typedef struct ecs_table_t ecs_table_t;
-typedef struct ecs_table_column_t ecs_table_column_t;
+typedef struct ecs_column_t ecs_column_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Private datatypes
@@ -72,14 +72,14 @@ typedef struct ecs_table_reader_t {
 
     int32_t table_index;
     ecs_table_t *table;
-    ecs_table_column_t *columns;
+    ecs_column_t *columns;
 
     /* Current index in type */
     size_t type_written;
     ecs_type_t type;
 
     /* Current column */
-    ecs_table_column_t *column;
+    ecs_column_t *column;
     int32_t column_index;
     int32_t total_columns;
 
@@ -125,7 +125,7 @@ typedef struct ecs_table_writer_t {
     ecs_blob_header_kind_t state;
 
     ecs_table_t *table;
-    ecs_table_column_t *column;
+    ecs_column_t *column;
 
     /* Keep state for parsing type */
     int32_t type_count;
@@ -175,10 +175,10 @@ typedef struct ecs_filter_t ecs_type_filter_t;
 ////////////////////////////////////////////////////////////////////////////////
 
 #define ecs_get_singleton(world, type)\
-    (*(type*)_ecs_get_ptr(world, EcsSingleton, T##type))
+    (*(type*)_ecs_get_ptr(world, EcsSingleton, E##type))
 
 #define ecs_get_singleton_ptr(world, type)\
-    (type*)_ecs_get_ptr(world, EcsSingleton, T##type)
+    (type*)_ecs_get_ptr(world, EcsSingleton, E##type)
 
 #ifndef __BAKE_LEGACY__
 #define ecs_set_singleton(world, component, ...)\
@@ -211,7 +211,7 @@ FLECS_EXPORT
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
     const char *id,
-    EcsSystemKind kind,
+    ecs_system_kind_t kind,
     const char *sig,
     ecs_system_action_t action);
 

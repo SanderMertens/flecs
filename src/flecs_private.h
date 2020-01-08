@@ -5,7 +5,15 @@
 
 #include "types.h"
 
-/* -- Entity API -- */
+////////////////////////////////////////////////////////////////////////////////
+//// Entity API
+////////////////////////////////////////////////////////////////////////////////
+
+/* Get entity record */
+ecs_row_t* ecs_get_entity(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity);
 
 /* Merge entity with stage */
 void ecs_merge_entity(
@@ -29,7 +37,7 @@ ecs_type_t ecs_notify(
     ecs_map_t *systems,
     ecs_type_t type_id,
     ecs_table_t *table,
-    ecs_table_column_t *table_columns,
+    ecs_column_t *table_columns,
     int32_t offset,
     int32_t limit);
 
@@ -67,7 +75,10 @@ void ecs_clear_w_filter(
     ecs_world_t *world,
     const ecs_filter_t *filter);
 
-/* -- World API -- */
+
+////////////////////////////////////////////////////////////////////////////////
+//// World API
+////////////////////////////////////////////////////////////////////////////////
 
 /* Get (or create) table from type */
 ecs_table_t* ecs_world_get_table(
@@ -76,7 +87,7 @@ ecs_table_t* ecs_world_get_table(
     ecs_type_t type_id);
 
 /* Notify systems that there is a new table, which triggers matching */
-void ecs_notify_systems_of_table(
+void ecs_notify_queries_of_table(
     ecs_world_t *world,
     ecs_table_t *table);
 
@@ -84,7 +95,7 @@ void ecs_notify_systems_of_table(
 void ecs_world_activate_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsSystemKind kind,
+    ecs_system_kind_t kind,
     bool active);
 
 /* Get current thread-specific stage */
@@ -94,9 +105,12 @@ ecs_stage_t *ecs_get_stage(
 /* Get array for system kind */
 ecs_vector_t** ecs_system_array(
     ecs_world_t *world,
-    EcsSystemKind kind);
+    ecs_system_kind_t kind);
 
-/* -- Stage API -- */
+
+////////////////////////////////////////////////////////////////////////////////
+//// Stage API
+////////////////////////////////////////////////////////////////////////////////
 
 /* Initialize stage data structures */
 void ecs_stage_init(
@@ -113,7 +127,10 @@ void ecs_stage_merge(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-/* -- Type utility API -- */
+
+////////////////////////////////////////////////////////////////////////////////
+//// Type API
+////////////////////////////////////////////////////////////////////////////////
 
 ecs_type_t ecs_type_find_intern(
     ecs_world_t *world,
@@ -175,7 +192,10 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_entity_t component,
     ecs_entity_t previous);
 
-/* -- Table API -- */
+
+////////////////////////////////////////////////////////////////////////////////
+//// Table API
+////////////////////////////////////////////////////////////////////////////////
 
 /* Initialize table */
 void ecs_table_init(
@@ -189,35 +209,35 @@ void ecs_table_eval_columns(
     ecs_table_t *table);
 
 /* Allocate a set of columns for a type */
-ecs_table_column_t *ecs_table_get_columns(
+ecs_column_t *ecs_table_get_columns(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table);
 
-void ecs_table_register_system(
+void ecs_table_register_query(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entity_t system);    
+    ecs_query_t *query);
 
 /* Insert row into table (or stage) */
 int32_t ecs_table_insert(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     ecs_entity_t entity);
 
 /* Insert multiple rows into table (or stage) */
 int32_t ecs_table_grow(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     int32_t count,
     ecs_entity_t first_entity);
 
 /* Dimension array to have n rows (doesn't add entities) */
 int16_t ecs_table_dim(
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     int32_t count);
 
 /* Return number of entities in table */
@@ -237,7 +257,7 @@ void ecs_table_delete(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     int32_t index);
 
 /* Get row from table (or stage) */
@@ -274,7 +294,7 @@ void ecs_table_clear(
 void ecs_table_replace_columns(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_column_t *columns);
+    ecs_column_t *columns);
     
 /* Merge data of one table into another table */
 void ecs_table_merge(
@@ -285,7 +305,7 @@ void ecs_table_merge(
 void ecs_table_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     int32_t row_1,
     int32_t row_2,
     ecs_row_t *row_ptr_1,
@@ -294,11 +314,44 @@ void ecs_table_swap(
 void ecs_table_move_back_and_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     int32_t row,
     int32_t count);
 
-/* -- System API -- */
+
+////////////////////////////////////////////////////////////////////////////////
+//// Query API
+////////////////////////////////////////////////////////////////////////////////
+
+ecs_query_t*  ecs_query_new_w_sig(
+    ecs_world_t *world,
+    ecs_entity_t system, 
+    ecs_sig_t *sig);
+
+void ecs_query_activate_table(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_table_t *table,
+    bool active);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Signature API
+////////////////////////////////////////////////////////////////////////////////
+
+void ecs_sig_init(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_sig_t *sig);
+
+void ecs_sig_deinit(
+    ecs_sig_t *sig);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// System API
+////////////////////////////////////////////////////////////////////////////////
 
 void ecs_system_init_base(
     ecs_world_t *world,
@@ -323,22 +376,22 @@ void ecs_invoke_status_action(
     ecs_system_status_t status);
 
 /* Check if all non-table column constraints are met */
-bool ecs_check_column_constraints(
+bool ecs_sig_check_constraints(
     ecs_world_t *world,
-    EcsSystem *system_data);
+    ecs_sig_t *sig);
 
 /* Create new table system */
 ecs_entity_t ecs_new_col_system(
     ecs_world_t *world,
-    const char *id,
-    EcsSystemKind kind,
-    const char *sig,
+    const char *name,
+    ecs_system_kind_t kind,
+    ecs_sig_t *sig,
     ecs_system_action_t action);
 
 /* Notify column system of a new table, which initiates system-table matching */
-void ecs_col_system_notify_of_table(
+void ecs_query_notify_of_table(
     ecs_world_t *world,
-    ecs_entity_t system,
+    ecs_query_t *query,
     ecs_table_t *table);
 
 /* Notify row system of a new type, which initiates system-type matching */
@@ -366,32 +419,32 @@ ecs_type_t ecs_notify_row_system(
     ecs_entity_t system,
     ecs_type_t type,
     ecs_table_t *table,
-    ecs_table_column_t *table_columns,
+    ecs_column_t *table_columns,
     int32_t offset,
     int32_t limit);
 
-/* Callback for parse_component_expr that stores result as ecs_system_column_t's */
+/* Callback for parse_component_expr that stores result as ecs_sig_column_t's */
 int ecs_parse_signature_action(
     ecs_world_t *world,
     const char *system_id,
     const char *sig,
     int column,    
-    ecs_system_expr_elem_kind_t elem_kind,
-    ecs_system_expr_oper_kind_t oper_kind,
-    ecs_system_expr_inout_kind_t inout_kind,
+    ecs_sig_from_kind_t from_kind,
+    ecs_sig_oper_kind_t oper_kind,
+    ecs_sig_inout_kind_t inout_kind,
     const char *component_id,
     const char *source_id,
     void *data);
 
 /* Trigger rematch of system */
-void ecs_rematch_system(
+void ecs_rematch_query(
     ecs_world_t *world,
-    ecs_entity_t system);
+    ecs_query_t *query);
 
 /* Re-resolve references of system after table realloc */
-void ecs_revalidate_system_refs(
+void ecs_revalidate_query_refs(
     ecs_world_t *world,
-    ecs_entity_t system);
+    ecs_query_t *query);
 
 void ecs_measure_frame_time(
     ecs_world_t *world,
@@ -401,7 +454,10 @@ void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable);
 
-/* -- Worker API -- */
+
+////////////////////////////////////////////////////////////////////////////////
+//// Worker API
+////////////////////////////////////////////////////////////////////////////////
 
 /* Compute schedule based on current number of entities matching system */
 void ecs_schedule_jobs(
@@ -417,14 +473,23 @@ void ecs_prepare_jobs(
 void ecs_run_jobs(
     ecs_world_t *world);
 
-/* -- Os time api -- */
+
+////////////////////////////////////////////////////////////////////////////////
+//// Time API
+////////////////////////////////////////////////////////////////////////////////
 
 void ecs_os_time_setup(void);
+
 uint64_t ecs_os_time_now(void);
-void ecs_os_time_sleep(int32_t sec, int32_t nanosec);
+
+void ecs_os_time_sleep(
+    int32_t sec, 
+    int32_t nanosec);
 
 
-/* -- Private utilities -- */
+////////////////////////////////////////////////////////////////////////////////
+//// Utilities
+////////////////////////////////////////////////////////////////////////////////
 
 /* Compute hash */
 void ecs_hash(
@@ -446,7 +511,7 @@ uint64_t ecs_from_row(
 //void ecs_print_error_string(const char* signature, const char *system_id, const char *error_description, const char *component_id);
 
 /* Utility that parses system signature */
-int ecs_parse_component_expr(
+int ecs_parse_expr(
     ecs_world_t *world,
     const char *sig,
     ecs_parse_action_t action,

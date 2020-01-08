@@ -118,7 +118,7 @@ void Chunked_remove() {
 
     populate(ch, 3);
     
-    const uint32_t *indices = ecs_sparse_indices(ch);
+    const int32_t *indices = ecs_sparse_indices(ch);
     int32_t i0 = indices[0];
     int32_t i1 = indices[2];
     void *elem = ecs_sparse_get(ch, int, 1);
@@ -142,7 +142,7 @@ void Chunked_remove_first() {
 
     populate(ch, 3);
 
-    const uint32_t *indices = ecs_sparse_indices(ch);
+    const int32_t *indices = ecs_sparse_indices(ch);
     int32_t i0 = indices[1];
     int32_t i1 = indices[2];
     void *elem = ecs_sparse_get(ch, int, 0);
@@ -166,7 +166,7 @@ void Chunked_remove_last() {
 
     populate(ch, 3);
     
-    const uint32_t *indices = ecs_sparse_indices(ch);
+    const int32_t *indices = ecs_sparse_indices(ch);
     int32_t i0 = indices[0];
     int32_t i1 = indices[1];
     void *elem = ecs_sparse_get(ch, int, 2);
@@ -282,7 +282,7 @@ void Chunked_clear_n_chunks() {
 }
 
 void Chunked_memory_null() {
-    uint32_t allocd = 0, used = 0; 
+    int32_t allocd = 0, used = 0; 
     ecs_sparse_memory(NULL, &allocd, &used);
     test_int(allocd, 0);
     test_int(used, 0);

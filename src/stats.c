@@ -357,14 +357,14 @@ void StatsCollectSystemStats_StatusAction(
 
 static
 int32_t system_tables_matched(EcsColSystem *system) {
-    return ecs_vector_count(system->tables) +
-           ecs_vector_count(system->inactive_tables);
+    return ecs_vector_count(system->query->tables) +
+           ecs_vector_count(system->query->inactive_tables);
 }
 
 static
 int32_t system_entities_matched(EcsColSystem *system) {
-    ecs_matched_table_t *tables = ecs_vector_first(system->tables);
-    int32_t i, total = 0, count = ecs_vector_count(system->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(system->query->tables);
+    int32_t i, total = 0, count = ecs_vector_count(system->query->tables);
 
     for (i = 0; i < count; i ++) {
         if (tables[i].table) {
@@ -386,7 +386,7 @@ void StatsCollectSystemStats(ecs_rows_t *rows) {
 
         stats[i].entity = entity;
         stats[i].name = ecs_get_id(rows->world, entity);
-        stats[i].signature = system[i].base.signature;
+        stats[i].signature = system[i].query->sig.expr;
         stats[i].kind = system[i].base.kind;
         stats[i].tables_matched_count = system_tables_matched(&system[i]);
         stats[i].entities_matched_count = system_entities_matched(&system[i]);
@@ -394,7 +394,7 @@ void StatsCollectSystemStats(ecs_rows_t *rows) {
         stats[i].seconds_total = system[i].base.time_spent;
         stats[i].invoke_count_total = system[i].base.invoke_count;
         stats[i].is_enabled = system[i].base.enabled;
-        stats[i].is_active = ecs_vector_count(system[i].tables) != 0;
+        stats[i].is_active = ecs_vector_count(system[i].query->tables) != 0;
         stats[i].is_hidden = ecs_has(rows->world, entity, EcsHidden);
     }
 }
@@ -405,7 +405,7 @@ void collect_system_table_metrics(
     ecs_vector_t *tables,
     ecs_memory_stat_t *stat)
 {
-    int32_t column_count = ecs_vector_count(system->base.columns);
+    int32_t column_count = ecs_vector_count(system->query->sig.columns);
 
     ecs_vector_memory(tables, ecs_matched_table_t, 
         &stat->allocd_bytes, &stat->used_bytes);
@@ -443,14 +443,14 @@ void StatsCollectColSystemMemoryStats(ecs_rows_t *rows) {
         stats[i].jobs_memory = (ecs_memory_stat_t){0};
         stats[i].other_memory_bytes = 0;
         
-        ecs_vector_memory(system->base.columns, ecs_system_column_t, 
+        ecs_vector_memory(system->query->sig.columns, ecs_sig_column_t, 
             &stats[i].columns_memory.allocd_bytes, 
             &stats[i].columns_memory.used_bytes);
 
-        collect_system_table_metrics(system, system->tables, 
+        collect_system_table_metrics(system, system->query->tables, 
             &stats[i].active_tables_memory);
 
-        collect_system_table_metrics(system, system->inactive_tables, 
+        collect_system_table_metrics(system, system->query->inactive_tables, 
             &stats[i].inactive_tables_memory);
 
         ecs_vector_memory(system->jobs, ecs_job_t, 
@@ -474,7 +474,7 @@ void StatsCollectRowSystemMemoryStats(ecs_rows_t *rows) {
         stats[i].columns_memory = (ecs_memory_stat_t){0};
         stats[i].components_memory = (ecs_memory_stat_t){0};
 
-        ecs_vector_memory(system->base.columns, ecs_system_column_t, 
+        ecs_vector_memory(system->sig.columns, ecs_sig_column_t, 
             &stats[i].columns_memory.allocd_bytes, 
             &stats[i].columns_memory.used_bytes);
 
@@ -563,7 +563,7 @@ void collect_table_data_memory(
     EcsTableStats *stats)
 {
     int32_t i, count = ecs_vector_count(table->type);
-    ecs_table_column_t *columns = table->columns;
+    ecs_column_t *columns = table->columns;
 
     stats->entity_memory = (ecs_memory_stat_t){0};
 
@@ -588,15 +588,15 @@ void StatsCollectTableStats(ecs_rows_t *rows) {
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_table_t *table = table_ptr[i].table;
-        ecs_table_column_t *columns = table->columns;
+        ecs_column_t *columns = table->columns;
         ecs_type_t type = table->type;
         stats[i].type = table->type;
         stats[i].columns_count = ecs_vector_count(type);
         stats[i].rows_count = ecs_vector_count(columns[0].data);
-        stats[i].systems_matched_count = ecs_vector_count(table->frame_systems);
+        stats[i].systems_matched_count = ecs_vector_count(table->queries);
         stats[i].other_memory_bytes = 
-            sizeof(ecs_table_column_t) + ecs_vector_count(type) +
-            sizeof(ecs_entity_t) * ecs_vector_count(table->frame_systems);
+            sizeof(ecs_column_t) + ecs_vector_count(type) +
+            sizeof(ecs_entity_t) * ecs_vector_count(table->queries);
 
         collect_table_data_memory(table, &stats[i]);
     }
@@ -651,7 +651,7 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
                     }
 
                     EcsColSystem *ptr = ecs_get_ptr(world, e, EcsColSystem);
-                    if (ecs_vector_count(ptr->tables)) {
+                    if (ecs_vector_count(ptr->query->tables)) {
                         stats[i].active_systems_count ++;
                     }
                 } else

@@ -26,7 +26,7 @@ void notify_new_tables(
 
     for (i = old_table_count; i < new_table_count; i ++) {
         ecs_table_t *t = ecs_sparse_get(tables, ecs_table_t, i);
-        ecs_notify_systems_of_table(world, t);
+        ecs_notify_queries_of_table(world, t);
     }
 }
 
@@ -35,10 +35,10 @@ void clean_data_stage(
     ecs_stage_t *stage)
 {
     ecs_map_iter_t it = ecs_map_iter(stage->data_stage);
-    ecs_table_column_t *columns;
+    ecs_column_t *columns;
     ecs_map_key_t keyval;
 
-    while ((columns = ecs_map_next_ptr(&it, ecs_table_column_t*, &keyval))) {
+    while ((columns = ecs_map_next_ptr(&it, ecs_column_t*, &keyval))) {
         ecs_type_t type = (ecs_type_t)(uintptr_t)keyval;
         int32_t i, count = ecs_vector_count(type);
         
@@ -125,7 +125,7 @@ void ecs_stage_init(
     }
 
     if (!is_main_stage) {
-        stage->data_stage = ecs_map_new(ecs_table_column_t*, 0);
+        stage->data_stage = ecs_map_new(ecs_column_t*, 0);
         stage->remove_merge = ecs_map_new(ecs_type_t, 0);
     }
 

@@ -15,7 +15,7 @@ void ecs_dbg_table(
     *dbg_out = (ecs_dbg_table_t){.table = table};
 
     dbg_out->type = table->type;
-    dbg_out->systems_matched = table->frame_systems;
+    dbg_out->systems_matched = table->queries;
 
     /* Determine components from parent/base entities */
     ecs_entity_t *entities = ecs_vector_first(table->type);
@@ -117,12 +117,12 @@ int ecs_dbg_col_system(
     }
 
     *dbg_out = (ecs_dbg_col_system_t){.system = system};
-    dbg_out->active_table_count = ecs_vector_count(system_data->tables);
-    dbg_out->inactive_table_count = ecs_vector_count(system_data->inactive_tables);
+    dbg_out->active_table_count = ecs_vector_count(system_data->query->tables);
+    dbg_out->inactive_table_count = ecs_vector_count(system_data->query->inactive_tables);
     dbg_out->enabled = system_data->base.enabled;
 
-    ecs_matched_table_t *mt = ecs_vector_first(system_data->tables);
-    int32_t i, count = ecs_vector_count(system_data->tables);
+    ecs_matched_table_t *mt = ecs_vector_first(system_data->query->tables);
+    int32_t i, count = ecs_vector_count(system_data->query->tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = mt[i].table;
@@ -147,7 +147,7 @@ ecs_table_t* ecs_dbg_active_table(
 
     EcsColSystem *system_data = dbg->system_data;
     ecs_matched_table_t *table = ecs_vector_get(
-        system_data->tables, ecs_matched_table_t, index);
+        system_data->query->tables, ecs_matched_table_t, index);
     if (!table) {
         return NULL;
     }
@@ -164,7 +164,7 @@ ecs_table_t* ecs_dbg_inactive_table(
 
     EcsColSystem *system_data = dbg->system_data;
     ecs_matched_table_t *table = ecs_vector_get(
-        system_data->inactive_tables, ecs_matched_table_t, index);
+        system_data->query->inactive_tables, ecs_matched_table_t, index);
     if (!table) {
         return NULL;
     }
@@ -182,15 +182,15 @@ ecs_type_t ecs_dbg_get_column_type(
         return NULL;
     }
     
-    ecs_system_column_t *columns = ecs_vector_first(system_data->base.columns);
-    int32_t count = ecs_vector_count(system_data->base.columns);
+    ecs_sig_column_t *columns = ecs_vector_first(system_data->query->sig.columns);
+    int32_t count = ecs_vector_count(system_data->query->sig.columns);
 
     if (count < column_index) {
         return NULL;
     }
 
-    ecs_system_column_t *column = &columns[column_index - 1];
-    ecs_system_expr_oper_kind_t oper_kind = column->oper_kind;
+    ecs_sig_column_t *column = &columns[column_index - 1];
+    ecs_sig_oper_kind_t oper_kind = column->oper_kind;
     ecs_type_t result;
 
     switch(oper_kind) {

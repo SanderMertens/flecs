@@ -300,11 +300,8 @@ void Container_get_ptr_container() {
     ecs_entity_t child = ecs_new_child(world, parent, 0);
 
     test_assert( ecs_contains(world, parent, child));
-
-    ecs_type_t Tparent = ecs_type_from_entity(world, parent);
-    test_assert(Tparent != 0);
-    test_assert( ecs_has(world, child, parent));
-    test_assert( _ecs_get_ptr(world, child, ecs_type(parent)) == NULL);
+    test_assert( ecs_has_entity(world, child, parent));
+    test_assert( _ecs_get_ptr(world, child, parent) == NULL);
 
     ecs_fini(world);
 }

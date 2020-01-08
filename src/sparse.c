@@ -285,12 +285,20 @@ void* _ecs_sparse_get_or_set_sparse(
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse)
 {
+    if (!sparse) {
+        return 0;
+    }
+
     return ecs_vector_count(sparse->dense);
 }
 
 int32_t ecs_sparse_size(
     const ecs_sparse_t *sparse)
 {
+    if (!sparse) {
+        return 0;
+    }
+        
     return ecs_vector_count(sparse->sparse);
 }
 

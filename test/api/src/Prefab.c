@@ -699,8 +699,8 @@ void Prefab_get_ptr_prefab() {
 
     ecs_entity_t e_1 = ecs_new_instance(world, Prefab, 0);
     test_assert(e_1 != 0);
-    test_assert( ecs_has(world, e_1, Prefab));
-    test_assert( _ecs_get_ptr(world, e_1, ecs_type(Prefab)) == NULL);
+    test_assert( ecs_has_entity(world, e_1, Prefab));
+    test_assert( _ecs_get_ptr(world, e_1, Prefab) == NULL);
 
     ecs_fini(world);
 }

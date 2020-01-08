@@ -102,10 +102,10 @@ ecs_table_t* bootstrap_component_table(
     ecs_stage_t *stage = &world->main_stage;
     ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
     result->type = world->t_component;
-    result->frame_systems = NULL;
+    result->queries = NULL;
     result->flags = 0;
     result->flags |= EcsTableHasBuiltins;
-    result->columns = ecs_os_malloc(sizeof(ecs_table_column_t) * 3);
+    result->columns = ecs_os_malloc(sizeof(ecs_column_t) * 3);
     ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->columns[0].data = ecs_vector_new(ecs_entity_t, 16);
@@ -147,33 +147,42 @@ void bootstrap_component(
 }
 
 static
-void notify_create_table(
-    ecs_world_t *world,
-    ecs_vector_t *systems,
-    ecs_table_t *table)
+void rematch_queries(
+    ecs_world_t *world)
 {
-    ecs_entity_t *buffer = ecs_vector_first(systems);
-    int32_t i, count = ecs_vector_count(systems);
+    ecs_sparse_t *queries = world->queries;
+    int32_t i, count = ecs_sparse_count(queries);
 
     for (i = 0; i < count; i ++) {
-        ecs_col_system_notify_of_table(world, buffer[i], table);
+        ecs_query_t *query = ecs_sparse_get(queries, ecs_query_t, i);
+        ecs_rematch_query(world, query);
     }
 }
 
-void ecs_notify_systems_of_table(
+static
+void revalidate_query_refs(
+    ecs_world_t *world)
+{
+    ecs_sparse_t *queries = world->queries;
+    int32_t i, count = ecs_sparse_count(queries);
+
+    for (i = 0; i < count; i ++) {
+        ecs_query_t *query = ecs_sparse_get(queries, ecs_query_t, i);
+        ecs_revalidate_query_refs(world, query);
+    }  
+}
+
+void ecs_notify_queries_of_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    notify_create_table(world, world->pre_update_systems, table);
-    notify_create_table(world, world->post_update_systems, table);
-    notify_create_table(world, world->on_load_systems, table);
-    notify_create_table(world, world->post_load_systems, table);
-    notify_create_table(world, world->pre_store_systems, table);
-    notify_create_table(world, world->on_store_systems, table);
-    notify_create_table(world, world->on_validate_systems, table);
-    notify_create_table(world, world->on_update_systems, table);
-    notify_create_table(world, world->manual_systems, table);
-    notify_create_table(world, world->inactive_systems, table);
+    ecs_sparse_t *queries = world->queries;
+    int32_t i, count = ecs_sparse_count(queries);
+
+    for (i = 0; i < count; i ++) {
+        ecs_query_t *query = ecs_sparse_get(queries, ecs_query_t, i);
+        ecs_query_notify_of_table(world, query, table);
+    }  
 }
 
 /** Create a new table and register it with the world and systems. A table in
@@ -199,7 +208,7 @@ ecs_table_t* create_table(
     set_table(stage, type, result);
 
     if (stage == &world->main_stage && !world->is_merging) {
-        ecs_notify_systems_of_table(world, result);
+        ecs_notify_queries_of_table(world, result);
     }
 
     return result;
@@ -249,7 +258,7 @@ ecs_table_t* ecs_world_get_table(
 
 ecs_vector_t** ecs_system_array(
     ecs_world_t *world,
-    EcsSystemKind kind)
+    ecs_system_kind_t kind)
 {
     ecs_assert(kind == EcsOnUpdate ||
                kind == EcsOnValidate ||
@@ -297,7 +306,7 @@ ecs_vector_t** ecs_system_array(
 void ecs_world_activate_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsSystemKind kind,
+    ecs_system_kind_t kind,
     bool active)
 {
     ecs_vector_t *src_array, *dst_array;
@@ -384,7 +393,7 @@ void col_systems_deinit_handlers(
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
 
         /* Invoke Deactivated action for active systems */
-        if (ecs_vector_count(ptr->tables)) {
+        if (ecs_vector_count(ptr->query->tables)) {
             ecs_invoke_status_action(world, buffer[i], ptr, EcsSystemDeactivated);
         }
 
@@ -406,26 +415,8 @@ void col_systems_deinit(
     for (i = 0; i < count; i ++) {
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
 
-        ecs_os_free(ptr->base.signature);
-
-        ecs_vector_free(ptr->base.columns);
         ecs_vector_free(ptr->jobs);
-
-        int32_t t;
-        ecs_matched_table_t *tables = ecs_vector_first(ptr->inactive_tables);
-        for (t = 0; t < ecs_vector_count(ptr->inactive_tables); t ++) {
-            ecs_os_free(tables[t].columns);
-            ecs_os_free(tables[t].components);
-        }
-
-        tables = ecs_vector_first(ptr->tables);
-        for (t = 0; t < ecs_vector_count(ptr->tables); t ++) {
-            ecs_os_free(tables[t].columns);
-            ecs_os_free(tables[t].components);
-        }
-
-        ecs_vector_free(ptr->inactive_tables);
-        ecs_vector_free(ptr->tables);
+        ecs_query_free(ptr->query);
     }
 }
 
@@ -439,8 +430,7 @@ void row_systems_deinit(
 
     for (i = 0; i < count; i ++) {
         EcsRowSystem *ptr = ecs_get_ptr(world, buffer[i], EcsRowSystem);
-        ecs_os_free(ptr->base.signature);
-        ecs_vector_free(ptr->base.columns);
+        ecs_sig_deinit(&ptr->sig);
         ecs_vector_free(ptr->components);
     }
 }
@@ -650,10 +640,12 @@ ecs_world_t *ecs_init(void) {
     world->post_update_systems = ecs_vector_new(ecs_entity_t, 0);
     world->post_load_systems = ecs_vector_new(ecs_entity_t, 0);
     world->on_load_systems = ecs_vector_new(ecs_entity_t, 0);
-    world->pre_store_systems = ecs_vector_new( ecs_entity_t, 0);
-    world->on_store_systems = ecs_vector_new( ecs_entity_t, 0);
+    world->pre_store_systems = ecs_vector_new(ecs_entity_t, 0);
+    world->on_store_systems = ecs_vector_new(ecs_entity_t, 0);
     world->inactive_systems = ecs_vector_new(ecs_entity_t, 0);
     world->manual_systems = ecs_vector_new(ecs_entity_t, 0);
+
+    world->queries = ecs_sparse_new(ecs_query_t, 0);
 
     world->add_systems = ecs_vector_new(ecs_entity_t, 0);
     world->remove_systems = ecs_vector_new(ecs_entity_t, 0);
@@ -943,7 +935,7 @@ void _ecs_dim_type(
 static
 ecs_entity_t ecs_lookup_child_in_columns(
     ecs_type_t type,
-    ecs_table_column_t *columns,
+    ecs_column_t *columns,
     ecs_entity_t parent,
     const char *id)
 {
@@ -957,7 +949,7 @@ ecs_entity_t ecs_lookup_child_in_columns(
         return 0;
     }
 
-    ecs_table_column_t *column = &columns[column_index + 1];
+    ecs_column_t *column = &columns[column_index + 1];
     EcsId *buffer = ecs_vector_first(column->data);
     int32_t i, count = ecs_vector_count(column->data);
     
@@ -985,10 +977,10 @@ ecs_entity_t ecs_lookup_child(
 
     if (stage != &world->main_stage) {
         ecs_map_iter_t it = ecs_map_iter(stage->data_stage);
-        ecs_table_column_t *columns;
+        ecs_column_t *columns;
         ecs_map_key_t key;
 
-        while ((columns = ecs_map_next_ptr(&it, ecs_table_column_t*, &key))) {
+        while ((columns = ecs_map_next_ptr(&it, ecs_column_t*, &key))) {
             ecs_type_t key_type = (ecs_type_t)(uintptr_t)key;
             result = ecs_lookup_child_in_columns(key_type, columns, parent, id);
             if (result) {
@@ -1023,72 +1015,6 @@ ecs_entity_t ecs_lookup(
     }
     
     return ecs_lookup_child(world, 0, id);
-}
-
-static
-void rematch_system_array(
-    ecs_world_t *world,
-    ecs_vector_t *systems)
-{
-    int32_t i, count = ecs_vector_count(systems);
-    ecs_entity_t *buffer = ecs_vector_first(systems);
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t system = buffer[i];
-        ecs_rematch_system(world, system);
-
-        if (system != buffer[i]) {
-            /* It is possible that rematching a system caused it to be activated
-             * or deactived. In that case, reevaluate the current element again,
-             * as it will now contain a different system. */
-            i --;
-            count = ecs_vector_count(systems);
-        }
-    }
-}
-
-static
-void rematch_systems(
-    ecs_world_t *world)
-{
-    rematch_system_array(world, world->on_load_systems);
-    rematch_system_array(world, world->post_load_systems);
-    rematch_system_array(world, world->pre_update_systems);
-    rematch_system_array(world, world->on_update_systems);
-    rematch_system_array(world, world->on_validate_systems);
-    rematch_system_array(world, world->post_update_systems);
-    rematch_system_array(world, world->pre_store_systems);
-    rematch_system_array(world, world->on_store_systems);    
-    rematch_system_array(world, world->inactive_systems);   
-}
-
-static
-void revalidate_system_array(
-    ecs_world_t *world,
-    ecs_vector_t *systems)
-{
-    int32_t i, count = ecs_vector_count(systems);
-    ecs_entity_t *buffer = ecs_vector_first(systems);
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t system = buffer[i];
-        ecs_revalidate_system_refs(world, system);
-    }
-}
-
-static
-void revalidate_system_refs(
-    ecs_world_t *world)
-{
-    revalidate_system_array(world, world->on_load_systems);
-    revalidate_system_array(world, world->post_load_systems);
-    revalidate_system_array(world, world->pre_update_systems);
-    revalidate_system_array(world, world->on_update_systems);
-    revalidate_system_array(world, world->on_validate_systems);
-    revalidate_system_array(world, world->post_update_systems);
-    revalidate_system_array(world, world->pre_store_systems);
-    revalidate_system_array(world, world->on_store_systems);    
-    revalidate_system_array(world, world->inactive_systems);   
 }
 
 static
@@ -1235,12 +1161,12 @@ bool ecs_progress(
     bool has_threads = ecs_vector_count(world->worker_threads) != 0;
 
     if (world->should_match) {
-        rematch_systems(world);
+        rematch_queries(world);
         world->should_match = false;
     }
 
     if (world->should_resolve) {
-        revalidate_system_refs(world);
+        revalidate_query_refs(world);
         world->should_resolve = false;
     }    
 
@@ -1483,15 +1409,13 @@ ecs_entity_t _ecs_import(
 
         /* Copy value of module component in handles_out parameter */
         if (handles_size && handles_out) {
-            ecs_type_t t = ecs_type_from_entity(world, e);
-            void *module_ptr = _ecs_get_ptr(world, ECS_SINGLETON, t);
+            void *module_ptr = _ecs_get_ptr(world, ECS_SINGLETON, e);
             memcpy(handles_out, module_ptr, handles_size);
         }
 
     /* If module was already loaded, copy module component into handles_out */
     } else if (handles_size) {
-        ecs_type_t t = ecs_type_from_entity(world, e);
-        void *handles_ptr = _ecs_get_ptr(world, ECS_SINGLETON, t);
+        void *handles_ptr = _ecs_get_ptr(world, ECS_SINGLETON, e);
         memcpy(handles_out, handles_ptr, handles_size);
     }
 
