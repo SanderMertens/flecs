@@ -300,13 +300,13 @@ typedef struct EcsRowSystem {
     ecs_vector_t *components;       /* Components in order of signature */
 } EcsRowSystem;
  
-/** The ecs_row_t struct is a 64-bit value that describes in which table
+/** The ecs_record_t struct is a 64-bit value that describes in which table
  * (identified by a type) is stored, at which index. Entries in the 
- * world::entity_index are of type ecs_row_t. */
-typedef struct ecs_row_t {
+ * world::entity_index are of type ecs_record_t. */
+typedef struct ecs_record_t {
     ecs_type_t type;              /* Identifies a type (and table) in world */
-    int32_t index;                /* Index of the entity in its table */
-} ecs_row_t;
+    int32_t row;                  /* Table row of the entity */
+} ecs_record_t;
 
 #define ECS_TYPE_DB_MAX_CHILD_NODES (256)
 #define ECS_TYPE_DB_BUCKET_COUNT (256)

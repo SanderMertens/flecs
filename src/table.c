@@ -298,10 +298,10 @@ void ecs_table_delete(
         }
 
         /* Last entity in table is now moved to index of removed entity */
-        ecs_row_t row;
-        row.type = table->type;
-        row.index = index + 1;
-        ecs_map_set(stage->entity_index, to_move, &row);
+        ecs_record_t record;
+        record.type = table->type;
+        record.row = index + 1;
+        ecs_map_set(stage->entity_index, to_move, &record);
 
         /* Decrease size of entity column */
         ecs_vector_remove_last(entity_column);
@@ -419,8 +419,8 @@ void ecs_table_swap(
     ecs_column_t *columns,
     int32_t row_1,
     int32_t row_2,
-    ecs_row_t *row_ptr_1,
-    ecs_row_t *row_ptr_2)
+    ecs_record_t *record_ptr_1,
+    ecs_record_t *record_ptr_2)
 {    
     ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -434,19 +434,19 @@ void ecs_table_swap(
     ecs_entity_t e2 = entities[row_2];
     
     /* Get pointers to records in entity index */
-    if (!row_ptr_1) {
-        row_ptr_1 = ecs_map_get(stage->entity_index, ecs_row_t, e1);
+    if (!record_ptr_1) {
+        record_ptr_1 = ecs_map_get(stage->entity_index, ecs_record_t, e1);
     }
 
-    if (!row_ptr_2) {
-        row_ptr_2 = ecs_map_get(stage->entity_index, ecs_row_t, e2);
+    if (!record_ptr_2) {
+        record_ptr_2 = ecs_map_get(stage->entity_index, ecs_record_t, e2);
     }
 
     /* Swap entities */
     entities[row_1] = e2;
     entities[row_2] = e1;
-    row_ptr_1->index = row_2 + 1;
-    row_ptr_2->index = row_1 + 1;
+    record_ptr_1->row = row_2 + 1;
+    record_ptr_2->row = row_1 + 1;
 
     /* Swap columns */
     int32_t i, column_count = ecs_vector_count(table->type);
@@ -484,13 +484,13 @@ void ecs_table_move_back_and_swap(
         ecs_entity_t cur = entities[row + i];
         entities[row + i - 1] = cur;
 
-        ecs_row_t *row_ptr = ecs_map_get(stage->entity_index, ecs_row_t, cur);
-        row_ptr->index = row + i;
+        ecs_record_t *record_ptr = ecs_map_get(stage->entity_index, ecs_record_t, cur);
+        record_ptr->row = row + i;
     }
 
     entities[row + count - 1] = e;
-    ecs_row_t *row_ptr = ecs_map_get(stage->entity_index, ecs_row_t, e);
-    row_ptr->index = row + count;
+    ecs_record_t *record_ptr = ecs_map_get(stage->entity_index, ecs_record_t, e);
+    record_ptr->row = row + count;
 
     /* Move back and swap columns */
     int32_t column_count = ecs_vector_count(table->type);
@@ -546,8 +546,8 @@ void ecs_table_merge(
     ecs_entity_t *old_entities = ecs_vector_first(old_columns[0].data);
     int32_t i;
     for(i = 0; i < old_count; i ++) {
-        ecs_row_t row = {.type = new_type, .index = i + new_count};
-        ecs_map_set(world->main_stage.entity_index, old_entities[i], &row);
+        ecs_record_t record = {.type = new_type, .row = i + new_count};
+        ecs_map_set(world->main_stage.entity_index, old_entities[i], &record);
     }
 
     if (!new_table) {

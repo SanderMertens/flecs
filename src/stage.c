@@ -64,11 +64,11 @@ void merge_commits(
     }
 
     ecs_map_iter_t it = ecs_map_iter(stage->entity_index);
-    ecs_row_t *row;
+    ecs_record_t *record;
     ecs_entity_t entity;
 
-    while ((row = ecs_map_next(&it, ecs_row_t, &entity))) {
-        ecs_merge_entity(world, stage, entity, *row);
+    while ((record = ecs_map_next(&it, ecs_record_t, &entity))) {
+        ecs_merge_entity(world, stage, entity, *record);
     }
     
     clean_data_stage(stage);
@@ -107,7 +107,7 @@ void ecs_stage_init(
 
     memset(stage, 0, sizeof(ecs_stage_t));
 
-    stage->entity_index = ecs_map_new(ecs_row_t, 0);
+    stage->entity_index = ecs_map_new(ecs_record_t, 0);
 
     if (is_main_stage) {
         stage->last_link = &world->main_stage.type_root.link;

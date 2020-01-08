@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Get entity record */
-ecs_row_t* ecs_get_entity(
+ecs_record_t* ecs_get_entity(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity);
@@ -20,7 +20,7 @@ void ecs_merge_entity(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_row_t staged_row);
+    ecs_record_t staged_record);
 
 /* Get prefab from type, even if type was introduced while in progress */
 ecs_entity_t ecs_get_prefab_from_type(
@@ -308,8 +308,8 @@ void ecs_table_swap(
     ecs_column_t *columns,
     int32_t row_1,
     int32_t row_2,
-    ecs_row_t *row_ptr_1,
-    ecs_row_t *row_ptr_2);
+    ecs_record_t *record_ptr_1,
+    ecs_record_t *record_ptr_2);
 
 void ecs_table_move_back_and_swap(
     ecs_stage_t *stage,
@@ -497,14 +497,14 @@ void ecs_hash(
     size_t length,
     uint32_t *result);
 
-/* Convert 64bit value to ecs_row_t type. ecs_row_t is stored as 64bit int in the
+/* Convert 64bit value to ecs_record_t type. ecs_record_t is stored as 64bit int in the
  * entity index */
-ecs_row_t ecs_to_row(
+ecs_record_t ecs_to_row(
     uint64_t value);
 
-/* Get 64bit integer from ecs_row_t */
+/* Get 64bit integer from ecs_record_t */
 uint64_t ecs_from_row(
-    ecs_row_t row);
+    ecs_record_t record);
 
 /* Utility that print a descriptive error string*/
 //void ecs_print_error_string(const char *error_description, const char* signature, const char* system_id, const char* component_id);

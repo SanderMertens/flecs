@@ -17,12 +17,12 @@ ecs_entity_t components_contains(
         if (entity & ECS_CHILDOF) {
             entity &= ECS_ENTITY_MASK;
 
-            ecs_row_t *row = ecs_get_entity(world, &world->main_stage, entity);
-            ecs_assert(row != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_record_t *record = ecs_get_entity(world, &world->main_stage, entity);
+            ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
 
-            if (row->type) {
+            if (record->type) {
                 ecs_entity_t component = ecs_type_contains(
-                    world, row->type, type, match_all, true);
+                    world, record->type, type, match_all, true);
 
                 if (component) {
                     if (entity_out) *entity_out = entity;
@@ -43,9 +43,9 @@ ecs_entity_t ecs_get_entity_for_component(
     ecs_entity_t component)
 {
     if (entity) {
-        ecs_row_t *row = ecs_get_entity(world, &world->main_stage, entity);
-        ecs_assert(row != NULL, ECS_INTERNAL_ERROR, NULL);
-        type = row->type;
+        ecs_record_t *record = ecs_get_entity(world, &world->main_stage, entity);
+        ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
+        type = record->type;
     }
 
     ecs_entity_t *array = ecs_vector_first(type);

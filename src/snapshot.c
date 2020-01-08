@@ -153,11 +153,11 @@ void ecs_snapshot_restore(
             ecs_map_t *entity_index = world->main_stage.entity_index;
             
             for (j = 0; j < row_count; j ++) {
-                ecs_row_t row = {
+                ecs_record_t record = {
                     .type = dst->type,
-                    .index = j + 1
+                    .row = j + 1
                 };
-                ecs_map_set(entity_index, array[j], &row);
+                ecs_map_set(entity_index, array[j], &record);
             } 
         }
     }

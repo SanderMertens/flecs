@@ -206,25 +206,25 @@ void ecs_table_writer_finalize_table(
     int32_t i, count = ecs_vector_count(entity_vector);
 
     for (i = 0; i < count; i ++) {
-        ecs_row_t *row_ptr = ecs_map_get(
-            world->main_stage.entity_index, ecs_row_t, entities[i]);
-        if (row_ptr) {
-            if (row_ptr->type != writer->table->type) {
+        ecs_record_t *record_ptr = ecs_map_get(
+            world->main_stage.entity_index, ecs_record_t, entities[i]);
+        if (record_ptr) {
+            if (record_ptr->type != writer->table->type) {
                 ecs_table_t *table = ecs_world_get_table(
-                    world, &world->main_stage, row_ptr->type);
+                    world, &world->main_stage, record_ptr->type);
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 ecs_table_delete(world, &world->main_stage, 
-                    table, table->columns, row_ptr->index);
+                    table, table->columns, record_ptr->row);
             }
         }
 
-        ecs_row_t row = (ecs_row_t){
-            .index = i + 1,
+        ecs_record_t record = (ecs_record_t){
+            .row = i + 1,
             .type = writer->table->type
         };
 
-        ecs_map_set(world->main_stage.entity_index, entities[i], &row);
+        ecs_map_set(world->main_stage.entity_index, entities[i], &record);
 
         if (entities[i] >= world->last_handle) {
             world->last_handle = entities[i] + 1;
