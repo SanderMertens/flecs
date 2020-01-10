@@ -181,6 +181,11 @@ public:
     bool is_shared(uint32_t column) const {
         return ecs_is_shared(m_rows, column);
     }
+    
+    /* Access param field */
+    void *param() {
+        return m_rows->param;
+    }
 
     /* Is column readonly */
     bool is_readonly(uint32_t column) const {
