@@ -1192,61 +1192,39 @@ public:
         , m_name(name)
         , m_period(0.0)
         , m_on_demand(false)
-        , m_hidden(false) { 
+        , m_hidden(false)
+        , m_finalized(false) { 
             m_world = world.c_ptr();
         }
 
     system& signature(const char *signature) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_signature = signature;
         return *this;
     }
 
     system& kind(system_kind kind) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_kind = static_cast<EcsSystemKind>(kind);
         return *this;
     }
 
     system& period(float period) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_period = period;
         return *this;
     }
 
     system& on_demand() {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_on_demand = true;
         return *this;
     }
 
     system& hidden() {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_hidden = true;
         return *this;
-    }
-
-    void enable() {
-        ecs_enable(m_world, m_id, true);
-    }
-
-    void disable() {
-        ecs_enable(m_world, m_id, false);
-    }
-
-    bool is_enabled() const {
-        return ecs_is_enabled(m_world, m_id);
-    }
-
-    void set_period(float period) const {
-        ecs_set_period(m_world, m_id, period);
-    }
-
-    void set_context(void *ctx) const {
-        ecs_set_system_context(m_world, m_id, ctx);
-    }
-
-    void* get_context() const {
-        return ecs_get_system_context(m_world, m_id);
-    }
-
-    system_runner_fluent run(float delta_time = 0.0f, void *param = nullptr) const {
-        return system_runner_fluent(m_world, m_id, delta_time, param);
     }
 
     /* Action is mandatory and always the last thing that is added in the fluent
@@ -1254,6 +1232,7 @@ public:
      * anything provided by the signature method. */
     template <typename Func>
     system& action(Func func) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         auto ctx = new system_ctx<Func, Components...>(func);
 
         std::stringstream str;
@@ -1316,9 +1295,45 @@ public:
         }
 
         m_id = e;
+        m_finalized = true;
 
         return *this;
     }
+
+    void enable() {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        ecs_enable(m_world, m_id, true);
+    }
+
+    void disable() {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        ecs_enable(m_world, m_id, false);
+    }
+
+    bool is_enabled() const {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        return ecs_is_enabled(m_world, m_id);
+    }
+
+    void set_period(float period) const {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        ecs_set_period(m_world, m_id, period);
+    }
+
+    void set_context(void *ctx) const {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        ecs_set_system_context(m_world, m_id, ctx);
+    }
+
+    void* get_context() const {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        return ecs_get_system_context(m_world, m_id);
+    }
+
+    system_runner_fluent run(float delta_time = 0.0f, void *param = nullptr) const {
+        ecs_assert(m_finalized, ECS_INVALID_PARAMETER, NULL);
+        return system_runner_fluent(m_world, m_id, delta_time, param);
+    }    
 
     ~system() = default;
 private:
@@ -1348,6 +1363,7 @@ private:
     float m_period;
     bool m_on_demand;
     bool m_hidden;
+    bool m_finalized; // After set to true, call no more fluent functions
 };
 
 
