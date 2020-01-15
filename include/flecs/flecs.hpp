@@ -841,7 +841,7 @@ public:
         m_normalized = ecs_type_add(m_world, m_normalized, component_base<T>::s_entity);
         sync_from_me();
         return *this;
-    }    
+    }
 
     type& add_instanceof(const entity& entity) {
         m_type = ecs_type_add(m_world, m_type, entity.id() | ECS_INSTANCEOF);

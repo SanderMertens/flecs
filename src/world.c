@@ -135,15 +135,15 @@ void bootstrap_component(
     int32_t index = ecs_table_insert(world, table, table->columns, entity);
 
     /* Create record in entity index */
-    ecs_record_t record = {.type = world->t_component, .row = index};
+    ecs_record_t record = {.type = world->t_component, .row = index + 1};
     ecs_map_set(stage->entity_index, entity, &record);
 
     /* Set size and id */
     EcsComponent *component_data = ecs_vector_first(table->columns[1].data);
     EcsId *id_data = ecs_vector_first(table->columns[2].data);
     
-    component_data[index - 1].size = size;
-    id_data[index - 1] = id;
+    component_data[index].size = size;
+    id_data[index] = id;
 }
 
 static
@@ -497,8 +497,11 @@ void add_prefab_child_to_builder(
         ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
 
         ecs_entity_t *array = ecs_vector_first(type);
-        (void)array;
         int32_t count = ecs_vector_count(type);
+
+        /* When compiling for release mode, these variables will show up as
+         * unused */
+        (void)array;
         (void)count;
 
         ecs_assert((array[count - 1] & ECS_INSTANCEOF) != 0, 
@@ -696,6 +699,8 @@ ecs_world_t *ecs_init(void) {
     ecs_stage_init(world, &world->main_stage);
     ecs_stage_init(world, &world->temp_stage);
 
+    world->singleton = (ecs_record_t){0, 0};
+
     /* Initialize types for builtin types */
     bootstrap_types(world);
 
@@ -731,6 +736,8 @@ ecs_world_t *ecs_init(void) {
 
     /* Initialize EcsWorld */
     ecs_set(world, EcsWorld, EcsId, {"EcsWorld"});
+
+    ecs_assert(ecs_get_id(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return world;
 }

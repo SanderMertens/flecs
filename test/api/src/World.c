@@ -917,7 +917,7 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 2);
-    test_int(stats.tables_count - init_table_count, 3);
+    test_int(stats.tables_count - init_table_count, 4);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 6);
 

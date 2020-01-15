@@ -215,7 +215,7 @@ void ecs_table_writer_finalize_table(
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 ecs_table_delete(world, &world->main_stage, 
-                    table, table->columns, record_ptr->row);
+                    table, table->columns, record_ptr->row - 1);
             }
         }
 

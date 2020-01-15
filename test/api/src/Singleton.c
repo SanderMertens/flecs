@@ -7,6 +7,8 @@ void Singleton_set() {
 
     ecs_set_singleton(world, Position, {10, 20});
 
+    test_assert( ecs_has(world, ECS_SINGLETON, Position));
+
     Position *p = ecs_get_singleton_ptr(world, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
@@ -23,6 +25,8 @@ void Singleton_set_ptr() {
     Position p_value = {10, 20};
 
     ecs_set_singleton_ptr(world, Position, &p_value);
+
+    test_assert( ecs_has(world, ECS_SINGLETON, Position));
 
     Position *p = ecs_get_singleton_ptr(world, Position);
     test_assert(p != NULL);

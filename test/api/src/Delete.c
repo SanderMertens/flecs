@@ -162,7 +162,7 @@ void CreateEntity(ecs_rows_t *rows) {
 
     ecs_entity_t e = ecs_new_w_count(rows->world, Position, 10);
     test_assert(e != 0);
-    test_assert(ecs_has(rows->world, e, Position));
+    test_assert( ecs_has(rows->world, e, Position));
 }
 
 static

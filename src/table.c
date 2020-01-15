@@ -247,7 +247,7 @@ int32_t ecs_table_insert(
     }
 
     /* Return index of last added entity */
-    return index + 1;
+    return index;
 }
 
 void ecs_table_delete(
@@ -255,7 +255,7 @@ void ecs_table_delete(
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_column_t *columns,
-    int32_t sindex)
+    int32_t index)
 {
     if (!stage) {
         stage = &world->main_stage;
@@ -265,15 +265,7 @@ void ecs_table_delete(
     }
 
     ecs_vector_t *entity_column = columns[0].data;
-    int32_t index, count = ecs_vector_count(entity_column);
-
-    if (sindex < 0) {
-        index = -sindex;
-    } else {
-        index = sindex;
-    }
-
-    index --;
+    int32_t count = ecs_vector_count(entity_column);
 
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -292,7 +284,8 @@ void ecs_table_delete(
 
         for (i = 1; i < column_last; i ++) {
             if (columns[i].size) {
-                _ecs_vector_remove_index(columns[i].data, columns[i].size, index);
+                _ecs_vector_remove_index(
+                    columns[i].data, columns[i].size, index);
             }
         }
 
@@ -367,7 +360,7 @@ int32_t ecs_table_grow(
     }
 
     /* Return index of first added entity */
-    return row_count - count + 1;
+    return row_count - count;
 }
 
 int16_t ecs_table_dim(
