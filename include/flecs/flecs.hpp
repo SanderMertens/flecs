@@ -28,8 +28,12 @@ class filter;
 class filter_iterator;
 class world_filter;
 class snapshot_filter;
-class query;
+
+template<typename ... Components>
 class query_iterator;
+
+template<typename ... Components>
+class query;
 
 template <typename T>
 class component_base;
@@ -591,7 +595,7 @@ public:
                 EcsId id{ ecs_os_strdup(name) };
                 m_id = ecs_set_ptr(m_world, 0, EcsId, &id);
             }
-        }  
+        }
 
     entity(const world& world, std::string name) 
         : m_world( world.c_ptr() )
@@ -601,7 +605,7 @@ public:
                 EcsId id{ ecs_os_strdup(name.c_str()) };
                 m_id = ecs_set_ptr(m_world, 0, EcsId, &id);
             }
-        }                
+        }         
 
     entity(const world& world, entity_t id) 
         : m_world( world.c_ptr() )
@@ -1018,21 +1022,56 @@ private:
 //// Persistent queries
 ////////////////////////////////////////////////////////////////////////////////
 
+template<typename ... Components>
 class query final {
 public:
-    explicit query(world& world, const char *expr) {
-        m_query = ecs_query_new(world.c_ptr(), expr);
+    query() : m_query(nullptr) { }
+
+    explicit query(world& world) {
+        std::stringstream str;
+        if (!pack_args_to_string(str)) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
     }
 
-    query_iterator begin() const;
+    explicit query(world& world, const char *expr) {
+        std::stringstream str;
+        if (!pack_args_to_string(str)) {
+            m_query = ecs_query_new(world.c_ptr(), expr);
+        } else {
+            str << "," << expr;
+            m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
+        }
+    }
 
-    query_iterator end() const;
+    query_iterator<Components...> begin() const;
+
+    query_iterator<Components...> end() const;
 
     query_t* c_ptr() const {
         return m_query;
     }
 
 private:
+    bool pack_args_to_string(std::stringstream& str) {
+        std::array<const char*, sizeof...(Components)> ids = {
+            component_base<Components>::s_name...
+        };
+
+        int i = 0;
+        for (auto id : ids) {
+            if (i) {
+                str << ",";
+            }
+            str << id;
+            i ++;
+        }
+
+        return i != 0;
+    }
+
     query_t *m_query;
 };
 
@@ -1381,6 +1420,7 @@ private:
 //// Persistent queries
 ////////////////////////////////////////////////////////////////////////////////
 
+template<typename ... Components>
 class query_iterator
 {
 public:
@@ -1388,7 +1428,7 @@ public:
         : m_has_next(false)
         , m_iter{ } { }
 
-    query_iterator(const query& query) 
+    query_iterator(const query<Components...>& query) 
         : m_iter( ecs_query_iter(query.c_ptr(), 0, 0) )
     {
         m_has_next = ecs_query_next(&m_iter);
@@ -1572,12 +1612,14 @@ inline filter_iterator snapshot::end() {
 //// Query fwd declared functions
 ////////////////////////////////////////////////////////////////////////////////
 
-inline query_iterator query::begin() const {
-    return query_iterator(*this);
+template<typename ... Components>
+inline query_iterator<Components...> query<Components...>::begin() const {
+    return query_iterator<Components...>(*this);
 }
 
-inline query_iterator query::end() const {
-    return query_iterator();
+template<typename ... Components>
+inline query_iterator<Components...> query<Components...>::end() const {
+    return query_iterator<Components...>();
 }
 
 

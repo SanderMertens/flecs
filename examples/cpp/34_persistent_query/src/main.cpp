@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
      *
      * Queries are the mechanism used by systems, and as such both accept the
      * same signature expressions, and have similar performance.  */
-    flecs::query q(world, "Position, Velocity");
+    flecs::query<Position, Velocity> q(world);
 
     /* Create a few entities that match the query */
     flecs::entity(world, "E1")
