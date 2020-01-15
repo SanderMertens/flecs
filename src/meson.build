@@ -1,15 +1,15 @@
 flecs_src += files([
     'chunked.c',
     'column_system.c',
-    'dbg.c'
+    'dbg.c',
     'entity.c',
     'err.c',
-    'filter.c'
+    'filter.c',
     'map.c',
     'misc.c',
     'os_api.c',
     'parser.c',
-    'snapshot.c'
+    'snapshot.c',
     'stage.c',
     'stats.c',
     'system.c',
