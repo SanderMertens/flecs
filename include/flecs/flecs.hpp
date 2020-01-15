@@ -189,6 +189,11 @@ public:
     bool is_shared(int32_t column) const {
         return ecs_is_shared(m_rows, column);
     }
+    
+    /* Access param field */
+    void *param() {
+        return m_rows->param;
+    }
 
     /* Is column readonly */
     bool is_readonly(int32_t column) const {
@@ -913,7 +918,8 @@ public:
             component_base<T>::s_type, 
             component_base<T>::s_name);    
 
-        entity(world, component_base<T>::s_entity);
+        m_id = component_base<T>::s_entity;
+        m_world = world.c_ptr();
     }
 };
 
@@ -1323,27 +1329,39 @@ public:
     system(const world& world, const char *name = nullptr)
         : m_kind(static_cast<ecs_system_kind_t>(OnUpdate))
         , m_name(name) 
+        , m_period(0.0)
         , m_on_demand(false)
-        , m_hidden(false) { 
+        , m_hidden(false)
+        , m_finalized(false) { 
             m_world = world.c_ptr();
         }
 
     system& signature(const char *signature) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_signature = signature;
         return *this;
     }
 
     system& kind(system_kind kind) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_kind = static_cast<ecs_system_kind_t>(kind);
         return *this;
     }
 
+    system& period(float period) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
+        m_period = period;
+        return *this;
+    }
+
     system& on_demand() {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_on_demand = true;
         return *this;
     }
 
     system& hidden() {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_hidden = true;
         return *this;
     }
@@ -1381,6 +1399,7 @@ public:
      * parameters and anything provided by the signature method. */
     template <typename Func>
     system& action(Func func) {
+        ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         auto ctx = new system_ctx<Func, Components...>(func);
 
         std::string signature = build_signature();
@@ -1394,11 +1413,17 @@ public:
 
         ecs_set_system_context(m_world, e, ctx);
 
+        if (m_period) {
+            ecs_set_period(m_world, e, m_period);
+        }
+
         m_id = e;
 
         return *this;
     }
 
+    /* Each is similar to action, but accepts a function that operates on a
+     * single entity */
     template <typename Func>
     system& each(Func func) {
         auto ctx = new simple_system_ctx<Func, Components...>(func);
@@ -1413,6 +1438,10 @@ public:
             simple_system_ctx<Func, Components...>::run);
 
         ecs_set_system_context(m_world, e, ctx);
+
+        if (m_period) {
+            ecs_set_period(m_world, e, m_period);
+        }        
 
         m_id = e;
 
@@ -1500,8 +1529,10 @@ private:
     ecs_system_kind_t m_kind;
     const char *m_name;
     const char *m_signature = nullptr;
+    float m_period;
     bool m_on_demand;
     bool m_hidden;
+    bool m_finalized; // After set to true, call no more fluent functions
 };
 
 

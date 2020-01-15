@@ -23,8 +23,6 @@ void Move(flecs::rows& rows, flecs::column<Position> p, flecs::column<Velocity> 
         p[row].x += v[row].x;
         p[row].y += v[row].y;
 
-        /* Print something to the console so we can see the system is being
-         * invoked */
         std::cout << rows.entity(row).name() << " moved to {.x = "
             << p[row].x << ", .y = "
             << p[row].y << "}" << std::endl;
@@ -36,29 +34,27 @@ void Move(flecs::rows& rows, flecs::column<Position> p, flecs::column<Velocity> 
  * will be used to then transform Position to WorldPosition of the child.
  * If the CASCADE column is not set, the system matched a root. In that case,
  * just assign the Position to the WorldPosition. */
-void Transform(flecs::rows& rows) {
-    flecs::column<const WorldPosition> parent_wp(rows, 1);
-    flecs::column<WorldPosition> wp(rows, 2);
-    flecs::column<Position> p(rows, 3);
+void Transform(flecs::rows& rows, flecs::column<WorldPosition> wp, flecs::column<Position> p) {
+    flecs::column<const WorldPosition> parent_wp(rows, 3);
 
     if (!parent_wp.is_set()) {
         for (auto row : rows) {
             wp[row].x = p[row].x;
             wp[row].y = p[row].y;
 
-            /* Print something to the console so we can see the system is being
-            * invoked */
             std::cout << rows.entity(row).name() << " transformed to {.x = "
                 << wp[row].x << ", .y = "
                 << wp[row].y << "} <<root>>" << std::endl;
         }
     } else {
         for (auto row : rows) {
+            /* Note that we're not using row to access parent_wp. This function
+             * ('Transform') is invoked for every matching archetype, and the 
+             * parent is part of the archetype. That means that all entities 
+             * that are being iterated over have the same, single parent. */
             wp[row].x = parent_wp->x + p[row].x;
             wp[row].y = parent_wp->y + p[row].y;
 
-            /* Print something to the console so we can see the system is being
-            * invoked */
             std::cout << rows.entity(row).name() << " transformed to {.x = "
                 << wp[row].x << ", .y = "
                 << wp[row].y << "} <<child>>" << std::endl;
@@ -82,9 +78,16 @@ int main(int argc, char *argv[]) {
     /* Transform local coordinates to world coordinates. A CASCADE column
      * guarantees that entities are evaluated breadth-first, according to the
      * hierarchy. This system will depth-sort based on parents that have the
-     * WorldPosition component. */
-    flecs::system<>(world)
-        .signature("CASCADE.WorldPosition, WorldPosition, Position")
+     * WorldPosition component. 
+     *
+     * Note that columns that have modifiers (like CASCADE) cannot be provided
+     * as a template parameter, and have to be specified using hte 'signature'
+     * method. This string will be appended to the signature, so that the full
+     * signature for this system will be:
+     *     WorldPosition, Position. CASCADE.WorldPosition. 
+     */
+    flecs::system<WorldPosition, Position>(world)
+        .signature("CASCADE.WorldPosition")
         .action(Transform);
 
     /* Create root of the hierachy which moves around */
