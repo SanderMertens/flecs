@@ -287,7 +287,9 @@ ecs_entity_t ecs_new_system(
         kind == EcsOnAdd || kind == EcsOnRemove || kind == EcsOnSet,
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (!expr || !expr[0]) {
+        expr = "0";
+    }
     
     /* Parse signature */
     ecs_sig_t sig = {0};

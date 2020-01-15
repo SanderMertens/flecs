@@ -9,8 +9,11 @@ void install_test_abort() {
 }
 
 static
+bool dummy_invoked = false;
+
+static
 void Dummy(ecs_rows_t *rows) {
-    // ...
+    dummy_invoked = true;
 }
 
 void SystemMisc_invalid_not_without_id() {
@@ -354,25 +357,25 @@ void SystemMisc_invalid_or_from_system() {
 }
 
 void SystemMisc_invalid_null_string() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
-    test_expect_abort();
-
     ecs_new_system(world, "Dummy", EcsOnUpdate, NULL, Dummy);
+
+    ecs_progress(world, 0);
+
+    test_assert(dummy_invoked == true);
 
     ecs_fini(world);
 }
 
 void SystemMisc_invalid_empty_string() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
-    test_expect_abort();
-
     ecs_new_system(world, "Dummy", EcsOnUpdate, "", Dummy);
+
+    ecs_progress(world, 0);
+
+    test_assert(dummy_invoked == true);    
 
     ecs_fini(world);
 }
