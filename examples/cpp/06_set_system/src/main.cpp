@@ -7,20 +7,16 @@ struct Position {
 };
 
 /* This system will be called when Position is added */
-void AddPosition(flecs::rows& rows, flecs::column<Position> p) {
-    for (auto row : rows) {
-        p[row].x = 10;
-        p[row].y = 20;
-        std::cout << "Position added" << std::endl;
-    }
+void AddPosition(flecs::entity e,  Position& p) {
+    p.x = 10;
+    p.y = 20;
+    std::cout << "Position added" << std::endl;
 }
 
 /* This system will be called when Position is set */
-void SetPosition(flecs::rows& rows, flecs::column<Position> p) {
-    for (auto row : rows) {
-        std::cout << "Position set -> {" 
-                  << p[row].x << ", " << p[row].y << "}" << std::endl;
-    }
+void SetPosition(flecs::entity e,  Position& p) {
+    std::cout << "Position set -> {" 
+              << p.x << ", " << p.y << "}" << std::endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -31,8 +27,8 @@ int main(int argc, char *argv[]) {
     flecs::component<Position>(world, "Position");
 
     /* Register two systems that are executed when Position is added or set */
-    flecs::system<Position>(world).kind(flecs::OnAdd).action(AddPosition);
-    flecs::system<Position>(world).kind(flecs::OnSet).action(SetPosition);
+    flecs::system<Position>(world).kind(flecs::OnAdd).each(AddPosition);
+    flecs::system<Position>(world).kind(flecs::OnSet).each(SetPosition);
 
     flecs::entity e(world);
 
