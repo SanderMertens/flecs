@@ -1211,6 +1211,63 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Utility class to invoke a system each
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Func, typename ... Components>
+class simple_system_ctx {
+    using columns = std::array<void*, sizeof...(Components)>;
+
+public:
+    explicit simple_system_ctx(Func func) : m_func(func) { }
+
+    /* Dummy function when last component has been added */
+    static void populate_columns(ecs_rows_t *rows, int index, columns& columns) { }
+
+    /* Populate columns array recursively */
+    template <typename T, typename... Targs>
+    static void populate_columns(ecs_rows_t *rows, int index, columns& columns, T comp, Targs... comps) {
+        columns[index] = _ecs_column(rows, sizeof(*comp), index + 1);
+        populate_columns(rows, index + 1, columns, comps ...);
+    }
+
+    /* Invoke system */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_rows_t *rows, int index, columns& columns, Targs... comps) {
+        simple_system_ctx *self = (simple_system_ctx*)
+            ecs_get_system_context(rows->world, rows->system);
+
+        Func func = self->m_func;
+
+        flecs::rows rows_wrapper(rows);
+
+        for (auto row : rows_wrapper) {
+            func(rows_wrapper.entity(row), (column<typename std::remove_reference<Components>::type>(
+                (typename std::remove_reference<Components>::type*)comps, rows->count))[row]...);
+        }
+    }
+
+    /** Add components one by one to parameter pack */
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_rows_t *rows, int index, columns& columns, Targs... comps) {
+        call_system(rows, index + 1, columns, comps..., columns[index]);
+    }
+
+    /** Callback provided to flecs */
+    static void run(ecs_rows_t *rows) {
+        columns columns;
+        populate_columns(rows, 0, columns, (typename std::remove_reference<Components>::type*)nullptr...);
+        call_system(rows, 0, columns);
+    }   
+
+private:
+    Func m_func;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Fluent interface to run a system manually
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1319,14 +1376,87 @@ public:
         return system_runner_fluent(m_world, m_id, delta_time, param);
     }
 
-    /* Action is mandatory and always the last thing that is added in the fluent
-     * method chain. Create system signature from both template parameters and
-     * anything provided by the signature method. */
+    /* Action (or each) is mandatory and always the last thing that is added in 
+     * the fluent method chain. Create system signature from both template 
+     * parameters and anything provided by the signature method. */
     template <typename Func>
     system& action(Func func) {
         auto ctx = new system_ctx<Func, Components...>(func);
 
+        std::string signature = build_signature();
+
+        entity_t e = ecs_new_system(
+            m_world, 
+            m_name, 
+            m_kind, 
+            signature.c_str(), 
+            system_ctx<Func, Components...>::run);
+
+        ecs_set_system_context(m_world, e, ctx);
+
+        m_id = e;
+
+        return *this;
+    }
+
+    template <typename Func>
+    system& each(Func func) {
+        auto ctx = new simple_system_ctx<Func, Components...>(func);
+
+        std::string signature = build_signature();
+
+        entity_t e = ecs_new_system(
+            m_world, 
+            m_name, 
+            m_kind, 
+            signature.c_str(), 
+            simple_system_ctx<Func, Components...>::run);
+
+        ecs_set_system_context(m_world, e, ctx);
+
+        m_id = e;
+
+        return *this;
+    }
+
+    ~system() = default;
+private:
+    std::string build_signature() {
+        bool set = false;
+
         std::stringstream str;
+        if (pack_args_to_string(str)) {
+            set = true;
+        }
+
+        if (m_signature) {
+            if (set) {
+                str << ",";
+            }
+            str << m_signature;
+            set = true;
+        }
+
+        if (m_hidden) {
+            if (set) {
+                str << ",";
+            }            
+            str << "SYSTEM.EcsHidden";
+            set = true;
+        }    
+
+        if (m_on_demand) {
+            if (set) {
+                str << ",";
+            }            
+            str << "SYSTEM.EcsOnDemand";
+            set = true;
+        } 
+
+        return str.str();       
+    }
+
+    bool pack_args_to_string(std::stringstream& str) {
         std::array<const char*, sizeof...(Components)> ids = {
             component_base<Components>::s_name...
         };
@@ -1343,51 +1473,10 @@ public:
             str << inout_modifiers[i];
             str << id;
             i ++;
-        }           
+        }  
 
-        if (m_signature) {
-            if (i) {
-                str << ",";
-            }
-
-            str << m_signature;
-            i++;
-        }
-
-        if (m_hidden) {
-            if (i) {
-                str << ",";
-            }            
-            str << "SYSTEM.EcsHidden";
-            i ++;
-        }    
-
-        if (m_on_demand) {
-            if (i) {
-                str << ",";
-            }            
-            str << "SYSTEM.EcsOnDemand";
-            i ++;
-        }         
-
-        std::string signature = str.str();
-
-        entity_t e = ecs_new_system(
-            m_world, 
-            m_name, 
-            m_kind, 
-            signature.c_str(), 
-            system_ctx<Func, Components...>::run);
-
-        ecs_set_system_context(m_world, e, ctx);
-
-        m_id = e;
-
-        return *this;
+        return i != 0;
     }
-
-    ~system() = default;
-private:
 
     /** Utilities to convert type trait to flecs signature syntax */
     template <typename T,
