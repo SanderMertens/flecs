@@ -1048,11 +1048,90 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Utility to convert template argument pack to array of columns
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename ... Components>
+class column_args {
+public:    
+    struct Column {
+        void *ptr;
+        bool is_shared;
+    };
+
+    using Columns = std::array<Column, sizeof...(Components)>;
+
+    column_args(ecs_rows_t* rows) {
+        populate_columns(rows, 0, (typename std::remove_reference<Components>::type*)nullptr...);
+    }
+
+    Columns m_columns;
+
+private:
+    /* Dummy function when last component has been added */
+    void populate_columns(ecs_rows_t *rows, int index) { }
+
+    /* Populate columns array recursively */
+    template <typename T, typename... Targs>
+    void populate_columns(ecs_rows_t *rows, int index, T comp, Targs... comps) {
+        m_columns[index].ptr = _ecs_column(rows, sizeof(*comp), index + 1);
+        m_columns[index].is_shared = ecs_is_shared(rows, index + 1);
+        populate_columns(rows, index + 1, comps ...);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//// Utility class to invoke a system each
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Func, typename ... Components>
+class each_invoker {
+    using Columns = typename column_args<Components ...>::Columns;
+
+public:
+    explicit each_invoker(Func func) : m_func(func) { }
+
+    // Invoke system
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_rows_t *rows, Func func, int index, Columns& columns, Targs... comps) {
+        flecs::rows rows_wrapper(rows);
+
+        // Use auto_column so we can transparently use shared components
+        for (auto row : rows_wrapper) {
+            func(rows_wrapper.entity(row), (auto_column<typename std::remove_reference<Components>::type>(
+                 (typename std::remove_reference<Components>::type*)comps.ptr, rows->count, comps.is_shared))[row]...);
+        }
+    }
+
+    // Add components one by one to parameter pack
+    template <typename... Targs,
+        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
+    static void call_system(ecs_rows_t *rows, Func func, int index, Columns& columns, Targs... comps) {
+        call_system(rows, func, index + 1, columns, comps..., columns[index]);
+    }
+
+    // Callback provided to flecs system
+    static void run(ecs_rows_t *rows) {
+        each_invoker *self = (each_invoker*)
+            ecs_get_system_context(rows->world, rows->system);
+        Func func = self->m_func;        
+        column_args<Components...> columns(rows);
+        call_system(rows, func, 0, columns.m_columns);
+    }   
+
+private:
+    Func m_func;
+};
+
+////////////////////////////////////////////////////////////////////////////////
 //// Persistent queries
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename ... Components>
 class query final {
+    using Columns = typename column_args<Components...>::Columns;
+
 public:
     query() : m_query(nullptr) { }
 
@@ -1078,6 +1157,18 @@ public:
     query_iterator<Components...> begin() const;
 
     query_iterator<Components...> end() const;
+
+    template <typename Func>
+    void each(Func func) {
+        ecs_query_iter_t it = ecs_query_iter(m_query, 0, 0);
+
+        while (ecs_query_next(&it)) {
+            ecs_rows_t *rows = &it.rows;
+            column_args<Components...> columns(rows);
+            each_invoker<Func, Components...> ctx(func);
+            ctx.call_system(rows, func, 0, columns.m_columns);
+        }
+    }
 
     query_t* c_ptr() const {
         return m_query;
@@ -1183,52 +1274,24 @@ private:
     snapshot_t *m_snapshot;
 };
 
-template <typename ... Components>
-class column_args {
-public:    
-    struct Column {
-        void *ptr;
-        bool is_shared;
-    };
-
-    using Columns = std::array<Column, sizeof...(Components)>;
-
-    column_args(ecs_rows_t* rows) {
-        populate_columns(rows, 0, (typename std::remove_reference<Components>::type*)nullptr...);
-    }
-
-    Columns m_columns;
-
-private:
-    /* Dummy function when last component has been added */
-    void populate_columns(ecs_rows_t *rows, int index) { }
-
-    /* Populate columns array recursively */
-    template <typename T, typename... Targs>
-    void populate_columns(ecs_rows_t *rows, int index, T comp, Targs... comps) {
-        m_columns[index].ptr = _ecs_column(rows, sizeof(*comp), index + 1);
-        m_columns[index].is_shared = ecs_is_shared(rows, index + 1);
-        populate_columns(rows, index + 1, comps ...);
-    }
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility class to invoke a system action
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename Func, typename ... Components>
-class system_ctx {
+class action_invoker {
     using Columns = typename column_args<Components ...>::Columns;
 
 public:
-    explicit system_ctx(Func func) 
+    explicit action_invoker(Func func) 
         : m_func(func) { }
 
     /* Invoke system */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
     static void call_system(ecs_rows_t *rows, int index, Columns& columns, Targs... comps) {
-        system_ctx *self = (system_ctx*)
+        action_invoker *self = (action_invoker*)
             ecs_get_system_context(rows->world, rows->system);
 
         Func func = self->m_func;
@@ -1237,53 +1300,6 @@ public:
         
         func(rows_wrapper, (column<typename std::remove_reference<Components>::type>(
             (typename std::remove_reference<Components>::type*)comps.ptr, rows->count, comps.is_shared))...);
-    }
-
-    /** Add components one by one to parameter pack */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_rows_t *rows, int index, Columns& columns, Targs... comps) {
-        call_system(rows, index + 1, columns, comps..., columns[index]);
-    }
-
-    /** Callback provided to flecs */
-    static void run(ecs_rows_t *rows) {
-        column_args<Components...> columns(rows);
-        call_system(rows, 0, columns.m_columns);
-    }   
-
-private:
-    Func m_func;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utility class to invoke a system each
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename Func, typename ... Components>
-class simple_system_ctx {
-    using Columns = typename column_args<Components ...>::Columns;
-
-public:
-    explicit simple_system_ctx(Func func) : m_func(func) { }
-
-    /* Invoke system */
-    template <typename... Targs,
-        typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_rows_t *rows, int index, Columns& columns, Targs... comps) {
-        simple_system_ctx *self = (simple_system_ctx*)
-            ecs_get_system_context(rows->world, rows->system);
-
-        Func func = self->m_func;
-
-        flecs::rows rows_wrapper(rows);
-
-        // Use auto_column so we can transparently use shared components
-        for (auto row : rows_wrapper) {
-            func(rows_wrapper.entity(row), (auto_column<typename std::remove_reference<Components>::type>(
-                 (typename std::remove_reference<Components>::type*)comps.ptr, rows->count, comps.is_shared))[row]...);
-        }
     }
 
     /** Add components one by one to parameter pack */
@@ -1431,7 +1447,7 @@ public:
     template <typename Func>
     system& action(Func func) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        auto ctx = new system_ctx<Func, Components...>(func);
+        auto ctx = new action_invoker<Func, Components...>(func);
 
         std::string signature = build_signature();
 
@@ -1440,7 +1456,7 @@ public:
             m_name, 
             m_kind, 
             signature.c_str(), 
-            system_ctx<Func, Components...>::run);
+            action_invoker<Func, Components...>::run);
 
         ecs_set_system_context(m_world, e, ctx);
 
@@ -1457,7 +1473,7 @@ public:
      * single entity */
     template <typename Func>
     system& each(Func func) {
-        auto ctx = new simple_system_ctx<Func, Components...>(func);
+        auto ctx = new each_invoker<Func, Components...>(func);
 
         std::string signature = build_signature();
 
@@ -1466,7 +1482,7 @@ public:
             m_name, 
             m_kind, 
             signature.c_str(), 
-            simple_system_ctx<Func, Components...>::run);
+            each_invoker<Func, Components...>::run);
 
         ecs_set_system_context(m_world, e, ctx);
 

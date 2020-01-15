@@ -42,7 +42,16 @@ int main(int argc, char *argv[]) {
     flecs::entity(world, "E3")
         .set<Position>({5, 6});
 
-    /* Iterate over entities matching the query */
+    /* Iterate over entities matching the query using each */
+    q.each([](flecs::entity e, Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+
+        std::cout << "Moved " << e.name() << " to {" <<
+            p.x << ", " << p.y << "}" << std::endl;
+    });
+
+    /* Iterate over entities matching the query in a nested for loop */
     for (auto rows : q) {
         flecs::column<Position> p(rows, 1); 
         flecs::column<Velocity> v(rows, 2);
