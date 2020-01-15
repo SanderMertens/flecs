@@ -16,14 +16,20 @@ struct Mass {
     float value;
 };
 
-/* Implement a simple move system */
+/* Implement a move system with support for shared columns */
 void Move(flecs::rows& rows, flecs::column<Position> p, flecs::column<Force> f, flecs::column<Mass> m) {
 
     for (auto row : rows) {
+        /* Explicitly check if the Mass column is shared or not. If the column
+         * is shared, each entity that is currently iterated over shared the
+         * same base, and thus the same Mass value. This means that rather than
+         * accessing m as an array, we should access it as a single value. */
         if (m.is_shared()) {
+            /* Mass is shared, use as single value */
             p[row].x += f[row].x / m->value;
             p[row].y += f[row].y / m->value;
         } else {
+            /* Mass is not shared, use as array */
             p[row].x += f[row].x / m[row].value;
             p[row].y += f[row].y / m[row].value;
         }
@@ -51,15 +57,22 @@ int main(int argc, char *argv[]) {
      * will be either shared or owned. */
     flecs::system<Position, Force, Mass>(world).action(Move);
 
+    /* Demonstrate that a system can also use 'each' to abstract away from the
+     * difference between shared and owned components */
+    flecs::system<Mass>(world).each(
+        [](flecs::entity e, Mass& m) {
+            std::cout << e.name() << ": Mass = " << m.value << std::endl;
+        });
+
     /* Create two base entities */
-    auto HeavyEntity = flecs::entity(world).set<Mass>({100});
-    auto LightEntity = flecs::entity(world).set<Mass>({200});
+    auto LightEntity = flecs::entity(world, "LightEntity").set<Mass>({100});
+    auto HeavyEntity = flecs::entity(world, "HeavyEntity").set<Mass>({200});
 
     /* Create an entity which does not share Mass from a base */
     flecs::entity(world, "MyEntity")
         .set<Position>({0, 0})
         .set<Force>({10, 10})
-        .set<Mass>({2});
+        .set<Mass>({50});
 
     /* Create entities which share the Mass component from a base */
     flecs::entity(world, "MyInstance1")
@@ -70,7 +83,12 @@ int main(int argc, char *argv[]) {
     flecs::entity(world, "MyInstance2")
         .add_instanceof(HeavyEntity)
         .set<Position>({0, 0})
-        .set<Force>({10, 10});        
+        .set<Force>({10, 10}); 
+
+    flecs::entity(world, "MyInstance3")
+        .add_instanceof(HeavyEntity)
+        .set<Position>({0, 0})
+        .set<Force>({10, 10});                
 
     world.set_target_fps(1);
 

@@ -87,7 +87,7 @@ static const entity_t Invalid = EcsInvalid;
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class column final {
+class column {
 public:
     column(T* array, std::size_t count, bool is_shared = false)
         : m_array(array)
@@ -98,6 +98,7 @@ public:
 
     T& operator[](size_t index) {
         ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+        ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER, NULL);
         return m_array[index];
     }
 
@@ -113,10 +114,32 @@ public:
     bool is_shared() const {
         return m_is_shared;
     }
-private:
+
+protected:
     T* m_array;
     size_t m_count;
     bool m_is_shared;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Like flecs::column, but abstracts away from shared vs. owned columns
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+class auto_column final : public column<T> {
+public:
+    auto_column(T* array, std::size_t count, bool is_shared = false)
+        : column<T>(array, count, is_shared) { }
+
+    T& operator[](size_t index) {
+        if (!this->m_is_shared) {
+            ecs_assert(index < this->m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+            return this->m_array[index];
+        } else {
+            return this->m_array[0];
+        }
+    }   
 };
 
 
@@ -1167,25 +1190,31 @@ private:
 
 template <typename Func, typename ... Components>
 class system_ctx {
-    using columns = std::array<void*, sizeof...(Components)>;
+    struct Column {
+        void *ptr;
+        bool is_shared;
+    };
+
+    using Columns = std::array<Column, sizeof...(Components)>;
 
 public:
     explicit system_ctx(Func func) : m_func(func) { }
 
     /* Dummy function when last component has been added */
-    static void populate_columns(ecs_rows_t *rows, int index, columns& columns) { }
+    static void populate_columns(ecs_rows_t *rows, int index, Columns& columns) { }
 
     /* Populate columns array recursively */
     template <typename T, typename... Targs>
-    static void populate_columns(ecs_rows_t *rows, int index, columns& columns, T comp, Targs... comps) {
-        columns[index] = _ecs_column(rows, sizeof(*comp), index + 1);
+    static void populate_columns(ecs_rows_t *rows, int index, Columns& columns, T comp, Targs... comps) {
+        columns[index].ptr = _ecs_column(rows, sizeof(*comp), index + 1);
+        columns[index].is_shared = ecs_is_shared(rows, index + 1);
         populate_columns(rows, index + 1, columns, comps ...);
     }
 
     /* Invoke system */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_rows_t *rows, int index, columns& columns, Targs... comps) {
+    static void call_system(ecs_rows_t *rows, int index, Columns& columns, Targs... comps) {
         system_ctx *self = (system_ctx*)
             ecs_get_system_context(rows->world, rows->system);
 
@@ -1194,19 +1223,19 @@ public:
         flecs::rows rows_wrapper(rows);
         
         func(rows_wrapper, (column<typename std::remove_reference<Components>::type>(
-            (typename std::remove_reference<Components>::type*)comps, rows->count))...);
+            (typename std::remove_reference<Components>::type*)comps.ptr, rows->count, comps.is_shared))...);
     }
 
     /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_rows_t *rows, int index, columns& columns, Targs... comps) {
+    static void call_system(ecs_rows_t *rows, int index, Columns& columns, Targs... comps) {
         call_system(rows, index + 1, columns, comps..., columns[index]);
     }
 
     /** Callback provided to flecs */
     static void run(ecs_rows_t *rows) {
-        columns columns;
+        Columns columns;
         populate_columns(rows, 0, columns, (typename std::remove_reference<Components>::type*)nullptr...);
         call_system(rows, 0, columns);
     }   
@@ -1222,25 +1251,31 @@ private:
 
 template <typename Func, typename ... Components>
 class simple_system_ctx {
-    using columns = std::array<void*, sizeof...(Components)>;
+    struct Column {
+        void *ptr;
+        bool is_shared;
+    };
+
+    using Columns = std::array<Column, sizeof...(Components)>;
 
 public:
     explicit simple_system_ctx(Func func) : m_func(func) { }
 
     /* Dummy function when last component has been added */
-    static void populate_columns(ecs_rows_t *rows, int index, columns& columns) { }
+    static void populate_columns(ecs_rows_t *rows, int index, Columns& columns) { }
 
     /* Populate columns array recursively */
     template <typename T, typename... Targs>
-    static void populate_columns(ecs_rows_t *rows, int index, columns& columns, T comp, Targs... comps) {
-        columns[index] = _ecs_column(rows, sizeof(*comp), index + 1);
+    static void populate_columns(ecs_rows_t *rows, int index, Columns& columns, T comp, Targs... comps) {
+        columns[index].ptr = _ecs_column(rows, sizeof(*comp), index + 1);
+        columns[index].is_shared = ecs_is_shared(rows, index + 1);
         populate_columns(rows, index + 1, columns, comps ...);
     }
 
     /* Invoke system */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_rows_t *rows, int index, columns& columns, Targs... comps) {
+    static void call_system(ecs_rows_t *rows, int index, Columns& columns, Targs... comps) {
         simple_system_ctx *self = (simple_system_ctx*)
             ecs_get_system_context(rows->world, rows->system);
 
@@ -1249,21 +1284,21 @@ public:
         flecs::rows rows_wrapper(rows);
 
         for (auto row : rows_wrapper) {
-            func(rows_wrapper.entity(row), (column<typename std::remove_reference<Components>::type>(
-                (typename std::remove_reference<Components>::type*)comps, rows->count))[row]...);
+            func(rows_wrapper.entity(row), (auto_column<typename std::remove_reference<Components>::type>(
+                 (typename std::remove_reference<Components>::type*)comps.ptr, rows->count, comps.is_shared))[row]...);
         }
     }
 
     /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_rows_t *rows, int index, columns& columns, Targs... comps) {
+    static void call_system(ecs_rows_t *rows, int index, Columns& columns, Targs... comps) {
         call_system(rows, index + 1, columns, comps..., columns[index]);
     }
 
     /** Callback provided to flecs */
     static void run(ecs_rows_t *rows) {
-        columns columns;
+        Columns columns;
         populate_columns(rows, 0, columns, (typename std::remove_reference<Components>::type*)nullptr...);
         call_system(rows, 0, columns);
     }   

@@ -17,16 +17,13 @@ struct Velocity {
 };
 
 /* Implement a simple move system */
-void Move(flecs::rows& rows, flecs::column<Position> p, flecs::column<Velocity> v) {
+void Move(flecs::entity e, Position& p, Velocity& v) {
+    p.x += v.x;
+    p.y += v.y;
 
-    for (auto row : rows) {
-        p[row].x += v[row].x;
-        p[row].y += v[row].y;
-
-        std::cout << rows.entity(row).name() << " moved to {.x = "
-            << p[row].x << ", .y = "
-            << p[row].y << "}" << std::endl;
-    }
+    std::cout << e.name() << " moved to {.x = "
+        << p.x << ", .y = "
+        << p.y << "}" << std::endl;
 }
 
 /* Implement a system that transforms world coordinates hierarchically. If the 
@@ -73,7 +70,7 @@ int main(int argc, char *argv[]) {
     flecs::component<Velocity>(world, "Velocity");
 
     /* Move entities with Position and Velocity */
-    flecs::system<Position, Velocity>(world).action(Move);
+    flecs::system<Position, Velocity>(world).each(Move);
 
     /* Transform local coordinates to world coordinates. A CASCADE column
      * guarantees that entities are evaluated breadth-first, according to the
@@ -84,7 +81,14 @@ int main(int argc, char *argv[]) {
      * as a template parameter, and have to be specified using hte 'signature'
      * method. This string will be appended to the signature, so that the full
      * signature for this system will be:
-     *     WorldPosition, Position. CASCADE.WorldPosition. 
+     *     WorldPosition, Position. CASCADE.WorldPosition.
+     *
+     * Additionally, note that we're using 'action' instead of 'each'. Actions
+     * provide more flexibility and performance, but also are slightly more
+     * complex to implement.
+     *
+     * In this case we need to use 'action', since otherwise we cannot access
+     * the WorldPosition component from the parent.
      */
     flecs::system<WorldPosition, Position>(world)
         .signature("CASCADE.WorldPosition")
