@@ -22,10 +22,8 @@ int main(int argc, char *argv[]) {
 
     flecs::system<Position, Velocity>(world)
         .each([](flecs::entity e, Position& p, Velocity& v) {    
-            for (auto row : rows) {
-                p.x += v.x;
-                p.y += v.y;
-            }
+            p.x += v.x;
+            p.y += v.y;
         });
 
     /* Create system that is invoked once per second */
