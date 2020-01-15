@@ -585,7 +585,23 @@ public:
 
     entity(const world& world, const char *name) 
         : m_world( world.c_ptr() )
-        , m_id( ecs_new_entity(m_world, name, 0) ) { }
+        , m_id( ecs_lookup(m_world, name) ) 
+        { 
+            if (!m_id) {
+                EcsId id{ ecs_os_strdup(name) };
+                m_id = ecs_set_ptr(m_world, 0, EcsId, &id);
+            }
+        }  
+
+    entity(const world& world, std::string name) 
+        : m_world( world.c_ptr() )
+        , m_id( ecs_lookup(m_world, name.c_str()) ) 
+        { 
+            if (!m_id) {
+                EcsId id{ ecs_os_strdup(name.c_str()) };
+                m_id = ecs_set_ptr(m_world, 0, EcsId, &id);
+            }
+        }                
 
     entity(const world& world, entity_t id) 
         : m_world( world.c_ptr() )
