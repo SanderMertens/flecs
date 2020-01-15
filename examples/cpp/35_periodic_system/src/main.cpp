@@ -21,26 +21,19 @@ int main(int argc, char *argv[]) {
     flecs::component<Velocity>(world, "Velocity");
 
     flecs::system<Position, Velocity>(world)
-        .action([](const flecs::rows& rows, 
-            flecs::column<Position> p, 
-            flecs::column<Velocity> v) 
-        {    
+        .each([](flecs::entity e, Position& p, Velocity& v) {    
             for (auto row : rows) {
-                p[row].x += v[row].x;
-                p[row].y += v[row].y;
+                p.x += v.x;
+                p.y += v.y;
             }
         });
 
     /* Create system that is invoked once per second */
     flecs::system<Position>(world)
         .period(1.0)
-        .action([](const flecs::rows& rows, 
-            flecs::column<Position> p) 
-        {    
-            for (auto row : rows) {
-                std::cout << "Position of " << rows.entity(row).name() << " is {" <<
-                    p[row].x << ", " << p[row].y << "}" << std::endl;
-            }
+        .each([](flecs::entity e, Position& p) {    
+            std::cout << "Position of " << e.name() << " is {" <<
+                p.x << ", " << p.y << "}" << std::endl;
         });        
 
     flecs::entity(world, "MyEntity")

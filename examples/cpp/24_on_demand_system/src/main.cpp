@@ -45,12 +45,10 @@ int main(int argc, char *argv[]) {
      * provide a value for it. If there are any OnDemand systems that provide
      * 'Position' as an output, they will be enabled. */
     auto PrintPosition = flecs::system<const Position, Printable>(world)
-        .action([](flecs::rows& rows, flecs::column<const Position> p, flecs::column<Printable> printable) {
-            for (auto row : rows) {
-                std::cout << "Position of " << rows.entity(row).name() 
-                    << " is {" << p[row].x << ", " << p[row].y << "}" 
-                    << std::endl; 
-            }
+        .each([](flecs::entity e, const Position& p, Printable& printable) {
+            std::cout << "Position of " << e.name() 
+                << " is {" << p.x << ", " << p.y << "}" 
+                << std::endl; 
         });
 
     /* Create dummy entity. Entity does not match with PrintPosition because it
