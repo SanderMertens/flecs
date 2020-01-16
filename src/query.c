@@ -834,6 +834,8 @@ ecs_query_iter_t ecs_query_iter(
     int32_t offset,
     int32_t limit)
 {
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+
     return (ecs_query_iter_t){
         .query = query,
         .offset = offset,
@@ -852,6 +854,8 @@ ecs_query_iter_t ecs_query_iter(
 bool ecs_query_next(
     ecs_query_iter_t *iter)
 {
+    ecs_assert(iter != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_query_t *query = iter->query;
     ecs_rows_t *rows = &iter->rows;
     int32_t table_count = ecs_vector_count(query->tables);
