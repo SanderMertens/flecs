@@ -125,29 +125,6 @@ void register_out_columns(
     ecs_assert(out_count != 0, ECS_NO_OUT_COLUMNS, NULL);
 }
 
-static
-bool should_run(
-    EcsColSystem *system_data,
-    float period,
-    float delta_time)
-{
-    float time_passed = system_data->time_passed + delta_time;
-
-    if (time_passed >= period) {
-        time_passed -= period;
-        if (time_passed > period) {
-            time_passed = 0;
-        }
-
-        system_data->time_passed = time_passed;
-    } else {
-        system_data->time_passed = time_passed;
-        return false;
-    }
-
-    return true;
-}
-
 /* -- Private API -- */
 
 void ecs_invoke_status_action(
@@ -394,10 +371,18 @@ ecs_entity_t _ecs_run_w_filter(
     /* If system should run at a fixed time interval, test if system should run
      * this iteration */
     float period = system_data->period;
-    if (period) {
-        if (!should_run(system_data, period, delta_time)) {
-            return 0;
+    float time_passed = system_data->time_passed + delta_time;
+
+    if (time_passed >= period) {
+        float t = time_passed - period;
+        if (t > period) {
+            t = 0;
         }
+
+        system_data->time_passed = t;
+    } else {
+        system_data->time_passed = time_passed;
+        return 0;
     }
 
     /* If system profiling is enabled, record the time spent in the system */
@@ -411,7 +396,8 @@ ecs_entity_t _ecs_run_w_filter(
     ecs_query_iter_t qiter = ecs_query_iter(system_data->query, offset, limit);
     qiter.rows.world = world;
     qiter.rows.system = system;
-    qiter.rows.delta_time = delta_time + system_data->time_passed;
+    qiter.rows.delta_time = delta_time;
+    qiter.rows.delta_system_time = time_passed;
     qiter.rows.world_time = world->world_time_total;
     qiter.rows.frame_offset = offset;
     
@@ -445,7 +431,7 @@ ecs_entity_t _ecs_run_w_filter(
 
     if (measure_time) {
         system_data->base.time_spent += ecs_time_measure(&time_start);
-    }
+    }    
 
     return qiter.rows.interrupted_by;
 }

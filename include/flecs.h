@@ -155,6 +155,7 @@ struct ecs_rows_t {
 
     void *param;                 /* Userdata passed to on-demand system */
     float delta_time;            /* Time elapsed since last frame */
+    float delta_system_time;     /* Time elapsed since last system invocation */
     float world_time;            /* Time elapsed since start of simulation */
     int32_t frame_offset;       /* Offset relative to frame */
     int32_t table_offset;       /* Current active table being processed */

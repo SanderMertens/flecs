@@ -1,4 +1,5 @@
 #include <delta_time.h>
+#include <iostream>
 
 /* Component types */
 struct Position {

@@ -208,6 +208,11 @@ public:
         return m_rows->delta_time;
     }
 
+    /* Return time elapsed since last time system was invoked */
+    float delta_system_time() const {
+        return m_rows->delta_system_time;
+    }
+
     /* Is column shared */
     bool is_shared(int32_t column) const {
         return ecs_is_shared(m_rows, column);
