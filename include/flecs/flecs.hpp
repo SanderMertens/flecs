@@ -665,8 +665,10 @@ public:
     flecs::type to_type() const;
 
     template<typename T>
-    T get() const {
-        return *(T*)_ecs_get_ptr(m_world, m_id, component_base<T>::s_entity);
+    T& get() const {
+        T* component_ptr = static_cast<T*>(_ecs_get_ptr(m_world, m_id, component_base<T>::s_entity));
+        ecs_assert(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+        return *component_ptr;
     }
 
     template<typename T>
