@@ -23,8 +23,8 @@
 # include <endian.h>    /* attempt to define endianness */
 #endif
 
-#include <flecs.h>
-#include <flecs/util/dbg.h>
+#include "flecs.h"
+#include "flecs/util/dbg.h"
 
 #define ECS_WORLD_INITIAL_TABLE_COUNT (2)
 #define ECS_WORLD_INITIAL_ENTITY_COUNT (2)
