@@ -725,7 +725,11 @@ public:
     template <typename T>
     bool has_owned() const {
         return has_owned(component_base<T>::s_entity);
-    }    
+    }
+
+    float delta_time() {
+        return ecs_get_delta_time(m_world);
+    }
 
 protected:
     world_t *m_world;

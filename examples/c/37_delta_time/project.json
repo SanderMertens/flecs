@@ -1,5 +1,5 @@
 {
-    "id": "empty_system_signature",
+    "id": "delta_time",
     "type": "application",
     "value": {
         "author": "Jane Doe",
@@ -7,7 +7,6 @@
         "public": false,
         "use": [
             "flecs"
-        ],
-        "language": "c++"
+        ]
     }
 }
