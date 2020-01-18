@@ -345,6 +345,7 @@
             "testcases": [
                 "new_match_1_of_1",
                 "new_match_1_of_2",
+                "new_match_1_singleton",
                 "new_no_match_1",
                 "new_no_match_2_of_1",
                 "new_no_match_2_of_3",

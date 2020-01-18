@@ -4,7 +4,7 @@ void Init(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     
     Velocity *v = NULL;
-    if (rows->column_count >= 2) {
+    if (rows->column_count >= 2 && !ecs_is_shared(rows, 2)) {
         v = ecs_column(rows, Velocity, 2);
     }
 
@@ -76,6 +76,37 @@ void SystemOnAdd_new_match_1_of_2() {
     test_int(ctx.s[0][0], 0);
 
     Position *p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void SystemOnAdd_new_match_1_singleton() {
+    ecs_world_t* world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position, $.Velocity);
+
+    SysTestData ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_add(world, ECS_SINGLETON, Velocity);
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, Init);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+
+    Position* p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 

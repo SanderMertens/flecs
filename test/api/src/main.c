@@ -308,6 +308,7 @@ void SystemMisc_status_deactivate_after_delete(void);
 // Testsuite 'SystemOnAdd'
 void SystemOnAdd_new_match_1_of_1(void);
 void SystemOnAdd_new_match_1_of_2(void);
+void SystemOnAdd_new_match_1_singleton(void);
 void SystemOnAdd_new_no_match_1(void);
 void SystemOnAdd_new_no_match_2_of_1(void);
 void SystemOnAdd_new_no_match_2_of_3(void);
@@ -2070,7 +2071,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 31,
+        .testcase_count = 32,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -2079,6 +2080,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "new_match_1_of_2",
                 .function = SystemOnAdd_new_match_1_of_2
+            },
+            {
+                .id = "new_match_1_singleton",
+                .function = SystemOnAdd_new_match_1_singleton
             },
             {
                 .id = "new_no_match_1",
