@@ -512,12 +512,18 @@ void StatsCollectComponentStats(ecs_rows_t *rows) {
             int32_t c, c_count = ecs_vector_count(table->type);
 
             /* Iterate over table columns until component is found */
+            ecs_data_t *data = ecs_table_get_data(
+                rows->world, &rows->world->main_stage, table);
+            ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_column_t *columns = data->columns;
+            ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
             for (c = 0; c < c_count; c ++) {
                 if (components[c] == entity) {
-                    ecs_vector_t *column = table->columns[c].data;
+                    ecs_vector_t *column = columns[c].data;
                     stats[i].tables_count ++;
                     stats[i].entities_count += ecs_vector_count(column);
-                    _ecs_vector_memory(column, table->columns[c].size, 
+                    _ecs_vector_memory(column, columns[c].size, 
                         &stats[i].memory.allocd_bytes, 
                         &stats[i].memory.used_bytes);
                     break;
@@ -559,11 +565,17 @@ void StatsCollectTableStats_StatusAction(
 
 static
 void collect_table_data_memory(
+    ecs_world_t *world,
     ecs_table_t *table,
     EcsTableStats *stats)
 {
     int32_t i, count = ecs_vector_count(table->type);
-    ecs_column_t *columns = table->columns;
+    ecs_data_t *data = ecs_table_get_data(
+        world, &world->main_stage, table);
+
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_column_t *columns = data->columns;
+    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     stats->entity_memory = (ecs_memory_stat_t){0};
 
@@ -588,7 +600,13 @@ void StatsCollectTableStats(ecs_rows_t *rows) {
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_table_t *table = table_ptr[i].table;
-        ecs_column_t *columns = table->columns;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_data_t *data = ecs_table_get_data(
+            rows->world, &rows->world->main_stage, table);
+        ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_column_t *columns = data->columns;
+        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
         ecs_type_t type = table->type;
         stats[i].type = table->type;
         stats[i].columns_count = ecs_vector_count(type);
@@ -598,7 +616,7 @@ void StatsCollectTableStats(ecs_rows_t *rows) {
             sizeof(ecs_column_t) + ecs_vector_count(type) +
             sizeof(ecs_entity_t) * ecs_vector_count(table->queries);
 
-        collect_table_data_memory(table, &stats[i]);
+        collect_table_data_memory(rows->world, table, &stats[i]);
     }
 }
 

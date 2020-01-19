@@ -134,10 +134,12 @@ ecs_type_t ecs_notify_row_system(
     ecs_entity_t system,
     ecs_type_t type,
     ecs_table_t *table,
-    ecs_column_t *table_columns,
+    ecs_data_t *data,
     int32_t offset,
     int32_t limit)
 {
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_world_t *real_world = world;
     ecs_get_stage(&real_world);
 
@@ -145,6 +147,8 @@ ecs_type_t ecs_notify_row_system(
         real_world, &real_world->main_stage, system, EEcsRowSystem, false, true);
     
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_column_t *table_columns = data->columns;
 
     if (!system_data->base.enabled) {
         return false;

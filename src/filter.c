@@ -33,14 +33,18 @@ ecs_filter_iter_t ecs_snapshot_filter_iter(
 bool ecs_filter_next(
     ecs_filter_iter_t *iter)
 {
+    ecs_world_t *world = iter->rows.world;
     ecs_sparse_t *tables = iter->tables;
     int32_t count = ecs_sparse_count(tables);
     int32_t i;
 
     for (i = iter->index; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+        
+        ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
 
-        if (!table->columns) {
+        if (!table->data) {
             continue;
         }
 
@@ -50,9 +54,9 @@ bool ecs_filter_next(
 
         ecs_rows_t *rows = &iter->rows;
         rows->table = table;
-        rows->table_columns = table->columns;
+        rows->table_columns = data->columns;
         rows->count = ecs_table_count(table);
-        rows->entities = ecs_vector_first(table->columns[0].data);
+        rows->entities = ecs_vector_first(data->entities);
         iter->index = ++i;
         return true;
     }

@@ -856,6 +856,7 @@ bool ecs_query_next(
 
     ecs_query_t *query = iter->query;
     ecs_rows_t *rows = &iter->rows;
+    ecs_world_t *world = rows->world;
     int32_t table_count = ecs_vector_count(query->tables);
     ecs_matched_table_t *tables = ecs_vector_first(query->tables);
 
@@ -869,16 +870,17 @@ bool ecs_query_next(
     for (i = iter->index; i < table_count; i ++) {
         ecs_matched_table_t *table = &tables[i];
         ecs_table_t *world_table = table->table;
-        ecs_column_t *table_data = NULL;
+        ecs_data_t *table_data = NULL;
 
-        if  (world_table) {
-            table_data = world_table->columns;
+        if (world_table) {
+            table_data = ecs_table_get_data(world, &world->main_stage, world_table);
+            ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
-        rows->table_columns = table_data;
+        rows->table_columns = table_data->columns;
 
         if (table_data) {
-            int32_t first = 0, count = ecs_vector_count(table_data[0].data);
+            int32_t first = 0, count = ecs_table_count(world_table);
 
             if (offset_limit) {
                 if (offset) {

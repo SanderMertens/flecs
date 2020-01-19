@@ -137,13 +137,19 @@ typedef struct ecs_sig_column_t {
     ecs_entity_t source;             /* Source entity (used with FromEntity) */
 } ecs_sig_column_t;
 
-/** A table column describes a single column in a table (archetype) */
+/** A component array in a table */
 struct ecs_column_t {
     ecs_vector_t *data;              /* Column data */
     uint16_t size;                   /* Column size (saves component lookups) */
 };
 
-#define EcsTableIsStaged  (1)
+/** Table component data and entity ids */
+typedef struct ecs_data_t {
+    ecs_vector_t *entities;
+    ecs_column_t *columns;
+} ecs_data_t;
+
+#define EcsTableIsStaged (1)
 #define EcsTableIsPrefab (2)
 #define EcsTableHasPrefab (4)
 #define EcsTableHasBuiltins (8)
@@ -153,7 +159,7 @@ struct ecs_column_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
 struct ecs_table_t {
-    ecs_column_t *columns;            /* Columns storing components of array */
+    ecs_data_t *data;                 /* Component data and entity ids */
     ecs_vector_t *queries;            /* Queries matched with table */
     ecs_type_t type;                  /* Identifies table type in type_index */
     int32_t flags;                    /* Flags for testing table properties */
@@ -375,7 +381,7 @@ typedef struct ecs_stage_t {
 typedef struct ecs_entity_info_t {
     ecs_record_t *record;       /* Main stage record in entity index */
     ecs_table_t *table;         /* Table. Not set if entity is empty */
-    ecs_column_t *columns;      /* Stage-specific table columns */
+    ecs_data_t *data;           /* Stage-specific table columns */
     int32_t row;                /* Actual row (stripped from is_watched bit) */
     bool is_watched;            /* Is entity being watched */
 } ecs_entity_info_t;

@@ -72,11 +72,12 @@ void ecs_dbg_table(
             dbg_out->base_entities = ecs_type_add(
                 world, base_table_dbg.base_entities, e & ECS_ENTITY_MASK);                                                       
         }
-    }    
+    }
 
-    if (table->columns) {
-        dbg_out->entities = ecs_vector_first(table->columns[0].data);
-        dbg_out->entities_count = ecs_vector_count(table->columns[0].data);
+    ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+    if (data) {
+        dbg_out->entities = ecs_vector_first(data->entities);
+        dbg_out->entities_count = ecs_vector_count(data->entities);
     }
 }
 
@@ -126,9 +127,8 @@ int ecs_dbg_col_system(
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = mt[i].table;
-        if (table && table->columns) {
-            dbg_out->entities_matched_count += ecs_vector_count(
-                table->columns[0].data);
+        if (table) {
+            dbg_out->entities_matched_count += ecs_table_count(table);
         }
     }
 

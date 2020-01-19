@@ -10,10 +10,15 @@ void ecs_component_reader_fetch_component_data(
 
     /* Component table is the first table in the world */
     ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, 0);
-    reader->id_column = ecs_vector_first(table->columns[0].data);
-    reader->data_column = ecs_vector_first(table->columns[1].data);
-    reader->name_column = ecs_vector_first(table->columns[2].data);
-    reader->count = ecs_vector_count(table->columns[0].data);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    reader->id_column = ecs_vector_first(data->entities);
+    reader->data_column = ecs_vector_first(data->columns[0].data);
+    reader->name_column = ecs_vector_first(data->columns[1].data);
+    reader->count = ecs_table_count(table);
 }
 
 static
@@ -140,6 +145,7 @@ void ecs_table_reader_next(
 {
     ecs_table_reader_t *reader = &stream->table;
     ecs_sparse_t *tables = stream->tables;
+    ecs_world_t *world = stream->world;
 
     switch(reader->state) {
     case EcsTableHeader: {
@@ -150,7 +156,13 @@ void ecs_table_reader_next(
         do {
             ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, reader->table_index);
             reader->table = table;
-            reader->columns = table->columns;
+             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+            ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(data->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            reader->columns = data->columns;
             reader->table_index ++;
 
             /* If a table is filtered out by the snapshot, does not have any
@@ -299,7 +311,7 @@ size_t ecs_table_reader(
     }
 
     case EcsTableSize:
-        *(int32_t*)buffer = ecs_vector_count(reader->table->columns[0].data);
+        *(int32_t*)buffer = ecs_table_count(reader->table);
         read = sizeof(int32_t);
         ecs_table_reader_next(stream);
         break;

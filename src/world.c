@@ -105,15 +105,19 @@ ecs_table_t* bootstrap_component_table(
     result->queries = NULL;
     result->flags = 0;
     result->flags |= EcsTableHasBuiltins;
-    result->columns = ecs_os_malloc(sizeof(ecs_column_t) * 3);
-    ecs_assert(result->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
+    result->data = ecs_os_malloc(sizeof(ecs_data_t));
+    ecs_assert(result->data != NULL, ECS_OUT_OF_MEMORY, NULL);
+    result->data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 2);
+    ecs_assert(result->data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    result->columns[0].data = ecs_vector_new(ecs_entity_t, 16);
-    result->columns[0].size = sizeof(ecs_entity_t);
-    result->columns[1].data = ecs_vector_new(EcsComponent, 16);
-    result->columns[1].size = sizeof(EcsComponent);
-    result->columns[2].data = ecs_vector_new(EcsId, 16);
-    result->columns[2].size = sizeof(EcsId);
+    ecs_data_t *data = result->data;
+    ecs_column_t *columns = data->columns;
+
+    data->entities = ecs_vector_new(ecs_entity_t, 16);
+    columns[0].data = ecs_vector_new(EcsComponent, 16);
+    columns[0].size = sizeof(EcsComponent);
+    columns[1].data = ecs_vector_new(EcsId, 16);
+    columns[1].size = sizeof(EcsId);
 
     set_table(stage, world->t_component, result);
 
@@ -131,16 +135,24 @@ void bootstrap_component(
 {
     ecs_stage_t *stage = &world->main_stage;
 
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_column_t *columns = data->columns;
+    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
     /* Insert row into table to store EcsComponent itself */
-    int32_t index = ecs_table_insert(world, table, table->columns, entity);
+    int32_t index = ecs_table_insert(world, table, data, entity);
 
     /* Create record in entity index */
     ecs_record_t record = {.type = world->t_component, .row = index + 1};
     ecs_map_set(stage->entity_index, entity, &record);
 
     /* Set size and id */
-    EcsComponent *component_data = ecs_vector_first(table->columns[1].data);
-    EcsId *id_data = ecs_vector_first(table->columns[2].data);
+    EcsComponent *component_data = ecs_vector_first(columns[0].data);
+    EcsId *id_data = ecs_vector_first(columns[1].data);
     
     component_data[index].size = size;
     id_data[index] = id;
@@ -934,7 +946,7 @@ void _ecs_dim_type(
     if (type) {
         ecs_table_t *table = ecs_world_get_table(world, &world->main_stage, type);
         if (table) {
-            ecs_table_dim(table, NULL, entity_count);
+            ecs_table_set_size(table, NULL, entity_count);
         }
     }
 }
@@ -942,11 +954,16 @@ void _ecs_dim_type(
 static
 ecs_entity_t ecs_lookup_child_in_columns(
     ecs_type_t type,
-    ecs_column_t *columns,
+    ecs_data_t *data,
     ecs_entity_t parent,
     const char *id)
 {
     int16_t column_index;
+
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_column_t *columns = data->columns;
+    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if ((column_index = ecs_type_index_of(type, EEcsId)) == -1) {
         return 0;
@@ -956,7 +973,7 @@ ecs_entity_t ecs_lookup_child_in_columns(
         return 0;
     }
 
-    ecs_column_t *column = &columns[column_index + 1];
+    ecs_column_t *column = &columns[column_index];
     EcsId *buffer = ecs_vector_first(column->data);
     int32_t i, count = ecs_vector_count(column->data);
     
@@ -984,12 +1001,12 @@ ecs_entity_t ecs_lookup_child(
 
     if (stage != &world->main_stage) {
         ecs_map_iter_t it = ecs_map_iter(stage->data_stage);
-        ecs_column_t *columns;
+        ecs_data_t *data;
         ecs_map_key_t key;
 
-        while ((columns = ecs_map_next_ptr(&it, ecs_column_t*, &key))) {
+        while ((data = ecs_map_next_ptr(&it, ecs_data_t*, &key))) {
             ecs_type_t key_type = (ecs_type_t)(uintptr_t)key;
-            result = ecs_lookup_child_in_columns(key_type, columns, parent, id);
+            result = ecs_lookup_child_in_columns(key_type, data, parent, id);
             if (result) {
                 break;
             }
@@ -1002,8 +1019,13 @@ ecs_entity_t ecs_lookup_child(
 
         for (t = 0; t < count; t ++) {
             ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
+            ecs_data_t *data = ecs_table_get_data(
+                world, &world->main_stage, table);
+
+            ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
             result = ecs_lookup_child_in_columns(
-                table->type, table->columns, parent, id);
+                table->type, data, parent, id);
             if (result) {
                 break;
             }

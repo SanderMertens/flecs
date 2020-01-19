@@ -173,7 +173,7 @@ void ecs_schedule_jobs(
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = tables[i].table;
         if (table) {
-            total_rows += ecs_vector_count(table->columns[0].data);
+            total_rows += ecs_table_count(table);
         } else {
             is_task = true;
         }

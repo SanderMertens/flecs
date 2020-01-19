@@ -73,7 +73,7 @@ ecs_type_t ecs_notify(
     ecs_map_t *systems,
     ecs_type_t type_id,
     ecs_table_t *table,
-    ecs_column_t *table_columns,
+    ecs_data_t *data,
     int32_t offset,
     int32_t limit);
 
@@ -245,7 +245,7 @@ void ecs_table_eval_columns(
     ecs_table_t *table);
 
 /* Allocate a set of columns for a type */
-ecs_column_t *ecs_table_get_columns(
+ecs_data_t *ecs_table_get_data(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table);
@@ -259,21 +259,21 @@ void ecs_table_register_query(
 int32_t ecs_table_insert(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_column_t *columns,
+    ecs_data_t *data,
     ecs_entity_t entity);
 
 /* Insert multiple rows into table (or stage) */
 int32_t ecs_table_grow(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_column_t *columns,
+    ecs_data_t *data,
     int32_t count,
     ecs_entity_t first_entity);
 
 /* Dimension array to have n rows (doesn't add entities) */
-int16_t ecs_table_dim(
+int16_t ecs_table_set_size(
     ecs_table_t *table,
-    ecs_column_t *columns,
+    ecs_data_t *data,
     int32_t count);
 
 /* Return number of entities in table */
@@ -293,7 +293,7 @@ void ecs_table_delete(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_column_t *columns,
+    ecs_data_t *data,
     int32_t index);
 
 /* Get row from table (or stage) */
@@ -330,7 +330,7 @@ void ecs_table_clear(
 void ecs_table_replace_columns(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_column_t *columns);
+    ecs_data_t *data);
     
 /* Merge data of one table into another table */
 void ecs_table_merge(
@@ -341,7 +341,7 @@ void ecs_table_merge(
 void ecs_table_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_column_t *columns,
+    ecs_data_t *data,
     int32_t row_1,
     int32_t row_2,
     ecs_record_t *record_ptr_1,
@@ -350,7 +350,7 @@ void ecs_table_swap(
 void ecs_table_move_back_and_swap(
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_column_t *columns,
+    ecs_data_t *data,
     int32_t row,
     int32_t count);
 
@@ -455,7 +455,7 @@ ecs_type_t ecs_notify_row_system(
     ecs_entity_t system,
     ecs_type_t type,
     ecs_table_t *table,
-    ecs_column_t *table_columns,
+    ecs_data_t *data,
     int32_t offset,
     int32_t limit);
 
