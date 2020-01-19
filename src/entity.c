@@ -109,7 +109,7 @@ void* get_component(
 
     for (i = 0; i < count; i ++) {
         if (array[i] == component) {
-            ecs_column_t *component = &columns[i + 1];
+            ecs_column_t *component = &columns[i];
             uint32_t size = component->size; 
             ecs_vector_t *data_vec = component->data;
             if (data_vec) {
@@ -224,7 +224,7 @@ void set_info_from_record(
         return;
     }
 
-    ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+    ecs_data_t *data = ecs_table_get_data(world, table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     info->data = data;
@@ -519,7 +519,8 @@ ecs_type_t instantiate_prefab(
     int32_t limit,
     ecs_type_t modified)
 {
-    ecs_data_t *data = ecs_table_get_data(world, stage, entity_info->table);
+    ecs_data_t *data = ecs_table_get_staged_data(world, stage, entity_info->table);
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_entity_t *entity_ids = ecs_vector_first(data->entities);
 
     EcsPrefabBuilder *builder = get_component(prefab_info, EEcsPrefabBuilder);
@@ -608,8 +609,7 @@ ecs_type_t copy_from_prefab(
     ecs_table_t *prefab_table = prefab_info->table;
     ecs_type_t prefab_type = prefab_table->type;
 
-    ecs_data_t *prefab_data = ecs_table_get_data(
-            world, &world->main_stage, prefab_table);
+    ecs_data_t *prefab_data = ecs_table_get_data(world, prefab_table);
     ecs_assert(prefab_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *prefab_columns = prefab_data->columns;
@@ -866,7 +866,7 @@ int32_t commit(
          * stage. Otherwise, obtain columns from the table directly. */
         old_index = info->row;
 
-        old_data = ecs_table_get_data(world, &world->main_stage, old_table);
+        old_data = ecs_table_get_staged_data(world, stage, old_table);
         ecs_assert(old_data != NULL, ECS_INTERNAL_ERROR, NULL);
         
         old_columns = old_data->columns;
@@ -905,7 +905,7 @@ int32_t commit(
 
         /* This operation will automatically obtain components from the stage if
          * the application is iterating. */
-        new_data = ecs_table_get_data(world, stage, new_table);
+        new_data = ecs_table_get_or_create_data(world, stage, new_table);
         ecs_assert(new_data != NULL, ECS_INTERNAL_ERROR, NULL);
         new_columns = new_data->columns;
         ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, 0);
@@ -1183,8 +1183,7 @@ void ecs_merge_entity(
         bool is_watched;
         int32_t staged_row = convert_record_row(staged_record.row, &is_watched);
 
-        ecs_data_t *new_data = ecs_table_get_data(
-                world, &world->main_stage, new_table);
+        ecs_data_t *new_data = ecs_table_get_data( world, new_table);
 
         copy_row( new_table->type, new_data, new_index,
                 staged_table->type, staged_data, staged_row);
@@ -1555,7 +1554,7 @@ int32_t update_entity_index(
                 if (record_ptr->type != type) {
                     ecs_table_t *old_table = ecs_world_get_table(
                         world, stage, record_ptr->type);
-                    ecs_data_t *old_data = ecs_table_get_data(
+                    ecs_data_t *old_data = ecs_table_get_staged_data(
                         world, stage, old_table);
 
                     /* Insert new row into destination table */
@@ -1672,7 +1671,7 @@ int32_t update_entity_index(
                 if (prev_src_type) {
                     src_table = ecs_world_get_table(
                         world, stage, prev_src_type);
-                    src_data = ecs_table_get_data(
+                    src_data = ecs_table_get_staged_data(
                         world, stage, src_table);
                 }
 
@@ -1716,7 +1715,7 @@ int32_t update_entity_index(
     if (prev_src_type) {
         src_table = ecs_world_get_table(
             world, stage, prev_src_type);
-        src_data = ecs_table_get_data(
+        src_data = ecs_table_get_staged_data(
             world, stage, src_table);
     }
 
@@ -1765,7 +1764,7 @@ ecs_entity_t set_w_data_intern(
         /* Get table, table columns and grow table to accomodate for new
          * entities */
         ecs_table_t *table = ecs_world_get_table(world, stage, type);
-        ecs_data_t *data = ecs_table_get_data(
+        ecs_data_t *data = ecs_table_get_or_create_data(
                 world, stage, table);
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, 0);
         int32_t start_row = 0;
@@ -1982,7 +1981,7 @@ void ecs_delete_w_filter_intern(
         }
 
         /* Remove entities from index */
-        ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+        ecs_data_t *data = ecs_table_get_data(world, table);
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_vector_t *entities = NULL;

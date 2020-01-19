@@ -42,7 +42,7 @@ bool ecs_filter_next(
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+        ecs_data_t *data = ecs_table_get_data(world, table);
 
         if (!table->data) {
             continue;

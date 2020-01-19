@@ -60,7 +60,7 @@ ecs_snapshot_t* snapshot_create(
             continue;
         }
 
-        ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+        ecs_data_t *data = ecs_table_get_data(world, table);
 
         /* Skip tables that are already filtered out */
         if (!data) {
@@ -149,7 +149,7 @@ void ecs_snapshot_restore(
 
         /* If table has no columns, it was filtered out and should not be
          * restored. */
-        ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, src);
+        ecs_data_t *data = ecs_table_get_data(world, src);
         if (!data) {
             filter_used = true;
             continue;
@@ -158,7 +158,7 @@ void ecs_snapshot_restore(
         ecs_table_t *dst = ecs_sparse_get(world->main_stage.tables, ecs_table_t, i);
         ecs_table_replace_columns(world, dst, data);
 
-        ecs_data_t *dst_data = ecs_table_get_data(world, &world->main_stage, dst);
+        ecs_data_t *dst_data = ecs_table_get_data(world, dst);
 
         /* If a filter was used, we need to fix the entity index one by one */
         if (filter_used) {

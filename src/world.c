@@ -137,7 +137,7 @@ void bootstrap_component(
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+    ecs_data_t *data = ecs_table_get_data(world, table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *columns = data->columns;
@@ -1019,8 +1019,7 @@ ecs_entity_t ecs_lookup_child(
 
         for (t = 0; t < count; t ++) {
             ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
-            ecs_data_t *data = ecs_table_get_data(
-                world, &world->main_stage, table);
+            ecs_data_t *data = ecs_table_get_data(world, table);
 
             ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 

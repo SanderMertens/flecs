@@ -512,8 +512,7 @@ void StatsCollectComponentStats(ecs_rows_t *rows) {
             int32_t c, c_count = ecs_vector_count(table->type);
 
             /* Iterate over table columns until component is found */
-            ecs_data_t *data = ecs_table_get_data(
-                rows->world, &rows->world->main_stage, table);
+            ecs_data_t *data = ecs_table_get_data(rows->world, table);
             ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_column_t *columns = data->columns;
             ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -570,8 +569,7 @@ void collect_table_data_memory(
     EcsTableStats *stats)
 {
     int32_t i, count = ecs_vector_count(table->type);
-    ecs_data_t *data = ecs_table_get_data(
-        world, &world->main_stage, table);
+    ecs_data_t *data = ecs_table_get_data(world, table);
 
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_column_t *columns = data->columns;
@@ -601,8 +599,7 @@ void StatsCollectTableStats(ecs_rows_t *rows) {
     for (i = 0; i < rows->count; i ++) {
         ecs_table_t *table = table_ptr[i].table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_data_t *data = ecs_table_get_data(
-            rows->world, &rows->world->main_stage, table);
+        ecs_data_t *data = ecs_table_get_data(rows->world, table);
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_column_t *columns = data->columns;
         ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);

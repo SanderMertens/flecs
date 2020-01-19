@@ -12,7 +12,7 @@ void ecs_component_reader_fetch_component_data(
     ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, 0);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+    ecs_data_t *data = ecs_table_get_data(world, table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     reader->id_column = ecs_vector_first(data->entities);
@@ -158,7 +158,7 @@ void ecs_table_reader_next(
             reader->table = table;
              ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+            ecs_data_t *data = ecs_table_get_data(world, table);
             ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(data->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 

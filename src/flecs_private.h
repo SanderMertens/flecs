@@ -247,8 +247,17 @@ void ecs_table_eval_columns(
 /* Allocate a set of columns for a type */
 ecs_data_t *ecs_table_get_data(
     ecs_world_t *world,
+    ecs_table_t *table);
+
+ecs_data_t *ecs_table_get_staged_data(
+    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table);
+
+ecs_data_t *ecs_table_get_or_create_data(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table); 
 
 void ecs_table_register_query(
     ecs_world_t *world,

@@ -74,7 +74,7 @@ void ecs_dbg_table(
         }
     }
 
-    ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+    ecs_data_t *data = ecs_table_get_data(world, table);
     if (data) {
         dbg_out->entities = ecs_vector_first(data->entities);
         dbg_out->entities_count = ecs_vector_count(data->entities);

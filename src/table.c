@@ -72,18 +72,20 @@ ecs_data_t* new_data(
 
 /* -- Private functions -- */
 
-ecs_data_t* ecs_table_get_data(
+static
+ecs_data_t* ecs_table_get_data_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_table_t *table)
+    ecs_table_t *table,
+    bool create)
 {
     if (!world->in_progress) {
         return table->data;
     } else {
         ecs_type_t type = table->type;
-        ecs_data_t *data;
+        ecs_data_t *data = NULL;
 
-        if (!ecs_map_has(stage->data_stage, (uintptr_t)type, &data)) {
+        if (!ecs_map_has(stage->data_stage, (uintptr_t)type, &data) && create) {
             ecs_type_t type = table->type;
             data = new_data(world, stage, table, type);
             ecs_map_set(stage->data_stage, (uintptr_t)type, data);
@@ -91,6 +93,29 @@ ecs_data_t* ecs_table_get_data(
 
         return data;
     }
+}
+
+ecs_data_t* ecs_table_get_data(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    return ecs_table_get_data_intern(world, &world->main_stage, table, false);
+}
+
+ecs_data_t* ecs_table_get_staged_data(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table)
+{
+    return ecs_table_get_data_intern(world, stage, table, false);
+}
+
+ecs_data_t* ecs_table_get_or_create_data(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table)
+{
+    return ecs_table_get_data_intern(world, stage, table, true);
 }
 
 void ecs_table_init(

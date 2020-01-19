@@ -873,7 +873,7 @@ bool ecs_query_next(
         ecs_data_t *table_data = NULL;
 
         if (world_table) {
-            table_data = ecs_table_get_data(world, &world->main_stage, world_table);
+            table_data = ecs_table_get_data(world, world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 

@@ -196,6 +196,6 @@ void* ecs_table_column(
 {
     ecs_world_t *world = rows->world;
     ecs_table_t *table = rows->table;
-    ecs_data_t *data = ecs_table_get_data(world, &world->main_stage, table);
+    ecs_data_t *data = ecs_table_get_data(world, table);
     return ecs_vector_first(data->columns[column].data);
 }
