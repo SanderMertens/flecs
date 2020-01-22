@@ -9,48 +9,6 @@
 //// Entity API
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Get entity record */
-ecs_record_t* ecs_get_entity(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity);
-
-/* Get entity info */
-bool ecs_get_info(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_entity_info_t *info);
-
-/* Set entity */
-void ecs_set_entity(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_record_t *record);  
-
-/* Set entity in main stage */
-ecs_record_t* ecs_set_entity_in_main(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/* Delete entity from stage */
-void ecs_delete_entity(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity);
-
-/* Grow entity index */
-void ecs_grow_entities(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    uint32_t count);
-
-/* Count entities in stage */
-uint32_t ecs_count_entities(
-    ecs_world_t *world,
-    ecs_stage_t *stage);      
-
 /* Merge entity with stage */
 void ecs_merge_entity(
     ecs_world_t *world,
@@ -111,6 +69,69 @@ void ecs_clear_w_filter(
     ecs_world_t *world,
     const ecs_filter_t *filter);
 
+/* Get entity info */
+bool ecs_get_info(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_info_t *info); 
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Entity Index API
+////////////////////////////////////////////////////////////////////////////////
+
+/* Get entity record */
+ecs_record_t* ecs_ei_get(
+    ecs_stage_t *stage,
+    ecs_entity_t entity);
+
+/* Set entity */
+void ecs_ei_set(
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_record_t *record); 
+
+/* Get or set entity */
+ecs_record_t* ecs_ei_get_or_create(
+    ecs_stage_t *stage,
+    ecs_entity_t entity);
+
+/* Delete entity from stage */
+void ecs_ei_delete(
+    ecs_stage_t *stage,
+    ecs_entity_t entity);
+
+/* Grow entity index */
+void ecs_ei_grow(
+    ecs_stage_t *stage,
+    uint32_t count);
+
+/* Grow entity index to specific size */
+void ecs_ei_set_size(
+    ecs_stage_t *stage,
+    uint32_t size);    
+
+/* Count entities in stage */
+uint32_t ecs_ei_count(
+    ecs_stage_t *stage);      
+
+/* Initialize entity index for stage */
+void ecs_ei_new(
+    ecs_stage_t *stage);
+
+/* Clear all entities from a stage */
+void ecs_ei_clear(
+    ecs_stage_t *stage);
+
+/* Free entity index for stage */
+void ecs_ei_free(
+    ecs_stage_t *stage);
+
+void ecs_ei_memory(
+    ecs_stage_t *stage,
+    int32_t *allocd,
+    int32_t *used);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// World API
@@ -233,6 +254,10 @@ ecs_entity_t ecs_find_entity_in_prefabs(
 //// Table API
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Bootstrap first table to store component data */ 
+ecs_table_t *ecs_bootstrap_component_table(
+    ecs_world_t *world);
+
 /* Initialize table */
 void ecs_table_init(
     ecs_world_t *world,
@@ -265,7 +290,7 @@ void ecs_table_register_query(
     ecs_query_t *query);
 
 /* Insert row into table (or stage) */
-int32_t ecs_table_insert(
+int32_t ecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -317,7 +342,7 @@ bool ecs_table_has_components(
     ecs_vector_t *components);
 
 /* Deinitialize table. This invokes all matching on_remove systems */
-void ecs_table_deinit(
+void ecs_table_deinit_components(
     ecs_world_t *world,
     ecs_table_t *table);
 
@@ -336,7 +361,7 @@ void ecs_table_clear(
     ecs_table_t *table);    
 
 /* Clear data in columns */
-void ecs_table_replace_columns(
+void ecs_table_replace_data(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data);
@@ -348,6 +373,7 @@ void ecs_table_merge(
     ecs_table_t *old_table);
 
 void ecs_table_swap(
+    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -357,6 +383,7 @@ void ecs_table_swap(
     ecs_record_t *record_ptr_2);
 
 void ecs_table_move_back_and_swap(
+    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,

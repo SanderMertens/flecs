@@ -17,7 +17,7 @@ ecs_entity_t components_contains(
         if (entity & ECS_CHILDOF) {
             entity &= ECS_ENTITY_MASK;
 
-            ecs_record_t *record = ecs_get_entity(world, &world->main_stage, entity);
+            ecs_record_t *record = ecs_ei_get(world, &world->stage, entity);
             ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
 
             if (record->type) {
@@ -43,7 +43,7 @@ ecs_entity_t ecs_get_entity_for_component(
     ecs_entity_t component)
 {
     if (entity) {
-        ecs_record_t *record = ecs_get_entity(world, &world->main_stage, entity);
+        ecs_record_t *record = ecs_ei_get(world, &world->stage, entity);
         ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
         type = record->type;
     }
@@ -256,7 +256,7 @@ void add_table(
                 if (component_data->size) {
                     if (e != ECS_INVALID_ENTITY) {
                         ref->cached_ptr = _ecs_get_ptr(world, e, component);
-                        ecs_set_watch(world, &world->main_stage, e);                     
+                        ecs_set_watch(world, &world->stage, e);                     
                     } else {
                         ref->cached_ptr = NULL;
                     }
@@ -513,11 +513,11 @@ void match_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    int32_t i, count = ecs_sparse_count(world->main_stage.tables);
+    int32_t i, count = ecs_sparse_count(world->stage.tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(
-            world->main_stage.tables, ecs_table_t, i);
+            world->stage.tables, ecs_table_t, i);
 
         if (match_table(world, table, query, NULL)) {
             add_table(world, query, table);
@@ -610,7 +610,7 @@ void resolve_cascade_container(
     if (container) {
         references[ref_index].entity = container;
         references[ref_index].cached_ptr = ecs_get_ptr_intern(
-            world, &world->main_stage, container, ref->component, false, true);
+            world, &world->stage, container, ref->component, false, true);
     } else {
         references[ref_index].entity = ECS_INVALID_ENTITY;
         references[ref_index].cached_ptr = NULL;
@@ -695,7 +695,7 @@ void ecs_rematch_query(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    ecs_sparse_t *tables = world->main_stage.tables;
+    ecs_sparse_t *tables = world->stage.tables;
     int32_t i, count = ecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
@@ -769,7 +769,7 @@ void ecs_revalidate_query_refs(
         for (r = 0; r < ref_count; r ++) {
             ecs_reference_t ref = refs[r];
             refs[r].cached_ptr = ecs_get_ptr_intern(
-                world, &world->main_stage, ref.entity, ref.component, false, true);
+                world, &world->stage, ref.entity, ref.component, false, true);
         }            
     }
 }
@@ -860,6 +860,9 @@ bool ecs_query_next(
     int32_t table_count = ecs_vector_count(query->tables);
     ecs_matched_table_t *tables = ecs_vector_first(query->tables);
 
+    ecs_world_t *real_world = world;
+    ecs_get_stage(&real_world);
+
     int32_t offset = iter->offset;
     int32_t limit = iter->limit;
     int32_t remaining = iter->remaining;
@@ -873,11 +876,10 @@ bool ecs_query_next(
         ecs_data_t *table_data = NULL;
 
         if (world_table) {
-            table_data = ecs_table_get_data(world, world_table);
+            table_data = ecs_table_get_data(real_world, world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
+            rows->table_columns = table_data->columns;
         }
-
-        rows->table_columns = table_data->columns;
 
         if (table_data) {
             int32_t first = 0, count = ecs_table_count(world_table);
@@ -913,9 +915,7 @@ bool ecs_query_next(
                 continue;
             }
 
-            ecs_entity_t *entity_buffer = 
-                ecs_vector_first(((ecs_column_t*)rows->table_columns)[0].data);
-            
+            ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities);            
             rows->entities = &entity_buffer[first];
             rows->offset = first;
             rows->count = count;

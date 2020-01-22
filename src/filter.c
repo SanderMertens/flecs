@@ -7,7 +7,7 @@ ecs_filter_iter_t ecs_filter_iter(
 {
     return (ecs_filter_iter_t){
         .filter = filter ? *filter : (ecs_filter_t){0},
-        .tables = world->main_stage.tables,
+        .tables = world->stage.tables,
         .index = 0,
         .rows = {
             .world = world
@@ -33,7 +33,6 @@ ecs_filter_iter_t ecs_snapshot_filter_iter(
 bool ecs_filter_next(
     ecs_filter_iter_t *iter)
 {
-    ecs_world_t *world = iter->rows.world;
     ecs_sparse_t *tables = iter->tables;
     int32_t count = ecs_sparse_count(tables);
     int32_t i;
@@ -42,9 +41,9 @@ bool ecs_filter_next(
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        ecs_data_t *data = ecs_table_get_data(world, table);
+        ecs_data_t *data = ecs_vector_first(table->stage_data);
 
-        if (!table->data) {
+        if (!data) {
             continue;
         }
 

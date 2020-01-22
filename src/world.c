@@ -55,6 +55,7 @@ void set_table(
     ecs_type_t type,
     ecs_table_t *table)
 {
+    ecs_assert(!ecs_map_get(stage->table_index, ecs_table_t*, (uintptr_t)type), ECS_INTERNAL_ERROR, NULL);
     ecs_map_set(stage->table_index, (uintptr_t)type, &table);
 }
 
@@ -63,7 +64,7 @@ static
 void bootstrap_types(
     ecs_world_t *world)
 {
-    ecs_stage_t *stage = &world->main_stage;
+    ecs_stage_t *stage = &world->stage;
     
     TEcsComponent = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsComponent}, 1);
     TEcsTypeComponent = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsTypeComponent}, 1);
@@ -97,30 +98,8 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_assert(world->t_component != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_stage_t *stage = &world->main_stage;
-    ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
-    result->type = world->t_component;
-    result->queries = NULL;
-    result->flags = 0;
-    result->flags |= EcsTableHasBuiltins;
-    result->data = ecs_os_malloc(sizeof(ecs_data_t));
-    ecs_assert(result->data != NULL, ECS_OUT_OF_MEMORY, NULL);
-    result->data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 2);
-    ecs_assert(result->data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
-
-    ecs_data_t *data = result->data;
-    ecs_column_t *columns = data->columns;
-
-    data->entities = ecs_vector_new(ecs_entity_t, 16);
-    columns[0].data = ecs_vector_new(EcsComponent, 16);
-    columns[0].size = sizeof(EcsComponent);
-    columns[1].data = ecs_vector_new(EcsId, 16);
-    columns[1].size = sizeof(EcsId);
-
-    set_table(stage, world->t_component, result);
-
+    ecs_table_t *result = ecs_bootstrap_component_table(world);
+    set_table(&world->stage, world->t_component, result);
     return result;
 }
 
@@ -133,8 +112,6 @@ void bootstrap_component(
     const char *id,
     size_t size)
 {
-    ecs_stage_t *stage = &world->main_stage;
-
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_data_t *data = ecs_table_get_data(world, table);
@@ -144,11 +121,12 @@ void bootstrap_component(
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Insert row into table to store EcsComponent itself */
-    int32_t index = ecs_table_insert(world, table, data, entity);
+    int32_t index = ecs_table_append(world, table, data, entity);
 
     /* Create record in entity index */
-    ecs_record_t record = {.type = world->t_component, .row = index + 1};
-    ecs_map_set(stage->entity_index, entity, &record);
+    ecs_record_t *record = ecs_ei_get_or_create(&world->stage, entity);
+    record->type = world->t_component;
+    record->row = index + 1;
 
     /* Set size and id */
     EcsComponent *component_data = ecs_vector_first(columns[0].data);
@@ -219,7 +197,7 @@ ecs_table_t* create_table(
 
     set_table(stage, type, result);
 
-    if (stage == &world->main_stage && !world->is_merging) {
+    if (stage == &world->stage && !world->is_merging) {
         ecs_notify_queries_of_table(world, result);
     }
 
@@ -252,17 +230,21 @@ ecs_table_t* ecs_world_get_table(
 {
     ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_vector_count(type) < ECS_MAX_ENTITIES_IN_TYPE, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_stage_t *main_stage = &world->main_stage;
+    ecs_stage_t *main_stage = &world->stage;
     ecs_table_t* table = get_table(main_stage, type);
 
-    if (!table && world->in_progress) {
-        assert(stage != NULL);
-        table = get_table(stage, type);
-    }
-
     if (!table) {
-        table = create_table(world, stage, type);
+        if (stage->id > 1) {
+            assert(stage != NULL);
+            table = get_table(stage, type);
+            if (!table) {
+                table = create_table(world, stage, type);
+            }
+        } else {
+            table = create_table(world, &world->stage, type);
+        }
     }
 
     return table;
@@ -382,7 +364,7 @@ ecs_stage_t *ecs_get_stage(
         if (world->in_progress) {
             return &world->temp_stage;
         } else {
-            return &world->main_stage;
+            return &world->stage;
         }
     } else if (world->magic == ECS_THREAD_MAGIC) {
         ecs_thread_t *thread = (ecs_thread_t*)world;
@@ -465,12 +447,12 @@ static
 void deinit_tables(
     ecs_world_t *world)
 {
-    ecs_sparse_t *tables = world->main_stage.tables;
+    ecs_sparse_t *tables = world->stage.tables;
     int32_t i, count = ecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
-        ecs_table_deinit(world, table);
+        ecs_table_deinit_components(world, table);
     }
 }
 
@@ -675,6 +657,7 @@ ecs_world_t *ecs_init(void) {
     world->on_activate_components = ecs_map_new(ecs_on_demand_in_t, 0);
     world->on_enable_components = ecs_map_new(ecs_on_demand_in_t, 0);
 
+    world->stage_count = 2;
     world->worker_stages = NULL;
     world->worker_threads = NULL;
     world->jobs_finished = 0;
@@ -708,10 +691,8 @@ ecs_world_t *ecs_init(void) {
     world->arg_fps = 0;
     world->arg_threads = 0;
 
-    ecs_stage_init(world, &world->main_stage);
+    ecs_stage_init(world, &world->stage);
     ecs_stage_init(world, &world->temp_stage);
-
-    world->singleton = (ecs_record_t){0, 0};
 
     /* Initialize types for builtin types */
     bootstrap_types(world);
@@ -893,7 +874,7 @@ int ecs_fini(
     ecs_map_free(world->type_handles);
     ecs_map_free(world->prefab_parent_index);
 
-    ecs_stage_deinit(world, &world->main_stage);
+    ecs_stage_deinit(world, &world->stage);
     ecs_stage_deinit(world, &world->temp_stage);
 
     on_demand_in_map_deinit(world->on_activate_components);
@@ -916,8 +897,6 @@ int ecs_fini(
     ecs_vector_free(world->remove_systems);
     ecs_vector_free(world->set_systems);
 
-
-
     world->magic = 0;
 
     ecs_os_free(world);
@@ -934,7 +913,7 @@ void ecs_dim(
     int32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    ecs_map_set_size(world->main_stage.entity_index, entity_count);
+    ecs_ei_set_size(&world->stage, entity_count);
 }
 
 void _ecs_dim_type(
@@ -944,9 +923,10 @@ void _ecs_dim_type(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     if (type) {
-        ecs_table_t *table = ecs_world_get_table(world, &world->main_stage, type);
+        ecs_table_t *table = ecs_world_get_table(world, &world->stage, type);
+        ecs_data_t *data = ecs_table_get_data(world, table);
         if (table) {
-            ecs_table_set_size(table, NULL, entity_count);
+            ecs_table_set_size(table, data, entity_count);
         }
     }
 }
@@ -976,6 +956,9 @@ ecs_entity_t ecs_lookup_child_in_columns(
     ecs_column_t *column = &columns[column_index];
     EcsId *buffer = ecs_vector_first(column->data);
     int32_t i, count = ecs_vector_count(column->data);
+
+    ecs_assert(count == ecs_vector_count(data->entities), 
+        ECS_INTERNAL_ERROR, NULL);
     
     for (i = 0; i < count; i ++) {
         if (!buffer[i]) {
@@ -984,7 +967,7 @@ ecs_entity_t ecs_lookup_child_in_columns(
         
         if (!strcmp(buffer[i], id)) {
             return *(ecs_entity_t*)ecs_vector_get(
-                columns[0].data, ecs_entity_t, i);
+                data->entities, ecs_entity_t, i);
         }
     }
 
@@ -999,36 +982,27 @@ ecs_entity_t ecs_lookup_child(
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_t result = 0;
 
-    if (stage != &world->main_stage) {
-        ecs_map_iter_t it = ecs_map_iter(stage->data_stage);
-        ecs_data_t *data;
-        ecs_map_key_t key;
+    ecs_sparse_t *tables = world->stage.tables;
+    int32_t t, count = ecs_sparse_count(tables);
 
-        while ((data = ecs_map_next_ptr(&it, ecs_data_t*, &key))) {
-            ecs_type_t key_type = (ecs_type_t)(uintptr_t)key;
-            result = ecs_lookup_child_in_columns(key_type, data, parent, id);
-            if (result) {
-                break;
-            }
-        }
-    }
-
-    if (!result) {
-        ecs_sparse_t *tables = world->main_stage.tables;
-        int32_t t, count = ecs_sparse_count(tables);
-
-        for (t = 0; t < count; t ++) {
-            ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
-            ecs_data_t *data = ecs_table_get_data(world, table);
-
-            ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
+    for (t = 0; t < count; t ++) {
+        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
+        ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
+        if (data) {
             result = ecs_lookup_child_in_columns(
                 table->type, data, parent, id);
-            if (result) {
-                break;
-            }
         }
+
+        if (!result) {
+            data = ecs_table_get_staged_data(world, &world->stage, table);
+            ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+            result = ecs_lookup_child_in_columns(
+                table->type, data, parent, id);
+        }
+
+        if (result) {
+            break;
+        }        
     }
 
     return result;
@@ -1098,7 +1072,7 @@ void run_multi_thread_stage(
         }
 
         ecs_time_t start;
-        ecs_time_measure(&start);
+        ecs_os_get_time(&start);
 
         ecs_run_jobs(world);
 

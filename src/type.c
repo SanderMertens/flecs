@@ -265,7 +265,7 @@ ecs_type_t register_type(
     bool has_flags = (array[count - 1] & ECS_ENTITY_FLAGS_MASK) != 0;
     
     if (!normalized && has_flags) {
-        result = ecs_type_from_array_normalize(world, stage, array, count);
+        return ecs_type_from_array_normalize(world, stage, array, count);
     } else {
         result = ecs_type_from_array(array, count);
 
@@ -277,7 +277,7 @@ ecs_type_t register_type(
     link->type = result;
 
     if (!stage->last_link) {
-        stage->last_link = world->main_stage.last_link;
+        stage->last_link = world->stage.last_link;
     }
 
     ecs_assert(stage->last_link != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -338,7 +338,8 @@ ecs_type_t find_type_in_vector(
     if (create) {
         ecs_type_link_t **link = ecs_vector_add(vector, ecs_type_link_t*);
         *link = ecs_os_calloc(1, sizeof(ecs_type_link_t));
-        ecs_type_t result = register_type(world, stage, *link, array, count, normalized);
+        ecs_type_t result = register_type(
+            world, stage, *link, array, count, normalized);
         return result;
     }
     
@@ -500,20 +501,20 @@ ecs_type_t ecs_type_find_intern(
     ecs_type_t type = NULL;
 
     if (!stage) {
-        stage = &world->main_stage;
+        stage = &world->stage;
     }
 
-    if (stage == &world->main_stage) {
+    if (stage == &world->stage) {
         type = find_or_create_type(
-            world, stage, &world->main_stage.type_root, array, count, true, false);
+            world, stage, &world->stage.type_root, array, count, true, false);
     } else {
         type = find_or_create_type(
-            world, stage, &world->main_stage.type_root, array, count, false, false);
+            world, stage, &world->stage.type_root, array, count, false, false);
     }
 
-    if (!type && stage != &world->main_stage) {
+    if (!type && stage != &world->stage) {
         type = find_or_create_type(
-            world, stage, &world->main_stage.type_root, array, count, true, false);
+            world, stage, &world->stage.type_root, array, count, true, false);
     }
 
     ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -872,15 +873,15 @@ EcsTypeComponent type_from_vec(
     for (i = 0; i < count; i ++) {
         ecs_entity_t entity = array[i];
 
-        ecs_type_t entity_type = ecs_type_find_intern(world, &world->main_stage, &entity, 1);
+        ecs_type_t entity_type = ecs_type_find_intern(world, &world->stage, &entity, 1);
         ecs_type_t resolved_type = ecs_type_from_entity(world, entity);
         assert(resolved_type != 0);
 
         result.type = ecs_type_merge_intern(
-            world, &world->main_stage, result.type, entity_type, 0);
+            world, &world->stage, result.type, entity_type, 0);
 
         result.normalized = ecs_type_merge_intern(
-            world, &world->main_stage, result.normalized, resolved_type, 0);
+            world, &world->stage, result.normalized, resolved_type, 0);
     }
 
     return result;

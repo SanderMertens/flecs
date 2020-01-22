@@ -180,7 +180,7 @@ void ecs_table_writer_register_table(
 
     ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    writer->table = ecs_world_get_table(world, &world->main_stage, type);
+    writer->table = ecs_world_get_table(world, &world->stage, type);
 
     ecs_data_t *data = ecs_table_get_data(world, writer->table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -190,7 +190,7 @@ void ecs_table_writer_register_table(
     ecs_entity_t *entities = ecs_vector_first(entity_vector);
     int32_t i, count = ecs_vector_count(entity_vector);
     for (i = 0; i < count; i ++) {
-        ecs_map_remove(world->main_stage.entity_index, entities[i]);
+        ecs_ei_delete(&world->stage, entities[i]);
     }
 
     ecs_assert(writer->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -210,18 +210,18 @@ void ecs_table_writer_finalize_table(
     int32_t i, count = ecs_vector_count(entity_vector);
 
     for (i = 0; i < count; i ++) {
-        ecs_record_t *record_ptr = ecs_map_get(
-            world->main_stage.entity_index, ecs_record_t, entities[i]);
+        ecs_record_t *record_ptr = ecs_ei_get(&world->stage, entities[i]);
+
         if (record_ptr) {
             if (record_ptr->type != writer->table->type) {
                 ecs_table_t *table = ecs_world_get_table(
-                    world, &world->main_stage, record_ptr->type);
+                    world, &world->stage, record_ptr->type);
                 
                 ecs_data_t *data = ecs_table_get_data(world, table);
 
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                ecs_table_delete(world, &world->main_stage, 
+                ecs_table_delete(world, &world->stage, 
                     table, data, record_ptr->row - 1);
             }
         }
@@ -231,7 +231,7 @@ void ecs_table_writer_finalize_table(
             .type = writer->table->type
         };
 
-        ecs_map_set(world->main_stage.entity_index, entities[i], &record);
+        ecs_ei_set(&world->stage, entities[i], &record);
 
         if (entities[i] >= world->last_handle) {
             world->last_handle = entities[i] + 1;
@@ -250,15 +250,24 @@ void ecs_table_writer_prepare_column(
     ecs_data_t *data = ecs_table_get_data(world, writer->table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    writer->column = &writer->table->data->columns[writer->column_index];
-    writer->column_size = size;
+    if (writer->column_index) {
+        ecs_column_t *column = &data->columns[writer->column_index - 1];
 
-    if (size) {
-        _ecs_vector_set_count(
-            &writer->column->data, writer->column_size, writer->row_count);
+        if (size) {
+            _ecs_vector_set_count(&column->data, size, writer->row_count);
+        }
+
+        writer->column_vector = column->data;
+        writer->column_size = size;
+    } else {
+        ecs_vector_set_count(
+            &data->entities, ecs_entity_t, writer->row_count);
+
+        writer->column_vector = data->entities;
+        writer->column_size = sizeof(ecs_entity_t);      
     }
 
-    writer->column_data = ecs_vector_first(writer->column->data);
+    writer->column_data = ecs_vector_first(writer->column_vector);
     writer->column_written = 0;
 }
 
@@ -308,7 +317,8 @@ void ecs_table_writer_next(
 
     case EcsTableColumnData:
         writer->column_index ++;
-        if (writer->column_index >= writer->type_count) {
+
+        if (writer->column_index > writer->type_count) {
             ecs_table_writer_finalize_table(stream);
             stream->state = EcsStreamHeader;
             writer->column_written = 0;

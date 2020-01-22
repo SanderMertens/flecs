@@ -652,6 +652,10 @@ public:
         : m_world(nullptr)
         , m_id(0) { }
 
+    static entity nil(world& world) {
+        return entity(world, static_cast<entity_t>(0));
+    }
+
     entity_t id() const {
         return m_id;
     }
@@ -1155,7 +1159,7 @@ public:
         m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
     }
 
-    explicit query(world& world, const char *expr) {
+    explicit query(world& world, const char *expr) const{
         std::stringstream str;
         if (!pack_args_to_string(str)) {
             m_query = ecs_query_new(world.c_ptr(), expr);
@@ -1806,7 +1810,7 @@ inline query_iterator<Components...> query<Components...>::end() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 inline flecs::type entity::type() const {
-    return flecs::type(world(m_world), ecs_get_type(m_world, m_id));
+    return flecs::type(m_world, ecs_get_type(m_world, m_id));
 }
 
 inline flecs::type entity::to_type() const {

@@ -39,6 +39,7 @@
 #define ECS_TABLE_INITIAL_ROW_COUNT (0)
 #define ECS_SYSTEM_INITIAL_TABLE_COUNT (0)
 #define ECS_MAX_JOBS_PER_WORKER (16)
+#define ECS_HI_ENTITY_ID (100000)   /* Limit for entities in map / sparse set */
 
 /* This is _not_ the max number of entities that can be of a given type. This 
  * constant defines the maximum number of components, prefabs and parents can be
@@ -144,10 +145,10 @@ struct ecs_column_t {
 };
 
 /** Table component data and entity ids */
-typedef struct ecs_data_t {
+struct ecs_data_t {
     ecs_vector_t *entities;
     ecs_column_t *columns;
-} ecs_data_t;
+};
 
 #define EcsTableIsStaged (1)
 #define EcsTableIsPrefab (2)
@@ -159,7 +160,7 @@ typedef struct ecs_data_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
 struct ecs_table_t {
-    ecs_data_t *data;                 /* Component data and entity ids */
+    ecs_vector_t *stage_data;         /* Data per stage */
     ecs_vector_t *queries;            /* Queries matched with table */
     ecs_type_t type;                  /* Identifies table type in type_index */
     int32_t flags;                    /* Flags for testing table properties */
@@ -308,7 +309,7 @@ typedef struct EcsRowSystem {
  
 /** The ecs_record_t struct is a 64-bit value that describes in which table
  * (identified by a type) is stored, at which index. Entries in the 
- * world::entity_index are of type ecs_record_t. */
+ * entity_index are of type ecs_record_t. */
 typedef struct ecs_record_t {
     ecs_type_t type;              /* Identifies a type (and table) in world */
     int32_t row;                  /* Table row of the entity */
@@ -341,6 +342,12 @@ typedef struct ecs_type_node_t {
     ecs_type_link_t link;     
 } ecs_type_node_t;
 
+typedef struct ecs_ei_t {
+    ecs_record_t singleton; /* Special record for singleton entity */
+    ecs_sparse_t *lo;       /* Low entity ids are stored in a sparse set */
+    ecs_map_t *hi;          /* To save memory high ids are stored in a map */
+} ecs_ei_t;
+
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
  * to arbitrarily add/remove/set components and create/delete entities while
@@ -350,7 +357,7 @@ typedef struct ecs_stage_t {
     /* If this is not main stage, 
      * changes to the entity index 
      * are buffered here */
-    ecs_map_t *entity_index;       /* Entity lookup table for (table, row) */
+    ecs_ei_t entity_index; /* Entity lookup table for (table, row) */
 
     /* If this is not a thread
      * stage, these are the same
@@ -363,15 +370,9 @@ typedef struct ecs_stage_t {
     /* These occur only in
      * temporary stages, and
      * not on the main stage */
-    ecs_map_t *data_stage;         /* Arrays with staged component values */
     ecs_map_t *remove_merge;       /* All removed components before merge */
 
-    /* Keep track of changes so
-     * code knows when entity
-     * info is invalidated */
-    int32_t commit_count;
-    ecs_type_t from_type;
-    ecs_type_t to_type;
+    int32_t id;                    /* Unique id that identifies the stage */
     
     /* Is entity range checking enabled? */
     bool range_check_enabled;
@@ -413,7 +414,7 @@ typedef struct ecs_thread_t {
 
 /* World snapshot */
 struct ecs_snapshot_t {
-    ecs_map_t *entity_index;
+    ecs_ei_t entity_index;
     ecs_sparse_t *tables;
     ecs_entity_t last_handle;
     ecs_filter_t filter;
@@ -470,15 +471,13 @@ struct ecs_world_t {
     ecs_map_t *prefab_parent_index;   /* Index to find flag for prefab parent */
     ecs_map_t *type_handles;          /* Handles to named types */
 
-    /* -- Singleton record -- */
-
-    ecs_record_t singleton;
 
     /* -- Staging -- */
 
-    ecs_stage_t main_stage;          /* Main storage */
+    ecs_stage_t stage;               /* Main storage */
     ecs_stage_t temp_stage;          /* Stage for when processing systems */
     ecs_vector_t *worker_stages;     /* Stages for worker threads */
+    uint32_t stage_count;            /* Number of stages in world */
 
 
     /* -- Multithreading -- */

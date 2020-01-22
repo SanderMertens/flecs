@@ -128,6 +128,7 @@ void start_threads(
 
         thread->stage = ecs_vector_add(&world->worker_stages, ecs_stage_t);
         ecs_stage_init(world, thread->stage);
+        thread->stage->id = 2 + i; /* 0 and 1 are reserved for main and temp */
 
         if (i != 0) {
             thread->thread = ecs_os_thread_new(ecs_worker, thread);
@@ -301,6 +302,7 @@ void ecs_set_threads(
             world->thread_mutex = ecs_os_mutex_new();
             world->job_cond = ecs_os_cond_new();
             world->job_mutex = ecs_os_mutex_new();
+            world->stage_count = 2 + threads;
             start_threads(world, threads);
         }
 

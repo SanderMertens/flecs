@@ -10,7 +10,7 @@ void* get_owned_column_ptr(
     ecs_assert(rows->table_columns != NULL, ECS_INTERNAL_ERROR, NULL);
     (void)size;
 
-    ecs_column_t *column = &((ecs_column_t*)rows->table_columns)[table_column];
+    ecs_column_t *column = &((ecs_column_t*)rows->table_columns)[table_column - 1];
     ecs_assert(column->size != 0, ECS_COLUMN_HAS_NO_DATA, NULL);
     ecs_assert(!size || column->size == size, ECS_COLUMN_TYPE_MISMATCH, NULL);
     void *buffer = ecs_vector_first(column->data);
@@ -73,6 +73,10 @@ void* get_column(
     int32_t row)
 {
     int32_t table_column;
+
+    if (!column) {
+        return rows->entities;
+    }
 
     if (!get_table_column(rows, column, &table_column)) {
         return NULL;

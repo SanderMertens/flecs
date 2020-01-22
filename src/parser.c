@@ -116,7 +116,7 @@ void compute_sig_types(
 
         /* AND (default) and optional columns are stored the same way */
         if (from == EcsFromEntity) {
-            ecs_set_watch(world, &world->main_stage, elem->source);
+            ecs_set_watch(world, &world->stage, elem->source);
         } else if (from == EcsCascade) {
             sig->cascade_by = i + 1;
         } else if (op == EcsOperOr) {
@@ -490,7 +490,7 @@ int ecs_parse_signature_action(
                     "unresolved source identifier '%s'", source_id);
             }
 
-            ecs_set_watch(world, &world->main_stage, elem->source);
+            ecs_set_watch(world, &world->stage, elem->source);
         }
 
     /* OR columns store a type id instead of a single component */

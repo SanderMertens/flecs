@@ -851,6 +851,10 @@ void World_world_stats() {
     int init_component_count = stats.components_count;
     int init_entity_count = stats.entities_count;
 
+    test_assert(init_table_count != 0);
+    test_assert(init_component_count != 0);
+    test_assert(init_entity_count != 0);
+
     ecs_progress(world, 1);
 
     stats = ecs_get(world, EcsWorld, EcsWorldStats);

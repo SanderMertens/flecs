@@ -2145,7 +2145,7 @@ ecs_entity_t ecs_import_from_library(
     ECS_SET_COMPONENT(type)
 
 #define ECS_EXPORT_ENTITY(type)\
-    ECS_SET_ENTITY(type)
+    ecs_ei_set(type)
 
 /** Utility macro for declaring handles by modules */
 #define ECS_IMPORT_COMPONENT(handles, type)\

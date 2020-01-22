@@ -4,7 +4,7 @@ ecs_table_t *ecs_dbg_find_table(
     ecs_world_t *world,
     ecs_type_t type)
 {
-    return ecs_world_get_table(world, &world->main_stage, type);
+    return ecs_world_get_table(world, &world->stage, type);
 }
 
 void ecs_dbg_table(
@@ -85,12 +85,12 @@ ecs_table_t* ecs_dbg_get_table(
     ecs_world_t *world,
     int32_t index)
 {
-    if (ecs_sparse_count(world->main_stage.tables) <= index) {
+    if (ecs_sparse_count(world->stage.tables) <= index) {
         return NULL;
     }
 
     return ecs_sparse_get(
-        world->main_stage.tables, ecs_table_t, index);
+        world->stage.tables, ecs_table_t, index);
 }
 
 bool ecs_dbg_filter_table(
