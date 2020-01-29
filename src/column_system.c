@@ -928,10 +928,11 @@ ecs_entity_t _ecs_run_w_filter(
     void *param)
 {
     ecs_world_t *real_world = world;
-
     if (world->magic == ECS_THREAD_MAGIC) {
         real_world = ((ecs_thread_t*)world)->world; /* dispel the magic */
     }
+
+    bool in_progress = real_world->in_progress;  
 
     ecs_entity_info_t sys_info = {.entity = system};
     EcsColSystem *system_data = ecs_get_ptr_intern(real_world, &real_world->main_stage, 
@@ -945,8 +946,6 @@ ecs_entity_t _ecs_run_w_filter(
     if (!param) {
         param = system_data->base.ctx;
     }
-
-    ecs_get_stage(&real_world);
 
     float system_delta_time = delta_time + system_data->time_passed;
     float period = system_data->period;
@@ -964,6 +963,12 @@ ecs_entity_t _ecs_run_w_filter(
             return 0;
         }
     }
+
+    ecs_stage_t *stage = NULL;
+    if (!in_progress) {
+        real_world->in_progress = true;
+        stage = ecs_get_stage(&real_world);
+    }    
 
     ecs_time_t time_start;
     if (measure_time) {
@@ -1061,6 +1066,13 @@ ecs_entity_t _ecs_run_w_filter(
             interrupted_by = info.interrupted_by;
             break;
         }
+    }
+
+    /* If world wasn't in progress when we entered this function, we need to
+     * merge and reset the value */
+    if (!in_progress) {
+        real_world->in_progress = false;
+        ecs_stage_merge(real_world, stage);
     }
 
     if (measure_time) {

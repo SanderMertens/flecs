@@ -714,6 +714,7 @@ void Run_run_w_container_filter(void);
 void Run_run_comb_10_entities_1_type(void);
 void Run_run_comb_10_entities_2_types(void);
 void Run_run_w_interrupt(void);
+void Run_run_staging(void);
 
 // Testsuite 'MultiThread'
 void MultiThread_2_thread_1_entity(void);
@@ -3578,7 +3579,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Run",
-        .testcase_count = 23,
+        .testcase_count = 24,
         .testcases = (bake_test_case[]){
             {
                 .id = "run",
@@ -3671,6 +3672,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "run_w_interrupt",
                 .function = Run_run_w_interrupt
+            },
+            {
+                .id = "run_staging",
+                .function = Run_run_staging
             }
         }
     },

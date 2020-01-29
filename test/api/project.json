@@ -782,7 +782,8 @@
                 "run_w_container_filter",
                 "run_comb_10_entities_1_type",
                 "run_comb_10_entities_2_types",
-                "run_w_interrupt"
+                "run_w_interrupt",
+                "run_staging"
             ]
         }, {
             "id": "MultiThread",
