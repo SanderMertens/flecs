@@ -1384,6 +1384,13 @@ void ecs_set_target_fps(
     }
 }
 
+float ecs_get_target_fps(
+    ecs_world_t *world)
+{
+    return world->target_fps;
+}
+
+
 /* Mock types so we don't have to depend on them. 
  * TODO: Need a better workaround */
 typedef uint16_t EcsAdmin;
@@ -1652,8 +1659,3 @@ uint32_t ecs_get_threads(
     return ecs_vector_count(world->worker_threads);
 }
 
-uint32_t ecs_get_target_fps(
-    ecs_world_t *world)
-{
-    return world->target_fps;
-}
