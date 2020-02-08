@@ -337,6 +337,7 @@ void SystemOnAdd_2_systems_w_table_creation(void);
 void SystemOnAdd_2_systems_w_table_creation_in_progress(void);
 void SystemOnAdd_sys_context(void);
 void SystemOnAdd_get_sys_context_from_param(void);
+void SystemOnAdd_container_column(void);
 
 // Testsuite 'SystemOnRemove'
 void SystemOnRemove_remove_match_1_of_1(void);
@@ -2071,7 +2072,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 31,
+        .testcase_count = 32,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -2196,6 +2197,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_sys_context_from_param",
                 .function = SystemOnAdd_get_sys_context_from_param
+            },
+            {
+                .id = "container_column",
+                .function = SystemOnAdd_container_column
             }
         }
     },

@@ -944,3 +944,26 @@ void SystemOnAdd_get_sys_context_from_param() {
 
     ecs_fini(world);
 }
+
+static
+void TestContainer(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Velocity, v, 2);
+    test_assert(v != NULL);
+    is_invoked = true;
+}
+
+void SystemOnAdd_container_column() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, TestContainer, EcsOnAdd, Position, CONTAINER.Velocity);
+
+    ecs_entity_t parent = ecs_new(world, Velocity);
+    ecs_new_child(world, parent, Position);
+
+    test_bool(is_invoked, true);
+
+    ecs_fini(world);
+}

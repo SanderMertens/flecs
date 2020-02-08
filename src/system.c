@@ -596,6 +596,10 @@ ecs_type_t ecs_notify_row_system(
             } else if (buffer[i].kind == EcsFromEntity) {
                 /* The source is another entity (prefab, container, other) */
                 entity = buffer[i].source;
+            } else if (buffer[i].kind == EcsFromContainer) {
+                ecs_components_contains_component(
+                    world, table->type, buffer[i].is.component, ECS_CHILDOF, 
+                    &entity);
             }
 
             /* Store the reference data so the system callback can access it */
