@@ -374,7 +374,11 @@
                 "2_systems_w_table_creation_in_progress",
                 "sys_context",
                 "get_sys_context_from_param",
-                "container_column"
+                "container_column",
+                "owned_only",
+                "shared_only",
+                "add_with_owned",
+                "add_with_shared"
 
             ]
         }, {

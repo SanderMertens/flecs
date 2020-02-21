@@ -133,11 +133,19 @@ ecs_entity_t new_row_system(
         }
     }
 
+    ecs_system_compute_and_families(world, &system_data->base);
+
+    ecs_system_init_base(world, &system_data->base);
+
     ecs_entity_t *elem = NULL;
 
     if (!needs_tables && kind == EcsOnRemove) {
         elem = ecs_vector_add(&world->fini_tasks, &handle_arr_params);
     } else {
+        if (!system_data->base.and_from_self) {
+            ecs_abort(ECS_INVALID_REACTIVE_SIGNATURE, sig);
+        }
+
         if (kind == EcsOnAdd) {
             elem = ecs_vector_add(&world->add_systems, &handle_arr_params);
         } else if (kind == EcsOnRemove) {
@@ -150,10 +158,6 @@ ecs_entity_t new_row_system(
     if (elem) {
         *elem = result;
     }
-
-    ecs_system_compute_and_families(world, &system_data->base);
-
-    ecs_system_init_base(world, &system_data->base);
 
     if (needs_tables) {
         match_families(world, result, system_data);
@@ -567,13 +571,27 @@ ecs_type_t ecs_notify_row_system(
     for (i = 0; i < column_count; i ++) {
         ecs_entity_t entity = 0;
 
-        if (buffer[i].kind == EcsFromSelf) {
+        /* Check if column is provided by either self or base entity */
+        if (buffer[i].kind == EcsFromSelf || 
+            buffer[i].kind == EcsFromOwned || 
+            buffer[i].kind == EcsFromShared) 
+        {
             /* If a regular column, find corresponding column in table */
             columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
 
+            /* If entity owns component but column is shared, no match */
+            if (columns[i] && buffer[i].kind == EcsFromShared) {
+                return 0;
+            }
+
             if (!columns[i] && table) {
-                /* If column is not found, it could come from a prefab. Look for
-                 * components of components */
+                /* If column is not found, it could come from a base. Look for
+                 * components of components, but only if column was not OWNED */
+                if (buffer[i].kind == EcsFromOwned) {
+                    /* System doesn't match */
+                    return 0;
+                }
+
                 entity = ecs_get_entity_for_component(
                     real_world, 0, table->type, buffer[i].is.component);
 
@@ -589,7 +607,6 @@ ecs_type_t ecs_notify_row_system(
             ecs_entity_t component = buffer[i].is.component;
 
             /* Resolve component from the right source */
-            
             if (buffer[i].kind == EcsFromSystem) {
                 /* The source is the system itself */
                 entity = system;

@@ -278,6 +278,7 @@ ecs_type_t register_type(
     
     if (!normalized && has_flags) {
         result = ecs_type_from_array_normalize(world, stage, array, count);
+        return result;
     } else {
         result = ecs_type_from_array(array, count);
 

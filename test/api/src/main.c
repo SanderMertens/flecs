@@ -338,6 +338,10 @@ void SystemOnAdd_2_systems_w_table_creation_in_progress(void);
 void SystemOnAdd_sys_context(void);
 void SystemOnAdd_get_sys_context_from_param(void);
 void SystemOnAdd_container_column(void);
+void SystemOnAdd_owned_only(void);
+void SystemOnAdd_shared_only(void);
+void SystemOnAdd_add_with_owned(void);
+void SystemOnAdd_add_with_shared(void);
 
 // Testsuite 'SystemOnRemove'
 void SystemOnRemove_remove_match_1_of_1(void);
@@ -2072,7 +2076,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 32,
+        .testcase_count = 36,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -2201,6 +2205,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "container_column",
                 .function = SystemOnAdd_container_column
+            },
+            {
+                .id = "owned_only",
+                .function = SystemOnAdd_owned_only
+            },
+            {
+                .id = "shared_only",
+                .function = SystemOnAdd_shared_only
+            },
+            {
+                .id = "add_with_owned",
+                .function = SystemOnAdd_add_with_owned
+            },
+            {
+                .id = "add_with_shared",
+                .function = SystemOnAdd_add_with_shared
             }
         }
     },

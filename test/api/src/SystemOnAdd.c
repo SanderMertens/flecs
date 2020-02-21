@@ -1,5 +1,13 @@
 #include <api.h>
 
+static
+void install_test_abort() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.abort = test_abort;
+    ecs_os_set_api(&os_api);
+}
+
 void Init(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     
@@ -964,6 +972,91 @@ void SystemOnAdd_container_column() {
     ecs_new_child(world, parent, Position);
 
     test_bool(is_invoked, true);
+
+    ecs_fini(world);
+}
+
+void SystemOnAdd_owned_only() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+
+    /* OnAdd systems only trigger on SELF columns, and a signature needs to have
+     * at least one. */
+    ECS_SYSTEM(world, Init, EcsOnAdd, OWNED.Position);
+}
+
+void SystemOnAdd_shared_only() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();    
+
+    /* OnAdd systems only trigger on SELF columns, and a signature needs to have
+     * at least one. */
+    ECS_SYSTEM(world, Init, EcsOnAdd, SHARED.Position);
+}
+
+void SystemOnAdd_add_with_owned() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_ENTITY(world, Base, Velocity);
+    ECS_TYPE(world, Type_w_Owned, Position, Velocity);
+    ECS_TYPE(world, Type_w_Shared, Position, INSTANCEOF | Base);
+
+    // OnAdd system with OWNED column
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position, OWNED.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    // Create entity with OWNED, should invoke OnAdd
+    ecs_entity_t e = ecs_new(world, Type_w_Owned);
+    test_assert(e != 0);
+    test_int(ctx.count, 1);
+    ctx.count = 0;
+
+    // Create entity with SHARED, should not invoke OnADd
+    ecs_entity_t e2 = ecs_new(world, Type_w_Shared);
+    test_assert(e2 != 0);
+    test_int(ctx.count, 0);
+
+    ecs_fini(world);
+}
+
+void SystemOnAdd_add_with_shared() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_ENTITY(world, Base, Velocity);
+    ECS_TYPE(world, Type_w_Owned, Position, Velocity);
+    ECS_TYPE(world, Type_w_Shared, Position, INSTANCEOF | Base);
+
+    // OnAdd system with OWNED column
+    ECS_SYSTEM(world, Init, EcsOnAdd, Position, SHARED.Velocity);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    // Create entity with OWNED, should not invoke OnAdd
+    ecs_entity_t e = ecs_new(world, Type_w_Owned);
+    test_assert(e != 0);
+    test_int(ctx.count, 0);
+
+    // Create entity with SHARED, should invoke OnADd
+    ecs_entity_t e2 = ecs_new(world, Type_w_Shared);
+    test_assert(e2 != 0);
+    test_int(ctx.count, 1);    
 
     ecs_fini(world);
 }
