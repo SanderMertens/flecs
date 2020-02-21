@@ -1534,7 +1534,6 @@ ecs_entity_t ecs_import_from_library(
     int flags)
 {
     ecs_assert(library_name != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(module_name != NULL, ECS_INVALID_PARAMETER, NULL);
 
     char *import_func = (char*)module_name; /* safe */
     char *module = (char*)module_name;
