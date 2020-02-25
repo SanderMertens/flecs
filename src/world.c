@@ -672,6 +672,7 @@ ecs_world_t *ecs_init(void) {
     world->last_handle = 0;
     world->should_quit = false;
     world->should_match = false;
+    world->locking_enabled = false;
 
     world->frame_start_time = (ecs_time_t){0, 0};
     if (time_ok) {
@@ -841,6 +842,10 @@ int ecs_fini(
     if (world->worker_threads) {
         ecs_set_threads(world, 0);
     }
+
+    if (world->locking_enabled) {
+        ecs_os_mutex_free(world->mutex);
+    }    
 
     deinit_tables(world);
 
@@ -1153,6 +1158,10 @@ bool ecs_progress(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(user_delta_time || ecs_os_api.get_time, ECS_MISSING_OS_API, "get_time");
 
+    if (world->locking_enabled) {
+        ecs_lock(world);
+    }
+
     /* Start measuring total frame time */
     float delta_time = start_measure_frame(world, user_delta_time);
 
@@ -1197,10 +1206,13 @@ bool ecs_progress(
     /* -- System execution stops here -- */
 
     world->frame_count_total ++;
-    
-    stop_measure_frame(world, delta_time);
-
     world->in_progress = false;
+
+    if (world->locking_enabled) {
+        ecs_unlock(world);
+    }
+
+    stop_measure_frame(world, delta_time);    
 
     return !world->should_quit;
 }
@@ -1562,4 +1574,37 @@ int32_t ecs_get_target_fps(
     ecs_world_t *world)
 {
     return world->target_fps;
+}
+
+bool ecs_enable_locking(
+    ecs_world_t *world,
+    bool enable)
+{
+    if (enable) {
+        if (!world->locking_enabled) {
+            world->mutex = ecs_os_mutex_new();
+        }
+    } else {
+        if (world->locking_enabled) {
+            ecs_os_mutex_free(world->mutex);
+        }
+    }
+
+    bool old = world->locking_enabled;
+    world->locking_enabled = enable;
+    return old;
+}
+
+void ecs_lock(
+    ecs_world_t *world)
+{
+    ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
+    ecs_os_mutex_lock(world->mutex);
+}
+
+void ecs_unlock(
+    ecs_world_t *world)
+{
+    ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
+    ecs_os_mutex_unlock(world->mutex);
 }

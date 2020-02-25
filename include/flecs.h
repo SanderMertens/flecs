@@ -634,6 +634,41 @@ bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable);
 
+/** Enable world locking while in progress.
+ * When locking is enabled, Flecs will lock the world while in progress. This
+ * allows applications to interact with the world from other threads without
+ * running into race conditions.
+ *
+ * This is a better alternative to applications putting a lock around calls to
+ * ecs_progress, since ecs_progress can sleep when FPS control is enabled,
+ * which is time during which other threads could perform work.
+ *
+ * Locking must be enabled before applications can use the ecs_lock and
+ * ecs_unlock functions. Locking is turned off by default.
+ *
+ * @param world The world.
+ * @param enable True if locking is to be enabled.
+ * @result The previous value of the setting.
+ */
+FLECS_EXPORT
+bool ecs_enable_locking(
+    ecs_world_t *world,
+    bool enable);
+
+/** Locks the world.
+ * See ecs_enable_locking for details.
+ */
+FLECS_EXPORT
+void ecs_lock(
+    ecs_world_t *world);
+
+/** Unlocks the world.
+ * See ecs_enable_locking for details.
+ */
+FLECS_EXPORT
+void ecs_unlock(
+    ecs_world_t *world);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API

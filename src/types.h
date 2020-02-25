@@ -523,6 +523,8 @@ struct ecs_world_t {
     int arg_fps;
     int arg_threads;
 
+    /* -- World lock -- */
+    ecs_os_mutex_t mutex;         /* Locks the world if locking enabled */
 
     /* -- World state -- */
 
@@ -536,6 +538,7 @@ struct ecs_world_t {
     bool should_quit;             /* Did a system signal that app should quit */
     bool should_match;            /* Should tablea be rematched */
     bool should_resolve;          /* If a table reallocd, resolve system refs */
+    bool locking_enabled;         /* Lock world when in progress */    
 };
 
 #endif

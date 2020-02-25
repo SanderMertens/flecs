@@ -466,6 +466,21 @@ public:
 
     int count(flecs::filter filter) const;
     
+    /* Enable locking */
+    bool enable_locking(bool enabled) {
+        return ecs_enable_locking(m_world, enabled);
+    }
+
+    /* Lock world */
+    void lock() {
+        ecs_lock(m_world);
+    }
+
+    /* Unlock world */
+    void unlock() {
+        ecs_unlock(m_world);
+    }
+
 private:
     void init_builtin_components();
 
