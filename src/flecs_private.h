@@ -309,6 +309,13 @@ void ecs_system_compute_and_families(
     ecs_world_t *world,
     EcsSystem *system_data);
 
+void ecs_enable_intern(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    EcsSystem *system_data,
+    bool enabled,
+    bool by_user);
+
 /* Invoked when system becomes active / inactive */
 void ecs_system_activate(
     ecs_world_t *world,

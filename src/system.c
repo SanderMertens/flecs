@@ -224,9 +224,13 @@ void activate_in_columns(
                     /* If this is the first out column that is requested from
                      * the OnDemand system, enable it */
                     if (activate && out[s]->count == 1) {
-                        ecs_enable(world, out[s]->system, true);
-                    } else if (!activate && !out[s]->count) {                
-                        ecs_enable(world, out[s]->system, false);
+                        EcsSystem *ptr = (EcsSystem*)ecs_get_ptr(world, out[s]->system, EcsColSystem);
+                        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                        ecs_enable_intern(world, out[s]->system, ptr, true, false);
+                    } else if (!activate && !out[s]->count) {
+                        EcsSystem *ptr = (EcsSystem*)ecs_get_ptr(world, out[s]->system, EcsColSystem); 
+                        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);               
+                        ecs_enable_intern(world, out[s]->system, ptr, false, false);
                     }
 
                     indent --;
@@ -708,6 +712,146 @@ void ecs_system_activate(
         activate ? EcsSystemActivated : EcsSystemDeactivated);
 }
 
+/* Actually enable or disable system */
+void ecs_enable_system(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    EcsSystem *system_data,
+    bool enabled)
+{
+    if (ecs_has(world, system, EcsColSystem)) {
+        EcsColSystem *col_system = (EcsColSystem*)system_data;
+
+        if (system_data->enabled != enabled) {
+            system_data->enabled = enabled;
+
+            if (ecs_vector_count(col_system->tables)) {
+                /* Only (de)activate system if it has non-empty tables. */
+                ecs_world_activate_system(
+                    world, system, col_system->base.kind, enabled);
+            }
+
+            /* Enable/disable systems that trigger on [in] enablement */
+            activate_in_columns(
+                world, 
+                col_system, 
+                world->on_enable_components, 
+                enabled);
+            
+            /* Invoke action for enable/disable status */
+            ecs_invoke_status_action(
+                world, system, col_system, 
+                enabled ? EcsSystemEnabled : EcsSystemDisabled);
+        }
+    } else {
+        system_data->enabled = enabled;
+    }  
+}
+
+/* Evaluate user & demand state, and determine whether the system actually needs
+ * to be enabled or disabled */
+void ecs_enable_intern(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    EcsSystem *system_data,
+    bool enabled,
+    bool by_user)
+{
+    if (ecs_has(world, system, EcsColSystem)) {
+        EcsColSystem *col_system = (EcsColSystem*)system_data;
+
+        if (by_user) {
+            /* If the user state did not change, nothing needs to be done */
+            if (col_system->enabled_by_user != enabled) {
+                if (enabled) {
+                    ecs_assert(
+                        system_data->enabled == false, 
+                        ECS_INTERNAL_ERROR, 
+                        NULL);
+
+                    if (col_system->enabled_by_demand) {
+                        /* System can be turned on as there is demand for it */
+                        ecs_enable_system(world, system, system_data, true);
+                    } else {
+                        /* User enabled system but there is no demand for it, so
+                         * don't turn it on. System will turn on when demand is
+                         * created. */                        
+                    }
+                } else {
+                    if (!col_system->enabled_by_demand) {
+                        ecs_assert(
+                            system_data->enabled == false, 
+                            ECS_INTERNAL_ERROR, 
+                            NULL);
+
+                        /* If the user disabled the system but it was already
+                         * disabled because there was no demand for it, nothing
+                         * needs to be done right now. */                       
+                    } else {
+                        ecs_assert(
+                            system_data->enabled == true, 
+                            ECS_INTERNAL_ERROR, 
+                            NULL);
+
+                        /* If the user disabled the system and it was enabled
+                         * because there was demand for it, it needs to be
+                         * disabled. */
+                        ecs_enable_system(world, system, system_data, false);
+                    }
+                }
+
+                col_system->enabled_by_user = enabled;
+            }
+        } else {
+            /* If the demand state did not change, nothing needs to be done */
+            if (col_system->enabled_by_demand != enabled) {
+                if (enabled) {
+                    ecs_assert(
+                        system_data->enabled == false, 
+                        ECS_INTERNAL_ERROR, 
+                        NULL);
+
+                    if (col_system->enabled_by_user) {
+                        /* System can be turned on since the user has enabled it
+                         * and there is now demand. */
+                        ecs_enable_system(world, system, system_data, true);
+                    } else {
+                        /* Demand was created, but the user explicitly disabled
+                         * the system. Don't do anything. */
+                    }
+                } else {
+                    if (!col_system->enabled_by_user) {
+                        ecs_assert(
+                            system_data->enabled == false, 
+                            ECS_INTERNAL_ERROR, 
+                            NULL); 
+
+                        /* If the system is disabled because the user disabled
+                         * it and now there is also no more demand for it,
+                         * nothing needs to be done. */
+                    } else {
+                        ecs_assert(
+                            system_data->enabled == true, 
+                            ECS_INTERNAL_ERROR, 
+                            NULL);                        
+
+                        /* If the system was enabled by the user and now there
+                         * is no more demand for it, disable the system */
+                        ecs_enable_system(world, system, system_data, false);
+                    }
+                }
+
+                col_system->enabled_by_demand = enabled;
+            }
+        }
+    } else {
+        /* For row systems there is no such thing as on demand, so simply set
+         * the enabled status. */
+        ecs_enable_system(world, system, system_data, enabled);
+    }
+}
+
+
 /* -- Public API -- */
 
 ecs_entity_t ecs_new_system(
@@ -775,7 +919,7 @@ ecs_entity_t ecs_new_system(
         system_data->has_refs = has_refs(system_data);
     }
 
-    /* If system contains FromSystem params, add them tot the system */
+    /* If system contains FromSystem params, add them tot the system. */
     ecs_type_t type = system_data->and_from_system;
     if (type) {
         ecs_entity_t *array = ecs_vector_first(type);
@@ -784,7 +928,14 @@ ecs_entity_t ecs_new_system(
             ecs_type_t type = ecs_type_from_entity(world, array[i]);
             _ecs_add(world, result, type);
         }
-    }
+
+        /* Re-obtain system_data, as it might have changed */
+        system_data = (EcsSystem*)ecs_get_ptr(world, result, EcsColSystem);
+        if (!system_data) {
+            system_data = (EcsSystem*)ecs_get_ptr(world, result, EcsRowSystem);
+            ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+        }
+    }   
 
     if (is_reactive == false) {
         EcsColSystem *col_system_data = (EcsColSystem*)system_data;
@@ -806,7 +957,7 @@ ecs_entity_t ecs_new_system(
         /* Check if all non-table column constraints are met. If not, disable
         * system (system will be enabled once constraints are met) */
         if (!ecs_check_column_constraints(world, system_data)) {
-            ecs_enable(world, result, false);
+            ecs_enable_intern(world, result, system_data, false, false);
         }               
     }
 
@@ -822,9 +973,9 @@ ecs_entity_t ecs_new_system(
         /* If there are no systems currently interested in any of the [out]
          * columns of the on demand system, disable it */
         if (!col_system_data->on_demand->count) {
-            ecs_enable(world, result, false);
+            ecs_enable_intern(world, result, system_data, false, false);
         }
-    }
+    } 
 
     return result;
 }
@@ -835,44 +986,15 @@ void ecs_enable(
     bool enabled)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    bool col_system = false;
 
     /* Try to get either ColSystem or RowSystem data */
     EcsSystem *system_data = (EcsSystem*)ecs_get_ptr(world, system, EcsColSystem);
     if (!system_data) {
         system_data = (EcsSystem*)ecs_get_ptr(world, system, EcsRowSystem);
-    } else {
-        col_system = true;
     }
 
     if (system_data) {
-        if (col_system) {
-            EcsColSystem *col_system = (EcsColSystem*)system_data;
-
-            if (system_data->enabled != enabled) {
-                system_data->enabled = enabled;
-
-                if (ecs_vector_count(col_system->tables)) {
-                    /* Only (de)activate system if it has non-empty tables. */
-                    ecs_world_activate_system(
-                        world, system, col_system->base.kind, enabled);
-                }
-
-                /* Enable/disable systems that trigger on [in] enablement */
-                activate_in_columns(
-                    world, 
-                    col_system, 
-                    world->on_enable_components, 
-                    enabled);
-                
-                /* Invoke action for enable/disable status */
-                ecs_invoke_status_action(
-                    world, system, col_system, 
-                    enabled ? EcsSystemEnabled : EcsSystemDisabled);
-            }
-        } else {
-            system_data->enabled = enabled;
-        }
+        ecs_enable_intern(world, system, system_data, enabled, true);
     } else {
         /* If entity is neither ColSystem nor RowSystem, it should be a type */
         EcsTypeComponent *type_data = ecs_get_ptr(

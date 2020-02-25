@@ -338,7 +338,8 @@
                 "status_disable_after_new",
                 "status_disable_after_disable",
                 "status_activate_after_new",
-                "status_deactivate_after_delete"
+                "status_deactivate_after_delete",
+                "dont_enable_after_rematch"
             ]
         }, {
             "id": "SystemOnAdd",
@@ -379,7 +380,6 @@
                 "shared_only",
                 "add_with_owned",
                 "add_with_shared"
-
             ]
         }, {
             "id": "SystemOnRemove",
@@ -500,7 +500,8 @@
                 "trigger_on_manual",
                 "trigger_on_manual_not_column",
                 "on_demand_task_w_from_entity",
-                "on_demand_task_w_not_from_entity"
+                "on_demand_task_w_not_from_entity",
+                "enable_after_user_disable"
             ]
         }, {
             "id": "SystemCascade",

@@ -676,15 +676,15 @@ void ecs_rematch_system(
     }
 
     /* If the system has a CASCADE column and modifications were made, 
-        * reorder the system tables so that the depth order is preserved */
+     * reorder the system tables so that the depth order is preserved */
     if (system_data->base.cascade_by) {
         order_cascade_tables(world, system_data);
     }
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
-    ecs_enable(world, system, 
-        ecs_check_column_constraints(world, (EcsSystem*)system_data));
+    ecs_enable_intern(world, system, (EcsSystem*)system_data, 
+        ecs_check_column_constraints(world, (EcsSystem*)system_data), false);
 }
 
 /** Revalidate references after a realloc occurred in a table */
@@ -821,6 +821,8 @@ ecs_entity_t ecs_new_col_system(
     memset(system_data, 0, sizeof(EcsColSystem));
     system_data->base.action = action;
     system_data->base.enabled = true;
+    system_data->enabled_by_user = true;
+    system_data->enabled_by_demand = true;
     system_data->base.signature = ecs_os_strdup(sig);
     system_data->base.time_spent = 0;
     system_data->base.columns = ecs_vector_new(&system_column_params, count);

@@ -201,8 +201,8 @@ typedef struct EcsSystem {
     ecs_type_t not_from_shared;     /* Exclude components from self only if shared */
     ecs_type_t not_from_component; /* Exclude components from components */
     ecs_type_t and_from_self;      /* Which components are required from entity */
-    ecs_type_t and_from_owned;      /* Which components are required from entity */
-    ecs_type_t and_from_shared;      /* Which components are required from entity */
+    ecs_type_t and_from_owned;     /* Which components are required from entity */
+    ecs_type_t and_from_shared;    /* Which components are required from entity */
     ecs_type_t and_from_system;    /* Used to auto-add components to system */
     
     EcsSystemKind kind;            /* Kind of system */
@@ -268,6 +268,8 @@ typedef struct EcsColSystem {
     ecs_vector_params_t ref_params;       /* Parameters for refs */
     float period;                         /* Minimum period inbetween system invocations */
     float time_passed;                    /* Time passed since last invocation */
+    bool enabled_by_demand;               /* Is system enabled by on demand systems */
+    bool enabled_by_user;                /* Is system enabled by user */
 } EcsColSystem;
 
 /** A row system is a system that is ran on 1..n entities for which a certain 
