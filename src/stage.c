@@ -34,24 +34,8 @@ static
 void clean_data_stage(
     ecs_stage_t *stage)
 {
-    ecs_map_iter_t it = ecs_map_iter(stage->data_stage);
-    ecs_column_t *columns;
-    ecs_map_key_t keyval;
-
-    while ((columns = ecs_map_next_ptr(&it, ecs_column_t*, &keyval))) {
-        ecs_type_t type = (ecs_type_t)(uintptr_t)keyval;
-        int32_t i, count = ecs_vector_count(type);
-        
-        for(i = 0; i < count + 1; i ++) {
-            ecs_vector_free(columns[i].data);
-        }
-
-        ecs_os_free(columns);
-    }
-
     ecs_map_clear(stage->entity_index);
     ecs_map_clear(stage->remove_merge);
-    ecs_map_clear(stage->data_stage);
 }
 
 static
@@ -59,6 +43,8 @@ void merge_commits(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {  
+    ecs_assert(stage != &world->main_stage, ECS_INTERNAL_ERROR, NULL);
+
     if (!ecs_map_count(stage->entity_index)) {
         return;
     }
@@ -70,8 +56,6 @@ void merge_commits(
     while ((record = ecs_map_next(&it, ecs_record_t, &entity))) {
         ecs_merge_entity(world, stage, entity, *record);
     }
-    
-    clean_data_stage(stage);
 }
 
 static
@@ -111,9 +95,11 @@ void ecs_stage_init(
 
     if (is_main_stage) {
         stage->last_link = &world->main_stage.type_root.link;
+        stage->id = 0;
     } else if (is_temp_stage) {
         stage->type_root = world->main_stage.type_root;
         stage->last_link = NULL;
+        stage->id = 1;
     } else {
     }
     
@@ -125,13 +111,9 @@ void ecs_stage_init(
     }
 
     if (!is_main_stage) {
-        stage->data_stage = ecs_map_new(ecs_column_t*, 0);
         stage->remove_merge = ecs_map_new(ecs_type_t, 0);
     }
 
-    stage->commit_count = 0;
-    stage->to_type = 0;
-    stage->from_type = 0;
     stage->range_check_enabled = true;
 }
 
@@ -148,7 +130,6 @@ void ecs_stage_deinit(
 
     if (!is_main_stage) {
         clean_data_stage(stage);
-        ecs_map_free(stage->data_stage);
         ecs_map_free(stage->remove_merge);
     }
 
@@ -178,6 +159,7 @@ void ecs_stage_merge(
     clean_tables(world, stage);
     ecs_sparse_clear(stage->tables);
     ecs_map_clear(stage->table_index);
+    ecs_map_clear(stage->entity_index);
 
     /* Now that all data has been merged, evaluate columns of added tables. This
      * step updates the world for special columns, like prefab components */

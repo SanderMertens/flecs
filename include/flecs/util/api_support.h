@@ -11,6 +11,7 @@ extern "C" {
 
 typedef struct ecs_table_t ecs_table_t;
 typedef struct ecs_column_t ecs_column_t;
+typedef struct ecs_data_t ecs_data_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Private datatypes
@@ -72,14 +73,14 @@ typedef struct ecs_table_reader_t {
 
     int32_t table_index;
     ecs_table_t *table;
-    ecs_column_t *columns;
+    ecs_data_t *data;
 
     /* Current index in type */
     size_t type_written;
     ecs_type_t type;
 
     /* Current column */
-    ecs_column_t *column;
+    ecs_vector_t *column_vector;
     int32_t column_index;
     int32_t total_columns;
 
@@ -125,7 +126,7 @@ typedef struct ecs_table_writer_t {
     ecs_blob_header_kind_t state;
 
     ecs_table_t *table;
-    ecs_column_t *column;
+    ecs_vector_t *column_vector;
 
     /* Keep state for parsing type */
     int32_t type_count;

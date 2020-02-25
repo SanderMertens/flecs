@@ -250,15 +250,24 @@ void ecs_table_writer_prepare_column(
     ecs_data_t *data = ecs_table_get_data(world, writer->table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    writer->column = &writer->table->data->columns[writer->column_index];
-    writer->column_size = size;
+    if (writer->column_index) {
+        ecs_column_t *column = &data->columns[writer->column_index - 1];
 
-    if (size) {
-        _ecs_vector_set_count(
-            &writer->column->data, writer->column_size, writer->row_count);
+        if (size) {
+            _ecs_vector_set_count(&column->data, size, writer->row_count);
+        }
+
+        writer->column_vector = column->data;
+        writer->column_size = size;
+    } else {
+        ecs_vector_set_count(
+            &data->entities, ecs_entity_t, writer->row_count);
+
+        writer->column_vector = data->entities;
+        writer->column_size = sizeof(ecs_entity_t);      
     }
 
-    writer->column_data = ecs_vector_first(writer->column->data);
+    writer->column_data = ecs_vector_first(writer->column_vector);
     writer->column_written = 0;
 }
 
@@ -308,7 +317,8 @@ void ecs_table_writer_next(
 
     case EcsTableColumnData:
         writer->column_index ++;
-        if (writer->column_index >= writer->type_count) {
+
+        if (writer->column_index > writer->type_count) {
             ecs_table_writer_finalize_table(stream);
             stream->state = EcsStreamHeader;
             writer->column_written = 0;

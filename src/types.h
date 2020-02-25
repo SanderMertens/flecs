@@ -144,10 +144,10 @@ struct ecs_column_t {
 };
 
 /** Table component data and entity ids */
-typedef struct ecs_data_t {
+struct ecs_data_t {
     ecs_vector_t *entities;
     ecs_column_t *columns;
-} ecs_data_t;
+};
 
 #define EcsTableIsStaged (1)
 #define EcsTableIsPrefab (2)
@@ -159,7 +159,7 @@ typedef struct ecs_data_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
 struct ecs_table_t {
-    ecs_data_t *data;                 /* Component data and entity ids */
+    ecs_vector_t *stage_data;         /* Data per stage */
     ecs_vector_t *queries;            /* Queries matched with table */
     ecs_type_t type;                  /* Identifies table type in type_index */
     int32_t flags;                    /* Flags for testing table properties */
@@ -363,15 +363,9 @@ typedef struct ecs_stage_t {
     /* These occur only in
      * temporary stages, and
      * not on the main stage */
-    ecs_map_t *data_stage;         /* Arrays with staged component values */
     ecs_map_t *remove_merge;       /* All removed components before merge */
 
-    /* Keep track of changes so
-     * code knows when entity
-     * info is invalidated */
-    int32_t commit_count;
-    ecs_type_t from_type;
-    ecs_type_t to_type;
+    int32_t id;                    /* Unique id that identifies the stage */
     
     /* Is entity range checking enabled? */
     bool range_check_enabled;
@@ -479,6 +473,7 @@ struct ecs_world_t {
     ecs_stage_t main_stage;          /* Main storage */
     ecs_stage_t temp_stage;          /* Stage for when processing systems */
     ecs_vector_t *worker_stages;     /* Stages for worker threads */
+    uint32_t stage_count;            /* Number of stages in world */
 
 
     /* -- Multithreading -- */

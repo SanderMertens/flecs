@@ -2978,3 +2978,76 @@ void SingleThreadStaging_get_parent_in_progress() {
 
     ecs_fini(world);
 }
+
+static
+void AddInProgress(ecs_rows_t *rows) {
+    ecs_world_t *world = rows->world;
+
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_set(world, rows->entities[i], Position, {1, 1});
+        ecs_set(world, rows->entities[i], Velocity, {2, 2});
+
+        /* Make sure we can now access velocity from stage */
+        test_assert( ecs_has(world, rows->entities[i], Velocity));
+        Velocity *v_ptr = ecs_get_ptr(world, rows->entities[i], Velocity);
+        test_assert(v_ptr != NULL);
+        test_int(v_ptr->x, 2);
+        test_int(v_ptr->y, 2);
+
+        /* Make sure main stage hasn't been updated yet (this happens in the 
+         * merge) */
+        test_int(p[i].x, 0);
+        test_int(p[i].y, 0);
+    }
+}
+
+static
+void Move(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN(rows, Velocity, v, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }    
+}
+
+void SingleThreadStaging_merge_once() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, AddInProgress, EcsOnUpdate, Position, !Velocity);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
+    ecs_progress(world, 1);
+
+    Position *p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 1);
+    test_int(p->y, 1);
+
+    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    test_int(v->x, 2);
+    test_int(v->y, 2);
+
+    ecs_progress(world, 1);
+    ecs_progress(world, 1);
+
+    p = ecs_get_ptr(world, e, Position);
+    test_int(p->x, 5);
+    test_int(p->y, 5);
+
+    v = ecs_get_ptr(world, e, Velocity);
+    test_int(v->x, 2);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}

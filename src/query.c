@@ -860,6 +860,9 @@ bool ecs_query_next(
     int32_t table_count = ecs_vector_count(query->tables);
     ecs_matched_table_t *tables = ecs_vector_first(query->tables);
 
+    ecs_world_t *real_world = world;
+    ecs_get_stage(&real_world);
+
     int32_t offset = iter->offset;
     int32_t limit = iter->limit;
     int32_t remaining = iter->remaining;
@@ -873,11 +876,10 @@ bool ecs_query_next(
         ecs_data_t *table_data = NULL;
 
         if (world_table) {
-            table_data = ecs_table_get_data(world, world_table);
+            table_data = ecs_table_get_data(real_world, world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
+            rows->table_columns = table_data->columns;
         }
-
-        rows->table_columns = table_data->columns;
 
         if (table_data) {
             int32_t first = 0, count = ecs_table_count(world_table);
@@ -913,9 +915,7 @@ bool ecs_query_next(
                 continue;
             }
 
-            ecs_entity_t *entity_buffer = 
-                ecs_vector_first(((ecs_column_t*)rows->table_columns)[0].data);
-            
+            ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities);            
             rows->entities = &entity_buffer[first];
             rows->offset = first;
             rows->count = count;

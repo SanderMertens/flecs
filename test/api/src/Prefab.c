@@ -1965,6 +1965,7 @@ void Prefab_no_instantiate_on_2nd_add_in_progress() {
 void NewPrefab_w_count(ecs_rows_t *rows) {
     ecs_entity_t *result = ecs_get_context(rows->world);
     ECS_COLUMN_ENTITY(rows, Prefab, 1);
+
     *result = ecs_new_instance_w_count(rows->world, Prefab, 0, 3);
 }
 

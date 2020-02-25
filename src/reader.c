@@ -159,16 +159,12 @@ void ecs_table_reader_next(
              ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
             ecs_data_t *data = ecs_table_get_data(world, table);
-            ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(data->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            reader->columns = data->columns;
+            reader->data = data;
             reader->table_index ++;
 
             /* If a table is filtered out by the snapshot, does not have any
              * entities or contains builtin data, skip it */
-            if (reader->columns &&
-                 ecs_vector_count(reader->columns[0].data) &&
+            if (data && ecs_table_count(reader->table) &&
                  !(reader->table->flags & EcsTableHasBuiltins))
             {
                 table_found = true;
@@ -183,7 +179,7 @@ void ecs_table_reader_next(
             reader->type = reader->table->type;
             reader->total_columns = ecs_vector_count(reader->type) + 1;
             reader->column_index = 0;
-            reader->row_count = ecs_vector_count(reader->columns[0].data);
+            reader->row_count = ecs_table_count(reader->table);
         }
         break;
     }
@@ -204,22 +200,32 @@ void ecs_table_reader_next(
 
     case EcsTableColumnHeader:
         reader->state = EcsTableColumnSize;
-        reader->column = &reader->columns[reader->column_index];
-        reader->column_size = reader->column->size;
+        if (!reader->column_index) {
+            reader->column_vector = reader->data->entities;
+            reader->column_size = sizeof(ecs_entity_t);
+        } else {
+            ecs_column_t *column = 
+                &reader->data->columns[reader->column_index - 1];
+            reader->column_vector = column->data;
+            reader->column_size = column->size;
+        }
         break;
 
     case EcsTableColumnSize:
         reader->state = EcsTableColumnData;
-        reader->column_data = ecs_vector_first(reader->column->data);
+        reader->column_data = ecs_vector_first(reader->column_vector);
         reader->column_written = 0;
         break;
 
-    case EcsTableColumnNameHeader:
+    case EcsTableColumnNameHeader: {
         reader->state = EcsTableColumnNameLength;
-        reader->column = &reader->columns[reader->column_index];
-        reader->column_data = ecs_vector_first(reader->column->data);
+        ecs_column_t *column = 
+                &reader->data->columns[reader->column_index - 1];
+        reader->column_vector = column->data;                
+        reader->column_data = ecs_vector_first(reader->column_vector);
         reader->row_index = 0;
         break;
+    }
 
     case EcsTableColumnNameLength:
         reader->state = EcsTableColumnName;

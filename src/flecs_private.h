@@ -41,10 +41,16 @@ void ecs_delete_entity(
     ecs_entity_t entity);
 
 /* Grow entity index */
-void ecs_grow_entities(
+void ecs_entities_grow(
     ecs_world_t *world,
     ecs_stage_t *stage,
     uint32_t count);
+
+/* Grow entity index to specific size */
+void ecs_entities_set_size(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    uint32_t size);    
 
 /* Count entities in stage */
 uint32_t ecs_count_entities(
@@ -233,6 +239,10 @@ ecs_entity_t ecs_find_entity_in_prefabs(
 //// Table API
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Bootstrap first table to store component data */ 
+ecs_table_t *ecs_bootstrap_component_table(
+    ecs_world_t *world);
+
 /* Initialize table */
 void ecs_table_init(
     ecs_world_t *world,
@@ -265,7 +275,7 @@ void ecs_table_register_query(
     ecs_query_t *query);
 
 /* Insert row into table (or stage) */
-int32_t ecs_table_insert(
+int32_t ecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -317,7 +327,7 @@ bool ecs_table_has_components(
     ecs_vector_t *components);
 
 /* Deinitialize table. This invokes all matching on_remove systems */
-void ecs_table_deinit(
+void ecs_table_deinit_components(
     ecs_world_t *world,
     ecs_table_t *table);
 
@@ -336,7 +346,7 @@ void ecs_table_clear(
     ecs_table_t *table);    
 
 /* Clear data in columns */
-void ecs_table_replace_columns(
+void ecs_table_replace_data(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data);
@@ -348,6 +358,7 @@ void ecs_table_merge(
     ecs_table_t *old_table);
 
 void ecs_table_swap(
+    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
@@ -357,6 +368,7 @@ void ecs_table_swap(
     ecs_record_t *record_ptr_2);
 
 void ecs_table_move_back_and_swap(
+    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,

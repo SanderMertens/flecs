@@ -197,9 +197,6 @@ void compute_stage_memory(
     ecs_map_memory(stage->table_index,
         &stats->stages_memory.allocd_bytes, &stats->stages_memory.used_bytes);
 
-    ecs_map_memory(stage->data_stage,
-        &stats->stages_memory.allocd_bytes, &stats->stages_memory.used_bytes);
-
     ecs_map_memory(stage->remove_merge,
         &stats->stages_memory.allocd_bytes, &stats->stages_memory.used_bytes);
 }
@@ -577,13 +574,13 @@ void collect_table_data_memory(
 
     stats->entity_memory = (ecs_memory_stat_t){0};
 
-    ecs_vector_memory(columns[0].data, ecs_entity_t, 
+    ecs_vector_memory(data->entities, ecs_entity_t, 
         &stats->entity_memory.allocd_bytes, 
         &stats->entity_memory.used_bytes);
 
     stats->component_memory = (ecs_memory_stat_t){0};
 
-    for (i = 1; i <= count; i ++) {
+    for (i = 0; i < count; i ++) {
         _ecs_vector_memory(columns[i].data, columns[i].size, 
             &stats->component_memory.allocd_bytes, 
             &stats->component_memory.used_bytes);

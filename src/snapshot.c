@@ -2,29 +2,29 @@
 
 static
 void dup_table(
+    ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_assert(table->data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->data->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    /* Store pointer to data in main stage */
+    ecs_data_t *main_data = ecs_vector_first(table->stage_data);
+
+    /* Obtain new data for the snapshot table  */
+    table->stage_data = NULL;
+    ecs_data_t *snapshot_data = ecs_table_get_data(world, table);
 
     int32_t c, column_count = ecs_vector_count(table->type);
-    
-    ecs_data_t *data = ecs_os_malloc(sizeof(ecs_data_t));
-    ecs_assert(data != NULL, ECS_OUT_OF_MEMORY, NULL);
-    
-    data->columns = ecs_os_memdup(
-        table->data->columns, sizeof(ecs_column_t) * column_count);
+
+    snapshot_data->columns = ecs_os_memdup(
+        main_data->columns, sizeof(ecs_column_t) * column_count);
 
     /* Copy entities */
-    data->entities = ecs_vector_copy(table->data->entities, ecs_entity_t);
+    snapshot_data->entities = ecs_vector_copy(main_data->entities, ecs_entity_t);
 
     /* Copy each column */
-    for (c = 0; c < column_count + 1; c ++) {
-        ecs_column_t *column = &data->columns[c];
+    for (c = 0; c < column_count; c ++) {
+        ecs_column_t *column = &snapshot_data->columns[c];
         column->data = _ecs_vector_copy(column->data, column->size);
     }
-
-    table->data = data;
 }
 
 static
@@ -68,14 +68,14 @@ ecs_snapshot_t* snapshot_create(
         }
 
         if (!filter || ecs_type_match_w_filter(world, table->type, filter)) {
-            dup_table(table);
+            dup_table(world, table);
         } else {
             /* If the table does not match the filter, instead of copying just
              * set the data to NULL. This way the restore will ignore the
              * table. 
              * Note that this does not cause a memory leak, as at this point the
              * columns member still points to the live data. */
-            table->data = NULL;
+            table->stage_data = NULL;
         }
     }
 
@@ -149,14 +149,14 @@ void ecs_snapshot_restore(
 
         /* If table has no columns, it was filtered out and should not be
          * restored. */
-        ecs_data_t *data = ecs_table_get_data(world, src);
+        ecs_data_t *data = ecs_vector_first(src->stage_data);
         if (!data) {
             filter_used = true;
             continue;
         }
 
         ecs_table_t *dst = ecs_sparse_get(world->main_stage.tables, ecs_table_t, i);
-        ecs_table_replace_columns(world, dst, data);
+        ecs_table_replace_data(world, dst, data);
 
         ecs_data_t *dst_data = ecs_table_get_data(world, dst);
 
@@ -181,7 +181,7 @@ void ecs_snapshot_restore(
     int32_t world_count = ecs_sparse_count(world->main_stage.tables);
     for (; i < world_count; i ++) {
         ecs_table_t *table = ecs_sparse_get(world->main_stage.tables, ecs_table_t, i);
-        ecs_table_replace_columns(world, table, NULL);
+        ecs_table_replace_data(world, table, NULL);
     }
 
     ecs_sparse_free(snapshot->tables);
@@ -212,9 +212,13 @@ void ecs_snapshot_free(
             continue;
         }
 
-        ecs_table_replace_columns(world, src, NULL);
-        ecs_os_free(src->data->columns);
-        ecs_os_free(src->data);
+        ecs_table_replace_data(world, src, NULL);
+
+        ecs_data_t *src_data = ecs_vector_first(src->stage_data);
+        if (src_data) {
+            ecs_os_free(src_data->columns);
+            src_data->columns = NULL;
+        }
     }    
 
     ecs_sparse_free(snapshot->tables);

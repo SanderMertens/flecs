@@ -332,23 +332,29 @@ void _ecs_map_set(
     }
 
     if (!found) {
-        ecs_assert(bucket->count < BUCKET_COUNT, ECS_INTERNAL_ERROR, NULL);
-
-        int32_t bucket_count = ++bucket->count;
-        int32_t map_count = ++map->count;
-        
-        *elem = key;
-        memcpy(PAYLOAD(elem), payload, elem_size);
-
-        int32_t target_bucket_count = get_bucket_count(map_count);
-        int32_t map_bucket_count = map->bucket_count;
-
-        if (bucket_count == BUCKET_COUNT) {
-            rehash(map, map_bucket_count * 2);
+        if (bucket->count == BUCKET_COUNT) {
+            /* Can't fit in current bucket, need to grow the map first */
+            rehash(map, map->bucket_count * 2);
+            _ecs_map_set(map, elem_size, key, payload);
         } else {
-            if (target_bucket_count > map_bucket_count) {
-                rehash(map, target_bucket_count);
-            }
+            ecs_assert(bucket->count < BUCKET_COUNT, ECS_INTERNAL_ERROR, NULL);
+
+            int32_t bucket_count = ++bucket->count;
+            int32_t map_count = ++map->count;
+            
+            *elem = key;
+            memcpy(PAYLOAD(elem), payload, elem_size);
+
+            int32_t target_bucket_count = get_bucket_count(map_count);
+            int32_t map_bucket_count = map->bucket_count;
+
+            if (bucket_count == BUCKET_COUNT) {
+                rehash(map, map_bucket_count * 2);
+            } else {
+                if (target_bucket_count > map_bucket_count) {
+                    rehash(map, target_bucket_count);
+                }
+            }            
         }
     } else {
         *found = key;
@@ -527,8 +533,6 @@ ecs_map_t* ecs_map_copy(
     const ecs_map_t *src)
 {
     ecs_map_t *dst = ecs_os_memdup(src, sizeof(ecs_map_t));
-    dst->buckets = ecs_os_memdup(
-        src->buckets, src->bucket_count * sizeof(int32_t));
     
     dst->buckets = ecs_sparse_copy(src->buckets);
 

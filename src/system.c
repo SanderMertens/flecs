@@ -10,7 +10,7 @@ void match_type(
     /* Test if the components of the system are equal or a subset of the 
      * components of the type */
     ecs_entity_t match = ecs_type_contains(
-        world, type, system_data->sig.and_from_self, true, false);
+        world, type, system_data->sig.and_from_self, true, true);
 
     /* If there is a match, add the system to the type-row_system index */
     if (match) {
@@ -73,6 +73,8 @@ ecs_entity_t new_row_system(
     *id_data = name;
 
     EcsRowSystem *system_data = ecs_get_ptr(world, result, EcsRowSystem);
+    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     memset(system_data, 0, sizeof(EcsRowSystem));
     system_data->base.action = action;
     system_data->base.enabled = true;
@@ -138,8 +140,6 @@ ecs_type_t ecs_notify_row_system(
     int32_t offset,
     int32_t limit)
 {
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
     ecs_world_t *real_world = world;
     ecs_get_stage(&real_world);
 
@@ -148,7 +148,10 @@ ecs_type_t ecs_notify_row_system(
     
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_column_t *table_columns = data->columns;
+    ecs_column_t *table_columns = NULL;
+    if (data) {
+        table_columns = data->columns;
+    }
 
     if (!system_data->base.enabled) {
         return false;
@@ -240,7 +243,7 @@ ecs_type_t ecs_notify_row_system(
 
     /* Obtain pointer to vector with entity identifiers */
     if (table_columns) {
-        ecs_entity_t *entities = ecs_vector_first(table_columns[0].data);
+        ecs_entity_t *entities = ecs_vector_first(data->entities);
         rows.entities = &entities[rows.offset];
     }
 

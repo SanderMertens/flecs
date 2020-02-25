@@ -398,7 +398,7 @@ ecs_entity_t _ecs_run_w_filter(
     qiter.rows.system = system;
     qiter.rows.delta_time = delta_time;
     qiter.rows.delta_system_time = time_passed;
-    qiter.rows.world_time = world->world_time_total;
+    qiter.rows.world_time = real_world->world_time_total;
     qiter.rows.frame_offset = offset;
     
     /* Set param if provided, otherwise use system context */

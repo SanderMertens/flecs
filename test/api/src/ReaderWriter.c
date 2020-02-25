@@ -145,14 +145,17 @@ int simple_test(int buffer_size) {
 
     Position *
     p = ecs_get_ptr(world, e1, Position);
+    test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
     p = ecs_get_ptr(world, e2, Position);
+    test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
 
     p = ecs_get_ptr(world, e3, Position);
+    test_assert(p != NULL);
     test_int(p->x, 5);
     test_int(p->y, 6); 
 
@@ -337,34 +340,42 @@ int id_w_simple_test(int buffer_size) {
 
     Position *
     p = ecs_get_ptr(world, e1, Position);
+    test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
     p = ecs_get_ptr(world, e2, Position);
+    test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
 
     p = ecs_get_ptr(world, e3, Position);
+    test_assert(p != NULL);
     test_int(p->x, 5);
     test_int(p->y, 6);  
 
     p = ecs_get_ptr(world, e4, Position);
+    test_assert(p != NULL);
     test_int(p->x, 7);
     test_int(p->y, 8);  
 
     p = ecs_get_ptr(world, e5, Position);
+    test_assert(p != NULL);
     test_int(p->x, 9);
     test_int(p->y, 10);  
 
     p = ecs_get_ptr(world, e6, Position);
+    test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 12);  
 
     p = ecs_get_ptr(world, e7, Position);
+    test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 14);  
 
     p = ecs_get_ptr(world, e8, Position);
+    test_assert(p != NULL);
     test_int(p->x, 15);
     test_int(p->y, 16);
 
@@ -430,6 +441,7 @@ int unaligned_test(int buffer_size, int entity_count) {
         test_assert( !ecs_is_empty(world, first + i));
         test_assert( ecs_has(world, first + i, Byte));
         Byte *b = ecs_get_ptr(world, first + i, Byte);
+        test_assert(b != NULL);
         test_int(*b, i);
     }
 
@@ -563,14 +575,17 @@ int simple_w_tag_test(int buffer_size) {
 
     Position *
     p = ecs_get_ptr(world, e1, Position);
+    test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
     p = ecs_get_ptr(world, e2, Position);
+    test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
 
     p = ecs_get_ptr(world, e3, Position);
+    test_assert(p != NULL);
     test_int(p->x, 5);
     test_int(p->y, 6);  
 
@@ -638,14 +653,17 @@ int tag_w_simple_test(int buffer_size) {
 
     Position *
     p = ecs_get_ptr(world, e1, Position);
+    test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
     p = ecs_get_ptr(world, e2, Position);
+    test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
 
     p = ecs_get_ptr(world, e3, Position);
+    test_assert(p != NULL);
     test_int(p->x, 5);
     test_int(p->y, 6);     
 
@@ -823,14 +841,17 @@ int simple_w_parent_test(int buffer_size) {
 
     Position *
     p = ecs_get_ptr(world, e1, Position);
+    test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
     p = ecs_get_ptr(world, e2, Position);
+    test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
 
     p = ecs_get_ptr(world, e3, Position);
+    test_assert(p != NULL);
     test_int(p->x, 5);
     test_int(p->y, 6); 
 
@@ -967,14 +988,17 @@ int simple_w_inheritance_test(int buffer_size) {
 
     Velocity *
     p = ecs_get_ptr(world, e1, Velocity);
+    test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
 
     p = ecs_get_ptr(world, e2, Velocity);
+    test_assert(p != NULL);
     test_int(p->x, 5);
     test_int(p->y, 6);
 
     p = ecs_get_ptr(world, e3, Velocity);
+    test_assert(p != NULL);
     test_int(p->x, 7);
     test_int(p->y, 8); 
 
@@ -1030,14 +1054,17 @@ int deserialize_twice_test(int buffer_size) {
 
     Position *
     p = ecs_get_ptr(world, e1, Position);
+    test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
     p = ecs_get_ptr(world, e2, Position);
+    test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
 
     p = ecs_get_ptr(world, e3, Position);
+    test_assert(p != NULL);
     test_int(p->x, 5);
     test_int(p->y, 6); 
 
@@ -1100,6 +1127,7 @@ void ReaderWriter_entity_conflict() {
         test_assert( !ecs_has(world, e1, Velocity));
 
         Position *p = ecs_get_ptr(world, e1, Position);
+        test_assert(p != NULL);
         test_int(p->x, 1);
         test_int(p->y, 2);
 
@@ -1146,14 +1174,17 @@ void ReaderWriter_snapshot_reader_simple() {
 
     Position *
     p = ecs_get_ptr(world, e1, Position);
+    test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
     p = ecs_get_ptr(world, e2, Position);
+    test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
 
     p = ecs_get_ptr(world, e3, Position);
+    test_assert(p != NULL);
     test_int(p->x, 5);
     test_int(p->y, 6); 
 

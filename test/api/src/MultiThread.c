@@ -994,7 +994,7 @@ void MultiThread_multithread_quit() {
     ecs_fini(world);
 }
 
-static bool has_ran;
+static bool has_ran = false;
 
 static
 void MtTask(ecs_rows_t *rows) {
