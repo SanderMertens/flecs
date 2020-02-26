@@ -843,7 +843,8 @@ ecs_query_iter_t ecs_query_iter(
         .rows = {
             .world = query->world,
             .query = query,
-            .column_count = ecs_vector_count(query->sig.columns)
+            .column_count = ecs_vector_count(query->sig.columns),
+            .table_count = ecs_vector_count(query->tables)
         }
     };
 }

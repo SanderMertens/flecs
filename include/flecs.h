@@ -148,6 +148,7 @@ struct ecs_rows_t {
     uint16_t column_count;       /* Number of columns for system */
     void *table;                 /* Opaque structure with reference to table */
     void *table_columns;         /* Opaque structure with table column data */
+    int32_t table_count;         /* Number of active tables matched with system */
     ecs_query_t *query;          /* Query being evaluated */
     ecs_reference_t *references; /* References to other entities */
     ecs_entity_t *components;    /* System-table specific list of components */
@@ -1139,6 +1140,49 @@ ecs_entity_t _ecs_set_ptr(
 #define ecs_set(world, entity, component, ...)\
     _ecs_set_ptr(world, entity, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
 #endif
+
+/** Get new or existing component from entity.
+ * This operation retrieves the pointer for a component and add the component if
+ * the entity did not have the component yet. If the component was added as a
+ * result of this operation, OnAdd systems will be invoked.
+ * 
+ * This operation is useful in combination with ecs_modified, as it allows an
+ * application to achieve the same behavior of an ecs_set, but with the option
+ * to only set certain members of a component instead of overwriting the whole
+ * component value.
+ *
+ * @param world The world.
+ * @param entity The entity from which to obtain the component.
+ * @param size The size of the component.
+ * @param is_added Out parameter indicating if the component was added.
+ * @return A pointer to the component value.
+ */
+FLECS_EXPORT
+void* _ecs_get_or_add(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    size_t size,
+    bool *is_added);
+
+#define ecs_get_or_add(world, entity, component, is_added)\
+    _ecs_get_or_add(world, entity, ecs_entity(component), sizeof(component), is_added)
+
+/** Signal that component has been modified.
+ * This operation will invoke the OnSet handlers for the modified component.
+ * 
+ * @param world The world.
+ * @param entity The entity of which the component has been modified. 
+ * @param component The component that has been modified. 
+ */
+FLECS_EXPORT 
+void _ecs_modified(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component);
+
+#define ecs_modified(world, entity, component)\
+    _ecs_modified(world, entity, ecs_entity(component))
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the

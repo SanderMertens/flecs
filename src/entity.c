@@ -2273,6 +2273,76 @@ void* _ecs_get_ptr(
     return ecs_get_ptr_intern(world, stage, entity, component, false, true);
 }
 
+void* _ecs_get_or_add(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    size_t size,
+    bool *is_added)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_world_t *world_arg = world;
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_entity_info_t info = {0};
+    ecs_type_t type = ecs_type_from_entity(world, component);
+
+    void *dst = NULL;
+    if (get_or_create_staged_info(world, stage, entity, &info)) {
+        dst = get_component(&info, component);
+    }
+
+    if (!dst) {
+        ecs_add_remove_intern(world_arg, entity, &info, type, 0, false);
+        dst = get_component(&info, component);
+
+        /* Check if data is available in main stage. If so, copy value from main
+         * stage into staged value */
+        if (stage != &world->main_stage) {
+            ecs_entity_info_t main_info;
+            if (get_info(world, entity, &main_info)) {
+                void *main_dst = get_component(&main_info, component);
+                if (main_dst) {
+                    memcpy(dst, main_dst, size);
+                    
+                    /* We did add the component to the stage, but for the
+                     * application this can be transparent as there is no need
+                     * to initialize the component. */
+                    *is_added = false;
+                    return dst;
+                }
+            }
+        }
+
+        *is_added = true;
+        return dst;
+    } else {
+        *is_added = false;
+        return dst;
+    }
+}
+
+void _ecs_modified(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component)
+{
+    ecs_world_t *world_arg = world;
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_entity_info_t info = {0};
+    ecs_type_t type = ecs_type_from_entity(world, component);
+
+    if (stage == &world->main_stage) {
+        get_info(world, entity, &info);
+    } else {
+        get_staged_info(world, stage, entity, &info);
+    }
+
+    notify_pre_merge(
+            world_arg, stage, info.table, info.data, info.row, 1, type,
+            world->type_sys_set_index);   
+}
+
 ecs_entity_t _ecs_set_ptr(
     ecs_world_t *world,
     ecs_entity_t entity,

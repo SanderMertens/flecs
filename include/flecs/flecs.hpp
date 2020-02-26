@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <array>
+#include <functional>
 
 namespace flecs {
 
@@ -465,7 +466,7 @@ public:
     }
 
     int count(flecs::filter filter) const;
-    
+
     /* Enable locking */
     bool enable_locking(bool enabled) {
         return ecs_enable_locking(m_world, enabled);
@@ -480,7 +481,7 @@ public:
     void unlock() {
         ecs_unlock(m_world);
     }
-
+    
 private:
     void init_builtin_components();
 
@@ -617,7 +618,41 @@ public:
             _ecs_set_ptr(world, id, component_base<T>::s_entity, sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
-    }        
+    }
+
+    template <typename T>
+    const base_type& replace(std::function<void(T&, bool)> func) const {
+        static_cast<base_type*>(this)->invoke(
+        [func](world_t *world, entity_t id) {
+            bool is_added;
+
+            T *ptr = static_cast<T*>(_ecs_get_or_add(
+                world, id, component_base<T>::s_entity, sizeof(T), &is_added));
+
+            if (ptr) {
+                func(*ptr, !is_added);
+                _ecs_modified(world, id, component_base<T>::s_entity);
+            }
+        });
+        return *static_cast<base_type*>(this);
+    }      
+
+    template <typename T>
+    const base_type& replace(std::function<void(T&)> func) const {
+        static_cast<base_type*>(this)->invoke(
+        [func](world_t *world, entity_t id) {
+            bool is_added;
+
+            T *ptr = static_cast<T*>(_ecs_get_or_add(
+                world, id, component_base<T>::s_entity, sizeof(T), &is_added));
+
+            if (ptr) {
+                func(*ptr);
+                _ecs_modified(world, id, component_base<T>::s_entity);
+            }
+        });
+        return *static_cast<base_type*>(this);
+    }            
 };
 
 
@@ -667,6 +702,11 @@ public:
         : m_world(nullptr)
         , m_id(0) { }
 
+    static
+    flecs::entity nil(const world& world) {
+        return flecs::entity(world.c_ptr(), (ecs_entity_t)0);
+    }
+
     entity_t id() const {
         return m_id;
     }
@@ -685,7 +725,7 @@ public:
     flecs::type to_type() const;
 
     template<typename T>
-    T& get() const {
+    const T& get() const {
         T* component_ptr = static_cast<T*>(_ecs_get_ptr(m_world, m_id, component_base<T>::s_entity));
         ecs_assert(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
         return *component_ptr;
@@ -900,7 +940,7 @@ private:
         EcsTypeComponent *tc = ecs_get_ptr(m_world, m_id, EcsTypeComponent);
         if (tc) {
             tc->type = m_type;
-            tc->resolved = m_normalized;
+            tc->normalized = m_normalized;
         }
     }
 
@@ -908,7 +948,7 @@ private:
         EcsTypeComponent *tc = ecs_get_ptr(m_world, m_id, EcsTypeComponent);
         if (tc) {
             m_type = tc->type;
-            m_normalized = tc->resolved;
+            m_normalized = tc->normalized;
         }
     }
 
@@ -993,11 +1033,12 @@ class import {
 public:
     import(world& world, int flags) {
         if (!component_base<T>::s_name) {
-            T module_data = T(world, flags);
+            // Allocate module, so the this ptr will remain stable
+            T *module_data = new T(world, flags);
 
             flecs::entity s(world, EcsSingleton);
 
-            s.set<T>(module_data);
+            s.set<T>(*module_data);
         }
     }
 };
@@ -1185,7 +1226,7 @@ public:
     query_iterator<Components...> end() const;
 
     template <typename Func>
-    void each(Func func) {
+    void each(Func func) const {
         ecs_query_iter_t it = ecs_query_iter(m_query, 0, 0);
 
         while (ecs_query_next(&it)) {
@@ -1821,7 +1862,7 @@ inline query_iterator<Components...> query<Components...>::end() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 inline flecs::type entity::type() const {
-    return flecs::type(world(m_world), ecs_get_type(m_world, m_id));
+    return flecs::type(m_world, ecs_get_type(m_world, m_id));
 }
 
 inline flecs::type entity::to_type() const {
