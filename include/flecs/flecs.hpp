@@ -1527,7 +1527,7 @@ inline filter_iterator snapshot::end() {
 ////////////////////////////////////////////////////////////////////////////////
 
 inline flecs::type entity::type() const {
-    return flecs::type(world(m_world), ecs_get_type(m_world, m_id));
+    return flecs::type(m_world, ecs_get_type(m_world, m_id));
 }
 
 inline flecs::type entity::to_type() const {
