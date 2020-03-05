@@ -1527,7 +1527,7 @@ ecs_entity_t ecs_import_from_library(
     if (!action) {
         ecs_os_err("failed to load import function %s from library %s",
             import_func, library_name);
-        free(library_filename);
+        ecs_os_free(library_filename);
         ecs_os_dlclose(dl);            
         return ECS_INVALID_ENTITY;
     } else {
@@ -1546,7 +1546,7 @@ ecs_entity_t ecs_import_from_library(
         ecs_os_free(module);
     }
 
-    free(library_filename);
+    ecs_os_free(library_filename);
 
     return result;
 }

@@ -1129,7 +1129,7 @@ char* ecs_type_to_expr(
 
     *(char*)ecs_vector_add(&chbuf, char) = '\0';
 
-    char *result = strdup(ecs_vector_first(chbuf));
+    char* result = ecs_os_strdup(ecs_vector_first(chbuf));
     ecs_vector_free(chbuf);
     return result;
 }
