@@ -1091,7 +1091,7 @@ void* ecs_get_ptr_intern(
     }
 
     if (!ptr && !staged_only) {
-        found = get_info(world, entity, &info) & (info.table != NULL);
+        found = get_info(world, entity, &info) && (info.table != NULL);
         if (found && !stage_removed) {
             ptr = get_component(&info, component);
         }
