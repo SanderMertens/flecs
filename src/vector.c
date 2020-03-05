@@ -5,6 +5,12 @@ struct ecs_vector_t {
     int32_t size;
 #ifndef NDEBUG
     size_t elem_size;
+#else
+    /* Aligns the array to 16 bytes. This prevents issues with component types
+     * that are 16 bit aligned, such as some SIMD compiler intrinsics. This is
+     * a quick hack, but should in the long term be solved by using a separate
+     * datastructure for any collection that can contain user-defined types. */
+    uint64_t dummy;
 #endif
 };
 
