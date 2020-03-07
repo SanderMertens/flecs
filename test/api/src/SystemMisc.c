@@ -14,6 +14,7 @@ bool dummy_invoked = false;
 static
 void Dummy(ecs_rows_t *rows) {
     dummy_invoked = true;
+    ProbeSystem(rows);
 }
 
 void SystemMisc_invalid_not_without_id() {
@@ -746,4 +747,47 @@ void SystemMisc_status_deactivate_after_delete() {
     test_assert(system_status_action_invoked == true);
     test_assert(enable_status == EcsSystemDisabled);
     test_assert(active_status == EcsSystemStatusNone);
+}
+
+void SystemMisc_dont_enable_after_rematch() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position, Velocity);
+
+    /* Create an entity that is watched. Whenever components are added/removed
+     * to and/or from watched entities, a rematch is triggered. */
+    ECS_PREFAB(world, Prefab, Position);
+
+    ECS_ENTITY(world, Entity, INSTANCEOF | Prefab);
+
+    SysTestData ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    /* System is enabled but doesn't match with any entities */
+    test_bool(ecs_is_enabled(world, Dummy), true);
+    ecs_progress(world, 1);
+    test_int(ctx.count, 0);
+
+    /* Explicitly disable system before triggering a rematch */
+    ecs_enable(world, Dummy, false);
+    test_bool(ecs_is_enabled(world, Dummy), false);
+
+    /* Trigger a rematch. System should still be disabled after this */
+    ecs_add(world, Prefab, Velocity);
+    test_bool(ecs_is_enabled(world, Dummy), false);
+
+    ecs_progress(world, 1);
+    test_int(ctx.count, 0);
+
+    /* Enable system. It is matched, so should now be invoked */
+    ecs_enable(world, Dummy, true);
+    test_bool(ecs_is_enabled(world, Dummy), true);
+
+    ecs_progress(world, 1);
+    test_int(ctx.count, 1);
+
+    ecs_fini(world);
 }

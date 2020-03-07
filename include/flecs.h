@@ -499,7 +499,7 @@ void ecs_set_target_fps(
  * @param return The current target FPS.
  */
 FLECS_EXPORT
-int32_t ecs_get_target_fps(
+float ecs_get_target_fps(
     ecs_world_t *world);   
 
 /** Get last delta time from world.

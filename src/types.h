@@ -294,6 +294,8 @@ typedef struct EcsColSystem {
     uint32_t ref_size;                    /* Parameters for refs */
     float period;                         /* Minimum period inbetween system invocations */
     float time_passed;                    /* Time passed since last invocation */
+    bool enabled_by_demand;               /* Is system enabled by on demand systems */
+    bool enabled_by_user;                /* Is system enabled by user */
 } EcsColSystem;
 
 /** A row system is a system that is ran on 1..n entities for which a certain 

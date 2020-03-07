@@ -341,7 +341,8 @@
                 "status_disable_after_new",
                 "status_disable_after_disable",
                 "status_activate_after_new",
-                "status_deactivate_after_delete"
+                "status_deactivate_after_delete",
+                "dont_enable_after_rematch"
             ]
         }, {
             "id": "SystemOnAdd",
@@ -376,7 +377,12 @@
                 "2_systems_w_table_creation",
                 "2_systems_w_table_creation_in_progress",
                 "sys_context",
-                "get_sys_context_from_param"
+                "get_sys_context_from_param",
+                "container_column",
+                "owned_only",
+                "shared_only",
+                "add_with_owned",
+                "add_with_shared"
             ]
         }, {
             "id": "SystemOnRemove",
@@ -497,7 +503,8 @@
                 "trigger_on_manual",
                 "trigger_on_manual_not_column",
                 "on_demand_task_w_from_entity",
-                "on_demand_task_w_not_from_entity"
+                "on_demand_task_w_not_from_entity",
+                "enable_after_user_disable"
             ]
         }, {
             "id": "SystemCascade",
@@ -784,7 +791,8 @@
                 "run_w_container_filter",
                 "run_comb_10_entities_1_type",
                 "run_comb_10_entities_2_types",
-                "run_w_interrupt"
+                "run_w_interrupt",
+                "run_staging"
             ]
         }, {
             "id": "MultiThread",

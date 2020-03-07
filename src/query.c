@@ -741,8 +741,9 @@ void ecs_rematch_query(
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
     if (query->system) {
-        ecs_enable(world, query->system, 
-            ecs_sig_check_constraints(world, &query->sig));
+        EcsColSystem* system_data = ecs_get_ptr(world, query->system, EcsColSystem);
+        bool enable = ecs_sig_check_constraints(world, &query->sig);
+        ecs_enable_intern(world, query->system, (EcsSystem*)system_data, enable, false);
     }
 }
 

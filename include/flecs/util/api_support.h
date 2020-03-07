@@ -312,6 +312,7 @@ void _ecs_parser_error(
 #define ECS_DESERIALIZE_COMPONENT_ID_CONFLICT (37)
 #define ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT (38)
 #define ECS_DESERIALIZE_FORMAT_ERROR (39)
+#define ECS_INVALID_REACTIVE_SIGNATURE (40)
 
 /** Declare type variable */
 #define ECS_TYPE_VAR(type)\

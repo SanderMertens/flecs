@@ -105,6 +105,10 @@ ecs_entity_t new_row_system(
     if (!sig->needs_tables && kind == EcsOnRemove) {
         elem = ecs_vector_add(&world->fini_tasks, ecs_entity_t);
     } else {
+        if (!sig->and_from_self) {
+            ecs_abort(ECS_INVALID_REACTIVE_SIGNATURE, sig->expr);
+        }
+
         if (kind == EcsOnAdd) {
             elem = ecs_vector_add(&world->add_systems, ecs_entity_t);
         } else if (kind == EcsOnRemove) {
@@ -126,7 +130,6 @@ ecs_entity_t new_row_system(
 
     return result;
 }
-
 
 /* -- Private API -- */
 
@@ -176,13 +179,27 @@ ecs_type_t ecs_notify_row_system(
     for (i = 0; i < column_count; i ++) {
         ecs_entity_t entity = 0;
 
-        if (buffer[i].from_kind == EcsFromSelf) {
+        /* Check if column is provided by either self or base entity */
+        if (buffer[i].from_kind == EcsFromSelf || 
+            buffer[i].from_kind == EcsFromOwned || 
+            buffer[i].from_kind == EcsFromShared) 
+        {
             /* If a regular column, find corresponding column in table */
             columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
 
+            /* If entity owns component but column is shared, no match */
+            if (columns[i] && buffer[i].from_kind == EcsFromShared) {
+                return 0;
+            }
+
             if (!columns[i] && table) {
-                /* If column is not found, it could come from a prefab. Look for
-                 * components of components */
+                /* If column is not found, it could come from a base. Look for
+                 * components of components, but only if column was not OWNED */
+                if (buffer[i].from_kind == EcsFromOwned) {
+                    /* System doesn't match */
+                    return 0;
+                }
+
                 entity = ecs_get_entity_for_component(
                     real_world, 0, table->type, buffer[i].is.component);
 
@@ -198,13 +215,16 @@ ecs_type_t ecs_notify_row_system(
             ecs_entity_t component = buffer[i].is.component;
 
             /* Resolve component from the right source */
-            
             if (buffer[i].from_kind == EcsFromSystem) {
                 /* The source is the system itself */
                 entity = system;
             } else if (buffer[i].from_kind == EcsFromEntity) {
                 /* The source is another entity (prefab, container, other) */
                 entity = buffer[i].source;
+            } else if (buffer[i].from_kind == EcsFromContainer) {
+                ecs_components_contains_component(
+                    world, table->type, buffer[i].is.component, ECS_CHILDOF, 
+                    &entity);
             }
 
             /* Store the reference data so the system callback can access it */
@@ -362,9 +382,16 @@ ecs_entity_t ecs_new_system(
             ecs_type_t type = ecs_type_from_entity(world, array[i]);
             _ecs_add(world, result, type);
         }
+
+        /* Re-obtain system_data, as it might have changed */
+        system_data = (EcsSystem*)ecs_get_ptr(world, result, EcsColSystem);
+        if (!system_data) {
+            system_data = (EcsSystem*)ecs_get_ptr(world, result, EcsRowSystem);
+            ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+        }
     }
 
-    /* If this is an OnDemand system, disable if there is no interest for it */
+    /* If this is an OnDemand system, register its [out] columns */
     if (ecs_has(world, result, EcsOnDemand)) {
         ecs_assert(is_reactive == false, ECS_INVALID_PARAMETER, NULL);
         
@@ -375,9 +402,9 @@ ecs_entity_t ecs_new_system(
         /* If there are no systems currently interested in any of the [out]
          * columns of the on demand system, disable it */
         if (!col_system_data->on_demand->count) {
-            ecs_enable(world, result, false);
+            ecs_enable_intern(world, result, system_data, false, false);
         }
-    }
+    } 
 
     return result;
 }

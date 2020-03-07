@@ -307,6 +307,7 @@ void SystemMisc_status_disable_after_new(void);
 void SystemMisc_status_disable_after_disable(void);
 void SystemMisc_status_activate_after_new(void);
 void SystemMisc_status_deactivate_after_delete(void);
+void SystemMisc_dont_enable_after_rematch(void);
 
 // Testsuite 'SystemOnAdd'
 void SystemOnAdd_new_match_1_of_1(void);
@@ -340,6 +341,11 @@ void SystemOnAdd_2_systems_w_table_creation(void);
 void SystemOnAdd_2_systems_w_table_creation_in_progress(void);
 void SystemOnAdd_sys_context(void);
 void SystemOnAdd_get_sys_context_from_param(void);
+void SystemOnAdd_container_column(void);
+void SystemOnAdd_owned_only(void);
+void SystemOnAdd_shared_only(void);
+void SystemOnAdd_add_with_owned(void);
+void SystemOnAdd_add_with_shared(void);
 
 // Testsuite 'SystemOnRemove'
 void SystemOnRemove_remove_match_1_of_1(void);
@@ -453,6 +459,7 @@ void SystemOnDemand_trigger_on_manual(void);
 void SystemOnDemand_trigger_on_manual_not_column(void);
 void SystemOnDemand_on_demand_task_w_from_entity(void);
 void SystemOnDemand_on_demand_task_w_not_from_entity(void);
+void SystemOnDemand_enable_after_user_disable(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -716,6 +723,7 @@ void Run_run_w_container_filter(void);
 void Run_run_comb_10_entities_1_type(void);
 void Run_run_comb_10_entities_2_types(void);
 void Run_run_w_interrupt(void);
+void Run_run_staging(void);
 
 // Testsuite 'MultiThread'
 void MultiThread_2_thread_1_entity(void);
@@ -1919,7 +1927,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 40,
+        .testcase_count = 41,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -2080,12 +2088,16 @@ static bake_test_suite suites[] = {
             {
                 .id = "status_deactivate_after_delete",
                 .function = SystemMisc_status_deactivate_after_delete
+            },
+            {
+                .id = "dont_enable_after_rematch",
+                .function = SystemMisc_dont_enable_after_rematch
             }
         }
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 31,
+        .testcase_count = 36,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -2210,6 +2222,26 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_sys_context_from_param",
                 .function = SystemOnAdd_get_sys_context_from_param
+            },
+            {
+                .id = "container_column",
+                .function = SystemOnAdd_container_column
+            },
+            {
+                .id = "owned_only",
+                .function = SystemOnAdd_owned_only
+            },
+            {
+                .id = "shared_only",
+                .function = SystemOnAdd_shared_only
+            },
+            {
+                .id = "add_with_owned",
+                .function = SystemOnAdd_add_with_owned
+            },
+            {
+                .id = "add_with_shared",
+                .function = SystemOnAdd_add_with_shared
             }
         }
     },
@@ -2549,7 +2581,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnDemand",
-        .testcase_count = 26,
+        .testcase_count = 27,
         .testcases = (bake_test_case[]){
             {
                 .id = "enable_out_after_in",
@@ -2654,6 +2686,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "on_demand_task_w_not_from_entity",
                 .function = SystemOnDemand_on_demand_task_w_not_from_entity
+            },
+            {
+                .id = "enable_after_user_disable",
+                .function = SystemOnDemand_enable_after_user_disable
             }
         }
     },
@@ -3589,7 +3625,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Run",
-        .testcase_count = 23,
+        .testcase_count = 24,
         .testcases = (bake_test_case[]){
             {
                 .id = "run",
@@ -3682,6 +3718,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "run_w_interrupt",
                 .function = Run_run_w_interrupt
+            },
+            {
+                .id = "run_staging",
+                .function = Run_run_staging
             }
         }
     },

@@ -1238,3 +1238,69 @@ void Run_run_w_interrupt() {
  
     ecs_fini(world);
 }
+
+static
+void AddVelocity(ecs_rows_t *rows) {
+    ecs_world_t *world = rows->world;
+
+    ECS_COLUMN(rows, Position, p, 1);
+    ECS_COLUMN_COMPONENT(rows, Position, 1);
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_entity_t e = rows->entities[i];
+
+        float x = p[i].x;
+        float y = p[i].y;
+        
+        ecs_set(world, e, Position, {x + 1, y + 2});
+        Position *p_stage = ecs_get_ptr(world, e, Position);
+        test_int(p_stage->x, x + 1);
+        test_int(p_stage->y, y + 2);
+
+        /* Main stage isn't updated until after merge */
+        test_int(p[i].x, x);
+        test_int(p[i].y, y);
+
+        ecs_set(world, e, Velocity, {1, 2});
+        Velocity *v = ecs_get_ptr(world, e, Velocity);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+}
+
+void Run_run_staging() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {30, 40});
+
+    ECS_SYSTEM(world, AddVelocity, EcsManual, Position, .Velocity);
+
+    ecs_run(world, AddVelocity, 0, NULL);
+
+    test_assert( ecs_has(world, e1, Position));
+    test_assert( ecs_has(world, e1, Velocity));
+
+    Position *p = ecs_get_ptr(world, e1, Position);
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    Velocity *v = ecs_get_ptr(world, e1, Velocity);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    p = ecs_get_ptr(world, e2, Position);
+    test_int(p->x, 31);
+    test_int(p->y, 42);
+
+    v = ecs_get_ptr(world, e2, Velocity);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+ 
+    ecs_fini(world);
+}

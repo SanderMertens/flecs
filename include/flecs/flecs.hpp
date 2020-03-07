@@ -399,11 +399,11 @@ public:
     }
 
     /* Time management */
-    void set_target_fps(std::int32_t target_fps) const {
+    void set_target_fps(float target_fps) const {
         ecs_set_target_fps(m_world, target_fps);
     }
 
-    std::int32_t get_target_fps() const {
+    float get_target_fps() const {
         return ecs_get_target_fps(m_world);
     }
 

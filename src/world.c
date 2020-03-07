@@ -1445,7 +1445,6 @@ ecs_entity_t ecs_import_from_library(
     int flags)
 {
     ecs_assert(library_name != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(module_name != NULL, ECS_INVALID_PARAMETER, NULL);
 
     char *import_func = (char*)module_name; /* safe */
     char *module = (char*)module_name;
@@ -1570,7 +1569,7 @@ int32_t ecs_get_threads(
     return ecs_vector_count(world->worker_threads);
 }
 
-int32_t ecs_get_target_fps(
+float ecs_get_target_fps(
     ecs_world_t *world)
 {
     return world->target_fps;

@@ -265,7 +265,8 @@ ecs_type_t register_type(
     bool has_flags = (array[count - 1] & ECS_ENTITY_FLAGS_MASK) != 0;
     
     if (!normalized && has_flags) {
-        return ecs_type_from_array_normalize(world, stage, array, count);
+        result = ecs_type_from_array_normalize(world, stage, array, count);
+        return result;
     } else {
         result = ecs_type_from_array(array, count);
 

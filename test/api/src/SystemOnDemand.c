@@ -817,3 +817,36 @@ void SystemOnDemand_on_demand_task_w_not_from_entity() {
 
     ecs_fini(world);
 }
+
+void SystemOnDemand_enable_after_user_disable() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+
+    /* Explicitly disable system. System should not automatically enable once
+     * demand is created */
+    ecs_enable(world, OutSystem, false);
+
+    /* Create dummy entity so system won't be disabled all the time */
+    ecs_new(world, Position);
+
+    test_assert(ecs_is_enabled(world, OutSystem) == false);
+    ecs_progress(world, 0);
+    test_assert(invoked == false);
+
+    ECS_SYSTEM(world, InSystem, EcsOnUpdate, [in] Position);
+
+    /* System should still be disabled, since user explicitly disabled it */
+    test_assert(ecs_is_enabled(world, OutSystem) == false);
+
+    /* Explicitly enable system. This should enable the system, since now there
+     * is also demand */
+    ecs_enable(world, OutSystem, true);
+    test_assert(ecs_is_enabled(world, OutSystem) == true);
+
+    ecs_progress(world, 0);
+    test_assert(invoked == true);
+
+    ecs_fini(world);
+}
