@@ -242,7 +242,7 @@ void ecs_map_free(
 {
     if (map) {
         ecs_sparse_free(map->buckets);
-        free(map);
+        ecs_os_free(map);
     }
 }
 

@@ -915,7 +915,7 @@ public:
     std::string str() const {
         char *str = ecs_type_to_expr(m_world, m_type);
         std::string result(str);
-        free(str);
+        ecs_os_free(str);
         return result;
     }
 

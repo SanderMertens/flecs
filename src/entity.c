@@ -1091,7 +1091,7 @@ void* ecs_get_ptr_intern(
     }
 
     if (!ptr && !staged_only) {
-        found = get_info(world, entity, &info) & (info.table != NULL);
+        found = get_info(world, entity, &info) && (info.table != NULL);
         if (found && !stage_removed) {
             ptr = get_component(&info, component);
         }
@@ -1531,7 +1531,7 @@ int32_t update_entity_index(
         ecs_record_t *record_ptr = ecs_get_entity(world, stage, e);
         if (record_ptr) {
             src_row = record_ptr->row;
-            uint8_t is_monitored = 1 - (src_row < 0) * 2;
+            int8_t is_monitored = (src_row < 0) ? -1 : 1;
             src_row = (src_row * is_monitored) - 1;
 
             ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);
