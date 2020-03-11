@@ -224,8 +224,8 @@ void Set_set_remove_other(void);
 void Set_set_remove_twice(void);
 void Set_set_and_new(void);
 void Set_set_null(void);
-void Set_get_or_add_new(void);
-void Set_get_or_add_existing(void);
+void Set_get_mutable_new(void);
+void Set_get_mutable_existing(void);
 void Set_modified_w_on_set(void);
 
 // Testsuite 'Lookup'
@@ -828,6 +828,9 @@ void SingleThreadStaging_merge_after_tasks(void);
 void SingleThreadStaging_override_after_remove_in_progress(void);
 void SingleThreadStaging_get_parent_in_progress(void);
 void SingleThreadStaging_merge_once(void);
+void SingleThreadStaging_get_mutable(void);
+void SingleThreadStaging_get_mutable_from_main(void);
+void SingleThreadStaging_get_mutable_w_add(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_2_threads_add_to_current(void);
@@ -1766,12 +1769,12 @@ static bake_test_suite suites[] = {
                 .function = Set_set_null
             },
             {
-                .id = "get_or_add_new",
-                .function = Set_get_or_add_new
+                .id = "get_mutable_new",
+                .function = Set_get_mutable_new
             },
             {
-                .id = "get_or_add_existing",
-                .function = Set_get_or_add_existing
+                .id = "get_mutable_existing",
+                .function = Set_get_mutable_existing
             },
             {
                 .id = "modified_w_on_set",
@@ -3869,7 +3872,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 66,
+        .testcase_count = 69,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -4134,6 +4137,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "merge_once",
                 .function = SingleThreadStaging_merge_once
+            },
+            {
+                .id = "get_mutable",
+                .function = SingleThreadStaging_get_mutable
+            },
+            {
+                .id = "get_mutable_from_main",
+                .function = SingleThreadStaging_get_mutable_from_main
+            },
+            {
+                .id = "get_mutable_w_add",
+                .function = SingleThreadStaging_get_mutable_w_add
             }
         }
     },

@@ -1158,15 +1158,15 @@ ecs_entity_t _ecs_set_ptr(
  * @return A pointer to the component value.
  */
 FLECS_EXPORT
-void* _ecs_get_or_add(
+void* _ecs_get_mutable(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,
     size_t size,
     bool *is_added);
 
-#define ecs_get_or_add(world, entity, component, is_added)\
-    _ecs_get_or_add(world, entity, ecs_entity(component), sizeof(component), is_added)
+#define ecs_get_mutable(world, entity, component, is_added)\
+    _ecs_get_mutable(world, entity, ecs_entity(component), sizeof(component), is_added)
 
 /** Signal that component has been modified.
  * This operation will invoke the OnSet handlers for the modified component.

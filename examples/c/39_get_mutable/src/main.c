@@ -1,4 +1,4 @@
-#include <get_or_add.h>
+#include <get_mutable.h>
 
 typedef struct Counter {
     int value;
@@ -23,7 +23,7 @@ void PrintCounterSet(ecs_rows_t *rows) {
 void inc(ecs_world_t *world, ecs_entity_t e, ecs_entity_t ecs_entity(Counter)) {
     bool is_added = false;
     
-    Counter *c = ecs_get_or_add(world, e, Counter, &is_added);
+    Counter *c = ecs_get_mutable(world, e, Counter, &is_added);
     if (is_added) {
         c->value = 0;
     }

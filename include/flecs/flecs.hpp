@@ -626,7 +626,7 @@ public:
         [func](world_t *world, entity_t id) {
             bool is_added;
 
-            T *ptr = static_cast<T*>(_ecs_get_or_add(
+            T *ptr = static_cast<T*>(_ecs_get_mutable(
                 world, id, component_base<T>::s_entity, sizeof(T), &is_added));
 
             if (ptr) {
@@ -643,7 +643,7 @@ public:
         [func](world_t *world, entity_t id) {
             bool is_added;
 
-            T *ptr = static_cast<T*>(_ecs_get_or_add(
+            T *ptr = static_cast<T*>(_ecs_get_mutable(
                 world, id, component_base<T>::s_entity, sizeof(T), &is_added));
 
             if (ptr) {

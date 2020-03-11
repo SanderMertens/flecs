@@ -1,8 +1,8 @@
-#ifndef GET_OR_ADD_H
-#define GET_OR_ADD_H
+#ifndef GET_MUTABLE_H
+#define GET_MUTABLE_H
 
 /* This generated file contains includes for project dependencies */
-#include "get_or_add/bake_config.h"
+#include "get_mutable/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

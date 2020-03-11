@@ -14,30 +14,30 @@
  * dependencies will automatically show up in this file. Include bake_config.h
  * in your main project file. Do not edit! */
 
-#ifndef GET_OR_ADD_BAKE_CONFIG_H
-#define GET_OR_ADD_BAKE_CONFIG_H
+#ifndef GET_MUTABLE_BAKE_CONFIG_H
+#define GET_MUTABLE_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
 #include <flecs.h>
 
 /* Headers of private dependencies */
-#ifdef GET_OR_ADD_IMPL
+#ifdef GET_MUTABLE_IMPL
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#ifndef GET_OR_ADD_STATIC
-  #if GET_OR_ADD_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define GET_OR_ADD_EXPORT __declspec(dllexport)
-  #elif GET_OR_ADD_IMPL
-    #define GET_OR_ADD_EXPORT __attribute__((__visibility__("default")))
+#ifndef GET_MUTABLE_STATIC
+  #if GET_MUTABLE_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
+    #define GET_MUTABLE_EXPORT __declspec(dllexport)
+  #elif GET_MUTABLE_IMPL
+    #define GET_MUTABLE_EXPORT __attribute__((__visibility__("default")))
   #elif defined _MSC_VER
-    #define GET_OR_ADD_EXPORT __declspec(dllimport)
+    #define GET_MUTABLE_EXPORT __declspec(dllimport)
   #else
-    #define GET_OR_ADD_EXPORT
+    #define GET_MUTABLE_EXPORT
   #endif
 #else
-  #define GET_OR_ADD_EXPORT
+  #define GET_MUTABLE_EXPORT
 #endif
 
 #endif

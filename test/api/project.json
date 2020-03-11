@@ -251,8 +251,8 @@
                 "set_remove_twice",
                 "set_and_new",
                 "set_null",
-                "get_or_add_new",
-                "get_or_add_existing",
+                "get_mutable_new",
+                "get_mutable_existing",
                 "modified_w_on_set"
             ]
         }, {
@@ -900,7 +900,10 @@
                 "merge_after_tasks",
                 "override_after_remove_in_progress",
                 "get_parent_in_progress",
-                "merge_once"
+                "merge_once",
+                "get_mutable",
+                "get_mutable_from_main",
+                "get_mutable_w_add"
             ]
         }, {
             "id": "MultiThreadStaging",

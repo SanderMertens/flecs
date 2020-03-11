@@ -2273,7 +2273,7 @@ void* _ecs_get_ptr(
     return ecs_get_ptr_intern(world, stage, entity, component, false, true);
 }
 
-void* _ecs_get_or_add(
+void* _ecs_get_mutable(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,

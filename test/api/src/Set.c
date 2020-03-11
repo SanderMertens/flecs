@@ -321,7 +321,7 @@ void Set_set_null() {
     ecs_fini(world);
 }
 
-void Set_get_or_add_new() {
+void Set_get_mutable_new() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -330,7 +330,7 @@ void Set_get_or_add_new() {
     test_assert(e != 0);
 
     bool is_added = false;
-    Position *p = ecs_get_or_add(world, e, Position, &is_added);
+    Position *p = ecs_get_mutable(world, e, Position, &is_added);
     test_assert(p != NULL);
     test_bool(is_added, true);
     test_assert( ecs_has(world, e, Position));
@@ -339,7 +339,7 @@ void Set_get_or_add_new() {
     ecs_fini(world);
 }
 
-void Set_get_or_add_existing() {
+void Set_get_mutable_existing() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -350,7 +350,7 @@ void Set_get_or_add_existing() {
     Position *p_prev = ecs_get_ptr(world, e, Position);
 
     bool is_added = false;
-    Position *p = ecs_get_or_add(world, e, Position, &is_added);
+    Position *p = ecs_get_mutable(world, e, Position, &is_added);
     test_assert(p != NULL);
     test_bool(is_added, false);
     test_assert( ecs_has(world, e, Position));
@@ -375,7 +375,7 @@ void Set_modified_w_on_set() {
     test_assert(e != 0);
 
     bool is_added = false;
-    Position *p = ecs_get_or_add(world, e, Position, &is_added);
+    Position *p = ecs_get_mutable(world, e, Position, &is_added);
     test_assert(p != NULL);
     test_bool(is_added, true);
     test_assert( ecs_has(world, e, Position));

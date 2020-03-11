@@ -3051,3 +3051,184 @@ void SingleThreadStaging_merge_once() {
 
     ecs_fini(world);
 }
+
+void MutableTest(ecs_rows_t *rows) {
+    ecs_world_t *world = rows->world;
+
+    ECS_COLUMN(rows, Velocity, v, 2);
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        bool is_added;
+        Velocity *v_mut = ecs_get_mutable(
+            world, rows->entities[i], Velocity, &is_added);
+
+        // Even though component is added to stage, is_added should only be true
+        // if the component is added for the first time, which requires the app
+        // to init the component value.
+        if (!v) {
+            test_bool(is_added, true);
+        } else {
+            test_bool(is_added, false);
+        }
+
+        if (is_added) {
+            v_mut->x = 0;
+            v_mut->y = 0;
+        }
+
+        v_mut->x ++;
+        v_mut->y ++;
+
+        // Make sure we didn't update the main stage
+        if (v) {
+            test_assert(v->x == v_mut->x - 1);
+            test_assert(v->y == v_mut->y - 1);
+        }
+    }
+}
+
+void SingleThreadStaging_get_mutable() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, MutableTest, EcsOnUpdate, Position, ?Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_progress(world, 0);
+    test_assert( ecs_has(world, e, Velocity));
+    
+    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 1);
+
+    ecs_progress(world, 0);
+    test_assert( ecs_has(world, e, Velocity));
+
+    v = ecs_get_ptr(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 2);
+    test_int(v->y, 2);
+    
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_get_mutable_from_main() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, MutableTest, EcsOnUpdate, Position, ?Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    // Add velocity on main stage
+    ecs_set(world, e, Velocity, {1, 1});
+
+    ecs_progress(world, 0);
+    test_assert( ecs_has(world, e, Velocity));
+    
+    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 2);
+    test_int(v->y, 2);
+
+    ecs_progress(world, 0);
+    test_assert( ecs_has(world, e, Velocity));
+
+    v = ecs_get_ptr(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 3);
+    test_int(v->y, 3);
+    
+    ecs_fini(world);
+}
+
+void MutableTest_w_Add(ecs_rows_t *rows) {
+    ecs_world_t *world = rows->world;
+
+    ECS_COLUMN(rows, Velocity, v, 2);
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+    ECS_COLUMN_COMPONENT(rows, MyTag, 3);
+
+    int32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(world, rows->entities[i], MyTag);
+
+        bool is_added;
+        Velocity *v_mut = ecs_get_mutable(
+            world, rows->entities[i], Velocity, &is_added);
+
+        // Even though component is added to stage, is_added should only be true
+        // if the component is added for the first time, which requires the app
+        // to init the component value.
+        if (!v) {
+            test_bool(is_added, true);
+        } else {
+            test_bool(is_added, false);
+        }
+
+        if (is_added) {
+            v_mut->x = 0;
+            v_mut->y = 0;
+        }
+
+        v_mut->x ++;
+        v_mut->y ++;
+
+        // Make sure we didn't update the main stage
+        if (v) {
+            test_assert(v->x == v_mut->x - 1);
+            test_assert(v->y == v_mut->y - 1);
+        }
+    }
+}
+
+typedef bool MyBool;
+
+void SingleThreadStaging_get_mutable_w_add() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, MyBool);
+    ECS_SYSTEM(world, MutableTest_w_Add, EcsOnUpdate, Position, ?Velocity, .MyBool);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    ecs_progress(world, 0);
+    test_assert( ecs_has(world, e, Velocity));
+    
+    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 1);
+
+    ecs_progress(world, 0);
+    test_assert( ecs_has(world, e, Velocity));
+
+    v = ecs_get_ptr(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 2);
+    test_int(v->y, 2);
+
+    ecs_progress(world, 0);
+    test_assert( ecs_has(world, e, Velocity));
+
+    v = ecs_get_ptr(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 3);
+    test_int(v->y, 3);
+
+    test_assert(false);
+    
+    ecs_fini(world);
+}
+
