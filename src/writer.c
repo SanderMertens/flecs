@@ -190,7 +190,7 @@ void ecs_table_writer_register_table(
     ecs_entity_t *entities = ecs_vector_first(entity_vector);
     int32_t i, count = ecs_vector_count(entity_vector);
     for (i = 0; i < count; i ++) {
-        ecs_ei_delete(&world->stage, entities[i]);
+        ecs_eis_delete(&world->stage, entities[i]);
     }
 
     ecs_assert(writer->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -210,7 +210,7 @@ void ecs_table_writer_finalize_table(
     int32_t i, count = ecs_vector_count(entity_vector);
 
     for (i = 0; i < count; i ++) {
-        ecs_record_t *record_ptr = ecs_ei_get(&world->stage, entities[i]);
+        ecs_record_t *record_ptr = ecs_eis_get(&world->stage, entities[i]);
 
         if (record_ptr) {
             if (record_ptr->type != writer->table->type) {
@@ -231,7 +231,7 @@ void ecs_table_writer_finalize_table(
             .type = writer->table->type
         };
 
-        ecs_ei_set(&world->stage, entities[i], &record);
+        ecs_eis_set(&world->stage, entities[i], &record);
 
         if (entities[i] >= world->last_handle) {
             world->last_handle = entities[i] + 1;

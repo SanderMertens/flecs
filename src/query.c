@@ -17,7 +17,7 @@ ecs_entity_t components_contains(
         if (entity & ECS_CHILDOF) {
             entity &= ECS_ENTITY_MASK;
 
-            ecs_record_t *record = ecs_ei_get(world, &world->stage, entity);
+            ecs_record_t *record = ecs_eis_get(&world->stage, entity);
             ecs_assert(record != 0, ECS_INTERNAL_ERROR, NULL);
 
             if (record->type) {
@@ -43,7 +43,7 @@ ecs_entity_t ecs_get_entity_for_component(
     ecs_entity_t component)
 {
     if (entity) {
-        ecs_record_t *record = ecs_ei_get(world, &world->stage, entity);
+        ecs_record_t *record = ecs_eis_get(&world->stage, entity);
         ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
         type = record->type;
     }
@@ -741,8 +741,9 @@ void ecs_rematch_query(
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
     if (query->system) {
-        ecs_enable(world, query->system, 
-            ecs_sig_check_constraints(world, &query->sig));
+        EcsColSystem* system_data = ecs_get_ptr(world, query->system, EcsColSystem);
+        bool enable = ecs_sig_check_constraints(world, &query->sig);
+        ecs_enable_intern(world, query->system, (EcsSystem*)system_data, enable, false);
     }
 }
 
@@ -843,7 +844,8 @@ ecs_query_iter_t ecs_query_iter(
         .rows = {
             .world = query->world,
             .query = query,
-            .column_count = ecs_vector_count(query->sig.columns)
+            .column_count = ecs_vector_count(query->sig.columns),
+            .table_count = ecs_vector_count(query->tables)
         }
     };
 }

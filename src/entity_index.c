@@ -62,7 +62,7 @@ void ecs_ei_set(
     ecs_entity_t entity,
     ecs_record_t *record)
 {
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (entity > ECS_HI_ENTITY_ID) {
         if (entity == EcsSingleton) {
@@ -83,7 +83,7 @@ void ecs_ei_delete(
     ecs_ei_t *entity_index,
     ecs_entity_t entity)
 {
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (entity > ECS_HI_ENTITY_ID) {
         if (entity == EcsSingleton) {
@@ -101,7 +101,7 @@ void ecs_ei_grow(
     ecs_ei_t *entity_index,
     uint32_t count)
 {
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
     uint32_t sparse_size = ecs_sparse_size(entity_index->lo);
     uint32_t to_grow = count;
@@ -126,7 +126,7 @@ void ecs_ei_set_size(
     ecs_ei_t *entity_index,
     uint32_t size)
 {
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (size > ECS_HI_ENTITY_ID) {
         ecs_sparse_set_size(entity_index->lo, ECS_HI_ENTITY_ID);
@@ -141,7 +141,7 @@ void ecs_ei_set_size(
 uint32_t ecs_ei_count(
     ecs_ei_t *entity_index)
 {
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return ecs_map_count(entity_index->hi) + 
         ecs_sparse_count(entity_index->lo);
@@ -160,7 +160,7 @@ void ecs_ei_new(
 void ecs_ei_clear(
     ecs_ei_t *entity_index)
 {
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
     entity_index->singleton = (ecs_record_t){ 0 };
     ecs_map_clear(entity_index->hi);
@@ -171,7 +171,7 @@ void ecs_ei_clear(
 void ecs_ei_free(
     ecs_ei_t *entity_index)
 {
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
     
     entity_index->singleton = (ecs_record_t){ 0 };
     ecs_map_free(entity_index->hi);
@@ -180,9 +180,10 @@ void ecs_ei_free(
 
 /* Copy entity index */
 ecs_ei_t ecs_ei_copy(
-    ecs_ei_t *entity_index)
+    const ecs_ei_t *entity_index)
 {
     return (ecs_ei_t){
+        .singleton = entity_index->singleton,
         .hi = ecs_map_copy(entity_index->hi),
         .lo = ecs_sparse_copy(entity_index->lo)
     };

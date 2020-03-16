@@ -112,7 +112,7 @@ void StatsCollectWorldStats(ecs_rows_t *rows) {
 
     ecs_world_t *world = rows->world;
 
-    stats->entities_count = ecs_ei_count(&world->stage);
+    stats->entities_count = ecs_eis_count(&world->stage);
     stats->components_count = ecs_count(world, EcsComponent);
     stats->col_systems_count = ecs_count(world, EcsColSystem);
     stats->row_systems_count = ecs_count(world, EcsRowSystem);
@@ -187,7 +187,7 @@ void compute_stage_memory(
     ecs_stage_t *stage, 
     EcsMemoryStats *stats)
 {
-    ecs_ei_memory(stage, 
+    ecs_eis_memory(stage, 
         &stats->entities_memory.allocd_bytes, 
         &stats->entities_memory.used_bytes);
 
@@ -302,7 +302,7 @@ void StatsCollectMemoryStats(ecs_rows_t *rows) {
     /* Compute entity memory (entity index) */
     stats->entities_memory = (ecs_memory_stat_t){0};
     
-    ecs_ei_memory(&world->stage, 
+    ecs_eis_memory(&world->stage, 
         &stats->entities_memory.allocd_bytes, 
         &stats->entities_memory.used_bytes);
     

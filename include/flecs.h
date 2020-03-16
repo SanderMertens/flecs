@@ -148,6 +148,7 @@ struct ecs_rows_t {
     uint16_t column_count;       /* Number of columns for system */
     void *table;                 /* Opaque structure with reference to table */
     void *table_columns;         /* Opaque structure with table column data */
+    int32_t table_count;         /* Number of active tables matched with system */
     ecs_query_t *query;          /* Query being evaluated */
     ecs_reference_t *references; /* References to other entities */
     ecs_entity_t *components;    /* System-table specific list of components */
@@ -498,7 +499,7 @@ void ecs_set_target_fps(
  * @param return The current target FPS.
  */
 FLECS_EXPORT
-int32_t ecs_get_target_fps(
+float ecs_get_target_fps(
     ecs_world_t *world);   
 
 /** Get last delta time from world.
@@ -633,6 +634,41 @@ FLECS_EXPORT
 bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable);
+
+/** Enable world locking while in progress.
+ * When locking is enabled, Flecs will lock the world while in progress. This
+ * allows applications to interact with the world from other threads without
+ * running into race conditions.
+ *
+ * This is a better alternative to applications putting a lock around calls to
+ * ecs_progress, since ecs_progress can sleep when FPS control is enabled,
+ * which is time during which other threads could perform work.
+ *
+ * Locking must be enabled before applications can use the ecs_lock and
+ * ecs_unlock functions. Locking is turned off by default.
+ *
+ * @param world The world.
+ * @param enable True if locking is to be enabled.
+ * @result The previous value of the setting.
+ */
+FLECS_EXPORT
+bool ecs_enable_locking(
+    ecs_world_t *world,
+    bool enable);
+
+/** Locks the world.
+ * See ecs_enable_locking for details.
+ */
+FLECS_EXPORT
+void ecs_lock(
+    ecs_world_t *world);
+
+/** Unlocks the world.
+ * See ecs_enable_locking for details.
+ */
+FLECS_EXPORT
+void ecs_unlock(
+    ecs_world_t *world);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1104,6 +1140,49 @@ ecs_entity_t _ecs_set_ptr(
 #define ecs_set(world, entity, component, ...)\
     _ecs_set_ptr(world, entity, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
 #endif
+
+/** Get new or existing component from entity.
+ * This operation retrieves the pointer for a component and add the component if
+ * the entity did not have the component yet. If the component was added as a
+ * result of this operation, OnAdd systems will be invoked.
+ * 
+ * This operation is useful in combination with ecs_modified, as it allows an
+ * application to achieve the same behavior of an ecs_set, but with the option
+ * to only set certain members of a component instead of overwriting the whole
+ * component value.
+ *
+ * @param world The world.
+ * @param entity The entity from which to obtain the component.
+ * @param size The size of the component.
+ * @param is_added Out parameter indicating if the component was added.
+ * @return A pointer to the component value.
+ */
+FLECS_EXPORT
+void* _ecs_get_mutable(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component,
+    size_t size,
+    bool *is_added);
+
+#define ecs_get_mutable(world, entity, component, is_added)\
+    _ecs_get_mutable(world, entity, ecs_entity(component), sizeof(component), is_added)
+
+/** Signal that component has been modified.
+ * This operation will invoke the OnSet handlers for the modified component.
+ * 
+ * @param world The world.
+ * @param entity The entity of which the component has been modified. 
+ * @param component The component that has been modified. 
+ */
+FLECS_EXPORT 
+void _ecs_modified(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t component);
+
+#define ecs_modified(world, entity, component)\
+    _ecs_modified(world, entity, ecs_entity(component))
 
 /** Check if entity has the specified type.
  * This operation checks if the entity has the components associated with the

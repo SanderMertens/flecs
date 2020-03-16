@@ -78,62 +78,6 @@ bool ecs_get_info(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Entity Index API
-////////////////////////////////////////////////////////////////////////////////
-
-/* Get entity record */
-ecs_record_t* ecs_ei_get(
-    ecs_stage_t *stage,
-    ecs_entity_t entity);
-
-/* Set entity */
-void ecs_ei_set(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_record_t *record); 
-
-/* Get or set entity */
-ecs_record_t* ecs_ei_get_or_create(
-    ecs_stage_t *stage,
-    ecs_entity_t entity);
-
-/* Delete entity from stage */
-void ecs_ei_delete(
-    ecs_stage_t *stage,
-    ecs_entity_t entity);
-
-/* Grow entity index */
-void ecs_ei_grow(
-    ecs_stage_t *stage,
-    uint32_t count);
-
-/* Grow entity index to specific size */
-void ecs_ei_set_size(
-    ecs_stage_t *stage,
-    uint32_t size);    
-
-/* Count entities in stage */
-uint32_t ecs_ei_count(
-    ecs_stage_t *stage);      
-
-/* Initialize entity index for stage */
-void ecs_ei_new(
-    ecs_stage_t *stage);
-
-/* Clear all entities from a stage */
-void ecs_ei_clear(
-    ecs_stage_t *stage);
-
-/* Free entity index for stage */
-void ecs_ei_free(
-    ecs_stage_t *stage);
-
-void ecs_ei_memory(
-    ecs_stage_t *stage,
-    int32_t *allocd,
-    int32_t *used);
-
-////////////////////////////////////////////////////////////////////////////////
 //// World API
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -433,6 +377,13 @@ void ecs_system_init_base(
 void ecs_system_compute_and_families(
     ecs_world_t *world,
     EcsSystem *system_data);
+
+void ecs_enable_intern(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    EcsSystem *system_data,
+    bool enabled,
+    bool by_user);
 
 /* Invoked when system becomes active / inactive */
 void ecs_system_activate(

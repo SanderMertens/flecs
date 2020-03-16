@@ -155,6 +155,8 @@ const char* ecs_strerror(
         return "serialized data contains conflicting component size";   
     case ECS_DESERIALIZE_FORMAT_ERROR:
         return "serialized data has invalid format";
+    case ECS_INVALID_REACTIVE_SIGNATURE:
+        return "signature is not valid for reactive system (must contain at least one SELF column)";
     }
 
     return "unknown error code";

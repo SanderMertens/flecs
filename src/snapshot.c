@@ -90,7 +90,7 @@ ecs_snapshot_t* ecs_snapshot_take(
 {
     ecs_snapshot_t *result = snapshot_create(
             world,
-            world->stage.entity_index,
+            &world->stage.entity_index,
             world->stage.tables,
             filter);
 
@@ -107,7 +107,7 @@ ecs_snapshot_t* ecs_snapshot_copy(
 {
     ecs_snapshot_t *result = snapshot_create(
             world,
-            snapshot->entity_index,
+            &snapshot->entity_index,
             snapshot->tables,
             filter);
 
@@ -136,7 +136,7 @@ void ecs_snapshot_restore(
     } else {
         /* If no filter was used, the entity index will be an exact copy of what
          * it was before taking the snapshot */
-        ecs_map_free(world->stage.entity_index);
+        ecs_ei_free(&world->stage.entity_index);
         world->stage.entity_index = snapshot->entity_index;
     }   
 
@@ -166,14 +166,14 @@ void ecs_snapshot_restore(
             ecs_vector_t *entities = dst_data->entities;
             ecs_entity_t *array = ecs_vector_first(entities);
             int32_t j, row_count = ecs_vector_count(entities);
-            ecs_map_t *entity_index = world->stage.entity_index;
+            ecs_ei_t *entity_index = &world->stage.entity_index;
             
             for (j = 0; j < row_count; j ++) {
                 ecs_record_t record = {
                     .type = dst->type,
                     .row = j + 1
                 };
-                ecs_map_set(entity_index, array[j], &record);
+                ecs_ei_set(entity_index, array[j], &record);
             } 
         }
     }
@@ -202,9 +202,7 @@ void ecs_snapshot_free(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    if (snapshot->entity_index) {
-        ecs_map_free(snapshot->entity_index);
-    }
+    ecs_ei_free(&snapshot->entity_index);
 
     int32_t i, count = ecs_sparse_count(snapshot->tables);
     for (i = 0; i < count; i ++) {

@@ -34,8 +34,7 @@ static
 void clean_data_stage(
     ecs_stage_t *stage)
 {
-    ecs_ei_clear(stage);
-    ecs_map_clear(stage->remove_merge);
+    ecs_eis_clear(stage);
 }
 
 static
@@ -45,7 +44,7 @@ void merge_commits(
 {  
     ecs_assert(stage != &world->stage, ECS_INTERNAL_ERROR, NULL);
 
-    if (!ecs_ei_count(stage)) {
+    if (!ecs_eis_count(stage)) {
         return;
     }
 
@@ -103,7 +102,7 @@ void ecs_stage_init(
     memset(stage, 0, sizeof(ecs_stage_t));
 
     /* Initialize entity index */
-    ecs_ei_new(stage);
+    ecs_eis_new(stage);
 
     if (is_main_stage) {
         stage->last_link = &world->stage.type_root.link;
@@ -148,7 +147,7 @@ void ecs_stage_deinit(
     clean_tables(world, stage);
     ecs_sparse_free(stage->tables);
     ecs_map_free(stage->table_index);
-    ecs_ei_free(stage);
+    ecs_eis_free(stage);
 }
 
 void ecs_stage_merge(
@@ -171,7 +170,7 @@ void ecs_stage_merge(
     clean_tables(world, stage);
     ecs_sparse_clear(stage->tables);
     ecs_map_clear(stage->table_index);
-    ecs_ei_clear(stage);
+    ecs_eis_clear(stage);
 
     /* Now that all data has been merged, evaluate columns of added tables. This
      * step updates the world for special columns, like prefab components */

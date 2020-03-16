@@ -320,3 +320,70 @@ void Set_set_null() {
 
     ecs_fini(world);
 }
+
+void Set_get_mutable_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    bool is_added = false;
+    Position *p = ecs_get_mutable(world, e, Position, &is_added);
+    test_assert(p != NULL);
+    test_bool(is_added, true);
+    test_assert( ecs_has(world, e, Position));
+    test_assert(p == ecs_get_ptr(world, e, Position));
+    
+    ecs_fini(world);
+}
+
+void Set_get_mutable_existing() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+    Position *p_prev = ecs_get_ptr(world, e, Position);
+
+    bool is_added = false;
+    Position *p = ecs_get_mutable(world, e, Position, &is_added);
+    test_assert(p != NULL);
+    test_bool(is_added, false);
+    test_assert( ecs_has(world, e, Position));
+    test_assert(p == p_prev);
+    
+    ecs_fini(world);
+}
+
+static bool is_invoked = false;
+
+void OnSetPosition(ecs_rows_t *rows) {
+    is_invoked = true;
+}
+
+void Set_modified_w_on_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, OnSetPosition, EcsOnSet, Position);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    bool is_added = false;
+    Position *p = ecs_get_mutable(world, e, Position, &is_added);
+    test_assert(p != NULL);
+    test_bool(is_added, true);
+    test_assert( ecs_has(world, e, Position));
+    test_assert(p == ecs_get_ptr(world, e, Position));
+
+    test_assert(is_invoked == false);
+    ecs_modified(world, e, Position);
+    test_assert(is_invoked == true);
+    
+    ecs_fini(world);
+}

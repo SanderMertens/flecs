@@ -25,6 +25,7 @@
 
 #include "flecs.h"
 #include "flecs/util/dbg.h"
+#include "flecs/util/entity_index.h"
 
 #define ECS_WORLD_INITIAL_TABLE_COUNT (2)
 #define ECS_WORLD_INITIAL_ENTITY_COUNT (2)
@@ -295,6 +296,8 @@ typedef struct EcsColSystem {
     uint32_t ref_size;                    /* Parameters for refs */
     float period;                         /* Minimum period inbetween system invocations */
     float time_passed;                    /* Time passed since last invocation */
+    bool enabled_by_demand;               /* Is system enabled by on demand systems */
+    bool enabled_by_user;                /* Is system enabled by user */
 } EcsColSystem;
 
 /** A row system is a system that is ran on 1..n entities for which a certain 
@@ -307,14 +310,6 @@ typedef struct EcsRowSystem {
     ecs_vector_t *components;       /* Components in order of signature */
 } EcsRowSystem;
  
-/** The ecs_record_t struct is a 64-bit value that describes in which table
- * (identified by a type) is stored, at which index. Entries in the 
- * entity_index are of type ecs_record_t. */
-typedef struct ecs_record_t {
-    ecs_type_t type;              /* Identifies a type (and table) in world */
-    int32_t row;                  /* Table row of the entity */
-} ecs_record_t;
-
 #define ECS_TYPE_DB_MAX_CHILD_NODES (256)
 #define ECS_TYPE_DB_BUCKET_COUNT (256)
 
@@ -342,11 +337,11 @@ typedef struct ecs_type_node_t {
     ecs_type_link_t link;     
 } ecs_type_node_t;
 
-typedef struct ecs_ei_t {
+struct ecs_ei_t {
     ecs_record_t singleton; /* Special record for singleton entity */
     ecs_sparse_t *lo;       /* Low entity ids are stored in a sparse set */
     ecs_map_t *hi;          /* To save memory high ids are stored in a map */
-} ecs_ei_t;
+};
 
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
@@ -527,6 +522,8 @@ struct ecs_world_t {
     int arg_fps;
     int arg_threads;
 
+    /* -- World lock -- */
+    ecs_os_mutex_t mutex;         /* Locks the world if locking enabled */
 
     /* -- World state -- */
 
@@ -540,6 +537,7 @@ struct ecs_world_t {
     bool should_quit;             /* Did a system signal that app should quit */
     bool should_match;            /* Should tablea be rematched */
     bool should_resolve;          /* If a table reallocd, resolve system refs */
+    bool locking_enabled;         /* Lock world when in progress */    
 };
 
 #endif

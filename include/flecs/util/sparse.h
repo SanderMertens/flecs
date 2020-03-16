@@ -1,5 +1,5 @@
-#ifndef FLECS_CHUNKED_H
-#define FLECS_CHUNKED_H
+#ifndef FLECS_SPARSE_H
+#define FLECS_SPARSE_H
 
 #ifdef __cplusplus
 extern "C" {

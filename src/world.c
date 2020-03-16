@@ -124,7 +124,7 @@ void bootstrap_component(
     int32_t index = ecs_table_append(world, table, data, entity);
 
     /* Create record in entity index */
-    ecs_record_t *record = ecs_ei_get_or_create(&world->stage, entity);
+    ecs_record_t *record = ecs_eis_get_or_create(&world->stage, entity);
     record->type = world->t_component;
     record->row = index + 1;
 
@@ -672,6 +672,7 @@ ecs_world_t *ecs_init(void) {
     world->last_handle = 0;
     world->should_quit = false;
     world->should_match = false;
+    world->locking_enabled = false;
 
     world->frame_start_time = (ecs_time_t){0, 0};
     if (time_ok) {
@@ -840,6 +841,10 @@ int ecs_fini(
         ecs_set_threads(world, 0);
     }
 
+    if (world->locking_enabled) {
+        ecs_os_mutex_free(world->mutex);
+    }    
+
     deinit_tables(world);
 
     col_systems_deinit_handlers(world, world->on_update_systems);
@@ -913,7 +918,7 @@ void ecs_dim(
     int32_t entity_count)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
-    ecs_ei_set_size(&world->stage, entity_count);
+    ecs_eis_set_size(&world->stage, entity_count);
 }
 
 void _ecs_dim_type(
@@ -1151,6 +1156,10 @@ bool ecs_progress(
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(user_delta_time || ecs_os_api.get_time, ECS_MISSING_OS_API, "get_time");
 
+    if (world->locking_enabled) {
+        ecs_lock(world);
+    }
+
     /* Start measuring total frame time */
     float delta_time = start_measure_frame(world, user_delta_time);
 
@@ -1195,10 +1204,13 @@ bool ecs_progress(
     /* -- System execution stops here -- */
 
     world->frame_count_total ++;
-    
-    stop_measure_frame(world, delta_time);
-
     world->in_progress = false;
+
+    if (world->locking_enabled) {
+        ecs_unlock(world);
+    }
+
+    stop_measure_frame(world, delta_time);    
 
     return !world->should_quit;
 }
@@ -1431,7 +1443,6 @@ ecs_entity_t ecs_import_from_library(
     int flags)
 {
     ecs_assert(library_name != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(module_name != NULL, ECS_INVALID_PARAMETER, NULL);
 
     char *import_func = (char*)module_name; /* safe */
     char *module = (char*)module_name;
@@ -1513,7 +1524,7 @@ ecs_entity_t ecs_import_from_library(
     if (!action) {
         ecs_os_err("failed to load import function %s from library %s",
             import_func, library_name);
-        free(library_filename);
+        ecs_os_free(library_filename);
         ecs_os_dlclose(dl);            
         return ECS_INVALID_ENTITY;
     } else {
@@ -1532,7 +1543,7 @@ ecs_entity_t ecs_import_from_library(
         ecs_os_free(module);
     }
 
-    free(library_filename);
+    ecs_os_free(library_filename);
 
     return result;
 }
@@ -1556,8 +1567,41 @@ int32_t ecs_get_threads(
     return ecs_vector_count(world->worker_threads);
 }
 
-int32_t ecs_get_target_fps(
+float ecs_get_target_fps(
     ecs_world_t *world)
 {
     return world->target_fps;
+}
+
+bool ecs_enable_locking(
+    ecs_world_t *world,
+    bool enable)
+{
+    if (enable) {
+        if (!world->locking_enabled) {
+            world->mutex = ecs_os_mutex_new();
+        }
+    } else {
+        if (world->locking_enabled) {
+            ecs_os_mutex_free(world->mutex);
+        }
+    }
+
+    bool old = world->locking_enabled;
+    world->locking_enabled = enable;
+    return old;
+}
+
+void ecs_lock(
+    ecs_world_t *world)
+{
+    ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
+    ecs_os_mutex_lock(world->mutex);
+}
+
+void ecs_unlock(
+    ecs_world_t *world)
+{
+    ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
+    ecs_os_mutex_unlock(world->mutex);
 }
