@@ -167,6 +167,8 @@ public:
     /* Obtain handle to current system */
     flecs::entity system() const;
 
+    flecs::world world() const;
+
     /* Number of entities to iterate over */
     uint32_t count() const {
         return m_rows->count;
@@ -313,13 +315,16 @@ inline column<T>::column(rows &rows, int column) {
 class world final {
 public:
     world() 
-        : m_world( ecs_init() ) { init_builtin_components(); }
+        : m_world( ecs_init() )
+        , m_owned( true ) { init_builtin_components(); }
 
     world(int argc, char *argv[])
-        : m_world( ecs_init_w_args(argc, argv) ) { init_builtin_components(); }
+        : m_world( ecs_init_w_args(argc, argv) )
+        , m_owned( true ) { init_builtin_components(); }
 
     explicit world(world_t *world) 
-        : m_world( world ) { init_builtin_components(); }
+        : m_world( world ) 
+        , m_owned( false ) { }
 
     /* Not allowed to copy a world. May only take a reference */
     world(const world& obj) = delete;
@@ -337,7 +342,9 @@ public:
     }
     
     ~world() { 
-        ecs_fini(m_world); 
+        if (m_owned) {
+            ecs_fini(m_world); 
+        }
     }
 
     world_t* c_ptr() const {
@@ -434,6 +441,7 @@ private:
     void init_builtin_components();
 
     world_t *m_world;
+    bool m_owned;
 };
 
 
@@ -1599,6 +1607,10 @@ inline entity world::lookup(const char *name) const {
 
 inline flecs::entity rows::system() const {
     return flecs::entity(m_rows->world, m_rows->system);
+}
+
+inline flecs::world rows::world() const {
+    return flecs::world(m_rows->world);
 }
 
 inline flecs::entity rows::entity(uint32_t row) const {
