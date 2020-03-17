@@ -469,6 +469,7 @@ void SystemCascade_adopt_after_match(void);
 void SystemManual_1_type_1_component(void);
 void SystemManual_disabled(void);
 void SystemManual_activate_status(void);
+void SystemManual_no_automerge(void);
 
 // Testsuite 'Tasks'
 void Tasks_no_components(void);
@@ -2707,7 +2708,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemManual",
-        .testcase_count = 3,
+        .testcase_count = 4,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -2720,6 +2721,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "activate_status",
                 .function = SystemManual_activate_status
+            },
+            {
+                .id = "no_automerge",
+                .function = SystemManual_no_automerge
             }
         }
     },

@@ -1096,7 +1096,9 @@ ecs_entity_t ecs_run_w_filter_v2(
      * merge and reset the value */
     if (!in_progress) {
         real_world->in_progress = false;
-        ecs_stage_merge(real_world, stage);
+        if (world->auto_merge) {
+            ecs_stage_merge(real_world, stage);
+        }
     }
 
     return interrupted_by;

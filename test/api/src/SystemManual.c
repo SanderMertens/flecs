@@ -173,3 +173,36 @@ void SystemManual_activate_status() {
     test_assert(enable_status == EcsSystemDisabled);
     test_assert(active_status == EcsSystemDeactivated);
 }
+
+static
+void AddVelocity(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Velocity);
+    }
+}
+
+void SystemManual_no_automerge() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, AddVelocity, EcsManual, Position, .Velocity);
+
+    ECS_ENTITY(world, e_1, Position);
+
+    ecs_set_automerge(world, false);
+
+    ecs_run(world, AddVelocity, 1, NULL);
+
+    test_assert(!ecs_has(world, e_1, Velocity));
+
+    ecs_merge(world);
+
+    test_assert(ecs_has(world, e_1, Velocity));
+
+    ecs_fini(world);
+}

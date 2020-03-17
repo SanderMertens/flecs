@@ -517,7 +517,8 @@
             "testcases": [
                 "1_type_1_component",
                 "disabled",
-                "activate_status"
+                "activate_status",
+                "no_automerge"
             ]
         }, {
             "id": "Tasks",
