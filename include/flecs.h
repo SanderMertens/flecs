@@ -186,6 +186,7 @@ typedef struct EcsPrefab {
 } EcsPrefab;
 
 #include <flecs/util/api_support.h>
+#include <flecs/util/v2.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////

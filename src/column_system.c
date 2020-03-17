@@ -627,6 +627,29 @@ void resolve_cascade_container(
     }
 }
 
+static
+bool should_run(
+    EcsColSystem *system_data,
+    float period,
+    float delta_time)
+{
+    float time_passed = system_data->time_passed + delta_time;
+
+    if (time_passed >= period) {
+        time_passed -= period;
+        if (time_passed > period) {
+            time_passed = 0;
+        }
+
+        system_data->time_passed = time_passed;
+    } else {
+        system_data->time_passed = time_passed;
+        return false;
+    }
+
+    return true;
+}
+
 /* -- Private API -- */
 
 /* Rematch system with tables after a change happened to a container or prefab */
@@ -895,47 +918,16 @@ ecs_entity_t ecs_new_col_system(
     return result;
 }
 
-/* -- Public API -- */
-
-static
-bool should_run(
-    EcsColSystem *system_data,
-    float period,
-    float delta_time)
-{
-    float time_passed = system_data->time_passed + delta_time;
-
-    if (time_passed >= period) {
-        time_passed -= period;
-        if (time_passed > period) {
-            time_passed = 0;
-        }
-
-        system_data->time_passed = time_passed;
-    } else {
-        system_data->time_passed = time_passed;
-        return false;
-    }
-
-    return true;
-}
-
-ecs_entity_t _ecs_run_w_filter(
+ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
+    ecs_world_t *real_world,
     ecs_entity_t system,
     float delta_time,
     uint32_t offset,
     uint32_t limit,
-    ecs_type_t filter,
-    void *param)
-{
-    ecs_world_t *real_world = world;
-    if (world->magic == ECS_THREAD_MAGIC) {
-        real_world = ((ecs_thread_t*)world)->world; /* dispel the magic */
-    }
-
-    bool in_progress = real_world->in_progress;  
-
+    const ecs_filter_t *filter,
+    void *param) 
+{    
     ecs_entity_info_t sys_info = {.entity = system};
     EcsColSystem *system_data = ecs_get_ptr_intern(real_world, &real_world->main_stage, 
         &sys_info, EEcsColSystem, false, false);
@@ -966,12 +958,6 @@ ecs_entity_t _ecs_run_w_filter(
         }
     }
 
-    ecs_stage_t *stage = NULL;
-    if (!in_progress) {
-        real_world->in_progress = true;
-        stage = ecs_get_stage(&real_world);
-    }    
-
     ecs_time_t time_start;
     if (measure_time) {
         ecs_os_get_time(&time_start);
@@ -989,7 +975,7 @@ ecs_entity_t _ecs_run_w_filter(
         .param = param,
         .column_count = column_count,
         .delta_time = system_delta_time,
-        .world_time = world->world_time_total,
+        .world_time = real_world->world_time_total,
         .frame_offset = offset,
         .table_offset = 0,
         .system_data = &system_data->base
@@ -1006,8 +992,8 @@ ecs_entity_t _ecs_run_w_filter(
             count = ecs_table_count(world_table);
 
             if (filter) {
-                if (!ecs_type_contains(
-                    real_world, world_table->type, filter, true, true))
+                if (!ecs_type_match_w_filter(
+                    real_world, world_table->type, filter))
                 {
                     continue;
                 }
@@ -1070,6 +1056,42 @@ ecs_entity_t _ecs_run_w_filter(
         }
     }
 
+    if (measure_time) {
+        system_data->base.time_spent += ecs_time_measure(&time_start);
+    }
+    
+    system_data->base.invoke_count ++;
+
+    return interrupted_by;
+}
+
+/* -- Public API -- */
+
+ecs_entity_t ecs_run_w_filter_v2(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    float delta_time,
+    uint32_t offset,
+    uint32_t limit,
+    const ecs_filter_t *filter,
+    void *param)
+{
+    ecs_world_t *real_world = world;
+    if (world->magic == ECS_THREAD_MAGIC) {
+        real_world = ((ecs_thread_t*)world)->world; /* dispel the magic */
+    }
+
+    bool in_progress = real_world->in_progress;
+
+    ecs_stage_t *stage = NULL;
+    if (!in_progress) {
+        real_world->in_progress = true;
+        stage = ecs_get_stage(&real_world);
+    }
+
+    ecs_entity_t interrupted_by = ecs_run_intern(
+        world, real_world, system, delta_time, offset, limit, filter, param);
+
     /* If world wasn't in progress when we entered this function, we need to
      * merge and reset the value */
     if (!in_progress) {
@@ -1077,11 +1099,25 @@ ecs_entity_t _ecs_run_w_filter(
         ecs_stage_merge(real_world, stage);
     }
 
-    if (measure_time) {
-        system_data->base.time_spent += ecs_time_measure(&time_start);
-    }
-    
-    system_data->base.invoke_count ++;
+    return interrupted_by;
+}
+
+ecs_entity_t _ecs_run_w_filter(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    float delta_time,
+    uint32_t offset,
+    uint32_t limit,
+    ecs_type_t include_type,
+    void *param)
+{
+    ecs_filter_t filter = {
+        .include = include_type,
+        .include_kind = EcsMatchAll
+    };
+
+    ecs_entity_t interrupted_by = ecs_run_w_filter_v2(
+        world, system, delta_time, offset, limit, &filter, param);
 
     return interrupted_by;
 }

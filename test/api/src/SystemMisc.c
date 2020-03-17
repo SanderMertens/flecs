@@ -787,3 +787,34 @@ void SystemMisc_dont_enable_after_rematch() {
 
     ecs_fini(world);
 }
+
+static void SysA(ecs_rows_t *rows)
+{
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+    ecs_add(rows->world, rows->entities[0], Velocity);
+}
+
+static int b_invoked;
+
+static void SysB(ecs_rows_t *rows)
+{
+    b_invoked ++;
+}
+
+void SystemMisc_ensure_single_merge() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, SysA, EcsOnLoad, Position, !Velocity);
+    ECS_SYSTEM(world, SysB, EcsPostLoad, Velocity);
+
+    ECS_ENTITY(world, MyEntity, Position);
+
+    ecs_progress(world, 0);
+
+    test_assert(b_invoked == 1);
+
+    ecs_fini(world);
+}

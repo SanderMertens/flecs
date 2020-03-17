@@ -936,6 +936,10 @@ public:
  
 class filter {
 public:
+    filter() 
+        : m_world( nullptr )
+        , m_filter{ } {}
+
     explicit filter(const world& world) 
         : m_world( world.c_ptr() )
         , m_filter{ } { }
@@ -991,7 +995,11 @@ public:
     }  
 
     const filter_t* c_ptr() const {
-        return &m_filter;
+        if (m_world) {
+            return &m_filter;
+        } else {
+            return nullptr;
+        }
     }
 
 private:
@@ -1145,13 +1153,12 @@ public:
         , m_id(id)
         , m_delta_time(delta_time)
         , m_param(param)
-        , m_filter(nullptr)
+        , m_filter()
         , m_offset(0)
         , m_limit(0) { }
 
     system_runner_fluent& filter(filter filter) {
-        ecs_assert(filter.exclude().c_ptr() == nullptr, ECS_UNSUPPORTED, NULL);
-        m_filter = filter.include().c_ptr();
+        m_filter = filter;
         return *this;
     }
 
@@ -1166,15 +1173,15 @@ public:
     }
 
     ~system_runner_fluent() {
-        _ecs_run_w_filter(
-            m_world, m_id, m_delta_time, m_offset, m_limit, m_filter, m_param);
+        ecs_run_w_filter_v2(
+            m_world, m_id, m_delta_time, m_offset, m_limit, m_filter.c_ptr(), m_param);
     }
 private:
     world_t *m_world;
     entity_t m_id;
     float m_delta_time;
     void *m_param;
-    ecs_type_t m_filter;
+    flecs::filter m_filter;
     std::int32_t m_offset;
     std::int32_t m_limit;
 };

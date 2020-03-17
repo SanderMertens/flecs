@@ -1132,7 +1132,8 @@ void run_single_thread_stage(
         ecs_time_measure(&start);
 
         for (i = 0; i < system_count; i ++) {
-            ecs_run(world, buffer[i], world->delta_time, NULL);
+            ecs_run_intern(
+                world, world, buffer[i], world->delta_time, 0, 0, NULL, NULL);
         }
 
         world->system_time_total += ecs_time_measure(&start);

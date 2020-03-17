@@ -339,7 +339,8 @@
                 "status_disable_after_disable",
                 "status_activate_after_new",
                 "status_deactivate_after_delete",
-                "dont_enable_after_rematch"
+                "dont_enable_after_rematch",
+                "ensure_single_merge"
             ]
         }, {
             "id": "SystemOnAdd",
