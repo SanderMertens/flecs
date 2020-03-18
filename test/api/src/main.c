@@ -311,6 +311,7 @@ void SystemMisc_status_deactivate_after_delete(void);
 void SystemMisc_dont_enable_after_rematch(void);
 void SystemMisc_ensure_single_merge(void);
 void SystemMisc_table_count(void);
+void SystemMisc_active_system_count(void);
 
 // Testsuite 'SystemOnAdd'
 void SystemOnAdd_new_match_1_of_1(void);
@@ -1935,7 +1936,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 43,
+        .testcase_count = 44,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -2108,6 +2109,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "table_count",
                 .function = SystemMisc_table_count
+            },
+            {
+                .id = "active_system_count",
+                .function = SystemMisc_active_system_count
             }
         }
     },

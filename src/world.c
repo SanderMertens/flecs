@@ -1298,6 +1298,26 @@ bool ecs_progress(
     return !world->should_quit;
 }
 
+int32_t ecs_active_system_count(
+    ecs_world_t *world)
+{
+    return
+        ecs_vector_count(world->on_load_systems) +
+        ecs_vector_count(world->post_load_systems) +
+        ecs_vector_count(world->pre_update_systems) +
+        ecs_vector_count(world->on_update_systems) +
+        ecs_vector_count(world->on_validate_systems) +
+        ecs_vector_count(world->post_update_systems) +
+        ecs_vector_count(world->pre_store_systems) +
+        ecs_vector_count(world->on_store_systems);
+}
+
+int32_t ecs_inactive_system_count(
+    ecs_world_t *world)
+{
+    return ecs_vector_count(world->inactive_systems);
+}
+
 float ecs_get_delta_time(
     ecs_world_t *world)
 {
@@ -1658,4 +1678,3 @@ uint32_t ecs_get_threads(
 {
     return ecs_vector_count(world->worker_threads);
 }
-

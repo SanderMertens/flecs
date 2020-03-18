@@ -853,3 +853,28 @@ void SystemMisc_table_count() {
 
     ecs_fini(world);
 }
+
+void SystemMisc_active_system_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, SysB, EcsOnUpdate, Position, Velocity);
+
+    test_int( ecs_active_system_count(world), 0);
+    test_int( ecs_inactive_system_count(world), 2);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    test_int( ecs_active_system_count(world), 1);
+    test_int( ecs_inactive_system_count(world), 1);
+
+    ecs_add(world, e, Velocity);
+
+    test_int( ecs_active_system_count(world), 2);
+    test_int( ecs_inactive_system_count(world), 0);
+    
+    ecs_fini(world);
+}
