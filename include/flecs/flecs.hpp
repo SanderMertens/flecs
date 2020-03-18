@@ -423,13 +423,25 @@ public:
     void delete_entities(flecs::filter filter) const;
 
     template <typename T>
+    void add() const;
+    template <typename T>
     void add(flecs::filter filter) const;
+
+    void add(type type) const;
     void add(type type, flecs::filter filter) const;
+
+    void add(entity entity) const;
     void add(entity entity, flecs::filter filter) const;
 
     template <typename T>
+    void remove() const;
+    template <typename T>
     void remove(flecs::filter filter) const;
+
+    void remove(type type) const;
     void remove(type type, flecs::filter filter) const;
+
+    void remove(entity entity) const;
     void remove(entity entity, flecs::filter filter) const;
 
     /* Iterate world tables */
@@ -868,9 +880,15 @@ template <typename T>
 class component_base final {
 public:
     static void init(const world& world, const char *name) {
+        entity_t cur_entity = s_entity;
+        type_t cur_type = s_type;
+
         s_entity = ecs_new_component(world.c_ptr(), name, sizeof(T));
         s_type = ecs_type_from_entity(world.c_ptr(), s_entity);
         s_name = name;
+
+        ecs_assert(!cur_entity || cur_entity == s_entity, ECS_INCONSISTENT_COMPONENT_NAME, name);
+        ecs_assert(!cur_type || cur_type == s_type, ECS_INCONSISTENT_COMPONENT_NAME, name);
     }
 
     static void init_existing(entity_t entity, type_t type, const char *name) {
@@ -1656,12 +1674,25 @@ inline void world::delete_entities(flecs::filter filter) const {
 }
 
 template <typename T>
+inline void world::add() const {
+    _ecs_add_remove_w_filter(m_world, component_base<T>::s_type, nullptr, nullptr);
+}
+
+template <typename T>
 inline void world::add(flecs::filter filter) const {
     _ecs_add_remove_w_filter(m_world, component_base<T>::s_type, nullptr, filter.c_ptr());
 }
 
+inline void world::add(type type) const {
+    _ecs_add_remove_w_filter(m_world, type.c_ptr(), nullptr, nullptr);
+}
+
 inline void world::add(type type, flecs::filter filter) const {
     _ecs_add_remove_w_filter(m_world, type.c_ptr(), nullptr, filter.c_ptr());
+}
+
+inline void world::add(entity entity) const {
+    _ecs_add_remove_w_filter(m_world, entity.to_type().c_ptr(), nullptr, nullptr);
 }
 
 inline void world::add(entity entity, flecs::filter filter) const {
@@ -1669,12 +1700,25 @@ inline void world::add(entity entity, flecs::filter filter) const {
 }
 
 template <typename T>
+inline void world::remove() const {
+    _ecs_add_remove_w_filter(m_world, nullptr, component_base<T>::s_type, nullptr);
+}
+
+template <typename T>
 inline void world::remove(flecs::filter filter) const {
     _ecs_add_remove_w_filter(m_world, nullptr, component_base<T>::s_type, filter.c_ptr());
 }
 
+inline void world::remove(type type) const {
+    _ecs_add_remove_w_filter(m_world, nullptr, type.c_ptr(), nullptr);
+}
+
 inline void world::remove(type type, flecs::filter filter) const {
     _ecs_add_remove_w_filter(m_world, nullptr, type.c_ptr(), filter.c_ptr());
+}
+
+inline void world::remove(entity entity) const {
+    _ecs_add_remove_w_filter(m_world, nullptr, entity.to_type().c_ptr(), nullptr);
 }
 
 inline void world::remove(entity entity, flecs::filter filter) const {

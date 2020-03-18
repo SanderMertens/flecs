@@ -1796,8 +1796,9 @@ void _ecs_add_remove_w_filter(
             continue;
         }
 
-        /* Component(s) must be removed, find table */
+        /* Component(s) must be added / removed, find table */
         ecs_type_t dst_type = ecs_type_merge(world, type, to_add, to_remove);
+
         if (!dst_type) {
             /* If this removes all components, clear table */
             ecs_table_merge(world, NULL, table);
@@ -1806,7 +1807,9 @@ void _ecs_add_remove_w_filter(
             ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
             /* Merge table into dst_table */
-            ecs_table_merge(world, dst_table, table);
+            if (dst_table != table) {
+                ecs_table_merge(world, dst_table, table);
+            }
         }
     }    
 }

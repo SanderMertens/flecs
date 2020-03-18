@@ -148,7 +148,11 @@
                 "remove_1_include_1",
                 "remove_1_include_2",
                 "add_1",
-                "add_2"                           
+                "add_2",
+                "add_existing",
+                "remove_existing",
+                "remove_existing_no_filter",
+                "add_remove_nothing"
             ]
         }, {
             "id": "Has",

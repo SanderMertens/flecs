@@ -134,6 +134,10 @@ void Add_remove_w_filter_remove_1_include_1(void);
 void Add_remove_w_filter_remove_1_include_2(void);
 void Add_remove_w_filter_add_1(void);
 void Add_remove_w_filter_add_2(void);
+void Add_remove_w_filter_add_existing(void);
+void Add_remove_w_filter_remove_existing(void);
+void Add_remove_w_filter_remove_existing_no_filter(void);
+void Add_remove_w_filter_add_remove_nothing(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -1367,7 +1371,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Add_remove_w_filter",
-        .testcase_count = 12,
+        .testcase_count = 16,
         .testcases = (bake_test_case[]){
             {
                 .id = "remove_1_no_filter",
@@ -1416,6 +1420,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_2",
                 .function = Add_remove_w_filter_add_2
+            },
+            {
+                .id = "add_existing",
+                .function = Add_remove_w_filter_add_existing
+            },
+            {
+                .id = "remove_existing",
+                .function = Add_remove_w_filter_remove_existing
+            },
+            {
+                .id = "remove_existing_no_filter",
+                .function = Add_remove_w_filter_remove_existing_no_filter
+            },
+            {
+                .id = "add_remove_nothing",
+                .function = Add_remove_w_filter_add_remove_nothing
             }
         }
     },
