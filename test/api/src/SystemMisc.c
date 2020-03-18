@@ -818,3 +818,38 @@ void SystemMisc_ensure_single_merge() {
 
     ecs_fini(world);
 }
+
+static int test_table_count_invoked;
+
+static void TestTableCount(ecs_rows_t *rows) {
+    test_int(rows->table_count, 2);
+    test_int(rows->inactive_table_count, 1);
+    test_table_count_invoked ++;
+}
+
+void SystemMisc_table_count() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_SYSTEM(world, TestTableCount, EcsOnUpdate, Position);
+
+    // Create two active tables
+    ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+
+    // Create one inactive table
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_add(world, e3, Mass);
+    ecs_delete(world, e3);
+
+    ecs_progress(world, 0);
+
+    test_int(test_table_count_invoked, 2);
+
+    ecs_fini(world);
+}

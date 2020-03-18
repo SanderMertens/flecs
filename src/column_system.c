@@ -978,7 +978,9 @@ ecs_entity_t ecs_run_intern(
         .world_time = real_world->world_time_total,
         .frame_offset = offset,
         .table_offset = 0,
-        .system_data = &system_data->base
+        .system_data = &system_data->base,
+        .table_count = table_count,
+        .inactive_table_count = ecs_vector_count(system_data->inactive_tables)
     };
 
     for (i = 0; i < table_count; i ++) {

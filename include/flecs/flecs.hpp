@@ -209,6 +209,14 @@ public:
     /* Obtain type of table being iterated over */
     type table_type() const;
 
+    int32_t table_count() const {
+        return m_rows->table_count;
+    }
+
+    int32_t inactive_table_count() const {
+        return m_rows->inactive_table_count;
+    }
+
     /* Obtain untyped pointer to table column */
     void* table_column(uint32_t table_column) const {
         return ecs_table_column(m_rows, table_column);

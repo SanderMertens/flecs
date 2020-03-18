@@ -142,6 +142,8 @@ struct ecs_rows_t {
     ecs_entity_t system;         /* Handle to current system */
 
     int32_t *columns;    /* Indices mapping system params to columns and refs */
+    uint32_t table_count;        /* Number of tables matched with system */
+    uint32_t inactive_table_count; /* Number of inactive tables matched with system */
     uint16_t column_count;       /* Number of columns for system */
     void *table;                 /* Opaque structure with reference to table */
     void *table_columns;         /* Opaque structure with table column data */

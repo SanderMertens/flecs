@@ -340,7 +340,8 @@
                 "status_activate_after_new",
                 "status_deactivate_after_delete",
                 "dont_enable_after_rematch",
-                "ensure_single_merge"
+                "ensure_single_merge",
+                "table_count"
             ]
         }, {
             "id": "SystemOnAdd",
