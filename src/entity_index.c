@@ -6,12 +6,8 @@ ecs_record_t* ecs_ei_get(
     ecs_entity_t entity)
 {
     if (entity > ECS_HI_ENTITY_ID) {
-        if (entity == EcsSingleton) {
-            return &entity_index->singleton;
-        } else {
-            return ecs_map_get(
-                entity_index->hi, ecs_record_t, entity);
-        }
+        return ecs_map_get(
+            entity_index->hi, ecs_record_t, entity);
     } else {
         return ecs_sparse_get_sparse(
             entity_index->lo, ecs_record_t, entity);
@@ -24,24 +20,22 @@ ecs_record_t* ecs_ei_get_or_create(
     ecs_entity_t entity)
 {
     if (entity > ECS_HI_ENTITY_ID) {
-        if (entity == EcsSingleton) {
-            return &entity_index->singleton;
-        } else {
-            ecs_record_t *record =  ecs_map_get(
-                entity_index->hi, ecs_record_t, entity);
+        ecs_record_t *record =  ecs_map_get(
+            entity_index->hi, ecs_record_t, entity);
 
-            if (!record) {
-                ecs_record_t new_record = { 0 };
-                ecs_map_set(
-                    entity_index->hi, entity, &new_record);
+        if (!record) {
+            ecs_record_t new_record = { 0 };
+            ecs_map_set(
+                entity_index->hi, entity, &new_record);
 
-                record = ecs_map_get(
-                    entity_index->hi, ecs_record_t, entity);  
+            record = ecs_map_get(
+                entity_index->hi, ecs_record_t, entity);  
 
-                record->type = NULL;              
-            }
-            return record;
+            record->type = NULL;  
+            record->row = 0;            
         }
+
+        return record;
     } else {
         bool is_new = false;
 
@@ -50,6 +44,7 @@ ecs_record_t* ecs_ei_get_or_create(
 
         if (is_new) {
             record->type = NULL;
+            record->row = 0;
         }
         
         return record;
@@ -65,11 +60,7 @@ void ecs_ei_set(
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (entity > ECS_HI_ENTITY_ID) {
-        if (entity == EcsSingleton) {
-            entity_index->singleton = *record;
-        } else {
-            ecs_map_set(entity_index->hi, entity, record);
-        }
+        ecs_map_set(entity_index->hi, entity, record);
     } else {
         bool is_new;
         ecs_record_t *dst_record = ecs_sparse_get_or_set_sparse(
@@ -85,14 +76,25 @@ void ecs_ei_delete(
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (entity > ECS_HI_ENTITY_ID) {
-        if (entity == EcsSingleton) {
-            entity_index->singleton = (ecs_record_t){ 0 };
-        } else {
-            ecs_map_remove(entity_index->hi, entity);
-        }
+    if (entity_index->keep_deletes) {
+        ecs_ei_set(entity_index, entity, &(ecs_record_t){ 0 });
     } else {
-        ecs_sparse_remove(entity_index->lo, ecs_record_t, entity);
+        if (entity > ECS_HI_ENTITY_ID) {
+            ecs_map_remove(entity_index->hi, entity);
+        } else {
+            ecs_sparse_remove(entity_index->lo, ecs_record_t, entity);
+        }
+    }
+}
+
+ecs_entity_t ecs_ei_recycle(
+    ecs_ei_t *entity_index)
+{
+    int32_t result;
+    if (ecs_sparse_recycle(entity_index->lo, ecs_record_t, &result)) {
+        return result; // implicit upcast
+    } else {
+        return 0;
     }
 }
 
@@ -151,9 +153,9 @@ uint32_t ecs_ei_count(
 void ecs_ei_new(
     ecs_ei_t *entity_index)
 {
-    entity_index->singleton = (ecs_record_t){ 0 };
     entity_index->lo = ecs_sparse_new(ecs_record_t, 0);
     entity_index->hi = ecs_map_new(ecs_record_t, 0);
+    entity_index->keep_deletes = false;
 }
 
 /* Clear entities from index */
@@ -162,7 +164,6 @@ void ecs_ei_clear(
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    entity_index->singleton = (ecs_record_t){ 0 };
     ecs_map_clear(entity_index->hi);
     ecs_sparse_clear(entity_index->lo);
 }
@@ -173,7 +174,6 @@ void ecs_ei_free(
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
     
-    entity_index->singleton = (ecs_record_t){ 0 };
     ecs_map_free(entity_index->hi);
     ecs_sparse_free(entity_index->lo);
 }
@@ -183,7 +183,6 @@ ecs_ei_t ecs_ei_copy(
     const ecs_ei_t *entity_index)
 {
     return (ecs_ei_t){
-        .singleton = entity_index->singleton,
         .hi = ecs_map_copy(entity_index->hi),
         .lo = ecs_sparse_copy(entity_index->lo)
     };
@@ -197,4 +196,40 @@ void ecs_ei_memory(
 {
     ecs_sparse_memory(entity_index->lo, allocd, used);
     ecs_map_memory(entity_index->hi, allocd, used);
+}
+
+ecs_ei_iter_t ecs_ei_iter(
+    ecs_ei_t *entity_index)
+{
+    ecs_ei_iter_t result;
+    result.index = 0;
+    result.sparse_indices = ecs_sparse_indices(entity_index->lo);
+    result.sparse_count = ecs_sparse_count(entity_index->lo);
+    result.map_iter = ecs_map_iter(entity_index->hi);
+    result.lo = entity_index->lo;
+    return result;
+}
+
+/* Return next record for iterator (return NULL when end is reached) */
+ecs_record_t *ecs_ei_next(
+    ecs_ei_iter_t *iter,
+    ecs_entity_t *entity_out)
+{
+    const int32_t *sparse_indices = iter->sparse_indices;
+
+    if (sparse_indices) {
+        int32_t index = iter->index;
+        if (iter->index < iter->sparse_count) {
+            ecs_entity_t entity = sparse_indices[index];
+            ecs_record_t *result = ecs_sparse_get_sparse(
+                    iter->lo, ecs_record_t, entity);
+            *entity_out = entity;
+            iter->index ++;
+            return result;
+        } else {
+            iter->sparse_indices = NULL;
+        }
+    }
+
+    return ecs_map_next(&iter->map_iter, ecs_record_t, entity_out);
 }

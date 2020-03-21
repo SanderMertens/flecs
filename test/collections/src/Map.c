@@ -274,3 +274,13 @@ void Map_grow() {
 
     test_int(malloc_count, 0);
 }
+
+void Map_set_size_0() {
+    ecs_map_t *map = ecs_map_new(sizeof(char*), 1);
+    
+    ecs_map_set_size(map, 0);
+
+    test_int( ecs_map_count(map), 0);
+
+    ecs_map_free(map);
+}

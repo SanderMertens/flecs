@@ -195,6 +195,8 @@ bool get_info(
 {
     ecs_record_t *record = ecs_eis_get(&world->stage, entity);
     if (!record) {
+        info->table = NULL;
+        info->is_watched = false;
         return false;
     }
 
@@ -228,11 +230,14 @@ bool get_staged_info(
 
     ecs_record_t *record = ecs_eis_get(stage, entity);
     if (!record) {
+        info->table = NULL;
+        info->is_watched = false;
         return false;
     }
 
-    ecs_table_t *table;
+    set_row_info(info, record->row);    
 
+    ecs_table_t *table;
     if (record->type) {
         table = ecs_world_get_table(world, stage, record->type);
     } else {
@@ -243,8 +248,6 @@ bool get_staged_info(
     if (!info->table) {
         return true;
     }
-
-    set_row_info(info, record->row);
 
     ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
     info->data = data;
@@ -662,6 +665,7 @@ int32_t commit(
     int32_t new_index = 0, old_index = 0;
     bool in_progress = world->in_progress;
     ecs_type_t remove_type, last_remove_type = NULL;
+    bool is_watched = info->is_watched;
 
     /* Always update remove_merge stage when in progress. It is possible (and
      * likely) that when a component is removed, it hasn't been added in the
@@ -736,7 +740,7 @@ int32_t commit(
      * ensures that systems that rely on components from containers or prefabs
      * update the matched tables when the application adds or removes a 
      * component from, for example, a container. */
-    if (info->is_watched) {
+    if (is_watched) {
         world->should_match = true;
     }
 
@@ -749,8 +753,10 @@ int32_t commit(
          * the application is iterating. */
         new_data = ecs_table_get_or_create_data(world, stage, new_table);
         ecs_assert(new_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
         new_columns = new_data->columns;
         ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, 0);
+
         new_index = ecs_table_append(world, new_table, new_data, entity);
     }
 
@@ -766,7 +772,7 @@ int32_t commit(
         ecs_record_t new_record = (ecs_record_t){.type = type, .row = new_index + 1};
 
         /* If old row was being watched, make sure new row is as well */
-        if (info->is_watched) {
+        if (is_watched) {
             new_record.row *= -1;
         }
 
@@ -1048,7 +1054,7 @@ void ecs_set_watch(
 
         } else if (record->row == 0) {
             /* If entity is empty, there is no index to change the sign of. In
-                * this case, set the index to -1, and assign an empty type. */
+             * this case, set the index to -1, and assign an empty type. */
             record->row = -1;
             record->type = NULL;
         }
@@ -1097,8 +1103,6 @@ void ecs_add_remove_intern(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
-
-    info->table = NULL;
 
     if (stage == &world->stage) {
         get_info(world, entity, info);
@@ -2176,6 +2180,7 @@ ecs_entity_t _ecs_set_ptr(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
+
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_info_t info = {0};
@@ -2343,7 +2348,7 @@ const char* ecs_get_id(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    if (entity == ECS_SINGLETON) {
+    if (entity == EcsSingleton) {
         return "$";
     }
 

@@ -12,6 +12,14 @@ typedef struct ecs_record_t {
     int32_t row;                  /* Table row of the entity */
 } ecs_record_t;
 
+typedef struct ecs_ei_iter_t {
+    int32_t index;
+    const int32_t *sparse_indices;
+    int32_t sparse_count;
+    ecs_map_iter_t map_iter;
+    ecs_sparse_t *lo;
+} ecs_ei_iter_t;
+
 /* Get entity record */
 ecs_record_t* ecs_ei_get(
     ecs_ei_t *entity_index,
@@ -32,6 +40,10 @@ ecs_record_t* ecs_ei_get_or_create(
 void ecs_ei_delete(
     ecs_ei_t *entity_index,
     ecs_entity_t entity);
+
+/* Recycle deleted entity id (returns 0 if no available) */
+ecs_entity_t ecs_ei_recycle(
+    ecs_ei_t *entity_index);
 
 /* Grow entity index */
 void ecs_ei_grow(
@@ -67,6 +79,15 @@ void ecs_ei_memory(
     ecs_ei_t *entity_index,
     int32_t *allocd,
     int32_t *used);
+
+/* Create iterator for entity index */
+ecs_ei_iter_t ecs_ei_iter(
+    ecs_ei_t *entity_index);
+
+/* Return next record for iterator (return NULL when end is reached) */
+ecs_record_t *ecs_ei_next(
+    ecs_ei_iter_t *iter,
+    ecs_entity_t *entity_out);
 
 // Convenience macro's for directly calling operations for stage
 #define ecs_eis_get(stage, entity) ecs_ei_get(&(stage)->entity_index, entity)

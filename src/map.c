@@ -513,7 +513,10 @@ void ecs_map_set_size(
 {    
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
     int32_t bucket_count = get_bucket_count(element_count);
-    rehash(map, bucket_count);
+
+    if (bucket_count) {
+        rehash(map, bucket_count);
+    }
 }
 
 void ecs_map_memory(
@@ -532,6 +535,10 @@ void ecs_map_memory(
 ecs_map_t* ecs_map_copy(
     const ecs_map_t *src)
 {
+    if (!src) {
+        return NULL;
+    }
+    
     ecs_map_t *dst = ecs_os_memdup(src, sizeof(ecs_map_t));
     
     dst->buckets = ecs_sparse_copy(src->buckets);

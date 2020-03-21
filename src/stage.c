@@ -44,26 +44,12 @@ void merge_commits(
 {  
     ecs_assert(stage != &world->stage, ECS_INTERNAL_ERROR, NULL);
 
-    if (!ecs_eis_count(stage)) {
-        return;
-    }
-
-    /* Iterate hi entity index */
-    ecs_map_iter_t it = ecs_map_iter(stage->entity_index.hi);
+    /* Merge commits */
+    ecs_ei_iter_t iter = ecs_ei_iter(&stage->entity_index);
     ecs_record_t *record;
     ecs_entity_t entity;
 
-    while ((record = ecs_map_next(&it, ecs_record_t, &entity))) {
-        ecs_merge_entity(world, stage, entity, *record);
-    }
-
-    /* Iterate lo entity index */
-    ecs_sparse_t *entities = stage->entity_index.lo;
-    int32_t i, count = ecs_sparse_count(entities);
-    const int32_t *indices = ecs_sparse_indices(entities);    
-    for (i = 0; i < count; i ++) {
-        entity = indices[i];
-        record = ecs_sparse_get(entities, ecs_record_t, i);
+    while ((record = ecs_ei_next(&iter, &entity))) {
         ecs_merge_entity(world, stage, entity, *record);
     }
 }
@@ -123,6 +109,7 @@ void ecs_stage_init(
 
     if (!is_main_stage) {
         stage->remove_merge = ecs_map_new(ecs_type_t, 0);
+        stage->entity_index.keep_deletes = true;
     }
 
     stage->range_check_enabled = true;

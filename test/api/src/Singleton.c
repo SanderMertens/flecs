@@ -7,7 +7,7 @@ void Singleton_set() {
 
     ecs_set_singleton(world, Position, {10, 20});
 
-    test_assert( ecs_has(world, ECS_SINGLETON, Position));
+    test_assert( ecs_has(world, EcsSingleton, Position));
 
     Position *p = ecs_get_singleton_ptr(world, Position);
     test_assert(p != NULL);
@@ -26,7 +26,7 @@ void Singleton_set_ptr() {
 
     ecs_set_singleton_ptr(world, Position, &p_value);
 
-    test_assert( ecs_has(world, ECS_SINGLETON, Position));
+    test_assert( ecs_has(world, EcsSingleton, Position));
 
     Position *p = ecs_get_singleton_ptr(world, Position);
     test_assert(p != NULL);
@@ -60,10 +60,10 @@ void Singleton_system_w_singleton() {
     ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, $.Velocity);
 
     ecs_set_singleton(world, Velocity, {1, 2});
-    test_assert( ecs_has(world, ECS_SINGLETON, Velocity));
+    test_assert( ecs_has(world, EcsSingleton, Velocity));
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
-    test_assert( !ecs_has(world, ECS_SINGLETON, Position));
+    test_assert( !ecs_has(world, EcsSingleton, Position));
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -88,7 +88,7 @@ void Singleton_system_w_singleton_no_match() {
     ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, $.Velocity);
 
     ecs_set(world, 0, Position, {10, 20});
-    test_assert( !ecs_has(world, ECS_SINGLETON, Position));
+    test_assert( !ecs_has(world, EcsSingleton, Position));
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -121,7 +121,7 @@ void Singleton_lookup_singleton() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_lookup(world, "$");
-    test_assert(e == ECS_SINGLETON);
+    test_assert(e == EcsSingleton);
 
     ecs_fini(world);
 }
@@ -129,7 +129,7 @@ void Singleton_lookup_singleton() {
 void Singleton_get_singleton_id() {
     ecs_world_t *world = ecs_init();
 
-    test_str( ecs_get_id(world, ECS_SINGLETON), "$");
+    test_str( ecs_get_id(world, EcsSingleton), "$");
 
     ecs_fini(world);
 }

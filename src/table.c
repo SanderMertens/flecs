@@ -86,6 +86,7 @@ void deinit_data(
     }
 
     ecs_vector_free(data->entities);
+    data->entities = NULL;
 }
 
 /* Utility function to free data for all stages */
@@ -282,6 +283,8 @@ void ecs_table_replace_data(
 {
     int32_t prev_count = 0;
     ecs_data_t *table_data = ecs_vector_first(table->stage_data);
+
+    ecs_assert(!data || data != table_data, ECS_INTERNAL_ERROR, NULL);
 
     if (table_data) {
         prev_count = ecs_vector_count(table_data->entities);

@@ -164,7 +164,7 @@ typedef struct ecs_writer_t {
 //// Deprecated names
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_SINGLETON ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
+#define EcsSingleton ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
 #define ECS_INVALID_ENTITY (0)
 
 struct ecs_filter_t;

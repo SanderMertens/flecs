@@ -402,21 +402,21 @@ void Container_get_parent_no_parent() {
 void Container_singleton_as_container() {
     ecs_world_t *world = ecs_init();
 
-    test_assert(((ECS_CHILDOF | ECS_SINGLETON) & ECS_ENTITY_MASK) == ECS_SINGLETON);
+    test_assert(((ECS_CHILDOF | EcsSingleton) & ECS_ENTITY_MASK) == EcsSingleton);
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t child = ecs_new_child(world, ECS_SINGLETON, Position);
+    ecs_entity_t child = ecs_new_child(world, EcsSingleton, Position);
 
-    test_assert( ecs_contains(world, ECS_SINGLETON, child));
+    test_assert( ecs_contains(world, EcsSingleton, child));
     test_assert( ecs_has(world, child, Position));
 
     ecs_type_t type = ecs_get_type(world, child);
     ecs_entity_t *entities = ecs_vector_first(type);
     test_assert(entities[0] == ecs_entity(Position));
-    test_assert(entities[1] == (ECS_CHILDOF | ECS_SINGLETON));
+    test_assert(entities[1] == (ECS_CHILDOF | EcsSingleton));
     test_assert(!(entities[1] & ECS_INSTANCEOF));
-    test_assert((entities[1] & ECS_ENTITY_MASK) == ECS_SINGLETON);
+    test_assert((entities[1] & ECS_ENTITY_MASK) == EcsSingleton);
 
     ecs_fini(world);
 }

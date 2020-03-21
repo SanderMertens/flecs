@@ -1849,7 +1849,7 @@ void SystemOnFrame_not_from_singleton() {
 
     test_int(ctx.count, 1);
 
-    ecs_add(world, ECS_SINGLETON, Velocity);
+    ecs_add(world, EcsSingleton, Velocity);
 
     ecs_progress(world, 1);
     

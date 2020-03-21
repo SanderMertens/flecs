@@ -1018,7 +1018,7 @@ ecs_entity_t ecs_lookup(
     const char *id)
 {
     if (!strcmp(id, "$")) {
-        return ECS_SINGLETON;
+        return EcsSingleton;
     }
     
     return ecs_lookup_child(world, 0, id);
@@ -1423,13 +1423,13 @@ ecs_entity_t _ecs_import(
 
         /* Copy value of module component in handles_out parameter */
         if (handles_size && handles_out) {
-            void *module_ptr = _ecs_get_ptr(world, ECS_SINGLETON, e);
+            void *module_ptr = _ecs_get_ptr(world, EcsSingleton, e);
             memcpy(handles_out, module_ptr, handles_size);
         }
 
     /* If module was already loaded, copy module component into handles_out */
     } else if (handles_size) {
-        void *handles_ptr = _ecs_get_ptr(world, ECS_SINGLETON, e);
+        void *handles_ptr = _ecs_get_ptr(world, EcsSingleton, e);
         memcpy(handles_out, handles_ptr, handles_size);
     }
 

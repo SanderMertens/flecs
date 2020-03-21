@@ -338,9 +338,9 @@ typedef struct ecs_type_node_t {
 } ecs_type_node_t;
 
 struct ecs_ei_t {
-    ecs_record_t singleton; /* Special record for singleton entity */
     ecs_sparse_t *lo;       /* Low entity ids are stored in a sparse set */
     ecs_map_t *hi;          /* To save memory high ids are stored in a map */
+    bool keep_deletes;      /* Insert empty record for deletes */
 };
 
 /** A stage is a data structure in which delta's are stored until it is safe to

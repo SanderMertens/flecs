@@ -173,9 +173,14 @@ void DeleteEntity(ecs_rows_t *rows) {
     }
 }
 
+static int on_remove_system_invoked;
+
 static
 void OnRemoveSystem(ecs_rows_t *rows) {
-    /* Dummy */
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        on_remove_system_invoked ++;
+    }
 }
 
 void Delete_delete_w_on_remove() {
@@ -189,6 +194,8 @@ void Delete_delete_w_on_remove() {
 
     ecs_progress(world, 0);
 
+    test_int(on_remove_system_invoked, 10);
+    
     test_int( ecs_count(world, Position), 0);
     
     ecs_fini(world);

@@ -231,7 +231,7 @@ extern ecs_type_t
 
 /** Builtin entity ids */
 #define EcsWorld (13)
-#define EcsSingleton (ECS_SINGLETON)
+#define ECS_SINGLETON (EcsSingleton)
 #define EcsInvalid (ECS_INVALID_ENTITY)
 
 /** Value used to quickly check if component is builtin */
