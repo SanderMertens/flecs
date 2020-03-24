@@ -264,7 +264,10 @@ void _ecs_parser_error(
     ...);
 
 #define ecs_abort(error_code, param) _ecs_abort(error_code, param, __FILE__, __LINE__); abort()
+
+#ifndef __BAKE_LEGACY__
 #define ecs_parser_error(name, expr, column, ...) _ecs_parser_error(name, expr, column, __VA_ARGS__); abort()
+#endif
 
 #ifdef NDEBUG
 #define ecs_assert(condition, error_code, param)
