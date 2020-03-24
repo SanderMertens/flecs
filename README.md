@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     flecs::component<Speed>(world, "Speed");
 
     flecs::system<Position, Speed>(world)
-        .each([](flecs::entity e, Position& p, Speed& s)) {
+        .each([](flecs::entity e, Position& p, Speed& s) {
             p.x += s.value * e.delta_time();
             p.y += s.value * e.delta_time();
         });
