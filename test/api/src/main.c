@@ -134,6 +134,10 @@ void Add_remove_w_filter_remove_1_include_1(void);
 void Add_remove_w_filter_remove_1_include_2(void);
 void Add_remove_w_filter_add_1(void);
 void Add_remove_w_filter_add_2(void);
+void Add_remove_w_filter_add_existing(void);
+void Add_remove_w_filter_remove_existing(void);
+void Add_remove_w_filter_remove_existing_no_filter(void);
+void Add_remove_w_filter_add_remove_nothing(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -308,6 +312,9 @@ void SystemMisc_status_disable_after_disable(void);
 void SystemMisc_status_activate_after_new(void);
 void SystemMisc_status_deactivate_after_delete(void);
 void SystemMisc_dont_enable_after_rematch(void);
+void SystemMisc_ensure_single_merge(void);
+void SystemMisc_table_count(void);
+void SystemMisc_active_system_count(void);
 
 // Testsuite 'SystemOnAdd'
 void SystemOnAdd_new_match_1_of_1(void);
@@ -471,6 +478,7 @@ void SystemCascade_adopt_after_match(void);
 void SystemManual_1_type_1_component(void);
 void SystemManual_disabled(void);
 void SystemManual_activate_status(void);
+void SystemManual_no_automerge(void);
 
 // Testsuite 'Tasks'
 void Tasks_no_components(void);
@@ -1370,7 +1378,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Add_remove_w_filter",
-        .testcase_count = 12,
+        .testcase_count = 16,
         .testcases = (bake_test_case[]){
             {
                 .id = "remove_1_no_filter",
@@ -1419,6 +1427,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_2",
                 .function = Add_remove_w_filter_add_2
+            },
+            {
+                .id = "add_existing",
+                .function = Add_remove_w_filter_add_existing
+            },
+            {
+                .id = "remove_existing",
+                .function = Add_remove_w_filter_remove_existing
+            },
+            {
+                .id = "remove_existing_no_filter",
+                .function = Add_remove_w_filter_remove_existing_no_filter
+            },
+            {
+                .id = "add_remove_nothing",
+                .function = Add_remove_w_filter_add_remove_nothing
             }
         }
     },
@@ -1930,7 +1954,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 41,
+        .testcase_count = 44,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -2095,6 +2119,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "dont_enable_after_rematch",
                 .function = SystemMisc_dont_enable_after_rematch
+            },
+            {
+                .id = "ensure_single_merge",
+                .function = SystemMisc_ensure_single_merge
+            },
+            {
+                .id = "table_count",
+                .function = SystemMisc_table_count
+            },
+            {
+                .id = "active_system_count",
+                .function = SystemMisc_active_system_count
             }
         }
     },
@@ -2720,7 +2756,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemManual",
-        .testcase_count = 3,
+        .testcase_count = 4,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -2733,6 +2769,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "activate_status",
                 .function = SystemManual_activate_status
+            },
+            {
+                .id = "no_automerge",
+                .function = SystemManual_no_automerge
             }
         }
     },

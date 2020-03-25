@@ -21,13 +21,14 @@ void* ecs_worker(void *arg) {
         ecs_os_mutex_unlock(world->thread_mutex);
 
         for (i = 0; i < job_count; i ++) {
-            ecs_run_w_filter(
+            ecs_run_intern(
                 (ecs_world_t*)thread, /* magic */
+                world,
                 jobs[i]->system, 
                 world->delta_time, 
                 jobs[i]->offset, 
                 jobs[i]->limit, 
-                0, 
+                NULL, 
                 NULL);
         }
 

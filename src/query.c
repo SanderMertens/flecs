@@ -845,7 +845,8 @@ ecs_query_iter_t ecs_query_iter(
             .world = query->world,
             .query = query,
             .column_count = ecs_vector_count(query->sig.columns),
-            .table_count = ecs_vector_count(query->tables)
+            .table_count = ecs_vector_count(query->tables),
+            .inactive_table_count = ecs_vector_count(query->inactive_tables)
         }
     };
 }

@@ -431,6 +431,17 @@ void ecs_system_activate_table(
     ecs_table_t *table,
     bool active);
 
+/* Internal function to run a system */
+ecs_entity_t ecs_run_intern(
+    ecs_world_t *world,
+    ecs_world_t *real_world,
+    ecs_entity_t system,
+    float delta_time,
+    uint32_t offset,
+    uint32_t limit,
+    const ecs_filter_t *filter,
+    void *param);
+
 /* Run a task (periodic system that is not matched against any tables) */
 void ecs_run_task(
     ecs_world_t *world,

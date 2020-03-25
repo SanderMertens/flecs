@@ -145,10 +145,11 @@ struct ecs_rows_t {
     ecs_entity_t system;         /* Handle to current system */
 
     int32_t *columns;    /* Indices mapping system params to columns and refs */
+    int32_t table_count;        /* Number of tables matched with system */
+    int32_t inactive_table_count; /* Number of inactive tables matched with system */
     uint16_t column_count;       /* Number of columns for system */
     void *table;                 /* Opaque structure with reference to table */
     void *table_columns;         /* Opaque structure with table column data */
-    int32_t table_count;         /* Number of active tables matched with system */
     ecs_query_t *query;          /* Query being evaluated */
     ecs_reference_t *references; /* References to other entities */
     ecs_entity_t *components;    /* System-table specific list of components */
@@ -191,6 +192,7 @@ typedef struct EcsPrefab {
 } EcsPrefab;
 
 #include "flecs/util/api_support.h"
+#include "flecs/util/v2.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -466,11 +468,34 @@ void ecs_quit(
  *
  * @param world The world to progress.
  * @param delta_time The time passed since the last frame.
+ * @return false if ecs_quit has been called, true otherwise.
  */
 FLECS_EXPORT
 bool ecs_progress(
     ecs_world_t *world,
     float delta_time);
+
+/** Returns number of active systems.
+ * This operation returns the number of currently active systems. Active systems
+ * are systems that are both enabled and are matched with 1 or more entities. If
+ * this operation returns 0, invoking ecs_progress will not run any systems.
+ *
+ * @param world The world.
+ * @return The number of active systems.
+ */
+int32_t ecs_active_system_count(
+    ecs_world_t *world);
+
+/** Returns number of inactive systems.
+ * This operation returns the number of currently inactive systems. Inactive
+ * systems are systems that are either disabled or do not match with any 
+ * entities.
+ *
+ * @param world The world.
+ * @return The number of inactive systems.
+ */
+int32_t ecs_inactive_system_count(
+    ecs_world_t *world);    
 
 /** Set target frames per second (FPS) for application.
  * Setting the target FPS ensures that ecs_progress is not invoked faster than
