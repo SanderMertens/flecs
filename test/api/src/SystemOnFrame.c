@@ -1290,7 +1290,7 @@ void SystemOnFrame_on_period() {
     ECS_SYSTEM(world, OnPeriodSystem, EcsOnUpdate, Position);
     ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
 
-    ecs_set_period(world, OnPeriodSystem, 0.5);
+    ecs_set_interval(world, OnPeriodSystem, 0.5);
 
     ecs_set_target_fps(world, 60);
 
@@ -1324,7 +1324,7 @@ void SystemOnFrame_on_period_long_delta() {
     ECS_SYSTEM(world, OnPeriodSystem, EcsOnUpdate, Position);
     ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
 
-    ecs_set_period(world, OnPeriodSystem, 0.5);
+    ecs_set_interval(world, OnPeriodSystem, 0.5);
 
     ecs_progress(world, 0);
 
@@ -2011,6 +2011,20 @@ void SystemOnFrame_is_in_readonly() {
     ecs_progress(world, 0);
 
     test_assert(dummy_invoked == e);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_get_period() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, [in] Position);
+
+    ecs_set_interval(world, Dummy, 10.0);
+
+    test_flt( ecs_get_period(world, Dummy), 10.0);
 
     ecs_fini(world);
 }

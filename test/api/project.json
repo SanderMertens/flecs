@@ -480,7 +480,18 @@
                 "use_field_w_0_size",
                 "owned_only",
                 "shared_only",
-                "is_in_readonly"
+                "is_in_readonly",
+                "get_period"
+            ]
+        }, {
+            "id": "Timer",
+            "testcases": [
+                "timeout",
+                "interval",
+                "shared_timeout",
+                "shared_interval",
+                "zero_timeout",
+                "zero_interval"
             ]
         }, {
             "id": "SystemOnDemand",

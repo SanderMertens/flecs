@@ -864,21 +864,24 @@ void SystemMisc_active_system_count() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    int32_t initial_active_count = ecs_active_system_count(world);
+    int32_t initial_inactive_count = ecs_inactive_system_count(world);
+
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position, Velocity);
 
-    test_int( ecs_active_system_count(world), 0);
-    test_int( ecs_inactive_system_count(world), 2);
+    test_int( ecs_active_system_count(world) - initial_active_count, 0);
+    test_int( ecs_inactive_system_count(world) - initial_inactive_count, 2);
 
     ecs_entity_t e = ecs_new(world, Position);
 
-    test_int( ecs_active_system_count(world), 1);
-    test_int( ecs_inactive_system_count(world), 1);
+    test_int( ecs_active_system_count(world) - initial_active_count, 1);
+    test_int( ecs_inactive_system_count(world) - initial_inactive_count, 1);
 
     ecs_add(world, e, Velocity);
 
-    test_int( ecs_active_system_count(world), 2);
-    test_int( ecs_inactive_system_count(world), 0);
+    test_int( ecs_active_system_count(world) - initial_active_count, 2);
+    test_int( ecs_inactive_system_count(world) - initial_inactive_count, 0);
     
     ecs_fini(world);
 }

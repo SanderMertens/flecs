@@ -438,6 +438,15 @@ void SystemOnFrame_use_field_w_0_size(void);
 void SystemOnFrame_owned_only(void);
 void SystemOnFrame_shared_only(void);
 void SystemOnFrame_is_in_readonly(void);
+void SystemOnFrame_get_period(void);
+
+// Testsuite 'Timer'
+void Timer_timeout(void);
+void Timer_interval(void);
+void Timer_shared_timeout(void);
+void Timer_shared_interval(void);
+void Timer_zero_timeout(void);
+void Timer_zero_interval(void);
 
 // Testsuite 'SystemOnDemand'
 void SystemOnDemand_enable_out_after_in(void);
@@ -2422,7 +2431,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 48,
+        .testcase_count = 49,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -2615,6 +2624,40 @@ static bake_test_suite suites[] = {
             {
                 .id = "is_in_readonly",
                 .function = SystemOnFrame_is_in_readonly
+            },
+            {
+                .id = "get_period",
+                .function = SystemOnFrame_get_period
+            }
+        }
+    },
+    {
+        .id = "Timer",
+        .testcase_count = 6,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "timeout",
+                .function = Timer_timeout
+            },
+            {
+                .id = "interval",
+                .function = Timer_interval
+            },
+            {
+                .id = "shared_timeout",
+                .function = Timer_shared_timeout
+            },
+            {
+                .id = "shared_interval",
+                .function = Timer_shared_interval
+            },
+            {
+                .id = "zero_timeout",
+                .function = Timer_zero_timeout
+            },
+            {
+                .id = "zero_interval",
+                .function = Timer_zero_interval
             }
         }
     },
@@ -4551,5 +4594,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 42);
+    return bake_test_run("api", argc, argv, suites, 43);
 }

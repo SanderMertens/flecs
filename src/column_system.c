@@ -331,12 +331,7 @@ ecs_entity_t ecs_new_col_system(
     system_data->query = ecs_query_new_w_sig(world, result, sig);
     ecs_assert(system_data->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t column_count = ecs_vector_count(system_data->query->sig.columns);
-
-    system_data->column_size = sizeof(int32_t) * (column_count);
-    system_data->ref_size = sizeof(ecs_reference_t) * column_count;
-    system_data->component_size = sizeof(ecs_entity_t) * column_count;
-    system_data->period = 0;
+    system_data->timer = 0;
     system_data->entity = result;
 
     ecs_entity_t *elem = NULL;
@@ -481,20 +476,26 @@ ecs_entity_t ecs_run_intern(
         param = system_data->base.ctx;
     }
 
-    /* If system should run at a fixed time interval, test if system should run
-     * this iteration */
-    float period = system_data->period;
-    float time_passed = system_data->time_passed + delta_time;
+    float time_elapsed = delta_time;
+    ecs_entity_t system_timer = system_data->timer;
 
-    if (time_passed >= period) {
-        float t = time_passed - period;
-        if (t > period) {
-            t = 0;
+    if (system_timer) {
+        EcsTimer *timer = ecs_get_ptr(real_world, system_timer, EcsTimer);
+        if (timer) {
+            time_elapsed = timer->time_elapsed;
+
+            /* If timer hasn't fired we shouldn't run the system */
+            if (!time_elapsed) {
+                return 0;
+            }
+        } else {
+            /* If a timer has been set but the timer entity does not have the
+             * EcsTimer component, don't run the system. This can be the result
+             * of a single-shot timer that has fired already. Not resetting the
+             * timer field of the system will ensure that the system won't be
+             * ran after the timer has fired. */
+            return 0;
         }
-        system_data->time_passed = t;
-    } else {
-        system_data->time_passed = time_passed;
-        return 0;
     }
 
     ecs_time_t time_start;
@@ -508,7 +509,7 @@ ecs_entity_t ecs_run_intern(
     qiter.rows.world = world;
     qiter.rows.system = system;
     qiter.rows.delta_time = delta_time;
-    qiter.rows.delta_system_time = time_passed;
+    qiter.rows.delta_system_time = time_elapsed;
     qiter.rows.world_time = real_world->world_time_total;
     qiter.rows.frame_offset = offset;
     

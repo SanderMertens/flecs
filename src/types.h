@@ -291,15 +291,13 @@ typedef struct EcsColSystem {
     ecs_on_demand_out_t *on_demand;       /* Keep track of [out] column refs */
     ecs_system_status_action_t status_action; /* Status action */
     void *status_ctx;                     /* User data for status action */    
-    uint32_t column_size;                 /* Parameters for type_columns */
-    uint32_t component_size;              /* Parameters for components */
-    uint32_t ref_size;                    /* Parameters for refs */
-    float period;                         /* Minimum period inbetween system invocations */
+    ecs_entity_t timer;                   /* Timer associated with system */
+    ecs_entity_t rate_filter;             /* Rate filter associated with system */
     float time_passed;                    /* Time passed since last invocation */
     bool enabled_by_demand;               /* Is system enabled by on demand systems */
-    bool enabled_by_user;                /* Is system enabled by user */
+    bool enabled_by_user;                 /* Is system enabled by user */
 } EcsColSystem;
-
+ 
 /** A row system is a system that is ran on 1..n entities for which a certain 
  * operation has been invoked. The system kind determines on what kind of
  * operation the row system is invoked. Example operations are ecs_add,
@@ -506,6 +504,8 @@ struct ecs_world_t {
     ecs_time_t frame_start_time;  /* Timestamp of frame start */
     float target_fps;             /* Target fps */
     float fps_sleep;              /* Sleep time to prevent fps overshoot */
+    ecs_entity_t progress_timers; /* System to progress timers */
+    ecs_entity_t clear_timers;    /* System that clears timers */
 
 
     /* -- Metrics -- */

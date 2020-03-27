@@ -191,6 +191,15 @@ typedef struct EcsPrefab {
     ecs_entity_t parent;
 } EcsPrefab;
 
+/** Component used for timer functionality */
+typedef struct EcsTimer {
+    float timeout;          /* Timer timeout period */
+    float time;             /* Incrementing time value */
+    float time_elapsed;     /* Time elapsed since last tick (0 if not ticking) */
+    int32_t fired_count;    /* Number of times ticked */
+    bool single_shot;       /* Is this a single shot timer */
+} EcsTimer;
+
 #include "flecs/util/api_support.h"
 #include "flecs/util/v2.h"
 
@@ -216,7 +225,8 @@ extern ecs_type_t
     TEcsId,
     TEcsHidden,
     TEcsDisabled,
-    TEcsOnDemand;
+    TEcsOnDemand,
+    TEcsTimer;
 
 /** Handles to builtin components */
 #define EEcsComponent (1)
@@ -230,6 +240,7 @@ extern ecs_type_t
 #define EEcsHidden (9)
 #define EEcsDisabled (10)
 #define EEcsOnDemand (11)
+#define EEcsTimer (12)
 
 /** Builtin entity ids */
 #define EcsWorld (13)
@@ -1710,33 +1721,6 @@ void ecs_enable(
     ecs_entity_t system,
     bool enabled);
 
-/** Configure how often a system should be invoked.
- * This operation lets an application control how often a system should be
- * invoked. The provided period is the minimum interval between two invocations.
- *
- * Correct operation of this feature relies on an application providing a
- * delta_time value to ecs_progress. Once the delta_time exceeds the period that
- * is specified for a system, ecs_progress will invoke it.
- *
- * This operation is only valid on EcsPeriodic systems. If it is invoked on
- * handles of other systems or entities it will be ignored. An application may
- * only set the period outside ecs_progress.
- *
- * Note that a system will never be invoked more often than ecs_progress is
- * invoked. If the specified period is smaller than the interval at which
- * ecs_progress is invoked, the system will be invoked at every ecs_progress,
- * provided that the delta_time provided to ecs_progress is accurate.
- *
- * @param world The world.
- * @param system The system for which to set the period.
- * @param period The period.
- */
-FLECS_EXPORT
-void ecs_set_period(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    float period);
-
 /** Returns the enabled status for a system / entity.
  * This operation will return whether a system is enabled or disabled. Currently
  * only systems can be enabled or disabled, but this operation does not fail
@@ -1892,6 +1876,99 @@ void ecs_set_system_status_action(
     ecs_entity_t system,
     ecs_system_status_action_t action,
     const void *ctx);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Timer API
+////////////////////////////////////////////////////////////////////////////////
+
+/** Set timer timeout.
+ * This operation executes any systems associated with the timer after the
+ * specified timeout value. If the entity contains an existing timer, the 
+ * timeout value will be reset.
+ *
+ * Any entity can be used as a timer (including systems). If a timeout value is
+ * set on a system entity, it will be automatically applied to that system.
+ *
+ * The timer is synchronous, and is incremented each frame by delta_time.
+ *
+ * @param world The world.
+ * @param timer The timer for which to set the timeout. If 0, an entity will be created.
+ * @param timeout The timeout value.
+ * @return The timer entity for which the timeout has been set.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_set_timeout(
+    ecs_world_t *world,
+    ecs_entity_t timer,
+    float timeout);
+
+/** Get current timeout value for the specified timer.
+ * This operation returns the value set by ecs_set_timeout. If no timer is
+ * active for this entity, the operation returns 0.
+ *
+ * After the timeout expires the timer component is removed from the entity.
+ * This means that if ecs_get_timeout is invoked after the timer is expired, the
+ * operation will return 0.
+ *
+ * @param world The world.
+ * @param timer The timer.
+ * @return The current timeout value, or 0 if no timer is active.
+ */
+FLECS_EXPORT
+float ecs_get_timeout(
+    ecs_world_t *world,
+    ecs_entity_t timer);
+
+/** Set timer interval.
+ * This operation will continously invoke systems associated with the timer 
+ * after the interval period expires. If the entity contains an existing timer,
+ * the interval value will be reset.
+ *
+ * Any entity can be used as a timer (including systems). If an interval value
+ * is set on a system entity, it will be automatically applied to that system.
+ *
+ * The timer is synchronous, and is incremented each frame by delta_time.
+ *
+ * @param world The world.
+ * @param timer The timer for which to set the interval.
+ * @param interval The interval value.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_set_interval(
+    ecs_world_t *world,
+    ecs_entity_t timer,
+    float interval);   
+
+/** Get current interval value for the specified timer.
+ * This operation returns the value set by ecs_set_interval. If no timer is
+ * active for this entity, the operation returns 0.
+ *
+ * @param world The world.
+ * @param timer The timer for which to set the interval. If 0, an entity will be created.
+ * @return The current interval value, or 0 if no timer is active.
+ */
+FLECS_EXPORT
+float ecs_get_interval(
+    ecs_world_t *world,
+    ecs_entity_t timer);
+
+/** Assign timer to system.
+ * This operation associates a system with a timer. If the system is both active
+ * and enabled at the moment the timer fires, it will be executed. If no timer
+ * is associated with a system, it will be invoked every frame.
+ *
+ * To disassociate a timer from a system, use 0 for the timer parameter.
+ *
+ * @param world The world.
+ * @param system The system to associate with the timer.
+ * @param timer The timer to associate with the system.
+ */ 
+FLECS_EXPORT
+void ecs_set_timer(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_entity_t timer);
 
 
 ////////////////////////////////////////////////////////////////////////////////

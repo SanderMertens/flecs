@@ -191,6 +191,18 @@ typedef struct ecs_filter_t ecs_type_filter_t;
 
 #define ecs_is_empty(world, entity) (ecs_get_type(world, entity) == NULL)
 
+/** DEPRECATED - use timer API. */
+FLECS_EXPORT
+void ecs_set_period(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    float period);
+
+/** DEPRECATED - use timer API. */
+FLECS_EXPORT
+float ecs_get_period(
+    ecs_world_t *world,
+    ecs_entity_t system);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Functions used in declarative (macro) API

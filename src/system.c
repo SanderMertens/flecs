@@ -425,18 +425,6 @@ bool ecs_is_enabled(
     }
 }
 
-void ecs_set_period(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    float period)
-{
-    assert(world->magic == ECS_WORLD_MAGIC);
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
-    if (system_data) {
-        system_data->period = period;
-    }
-}
-
 static
 EcsSystem* get_system_ptr(
     ecs_world_t *world,

@@ -13,6 +13,7 @@ ecs_type_t TEcsId;
 ecs_type_t TEcsHidden;
 ecs_type_t TEcsDisabled;
 ecs_type_t TEcsOnDemand;
+ecs_type_t TEcsTimer;
 
 const char *ECS_COMPONENT_ID =      "EcsComponent";
 const char *ECS_TYPE_COMPONENT_ID = "EcsTypeComponent";
@@ -25,6 +26,7 @@ const char *ECS_ID_ID =             "EcsId";
 const char *ECS_HIDDEN_ID =         "EcsHidden";
 const char *ECS_DISABLED_ID =       "EcsDisabled";
 const char *ECS_ON_DEMAND_ID =      "EcsOnDemand";
+const char *ECS_TIMER_ID =          "EcsTimer";
 
 /** Comparator function for handles */
 static
@@ -714,13 +716,11 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsHidden, ECS_HIDDEN_ID, 0);
     bootstrap_component(world, table, EEcsDisabled, ECS_DISABLED_ID, 0);
     bootstrap_component(world, table, EEcsOnDemand, ECS_ON_DEMAND_ID, 0);
+    bootstrap_component(world, table, EEcsTimer, ECS_TIMER_ID, sizeof(EcsTimer));
 
     world->last_handle = EcsWorld + 1;
     world->min_handle = 0;
     world->max_handle = 0;
-
-    ecs_new_system(world, "EcsInitPrefab", EcsOnAdd, "EcsPrefab", EcsInitPrefab);
-    ecs_new_system(world, "EcsSetPrefab", EcsOnSet, "EcsPrefab", EcsSetPrefab);
 
     /* Create type that allows for quickly checking if a type contains builtin
      * components. */
@@ -730,8 +730,18 @@ ecs_world_t *ecs_init(void) {
 
     /* Initialize EcsWorld */
     ecs_set(world, EcsWorld, EcsId, {"EcsWorld"});
-
     ecs_assert(ecs_get_id(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Prefab handling */
+    ecs_new_system(world, "EcsInitPrefab", EcsOnAdd, "EcsPrefab", EcsInitPrefab);
+    ecs_new_system(world, "EcsSetPrefab", EcsOnSet, "EcsPrefab", EcsSetPrefab);
+
+    /* Timer handling */
+    world->progress_timers = 
+    ecs_new_system(world, "EcsProgressTimers", EcsManual, "EcsTimer", EcsProgressTimers);
+    
+    world->clear_timers = 
+    ecs_new_system(world, "EcsClearTimers", EcsManual, "EcsTimer", EcsClearTimers);
 
     return world;
 }
@@ -1180,7 +1190,11 @@ bool ecs_progress(
     if (world->should_resolve) {
         revalidate_query_refs(world);
         world->should_resolve = false;
-    }    
+    }
+
+    /* Evaluate timers */
+    ecs_run_intern(
+        world, world, world->progress_timers, user_delta_time, 0, 0, NULL, NULL);
 
     /* -- System execution starts here -- */
 
@@ -1203,6 +1217,13 @@ bool ecs_progress(
     run_single_thread_stage(world, world->on_store_systems, true);
 
     /* -- System execution stops here -- */
+
+    /* Clear timers */
+    ecs_run_intern(
+        world, world, world->clear_timers, user_delta_time, 0, 0, NULL, NULL);
+
+    /* Clearing timers may have staged data, merge temp stage */
+    ecs_stage_merge(world, &world->temp_stage);
 
     world->frame_count_total ++;
     world->in_progress = false;
