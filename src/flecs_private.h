@@ -369,11 +369,15 @@ void ecs_sig_deinit(
 //// Timer API
 ////////////////////////////////////////////////////////////////////////////////
 
+/* System to automatically add EcsTickSource to timers and rate filters */
+void EcsAddTickSource(ecs_rows_t *rows);
+
 /* System to progress timers */
 void EcsProgressTimers(ecs_rows_t *rows);
 
-/* System to clear timers */
-void EcsClearTimers(ecs_rows_t *rows);
+/* System to progress rate filter */
+void EcsProgressRateFilters(ecs_rows_t *rows);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// System API

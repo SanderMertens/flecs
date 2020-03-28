@@ -90,7 +90,7 @@ void add_table(
          * would never get activated otherwise. */
         table_data = ecs_vector_add(
             &query->tables, ecs_matched_table_t);
-    }    
+    }
 
     table_data->table = table;
     table_data->references = NULL;

@@ -291,8 +291,7 @@ typedef struct EcsColSystem {
     ecs_on_demand_out_t *on_demand;       /* Keep track of [out] column refs */
     ecs_system_status_action_t status_action; /* Status action */
     void *status_ctx;                     /* User data for status action */    
-    ecs_entity_t timer;                   /* Timer associated with system */
-    ecs_entity_t rate_filter;             /* Rate filter associated with system */
+    ecs_entity_t tick_source;             /* Tick source associated with system */
     float time_passed;                    /* Time passed since last invocation */
     bool enabled_by_demand;               /* Is system enabled by on demand systems */
     bool enabled_by_user;                 /* Is system enabled by user */
@@ -504,8 +503,10 @@ struct ecs_world_t {
     ecs_time_t frame_start_time;  /* Timestamp of frame start */
     float target_fps;             /* Target fps */
     float fps_sleep;              /* Sleep time to prevent fps overshoot */
+
+    ecs_entity_t add_tick_source; /* System to add EcsTickSource */
     ecs_entity_t progress_timers; /* System to progress timers */
-    ecs_entity_t clear_timers;    /* System that clears timers */
+    ecs_entity_t progress_rate_filters; /* System to progress rate filters */
 
 
     /* -- Metrics -- */

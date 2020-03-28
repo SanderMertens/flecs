@@ -193,12 +193,26 @@ typedef struct EcsPrefab {
 
 /** Component used for timer functionality */
 typedef struct EcsTimer {
-    float timeout;          /* Timer timeout period */
-    float time;             /* Incrementing time value */
-    float time_elapsed;     /* Time elapsed since last tick (0 if not ticking) */
-    int32_t fired_count;    /* Number of times ticked */
-    bool single_shot;       /* Is this a single shot timer */
+    float timeout;         /* Timer timeout period */
+    float time;            /* Incrementing time value */
+    int32_t fired_count;   /* Number of times ticked */
+    bool active;           /* Is the timer active or not */
+    bool single_shot;      /* Is this a single shot timer */
 } EcsTimer;
+
+/* Apply a rate filter to a tick source */
+typedef struct EcsRateFilter {
+    ecs_entity_t src;
+    int32_t rate;
+    int32_t tick_count;
+    float time_elapsed;   /* Time elapsed since last tick */
+} EcsRateFilter;
+
+/* Component used to provide a tick source to systems */
+typedef struct EcsTickSource {
+    bool tick;           /* True if providing tick */
+    float time_elapsed;  /* Time elapsed since last tick */
+} EcsTickSource;
 
 #include "flecs/util/api_support.h"
 #include "flecs/util/v2.h"
@@ -226,7 +240,9 @@ extern ecs_type_t
     TEcsHidden,
     TEcsDisabled,
     TEcsOnDemand,
-    TEcsTimer;
+    TEcsTimer,
+    TEcsRateFilter,
+    TEcsTickSource;
 
 /** Handles to builtin components */
 #define EEcsComponent (1)
@@ -241,9 +257,11 @@ extern ecs_type_t
 #define EEcsDisabled (10)
 #define EEcsOnDemand (11)
 #define EEcsTimer (12)
+#define EEcsRateFilter (13)
+#define EEcsTickSource (14)
 
 /** Builtin entity ids */
-#define EcsWorld (13)
+#define EcsWorld (15)
 #define ECS_SINGLETON (EcsSingleton)
 #define EcsInvalid (ECS_INVALID_ENTITY)
 
@@ -1965,10 +1983,10 @@ float ecs_get_interval(
  * @param timer The timer to associate with the system.
  */ 
 FLECS_EXPORT
-void ecs_set_timer(
+void ecs_set_tick_source(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_entity_t timer);
+    ecs_entity_t tick_source);
 
 
 ////////////////////////////////////////////////////////////////////////////////

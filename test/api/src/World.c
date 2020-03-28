@@ -118,7 +118,7 @@ void World_entity_range_offset_out_of_range() {
 
     test_expect_abort();
 
-    ecs_add(world, 20, Position);
+    ecs_add(world, 40, Position);
 
     ecs_fini(world);
 }

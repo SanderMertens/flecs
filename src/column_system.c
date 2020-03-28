@@ -331,7 +331,7 @@ ecs_entity_t ecs_new_col_system(
     system_data->query = ecs_query_new_w_sig(world, result, sig);
     ecs_assert(system_data->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    system_data->timer = 0;
+    system_data->tick_source = 0;
     system_data->entity = result;
 
     ecs_entity_t *elem = NULL;
@@ -477,15 +477,16 @@ ecs_entity_t ecs_run_intern(
     }
 
     float time_elapsed = delta_time;
-    ecs_entity_t system_timer = system_data->timer;
+    ecs_entity_t tick_source = system_data->tick_source;
 
-    if (system_timer) {
-        EcsTimer *timer = ecs_get_ptr(real_world, system_timer, EcsTimer);
-        if (timer) {
-            time_elapsed = timer->time_elapsed;
+    if (tick_source) {
+        EcsTickSource *tick = ecs_get_ptr(real_world, tick_source, EcsTickSource);
+
+        if (tick) {
+            time_elapsed = tick->time_elapsed;
 
             /* If timer hasn't fired we shouldn't run the system */
-            if (!time_elapsed) {
+            if (!tick->tick) {
                 return 0;
             }
         } else {

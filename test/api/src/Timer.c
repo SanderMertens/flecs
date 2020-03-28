@@ -35,6 +35,7 @@ void Timer_timeout() {
     test_bool(system_a_invoked, false);
     ecs_progress(world, 1.0);
     test_bool(system_a_invoked, false);
+
     ecs_progress(world, 1.0);
     test_bool(system_a_invoked, true);
 
@@ -98,8 +99,8 @@ void Timer_shared_timeout() {
     ecs_entity_t timer = ecs_set_timeout(world, 0, 3.0);
     test_assert(timer != 0);
 
-    ecs_set_timer(world, SystemA, timer);
-    ecs_set_timer(world, SystemB, timer);
+    ecs_set_tick_source(world, SystemA, timer);
+    ecs_set_tick_source(world, SystemB, timer);
 
     test_bool(system_a_invoked, false);
     test_bool(system_b_invoked, false);
@@ -143,8 +144,8 @@ void Timer_shared_interval() {
     ecs_entity_t timer = ecs_set_interval(world, 0, 3.0);
     test_assert(timer != 0);
 
-    ecs_set_timer(world, SystemA, timer);
-    ecs_set_timer(world, SystemB, timer);
+    ecs_set_tick_source(world, SystemA, timer);
+    ecs_set_tick_source(world, SystemB, timer);
 
     test_bool(system_a_invoked, false);
     test_bool(system_b_invoked, false);
