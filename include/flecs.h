@@ -1911,9 +1911,9 @@ void ecs_set_system_status_action(
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
  * @param world The world.
- * @param timer The timer for which to set the timeout. If 0, an entity will be created.
+ * @param timer The timer for which to set the timeout (0 to create one).
  * @param timeout The timeout value.
- * @return The timer entity for which the timeout has been set.
+ * @return The timer entity.
  */
 FLECS_EXPORT
 ecs_entity_t ecs_set_timeout(
@@ -1949,8 +1949,9 @@ float ecs_get_timeout(
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
  * @param world The world.
- * @param timer The timer for which to set the interval.
+ * @param timer The timer for which to set the interval (0 to create one).
  * @param interval The interval value.
+ * @return The timer entity.
  */
 FLECS_EXPORT
 ecs_entity_t ecs_set_interval(
@@ -1971,12 +1972,65 @@ float ecs_get_interval(
     ecs_world_t *world,
     ecs_entity_t timer);
 
-/** Assign timer to system.
- * This operation associates a system with a timer. If the system is both active
- * and enabled at the moment the timer fires, it will be executed. If no timer
- * is associated with a system, it will be invoked every frame.
+/** Start timer.
+ * This operation resets the timer and starts it with the specified timeout. The
+ * entity must have the EcsTimer component (added by ecs_set_timeout and 
+ * ecs_set_interval). If the entity does not have the EcsTimer component this
+ * operation will assert.
  *
- * To disassociate a timer from a system, use 0 for the timer parameter.
+ * @param world The world.
+ * @param timer The timer to start.
+ */
+FLECS_EXPORT
+void ecs_start_timer(
+    ecs_world_t *world,
+    ecs_entity_t timer);
+
+/** Stop timer
+ * This operation stops a timer from triggering. The entity must have the 
+ * EcsTimer component or this operation will assert.
+ *
+ * @param world The world.
+ * @param timer The timer to stop.
+ */
+FLECS_EXPORT
+void ecs_stop_timer(
+    ecs_world_t *world,
+    ecs_entity_t timer);
+
+/** Set rate filter.
+ * This operation sets the source and rate for a rate filter. A rate filter
+ * samples another tick source (or frames, if none provided) and ticks when the
+ * number of sampled ticks equals the rate.
+ *
+ * @param world The world.
+ * @param filter The filter entity (0 to create one).
+ * @param rate The rate to apply.
+ * @param source The tick source (0 to use frames)
+ * @return The filter entity.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_set_rate_filter(
+    ecs_world_t *world,
+    ecs_entity_t filter,
+    int32_t rate,
+    ecs_entity_t source);
+
+/** Assign tick source to system.
+ * This operation associates a system with a tick source. If the system is both 
+ * active and enabled at the moment the tick source fires, it will be executed.
+ * If no tick source is associated with a system, it will be invoked every 
+ * frame.
+ *
+ * To disassociate a tick source from a system, use 0 for the tick_source 
+ * parameter.
+ *
+ * Timer and rate filter entities are valid tick sources. An application can
+ * also create its own tick source by setting the EcsTickSource component on an
+ * entity.
+ *
+ * If an entity without the EcsTickSource component is provided as tick source,
+ * the system will not be executed.
  *
  * @param world The world.
  * @param system The system to associate with the timer.

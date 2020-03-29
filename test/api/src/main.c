@@ -445,8 +445,11 @@ void Timer_timeout(void);
 void Timer_interval(void);
 void Timer_shared_timeout(void);
 void Timer_shared_interval(void);
-void Timer_zero_timeout(void);
-void Timer_zero_interval(void);
+void Timer_start_stop_one_shot(void);
+void Timer_start_stop_interval(void);
+void Timer_rate_filter(void);
+void Timer_rate_filter_w_rate_filter_src(void);
+void Timer_rate_filter_w_timer_src(void);
 
 // Testsuite 'SystemOnDemand'
 void SystemOnDemand_enable_out_after_in(void);
@@ -2633,7 +2636,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Timer",
-        .testcase_count = 6,
+        .testcase_count = 9,
         .testcases = (bake_test_case[]){
             {
                 .id = "timeout",
@@ -2652,12 +2655,24 @@ static bake_test_suite suites[] = {
                 .function = Timer_shared_interval
             },
             {
-                .id = "zero_timeout",
-                .function = Timer_zero_timeout
+                .id = "start_stop_one_shot",
+                .function = Timer_start_stop_one_shot
             },
             {
-                .id = "zero_interval",
-                .function = Timer_zero_interval
+                .id = "start_stop_interval",
+                .function = Timer_start_stop_interval
+            },
+            {
+                .id = "rate_filter",
+                .function = Timer_rate_filter
+            },
+            {
+                .id = "rate_filter_w_rate_filter_src",
+                .function = Timer_rate_filter_w_rate_filter_src
+            },
+            {
+                .id = "rate_filter_w_timer_src",
+                .function = Timer_rate_filter_w_timer_src
             }
         }
     },

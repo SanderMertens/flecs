@@ -490,8 +490,11 @@
                 "interval",
                 "shared_timeout",
                 "shared_interval",
-                "zero_timeout",
-                "zero_interval"
+                "start_stop_one_shot",
+                "start_stop_interval",
+                "rate_filter",
+                "rate_filter_w_rate_filter_src",
+                "rate_filter_w_timer_src"
             ]
         }, {
             "id": "SystemOnDemand",
