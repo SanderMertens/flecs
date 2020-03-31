@@ -1099,7 +1099,9 @@ ecs_entity_t ecs_run_w_filter_v2(
     if (!in_progress) {
         real_world->in_progress = false;
         if (world->auto_merge) {
+            real_world->is_merging = true;
             ecs_stage_merge(real_world, stage);
+            real_world->is_merging = false;
         }
     }
 
