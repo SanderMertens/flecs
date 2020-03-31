@@ -87,14 +87,9 @@ int main(int argc, char *argv[]) {
     flecs::component<Speed>(world, "Speed");
 
     flecs::system<Position, Speed>(world)
-        .action([](const flecs::rows& rows, 
-            flecs::column<Position> p, 
-            flecs::column<Speed> s) 
-        {    
-            for (auto row : rows) {
-                p[row].x += s[row].value * rows.delta_time();
-                p[row].y += s[row].value * rows.delta_time();
-            }
+        .each([](flecs::entity e, Position& p, Speed& s) {
+            p.x += s.value * e.delta_time();
+            p.y += s.value * e.delta_time();
         });
 
     flecs::entity(world, "MyEntity")
