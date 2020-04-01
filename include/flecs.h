@@ -139,6 +139,14 @@ typedef struct ecs_filter_t {
     ecs_match_kind_t exclude_kind;
 } ecs_filter_t;
 
+typedef struct ecs_cached_ptr_t {
+    void *table;
+    void *stage;
+    int32_t count;
+    int32_t row;
+    void *ptr;
+} ecs_cached_ptr_t;
+
 /** The ecs_rows_t struct passes data from a system to a system callback.  */
 struct ecs_rows_t {
     ecs_world_t *world;          /* Current world */
@@ -1160,6 +1168,18 @@ void* _ecs_get_ptr(
 
 #define ecs_get(world, entity, component)\
   (*(component*)_ecs_get_ptr(world, entity, E##component))
+
+
+/** Retrieve a cached pointer */
+FLECS_EXPORT
+void* _ecs_get_cached_ptr(
+    ecs_world_t *world,
+    ecs_cached_ptr_t *cached_ptr,
+    ecs_entity_t entity,
+    ecs_entity_t component);
+
+#define ecs_get_cached_ptr(world, entity, component)\
+    (component*)_ecs_get_cached_ptr(world, entity, E##component)
 
 /* Set value of component.
  * This function sets the value of a component on the specified entity. If the

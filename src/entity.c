@@ -2104,6 +2104,48 @@ void* _ecs_get_ptr(
     return ecs_get_ptr_intern(world, stage, entity, component, false, true);
 }
 
+void* _ecs_get_cached_ptr(
+    ecs_world_t *world,
+    ecs_cached_ptr_t *cached_ptr,
+    ecs_entity_t entity,
+    ecs_entity_t component)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_t *stage = ecs_get_stage(&world);
+
+    ecs_entity_info_t info = {0};
+    bool found = ecs_get_info(world, stage, entity, &info) && (info.table != NULL);
+
+    if (found) {
+        ecs_data_t *data = ecs_table_get_staged_data(world, stage, info.table);
+        ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        int32_t count = ecs_vector_count(data->entities);
+
+        if (stage == cached_ptr->stage) {
+            if (info.table == cached_ptr->table && count == cached_ptr->count) {
+                if (info.row == cached_ptr->row) {
+                    return cached_ptr->ptr;
+                }
+            }
+        }
+
+        cached_ptr->stage = stage;
+        cached_ptr->table = info.table;
+        cached_ptr->count = count;
+        cached_ptr->row = info.row;
+        cached_ptr->ptr = get_component(&info, component);
+    } else {
+        cached_ptr->stage = NULL;
+        cached_ptr->table = NULL;
+        cached_ptr->count = 0;
+        cached_ptr->row = 0;
+        cached_ptr->ptr = NULL;
+    }
+
+    return cached_ptr->ptr;
+}
+
 void* _ecs_get_mutable(
     ecs_world_t *world,
     ecs_entity_t entity,

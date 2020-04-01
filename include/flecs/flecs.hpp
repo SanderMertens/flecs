@@ -675,12 +675,64 @@ public:
                 world, id, component_base<T>::s_entity, sizeof(T), &is_added));
 
             if (ptr) {
+                if (is_added) {
+                    // Allow constructor to initialize value
+                    T value;
+                    *ptr = value;
+                }
+
                 func(*ptr);
                 _ecs_modified(world, id, component_base<T>::s_entity);
             }
         });
         return *static_cast<base_type*>(this);
     }            
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//// Cached component pointer
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+class cached_ptr {
+public:
+    cached_ptr()
+        : m_world( nullptr )
+        , m_entity( 0 )
+        , m_cached_ptr({0}) { }
+
+    cached_ptr(world_t *world, entity_t entity) 
+        : m_world( world )
+        , m_entity( entity )
+        , m_cached_ptr({0}) {
+        _ecs_get_cached_ptr(
+            m_world, &m_cached_ptr, m_entity, component_base<T>::s_entity);
+    }
+
+    T* operator->() {
+        T* result = static_cast<T*>(_ecs_get_cached_ptr(
+            m_world, &m_cached_ptr, m_entity, component_base<T>::s_entity));
+
+        ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
+
+        return result;
+    }
+
+    T* get() {
+        if (m_entity) {
+            _ecs_get_cached_ptr(
+                m_world, &m_cached_ptr, m_entity, component_base<T>::s_entity);    
+        }
+
+        return static_cast<T*>(m_cached_ptr.ptr);
+    }
+
+    flecs::entity entity() const;
+
+private:
+    world_t *m_world;
+    entity_t m_entity;
+    ecs_cached_ptr_t m_cached_ptr;
 };
 
 
@@ -759,10 +811,15 @@ public:
         return *component_ptr;
     }
 
-    template<typename T>
+    template <typename T>
     T* get_ptr() const {
         return static_cast<T*>(
             _ecs_get_ptr(m_world, m_id, component_base<T>::s_entity));
+    }
+
+    template <typename T>
+    cached_ptr<T> get_cached_ptr() const {
+        return cached_ptr<T>(m_world, m_id);
     }
 
     template <typename Func>
@@ -817,6 +874,10 @@ public:
 
     float delta_time() {
         return ecs_get_delta_time(m_world);
+    }
+
+    operator bool() {
+        return m_id != 0;
     }
 
 protected:
@@ -1253,7 +1314,7 @@ public:
         m_query = ecs_query_new(world.c_ptr(), str.str().c_str());
     }
 
-    explicit query(world& world, const char *expr) const{
+    explicit query(world& world, const char *expr) {
         std::stringstream str;
         if (!pack_args_to_string(str)) {
             m_query = ecs_query_new(world.c_ptr(), expr);
@@ -1899,6 +1960,16 @@ inline query_iterator<Components...> query<Components...>::end() const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Cached ptr fwd declared functions
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+flecs::entity cached_ptr<T>::entity() const {
+    return flecs::entity(m_world, m_entity);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Entity fwd declared functions
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1974,7 +2045,7 @@ inline flecs::world rows::world() const {
     return flecs::world(m_rows->world);
 }
 
-inline flecs::entity rows::entity(uint32_t row) const {
+inline flecs::entity rows::entity(int32_t row) const {
     ecs_assert(row < m_rows->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
     return flecs::entity(m_rows->world, m_rows->entities[row]);
 }

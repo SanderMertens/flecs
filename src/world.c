@@ -1221,7 +1221,7 @@ bool ecs_progress(
 
     /* -- System execution starts here -- */
 
-    run_single_thread_stage(world, world->on_load_systems, false);
+    run_single_thread_stage(world, world->on_load_systems, true);
     run_single_thread_stage(world, world->post_load_systems, true);
 
     if (has_threads) {
