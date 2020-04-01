@@ -520,6 +520,7 @@ bool ecs_progress(
  * @param world The world.
  * @return The number of active systems.
  */
+FLECS_EXPORT
 int32_t ecs_active_system_count(
     ecs_world_t *world);
 
@@ -531,6 +532,7 @@ int32_t ecs_active_system_count(
  * @param world The world.
  * @return The number of inactive systems.
  */
+FLECS_EXPORT
 int32_t ecs_inactive_system_count(
     ecs_world_t *world);    
 
