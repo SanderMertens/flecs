@@ -408,7 +408,9 @@
                 "delete_no_match_1",
                 "delete_no_match_2_of_1",
                 "delete_no_match_2_of_3",
-                "disabled_system"
+                "disabled_system",
+                "remove_watched",
+                "delete_watched"
             ]
         }, {
             "id": "SystemOnSet",

@@ -1646,6 +1646,10 @@ public:
 
         std::string signature = build_signature();
 
+        if (!signature.length()) {
+            signature = "0";
+        }
+
         entity_t e = ecs_new_system(
             m_world, 
             m_name, 

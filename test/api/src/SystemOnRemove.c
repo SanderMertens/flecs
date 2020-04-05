@@ -429,3 +429,57 @@ void SystemOnRemove_disabled_system() {
 
     ecs_fini(world);
 }
+
+static Position old_position = {0};
+
+static
+void RemovePosition(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+
+    test_assert(rows->count == 1);
+
+    old_position = p[0];
+}
+
+void SystemOnRemove_remove_watched() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, RemovePosition, EcsOnRemove, Position);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e != 0);
+
+    /* Make parent entity watched */
+    ecs_new_child(world, e, 0);
+
+    ecs_remove(world, e, Position);
+
+    test_int(old_position.x, 10);
+    test_int(old_position.y, 20);
+
+    ecs_fini(world);
+}
+
+
+void SystemOnRemove_delete_watched() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, RemovePosition, EcsOnRemove, Position);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e != 0);
+
+    /* Make parent entity watched */
+    ecs_new_child(world, e, 0);
+
+    ecs_delete(world, e);
+
+    test_int(old_position.x, 10);
+    test_int(old_position.y, 20);
+
+    ecs_fini(world);
+}
