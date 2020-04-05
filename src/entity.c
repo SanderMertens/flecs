@@ -611,6 +611,9 @@ uint32_t commit(
         /* If committing while iterating, obtain component columns from the
          * stage. Otherwise, obtain columns from the table directly. */
         old_index = info->index;
+        if (old_index < 0) {
+            old_index = -old_index;
+        }
         
         if (in_progress) {
             ecs_map_has(stage->data_stage, (uintptr_t)old_type, &old_columns);
