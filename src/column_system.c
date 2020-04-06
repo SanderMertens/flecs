@@ -1117,13 +1117,21 @@ ecs_entity_t _ecs_run_w_filter(
     ecs_type_t include_type,
     void *param)
 {
-    ecs_filter_t filter = {
-        .include = include_type,
-        .include_kind = EcsMatchAll
-    };
+    ecs_entity_t interrupted_by = 0;
 
-    ecs_entity_t interrupted_by = ecs_run_w_filter_v2(
-        world, system, delta_time, offset, limit, &filter, param);
+    if (include_type) {
+        ecs_filter_t filter = {
+            .include = include_type,
+            .include_kind = EcsMatchAll
+        };
+
+        interrupted_by = ecs_run_w_filter_v2(
+            world, system, delta_time, offset, limit, &filter, param);
+    } else {
+        interrupted_by = ecs_run_w_filter_v2(
+            world, system, delta_time, offset, limit, NULL, param);
+
+    }
 
     return interrupted_by;
 }

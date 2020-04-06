@@ -346,7 +346,9 @@
                 "dont_enable_after_rematch",
                 "ensure_single_merge",
                 "table_count",
-                "active_system_count"
+                "active_system_count",
+                "match_system",
+                "match_system_w_filter"
             ]
         }, {
             "id": "SystemOnAdd",
