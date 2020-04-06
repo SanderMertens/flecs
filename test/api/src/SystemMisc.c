@@ -799,10 +799,12 @@ static void SysA(ecs_rows_t *rows)
 }
 
 static int b_invoked;
+static ecs_entity_t b_entity;
 
 static void SysB(ecs_rows_t *rows)
 {
     b_invoked ++;
+    b_entity = rows->entities[0];
 }
 
 void SystemMisc_ensure_single_merge() {
@@ -882,6 +884,40 @@ void SystemMisc_active_system_count() {
 
     test_int( ecs_active_system_count(world) - initial_active_count, 2);
     test_int( ecs_inactive_system_count(world) - initial_inactive_count, 0);
+    
+    ecs_fini(world);
+}
+
+void SystemMisc_match_system() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, SysA, EcsManual, SYSTEM.Position);
+    ECS_SYSTEM(world, SysB, EcsManual, Position);
+
+    ecs_run(world, SysB, 0, NULL);
+
+    test_assert(b_invoked != 0);
+    test_assert(b_entity == SysA);
+    
+    ecs_fini(world);
+}
+
+void SystemMisc_match_system_w_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, SysA, EcsManual, SYSTEM.Position);
+    ECS_SYSTEM(world, SysB, EcsManual, Position);
+
+    ecs_run_w_filter(world, SysB, 0, 0, 0, Position, NULL);
+
+    test_assert(b_invoked != 0);
+    test_assert(b_entity == SysA);
     
     ecs_fini(world);
 }
