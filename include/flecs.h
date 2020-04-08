@@ -27,8 +27,10 @@ typedef char bool;
 
 #include "flecs/util/os_api.h"
 #include "flecs/util/vector.h"
+#include "flecs/util/ringbuf.h"
 #include "flecs/util/sparse.h"
 #include "flecs/util/map.h"
+#include "flecs/util/strbuf.h"
 #include "flecs/util/os_api.h"
 
 #ifdef __cplusplus
