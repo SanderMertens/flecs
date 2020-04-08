@@ -1124,20 +1124,16 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class import {
-public:
-    import(world& world, int flags) {
-        if (!component_base<T>::s_name) {
-            // Allocate module, so the this ptr will remain stable
-            T *module_data = new T(world, flags);
+void import(world& world, int flags = 0) {
+    if (!component_base<T>::s_name) {
+        // Allocate module, so the this ptr will remain stable
+        T *module_data = new T(world, flags);
 
-            flecs::entity s(world, EcsSingleton);
+        flecs::entity s(world, EcsSingleton);
 
-            s.set<T>(*module_data);
-        }
+        s.set<T>(*module_data);
     }
-};
-
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// A filter is used to match subsets of tables
