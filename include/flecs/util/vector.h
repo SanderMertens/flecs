@@ -188,4 +188,78 @@ ecs_vector_t* _ecs_vector_copy(
 }
 #endif
 
+#ifdef __cplusplus
+#ifndef FLECS_NO_CPP
+
+#include <iostream>
+
+namespace flecs {
+
+template <typename T>
+class vector {
+public:
+    vector(int32_t count = 0) : m_vector( nullptr ) { 
+        if (count) {
+            init(count);
+        }
+    }
+
+    vector(std::initializer_list<T> elems) : m_vector( nullptr) {
+        init(elems.size());
+        *this = elems;
+    }
+
+    void operator=(std::initializer_list<T> elems) {
+        for (auto elem : elems) {
+            this->add(elem);
+        }
+    }
+
+    void clear() {
+        ecs_vector_clear(m_vector);
+    }
+
+    void add(T& value) {
+        T* elem = ecs_vector_add(&m_vector, T);
+        *elem = value;
+    }
+
+    void add(T&& value) {
+        T* elem = ecs_vector_add(&m_vector, T);
+        *elem = value;
+    }    
+
+    T& get(int32_t index) {
+        return ecs_vector_get(m_vector, T, index);
+    }
+
+    T& first() {
+        return static_cast<T*>(ecs_vector_first(m_vector));
+    }
+
+    T& last() {
+        return ecs_vector_last(m_vector, T);
+    }
+
+    int32_t count() {
+        return ecs_vector_count(m_vector);
+    }
+
+    int32_t size() {
+        return ecs_vector_size(m_vector);
+    }
+
+private:
+    void init(int32_t count) {
+        m_vector = ecs_vector_new(T, count);
+    }
+
+    ecs_vector_t *m_vector;
+};
+
+}
+
+#endif
+#endif
+
 #endif

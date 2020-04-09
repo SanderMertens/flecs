@@ -2181,16 +2181,22 @@ void* _ecs_get_mutable(
                     /* We did add the component to the stage, but for the
                      * application this can be transparent as there is no need
                      * to initialize the component. */
-                    *is_added = false;
+                    if (is_added) {
+                        *is_added = false;
+                    }
                     return dst;
                 }
             }
         }
 
-        *is_added = true;
+        if (is_added) {
+            *is_added = true;
+        }
         return dst;
     } else {
-        *is_added = false;
+        if (is_added) {
+            *is_added = false;
+        }
         return dst;
     }
 }

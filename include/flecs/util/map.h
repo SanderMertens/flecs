@@ -128,4 +128,58 @@ ecs_map_t* ecs_map_copy(
 }
 #endif
 
+#ifdef __cplusplus
+#ifndef FLECS_NO_CPP
+
+#include <iostream>
+
+namespace flecs {
+
+template <typename K, typename T>
+class map {
+public:
+    map(int32_t count = 0) { 
+        init(count);
+    }
+
+    map(std::initializer_list<std::pair<K, T>> elems) {
+        init(elems.size());
+        *this = elems;
+    }
+
+    void operator=(std::initializer_list<std::pair<K, T>> elems) {
+        for (auto elem : elems) {
+            this->set(elem.first, elem.second);
+        }
+    }
+
+    void clear() {
+        ecs_map_clear(m_map);
+    }
+
+    int32_t count() {
+        return ecs_map_count(m_map);
+    }
+
+    void set(K& key, T& value) {
+        ecs_map_set(m_map, reinterpret_cast<ecs_map_key_t>(key), &value);
+    }
+
+    T& get(K& key) {
+        *(T*)ecs_map_get(m_map, T, reinterpret_cast<ecs_map_key_t>(key));
+    }
+
+private:
+    void init(int32_t count) {
+        m_map = ecs_map_new(sizeof(T), count);
+    }
+
+    ecs_map_t *m_map;
+};
+
+}
+
+#endif
+#endif
+
 #endif
