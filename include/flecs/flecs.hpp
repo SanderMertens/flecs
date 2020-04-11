@@ -633,7 +633,7 @@ public:
     template <typename T>
     const base_type& set(const T&& value) const {
         static_cast<base_type*>(this)->invoke(
-        [value](world_t *world, entity_t id) {
+        [&value](world_t *world, entity_t id) {
             _ecs_set_ptr(world, id, component_base<T>::s_entity, sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
@@ -642,7 +642,7 @@ public:
     template <typename T>
     const base_type& set(const T& value) const {
         static_cast<base_type*>(this)->invoke(
-        [value](world_t *world, entity_t id) {
+        [&value](world_t *world, entity_t id) {
             _ecs_set_ptr(world, id, component_base<T>::s_entity, sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
@@ -651,7 +651,7 @@ public:
     template <typename T>
     const base_type& replace(std::function<void(T&, bool)> func) const {
         static_cast<base_type*>(this)->invoke(
-        [func](world_t *world, entity_t id) {
+        [&func](world_t *world, entity_t id) {
             bool is_added;
 
             T *ptr = static_cast<T*>(_ecs_get_mutable(
@@ -668,7 +668,7 @@ public:
     template <typename T>
     const base_type& replace(std::function<void(T&)> func) const {
         static_cast<base_type*>(this)->invoke(
-        [func](world_t *world, entity_t id) {
+        [&func](world_t *world, entity_t id) {
             bool is_added;
 
             T *ptr = static_cast<T*>(_ecs_get_mutable(
@@ -823,7 +823,7 @@ public:
     }
 
     template <typename Func>
-    void invoke(Func action) const {
+    void invoke(Func&& action) const {
         action(m_world, m_id);
     } 
 
@@ -915,7 +915,7 @@ public:
         , m_count(count) { }
 
     template <typename Func>
-    void invoke(Func action) const {
+    void invoke(Func&& action) const {
         for (auto id : *this) {
             action(m_world, id);
         }
