@@ -148,7 +148,11 @@
                 "remove_1_include_1",
                 "remove_1_include_2",
                 "add_1",
-                "add_2"                           
+                "add_2",
+                "add_existing",
+                "remove_existing",
+                "remove_existing_no_filter",
+                "add_remove_nothing"
             ]
         }, {
             "id": "Has",
@@ -339,7 +343,12 @@
                 "status_disable_after_disable",
                 "status_activate_after_new",
                 "status_deactivate_after_delete",
-                "dont_enable_after_rematch"
+                "dont_enable_after_rematch",
+                "ensure_single_merge",
+                "table_count",
+                "active_system_count",
+                "match_system",
+                "match_system_w_filter"
             ]
         }, {
             "id": "SystemOnAdd",
@@ -398,7 +407,9 @@
                 "delete_no_match_1",
                 "delete_no_match_2_of_1",
                 "delete_no_match_2_of_3",
-                "disabled_system"
+                "disabled_system",
+                "remove_watched",
+                "delete_watched"
             ]
         }, {
             "id": "SystemOnSet",
@@ -516,7 +527,8 @@
             "testcases": [
                 "1_type_1_component",
                 "disabled",
-                "activate_status"
+                "activate_status",
+                "no_automerge"
             ]
         }, {
             "id": "Tasks",

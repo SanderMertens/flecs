@@ -1132,7 +1132,8 @@ void run_single_thread_stage(
         ecs_time_measure(&start);
 
         for (i = 0; i < system_count; i ++) {
-            ecs_run(world, buffer[i], world->delta_time, NULL);
+            ecs_run_intern(
+                world, world, buffer[i], world->delta_time, 0, 0, NULL, NULL);
         }
 
         world->system_time_total += ecs_time_measure(&start);
@@ -1268,7 +1269,7 @@ bool ecs_progress(
 
     /* -- System execution starts here -- */
 
-    run_single_thread_stage(world, world->on_load_systems, false);
+    run_single_thread_stage(world, world->on_load_systems, true);
     run_single_thread_stage(world, world->post_load_systems, true);
 
     if (has_threads) {
@@ -1295,6 +1296,26 @@ bool ecs_progress(
     world->in_progress = false;
 
     return !world->should_quit;
+}
+
+int32_t ecs_active_system_count(
+    ecs_world_t *world)
+{
+    return
+        ecs_vector_count(world->on_load_systems) +
+        ecs_vector_count(world->post_load_systems) +
+        ecs_vector_count(world->pre_update_systems) +
+        ecs_vector_count(world->on_update_systems) +
+        ecs_vector_count(world->on_validate_systems) +
+        ecs_vector_count(world->post_update_systems) +
+        ecs_vector_count(world->pre_store_systems) +
+        ecs_vector_count(world->on_store_systems);
+}
+
+int32_t ecs_inactive_system_count(
+    ecs_world_t *world)
+{
+    return ecs_vector_count(world->inactive_systems);
 }
 
 float ecs_get_delta_time(
@@ -1657,4 +1678,3 @@ uint32_t ecs_get_threads(
 {
     return ecs_vector_count(world->worker_threads);
 }
-

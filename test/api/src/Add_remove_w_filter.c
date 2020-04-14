@@ -496,3 +496,104 @@ void Add_remove_w_filter_add_2() {
 
     ecs_fini(world);
 }
+
+void Add_remove_w_filter_add_existing() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ecs_entity_t e_1 = ecs_new_w_count(world, Type, 3);
+
+    test_int( ecs_count(world, Type), 3);
+
+    /* Remove component Mass */
+    ecs_add_remove_w_filter(world, Velocity, 0, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    /* ecs_count tests if the number of entities in the tables is correct */
+    test_int( ecs_count(world, Type), 3);
+
+    /* ecs_get_type tests if the entity index is properly updated */
+    test_assert( ecs_get_type(world, e_1) == ecs_type(Type));
+    test_assert( ecs_get_type(world, e_1 + 1) == ecs_type(Type));
+    test_assert( ecs_get_type(world, e_1 + 2) == ecs_type(Type));
+
+    ecs_fini(world);
+}
+
+void Add_remove_w_filter_remove_existing() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e_1 = ecs_new_w_count(world, Position, 3);
+
+    test_int( ecs_count(world, Position), 3);
+
+    /* Remove component Mass */
+    ecs_add_remove_w_filter(world, 0, Velocity, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    /* ecs_count tests if the number of entities in the tables is correct */
+    test_int( ecs_count(world, Position), 3);
+
+    /* ecs_get_type tests if the entity index is properly updated */
+    test_assert( ecs_get_type(world, e_1) == ecs_type(Position));
+    test_assert( ecs_get_type(world, e_1 + 1) == ecs_type(Position));
+    test_assert( ecs_get_type(world, e_1 + 2) == ecs_type(Position));
+
+    ecs_fini(world);
+}
+
+void Add_remove_w_filter_remove_existing_no_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e_1 = ecs_new_w_count(world, Position, 3);
+
+    test_int( ecs_count(world, Position), 3);
+
+    /* Remove component Mass */
+    ecs_add_remove_w_filter(world, 0, Velocity, NULL);
+
+    /* ecs_count tests if the number of entities in the tables is correct */
+    test_int( ecs_count(world, Position), 3);
+
+    /* ecs_get_type tests if the entity index is properly updated */
+    test_assert( ecs_get_type(world, e_1) == ecs_type(Position));
+    test_assert( ecs_get_type(world, e_1 + 1) == ecs_type(Position));
+    test_assert( ecs_get_type(world, e_1 + 2) == ecs_type(Position));
+
+    ecs_fini(world);
+}
+
+void Add_remove_w_filter_add_remove_nothing() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e_1 = ecs_new_w_count(world, Position, 3);
+
+    test_int( ecs_count(world, Position), 3);
+
+    /* Remove component Mass */
+    ecs_add_remove_w_filter(world, 0, 0, NULL);
+
+    /* ecs_count tests if the number of entities in the tables is correct */
+    test_int( ecs_count(world, Position), 3);
+
+    /* ecs_get_type tests if the entity index is properly updated */
+    test_assert( ecs_get_type(world, e_1) == ecs_type(Position));
+    test_assert( ecs_get_type(world, e_1 + 1) == ecs_type(Position));
+    test_assert( ecs_get_type(world, e_1 + 2) == ecs_type(Position));
+
+    ecs_fini(world);
+}

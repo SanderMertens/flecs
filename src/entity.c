@@ -611,6 +611,9 @@ uint32_t commit(
         /* If committing while iterating, obtain component columns from the
          * stage. Otherwise, obtain columns from the table directly. */
         old_index = info->index;
+        if (old_index < 0) {
+            old_index = -old_index;
+        }
         
         if (in_progress) {
             ecs_map_has(stage->data_stage, (uintptr_t)old_type, &old_columns);
@@ -1796,8 +1799,9 @@ void _ecs_add_remove_w_filter(
             continue;
         }
 
-        /* Component(s) must be removed, find table */
+        /* Component(s) must be added / removed, find table */
         ecs_type_t dst_type = ecs_type_merge(world, type, to_add, to_remove);
+
         if (!dst_type) {
             /* If this removes all components, clear table */
             ecs_table_merge(world, NULL, table);
@@ -1806,7 +1810,9 @@ void _ecs_add_remove_w_filter(
             ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
             /* Merge table into dst_table */
-            ecs_table_merge(world, dst_table, table);
+            if (dst_table != table) {
+                ecs_table_merge(world, dst_table, table);
+            }
         }
     }    
 }

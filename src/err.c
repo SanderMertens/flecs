@@ -157,6 +157,8 @@ const char* ecs_strerror(
         return "serialized data has invalid format";
     case ECS_INVALID_REACTIVE_SIGNATURE:
         return "signature is not valid for reactive system (must contain at least one SELF column)";
+    case ECS_INCONSISTENT_COMPONENT_NAME:
+        return "component registered twice with a different name";
     }
 
     return "unknown error code";
