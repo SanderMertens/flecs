@@ -31,7 +31,7 @@ ecs_record_t* ecs_ei_get_or_create(
             record = ecs_map_get(
                 entity_index->hi, ecs_record_t, entity);  
 
-            record->type = NULL;  
+            record->table = NULL;  
             record->row = 0;            
         }
 
@@ -43,7 +43,7 @@ ecs_record_t* ecs_ei_get_or_create(
             entity_index->lo, ecs_record_t, entity, &is_new);
 
         if (is_new) {
-            record->type = NULL;
+            record->table = NULL;
             record->row = 0;
         }
         

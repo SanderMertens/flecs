@@ -131,7 +131,7 @@ void bootstrap_component(
 
     /* Create record in entity index */
     ecs_record_t *record = ecs_eis_get_or_create(&world->stage, entity);
-    record->type = world->t_component;
+    record->table = table;
     record->row = index + 1;
 
     /* Set size and id */

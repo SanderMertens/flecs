@@ -162,13 +162,7 @@ void set_info_from_record(
 
     info->record = record;
 
-    ecs_table_t *table;
-
-    if (record->type) {
-        table = ecs_world_get_table(world, &world->stage, record->type);
-    } else {
-        table = NULL;
-    }
+    ecs_table_t *table = record->table;
 
     set_row_info(info, record->row);
 
@@ -237,13 +231,8 @@ bool get_staged_info(
 
     set_row_info(info, record->row);    
 
-    ecs_table_t *table;
-    if (record->type) {
-        table = ecs_world_get_table(world, stage, record->type);
-    } else {
-        table = NULL;
-    }
-    
+    ecs_table_t *table = record->table;
+
     info->table = table;
     if (!info->table) {
         return true;
@@ -769,7 +758,9 @@ int32_t commit(
 
     /* Update the entity index so that it points to the new table */
     if (type) {
-        ecs_record_t new_record = (ecs_record_t){.type = type, .row = new_index + 1};
+        ecs_record_t new_record = (ecs_record_t){
+            .table = new_table, .row = new_index + 1
+        };
 
         /* If old row was being watched, make sure new row is as well */
         if (is_watched) {
@@ -823,8 +814,8 @@ int32_t commit(
                 ecs_record_t *main_record = ecs_eis_get(&world->stage, entity);
                 ecs_type_t main_type = NULL;
                 
-                if (main_record) {
-                    main_type = main_record->type;
+                if (main_record && main_record->table) {
+                    main_type = main_record->table->type;
                 }
 
                 /* If components were removed while in progress, subtract them
@@ -986,17 +977,17 @@ void ecs_merge_entity(
     ecs_record_t staged_record)
 {
     ecs_record_t *old_record;
-    ecs_table_t *old_table = NULL;
     ecs_type_t old_type = NULL;
     ecs_entity_info_t info = {0};
 
     if ((old_record = ecs_eis_get(&world->stage, entity))) {
-        if ((old_type = old_record->type)) {
+        ecs_table_t *old_table = old_record->table;
+        if (old_table) {
             /* It is possible that an entity exists in the main stage but does
              * not have a type. This happens when an empty entity is being 
              * watched, in which case it will have -1 as index, but no type. */
-            old_table = ecs_world_get_table(world, stage, old_record->type);
             info.table = old_table;
+            old_type = old_table->type;
         }
         info.row = convert_record_row(old_record->row, &info.is_watched);
     }
@@ -1004,9 +995,14 @@ void ecs_merge_entity(
     ecs_type_t to_remove = NULL;
     ecs_map_has(stage->remove_merge, entity, &to_remove);
 
-    ecs_type_t staged_type = staged_record.type;    
+    ecs_table_t *staged_table = staged_record.table;
+    ecs_type_t staged_type = NULL;
+    if (staged_table) {
+        staged_type = staged_table->type;
+    }
+
     ecs_type_t type = ecs_type_merge_intern(
-        world, stage, old_type, staged_record.type, to_remove);    
+        world, stage, old_type, staged_type, to_remove);
 
     int32_t new_index = commit(
         world, &world->stage, entity, &info, type, 0, to_remove, false);
@@ -1046,7 +1042,7 @@ void ecs_set_watch(
 
     ecs_record_t *record = ecs_eis_get(stage, entity);
     if (!record) {
-        ecs_record_t new_record = {.row = -1, .type = NULL};
+        ecs_record_t new_record = {.row = -1, .table = NULL};
         ecs_eis_set(stage, entity, &new_record);
     } else {
         if (record->row > 0) {
@@ -1056,7 +1052,7 @@ void ecs_set_watch(
             /* If entity is empty, there is no index to change the sign of. In
              * this case, set the index to -1, and assign an empty type. */
             record->row = -1;
-            record->type = NULL;
+            record->table = NULL;
         }
     }
 }
@@ -1319,7 +1315,7 @@ int32_t update_entity_index(
      * origins, so that reactive systems can be inovoked on arrays of entities
      * vs individual entities as much as possible. */
     bool same_origin = true;
-    ecs_type_t src_type = NULL, prev_src_type = NULL;
+    ecs_table_t *src_table = NULL, *prev_src_table = NULL;
     int32_t src_row = 0, prev_src_row = 0, dst_first_contiguous_row = start_row;
     int32_t src_first_contiguous_row = 0;
 
@@ -1375,10 +1371,10 @@ int32_t update_entity_index(
              * on those subsets. */
             if (!i) {
                 /* For the first entity we don't have to do much */
-                prev_src_type = record_ptr->type;
+                prev_src_table = record_ptr->table;
             }
 
-            src_type = record_ptr->type;
+            src_table = record_ptr->table;
 
             /* If entity exists, and this is the first entity being iterated
              * set the start index to the current index of the entity. The
@@ -1387,18 +1383,16 @@ int32_t update_entity_index(
              * In the ideal scenario, the subsequent entities to be added
              * will be provided in the same order after the first entity, so
              * that the entity index does not need to be updated. */
-            if (!i && record_ptr->type == type) {
+            if (!i && src_table == table) {
                 dst_start_row = src_row;
                 dst_first_contiguous_row = src_row;
             } else {
                 /* If the entity exists but it is not the first entity, 
                  * check if it is in the same table. If not, delete the 
                  * entity from the other table */     
-                if (record_ptr->type != type) {
-                    ecs_table_t *old_table = ecs_world_get_table(
-                        world, stage, record_ptr->type);
+                if (src_table != table) {
                     ecs_data_t *old_data = ecs_table_get_staged_data(
-                        world, stage, old_table);
+                        world, stage, src_table);
 
                     /* Insert new row into destination table */
                     int32_t dst_row = ecs_table_append(
@@ -1423,7 +1417,7 @@ int32_t update_entity_index(
                             record_ptr->row, &is_watching);
 
                         copy_row(type, data, dst_row, 
-                            old_table->type, old_data, src_row);
+                            src_table->type, old_data, src_row);
                     }
 
                     /* Actual deletion of the entity from the source table
@@ -1478,12 +1472,12 @@ int32_t update_entity_index(
             }
 
             /* Update entity index with the new table / row */
-            record_ptr->type = type;
+            record_ptr->table = table;
             record_ptr->row = dst_start_row + i + 1;
             record_ptr->row *= is_monitored;
         } else {
             ecs_record_t new_record = (ecs_record_t){
-                .type = type, .row = dst_start_row + i + 1
+                .table = table, .row = dst_start_row + i + 1
             };
 
             ecs_eis_set(stage, e, &new_record);
@@ -1505,29 +1499,28 @@ int32_t update_entity_index(
         if (i) {
             ecs_assert(dst_first_contiguous_row >= dst_start_row, ECS_INTERNAL_ERROR, NULL);
 
-            if (prev_src_type != src_type || (src_row != prev_src_row && prev_src_row != (src_row - 1))) {
+            if (prev_src_table != src_table || (src_row != prev_src_row && prev_src_row != (src_row - 1))) {
                 /* If either the previous type is different from the current
                  * type, or the previous index is not one before the current,
                  * entities are not from the same origin or they are not stored
                  * in a contiguous way. If this happens, invoke reactive systems
                  * up to this point. */
-                ecs_table_t *src_table = NULL;
-                ecs_data_t *src_data = NULL;
-                
-                if (prev_src_type) {
-                    src_table = ecs_world_get_table(
-                        world, stage, prev_src_type);
-                    src_data = ecs_table_get_staged_data(
-                        world, stage, src_table);
+                ecs_table_t *prev_table = NULL;
+                ecs_data_t *prev_data = NULL;
+
+                if (prev_src_table) {
+                    prev_table = prev_src_table;
+                    prev_data = ecs_table_get_staged_data(
+                        world, stage, prev_table);
                 }
 
                 invoke_reactive_systems(
                     world,
                     stage,
-                    prev_src_type,
+                    prev_table ? prev_table->type : NULL,
                     type,
                     src_table,
-                    src_data,
+                    prev_data,
                     table,
                     data,
                     src_first_contiguous_row,
@@ -1538,7 +1531,7 @@ int32_t update_entity_index(
                 /* Start a new contiguous set */
                 dst_first_contiguous_row = dst_start_row + i;
                 src_first_contiguous_row = src_row;
-                prev_src_type = src_type;
+                prev_src_table = src_table;
                 same_origin = false;
             }            
         }
@@ -1548,7 +1541,6 @@ int32_t update_entity_index(
 
     /* Invoke reactive systems on the entities in the last contiguous set. If 
      * all entities are from the same origin, this will cover all entities. */
-    ecs_table_t *src_table = NULL;
     ecs_data_t *src_data = NULL;
     int32_t contiguous_count = 0;
 
@@ -1558,17 +1550,18 @@ int32_t update_entity_index(
         contiguous_count = prev_src_row - src_first_contiguous_row + 1;
     }
 
-    if (prev_src_type) {
-        src_table = ecs_world_get_table(
-            world, stage, prev_src_type);
+    if (prev_src_table) {
+        src_table = prev_src_table;
         src_data = ecs_table_get_staged_data(
             world, stage, src_table);
+    } else {
+        src_table = NULL;
     }
 
     invoke_reactive_systems(
         world,
         stage,
-        prev_src_type,
+        src_table ? src_table->type : NULL,
         type,
         src_table,
         src_data,
@@ -1788,8 +1781,8 @@ void ecs_delete(
          * ensure that subsequent calls to ecs_has, ecs_get and ecs_is_empty will
          * behave consistently with the delete. */
         ecs_record_t *record = ecs_eis_get(&world->stage, entity);
-        if (record) {
-            ecs_map_set(stage->remove_merge, entity, &record->type);
+        if (record && record->table) {
+            ecs_map_set(stage->remove_merge, entity, &record->table->type);
         }
     }
 
@@ -2457,8 +2450,8 @@ ecs_type_t ecs_get_type(
 
     if (stage != &world->stage) {
         ecs_record_t *record = ecs_eis_get(stage, entity);
-        if (record) {
-            type = record->type;
+        if (record && record->table) {
+            type = record->table->type;
         }
         ecs_map_has(stage->remove_merge, entity, &remove_type);        
     }
@@ -2466,10 +2459,18 @@ ecs_type_t ecs_get_type(
     ecs_record_t *record = ecs_eis_get(&world->stage, entity);
     if (record) {
         if (type || remove_type) {
+            ecs_type_t record_type = NULL;
+            if (record->table) {
+                record_type = record->table->type;
+            }
             type = ecs_type_merge_intern(
-                world, stage, record->type, type, remove_type);
+                world, stage, record_type, type, remove_type);
         } else {
-            type = record->type;
+            if (record->table) {
+                type = record->table->type;
+            } else {
+                type = NULL;
+            }
         }
     } else if (type && remove_type) {
         type = ecs_type_merge_intern(

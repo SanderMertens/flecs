@@ -213,10 +213,8 @@ void ecs_table_writer_finalize_table(
         ecs_record_t *record_ptr = ecs_eis_get(&world->stage, entities[i]);
 
         if (record_ptr) {
-            if (record_ptr->type != writer->table->type) {
-                ecs_table_t *table = ecs_world_get_table(
-                    world, &world->stage, record_ptr->type);
-                
+            if (record_ptr->table != writer->table) {
+                ecs_table_t *table = record_ptr->table;                
                 ecs_data_t *data = ecs_table_get_data(world, table);
 
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -228,7 +226,7 @@ void ecs_table_writer_finalize_table(
 
         ecs_record_t record = (ecs_record_t){
             .row = i + 1,
-            .type = writer->table->type
+            .table = writer->table
         };
 
         ecs_eis_set(&world->stage, entities[i], &record);

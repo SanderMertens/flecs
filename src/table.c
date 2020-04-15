@@ -415,7 +415,7 @@ void ecs_table_delete(
 
         /* Last entity in table is now moved to index of removed entity */
         ecs_record_t record;
-        record.type = table->type;
+        record.table = table;
         record.row = index + 1;
         ecs_eis_set(stage, to_move, &record);
 
@@ -720,7 +720,7 @@ void ecs_table_merge(
     ecs_entity_t *old_entities = ecs_vector_first(old_data->entities);
     int32_t i;
     for(i = 0; i < old_count; i ++) {
-        ecs_record_t record = {.type = new_type, .row = i + new_count};
+        ecs_record_t record = {.table = new_table, .row = i + new_count};
         ecs_eis_set(&world->stage, old_entities[i], &record);
     }
 

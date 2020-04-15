@@ -170,7 +170,7 @@ void ecs_snapshot_restore(
             
             for (j = 0; j < row_count; j ++) {
                 ecs_record_t record = {
-                    .type = dst->type,
+                    .table = dst,
                     .row = j + 1
                 };
                 ecs_ei_set(entity_index, array[j], &record);
