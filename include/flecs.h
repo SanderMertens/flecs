@@ -43,6 +43,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef struct ecs_world_t ecs_world_t;
+typedef struct ecs_stage_t ecs_stage_t;
 typedef struct ecs_rows_t ecs_rows_t;
 typedef struct ecs_reference_t ecs_reference_t;
 typedef struct ecs_snapshot_t ecs_snapshot_t;
@@ -77,6 +78,7 @@ typedef enum ecs_system_kind_t {
     EcsManual,
 
     /* Reactive systems */
+    EcsOnNew,
     EcsOnAdd,
     EcsOnRemove,
     EcsOnSet
@@ -148,6 +150,21 @@ typedef struct ecs_cached_ptr_t {
     int32_t row;
     void *ptr;
 } ecs_cached_ptr_t;
+
+/** Component calbacks */
+typedef void (*ecs_init_t)(
+    void *data,
+    void *ctx);
+
+typedef void (*ecs_replace_t)(
+    void *old,
+    void *_new,
+    void *ctx);
+
+typedef void (*ecs_merge_t)(
+    void *src,
+    void *dst,
+    void *ctx);
 
 /** The ecs_rows_t struct passes data from a system to a system callback.  */
 struct ecs_rows_t {
@@ -226,7 +243,6 @@ typedef struct EcsTickSource {
 
 #include "flecs/util/api_support.h"
 #include "flecs/util/v2.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Public constants
@@ -1059,7 +1075,7 @@ void _ecs_add_remove(
  * @param parent The parent entity to add to the entity.
  */
 FLECS_EXPORT
-void ecs_adopt(
+void ecs_add_childof(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t parent);
@@ -1077,7 +1093,7 @@ void ecs_adopt(
  * @param parent The parent entity to remove from the entity.
  */
 FLECS_EXPORT
-void ecs_orphan(
+void ecs_remove_childof(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t parent);
@@ -1092,7 +1108,7 @@ void ecs_orphan(
  * @param base The base to add to the entity.
  */
 FLECS_EXPORT
-void ecs_inherit(
+void ecs_add_instanceof(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t base);
@@ -1107,7 +1123,7 @@ void ecs_inherit(
  * @param base The base to remove from the entity.
  */
 FLECS_EXPORT
-void ecs_disinherit(
+void ecs_remove_instanceof(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t base);

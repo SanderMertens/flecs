@@ -91,7 +91,7 @@ ecs_record_t *ecs_ei_next(
 
 // Convenience macro's for directly calling operations for stage
 #define ecs_eis_get(stage, entity) ecs_ei_get(&(stage)->entity_index, entity)
-#define ecs_eis_set(stage, entity, record) ecs_ei_set(&(stage)->entity_index, entity, record)
+#define ecs_eis_set(stage, entity, ...) ecs_ei_set(&(stage)->entity_index, entity, __VA_ARGS__)
 #define ecs_eis_get_or_create(stage, entity) ecs_ei_get_or_create(&(stage)->entity_index, entity)
 #define ecs_eis_delete(stage, entity) ecs_ei_delete(&(stage)->entity_index, entity)
 #define ecs_eis_grow(stage, count) ecs_ei_grow(&(stage)->entity_index, count)

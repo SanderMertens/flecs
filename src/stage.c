@@ -41,17 +41,74 @@ static
 void merge_commits(
     ecs_world_t *world,
     ecs_stage_t *stage)
-{  
-    ecs_assert(stage != &world->stage, ECS_INTERNAL_ERROR, NULL);
+{
+    /* Loop the tables for which the stage has modified data */
+    uint32_t i, count = ecs_vector_count(stage->dirty_tables);
+    ecs_table_t **tables = ecs_vector_first(stage->dirty_tables);
 
-    /* Merge commits */
-    ecs_ei_iter_t iter = ecs_ei_iter(&stage->entity_index);
-    ecs_record_t *record;
-    ecs_entity_t entity;
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *table = tables[i];
+        ecs_data_t *main_data = ecs_table_get_data(world, table);
+        ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
+        uint32_t i, count = ecs_table_data_count(data);
+        ecs_entity_t *entities = ecs_vector_first(data->entities);
+        ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs);
+        uint32_t c, column_count = ecs_vector_count(table->type);
 
-    while ((record = ecs_ei_next(&iter, &entity))) {
-        ecs_merge_entity(world, stage, entity, *record);
+        ecs_assert(main_data != data, ECS_INTERNAL_ERROR, NULL);
+
+        /* Ensure destination row array is large enough */
+        ecs_vector_set_min_size(&table->dst_rows, int32_t, count);
+        uint32_t *dst_rows = ecs_vector_first(table->dst_rows);
+
+        /* First make sure that all entities have entries in the main stage */
+        for (i = 0; i < count; i ++) {
+            ecs_record_t *record = record_ptrs[i];
+            ecs_entity_t entity = entities[i];
+
+            /* If the entity did not yet exist in the main stage, register it */
+            if (!record) {
+                record = ecs_eis_get_or_create(&world->stage, entity);
+                record->table = NULL;
+            }
+
+            /* Check if entity was already stored in this main stage table. If
+             * not, add a new row */
+            ecs_table_t *src_table = record->table;
+            if (src_table != table) {
+                record->table = table;
+                dst_rows[i] = record->row = ecs_table_append(
+                    world, table, main_data, entity, record);
+            } else {
+                dst_rows[i] = record->row;
+            }
+        }
+
+        /* Now copy data column by column from the stage to the main stage */
+        for (c = 0; c < column_count; c ++) {
+            ecs_column_t *main_column = &main_data->columns[c];
+            void *main_data = ecs_vector_first(main_column->data);
+
+            ecs_column_t *column = &data->columns[c];
+            void *data = ecs_vector_first(column->data);
+            uint16_t size = column->size;
+            void *src = data;
+
+            for (i = 0; i < count; i ++) {
+                void *dst = ECS_OFFSET(main_data, size * dst_rows[i]);
+                memcpy(dst, src, size);
+                void *src = ECS_OFFSET(src, size);
+            }
+
+            ecs_vector_clear(column->data);
+        }
+
+        ecs_vector_clear(data->entities);
+        ecs_vector_clear(data->record_ptrs);
     }
+
+    ecs_vector_clear(stage->dirty_tables);
+    ecs_eis_clear(stage);
 }
 
 static
@@ -97,18 +154,21 @@ void ecs_stage_init(
         stage->type_root = world->stage.type_root;
         stage->last_link = NULL;
         stage->id = 1;
+
+        stage->tables = world->stage.tables;
+        stage->root = world->stage.root;
     } else {
     }
     
     stage->table_index = ecs_map_new(ecs_table_t*, 0);
+    
     if (is_main_stage) {
         stage->tables = ecs_sparse_new(ecs_table_t, 64);
     } else {
         stage->tables = ecs_sparse_new(ecs_table_t, 8);
     }
-
+    
     if (!is_main_stage) {
-        stage->remove_merge = ecs_map_new(ecs_type_t, 0);
         stage->entity_index.keep_deletes = true;
     }
 
@@ -128,7 +188,6 @@ void ecs_stage_deinit(
 
     if (!is_main_stage) {
         clean_data_stage(stage);
-        ecs_map_free(stage->remove_merge);
     }
 
     clean_tables(world, stage);

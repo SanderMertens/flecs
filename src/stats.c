@@ -196,9 +196,6 @@ void compute_stage_memory(
 
     ecs_map_memory(stage->table_index,
         &stats->stages_memory.allocd_bytes, &stats->stages_memory.used_bytes);
-
-    ecs_map_memory(stage->remove_merge,
-        &stats->stages_memory.allocd_bytes, &stats->stages_memory.used_bytes);
 }
 
 static

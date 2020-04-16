@@ -158,6 +158,7 @@ typedef struct ecs_writer_t {
 
 #define ECS_ENTITY_FLAGS_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF))
 #define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ENTITY_FLAGS_MASK)
+#define ECS_ENTITY_FLAGS_START ECS_CHILDOF
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,6 +204,22 @@ FLECS_EXPORT
 float ecs_get_period(
     ecs_world_t *world,
     ecs_entity_t system);
+
+
+/** DEPRECATED - use new APIs. */
+
+#define ecs_adopt(world, entity, parent)\
+    ecs_add_childof(world, entity, parent)
+
+#define ecs_orphan(world, entity, parent)\
+    ecs_remove_childof(world, entity, parent)
+
+#define ecs_inherit(world, entity, parent)\
+    ecs_add_instanceof(world, entity, parent)
+
+#define ecs_disinherit(world, entity, parent)\
+    ecs_remove_instanceof(world, entity, parent)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Functions used in declarative (macro) API

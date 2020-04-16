@@ -42,20 +42,6 @@ int compare_handle(
 }
 
 static
-ecs_table_t* get_table(
-    ecs_stage_t *stage,
-    ecs_type_t type)
-{
-    ecs_table_t* result;
-
-    if (ecs_map_has(stage->table_index, (uintptr_t)type, &result)) {
-        return result;
-    } else {
-        return 0;
-    }
-}
-
-static
 void set_table(
     ecs_stage_t *stage,
     ecs_type_t type,
@@ -65,6 +51,25 @@ void set_table(
     ecs_map_set(stage->table_index, (uintptr_t)type, &table);
 }
 
+/** Get type for component */
+static
+ecs_type_t bootstrap_type(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_table_t *table = ecs_table_find_or_create(world, NULL, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){entity},
+            .count = 1
+        }
+    );
+
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return table->type;
+}
+
 /** Bootstrap builtin component types and commonly used types */
 static
 void bootstrap_types(
@@ -72,17 +77,17 @@ void bootstrap_types(
 {
     ecs_stage_t *stage = &world->stage;
     
-    TEcsComponent = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsComponent}, 1);
-    TEcsTypeComponent = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsTypeComponent}, 1);
-    TEcsPrefab = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsPrefab}, 1);
-    TEcsPrefabParent = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsPrefabParent}, 1);
-    TEcsPrefabBuilder = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsPrefabBuilder}, 1);
-    TEcsRowSystem = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsRowSystem}, 1);
-    TEcsColSystem = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsColSystem}, 1);
-    TEcsId = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsId}, 1);
-    TEcsHidden = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsHidden}, 1);
-    TEcsDisabled = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsDisabled}, 1);
-    TEcsOnDemand = ecs_type_find_intern(world, stage, &(ecs_entity_t){EEcsOnDemand}, 1);
+    TEcsComponent = bootstrap_type(world, EEcsComponent);
+    TEcsTypeComponent = bootstrap_type(world, EEcsTypeComponent);
+    TEcsPrefab = bootstrap_type(world, EEcsPrefab);
+    TEcsPrefabParent = bootstrap_type(world, EEcsPrefabParent);
+    TEcsPrefabBuilder = bootstrap_type(world, EEcsPrefabBuilder);
+    TEcsRowSystem = bootstrap_type(world, EEcsRowSystem);
+    TEcsColSystem = bootstrap_type(world, EEcsColSystem);
+    TEcsId = bootstrap_type(world, EEcsId);
+    TEcsHidden = bootstrap_type(world, EEcsHidden);
+    TEcsDisabled = bootstrap_type(world, EEcsDisabled);
+    TEcsOnDemand = bootstrap_type(world, EEcsOnDemand);
 
     world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsId, 0);
     world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsId, 0);
@@ -126,12 +131,12 @@ void bootstrap_component(
     ecs_column_t *columns = data->columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Insert row into table to store EcsComponent itself */
-    int32_t index = ecs_table_append(world, table, data, entity);
-
     /* Create record in entity index */
     ecs_record_t *record = ecs_eis_get_or_create(&world->stage, entity);
     record->table = table;
+
+    /* Insert row into table to store EcsComponent itself */
+    int32_t index = ecs_table_append(world, table, data, entity, record);
     record->row = index + 1;
 
     /* Set size and id */
@@ -168,48 +173,6 @@ void revalidate_query_refs(
     }  
 }
 
-void ecs_notify_queries_of_table(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_sparse_t *queries = world->queries;
-    int32_t i, count = ecs_sparse_count(queries);
-
-    for (i = 0; i < count; i ++) {
-        ecs_query_t *query = ecs_sparse_get(queries, ecs_query_t, i);
-        ecs_query_notify_of_table(world, query, table);
-    }  
-}
-
-/** Create a new table and register it with the world and systems. A table in
- * flecs is equivalent to an archetype */
-static
-ecs_table_t* create_table(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type)
-{
-    /* Add and initialize table */
-    ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
-    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    result->type = type;
-
-    ecs_table_init(world, stage, result);
-
-    if (world->in_progress) {
-        result->flags |= EcsTableIsStaged;
-    }
-
-    set_table(stage, type, result);
-
-    if (stage == &world->stage && !world->is_merging) {
-        ecs_notify_queries_of_table(world, result);
-    }
-
-    return result;
-}
-
 #ifndef NDEBUG
 static
 void no_threading(
@@ -227,34 +190,6 @@ void no_time(
 #endif
 
 /* -- Private functions -- */
-
-/** Find or create table from type */
-ecs_table_t* ecs_world_get_table(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type)
-{
-    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_vector_count(type) < ECS_MAX_ENTITIES_IN_TYPE, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_stage_t *main_stage = &world->stage;
-    ecs_table_t* table = get_table(main_stage, type);
-
-    if (!table) {
-        if (stage->id > 1) {
-            assert(stage != NULL);
-            table = get_table(stage, type);
-            if (!table) {
-                table = create_table(world, stage, type);
-            }
-        } else {
-            table = create_table(world, &world->stage, type);
-        }
-    }
-
-    return table;
-}
 
 ecs_vector_t** ecs_system_array(
     ecs_world_t *world,
@@ -574,7 +509,7 @@ void EcsSetPrefab(ecs_rows_t *rows) {
 
         /* Add the prefab parent to the type of the entity */
         if (!prefab_parent_added && parent) {
-            ecs_adopt(world, e, parent);
+            ecs_add_childof(world, e, parent);
             add_prefab_child_to_builder(world, parent, e);
         }
 
@@ -636,6 +571,11 @@ ecs_world_t *ecs_init(void) {
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     world->magic = ECS_WORLD_MAGIC;
+    world->component_data = NULL;
+    ecs_vector_set_count(
+        &world->component_data, ecs_component_data_t, ECS_HI_COMPONENT_ID);
+    ecs_component_data_t *cdata_array = ecs_vector_first(world->component_data);
+    memset(cdata_array, 0, sizeof(ecs_component_data_t) * ECS_HI_COMPONENT_ID);    
 
     world->on_update_systems = ecs_vector_new(ecs_entity_t, 0);
     world->on_validate_systems = ecs_vector_new(ecs_entity_t, 0);
@@ -701,6 +641,9 @@ ecs_world_t *ecs_init(void) {
     ecs_stage_init(world, &world->stage);
     ecs_stage_init(world, &world->temp_stage);
 
+    /* Initialize root table */
+    ecs_init_root_table(world);
+
     /* Initialize types for builtin types */
     bootstrap_types(world);
 
@@ -736,6 +679,7 @@ ecs_world_t *ecs_init(void) {
 
     /* Initialize EcsWorld */
     ecs_set(world, EcsWorld, EcsId, {"EcsWorld"});
+
     ecs_assert(ecs_get_id(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Prefab handling */
@@ -949,7 +893,10 @@ void _ecs_dim_type(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
     if (type) {
-        ecs_table_t *table = ecs_world_get_table(world, &world->stage, type);
+        ecs_table_t *table = ecs_table_from_type(
+            world, &world->stage, type);
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+        
         ecs_data_t *data = ecs_table_get_data(world, table);
         if (table) {
             ecs_table_set_size(table, data, entity_count);

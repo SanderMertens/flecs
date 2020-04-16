@@ -27,20 +27,19 @@
 #include "flecs/util/dbg.h"
 #include "flecs/util/entity_index.h"
 
-#define ECS_WORLD_INITIAL_TABLE_COUNT (2)
-#define ECS_WORLD_INITIAL_ENTITY_COUNT (2)
-#define ECS_WORLD_INITIAL_STAGING_COUNT (0)
-#define ECS_WORLD_INITIAL_COL_SYSTEM_COUNT (1)
-#define ECS_WORLD_INITIAL_OTHER_SYSTEM_COUNT (0)
-#define ECS_WORLD_INITIAL_ADD_SYSTEM_COUNT (0)
-#define ECS_WORLD_INITIAL_REMOVE_SYSTEM_COUNT (0)
-#define ECS_WORLD_INITIAL_SET_SYSTEM_COUNT (0)
-#define ECS_WORLD_INITIAL_PREFAB_COUNT (0)
-#define ECS_MAP_INITIAL_NODE_COUNT (4)
-#define ECS_TABLE_INITIAL_ROW_COUNT (0)
-#define ECS_SYSTEM_INITIAL_TABLE_COUNT (0)
 #define ECS_MAX_JOBS_PER_WORKER (16)
-#define ECS_HI_ENTITY_ID (100000)   /* Limit for entities in map / sparse set */
+
+/** Entity id's higher than this number will be stored in a map instead of a
+ * sparse set. Increasing this value can improve performance at the cost of
+ * (significantly) higher memory usage. */
+#define ECS_HI_ENTITY_ID (100000)
+
+/** This reserves entity ids for components. Regular entity ids will start after
+ * this constant. This affects performance of table traversal, as edges with ids 
+ * lower than this constant are looked up in an array, whereas constants higher
+ * than this id are looked up in a map. Increasing this value can improve
+ * performance at the cost of (significantly) higher memory usage. */
+#define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
 
 /* This is _not_ the max number of entities that can be of a given type. This 
  * constant defines the maximum number of components, prefabs and parents can be
@@ -49,6 +48,9 @@
  * using alloca for temporary buffers). */
 #define ECS_MAX_ENTITIES_IN_TYPE (256)
 
+/** These values are used to verify validity of the pointers passed into the API
+ * and to allow for passing a thread as a world to some API calls (this allows
+ * for transparently passing thread context to API functions) */
 #define ECS_WORLD_MAGIC (0x65637377)
 #define ECS_THREAD_MAGIC (0x65637374)
 
@@ -148,6 +150,7 @@ struct ecs_column_t {
 /** Table component data and entity ids */
 struct ecs_data_t {
     ecs_vector_t *entities;
+    ecs_vector_t *record_ptrs;
     ecs_column_t *columns;
 };
 
@@ -155,6 +158,12 @@ struct ecs_data_t {
 #define EcsTableIsPrefab (2)
 #define EcsTableHasPrefab (4)
 #define EcsTableHasBuiltins (8)
+
+/** Edge used for traversing the table graph */
+typedef struct ecs_edge_t {
+    ecs_table_t *add;
+    ecs_table_t *remove;
+} ecs_edge_t;
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
@@ -164,7 +173,15 @@ struct ecs_table_t {
     ecs_vector_t *stage_data;         /* Data per stage */
     ecs_vector_t *queries;            /* Queries matched with table */
     ecs_type_t type;                  /* Identifies table type in type_index */
+    ecs_edge_t *lo_edges;             /* Edges to low entity ids */
+    ecs_map_t *hi_edges;              /* Edges to high entity ids */
+
+    ecs_vector_t *dst_rows;           /* Used for more efficient merging */
+    ecs_vector_t *on_new;             /* Systems executed when new entity is
+                                       * added to table */
+
     int32_t flags;                    /* Flags for testing table properties */
+    int32_t parent_count;             /* Number of parents in table type */
 };
 
 /** Cached reference to a component in an entity */
@@ -356,13 +373,11 @@ typedef struct ecs_stage_t {
      * as the main stage */
     ecs_type_node_t type_root;     /* Hierarchical type store (& first link) */
     ecs_type_link_t *last_link;    /* Link to last registered type */
-    ecs_sparse_t *tables;         /* Tables created while >1 threads running */
+    ecs_sparse_t *tables;          /* Tables created while >1 threads running */
     ecs_map_t *table_index;        /* Lookup table by type */
 
-    /* These occur only in
-     * temporary stages, and
-     * not on the main stage */
-    ecs_map_t *remove_merge;       /* All removed components before merge */
+    ecs_table_t root;              /* Root table */
+    ecs_vector_t *dirty_tables;
 
     int32_t id;                    /* Unique id that identifies the stage */
     
@@ -412,12 +427,28 @@ struct ecs_snapshot_t {
     ecs_filter_t filter;
 };
 
+/** Component-specific data */
+typedef struct ecs_component_data_t {
+    ecs_vector_t *on_add;       /* Systems ran after adding this component */
+    ecs_vector_t *on_remove;    /* Systems ran after removing this component */
+    ecs_vector_t *on_set;       /* Systems ran after setting this component */
+
+    ecs_init_t init;            /* Invoked for new uninitialized component */
+    ecs_init_t fini;            /* Invoked when component is deinitialized */
+    ecs_replace_t replace;      /* Invoked when component value is replaced */
+    ecs_merge_t merge;          /* Invoked when component value is merged */
+
+    void *ctx;
+} ecs_component_data_t;
+
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
     float delta_time;             /* Time passed to or computed by ecs_progress */
     void *context;                /* Application context */
+
+    ecs_vector_t *component_data;
 
     /* -- Column systems -- */
 

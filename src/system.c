@@ -134,10 +134,9 @@ ecs_entity_t new_row_system(
 /* -- Private API -- */
 
 /** Run system on a single row */
-ecs_type_t ecs_notify_row_system(
+ecs_type_t ecs_run_row_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_type_t type,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t offset,
@@ -185,7 +184,7 @@ ecs_type_t ecs_notify_row_system(
             buffer[i].from_kind == EcsFromShared) 
         {
             /* If a regular column, find corresponding column in table */
-            columns[i] = ecs_type_index_of(type, buffer[i].is.component) + 1;
+            columns[i] = ecs_type_index_of(table->type, buffer[i].is.component) + 1;
 
             /* If entity owns component but column is shared, no match */
             if (columns[i] && buffer[i].from_kind == EcsFromShared) {
@@ -281,7 +280,7 @@ void ecs_run_task(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    ecs_notify_row_system(world, system, NULL, NULL, NULL, 0, 1);
+    ecs_run_row_system(world, system, NULL, NULL, 0, 1);
 }
 
 /* Notify row system of a new type */

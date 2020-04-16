@@ -1,5 +1,4 @@
 
-
 #ifndef FLECS_RINGBUF_H_
 #define FLECS_RINGBUF_H_
 

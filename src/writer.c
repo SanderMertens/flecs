@@ -180,8 +180,9 @@ void ecs_table_writer_register_table(
 
     ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    writer->table = ecs_world_get_table(world, &world->stage, type);
-
+    writer->table = ecs_table_from_type(world, &world->stage, type);
+    ecs_assert(writer->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     ecs_data_t *data = ecs_table_get_data(world, writer->table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 

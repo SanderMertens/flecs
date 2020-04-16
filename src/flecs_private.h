@@ -4,17 +4,12 @@
 /* This file contains declarations to private flecs functions */
 
 #include "types.h"
+#include "flecs/util/entity_index.h"
+#include "flecs/util/table.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API
 ////////////////////////////////////////////////////////////////////////////////
-
-/* Merge entity with stage */
-void ecs_merge_entity(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_record_t staged_record);
 
 /* Get prefab from type, even if type was introduced while in progress */
 ecs_entity_t ecs_get_prefab_from_type(
@@ -23,17 +18,6 @@ ecs_entity_t ecs_get_prefab_from_type(
     bool is_new_table,
     ecs_entity_t entity,
     ecs_type_t type_id);
-
-/* Notify row system of entity (identified by row_index) */
-ecs_type_t ecs_notify(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_map_t *systems,
-    ecs_type_t type_id,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t offset,
-    int32_t limit);
 
 /* Mark an entity as being watched. This is used to trigger automatic rematching
  * when entities used in system expressions change their components. */
@@ -76,16 +60,20 @@ bool ecs_get_info(
     ecs_entity_t entity,
     ecs_entity_info_t *info); 
 
+/* Run on_add / on_remove / on_set / component callbacks */
+void ecs_run_component_actions(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    uint32_t row,
+    uint32_t count,
+    ecs_entities_t components,
+    bool is_init);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// World API
 ////////////////////////////////////////////////////////////////////////////////
-
-/* Get (or create) table from type */
-ecs_table_t* ecs_world_get_table(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type_id);
 
 /* Notify systems that there is a new table, which triggers matching */
 void ecs_notify_queries_of_table(
@@ -198,92 +186,18 @@ ecs_entity_t ecs_find_entity_in_prefabs(
 //// Table API
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Initialize root table */
+void ecs_init_root_table(
+    ecs_world_t *world);
+
 /* Bootstrap first table to store component data */ 
 ecs_table_t *ecs_bootstrap_component_table(
     ecs_world_t *world);
-
-/* Initialize table */
-void ecs_table_init(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table);
-
-/* Evaluate table for special columns */
-void ecs_table_eval_columns(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
-/* Allocate a set of columns for a type */
-ecs_data_t *ecs_table_get_data(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
-ecs_data_t *ecs_table_get_staged_data(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table);
-
-ecs_data_t *ecs_table_get_or_create_data(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table); 
 
 void ecs_table_register_query(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_query_t *query);
-
-/* Insert row into table (or stage) */
-int32_t ecs_table_append(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    ecs_entity_t entity);
-
-/* Insert multiple rows into table (or stage) */
-int32_t ecs_table_grow(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t count,
-    ecs_entity_t first_entity);
-
-/* Dimension array to have n rows (doesn't add entities) */
-int16_t ecs_table_set_size(
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t count);
-
-/* Return number of entities in table */
-uint64_t ecs_table_count(
-    ecs_table_t *table);
-
-/* Return size of table row */
-int32_t ecs_table_row_size(
-    ecs_table_t *table);
-
-/* Return size of table row */
-int32_t ecs_table_rows_dimensioned(
-    ecs_table_t *table);    
-
-/* Delete row from table */
-void ecs_table_delete(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t index);
-
-/* Get row from table (or stage) */
-void* ecs_table_get(
-    ecs_table_t *table,
-    ecs_vector_t *rows,
-    int32_t index);
-
-/* Test if table has component */
-bool ecs_table_has_components(
-    ecs_table_t *table,
-    ecs_vector_t *components);
 
 /* Deinitialize table. This invokes all matching on_remove systems */
 void ecs_table_deinit_components(
@@ -293,16 +207,7 @@ void ecs_table_deinit_components(
 /* Free table */
 void ecs_table_free(
     ecs_world_t *world,
-    ecs_table_t *table);
-
-/* Clear table data */
-void ecs_table_delete_all(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
-void ecs_table_clear(
-    ecs_world_t *world,
-    ecs_table_t *table);    
+    ecs_table_t *table); 
 
 /* Clear data in columns */
 void ecs_table_replace_data(
@@ -350,6 +255,10 @@ void ecs_query_activate_table(
     ecs_table_t *table,
     bool active);
 
+void ecs_query_match_table(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_table_t *table);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
@@ -462,10 +371,9 @@ void ecs_run_task(
     ecs_entity_t system);
 
 /* Invoke row system */
-ecs_type_t ecs_notify_row_system(
+ecs_type_t ecs_run_row_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_type_t type,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t offset,
@@ -538,12 +446,6 @@ void ecs_os_time_sleep(
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
-
-/* Compute hash */
-void ecs_hash(
-    const void *key,
-    size_t length,
-    uint32_t *result);
 
 /* Convert 64bit value to ecs_record_t type. ecs_record_t is stored as 64bit int in the
  * entity index */

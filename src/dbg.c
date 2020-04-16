@@ -4,7 +4,12 @@ ecs_table_t *ecs_dbg_find_table(
     ecs_world_t *world,
     ecs_type_t type)
 {
-    return ecs_world_get_table(world, &world->stage, type);
+    ecs_table_t *table = ecs_table_from_type(
+        world, &world->stage, type);
+        
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return table;
 }
 
 void ecs_dbg_table(

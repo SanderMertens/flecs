@@ -1,15 +1,5 @@
 #include "flecs_private.h"
 
-static
-ecs_type_t find_or_create_type(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_node_t *root,
-    ecs_entity_t *array,
-    int32_t count,
-    bool create,
-    bool normalized);
-
 /** Parse callback that adds type to type identifier for ecs_new_type */
 static
 int parse_type_action(
@@ -83,57 +73,6 @@ int parse_type_action(
     return 0;
 }
 
-/** Comparator function for handles */
-static
-int compare_handle(
-    const void *p1,
-    const void *p2)
-{
-    ecs_entity_t e1 = *(ecs_entity_t*)p1;
-    ecs_entity_t e2 = *(ecs_entity_t*)p2;
-    return e1 > e2 ? 1 : e1 < e2 ? -1 : 0;
-}
-
-/** Hash array of handles */
-static
-uint32_t hash_array(
-    ecs_entity_t* array,
-    int32_t count)
-{
-    uint32_t hash = 0;
-    int32_t i;
-    for (i = 0; i < count; i ++) {
-        ecs_hash(&array[i], sizeof(ecs_entity_t), &hash);
-    }
-    return hash;
-}
-
-static
-void notify_systems_array_of_type(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_vector_t *systems,
-    ecs_type_t type)
-{
-    ecs_entity_t *buffer = ecs_vector_first(systems);
-    int32_t i, count = ecs_vector_count(systems);
-
-    for (i = 0; i < count; i ++) {
-        ecs_row_system_notify_of_type(world, stage, buffer[i], type);
-    }
-}
-
-static
-void notify_systems_of_type(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type)
-{
-    notify_systems_array_of_type(world, stage, world->add_systems, type);
-    notify_systems_array_of_type(world, stage, world->remove_systems, type);
-    notify_systems_array_of_type(world, stage, world->set_systems, type);
-}
-
 static
 ecs_entity_t split_entity_id(
     ecs_entity_t id,
@@ -141,307 +80,6 @@ ecs_entity_t split_entity_id(
 {
     *entity = (id & ECS_ENTITY_MASK);
     return id;
-}
-
-static
-ecs_type_t ecs_type_from_array(
-    ecs_entity_t *array,
-    int32_t count)
-{
-    ecs_vector_t *vector = ecs_vector_new(ecs_entity_t, count);
-    ecs_vector_set_count(&vector, ecs_entity_t, count);
-    ecs_entity_t *vector_first = ecs_vector_first(vector);
-    memcpy(vector_first, array, sizeof(ecs_entity_t) * count);
-
-    return vector;
-}
-
-/* Algorithm that guarantees each entity only occurs once in a type. Even though
- * the elements of a type are ordered, the same entity with flags or without
- * flags typically is stored at a different index, as a flag changes the element
- * value, and thus the ordering.
- * This complicates merging of two types, which, if both types are perfectly
- * ordered and have no flags, is an O(n) operation. With flags however, a merge
- * still needs to yield a type in which each entity occurs no more than once, 
- * and this cannot be done in O(n).
- * Type merging is a common operation which can happen often in the main loop,
- * thus it needs to be fast. Similarly, it would be possible to ignore type
- * flags when ordering, but then other common operations (those that check for
- * prefabs / containers) become more expensive (O(1) to O(n)).
- * To move this complexity out of the main loop, the algorithm that ensures each
- * entity only occurs once in a type (this function) is only performed when a
- * new type is registered. The result of this operation is that the type tree
- * contains an entry for the non-normalized type which points to the normalized
- * type. This ensures that a type merge can produce a non-normalized array,
- * which when looked up, is guaranteed to return a normalized type.
- * This results in some extra memory usage for extra entries in the type tree.
- * For example, a type [A] may occur multiple times:
- *
- * - [A]
- * - [A, INSTANCEOF|A]
- * - [A, CHILDOF|A]
- * - [A, INSTANCEOF|CHILDOF|A]
- * - [INSTANCEOF|A]
- * - [CHILDOF|A]
- * - [INSTANCEOF|CHILDOF|A]
- *
- * While worst case this could result in a lot of memory overhead, in practice
- * this is manageable. Entities are typically only used in combination with a
- * single flag, and types typically have comparatively low numbers of entities
- * with flags. If in the previous example, "A" would always be used as a prefab,
- * it would only create this entry:
- *
- * - [INSTANCEOF|A]
- */
-static
-ecs_type_t ecs_type_from_array_normalize(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t *array,
-    int32_t count)
-{
-    ecs_entity_t *dst_array = ecs_os_alloca(ecs_entity_t, count);
-    int32_t dst_count = 0;
-    
-    int32_t i, j;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t ie = array[i];
-        ecs_entity_t ie_e = ie & ECS_ENTITY_MASK;
-        ecs_entity_t found = 0;
-
-        for (j = count - 1; j > i; j --) {
-            ecs_entity_t je = array[j];
-            ecs_entity_t je_e = je & ECS_ENTITY_MASK;
-
-            if (je_e == ie_e) {
-                found = je;
-                break;
-            }
-        }
-
-        if (!found) {
-            dst_array[dst_count ++] = ie;
-        } else {
-            array[j] |= ie;
-        }
-    }
-
-    return find_or_create_type(
-        world, stage, &stage->type_root, dst_array, dst_count, true, true);
-}
-
-static
-void mark_parents(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t *array,
-    int32_t count)
-{
-    int i;
-    for (i = count - 1; i >= 0; i --) {
-        ecs_entity_t e = array[i];
-
-        if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {
-            ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
-        } else if (!(e & ECS_ENTITY_FLAGS_MASK)) {
-            break;
-        }
-    }   
-}
-
-static
-ecs_type_t register_type(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_link_t *link,
-    ecs_entity_t *array,
-    int32_t count,
-    bool normalized)
-{
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(count < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
-
-    ecs_type_t result;
-    bool has_flags = (array[count - 1] & ECS_ENTITY_FLAGS_MASK) != 0;
-    
-    if (!normalized && has_flags) {
-        return ecs_type_from_array_normalize(world, stage, array, count);
-    } else {
-        result = ecs_type_from_array(array, count);
-
-        if (has_flags) {
-            mark_parents(world, stage, array, count);
-        }
-    }
-
-    link->type = result;
-
-    if (!stage->last_link) {
-        stage->last_link = world->stage.last_link;
-    }
-
-    ecs_assert(stage->last_link != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    stage->last_link->next = link;
-    stage->last_link = link;
-
-    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (normalized || !has_flags) {
-        /* Only notify systems of normalized type */
-        notify_systems_of_type(world, stage, result);
-    }
-    
-    return result;
-}
-
-static
-ecs_type_t find_type_in_vector(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_vector_t **vector,
-    ecs_entity_t *array,
-    int32_t count,
-    bool create,
-    bool normalized)
-{
-    int32_t i, types_count = ecs_vector_count(*vector);
-    ecs_type_link_t **type_array = ecs_vector_first(*vector);
-
-    for (i = 0; i < types_count; i ++) {
-        ecs_type_t type = type_array[i]->type;
-        if (!type) {
-            continue;
-        }
-
-        int32_t type_count = ecs_vector_count(type);
-
-        if (type_count != count) {
-            continue;
-        }
-
-        ecs_entity_t *type_array = ecs_vector_first(type);
-
-        int32_t j;
-        for (j = 0; j < type_count; j ++) {
-            if (type_array[j] != array[j]) {
-                break;
-            }
-        }
-
-        if (j == type_count) {
-            return type;
-        }
-    }
-
-    /* Type has not been found, add it */
-    if (create) {
-        ecs_type_link_t **link = ecs_vector_add(vector, ecs_type_link_t*);
-        *link = ecs_os_calloc(1, sizeof(ecs_type_link_t));
-        ecs_type_t result = register_type(
-            world, stage, *link, array, count, normalized);
-        return result;
-    }
-    
-    return NULL;
-}
-
-static
-ecs_type_t find_or_create_type(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_node_t *root,
-    ecs_entity_t *array,
-    int32_t count,
-    bool create,
-    bool normalized)
-{
-    ecs_type_node_t *node = root;
-    ecs_type_t type = NULL;
-    ecs_entity_t offset = 0;
-    int32_t i;
-
-    ecs_assert(count < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = array[i];
-        ecs_entity_t rel = e - offset;
-
-        /* Lookup next node in nodes array */
-        if (rel < ECS_TYPE_DB_MAX_CHILD_NODES) {
-            ecs_type_node_t *node_array = NULL;
-
-            if (!node->nodes && create) {
-                /* Create vector */
-                ecs_vector_set_count(&node->nodes, ecs_type_node_t, 
-                    ECS_TYPE_DB_MAX_CHILD_NODES);
-
-                node_array = ecs_vector_first(node->nodes);
-
-                memset(node_array, 0, 
-                    ECS_TYPE_DB_MAX_CHILD_NODES * sizeof(ecs_type_node_t));
-            } else {
-                node_array = ecs_vector_first(node->nodes);
-            }
-            
-            if (node_array) {
-                node = &node_array[rel];
-                type = node->link.type;
-                
-                if (!type && create) {
-                    type = register_type(
-                        world, stage, &node->link, array, i + 1, normalized);
-
-                    ecs_assert(
-                        ecs_vector_count(type) == i + 1, 
-                        ECS_INTERNAL_ERROR, 
-                        NULL);
-                }
-            } else {
-                type = NULL;
-            }
-
-        } else {
-            if (!node->types) {
-                if (create) {
-                    node->types = ecs_os_calloc(
-                        ECS_TYPE_DB_BUCKET_COUNT, sizeof(ecs_vector_t*));
-                } else {
-                    return NULL;
-                }
-            }
-
-            uint32_t hash = hash_array(&array[i], count - i);
-            int32_t index = hash % ECS_TYPE_DB_BUCKET_COUNT;
-
-            if (!node->types[index]) {
-                if (create) {
-                    node->types[index] = ecs_vector_new(ecs_type_link_t*, 1);
-                } else {
-                    return NULL;
-                }
-            }
-
-            type = find_type_in_vector(
-                world, stage, &node->types[index], array, count, create, 
-                normalized);
-
-            if (type) {
-                break;
-            }
-
-            if (create) {
-                return NULL;
-            }
-        }
-        
-        offset = e;
-    }
-    
-    ecs_assert(!create || type != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!create || !normalized || ecs_vector_count(type) == count, ECS_INTERNAL_ERROR, NULL);
-
-    return type;
 }
 
 ecs_entity_t ecs_find_entity_in_prefabs(
@@ -498,28 +136,15 @@ ecs_type_t ecs_type_find_intern(
     ecs_entity_t *array,
     int32_t count)
 {
-    ecs_type_t type = NULL;
+    ecs_entities_t entities = {
+        .array = array,
+        .count = count
+    };
 
-    if (!stage) {
-        stage = &world->stage;
-    }
+    ecs_table_t *table = ecs_table_find_or_create(world, stage, &entities);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (stage == &world->stage) {
-        type = find_or_create_type(
-            world, stage, &world->stage.type_root, array, count, true, false);
-    } else {
-        type = find_or_create_type(
-            world, stage, &world->stage.type_root, array, count, false, false);
-    }
-
-    if (!type && stage != &world->stage) {
-        type = find_or_create_type(
-            world, stage, &world->stage.type_root, array, count, true, false);
-    }
-
-    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return type;
+    return table->type;
 }
 
 /** Extend existing type with additional entity */
@@ -529,40 +154,18 @@ ecs_type_t ecs_type_add_intern(
     ecs_type_t type,
     ecs_entity_t e)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *table = ecs_table_from_type(world, stage, type);
 
-    int32_t count = ecs_vector_count(type);
-    ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, count + 1);
-    ecs_entity_t *old_array = ecs_vector_first(type);
-    void *new_buffer = new_array;
+    ecs_entities_t entities = {
+        .array = &e,
+        .count = 1
+    };
 
-    ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+    table = ecs_table_traverse(world, stage, table, &entities, NULL, NULL, NULL);
 
-    int32_t i, pos = 0;
-    bool in_type = false;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t elem = old_array[i];
-        if (elem < e) {
-            new_array[pos ++] = elem;
-        } else if (elem > e && !in_type) {
-            new_array[pos ++] = e;
-            new_array[pos ++] = elem;
-            in_type = true;
-        } else {
-            new_array[pos ++] = elem;
-            in_type = true;
-        }
-    }
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (!in_type && i == pos) {
-        new_array[pos ++] = e;
-    }
-
-    ecs_type_t result = ecs_type_find_intern(world, stage, new_buffer, pos);
-    ecs_assert(ecs_vector_count(result) == pos, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(pos - count <= 1, ECS_INTERNAL_ERROR, NULL);
-
-    return result;
+    return table->type;
 }
 
 /** Remove entity from type */
@@ -572,156 +175,17 @@ ecs_type_t ecs_type_remove_intern(
     ecs_type_t type,
     ecs_entity_t e)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *table = ecs_table_from_type(world, stage, type);
 
-    if (!type) {
-        return NULL;
-    }
+    ecs_entities_t entities = {
+        .array = &e,
+        .count = 1
+    };
 
-    int32_t count = ecs_vector_count(type);
-    ecs_entity_t *new_array = ecs_os_alloca(ecs_entity_t, count);
-    ecs_entity_t *old_array = ecs_vector_first(type);
-    void *new_buffer = new_array;
+    table = ecs_table_traverse(world, stage, table, NULL, &entities, NULL, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t i, pos = 0;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t elem = old_array[i];
-        if (elem != e) {
-            new_array[pos ++] = elem;
-        }
-    }
-
-    ecs_type_t result = ecs_type_find_intern(world, stage, new_buffer, pos);
-    ecs_assert(ecs_vector_count(result) == pos, ECS_INTERNAL_ERROR, NULL);
-
-    return result;
-}
-
-ecs_type_t ecs_type_merge_intern(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t arr_cur,
-    ecs_type_t to_add,
-    ecs_type_t to_del)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (!to_del) {
-        if (arr_cur && !to_add) {
-            return arr_cur;
-        } else if (to_add && !arr_cur) {
-            return to_add;
-        } else if (to_add == arr_cur) {
-            return arr_cur;
-        }
-    } else if (to_del == arr_cur) {
-        return to_add;
-    }
-
-    ecs_entity_t *buf_add = NULL, *buf_del = NULL, *buf_cur = NULL;
-    ecs_entity_t cur = 0, add = 0, del = 0;
-    int32_t i_cur = 0, i_add = 0, i_del = 0;
-    int32_t cur_count = 0, add_count = 0, del_count = 0;
-
-    del_count = ecs_vector_count(to_del);
-    if (del_count) {
-        buf_del = ecs_vector_first(to_del);
-        del = buf_del[0];
-    }
-
-    cur_count = ecs_vector_count(arr_cur);
-    if (cur_count) {
-        buf_cur = ecs_vector_first(arr_cur);
-        cur = buf_cur[0];
-    }
-
-    add_count = ecs_vector_count(to_add);
-    if (add_count) {
-        buf_add = ecs_vector_first(to_add);
-        add = buf_add[0];
-    }
-
-    ecs_entity_t *buf_new = NULL; 
-    if (cur_count + add_count) {
-        ecs_assert((cur_count + add_count) < ECS_MAX_ENTITIES_IN_TYPE, ECS_TYPE_TOO_LARGE, NULL);
-        buf_new = ecs_os_alloca(ecs_entity_t, cur_count + add_count);
-    }
-
-    int32_t new_count = 0;
-
-    do {
-        if (add && (!cur || add < cur)) {
-            ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
-            buf_new[new_count] = add;
-            new_count ++;
-            i_add ++;
-            if (i_add < add_count) {
-                add = buf_add[i_add];
-            } else {
-                add = 0;
-            }
-        } else if (cur && (!add || cur < add)) {
-            while (del && del < cur) {
-                i_del ++;
-                if (del_count && i_del < del_count) {
-                    del = buf_del[i_del];
-                } else {
-                    del = 0;
-                }
-            }
-
-            if (del != cur) {
-                ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
-                buf_new[new_count] = cur;
-                new_count ++;
-            } else if (del == cur) {
-                i_del ++;
-                if (i_del < del_count) {
-                    del = buf_del[i_del];
-                } else {
-                    del = 0;
-                }
-            }
-
-            i_cur ++;
-            if (i_cur < cur_count) {
-                cur = buf_cur[i_cur];
-            } else {
-                cur = 0;
-            }
-        } else if (add && add == cur) {
-            ecs_assert(buf_new != NULL, ECS_INTERNAL_ERROR, NULL);
-            buf_new[new_count] = add;
-            new_count ++;
-            i_cur ++;
-            i_add ++;
-
-            if (i_add < add_count) {
-                add = buf_add[i_add];
-            } else {
-                add = 0;
-            }
-
-            if (i_cur < cur_count) {
-                cur = buf_cur[i_cur];
-            } else {
-                cur = 0;
-            }
-        }
-    } while (cur || add);
-
-    if (new_count) {
-        ecs_assert(
-            (ecs_vector_count(arr_cur) + 
-             ecs_vector_count(to_add)) >= new_count, ECS_INTERNAL_ERROR, 0);
-
-        ecs_type_t result = ecs_type_find_intern(world, stage, buf_new, new_count);
-        return result;
-    } else {
-        return 0;
-    }
+    return table->type;
 }
 
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
@@ -1004,14 +468,43 @@ int16_t ecs_type_index_of(
     return -1;
 }
 
+ecs_type_t ecs_type_merge_intern(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_type_t type,
+    ecs_type_t to_add,
+    ecs_type_t to_remove)
+{
+    ecs_table_t *table = ecs_table_from_type(world, stage, type);
+
+    ecs_entities_t add_array = {
+        .array = ecs_vector_first(to_add),
+        .count = ecs_vector_count(to_add)
+    };
+
+    ecs_entities_t remove_array = {
+        .array = ecs_vector_first(to_remove),
+        .count = ecs_vector_count(to_remove)
+    };
+    
+    table = ecs_table_traverse(
+        world, stage, table, &add_array, &remove_array, NULL, NULL); 
+
+    if (!table) {
+        return NULL;
+    } else {
+        return table->type;
+    }
+}
+
 ecs_type_t ecs_type_merge(
     ecs_world_t *world,
     ecs_type_t type,
-    ecs_type_t type_add,
-    ecs_type_t type_remove)
+    ecs_type_t to_add,
+    ecs_type_t to_remove)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
-    return ecs_type_merge_intern(world, stage, type, type_add, type_remove);
+    return ecs_type_merge_intern(world, stage, type, to_add, to_remove);
 }
 
 ecs_type_t ecs_type_find(
@@ -1020,9 +513,6 @@ ecs_type_t ecs_type_find(
     int32_t count)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
-
-    qsort(array, count, sizeof(ecs_entity_t), compare_handle);
-
     return ecs_type_find_intern(world, stage, array, count);
 }
 
