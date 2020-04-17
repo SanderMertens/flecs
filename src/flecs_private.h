@@ -188,7 +188,8 @@ ecs_entity_t ecs_find_entity_in_prefabs(
 
 /* Initialize root table */
 void ecs_init_root_table(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    ecs_stage_t *stage);
 
 /* Bootstrap first table to store component data */ 
 ecs_table_t *ecs_bootstrap_component_table(

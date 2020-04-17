@@ -152,6 +152,7 @@ struct ecs_data_t {
     ecs_vector_t *entities;
     ecs_vector_t *record_ptrs;
     ecs_column_t *columns;
+    bool marked_dirty;             /* Was table already added to dirty array? */
 };
 
 #define EcsTableIsStaged (1)
@@ -371,13 +372,9 @@ typedef struct ecs_stage_t {
     /* If this is not a thread
      * stage, these are the same
      * as the main stage */
-    ecs_type_node_t type_root;     /* Hierarchical type store (& first link) */
-    ecs_type_link_t *last_link;    /* Link to last registered type */
     ecs_sparse_t *tables;          /* Tables created while >1 threads running */
-    ecs_map_t *table_index;        /* Lookup table by type */
-
     ecs_table_t root;              /* Root table */
-    ecs_vector_t *dirty_tables;
+    ecs_vector_t *dirty_tables;    /* Tables that need merging */
 
     int32_t id;                    /* Unique id that identifies the stage */
     

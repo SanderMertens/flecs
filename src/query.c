@@ -818,11 +818,13 @@ void ecs_query_free(
     int32_t t;
     ecs_matched_table_t *tables = ecs_vector_first(query->inactive_tables);
     for (t = 0; t < ecs_vector_count(query->inactive_tables); t ++) {
+        ecs_os_free(tables[t].columns);
         ecs_os_free(tables[t].components);
     }
 
     tables = ecs_vector_first(query->tables);
     for (t = 0; t < ecs_vector_count(query->tables); t ++) {
+        ecs_os_free(tables[t].columns);
         ecs_os_free(tables[t].components);
     }
 
@@ -936,6 +938,7 @@ bool ecs_query_next(
 
         /* Table is ready to be iterated, return rows struct */
         iter->index = ++ i;
+
         return true;
     }
 

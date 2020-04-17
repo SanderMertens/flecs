@@ -125,17 +125,17 @@ void compute_sig_types(
             if (from == EcsFromSelf) {
                 sig->not_from_self =
                     ecs_type_add_intern(
-                        world, NULL, sig->not_from_self, elem->is.component);
+                        world, &world->stage, sig->not_from_self, elem->is.component);
 
             } else if (from == EcsFromOwned) {
                 sig->not_from_owned =
                     ecs_type_add_intern(
-                        world, NULL, sig->not_from_owned, elem->is.component);
+                        world, &world->stage, sig->not_from_owned, elem->is.component);
 
             } else if (from == EcsFromShared) {
                 sig->not_from_shared =
                     ecs_type_add_intern(
-                        world, NULL, sig->not_from_shared, elem->is.component);
+                        world, &world->stage, sig->not_from_shared, elem->is.component);
 
             } else if (from == EcsFromEntity) {
                 /* Nothing to be done here */
@@ -143,28 +143,28 @@ void compute_sig_types(
             } else if (from == EcsFromContainer) {
                 sig->not_from_container =
                     ecs_type_add_intern(
-                      world, NULL, sig->not_from_container, elem->is.component);
+                      world, &world->stage, sig->not_from_container, elem->is.component);
             }
         } else if (op == EcsOperAnd) {
             if (from == EcsFromSelf) {
                 sig->and_from_self = ecs_type_add_intern(
-                    world, NULL, sig->and_from_self, elem->is.component);
+                    world, &world->stage, sig->and_from_self, elem->is.component);
 
             } else if (from == EcsFromOwned) {
                 sig->and_from_owned = ecs_type_add_intern(
-                    world, NULL, sig->and_from_owned, elem->is.component);
+                    world, &world->stage, sig->and_from_owned, elem->is.component);
 
             } else if (from == EcsFromShared) {
                 sig->and_from_shared = ecs_type_add_intern(
-                    world, NULL, sig->and_from_shared, elem->is.component);
+                    world, &world->stage, sig->and_from_shared, elem->is.component);
 
             } else if (from == EcsFromSystem) {
                 sig->and_from_system = ecs_type_add_intern(
-                    world, NULL, sig->and_from_system, elem->is.component);
+                    world, &world->stage, sig->and_from_system, elem->is.component);
 
             } else if (from == EcsFromContainer) {
                 sig->and_from_container = ecs_type_add_intern(
-                    world, NULL, sig->and_from_container, elem->is.component);
+                    world, &world->stage, sig->and_from_container, elem->is.component);
 
             }  else if (from == EcsCascade) {
                 sig->cascade_by = i + 1;
@@ -500,7 +500,7 @@ int ecs_parse_signature_action(
         elem = ecs_vector_last(sig->columns, ecs_sig_column_t);
         if (elem->oper_kind == EcsOperAnd) {
             elem->is.type = ecs_type_add_intern(
-                world, NULL, 0, elem->is.component);
+                world, &world->stage, 0, elem->is.component);
 
         } else {
             if (elem->from_kind != from_kind) {
@@ -512,7 +512,7 @@ int ecs_parse_signature_action(
         }
 
         elem->is.type = ecs_type_add_intern(
-            world, NULL, elem->is.type, component);
+            world, &world->stage, elem->is.type, component);
         elem->from_kind = from_kind;
         elem->oper_kind = oper_kind;
 
@@ -528,15 +528,15 @@ int ecs_parse_signature_action(
 
         if (from_kind == EcsFromSelf) {
             sig->not_from_self = ecs_type_add_intern(
-                world, NULL, sig->not_from_self, component);
+                world, &world->stage, sig->not_from_self, component);
 
         } else if (from_kind == EcsFromOwned) {
             sig->not_from_owned = ecs_type_add_intern(
-                world, NULL, sig->not_from_owned, component);
+                world, &world->stage, sig->not_from_owned, component);
 
         } else if (from_kind == EcsFromShared) {
             sig->not_from_shared = ecs_type_add_intern(
-                world, NULL, sig->not_from_shared, component); 
+                world, &world->stage, sig->not_from_shared, component); 
 
         } else if (from_kind == EcsFromEntity) {
             elem->from_kind = EcsFromEntity;

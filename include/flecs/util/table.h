@@ -129,6 +129,14 @@ int32_t ecs_table_grow(
 
 /* Set table to a fixed size. Useful for preallocating memory in advance. */
 int16_t ecs_table_set_size(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t count); 
+
+/* Set table to a fixed count. Useful for copying data in bulk. */
+int16_t ecs_table_set_count(
+    ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count); 

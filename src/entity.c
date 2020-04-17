@@ -453,7 +453,7 @@ uint32_t new_entity(
     ecs_entities_t *added)
 {
     ecs_record_t *record = info->record;
-    ecs_data_t *dst_data = ecs_table_get_staged_data(world, stage, new_table);
+    ecs_data_t *dst_data = ecs_table_get_or_create_data(world, stage, new_table);
     uint32_t new_row;
 
     if (stage == &world->stage) {
@@ -516,9 +516,10 @@ uint32_t move_entity(
     ecs_assert(src_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_vector_count(src_data[0].entities) > src_row, ECS_INTERNAL_ERROR, NULL);
-    
+
+    bool main_stage = stage == &world->stage;
     ecs_record_t *record = info->record;
-    ecs_data_t *dst_data = ecs_table_get_staged_data(world, stage, dst_table);
+    ecs_data_t *dst_data = ecs_table_get_or_create_data(world, stage, dst_table);
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record);
     ecs_assert(ecs_vector_count(dst_data[0].entities) > dst_row, ECS_INTERNAL_ERROR, NULL);
 
@@ -530,9 +531,13 @@ uint32_t move_entity(
             world, stage, src_table, src_data, src_row, 1, *removed, false);
     }
 
-    ecs_table_delete(world, stage, src_table, src_data, src_row);
+    /* Only remove entity from previous table if the table isn't from the main
+     * stage. Modifications to the main stage are only made during merging */
+    if (main_stage || record->table != src_table) {
+        ecs_table_delete(world, stage, src_table, src_data, src_row);
+    }
 
-    if (stage == &world->stage) {
+    if (main_stage) {
         record->table = dst_table;
         record->row = dst_row + 1;
     } else {
@@ -601,6 +606,7 @@ bool commit(
 
     /* Find the new table */
     src_table = info->table;
+
     if (src_table) {
         if (to_remove) {
             to_remove_ptr = to_remove;
@@ -815,8 +821,14 @@ void ecs_add_remove_intern(
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
 
     ecs_entity_info_t info;
-    if (!get_or_create_staged_info(world, stage, entity, &info)) {
-        info.table = NULL;
+    info.table = NULL;
+
+    if (stage == &world->stage) {
+        get_info(world, entity, &info);
+    } else {
+        if (!get_staged_info(world, stage, entity, &info)) {
+            get_info(world, entity, &info);
+        }
     }
 
     commit(world, stage, entity, &info, to_add, to_remove, do_set);
@@ -1343,7 +1355,7 @@ ecs_entity_t set_w_data_intern(
          * row_count number of rows, which will give a perf boost the first time
          * the entities are inserted. */
         if (!entities) {
-            ecs_table_set_size(table, data, count);
+            ecs_table_set_size(world, table, data, count);
             entities = ecs_vector_first(data->entities);
             ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
         }

@@ -41,23 +41,13 @@ int compare_handle(
     return *(ecs_entity_t*)p1 - *(ecs_entity_t*)p2;
 }
 
-static
-void set_table(
-    ecs_stage_t *stage,
-    ecs_type_t type,
-    ecs_table_t *table)
-{
-    ecs_assert(!ecs_map_get(stage->table_index, ecs_table_t*, (uintptr_t)type), ECS_INTERNAL_ERROR, NULL);
-    ecs_map_set(stage->table_index, (uintptr_t)type, &table);
-}
-
 /** Get type for component */
 static
 ecs_type_t bootstrap_type(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_table_t *table = ecs_table_find_or_create(world, NULL, 
+    ecs_table_t *table = ecs_table_find_or_create(world, &world->stage, 
         &(ecs_entities_t){
             .array = (ecs_entity_t[]){entity},
             .count = 1
@@ -110,7 +100,6 @@ ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
     ecs_table_t *result = ecs_bootstrap_component_table(world);
-    set_table(&world->stage, world->t_component, result);
     return result;
 }
 
@@ -125,7 +114,7 @@ void bootstrap_component(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *data = ecs_table_get_data(world, table);
+    ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, table);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *columns = data->columns;
@@ -351,7 +340,6 @@ void col_systems_deinit(
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
 
         ecs_vector_free(ptr->jobs);
-        ecs_query_free(ptr->query);
     }
 }
 
@@ -641,12 +629,6 @@ ecs_world_t *ecs_init(void) {
     ecs_stage_init(world, &world->stage);
     ecs_stage_init(world, &world->temp_stage);
 
-    /* Initialize root table */
-    ecs_init_root_table(world);
-
-    /* Initialize types for builtin types */
-    bootstrap_types(world);
-
     /* Create table that will hold components (EcsComponent, EcsId) */
     ecs_table_t *table = bootstrap_component_table(world);
     assert(table != NULL);
@@ -666,6 +648,9 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsTimer, ECS_TIMER_ID, sizeof(EcsTimer));
     bootstrap_component(world, table, EEcsRateFilter, ECS_RATE_FILTER_ID, sizeof(EcsRateFilter));
     bootstrap_component(world, table, EEcsTickSource, ECS_TICK_SOURCE_ID, sizeof(EcsTickSource));
+
+    /* Initialize types for builtin types */
+    bootstrap_types(world);
 
     world->last_handle = EcsWorld + 1;
     world->min_handle = 0;
@@ -811,6 +796,7 @@ int ecs_fini(
     }    
 
     deinit_tables(world);
+    ecs_vector_free(world->component_data);
 
     col_systems_deinit_handlers(world, world->on_update_systems);
     col_systems_deinit_handlers(world, world->on_validate_systems);
@@ -841,6 +827,14 @@ int ecs_fini(
     row_index_deinit(world->type_sys_add_index);
     row_index_deinit(world->type_sys_remove_index);
     row_index_deinit(world->type_sys_set_index);
+
+    int  count = ecs_sparse_count(world->queries);
+    for (i = 0; i < count; i ++) {
+        ecs_query_t *q = ecs_sparse_get(world->queries, ecs_query_t, i);
+        ecs_query_free(q);
+    }
+
+    ecs_sparse_free(world->queries);
     ecs_map_free(world->type_handles);
     ecs_map_free(world->prefab_parent_index);
 
@@ -899,7 +893,7 @@ void _ecs_dim_type(
         
         ecs_data_t *data = ecs_table_get_data(world, table);
         if (table) {
-            ecs_table_set_size(table, data, entity_count);
+            ecs_table_set_size(world, table, data, entity_count);
         }
     }
 }
@@ -968,7 +962,10 @@ ecs_entity_t ecs_lookup_child(
 
         if (!result) {
             data = ecs_table_get_staged_data(world, &world->stage, table);
-            ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (!data) {
+                continue;
+            }
+            
             result = ecs_lookup_child_in_columns(
                 table->type, data, parent, id);
         }

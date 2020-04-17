@@ -154,6 +154,9 @@ ecs_type_t ecs_type_add_intern(
     ecs_type_t type,
     ecs_entity_t e)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     ecs_table_t *table = ecs_table_from_type(world, stage, type);
 
     ecs_entities_t entities = {

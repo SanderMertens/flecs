@@ -33,6 +33,7 @@ ecs_type_t entities_to_type(
 static
 void init_edges(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_table_t *table)
 {
     ecs_entity_t *entities = ecs_vector_first(table->type);
@@ -50,7 +51,7 @@ void init_edges(
             ecs_edge_t edge = { .add = table };
 
             if (count == 1) {
-                edge.remove = &world->stage.root;
+                edge.remove = &stage->root;
             }
 
             ecs_map_set(table->hi_edges, e, &edge);
@@ -58,7 +59,7 @@ void init_edges(
             table->lo_edges[e].add = table;
 
             if (count == 1) {
-                table->lo_edges[e].remove = &world->stage.root;
+                table->lo_edges[e].remove = &stage->root;
             } else {
                 table->lo_edges[e].remove = NULL;
             }
@@ -81,6 +82,7 @@ void init_edges(
 static
 void init_table(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_entities_t *entities)
 {
@@ -89,7 +91,7 @@ void init_table(
     table->dst_rows = NULL;
     table->flags = 0;
     
-    init_edges(world, table);
+    init_edges(world, stage, table);
 
     table->queries = NULL;
     table->on_new = NULL;
@@ -103,52 +105,60 @@ ecs_table_t *create_table(
 {
     ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
 
-    init_table(world, result, entities);
+    init_table(world, stage, result, entities);
 
-    ecs_notify_queries_of_table(world, result);
+    /* Don't notify queries if table is created in stage */
+    if (stage == &world->stage) {
+        ecs_notify_queries_of_table(world, result);
+    }
 
     return result;
 }
 
 void ecs_init_root_table(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    ecs_stage_t *stage)
 {
     ecs_entities_t entities = {
         .array = NULL,
         .count = 0
     };
 
-    init_table(world, &world->stage.root, &entities);
+    init_table(world, stage, &stage->root, &entities);
 }
 
 ecs_table_t *ecs_bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_assert(world->t_component != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_entity_t array[] = {ecs_entity(EcsComponent), ecs_entity(EcsId)};
+    ecs_entities_t entities = {
+        .array = array,
+        .count = 2
+    };
 
-    ecs_stage_t *stage = &world->stage;
-    ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
-    result->type = world->t_component;
+    ecs_table_t *result = ecs_sparse_add(world->stage.tables, ecs_table_t);
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    result->type = entities_to_type(&entities);
     result->queries = NULL;
-    result->flags = 0;
-    result->flags |= EcsTableHasBuiltins;
+    result->flags = EcsTableHasBuiltins;
     result->stage_data = NULL;
 
     ecs_data_t *data = ecs_vector_add(&result->stage_data, ecs_data_t);
     ecs_assert(data != NULL, ECS_OUT_OF_MEMORY, NULL);
-    data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 2);
-    ecs_assert(data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
-    ecs_column_t *columns = data->columns;
-
+    
     data->entities = ecs_vector_new(ecs_entity_t, 16);
     data->record_ptrs = ecs_vector_new(ecs_record_t*, 16);
 
-    columns[0].data = ecs_vector_new(EcsComponent, 16);
-    columns[0].size = sizeof(EcsComponent);
-    columns[1].data = ecs_vector_new(EcsId, 16);
-    columns[1].size = sizeof(EcsId);
+    data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 2);
+    ecs_assert(data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    init_edges(world, result);
+    data->columns[0].data = ecs_vector_new(EcsComponent, 16);
+    data->columns[0].size = sizeof(EcsComponent);
+    data->columns[1].data = ecs_vector_new(EcsId, 16);
+    data->columns[1].size = sizeof(EcsId);
+
+    init_edges(world, &world->stage, result);
 
     return result;    
 }
@@ -225,8 +235,10 @@ void create_backlink_after_add(
     ecs_entity_t add)
 {
     ecs_edge_t *edge = get_edge(next, add);
-    edge->add = NULL;
-    edge->remove = prev;
+    if (!edge->remove) {
+        edge->add = NULL;
+        edge->remove = prev;
+    }
 }
 
 static
@@ -236,8 +248,10 @@ void create_backlink_after_remove(
     ecs_entity_t add)
 {
     ecs_edge_t *edge = get_edge(next, add);
-    edge->add = prev;
-    edge->remove = NULL;
+    if (!edge->add) {
+        edge->add = prev;
+        edge->remove = NULL;
+    }
 }
 
 static
@@ -258,7 +272,7 @@ ecs_table_t *find_or_create_table_include(
     add_entity_to_type(type, add, &entities);
 
     ecs_table_t *result = ecs_table_find_or_create(world, stage, &entities);
-
+    
     create_backlink_after_add(result, node, add);
 
     return result;
@@ -315,13 +329,19 @@ ecs_table_t* traverse_remove_hi_edges(
         next = edge->remove;
 
         if (!next) {
-            next = edge->remove = find_or_create_table_exclude(
+            next = find_or_create_table_exclude(
                 world, stage, node, next_e);
             if (!next) {
                 return NULL;
             }
 
-            edge->remove = next;
+            /* If a table is created while being staged, the next pointer of the
+             * edge may not be set, as the current node may be in the main stage
+             * while the new table is created in the stage. This connection will
+             * be made once the staged table is merged with the main stage. */
+            ecs_assert(
+                &world->stage != stage || edge->remove != NULL, 
+                ECS_INTERNAL_ERROR, NULL);
         }
 
         /* Hi edges should are not removed to the removed array. This array is used
@@ -369,7 +389,13 @@ ecs_table_t* traverse_remove(
                     return NULL;
                 }
 
-                edge->remove = next;
+                /* If a table is created while being staged, the next pointer of the
+                * edge may not be set, as the current node may be in the main stage
+                * while the new table is created in the stage. This connection will
+                * be made once the staged table is merged with the main stage. */
+                ecs_assert(
+                    &world->stage != stage || edge->remove != NULL, 
+                    ECS_INTERNAL_ERROR, NULL);
             } else {
                 /* If the add edge does not point to self, the table
                     * does not have the entity in to_remove. */
@@ -409,10 +435,17 @@ ecs_table_t* traverse_add_hi_edges(
         next = edge->add;
 
         if (!next) {
-            next = edge->add = find_or_create_table_include(
+            next = find_or_create_table_include(
                 world, stage, node, next_e);
             
             ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);                    
+
+            /* If a table is created while being staged, the next pointer of the
+             * edge may not be set, as the current node may be in the main stage
+             * while the new table is created in the stage. This connection will
+             * be made once the staged table is merged with the main stage. */
+            ecs_assert(
+                &world->stage != stage || edge->add != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
         /* Hi edges should are not added to the added array. This array is used
@@ -455,8 +488,15 @@ ecs_table_t* traverse_add(
         next = edge->add;
 
         if (!next) {
-            next = edge->add = find_or_create_table_include(world, stage, node, e);
+            next = find_or_create_table_include(world, stage, node, e);
             ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            /* If a table is created while being staged, the next pointer of the
+             * edge may not be set, as the current node may be in the main stage
+             * while the new table is created in the stage. This connection will
+             * be made once the staged table is merged with the main stage. */
+            ecs_assert(
+                &world->stage != stage || edge->add != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
         if (added && node != next) added->array[added->count ++] = e;
@@ -523,6 +563,9 @@ ecs_table_t *ecs_table_find_or_create_intern(
     ecs_table_t *root,
     ecs_entities_t *entities)
 {    
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+
     uint32_t count;
     if (entities && (count = entities->count)) 
     {
@@ -532,10 +575,6 @@ ecs_table_t *ecs_table_find_or_create_intern(
         ecs_table_t *table = root;
         ecs_entity_t *array = entities->array;
         uint32_t i;
-
-        if (!stage) {
-            stage = &world->stage;
-        }
 
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = array[i];
@@ -559,9 +598,12 @@ ecs_table_t *ecs_table_find_or_create_intern(
                 /* A new table needs to be created. To ensure that one table is
                  * created per combination of components, regardless of in
                  * which order the components are specified, the entity array
-                 * with which the table is created must be ordered. */
+                 * with which the table is created must be ordered. This
+                 * provides a canonical path through which the table can always
+                 * be reached, and allows other paths to be created 
+                 * progressively.*/
 
-                /* First, determine of the entities array is ordered. Do this
+                /* First, determine if the entities array is ordered. Do this
                  * only once per lookup */
                 if (!order_checked) {
                     is_ordered = ecs_entity_array_is_ordered(entities);
@@ -576,9 +618,9 @@ ecs_table_t *ecs_table_find_or_create_intern(
                     };
 
                     /* If the original array is ordered and the edge was empty, 
-                    * the table does not exist, so create it */
-                    if (stage != &world->stage && stage != &world->temp_stage) {
-                        /* If we're in threaded mode and we have been searching
+                     * the table does not exist, so create it */
+                    if (stage != &world->stage) {
+                        /* If we're in staged mode and we have been searching
                          * the main stage tables, find or create the table in 
                          * the thread specific staging area.
                          *
@@ -599,6 +641,7 @@ ecs_table_t *ecs_table_find_or_create_intern(
                                 ECS_INTERNAL_ERROR, NULL);
                             
                             table = create_table(world, stage, &table_entities);
+                            
                         }
                     } else {
                         table = create_table(world, stage, &table_entities);
@@ -629,10 +672,11 @@ ecs_table_t *ecs_table_find_or_create_intern(
                     * existing table can be found using the ordered array */
                     table = ecs_table_find_or_create_intern(
                         world, stage, root, &table_entities);                                
-                }                    
+                }
 
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+                /* Make sure canonical (ordered) path is connected */
                 edge->add = table;
             }
         }
@@ -650,6 +694,9 @@ ecs_table_t *ecs_table_find_or_create(
     ecs_stage_t *stage,
     ecs_entities_t *components)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+
     return ecs_table_find_or_create_intern(
         world, stage, &world->stage.root, components);
 }
@@ -681,9 +728,8 @@ ecs_table_t *ecs_table_traverse(
     ecs_assert(!added || added->array != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!removed || removed->array != NULL, ECS_INTERNAL_ERROR, NULL);
 
-
     if (!node) {
-        node = &world->stage.root;
+        node = &stage->root;
     }
 
     /* Do to_remove first, to limit the depth of the graph */
@@ -695,7 +741,7 @@ ecs_table_t *ecs_table_traverse(
         node = traverse_add(world, stage, node, to_add, added);
     }
 
-    if (node == &world->stage.root) {
+    if (node == &stage->root) {
         node = NULL;
     }
 

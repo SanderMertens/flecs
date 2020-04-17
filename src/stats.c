@@ -193,9 +193,6 @@ void compute_stage_memory(
 
     ecs_sparse_memory(stage->tables,
         &stats->stages_memory.allocd_bytes, &stats->stages_memory.used_bytes);    
-
-    ecs_map_memory(stage->table_index,
-        &stats->stages_memory.allocd_bytes, &stats->stages_memory.used_bytes);
 }
 
 static
@@ -258,8 +255,6 @@ void compute_world_memory(
 
     /* Add table array to table memory */
     ecs_sparse_memory(world->stage.tables,
-        &stats->tables_memory.allocd_bytes, &stats->tables_memory.used_bytes);
-    ecs_map_memory(world->stage.table_index,
         &stats->tables_memory.allocd_bytes, &stats->tables_memory.used_bytes);
 
     /* Add misc lookup indices to world memory */
