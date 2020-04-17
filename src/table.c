@@ -250,6 +250,13 @@ ecs_data_t* ecs_table_get_or_create_data(
     return result;   
 }
 
+void ecs_table_clear_data(
+    ecs_table_t *table,
+    ecs_data_t *data)
+{
+    deinit_data(table, data);
+}
+
 /* Clear columns. Deactivate table in systems if necessary, but do not invoke
  * OnRemove handlers. This is typically used when restoring a table to a
  * previous state. */

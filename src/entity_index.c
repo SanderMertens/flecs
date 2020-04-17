@@ -83,6 +83,28 @@ void ecs_ei_delete(
     }
 }
 
+void ecs_ei_clear_entity(
+    ecs_ei_t *entity_index,
+    ecs_entity_t entity,
+    bool is_watched)
+{
+    if (entity > ECS_HI_ENTITY_ID) {
+        if (!is_watched) {
+            ecs_map_remove(entity_index->hi, entity);
+        } else {
+            ecs_ei_set(entity_index, entity, &(ecs_record_t){
+                .table = NULL,
+                .row = -1
+            });
+        }
+    } else {
+        ecs_ei_set(entity_index, entity, &(ecs_record_t){
+            .table = NULL,
+            .row = -is_watched
+        });
+    }    
+}
+
 ecs_entity_t ecs_ei_recycle(
     ecs_ei_t *entity_index)
 {

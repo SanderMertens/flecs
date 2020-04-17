@@ -1429,6 +1429,20 @@ const char* ecs_get_id(
     ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Return whether entity is watched.
+ * This function returns whether an entity is watched. Entities are flagged as
+ * watched when they are referenced from query signatures. When their components
+ * change, queries may have to be rematched.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return Whether the entity is being watched.
+ */
+FLECS_EXPORT
+bool ecs_get_watched(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
 /** Returns number of entities that have a given type. 
  * This operation will count the number of entities that have all of the
  * components in the specified type.

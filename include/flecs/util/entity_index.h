@@ -37,6 +37,12 @@ ecs_record_t* ecs_ei_get_or_create(
     ecs_entity_t entity);
 
 /* Delete entity from stage */
+void ecs_ei_clear_entity(
+    ecs_ei_t *entity_index,
+    ecs_entity_t entity,
+    bool is_watched);
+
+/* Delete entity from stage */
 void ecs_ei_delete(
     ecs_ei_t *entity_index,
     ecs_entity_t entity);
@@ -94,6 +100,7 @@ ecs_record_t *ecs_ei_next(
 #define ecs_eis_set(stage, entity, ...) ecs_ei_set(&(stage)->entity_index, entity, __VA_ARGS__)
 #define ecs_eis_get_or_create(stage, entity) ecs_ei_get_or_create(&(stage)->entity_index, entity)
 #define ecs_eis_delete(stage, entity) ecs_ei_delete(&(stage)->entity_index, entity)
+#define ecs_eis_clear_entity(stage, entity, is_watched) ecs_ei_clear_entity(&(stage)->entity_index, entity, is_watched)
 #define ecs_eis_grow(stage, count) ecs_ei_grow(&(stage)->entity_index, count)
 #define ecs_eis_set_size(stage, size) ecs_ei_set_size(&(stage)->entity_index, size)
 #define ecs_eis_count(stage) ecs_ei_count(&(stage)->entity_index)

@@ -85,6 +85,11 @@ void ecs_table_clear_silent(
     ecs_world_t *world,
     ecs_table_t *table);
 
+/* Clear table data. Don't call OnRemove handlers. */
+void ecs_table_clear_data(
+    ecs_table_t *table,
+    ecs_data_t *data);    
+
 /* Return number of entities in table in main stage. */
 uint64_t ecs_table_count(
     ecs_table_t *table);

@@ -651,8 +651,6 @@ bool commit(
                 world, stage, entity, src_table, info->data, info->row, 
                 removed_ptr);
 
-            /* This path is only taken when an entity has no more components,
-             * not when it is explicitly deleted. */
             ecs_eis_set(stage, entity, &(ecs_record_t){
                 NULL, 
                 -info->is_watched 
@@ -1530,21 +1528,37 @@ void ecs_delete(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_record_t *record;
     ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_entity_info_t info;
+    info.table = NULL;
 
-    if ((record = ecs_eis_get(stage, entity))) {
-        ecs_table_t *table = record->table;
-        ecs_entities_t removed = {
-            .array = ecs_vector_first(table->type),
-            .count = ecs_vector_count(table->type)
+    if (stage == &world->stage) {
+        get_info(world, entity, &info);
+    } else {
+        if (!get_staged_info(world, stage, entity, &info)) {
+            get_info(world, entity, &info);
+        }
+    }
+
+    /* If entity has components, remove them */
+    ecs_table_t *table = info.table;
+    if (table) {
+        ecs_type_t type = table->type;
+
+        /* Remove all components */
+        ecs_entities_t to_remove = {
+            .array = ecs_vector_first(type),
+            .count = ecs_vector_count(type)
         };
 
-        ecs_data_t *data = ecs_table_get_data(world, table);
+        commit(world, stage, entity, &info, NULL, &to_remove, false);
+    }
 
-        // TODO: deal with monitored entities
-        delete_entity(world, stage, entity, table, data, 
-            record->row - 1, &removed);
+    /* If this is a staged delete, set the table in the staged entity index to
+     * NULL. That way the merge will know to delete this entity vs. just to
+     * remove its components */
+    if (stage != &world->stage) {
+        ecs_eis_set(stage, entity, &(ecs_record_t){ NULL, 0 });
     }
 }
 
@@ -2270,5 +2284,17 @@ void ecs_dbg_entity(
         dbg_out->row = info.row;
         dbg_out->is_watched = info.is_watched;
         dbg_out->type = info.table ? info.table->type : NULL;
+    }
+}
+
+bool ecs_get_watched(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_entity_info_t info = { 0 };
+    if (get_info(world, entity, &info)) {
+        return info.is_watched;
+    } else {
+        return false;
     }
 }

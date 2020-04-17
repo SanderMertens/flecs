@@ -32,10 +32,24 @@ void clear_columns(
                 ecs_data_t *src_data = ecs_table_get_data(world, src_table);
                 ecs_table_delete(world, stage, src_table, src_data, row);
             }
-            
-            /* Reset entity index */
-            record->table = NULL;
-            record->row = -is_watched;
+
+            /* If the staged record has the table set to the root, this is an entity
+            * without components. If the table is NULL, this is a delete. */
+            ecs_record_t *staged_record = ecs_eis_get(stage, e);
+            if (staged_record->table) {
+                /* Clear the entity record. This will set the table to NULL but
+                 * if necessary, retain information about whether the entity is
+                 * being watched or not. This is not the same as a delete, where
+                 * the is_watched information is lost, and the entity id can be
+                 * recycled. */
+                ecs_eis_clear_entity(&world->stage, e, is_watched);
+            } else {
+                /* If the stage record did not have a table, delete the entity from
+                 * the main stage table */
+                ecs_eis_delete(&world->stage, e);
+            }            
+        } else {
+            /* If there was no main stage record, nothing needs to be done */
         }
     }
 }
@@ -105,6 +119,7 @@ void merge_commits(
          * are in a root table need to be either deleted or emptied */
         if (!column_count) {
             clear_columns(world, stage, table, data);
+            ecs_table_clear_data(table, data);
             continue;
         }
 
@@ -151,6 +166,9 @@ void merge_commits(
             record->table = table;
             record->row = ecs_row_to_record(main_entity_count + e, is_watched);
         }
+
+        /* Clear staged table data */
+        ecs_table_clear_data(table, data);
 
         /* If the table was empty, activate it explicitly since we bypassed the
          * regular append path */
