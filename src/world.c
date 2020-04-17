@@ -149,19 +149,6 @@ void rematch_queries(
     }
 }
 
-static
-void revalidate_query_refs(
-    ecs_world_t *world)
-{
-    ecs_sparse_t *queries = world->queries;
-    int32_t i, count = ecs_sparse_count(queries);
-
-    for (i = 0; i < count; i ++) {
-        ecs_query_t *query = ecs_sparse_get(queries, ecs_query_t, i);
-        ecs_revalidate_query_refs(world, query);
-    }  
-}
-
 #ifndef NDEBUG
 static
 void no_threading(
@@ -1140,11 +1127,6 @@ bool ecs_progress(
     if (world->should_match) {
         rematch_queries(world);
         world->should_match = false;
-    }
-
-    if (world->should_resolve) {
-        revalidate_query_refs(world);
-        world->should_resolve = false;
     }
 
     /* Evaluate tick sources */

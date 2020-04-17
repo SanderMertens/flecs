@@ -188,7 +188,6 @@ void ecs_snapshot_restore(
     ecs_sparse_free(snapshot->tables);
 
     world->should_match = true;
-    world->should_resolve = true;
 
     if (!filter_used) {
         world->last_handle = snapshot->last_handle;

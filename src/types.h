@@ -355,7 +355,6 @@ typedef struct ecs_type_node_t {
 struct ecs_ei_t {
     ecs_sparse_t *lo;       /* Low entity ids are stored in a sparse set */
     ecs_map_t *hi;          /* To save memory high ids are stored in a map */
-    bool keep_deletes;      /* Insert empty record for deletes */
 };
 
 /** A stage is a data structure in which delta's are stored until it is safe to
@@ -565,7 +564,6 @@ struct ecs_world_t {
     bool measure_system_time;     /* Time spent by each system */
     bool should_quit;             /* Did a system signal that app should quit */
     bool should_match;            /* Should tablea be rematched */
-    bool should_resolve;          /* If a table reallocd, resolve system refs */
     bool locking_enabled;         /* Lock world when in progress */    
 };
 

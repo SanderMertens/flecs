@@ -8,6 +8,17 @@ ecs_data_t* init_data(
 {
     ecs_type_t type = table->type; 
     int32_t i, count = ecs_vector_count(type);
+    
+    result->entities = NULL;
+    result->record_ptrs = NULL;
+    result->marked_dirty = false;
+
+    /* Root tables don't have columns */
+    if (!count) {
+        result->columns = NULL;
+        return result;
+    }
+
     result->columns = ecs_os_calloc(sizeof(ecs_column_t), count);
     
     ecs_entity_t *entities = ecs_vector_first(type);
@@ -42,10 +53,6 @@ ecs_data_t* init_data(
             table->flags |= EcsTableHasPrefab;
         }
     }
-    
-    result->entities = NULL;
-    result->record_ptrs = NULL;
-    result->marked_dirty = false;
 
     return result;
 }
@@ -338,56 +345,44 @@ int32_t ecs_table_append(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_column_t *columns = data->columns;
-
-    /* It is possible that the table data was created without content. Now that
-     * data is going to be written to the table, initialize it */ 
-    if (!columns) {
-        init_data(world, table, data);
-        columns = data->columns;
-    }
-
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
     int32_t column_count = ecs_vector_count(table->type);
+
+    if (column_count) {
+        ecs_column_t *columns = data->columns;
+
+        /* It is possible that the table data was created without content. Now that
+        * data is going to be written to the table, initialize it */ 
+        if (!columns) {
+            init_data(world, table, data);
+            columns = data->columns;
+        }
+
+        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* Add elements to each column array */
+        int32_t i;
+        for (i = 0; i < column_count; i ++) {
+            int32_t size = columns[i].size;
+            if (size) {
+                _ecs_vector_add(&columns[i].data, size);
+            }
+        } 
+    }   
 
     /* Fist add entity to array with entity ids */
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
     *e = entity;
 
-
     /* Add record ptr to array with record ptrs */
     ecs_record_t **r = ecs_vector_add(&data->record_ptrs, ecs_record_t*);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     *r = record;
 
-    /* Add elements to each column array */
-    int32_t i;
-    bool reallocd = false;
-
-    for (i = 0; i < column_count; i ++) {
-        int32_t size = columns[i].size;
-        if (size) {
-            void *old_vector = columns[i].data;
-
-            _ecs_vector_add(&columns[i].data, size);
-            
-            if (old_vector != columns[i].data) {
-                reallocd = true;
-            }
-        }
-    }
-
     int32_t index = ecs_vector_count(data->entities) - 1;
 
     if (!world->in_progress && !index) {
         ecs_table_activate(world, table, 0, true);
-    }
-
-    ecs_data_t *main_data = ecs_table_get_data(world, table);
-    if (reallocd && main_data == data) {
-        world->should_resolve = true;
     }
 
     /* Return index of last added entity */
@@ -496,8 +491,6 @@ int32_t ecs_table_grow(
         e[i] = first_entity + i;
     }
 
-    bool reallocd = false;
-
     /* Add elements to each column array */
     for (i = 0; i < column_count; i ++) {
         size_t column_size = columns[i].size;
@@ -505,23 +498,12 @@ int32_t ecs_table_grow(
             continue;
         }
 
-        void *old_vector = columns[i].data;
-
         _ecs_vector_addn(&columns[i].data, column_size, count);
-
-        if (old_vector != columns[i].data) {
-            reallocd = true;
-        }
     }
 
     int32_t row_count = ecs_vector_count(data->entities);
     if (!world->in_progress && row_count == count) {
         ecs_table_activate(world, table, 0, true);
-    }
-
-    ecs_data_t *main_data = ecs_table_get_data(world, table);
-    if (reallocd && main_data == data) {
-        world->should_resolve = true;
     }
 
     /* Return index of first added entity */
@@ -894,8 +876,12 @@ void ecs_table_move(
     ecs_type_t new_type = new_table->type;
     ecs_type_t old_type = old_table->type;
 
-    uint16_t i_new, new_component_count = ecs_vector_count(new_type);
-    uint16_t i_old = 0, old_component_count = ecs_vector_count(old_type);
+    uint16_t i_new, new_column_count = ecs_vector_count(new_type);
+    if (!new_column_count) {
+        return;
+    }
+
+    uint16_t i_old = 0, old_column_count = ecs_vector_count(old_type);
     ecs_entity_t *new_components = ecs_vector_first(new_type);
     ecs_entity_t *old_components = ecs_vector_first(old_type);
 
@@ -910,8 +896,8 @@ void ecs_table_move(
     ecs_assert(old_columns != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    for (i_new = 0; i_new < new_component_count; ) {
-        if (i_old == old_component_count) {
+    for (i_new = 0; i_new < new_column_count; ) {
+        if (i_old == old_column_count) {
             break;
         }
 

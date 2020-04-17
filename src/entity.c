@@ -58,12 +58,21 @@ ecs_entity_t new_entity_handle(
     return entity;
 }
 
-static
-int32_t convert_record_row(int32_t row, bool *is_watched_out) {
+int32_t ecs_record_to_row(
+    int32_t row, 
+    bool *is_watched_out) 
+{
     bool is_watched = row < 0;
     row = row * -(is_watched * 2 - 1) - 1 * (row != 0);
     *is_watched_out = is_watched;
     return row;
+}
+
+int32_t ecs_row_to_record(
+    int32_t row, 
+    bool is_watched) 
+{
+    return (row + 1) * -(is_watched * 2 - 1);
 }
 
 /* Utility to compute actual row from row in record */
@@ -72,7 +81,7 @@ int32_t set_row_info(
     ecs_entity_info_t *info,
     int32_t row)
 {
-    return info->row = convert_record_row(row, &info->is_watched);
+    return info->row = ecs_record_to_row(row, &info->is_watched);
 }
 
 /* Utility to set info from main stage record */
@@ -573,7 +582,6 @@ void delete_entity(
     }
 
     ecs_table_delete(world, stage, src_table, src_data, src_row);
-    ecs_eis_delete(stage, entity);
 }
 
 /** Commit an entity with a specified type to a table (probably the most 
@@ -622,7 +630,12 @@ bool commit(
                 world, stage, src_table, to_add_ptr, NULL, added_ptr, NULL);
         }
 
-        if (dst_table) {
+        ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* Only move entity when it is not moved to the root table, unless we're
+         * iterating. In this case the entities need to be kept around so that
+         * the merge knows to remove them from their previous tables. */
+        if (dst_table->type || in_progress) {
             if (dst_table != src_table) {
                 dst_row = move_entity(
                     world, stage, entity, info, src_table, info->data, info->row, 
@@ -637,6 +650,13 @@ bool commit(
             delete_entity(
                 world, stage, entity, src_table, info->data, info->row, 
                 removed_ptr);
+
+            /* This path is only taken when an entity has no more components,
+             * not when it is explicitly deleted. */
+            ecs_eis_set(stage, entity, &(ecs_record_t){
+                NULL, 
+                -info->is_watched 
+            });
         }
 
         /* If the entity is being watched, it is being monitored for changes and
@@ -1148,7 +1168,7 @@ int32_t update_entity_index(
 
                     if (has_unset) {
                         bool is_watching;
-                        int32_t src_row = convert_record_row(
+                        int32_t src_row = ecs_record_to_row(
                             record_ptr->row, &is_watching);
 
                         ecs_table_move(
@@ -1513,24 +1533,18 @@ void ecs_delete(
     ecs_record_t *record;
     ecs_stage_t *stage = ecs_get_stage(&world);
 
-    if (stage == &world->stage) {
-        if ((record = ecs_eis_get(stage, entity))) {
-            ecs_table_t *table = record->table;
-            ecs_entities_t removed = {
-                .array = ecs_vector_first(table->type),
-                .count = ecs_vector_count(table->type)
-            };
+    if ((record = ecs_eis_get(stage, entity))) {
+        ecs_table_t *table = record->table;
+        ecs_entities_t removed = {
+            .array = ecs_vector_first(table->type),
+            .count = ecs_vector_count(table->type)
+        };
 
-            ecs_data_t *data = ecs_table_get_data(world, table);
+        ecs_data_t *data = ecs_table_get_data(world, table);
 
-            // TODO: deal with monitored entities
-            delete_entity(world, stage, entity, table, data, 
-                record->row - 1, &removed);
-        }
-    } else {
-        /* Remove the entity from the staged index. Any added components while
-         * in progress will be discarded as a result. */
-        ecs_eis_delete(stage, entity);
+        // TODO: deal with monitored entities
+        delete_entity(world, stage, entity, table, data, 
+            record->row - 1, &removed);
     }
 }
 

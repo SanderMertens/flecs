@@ -741,10 +741,6 @@ ecs_table_t *ecs_table_traverse(
         node = traverse_add(world, stage, node, to_add, added);
     }
 
-    if (node == &stage->root) {
-        node = NULL;
-    }
-
     return node;
 }
 

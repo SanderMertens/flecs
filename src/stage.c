@@ -1,22 +1,94 @@
 #include "flecs_private.h"
 
+/* If all components were removed, don't store the entity in a table. If the
+ * entity was deleted, also remove the entity from the entity index so that its
+ * id can be recycled. */
+static
+void clear_columns(
+    ecs_world_t *world,
+    ecs_stage_t *stage, 
+    ecs_table_t *table,
+    ecs_data_t *data)
+{
+    uint32_t i, entity_count = ecs_vector_count(data->entities);
+    ecs_entity_t *entities = ecs_vector_first(data->entities);
+    ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs);
+
+    for (i = 0; i < entity_count; i ++) {
+        ecs_entity_t e = entities[i];
+        ecs_record_t *record = record_ptrs[i];
+        
+        if (!record && e > ECS_HI_ENTITY_ID) {
+            record = ecs_eis_get(stage, e);
+        }
+
+        /* Remove component data from previous main stage table */
+        if (record) {
+            bool is_watched;
+            int32_t row = ecs_record_to_row(record->row, &is_watched);
+
+            ecs_table_t *src_table = record->table;
+            if (record && record->table) {
+                ecs_data_t *src_data = ecs_table_get_data(world, src_table);
+                ecs_table_delete(world, stage, src_table, src_data, row);
+            }
+            
+            /* Reset entity index */
+            record->table = NULL;
+            record->row = -is_watched;
+        }
+    }
+}
+
+static
+void merge_columns(
+    ecs_world_t *world,
+    ecs_stage_t *stage, 
+    ecs_table_t *table,
+    ecs_data_t *dst_data,
+    ecs_data_t *src_data,
+    uint32_t dst_entity_count,
+    int32_t src_entity_count)
+{
+    /* Copy data column by column from the stage to the main stage */
+    uint32_t c, column_count = ecs_vector_count(table->type);
+    for (c = 0; c < column_count; c ++) {
+        ecs_column_t *main_column = &dst_data->columns[c];
+        void *dst = ecs_vector_first(main_column->data);
+        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_column_t *column = &src_data->columns[c];
+        uint16_t size = column->size;
+
+        void *src = ecs_vector_first(column->data);
+        ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_assert(size == main_column->size, ECS_INTERNAL_ERROR, NULL);
+
+        memcpy( ECS_OFFSET(dst, dst_entity_count * size), 
+            src, size * src_entity_count);
+
+        ecs_vector_clear(column->data);
+    } 
+}
+
 static
 void merge_commits(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
     /* Loop the tables for which the stage has modified data */
-    uint32_t i, table_count = ecs_vector_count(stage->dirty_tables);
+    int32_t i, table_count = ecs_vector_count(stage->dirty_tables);
     ecs_table_t **tables = ecs_vector_first(stage->dirty_tables);
 
     for (i = 0; i < table_count; i ++) {
         ecs_table_t *table = tables[i];
         ecs_data_t *main_data = ecs_table_get_data(world, table);
         ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
-        uint32_t e, entity_count = ecs_table_data_count(data);
+        int32_t e, entity_count = ecs_table_data_count(data);
         ecs_entity_t *entities = ecs_vector_first(data->entities);
         ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs);
-        uint32_t c, column_count = ecs_vector_count(table->type);
+        int32_t column_count = ecs_vector_count(table->type);
 
         ecs_assert(main_data != data, ECS_INTERNAL_ERROR, NULL);
 
@@ -25,41 +97,36 @@ void merge_commits(
         /* If the table contains no data, this was a staged table that was
          * merged with the main stage. The main stage table will also have been
          * added to the dirty_table list, so we'll iterate it eventually */
-        if (!data->columns) {
+        if (!data->entities) {
+            continue;
+        }
+
+        /* If the table has no columns, this is the root table. Entities that
+         * are in a root table need to be either deleted or emptied */
+        if (!column_count) {
+            clear_columns(world, stage, table, data);
             continue;
         }
 
         /* Ensure that table is large enough to store new entities */
         int32_t main_entity_count = ecs_table_count(table);
-        ecs_table_set_count(world, table, main_data, main_entity_count + entity_count);
-
-        /* Copy data column by column from the stage to the main stage */
-        for (c = 0; c < column_count; c ++) {
-            ecs_column_t *main_column = &main_data->columns[c];
-            void *dst = ecs_vector_first(main_column->data);
-            ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            ecs_column_t *column = &data->columns[c];
-            uint16_t size = column->size;
-
-            void *src = ecs_vector_first(column->data);
-            ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            ecs_assert(size == main_column->size, ECS_INTERNAL_ERROR, NULL);
-
-            memcpy( ECS_OFFSET(dst, main_entity_count * size), 
-                src, size * entity_count);
-
-            ecs_vector_clear(column->data);
-        } 
+        ecs_table_set_count(world, table, main_data, 
+            main_entity_count + entity_count);
 
         /* Copy entity ids */
         ecs_entity_t *main_entities = ecs_vector_first(main_data->entities);
-        memcpy(&main_entities[main_entity_count], entities, entity_count * sizeof(ecs_entity_t));
+        memcpy(&main_entities[main_entity_count], entities, 
+            entity_count * sizeof(ecs_entity_t));
 
         /* Copy record ptrs */
         ecs_record_t **main_record_ptrs = ecs_vector_first(main_data->record_ptrs);
-        memcpy(&main_record_ptrs[main_entity_count], record_ptrs, entity_count * sizeof(ecs_record_t*));
+        memcpy(&main_record_ptrs[main_entity_count], record_ptrs, 
+            entity_count * sizeof(ecs_record_t*));
+
+        /* Copy component data */
+        merge_columns(
+            world, stage, table, main_data, data, main_entity_count, 
+            entity_count);
 
         /* Update the entity index */
         for (e = 0; e < entity_count; e ++) {
@@ -71,15 +138,18 @@ void merge_commits(
                 record = ecs_eis_get_or_create(&world->stage, entity);
             }
 
+            bool is_watched;
+            int32_t row = ecs_record_to_row(record->row, &is_watched);            
+
             ecs_table_t *src_table = record->table;
             if (src_table != table) {
                 /* Delete entity from old table */
                 ecs_data_t *src_data = ecs_table_get_data(world, src_table);
-                ecs_table_delete(world, stage, src_table, src_data, record->row - 1);
+                ecs_table_delete(world, stage, src_table, src_data, row);
             }
 
             record->table = table;
-            record->row = main_entity_count + e + 1;
+            record->row = ecs_row_to_record(main_entity_count + e, is_watched);
         }
 
         /* If the table was empty, activate it explicitly since we bypassed the
@@ -87,11 +157,9 @@ void merge_commits(
         if (!main_entity_count) {
             ecs_table_activate(world, table, NULL, true);
         }
-
-        ecs_vector_clear(data->entities);
-        ecs_vector_clear(data->record_ptrs);
     }
 
+    /* All dirty tables are processed, clear array for next frame. */
     ecs_vector_clear(stage->dirty_tables);
 }
 
@@ -133,10 +201,6 @@ void ecs_stage_init(
 
     /* Initialize one root table per stage */
     ecs_init_root_table(world, stage);
-
-    if (!is_main_stage) {
-        stage->entity_index.keep_deletes = true;
-    }
 
     stage->range_check_enabled = true;
 }

@@ -70,6 +70,16 @@ void ecs_run_component_actions(
     uint32_t count,
     ecs_entities_t components,
     bool is_init);
+    
+/* Get actual row from record row */
+int32_t ecs_record_to_row(
+    int32_t row, 
+    bool *is_watched_out);
+
+/* Convert actual row to record row */
+int32_t ecs_row_to_record(
+    int32_t row, 
+    bool is_watched);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// World API

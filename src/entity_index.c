@@ -76,14 +76,10 @@ void ecs_ei_delete(
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (entity_index->keep_deletes) {
-        ecs_ei_set(entity_index, entity, &(ecs_record_t){ 0 });
+    if (entity > ECS_HI_ENTITY_ID) {
+        ecs_map_remove(entity_index->hi, entity);
     } else {
-        if (entity > ECS_HI_ENTITY_ID) {
-            ecs_map_remove(entity_index->hi, entity);
-        } else {
-            ecs_sparse_remove(entity_index->lo, ecs_record_t, entity);
-        }
+        ecs_sparse_remove(entity_index->lo, ecs_record_t, entity);
     }
 }
 
@@ -155,7 +151,6 @@ void ecs_ei_new(
 {
     entity_index->lo = ecs_sparse_new(ecs_record_t, 0);
     entity_index->hi = ecs_map_new(ecs_record_t, 0);
-    entity_index->keep_deletes = false;
 }
 
 /* Clear entities from index */
