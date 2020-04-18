@@ -325,7 +325,6 @@ void col_systems_deinit(
 
     for (i = 0; i < count; i ++) {
         EcsColSystem *ptr = ecs_get_ptr(world, buffer[i], EcsColSystem);
-
         ecs_vector_free(ptr->jobs);
     }
 }
@@ -1588,4 +1587,33 @@ void ecs_unlock(
 {
     ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
     ecs_os_mutex_unlock(world->mutex);
+}
+
+ecs_component_data_t *ecs_get_component_data(
+    ecs_world_t *world,
+    ecs_entity_t component)
+{
+    ecs_assert(component < ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
+    ecs_component_data_t* cdata_array = ecs_vector_first(world->component_data);
+    return &cdata_array[component];
+}
+
+bool ecs_staging_begin(
+    ecs_world_t *world)
+{
+    bool in_progress = world->in_progress;
+    world->in_progress = true;
+    return in_progress;
+}
+
+void ecs_staging_end(
+    ecs_world_t *world,
+    bool is_staged)
+{
+    if (!is_staged) {
+        world->in_progress = false;
+        if (world->auto_merge) {
+            ecs_merge(world);
+        }
+    }
 }

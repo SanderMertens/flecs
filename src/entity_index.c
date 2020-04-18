@@ -52,7 +52,7 @@ ecs_record_t* ecs_ei_get_or_create(
 }
 
 /* Set entity */
-void ecs_ei_set(
+ecs_record_t* ecs_ei_set(
     ecs_ei_t *entity_index,
     ecs_entity_t entity,
     ecs_record_t *record)
@@ -66,7 +66,13 @@ void ecs_ei_set(
         ecs_record_t *dst_record = ecs_sparse_get_or_set_sparse(
             entity_index->lo, ecs_record_t, entity, &is_new);
         *dst_record = *record;
+
+        /* Only return record ptrs of the sparse set, as these pointers are
+         * stable. Tables store pointers to records only of they are stable */
+        return dst_record;
     }
+
+    return NULL;
 }
 
 /* Delete entity */

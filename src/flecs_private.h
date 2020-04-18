@@ -106,6 +106,10 @@ ecs_vector_t** ecs_system_array(
     ecs_world_t *world,
     ecs_system_kind_t kind);
 
+/* Get component callbacks */
+ecs_component_data_t *ecs_get_component_data(
+    ecs_world_t *world,
+    ecs_entity_t component);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API

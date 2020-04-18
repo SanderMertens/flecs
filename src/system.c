@@ -55,12 +55,19 @@ ecs_entity_t new_row_system(
             ecs_abort(ECS_INVALID_REACTIVE_SIGNATURE, sig->expr);
         }
 
-        if (kind == EcsOnAdd) {
-            elem = ecs_vector_add(&world->add_systems, ecs_entity_t);
+        ecs_entity_t id = *(ecs_entity_t*)ecs_vector_first(sig->and_from_self);
+        ecs_component_data_t *cdata = ecs_get_component_data(world, id);
+
+        if (kind == EcsOnNew) {
+            ecs_table_t *table = ecs_table_from_type(
+                    world, &world->stage, sig->and_from_self);
+            elem = ecs_vector_add(&table->on_new, ecs_entity_t);
+        } else if (kind == EcsOnAdd) {
+            elem = ecs_vector_add(&cdata->on_add, ecs_entity_t);
         } else if (kind == EcsOnRemove) {
-            elem = ecs_vector_add(&world->remove_systems, ecs_entity_t);
+            elem = ecs_vector_add(&cdata->on_remove, ecs_entity_t);
         } else if (kind == EcsOnSet) {
-            elem = ecs_vector_add(&world->set_systems, ecs_entity_t);
+           elem = ecs_vector_add(&cdata->on_set, ecs_entity_t);
         } else {
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
         }

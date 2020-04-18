@@ -26,10 +26,10 @@ ecs_record_t* ecs_ei_get(
     ecs_entity_t entity);
 
 /* Set entity */
-void ecs_ei_set(
+ecs_record_t* ecs_ei_set(
     ecs_ei_t *entity_index,
     ecs_entity_t entity,
-    ecs_record_t *record); 
+    ecs_record_t *record);
 
 /* Get or set entity */
 ecs_record_t* ecs_ei_get_or_create(

@@ -2769,6 +2769,17 @@ void ecs_set_automerge(
     ecs_world_t *world,
     bool auto_merge);
 
+/** Ensure staging */
+FLECS_EXPORT
+bool ecs_staging_begin(
+    ecs_world_t *world);
+
+/** End staging */
+FLECS_EXPORT
+void ecs_staging_end(
+    ecs_world_t *world,
+    bool is_staged);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////

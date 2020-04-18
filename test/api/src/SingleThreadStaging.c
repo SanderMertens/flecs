@@ -147,6 +147,14 @@ void New_w_component_w_count(ecs_rows_t *rows) {
     
     ecs_type_t type = ecs_type_from_entity(rows->world, ctx->component);
     ctx->new_entities[ctx->entity_count] = _ecs_new_w_count(rows->world, type, 1000);
+
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        test_assert( 
+            _ecs_has(rows->world, ctx->new_entities[ctx->entity_count] + i, 
+                type));
+    }
+
     ctx->entity_count ++;
 }
 
@@ -628,6 +636,7 @@ void SingleThreadStaging_clone_w_value() {
 static
 void Add_to_current(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
+
     int i;
     for (i = 0; i < rows->count; i ++) {
         if (ctx->component) {
@@ -3064,6 +3073,9 @@ void MutableTest(ecs_rows_t *rows) {
         Velocity *v_mut = ecs_get_mutable(
             world, rows->entities[i], Velocity, &is_added);
 
+        test_assert(v_mut != NULL);
+        test_assert(v_mut != v);
+
         // Even though component is added to stage, is_added should only be true
         // if the component is added for the first time, which requires the app
         // to init the component value.
@@ -3230,3 +3242,42 @@ void SingleThreadStaging_get_mutable_w_add() {
     ecs_fini(world);
 }
 
+void OnAdd(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Velocity, v, 1);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        v->x = 1;
+        v->y = 2;
+    }
+}
+
+void AddInProgress2(ecs_rows_t *rows) {
+    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+
+    int i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_add(rows->world, rows->entities[i], Velocity);
+    }
+}
+
+void SingleThreadStaging_on_add_after_new_type_in_progress() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, AddInProgress2, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_progress(world, 1);
+
+    test_assert( ecs_has(world, e, Velocity));
+    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}

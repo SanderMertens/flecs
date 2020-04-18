@@ -123,7 +123,40 @@ void merge_commits(
             continue;
         }
 
-        /* Ensure that table is large enough to store new entities */
+        /* If there are no entities to be merged, clear table data. This can
+         * happen if a table was populated in a stage causing it to be marked as
+         * dirty, and then the data got moved to another staged table. */
+        if (!entity_count) {
+            ecs_table_clear_data(table, data);
+            continue;
+        }
+
+        /* Delete the entity from its previous main stage table, if it already 
+         * existed. Doing this before copying the component data ensures that if 
+         * an entity was staged for the same table, it can be simply appended to 
+         * the end of the table without creating a duplicate record. */
+        for (e = 0; e < entity_count; e ++) {
+            ecs_record_t *record = record_ptrs[e];            
+            ecs_entity_t entity = entities[e];
+
+            /* If the entity did not yet exist in the main stage, register it */
+            if (!record) {
+                record = ecs_eis_get_or_create(&world->stage, entity);
+                record_ptrs[e] = record;
+            }
+
+            bool is_watched;
+            int32_t row = ecs_record_to_row(record->row, &is_watched);            
+
+            ecs_table_t *src_table = record->table;
+            if (src_table) {
+                /* Delete entity from old table */
+                ecs_data_t *src_data = ecs_table_get_data(world, src_table);
+                ecs_table_delete(world, stage, src_table, src_data, row);
+            }
+        }
+
+        /* Ensure that the main table is large enough to store new entities */
         int32_t main_entity_count = ecs_table_count(table);
         ecs_table_set_count(world, table, main_data, 
             main_entity_count + entity_count);
@@ -143,29 +176,19 @@ void merge_commits(
             world, stage, table, main_data, data, main_entity_count, 
             entity_count);
 
-        /* Update the entity index */
+        /* Update entity index */
         for (e = 0; e < entity_count; e ++) {
             ecs_record_t *record = record_ptrs[e];
-            ecs_entity_t entity = entities[e];
 
-            /* If the entity did not yet exist in the main stage, register it */
-            if (!record) {
-                record = ecs_eis_get_or_create(&world->stage, entity);
-            }
+            /* We just retrieved or created the record, it should be there */
+            ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
 
             bool is_watched;
-            int32_t row = ecs_record_to_row(record->row, &is_watched);            
-
-            ecs_table_t *src_table = record->table;
-            if (src_table != table) {
-                /* Delete entity from old table */
-                ecs_data_t *src_data = ecs_table_get_data(world, src_table);
-                ecs_table_delete(world, stage, src_table, src_data, row);
-            }
+            ecs_record_to_row(record->row, &is_watched);  
 
             record->table = table;
             record->row = ecs_row_to_record(main_entity_count + e, is_watched);
-        }
+        }        
 
         /* Clear staged table data */
         ecs_table_clear_data(table, data);

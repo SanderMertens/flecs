@@ -204,10 +204,23 @@ ecs_data_t* ecs_table_get_data_intern(
             int i;
             for (i = stage_count; i < count; i ++) {
                 deinit_data(table, &data_array[i]);
-            } 
+            }
 
             ecs_vector_set_count(&table->stage_data, ecs_data_t, stage_count);
             data_array = ecs_vector_first(table->stage_data);           
+        }
+
+        int i;
+        for (i = 0; i < stage_count; i ++) {
+            ecs_data_t *data_array = ecs_vector_first(table->stage_data);
+            ecs_stage_t *stage_array = ecs_vector_first(world->worker_stages);
+
+            data_array[0].stage = &world->stage;
+            data_array[1].stage = &world->temp_stage;
+
+            for (i = 2; i < stage_count; i ++) {
+                data_array[i].stage = &stage_array[i - 2];
+            }
         }
     }
     
@@ -247,6 +260,10 @@ ecs_data_t* ecs_table_get_or_create_data(
         result->marked_dirty = true;
     }
 
+    if (table->type && !result->columns) {
+        init_data(world, table, result);
+    }
+
     return result;   
 }
 
@@ -265,7 +282,9 @@ void ecs_table_clear_silent(
     ecs_table_t *table)
 {
     ecs_data_t *data = ecs_table_get_data(world, table);
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!data) {
+        return;
+    }
 
     int32_t count = ecs_vector_count(data->entities);
     
@@ -373,8 +392,8 @@ int32_t ecs_table_append(
             if (size) {
                 _ecs_vector_add(&columns[i].data, size);
             }
-        } 
-    }   
+        }
+    }
 
     /* Fist add entity to array with entity ids */
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
@@ -387,7 +406,6 @@ int32_t ecs_table_append(
     *r = record;
 
     int32_t index = ecs_vector_count(data->entities) - 1;
-
     if (!world->in_progress && !index) {
         ecs_table_activate(world, table, 0, true);
     }
@@ -406,8 +424,6 @@ void ecs_table_delete(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_column_t *columns = data->columns;
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_vector_t *entity_column = data->entities;
@@ -447,7 +463,7 @@ void ecs_table_delete(
         }
 
         /* Update record of moved entity in entity index */
-        if (stage == &world->stage) {
+        if (!world->in_progress) {
             record_to_move->row = index + 1;
         } else {
             ecs_record_t row;
@@ -470,7 +486,7 @@ void ecs_table_delete(
         }
     }
 
-    if (!count) {
+    if (!world->in_progress && !count) {
         ecs_table_activate(world, table, NULL, false);
     }
 }
@@ -484,10 +500,26 @@ int32_t ecs_table_grow(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_column_t *columns = data->columns;
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t column_count = ecs_vector_count(table->type);
+    ecs_column_t *columns = NULL;
+
+    if (column_count) {
+        columns = data->columns;
+
+        /* It is possible that the table data was created without content. Now that
+        * data is going to be written to the table, initialize it */ 
+        if (!columns) {
+            init_data(world, table, data);
+            columns = data->columns;
+        }
+
+        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    /* Fist grow record ptr array */
+    ecs_record_t **r = ecs_vector_addn(&data->record_ptrs, ecs_record_t*, count);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);    
 
     /* Fist add entity to column with entity ids */
     ecs_entity_t *e = ecs_vector_addn(&data->entities, ecs_entity_t, count);
@@ -496,6 +528,7 @@ int32_t ecs_table_grow(
     int32_t i;
     for (i = 0; i < count; i ++) {
         e[i] = first_entity + i;
+        r[i] = NULL;
     }
 
     /* Add elements to each column array */
@@ -755,19 +788,31 @@ void ecs_table_merge(
     ecs_table_t *old_table)
 {
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_table != old_table, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_type_t new_type = new_table ? new_table->type : NULL;
+    /* If there is no data to merge, drop out */
+    ecs_data_t *old_data = ecs_table_get_data(world, old_table);
+    if (!old_data) {
+        return;
+    }
+
+    ecs_type_t new_type = new_table->type;
     ecs_type_t old_type = old_table->type;
     ecs_assert(new_type != old_type, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *init_data = new_table ? ecs_table_get_data(world, new_table) : NULL;
-    ecs_assert(!init_data || init_data->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_data_t *old_data = ecs_table_get_data(world, old_table);
-    ecs_assert(!old_data || old_data->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_data_t *new_data = ecs_table_get_or_create_data(
+        world, &world->stage, new_table);
+    ecs_assert(new_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_column_t *new_columns = init_data ? init_data->columns : NULL;
     ecs_column_t *old_columns = old_data->columns;
+    ecs_column_t *new_columns = new_data->columns;
+    if (!new_columns) {
+        init_data(world, new_table, new_data);
+        new_columns = new_data->columns;
+    }
+
+    ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(old_columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t old_count = old_columns->data ? ecs_vector_count(old_columns->data) : 0;
@@ -840,7 +885,7 @@ void ecs_table_merge(
         }
     }
 
-    merge_vector(&init_data->entities, old_data->entities, sizeof(ecs_entity_t));
+    merge_vector(&new_data->entities, old_data->entities, sizeof(ecs_entity_t));
     old_data->entities = NULL;
 }
 
@@ -900,6 +945,7 @@ void ecs_table_move(
 
     ecs_column_t *old_columns = old_data->columns;
     ecs_column_t *new_columns = new_data->columns;
+
     ecs_assert(old_columns != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, NULL);
 

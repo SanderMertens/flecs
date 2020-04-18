@@ -152,6 +152,7 @@ struct ecs_data_t {
     ecs_vector_t *entities;
     ecs_vector_t *record_ptrs;
     ecs_column_t *columns;
+    ecs_stage_t *stage;
     bool marked_dirty;             /* Was table already added to dirty array? */
 };
 

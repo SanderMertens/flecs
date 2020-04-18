@@ -184,7 +184,9 @@ void ecs_table_writer_register_table(
     ecs_assert(writer->table != NULL, ECS_INTERNAL_ERROR, NULL);
     
     ecs_data_t *data = ecs_table_get_data(world, writer->table);
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!data) {
+        return;
+    }
 
     /* Remove any existing entities from entity index */
     ecs_vector_t *entity_vector = data->entities;
@@ -246,7 +248,9 @@ void ecs_table_writer_prepare_column(
     ecs_table_writer_t *writer = &stream->table;
     ecs_world_t *world = stream->world;
 
-    ecs_data_t *data = ecs_table_get_data(world, writer->table);
+    ecs_data_t *data = ecs_table_get_or_create_data(
+        world, &world->stage, writer->table);
+        
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (writer->column_index) {

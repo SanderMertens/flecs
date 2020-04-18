@@ -567,27 +567,15 @@ ecs_entity_t ecs_run_w_filter_v2(
         real_world = ((ecs_thread_t*)world)->world; /* dispel the magic */
     }
 
-    bool in_progress = real_world->in_progress;
-
-    ecs_stage_t *stage = NULL;
-    if (!in_progress) {
-        real_world->in_progress = true;
-        stage = ecs_get_stage(&real_world);
-    }
+    ecs_get_stage(&real_world);
+    bool in_progress = ecs_staging_begin(real_world);
 
     ecs_entity_t interrupted_by = ecs_run_intern(
         world, real_world, system, delta_time, offset, limit, filter, param);
 
     /* If world wasn't in progress when we entered this function, we need to
      * merge and reset the in_progress value */
-    if (!in_progress) {
-        real_world->in_progress = false;
-        if (world->auto_merge) {
-            real_world->is_merging = true;
-            ecs_stage_merge(real_world, stage);
-            real_world->is_merging = false;
-        }
-    }
+    ecs_staging_end(real_world, in_progress);
 
     return interrupted_by;
 }

@@ -335,13 +335,11 @@ ecs_table_t* traverse_remove_hi_edges(
                 return NULL;
             }
 
-            /* If a table is created while being staged, the next pointer of the
-             * edge may not be set, as the current node may be in the main stage
-             * while the new table is created in the stage. This connection will
-             * be made once the staged table is merged with the main stage. */
-            ecs_assert(
-                &world->stage != stage || edge->remove != NULL, 
-                ECS_INTERNAL_ERROR, NULL);
+            /* Only make links when not staged, to prevent tables from the main
+            * stage pointing to staged tables. */
+            if (&world->stage == stage) {
+                edge->remove = next;
+            }
         }
 
         /* Hi edges should are not removed to the removed array. This array is used
@@ -389,13 +387,11 @@ ecs_table_t* traverse_remove(
                     return NULL;
                 }
 
-                /* If a table is created while being staged, the next pointer of the
-                * edge may not be set, as the current node may be in the main stage
-                * while the new table is created in the stage. This connection will
-                * be made once the staged table is merged with the main stage. */
-                ecs_assert(
-                    &world->stage != stage || edge->remove != NULL, 
-                    ECS_INTERNAL_ERROR, NULL);
+                /* Only make links when not staged, to prevent tables from the main
+                * stage pointing to staged tables. */
+                if (&world->stage == stage) {
+                    edge->remove = next;
+                }
             } else {
                 /* If the add edge does not point to self, the table
                     * does not have the entity in to_remove. */
@@ -440,12 +436,11 @@ ecs_table_t* traverse_add_hi_edges(
             
             ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);                    
 
-            /* If a table is created while being staged, the next pointer of the
-             * edge may not be set, as the current node may be in the main stage
-             * while the new table is created in the stage. This connection will
-             * be made once the staged table is merged with the main stage. */
-            ecs_assert(
-                &world->stage != stage || edge->add != NULL, ECS_INTERNAL_ERROR, NULL);
+            /* Only make links when not staged, to prevent tables from the main
+             * stage pointing to staged tables. */
+            if (&world->stage == stage) {
+                edge->add = next;
+            }
         }
 
         /* Hi edges should are not added to the added array. This array is used
@@ -491,12 +486,11 @@ ecs_table_t* traverse_add(
             next = find_or_create_table_include(world, stage, node, e);
             ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            /* If a table is created while being staged, the next pointer of the
-             * edge may not be set, as the current node may be in the main stage
-             * while the new table is created in the stage. This connection will
-             * be made once the staged table is merged with the main stage. */
-            ecs_assert(
-                &world->stage != stage || edge->add != NULL, ECS_INTERNAL_ERROR, NULL);
+            /* Only make links when not staged, to prevent tables from the main
+             * stage pointing to staged tables. */
+            if (&world->stage == stage) {
+                edge->add = next;
+            }
         }
 
         if (added && node != next) added->array[added->count ++] = e;
@@ -566,127 +560,121 @@ ecs_table_t *ecs_table_find_or_create_intern(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t count;
-    if (entities && (count = entities->count)) 
-    {
-        bool is_ordered = true, order_checked = false;
-        ecs_entity_t *ordered_entities = NULL;
+    uint32_t count = entities->count;
 
-        ecs_table_t *table = root;
-        ecs_entity_t *array = entities->array;
-        uint32_t i;
+    bool is_ordered = true, order_checked = false;
+    ecs_entity_t *ordered_entities = NULL;
 
-        for (i = 0; i < count; i ++) {
-            ecs_entity_t e = array[i];
-            ecs_edge_t *edge;
+    ecs_table_t *table = root;
+    ecs_entity_t *array = entities->array;
+    uint32_t i;
 
-            if (e >= ECS_HI_COMPONENT_ID) {
-                edge = ecs_map_get(table->hi_edges, ecs_edge_t, e);
-                if (edge) {
-                    table = edge->add;
-                } else {
-                    edge = get_edge(table, e);
-                    table = NULL;
-                }
-            } else {
-                ecs_assert(e < ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
-                edge = &table->lo_edges[e];
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = array[i];
+        ecs_edge_t *edge;
+
+        if (e >= ECS_HI_COMPONENT_ID) {
+            edge = ecs_map_get(table->hi_edges, ecs_edge_t, e);
+            if (edge) {
                 table = edge->add;
+            } else {
+                edge = get_edge(table, e);
+                table = NULL;
             }
-
-            if (!table) {
-                /* A new table needs to be created. To ensure that one table is
-                 * created per combination of components, regardless of in
-                 * which order the components are specified, the entity array
-                 * with which the table is created must be ordered. This
-                 * provides a canonical path through which the table can always
-                 * be reached, and allows other paths to be created 
-                 * progressively.*/
-
-                /* First, determine if the entities array is ordered. Do this
-                 * only once per lookup */
-                if (!order_checked) {
-                    is_ordered = ecs_entity_array_is_ordered(entities);
-                    order_checked = true;
-                }
-
-                /* If the array is ordered, we can use it to create the table */
-                if (is_ordered) {
-                    ecs_entities_t table_entities = {
-                        .array = array,
-                        .count = i + 1
-                    };
-
-                    /* If the original array is ordered and the edge was empty, 
-                     * the table does not exist, so create it */
-                    if (stage != &world->stage) {
-                        /* If we're in staged mode and we have been searching
-                         * the main stage tables, find or create the table in 
-                         * the thread specific staging area.
-                         *
-                         * This is expensive, but should rarely happen as 
-                         * eventually the main stage will have tables for all of
-                         * the entity types. */
-                        if (root == &world->stage.root) {
-                            return ecs_table_find_or_create_intern(
-                                world, stage, &stage->root, entities);
-                        } else {
-                            /* If we are staged and we were looking in the table
-                             * root of the stage, the table doesn't exist yet
-                             * and we need to create it in the stage. */
-                            
-                            /* Verify that we weren't accidentally searching the
-                             * wrong stage */
-                            ecs_assert(&stage->root == root, 
-                                ECS_INTERNAL_ERROR, NULL);
-                            
-                            table = create_table(world, stage, &table_entities);
-                            
-                        }
-                    } else {
-                        table = create_table(world, stage, &table_entities);
-                    }
-                } else {
-                    uint32_t count_now = i + 1;
-
-                    /* Create an ordered array if we don't have one yet */
-                    if (!ordered_entities) {
-                        ordered_entities = ecs_os_alloca(ecs_entity_t, count);
-                    }
-                    
-                    memcpy(ordered_entities, array, 
-                        count_now * sizeof(ecs_entity_t));
-
-                    qsort(ordered_entities, count_now, 
-                        sizeof(ecs_entity_t), ecs_entity_compare);
-
-                    ecs_entities_t table_entities = {
-                        .array = ordered_entities,
-                        .count = count_now
-                    };
-
-                    /* Now that the array is sorted, dedup */
-                    ecs_entity_array_dedup(&table_entities);
-
-                    /* If the original array is unordered we want to check if an
-                    * existing table can be found using the ordered array */
-                    table = ecs_table_find_or_create_intern(
-                        world, stage, root, &table_entities);                                
-                }
-
-                ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                /* Make sure canonical (ordered) path is connected */
-                edge->add = table;
-            }
+        } else {
+            ecs_assert(e < ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
+            edge = &table->lo_edges[e];
+            table = edge->add;
         }
 
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        
-        return table;
-    } else {
-        return NULL;
+        if (!table) {
+            /* A new table needs to be created. To ensure that one table is
+                * created per combination of components, regardless of in
+                * which order the components are specified, the entity array
+                * with which the table is created must be ordered. This
+                * provides a canonical path through which the table can always
+                * be reached, and allows other paths to be created 
+                * progressively.*/
+
+            /* First, determine if the entities array is ordered. Do this
+                * only once per lookup */
+            if (!order_checked) {
+                is_ordered = ecs_entity_array_is_ordered(entities);
+                order_checked = true;
+            }
+
+            /* If the array is ordered, we can use it to create the table */
+            if (is_ordered) {
+                ecs_entities_t table_entities = {
+                    .array = array,
+                    .count = i + 1
+                };
+
+                /* If the original array is ordered and the edge was empty, 
+                    * the table does not exist, so create it */
+                if (stage != &world->stage) {
+                    /* If we're in staged mode and we have been searching
+                        * the main stage tables, find or create the table in 
+                        * the thread specific staging area.
+                        *
+                        * This is expensive, but should rarely happen as 
+                        * eventually the main stage will have tables for all of
+                        * the entity types. */
+                    if (root == &world->stage.root) {
+                        return ecs_table_find_or_create_intern(
+                            world, stage, &stage->root, entities);
+                    } else {
+                        /* If we are staged and we were looking in the table
+                            * root of the stage, the table doesn't exist yet
+                            * and we need to create it in the stage. */
+                        
+                        /* Verify that we weren't accidentally searching the
+                            * wrong stage */
+                        ecs_assert(&stage->root == root, 
+                            ECS_INTERNAL_ERROR, NULL);
+                        
+                        table = create_table(world, stage, &table_entities);
+                        
+                    }
+                } else {
+                    table = create_table(world, stage, &table_entities);
+                }
+            } else {
+                uint32_t count_now = i + 1;
+
+                /* Create an ordered array if we don't have one yet */
+                if (!ordered_entities) {
+                    ordered_entities = ecs_os_alloca(ecs_entity_t, count);
+                }
+                
+                memcpy(ordered_entities, array, 
+                    count_now * sizeof(ecs_entity_t));
+
+                qsort(ordered_entities, count_now, 
+                    sizeof(ecs_entity_t), ecs_entity_compare);
+
+                ecs_entities_t table_entities = {
+                    .array = ordered_entities,
+                    .count = count_now
+                };
+
+                /* Now that the array is sorted, dedup */
+                ecs_entity_array_dedup(&table_entities);
+
+                /* If the original array is unordered we want to check if an
+                * existing table can be found using the ordered array */
+                table = ecs_table_find_or_create_intern(
+                    world, stage, root, &table_entities);                                
+            }
+
+            ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            /* Make sure canonical (ordered) path is connected */
+            edge->add = table;
+        }
     }
+    
+    return table;
 }
 
 ecs_table_t *ecs_table_find_or_create(

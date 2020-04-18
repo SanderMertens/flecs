@@ -23,7 +23,9 @@ void* get_component(
     ecs_data_t *data = info->data;
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_column_t *columns = data->columns;
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!columns) {
+        return NULL;
+    }
 
     ecs_entity_t *array = ecs_vector_first(type);
     int32_t i, count = ecs_vector_count(type);
@@ -124,6 +126,7 @@ bool get_info(
     if (!record) {
         info->table = NULL;
         info->is_watched = false;
+        info->record = NULL;
         return false;
     }
 
@@ -141,7 +144,6 @@ void get_or_create_info(
 {
     ecs_record_t *record = ecs_eis_get_or_create(&world->stage, entity);
     ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
-
     set_info_from_record(world, info, record);
 }
 
@@ -159,6 +161,7 @@ bool get_staged_info(
     if (!record) {
         info->table = NULL;
         info->is_watched = false;
+        info->record = NULL;
         return false;
     }
 
@@ -168,6 +171,7 @@ bool get_staged_info(
 
     info->table = table;
     if (!info->table) {
+        info->record = NULL;
         return true;
     }
 
@@ -187,18 +191,20 @@ bool get_staged_info(
  * functionality is optimized for operations that are about to create a new
  * entity, and prevents an additional lookup in the main entity index. */
 static
-bool get_or_create_staged_info(
+bool ecs_get_or_create_info(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_info_t *info)
 {
     if (stage != &world->stage) {
-        if (get_staged_info(world, stage, entity, info)) {
-            return true;
+        if (!get_staged_info(world, stage, entity, info)) {
+            if (!get_info(world, entity, info)) {
+                return false;
+            }
         }
 
-        return false;
+        return true;
     } else {
         get_or_create_info(world, entity, info);
         return true;
@@ -329,18 +335,9 @@ void run_row_systems(
 }
 
 static
-ecs_component_data_t *get_component_data(
-    ecs_world_t *world,
-    ecs_entity_t component)
-{
-    ecs_assert(component < ECS_HI_COMPONENT_ID, ECS_INTERNAL_ERROR, NULL);
-    ecs_component_data_t* cdata_array = ecs_vector_first(world->component_data);
-    return &cdata_array[component];
-}
-
-static
 void run_component_set_action(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_component_data_t* cdata,
     ecs_entity_t component,
     ecs_table_t *table,
@@ -350,7 +347,9 @@ void run_component_set_action(
 {
     ecs_vector_t *systems = cdata->on_set;   
     if (systems) {
+        bool in_progress = ecs_staging_begin(world);
         run_row_systems(world, systems, table, data, row, count);
+        ecs_staging_end(world, in_progress);
     }
 }
 
@@ -378,7 +377,6 @@ void ecs_run_component_actions(
     for (i = 0; i < components.count; i ++) {
         /* Retrieve component callbacks & systems for component */
         ecs_entity_t component = components.array[i];
-
 
         if (component >= ECS_HI_COMPONENT_ID) {
             continue;
@@ -425,6 +423,8 @@ void ecs_run_component_actions(
         void *array = ecs_vector_first(column->data);
         void *ptr = ECS_OFFSET(array, column->size * row);
 
+        bool in_progress = ecs_staging_begin(world);
+
         if (is_init) {
             if (init) {
                 init(ptr, ctx);
@@ -433,7 +433,7 @@ void ecs_run_component_actions(
             if (has_base) {
                 override_component(world, component, type, column, row, count);
                 run_component_set_action(
-                    world, cdata, component, table, data, row, count);
+                    world, stage, cdata, component, table, data, row, count);
             }
         }
 
@@ -442,13 +442,15 @@ void ecs_run_component_actions(
 
             if (is_init) {
                 run_component_set_action(
-                    world, cdata, component, table, data, row, count);
+                    world, stage, cdata, component, table, data, row, count);
             }
         }
 
         if (fini) {
             fini(ptr, ctx);
         }
+
+        ecs_staging_end(world, in_progress);
     }
 }
 
@@ -518,6 +520,7 @@ uint32_t move_entity(
     ecs_data_t *src_data,
     int32_t src_row,
     ecs_table_t *dst_table,
+    ecs_data_t *dst_data,
     ecs_entities_t *added,
     ecs_entities_t *removed)
 {    
@@ -528,21 +531,22 @@ uint32_t move_entity(
 
     bool main_stage = stage == &world->stage;
     ecs_record_t *record = info->record;
-    ecs_data_t *dst_data = ecs_table_get_or_create_data(world, stage, dst_table);
+    ecs_assert(!record || record == ecs_eis_get(&world->stage, entity), ECS_INTERNAL_ERROR, NULL);
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record);
-    ecs_assert(ecs_vector_count(dst_data[0].entities) > dst_row, ECS_INTERNAL_ERROR, NULL);
 
     /* Copy entity & components from src_table to dst_table */
-    ecs_table_move(dst_table, dst_data, dst_row, src_table, src_data, src_row);
+    if (src_table->type) {
+        ecs_table_move(
+            dst_table, dst_data, dst_row, src_table, src_data, src_row);
+    }
 
     if (removed) {
         ecs_run_component_actions(
             world, stage, src_table, src_data, src_row, 1, *removed, false);
     }
 
-    /* Only remove entity from previous table if the table isn't from the main
-     * stage. Modifications to the main stage are only made during merging */
-    if (main_stage || record->table != src_table) {
+    /* Only delete from source table if it is in the same stage */
+    if (src_data->stage == stage) {
         ecs_table_delete(world, stage, src_table, src_data, src_row);
     }
 
@@ -616,6 +620,8 @@ bool commit(
     src_table = info->table;
 
     if (src_table) {
+        ecs_data_t *src_data = info->data;
+
         if (to_remove) {
             to_remove_ptr = to_remove;
             removed_ptr = &removed;            
@@ -635,11 +641,14 @@ bool commit(
         /* Only move entity when it is not moved to the root table, unless we're
          * iterating. In this case the entities need to be kept around so that
          * the merge knows to remove them from their previous tables. */
-        if (dst_table->type || in_progress) {
-            if (dst_table != src_table) {
+        if (dst_table->type || in_progress) {            
+            ecs_data_t *dst_data = ecs_table_get_or_create_data(
+                world, stage, dst_table);
+
+            if (src_data != dst_data) {
                 dst_row = move_entity(
-                    world, stage, entity, info, src_table, info->data, info->row, 
-                    dst_table, added_ptr, removed_ptr);
+                    world, stage, entity, info, src_table, src_data, 
+                    info->row, dst_table, dst_data, added_ptr, removed_ptr);
             } else {
                 return false;
             }
@@ -648,7 +657,7 @@ bool commit(
             info->row = dst_row;            
         } else {
             delete_entity(
-                world, stage, entity, src_table, info->data, info->row, 
+                world, stage, entity, src_table, src_data, info->row, 
                 removed_ptr);
 
             ecs_eis_set(stage, entity, &(ecs_record_t){
@@ -669,7 +678,7 @@ bool commit(
         dst_table = ecs_table_traverse(
             world, stage, &world->stage.root, to_add_ptr, NULL, added_ptr, NULL);
         
-        if (dst_table) {
+        if (dst_table->type) {
             dst_row = new_entity(world, stage, entity, info, dst_table, &added);
 
             info->table = dst_table;
@@ -839,15 +848,7 @@ void ecs_add_remove_intern(
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
 
     ecs_entity_info_t info;
-    info.table = NULL;
-
-    if (stage == &world->stage) {
-        get_info(world, entity, &info);
-    } else {
-        if (!get_staged_info(world, stage, entity, &info)) {
-            get_info(world, entity, &info);
-        }
-    }
+    ecs_get_info(world, stage, entity, &info);
 
     commit(world, stage, entity, &info, to_add, to_remove, do_set);
 }
@@ -887,572 +888,54 @@ ecs_entity_t _ecs_new(
 
     return entity;
 }
-static
-bool has_unset_columns(
-    ecs_type_t type,
-    ecs_column_t *columns,
-    ecs_table_data_t *data)
-{
-    if (!data->columns) {
-        return true;
-    }
-
-    int32_t i;
-    for (i = 0; i < data->column_count; i ++) {
-        /* If no column is provided for component, skip it */
-        ecs_entity_t component = data->components[i];
-        if (component & ECS_ENTITY_FLAGS_MASK) {
-            /* If this is a base or parent, don't copy anything */
-            continue;
-        }
-
-        int32_t column = ecs_type_index_of(type, component);
-        ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
-
-        int32_t size = columns[column + 1].size;
-        if (size) { 
-            if (!data->columns[i]) {
-                return true;
-            }
-        }
-    }    
-
-    return false;
-}
-
-static
-void copy_column_data(
-    ecs_type_t type,
-    ecs_data_t *data,
-    int32_t start_row,
-    ecs_table_data_t *user_data)
-{
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_column_t *columns = data->columns;
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t i;
-    for (i = 0; i < user_data->column_count; i ++) {
-        /* If no column is provided for component, skip it */
-        if (!user_data->columns[i]) {
-            continue;
-        }
-
-        ecs_entity_t component = user_data->components[i];
-        if (component & ECS_ENTITY_FLAGS_MASK) {
-            /* If this is a base or parent, don't copy anything */
-            continue;
-        }
-
-        int32_t column = ecs_type_index_of(type, component);
-        ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
-
-        int32_t size = columns[column].size;
-        if (size) { 
-            void *column_data = ecs_vector_first(columns[column].data);
-
-            memcpy(
-                ECS_OFFSET(column_data, (start_row) * size),
-                user_data->columns[i],
-                user_data->row_count * size
-            );
-        }
-    }
-}
-
-static
-void invoke_reactive_systems(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t src_type,
-    ecs_type_t dst_type,
-    ecs_table_t *src_table,
-    ecs_data_t *src_data,
-    ecs_table_t *dst_table,
-    ecs_data_t *dst_data,
-    int32_t src_index,
-    int32_t dst_index,
-    int32_t count,
-    bool do_set)
-{
-    ecs_type_t to_remove = NULL; 
-    ecs_type_t to_add = NULL;
-    
-    if (src_type) {
-        to_remove = ecs_type_merge_intern(world, stage, src_type, NULL, dst_type);
-    } else {
-        to_add = dst_type;
-    }
-
-    if (dst_type) {
-        to_add = ecs_type_merge_intern(world, stage, dst_type, NULL, src_type);
-    } else {
-        to_remove = src_type;
-    }
-
-    /* Invoke OnRemove systems */
-    if (to_remove) {
-        ecs_entities_t to_remove_array = {
-            .array = ecs_vector_first(to_remove),
-            .count = ecs_vector_count(to_remove)
-        };
-
-        ecs_run_component_actions(
-            world,
-            stage,
-            src_table,
-            src_data,
-            src_index,
-            count,
-            to_remove_array,
-            false
-        );
-    }
-
-    if (src_type && src_type != dst_type) {
-        /* Delete column from old table. Delete in reverse, as entity indexes of
-         * entities after the deletion point change as a result of the delete. */
-
-        int32_t i;
-        for (i = 0; i < count; i ++) {
-            ecs_table_delete(
-                world, stage, src_table, src_data, src_index + count - i - 1);
-        }
-    }
-
-    /* Invoke OnAdd systems */
-    if (to_add) {
-        ecs_entities_t to_add_array = {
-            .array = ecs_vector_first(to_add),
-            .count = ecs_vector_count(to_add)
-        };
-
-        ecs_run_component_actions(
-            world,
-            stage,
-            dst_table,
-            dst_data,
-            dst_index,
-            count,
-            to_add_array,
-            true
-        );
-    }
-}
-
-static
-int32_t update_entity_index(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_type_t type,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    ecs_entity_t start_entity,
-    int32_t start_row,
-    ecs_table_data_t *user_data)
-{
-    bool has_unset = false, tested_for_unset = false;
-    int32_t i, dst_start_row = start_row;
-    int32_t count = user_data->row_count;
-    ecs_column_t *columns = data->columns;
-    ecs_entity_t *entities = ecs_vector_first(data->entities);
-    int32_t row_count = ecs_vector_count(data->entities);
-
-    /* While we're updating the entity index we may need to invoke reactive
-     * systems (OnRemove, OnAdd) in case the origin of the entities is not the
-     * same. The only moment in time we know the previous type and the new type
-     * of the entity is in this function, which is why those systems need to be
-     * invoked here.
-     *
-     * These variables help track the largest contiguous subsets of different
-     * origins, so that reactive systems can be inovoked on arrays of entities
-     * vs individual entities as much as possible. */
-    bool same_origin = true;
-    ecs_table_t *src_table = NULL, *prev_src_table = NULL;
-    int32_t src_row = 0, prev_src_row = 0, dst_first_contiguous_row = start_row;
-    int32_t src_first_contiguous_row = 0;
-
-    ecs_entity_t e;
-
-    /* We need to commit each entity individually in order to populate
-     * the entity index */
-    for (i = 0; i < count; i ++) {
-
-        /* If existing array with entities was provided, use entity ids from
-         * that array. Otherwise use new entity id */
-        if(user_data->entities) {
-            e = user_data->entities[i];
-
-            /* If this is not the first entity, check if the next entity in
-             * the table is the next entity to set. If so, there is no need 
-             * to update the entity index. This is the fast path that is
-             * taken if all entities in the table are in the same order as
-             * provided in the data argument. */
-            if (i) {
-                if (entities) {
-                    if (dst_start_row + i < row_count) {
-                        if (entities[dst_start_row + i] == e) {
-                            continue;
-                        }
-                    }
-                }
-            }
-
-            /* Ensure that the last issued handle will always be ahead of the
-             * entities created by this operation */
-            if (e > world->last_handle) {
-                world->last_handle = e + 1;
-            }                            
-        } else {
-            e = i + start_entity;
-        }
-
-        ecs_record_t *record_ptr = ecs_eis_get(stage, e);
-        if (record_ptr) {
-            src_row = record_ptr->row;
-            int8_t is_monitored = (src_row < 0) ? -1 : 1;
-            src_row = (src_row * is_monitored) - 1;
-
-            ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);
-
-            /* Keep track of whether all entities come from the same origin or
-             * not. If they come from the same origin, reactive system(s)
-             * can be invoked with all of the entities at the same time. If the
-             * existing entities are of different origins however, we try to do
-             * the best we can, which is find the largest contiguous subset(s) 
-             * of entities from the same origin, and invoke the reactive systems
-             * on those subsets. */
-            if (!i) {
-                /* For the first entity we don't have to do much */
-                prev_src_table = record_ptr->table;
-            }
-
-            src_table = record_ptr->table;
-
-            /* If entity exists, and this is the first entity being iterated
-             * set the start index to the current index of the entity. The
-             * start_index indicates the start of where the to be added
-             * entities will be stored. 
-             * In the ideal scenario, the subsequent entities to be added
-             * will be provided in the same order after the first entity, so
-             * that the entity index does not need to be updated. */
-            if (!i && src_table == table) {
-                dst_start_row = src_row;
-                dst_first_contiguous_row = src_row;
-            } else {
-                /* If the entity exists but it is not the first entity, 
-                 * check if it is in the same table. If not, delete the 
-                 * entity from the other table */     
-                if (src_table != table) {
-                    ecs_data_t *old_data = ecs_table_get_staged_data(
-                        world, stage, src_table);
-
-                    /* Insert new row into destination table */
-                    int32_t dst_row = ecs_table_append(
-                        world, table, data, e, record_ptr);
-                    if (!i) {
-                        dst_start_row = dst_row;
-                        dst_first_contiguous_row = dst_row;
-                        src_first_contiguous_row = src_row;
-                    }
-
-                    /* If the data structure has columns that are unset data
-                     * must be copied from the old table to the new table */
-                    if (!tested_for_unset) {
-                        has_unset = has_unset_columns(
-                            type, columns, user_data);
-                        tested_for_unset = true;
-                    }
-
-                    if (has_unset) {
-                        bool is_watching;
-                        int32_t src_row = ecs_record_to_row(
-                            record_ptr->row, &is_watching);
-
-                        ecs_table_move(
-                            table, data, dst_row, src_table, old_data, src_row);
-                    }
-
-                    /* Actual deletion of the entity from the source table
-                     * happens after the OnRemove systems are invoked */
-
-                /* If entity exists in the same table but not on the right
-                 * index (if so, we would've found out by now) we need to
-                 * move things around. This will ensure that entities are
-                 * ordered in exactly the same way as they are provided in
-                 * the data argument, so that subsequent invocations of this
-                 * operation with entities in the same order, 
-                 * insertion can be much faster. This also allows the data
-                 * from columns in data to be inserted with a single
-                 * memcpy per column. */
-                } else {
-
-                    /* If we're not at the top of the table, simply swap the
-                     * next entity with the one that we want at this row. */
-                    if (row_count > (dst_start_row + i)) {
-                        ecs_table_swap(world, stage, table, data, 
-                            src_row, dst_start_row + i, record_ptr, NULL);
-
-                    /* We are at the top of the table and the entity is in
-                     * the table. This scenario is a bit nasty, since we
-                     * need to now move the added entities back one position
-                     * and swap the entity preceding them with the current
-                     * entity. This should only happen in rare cases, as any
-                     * subsequent calls with the same set of entities should
-                     * find the entities in the table to be in the right 
-                     * order. 
-                     * We could just have swapped the order in which the
-                     * entities are inserted, but then subsequent calls
-                     * would still be expensive, and we couldn't just memcpy
-                     * the component data into the columns. */
-                    } else {
-                        /* First, swap the entity preceding the start of the
-                         * added entities with the entity that we want at
-                         * the end of the block */
-                        ecs_table_swap(world, stage, table, data, 
-                            src_row, dst_start_row - 1, record_ptr, NULL);
-
-                        /* Now move back the whole block back one position, 
-                         * while moving the entity before the start to the 
-                         * row right after the block */
-                        ecs_table_move_back_and_swap(
-                            world, stage, table, data, dst_start_row, i);
-
-                        dst_start_row --;
-                        dst_first_contiguous_row --;
-                    }
-                }
-            }
-
-            /* Update entity index with the new table / row */
-            record_ptr->table = table;
-            record_ptr->row = dst_start_row + i + 1;
-            record_ptr->row *= is_monitored;
-        } else {
-            ecs_record_t *record = ecs_eis_get_or_create(stage, e);
-            record->table = table,
-            record->row = dst_start_row + i + 1;
-
-            if (entities) {
-                entities[dst_start_row] = e;
-                //record_ptrs[dst_start_row] = record;
-            } else {
-                int32_t row = ecs_table_append(
-                    world, table, data, e, record);
-
-                ecs_assert(row == dst_start_row, ECS_INTERNAL_ERROR, NULL);
-            }
-        }
-
-        /* Now that the entity index is updated for this entity, check if we
-         * need to invoke reactive systems for the current set of contiguous
-         * entities. */
-        if (i) {
-            ecs_assert(dst_first_contiguous_row >= dst_start_row, ECS_INTERNAL_ERROR, NULL);
-
-            if (prev_src_table != src_table || (src_row != prev_src_row && prev_src_row != (src_row - 1))) {
-                /* If either the previous type is different from the current
-                 * type, or the previous index is not one before the current,
-                 * entities are not from the same origin or they are not stored
-                 * in a contiguous way. If this happens, invoke reactive systems
-                 * up to this point. */
-                ecs_table_t *prev_table = NULL;
-                ecs_data_t *prev_data = NULL;
-
-                if (prev_src_table) {
-                    prev_table = prev_src_table;
-                    prev_data = ecs_table_get_staged_data(
-                        world, stage, prev_table);
-                }
-
-                invoke_reactive_systems(
-                    world,
-                    stage,
-                    prev_table ? prev_table->type : NULL,
-                    type,
-                    src_table,
-                    prev_data,
-                    table,
-                    data,
-                    src_first_contiguous_row,
-                    dst_first_contiguous_row,
-                    i - dst_start_row - dst_first_contiguous_row,
-                    user_data->columns == NULL);
-
-                /* Start a new contiguous set */
-                dst_first_contiguous_row = dst_start_row + i;
-                src_first_contiguous_row = src_row;
-                prev_src_table = src_table;
-                same_origin = false;
-            }            
-        }
-
-        prev_src_row = src_row;
-    }
-
-    /* Invoke reactive systems on the entities in the last contiguous set. If 
-     * all entities are from the same origin, this will cover all entities. */
-    ecs_data_t *src_data = NULL;
-    int32_t contiguous_count = 0;
-
-    if (same_origin) {
-        contiguous_count = count;
-    } else {
-        contiguous_count = prev_src_row - src_first_contiguous_row + 1;
-    }
-
-    if (prev_src_table) {
-        src_table = prev_src_table;
-        src_data = ecs_table_get_staged_data(
-            world, stage, src_table);
-    } else {
-        src_table = NULL;
-    }
-
-    invoke_reactive_systems(
-        world,
-        stage,
-        src_table ? src_table->type : NULL,
-        type,
-        src_table,
-        src_data,
-        table,
-        data,
-        src_first_contiguous_row,
-        dst_first_contiguous_row,
-        contiguous_count,
-        user_data->columns == NULL);
-
-    return dst_start_row;
-}
-
-static
-ecs_entity_t set_w_data_intern(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_type_t type,
-    ecs_table_data_t *user_data)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_entity_t result;
-    int32_t count = user_data->row_count;
-
-    if (user_data->entities) {
-        result = user_data->entities[0];
-    } else {
-        result = world->last_handle + 1;        
-        world->last_handle += count;
-    }
-
-    ecs_assert(!world->max_handle || world->last_handle <= world->max_handle, 
-        ECS_OUT_OF_RANGE, NULL);
-    ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
-
-    if (type) {
-        /* Get table, table columns and grow table to accomodate for new
-         * entities */
-        ecs_data_t *data = ecs_table_get_or_create_data(
-                world, stage, table);
-        ecs_assert(data != NULL, ECS_INTERNAL_ERROR, 0);
-        int32_t start_row = 0;
-
-        /* Grow world entity index only if no entity ids are provided. If ids
-         * are provided, it is possible that they already appear in the entity
-         * index, in which case they will be overwritten. */
-        if (!user_data->entities) {
-            start_row = ecs_table_grow(world, table, data, count, result);
-            ecs_eis_grow(stage, count);
-        }
-
-        /* Obtain list of entities */
-        ecs_entity_t *entities = ecs_vector_first(data->entities);
-
-        /* If the entity array is NULL, we can safely allocate space for
-         * row_count number of rows, which will give a perf boost the first time
-         * the entities are inserted. */
-        if (!entities) {
-            ecs_table_set_size(world, table, data, count);
-            entities = ecs_vector_first(data->entities);
-            ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
-        }
-
-        /* This is the most complex part of the set_w_data. We need to go from
-         * a potentially chaotic state (entities can be anywhere) to a state
-         * where all entities are in the same table, in the order specified by
-         * the arguments of this function.
-         *
-         * This function addresses the following cases:
-         * - generate new entity ids (when data->entities = NULL)
-         * - entities do not yet exist
-         * - entities exist, are in the same table, in the same order
-         * - entities exist, are in the same table, in a different order
-         * - entities exist, are in a different table, in the same order
-         * - entities exist, are in a different table, in a different order
-         * - entities may exist, and may be in different tables
-         *
-         * For each of these cases, the proper sequence of OnAdd / OnRemove 
-         * systems must be executed.
-         */
-        start_row = update_entity_index(
-            world, stage, type, table, data, result, start_row, user_data); 
-
-        /* If columns were provided, copy data from columns into table. This is
-         * where a lot of the performance benefits can be achieved: now that all
-         * entities are nicely ordered in the destination table, we can copy the
-         * data into each column with a single memcpy. */
-        if (user_data->columns) {
-            copy_column_data(type, data, start_row, user_data);
-
-            uint32_t i, count = user_data->column_count;
-            for (i = 0; i < count; i ++) {
-                ecs_entity_t c = user_data->components[i];
-                if (c < ECS_HI_COMPONENT_ID) {
-                    ecs_component_data_t *cdata = get_component_data(world, c);
-                    run_component_set_action(
-                        world, cdata, c, table, data, start_row, 
-                        user_data->row_count);
-                }
-            }            
-        }            
-    }
-
-    return result;
-}
 
 ecs_entity_t _ecs_new_w_count(
     ecs_world_t *world,
     ecs_type_t type,
     int32_t count)
 {
+    ecs_entity_t e = world->last_handle + 1;
+    world->last_handle += count;
+
+    if (!type) {
+        return e;
+    }
+
     ecs_stage_t *stage = ecs_get_stage(&world);
-
-    ecs_table_data_t table_data = {
-        .row_count = count
-    };
-
     ecs_table_t *table = ecs_table_from_type(world, stage, type);
+    ecs_data_t *data = ecs_table_get_or_create_data(world, stage, table);
 
-    return set_w_data_intern(world, table, type, &table_data);
-}
+    int32_t row = ecs_table_grow(world, table, data, count, e);
 
-ecs_entity_t ecs_set_w_data(
-    ecs_world_t *world,
-    ecs_table_data_t *data)
-{
-    ecs_stage_t *stage = ecs_get_stage(&world);
-
-    ecs_entities_t entities = {
-        .array = data->components,
-        .count = data->column_count
+    ecs_entities_t added = {
+        .array = ecs_vector_first(type),
+        .count = ecs_vector_count(type)
     };
+    
+    /* Update entity index. If entities are being created in the main stage,
+     * set the record pointers in the table. */
+    int i;
+    if (stage == &world->stage) {
+        ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs);
+        for (i = 0; i < count; i ++) {
+            record_ptrs[row + i] = ecs_eis_set(stage, e + i, &(ecs_record_t){
+                .table = table,
+                .row = row + i + 1
+            });
+        }
+    } else {
+        for (i = 0; i < count; i ++) {
+            ecs_eis_set(stage, e + i, &(ecs_record_t){
+                .table = table,
+                .row = row + i + 1
+            });
+        }
+    }
 
-    ecs_table_t *table = ecs_table_find_or_create(world, stage, &entities);
+    ecs_run_component_actions(
+        world, stage, table, data, row, 1, added, true);
 
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return set_w_data_intern(world, table, table->type, data);
+    return e;
 }
 
 ecs_entity_t _ecs_new_child(
@@ -1589,7 +1072,10 @@ void ecs_delete_w_filter_intern(
 
         /* Remove entities from index */
         ecs_data_t *data = ecs_table_get_data(world, table);
-        ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!data) {
+            /* If table has no data, there's nothing to delete */
+            continue;
+        }
 
         ecs_vector_t *entities = NULL;
         if (data) {
@@ -1672,18 +1158,15 @@ void _ecs_add_remove_w_filter(
             .count = ecs_vector_count(to_remove)
         };
 
-        ecs_entities_t added = {0};
-        ecs_entities_t removed = {0};
-
         ecs_table_t *dst_table = ecs_table_traverse(
             world, stage, table, &to_add_components, &to_remove_components,
-            &added, &removed);
+            NULL, NULL);
 
-        ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);            
+        ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);   
 
         if (!dst_table->type) {
             /* If this removes all components, clear table */
-            ecs_table_merge(world, NULL, table);
+            ecs_table_clear(world, table);
         } else {
             /* Merge table into dst_table */
             if (dst_table != table) {
@@ -1890,47 +1373,41 @@ void* _ecs_get_mutable(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_world_t *world_arg = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_entity_info_t info = {0};
 
+    ecs_entity_info_t info;
     void *dst = NULL;
-    if (get_or_create_staged_info(world, stage, entity, &info)) {
-        dst = get_component(&info, component);
+
+    /* Check if data is available in current stage */
+    if (stage == &world->stage) {
+        if (get_info(world, entity, &info)) {
+            dst = get_component(&info, component);
+        }
+    } else {
+        if (get_staged_info(world, stage, entity, &info)) {
+            dst = get_component(&info, component);
+        } else {
+            /* If the entity isn't store din the current stage, we still need to
+             * get the data from the main stage to pass it to commit */
+            get_info(world, entity, &info);
+        }
     }
 
+    ecs_table_t *table = info.table;
+
     if (!dst) {
-        ecs_entities_t components = {
+        ecs_entities_t to_add = {
             .array = &component,
             .count = 1
         };
 
-        ecs_add_remove_intern(world_arg, entity, &components, NULL, false);
+        commit(world, stage, entity, &info, &to_add, NULL, false);
         dst = get_component(&info, component);
 
-        /* Check if data is available in main stage. If so, copy value from main
-         * stage into staged value */
-        if (stage != &world->stage) {
-            ecs_entity_info_t main_info;
-            if (get_info(world, entity, &main_info)) {
-                void *main_dst = get_component(&main_info, component);
-                if (main_dst) {
-                    memcpy(dst, main_dst, size);
-                    
-                    /* We did add the component to the stage, but for the
-                     * application this can be transparent as there is no need
-                     * to initialize the component. */
-                    if (is_added) {
-                        *is_added = false;
-                    }
-                    return dst;
-                }
-            }
+        if (is_added) {
+            *is_added = table != info.table;
         }
 
-        if (is_added) {
-            *is_added = true;
-        }
         return dst;
     } else {
         if (is_added) {
@@ -1946,17 +1423,13 @@ void _ecs_modified(
     ecs_entity_t component)
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_entity_info_t info = {0};
+    ecs_entity_info_t info;
 
-    if (stage == &world->stage) {
-        get_info(world, entity, &info);
-    } else {
-        get_staged_info(world, stage, entity, &info);
-    }
+    ecs_get_info(world, stage, entity, &info);
 
-    ecs_component_data_t *cdata = get_component_data(world, component);    
+    ecs_component_data_t *cdata = ecs_get_component_data(world, component);    
     
-    run_component_set_action(world, cdata, component, 
+    run_component_set_action(world, stage, cdata, component, 
         info.table, info.data, info.row, 1);   
 }
 
@@ -1971,7 +1444,6 @@ ecs_entity_t _ecs_set_ptr(
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_entity_info_t info = {0};
     ecs_entities_t to_set = {
         .array = &component,
         .count = 1
@@ -1983,12 +1455,25 @@ ecs_entity_t _ecs_set_ptr(
         new_intern(world, stage, entity, &to_set);
     }
     
+    ecs_entity_info_t info;
     void *dst = NULL;
-    if (get_or_create_staged_info(world, stage, entity, &info)) {
-        dst = get_component(&info, component);
+    
+    /* Check if data is available in current stage */
+    if (stage == &world->stage) {
+        if (get_info(world, entity, &info)) {
+            dst = get_component(&info, component);
+        }
+    } else {
+        if (get_staged_info(world, stage, entity, &info)) {
+            dst = get_component(&info, component);
+        } else {
+            /* If the entity isn't store din the current stage, we still need to
+             * get the data from the main stage to pass it to commit */
+            get_info(world, entity, &info);
+        }
     }
 
-    if (!dst) {            
+    if (!dst) {
         commit(world, stage, entity, &info, &to_set, NULL, false);
 
         dst = get_component(&info, component);
@@ -2003,9 +1488,9 @@ ecs_entity_t _ecs_set_ptr(
         memset(dst, 0, size);
     }
 
-    ecs_component_data_t *cdata = get_component_data(world, component);    
+    ecs_component_data_t *cdata = ecs_get_component_data(world, component);    
     
-    run_component_set_action(world, cdata, component, 
+    run_component_set_action(world, stage, cdata, component, 
         info.table, info.data, info.row, 1);
 
     return entity;

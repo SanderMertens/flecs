@@ -418,7 +418,7 @@ ecs_entity_t ecs_new_prefab(
    
     EcsTypeComponent type = type_from_expr(world, id, expr);
     type.normalized = ecs_type_merge_intern(
-        world, NULL, world->t_prefab, type.normalized, 0);
+        world, &world->stage, world->t_prefab, type.normalized, 0);
 
     ecs_entity_t result = ecs_lookup(world, id);
     if (result) {
