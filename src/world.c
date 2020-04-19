@@ -3,10 +3,10 @@
 /* -- Global variables -- */
 
 ecs_type_t TEcsComponent;
+ecs_type_t TEcsComponentLifecycle;
 ecs_type_t TEcsTypeComponent;
+ecs_type_t TEcsParent;
 ecs_type_t TEcsPrefab;
-ecs_type_t TEcsPrefabParent;
-ecs_type_t TEcsPrefabBuilder;
 ecs_type_t TEcsRowSystem;
 ecs_type_t TEcsColSystem;
 ecs_type_t TEcsId;
@@ -18,10 +18,10 @@ ecs_type_t TEcsRateFilter;
 ecs_type_t TEcsTickSource;
 
 const char *ECS_COMPONENT_ID =      "EcsComponent";
+const char *ECS_COMPONENT_LIFECYCLE_ID = "EcsComponentLifecycle";
 const char *ECS_TYPE_COMPONENT_ID = "EcsTypeComponent";
+const char *ECS_PARENT_ID =         "EcsParent";
 const char *ECS_PREFAB_ID =         "EcsPrefab";
-const char *ECS_PREFAB_PARENT_ID =  "EcsPrefabParent";
-const char *ECS_PREFAB_BUILDER_ID = "EcsPrefabBuilder";
 const char *ECS_ROW_SYSTEM_ID =     "EcsRowSystem";
 const char *ECS_COL_SYSTEM_ID =     "EcsColSystem";
 const char *ECS_ID_ID =             "EcsId";
@@ -68,10 +68,9 @@ void bootstrap_types(
     ecs_stage_t *stage = &world->stage;
     
     TEcsComponent = bootstrap_type(world, EEcsComponent);
+    TEcsComponentLifecycle = bootstrap_type(world, EEcsComponentLifecycle);
     TEcsTypeComponent = bootstrap_type(world, EEcsTypeComponent);
     TEcsPrefab = bootstrap_type(world, EEcsPrefab);
-    TEcsPrefabParent = bootstrap_type(world, EEcsPrefabParent);
-    TEcsPrefabBuilder = bootstrap_type(world, EEcsPrefabBuilder);
     TEcsRowSystem = bootstrap_type(world, EEcsRowSystem);
     TEcsColSystem = bootstrap_type(world, EEcsColSystem);
     TEcsId = bootstrap_type(world, EEcsId);
@@ -371,134 +370,6 @@ void deinit_tables(
     }
 }
 
-static
-ecs_entity_t get_prefab_parent_flag(
-    ecs_world_t *world,
-    ecs_entity_t prefab)
-{
-    ecs_entity_t flag;
-    if (!ecs_map_has(world->prefab_parent_index, prefab, &flag)) {
-        flag = ecs_new(world, EcsPrefabParent);
-        ecs_set(world, flag, EcsPrefabParent, {.parent = prefab});
-        ecs_map_set(world->prefab_parent_index, prefab, &flag);
-    }
-
-    return flag;
-}
-
-static
-void add_prefab_child_to_builder(
-    ecs_world_t *world,
-    ecs_entity_t prefab,
-    ecs_entity_t child)
-{
-    EcsPrefabBuilder *builder = ecs_get_ptr(world, prefab, EcsPrefabBuilder);
-    if (!builder) {
-        ecs_add(world, prefab, EcsPrefabBuilder);
-        builder = ecs_get_ptr(world, prefab, EcsPrefabBuilder);
-        builder->ops = ecs_vector_new(ecs_builder_op_t, 1);
-    }
-
-    ecs_type_t type = NULL;
-    if (ecs_has(world, child, EcsTypeComponent)) {
-        type = ecs_type_from_entity(world, child); 
-
-        ecs_assert(type != NULL, ECS_INVALID_PARAMETER, NULL);
-
-        ecs_entity_t *array = ecs_vector_first(type);
-        int32_t count = ecs_vector_count(type);
-
-        /* When compiling for release mode, these variables will show up as
-         * unused */
-        (void)array;
-        (void)count;
-
-        ecs_assert((array[count - 1] & ECS_INSTANCEOF) != 0, 
-            ECS_INVALID_PREFAB_CHILD_TYPE, NULL);
-    } else {
-        ecs_entity_t array[] = {
-            child | ECS_INSTANCEOF,
-            EEcsId
-        };
-
-        type = ecs_type_find(world, array, 2);
-    }
-
-    /* If there are no child ops, this is the first time that this child is
-     * added to this parent prefab. Simply add it to the vector */
-    ecs_builder_op_t *op = ecs_vector_add(&builder->ops, ecs_builder_op_t);
-    op->id = ecs_get_id(world, child);
-    op->type = type;
-}
-
-void EcsInitPrefab(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, EcsPrefab, prefab, 1);
-
-    int32_t i;
-    for (i = 0; i < rows->count; i ++) {
-        prefab[i].parent = 0;
-    }
-}
-
-void EcsSetPrefab(ecs_rows_t *rows) {
-    ecs_world_t *world = rows->world;
-
-    ECS_COLUMN(rows, EcsPrefab, prefab, 1);
-
-    int32_t i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t parent = prefab[i].parent;
-        ecs_entity_t e = rows->entities[i];
-        ecs_table_t *table = rows->table;
-
-        ecs_entity_t *type = ecs_vector_first(table->type);
-        int32_t t, t_count = ecs_vector_count(table->type);
-
-        bool prefab_parent_flag_added = false;
-        bool prefab_parent_added = false;
-
-        /* Walk components of entity, find prefab */
-        for (t = 0; t < t_count; t++) {
-            EcsPrefabParent *pparent;
-
-            ecs_entity_t component = type[t];
-
-            if (parent != component) {
-                if ((pparent = ecs_get_ptr(world, component, EcsPrefabParent))) {                    
-                    if (pparent->parent != parent) {
-                        /* If this entity has a flag that is for a different prefab,
-                        * it must have switched prefabs. Remove the old flag. */
-                       ecs_type_t old_type = ecs_type_from_entity(world, component);
-                        _ecs_remove(world, e, old_type);
-                    } else {
-                        /* If the entity has a flag for the current prefab parent,
-                        * keep track of it so we don't add it again. */
-                        prefab_parent_flag_added = true;
-                    }
-                }
-            } else {
-                prefab_parent_added = true;
-            }
-        }
-
-        /* Add the prefab parent to the type of the entity */
-        if (!prefab_parent_added && parent) {
-            ecs_add_childof(world, e, parent);
-            add_prefab_child_to_builder(world, parent, e);
-        }
-
-        /* Add the prefab parent flag to the type of the entity */
-        if (!prefab_parent_flag_added && parent) {
-            ecs_entity_t flag = get_prefab_parent_flag(world, parent);
-            ecs_assert(flag != 0, ECS_INTERNAL_ERROR, NULL);
-
-            ecs_type_t flag_type = ecs_type_from_entity(world, flag);
-            _ecs_add(world, e, flag_type);
-        }
-    }
-}
-
-
 /* -- Public functions -- */
 
 ecs_world_t *ecs_init(void) {
@@ -621,10 +492,10 @@ ecs_world_t *ecs_init(void) {
 
     /* Create records for internal components */
     bootstrap_component(world, table, EEcsComponent, ECS_COMPONENT_ID, sizeof(EcsComponent));
+    bootstrap_component(world, table, EEcsComponentLifecycle, ECS_COMPONENT_LIFECYCLE_ID, sizeof(EcsComponentLifecycle));
     bootstrap_component(world, table, EEcsTypeComponent, ECS_TYPE_COMPONENT_ID, sizeof(EcsTypeComponent));
-    bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_ID, sizeof(EcsPrefab));
-    bootstrap_component(world, table, EEcsPrefabParent, ECS_PREFAB_PARENT_ID, sizeof(EcsPrefabParent));
-    bootstrap_component(world, table, EEcsPrefabBuilder, ECS_PREFAB_BUILDER_ID, sizeof(EcsPrefabBuilder));
+    bootstrap_component(world, table, EEcsParent, ECS_PARENT_ID, sizeof(EcsParent));
+    bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_ID, 0);
     bootstrap_component(world, table, EEcsRowSystem, ECS_ROW_SYSTEM_ID, sizeof(EcsRowSystem));
     bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_ID, sizeof(EcsColSystem));
     bootstrap_component(world, table, EEcsId, ECS_ID_ID, sizeof(EcsId));
@@ -642,32 +513,11 @@ ecs_world_t *ecs_init(void) {
     world->min_handle = 0;
     world->max_handle = 0;
 
-    /* Create type that allows for quickly checking if a type contains builtin
-     * components. */
-    world->t_builtins = ecs_expr_to_type(world,
-        "EcsComponent, EcsTypeComponent, EcsPrefab, EcsPrefabParent"
-        ", EcsPrefabBuilder, EcsRowSystem, EcsColSystem");
-
     /* Initialize EcsWorld */
     ecs_set(world, EcsWorld, EcsId, {"EcsWorld"});
-
     ecs_assert(ecs_get_id(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Prefab handling */
-    ecs_new_system(world, "EcsInitPrefab", EcsOnAdd, "EcsPrefab", EcsInitPrefab);
-    ecs_new_system(world, "EcsSetPrefab", EcsOnSet, "EcsPrefab", EcsSetPrefab);
-
-    /* Add EcsTickSource to timers and rate filters */
-    world->add_tick_source =
-    ecs_new_system(world, "EcsAddTickSource", EcsManual, "[in] EcsTimer | EcsRateFilter, [out] !EcsTickSource", EcsAddTickSource);
-
-    /* Timer handling */
-    world->progress_timers = 
-    ecs_new_system(world, "EcsProgressTimers", EcsManual, "EcsTimer, EcsTickSource", EcsProgressTimers);
-    
-    /* Rate filter handling */
-    world->progress_rate_filters = 
-    ecs_new_system(world, "EcsProgressRateFilters", EcsManual, "[in] EcsRateFilter, [out] EcsTickSource", EcsProgressRateFilters);
+    ecs_init_builtins(world);
 
     return world;
 }
@@ -896,7 +746,9 @@ ecs_entity_t ecs_lookup_child_in_columns(
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *columns = data->columns;
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!columns) {
+        return 0;
+    }
 
     if ((column_index = ecs_type_index_of(type, EEcsId)) == -1) {
         return 0;

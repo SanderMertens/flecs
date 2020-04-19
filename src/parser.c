@@ -13,7 +13,7 @@ const char *skip_space(
     return ptr;
 }
 
-/** Parse element with a dot-separated qualifier ('CONTAINER.Foo') */
+/** Parse element with a dot-separated qualifier ('PARENT.Foo') */
 static
 char* parse_complex_elem(
     const char *system_id,
@@ -45,7 +45,7 @@ char* parse_complex_elem(
     if (dot) {
         if (bptr == dot) {
             *from_kind = EcsFromEmpty;
-        } else if (!strncmp(bptr, "CONTAINER", dot - bptr)) {
+        } else if (!strncmp(bptr, "PARENT", dot - bptr)) {
             *from_kind = EcsFromContainer;
         } else if (!strncmp(bptr, "SYSTEM", dot - bptr)) {
             *from_kind = EcsFromSystem;

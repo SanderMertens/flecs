@@ -114,7 +114,7 @@ void LookupChildSystem(ecs_rows_t *rows) {
     test_assert(e != 0);
 
     ecs_adopt(rows->world, e, parent);
-    test_assert(ecs_contains(rows->world, parent, e));
+    test_assert( ecs_contains(rows->world, parent, e));
 
     ecs_set(rows->world, e, EcsId, {"Foo"});
     test_assert( ecs_has(rows->world, e, EcsId));

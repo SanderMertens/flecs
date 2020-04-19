@@ -508,7 +508,7 @@ void Type_invalid_container_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, CONTAINER.Position, Velocity);
+    ECS_TYPE(world, Type, PARENT.Position, Velocity);
 
     ecs_fini(world);
 }

@@ -68,7 +68,7 @@ ecs_snapshot_t* snapshot_create(
             continue;
         }
 
-        if (!filter || ecs_type_match_w_filter(world, table->type, filter)) {
+        if (!filter || ecs_table_match_filter(world, table, filter)) {
             dup_table(world, table);
         } else {
             /* If the table does not match the filter, instead of copying just

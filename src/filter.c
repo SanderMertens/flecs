@@ -47,7 +47,7 @@ bool ecs_filter_next(
             continue;
         }
 
-        if (!ecs_type_match_w_filter(iter->rows.world, table->type, &iter->filter)) {
+        if (!ecs_table_match_filter(iter->rows.world, table, &iter->filter)) {
             continue;
         }
 

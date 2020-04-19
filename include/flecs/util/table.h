@@ -146,6 +146,12 @@ int16_t ecs_table_set_count(
     ecs_data_t *data,
     int32_t count); 
 
+/* Match table with filter */
+bool ecs_table_match_filter(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    const ecs_filter_t *filter);
+
 #ifdef __cplusplus
 }
 #endif

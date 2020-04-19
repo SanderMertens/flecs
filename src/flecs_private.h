@@ -7,6 +7,18 @@
 #include "flecs/util/entity_index.h"
 #include "flecs/util/table.h"
 
+/* Initialize builtin systems */
+void ecs_init_builtins(
+    ecs_world_t *world);
+
+/* Initialize prefab builtin systems */
+void ecs_init_prefab_builtins(
+    ecs_world_t *world);
+
+/* Initialize timer builtin systems */
+void ecs_init_timer_builtins(
+    ecs_world_t *world);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,17 +72,26 @@ bool ecs_get_info(
     ecs_entity_t entity,
     ecs_entity_info_t *info); 
 
-/* Run on_add / on_remove / on_set / component callbacks */
-void ecs_run_component_actions(
+/* Initialize component value(s) */
+void ecs_run_init_actions(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
     uint32_t row,
     uint32_t count,
-    ecs_entities_t components,
-    bool is_init);
+    ecs_entities_t components);
     
+/* Deinitialize component value(s) */
+void ecs_run_deinit_actions(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    uint32_t row,
+    uint32_t count,
+    ecs_entities_t components);
+
 /* Get actual row from record row */
 int32_t ecs_record_to_row(
     int32_t row, 
@@ -254,7 +275,6 @@ void ecs_table_move_back_and_swap(
     int32_t row,
     int32_t count);
 
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
@@ -288,19 +308,6 @@ void ecs_sig_init(
 void ecs_sig_deinit(
     ecs_sig_t *sig);
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Timer API
-////////////////////////////////////////////////////////////////////////////////
-
-/* System to automatically add EcsTickSource to timers and rate filters */
-void EcsAddTickSource(ecs_rows_t *rows);
-
-/* System to progress timers */
-void EcsProgressTimers(ecs_rows_t *rows);
-
-/* System to progress rate filter */
-void EcsProgressRateFilters(ecs_rows_t *rows);
 
 
 ////////////////////////////////////////////////////////////////////////////////

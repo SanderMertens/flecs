@@ -37,20 +37,7 @@ ecs_data_t* init_data(
                 /* This is a tag */
             }
         } else {
-            /* This is an entity that was added to the type, likely a CHILDOF or
-             * an INSTANCEOF element */
-        }
-
-        if (table && entities[i] <= EcsLastBuiltin) {
-            table->flags |= EcsTableHasBuiltins;
-        }
-
-        if (table && entities[i] == EEcsPrefab) {
-            table->flags |= EcsTableIsPrefab;
-        }
-
-        if (table && entities[i] & ECS_INSTANCEOF) {
-            table->flags |= EcsTableHasPrefab;
+            /* This is an entity that was added to the type */
         }
     }
 
@@ -114,8 +101,8 @@ void run_on_remove_handlers(
             .count = ecs_vector_count(table->type)
         };
 
-        ecs_run_component_actions(
-            world, &world->stage, table, data, 0, count, components, false);
+        ecs_run_deinit_actions(
+            world, &world->stage, table, data, 0, count, components);
     }
 }
 
@@ -973,4 +960,57 @@ void ecs_table_move(
             i_old ++;
         }
     }
+}
+
+bool ecs_table_match_filter(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    const ecs_filter_t *filter)
+{
+    if (!filter) {
+        return true;
+    }
+
+    ecs_type_t type = table->type;
+    
+    if (filter->include) {
+        /* If filter kind is exact, types must be the same */
+        if (filter->include_kind == EcsMatchExact) {
+            if (type != filter->include) {
+                return false;
+            }
+
+        /* Default for include_kind is MatchAll */
+        } else if (!ecs_type_contains(world, type, filter->include, 
+            filter->include_kind != EcsMatchAny, true)) 
+        {
+            return false;
+        }
+    
+    /* If no include filter is specified, make sure that builtin components
+     * aren't matched by default. */
+    } else {
+        if (table->flags & EcsTableHasBuiltins)
+        {
+            /* Continue if table contains any of the builtin components */
+            return false;
+        }
+    }
+
+    if (filter->exclude) {
+        /* If filter kind is exact, types must be the same */
+        if (filter->exclude_kind == EcsMatchExact) {
+            if (type == filter->exclude) {
+                return false;
+            }
+        
+        /* Default for exclude_kind is MatchAny */                
+        } else if (ecs_type_contains(world, type, filter->exclude, 
+            filter->exclude_kind == EcsMatchAll, true))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }

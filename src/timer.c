@@ -1,6 +1,7 @@
 #include "flecs_private.h"
 
 /* Auto-add EcsTickSource to each entity with EcsTimer or EcsRateFilter */
+static
 void EcsAddTickSource(ecs_rows_t *rows) {
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
@@ -8,6 +9,7 @@ void EcsAddTickSource(ecs_rows_t *rows) {
     }
 }
 
+static
 void EcsProgressTimers(ecs_rows_t *rows) {
     ECS_COLUMN(rows, EcsTimer, timer, 1);
     ECS_COLUMN(rows, EcsTickSource, tick_source, 2);
@@ -45,6 +47,7 @@ void EcsProgressTimers(ecs_rows_t *rows) {
     }
 }
 
+static
 void EcsProgressRateFilters(ecs_rows_t *rows) {
     ECS_COLUMN(rows, EcsRateFilter, filter, 1);
     ECS_COLUMN(rows, EcsTickSource, tick_dst, 2);
@@ -79,6 +82,28 @@ void EcsProgressRateFilters(ecs_rows_t *rows) {
             tick_dst[i].tick = false;
         }
     }
+}
+
+void ecs_init_timer_builtins(
+    ecs_world_t *world)
+{
+    /* Add EcsTickSource to timers and rate filters */
+    world->add_tick_source =
+    ecs_new_system(world, "EcsAddTickSource", EcsManual, 
+        "[in] EcsTimer | EcsRateFilter, [out] !EcsTickSource", 
+        EcsAddTickSource);
+
+    /* Timer handling */
+    world->progress_timers = 
+    ecs_new_system(world, "EcsProgressTimers", EcsManual, 
+        "EcsTimer, EcsTickSource", 
+        EcsProgressTimers);
+    
+    /* Rate filter handling */
+    world->progress_rate_filters = 
+    ecs_new_system(world, "EcsProgressRateFilters", EcsManual, 
+        "[in] EcsRateFilter, [out] EcsTickSource", 
+        EcsProgressRateFilters);    
 }
 
 ecs_entity_t ecs_set_timeout(

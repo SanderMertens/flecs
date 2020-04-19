@@ -449,7 +449,7 @@ if (ecs_contains(world, parent, child) {
 Systems can request components from containers. If a system requests component `EcsPosition2D` from a container, but an entity does not have a container, or the container does not have `EcsPosition2D`, the system will not match the entity. This system definition shows an example of how a system can access container components:
 
 ```c
-ECS_SYSTEM(world, MySystem, EcsOnUpdate, CONTAINER.Foo, Bar);
+ECS_SYSTEM(world, MySystem, EcsOnUpdate, PARENT.Foo, Bar);
 ```
 
 [Learn more](Manual.md#containers)

@@ -151,19 +151,33 @@ typedef struct ecs_cached_ptr_t {
     void *ptr;
 } ecs_cached_ptr_t;
 
-/** Component calbacks */
-typedef void (*ecs_init_t)(
-    void *data,
+/* Constructor/destructor. Used for initializing / deinitializing components */
+typedef void (*ecs_xtor_t)(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    void *ptr,
+    size_t size,
+    int32_t count,
     void *ctx);
 
-typedef void (*ecs_replace_t)(
-    void *old,
-    void *_new,
+/* Copy is invoked when a component is copied into another component */
+typedef void (*ecs_copy_t)(
+    ecs_world_t *world,
+    ecs_entity_t component,    
+    void *dst_ptr,
+    const void *src_ptr,
+    size_t size,
+    int32_t count,
     void *ctx);
 
-typedef void (*ecs_merge_t)(
-    void *src,
-    void *dst,
+/* Move is invoked when a component is moved to another component */
+typedef void (*ecs_move_t)(
+    ecs_world_t *world,
+    ecs_entity_t component,    
+    void *dst_ptr,
+    void *src_ptr,
+    size_t size,
+    int32_t count,
     void *ctx);
 
 /** The ecs_rows_t struct passes data from a system to a system callback.  */
@@ -202,10 +216,20 @@ struct ecs_rows_t {
 /** Component that contains an entity name */
 typedef const char *EcsId;
 
-/** Component that contains metadata about a component */
+/** Component that contains the size of a component */
 typedef struct EcsComponent {
     size_t size;
 } EcsComponent;
+
+/* Component that contains lifecycle callbacks for a component */
+typedef struct EcsComponentLifecycle {
+    ecs_xtor_t ctor;
+    ecs_xtor_t dtor;
+    ecs_copy_t copy;
+    ecs_move_t move;
+
+    void *ctx;
+} EcsComponentLifecycle;
 
 /** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
 typedef struct EcsTypeComponent {
@@ -213,10 +237,11 @@ typedef struct EcsTypeComponent {
     ecs_type_t normalized;  /* Resolved nested types */
 } EcsTypeComponent;
 
-/** Component used to create prefabs and prefab hierarchies */
-typedef struct EcsPrefab {
-    ecs_entity_t parent;
-} EcsPrefab;
+typedef struct EcsParent {
+    /* The tables with child entities for this parent. Useful when doing depth-
+     * first walks */
+    ecs_vector_t *child_tables;
+} EcsParent;
 
 /** Component used for timer functionality */
 typedef struct EcsTimer {
@@ -244,6 +269,7 @@ typedef struct EcsTickSource {
 #include "flecs/util/api_support.h"
 #include "flecs/util/v2.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Public constants
 ////////////////////////////////////////////////////////////////////////////////
@@ -256,10 +282,10 @@ typedef struct EcsTickSource {
 FLECS_EXPORT
 extern ecs_type_t 
     TEcsComponent,
+    TEcsComponentLifecycle,
     TEcsTypeComponent,
+    TEcsParent,
     TEcsPrefab,
-    TEcsPrefabParent,
-    TEcsPrefabBuilder,
     TEcsRowSystem,
     TEcsColSystem,
     TEcsId,
@@ -272,10 +298,10 @@ extern ecs_type_t
 
 /** Handles to builtin components */
 #define EEcsComponent (1)
-#define EEcsTypeComponent (2)
-#define EEcsPrefab (3)
-#define EEcsPrefabParent (4)
-#define EEcsPrefabBuilder (5)
+#define EEcsComponentLifecycle (2)
+#define EEcsTypeComponent (3)
+#define EEcsParent (4)
+#define EEcsPrefab (5)
 #define EEcsRowSystem (6)
 #define EEcsColSystem (7)
 #define EEcsId (8)
@@ -410,7 +436,7 @@ extern ecs_type_t
  * - A NOT expression ('!Position')
  * - An OWNED expression ('OWNED.Position')
  * - A SHARED expression ('SHARED.Position')
- * - A CONTAINER expression ('CONTAINER.Position')
+ * - A PARENT expression ('PARENT.Position')
  * - A CASCADE expression ('CASCADE.Position')
  * - An entity expression ('MyEntity.Position')
  * - An empty expression ('.Position')
@@ -419,7 +445,7 @@ extern ecs_type_t
  *
  * Examples:
  * ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity, !AngularVelocity);
- * ECS_SYSTEM(world, Transform, EcsPostUpdate, CONTAINER.Transform, Transform);
+ * ECS_SYSTEM(world, Transform, EcsPostUpdate, PARENT.Transform, Transform);
  *
  * In these examples, 'Move' and 'Transform' must be valid identifiers to a C
  * function of the following signature:
@@ -779,6 +805,7 @@ ecs_entity_t _ecs_new(
 #define ecs_new(world, type)\
     _ecs_new(world, T##type)
 
+
 /** Create new entities in a batch.
  * This operation creates the number of specified entities with one API call
  * which is a more efficient alternative to repeatedly calling ecs_new.
@@ -799,52 +826,26 @@ ecs_entity_t _ecs_new_w_count(
 #define ecs_new_w_count(world, type, count)\
     _ecs_new_w_count(world, T##type, count)
 
-typedef void* ecs_table_columns_t;
 
-typedef struct ecs_table_data_t {
-    int32_t row_count;
-    int32_t column_count;
-    ecs_entity_t *entities;
-    ecs_entity_t *components;
-    ecs_table_columns_t *columns;
-} ecs_table_data_t;
-
-/** Insert data in bulk.
- * This operation allows applications to insert data in bulk by providing the
- * entity and component data as arrays. The data is passed in using the
- * ecs_table_data_t type, which has to be populated with the data that has to be
- * inserted.
- * 
- * The application must at least provide the row_count, column_count and 
- * components fields. The latter is an array of component identifiers that
- * identifies the components to be added to the entitiy.
+/** Create new entities with data in a batch.
+ * This operation is the same as ecs_new_w_count, but allows for providing
+ * initial values for the components.
  *
- * The entities array must be populated with the entity identifiers to set. If
- * this field is left NULL, Flecs will create row_count new entities.
- *
- * The component data must be provided in the columns field. This is an array of
- * component arrays. The component arrays must be provided in the same order as
- * the components have been provided in the components array. For example, if
- * the components array is set to {ecs_entity(Position), ecs_entity(Velocity)},
- * the columns must first specify the Position, and then the Velocity array. If
- * no component data is provided, the components will be left uninitialized.
- *
- * Both the entities array and the component data arrays in columns must contain
- * exactly row_count elements. The columns array must contain exactly 
- * column_count elements.
- *
- * The operation allows for efficient insertion of data for the same set of
- * entities, provided that the entities are specified in the same order for
- * every invocation of this function. After executing this operation, entities
- * will be ordered in the same order specified in the entities array.
- *
- * If entities already exist in another table, they will be deleted from that
- * table and inserted into the new table. 
+ * @param world The world.
+ * @param type Zero if no type, or handle to a component, type or prefab.
+ * @param count The number of entities to create.
+ * @param data An array with component data arrays for each component.
+ * @return The first created entity.
  */
 FLECS_EXPORT
-ecs_entity_t ecs_set_w_data(
+ecs_entity_t _ecs_new_w_data(
     ecs_world_t *world,
-    ecs_table_data_t *data);
+    ecs_type_t type,
+    int32_t count,
+    void** data);
+
+#define ecs_new_w_data(world, type, count)\
+    _ecs_new_w_count(world, T##type, count)
 
 /** Create a new child entity.
  * Child entities are equivalent to normal entities, but can additionally be 
@@ -1544,7 +1545,7 @@ void* _ecs_column(
  * The following signature shows an example of owned components and shared
  * components:
  * 
- * Position, CONTAINER.Velocity, MyEntity.Mass
+ * Position, PARENT.Velocity, MyEntity.Mass
  * 
  * Position is an owned component, while Velocity and Mass are shared 
  * components. While these kinds of relationships are expressed explicity in a
@@ -2671,12 +2672,6 @@ FLECS_EXPORT
 char* ecs_type_to_expr(
     ecs_world_t *world,
     ecs_type_t type);
-
-FLECS_EXPORT
-bool ecs_type_match_w_filter(
-    ecs_world_t *world,
-    ecs_type_t type,
-    const ecs_filter_t *filter);
 
 FLECS_EXPORT
 int16_t ecs_type_index_of(

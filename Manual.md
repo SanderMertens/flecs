@@ -64,7 +64,7 @@
        - [OWNED source](#owned-source)
        - [SHARED source](#shared-source)
        - [NOTHING source](#nothing-source)
-       - [CONTAINER source](#container-source)
+       - [PARENT source](#container-source)
        - [CASCADE source](#cascade-source)
        - [SYSTEM source](#system-source)
        - [SINGLETON source](#singleton-source)
@@ -1068,19 +1068,19 @@ for (int i = 0; i < rows->count; i ++) {
 
 Empty columns have no data, and as such should not be accessed as owned or shared columns. Instead, the system should only attempt to obtain the handle to the component or component type.
 
-##### CONTAINER source
-The `CONTAINER` source allows a system to select a component from the entity that contains the currently iterated over entity. An example of the `CONTAINER` modifier is:
+##### PARENT source
+The `PARENT` source allows a system to select a component from the entity that contains the currently iterated over entity. An example of the `PARENT` modifier is:
 
 ```
-CONTAINER.Position, Position, Velocity
+PARENT.Position, Position, Velocity
 ```
 
 This will match all entities that have `Position, Velocity`, _and_ that have a container (parent) entity that has the `Position` component. This facilitates building systems that must traverse entities in a hierarchical manner.
 
-`CONTAINER` columns can be accessed the same way as `SHARED` columns.
+`PARENT` columns can be accessed the same way as `SHARED` columns.
 
 ##### CASCADE source
-The `CASCADE` source is similar to an _optional_ `CONTAINER` column, but in addition it ensures that entities are iterated over in the order of the container hierarchy. 
+The `CASCADE` source is similar to an _optional_ `PARENT` column, but in addition it ensures that entities are iterated over in the order of the container hierarchy. 
 
 For a hierarchy like this:
 
@@ -1194,7 +1194,7 @@ void Move(ecs_rows_t *rows) {
 }
 ```
 
-When a column contains shared data, a system should not access the data as an array. Colummns that are guaranteed to be shared are columns with the `CONTAINER` modifier, `SYSTEM` modifier or `ENTITIY` modifier. In this case, a system should treat the column pointer as an ordinary pointer instead of an array:
+When a column contains shared data, a system should not access the data as an array. Colummns that are guaranteed to be shared are columns with the `PARENT` modifier, `SYSTEM` modifier or `ENTITIY` modifier. In this case, a system should treat the column pointer as an ordinary pointer instead of an array:
 
 ```c
 void Move(ecs_rows_t *rows) {
@@ -1871,7 +1871,7 @@ Because the elements in a type are of `ecs_entity_t`, it is possible to add regu
 
 There are currently two type flags in Flecs: `CHILDOF` and `INSTANCEOF`. The values of these flags are single bits, starting from the MSB and counting backwards. This makes the addressing space for type flags limited: with each new flag the entity addressing space is halved. However, since the `ecs_entity_t` type is a 64-bit integer, this will not quickly become an issue.
 
-A type with a `CHILDOF` flag could look like `[Position, Velocity, CHILDOF | my_parent]`, where `my_parent` can be any regular entity. This indicates to Flecs that `my_parent` should be treated as a parent of entities of this type. This knowledge is used to optimize storage for hierarchies, and to implement certain features like `CONTAINER` and `CASCADE` columns in queries (see [Hierarchies](#hierarches)).
+A type with a `CHILDOF` flag could look like `[Position, Velocity, CHILDOF | my_parent]`, where `my_parent` can be any regular entity. This indicates to Flecs that `my_parent` should be treated as a parent of entities of this type. This knowledge is used to optimize storage for hierarchies, and to implement certain features like `PARENT` and `CASCADE` columns in queries (see [Hierarchies](#hierarches)).
 
 Similarly, a type with an `INSTANCEOF` flag looks like `[Position, Velocity, INSTANCEOF | my_base]`, where `my_base` can be any regular entity. This indicates to flecs that components of `my_base` should be shared with entities of this type (see [Inheritance](#inheritance)).
 
@@ -1882,7 +1882,7 @@ Entities are stored in archetypes which lets them to be iterated with systems, b
 
 In Flecs the entity index is implemented as a sparse set, where the entity identifier is the index in the sparse array. The dense array of the sparse set is used to test if an entity identifier is alive, and allows for iterating all entities. The data stored in the sparse set is a pointer to the archetype the entity is stored in, combined with an _row_ (array index) that points to where in the component arrays the entity is stored.
 
-Flecs has a mechanism whereby it can monitor specific entities for changes. This is required for ensuring that the set of archetypes matched with systems that have `CONTAINER` columns remains correct and up to date. For example, a system with `CONTAINER.Position` column can unmatch a previously matched archetype when the `Position` component is removed from one of the parents of the entities matched with the system. It would be expensive to reevaluate matched archetypes after updating _any_ entity, so instead Flecs needs a mechanism to monitor specific entities for updates. Monitored entities are stored with a negative row in the entity index. The actual index of an entity can be found by multiplying the row with -1. This allows Flecs to monitor entities for changes efficiently without having to do additional lookups.
+Flecs has a mechanism whereby it can monitor specific entities for changes. This is required for ensuring that the set of archetypes matched with systems that have `PARENT` columns remains correct and up to date. For example, a system with `PARENT.Position` column can unmatch a previously matched archetype when the `Position` component is removed from one of the parents of the entities matched with the system. It would be expensive to reevaluate matched archetypes after updating _any_ entity, so instead Flecs needs a mechanism to monitor specific entities for updates. Monitored entities are stored with a negative row in the entity index. The actual index of an entity can be found by multiplying the row with -1. This allows Flecs to monitor entities for changes efficiently without having to do additional lookups.
 
 Systems will occasionally need access to the entity identifier. Because systems access the entities directly from the archetypes and not from the entity index, they need to obtain the entity identifier in another way. Flecs accomplishes this by storing the entity identifiers as an additional column columns in an archetype. Applications can access the entity identifiers using `row->entities`, or by requesting the column at index 0:
 

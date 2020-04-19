@@ -1063,7 +1063,7 @@ void SystemOnFrame_use_fields_1_owned_1_shared() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Use_field, EcsOnUpdate, Position, CONTAINER.Velocity);
+    ECS_SYSTEM(world, Use_field, EcsOnUpdate, Position, PARENT.Velocity);
 
     ecs_entity_t e_1 = ecs_set(world, 0, Position, {1, 2});
     ecs_entity_t parent = ecs_set(world, 0, Velocity, {10, 20});
@@ -1180,7 +1180,7 @@ void SystemOnFrame_ensure_optional_is_null_shared() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?CONTAINER.Velocity);
+    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?PARENT.Velocity);
     
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1236,7 +1236,7 @@ void SystemOnFrame_ensure_optional_is_null_field_shared() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?CONTAINER.Velocity);
+    ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?PARENT.Velocity);
     
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1779,7 +1779,7 @@ void SystemOnFrame_container_dont_match_inheritance() {
     ECS_ENTITY(world, e1, Position, INSTANCEOF | base);
     ECS_ENTITY(world, e2, Position, CHILDOF | base);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CONTAINER.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, PARENT.Velocity);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);

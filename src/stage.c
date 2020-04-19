@@ -68,6 +68,10 @@ void merge_columns(
     uint32_t c, column_count = ecs_vector_count(table->type);
     for (c = 0; c < column_count; c ++) {
         ecs_column_t *main_column = &dst_data->columns[c];
+        if (!main_column->size) {
+            continue;
+        }
+        
         void *dst = ecs_vector_first(main_column->data);
         ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 

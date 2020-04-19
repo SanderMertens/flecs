@@ -533,7 +533,7 @@ ecs_entity_t ecs_run_intern(
     } else {
         while (ecs_query_next(&qiter)) {
             ecs_table_t *table = qiter.rows.table;
-            if (!ecs_type_match_w_filter(real_world, table->type, filter))
+            if (!ecs_table_match_filter(real_world, table, filter))
             {
                 continue;
             }

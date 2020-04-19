@@ -65,6 +65,10 @@ void init_edges(
             }
         }
 
+        /* As we're iterating over the table components, also set the table
+         * flags. These allow us to quickly determine if the table contains
+         * data that needs to be handled in a special way, like prefabs or 
+         * containers */
         if (e <= EcsLastBuiltin) {
             table->flags |= EcsTableHasBuiltins;
         }
@@ -73,8 +77,19 @@ void init_edges(
             table->flags |= EcsTableIsPrefab;
         }
 
+        if (e & ECS_INSTANCEOF) {
+            table->flags |= EcsTableHasPrefab;
+        }
+
         if (e & ECS_CHILDOF) {
-            table->parent_count ++;
+            table->flags |= EcsTableHasParent;
+
+            /* Register child table with parent */
+            ecs_entity_t parent = e & ECS_ENTITY_MASK;
+            EcsParent *ptr = ecs_get_mutable(world, parent, EcsParent, NULL);
+            ecs_table_t **el = ecs_vector_add(&ptr->child_tables, ecs_table_t*);
+            *el = table;
+            ecs_modified(world, parent, EcsParent);
         }
     }
 }
@@ -88,7 +103,6 @@ void init_table(
 {
     table->type = entities_to_type(entities);
     table->stage_data = NULL;
-    table->dst_rows = NULL;
     table->flags = 0;
     
     init_edges(world, stage, table);
@@ -443,13 +457,7 @@ ecs_table_t* traverse_add_hi_edges(
             }
         }
 
-        /* Hi edges should are not added to the added array. This array is used
-         * to determine if component actions need to be executed, and entities
-         * that are not a component (>ECS_HI_COMPONENT_ID) there is never any
-         * component action.
-         *
-         if (added && node != next) added->array[added->count ++] = e;
-         */
+        if (added && node != next) added->array[added->count ++] = e;
 
         node = next;        
     }

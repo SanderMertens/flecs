@@ -60,7 +60,7 @@ void SystemMisc_invalid_container_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CONTAINER.);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.);
 
     ecs_fini(world);
 }
@@ -234,7 +234,7 @@ void SystemMisc_invalid_0_w_from_container() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CONTAINER.0);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.0);
 
     ecs_fini(world);
 }

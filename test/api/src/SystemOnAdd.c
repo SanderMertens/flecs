@@ -966,7 +966,7 @@ void SystemOnAdd_container_column() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, TestContainer, EcsOnAdd, Position, CONTAINER.Velocity);
+    ECS_SYSTEM(world, TestContainer, EcsOnAdd, Position, PARENT.Velocity);
 
     ecs_entity_t parent = ecs_new(world, Velocity);
     ecs_new_child(world, parent, Position);

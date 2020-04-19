@@ -773,7 +773,7 @@ int parent_test(int buffer_size) {
     test_assert( ecs_contains(world, parent, e2));
     test_assert( ecs_contains(world, parent, e3)); 
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CONTAINER.Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.Position);
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);      
     ecs_progress(world, 0);
@@ -855,7 +855,7 @@ int simple_w_parent_test(int buffer_size) {
     test_int(p->x, 5);
     test_int(p->y, 6); 
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CONTAINER.Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.Position);
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);      
     ecs_progress(world, 0);

@@ -57,38 +57,6 @@
 
 /* -- Builtin component types -- */
 
-/* For prefabs with child entities, the parent prefab must be marked so that
- * flecs knows not to share components from it, as adding a prefab as a parent
- * is stored in the same way as adding a prefab for sharing components.
- * There are two mechanisms required to accomplish this. The first one is to set
- * the 'parent' member in the EcsPrefab component, for the child entity of the
- * prefab. This acts as a front-end for another mechanism, that ensures that
- * child entities for different prefab parents are added to different tables. As
- * a result of setting a parent in EcsPrefab, Flecs will:
- * 
- *  - Add the prefab to the entity type
- *  - Find or create a prefab parent flag entity
- *  - Set the EcsPrefabParent component on the prefab parent flag entity
- *  - Add the prefab parent flag entity to the child
- * 
- * The last step ensures that the type of the child entity is associated with at
- * most one prefab parent. If the mechanism would just rely on the EcsPrefab
- * parent field, it would theoretically be possible that childs for different
- * prefab parents end up in the same table.
- */
-typedef struct EcsPrefabParent {
-    ecs_entity_t parent;
-} EcsPrefabParent;
-
-typedef struct ecs_builder_op_t {
-    const char *id;
-    ecs_type_t type;
-} ecs_builder_op_t;
-
-typedef struct EcsPrefabBuilder {
-    ecs_vector_t *ops; /* ecs_builder_op_t */
-} EcsPrefabBuilder;
-
 typedef enum ecs_sig_inout_kind_t {
     EcsInOut,
     EcsIn,
@@ -156,10 +124,10 @@ struct ecs_data_t {
     bool marked_dirty;             /* Was table already added to dirty array? */
 };
 
-#define EcsTableIsStaged (1)
+#define EcsTableHasBuiltins (1)
 #define EcsTableIsPrefab (2)
 #define EcsTableHasPrefab (4)
-#define EcsTableHasBuiltins (8)
+#define EcsTableHasParent (8)
 
 /** Edge used for traversing the table graph */
 typedef struct ecs_edge_t {
@@ -177,13 +145,9 @@ struct ecs_table_t {
     ecs_type_t type;                  /* Identifies table type in type_index */
     ecs_edge_t *lo_edges;             /* Edges to low entity ids */
     ecs_map_t *hi_edges;              /* Edges to high entity ids */
-
-    ecs_vector_t *dst_rows;           /* Used for more efficient merging */
     ecs_vector_t *on_new;             /* Systems executed when new entity is
                                        * added to table */
-
     int32_t flags;                    /* Flags for testing table properties */
-    int32_t parent_count;             /* Number of parents in table type */
 };
 
 /** Cached reference to a component in an entity */
@@ -430,12 +394,7 @@ typedef struct ecs_component_data_t {
     ecs_vector_t *on_remove;    /* Systems ran after removing this component */
     ecs_vector_t *on_set;       /* Systems ran after setting this component */
 
-    ecs_init_t init;            /* Invoked for new uninitialized component */
-    ecs_init_t fini;            /* Invoked when component is deinitialized */
-    ecs_replace_t replace;      /* Invoked when component value is replaced */
-    ecs_merge_t merge;          /* Invoked when component value is merged */
-
-    void *ctx;
+    EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
 } ecs_component_data_t;
 
 /** The world stores and manages all ECS data. An application can have more than
@@ -522,8 +481,6 @@ struct ecs_world_t {
     ecs_type_t t_prefab;
     ecs_type_t t_row_system;
     ecs_type_t t_col_system;
-    ecs_type_t t_builtins;
-
 
     /* -- Time management -- */
 
