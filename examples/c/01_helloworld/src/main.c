@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     Position p = ecs_get(world, MyEntity, Position);
 
     printf("Position of %s is {%f, %f}\n", 
-        ecs_get_id(world, MyEntity), p.x, p.y);
+        ecs_get_name(world, MyEntity), p.x, p.y);
 
     /* Cleanup */
     return ecs_fini(world);

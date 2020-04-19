@@ -24,7 +24,7 @@ void PrintPosition(ecs_rows_t *rows) {
 
     for (int i = 0; i < rows->count; i ++) {
         printf("%s position = {.x = %f, .y = %f}\n",
-            ecs_get_id(rows->world, rows->entities[i]),
+            ecs_get_name(rows->world, rows->entities[i]),
             p[i].x, p[i].y);
     }
 }

@@ -6,7 +6,7 @@ typedef struct Counter {
 
 void PrintCounterAdd(ecs_rows_t *rows) {
     for (int i = 0; i < rows->count; i ++) {
-        printf("%s: Counter added\n", ecs_get_id(rows->world, rows->entities[i]));
+        printf("%s: Counter added\n", ecs_get_name(rows->world, rows->entities[i]));
     }
 }
 
@@ -15,7 +15,7 @@ void PrintCounterSet(ecs_rows_t *rows) {
 
     for (int i = 0; i < rows->count; i ++) {
         printf("%s: Counter set to %d\n", 
-            ecs_get_id(rows->world, rows->entities[i]),
+            ecs_get_name(rows->world, rows->entities[i]),
             counter[i].value);
     }
 }

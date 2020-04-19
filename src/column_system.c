@@ -126,7 +126,7 @@ void register_out_columns(
 
     /* If there are no out columns in the on-demand system, the system will
      * never be enabled */
-    ecs_assert(out_count != 0, ECS_NO_OUT_COLUMNS, ecs_get_id(world, system));
+    ecs_assert(out_count != 0, ECS_NO_OUT_COLUMNS, ecs_get_name(world, system));
 }
 
 /* Invoked when system becomes active or inactive */
@@ -317,7 +317,7 @@ ecs_entity_t ecs_new_col_system(
     ecs_entity_t result = _ecs_new(
         world, world->t_col_system);
 
-    EcsId *id_data = ecs_get_ptr(world, result, EcsId);
+    EcsName *id_data = ecs_get_ptr(world, result, EcsName);
     *id_data = id;
 
     EcsColSystem *system_data = ecs_get_ptr(world, result, EcsColSystem);

@@ -887,7 +887,7 @@ void* ecs_get_ptr_intern(
         ptr = get_component(&info, component);
 
         if (!ptr && search_prefab) {
-            if (component != EEcsId && component != EEcsPrefab) {
+            if (component != EEcsName && component != EEcsPrefab) {
                 ptr = get_base_component(
                     world, stage, entity, &info, 0, component);
             }
@@ -1791,7 +1791,7 @@ ecs_entity_t _ecs_get_parent(
     return parent;
 }
 
-const char* ecs_get_id(
+const char* ecs_get_name(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
@@ -1799,7 +1799,7 @@ const char* ecs_get_id(
         return "$";
     }
 
-    EcsId *id = ecs_get_ptr(world, entity, EcsId);
+    EcsName *id = ecs_get_ptr(world, entity, EcsName);
 
     if (id) {
         return *id;
@@ -1917,7 +1917,7 @@ ecs_entity_t ecs_new_component(
 
     result = _ecs_new(world, world->t_component);
     ecs_set(world, result, EcsComponent, {.size = size});
-    ecs_set(world, result, EcsId, {id});
+    ecs_set(world, result, EcsName, {id});
 
     return result;
 }

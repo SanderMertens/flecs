@@ -339,10 +339,10 @@ ecs_enable(world, LogPoints, false);
 [Learn more](Manual.md#systems)
 
 ### Identifier
-Entities in flecs may have an optional string-based identifier. An identifier can be added to an entity by setting the `EcsId` component, like this:
+Entities in flecs may have an optional string-based identifier. An identifier can be added to an entity by setting the `EcsName` component, like this:
 
 ```c
-ecs_set(world, e, EcsId, {"MyEntity"});
+ecs_set(world, e, EcsName, {"MyEntity"});
 ```
 
 After a string identifier is added, the entity can be looked up like this:
@@ -351,13 +351,13 @@ After a string identifier is added, the entity can be looked up like this:
 ecs_entity_t e = ecs_lookup(world, "MyEntity");
 ```
 
-Additionally, applications can define entities with the `ECS_ENTITY` macro, which automatically adds `EcsId` and initializes it with the provided name:
+Additionally, applications can define entities with the `ECS_ENTITY` macro, which automatically adds `EcsName` and initializes it with the provided name:
 
 ```c
 ECS_ENTITY(world, MyEntity, Point);
 ```
 
-Components, systems, tasks, types and prefabs automatically register the `EcsId` component when they are created, and can thus be looked up with `ecs_lookup`.
+Components, systems, tasks, types and prefabs automatically register the `EcsName` component when they are created, and can thus be looked up with `ecs_lookup`.
 
 ### Task
 A task is a system that has no interest expression. Tasks are run once every frame. Tasks are defined the same way as normal systems, but instead of an interest expression, you specify `0`:

@@ -20,7 +20,7 @@ void Move(ecs_rows_t *rows) {
         p[i].y += v[i].y * rows->delta_time;
 
         printf("%s moved to {.x = %f, .y = %f}\n",
-            ecs_get_id(rows->world, rows->entities[i]),
+            ecs_get_name(rows->world, rows->entities[i]),
             p[i].x, p[i].y);
     }
 }

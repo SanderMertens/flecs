@@ -254,16 +254,16 @@ ecs_fini(world);
 This also means that the application is fully responsible for ensuring that if a component contains pointers, these pointers are kept valid, and are cleaned up. In some cases this is straightforward, if the memory outlives a component as is often the case with entity identifiers:
 
 ```c
-ecs_set(world, e, EcsId, {"MyEntity"}); 
+ecs_set(world, e, EcsName, {"MyEntity"}); 
 ```
 
-This sets the `EcsId` component on an entity which is used by Flecs to assign names to entities. The `"MyEntity"` string is a literal and will certainly outlive the lifespan of the component, as it is tied to the lifecycle of the process, therefore it is safe to assign it like this. It can subsequently be obtained with this function:
+This sets the `EcsName` component on an entity which is used by Flecs to assign names to entities. The `"MyEntity"` string is a literal and will certainly outlive the lifespan of the component, as it is tied to the lifecycle of the process, therefore it is safe to assign it like this. It can subsequently be obtained with this function:
 
 ```c
-const char *id = ecs_get_id(world, e);
+const char *id = ecs_get_name(world, e);
 ```
 
-This function returns the verbatim address that is stored in the `EcsId` component, and thus should not be freed.
+This function returns the verbatim address that is stored in the `EcsName` component, and thus should not be freed.
 
 If memory is tied to the lifecycle of a component, applications can use `OnAdd` and `OnRemove` components to initialize and free the memory when components are added/removed. This example shows how to create two systems for a dynamic buffer that automatically allocate/free the memory for the dynamic buffer when it is added to an entity:
 
@@ -351,7 +351,7 @@ You may find that certain things cannot be expressed through declarative stateme
 It is much more efficient to [create entities in bulk](#create-entities-in-bulk) (using the `ecs_new_w_count` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
 
 ### Limit usage of ecs_lookup
-You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsId` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `NOTHING` modifier, like so:
+You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsName` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `NOTHING` modifier, like so:
 
 ```c
 ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, .MyEntity);
@@ -490,7 +490,7 @@ ECS_ENTITY(world, MyParent, Position);
 ECS_ENTITY(world, MyChild, CHILDOF | MyParent, Position);
 ```
 
-Note that in order to be able to use entity flags, the parent entity must be named (it must have an `EcsId` component). When not considering the entity identifiers, the above examples are equivalent to:
+Note that in order to be able to use entity flags, the parent entity must be named (it must have an `EcsName` component). When not considering the entity identifiers, the above examples are equivalent to:
 
 ```c
 ecs_entity_t MyParent = ecs_new(world, Position);
@@ -564,7 +564,7 @@ ECS_ENTITY(world, MyBase, Position);
 ECS_ENTITY(world, MyInstance, INSTANCEOF | MyBase, Velocity);
 ```
 
-Note that in order to be able to use entity flags, the parent entity must be named (it must have an `EcsId` component). When not considering the entity identifiers, the above examples are equivalent to:
+Note that in order to be able to use entity flags, the parent entity must be named (it must have an `EcsName` component). When not considering the entity identifiers, the above examples are equivalent to:
 
 ```c
 ecs_entity_t MyBase = ecs_new(world, Position);
@@ -896,7 +896,7 @@ EcsPrefabParent | Internal data for prefab parents | Opaque
 EcsPrefabBuilder | Internal data for prefab parents | Opaque 
 EcsRowSystem | Internal data for row systems | Opaque
 EcsColSystem | Internal data for column systems | Opaque
-EcsId | Stores the name of an entity | Read / Write
+EcsName | Stores the name of an entity | Read / Write
 EcsHidden | Tag that indicates an entity should be hidden by UIs | Read / Write
 EcsDisabled | Tag that indicates an entity should not be matched with systems | Read / Write
 

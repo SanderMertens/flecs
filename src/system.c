@@ -14,7 +14,7 @@ ecs_entity_t new_row_system(
 
     ecs_entity_t result = _ecs_new(world, world->t_row_system);
 
-    EcsId *id_data = ecs_get_ptr(world, result, EcsId);
+    EcsName *id_data = ecs_get_ptr(world, result, EcsName);
     ecs_assert(id_data != NULL, ECS_INTERNAL_ERROR, NULL);
     *id_data = name;
 
@@ -154,7 +154,7 @@ ecs_type_t ecs_run_row_system(
                 ecs_assert(entity != 0 || 
                            buffer[i].oper_kind == EcsOperOptional, 
                                 ECS_INTERNAL_ERROR, 
-                                ecs_get_id(real_world, buffer[i].is.component));
+                                ecs_get_name(real_world, buffer[i].is.component));
             }
         }
 

@@ -28,16 +28,16 @@ int main(int argc, char *argv[]) {
     ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
 
     /* Create a few entities that match the query */
-    ecs_entity_t E1 = ecs_set(world, 0, EcsId, {"E1"});
+    ecs_entity_t E1 = ecs_set(world, 0, EcsName, {"E1"});
     ecs_set(world, E1, Position, {1, 2});
     ecs_set(world, E1, Velocity, {1, 1});
 
-    ecs_entity_t E2 = ecs_set(world, 0, EcsId, {"E2"});
+    ecs_entity_t E2 = ecs_set(world, 0, EcsName, {"E2"});
     ecs_set(world, E2, Position, {1, 2});
     ecs_set(world, E2, Velocity, {1, 1});
 
     /* Don't add Velocity here, E3 will not match query */
-    ecs_entity_t E3 = ecs_set(world, 0, EcsId, {"E3"});
+    ecs_entity_t E3 = ecs_set(world, 0, EcsName, {"E3"});
     ecs_set(world, E3, Position, {1, 2});
 
     /* Iterate over entities matching the query */
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
             p[i].y += v[i].y;
 
             printf("%s moved to {.x = %f, .y = %f}\n",
-                ecs_get_id(world, rows->entities[i]), p[i].x, p[i].y);
+                ecs_get_name(world, rows->entities[i]), p[i].x, p[i].y);
         }
     }
 

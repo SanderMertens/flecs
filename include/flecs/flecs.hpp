@@ -73,7 +73,7 @@ static const entity_t PrefabParent = EEcsPrefabParent;
 static const entity_t PrefabBuilder = EEcsPrefabBuilder;
 static const entity_t RowSystem = EEcsRowSystem;
 static const entity_t ColSystem = EEcsColSystem;
-using Name = EcsId;
+using Name = EcsName;
 static const entity_t Hidden = EEcsHidden;
 static const entity_t Disabled = EEcsDisabled;
 static const entity_t OnDemand = EEcsOnDemand;
@@ -755,8 +755,8 @@ public:
         , m_id( ecs_lookup(m_world, name) ) 
         { 
             if (!m_id) {
-                EcsId id{ ecs_os_strdup(name) };
-                m_id = ecs_set_ptr(m_world, 0, EcsId, &id);
+                EcsName id{ ecs_os_strdup(name) };
+                m_id = ecs_set_ptr(m_world, 0, EcsName, &id);
             }
         }
 
@@ -765,8 +765,8 @@ public:
         , m_id( ecs_lookup(m_world, name.c_str()) ) 
         { 
             if (!m_id) {
-                EcsId id{ ecs_os_strdup(name.c_str()) };
-                m_id = ecs_set_ptr(m_world, 0, EcsId, &id);
+                EcsName id{ ecs_os_strdup(name.c_str()) };
+                m_id = ecs_set_ptr(m_world, 0, EcsName, &id);
             }
         }         
 
@@ -792,7 +792,7 @@ public:
     }
 
     std::string name() const {
-        EcsId *name = (EcsId*)_ecs_get_ptr(m_world, m_id, EEcsId);
+        EcsName *name = (EcsName*)_ecs_get_ptr(m_world, m_id, EEcsName);
         if (name) {
             return std::string(*name);
         } else {
@@ -2151,7 +2151,7 @@ inline void world::init_builtin_components() {
     component<Component>(*this, "EcsComponent");
     component<TypeComponent>(*this, "EcsTypeComponent");
     component<Prefab>(*this, "EcsPrefab");
-    component<Name>(*this, "EcsId");
+    component<Name>(*this, "EcsName");
 }
 
 }

@@ -214,7 +214,7 @@ struct ecs_rows_t {
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Component that contains an entity name */
-typedef const char *EcsId;
+typedef const char *EcsName;
 
 /** Component that contains the size of a component */
 typedef struct EcsComponent {
@@ -288,7 +288,7 @@ extern ecs_type_t
     TEcsPrefab,
     TEcsRowSystem,
     TEcsColSystem,
-    TEcsId,
+    TEcsName,
     TEcsHidden,
     TEcsDisabled,
     TEcsOnDemand,
@@ -304,7 +304,7 @@ extern ecs_type_t
 #define EEcsPrefab (5)
 #define EEcsRowSystem (6)
 #define EEcsColSystem (7)
-#define EEcsId (8)
+#define EEcsName (8)
 #define EEcsHidden (9)
 #define EEcsDisabled (10)
 #define EEcsOnDemand (11)
@@ -1414,11 +1414,11 @@ ecs_type_t ecs_get_type(
     ecs_entity_t entity);
 
 /** Return the entity id.
- * This returns the string identifier of an entity, if the entity has the EcsId
+ * This returns the string identifier of an entity, if the entity has the EcsName
  * component. By default, all component, type, system and prefab entities add
- * the EcsId component if they have been created with the ecs_new_* functions.
+ * the EcsName component if they have been created with the ecs_new_* functions.
  *
- * If the entity does not contain the EcsId component, this function will return
+ * If the entity does not contain the EcsName component, this function will return
  * NULL.
  *
  * @param world The world.
@@ -1426,7 +1426,7 @@ ecs_type_t ecs_get_type(
  * @return The id of the entity.
  */
 FLECS_EXPORT
-const char* ecs_get_id(
+const char* ecs_get_name(
     ecs_world_t *world,
     ecs_entity_t entity);
 
@@ -1470,7 +1470,7 @@ int32_t ecs_count_w_filter(
 
 /** Lookup an entity by id.
  * This operation is a convenient way to lookup entities by string identifier
- * that have the EcsId component. It is recommended to cache the result of this
+ * that have the EcsName component. It is recommended to cache the result of this
  * function, as the function must iterates over all entities and all components
  * in an entity.
  *

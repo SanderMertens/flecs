@@ -375,7 +375,7 @@ void StatsCollectSystemStats(ecs_rows_t *rows) {
         ecs_entity_t entity = rows->entities[i];
 
         stats[i].entity = entity;
-        stats[i].name = ecs_get_id(rows->world, entity);
+        stats[i].name = ecs_get_name(rows->world, entity);
         stats[i].signature = system[i].query->sig.expr;
         stats[i].kind = system[i].base.kind;
         stats[i].tables_matched_count = system_tables_matched(&system[i]);
@@ -484,7 +484,7 @@ void StatsCollectComponentStats(ecs_rows_t *rows) {
         ecs_entity_t entity = rows->entities[i];
 
         stats[i].entity = entity;
-        stats[i].name = ecs_get_id(rows->world, entity);
+        stats[i].name = ecs_get_name(rows->world, entity);
         stats[i].size_bytes = component[i].size;
         
         /* Reset values */
@@ -616,7 +616,7 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
 
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
-        stats[i].name = ecs_get_id(world, rows->entities[i]);
+        stats[i].name = ecs_get_name(world, rows->entities[i]);
         stats[i].entity = rows->entities[i];
         stats[i].type = type_component[i].type;
         stats[i].normalized_type = type_component[i].normalized;

@@ -33,7 +33,7 @@ void* get_shared_column(
             EcsComponent);
         ecs_assert(cdata != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(cdata->size == size, ECS_COLUMN_TYPE_MISMATCH, 
-            ecs_get_id(rows->world, rows->system));
+            ecs_get_name(rows->world, rows->system));
     }
 #endif
 

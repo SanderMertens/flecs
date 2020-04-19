@@ -63,7 +63,7 @@ int ecs_component_writer_register_component(
 
         _ecs_add(world, id, world->t_component);
         ecs_set(world, id, EcsComponent, {writer->size});
-        ecs_set(world, id, EcsId, {name});
+        ecs_set(world, id, EcsName, {name});
 
         /* Don't overwrite component name */
         ecs_name_writer_reset(&writer->name);        
@@ -429,7 +429,7 @@ size_t ecs_table_writer(
     }
 
     case EcsTableColumnNameHeader:
-        ecs_table_writer_prepare_column(stream, sizeof(EcsId));
+        ecs_table_writer_prepare_column(stream, sizeof(EcsName));
         ecs_table_writer_next(stream);
 
     case EcsTableColumnNameLength:
@@ -441,7 +441,7 @@ size_t ecs_table_writer(
     case EcsTableColumnName: {
         written = sizeof(int32_t);
         if (!ecs_name_writer_write(&writer->name, buffer)) {
-            ((EcsId*)writer->column_data)[writer->row_index] = writer->name.name;
+            ((EcsName*)writer->column_data)[writer->row_index] = writer->name.name;
 
             /* Don't overwrite entity name */
             ecs_name_writer_reset(&writer->name);   

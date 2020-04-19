@@ -240,7 +240,7 @@ ecs_entity_t ecs_type_contains(
         }
 
         if (e1 != e2) {
-            if (match_prefab && e2 != EEcsId && e2 != EEcsPrefab && e2 != EEcsDisabled) {
+            if (match_prefab && e2 != EEcsName && e2 != EEcsPrefab && e2 != EEcsDisabled) {
                 if (ecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
                     e1 = e2;
                 }
@@ -396,7 +396,7 @@ ecs_entity_t ecs_new_type(
         }
     } else if (!result) {
         result = _ecs_new(world, world->t_type);
-        ecs_set(world, result, EcsId, {id});
+        ecs_set(world, result, EcsName, {id});
         ecs_set(world, result, EcsTypeComponent, {
             .type = type.type, .normalized = type.normalized
         });
@@ -427,7 +427,7 @@ ecs_entity_t ecs_new_prefab(
         }
     } else {
         result = _ecs_new(world, type.normalized);
-        ecs_set(world, result, EcsId, {id});
+        ecs_set(world, result, EcsName, {id});
     }
 
     return result;
@@ -449,7 +449,7 @@ ecs_entity_t ecs_new_entity(
         }
     } else {
         result = _ecs_new(world, type.normalized);
-        ecs_set(world, result, EcsId, {id});
+        ecs_set(world, result, EcsName, {id});
     }
 
     return result;
@@ -607,7 +607,7 @@ char* ecs_type_to_expr(
         }
 
         const char *str = NULL;
-        EcsId *id = ecs_get_ptr(world, h, EcsId);
+        EcsName *id = ecs_get_ptr(world, h, EcsName);
         if (id) {
             str = *id;
         } else {

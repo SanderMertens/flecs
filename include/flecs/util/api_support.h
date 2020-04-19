@@ -42,7 +42,7 @@ typedef enum ecs_blob_header_kind_t {
     EcsTableColumnSize,
     EcsTableColumnData,
 
-    /* Name column (EcsId) */
+    /* Name column (EcsName) */
     EcsTableColumnNameHeader,
     EcsTableColumnNameLength,
     EcsTableColumnName,
@@ -56,7 +56,7 @@ typedef struct ecs_component_reader_t {
     /* Component data fetched from the world */
     ecs_entity_t *id_column;
     EcsComponent *data_column;
-    EcsId *name_column;
+    EcsName *name_column;
 
     /* Current component & total number of components */
     int32_t index;

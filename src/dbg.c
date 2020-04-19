@@ -59,9 +59,9 @@ void ecs_dbg_table(
             dbg_out->shared = ecs_type_merge(
                 world, dbg_out->shared, base_table_dbg.shared, NULL);
 
-            /* Never inherit EcsId or EcsPrefab */
+            /* Never inherit EcsName or EcsPrefab */
             dbg_out->shared = ecs_type_merge(
-                world, dbg_out->shared, NULL, TEcsId);
+                world, dbg_out->shared, NULL, TEcsName);
             dbg_out->shared = ecs_type_merge(
                 world, dbg_out->shared, NULL, TEcsPrefab);
 

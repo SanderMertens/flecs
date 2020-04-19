@@ -129,7 +129,7 @@ void Singleton_lookup_singleton() {
 void Singleton_get_singleton_id() {
     ecs_world_t *world = ecs_init();
 
-    test_str( ecs_get_id(world, EcsSingleton), "$");
+    test_str( ecs_get_name(world, EcsSingleton), "$");
 
     ecs_fini(world);
 }

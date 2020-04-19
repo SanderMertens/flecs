@@ -187,22 +187,22 @@ static
 int id_test(int buffer_size) {
     ecs_world_t *world = ecs_init();
     
-    int base_id_count = ecs_count(world, EcsId);
+    int base_id_count = ecs_count(world, EcsName);
 
     /* Entities with different name lengths to test if alignment & fragmentation
      * works properly */
-    ecs_entity_t e1 = ecs_set(world, 0, EcsId, {""});
-    ecs_entity_t e2 = ecs_set(world, 0, EcsId, {"E"});
-    ecs_entity_t e3 = ecs_set(world, 0, EcsId, {"E3"});
-    ecs_entity_t e4 = ecs_set(world, 0, EcsId, {"E4E"});
-    ecs_entity_t e5 = ecs_set(world, 0, EcsId, {"E5E5"});
-    ecs_entity_t e6 = ecs_set(world, 0, EcsId, {"E6E6E"});
-    ecs_entity_t e7 = ecs_set(world, 0, EcsId, {"E7E7E7E"});
-    ecs_entity_t e8 = ecs_set(world, 0, EcsId, {"E8E8E8E8"});
+    ecs_entity_t e1 = ecs_set(world, 0, EcsName, {""});
+    ecs_entity_t e2 = ecs_set(world, 0, EcsName, {"E"});
+    ecs_entity_t e3 = ecs_set(world, 0, EcsName, {"E3"});
+    ecs_entity_t e4 = ecs_set(world, 0, EcsName, {"E4E"});
+    ecs_entity_t e5 = ecs_set(world, 0, EcsName, {"E5E5"});
+    ecs_entity_t e6 = ecs_set(world, 0, EcsName, {"E6E6E"});
+    ecs_entity_t e7 = ecs_set(world, 0, EcsName, {"E7E7E7E"});
+    ecs_entity_t e8 = ecs_set(world, 0, EcsName, {"E8E8E8E8"});
 
     ecs_vector_t *v = serialize_to_vector(world, buffer_size);
 
-    int id_count = ecs_count(world, EcsId);
+    int id_count = ecs_count(world, EcsName);
 
     test_assert(id_count == (base_id_count + 8));
 
@@ -210,7 +210,7 @@ int id_test(int buffer_size) {
 
     world = deserialize_from_vector(v, buffer_size);
 
-    test_int( ecs_count(world, EcsId), id_count);
+    test_int( ecs_count(world, EcsName), id_count);
 
     test_assert( !ecs_is_empty(world, e1));
     test_assert( !ecs_is_empty(world, e2));
@@ -221,29 +221,29 @@ int id_test(int buffer_size) {
     test_assert( !ecs_is_empty(world, e7));
     test_assert( !ecs_is_empty(world, e8));
 
-    test_assert( ecs_has(world, e1, EcsId));
-    test_assert( ecs_has(world, e2, EcsId));
-    test_assert( ecs_has(world, e3, EcsId));
-    test_assert( ecs_has(world, e4, EcsId));
-    test_assert( ecs_has(world, e5, EcsId));
-    test_assert( ecs_has(world, e6, EcsId));
-    test_assert( ecs_has(world, e7, EcsId));
-    test_assert( ecs_has(world, e8, EcsId));    
+    test_assert( ecs_has(world, e1, EcsName));
+    test_assert( ecs_has(world, e2, EcsName));
+    test_assert( ecs_has(world, e3, EcsName));
+    test_assert( ecs_has(world, e4, EcsName));
+    test_assert( ecs_has(world, e5, EcsName));
+    test_assert( ecs_has(world, e6, EcsName));
+    test_assert( ecs_has(world, e7, EcsName));
+    test_assert( ecs_has(world, e8, EcsName));    
 
-    test_str( ecs_get_id(world, e1), "");
-    test_str( ecs_get_id(world, e2), "E");
-    test_str( ecs_get_id(world, e3), "E3");
-    test_str( ecs_get_id(world, e4), "E4E");
-    test_str( ecs_get_id(world, e5), "E5E5");
-    test_str( ecs_get_id(world, e6), "E6E6E");
-    test_str( ecs_get_id(world, e7), "E7E7E7E");
-    test_str( ecs_get_id(world, e8), "E8E8E8E8");
+    test_str( ecs_get_name(world, e1), "");
+    test_str( ecs_get_name(world, e2), "E");
+    test_str( ecs_get_name(world, e3), "E3");
+    test_str( ecs_get_name(world, e4), "E4E");
+    test_str( ecs_get_name(world, e5), "E5E5");
+    test_str( ecs_get_name(world, e6), "E6E6E");
+    test_str( ecs_get_name(world, e7), "E7E7E7E");
+    test_str( ecs_get_name(world, e8), "E8E8E8E8");
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, EcsId);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, EcsName);
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);      
     ecs_progress(world, 0);
-    test_int(ctx.count, id_count + 1); /* System itself also has EcsId */
+    test_int(ctx.count, id_count + 1); /* System itself also has EcsName */
 
     ecs_fini(world);
 
@@ -272,35 +272,35 @@ int id_w_simple_test(int buffer_size) {
     /* Entities with different name lengths to test if alignment & fragmentation
      * works properly */
     ecs_entity_t e1 = 
-    ecs_set(world, 0, EcsId, {""});
+    ecs_set(world, 0, EcsName, {""});
     ecs_set(world, e1, Position, {1, 2});
 
     ecs_entity_t e2 = 
-    ecs_set(world, 0, EcsId, {"E"});
+    ecs_set(world, 0, EcsName, {"E"});
     ecs_set(world, e2, Position, {3, 4});
 
     ecs_entity_t e3 = 
-    ecs_set(world, 0, EcsId, {"E3"});
+    ecs_set(world, 0, EcsName, {"E3"});
     ecs_set(world, e3, Position, {5, 6});
 
     ecs_entity_t e4 = 
-    ecs_set(world, 0, EcsId, {"E4E"});
+    ecs_set(world, 0, EcsName, {"E4E"});
     ecs_set(world, e4, Position, {7, 8});
 
     ecs_entity_t e5 = 
-    ecs_set(world, 0, EcsId, {"E5E5"});
+    ecs_set(world, 0, EcsName, {"E5E5"});
     ecs_set(world, e5, Position, {9, 10});
 
     ecs_entity_t e6 = 
-    ecs_set(world, 0, EcsId, {"E6E6E"});
+    ecs_set(world, 0, EcsName, {"E6E6E"});
     ecs_set(world, e6, Position, {11, 12});   
 
     ecs_entity_t e7 = 
-    ecs_set(world, 0, EcsId, {"E7E7E7E"});
+    ecs_set(world, 0, EcsName, {"E7E7E7E"});
     ecs_set(world, e7, Position, {13, 14});  
 
     ecs_entity_t e8 = 
-    ecs_set(world, 0, EcsId, {"E8E8E8E8"});
+    ecs_set(world, 0, EcsName, {"E8E8E8E8"});
     ecs_set(world, e8, Position, {15, 16});
 
     ecs_vector_t *v = serialize_to_vector(world, buffer_size);
@@ -329,14 +329,14 @@ int id_w_simple_test(int buffer_size) {
     test_assert( ecs_has(world, e7, Position));
     test_assert( ecs_has(world, e8, Position));
     
-    test_assert( ecs_has(world, e1, EcsId));
-    test_assert( ecs_has(world, e2, EcsId));
-    test_assert( ecs_has(world, e3, EcsId));
-    test_assert( ecs_has(world, e4, EcsId));
-    test_assert( ecs_has(world, e5, EcsId));
-    test_assert( ecs_has(world, e6, EcsId));
-    test_assert( ecs_has(world, e7, EcsId));
-    test_assert( ecs_has(world, e8, EcsId));    
+    test_assert( ecs_has(world, e1, EcsName));
+    test_assert( ecs_has(world, e2, EcsName));
+    test_assert( ecs_has(world, e3, EcsName));
+    test_assert( ecs_has(world, e4, EcsName));
+    test_assert( ecs_has(world, e5, EcsName));
+    test_assert( ecs_has(world, e6, EcsName));
+    test_assert( ecs_has(world, e7, EcsName));
+    test_assert( ecs_has(world, e8, EcsName));    
 
     Position *
     p = ecs_get_ptr(world, e1, Position);
@@ -379,16 +379,16 @@ int id_w_simple_test(int buffer_size) {
     test_int(p->x, 15);
     test_int(p->y, 16);
 
-    test_str( ecs_get_id(world, e1), "");
-    test_str( ecs_get_id(world, e2), "E");
-    test_str( ecs_get_id(world, e3), "E3");
-    test_str( ecs_get_id(world, e4), "E4E");
-    test_str( ecs_get_id(world, e5), "E5E5");
-    test_str( ecs_get_id(world, e6), "E6E6E");
-    test_str( ecs_get_id(world, e7), "E7E7E7E");
-    test_str( ecs_get_id(world, e8), "E8E8E8E8");
+    test_str( ecs_get_name(world, e1), "");
+    test_str( ecs_get_name(world, e2), "E");
+    test_str( ecs_get_name(world, e3), "E3");
+    test_str( ecs_get_name(world, e4), "E4E");
+    test_str( ecs_get_name(world, e5), "E5E5");
+    test_str( ecs_get_name(world, e6), "E6E6E");
+    test_str( ecs_get_name(world, e7), "E7E7E7E");
+    test_str( ecs_get_name(world, e8), "E8E8E8E8");
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position, EcsId);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position, EcsName);
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);      
     ecs_progress(world, 0);
@@ -1202,24 +1202,24 @@ void ReaderWriter_snapshot_reader_simple() {
 void ReaderWriter_snapshot_reader_id() {
     ecs_world_t *world = ecs_init();
     
-    int base_id_count = ecs_count(world, EcsId);
+    int base_id_count = ecs_count(world, EcsName);
 
     /* Entities with different name lengths to test if alignment & fragmentation
      * works properly */
-    ecs_entity_t e1 = ecs_set(world, 0, EcsId, {""});
-    ecs_entity_t e2 = ecs_set(world, 0, EcsId, {"E"});
-    ecs_entity_t e3 = ecs_set(world, 0, EcsId, {"E3"});
-    ecs_entity_t e4 = ecs_set(world, 0, EcsId, {"E4E"});
-    ecs_entity_t e5 = ecs_set(world, 0, EcsId, {"E5E5"});
-    ecs_entity_t e6 = ecs_set(world, 0, EcsId, {"E6E6E"});
-    ecs_entity_t e7 = ecs_set(world, 0, EcsId, {"E7E7E7E"});
-    ecs_entity_t e8 = ecs_set(world, 0, EcsId, {"E8E8E8E8"});
+    ecs_entity_t e1 = ecs_set(world, 0, EcsName, {""});
+    ecs_entity_t e2 = ecs_set(world, 0, EcsName, {"E"});
+    ecs_entity_t e3 = ecs_set(world, 0, EcsName, {"E3"});
+    ecs_entity_t e4 = ecs_set(world, 0, EcsName, {"E4E"});
+    ecs_entity_t e5 = ecs_set(world, 0, EcsName, {"E5E5"});
+    ecs_entity_t e6 = ecs_set(world, 0, EcsName, {"E6E6E"});
+    ecs_entity_t e7 = ecs_set(world, 0, EcsName, {"E7E7E7E"});
+    ecs_entity_t e8 = ecs_set(world, 0, EcsName, {"E8E8E8E8"});
 
     ecs_snapshot_t *snapshot = ecs_snapshot_take(world, NULL);
     ecs_vector_t *v = serialize_snapshot_to_vector(world, 36, snapshot);
     ecs_snapshot_free(world, snapshot);
 
-    int id_count = ecs_count(world, EcsId);
+    int id_count = ecs_count(world, EcsName);
 
     test_assert(id_count == (base_id_count + 8));
 
@@ -1227,7 +1227,7 @@ void ReaderWriter_snapshot_reader_id() {
 
     world = deserialize_from_vector(v, 36);
 
-    test_int( ecs_count(world, EcsId), id_count);
+    test_int( ecs_count(world, EcsName), id_count);
 
     test_assert( !ecs_is_empty(world, e1));
     test_assert( !ecs_is_empty(world, e2));
@@ -1238,29 +1238,29 @@ void ReaderWriter_snapshot_reader_id() {
     test_assert( !ecs_is_empty(world, e7));
     test_assert( !ecs_is_empty(world, e8));
 
-    test_assert( ecs_has(world, e1, EcsId));
-    test_assert( ecs_has(world, e2, EcsId));
-    test_assert( ecs_has(world, e3, EcsId));
-    test_assert( ecs_has(world, e4, EcsId));
-    test_assert( ecs_has(world, e5, EcsId));
-    test_assert( ecs_has(world, e6, EcsId));
-    test_assert( ecs_has(world, e7, EcsId));
-    test_assert( ecs_has(world, e8, EcsId));    
+    test_assert( ecs_has(world, e1, EcsName));
+    test_assert( ecs_has(world, e2, EcsName));
+    test_assert( ecs_has(world, e3, EcsName));
+    test_assert( ecs_has(world, e4, EcsName));
+    test_assert( ecs_has(world, e5, EcsName));
+    test_assert( ecs_has(world, e6, EcsName));
+    test_assert( ecs_has(world, e7, EcsName));
+    test_assert( ecs_has(world, e8, EcsName));    
 
-    test_str( ecs_get_id(world, e1), "");
-    test_str( ecs_get_id(world, e2), "E");
-    test_str( ecs_get_id(world, e3), "E3");
-    test_str( ecs_get_id(world, e4), "E4E");
-    test_str( ecs_get_id(world, e5), "E5E5");
-    test_str( ecs_get_id(world, e6), "E6E6E");
-    test_str( ecs_get_id(world, e7), "E7E7E7E");
-    test_str( ecs_get_id(world, e8), "E8E8E8E8");
+    test_str( ecs_get_name(world, e1), "");
+    test_str( ecs_get_name(world, e2), "E");
+    test_str( ecs_get_name(world, e3), "E3");
+    test_str( ecs_get_name(world, e4), "E4E");
+    test_str( ecs_get_name(world, e5), "E5E5");
+    test_str( ecs_get_name(world, e6), "E6E6E");
+    test_str( ecs_get_name(world, e7), "E7E7E7E");
+    test_str( ecs_get_name(world, e8), "E8E8E8E8");
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, EcsId);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, EcsName);
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);      
     ecs_progress(world, 0);
-    test_int(ctx.count, id_count + 1); /* System itself also has EcsId */
+    test_int(ctx.count, id_count + 1); /* System itself also has EcsName */
 
     ecs_fini(world);
 

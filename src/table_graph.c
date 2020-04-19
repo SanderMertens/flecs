@@ -144,7 +144,7 @@ void ecs_init_root_table(
 ecs_table_t *ecs_bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t array[] = {ecs_entity(EcsComponent), ecs_entity(EcsId)};
+    ecs_entity_t array[] = {ecs_entity(EcsComponent), ecs_entity(EcsName)};
     ecs_entities_t entities = {
         .array = array,
         .count = 2
@@ -169,8 +169,8 @@ ecs_table_t *ecs_bootstrap_component_table(
 
     data->columns[0].data = ecs_vector_new(EcsComponent, 16);
     data->columns[0].size = sizeof(EcsComponent);
-    data->columns[1].data = ecs_vector_new(EcsId, 16);
-    data->columns[1].size = sizeof(EcsId);
+    data->columns[1].data = ecs_vector_new(EcsName, 16);
+    data->columns[1].size = sizeof(EcsName);
 
     init_edges(world, &world->stage, result);
 

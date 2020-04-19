@@ -9,7 +9,7 @@ ecs_type_t TEcsParent;
 ecs_type_t TEcsPrefab;
 ecs_type_t TEcsRowSystem;
 ecs_type_t TEcsColSystem;
-ecs_type_t TEcsId;
+ecs_type_t TEcsName;
 ecs_type_t TEcsHidden;
 ecs_type_t TEcsDisabled;
 ecs_type_t TEcsOnDemand;
@@ -24,7 +24,7 @@ const char *ECS_PARENT_ID =         "EcsParent";
 const char *ECS_PREFAB_ID =         "EcsPrefab";
 const char *ECS_ROW_SYSTEM_ID =     "EcsRowSystem";
 const char *ECS_COL_SYSTEM_ID =     "EcsColSystem";
-const char *ECS_ID_ID =             "EcsId";
+const char *ECS_ID_ID =             "EcsName";
 const char *ECS_HIDDEN_ID =         "EcsHidden";
 const char *ECS_DISABLED_ID =       "EcsDisabled";
 const char *ECS_ON_DEMAND_ID =      "EcsOnDemand";
@@ -73,16 +73,16 @@ void bootstrap_types(
     TEcsPrefab = bootstrap_type(world, EEcsPrefab);
     TEcsRowSystem = bootstrap_type(world, EEcsRowSystem);
     TEcsColSystem = bootstrap_type(world, EEcsColSystem);
-    TEcsId = bootstrap_type(world, EEcsId);
+    TEcsName = bootstrap_type(world, EEcsName);
     TEcsHidden = bootstrap_type(world, EEcsHidden);
     TEcsDisabled = bootstrap_type(world, EEcsDisabled);
     TEcsOnDemand = bootstrap_type(world, EEcsOnDemand);
 
-    world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsId, 0);
-    world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsId, 0);
-    world->t_prefab = ecs_type_merge_intern(world, stage, TEcsPrefab, TEcsId, 0);
-    world->t_row_system = ecs_type_merge_intern(world, stage, TEcsRowSystem, TEcsId, 0);
-    world->t_col_system = ecs_type_merge_intern(world, stage, TEcsColSystem, TEcsId, 0);
+    world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsName, 0);
+    world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsName, 0);
+    world->t_prefab = ecs_type_merge_intern(world, stage, TEcsPrefab, TEcsName, 0);
+    world->t_row_system = ecs_type_merge_intern(world, stage, TEcsRowSystem, TEcsName, 0);
+    world->t_col_system = ecs_type_merge_intern(world, stage, TEcsColSystem, TEcsName, 0);
 
     ecs_assert(ecs_vector_count(world->t_component) == 2, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_vector_count(world->t_type) == 2, ECS_INTERNAL_ERROR, NULL);
@@ -129,7 +129,7 @@ void bootstrap_component(
 
     /* Set size and id */
     EcsComponent *component_data = ecs_vector_first(columns[0].data);
-    EcsId *id_data = ecs_vector_first(columns[1].data);
+    EcsName *id_data = ecs_vector_first(columns[1].data);
     
     component_data[index].size = size;
     id_data[index] = id;
@@ -486,7 +486,7 @@ ecs_world_t *ecs_init(void) {
     ecs_stage_init(world, &world->stage);
     ecs_stage_init(world, &world->temp_stage);
 
-    /* Create table that will hold components (EcsComponent, EcsId) */
+    /* Create table that will hold components (EcsComponent, EcsName) */
     ecs_table_t *table = bootstrap_component_table(world);
     assert(table != NULL);
 
@@ -498,7 +498,7 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_ID, 0);
     bootstrap_component(world, table, EEcsRowSystem, ECS_ROW_SYSTEM_ID, sizeof(EcsRowSystem));
     bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_ID, sizeof(EcsColSystem));
-    bootstrap_component(world, table, EEcsId, ECS_ID_ID, sizeof(EcsId));
+    bootstrap_component(world, table, EEcsName, ECS_ID_ID, sizeof(EcsName));
     bootstrap_component(world, table, EEcsHidden, ECS_HIDDEN_ID, 0);
     bootstrap_component(world, table, EEcsDisabled, ECS_DISABLED_ID, 0);
     bootstrap_component(world, table, EEcsOnDemand, ECS_ON_DEMAND_ID, 0);
@@ -514,8 +514,8 @@ ecs_world_t *ecs_init(void) {
     world->max_handle = 0;
 
     /* Initialize EcsWorld */
-    ecs_set(world, EcsWorld, EcsId, {"EcsWorld"});
-    ecs_assert(ecs_get_id(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_set(world, EcsWorld, EcsName, {"EcsWorld"});
+    ecs_assert(ecs_get_name(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_init_builtins(world);
 
@@ -750,7 +750,7 @@ ecs_entity_t ecs_lookup_child_in_columns(
         return 0;
     }
 
-    if ((column_index = ecs_type_index_of(type, EEcsId)) == -1) {
+    if ((column_index = ecs_type_index_of(type, EEcsName)) == -1) {
         return 0;
     }
 
@@ -759,7 +759,7 @@ ecs_entity_t ecs_lookup_child_in_columns(
     }
 
     ecs_column_t *column = &columns[column_index];
-    EcsId *buffer = ecs_vector_first(column->data);
+    EcsName *buffer = ecs_vector_first(column->data);
     int32_t i, count = ecs_vector_count(column->data);
 
     ecs_assert(count == ecs_vector_count(data->entities), 

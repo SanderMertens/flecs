@@ -20,7 +20,7 @@ void Move(ecs_rows_t *rows) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
         printf("Move '%s' {%f, %f}\n", 
-            ecs_get_id(rows->world, rows->entities[i]), p[i].x, p[i].y);
+            ecs_get_name(rows->world, rows->entities[i]), p[i].x, p[i].y);
     }
 }
 
@@ -36,12 +36,12 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     ecs_entity_t e1 = 
-    ecs_set(world, 0, EcsId, {"E1"});
+    ecs_set(world, 0, EcsName, {"E1"});
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Velocity, {1, 2});
 
     ecs_entity_t e2 =
-    ecs_set(world, 0, EcsId, {"E2"});
+    ecs_set(world, 0, EcsName, {"E2"});
     ecs_set(world, e2, Position, {0, 0});
     ecs_set(world, e2, Velocity, {1, 2});
     ecs_set(world, e2, Mass, {10});

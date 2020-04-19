@@ -19,7 +19,7 @@ void print_children(ecs_world_t *world, const char *parent_id, ecs_vector_t *chi
     ecs_entity_t *array = ecs_vector_first(children);
 
     for (int i = 0; i < ecs_vector_count(children); i ++) {
-        printf("Child found: '%s.%s'\n", parent_id, ecs_get_id(world, array[i]));
+        printf("Child found: '%s.%s'\n", parent_id, ecs_get_name(world, array[i]));
     }
 }
 
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
 
-    ECS_SYSTEM(world, GetChildren, EcsManual, EcsId);
+    ECS_SYSTEM(world, GetChildren, EcsManual, EcsName);
 
     /* Create two parents */
     ecs_entity_t parent_1 = ecs_new(world, 0);
@@ -49,10 +49,10 @@ int main(int argc, char *argv[]) {
     ecs_entity_t child_2_2 = ecs_new_child(world, parent_2, Bar);
 
     /* Set ids so it's easier to see which children were resolved */
-    ecs_set(world, child_1_1, EcsId, {"child_1_1"});
-    ecs_set(world, child_1_2, EcsId, {"child_1_2"});
-    ecs_set(world, child_2_1, EcsId, {"child_2_1"});
-    ecs_set(world, child_2_2, EcsId, {"child_2_2"});
+    ecs_set(world, child_1_1, EcsName, {"child_1_1"});
+    ecs_set(world, child_1_2, EcsName, {"child_1_2"});
+    ecs_set(world, child_2_1, EcsName, {"child_2_1"});
+    ecs_set(world, child_2_2, EcsName, {"child_2_2"});
 
     /* Create vector to store child entities */
     ecs_vector_t *children = ecs_vector_new(ecs_entity_t, 0);

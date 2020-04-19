@@ -18,7 +18,7 @@ void Lookup_lookup_w_null_id() {
     ECS_ENTITY(world, MyEntity, 0);
 
     /* Ensure this doesn't crash the lookup function */
-    ecs_set(world, 0, EcsId, {NULL});
+    ecs_set(world, 0, EcsName, {NULL});
 
     ecs_entity_t lookup = ecs_lookup(world, "MyEntity");
     test_assert(lookup != 0);
@@ -54,8 +54,8 @@ void Lookup_lookup_child() {
     ECS_ENTITY(world, Parent1, 0);
     ECS_ENTITY(world, Parent2, 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, EcsId, {"Child"});
-    ecs_entity_t e2 = ecs_set(world, 0, EcsId, {"Child"});
+    ecs_entity_t e1 = ecs_set(world, 0, EcsName, {"Child"});
+    ecs_entity_t e2 = ecs_set(world, 0, EcsName, {"Child"});
 
     ecs_adopt(world, e1, Parent1);
     ecs_adopt(world, e2, Parent2);
@@ -77,8 +77,8 @@ void Lookup_lookup_child_w_component() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_set(world, 0, EcsId, {"Child"});
-    ecs_entity_t e2 = ecs_set(world, 0, EcsId, {"Child"});
+    ecs_entity_t e1 = ecs_set(world, 0, EcsName, {"Child"});
+    ecs_entity_t e2 = ecs_set(world, 0, EcsName, {"Child"});
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Velocity);
@@ -98,8 +98,8 @@ void LookupSystem(ecs_rows_t *rows) {
     ecs_entity_t e = ecs_new(rows->world, 0);
     test_assert(e != 0);
 
-    ecs_set(rows->world, e, EcsId, {"Foo"});
-    test_assert( ecs_has(rows->world, e, EcsId));
+    ecs_set(rows->world, e, EcsName, {"Foo"});
+    test_assert( ecs_has(rows->world, e, EcsName));
 
     ecs_entity_t found = ecs_lookup(rows->world, "Foo");
     test_assert(found != 0);
@@ -116,8 +116,8 @@ void LookupChildSystem(ecs_rows_t *rows) {
     ecs_adopt(rows->world, e, parent);
     test_assert( ecs_contains(rows->world, parent, e));
 
-    ecs_set(rows->world, e, EcsId, {"Foo"});
-    test_assert( ecs_has(rows->world, e, EcsId));
+    ecs_set(rows->world, e, EcsName, {"Foo"});
+    test_assert( ecs_has(rows->world, e, EcsName));
 
     ecs_entity_t found = ecs_lookup(rows->world, "Foo");
     test_assert(found != 0);
@@ -148,8 +148,8 @@ void Lookup_get_id() {
     ecs_world_t *world = ecs_init();
 
     /* Ensure this doesn't crash the lookup function */
-    ecs_entity_t e = ecs_set(world, 0, EcsId, {"Entity"});
-    const char *id = ecs_get_id(world, e);
+    ecs_entity_t e = ecs_set(world, 0, EcsName, {"Entity"});
+    const char *id = ecs_get_name(world, e);
     test_assert(id != NULL);
     test_str(id, "Entity");
 
@@ -163,7 +163,7 @@ void Lookup_get_id_no_id() {
 
     /* Ensure this doesn't crash the lookup function */
     ecs_entity_t e = ecs_new(world, Position);
-    const char *id = ecs_get_id(world, e);
+    const char *id = ecs_get_name(world, e);
     test_assert(id == NULL);
 
     ecs_fini(world);
@@ -174,7 +174,7 @@ void Lookup_get_id_from_empty() {
 
     /* Ensure this doesn't crash the lookup function */
     ecs_entity_t e = ecs_new(world, 0);
-    const char *id = ecs_get_id(world, e);
+    const char *id = ecs_get_name(world, e);
     test_assert(id == NULL);
 
     ecs_fini(world);

@@ -23,7 +23,7 @@ void Move(ecs_rows_t *rows) {
         /* Print something to the console so we can see the system is being
          * invoked */
         printf("%s moved to {.x = %f, .y = %f}\n",
-            ecs_get_id(rows->world, rows->entities[i]),
+            ecs_get_name(rows->world, rows->entities[i]),
             p[i].x, p[i].y);
     }
 }
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     ecs_entity_t MyEntity = _ecs_new(world, 0);
 
     /* Set entity identifier using builtin component */
-    _ecs_set_ptr(world, MyEntity, EEcsId, sizeof(EcsId), &(EcsId){"MyEntity"});
+    _ecs_set_ptr(world, MyEntity, EEcsName, sizeof(EcsName), &(EcsName){"MyEntity"});
 
     /* Components are automatically added when doing an ecs_set, but this is for
      * demonstration purposes. The ecs_add operation accepts a type variable, as
