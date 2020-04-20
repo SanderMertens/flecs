@@ -57,8 +57,8 @@ void Lookup_lookup_child() {
     ecs_entity_t e1 = ecs_set(world, 0, EcsName, {"Child"});
     ecs_entity_t e2 = ecs_set(world, 0, EcsName, {"Child"});
 
-    ecs_adopt(world, e1, Parent1);
-    ecs_adopt(world, e2, Parent2);
+    ecs_add_entity(world, e1, ECS_CHILDOF | Parent1);
+    ecs_add_entity(world, e2, ECS_CHILDOF | Parent2);
 
     ecs_entity_t lookup = ecs_lookup_child(world, Parent1, "Child");
     test_assert(lookup != 0);
@@ -113,8 +113,8 @@ void LookupChildSystem(ecs_rows_t *rows) {
     ecs_entity_t e = ecs_new(rows->world, 0);
     test_assert(e != 0);
 
-    ecs_adopt(rows->world, e, parent);
-    test_assert( ecs_contains(rows->world, parent, e));
+    ecs_add_entity(rows->world, e, ECS_CHILDOF | parent);
+    test_assert( ecs_has_entity(rows->world, e, ECS_CHILDOF | parent));
 
     ecs_set(rows->world, e, EcsName, {"Foo"});
     test_assert( ecs_has(rows->world, e, EcsName));

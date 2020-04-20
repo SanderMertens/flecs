@@ -42,11 +42,11 @@ int main(int argc, char *argv[]) {
     ecs_type_t ecs_type(parent_2) = ecs_type_from_entity(world, parent_2);
 
     /* Create two children for each parent */
-    ecs_entity_t child_1_1 = ecs_new_child(world, parent_1, Foo);
-    ecs_entity_t child_1_2 = ecs_new_child(world, parent_1, Bar);
+    ECS_ENTITY(world, child_1_1, CHILDOF | parent_1, Foo);
+    ECS_ENTITY(world, child_1_2, CHILDOF | parent_1, Bar);
 
-    ecs_entity_t child_2_1 = ecs_new_child(world, parent_2, Foo);
-    ecs_entity_t child_2_2 = ecs_new_child(world, parent_2, Bar);
+    ECS_ENTITY(world, child_2_1, CHILDOF | parent_2, Foo);
+    ECS_ENTITY(world, child_2_2, CHILDOF | parent_2, Bar);
 
     /* Set ids so it's easier to see which children were resolved */
     ecs_set(world, child_1_1, EcsName, {"child_1_1"});

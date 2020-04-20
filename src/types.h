@@ -154,7 +154,7 @@ struct ecs_table_t {
 struct ecs_reference_t {
     ecs_entity_t entity;
     ecs_entity_t component;
-    void *cached_ptr;
+    ecs_cached_ptr_t cached_ptr;
 };
 
 /** Type containing data for a table matched with a system */

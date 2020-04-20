@@ -545,7 +545,7 @@ void StatsCollectTableStats_StatusAction(
         }
     } else if (status == EcsSystemDisabled) {
         /* Delete all entities with EcsTable tag */
-        ecs_delete_w_filter(world, &(ecs_filter_t){
+        ecs_bulk_delete(world, &(ecs_filter_t){
             .include = ecs_type(EcsTablePtr),
             .include_kind = EcsMatchAny
         });
@@ -629,7 +629,7 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
         stats[i].row_systems_count = 0;
         stats[i].enabled_systems_count = 0;
         stats[i].active_systems_count = 0;
-        stats[i].instance_count = _ecs_count(world, type_component[i].normalized);
+        stats[i].instance_count = ecs_count_type(world, type_component[i].normalized);
 
         int32_t j, count = ecs_vector_count(type_component[i].normalized);
         ecs_entity_t *entities = ecs_vector_first(type_component[i].normalized);
@@ -694,7 +694,7 @@ void FlecsStatsImport(
     ECS_COMPONENT(world, EcsTablePtr);
     ECS_COMPONENT(world, EcsTypeStats);
     
-    ECS_TAG(world, EcsStatsSkipCollect);
+    ECS_ENTITY(world, EcsStatsSkipCollect, 0);
 
     /* -- Helper systems -- */
 

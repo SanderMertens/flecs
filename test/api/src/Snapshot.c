@@ -327,7 +327,7 @@ void Snapshot_snapshot_w_filter_after_new() {
 
     test_assert(ecs_has(world, e1, Position));
     test_assert(ecs_has(world, e2, Velocity));
-    test_assert(ecs_is_empty(world, e3));
+    test_assert(!ecs_get_type(world, e3));
     test_assert(ecs_has(world, e4, Velocity));
 
     
@@ -364,15 +364,15 @@ void Snapshot_snapshot_w_filter_after_delete() {
     ecs_delete(world, e3);
     ecs_delete(world, e4);
 
-    test_assert( ecs_is_empty(world, e3));
-    test_assert( ecs_is_empty(world, e4));
+    test_assert( !ecs_get_type(world, e3));
+    test_assert( !ecs_get_type(world, e4));
 
     ecs_snapshot_restore(world, s);
 
     test_assert(ecs_has(world, e1, Position));
     test_assert(ecs_has(world, e2, Velocity));
     test_assert(ecs_has(world, e3, Position));
-    test_assert(ecs_is_empty(world, e4));
+    test_assert(!ecs_get_type(world, e4));
 
     ecs_fini(world);
 }
@@ -520,9 +520,9 @@ void Snapshot_snapshot_copy_filtered() {
 
     test_int( ecs_count(world, Position), 1);
     test_int( ecs_count(world, Velocity), 0);
-    test_assert( !ecs_is_empty(world, e1));
+    test_assert( !!ecs_get_type(world, e1));
     test_assert( ecs_has(world, e1, Position));
-    test_assert( ecs_is_empty(world, e2));    
+    test_assert( !ecs_get_type(world, e2));    
 
     p = ecs_get_ptr(world, e1, Position);
     test_int(p->x, 10);
@@ -564,9 +564,9 @@ void Snapshot_snapshot_copy_w_filter() {
 
     test_int( ecs_count(world, Position), 1);
     test_int( ecs_count(world, Velocity), 0);
-    test_assert( !ecs_is_empty(world, e1));
+    test_assert( !!ecs_get_type(world, e1));
     test_assert( ecs_has(world, e1, Position));
-    test_assert( ecs_is_empty(world, e2));    
+    test_assert( !ecs_get_type(world, e2));    
 
     p = ecs_get_ptr(world, e1, Position);
     test_int(p->x, 10);

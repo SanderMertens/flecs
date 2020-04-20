@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     };
 
     /* Delete matching entities from world to prove we're using snapshot data */
-    ecs_delete_w_filter(world, &f);
+    ecs_bulk_delete(world, &f);
 
     /* Create iterator for snapshot */
     ecs_filter_iter_t it = ecs_snapshot_filter_iter(world, s, &f);

@@ -57,7 +57,7 @@ void Modules_import_module_from_system() {
     ECS_IMPORT(world, SimpleModule, 0);
     ECS_SYSTEM(world, AddVtoP, EcsOnUpdate, Position, $.SimpleModule);
 
-    void *module_ptr = ecs_get_singleton_ptr(world, SimpleModule);
+    const void *module_ptr = ecs_get_ptr(world, EcsSingleton, SimpleModule);
     test_assert(module_ptr != NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -77,7 +77,7 @@ void Modules_import_from_on_add_system() {
     ECS_IMPORT(world, SimpleModule, 0);
     ECS_SYSTEM(world, AddVtoP, EcsOnAdd, Position, $.SimpleModule);
 
-    void *module_ptr = ecs_get_singleton_ptr(world, SimpleModule);
+    const void *module_ptr = ecs_get_ptr(world, EcsSingleton, SimpleModule);
     test_assert(module_ptr != NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -94,7 +94,7 @@ void Modules_import_from_on_set_system() {
     ECS_IMPORT(world, SimpleModule, 0);
     ECS_SYSTEM(world, AddVtoP, EcsOnSet, Position, $.SimpleModule);
 
-    void *module_ptr = ecs_get_singleton_ptr(world, SimpleModule);
+    const void *module_ptr = ecs_get_ptr(world, EcsSingleton, SimpleModule);
     test_assert(module_ptr != NULL);
 
     ecs_entity_t e = ecs_new(world, Position);

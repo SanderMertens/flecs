@@ -427,7 +427,7 @@ void SystemOnAdd_clone_match_1_of_1() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_2 = ecs_clone(world, e_1, false);
+    ecs_entity_t e_2 = ecs_copy(world, 0, e_1, false);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -460,7 +460,7 @@ void SystemOnAdd_clone_match_1_of_2() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_2 = ecs_clone(world, e_1, false);
+    ecs_entity_t e_2 = ecs_copy(world, 0, e_1, false);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -493,7 +493,7 @@ void SystemOnAdd_clone_match_2_of_2() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_2 = ecs_clone(world, e_1, false);
+    ecs_entity_t e_2 = ecs_copy(world, 0, e_1, false);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -533,7 +533,7 @@ void SystemOnAdd_clone_match_2_of_3() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_2 = ecs_clone(world, e_1, false);
+    ecs_entity_t e_2 = ecs_copy(world, 0, e_1, false);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -632,7 +632,7 @@ void SystemOnAdd_new_w_count_match_1_of_1() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, 3);
+    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
     test_assert(e != 0);
 
     test_int(ctx.count, 3);
@@ -859,7 +859,7 @@ void SystemA(ecs_rows_t *rows) {
     int i, tag;
     for (i = 0; i < rows->count; i ++) {
         for (tag = 1000; tag < 1100; tag ++) {
-            _ecs_add(
+            ecs_add_type(
                 rows->world, 
                 rows->entities[i], 
                 ecs_type_from_entity(rows->world, tag));
@@ -968,8 +968,8 @@ void SystemOnAdd_container_column() {
 
     ECS_SYSTEM(world, TestContainer, EcsOnAdd, Position, PARENT.Velocity);
 
-    ecs_entity_t parent = ecs_new(world, Velocity);
-    ecs_new_child(world, parent, Position);
+    ECS_ENTITY(world, Parent, Velocity);
+    ECS_ENTITY(world, child, CHILDOF | parent, Position);
 
     test_bool(is_invoked, true);
 

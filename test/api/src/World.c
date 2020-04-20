@@ -298,13 +298,13 @@ void World_dim() {
 
     malloc_count = 0;
 
-    ecs_new_w_count(world, Position, 500);
+    ecs_bulk_new(world, Position, 500);
 
     test_int(malloc_count, 2);
 
     malloc_count = 0;
 
-    ecs_new_w_count(world, Position, 500);
+    ecs_bulk_new(world, Position, 500);
 
     test_int(malloc_count, 2);
 
@@ -324,17 +324,17 @@ void World_dim_dim_type() {
     ECS_COMPONENT(world, Position);
 
     ecs_dim(world, 1000);
-    ecs_dim_type(world, Position, 1000);
+    ecs_dim_type(world, ecs_type(Position), 1000);
 
     malloc_count = 0;
 
-    ecs_new_w_count(world, Position, 500);
+    ecs_bulk_new(world, Position, 500);
 
     test_int(malloc_count, 0);
 
     malloc_count = 0;
 
-    ecs_new_w_count(world, Position, 400);
+    ecs_bulk_new(world, Position, 400);
 
     test_int(malloc_count, 0);
 

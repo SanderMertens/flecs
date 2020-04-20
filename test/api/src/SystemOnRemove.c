@@ -452,7 +452,7 @@ void SystemOnRemove_remove_watched() {
     test_assert(e != 0);
 
     /* Make parent entity watched */
-    ecs_new_child(world, e, 0);
+    ecs_new_w_entity(world, ECS_CHILDOF | e);
 
     ecs_remove(world, e, Position);
 
@@ -474,7 +474,7 @@ void SystemOnRemove_delete_watched() {
     test_assert(e != 0);
 
     /* Make parent entity watched */
-    ecs_new_child(world, e, 0);
+    ecs_new_w_entity(world, ECS_CHILDOF | e);
 
     ecs_delete(world, e);
 

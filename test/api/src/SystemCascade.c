@@ -38,8 +38,8 @@ void SystemCascade_cascade_depth_1() {
     ecs_set(world, e_3, Position, {1, 2});
     ecs_set(world, e_4, Position, {1, 2});
 
-    ecs_adopt(world, e_3, e_1);
-    ecs_adopt(world, e_4, e_2);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | e_1);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | e_2);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -103,10 +103,10 @@ void SystemCascade_cascade_depth_2() {
     ecs_set(world, e_5, Position, {1, 2});
     ecs_set(world, e_6, Position, {1, 2});
 
-    ecs_adopt(world, e_3, e_1);
-    ecs_adopt(world, e_4, e_2);
-    ecs_adopt(world, e_5, e_3);
-    ecs_adopt(world, e_6, e_4);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | e_1);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | e_2);
+    ecs_add_entity(world, e_5, ECS_CHILDOF | e_3);
+    ecs_add_entity(world, e_6, ECS_CHILDOF | e_4);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -197,8 +197,8 @@ void SystemCascade_add_after_match() {
     ecs_set(world, e_3, Position, {1, 2});
     ecs_set(world, e_4, Position, {1, 2});
 
-    ecs_adopt(world, e_3, parent);
-    ecs_adopt(world, e_4, parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -272,8 +272,8 @@ void SystemCascade_adopt_after_match() {
 
     ecs_progress(world, 1);
 
-    ecs_adopt(world, e_3, parent);
-    ecs_adopt(world, e_4, parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
 
     ctx = (SysTestData){0};
 

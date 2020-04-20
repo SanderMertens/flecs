@@ -113,20 +113,9 @@ void Has_2_of_2(void);
 void Has_3_of_2(void);
 void Has_2_of_1(void);
 void Has_1_of_empty(void);
-void Has_any_of_1_of_1(void);
-void Has_any_of_1_of_2(void);
-void Has_any_of_2_of_3(void);
-void Has_any_of_3_of_2(void);
-void Has_any_of_2_of_1(void);
-void Has_any_of_1_of_0(void);
-void Has_any_2_of_2_disjunct(void);
-void Has_any_of_0_0(void);
-void Has_any_of_0_1(void);
-void Has_any_of_0_zero_entity(void);
 void Has_has_in_progress(void);
 void Has_has_of_zero(void);
 void Has_has_owned(void);
-void Has_has_owned_any(void);
 void Has_has_entity(void);
 void Has_has_entity_0(void);
 void Has_has_entity_0_component(void);
@@ -467,35 +456,6 @@ void Tasks_on_remove_no_components(void);
 void Tasks_on_remove_one_tag(void);
 void Tasks_on_remove_from_system(void);
 void Tasks_tasks_in_phases(void);
-
-// Testsuite 'Container'
-void Container_child(void);
-void Container_child_w_component(void);
-void Container_child_w_type(void);
-void Container_child_w_type_w_childof(void);
-void Container_child_w_count_component(void);
-void Container_child_w_count_w_type(void);
-void Container_child_w_count_type_w_childof(void);
-void Container_contains_w_empty_parent(void);
-void Container_contains_w_child_as_parent(void);
-void Container_contains_w_0_as_child(void);
-void Container_contains_w_0_as_parent(void);
-void Container_contains_w_0_for_both(void);
-void Container_adopt(void);
-void Container_adopt_again(void);
-void Container_adopt_twice(void);
-void Container_orphan_empty(void);
-void Container_orphan(void);
-void Container_orphan_again(void);
-void Container_orphan_twice(void);
-void Container_adopt_orphan(void);
-void Container_adopt_2_orphan_1(void);
-void Container_get_ptr_container(void);
-void Container_get_parent(void);
-void Container_get_parent_no_matching_comp(void);
-void Container_get_parent_two_parents(void);
-void Container_get_parent_no_parent(void);
-void Container_singleton_as_container(void);
 
 // Testsuite 'Prefab'
 void Prefab_new_w_prefab(void);
@@ -1282,7 +1242,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Has",
-        .testcase_count = 30,
+        .testcase_count = 19,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -1325,46 +1285,6 @@ static bake_test_suite suites[] = {
                 .function = Has_1_of_empty
             },
             {
-                .id = "any_of_1_of_1",
-                .function = Has_any_of_1_of_1
-            },
-            {
-                .id = "any_of_1_of_2",
-                .function = Has_any_of_1_of_2
-            },
-            {
-                .id = "any_of_2_of_3",
-                .function = Has_any_of_2_of_3
-            },
-            {
-                .id = "any_of_3_of_2",
-                .function = Has_any_of_3_of_2
-            },
-            {
-                .id = "any_of_2_of_1",
-                .function = Has_any_of_2_of_1
-            },
-            {
-                .id = "any_of_1_of_0",
-                .function = Has_any_of_1_of_0
-            },
-            {
-                .id = "any_2_of_2_disjunct",
-                .function = Has_any_2_of_2_disjunct
-            },
-            {
-                .id = "any_of_0_0",
-                .function = Has_any_of_0_0
-            },
-            {
-                .id = "any_of_0_1",
-                .function = Has_any_of_0_1
-            },
-            {
-                .id = "any_of_0_zero_entity",
-                .function = Has_any_of_0_zero_entity
-            },
-            {
                 .id = "has_in_progress",
                 .function = Has_has_in_progress
             },
@@ -1375,10 +1295,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "has_owned",
                 .function = Has_has_owned
-            },
-            {
-                .id = "has_owned_any",
-                .function = Has_has_owned_any
             },
             {
                 .id = "has_entity",
@@ -2703,120 +2619,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "tasks_in_phases",
                 .function = Tasks_tasks_in_phases
-            }
-        }
-    },
-    {
-        .id = "Container",
-        .testcase_count = 27,
-        .testcases = (bake_test_case[]){
-            {
-                .id = "child",
-                .function = Container_child
-            },
-            {
-                .id = "child_w_component",
-                .function = Container_child_w_component
-            },
-            {
-                .id = "child_w_type",
-                .function = Container_child_w_type
-            },
-            {
-                .id = "child_w_type_w_childof",
-                .function = Container_child_w_type_w_childof
-            },
-            {
-                .id = "child_w_count_component",
-                .function = Container_child_w_count_component
-            },
-            {
-                .id = "child_w_count_w_type",
-                .function = Container_child_w_count_w_type
-            },
-            {
-                .id = "child_w_count_type_w_childof",
-                .function = Container_child_w_count_type_w_childof
-            },
-            {
-                .id = "contains_w_empty_parent",
-                .function = Container_contains_w_empty_parent
-            },
-            {
-                .id = "contains_w_child_as_parent",
-                .function = Container_contains_w_child_as_parent
-            },
-            {
-                .id = "contains_w_0_as_child",
-                .function = Container_contains_w_0_as_child
-            },
-            {
-                .id = "contains_w_0_as_parent",
-                .function = Container_contains_w_0_as_parent
-            },
-            {
-                .id = "contains_w_0_for_both",
-                .function = Container_contains_w_0_for_both
-            },
-            {
-                .id = "adopt",
-                .function = Container_adopt
-            },
-            {
-                .id = "adopt_again",
-                .function = Container_adopt_again
-            },
-            {
-                .id = "adopt_twice",
-                .function = Container_adopt_twice
-            },
-            {
-                .id = "orphan_empty",
-                .function = Container_orphan_empty
-            },
-            {
-                .id = "orphan",
-                .function = Container_orphan
-            },
-            {
-                .id = "orphan_again",
-                .function = Container_orphan_again
-            },
-            {
-                .id = "orphan_twice",
-                .function = Container_orphan_twice
-            },
-            {
-                .id = "adopt_orphan",
-                .function = Container_adopt_orphan
-            },
-            {
-                .id = "adopt_2_orphan_1",
-                .function = Container_adopt_2_orphan_1
-            },
-            {
-                .id = "get_ptr_container",
-                .function = Container_get_ptr_container
-            },
-            {
-                .id = "get_parent",
-                .function = Container_get_parent
-            },
-            {
-                .id = "get_parent_no_matching_comp",
-                .function = Container_get_parent_no_matching_comp
-            },
-            {
-                .id = "get_parent_two_parents",
-                .function = Container_get_parent_two_parents
-            },
-            {
-                .id = "get_parent_no_parent",
-                .function = Container_get_parent_no_parent
-            },
-            {
-                .id = "singleton_as_container",
-                .function = Container_singleton_as_container
             }
         }
     },
@@ -4451,5 +4253,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 42);
+    return bake_test_run("api", argc, argv, suites, 41);
 }

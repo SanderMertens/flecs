@@ -348,7 +348,7 @@ ECS_ENTITY(world, Player, Position, Velocity);
 You may find that certain things cannot be expressed through declarative statements yet, like setting component values on individual entities (you need `ecs_set` for that). These use cases represent areas in the API that we want to improve. Eventually, we would like applications to be able to define applications fully declaratively (except for the system implementations, of course!). 
 
 ### Create entities in bulk
-It is much more efficient to [create entities in bulk](#create-entities-in-bulk) (using the `ecs_new_w_count` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
+It is much more efficient to [create entities in bulk](#create-entities-in-bulk) (using the `ecs_bulk_new` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
 
 ### Limit usage of ecs_lookup
 You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsName` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `NOTHING` modifier, like so:
@@ -411,10 +411,10 @@ ecs_entity_t e = ecs_new(world, Position);
 As it is functionally equivalent to first calling `ecs_new` followed by `ecs_add`, `EcsOnAdd` systems will be invoked for the `Position` component as a result of this operation.
 
 #### Creating entities in bulk
-When creating a large number of new entities, it can be much faster do this them in bulk, especially when adding initial components. This can be achieved with the `ecs_new_w_count` function. This function is equivalent to `ecs_new` but it has an additional `count` parameter which indicates the number of entities to be returned. An application can use it like this:
+When creating a large number of new entities, it can be much faster do this them in bulk, especially when adding initial components. This can be achieved with the `ecs_bulk_new` function. This function is equivalent to `ecs_new` but it has an additional `count` parameter which indicates the number of entities to be returned. An application can use it like this:
 
 ```c
-ecs_entity_t e = ecs_new_w_count(world, Position, 100);
+ecs_entity_t e = ecs_bulk_new(world, Position, 100);
 ```
 
 This operation is functionally equivalent to calling `ecs_new` 100 times, but has the added benefit that all the resource allocations, updating of the internal administration and invoking of reactive systems can all happen in bulk. The function returns the first of the created entities, and it is guaranteed that the entity identifiers are consecutive, so that if the first entity identifier is 1, the last entity identifier is 101.
@@ -447,27 +447,27 @@ Flecs has an API to create a new entity which also specifies a parent entity. Th
 
 ```c
 ecs_entity_t my_root = ecs_new(world, 0);
-ecs_entity_t my_child = ecs_new_child(world, my_root, 0);
+ecs_entity_t my_child = ecs_new_w_entity(world, ECS_CHILDOF | my_root);
 ```
 
 Any entity can be specifed as a parent entity (`my_root`, in this example).
 
 #### Adopting entities
-The API allows applications to adopt entities by containers after they have been created with the `ecs_adopt` operation. The `ecs_adopt` operation is almost equivalent to an `ecs_add`, with as only difference that it accepts an `ecs_entity_t` (instead of an `ecs_type_t`), and it adds the `EcsContainer` component to the parent if it didn't have it already. The operation can be used like this:
+The API allows applications to adopt entities by containers after they have been created with the `ecs_add_entity` operation in combination with the `ECS_CHILDOF` flag:
 
 ```c
 ecs_entity_t my_root = ecs_new(world, 0);
 ecs_entity_t e = ecs_new(world, 0);
-ecs_adopt(world, e, my_root);
+ecs_add(world, e, ECS_CHILDOF | my_root);
 ```
 
 If the entity was already a child of the container, the operation has no side effects.
 
 #### Orphaning entities
-The API allows applications to orphan entities from containers after they have been created with the `ecs_orphan` operation. The `ecs_orphan` operation is almost equivalent to an `ecs_remove`, with as only difference that it accepts an `ecs_entity_t` (instead of an `ecs_type_t`). The operation can be used like this:
+The API allows applications to orphan entities from containers after they have been created with the `ecs_remove_entity` operation in combination with the `ECS_CHILDOF` flag:
 
 ```c
-ecs_orphan(world, e, my_root);
+ecs_remove_entity(world, e, ECS_CHILDOF | my_root);
 ```
 
 If the entity was not a child of the container, the operation has no side effects. This operation will not add the `EcsContainer` tag to `my_root`.
@@ -494,7 +494,8 @@ Note that in order to be able to use entity flags, the parent entity must be nam
 
 ```c
 ecs_entity_t MyParent = ecs_new(world, Position);
-ecs_entity_t MyChild = ecs_new_child(world, MyParent, Position);
+ecs_entity_t MyChild = ecs_new_w_entity(world, ECS_CHILDOF | MyParent);
+ecs_add(world, MyChild, Position);
 ```
 
 ### Inheritance
@@ -503,11 +504,11 @@ Inheritance is a mechanism in flecs that allows entities to "inherit", or share 
 The entity that inherits components is called the "instance". The entity from which the components are inherited is called the "base" entity.
 
 #### Creating instances
-Flecs has an API to create a new entity which also specifies a base entity. The API can be invoked like this:
+New instances in flecs can be created with the `ecs_new_w_entity` operation in combination with the `ECS_INSTANCEOF` flag:
 
 ```c
 ecs_entity_t my_base = ecs_new(world, Position);
-ecs_entity_t my_instance = ecs_new_instance(world, my_base, Velocity);
+ecs_entity_t my_instance = ecs_new_w_entity(world, ECS_INSTANCEOF | my_base);
 ```
 
 In this example, `my_instance` will now share the `Position` component from the `my_base` entity. If an application were to retrieve the Position component from both `my_base` and `my_instance`, it would observe that they are the same. Consider the following code snippet:
@@ -521,27 +522,27 @@ assert(p_base == p_instance); // condition will be true
 From this follows that modifying the component value of the base will also modify components of all its instances. Any entity can be specifed as a base entity (`my_root`, in this example).
 
 #### Adding inheritance relationships
-Inheritance relationships can be added after entities have been created with the `ecs_inherit` method. Consider:
+Inheritance relationships can be added after entities have been created with the `ecs_add_w_entity` operation. Consider:
 
 ```c
 ecs_entity_t my_base = ecs_new(world, Position);
 ecs_entity_t my_instance = ecs_new(world, Velocity);
 
 // Create inheritance relationship where my_instance inherits from my_base
-ecs_inherit(world, my_instance, my_base);
+ecs_add_entity(world, my_instance, ECS_INSTANCEOF | my_base);
 ```
 
 If the inheritance relationship was already added to the entity, this operation will have no effects.
 
 #### Removing inheritance relationships
-Inheritance relationships can be removed after they have been added with the `ecs_disinherit` method. Consider:
+Inheritance relationships can be removed after they have been added with the `ecs_remove_entity` operation. Consider:
 
 ```c
 ecs_entity_t my_base = ecs_new(world, Position);
-ecs_entity_t my_instance = ecs_new_instance(world, my_base, Velocity);
+ecs_entity_t my_instance = ecs_new_w_entity(world, ECS_INSTANCEOF | my_base);
 
 // Remove inheritance relationship
-ecs_disinherit(world, my_instance, my_base);
+ecs_remove_entity(world, my_instance, ECS_INSTANCEOF | my_base);
 ```
 
 If the inheritance relationship was not added to the entity, this operation will have no effects.
@@ -568,11 +569,11 @@ Note that in order to be able to use entity flags, the parent entity must be nam
 
 ```c
 ecs_entity_t MyBase = ecs_new(world, Position);
-ecs_entity_t MyInstance = ecs_new_instance(world, MyBase, Velocity);
+ecs_entity_t MyInstance = ecs_new_w_entity(world, ECS_INSTANCEOF | MyBase);
 ```
 
 #### Multiple inheritance
-An entity may inherit from multiple base entities. Consider the following example:
+An entity may have multiple base entities. Consider the following example:
 
 ```c
 ECS_ENTITY(world, MyBase1, Position);
@@ -587,7 +588,7 @@ An instance may override the components of a base entity. Consider the following
 
 ```c
 ecs_entity_t MyBase = ecs_new(world, Position);
-ecs_entity_t MyInstance = ecs_new_instance(world, MyBase, 0);
+ecs_entity_t MyInstance = ecs_new_w_entity(world, ECS_INSTANCEOF | MyBase);
 
 // Override Position from MyBase
 ecs_add(world, MyInstance, Position);
@@ -610,7 +611,8 @@ ecs_entity_t MyBase = ecs_new(world, Position);
     ecs_set(world, MyBase, Position, {10, 20});
 
 // Override Position on creation, copies the value from MyBase into MyInstance
-ecs_entity_t MyInstance = ecs_new_instance(world, MyBase, Position);
+ecs_entity_t MyInstance = ecs_new_w_entity(world, ECS_INSTANCEOF | MyBase);
+ecs_add(world, MyInstance, Position);
 ```
 
 After this operation, `MyInstance` will have a private `Position` component that is initialized to `{10, 20}`. The utility of this pattern becomes more obvious when combined when used in combination with types in which the inheritance relationship is encoded:
@@ -679,7 +681,7 @@ ECS_ENTITY(world, MyEntity, INSTANCEOF | MyPrefab);
 or:
 
 ```c
-ecs_entity_t e = ecs_new_instance(world, MyPrefab);
+ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | MyPrefab);
 ```
 
 #### Prefab nesting
@@ -687,10 +689,9 @@ Prefabs can be created as children of other prefabs. This lets applications crea
 
 ```c
 ECS_PREFAB(world, ParentPrefab, EcsPosition2D);
-  ECS_PREFAB(world, ChildPrefab, EcsPosition2D);
-     ecs_set(world, ChildPrefab, EcsPrefab, {.parent = ParentPrefab});
+  ECS_PREFAB(world, ChildPrefab, CHILDOF | ParentPrefab, EcsPosition2D);
      
-ecs_entity_t e = ecs_new_instance(world, ParentPrefab);
+ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | ParentPrefab);
 ```
 
 After running this example, entity `e` will contain a child entity called `ChildPrefab`. All components of `e` will be shared with `ParentPrefab`, and all components of `e`'s child will be shared with `ChildPrefab`. Just like with regular prefabs, component values can be overridden. To override the component of a child entity, an application can use the following method:
@@ -703,7 +704,7 @@ ecs_set(world, child, Position, {10, 20}); // Override the component of the chil
 An application can also choose to instantiate a child prefab directly:
 
 ```c
-ecs_entity_t e = ecs_new_instance(world, ChildPrefab);
+ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | ChildPrefab);
 ```
 
 Applications may want to compose a prefab out of various existing prefabs. This can be achieved by combining nested prefabs with prefab variants, as is shown in the following example:
@@ -711,16 +712,13 @@ Applications may want to compose a prefab out of various existing prefabs. This 
 ```c
 // Prefab that defines a wheel
 ECS_PREFAB(world, Wheel, EcsPosition2D, EcsCircle2D);
-  ECS_PREFAB(world, Tire, EcsPosition2D, EcsCircle2D, Pressure);
-      ecs_set(world, Tire, EcsPrefab, {.parent = Wheel});
+  ECS_PREFAB(world, Tire, CHILDOF | Wheel, EcsPosition2D, EcsCircle2D, Pressure);
 
 // Prefab that defines a car
 ECS_PREFAB(world, Car, EcsPosition2D);
-  ECS_PREFAB(world, FrontWheel, INSTANCEOF | Wheel);
-     ecs_set(world, FrontWheel, EcsPrefab, {.parent = Car});
+  ECS_PREFAB(world, FrontWheel, CHILDOF | Car, INSTANCEOF | Wheel);
      ecs_set(world, FrontWheel, EcsPosition, {-100, 0});
-  ECS_PREFAB(world, BackWheel, INSTANCEOF | Wheel);
-     ecs_set(world, BackWheel, EcsPrefab, {.parent = Car});
+  ECS_PREFAB(world, BackWheel, CHILDOF | Car, INSTANCEOF | Wheel);
      ecs_set(world, BackWheel, EcsPosition, {100, 0});     
 ```
 
@@ -728,7 +726,7 @@ In this example, the `FrontWheel` and `BackWheel` prefabs of the car inherit fro
 
 ```c
 // Also creates FrontWheel, FrontWheel/Tire, BackWheel, BackWheel/Tire
-ecs_entity_t e = ecs_new_instance(world, Car); 
+ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Car);
 ```
 
 ## Components and Types
@@ -853,10 +851,10 @@ ecs_set(world, e, Position, {10, 20});
 After the operation it is guaranteed that `e` has `Position`, and that it is set to `{10, 20}`. If the entity did not yet have `Position`, it will be added by the operation. If the entity already had `Position`, it will only assign the value. If there are any `EcsOnSet` systems that match with the `Position` component, they will be invoked after the value is assigned.
 
 ### Tags
-Tags are components that do not contain any data. Internally it is represented as a component with data-size 0. Tags can be useful for subdividing entities into categories, without adding any data. A tag can be defined with the ECS_TAG macro:
+A tag is a component that has no data associated with it. Because components are represented as entities in Flecs, a tag can be created by simply creating an empty entity:
 
 ```c
-ECS_TAG(world, MyTag);
+ECS_ENTITY(world, MyTag, 0);
 ```
 
 Tags can be added/removed just like regular components with `ecs_new`, `ecs_add` and `ecs_remove`:
@@ -990,7 +988,7 @@ for (int i = 0; i < rows->count; i ++) {
 ```
 
 ##### OWNED source
-OWNED is similar to SELF in that the component is matched with the entities to be iterated over, but will only match entities that own the component. Components from base entities (added either with `ecs_new_instance` or `ecs_inherit`) will not be matched.
+OWNED is similar to SELF in that the component is matched with the entities to be iterated over, but will only match entities that own the component. Components from base entities will not be matched.
 
 ```
 Position, OWNED.Velocity
@@ -1011,7 +1009,7 @@ for (int i = 0; i < rows->count; i ++) {
 ```
 
 ##### SHARED source
-SHARED is similar to SELF in that the component is matched with the entities to be iterated over, but will only match entities that do not own the component. Only components from base entities (added either with `ecs_new_instance` or `ecs_inherit`) will be matched.
+SHARED is similar to SELF in that the component is matched with the entities to be iterated over, but will only match entities that do not own the component. Only components from base entities.
 
 ```
 Position, SHARED.Velocity

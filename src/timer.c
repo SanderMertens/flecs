@@ -180,22 +180,6 @@ float ecs_get_interval(
     }
 }
 
-/* Deprecated functions */
-void ecs_set_period(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    float period)
-{
-    ecs_set_interval(world, system, period);
-}
-
-float ecs_get_period(
-    ecs_world_t *world,
-    ecs_entity_t system)
-{
-    return ecs_get_interval(world, system);
-}
-
 void ecs_start_timer(
     ecs_world_t *world,
     ecs_entity_t timer)

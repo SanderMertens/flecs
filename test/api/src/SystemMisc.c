@@ -914,7 +914,9 @@ void SystemMisc_match_system_w_filter() {
     ECS_SYSTEM(world, SysA, EcsManual, SYSTEM.Position);
     ECS_SYSTEM(world, SysB, EcsManual, Position);
 
-    ecs_run_w_filter(world, SysB, 0, 0, 0, Position, NULL);
+    ecs_run_w_filter(world, SysB, 0, 0, 0, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    }, NULL);
 
     test_assert(b_invoked != 0);
     test_assert(b_entity == SysA);

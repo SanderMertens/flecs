@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     ecs_new_system(world, "Move", EcsOnUpdate, "Position, Velocity", Move);
 
     /* Create entity */
-    ecs_entity_t MyEntity = _ecs_new(world, 0);
+    ecs_entity_t MyEntity = ecs_new_w_type(world, 0);
 
     /* Set entity identifier using builtin component */
     _ecs_set_ptr(world, MyEntity, EEcsName, sizeof(EcsName), &(EcsName){"MyEntity"});
@@ -53,8 +53,8 @@ int main(int argc, char *argv[]) {
     /* Components are automatically added when doing an ecs_set, but this is for
      * demonstration purposes. The ecs_add operation accepts a type variable, as
      * it can add multiple components in a single operation. */
-    _ecs_add(world, MyEntity, TPosition);
-    _ecs_add(world, MyEntity, TVelocity);
+    ecs_add_type(world, MyEntity, TPosition);
+    ecs_add_type(world, MyEntity, TVelocity);
 
     /* Set values for entity. */
     _ecs_set_ptr(world, MyEntity, EPosition, sizeof(Position), &(Position){0, 0});

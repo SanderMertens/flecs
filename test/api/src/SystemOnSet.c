@@ -148,7 +148,7 @@ void SystemOnSet_clone() {
 
     ctx = (SysTestData){0};
 
-   ecs_clone(world, e_1, false);
+   ecs_copy(world, 0, e_1, false);
 
     /* OnSet function should not have been called, because value has not been 
      * copied */
@@ -184,7 +184,7 @@ void SystemOnSet_clone_w_value() {
 
     ctx = (SysTestData){0};
 
-    ecs_entity_t e_2 = ecs_clone(world, e_1, true);
+    ecs_entity_t e_2 = ecs_copy(world, 0, e_1, true);
 
     /* OnSet function should not have been called, because value has not been 
      * copied */
@@ -427,7 +427,7 @@ void SystemOnSet_on_set_after_on_add_w_new_w_count() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, 3);
+    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
@@ -544,7 +544,7 @@ void SystemOnSet_on_set_after_override() {
 
     /* instantiate prefab */
 
-    ecs_entity_t e = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -650,7 +650,7 @@ void SystemOnSet_on_set_after_override_w_new_w_count() {
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_count(world, Type, 3);
+    ecs_entity_t e = ecs_bulk_new(world, Type, 3);
 
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);

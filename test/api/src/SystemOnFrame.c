@@ -310,7 +310,7 @@ void SystemOnFrame_2_type_3_component() {
 void SystemOnFrame_1_type_1_component_1_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, e_1, Position, Tag);
@@ -359,7 +359,7 @@ void SystemOnFrame_1_type_1_component_1_tag() {
 void SystemOnFrame_2_type_1_component_1_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, e_1, Position, Tag);
@@ -1067,7 +1067,7 @@ void SystemOnFrame_use_fields_1_owned_1_shared() {
 
     ecs_entity_t e_1 = ecs_set(world, 0, Position, {1, 2});
     ecs_entity_t parent = ecs_set(world, 0, Velocity, {10, 20});
-    ecs_adopt(world, e_1, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
 
     ecs_progress(world, 1);
 
@@ -1990,7 +1990,7 @@ void SystemOnFrame_shared_only() {
     ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, SHARED.Position);
 
     ecs_entity_t base = ecs_new(world, Position);
-    ecs_entity_t e = ecs_new_instance(world, base, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
 
     ecs_progress(world, 0);
 
@@ -2024,7 +2024,7 @@ void SystemOnFrame_get_period() {
 
     ecs_set_interval(world, Dummy, 10.0);
 
-    test_flt( ecs_get_period(world, Dummy), 10.0);
+    test_flt( ecs_get_interval(world, Dummy), 10.0);
 
     ecs_fini(world);
 }

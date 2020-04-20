@@ -647,7 +647,7 @@ void MultiThread_2_thread_test_combs_100_entity() {
 
     int i, ENTITIES = 100, THREADS = 2;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -675,7 +675,7 @@ void MultiThread_3_thread_test_combs_100_entity() {
 
     int i, ENTITIES = 100, THREADS = 3;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -703,7 +703,7 @@ void MultiThread_4_thread_test_combs_100_entity() {
 
     int i, ENTITIES = 100, THREADS = 4;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -731,7 +731,7 @@ void MultiThread_5_thread_test_combs_100_entity() {
 
     int i, ENTITIES = 100, THREADS = 5;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -759,7 +759,7 @@ void MultiThread_6_thread_test_combs_100_entity() {
 
     int i, ENTITIES = 100, THREADS = 6;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -789,8 +789,8 @@ void MultiThread_2_thread_test_combs_100_entity_2_types() {
 
     int i, ENTITIES = 100, THREADS = 2;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES / 2);
-    ecs_new_w_count(world, Type, ENTITIES / 2);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES / 2);
+    ecs_bulk_new(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -820,8 +820,8 @@ void MultiThread_3_thread_test_combs_100_entity_2_types() {
 
     int i, ENTITIES = 20, THREADS = 3;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES / 2);
-    ecs_new_w_count(world, Type, ENTITIES / 2);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES / 2);
+    ecs_bulk_new(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -851,8 +851,8 @@ void MultiThread_4_thread_test_combs_100_entity_2_types() {
 
     int i, ENTITIES = 100, THREADS = 4;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES / 2);
-    ecs_new_w_count(world, Type, ENTITIES / 2);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES / 2);
+    ecs_bulk_new(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -882,8 +882,8 @@ void MultiThread_5_thread_test_combs_100_entity_2_types() {
 
     int i, ENTITIES = 100, THREADS = 5;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES / 2);
-    ecs_new_w_count(world, Type, ENTITIES / 2);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES / 2);
+    ecs_bulk_new(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -913,8 +913,8 @@ void MultiThread_6_thread_test_combs_100_entity_2_types() {
 
     int i, ENTITIES = 100, THREADS = 6;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES / 2);
-    ecs_new_w_count(world, Type, ENTITIES / 2);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES / 2);
+    ecs_bulk_new(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -944,8 +944,8 @@ void MultiThread_change_thread_count() {
 
     int i, ENTITIES = 100;
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, ENTITIES / 2);
-    ecs_new_w_count(world, Type, ENTITIES / 2);
+    ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES / 2);
+    ecs_bulk_new(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, e + i, Position, {1, 2});
@@ -985,7 +985,7 @@ void MultiThread_multithread_quit() {
 
     ECS_SYSTEM(world, QuitSystem, EcsOnUpdate, Position);
 
-    ecs_new_w_count(world, Position, 100);
+    ecs_bulk_new(world, Position, 100);
 
     ecs_set_threads(world, 2);
 
@@ -1038,7 +1038,7 @@ void MultiThread_reactive_system() {
     ECS_SYSTEM(world, PeriodicDummySystem, EcsOnUpdate, Position);
     ECS_SYSTEM(world, ReactiveDummySystem, EcsOnSet, Position);
 
-    ecs_new_w_count(world, Position, 2);
+    ecs_bulk_new(world, Position, 2);
     ecs_set_threads(world, 2);
 
     test_assert(has_ran == false);

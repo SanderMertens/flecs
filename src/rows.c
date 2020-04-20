@@ -18,7 +18,7 @@ void* get_owned_column_ptr(
 }
 
 static
-void* get_shared_column(
+const void* get_shared_column(
     const ecs_rows_t *rows,
     size_t size,
     int32_t table_column)
@@ -37,7 +37,13 @@ void* get_shared_column(
     }
 #endif
 
-    return rows->references[-table_column - 1].cached_ptr;    
+    ecs_reference_t *ref = &rows->references[-table_column - 1];
+
+    return (void*)ecs_get_cached_ptr_w_entity(
+        rows->world,
+        &ref->cached_ptr,
+        ref->entity,
+        ref->component);
 }
 
 static
@@ -83,7 +89,7 @@ void* get_column(
     }
 
     if (table_column < 0) {
-        return get_shared_column(rows, size, table_column);
+        return (void*)get_shared_column(rows, size, table_column);
     } else {
         return get_owned_column_ptr(rows, size, table_column, row);
     }

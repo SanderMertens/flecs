@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 
     /* Create a system that prints the position of an entity once per second */
     ECS_SYSTEM(world, PrintPosition, EcsOnUpdate, Position);
-    ecs_set_period(world, PrintPosition, 1.0);
+    ecs_set_interval(world, PrintPosition, 1.0);
 
     /* Create an entity with Position and Velocity. Creating an entity with the
      * ECS_ENTITY macro is an easy way to create entities with multiple

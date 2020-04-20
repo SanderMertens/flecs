@@ -5,11 +5,11 @@ void Singleton_set() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_singleton(world, Position, {10, 20});
+    ecs_set(world, EcsSingleton, Position, {10, 20});
 
     test_assert( ecs_has(world, EcsSingleton, Position));
 
-    Position *p = ecs_get_singleton_ptr(world, Position);
+    Position *p = ecs_get_ptr(world, EcsSingleton, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -24,11 +24,11 @@ void Singleton_set_ptr() {
 
     Position p_value = {10, 20};
 
-    ecs_set_singleton_ptr(world, Position, &p_value);
+    ecs_set_ptr(world, EcsSingleton, Position, &p_value);
 
     test_assert( ecs_has(world, EcsSingleton, Position));
 
-    Position *p = ecs_get_singleton_ptr(world, Position);
+    Position *p = ecs_get_ptr(world, EcsSingleton, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -59,7 +59,7 @@ void Singleton_system_w_singleton() {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, $.Velocity);
 
-    ecs_set_singleton(world, Velocity, {1, 2});
+    ecs_set(world, EcsSingleton, Velocity, {1, 2});
     test_assert( ecs_has(world, EcsSingleton, Velocity));
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});

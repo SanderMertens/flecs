@@ -65,13 +65,6 @@ void ecs_clear_w_filter(
     ecs_world_t *world,
     const ecs_filter_t *filter);
 
-/* Get entity info */
-bool ecs_get_info(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_entity_info_t *info); 
-
 /* Initialize component value(s) */
 void ecs_run_init_actions(
     ecs_world_t *world,
@@ -178,13 +171,6 @@ ecs_entity_t ecs_type_contains(
     bool match_all,
     bool match_prefab);
 
-/* Test if type contains component */
-bool ecs_type_has_entity_intern(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t component,
-    bool match_prefab);
-
 /* Add component to type */
 ecs_type_t ecs_type_add_intern(
     ecs_world_t *world,
@@ -202,11 +188,6 @@ int32_t ecs_type_container_depth(
    ecs_world_t *world,
    ecs_type_t type,
    ecs_entity_t component);
-
-/** Utility to iterate over prefabs in type */
-int32_t ecs_type_get_prefab(
-    ecs_type_t type,
-    int32_t n);
 
 /* Find entity in prefabs of type */
 ecs_entity_t ecs_find_entity_in_prefabs(

@@ -189,9 +189,9 @@ void postprocess(
             /* If the signature explicitly indicates interest in EcsDisabled,
              * signal that disabled entities should be matched. By default,
              * disabled entities are not matched. */
-            if (ecs_type_has_entity_intern(
+            if (ecs_type_has_owned_entity(
                 world, column->is.type, 
-                ecs_entity(EcsDisabled), false))
+                ecs_entity(EcsDisabled), true))
             {
                 sig->match_disabled = true;
             }
@@ -199,9 +199,9 @@ void postprocess(
             /* If the signature explicitly indicates interest in EcsPrefab,
              * signal that disabled entities should be matched. By default,
              * prefab entities are not matched. */
-            if (ecs_type_has_entity_intern(
+            if (ecs_type_has_owned_entity(
                 world, column->is.type, 
-                ecs_entity(EcsPrefab), false))
+                ecs_entity(EcsPrefab), true))
             {
                 sig->match_prefab = true;
             }            

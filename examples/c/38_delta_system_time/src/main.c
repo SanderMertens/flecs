@@ -32,9 +32,9 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Period10, EcsOnUpdate, 0);
     ECS_SYSTEM(world, Period20, EcsOnUpdate, 0);
 
-    ecs_set_period(world, Period05, 0.5);
-    ecs_set_period(world, Period10, 1.0);
-    ecs_set_period(world, Period20, 2.0);
+    ecs_set_interval(world, Period05, 0.5);
+    ecs_set_interval(world, Period10, 1.0);
+    ecs_set_interval(world, Period20, 2.0);
 
     ecs_set_target_fps(world, 60);
 

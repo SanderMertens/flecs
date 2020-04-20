@@ -90,22 +90,22 @@ int main(int argc, char *argv[]) {
     ecs_set(world, Root, Position, {0, 0});
     ecs_set(world, Root, Velocity, {1, 2});
 
-        ecs_entity_t Child1 = ecs_new_child(world, Root, 0);
+        ecs_entity_t Child1 = ecs_new_w_entity(world, ECS_CHILDOF | Root);
         ecs_set(world, Child1, EcsName, {"Child1"});
         ecs_add(world, Child1, WorldPosition);
         ecs_set(world, Child1, Position, {100, 100});
 
-            ecs_entity_t GChild1 = ecs_new_child(world, Child1, 0);
+            ecs_entity_t GChild1 = ecs_new_w_entity(world, ECS_CHILDOF | Child1);
             ecs_set(world, GChild1, EcsName, {"GChild1"});
             ecs_add(world, GChild1, WorldPosition);
             ecs_set(world, GChild1, Position, {1000, 1000});
 
-        ecs_entity_t Child2 = ecs_new_child(world, Root, 0);
+        ecs_entity_t Child2 = ecs_new_w_entity(world, ECS_CHILDOF | Root);
         ecs_set(world, Child2, EcsName, {"Child2"});
         ecs_add(world, Child2, WorldPosition);
         ecs_set(world, Child2, Position, {100, 100});
 
-            ecs_entity_t GChild2 = ecs_new_child(world, Child1, 0);
+            ecs_entity_t GChild2 = ecs_new_w_entity(world, ECS_CHILDOF | Child1);
             ecs_set(world, GChild2, EcsName, {"GChild1"});
             ecs_add(world, GChild2, WorldPosition);
             ecs_set(world, GChild2, Position, {1000, 1000});

@@ -407,41 +407,29 @@ ecs_enable(World, MyFeature, true);
 
 [Learn more](Manual.md#features)
 
-### Tag
-A tag is a component that does not contain any data. Internally it is represented as a component with data-size 0. Tags can be useful for subdividing entities into categories, without adding any data. A tag can be defined with the `ECS_TAG` macro:
-
-```c
-ECS_TAG(world, MyTag);
-```
-
-Tags can be added/removed like any other component:
-
-```c
-ecs_add(world, e, MyTag);
-```
-
-[Learn more](Manual.md#tags)
-
-### Container
-A container is an entity that can contain other entities. There are several methods to add a child entity to a container entity. The easiest way is with the `ecs_new_child` function:
+### Parents
+In flecs, the ability to add entities to entities is used to construct hierarchies. The following example demonstrates how to create a simple hierarchy:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
-ecs_entity_t child = ecs_new_child(world, parent, 0);
+ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
 ```
 
-Alternatively, you can add an entity to a container entity after its creation using `ecs_adopt`:
+The `ECS_CHILDOF` constant is a "type flag", which tells flecs what the role of an entity is. In this case, we use it to describe that the newly created entity is a child of the `parent` entity.
+
+
+Alternatively, you can add an entity to a container entity after its creation using `ecs_add_entity`:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
 ecs_entity_t child = ecs_new(world, 0);
-ecs_adopt(world, child, parent);
+ecs_add_entity(world, child, ECS_CHILDOF | parent);
 ```
 
-With the `ecs_contains` function you can check whether an entity contains another entity:
+We can use `ecs_has_entity` to check if an entity is a child of a parent:
 
 ```c
-if (ecs_contains(world, parent, child) {
+if (ecs_has_entity(world, child, ECS_CHILDOF | parent) {
     printf("entity %u is a child of %u\n", child, parent);
 }
 ```

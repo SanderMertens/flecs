@@ -939,7 +939,9 @@ void Run_run_w_component_filter() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, Mass, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, &(ecs_filter_t){
+        .include = ecs_type(Mass)
+    }, NULL), 0);
 
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
@@ -997,7 +999,9 @@ void Run_run_w_type_filter_of_2() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, Type, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, &(ecs_filter_t){
+        .include = ecs_type(Type)
+    }, NULL), 0);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -1054,10 +1058,10 @@ void Run_run_w_container_filter() {
     ecs_entity_t parent = ecs_new(world, 0);
 
     /* Adopt child entities */
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_4, parent);
-    ecs_adopt(world, e_6, parent);
-    ecs_adopt(world, e_7, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_6, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_7, ECS_CHILDOF | parent);
 
     /* Get type from parent to use as filter */
     ecs_type_t TParent = ecs_type_from_entity(world, parent);
@@ -1066,7 +1070,9 @@ void Run_run_w_container_filter() {
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, Parent, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, &(ecs_filter_t){
+        .include = ecs_type(Parent)
+    }, NULL), 0);
 
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 4);
@@ -1159,7 +1165,7 @@ void Run_run_comb_10_entities_1_type() {
 
     int i, ENTITIES = 10;
 
-    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES);
+    ecs_entity_t start = ecs_bulk_new(world, Position, ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, start + i, Position, {1, 2});
@@ -1187,8 +1193,8 @@ void Run_run_comb_10_entities_2_types() {
 
     int i, ENTITIES = 10;
 
-    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES / 2);
-    ecs_new_w_count(world, Type, ENTITIES / 2);
+    ecs_entity_t start = ecs_bulk_new(world, Position, ENTITIES / 2);
+    ecs_bulk_new(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, start + i, Position, {1, 2});

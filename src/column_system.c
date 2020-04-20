@@ -314,7 +314,7 @@ ecs_entity_t ecs_new_col_system(
     ecs_sig_t *sig,
     ecs_system_action_t action)
 {
-    ecs_entity_t result = _ecs_new(
+    ecs_entity_t result = ecs_new_w_type(
         world, world->t_col_system);
 
     EcsName *id_data = ecs_get_ptr(world, result, EcsName);
@@ -553,12 +553,12 @@ ecs_entity_t ecs_run_intern(
 
 /* -- Public API -- */
 
-ecs_entity_t ecs_run_w_filter_v2(
+ecs_entity_t ecs_run_w_filter(
     ecs_world_t *world,
     ecs_entity_t system,
     float delta_time,
-    uint32_t offset,
-    uint32_t limit,
+    int32_t offset,
+    int32_t limit,
     const ecs_filter_t *filter,
     void *param)
 {
@@ -580,39 +580,11 @@ ecs_entity_t ecs_run_w_filter_v2(
     return interrupted_by;
 }
 
-ecs_entity_t _ecs_run_w_filter(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    float delta_time,
-    int32_t offset,
-    int32_t limit,
-    ecs_type_t include_type,
-    void *param)
-{
-    ecs_entity_t interrupted_by = 0;
-
-    if (include_type) {
-        ecs_filter_t filter = {
-            .include = include_type,
-            .include_kind = EcsMatchAll
-        };
-
-        interrupted_by = ecs_run_w_filter_v2(
-            world, system, delta_time, offset, limit, &filter, param);
-    } else {
-        interrupted_by = ecs_run_w_filter_v2(
-            world, system, delta_time, offset, limit, NULL, param);
-
-    }
-
-    return interrupted_by;
-}
-
 ecs_entity_t ecs_run(
     ecs_world_t *world,
     ecs_entity_t system,
     float delta_time,
     void *param)
 {
-    return ecs_run_w_filter(world, system, delta_time, 0, 0, 0, param);
+    return ecs_run_w_filter(world, system, delta_time, 0, 0, NULL, param);
 }

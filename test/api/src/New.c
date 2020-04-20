@@ -5,7 +5,7 @@ void New_empty() {
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
-    test_assert(ecs_is_empty(world, e));
+    test_assert(!ecs_get_type(world, e));
 
     ecs_fini(world);
 }
@@ -102,7 +102,7 @@ void New_type_mixed() {
 void New_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
 
     ecs_entity_t e = ecs_new(world, Tag);
     test_assert(e != 0);
@@ -114,7 +114,7 @@ void New_tag() {
 void New_type_w_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
 
     ECS_TYPE(world, Type, Tag);
 
@@ -128,8 +128,8 @@ void New_type_w_tag() {
 void New_type_w_2_tags() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag_1);
-    ECS_TAG(world, Tag_2);
+    ECS_ENTITY(world, Tag_1, 0);
+    ECS_ENTITY(world, Tag_2, 0);
 
     ECS_TYPE(world, Type, Tag_1, Tag_2);
 
@@ -144,7 +144,7 @@ void New_type_w_2_tags() {
 void New_type_w_tag_mixed() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
     ECS_COMPONENT(world, Position);
 
     ECS_TYPE(world, Type, Position, Tag);

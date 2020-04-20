@@ -57,10 +57,10 @@ void System_w_FromContainer_1_column_from_container() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT.Mass, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
-    ecs_adopt(world, e_3, parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -114,9 +114,9 @@ void System_w_FromContainer_2_column_1_from_container() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT.Mass, Position, Velocity);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
-    ecs_adopt(world, e_3, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -235,9 +235,9 @@ void System_w_FromContainer_3_column_2_from_container() {
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
     ecs_set(world, parent, Rotation, {3});
 
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
-    ecs_adopt(world, e_4, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -297,18 +297,18 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
 
-    ecs_adopt(world, e_1, parent_1);
-    ecs_adopt(world, e_1, parent_2);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_2);
 
-    ecs_adopt(world, e_2, parent_1);
-    ecs_adopt(world, e_2, parent_2);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
 
-    ecs_adopt(world, e_3, parent_1);
-    ecs_adopt(world, e_3, parent_2);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_2);
 
     /* e_4 and e_5 should not be matched */
-    ecs_adopt(world, e_4, parent_1);
-    ecs_adopt(world, e_5, parent_2);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_2);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -367,10 +367,10 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
 
-    ecs_adopt(world, e_1, parent_2);
-    ecs_adopt(world, e_2, parent_2);
-    ecs_adopt(world, e_3, parent_2);
-    ecs_adopt(world, e_4, parent_1);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_1);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -440,11 +440,11 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     ecs_entity_t parent_3 = ecs_set(world, 0, Mass, {4});
     ecs_set(world, parent_3, Rotation, {5});
 
-    ecs_adopt(world, e_1, parent_2);
-    ecs_adopt(world, e_2, parent_2);
-    ecs_adopt(world, e_3, parent_2);
-    ecs_adopt(world, e_4, parent_1);
-    ecs_adopt(world, e_5, parent_3);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_3);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -503,7 +503,7 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
 
     ecs_add(world, e_1, Prefab);
 
-    ecs_adopt(world, e_1, parent_1);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_1);
     ecs_set(world, e_1, Position, {1, 2});
 
     SysTestData ctx = {0};
@@ -560,12 +560,12 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
         ecs_set(world, parent_3, Mass, {5});
     ecs_entity_t parent_4 = ecs_set(world, 0, Velocity, {10, 20});
 
-    ecs_adopt(world, e_1, parent_1);
-    ecs_adopt(world, e_2, parent_2);
-    ecs_adopt(world, e_3, parent_3);
-    ecs_adopt(world, e_4, parent_4);
-    ecs_adopt(world, e_5, parent_2); 
-    ecs_adopt(world, e_5, parent_3);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_3);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_4);
+    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_2); 
+    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_3);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -657,8 +657,8 @@ void System_w_FromContainer_add_component_after_match() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT.Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -707,8 +707,8 @@ void System_w_FromContainer_add_component_after_match_and_rematch() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT.Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -883,8 +883,8 @@ void System_w_FromContainer_add_component_after_match_unmatch() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, !PARENT.Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -926,8 +926,8 @@ void System_w_FromContainer_add_component_after_match_unmatch_match() {
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, !PARENT.Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -976,8 +976,8 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -1029,7 +1029,7 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
 
     ECS_ENTITY(world, e_1, Position);
     ECS_ENTITY(world, e_2, Position);
@@ -1040,8 +1040,8 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ECS_SYSTEM(world, AddMass, EcsOnAdd, Tag, .Mass);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_add(world, parent, Tag);
 
@@ -1089,8 +1089,8 @@ void System_w_FromContainer_adopt_after_match() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT.Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, Mass);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -1136,8 +1136,8 @@ void System_w_FromContainer_new_child_after_match() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT.Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, Mass);
-    ecs_entity_t e_1 = ecs_new_child(world, parent, Position);
-    ecs_entity_t e_2 = ecs_new_child(world, parent, Position);
+    ECS_ENTITY(world, e_1, CHILDOF | parent, Position);
+    ECS_ENTITY(world, e_2, CHILDOF | parent, Position);
 
     ecs_set(world, parent, Mass, {2});
 
@@ -1201,9 +1201,9 @@ void System_w_FromContainer_select_same_from_container() {
     ECS_SYSTEM(world, IterSame, EcsOnUpdate, PARENT.Position, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
-    ecs_adopt(world, e_3, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
 
     ecs_set(world, e_1, Position, {10, 20});
     ecs_set(world, e_2, Position, {20, 40});
@@ -1257,7 +1257,7 @@ void System_w_FromContainer_realloc_after_match() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT.Mass, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_adopt(world, e_1, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
 
     SysTestData ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1285,7 +1285,7 @@ void System_w_FromContainer_realloc_after_match() {
     ecs_type_t parent_type = ecs_get_type(world, parent);
     test_assert(parent_type != 0);
 
-    _ecs_new_w_count(world, parent_type, 1000);
+    ecs_bulk_new_w_type(world, parent_type, 1000, NULL);
 
     /* Change value of parent Mass. This will update the value in the new table.
      * If the realloc would not be properly handled, the code could either crash

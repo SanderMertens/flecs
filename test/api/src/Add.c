@@ -7,7 +7,7 @@ void Add_zero() {
     test_assert(e != 0);
 
     ecs_add(world, e, 0);
-    test_assert(ecs_is_empty(world, e));
+    test_assert(!ecs_get_type(world, e));
     
     ecs_fini(world);
 }
@@ -391,7 +391,7 @@ void Add_type_to_nonempty_overlap() {
 void Add_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -405,7 +405,7 @@ void Add_tag() {
 void Add_type_w_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
     ECS_TYPE(world, Type, Tag);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -421,8 +421,8 @@ void Add_type_w_tag() {
 void Add_type_w_2_tags() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag_1);
-    ECS_TAG(world, Tag_2);
+    ECS_ENTITY(world, Tag_1, 0);
+    ECS_ENTITY(world, Tag_2, 0);
     ECS_TYPE(world, Type, Tag_1, Tag_2);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -439,8 +439,8 @@ void Add_type_w_2_tags() {
 void Add_type_w_tag_mixed() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag_1);
-    ECS_TAG(world, Tag_2);
+    ECS_ENTITY(world, Tag_1, 0);
+    ECS_ENTITY(world, Tag_2, 0);
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type, Tag_1, Tag_2, Position);
 
@@ -459,9 +459,9 @@ void Add_type_w_tag_mixed() {
 void Add_add_remove() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag_1);
-    ECS_TAG(world, Tag_2);
-    ECS_TAG(world, Tag_3);
+    ECS_ENTITY(world, Tag_1, 0);
+    ECS_ENTITY(world, Tag_2, 0);
+    ECS_ENTITY(world, Tag_3, 0);
     ECS_TYPE(world, Type, Tag_1, Tag_2, Tag_3);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -483,7 +483,7 @@ void Add_add_remove() {
 void Add_add_remove_same() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag_1);
+    ECS_ENTITY(world, Tag_1, 0);
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -497,9 +497,9 @@ void Add_add_remove_same() {
 void Add_add_2_remove() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag_1);
-    ECS_TAG(world, Tag_2);
-    ECS_TAG(world, Tag_3);
+    ECS_ENTITY(world, Tag_1, 0);
+    ECS_ENTITY(world, Tag_2, 0);
+    ECS_ENTITY(world, Tag_3, 0);
     ECS_TYPE(world, Type1, Tag_1, Tag_2, Tag_3);
     ECS_TYPE(world, Type2, Tag_1, Tag_2);
     ECS_TYPE(world, Type3, Tag_2, Tag_3);

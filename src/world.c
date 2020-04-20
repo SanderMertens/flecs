@@ -716,7 +716,7 @@ void ecs_dim(
     ecs_eis_set_size(&world->stage, entity_count);
 }
 
-void _ecs_dim_type(
+void ecs_dim_type(
     ecs_world_t *world,
     ecs_type_t type,
     int32_t entity_count)
@@ -1258,13 +1258,13 @@ ecs_entity_t _ecs_import(
 
         /* Copy value of module component in handles_out parameter */
         if (handles_size && handles_out) {
-            void *module_ptr = _ecs_get_ptr(world, EcsSingleton, e);
+            void *module_ptr = ecs_get_mutable_w_entity(world, EcsSingleton, e, NULL);
             memcpy(handles_out, module_ptr, handles_size);
         }
 
     /* If module was already loaded, copy module component into handles_out */
     } else if (handles_size) {
-        void *handles_ptr = _ecs_get_ptr(world, EcsSingleton, e);
+        void *handles_ptr = ecs_get_mutable_w_entity(world, EcsSingleton, e, NULL);
         memcpy(handles_out, handles_ptr, handles_size);
     }
 

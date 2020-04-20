@@ -171,56 +171,6 @@ typedef struct ecs_writer_t {
 struct ecs_filter_t;
 typedef struct ecs_filter_t ecs_type_filter_t;
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Deprecated functions / function wrappers
-////////////////////////////////////////////////////////////////////////////////
-
-#define ecs_get_singleton(world, type)\
-    (*(type*)_ecs_get_ptr(world, EcsSingleton, E##type))
-
-#define ecs_get_singleton_ptr(world, type)\
-    (type*)_ecs_get_ptr(world, EcsSingleton, E##type)
-
-#ifndef __BAKE_LEGACY__
-#define ecs_set_singleton(world, component, ...)\
-    _ecs_set_ptr(world, EcsSingleton, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
-#endif
-
-#define ecs_set_singleton_ptr(world, component, ptr)\
-    _ecs_set_ptr(world, EcsSingleton, ecs_entity(component), sizeof(component), ptr)
-
-#define ecs_is_empty(world, entity) (ecs_get_type(world, entity) == NULL)
-
-/** DEPRECATED - use timer API. */
-FLECS_EXPORT
-void ecs_set_period(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    float period);
-
-/** DEPRECATED - use timer API. */
-FLECS_EXPORT
-float ecs_get_period(
-    ecs_world_t *world,
-    ecs_entity_t system);
-
-
-/** DEPRECATED - use new APIs. */
-
-#define ecs_adopt(world, entity, parent)\
-    ecs_add_childof(world, entity, parent)
-
-#define ecs_orphan(world, entity, parent)\
-    ecs_remove_childof(world, entity, parent)
-
-#define ecs_inherit(world, entity, parent)\
-    ecs_add_instanceof(world, entity, parent)
-
-#define ecs_disinherit(world, entity, parent)\
-    ecs_remove_instanceof(world, entity, parent)
-
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Functions used in declarative (macro) API
 ////////////////////////////////////////////////////////////////////////////////

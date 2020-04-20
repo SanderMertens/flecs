@@ -61,7 +61,7 @@ int ecs_component_writer_register_component(
             goto error;
         }
 
-        _ecs_add(world, id, world->t_component);
+        ecs_add_type(world, id, world->t_component);
         ecs_set(world, id, EcsComponent, {writer->size});
         ecs_set(world, id, EcsName, {name});
 

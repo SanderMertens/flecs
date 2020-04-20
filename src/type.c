@@ -105,8 +105,8 @@ ecs_entity_t ecs_find_entity_in_prefabs(
                 continue;
             }
 
-            if (ecs_type_has_entity_intern(
-                world, prefab_type, component, false)) 
+            if (ecs_type_has_owned_entity(
+                world, prefab_type, component, true)) 
             {
                 return prefab;
             } else {
@@ -191,107 +191,6 @@ ecs_type_t ecs_type_remove_intern(
     return table->type;
 }
 
-/* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
-ecs_entity_t ecs_type_contains(
-    ecs_world_t *world,
-    ecs_type_t type_1,
-    ecs_type_t type_2,
-    bool match_all,
-    bool match_prefab)
-{
-    if (!type_1) {
-        return 0;
-    }
-
-    ecs_assert(type_2 != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (type_1 == type_2) {
-        return *(ecs_entity_t*)ecs_vector_first(type_1);
-    }
-
-    int32_t i_2, i_1 = 0;
-    ecs_entity_t e1 = 0;
-    ecs_entity_t *t1_array = ecs_vector_first(type_1);
-    ecs_entity_t *t2_array = ecs_vector_first(type_2);
-
-    ecs_assert(t1_array != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(t2_array != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t t1_count = ecs_vector_count(type_1);
-    int32_t t2_count = ecs_vector_count(type_2);
-
-    for (i_2 = 0; i_2 < t2_count; i_2 ++) {
-        ecs_entity_t e2 = t2_array[i_2] & ECS_ENTITY_MASK;
-
-        if (i_1 >= t1_count) {
-            return 0;
-        }
-
-        e1 = t1_array[i_1] & ECS_ENTITY_MASK;
-
-        if (e2 > e1) {
-            do {
-                i_1 ++;
-                if (i_1 >= t1_count) {
-                    return 0;
-                }
-                e1 = t1_array[i_1] & ECS_ENTITY_MASK;
-            } while (e2 > e1);
-        }
-
-        if (e1 != e2) {
-            if (match_prefab && e2 != EEcsName && e2 != EEcsPrefab && e2 != EEcsDisabled) {
-                if (ecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
-                    e1 = e2;
-                }
-            }
-
-            if (e1 != e2) {
-                if (match_all) return 0;
-            } else if (!match_all) {
-                return e1;
-            }
-        } else {
-            if (!match_all) return e1;
-            i_1 ++;
-            if (i_1 < t1_count) {
-                e1 = t1_array[i_1] & ECS_ENTITY_MASK;
-            }
-        }
-    }
-
-    if (match_all) {
-        return e1;
-    } else {
-        return 0;
-    }
-}
-
-bool ecs_type_has_entity_intern(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity,
-    bool match_prefab)
-{
-    ecs_entity_t *array = ecs_vector_first(type);
-    int32_t i, count = ecs_vector_count(type);
-
-    for (i = 0; i < count; i++) {
-        ecs_entity_t e = array[i];
-        if ((e == entity) || (e & ECS_ENTITY_MASK) == entity) {
-            return true;
-        }
-    }
-
-    if (match_prefab) {
-        if (ecs_find_entity_in_prefabs(world, 0, type, entity, 0)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 int32_t ecs_type_container_depth(
    ecs_world_t *world,
    ecs_type_t type,
@@ -371,6 +270,82 @@ EcsTypeComponent type_from_expr(
     }
 }
 
+/* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
+ecs_entity_t ecs_type_contains(
+    ecs_world_t *world,
+    ecs_type_t type_1,
+    ecs_type_t type_2,
+    bool match_all,
+    bool match_prefab)
+{
+    if (!type_1) {
+        return 0;
+    }
+
+    ecs_assert(type_2 != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (type_1 == type_2) {
+        return *(ecs_entity_t*)ecs_vector_first(type_1);
+    }
+
+    int32_t i_2, i_1 = 0;
+    ecs_entity_t e1 = 0;
+    ecs_entity_t *t1_array = ecs_vector_first(type_1);
+    ecs_entity_t *t2_array = ecs_vector_first(type_2);
+
+    ecs_assert(t1_array != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(t2_array != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t t1_count = ecs_vector_count(type_1);
+    int32_t t2_count = ecs_vector_count(type_2);
+
+    for (i_2 = 0; i_2 < t2_count; i_2 ++) {
+        ecs_entity_t e2 = t2_array[i_2] & ECS_ENTITY_MASK;
+
+        if (i_1 >= t1_count) {
+            return 0;
+        }
+
+        e1 = t1_array[i_1] & ECS_ENTITY_MASK;
+
+        if (e2 > e1) {
+            do {
+                i_1 ++;
+                if (i_1 >= t1_count) {
+                    return 0;
+                }
+                e1 = t1_array[i_1] & ECS_ENTITY_MASK;
+            } while (e2 > e1);
+        }
+
+        if (e1 != e2) {
+            if (match_prefab && e2 != EEcsName && e2 != EEcsPrefab && e2 != EEcsDisabled) {
+                if (ecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
+                    e1 = e2;
+                }
+            }
+
+            if (e1 != e2) {
+                if (match_all) return 0;
+            } else if (!match_all) {
+                return e1;
+            }
+        } else {
+            if (!match_all) return e1;
+            i_1 ++;
+            if (i_1 < t1_count) {
+                e1 = t1_array[i_1] & ECS_ENTITY_MASK;
+            }
+        }
+    }
+
+    if (match_all) {
+        return e1;
+    } else {
+        return 0;
+    }
+}
+
 /* -- Public API -- */
 
 ecs_entity_t ecs_new_type(
@@ -395,7 +370,7 @@ ecs_entity_t ecs_new_type(
             ecs_abort(ECS_ALREADY_DEFINED, id);
         }
     } else if (!result) {
-        result = _ecs_new(world, world->t_type);
+        result = ecs_new_w_type(world, world->t_type);
         ecs_set(world, result, EcsName, {id});
         ecs_set(world, result, EcsTypeComponent, {
             .type = type.type, .normalized = type.normalized
@@ -426,7 +401,7 @@ ecs_entity_t ecs_new_prefab(
             ecs_abort(ECS_ALREADY_DEFINED, id);
         }
     } else {
-        result = _ecs_new(world, type.normalized);
+        result = ecs_new_w_type(world, type.normalized);
         ecs_set(world, result, EcsName, {id});
     }
 
@@ -448,7 +423,7 @@ ecs_entity_t ecs_new_entity(
             ecs_abort(ECS_ALREADY_DEFINED, id);
         }
     } else {
-        result = _ecs_new(world, type.normalized);
+        result = ecs_new_w_type(world, type.normalized);
         ecs_set(world, result, EcsName, {id});
     }
 
@@ -519,33 +494,78 @@ ecs_type_t ecs_type_find(
     return ecs_type_find_intern(world, stage, array, count);
 }
 
-ecs_entity_t ecs_type_get_entity(
-    ecs_world_t *world,
-    ecs_type_t type,
-    int32_t index)
-{
-    (void)world;
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (!type) {
-        return 0;
-    }
-    
-    ecs_entity_t *array = ecs_vector_first(type);
-
-    if (ecs_vector_count(type) > index) {
-        return array[index];
-    } else {
-        return 0;
-    }
-}
-
 bool ecs_type_has_entity(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity)
 {
-    return ecs_type_has_entity_intern(world, type, entity, false);
+    ecs_entity_t *array = ecs_vector_first(type);
+    int i, count = ecs_vector_count(type);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = array[i];
+        if (e == entity) {
+            return true;
+        }
+
+        if (e & ECS_INSTANCEOF) {
+            ecs_entity_t base = e & ECS_ENTITY_MASK;
+            if (ecs_has_entity(world, base, entity)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool ecs_type_has_owned_entity(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t entity,
+    bool owned)
+{
+    ecs_entity_t *array = ecs_vector_first(type);
+    int i, count = ecs_vector_count(type);
+
+    if (owned) {
+        ecs_entity_t e = array[0];
+        for (i = 0; 
+            i < count && entity != e && entity < e; 
+            i ++, e = array[i]);
+        return e == entity;
+    } else {
+        for (i = count - 1; i >= 0; i --) {
+            ecs_entity_t e = array[i];
+            if (e < ECS_INSTANCEOF) {
+                return false;
+            } else
+            if (e & ECS_INSTANCEOF) {
+                ecs_entity_t base = e & ECS_ENTITY_MASK;
+                if (ecs_has_entity(world, base, entity)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool ecs_type_has_type(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_type_t has)
+{
+    return ecs_type_contains(world, type, has, true, false);
+}
+
+bool ecs_type_has_owned_type(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_type_t has,
+    bool owned)
+{
+    return ecs_type_contains(world, type, has, true, !owned);
 }
 
 ecs_type_t ecs_expr_to_type(

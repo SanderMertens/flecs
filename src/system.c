@@ -12,7 +12,7 @@ ecs_entity_t new_row_system(
 {
     int32_t column_count = ecs_vector_count(sig->columns);
 
-    ecs_entity_t result = _ecs_new(world, world->t_row_system);
+    ecs_entity_t result = ecs_new_w_type(world, world->t_row_system);
 
     EcsName *id_data = ecs_get_ptr(world, result, EcsName);
     ecs_assert(id_data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -179,9 +179,10 @@ ecs_type_t ecs_run_row_system(
             references[ref_id] = (ecs_reference_t){
                 .entity = entity, 
                 .component = component,
-                .cached_ptr = ecs_get_ptr_intern(real_world, 
-                    &real_world->stage, entity, component, false, true)
             };
+
+            ecs_get_cached_ptr_w_entity(world, &references[ref_id].cached_ptr,
+                entity, component);
 
             /* Update the column vector with the entry to the ref vector */
             ref_id ++;
@@ -315,7 +316,7 @@ ecs_entity_t ecs_new_system(
         int32_t i, count = ecs_vector_count(and_from_system);
         for (i = 0; i < count; i ++) {
             ecs_type_t type = ecs_type_from_entity(world, array[i]);
-            _ecs_add(world, result, type);
+            ecs_add_type(world, result, type);
         }
 
         /* Re-obtain system_data, as it might have changed */

@@ -202,8 +202,8 @@ void add_table(
 
         if (op == EcsOperOptional) {
             /* If table doesn't have the field, mark it as no data */
-            if (!ecs_type_has_entity_intern(
-                world, table_type, component, true))
+            if (!ecs_type_has_entity(
+                world, table_type, component))
             {
                 table_data->columns[c] = 0;
             }
@@ -259,10 +259,9 @@ void add_table(
 
                 if (component_data->size) {
                     if (e != ECS_INVALID_ENTITY) {
-                        ref->cached_ptr = _ecs_get_ptr(world, e, component);
+                        ecs_get_cached_ptr_w_entity(
+                            world, &ref->cached_ptr, e, component);
                         ecs_set_watch(world, &world->stage, e);                     
-                    } else {
-                        ref->cached_ptr = NULL;
                     }
 
                     /* Negative number indicates ref instead of offset to ecs_data */
@@ -304,16 +303,16 @@ bool match_table(
 
     ecs_type_t type, table_type = table->type;
 
-    if (!query->sig.match_disabled && ecs_type_has_entity_intern(
-        world, table_type, EEcsDisabled, false))
+    if (!query->sig.match_disabled && ecs_type_has_owned_entity(
+        world, table_type, EEcsDisabled, true))
     {
         /* Don't match disabled entities */
         failure_info->reason = EcsMatchEntityIsDisabled;
         return false;
     }
 
-    if (!query->sig.match_prefab && ecs_type_has_entity_intern(
-        world, table_type, EEcsPrefab, false))
+    if (!query->sig.match_prefab && ecs_type_has_owned_entity(
+        world, table_type, EEcsPrefab, true))
     {
         /* Don't match prefab entities */
         failure_info->reason = EcsMatchEntityIsPrefab;
@@ -366,30 +365,30 @@ bool match_table(
 
         if (oper_kind == EcsOperAnd) {
             if (from_kind == EcsFromSelf) {
-                if (!ecs_type_has_entity_intern(
-                        world, table_type, elem->is.component, true))
+                if (!ecs_type_has_entity(
+                        world, table_type, elem->is.component))
                 {
                     failure_info->reason = EcsMatchFromSelf;
                     failure_info->column = i + 1;
                     return false;
                 }
             } else if (from_kind == EcsFromOwned) {
-                if (!ecs_type_has_entity_intern(
-                        world, table_type, elem->is.component, false))
+                if (!ecs_type_has_owned_entity(
+                        world, table_type, elem->is.component, true))
                 {
                     failure_info->reason = EcsMatchFromOwned;
                     failure_info->column = i + 1;
                     return false;
                 }                
             } else if (from_kind == EcsFromShared) {
-                if (ecs_type_has_entity_intern(
-                        world, table_type, elem->is.component, false))
+                if (ecs_type_has_entity(
+                        world, table_type, elem->is.component))
                 {
                     failure_info->reason = EcsMatchFromSelf;
                     failure_info->column = i + 1;
                     return false;
                 } else
-                if (!ecs_type_has_entity_intern(
+                if (!ecs_type_has_owned_entity(
                     world, table_type, elem->is.component, true))
                 {
                     failure_info->reason = EcsMatchFromSelf;
@@ -613,11 +612,11 @@ void resolve_cascade_container(
     /* If container was found, update the reference */
     if (container) {
         references[ref_index].entity = container;
-        references[ref_index].cached_ptr = ecs_get_ptr_intern(
-            world, &world->stage, container, ref->component, false, true);
+        ecs_get_cached_ptr_w_entity(
+            world, &references[ref_index].cached_ptr, container, 
+            ref->component);
     } else {
         references[ref_index].entity = ECS_INVALID_ENTITY;
-        references[ref_index].cached_ptr = NULL;
     }
 }
 
@@ -748,34 +747,6 @@ void ecs_rematch_query(
         EcsColSystem* system_data = ecs_get_ptr(world, query->system, EcsColSystem);
         bool enable = ecs_sig_check_constraints(world, &query->sig);
         ecs_enable_intern(world, query->system, (EcsSystem*)system_data, enable, false);
-    }
-}
-
-/** Revalidate references after a realloc occurred in a table */
-void ecs_revalidate_query_refs(
-    ecs_world_t *world,
-    ecs_query_t *query)
-{
-    if (!query->sig.has_refs) {
-        return;
-    }
-
-    int32_t i, count = ecs_vector_count(query->tables);
-    ecs_matched_table_t *table_data = ecs_vector_first(query->tables);
-
-    for (i = 0; i < count; i ++) {
-        if (!table_data[i].references) {
-            continue;
-        }
-
-        int32_t r, ref_count = ecs_vector_count(table_data[i].references);
-        ecs_reference_t *refs = ecs_vector_first(table_data[i].references);
-
-        for (r = 0; r < ref_count; r ++) {
-            ecs_reference_t ref = refs[r];
-            refs[r].cached_ptr = ecs_get_ptr_intern(
-                world, &world->stage, ref.entity, ref.component, false, true);
-        }            
     }
 }
 
