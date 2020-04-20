@@ -650,9 +650,9 @@ It is possible to override components in inheritance trees to specialize compone
 ```c
 ECS_ENTITY(world, Planet, Mass);
 ECS_ENTITY(world, LightPlanet, INSTANCEOF | Planet, Mass);
-    ecs_set(world, LigthPlanet, Mass, {5.972 ^ 24});
+    ecs_set(world, LightPlanet, Mass, {5.972 ^ 24});
 ECS_ENTITY(world, HeavyPlanet, INSTANCEOF | Planet, Mass);
-    ecs_set(world, LigthPlanet, Mass, {1898 ^ 27});
+    ecs_set(world, HeavyPlanet, Mass, {1898 ^ 27});
 ```
 
 #### Prefabs
