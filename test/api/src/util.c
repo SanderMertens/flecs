@@ -1,9 +1,9 @@
 #include <api.h>
 
-void ProbeSystem(
+void probe_system(
     ecs_rows_t *rows) 
 {
-    SysTestData *ctx = ecs_get_context(rows->world);
+    Probe *ctx = ecs_get_context(rows->world);
     if (!ctx) {
         return;
     }
@@ -47,4 +47,15 @@ void ProbeSystem(
     }
 
     ctx->invoked ++;
+}
+
+void probe_has_entity(Probe *probe, ecs_entity_t e) {
+    int i;
+    for (i = 0; i < probe->count; i ++) {
+        if (probe->e[i] == e) {
+            break;
+        }
+    }
+
+    test_assert(i != probe->count);
 }

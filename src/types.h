@@ -32,7 +32,7 @@
 /** Entity id's higher than this number will be stored in a map instead of a
  * sparse set. Increasing this value can improve performance at the cost of
  * (significantly) higher memory usage. */
-#define ECS_HI_ENTITY_ID (100000)
+#define ECS_HI_ENTITY_ID (1000000)
 
 /** This reserves entity ids for components. Regular entity ids will start after
  * this constant. This affects performance of table traversal, as edges with ids 
@@ -54,6 +54,9 @@
 #define ECS_WORLD_MAGIC (0x65637377)
 #define ECS_THREAD_MAGIC (0x65637374)
 
+/* Maximum number of entities that can be added in a single operation. 
+ * Increasing this value will increase consumption of stack space. */
+#define ECS_MAX_ADD_REMOVE (32)
 
 /* -- Builtin component types -- */
 
@@ -93,6 +96,7 @@ typedef int (*ecs_parse_action_t)(
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t inout_kind,
+    ecs_entity_t flags,
     const char *component,
     const char *source,
     void *ctx);
@@ -128,6 +132,7 @@ struct ecs_data_t {
 #define EcsTableIsPrefab (2)
 #define EcsTableHasPrefab (4)
 #define EcsTableHasParent (8)
+#define EcsTableHasComponentData (16)
 
 /** Edge used for traversing the table graph */
 typedef struct ecs_edge_t {
@@ -327,7 +332,7 @@ struct ecs_ei_t {
  * to arbitrarily add/remove/set components and create/delete entities while
  * iterating. Additionally, worker threads have their own stage that lets them
  * mutate the state of entities without requiring locks. */
-typedef struct ecs_stage_t {
+struct ecs_stage_t {
     /* If this is not main stage, 
      * changes to the entity index 
      * are buffered here */
@@ -344,7 +349,7 @@ typedef struct ecs_stage_t {
     
     /* Is entity range checking enabled? */
     bool range_check_enabled;
-} ecs_stage_t;
+};
 
 /** Supporting type to store looked up or derived entity data */
 typedef struct ecs_entity_info_t {

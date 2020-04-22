@@ -22,6 +22,7 @@ char* parse_complex_elem(
     char *ptr,
     ecs_sig_from_kind_t *from_kind,
     ecs_sig_oper_kind_t *oper_kind,
+    ecs_entity_t *flags,
     const char * *source)
 {
     char *bptr = ptr;
@@ -70,6 +71,29 @@ char* parse_complex_elem(
                  "%s must be followed by an identifier", 
                  ptr);
         }
+    }
+
+    char *or = strchr(bptr, '|');
+    if (or) {
+        if (!strncmp(bptr, "CHILDOF", or - bptr)) {
+            *flags = ECS_CHILDOF;
+        } else if (!strncmp(bptr, "INSTANCEOF", or - bptr)) {
+            *flags = ECS_INSTANCEOF;
+        } else {
+            ecs_parser_error(
+                system_id, sig, column + or - bptr,
+                 "invalid flag identifier '%s'", 
+                 bptr);
+        }
+
+        bptr = or + 1;
+
+        if (!bptr[0]) {
+            ecs_parser_error(
+                system_id, sig, column + or - bptr,
+                 "%s must be followed by an identifier", 
+                 ptr);
+        }        
     }
 
     return bptr;
@@ -225,20 +249,6 @@ void postprocess(
 
 /* -- Private functions -- */
 
-/** Count components in a signature */
-int32_t ecs_columns_count(
-    const char *sig)
-{
-    const char *ptr = sig;
-    int32_t count = 1;
-
-    while ((ptr = strchr(ptr + 1, ','))) {
-        count ++;
-    }
-
-    return count;
-}
-
 static
 const char* parse_annotation(
     const char *system_id,
@@ -315,6 +325,7 @@ int ecs_parse_expr(
     ecs_sig_from_kind_t from_kind = EcsFromSelf;
     ecs_sig_oper_kind_t oper_kind = EcsOperAnd;
     ecs_sig_inout_kind_t inout_kind = EcsInOut;
+    ecs_entity_t flags = 0;
     const char *source;
 
     for (bptr = buffer, ch = sig[0], ptr = sig; ch; ptr++) {
@@ -335,7 +346,7 @@ int ecs_parse_expr(
             ptr = parse_annotation(system_id, sig, ptr - sig, ptr + 1, &inout_kind);
             ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        } else if (ch == ',' || ch == '|' || ch == '\0') {
+        } else if (ch == ',' || (ch == '|' && ptr[1] == '|') || ch == '\0') {
             /* Separators should not appear after an empty column */
             if (bptr == buffer) {
                 if (ch) {
@@ -354,24 +365,32 @@ int ecs_parse_expr(
 
             if (complex_expr) {
                 ecs_sig_oper_kind_t prev = oper_kind;
-                bptr = parse_complex_elem(system_id, sig, ptr - sig, bptr, &from_kind, &oper_kind, &source);
+                bptr = parse_complex_elem(
+                    system_id, sig, ptr - sig, bptr, &from_kind, &oper_kind, 
+                    &flags, &source);
 
                 if (oper_kind == EcsOperNot && prev == EcsOperOr) {
-                    ecs_parser_error(system_id, sig, ptr - sig, "cannot use ! in | expression");
+                    ecs_parser_error(
+                        system_id, sig, ptr - sig, 
+                        "cannot use ! in | expression");
                 }
             }
 
             if (oper_kind == EcsOperOr) {
                 if (from_kind == EcsFromEmpty) {
                     /* Cannot OR handles */
-                    ecs_parser_error(system_id, sig, ptr - sig, "cannot use | on columns without a source");
+                    ecs_parser_error(
+                        system_id, sig, ptr - sig, 
+                        "cannot use | on columns without a source");
                 }
             }
 
             if (!strcmp(bptr, "0")) {
                 if (bptr != buffer) {
                     /* 0 can only appear by itself */
-                    ecs_parser_error(system_id, sig, ptr - sig, "0 can only appear by itself");
+                    ecs_parser_error(
+                        system_id, sig, ptr - sig, 
+                        "0 can only appear by itself");
                 }
 
                 from_kind = EcsFromEmpty;
@@ -379,8 +398,8 @@ int ecs_parse_expr(
             }
 
             /* If retrieving a component from a system, only the AND operator is
-             * supported. The set of system components is expected to be constant, and
-             * thus no conditional operators are needed. */
+             * supported. The set of system components is expected to be 
+             * constant, and thus no conditional operators are needed. */
             if (from_kind == EcsFromSystem && oper_kind != EcsOperAnd) {
                 ecs_parser_error(system_id, sig, ptr - sig,
                     "invalid operator for SYSTEM column");
@@ -397,7 +416,7 @@ int ecs_parse_expr(
             }
 
             if (action(world, system_id, sig, ptr - sig, 
-                from_kind, oper_kind, inout_kind, bptr, source_id, ctx)) 
+                from_kind, oper_kind, inout_kind, flags, bptr, source_id, ctx)) 
             {
                 ecs_abort(ECS_INVALID_SIGNATURE, sig);
             }
@@ -409,15 +428,18 @@ int ecs_parse_expr(
             /* Reset variables for next column */
             complex_expr = false;
             from_kind = EcsFromSelf;
+            oper_kind = EcsOperAnd;
+            flags = 0;
 
             if (ch == '|') {
-                if (oper_kind == EcsOperNot) {
-                    ecs_parser_error(system_id, sig, ptr - sig, 
-                        "cannot use ! in | expression");
+                if (ptr[1] == '|') {
+                    ptr ++;
+                    if (oper_kind == EcsOperNot) {
+                        ecs_parser_error(system_id, sig, ptr - sig, 
+                            "cannot use ! in | expression");
+                    }
+                    oper_kind = EcsOperOr;
                 }
-                oper_kind = EcsOperOr;
-            } else {
-                oper_kind = EcsOperAnd;
             }
 
             inout_kind = EcsInOut;
@@ -427,7 +449,7 @@ int ecs_parse_expr(
             *bptr = ch;
             bptr ++;
 
-            if (ch == '.' || ch == '!' || ch == '?') {
+            if (ch == '.' || ch == '!' || ch == '?' || ch == '|') {
                 complex_expr = true;
             }
         }
@@ -446,6 +468,7 @@ int ecs_parse_signature_action(
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t inout_kind,
+    ecs_entity_t flags,
     const char *component_id,
     const char *source_id,
     void *data)
@@ -475,6 +498,8 @@ int ecs_parse_signature_action(
         }
     }
 
+    component |= flags;
+
     /* AND (default) and optional columns are stored the same way */
     if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
         elem = ecs_vector_add(&sig->columns, ecs_sig_column_t);
@@ -482,6 +507,7 @@ int ecs_parse_signature_action(
         elem->oper_kind = oper_kind;
         elem->inout_kind = inout_kind;
         elem->is.component = component;
+        elem->source = 0;
 
         if (from_kind == EcsFromEntity) {
             elem->source = ecs_lookup(world, source_id);
@@ -525,6 +551,7 @@ int ecs_parse_signature_action(
         elem->oper_kind = oper_kind;
         elem->inout_kind = inout_kind;
         elem->is.component = component;
+        elem->source = 0;
 
         if (from_kind == EcsFromSelf) {
             sig->not_from_self = ecs_type_add_intern(
@@ -545,7 +572,7 @@ int ecs_parse_signature_action(
         } else {
             sig->not_from_container =
               ecs_type_add_intern(
-                  world, NULL, sig->not_from_container, component);
+                  world, &world->stage, sig->not_from_container, component);
         }
     }
 

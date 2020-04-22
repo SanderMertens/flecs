@@ -90,7 +90,7 @@ void ecs_init_timer_builtins(
     /* Add EcsTickSource to timers and rate filters */
     world->add_tick_source =
     ecs_new_system(world, "EcsAddTickSource", EcsManual, 
-        "[in] EcsTimer | EcsRateFilter, [out] !EcsTickSource", 
+        "[in] EcsTimer || EcsRateFilter, [out] !EcsTickSource", 
         EcsAddTickSource);
 
     /* Timer handling */

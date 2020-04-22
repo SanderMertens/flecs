@@ -43,134 +43,6 @@ void ecs_name_writer_reset(
 }
 
 static
-int ecs_component_writer_register_component(
-    ecs_writer_t *stream)
-{
-    ecs_world_t *world = stream->world;
-    ecs_component_writer_t *writer = &stream->component;
-    const char *name = writer->name.name;
-    ecs_entity_t world_id = ecs_lookup(stream->world, name);
-    ecs_entity_t id = writer->id;
-
-    if (!world_id) {
-        /* If the component is not found, but the id is set in the world, the id
-         * is used for something else. Cannot deserialize when there is a
-         * conflict */
-        if (ecs_get_type(world, id)) {
-            stream->error = ECS_DESERIALIZE_COMPONENT_ID_CONFLICT;
-            goto error;
-        }
-
-        ecs_add_type(world, id, world->t_component);
-        ecs_set(world, id, EcsComponent, {writer->size});
-        ecs_set(world, id, EcsName, {name});
-
-        /* Don't overwrite component name */
-        ecs_name_writer_reset(&writer->name);        
-    } else {
-        if (world_id != id) {
-            stream->error = ECS_DESERIALIZE_COMPONENT_ID_CONFLICT;
-            goto error;
-        } else {
-            EcsComponent *cdata = ecs_get_ptr(world, id, EcsComponent);
-            if (cdata->size != writer->size) {
-                stream->error = ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT;
-                goto error;
-            } else {
-                /* Component exists, do nothing */
-            }
-        }
-    } 
-
-    return 0;
-error:
-    return -1;
-}
-
-static
-void ecs_component_writer_next(
-    ecs_writer_t *stream)
-{
-    ecs_component_writer_t *writer = &stream->component;
-
-    switch(writer->state) {
-    case EcsComponentId:
-        writer->state = EcsComponentSize;
-        break;
-    case EcsComponentSize:
-        writer->state = EcsComponentNameLength;
-        break;
-    case EcsComponentNameLength:
-        writer->state = EcsComponentName;
-        break;
-    case EcsComponentName:
-        stream->state = EcsStreamHeader;
-        writer->state = 0;
-        break;
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-        break;
-    }    
-}
-
-static
-size_t ecs_component_writer(
-    const char *buffer,
-    size_t size,
-    ecs_writer_t *stream)
-{
-    ecs_component_writer_t *writer = &stream->component;
-    size_t written = 0;
-
-    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size >= sizeof(int32_t), ECS_INVALID_PARAMETER, NULL);
-
-    if (!writer->state) {
-        writer->state = EcsComponentId;
-    }
-
-    switch(writer->state) {
-    case EcsComponentId:
-        writer->id = *(int32_t*)buffer;
-        written = sizeof(int32_t);
-        ecs_component_writer_next(stream);
-        break;
-
-    case EcsComponentSize:
-        writer->size = *(int32_t*)buffer;
-        written = sizeof(int32_t);
-        ecs_component_writer_next(stream);  
-        break;
-
-    case EcsComponentNameLength:
-        ecs_name_writer_alloc(&writer->name, *(int32_t*)buffer);
-        written = sizeof(int32_t);
-        ecs_component_writer_next(stream);
-        break;
-
-    case EcsComponentName: {
-        written = sizeof(int32_t);
-        if (!ecs_name_writer_write(&writer->name, buffer)) {
-            if (ecs_component_writer_register_component(stream)) {
-                goto error;
-            }
-
-            ecs_component_writer_next(stream);            
-        }
-        break;
-    }
-
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-        break;
-    }
-
-    return written;
-error:
-    return -1;
-}
-
-static
 void ecs_table_writer_register_table(
     ecs_writer_t *stream)
 {
@@ -183,17 +55,19 @@ void ecs_table_writer_register_table(
     writer->table = ecs_table_from_type(world, &world->stage, type);
     ecs_assert(writer->table != NULL, ECS_INTERNAL_ERROR, NULL);
     
-    ecs_data_t *data = ecs_table_get_data(world, writer->table);
-    if (!data) {
+    ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, writer->table);
+    if (data->entities) {
+        /* Remove any existing entities from entity index */
+        ecs_vector_t *entity_vector = data->entities;
+        ecs_entity_t *entities = ecs_vector_first(entity_vector);
+        int32_t i, count = ecs_vector_count(entity_vector);
+        for (i = 0; i < count; i ++) {
+            ecs_eis_delete(&world->stage, entities[i]);
+        }        
         return;
-    }
-
-    /* Remove any existing entities from entity index */
-    ecs_vector_t *entity_vector = data->entities;
-    ecs_entity_t *entities = ecs_vector_first(entity_vector);
-    int32_t i, count = ecs_vector_count(entity_vector);
-    for (i = 0; i < count; i ++) {
-        ecs_eis_delete(&world->stage, entities[i]);
+    } else {
+        /* Set size of table to 0. This will initialize columns */
+        ecs_table_set_size(world, writer->table, data, 0);
     }
 
     ecs_assert(writer->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -247,7 +121,6 @@ void ecs_table_writer_prepare_column(
 {
     ecs_table_writer_t *writer = &stream->table;
     ecs_world_t *world = stream->world;
-
     ecs_data_t *data = ecs_table_get_or_create_data(
         world, &world->stage, writer->table);
         
@@ -481,17 +354,12 @@ int ecs_writer_write(
         if (writer->state == EcsStreamHeader) {
             writer->state = *(ecs_blob_header_kind_t*)ECS_OFFSET(buffer, total_written);
 
-            if (writer->state != EcsComponentHeader &&
-                writer->state != EcsTableHeader)
-            {
+            if (writer->state != EcsTableHeader) {
                 writer->error = ECS_DESERIALIZE_FORMAT_ERROR;
                 goto error;
             }
 
             written = sizeof(ecs_blob_header_kind_t);
-        } else
-        if (writer->state == EcsComponentHeader) {
-            written = ecs_component_writer(ECS_OFFSET(buffer, total_written), remaining, writer);        
         } else
         if (writer->state == EcsTableHeader) {
             written = ecs_table_writer(ECS_OFFSET(buffer, total_written), remaining, writer);

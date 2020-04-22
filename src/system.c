@@ -94,8 +94,8 @@ ecs_type_t ecs_run_row_system(
     ecs_world_t *real_world = world;
     ecs_get_stage(&real_world);
 
-    EcsRowSystem *system_data = ecs_get_ptr_intern(
-        real_world, &real_world->stage, system, EEcsRowSystem, false, true);
+    const EcsRowSystem *system_data = ecs_get_ptr(
+        real_world, system, EcsRowSystem);
     
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -126,50 +126,52 @@ ecs_type_t ecs_run_row_system(
 
     for (i = 0; i < column_count; i ++) {
         ecs_entity_t entity = 0;
+        ecs_sig_from_kind_t from_kind = buffer[i].from_kind;
+        ecs_sig_oper_kind_t oper_kind = buffer[i].oper_kind;
 
         /* Check if column is provided by either self or base entity */
-        if (buffer[i].from_kind == EcsFromSelf || 
-            buffer[i].from_kind == EcsFromOwned || 
-            buffer[i].from_kind == EcsFromShared) 
+        if (from_kind == EcsFromSelf || 
+            from_kind == EcsFromOwned || 
+            from_kind == EcsFromShared) 
         {
             /* If a regular column, find corresponding column in table */
             columns[i] = ecs_type_index_of(table->type, buffer[i].is.component) + 1;
 
             /* If entity owns component but column is shared, no match */
-            if (columns[i] && buffer[i].from_kind == EcsFromShared) {
+            if (columns[i] && from_kind == EcsFromShared) {
                 return 0;
             }
 
             if (!columns[i] && table) {
                 /* If column is not found, it could come from a base. Look for
                  * components of components, but only if column was not OWNED */
-                if (buffer[i].from_kind == EcsFromOwned) {
+                if (from_kind != EcsFromOwned) {
+                    entity = ecs_get_entity_for_component(
+                        real_world, 0, table->type, buffer[i].is.component);
+
+                    if (!entity && oper_kind != EcsOperOptional) {
+                        /* System doesn't match */
+                        return 0;
+                    }
+                } else if (oper_kind != EcsOperOptional) {
                     /* System doesn't match */
                     return 0;
                 }
-
-                entity = ecs_get_entity_for_component(
-                    real_world, 0, table->type, buffer[i].is.component);
-
-                ecs_assert(entity != 0 || 
-                           buffer[i].oper_kind == EcsOperOptional, 
-                                ECS_INTERNAL_ERROR, 
-                                ecs_get_name(real_world, buffer[i].is.component));
             }
         }
 
-        if (entity || buffer[i].from_kind != EcsFromSelf) {
+        if (entity || from_kind != EcsFromSelf) {
             /* If not a regular column, it is a reference */
             ecs_entity_t component = buffer[i].is.component;
 
             /* Resolve component from the right source */
-            if (buffer[i].from_kind == EcsFromSystem) {
+            if (from_kind == EcsFromSystem) {
                 /* The source is the system itself */
                 entity = system;
-            } else if (buffer[i].from_kind == EcsFromEntity) {
+            } else if (from_kind == EcsFromEntity) {
                 /* The source is another entity (prefab, container, other) */
                 entity = buffer[i].source;
-            } else if (buffer[i].from_kind == EcsFromContainer) {
+            } else if (from_kind == EcsFromContainer) {
                 ecs_components_contains_component(
                     world, table->type, buffer[i].is.component, ECS_CHILDOF, 
                     &entity);

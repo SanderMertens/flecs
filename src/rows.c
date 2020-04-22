@@ -147,10 +147,7 @@ ecs_entity_t ecs_column_source(
     int32_t index)
 {
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
-
-    /* Index 0 (entity array) does not have a source */
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-
     ecs_assert(rows->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t table_column = rows->columns[index - 1];
@@ -170,10 +167,7 @@ ecs_type_t ecs_column_type(
     int32_t index)
 {
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
-
-    /* Index 0 (entity array) does not have a type */
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-
     ecs_assert(rows->components != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t component = rows->components[index - 1];
@@ -185,11 +179,9 @@ ecs_entity_t ecs_column_entity(
     int32_t index)
 {
     ecs_assert(index <= rows->column_count, ECS_INVALID_PARAMETER, NULL);
-
-    /* Index 0 (entity array) does not have a type */
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-
     ecs_assert(rows->components != NULL, ECS_INTERNAL_ERROR, NULL);
+
     return rows->components[index - 1];
 }
 

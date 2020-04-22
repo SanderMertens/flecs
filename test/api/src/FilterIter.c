@@ -302,7 +302,7 @@ void FilterIter_iter_snapshot_two_comps() {
         ecs_type_t table_type = ecs_table_type(&it.rows);
         ecs_entity_t *array = ecs_vector_first(table_type);
         test_assert(array[0] == ecs_entity(Position));      
-        test_assert(array[1] == ecs_entity(Position));        
+        test_assert(array[1] == ecs_entity(Velocity));        
         
         Position *p_row = ecs_table_column(&it.rows, 0);
         test_assert(p_row != NULL);

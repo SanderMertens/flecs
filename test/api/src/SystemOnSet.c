@@ -9,7 +9,7 @@ void OnSet(ecs_rows_t *rows) {
         v = ecs_column(rows, Velocity, 2);
     }
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -29,7 +29,7 @@ void SystemOnSet_set() {
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -60,7 +60,7 @@ void SystemOnSet_set_new() {
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
@@ -88,7 +88,7 @@ void SystemOnSet_set_again() {
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -126,7 +126,7 @@ void SystemOnSet_clone() {
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e_1 = ecs_set(world, 0, Position, {10, 20});
@@ -146,7 +146,7 @@ void SystemOnSet_clone() {
     test_int(p->x, 11);
     test_int(p->y, 20);
 
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
 
    ecs_copy(world, 0, e_1, false);
 
@@ -162,7 +162,7 @@ void SystemOnSet_clone_w_value() {
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e_1 = ecs_set(world, 0, Position, {10, 20});
@@ -182,12 +182,10 @@ void SystemOnSet_clone_w_value() {
     test_int(p->x, 11);
     test_int(p->y, 20);
 
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
 
     ecs_entity_t e_2 = ecs_copy(world, 0, e_1, true);
 
-    /* OnSet function should not have been called, because value has not been 
-     * copied */
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
@@ -215,7 +213,7 @@ void SystemOnSet_set_w_optional() {
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position, ?Velocity);
 
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e_1 = ecs_new(world, Position);
@@ -238,7 +236,7 @@ void SystemOnSet_set_w_optional() {
     test_int(ctx.s[0][1], 0);
 
 
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
     ecs_set(world, e_2, Position, {10, 20});
     
     test_int(ctx.count, 1);
@@ -280,7 +278,7 @@ void OnAdd_check_order(ecs_rows_t *rows) {
     test_assert(!add_called);
     test_assert(!set_called);
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -295,7 +293,7 @@ static
 void OnSet_check_order(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     test_assert(add_called);
     test_assert(!set_called);
@@ -316,7 +314,7 @@ void SystemOnSet_set_and_add_system() {
     ECS_SYSTEM(world, OnSet_check_order, EcsOnSet, Position);
     ECS_SYSTEM(world, OnAdd_check_order, EcsOnAdd, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -346,158 +344,6 @@ void SystemOnSet_set_and_add_system() {
 }
 
 static
-void OnAdd(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-
-    int i;
-    for (i = 0; i < rows->count; i ++) {
-        p[i].x = 1;
-        p[i].y = 3;
-    }
-}
-
-void SystemOnSet_on_set_after_on_add() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Position);
-    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
-
-    SysTestData ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, 0);
-
-    ecs_add(world, e, Position);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0); 
-
-    Position *p = ecs_get_ptr(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 2);
-    test_int(p->y, 3);  
-}
-
-void SystemOnSet_on_set_after_on_add_w_new() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Position);
-    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
-
-    SysTestData ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Position);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0); 
-
-    Position *p = ecs_get_ptr(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 2);
-    test_int(p->y, 3); 
-}
-
-void SystemOnSet_on_set_after_on_add_w_new_w_count() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Position);
-    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
-
-    SysTestData ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
-
-    test_int(ctx.count, 3);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0); 
-
-    Position *p = ecs_get_ptr(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 2);
-    test_int(p->y, 3);
-
-    p = ecs_get_ptr(world, e + 1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 2);
-    test_int(p->y, 3);
-
-    p = ecs_get_ptr(world, e + 2, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 2);
-    test_int(p->y, 3); 
-}
-
-static bool on_set_velocity = false;
-
-static
-void OnSetVelocity(ecs_rows_t *rows) {
-    on_set_velocity = true;
-}
-
-void SystemOnSet_on_set_after_on_add_1_of_2_matched() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_TYPE(world, Type, Position, Velocity);
-
-    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Position);
-    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
-    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
-
-    SysTestData ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Type);
-
-    test_int(on_set_velocity, false);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0); 
-
-    Position *p = ecs_get_ptr(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 2);
-    test_int(p->y, 3); 
-}
-
-static
 void OnSetShared(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
 
@@ -506,7 +352,7 @@ void OnSetShared(ecs_rows_t *rows) {
         v = ecs_column(rows, Velocity, 2);
     }
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
 
@@ -539,7 +385,7 @@ void SystemOnSet_on_set_after_override() {
 
     ECS_SYSTEM(world, OnSetShared, EcsOnSet, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* instantiate prefab */
@@ -565,7 +411,7 @@ void SystemOnSet_on_set_after_override() {
 
     /* override component (doesn't call system) */
 
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
 
     ecs_add(world, e, Position);
 
@@ -614,7 +460,7 @@ void SystemOnSet_on_set_after_override_w_new() {
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Type);
@@ -647,7 +493,7 @@ void SystemOnSet_on_set_after_override_w_new_w_count() {
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_bulk_new(world, Type, 3);
@@ -690,7 +536,7 @@ void SystemOnSet_on_set_after_override_1_of_2_overridden() {
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Type);
@@ -726,7 +572,7 @@ void SystemOnSet_disabled_system() {
 
     ecs_enable(world, IsInvoked, false);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});

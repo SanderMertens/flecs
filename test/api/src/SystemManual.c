@@ -14,7 +14,7 @@ void Iter(ecs_rows_t *rows) {
         m = ecs_column(rows, Mass, 3);
     }
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -43,7 +43,7 @@ void SystemManual_1_type_1_component() {
     ECS_ENTITY(world, e_3, Position);
     
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_run(world, Iter, 1, NULL);

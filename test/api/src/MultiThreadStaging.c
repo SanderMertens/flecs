@@ -405,7 +405,7 @@ void MultiThreadStaging_2_threads_on_add() {
     ECS_SYSTEM(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, .Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_bulk_new(world, Position, 10);

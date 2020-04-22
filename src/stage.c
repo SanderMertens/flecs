@@ -283,7 +283,10 @@ void merge_tables(
             /* Find or create the table in the main stage. Even though the
              * table may not have been created in the main stage when the stage
              * looked for it, other stages could have been merged before this
-             * stage that already created the table. 
+             * stage that already created the table. It is also possible that
+             * as a result of merging other tables a table was created, like
+             * how when a child table is created EcsParent is added to its
+             * parent, which can cause the creation of a new table.
              *
              * If this is the first time that the table is created in the main
              * stage, this will also trigger table notifications for queries. */
@@ -298,9 +301,13 @@ void merge_tables(
              * that could have populated the stage-specific table data, and we
              * wouldn't be here if the stage had found the table in the main
              * stage. */
-            ecs_assert(
-                ecs_table_get_staged_data(world, stage, main_table) == NULL, 
+#ifndef NDEBUG
+            ecs_data_t *staged_data = ecs_table_get_staged_data(
+                world, stage, main_table);
+
+            ecs_assert(!staged_data || !staged_data->columns, 
                 ECS_INTERNAL_ERROR, NULL);
+#endif
 
             ecs_data_t *main_staged_data = ecs_table_get_or_create_data(
                 world, stage, main_table);

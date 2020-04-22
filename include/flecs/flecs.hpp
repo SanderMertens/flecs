@@ -68,9 +68,8 @@ enum match_kind {
 
 using Component = EcsComponent;
 using TypeComponent = EcsTypeComponent;
-using Prefab = EcsPrefab;
-static const entity_t PrefabParent = EEcsPrefabParent;
-static const entity_t PrefabBuilder = EEcsPrefabBuilder;
+using Parent = EcsParent;
+static const entity_t Prefab = EEcsPrefab;
 static const entity_t RowSystem = EEcsRowSystem;
 static const entity_t ColSystem = EEcsColSystem;
 using Name = EcsName;
@@ -80,7 +79,6 @@ static const entity_t OnDemand = EEcsOnDemand;
 
 static const entity_t World = EcsWorld;
 static const entity_t Singleton = EcsSingleton;
-static const entity_t Invalid = EcsInvalid;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -441,7 +439,7 @@ public:
     }
 
     void dim_type(type_t type, std::int32_t entity_count) const {
-        _ecs_dim_type(m_world, type, entity_count);
+        ecs_dim_type(m_world, type, entity_count);
     }
 
     /* Entity ranges */
@@ -597,7 +595,7 @@ public:
     base_type& remove_childof(entity_t parent) const {
         static_cast<base_type*>(this)->invoke(
         [parent](world_t *world, entity_t id) {
-            ecs_orphan(world, id, parent);
+            ecs_remove_entity(world, id, ECS_CHILDOF | parent);
         });
         return *static_cast<base_type*>(this);  
     }
@@ -634,7 +632,7 @@ public:
     const base_type& set(const T&& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
-            _ecs_set_ptr(world, id, component_base<T>::s_entity, sizeof(T), &value);
+            ecs_set_ptr_w_entity(world, id, component_base<T>::s_entity, sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
     }   
@@ -643,7 +641,7 @@ public:
     const base_type& set(const T& value) const {
         static_cast<base_type*>(this)->invoke(
         [&value](world_t *world, entity_t id) {
-            _ecs_set_ptr(world, id, component_base<T>::s_entity, sizeof(T), &value);
+            ecs_set_ptr_w_entity(world, id, component_base<T>::s_entity, sizeof(T), &value);
         });
         return *static_cast<base_type*>(this);
     }
@@ -856,11 +854,11 @@ public:
     }
 
     bool has_owned(entity_t id) const {
-        return ecs_has_entity_owned(m_world, m_id, id);
+        return ecs_has_owned_entity(m_world, m_id, id, true);
     }
 
     bool has_owned(type_t type) const {
-        return _ecs_has_owned(m_world, m_id, type, true);
+        return ecs_type_has_owned_type(m_world, ecs_get_type(m_world, m_id), type, true);
     }
 
     bool has_owned(const entity& entity) const {
@@ -891,13 +889,7 @@ public:
     prefab(const world& world, const char *name) 
         : entity(world, name)
     {
-        this->add<Prefab>();
-    }
-
-    prefab(const world& world, const char *name, entity parent)
-        : entity(world, name)
-    {
-        this->set<Prefab>({parent.id()});
+        this->add(flecs::Prefab);
     }
 };
 
@@ -911,7 +903,7 @@ class entity_range final : public entity_fluent<entity_range> {
 public:
     entity_range(const world& world, std::int32_t count) 
         : m_world(world.c_ptr())
-        , m_id_start( ecs_new_w_type_w_count(m_world, nullptr, count))
+        , m_id_start( ecs_bulk_new_w_type(m_world, nullptr, count, NULL))
         , m_count(count) { }
 
     template <typename Func>
@@ -945,13 +937,6 @@ public:
     type(const world& world, const char *name, const char *expr = nullptr)
         : entity(world, ecs_new_type(world.c_ptr(), name, expr))
     { 
-        sync_from_flecs();
-    }
-
-    type(const world& world, const char *name, entity parent, const char *expr)
-        : entity(world, ecs_new_type(world.c_ptr(), name, expr))
-    { 
-        this->set<EcsPrefab>({parent.id()});
         sync_from_flecs();
     }
 
@@ -1002,7 +987,7 @@ public:
     }
 
     std::string str() const {
-        char *str = ecs_type_to_expr(m_world, m_type);
+        char *str = ecs_type_str(m_world, m_type);
         std::string result(str);
         ecs_os_free(str);
         return result;
@@ -2081,54 +2066,54 @@ inline void world::delete_entities(flecs::filter filter) const {
 
 template <typename T>
 inline void world::add() const {
-    ecs_add_type_remove_w_filter(m_world, component_base<T>::s_type, nullptr, nullptr);
+    ecs_bulk_add_remove_type(m_world, component_base<T>::s_type, nullptr, nullptr);
 }
 
 template <typename T>
 inline void world::add(flecs::filter filter) const {
-    ecs_add_type_remove_w_filter(m_world, component_base<T>::s_type, nullptr, filter.c_ptr());
+    ecs_bulk_add_remove_type(m_world, component_base<T>::s_type, nullptr, filter.c_ptr());
 }
 
 inline void world::add(type type) const {
-    ecs_add_type_remove_w_filter(m_world, type.c_ptr(), nullptr, nullptr);
+    ecs_bulk_add_remove_type(m_world, type.c_ptr(), nullptr, nullptr);
 }
 
 inline void world::add(type type, flecs::filter filter) const {
-    ecs_add_type_remove_w_filter(m_world, type.c_ptr(), nullptr, filter.c_ptr());
+    ecs_bulk_add_remove_type(m_world, type.c_ptr(), nullptr, filter.c_ptr());
 }
 
 inline void world::add(entity entity) const {
-    ecs_add_type_remove_w_filter(m_world, entity.to_type().c_ptr(), nullptr, nullptr);
+    ecs_bulk_add_remove_type(m_world, entity.to_type().c_ptr(), nullptr, nullptr);
 }
 
 inline void world::add(entity entity, flecs::filter filter) const {
-    ecs_add_type_remove_w_filter(m_world, entity.to_type().c_ptr(), nullptr, filter.c_ptr());
+    ecs_bulk_add_remove_type(m_world, entity.to_type().c_ptr(), nullptr, filter.c_ptr());
 }
 
 template <typename T>
 inline void world::remove() const {
-    ecs_add_type_remove_w_filter(m_world, nullptr, component_base<T>::s_type, nullptr);
+    ecs_bulk_add_remove_type(m_world, nullptr, component_base<T>::s_type, nullptr);
 }
 
 template <typename T>
 inline void world::remove(flecs::filter filter) const {
-    ecs_add_type_remove_w_filter(m_world, nullptr, component_base<T>::s_type, filter.c_ptr());
+    ecs_bulk_add_remove_type(m_world, nullptr, component_base<T>::s_type, filter.c_ptr());
 }
 
 inline void world::remove(type type) const {
-    ecs_add_type_remove_w_filter(m_world, nullptr, type.c_ptr(), nullptr);
+    ecs_bulk_add_remove_type(m_world, nullptr, type.c_ptr(), nullptr);
 }
 
 inline void world::remove(type type, flecs::filter filter) const {
-    ecs_add_type_remove_w_filter(m_world, nullptr, type.c_ptr(), filter.c_ptr());
+    ecs_bulk_add_remove_type(m_world, nullptr, type.c_ptr(), filter.c_ptr());
 }
 
 inline void world::remove(entity entity) const {
-    ecs_add_type_remove_w_filter(m_world, nullptr, entity.to_type().c_ptr(), nullptr);
+    ecs_bulk_add_remove_type(m_world, nullptr, entity.to_type().c_ptr(), nullptr);
 }
 
 inline void world::remove(entity entity, flecs::filter filter) const {
-    ecs_add_type_remove_w_filter(m_world, nullptr, entity.to_type().c_ptr(), filter.c_ptr());
+    ecs_bulk_add_remove_type(m_world, nullptr, entity.to_type().c_ptr(), filter.c_ptr());
 }
 
 inline flecs::world_filter world::filter(const flecs::filter& filter) const {
@@ -2150,7 +2135,7 @@ inline int world::count(flecs::filter filter) const {
 inline void world::init_builtin_components() {
     component<Component>(*this, "EcsComponent");
     component<TypeComponent>(*this, "EcsTypeComponent");
-    component<Prefab>(*this, "EcsPrefab");
+    component<Parent>(*this, "EcsParent");
     component<Name>(*this, "EcsName");
 }
 

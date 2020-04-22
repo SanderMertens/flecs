@@ -14,7 +14,7 @@ bool dummy_invoked = false;
 static
 void Dummy(ecs_rows_t *rows) {
     dummy_invoked = true;
-    ProbeSystem(rows);
+    probe_system(rows);
 }
 
 void SystemMisc_invalid_not_without_id() {
@@ -152,7 +152,7 @@ void SystemMisc_invalid_empty_or() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, | Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, || Position);
 
     ecs_fini(world);
 }
@@ -166,7 +166,7 @@ void SystemMisc_invalid_empty_or_w_space() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate,| Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate,|| Position);
 
     ecs_fini(world);
 }
@@ -181,7 +181,7 @@ void SystemMisc_invalid_or_w_not() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position | !Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position || !Velocity);
 
     ecs_fini(world);
 }
@@ -196,7 +196,7 @@ void SystemMisc_invalid_not_w_or() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !Position | Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !Position || Velocity);
 
     ecs_fini(world);
 }
@@ -299,7 +299,7 @@ void SystemMisc_invalid_or_w_empty() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, .Position | .Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, .Position || .Velocity);
 
     ecs_fini(world);
 }
@@ -352,7 +352,7 @@ void SystemMisc_invalid_or_from_system() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM.Position | SYSTEM.Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM.Position || SYSTEM.Velocity);
 
     ecs_fini(world);
 }
@@ -425,7 +425,7 @@ void SystemMisc_system_w_or_prefab() {
     ECS_COMPONENT(world, Position);
     ECS_PREFAB(world, Prefab, Position);
 
-    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab | EcsDisabled);
+    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab || EcsDisabled);
 
     test_int(is_invoked, 0);
 
@@ -442,7 +442,7 @@ void SystemMisc_system_w_or_disabled() {
     ECS_COMPONENT(world, Position);
     ECS_ENTITY(world, Entity, Position, EcsDisabled);
 
-    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab | EcsDisabled);
+    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab || EcsDisabled);
 
     test_int(is_invoked, 0);
 
@@ -460,7 +460,7 @@ void SystemMisc_system_w_or_disabled_and_prefab() {
     ECS_PREFAB(world, Prefab, Position);
     ECS_ENTITY(world, Entity, Position, EcsDisabled);
 
-    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab | EcsDisabled);
+    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab || EcsDisabled);
 
     test_int(is_invoked, 0);
 
@@ -763,7 +763,7 @@ void SystemMisc_dont_enable_after_rematch() {
 
     ECS_ENTITY(world, Entity, INSTANCEOF | Prefab);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* System is enabled but doesn't match with any entities */

@@ -258,7 +258,9 @@ void add_table(
                 ref->component = component;
 
                 if (component_data->size) {
-                    if (e != ECS_INVALID_ENTITY) {
+                    if (e) {
+                        ref->cached_ptr = (ecs_cached_ptr_t){0};
+
                         ecs_get_cached_ptr_w_entity(
                             world, &ref->cached_ptr, e, component);
                         ecs_set_watch(world, &world->stage, e);                     
@@ -381,15 +383,15 @@ bool match_table(
                     return false;
                 }                
             } else if (from_kind == EcsFromShared) {
-                if (ecs_type_has_entity(
-                        world, table_type, elem->is.component))
+                if (ecs_type_has_owned_entity(
+                        world, table_type, elem->is.component, true))
                 {
                     failure_info->reason = EcsMatchFromSelf;
                     failure_info->column = i + 1;
                     return false;
                 } else
                 if (!ecs_type_has_owned_entity(
-                    world, table_type, elem->is.component, true))
+                    world, table_type, elem->is.component, false))
                 {
                     failure_info->reason = EcsMatchFromSelf;
                     failure_info->column = i + 1;
@@ -532,17 +534,6 @@ void match_tables(
     }
 }
 
-/** Match new table against system (table is created after system) */
-void ecs_query_notify_of_table(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_table_t *table)
-{
-    if (match_table(world, table, query, NULL)) {
-        add_table(world, query, table);
-    }
-}
-
 /** Get index of table in system's matched tables */
 static
 int32_t get_table_param_index(
@@ -616,7 +607,7 @@ void resolve_cascade_container(
             world, &references[ref_index].cached_ptr, container, 
             ref->component);
     } else {
-        references[ref_index].entity = ECS_INVALID_ENTITY;
+        references[ref_index].entity = 0;
     }
 }
 

@@ -7,10 +7,10 @@ extern "C" {
 
 typedef struct ecs_ei_t ecs_ei_t;
 
-typedef struct ecs_record_t {
+struct ecs_record_t {
     ecs_table_t *table;            /* Identifies a type (and table) in world */
     int32_t row;                  /* Table row of the entity */
-} ecs_record_t;
+};
 
 typedef struct ecs_ei_iter_t {
     int32_t index;

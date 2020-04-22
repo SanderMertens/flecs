@@ -2510,7 +2510,7 @@ void On_PV(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     ECS_COLUMN(rows, Velocity, v, 2);
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -2538,7 +2538,7 @@ void SingleThreadStaging_match_table_created_in_progress() {
 
     ecs_progress(world, 1);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -2577,7 +2577,7 @@ void SingleThreadStaging_match_table_created_w_add_in_on_set() {
     ecs_entity_t e_2 = ecs_set(world, 0, Position, {10, 20});
     ecs_entity_t e_3 = ecs_set(world, 0, Position, {10, 20});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -2627,7 +2627,7 @@ void SingleThreadStaging_match_table_created_w_set_in_on_set() {
     ecs_entity_t e_2 = ecs_set(world, 0, Position, {10, 20});
     ecs_entity_t e_3 = ecs_set(world, 0, Position, {10, 20});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -2665,7 +2665,7 @@ static
 void On_V(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Velocity, v, 1);
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -2689,7 +2689,7 @@ void SingleThreadStaging_match_table_created_w_new_in_progress() {
 
     ecs_progress(world, 1);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
     ecs_enable(world, Set_velocity_on_new, false);
 
@@ -2722,7 +2722,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set() {
 
     ecs_set(world, 0, Position, {10, 20});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
     ecs_enable(world, Set_velocity_on_new, false);
 
@@ -2742,7 +2742,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set() {
 
 static
 void Create_container(ecs_rows_t *rows) {
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -2759,7 +2759,7 @@ void SingleThreadStaging_merge_table_w_container_added_in_progress() {
 
     ECS_ENTITY(world, e_1, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -2787,7 +2787,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set() {
      * cause an error */
     ECS_ENTITY(world, e_1, 0);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_set(world, e_1, Position, {10, 20});
@@ -2811,7 +2811,7 @@ static ecs_entity_t g_parent = 0;
 static
 void Create_container_reverse(ecs_rows_t *rows) {
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     ecs_world_t *world = rows->world;
 
@@ -2841,7 +2841,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
      * cause an error */
     ECS_ENTITY(world, e_1, 0);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_set(world, e_1, Position, {10, 20});
@@ -2956,14 +2956,13 @@ void GetParentInProgress(ecs_rows_t *rows) {
 
     /* Create parent */
     ecs_entity_t parent = ecs_new(world, Velocity);
-    ecs_type_t ecs_type(parent) = ecs_type_from_entity(world, parent);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
         ecs_entity_t e = rows->entities[i];
 
         ecs_add_entity(world, e, ECS_CHILDOF | parent);
-        test_assert( ecs_has(world, e, parent));
+        test_assert( ecs_has_entity(world, e, ECS_CHILDOF | parent));
 
         ecs_entity_t test_parent = ecs_get_parent(world, e, Velocity);
         test_assert(test_parent != 0);

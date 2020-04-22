@@ -55,7 +55,7 @@ void Add_remove_w_filter_remove_2_no_filter() {
     test_int( ecs_count(world, Type_1), 6);
     test_int( ecs_count(world, Type_2), 3);
 
-    /* Remove component Mass */
+    /* Remove component Mass and Rotation */
     ecs_bulk_add_remove(world, 0, ToRemove, NULL);
 
     /* ecs_count tests if the number of entities in the tables is correct */
@@ -125,7 +125,7 @@ void Add_remove_w_filter_remove_2_to_empty_no_filter() {
     test_int( ecs_count(world, Type_1), 3);
     test_int( ecs_count(world, Type_2), 3);
 
-    /* Remove component Mass */
+    /* Remove component Mass and Rotation */
     ecs_bulk_add_remove(world, 0, ToRemove, NULL);
 
     /* ecs_count tests if the number of entities in the tables is correct */
@@ -158,7 +158,7 @@ void Add_remove_w_filter_remove_1_all_no_filter() {
     test_int( ecs_count(world, Type_1), 3);
     test_int( ecs_count(world, Type_2), 3);
 
-    /* Remove component Mass */
+    /* Remove all components */
     ecs_bulk_add_remove(world, 0, Type_2, NULL);
 
     /* ecs_count tests if the number of entities in the tables is correct */

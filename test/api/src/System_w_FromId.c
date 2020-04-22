@@ -4,7 +4,7 @@ static
 void Iter(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -21,7 +21,7 @@ void System_w_FromId_2_column_1_from_id() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, .Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -50,7 +50,7 @@ void System_w_FromId_3_column_2_from_id() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, .Velocity, .Rotation);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -78,7 +78,7 @@ void CheckColumnType(ecs_rows_t *rows) {
 
     test_assert(ecs_type(Position) == ecs_column_type(rows, 1));
 
-    ProbeSystem(rows);
+    probe_system(rows);
 }
 
 void System_w_FromId_column_type() {
@@ -90,7 +90,7 @@ void System_w_FromId_column_type() {
 
     ECS_SYSTEM(world, CheckColumnType, EcsOnUpdate, Position, .Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_new(world, Position);

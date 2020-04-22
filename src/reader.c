@@ -1,145 +1,6 @@
 #include "flecs_private.h"
 
 static
-void ecs_component_reader_fetch_component_data(
-    ecs_reader_t *stream)
-{
-    ecs_component_reader_t *reader = &stream->component;
-    ecs_world_t *world = stream->world;
-    ecs_sparse_t *tables = world->stage.tables;
-
-    /* Component table is the first table in the world */
-    ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, 0);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_data_t *data = ecs_table_get_data(world, table);
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    reader->id_column = ecs_vector_first(data->entities);
-    reader->data_column = ecs_vector_first(data->columns[0].data);
-    reader->name_column = ecs_vector_first(data->columns[1].data);
-    reader->count = ecs_table_count(table);
-}
-
-static
-void ecs_component_reader_next(
-    ecs_reader_t *stream)
-{
-    ecs_component_reader_t *reader = &stream->component;
-
-    switch(reader->state) {
-    case EcsComponentHeader:  
-        reader->state = EcsComponentId;
-        if (!reader->id_column) {
-            /* Start from EcsOnDemand. Everything before that is the same for
-             * every world */
-            reader->index = EEcsOnDemand;
-        }
-        break;
-
-    case EcsComponentId:
-        reader->state = EcsComponentSize;
-        break;
-
-    case EcsComponentSize:
-        reader->state = EcsComponentNameLength;
-        reader->name = reader->name_column[reader->index];
-        reader->len = strlen(reader->name) + 1;
-        break;
-
-    case EcsComponentNameLength:
-        reader->state = EcsComponentName;
-        reader->written = 0;
-        break;
-
-    case EcsComponentName:
-        reader->state = EcsComponentHeader;    
-        reader->index ++;
-        if (reader->index == reader->count) {
-            stream->state = EcsTableSegment;
-        }
-        break;
-
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);        
-    }
-}
-
-static
-size_t ecs_component_reader(
-    char *buffer,
-    size_t size,
-    ecs_reader_t *stream)
-{
-    if (!size) {
-        return 0;
-    }
-
-    if (size < sizeof(int32_t)) {
-        return -1;
-    }
-
-    ecs_component_reader_t *reader = &stream->component;
-    size_t read = 0;
-
-    if (!reader->state) {
-        reader->state = EcsComponentHeader;
-    }
-
-    switch(reader->state) {
-    case EcsComponentHeader:  
-        *(ecs_blob_header_kind_t*)buffer = EcsComponentHeader;
-        read = sizeof(ecs_blob_header_kind_t);
-        ecs_component_reader_next(stream);
-        break;
-
-    case EcsComponentId:
-        *(int32_t*)buffer = (int32_t)reader->id_column[reader->index];
-        read = sizeof(int32_t);
-        ecs_component_reader_next(stream);
-        break;
-
-    case EcsComponentSize:
-        *(int32_t*)buffer = (int32_t)reader->data_column[reader->index].size;
-        read = sizeof(int32_t);
-        ecs_component_reader_next(stream);
-        break;
-
-    case EcsComponentNameLength:
-        *(int32_t*)buffer = (int32_t)reader->len;
-        read = sizeof(int32_t);
-        ecs_component_reader_next(stream);    
-        break;
-
-    case EcsComponentName:
-        read = reader->len - reader->written;
-        if (read >= sizeof(int32_t)) {
-            *(int32_t*)buffer = *(int32_t*)ECS_OFFSET(reader->name, reader->written);
-            reader->written += sizeof(int32_t);
-        } else {
-            memcpy(buffer, ECS_OFFSET(reader->name, reader->written), read);
-            memset(ECS_OFFSET(buffer, read), 0, sizeof(int32_t) - read);
-            reader->written += read;
-        }
-
-        /* Always align buffer to multiples of 4 bytes */
-        read = sizeof(int32_t);
-
-        if (reader->written == reader->len) {
-            ecs_component_reader_next(stream);
-        }
-        break;
-
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-    }
-
-    ecs_assert(read % 4 == 0, ECS_INTERNAL_ERROR, NULL);
-
-    return read;
-}
-
-static
 void ecs_table_reader_next(
     ecs_reader_t *stream)
 {
@@ -165,7 +26,8 @@ void ecs_table_reader_next(
             /* If a table is filtered out by the snapshot, does not have any
              * entities or contains builtin data, skip it */
             if (data && ecs_table_count(reader->table) &&
-                 !(reader->table->flags & EcsTableHasBuiltins))
+                 (!(reader->table->flags & EcsTableHasBuiltins) ||
+                    reader->table->flags & EcsTableHasComponentData))
             {
                 table_found = true;
                 break;
@@ -427,31 +289,6 @@ size_t ecs_reader_read(
     ecs_assert(size >= sizeof(int32_t), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(size % 4 == 0, ECS_INVALID_PARAMETER, NULL);
 
-    if (reader->state == EcsComponentSegment) {
-        while ((read = ecs_component_reader(ECS_OFFSET(buffer, total_read), remaining, reader))) {
-            if (read == (size_t)-1) {
-                break;
-            }
-
-            remaining -= read;
-            total_read += read;
-
-            if (reader->state != EcsComponentSegment) {
-                break;
-            }
-
-            ecs_assert(remaining % 4 == 0, ECS_INTERNAL_ERROR, NULL);
-        }
-
-        if (read == (size_t)-1) {
-            return total_read;
-        }
-
-        if (!read && remaining) {
-            reader->state = EcsTableSegment;
-        }
-    }
-
     if (reader->state == EcsTableSegment) {
         while ((read = ecs_table_reader(ECS_OFFSET(buffer, total_read), remaining, reader))) {
             remaining -= read;
@@ -473,17 +310,9 @@ ecs_reader_t ecs_reader_init(
 {
     ecs_reader_t result = {
         .world = world,
-        .state = EcsComponentSegment,
+        .state = EcsTableSegment,
         .tables = world->stage.tables
     };
-
-    ecs_component_reader_fetch_component_data(&result);
-
-    /* If the world does not contain components besides the built-in ones, go
-     * straight to serializing tables */
-    if (result.component.count == EEcsOnDemand) {
-        result.state = EcsTableSegment;
-    }
 
     return result;
 }
@@ -494,17 +323,9 @@ ecs_reader_t ecs_snapshot_reader_init(
 {
     ecs_reader_t result = {
         .world = world,
-        .state = EcsComponentSegment,
+        .state = EcsTableSegment,
         .tables = snapshot->tables
     };
-
-    ecs_component_reader_fetch_component_data(&result);
-
-    /* If the world does not contain components besides the built-in ones, go
-     * straight to serializing tables */
-    if (result.component.count == EEcsOnDemand) {
-        result.state = EcsTableSegment;
-    }
 
     return result;
 }

@@ -11,10 +11,6 @@
 void ecs_init_builtins(
     ecs_world_t *world);
 
-/* Initialize prefab builtin systems */
-void ecs_init_prefab_builtins(
-    ecs_world_t *world);
-
 /* Initialize timer builtin systems */
 void ecs_init_timer_builtins(
     ecs_world_t *world);
@@ -46,15 +42,6 @@ bool ecs_components_contains_component(
     ecs_entity_t flags,
     ecs_entity_t *entity_out);
 
-/* Get pointer to a component */
-void* ecs_get_ptr_intern(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_entity_t component,
-    bool staged_only,
-    bool search_prefab);
-
 ecs_entity_t ecs_get_entity_for_component(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -64,26 +51,6 @@ ecs_entity_t ecs_get_entity_for_component(
 void ecs_clear_w_filter(
     ecs_world_t *world,
     const ecs_filter_t *filter);
-
-/* Initialize component value(s) */
-void ecs_run_init_actions(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    uint32_t row,
-    uint32_t count,
-    ecs_entities_t components);
-    
-/* Deinitialize component value(s) */
-void ecs_run_deinit_actions(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    uint32_t row,
-    uint32_t count,
-    ecs_entities_t components);
 
 /* Get actual row from record row */
 int32_t ecs_record_to_row(
@@ -115,11 +82,6 @@ void ecs_world_activate_system(
 ecs_stage_t *ecs_get_stage(
     ecs_world_t **world_ptr);
 
-/* Get array for system kind */
-ecs_vector_t** ecs_system_array(
-    ecs_world_t *world,
-    ecs_system_kind_t kind);
-
 /* Get component callbacks */
 ecs_component_data_t *ecs_get_component_data(
     ecs_world_t *world,
@@ -148,12 +110,6 @@ void ecs_stage_merge(
 ////////////////////////////////////////////////////////////////////////////////
 //// Type API
 ////////////////////////////////////////////////////////////////////////////////
-
-ecs_type_t ecs_type_find_intern(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t *buf,
-    int32_t count);
 
 /* Merge add/remove types */
 ecs_type_t ecs_type_merge_intern(
@@ -197,6 +153,14 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_entity_t component,
     ecs_entity_t previous);
 
+void ecs_run_deinit_actions(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    uint32_t row,
+    uint32_t count,
+    ecs_entities_t components);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table API
@@ -206,10 +170,6 @@ ecs_entity_t ecs_find_entity_in_prefabs(
 void ecs_init_root_table(
     ecs_world_t *world,
     ecs_stage_t *stage);
-
-/* Bootstrap first table to store component data */ 
-ecs_table_t *ecs_bootstrap_component_table(
-    ecs_world_t *world);
 
 void ecs_table_register_query(
     ecs_world_t *world,
@@ -256,11 +216,25 @@ void ecs_table_move_back_and_swap(
     int32_t row,
     int32_t count);
 
+ecs_table_t *ecs_table_traverse_add(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_entities_t *to_add,
+    ecs_entities_t *added);
+
+ecs_table_t *ecs_table_traverse_remove(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_entities_t *to_remove,
+    ecs_entities_t *removed);    
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
 
-ecs_query_t*  ecs_query_new_w_sig(
+ecs_query_t* ecs_query_new_w_sig(
     ecs_world_t *world,
     ecs_entity_t system, 
     ecs_sig_t *sig);
@@ -290,19 +264,9 @@ void ecs_sig_deinit(
     ecs_sig_t *sig);
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 //// System API
 ////////////////////////////////////////////////////////////////////////////////
-
-void ecs_system_init_base(
-    ecs_world_t *world,
-    EcsSystem *base_data);
-
-/* Compute the AND type from the system columns */
-void ecs_system_compute_and_families(
-    ecs_world_t *world,
-    EcsSystem *system_data);
 
 void ecs_enable_intern(
     ecs_world_t *world,
@@ -336,12 +300,6 @@ ecs_entity_t ecs_new_col_system(
     ecs_system_kind_t kind,
     ecs_sig_t *sig,
     ecs_system_action_t action);
-
-/* Notify column system of a new table, which initiates system-table matching */
-void ecs_query_notify_of_table(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_table_t *table);
 
 /* Notify row system of a new type, which initiates system-type matching */
 void ecs_row_system_notify_of_type(
@@ -391,17 +349,13 @@ int ecs_parse_signature_action(
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t inout_kind,
+    ecs_entity_t flags,
     const char *component_id,
     const char *source_id,
     void *data);
 
 /* Trigger rematch of system */
 void ecs_rematch_query(
-    ecs_world_t *world,
-    ecs_query_t *query);
-
-/* Re-resolve references of system after table realloc */
-void ecs_revalidate_query_refs(
     ecs_world_t *world,
     ecs_query_t *query);
 
@@ -470,16 +424,6 @@ int ecs_parse_expr(
     ecs_parse_action_t action,
     const char *system_id,
     void *ctx);
-
-/* Test whether signature has columns that must be retrieved from a table */
-bool ecs_needs_tables(
-    ecs_world_t *world,
-    const char *signature,
-    const char *system_id);
-
-/* Count number of columns signature */
-int32_t ecs_columns_count(
-    const char *sig);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(

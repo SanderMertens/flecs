@@ -7,7 +7,7 @@ void Iter(ecs_rows_t *rows) {
 
     test_assert(!p_parent || ecs_is_shared(rows, 2));
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -41,7 +41,7 @@ void SystemCascade_cascade_depth_1() {
     ecs_add_entity(world, e_3, ECS_CHILDOF | e_1);
     ecs_add_entity(world, e_4, ECS_CHILDOF | e_2);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -52,10 +52,11 @@ void SystemCascade_cascade_depth_1() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.e[3], e_4);
+    probe_has_entity(&ctx, e_1);
+    probe_has_entity(&ctx, e_2);
+    probe_has_entity(&ctx, e_3);
+    probe_has_entity(&ctx, e_4);
+
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
@@ -108,7 +109,7 @@ void SystemCascade_cascade_depth_2() {
     ecs_add_entity(world, e_5, ECS_CHILDOF | e_3);
     ecs_add_entity(world, e_6, ECS_CHILDOF | e_4);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -168,7 +169,7 @@ void AddParent(ecs_rows_t *rows) {
 
     test_assert(!p_parent || ecs_is_shared(rows, 2));
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -200,14 +201,14 @@ void SystemCascade_add_after_match() {
     ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
     ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
 
     ecs_set(world, parent, Position, {1, 2});
 
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
 
     ecs_progress(world, 1);
 
@@ -267,7 +268,7 @@ void SystemCascade_adopt_after_match() {
     ecs_set(world, e_3, Position, {1, 2});
     ecs_set(world, e_4, Position, {1, 2});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -275,7 +276,7 @@ void SystemCascade_adopt_after_match() {
     ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
     ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
 
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
 
     ecs_progress(world, 1);
 

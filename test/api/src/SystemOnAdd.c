@@ -16,7 +16,7 @@ void Init(ecs_rows_t *rows) {
         v = ecs_column(rows, Velocity, 2);
     }
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -36,7 +36,7 @@ void SystemOnAdd_new_match_1_of_1() {
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -67,7 +67,7 @@ void SystemOnAdd_new_match_1_of_2() {
     ECS_TYPE(world, Type, Position, Velocity);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Type);
@@ -97,7 +97,7 @@ void SystemOnAdd_new_no_match_1() {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Velocity);
@@ -115,7 +115,7 @@ void SystemOnAdd_new_no_match_2_of_1() {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -136,7 +136,7 @@ void SystemOnAdd_new_no_match_2_of_3() {
     ECS_TYPE(world, Type, Position, Velocity, Mass);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position, Rotation);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Type);
@@ -153,7 +153,7 @@ void SystemOnAdd_add_match_1_of_1() {
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -188,7 +188,7 @@ void SystemOnAdd_add_match_1_of_2() {
     ECS_TYPE(world, Type, Position, Velocity);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -223,7 +223,7 @@ void SystemOnAdd_add_match_2_of_2() {
     ECS_TYPE(world, Type, Position, Velocity);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -261,7 +261,7 @@ void SystemOnAdd_add_match_2_of_3() {
     ECS_TYPE(world, Type, Position, Velocity, Mass);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -297,7 +297,7 @@ void SystemOnAdd_add_no_match_1() {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, Init, EcsOnAdd, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -320,7 +320,7 @@ void SystemOnAdd_add_no_match_2_of_1() {
     ECS_COMPONENT(world, Mass);
     ECS_SYSTEM(world, Init, EcsOnAdd, Velocity, Mass);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -345,7 +345,7 @@ void SystemOnAdd_add_no_match_2_of_3() {
     ECS_TYPE(world, Type, Position, Velocity, Mass);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position, Rotation);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -366,7 +366,7 @@ void SystemOnAdd_set_match_1_of_1() {
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -400,7 +400,7 @@ void SystemOnAdd_set_no_match_1() {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, Init, EcsOnAdd, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -424,7 +424,7 @@ void SystemOnAdd_clone_match_1_of_1() {
     ecs_entity_t e_1 = ecs_new(world, Position);
     test_assert(e_1 != 0);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e_2 = ecs_copy(world, 0, e_1, false);
@@ -457,7 +457,7 @@ void SystemOnAdd_clone_match_1_of_2() {
     ecs_entity_t e_1 = ecs_new(world, Type);
     test_assert(e_1 != 0);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e_2 = ecs_copy(world, 0, e_1, false);
@@ -490,7 +490,7 @@ void SystemOnAdd_clone_match_2_of_2() {
     ecs_entity_t e_1 = ecs_new(world, Type);
     test_assert(e_1 != 0);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e_2 = ecs_copy(world, 0, e_1, false);
@@ -530,7 +530,7 @@ void SystemOnAdd_clone_match_2_of_3() {
     ecs_entity_t e_1 = ecs_new(world, Type);
     test_assert(e_1 != 0);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e_2 = ecs_copy(world, 0, e_1, false);
@@ -569,7 +569,7 @@ void SystemOnAdd_add_again_1() {
 
     ecs_add(world, e, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_add(world, e, Position);
@@ -590,7 +590,7 @@ void SystemOnAdd_set_again_1() {
 
     ecs_set(world, e, Position, {10, 20});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_set(world, e, Position, {30, 40});
@@ -613,7 +613,7 @@ void SystemOnAdd_add_again_2() {
 
     ecs_add(world, e, Type);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_add(world, e, Type);
@@ -629,7 +629,7 @@ void SystemOnAdd_new_w_count_match_1_of_1() {
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, Init, EcsOnAdd, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_bulk_new(world, Position, 3);
@@ -659,7 +659,7 @@ void AddVelocity(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     ECS_COLUMN_COMPONENT(rows, Velocity, 2);
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -680,7 +680,7 @@ void SystemOnAdd_override_after_add_in_on_add() {
 
     ECS_SYSTEM(world, AddVelocity, EcsOnAdd, Position, .Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Prefab);
@@ -709,54 +709,6 @@ void SystemOnAdd_override_after_add_in_on_add() {
 }
 
 static
-void OnSetPosition(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-
-    int i;
-    for (i = 0; i < rows->count; i ++) {
-        p[i].x ++;
-        p[i].y ++;
-    }
-}
-
-void SystemOnAdd_set_after_add_in_on_add() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_SYSTEM(world, AddVelocity, EcsOnAdd, Position, .Velocity);
-    ECS_SYSTEM(world, OnSetPosition, EcsOnSet, Position);
-
-    SysTestData ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, 0);
-    test_assert(e != 0);
-
-    test_int(ctx.count, 0);
-
-    ecs_add(world, e, Position);
-    test_assert( ecs_has(world, e, Position));
-    test_assert( ecs_has(world, e, Velocity));
-
-    test_int(ctx.count, 1);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, AddVelocity);
-    test_int(ctx.column_count, 2);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0);
-
-    Position *p = ecs_get_ptr(world, e, Position);
-    test_int(p->x, 2);
-    test_int(p->y, 3);
-
-    ecs_fini(world);
-}
-
-static
 void AddAgain(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, Position, 1);
 
@@ -778,7 +730,7 @@ void SystemOnAdd_add_again_in_progress() {
 
     ecs_add(world, e, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -843,7 +795,7 @@ void SystemOnAdd_disabled_system() {
 
     ecs_enable(world, IsInvoked, false);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -969,7 +921,7 @@ void SystemOnAdd_container_column() {
     ECS_SYSTEM(world, TestContainer, EcsOnAdd, Position, PARENT.Velocity);
 
     ECS_ENTITY(world, Parent, Velocity);
-    ECS_ENTITY(world, child, CHILDOF | parent, Position);
+    ECS_ENTITY(world, child, CHILDOF | Parent, Position);
 
     test_bool(is_invoked, true);
 
@@ -1016,7 +968,7 @@ void SystemOnAdd_add_with_owned() {
     // OnAdd system with OWNED column
     ECS_SYSTEM(world, Init, EcsOnAdd, Position, OWNED.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     // Create entity with OWNED, should invoke OnAdd
@@ -1045,7 +997,7 @@ void SystemOnAdd_add_with_shared() {
     // OnAdd system with OWNED column
     ECS_SYSTEM(world, Init, EcsOnAdd, Position, SHARED.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     // Create entity with OWNED, should not invoke OnAdd

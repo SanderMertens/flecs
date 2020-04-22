@@ -6,8 +6,6 @@
 extern "C" {
 #endif
 
-typedef struct ecs_table_t ecs_table_t;
-
 /* Array of entity ids that, other than a type, can live on the stack */
 typedef struct ecs_entities_t {
     ecs_entity_t *array;
@@ -25,26 +23,6 @@ ecs_table_t* ecs_table_from_type(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_type_t type);    
-
-/* Traverse tables following the provided to_add and to_remove types */
-ecs_table_t* ecs_table_traverse(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_entities_t *to_add,
-    ecs_entities_t *to_remove,
-    ecs_entities_t *added,
-    ecs_entities_t *removed);
-
-/* Traverse tables following to provided to_add and to_remove types */
-ecs_table_t* ecs_table_traverse_type(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_type_t to_add,
-    ecs_type_t to_remove,
-    ecs_entities_t *added,
-    ecs_entities_t *removed);    
 
 /* Get table data from main stage */
 ecs_data_t *ecs_table_get_data(

@@ -9,7 +9,6 @@
 extern "C" {
 #endif
 
-typedef struct ecs_table_t ecs_table_t;
 typedef struct ecs_column_t ecs_column_t;
 typedef struct ecs_data_t ecs_data_t;
 
@@ -21,16 +20,8 @@ typedef enum ecs_blob_header_kind_t {
     EcsStreamHeader,
 
     /* Stream states */
-    EcsComponentSegment,
     EcsTableSegment,
     EcsFooterSegment,
-
-    /* Component segment */
-    EcsComponentHeader,
-    EcsComponentId,
-    EcsComponentSize,
-    EcsComponentNameLength,
-    EcsComponentName,
 
     /* Table segment */
     EcsTableHeader,
@@ -49,24 +40,6 @@ typedef enum ecs_blob_header_kind_t {
 
     EcsStreamFooter  
 } ecs_blob_header_kind_t;
-
-typedef struct ecs_component_reader_t {
-    ecs_blob_header_kind_t state;
-
-    /* Component data fetched from the world */
-    ecs_entity_t *id_column;
-    EcsComponent *data_column;
-    EcsName *name_column;
-
-    /* Current component & total number of components */
-    int32_t index;
-    int32_t count;
-
-    /* Keep track how much of the component name has been written */
-    const char *name;
-    size_t len;
-    size_t written;
-} ecs_component_reader_t;
 
 typedef struct ecs_table_reader_t {
     ecs_blob_header_kind_t state;
@@ -103,7 +76,6 @@ typedef struct ecs_reader_t {
     ecs_world_t *world;
     ecs_blob_header_kind_t state;
     ecs_sparse_t *tables;
-    ecs_component_reader_t component;
     ecs_table_reader_t table;
 } ecs_reader_t;
 
@@ -113,14 +85,6 @@ typedef struct ecs_name_writer_t {
     int32_t len;
     int32_t max_len;
 } ecs_name_writer_t;
-
-typedef struct ecs_component_writer_t {
-    ecs_blob_header_kind_t state;
-
-    int32_t id;
-    size_t size;
-    ecs_name_writer_t name;
-} ecs_component_writer_t;
 
 typedef struct ecs_table_writer_t {
     ecs_blob_header_kind_t state;
@@ -147,7 +111,6 @@ typedef struct ecs_table_writer_t {
 typedef struct ecs_writer_t {
     ecs_world_t *world;
     ecs_blob_header_kind_t state;
-    ecs_component_writer_t component;
     ecs_table_writer_t table;
     int error;
 } ecs_writer_t;
@@ -166,7 +129,6 @@ typedef struct ecs_writer_t {
 ////////////////////////////////////////////////////////////////////////////////
 
 #define EcsSingleton ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
-#define ECS_INVALID_ENTITY (0)
 
 struct ecs_filter_t;
 typedef struct ecs_filter_t ecs_type_filter_t;

@@ -6,7 +6,7 @@ void Iter(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Velocity, v, 2);
     ECS_COLUMN(rows, Mass, m, 3);
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {

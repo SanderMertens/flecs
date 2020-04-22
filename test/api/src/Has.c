@@ -206,7 +206,8 @@ void Has_has_entity() {
     test_assert(base != 0);
 
     ecs_add_entity(world, e, ECS_INSTANCEOF | base);
-    test_assert( ecs_has_entity(world, e, base));
+    test_assert( !ecs_has_entity(world, e, base));
+    test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | base));
  
     ecs_fini(world);
 }
@@ -254,10 +255,13 @@ void Has_has_entity_owned() {
 
     test_assert( ecs_has_entity(world, e, f));
     test_assert( ecs_has_entity(world, e, g));
-    test_assert( ecs_has_entity(world, e, base));
+    test_assert( !ecs_has_entity(world, e, base));
+    test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | base));
     test_assert( ecs_has_owned_entity(world, e, f, true));
     test_assert( !ecs_has_owned_entity(world, e, g, true));
-    test_assert( ecs_has_owned_entity(world, e, base, true));
+    test_assert( !ecs_has_owned_entity(world, e, base, true));
+
+    test_assert( ecs_has_owned_entity(world, e, ECS_INSTANCEOF | base, true));
  
     ecs_fini(world);
 }
@@ -279,7 +283,7 @@ void Has_has_entity_owned_0_component() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    test_assert( ecs_has_owned_entity(world, e, 0, true) == true);
+    test_assert( ecs_has_owned_entity(world, e, 0, true) == false);
 
     ecs_fini(world);
 }

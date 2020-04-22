@@ -41,7 +41,7 @@ void Iter_w_singleton(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Velocity, v, 2);
     test_assert(!v || ecs_is_shared(rows, 2));
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     if (v) {
         int i;
@@ -65,7 +65,7 @@ void Singleton_system_w_singleton() {
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     test_assert( !ecs_has(world, EcsSingleton, Position));
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -90,7 +90,7 @@ void Singleton_system_w_singleton_no_match() {
     ecs_set(world, 0, Position, {10, 20});
     test_assert( !ecs_has(world, EcsSingleton, Position));
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -107,7 +107,7 @@ void Singleton_system_w_not_singleton() {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, !$.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);

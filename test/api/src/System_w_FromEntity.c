@@ -17,7 +17,7 @@ void Iter(ecs_rows_t *rows) {
 
     test_assert(!m_ptr || ecs_is_shared(rows, 1));
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     Mass m = 1;
     if (m_ptr) {
@@ -49,7 +49,7 @@ void System_w_FromEntity_2_column_1_from_entity() {
 
     ecs_set(world, e_1, Mass, {5});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);

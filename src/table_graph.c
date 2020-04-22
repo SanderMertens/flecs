@@ -69,12 +69,16 @@ void init_edges(
          * flags. These allow us to quickly determine if the table contains
          * data that needs to be handled in a special way, like prefabs or 
          * containers */
-        if (e <= EcsLastBuiltin) {
+        if (e <= EcsLastInternal) {
             table->flags |= EcsTableHasBuiltins;
         }
 
         if (e == EEcsPrefab) {
             table->flags |= EcsTableIsPrefab;
+        }
+
+        if (e == EEcsComponent) {
+            table->flags |= EcsTableHasComponentData;
         }
 
         if (e & ECS_INSTANCEOF) {
@@ -90,6 +94,12 @@ void init_edges(
             ecs_table_t **el = ecs_vector_add(&ptr->child_tables, ecs_table_t*);
             *el = table;
             ecs_modified(world, parent, EcsParent);
+        }
+
+        if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {
+            if (stage == &world->stage) {
+                ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
+            }
         }
     }
 }
@@ -139,42 +149,6 @@ void ecs_init_root_table(
     };
 
     init_table(world, stage, &stage->root, &entities);
-}
-
-ecs_table_t *ecs_bootstrap_component_table(
-    ecs_world_t *world)
-{
-    ecs_entity_t array[] = {ecs_entity(EcsComponent), ecs_entity(EcsName)};
-    ecs_entities_t entities = {
-        .array = array,
-        .count = 2
-    };
-
-    ecs_table_t *result = ecs_sparse_add(world->stage.tables, ecs_table_t);
-    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    result->type = entities_to_type(&entities);
-    result->queries = NULL;
-    result->flags = EcsTableHasBuiltins;
-    result->stage_data = NULL;
-
-    ecs_data_t *data = ecs_vector_add(&result->stage_data, ecs_data_t);
-    ecs_assert(data != NULL, ECS_OUT_OF_MEMORY, NULL);
-    
-    data->entities = ecs_vector_new(ecs_entity_t, 16);
-    data->record_ptrs = ecs_vector_new(ecs_record_t*, 16);
-
-    data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 2);
-    ecs_assert(data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
-
-    data->columns[0].data = ecs_vector_new(EcsComponent, 16);
-    data->columns[0].size = sizeof(EcsComponent);
-    data->columns[1].data = ecs_vector_new(EcsName, 16);
-    data->columns[1].size = sizeof(EcsName);
-
-    init_edges(world, &world->stage, result);
-
-    return result;    
 }
 
 static
@@ -234,9 +208,13 @@ ecs_edge_t* get_edge(
     if (e < ECS_HI_COMPONENT_ID) {
         edge = &node->lo_edges[e];
     } else {
-        ecs_edge_t new_edge = {0};
-        ecs_map_set(node->hi_edges, e, &new_edge);
         edge = ecs_map_get(node->hi_edges, ecs_edge_t, e);        
+        if (!edge) {
+            ecs_edge_t new_edge = {0};
+            ecs_map_set(node->hi_edges, e, &new_edge);
+            edge = ecs_map_get(node->hi_edges, ecs_edge_t, e);    
+            ecs_assert(edge != NULL, ECS_INTERNAL_ERROR, NULL);
+        }
     }
 
     return edge;
@@ -250,7 +228,6 @@ void create_backlink_after_add(
 {
     ecs_edge_t *edge = get_edge(next, add);
     if (!edge->remove) {
-        edge->add = NULL;
         edge->remove = prev;
     }
 }
@@ -264,7 +241,6 @@ void create_backlink_after_remove(
     ecs_edge_t *edge = get_edge(next, add);
     if (!edge->add) {
         edge->add = prev;
-        edge->remove = NULL;
     }
 }
 
@@ -370,8 +346,7 @@ ecs_table_t* traverse_remove_hi_edges(
     return node;
 }
 
-static
-ecs_table_t* traverse_remove(
+ecs_table_t* ecs_table_traverse_remove(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *node,
@@ -380,6 +355,7 @@ ecs_table_t* traverse_remove(
 {
     uint32_t i, count = to_remove->count;
     ecs_entity_t *entities = to_remove->array;
+    node = node ? node : &stage->root;
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
@@ -465,8 +441,7 @@ ecs_table_t* traverse_add_hi_edges(
     return node;
 }
 
-static
-ecs_table_t* traverse_add(
+ecs_table_t* ecs_table_traverse_add(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *node,
@@ -475,6 +450,7 @@ ecs_table_t* traverse_add(
 {
     uint32_t i, count = to_add->count;
     ecs_entity_t *entities = to_add->array;
+    node = node ? node : &stage->root;
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
@@ -708,57 +684,4 @@ ecs_table_t* ecs_table_from_type(
     };
 
     return ecs_table_find_or_create(world, stage, &components);
-}
-
-ecs_table_t *ecs_table_traverse(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_entities_t *to_add,
-    ecs_entities_t *to_remove,
-    ecs_entities_t *added,
-    ecs_entities_t *removed)
-{
-    ecs_table_t *node = table;
-
-    ecs_assert(!added || added->array != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!removed || removed->array != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (!node) {
-        node = &stage->root;
-    }
-
-    /* Do to_remove first, to limit the depth of the graph */
-    if (to_remove) {
-        node = traverse_remove(world, stage, node, to_remove, removed);
-    }
-
-    if (to_add) {
-        node = traverse_add(world, stage, node, to_add, added);
-    }
-
-    return node;
-}
-
-ecs_table_t* ecs_table_traverse_type(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_type_t to_add,
-    ecs_type_t to_remove,
-    ecs_entities_t *added,
-    ecs_entities_t *removed)
-{
-    ecs_entities_t to_add_array = {
-        .array = ecs_vector_first(to_add),
-        .count = ecs_vector_count(to_add)
-    };
-
-    ecs_entities_t to_remove_array = {
-        .array = ecs_vector_first(to_remove),
-        .count = ecs_vector_count(to_remove)
-    };
-
-    return ecs_table_traverse(
-        world, stage, table, &to_add_array, &to_remove_array, added, removed);
 }

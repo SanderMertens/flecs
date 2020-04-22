@@ -71,29 +71,6 @@ void Lookup_lookup_child() {
     ecs_fini(world);
 }
 
-void Lookup_lookup_child_w_component() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t e1 = ecs_set(world, 0, EcsName, {"Child"});
-    ecs_entity_t e2 = ecs_set(world, 0, EcsName, {"Child"});
-
-    ecs_add(world, e1, Position);
-    ecs_add(world, e2, Velocity);
-
-    ecs_entity_t lookup = ecs_lookup_child(world, ecs_entity(Position), "Child");
-    test_assert(lookup != 0);
-    test_assert(lookup == e1);
-
-    lookup = ecs_lookup_child(world, ecs_entity(Velocity), "Child");
-    test_assert(lookup != 0);
-    test_assert(lookup == e2);
-
-    ecs_fini(world);
-}
-
 void LookupSystem(ecs_rows_t *rows) {
     ecs_entity_t e = ecs_new(rows->world, 0);
     test_assert(e != 0);
@@ -119,7 +96,7 @@ void LookupChildSystem(ecs_rows_t *rows) {
     ecs_set(rows->world, e, EcsName, {"Foo"});
     test_assert( ecs_has(rows->world, e, EcsName));
 
-    ecs_entity_t found = ecs_lookup(rows->world, "Foo");
+    ecs_entity_t found = ecs_lookup_child(rows->world, parent, "Foo");
     test_assert(found != 0);
     test_assert(found == e);
 }

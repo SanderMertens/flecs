@@ -24,8 +24,8 @@ ecs_data_t* init_data(
     ecs_entity_t *entities = ecs_vector_first(type);
 
     for (i = 0; i < count; i ++) {
-        EcsComponent *component = ecs_get_ptr_intern(
-            world, &world->stage, entities[i], EEcsComponent, false, false);
+        const EcsComponent *component = ecs_get_ptr(
+                world, entities[i], EcsComponent);
 
         /* Is the column a component? */
         if (component) {
@@ -211,7 +211,7 @@ ecs_data_t* ecs_table_get_data_intern(
         }
     }
     
-    return &data_array[id];  
+    return &data_array[id];
 }
 
 ecs_data_t* ecs_table_get_data(
@@ -245,10 +245,6 @@ ecs_data_t* ecs_table_get_or_create_data(
 
         /* Don't add table multiple times. Value is reset during merge */
         result->marked_dirty = true;
-    }
-
-    if (table->type && !result->columns) {
-        init_data(world, table, result);
     }
 
     return result;   
@@ -290,6 +286,16 @@ void ecs_table_clear(
     ecs_table_t *table)
 {
     run_on_remove_handlers(world, table);
+
+    ecs_data_t *data = ecs_table_get_data(world, table);
+    if (data) {
+        ecs_entity_t *entities = ecs_vector_first(data->entities);
+        int32_t i, count = ecs_vector_count(data->entities);
+        for(i = 0; i < count; i ++) {
+            ecs_eis_delete(&world->stage, entities[i]);
+        }
+    }
+
     ecs_table_clear_silent(world, table);
 }
 
@@ -332,7 +338,7 @@ void ecs_table_replace_data(
         deinit_data(table, table_data);
     }
 
-    table_data = ecs_table_get_data(world, table);
+    table_data = ecs_table_get_or_create_data(world, &world->stage, table);
     if (data) {
         *table_data = *data;
     }
@@ -393,6 +399,7 @@ int32_t ecs_table_append(
     *r = record;
 
     int32_t index = ecs_vector_count(data->entities) - 1;
+
     if (!world->in_progress && !index) {
         ecs_table_activate(world, table, 0, true);
     }
@@ -450,7 +457,7 @@ void ecs_table_delete(
         }
 
         /* Update record of moved entity in entity index */
-        if (!world->in_progress) {
+        if (!world->in_progress && record_to_move) {
             record_to_move->row = index + 1;
         } else {
             ecs_record_t row;

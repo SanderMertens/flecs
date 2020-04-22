@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Task(ecs_rows_t *rows) {
-    ProbeSystem(rows);
+    probe_system(rows);
 }
 
 void Tasks_no_components() {
@@ -9,7 +9,7 @@ void Tasks_no_components() {
 
     ECS_SYSTEM(world, Task, EcsOnUpdate, 0);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -26,7 +26,7 @@ void Tasks_one_tag() {
 
     ECS_SYSTEM(world, Task, EcsOnUpdate, SYSTEM.EcsHidden);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -46,7 +46,7 @@ void Tasks_from_system() {
 
     ECS_SYSTEM(world, Task, EcsOnUpdate, SYSTEM.Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -64,7 +64,7 @@ void Tasks_on_remove_no_components() {
 
     ECS_SYSTEM(world, Task, EcsOnRemove, 0);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -84,7 +84,7 @@ void Tasks_on_remove_one_tag() {
 
     ECS_SYSTEM(world, Task, EcsOnRemove, SYSTEM.EcsHidden);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -107,7 +107,7 @@ void Tasks_on_remove_from_system() {
 
     ECS_SYSTEM(world, Task, EcsOnRemove, SYSTEM.Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);

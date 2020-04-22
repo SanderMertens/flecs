@@ -33,7 +33,7 @@ void Iter(ecs_rows_t *rows) {
         test_assert(!m || ecs_is_shared(rows, 3));
     }
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -62,7 +62,7 @@ void System_w_FromSystem_2_column_1_from_system() {
     test_int(v->x, 10);
     test_int(v->y, 20);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
@@ -116,7 +116,7 @@ void System_w_FromSystem_3_column_2_from_system() {
     test_assert(m != NULL);
     test_int(*m, 3);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
@@ -166,7 +166,7 @@ void Iter_reactive(ecs_rows_t *rows) {
         test_assert(!m || ecs_is_shared(rows, 3));
     }
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -195,7 +195,7 @@ void System_w_FromSystem_2_column_1_from_system_on_add() {
     test_int(v->x, 10);
     test_int(v->y, 20);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -235,7 +235,7 @@ void System_w_FromSystem_2_column_1_from_system_on_remove() {
     test_int(v->x, 10);
     test_int(v->y, 20);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -273,7 +273,7 @@ void System_w_FromSystem_2_column_1_from_system_on_set() {
     test_int(v->x, 10);
     test_int(v->y, 20);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});

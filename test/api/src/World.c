@@ -9,7 +9,7 @@ void install_test_abort() {
 }
 
 void Move(ecs_rows_t *rows) {
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int row;
     for (row = 0; row < rows->count; row ++) {
@@ -30,7 +30,7 @@ void World_progress_w_0() {
 
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_set(world, e_1, Position, {0, 0});
@@ -68,7 +68,7 @@ void World_progress_w_t() {
 
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_set(world, e_1, Position, {0, 0});
@@ -300,13 +300,13 @@ void World_dim() {
 
     ecs_bulk_new(world, Position, 500);
 
-    test_int(malloc_count, 2);
+    test_int(malloc_count, 3);
 
     malloc_count = 0;
 
     ecs_bulk_new(world, Position, 500);
 
-    test_int(malloc_count, 2);
+    test_int(malloc_count, 3);
 
     ecs_fini(world);
 }

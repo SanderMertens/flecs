@@ -342,6 +342,10 @@ void* _ecs_vector_get(
     size_t elem_size,
     int32_t index)
 {
+    if (!vector) {
+        return NULL;
+    }
+    
     ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);    
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 

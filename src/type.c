@@ -10,6 +10,7 @@ int parse_type_action(
     ecs_sig_from_kind_t from_kind,
     ecs_sig_oper_kind_t oper_kind,
     ecs_sig_inout_kind_t inout_kind,
+    ecs_entity_t flags,
     const char *entity_id,
     const char *source_id,
     void *data)
@@ -27,14 +28,7 @@ int parse_type_action(
             return -1;
         }
 
-        if (!strcmp(entity_id, "INSTANCEOF")) {
-            entity = ECS_INSTANCEOF;
-        } else if (!strcmp(entity_id, "CHILDOF")) {
-            entity = ECS_CHILDOF;
-        } else {
-            entity = ecs_lookup(world, entity_id);
-        }
-        
+        entity = ecs_lookup(world, entity_id);
         if (!entity) {
             ecs_parser_error(system_id, sig, column, 
                 "unresolved identifier '%s'", entity_id);
@@ -43,25 +37,7 @@ int parse_type_action(
 
         if (oper_kind == EcsOperAnd) {
             ecs_entity_t* e_ptr = ecs_vector_add(array, ecs_entity_t);
-            *e_ptr = entity;
-        } else if (oper_kind == EcsOperOr) {
-            ecs_entity_t *e_ptr = ecs_vector_last(*array, ecs_entity_t);
-
-            /* If using an OR operator, the array should at least have one 
-             * element. */
-            ecs_assert(e_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            if (*e_ptr & ECS_ENTITY_MASK) {
-                if (entity & ECS_ENTITY_MASK) {
-                    /* An expression should not OR entity ids, only entities +
-                     * entity flags. */
-                    ecs_parser_error(system_id, sig, column, 
-                        "| operator unsupported in type expression");
-                    return -1;
-                }
-            }
-
-            *e_ptr |= entity;
+            *e_ptr = entity | flags;
         } else {
             /* Only AND and OR operators are supported for type expressions */
             ecs_parser_error(system_id, sig, column, 
@@ -164,7 +140,7 @@ ecs_type_t ecs_type_add_intern(
         .count = 1
     };
 
-    table = ecs_table_traverse(world, stage, table, &entities, NULL, NULL, NULL);
+    table = ecs_table_traverse_add(world, stage, table, &entities, NULL);
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -185,7 +161,7 @@ ecs_type_t ecs_type_remove_intern(
         .count = 1
     };
 
-    table = ecs_table_traverse(world, stage, table, NULL, &entities, NULL, NULL);
+    table = ecs_table_traverse_remove(world, stage, table, &entities, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return table->type;
@@ -300,13 +276,13 @@ ecs_entity_t ecs_type_contains(
     int32_t t2_count = ecs_vector_count(type_2);
 
     for (i_2 = 0; i_2 < t2_count; i_2 ++) {
-        ecs_entity_t e2 = t2_array[i_2] & ECS_ENTITY_MASK;
+        ecs_entity_t e2 = t2_array[i_2];
 
         if (i_1 >= t1_count) {
             return 0;
         }
 
-        e1 = t1_array[i_1] & ECS_ENTITY_MASK;
+        e1 = t1_array[i_1];
 
         if (e2 > e1) {
             do {
@@ -314,7 +290,7 @@ ecs_entity_t ecs_type_contains(
                 if (i_1 >= t1_count) {
                     return 0;
                 }
-                e1 = t1_array[i_1] & ECS_ENTITY_MASK;
+                e1 = t1_array[i_1];
             } while (e2 > e1);
         }
 
@@ -334,7 +310,7 @@ ecs_entity_t ecs_type_contains(
             if (!match_all) return e1;
             i_1 ++;
             if (i_1 < t1_count) {
-                e1 = t1_array[i_1] & ECS_ENTITY_MASK;
+                e1 = t1_array[i_1];
             }
         }
     }
@@ -384,52 +360,6 @@ ecs_entity_t ecs_new_type(
     return result;
 }
 
-ecs_entity_t ecs_new_prefab(
-    ecs_world_t *world,
-    const char *id,
-    const char *expr)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-   
-    EcsTypeComponent type = type_from_expr(world, id, expr);
-    type.normalized = ecs_type_merge_intern(
-        world, &world->stage, world->t_prefab, type.normalized, 0);
-
-    ecs_entity_t result = ecs_lookup(world, id);
-    if (result) {
-        if (ecs_get_type(world, result) != type.normalized) {
-            ecs_abort(ECS_ALREADY_DEFINED, id);
-        }
-    } else {
-        result = ecs_new_w_type(world, type.normalized);
-        ecs_set(world, result, EcsName, {id});
-    }
-
-    return result;
-}
-
-ecs_entity_t ecs_new_entity(
-    ecs_world_t *world,
-    const char *id,
-    const char *expr)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-   
-    EcsTypeComponent type = type_from_expr(world, id, expr);
-
-    ecs_entity_t result = ecs_lookup(world, id);
-    if (result) {
-        if (ecs_get_type(world, result) != type.normalized) {
-            ecs_abort(ECS_ALREADY_DEFINED, id);
-        }
-    } else {
-        result = ecs_new_w_type(world, type.normalized);
-        ecs_set(world, result, EcsName, {id});
-    }
-
-    return result;
-}
-
 int16_t ecs_type_index_of(
     ecs_type_t type,
     ecs_entity_t entity)
@@ -438,7 +368,7 @@ int16_t ecs_type_index_of(
     int i, count = ecs_vector_count(type);
     
     for (i = 0; i < count; i ++) {
-        if ((buf[i] & ECS_ENTITY_MASK) == entity) {
+        if (buf[i] == entity) {
             return i; 
         }
     }
@@ -465,8 +395,11 @@ ecs_type_t ecs_type_merge_intern(
         .count = ecs_vector_count(to_remove)
     };
     
-    table = ecs_table_traverse(
-        world, stage, table, &add_array, &remove_array, NULL, NULL); 
+    table = ecs_table_traverse_remove(
+        world, stage, table, &remove_array, NULL); 
+
+    table = ecs_table_traverse_add(
+        world, stage, table, &add_array, NULL); 
 
     if (!table) {
         return NULL;
@@ -499,6 +432,10 @@ bool ecs_type_has_entity(
     ecs_type_t type,
     ecs_entity_t entity)
 {
+    if (!entity) {
+        return true;
+    }
+
     ecs_entity_t *array = ecs_vector_first(type);
     int i, count = ecs_vector_count(type);
     for (i = 0; i < count; i ++) {
@@ -524,14 +461,18 @@ bool ecs_type_has_owned_entity(
     ecs_entity_t entity,
     bool owned)
 {
+    if (!type) {
+        return false;
+    }
+    
     ecs_entity_t *array = ecs_vector_first(type);
     int i, count = ecs_vector_count(type);
 
     if (owned) {
         ecs_entity_t e = array[0];
-        for (i = 0; 
-            i < count && entity != e && entity < e; 
-            i ++, e = array[i]);
+        for (i = 0; i < count && entity != e && e < entity; i ++) {
+            e = array[i];
+        }
         return e == entity;
     } else {
         for (i = count - 1; i >= 0; i --) {
@@ -594,7 +535,7 @@ ecs_type_t ecs_type_remove(
     return ecs_type_remove_intern(world, stage, type, e);
 }
 
-char* ecs_type_to_expr(
+char* ecs_type_str(
     ecs_world_t *world,
     ecs_type_t type)
 {
@@ -644,5 +585,51 @@ char* ecs_type_to_expr(
 
     char* result = ecs_os_strdup(ecs_vector_first(chbuf));
     ecs_vector_free(chbuf);
+    return result;
+}
+
+ecs_entity_t ecs_new_entity(
+    ecs_world_t *world,
+    const char *id,
+    const char *expr)
+{
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+   
+    EcsTypeComponent type = type_from_expr(world, id, expr);
+
+    ecs_entity_t result = ecs_lookup(world, id);
+    if (result) {
+        if (ecs_get_type(world, result) != type.normalized) {
+            ecs_abort(ECS_ALREADY_DEFINED, id);
+        }
+    } else {
+        result = ecs_new_w_type(world, type.normalized);
+        ecs_set(world, result, EcsName, {id});
+    }
+
+    return result;
+}
+
+ecs_entity_t ecs_new_prefab(
+    ecs_world_t *world,
+    const char *id,
+    const char *expr)
+{
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+   
+    EcsTypeComponent type = type_from_expr(world, id, expr);
+    type.normalized = ecs_type_merge_intern(
+        world, &world->stage, world->t_prefab, type.normalized, 0);
+
+    ecs_entity_t result = ecs_lookup(world, id);
+    if (result) {
+        if (ecs_get_type(world, result) != type.normalized) {
+            ecs_abort(ECS_ALREADY_DEFINED, id);
+        }
+    } else {
+        result = ecs_new_w_type(world, type.normalized);
+        ecs_set(world, result, EcsName, {id});
+    }
+
     return result;
 }

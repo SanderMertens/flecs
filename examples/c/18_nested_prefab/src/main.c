@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
      * its type with a CHILDOF mask, and the prefab Child in its type with an
      * INSTANCEOF mask. */
     ecs_entity_t child = ecs_lookup_child(world, e, "Child");
-    printf("Child type = [%s]\n", ecs_type_to_expr(world, ecs_get_type(world, child)));
+    printf("Child type = [%s]\n", ecs_type_str(world, ecs_get_type(world, child)));
 
     /* Print position of e and of the child. Note that since we did not override
      * any components, both position components are owned by the prefabs, not by

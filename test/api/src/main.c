@@ -189,7 +189,6 @@ void Lookup_lookup(void);
 void Lookup_lookup_component(void);
 void Lookup_lookup_not_found(void);
 void Lookup_lookup_child(void);
-void Lookup_lookup_child_w_component(void);
 void Lookup_lookup_in_progress(void);
 void Lookup_lookup_child_in_progress(void);
 void Lookup_lookup_w_null_id(void);
@@ -294,7 +293,6 @@ void SystemOnAdd_add_again_1(void);
 void SystemOnAdd_set_again_1(void);
 void SystemOnAdd_add_again_2(void);
 void SystemOnAdd_override_after_add_in_on_add(void);
-void SystemOnAdd_set_after_add_in_on_add(void);
 void SystemOnAdd_add_again_in_progress(void);
 void SystemOnAdd_add_in_progress_before_system_def(void);
 void SystemOnAdd_disabled_system(void);
@@ -335,10 +333,6 @@ void SystemOnSet_clone(void);
 void SystemOnSet_clone_w_value(void);
 void SystemOnSet_set_w_optional(void);
 void SystemOnSet_set_and_add_system(void);
-void SystemOnSet_on_set_after_on_add(void);
-void SystemOnSet_on_set_after_on_add_w_new(void);
-void SystemOnSet_on_set_after_on_add_w_new_w_count(void);
-void SystemOnSet_on_set_after_on_add_1_of_2_matched(void);
 void SystemOnSet_on_set_after_override(void);
 void SystemOnSet_on_set_after_override_w_new(void);
 void SystemOnSet_on_set_after_override_w_new_w_count(void);
@@ -1558,7 +1552,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Lookup",
-        .testcase_count = 11,
+        .testcase_count = 10,
         .testcases = (bake_test_case[]){
             {
                 .id = "lookup",
@@ -1575,10 +1569,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "lookup_child",
                 .function = Lookup_lookup_child
-            },
-            {
-                .id = "lookup_child_w_component",
-                .function = Lookup_lookup_child_w_component
             },
             {
                 .id = "lookup_in_progress",
@@ -1894,7 +1884,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 36,
+        .testcase_count = 35,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -1987,10 +1977,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "override_after_add_in_on_add",
                 .function = SystemOnAdd_override_after_add_in_on_add
-            },
-            {
-                .id = "set_after_add_in_on_add",
-                .function = SystemOnAdd_set_after_add_in_on_add
             },
             {
                 .id = "add_again_in_progress",
@@ -2118,7 +2104,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 16,
+        .testcase_count = 12,
         .testcases = (bake_test_case[]){
             {
                 .id = "set",
@@ -2147,22 +2133,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_and_add_system",
                 .function = SystemOnSet_set_and_add_system
-            },
-            {
-                .id = "on_set_after_on_add",
-                .function = SystemOnSet_on_set_after_on_add
-            },
-            {
-                .id = "on_set_after_on_add_w_new",
-                .function = SystemOnSet_on_set_after_on_add_w_new
-            },
-            {
-                .id = "on_set_after_on_add_w_new_w_count",
-                .function = SystemOnSet_on_set_after_on_add_w_new_w_count
-            },
-            {
-                .id = "on_set_after_on_add_1_of_2_matched",
-                .function = SystemOnSet_on_set_after_on_add_1_of_2_matched
             },
             {
                 .id = "on_set_after_override",

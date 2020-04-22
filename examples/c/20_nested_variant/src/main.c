@@ -38,10 +38,10 @@ int main(int argc, char *argv[]) {
 
     /* Print types of child1 and child2 */
     ecs_entity_t child1 = ecs_lookup_child(world, e, "Child1");
-    printf("Child1 type = [%s]\n", ecs_type_to_expr(world, ecs_get_type(world, child1)));
+    printf("Child1 type = [%s]\n", ecs_type_str(world, ecs_get_type(world, child1)));
 
     ecs_entity_t child2 = ecs_lookup_child(world, e, "Child2");
-    printf("Child2 type = [%s]\n", ecs_type_to_expr(world, ecs_get_type(world, child2)));
+    printf("Child2 type = [%s]\n", ecs_type_str(world, ecs_get_type(world, child2)));
 
     /* e shares Position from RootPrefab */
     Position *p = ecs_get_ptr(world, e, Position);

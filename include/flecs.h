@@ -45,6 +45,8 @@ extern "C" {
 typedef struct ecs_world_t ecs_world_t;
 typedef struct ecs_query_t ecs_query_t;
 typedef struct ecs_stage_t ecs_stage_t;
+typedef struct ecs_record_t ecs_record_t;
+typedef struct ecs_table_t ecs_table_t;
 typedef struct ecs_rows_t ecs_rows_t;
 typedef struct ecs_reference_t ecs_reference_t;
 typedef struct ecs_snapshot_t ecs_snapshot_t;
@@ -142,11 +144,12 @@ typedef struct ecs_filter_t {
 } ecs_filter_t;
 
 typedef struct ecs_cached_ptr_t {
-    void *table;
-    void *stage;
-    int32_t count;
-    int32_t row;
-    const void *ptr;
+    void *table;            /* Last known table */
+    int32_t row;            /* Last known location in table */
+    int32_t size;           /* Last known size of table (data reallocd?) */
+    ecs_stage_t *stage;     /* Last known stage */
+    ecs_record_t *record;   /* Pointer to record, if in main stage */
+    const void *ptr;        /* Cached ptr */
 } ecs_cached_ptr_t;
 
 /* Constructor/destructor. Used for initializing / deinitializing components */
@@ -174,6 +177,16 @@ typedef void (*ecs_move_t)(
     ecs_entity_t component,    
     void *dst_ptr,
     void *src_ptr,
+    size_t size,
+    int32_t count,
+    void *ctx);
+
+/* Callback for on_add, on_remove and on_change triggers */
+typedef void (*ecs_trigger_t)(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entity_ptr,
+    const void *ptr,
     size_t size,
     int32_t count,
     void *ctx);
@@ -312,10 +325,10 @@ extern ecs_type_t
 /** Builtin entity ids */
 #define EcsWorld (15)
 #define ECS_SINGLETON (EcsSingleton)
-#define EcsInvalid (ECS_INVALID_ENTITY)
 
 /** Value used to quickly check if component is builtin */
-#define EcsLastBuiltin (EEcsColSystem)
+#define EcsLastInternal (EEcsColSystem)
+#define EcsLastBuiltin (EEcsTickSource)
 
 /** This allows passing 0 as type to functions that accept types */
 #define T0 (0)
@@ -2077,7 +2090,7 @@ ecs_type_t ecs_expr_to_type(
     const char *expr);
 
 FLECS_EXPORT
-char* ecs_type_to_expr(
+char* ecs_type_str(
     ecs_world_t *world,
     ecs_type_t type);
 

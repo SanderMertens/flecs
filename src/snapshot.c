@@ -7,10 +7,16 @@ void dup_table(
 {
     /* Store pointer to data in main stage */
     ecs_data_t *main_data = ecs_vector_first(table->stage_data);
+    ecs_assert(main_data != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!main_data->columns) {
+        return;
+    }
 
     /* Obtain new data for the snapshot table  */
     table->stage_data = NULL;
-    ecs_data_t *snapshot_data = ecs_table_get_data(world, table);
+    ecs_data_t *snapshot_data = ecs_table_get_or_create_data(
+        world, &world->stage, table);
+    ecs_assert(snapshot_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t c, column_count = ecs_vector_count(table->type);
 
