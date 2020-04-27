@@ -1,6 +1,18 @@
 #include "flecs_private.h"
 #include <string.h>
 
+#define ECS_BLACK   "\033[1;30m"
+#define ECS_RED     "\033[0;31m"
+#define ECS_GREEN   "\033[0;32m"
+#define ECS_YELLOW  "\033[0;33m"
+#define ECS_BLUE    "\033[0;34m"
+#define ECS_MAGENTA "\033[0;35m"
+#define ECS_CYAN    "\033[0;36m"
+#define ECS_WHITE   "\033[1;37m"
+#define ECS_GREY    "\033[0;37m"
+#define ECS_NORMAL  "\033[0;49m"
+#define ECS_BOLD    "\033[1;49m"
+
 void _ecs_abort(
     int32_t error_code,
     const char *param,
@@ -38,6 +50,163 @@ void _ecs_assert(
     }
 }
 
+static
+char *ecs_vasprintf(
+    const char *fmt,
+    va_list args)
+{
+    size_t size = 0;
+    char *result  = NULL;
+    va_list tmpa;
+
+    va_copy(tmpa, args);
+
+    size = vsnprintf(result, size, fmt, tmpa);
+
+    va_end(tmpa);
+
+    if (size < 0) { 
+        return NULL; 
+    }
+
+    result = (char *) ecs_os_malloc(size + 1);
+
+    if (!result) { 
+        return NULL; 
+    }
+
+    vsprintf(result, fmt, args);
+
+    return result;
+}
+
+static
+char* ecs_colorize(
+    char *msg)
+{
+    ecs_strbuf_t buff = ECS_STRBUF_INIT;
+    char *ptr, ch, prev = '\0';
+    bool isNum = FALSE;
+    char isStr = '\0';
+    bool isVar = false;
+    bool overrideColor = false;
+    bool autoColor = true;
+    bool dontAppend = false;
+    bool use_colors = true;
+
+    for (ptr = msg; (ch = *ptr); ptr++) {
+        dontAppend = false;
+
+        if (!overrideColor) {
+            if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+                isNum = FALSE;
+            }
+            if (isStr && (isStr == ch) && prev != '\\') {
+                isStr = '\0';
+            } else if (((ch == '\'') || (ch == '"')) && !isStr && 
+                !isalpha(prev) && (prev != '\\')) 
+            {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_CYAN);
+                isStr = ch;
+            }
+
+            if ((isdigit(ch) || (ch == '%' && isdigit(prev)) || 
+                (ch == '-' && isdigit(ptr[1]))) && !isNum && !isStr && !isVar && 
+                 !isalpha(prev) && !isdigit(prev) && (prev != '_') && 
+                 (prev != '.')) 
+            {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_GREEN);
+                isNum = TRUE;
+            }
+
+            if (isVar && !isalpha(ch) && !isdigit(ch) && ch != '_') {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+                isVar = FALSE;
+            }
+
+            if (!isStr && !isVar && ch == '$' && isalpha(ptr[1])) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_CYAN);
+                isVar = TRUE;
+            }
+        }
+
+        if (!isVar && !isStr && !isNum && ch == '#' && ptr[1] == '[') {
+            bool isColor = true;
+            overrideColor = true;
+
+            /* Custom colors */
+            if (!strncmp(&ptr[2], "]", strlen("]"))) {
+                autoColor = false;
+            } else if (!strncmp(&ptr[2], "green]", strlen("green]"))) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_GREEN);
+            } else if (!strncmp(&ptr[2], "red]", strlen("red]"))) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_RED);
+            } else if (!strncmp(&ptr[2], "blue]", strlen("red]"))) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_BLUE);
+            } else if (!strncmp(&ptr[2], "magenta]", strlen("magenta]"))) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_MAGENTA);
+            } else if (!strncmp(&ptr[2], "cyan]", strlen("cyan]"))) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_CYAN);
+            } else if (!strncmp(&ptr[2], "yellow]", strlen("yellow]"))) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_YELLOW);
+            } else if (!strncmp(&ptr[2], "grey]", strlen("grey]"))) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_GREY);
+            } else if (!strncmp(&ptr[2], "white]", strlen("white]"))) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+            } else if (!strncmp(&ptr[2], "bold]", strlen("bold]"))) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_BOLD);
+            } else if (!strncmp(&ptr[2], "normal]", strlen("normal]"))) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+            } else if (!strncmp(&ptr[2], "reset]", strlen("reset]"))) {
+                overrideColor = false;
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+            } else {
+                isColor = false;
+                overrideColor = false;
+            }
+
+            if (isColor) {
+                ptr += 2;
+                while ((ch = *ptr) != ']') ptr ++;
+                dontAppend = true;
+            }
+            if (!autoColor) {
+                overrideColor = true;
+            }
+        }
+
+        if (ch == '\n') {
+            if (isNum || isStr || isVar || overrideColor) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+                overrideColor = false;
+                isNum = false;
+                isStr = false;
+                isVar = false;
+            }
+        }
+
+        if (!dontAppend) {
+            ecs_strbuf_appendstrn(&buff, ptr, 1);
+        }
+
+        if (!overrideColor) {
+            if (((ch == '\'') || (ch == '"')) && !isStr) {
+                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+            }
+        }
+
+        prev = ch;
+    }
+
+    if (isNum || isStr || isVar || overrideColor) {
+        if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+    }
+
+    return ecs_strbuf_get(&buff);
+}
+
+
 void _ecs_parser_error(
     const char *name,
     const char *expr, 
@@ -47,30 +216,76 @@ void _ecs_parser_error(
 {
     va_list valist;
     va_start(valist, fmt);
-
-    /* Most messages should fit in 80 characters, but if not, allocate a string
-     * that is large enough */
-    char *msg, msg_buf[80];
-    int required = vsnprintf(msg_buf, 80, fmt, valist);
-    if (required > 80) {
-        msg = ecs_os_malloc(required + 1);
-        int written = vsnprintf(msg, required, fmt, valist);
-        ecs_assert(written == required, ECS_INTERNAL_ERROR, NULL);
-    } else {
-        msg = msg_buf;
-    }
-
-    va_end(valist);
+    char *msg = ecs_vasprintf(fmt, valist);
 
     fprintf(stderr, "%s:%d: error: %s\n", name, column + 1, msg);
     fprintf(stderr, "    %s\n", expr);
     fprintf(stderr, "    %*s^\n", column, "");
+    
+    ecs_os_free(msg);
+    ecs_os_abort();
+}
 
-    if (msg != msg_buf) {
-        ecs_os_free(msg);
+static int trace_indent = 0;
+static bool trace_enabled = false;
+
+void _ecs_trace(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    va_list valist;
+    va_start(valist, fmt);
+
+    if (!trace_enabled) {
+        return;
     }
 
-    ecs_os_abort();
+    /* Massage filename so it doesn't take up too much space */
+    char filebuff[256];
+    strcpy(filebuff, file);
+    file = filebuff;
+    char *file_ptr = strrchr(file, '/');
+    if (file_ptr) {
+        file = file_ptr + 1;
+    }
+
+    /* Extension is likely the same for all files */
+    file_ptr = strrchr(file, '.');
+    if (file_ptr) {
+        *file_ptr = '\0';
+    }
+
+    char indent[32];
+    int i;
+    for (i = 0; i < trace_indent; i ++) {
+        indent[i * 2] = '|';
+        indent[i * 2 + 1] = ' ';
+    }
+    indent[i * 2] = '\0';
+
+    char *msg = ecs_vasprintf(fmt, valist);
+    char *color_msg = ecs_colorize(msg);
+    fprintf(stdout, "%s%12s:%3d: %sinfo%s: %s%s%s%s\n",
+        ECS_BOLD, file, line, ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+    ecs_os_free(color_msg);
+    ecs_os_free(msg);
+}
+
+void ecs_trace_push(void) {
+    trace_indent ++;
+}
+
+void ecs_trace_pop(void) {
+    trace_indent --;
+}
+
+void ecs_trace_enable(
+    bool enabled)
+{
+    trace_enabled = enabled;
 }
 
 const char* ecs_strerror(

@@ -38,16 +38,6 @@ void StatsAddSystemStats(ecs_rows_t *rows) {
 }
 
 static
-void StatsAddRowSystemMemoryStats(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, EcsRowSystemMemoryStats, 2);
-    
-    int32_t i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(rows->world, rows->entities[i], EcsRowSystemMemoryStats, {0});
-    }
-}
-
-static
 void StatsAddColSystemMemoryStats(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, EcsColSystemMemoryStats, 2);
     
@@ -115,7 +105,6 @@ void StatsCollectWorldStats(ecs_rows_t *rows) {
     stats->entities_count = ecs_eis_count(&world->stage);
     stats->components_count = ecs_count(world, EcsComponent);
     stats->col_systems_count = ecs_count(world, EcsColSystem);
-    stats->row_systems_count = ecs_count(world, EcsRowSystem);
     stats->inactive_systems_count = ecs_vector_count(world->inactive_systems);
     stats->tables_count = ecs_sparse_count(world->stage.tables);
     stats->threads_count = ecs_vector_count(world->worker_threads);
@@ -235,22 +224,7 @@ void compute_world_memory(
     ecs_vector_memory(world->inactive_systems, ecs_entity_t, 
         &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
 
-    ecs_vector_memory(world->add_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->remove_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->set_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-
     ecs_vector_memory(world->fini_tasks, ecs_entity_t,
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-
-    /* Add lookup indices for reactive systems to system memory */
-    ecs_map_memory(world->type_sys_add_index, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_map_memory(world->type_sys_remove_index, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_map_memory(world->type_sys_set_index, 
         &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
 
     /* Add table array to table memory */
@@ -258,8 +232,6 @@ void compute_world_memory(
         &stats->tables_memory.allocd_bytes, &stats->tables_memory.used_bytes);
 
     /* Add misc lookup indices to world memory */
-    ecs_map_memory(world->prefab_parent_index, 
-        &stats->world_memory.allocd_bytes, &stats->world_memory.used_bytes);
     ecs_map_memory(world->type_handles, 
         &stats->world_memory.allocd_bytes, &stats->world_memory.used_bytes);   
 
@@ -377,13 +349,13 @@ void StatsCollectSystemStats(ecs_rows_t *rows) {
         stats[i].entity = entity;
         stats[i].name = ecs_get_name(rows->world, entity);
         stats[i].signature = system[i].query->sig.expr;
-        stats[i].kind = system[i].base.kind;
+        stats[i].kind = system[i].kind;
         stats[i].tables_matched_count = system_tables_matched(&system[i]);
         stats[i].entities_matched_count = system_entities_matched(&system[i]);
         stats[i].period_seconds = ecs_get_interval(rows->world, system[i].tick_source);
-        stats[i].seconds_total = system[i].base.time_spent;
-        stats[i].invoke_count_total = system[i].base.invoke_count;
-        stats[i].is_enabled = system[i].base.enabled;
+        stats[i].seconds_total = system[i].time_spent;
+        stats[i].invoke_count_total = system[i].invoke_count;
+        stats[i].is_enabled = system[i].enabled;
         stats[i].is_active = ecs_vector_count(system[i].query->tables) != 0;
         stats[i].is_hidden = ecs_has(rows->world, entity, EcsHidden);
     }
@@ -450,27 +422,6 @@ void StatsCollectColSystemMemoryStats(ecs_rows_t *rows) {
         if (system->on_demand) {
             stats[i].other_memory_bytes += sizeof(ecs_on_demand_out_t);
         }
-    }
-}
-
-static
-void StatsCollectRowSystemMemoryStats(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, EcsRowSystem, system, 1);
-    ECS_COLUMN(rows, EcsRowSystemMemoryStats, stats, 2);
-
-    int32_t i;
-    for (i = 0; i < rows->count; i ++) {
-        stats[i].base_memory_bytes = sizeof(EcsColSystem);
-        stats[i].columns_memory = (ecs_memory_stat_t){0};
-        stats[i].components_memory = (ecs_memory_stat_t){0};
-
-        ecs_vector_memory(system->sig.columns, ecs_sig_column_t, 
-            &stats[i].columns_memory.allocd_bytes, 
-            &stats[i].columns_memory.used_bytes);
-
-        ecs_vector_memory(system->components, ecs_entity_t, 
-            &stats[i].components_memory.allocd_bytes, 
-            &stats[i].components_memory.used_bytes);
     }
 }
 
@@ -659,12 +610,6 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
                     if (ecs_vector_count(ptr->query->tables)) {
                         stats[i].active_systems_count ++;
                     }
-                } else
-                if (ecs_has(world, e, EcsRowSystem)) {
-                    stats[i].row_systems_count ++;
-                    if (ecs_is_enabled(world, e)) {
-                        stats[i].enabled_systems_count ++;
-                    }                    
                 } else {
                     stats[i].entities_count ++;
                 }
@@ -724,10 +669,6 @@ void FlecsStatsImport(
         SYSTEM.EcsOnDemand, SYSTEM.EcsHidden, 
         SYSTEM.EcsStatsSkipCollect, !EcsStatsSkipCollect);
 
-    ECS_SYSTEM(world, StatsAddRowSystemMemoryStats, EcsOnStore,
-        EcsRowSystem, [out] !EcsRowSystemMemoryStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
-
     ECS_SYSTEM(world, StatsAddColSystemMemoryStats, EcsOnStore,
         EcsColSystem, [out] !EcsColSystemMemoryStats,
         SYSTEM.EcsOnDemand, SYSTEM.EcsHidden, 
@@ -777,10 +718,6 @@ void FlecsStatsImport(
         EcsColSystem, [out] EcsColSystemMemoryStats,
         SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
 
-    ECS_SYSTEM(world, StatsCollectRowSystemMemoryStats, EcsPostLoad,
-        EcsRowSystem, [out] EcsRowSystemMemoryStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
-
     ECS_SYSTEM(world, StatsCollectComponentStats, EcsPostLoad,
         EcsComponent, [out] EcsComponentStats,
         SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
@@ -804,7 +741,6 @@ void FlecsStatsImport(
     ECS_EXPORT_COMPONENT(EcsMemoryStats);
     ECS_EXPORT_COMPONENT(EcsSystemStats);
     ECS_EXPORT_COMPONENT(EcsColSystemMemoryStats);
-    ECS_EXPORT_COMPONENT(EcsRowSystemMemoryStats);
     ECS_EXPORT_COMPONENT(EcsComponentStats);
     ECS_EXPORT_COMPONENT(EcsTableStats);
     ECS_EXPORT_COMPONENT(EcsTablePtr);

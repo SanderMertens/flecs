@@ -5,13 +5,18 @@ void probe_system(
 {
     Probe *ctx = ecs_get_context(rows->world);
     if (!ctx) {
-        return;
+        ctx = rows->param;
+        if (!ctx) {
+            return;
+        }
+        ctx->param = NULL;
+    } else {
+        ctx->param = rows->param;
     }
 
     ctx->system = rows->system;
     ctx->offset = 0;
     ctx->column_count = rows->column_count;
-    ctx->param = rows->param;
 
     int i;
     for (i = 0; i < ctx->column_count; i ++) {
@@ -48,6 +53,30 @@ void probe_system(
 
     ctx->invoked ++;
 }
+
+void probe_trigger(
+    ecs_rows_t *rows)
+{
+    // Probe *probe = rows->param;
+    // if (!ctx) {
+    //     return;
+    // }
+
+    // probe->system = 0;
+    // probe->param = NULL;
+    // probe->offset = 0;
+    // probe->column_count = 1;
+    // probe->c[probe->invoked][0] = component;
+    // probe->s[probe->invoked][0] = 0;
+
+    // int32_t i;
+    // for (i = 0; i < count; i ++) {
+    //     probe->e[i] = entities[i];
+    // }
+
+    // probe->count = count;
+    // probe->invoked ++;
+ }
 
 void probe_has_entity(Probe *probe, ecs_entity_t e) {
     int i;

@@ -568,13 +568,18 @@ char* ecs_type_str(
         }
 
         const char *str = NULL;
-        EcsName *id = ecs_get_ptr(world, h, EcsName);
-        if (id) {
-            str = *id;
+        if (h == 1) {
+            /* Prevent issues during bootstrap */
+            str = "EcsComponent";
         } else {
-            int h_int = h;
-            sprintf(buf, "%u", h_int);
-            str = buf;
+            EcsName *id = ecs_get_ptr(world, h, EcsName);
+            if (id) {
+                str = *id;
+            } else {
+                int h_int = h;
+                sprintf(buf, "%u", h_int);
+                str = buf;
+            }
         }
         len = strlen(str);
         dst = ecs_vector_addn(&chbuf, char, len);

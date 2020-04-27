@@ -224,14 +224,9 @@ struct ecs_query_t {
 };
 
 /** Base type for a system */
-typedef struct EcsSystem {
-    ecs_system_action_t action;    /* Callback to be invoked for matching rows */
-    void *ctx;                     /* Userdata for system */
-    ecs_system_kind_t kind;        /* Kind of system */
-    float time_spent;              /* Time spent on running system */
-    int32_t invoke_count;          /* Number of times system is invoked */
-    bool enabled;                  /* Is system enabled or not */
-} EcsSystem;
+typedef struct _EcsSystem {
+    int __dummy;
+} __EcsSystem;
 
 /** A column system is a system that is ran periodically (default = every frame)
  * on all entities that match the system signature expression. Column systems
@@ -272,7 +267,13 @@ typedef struct EcsSystem {
  * ran, and 'time_passed' is decreased by 'period'. 
  */
 typedef struct EcsColSystem {
-    EcsSystem base;
+    ecs_system_action_t action;    /* Callback to be invoked for matching rows */
+    void *ctx;                     /* Userdata for system */
+    ecs_system_kind_t kind;        /* Kind of system */
+    float time_spent;              /* Time spent on running system */
+    int32_t invoke_count;          /* Number of times system is invoked */
+    bool enabled;                  /* Is system enabled or not */
+
     ecs_entity_t entity;                  /* Entity id of system, used for ordering */
     ecs_query_t *query;                   /* System query */
     ecs_vector_t *jobs;                   /* Jobs for this system */
@@ -284,16 +285,6 @@ typedef struct EcsColSystem {
     bool enabled_by_demand;               /* Is system enabled by on demand systems */
     bool enabled_by_user;                 /* Is system enabled by user */
 } EcsColSystem;
- 
-/** A row system is a system that is ran on 1..n entities for which a certain 
- * operation has been invoked. The system kind determines on what kind of
- * operation the row system is invoked. Example operations are ecs_add,
- * ecs_remove and ecs_set. */
-typedef struct EcsRowSystem {
-    EcsSystem base;
-    ecs_sig_t sig;            /* System signature */
-    ecs_vector_t *components;       /* Components in order of signature */
-} EcsRowSystem;
  
 #define ECS_TYPE_DB_MAX_CHILD_NODES (256)
 #define ECS_TYPE_DB_BUCKET_COUNT (256)
@@ -434,25 +425,11 @@ struct ecs_world_t {
     ecs_map_t *on_enable_components; /* Trigger on enable of [in] column */
 
 
-    /* -- Row systems -- */
-
-    ecs_vector_t *add_systems;        /* Systems invoked on ecs_stage_add */
-    ecs_vector_t *remove_systems;     /* Systems invoked on ecs_stage_remove */
-    ecs_vector_t *set_systems;        /* Systems invoked on ecs_set */
-
-
     /* -- Tasks -- */
-
     ecs_vector_t *fini_tasks;         /* Tasks to execute on ecs_fini */
 
 
     /* -- Lookup Indices -- */
-
-    ecs_map_t *type_sys_add_index;    /* Index to find add row systems for type */
-    ecs_map_t *type_sys_remove_index; /* Index to find remove row systems for type*/
-    ecs_map_t *type_sys_set_index;    /* Index to find set row systems for type */
-    
-    ecs_map_t *prefab_parent_index;   /* Index to find flag for prefab parent */
     ecs_map_t *type_handles;          /* Handles to named types */
 
 
@@ -484,7 +461,6 @@ struct ecs_world_t {
     ecs_type_t t_component;
     ecs_type_t t_type;
     ecs_type_t t_prefab;
-    ecs_type_t t_row_system;
     ecs_type_t t_col_system;
 
     /* -- Time management -- */

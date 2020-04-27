@@ -271,7 +271,7 @@ void ecs_sig_deinit(
 void ecs_enable_intern(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsSystem *system_data,
+    EcsColSystem *system_data,
     bool enabled,
     bool by_user);
 
@@ -325,20 +325,6 @@ ecs_entity_t ecs_run_intern(
     uint32_t limit,
     const ecs_filter_t *filter,
     void *param);
-
-/* Run a task (periodic system that is not matched against any tables) */
-void ecs_run_task(
-    ecs_world_t *world,
-    ecs_entity_t system);
-
-/* Invoke row system */
-ecs_type_t ecs_run_row_system(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t offset,
-    int32_t limit);
 
 /* Callback for parse_component_expr that stores result as ecs_sig_column_t's */
 int ecs_parse_signature_action(

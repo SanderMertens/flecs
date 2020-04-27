@@ -64,7 +64,6 @@ typedef const ecs_vector_t* ecs_type_t;
 
 /** System kinds that determine when and how systems are ran */
 typedef enum ecs_system_kind_t {
-    /* Periodic systems */
     EcsOnLoad,
     EcsPostLoad,
     EcsPreUpdate,
@@ -73,16 +72,16 @@ typedef enum ecs_system_kind_t {
     EcsPostUpdate,
     EcsPreStore,
     EcsOnStore,
-
-    /* Manual systems */
     EcsManual,
+    EcsOnNew
+} ecs_system_kind_t;
 
-    /* Reactive systems */
-    EcsOnNew,
+/* Trigger kinds enable specifying when a trigger is executed */
+typedef enum ecs_trigger_kind_t {
     EcsOnAdd,
     EcsOnRemove,
-    EcsOnSet
-} ecs_system_kind_t;
+    EcsOnSet    
+} ecs_trigger_kind_t;
 
 /** System action callback */
 typedef void (*ecs_system_action_t)(
@@ -156,6 +155,7 @@ typedef struct ecs_cached_ptr_t {
 typedef void (*ecs_xtor_t)(
     ecs_world_t *world,
     ecs_entity_t component,
+    const ecs_entity_t *entity_ptr,
     void *ptr,
     size_t size,
     int32_t count,
@@ -165,6 +165,8 @@ typedef void (*ecs_xtor_t)(
 typedef void (*ecs_copy_t)(
     ecs_world_t *world,
     ecs_entity_t component,    
+    const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity,
     void *dst_ptr,
     const void *src_ptr,
     size_t size,
@@ -174,7 +176,9 @@ typedef void (*ecs_copy_t)(
 /* Move is invoked when a component is moved to another component */
 typedef void (*ecs_move_t)(
     ecs_world_t *world,
-    ecs_entity_t component,    
+    ecs_entity_t component,
+    const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity,
     void *dst_ptr,
     void *src_ptr,
     size_t size,
@@ -183,13 +187,7 @@ typedef void (*ecs_move_t)(
 
 /* Callback for on_add, on_remove and on_change triggers */
 typedef void (*ecs_trigger_t)(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entity_ptr,
-    const void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx);
+    ecs_rows_t *rows);
 
 /** The ecs_rows_t struct passes data from a system to a system callback.  */
 struct ecs_rows_t {
@@ -238,9 +236,15 @@ typedef struct EcsComponentLifecycle {
     ecs_xtor_t dtor;
     ecs_copy_t copy;
     ecs_move_t move;
-
     void *ctx;
 } EcsComponentLifecycle;
+
+/* Component that contains trigger callbacks for a component */
+typedef struct EcsComponentTrigger {
+    ecs_trigger_kind_t kind;
+    ecs_trigger_t callback;
+    void *ctx;
+} EcsComponentTrigger;
 
 /** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
 typedef struct EcsTypeComponent {
@@ -293,10 +297,10 @@ FLECS_EXPORT
 extern ecs_type_t 
     TEcsComponent,
     TEcsComponentLifecycle,
+    TEcsComponentTrigger,
     TEcsTypeComponent,
     TEcsParent,
     TEcsPrefab,
-    TEcsRowSystem,
     TEcsColSystem,
     TEcsName,
     TEcsHidden,
@@ -309,10 +313,10 @@ extern ecs_type_t
 /** Handles to builtin components */
 #define EEcsComponent (1)
 #define EEcsComponentLifecycle (2)
-#define EEcsTypeComponent (3)
-#define EEcsParent (4)
-#define EEcsPrefab (5)
-#define EEcsRowSystem (6)
+#define EEcsComponentTrigger (3)
+#define EEcsTypeComponent (4)
+#define EEcsParent (5)
+#define EEcsPrefab (6)
 #define EEcsColSystem (7)
 #define EEcsName (8)
 #define EEcsHidden (9)
@@ -461,6 +465,13 @@ extern ecs_type_t
     (void)ecs_type(id);
 
 #endif
+
+#define ECS_TRIGGER(world, cb, t_kind, component, t_ctx) \
+    ecs_set(world, ecs_entity(component), EcsComponentTrigger, {\
+        .kind = t_kind,\
+        .callback = cb,\
+        .ctx = t_ctx\
+    });
 
 ////////////////////////////////////////////////////////////////////////////////
 //// World API
@@ -768,6 +779,46 @@ void ecs_lock(
 FLECS_EXPORT
 void ecs_unlock(
     ecs_world_t *world);
+
+/** Tracing */
+FLECS_EXPORT
+void _ecs_trace(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+#define ecs_trace(lvl, ...)\
+    _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
+
+FLECS_EXPORT
+void ecs_trace_push(void);
+void ecs_trace_pop(void);
+
+FLECS_EXPORT
+void ecs_trace_enable(
+    bool enabled);
+
+#if !defined(NDEBUG) && !(defined(ECS_VERBOSITY_0) || defined(ECS_VERBOSITY_1) || defined(ECS_VERBOSITY_3))
+#define ECS_VERBOSITY_2
+#endif
+
+#if defined(ECS_VERBOSITY_3)
+#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
+#define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
+#define ecs_trace_3(...) ecs_trace(3, __VA_ARGS__);
+
+#elif defined(ECS_VERBOSITY_2)
+#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
+#define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
+#define ecs_trace_3(...)
+
+#elif defined(ECS_VERBOSITY_1)
+#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
+#define ecs_trace_2(...)
+#define ecs_trace_3(...)
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////

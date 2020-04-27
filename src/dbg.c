@@ -125,7 +125,7 @@ int ecs_dbg_col_system(
     *dbg_out = (ecs_dbg_col_system_t){.system = system};
     dbg_out->active_table_count = ecs_vector_count(system_data->query->tables);
     dbg_out->inactive_table_count = ecs_vector_count(system_data->query->inactive_tables);
-    dbg_out->enabled = system_data->base.enabled;
+    dbg_out->enabled = system_data->enabled;
 
     ecs_matched_table_t *mt = ecs_vector_first(system_data->query->tables);
     int32_t i, count = ecs_vector_count(system_data->query->tables);

@@ -86,6 +86,18 @@ void add_table(
         table_type = table->type;
         table_data = ecs_vector_add(
             &query->inactive_tables, ecs_matched_table_t);
+
+#ifndef NDEBUG
+        char *type_expr = ecs_type_str(world, table->type);
+        if (query->system) {
+            ecs_trace_1("query #[green]%s#[reset] matched with table #[green][%s]",
+                ecs_get_name(world, query->system), type_expr);
+        } else {
+            ecs_trace_1("query '%s' matched with table #[green][%s]",
+                query, type_expr);            
+        }
+        ecs_os_free(type_expr);
+#endif
     } else {
         /* If no table is provided to function, this is a system that contains
          * no columns that require table matching. In this case, the system will
@@ -658,11 +670,11 @@ void ecs_query_activate_table(
             world, query->system, EcsColSystem);
         ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);   
 
-        ecs_system_kind_t kind = system_data->base.kind;
+        ecs_system_kind_t kind = system_data->kind;
 
         if (active) {
             int32_t dst_count = ecs_vector_count(dst_array);
-            if (dst_count == 1 && system_data->base.enabled) {
+            if (dst_count == 1 && system_data->enabled) {
                 ecs_world_activate_system(
                     world, query->system, kind, true);
             }
@@ -737,7 +749,7 @@ void ecs_rematch_query(
     if (query->system) {
         EcsColSystem* system_data = ecs_get_ptr(world, query->system, EcsColSystem);
         bool enable = ecs_sig_check_constraints(world, &query->sig);
-        ecs_enable_intern(world, query->system, (EcsSystem*)system_data, enable, false);
+        ecs_enable_intern(world, query->system, system_data, enable, false);
     }
 }
 
@@ -756,11 +768,23 @@ ecs_query_t* ecs_query_new_w_sig(
     result->inactive_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = system;
 
+    if (system) {
+        ecs_trace_1("query #[green]%s#[reset] created with expression #[red]%s", 
+            ecs_get_name(world, system), result->sig.expr);
+    } else {
+        ecs_trace_1("query %p created with expression #[red]%s", 
+            result, result->sig.expr);
+    }
+
+    ecs_trace_push();
+
     if (!result->sig.needs_tables) {
         add_table(world, result, NULL);
     } else {
         match_tables(world, result);
     }
+
+    ecs_trace_pop();
 
     return result;
 }

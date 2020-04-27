@@ -119,6 +119,12 @@ void ecs_table_activate(
 {
     if (query) {
         ecs_query_activate_table(world, query, table, activate);
+        #ifndef NDEBUG
+            char *expr = ecs_type_str(world, table->type);
+            ecs_trace_1("table #[green][%s]#[reset] %s for single query", expr, 
+                activate ? "activated" : "deactivatd");
+            ecs_os_free(expr);
+        #endif           
     } else {
         ecs_vector_t *queries = table->queries;
         
@@ -129,7 +135,15 @@ void ecs_table_activate(
                 ecs_query_activate_table(world, buffer[i], table, activate);
             }
         }
-    }
+
+        #ifndef NDEBUG
+            char *expr = ecs_type_str(world, table->type);
+            ecs_trace_1("table #[green][%s]#[reset] %s for %d queries", expr, 
+                activate ? "activated" : "deactivated",
+                ecs_vector_count(queries));
+            ecs_os_free(expr);
+        #endif         
+    }     
 }
 
 /* This function is called when a query is matched with a table. A table keeps

@@ -892,7 +892,6 @@ EcsTypeComponent | Stores information about a named type | Opaque
 EcsPrefab | Indicates that entity can be used as prefab, stores optional prefab parent | Read / Write
 EcsPrefabParent | Internal data for prefab parents | Opaque 
 EcsPrefabBuilder | Internal data for prefab parents | Opaque 
-EcsRowSystem | Internal data for row systems | Opaque
 EcsColSystem | Internal data for column systems | Opaque
 EcsName | Stores the name of an entity | Read / Write
 EcsHidden | Tag that indicates an entity should be hidden by UIs | Read / Write
