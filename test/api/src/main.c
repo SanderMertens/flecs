@@ -273,22 +273,14 @@ void SystemMisc_match_system_w_filter(void);
 void SystemOnAdd_new_match_1_of_1(void);
 void SystemOnAdd_new_match_1_of_2(void);
 void SystemOnAdd_new_no_match_1(void);
-void SystemOnAdd_new_no_match_2_of_1(void);
-void SystemOnAdd_new_no_match_2_of_3(void);
 void SystemOnAdd_new_w_count_match_1_of_1(void);
 void SystemOnAdd_add_match_1_of_1(void);
 void SystemOnAdd_add_match_1_of_2(void);
-void SystemOnAdd_add_match_2_of_2(void);
-void SystemOnAdd_add_match_2_of_3(void);
 void SystemOnAdd_add_no_match_1(void);
-void SystemOnAdd_add_no_match_2_of_1(void);
-void SystemOnAdd_add_no_match_2_of_3(void);
 void SystemOnAdd_set_match_1_of_1(void);
 void SystemOnAdd_set_no_match_1(void);
 void SystemOnAdd_clone_match_1_of_1(void);
 void SystemOnAdd_clone_match_1_of_2(void);
-void SystemOnAdd_clone_match_2_of_2(void);
-void SystemOnAdd_clone_match_2_of_3(void);
 void SystemOnAdd_add_again_1(void);
 void SystemOnAdd_set_again_1(void);
 void SystemOnAdd_add_again_2(void);
@@ -300,11 +292,6 @@ void SystemOnAdd_2_systems_w_table_creation(void);
 void SystemOnAdd_2_systems_w_table_creation_in_progress(void);
 void SystemOnAdd_sys_context(void);
 void SystemOnAdd_get_sys_context_from_param(void);
-void SystemOnAdd_container_column(void);
-void SystemOnAdd_owned_only(void);
-void SystemOnAdd_shared_only(void);
-void SystemOnAdd_add_with_owned(void);
-void SystemOnAdd_add_with_shared(void);
 
 // Testsuite 'SystemOnRemove'
 void SystemOnRemove_remove_match_1_of_1(void);
@@ -1884,7 +1871,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 35,
+        .testcase_count = 22,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -1899,14 +1886,6 @@ static bake_test_suite suites[] = {
                 .function = SystemOnAdd_new_no_match_1
             },
             {
-                .id = "new_no_match_2_of_1",
-                .function = SystemOnAdd_new_no_match_2_of_1
-            },
-            {
-                .id = "new_no_match_2_of_3",
-                .function = SystemOnAdd_new_no_match_2_of_3
-            },
-            {
                 .id = "new_w_count_match_1_of_1",
                 .function = SystemOnAdd_new_w_count_match_1_of_1
             },
@@ -1919,24 +1898,8 @@ static bake_test_suite suites[] = {
                 .function = SystemOnAdd_add_match_1_of_2
             },
             {
-                .id = "add_match_2_of_2",
-                .function = SystemOnAdd_add_match_2_of_2
-            },
-            {
-                .id = "add_match_2_of_3",
-                .function = SystemOnAdd_add_match_2_of_3
-            },
-            {
                 .id = "add_no_match_1",
                 .function = SystemOnAdd_add_no_match_1
-            },
-            {
-                .id = "add_no_match_2_of_1",
-                .function = SystemOnAdd_add_no_match_2_of_1
-            },
-            {
-                .id = "add_no_match_2_of_3",
-                .function = SystemOnAdd_add_no_match_2_of_3
             },
             {
                 .id = "set_match_1_of_1",
@@ -1953,14 +1916,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "clone_match_1_of_2",
                 .function = SystemOnAdd_clone_match_1_of_2
-            },
-            {
-                .id = "clone_match_2_of_2",
-                .function = SystemOnAdd_clone_match_2_of_2
-            },
-            {
-                .id = "clone_match_2_of_3",
-                .function = SystemOnAdd_clone_match_2_of_3
             },
             {
                 .id = "add_again_1",
@@ -2005,26 +1960,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_sys_context_from_param",
                 .function = SystemOnAdd_get_sys_context_from_param
-            },
-            {
-                .id = "container_column",
-                .function = SystemOnAdd_container_column
-            },
-            {
-                .id = "owned_only",
-                .function = SystemOnAdd_owned_only
-            },
-            {
-                .id = "shared_only",
-                .function = SystemOnAdd_shared_only
-            },
-            {
-                .id = "add_with_owned",
-                .function = SystemOnAdd_add_with_owned
-            },
-            {
-                .id = "add_with_shared",
-                .function = SystemOnAdd_add_with_shared
             }
         }
     },

@@ -7,13 +7,17 @@
 #include "flecs/util/entity_index.h"
 #include "flecs/util/table.h"
 
-/* Initialize builtin systems */
+/* Initialize builtins */
 void ecs_init_builtins(
     ecs_world_t *world);
 
-/* Initialize timer builtin systems */
+/* Initialize timer builtins */
 void ecs_init_timer_builtins(
     ecs_world_t *world);
+
+/* Initialize system builtins */
+void ecs_init_system_builtins(
+    ecs_world_t *world);    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API

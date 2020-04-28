@@ -427,7 +427,7 @@ void run_component_trigger(
 {
     int32_t i, trigger_count = ecs_vector_count(trigger_vec);
     if (trigger_count) {
-        EcsComponentTrigger *triggers = ecs_vector_first(trigger_vec);
+        EcsTrigger *triggers = ecs_vector_first(trigger_vec);
         int32_t index = ecs_type_index_of(table->type, component);
         ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
         index ++;
@@ -455,7 +455,7 @@ void run_component_trigger(
 
         for (i = 0; i < trigger_count; i ++) {
             rows.param = triggers[i].ctx;
-            triggers[i].callback(&rows);
+            triggers[i].action(&rows);
         }
     }
 }
@@ -1877,26 +1877,6 @@ int32_t ecs_count_w_filter(
         }
     }
     
-    return result;
-}
-
-ecs_entity_t ecs_new_component(
-    ecs_world_t *world,
-    const char *id,
-    size_t size)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    assert(world->magic == ECS_WORLD_MAGIC);
-
-    ecs_entity_t result = ecs_lookup(world, id);
-    if (result) {
-        return result;
-    }
-
-    result = ecs_new_w_type(world, world->t_component);
-    ecs_set(world, result, EcsComponent, {.size = size});
-    ecs_set(world, result, EcsName, {id});
-
     return result;
 }
 

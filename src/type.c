@@ -1,54 +1,5 @@
 #include "flecs_private.h"
 
-/** Parse callback that adds type to type identifier for ecs_new_type */
-static
-int parse_type_action(
-    ecs_world_t *world,
-    const char *system_id,
-    const char *sig,
-    int column,
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t flags,
-    const char *entity_id,
-    const char *source_id,
-    void *data)
-{
-    ecs_vector_t **array = data;
-    (void)source_id;
-    (void)inout_kind;
-
-    if (strcmp(entity_id, "0")) {
-        ecs_entity_t entity = 0;
-
-        if (from_kind != EcsFromSelf) {
-            ecs_parser_error(system_id, sig, column, 
-                "source modifiers not supported for type expressions");
-            return -1;
-        }
-
-        entity = ecs_lookup(world, entity_id);
-        if (!entity) {
-            ecs_parser_error(system_id, sig, column, 
-                "unresolved identifier '%s'", entity_id);
-            return -1;
-        }
-
-        if (oper_kind == EcsOperAnd) {
-            ecs_entity_t* e_ptr = ecs_vector_add(array, ecs_entity_t);
-            *e_ptr = entity | flags;
-        } else {
-            /* Only AND and OR operators are supported for type expressions */
-            ecs_parser_error(system_id, sig, column, 
-                "invalid operator for type expression");
-            return -1;
-        }
-    }
-
-    return 0;
-}
-
 static
 ecs_entity_t split_entity_id(
     ecs_entity_t id,
@@ -203,49 +154,6 @@ int32_t ecs_type_container_depth(
     return result;
 }
 
-static
-EcsTypeComponent type_from_vec(
-    ecs_world_t *world,
-    ecs_vector_t *vec)
-{
-    EcsTypeComponent result = {0, 0};
-    ecs_entity_t *array = ecs_vector_first(vec);
-    int32_t i, count = ecs_vector_count(vec);
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t entity = array[i];
-
-        ecs_type_t entity_type = ecs_type_find_intern(world, &world->stage, &entity, 1);
-        ecs_type_t resolved_type = ecs_type_from_entity(world, entity);
-        assert(resolved_type != 0);
-
-        result.type = ecs_type_merge_intern(
-            world, &world->stage, result.type, entity_type, 0);
-
-        result.normalized = ecs_type_merge_intern(
-            world, &world->stage, result.normalized, resolved_type, 0);
-    }
-
-    return result;
-}
-
-static
-EcsTypeComponent type_from_expr(
-    ecs_world_t *world,
-    const char *id,
-    const char *expr)
-{
-    if (expr) {
-        ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_parse_expr(world, expr, parse_type_action, id, &vec);
-        EcsTypeComponent result = type_from_vec(world, vec);
-        ecs_vector_free(vec);
-        return result;
-    } else {
-        return (EcsTypeComponent){0, 0};
-    }
-}
-
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
 ecs_entity_t ecs_type_contains(
     ecs_world_t *world,
@@ -323,42 +231,6 @@ ecs_entity_t ecs_type_contains(
 }
 
 /* -- Public API -- */
-
-ecs_entity_t ecs_new_type(
-    ecs_world_t *world,
-    const char *id,
-    const char *expr)
-{
-    assert(world->magic == ECS_WORLD_MAGIC);  
-
-    EcsTypeComponent type = type_from_expr(world, id, expr);
-    ecs_entity_t result = ecs_lookup(world, id);
-
-    if (result) {
-        EcsTypeComponent *type_ptr = ecs_get_ptr(world, result, EcsTypeComponent);
-        if (type_ptr) {
-            if (type_ptr->type != type.type || 
-                type_ptr->normalized != type.normalized) 
-            {
-                ecs_abort(ECS_ALREADY_DEFINED, id);
-            }
-        } else {
-            ecs_abort(ECS_ALREADY_DEFINED, id);
-        }
-    } else if (!result) {
-        result = ecs_new_w_type(world, world->t_type);
-        ecs_set(world, result, EcsName, {id});
-        ecs_set(world, result, EcsTypeComponent, {
-            .type = type.type, .normalized = type.normalized
-        });
-
-        /* Register named types with world, so applications can automatically
-         * detect features (amongst others). */
-        ecs_map_set(world->type_handles, (uintptr_t)type.type, &result);
-    }
-
-    return result;
-}
 
 int16_t ecs_type_index_of(
     ecs_type_t type,
@@ -509,14 +381,6 @@ bool ecs_type_has_owned_type(
     return ecs_type_contains(world, type, has, true, !owned);
 }
 
-ecs_type_t ecs_expr_to_type(
-    ecs_world_t *world,
-    const char *expr)
-{
-    EcsTypeComponent type = type_from_expr(world, "<type>", expr);
-    return type.normalized;
-}
-
 ecs_type_t ecs_type_add(
     ecs_world_t *world,
     ecs_type_t type,
@@ -590,51 +454,5 @@ char* ecs_type_str(
 
     char* result = ecs_os_strdup(ecs_vector_first(chbuf));
     ecs_vector_free(chbuf);
-    return result;
-}
-
-ecs_entity_t ecs_new_entity(
-    ecs_world_t *world,
-    const char *id,
-    const char *expr)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-   
-    EcsTypeComponent type = type_from_expr(world, id, expr);
-
-    ecs_entity_t result = ecs_lookup(world, id);
-    if (result) {
-        if (ecs_get_type(world, result) != type.normalized) {
-            ecs_abort(ECS_ALREADY_DEFINED, id);
-        }
-    } else {
-        result = ecs_new_w_type(world, type.normalized);
-        ecs_set(world, result, EcsName, {id});
-    }
-
-    return result;
-}
-
-ecs_entity_t ecs_new_prefab(
-    ecs_world_t *world,
-    const char *id,
-    const char *expr)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-   
-    EcsTypeComponent type = type_from_expr(world, id, expr);
-    type.normalized = ecs_type_merge_intern(
-        world, &world->stage, world->t_prefab, type.normalized, 0);
-
-    ecs_entity_t result = ecs_lookup(world, id);
-    if (result) {
-        if (ecs_get_type(world, result) != type.normalized) {
-            ecs_abort(ECS_ALREADY_DEFINED, id);
-        }
-    } else {
-        result = ecs_new_w_type(world, type.normalized);
-        ecs_set(world, result, EcsName, {id});
-    }
-
     return result;
 }

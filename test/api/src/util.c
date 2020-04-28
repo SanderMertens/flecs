@@ -5,15 +5,10 @@ void probe_system(
 {
     Probe *ctx = ecs_get_context(rows->world);
     if (!ctx) {
-        ctx = rows->param;
-        if (!ctx) {
-            return;
-        }
-        ctx->param = NULL;
-    } else {
-        ctx->param = rows->param;
+        return;
     }
 
+    ctx->param = rows->param;
     ctx->system = rows->system;
     ctx->offset = 0;
     ctx->column_count = rows->column_count;

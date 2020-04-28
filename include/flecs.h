@@ -186,7 +186,7 @@ typedef void (*ecs_move_t)(
     void *ctx);
 
 /* Callback for on_add, on_remove and on_change triggers */
-typedef void (*ecs_trigger_t)(
+typedef void (*ecs_trigger_action_t)(
     ecs_rows_t *rows);
 
 /** The ecs_rows_t struct passes data from a system to a system callback.  */
@@ -239,12 +239,20 @@ typedef struct EcsComponentLifecycle {
     void *ctx;
 } EcsComponentLifecycle;
 
-/* Component that contains trigger callbacks for a component */
-typedef struct EcsComponentTrigger {
+/* Component used for registering component triggers */
+typedef struct EcsTrigger {
     ecs_trigger_kind_t kind;
-    ecs_trigger_t callback;
+    ecs_trigger_action_t action;
+    ecs_entity_t component;
     void *ctx;
-} EcsComponentTrigger;
+} EcsTrigger;
+
+/* Component used for registering systems */
+typedef struct EcsSystem {
+    ecs_system_kind_t kind;
+    ecs_system_action_t action;
+    char *signature;
+} EcsSystem;
 
 /** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
 typedef struct EcsTypeComponent {
@@ -297,10 +305,11 @@ FLECS_EXPORT
 extern ecs_type_t 
     TEcsComponent,
     TEcsComponentLifecycle,
-    TEcsComponentTrigger,
+    TEcsTrigger,
     TEcsTypeComponent,
     TEcsParent,
     TEcsPrefab,
+    TEcsSystem,
     TEcsColSystem,
     TEcsName,
     TEcsHidden,
@@ -313,21 +322,22 @@ extern ecs_type_t
 /** Handles to builtin components */
 #define EEcsComponent (1)
 #define EEcsComponentLifecycle (2)
-#define EEcsComponentTrigger (3)
+#define EEcsTrigger (3)
 #define EEcsTypeComponent (4)
 #define EEcsParent (5)
 #define EEcsPrefab (6)
-#define EEcsColSystem (7)
-#define EEcsName (8)
-#define EEcsHidden (9)
-#define EEcsDisabled (10)
-#define EEcsOnDemand (11)
-#define EEcsTimer (12)
-#define EEcsRateFilter (13)
-#define EEcsTickSource (14)
+#define EEcsSystem (7)
+#define EEcsColSystem (8)
+#define EEcsName (9)
+#define EEcsHidden (10)
+#define EEcsDisabled (11)
+#define EEcsOnDemand (12)
+#define EEcsTimer (13)
+#define EEcsRateFilter (14)
+#define EEcsTickSource (15)
 
 /** Builtin entity ids */
-#define EcsWorld (15)
+#define EcsWorld (16)
 #define ECS_SINGLETON (EcsSingleton)
 
 /** Value used to quickly check if component is builtin */
@@ -457,21 +467,20 @@ extern ecs_type_t
  *
  * For more details on system signatures and phases see the Flecs manual.
  */
-#define ECS_SYSTEM(world, id, kind, ...) \
-    ecs_entity_t F##id = ecs_new_system(world, #id, kind, #__VA_ARGS__, id);\
-    ecs_entity_t id = F##id;\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
-    (void)id;\
-    (void)ecs_type(id);
+
+#define ECS_SYSTEM(world, name, kind, ...) \
+    ecs_entity_t F##name = ecs_new_system(world, #name, kind, #__VA_ARGS__, name);\
+    ecs_entity_t name = F##name;\
+    (void)F##name;\
+    (void)name;
 
 #endif
 
-#define ECS_TRIGGER(world, cb, t_kind, component, t_ctx) \
-    ecs_set(world, ecs_entity(component), EcsComponentTrigger, {\
-        .kind = t_kind,\
-        .callback = cb,\
-        .ctx = t_ctx\
-    });
+#define ECS_TRIGGER(world, name, kind, component, ctx) \
+    ecs_entity_t F##name = ecs_new_trigger(world, #name, kind, ecs_entity(component), name, ctx);\
+    ecs_entity_t name = F##name;\
+    (void)F##name;\
+    (void)name;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// World API
@@ -2134,11 +2143,6 @@ FLECS_EXPORT
 ecs_entity_t ecs_type_to_entity(
     ecs_world_t *world,
     ecs_type_t type);
-
-FLECS_EXPORT
-ecs_type_t ecs_expr_to_type(
-    ecs_world_t *world,
-    const char *expr);
 
 FLECS_EXPORT
 char* ecs_type_str(

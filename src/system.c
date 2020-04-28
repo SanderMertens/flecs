@@ -293,70 +293,28 @@ void ecs_enable_intern(
     }
 }
 
-/* -- Private API -- */
-
-void ecs_invoke_status_action(
+static 
+void set_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsColSystem *system_data,
-    ecs_system_status_t status)
-{
-    ecs_system_status_action_t action = system_data->status_action;
-    if (action) {
-        action(world, system, status, system_data->status_ctx);
-    }
-}
-
-void ecs_col_system_free(
-    EcsColSystem *system_data)
-{
-    ecs_query_free(system_data->query);
-    ecs_vector_free(system_data->jobs);
-}
-
-/* -- Public API -- */
-
-ecs_entity_t ecs_new_system(
-    ecs_world_t *world,
     const char *name,
     ecs_system_kind_t kind,
-    const char *expr,
-    ecs_system_action_t action)
+    ecs_system_action_t action,
+    char *signature)
 {
-    ecs_assert(kind == EcsManual || kind == EcsOnLoad || kind == EcsPostLoad ||
-        kind == EcsPreUpdate || kind == EcsOnUpdate || kind == EcsOnValidate ||
-        kind == EcsPostUpdate || kind == EcsPreStore || kind == EcsOnStore ||
-        ECS_INVALID_PARAMETER, ECS_INVALID_PARAMETER, NULL);
-
-    if (!expr || !expr[0]) {
-        expr = "0";
-    }
-    
     /* Parse signature */
     ecs_sig_t sig = {0};
-    ecs_sig_init(world, name, expr, &sig);
+    ecs_sig_init(world, name, signature, &sig);
 
-    /* Check if system is already registered */
-    ecs_entity_t result = 0;
-    if (name) {
-        result = ecs_lookup(world, name);
-        if (result) {
-            return result;
-        }
-    }
-
-    result = ecs_new_w_type(world, world->t_col_system);
-    ecs_assert(result != 0, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_trace_1("system #[green]%s#[reset] (%d) created with expression #[red]%s#[normal]", 
-        name, result, expr);
+    ecs_trace_1("system #[green]%s#[reset] (%d) created with #[red]%s#[normal]", 
+        name, system, signature);
     ecs_trace_push();
 
-    EcsName *name_ptr = ecs_get_ptr(world, result, EcsName);
-    *name_ptr = name;
-
-    EcsColSystem *system_data = ecs_get_ptr(world, result, EcsColSystem);
+    bool is_added = false;
+    EcsColSystem *system_data = ecs_get_mutable(
+        world, system, EcsColSystem, &is_added);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(is_added == true, ECS_UNSUPPORTED, NULL);
 
     memset(system_data, 0, sizeof(EcsColSystem));
     system_data->action = action;
@@ -365,11 +323,11 @@ ecs_entity_t ecs_new_system(
     system_data->enabled_by_demand = true;
     system_data->time_spent = 0;
     system_data->kind = kind;
-    system_data->query = ecs_query_new_w_sig(world, result, &sig);
+    system_data->query = ecs_query_new_w_sig(world, system, &sig);
     ecs_assert(system_data->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
     system_data->tick_source = 0;
-    system_data->entity = result;
+    system_data->entity = system;
 
     ecs_entity_t *elem = NULL;
 
@@ -399,10 +357,10 @@ ecs_entity_t ecs_new_system(
         /* If tables have been matched with this system it is active, and we
         * should activate the in-columns, if any. This will ensure that any
         * OnDemand systems get enabled. */
-        ecs_system_activate(world, result, true);
+        ecs_system_activate(world, system, true);
     }
 
-    *elem = result;
+    *elem = system;
 
     /* If system is enabled, trigger enable components */
     if (system_data->enabled) {
@@ -415,7 +373,7 @@ ecs_entity_t ecs_new_system(
     /* Check if all non-table column constraints are met. If not, disable
      * system (system will be enabled once constraints are met) */
     if (!ecs_sig_check_constraints(world, &system_data->query->sig)) {
-        ecs_enable_intern(world, result, system_data, false, false);
+        ecs_enable_intern(world, system, system_data, false, false);
     }
 
     /* If the query has a OnDemand system tag, register its [out] columns */
@@ -423,7 +381,7 @@ ecs_entity_t ecs_new_system(
         world, system_data->query->sig.and_from_system, 
         TEcsOnDemand, true, false)) 
     {
-        register_out_columns(world, result, system_data);
+        register_out_columns(world, system, system_data);
     }
 
     /* If system contains FromSystem params, add them tot the system */
@@ -432,29 +390,73 @@ ecs_entity_t ecs_new_system(
         ecs_entity_t *array = ecs_vector_first(and_from_system);
         int32_t i, count = ecs_vector_count(and_from_system);
         for (i = 0; i < count; i ++) {
-            ecs_add_entity(world, result, array[i]);
+            ecs_add_entity(world, system, array[i]);
         }
 
         /* Re-obtain system_data, as it might have changed */
-        system_data = ecs_get_ptr(world, result, EcsColSystem);
+        system_data = ecs_get_ptr(world, system, EcsColSystem);
         ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     /* If this is an OnDemand system, register its [out] columns */
-    if (ecs_has(world, result, EcsOnDemand)) {
+    if (ecs_has(world, system, EcsOnDemand)) {
         ecs_assert(system_data->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* If there are no systems currently interested in any of the [out]
          * columns of the on demand system, disable it */
         if (!system_data->on_demand->count) {
-            ecs_enable_intern(world, result, system_data, false, false);
+            ecs_enable_intern(world, system, system_data, false, false);
         }
     } 
 
     ecs_trace_pop();
-
-    return result;
 }
+
+static 
+void EcsOnSetSystem(
+    ecs_rows_t *rows)
+{
+    ECS_COLUMN(rows, EcsSystem, sys, 1);
+
+    ecs_world_t *world = rows->world;
+    ecs_entity_t *entities = rows->entities;
+
+    int32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_entity_t e = entities[i];
+        set_system(world, entities[i], ecs_get_name(world, e), sys[i].kind, 
+            sys[i].action, sys[i].signature);
+    }
+}
+
+/* -- Private API -- */
+
+void ecs_init_system_builtins(
+    ecs_world_t *world)
+{
+    ECS_TRIGGER(world, EcsOnSetSystem, EcsOnSet, EcsSystem, 0);
+}
+
+void ecs_invoke_status_action(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    EcsColSystem *system_data,
+    ecs_system_status_t status)
+{
+    ecs_system_status_action_t action = system_data->status_action;
+    if (action) {
+        action(world, system, status, system_data->status_ctx);
+    }
+}
+
+void ecs_col_system_free(
+    EcsColSystem *system_data)
+{
+    ecs_query_free(system_data->query);
+    ecs_vector_free(system_data->jobs);
+}
+
+/* -- Public API -- */
 
 void ecs_enable(
     ecs_world_t *world,

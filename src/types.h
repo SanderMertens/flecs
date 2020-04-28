@@ -285,7 +285,7 @@ typedef struct EcsColSystem {
     bool enabled_by_demand;               /* Is system enabled by on demand systems */
     bool enabled_by_user;                 /* Is system enabled by user */
 } EcsColSystem;
- 
+
 #define ECS_TYPE_DB_MAX_CHILD_NODES (256)
 #define ECS_TYPE_DB_BUCKET_COUNT (256)
 

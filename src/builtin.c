@@ -88,26 +88,26 @@ static
 void ecs_component_set_intern(
     ecs_world_t *world,
     const ecs_entity_t *entities,
-    EcsComponentTrigger *ct,
+    EcsTrigger *ct,
     int32_t count)
 {
     ecs_component_data_t *cdata_array = ecs_vector_first(world->component_data);
     ecs_assert(cdata_array != NULL, ECS_INTERNAL_ERROR, NULL);
-    EcsComponentTrigger *el = NULL;
+    EcsTrigger *el = NULL;
 
     int i;
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];
+        ecs_entity_t e = ct[i].component;
         ecs_component_data_t *cdata = &cdata_array[e];
         switch(ct[i].kind) {
         case EcsOnAdd:
-            el = ecs_vector_add(&cdata->on_add, EcsComponentTrigger);
+            el = ecs_vector_add(&cdata->on_add, EcsTrigger);
             break;
         case EcsOnRemove:
-            el = ecs_vector_add(&cdata->on_remove, EcsComponentTrigger);
+            el = ecs_vector_add(&cdata->on_remove, EcsTrigger);
             break;
         case EcsOnSet:
-            el = ecs_vector_add(&cdata->on_set, EcsComponentTrigger);
+            el = ecs_vector_add(&cdata->on_set, EcsTrigger);
             break;
         }
         
@@ -125,15 +125,15 @@ void ecs_component_set_intern(
 }
 
 static
-void ecs_component_trigger_set(
+void EcsOnSetTrigger(
     ecs_rows_t *rows)
 {
-    ECS_COLUMN(rows, EcsComponentTrigger, ct, 1);
+    ECS_COLUMN(rows, EcsTrigger, ct, 1);
     ecs_component_set_intern(rows->world, rows->entities, ct, rows->count);
 }
 
 static
-void ecs_component_lifecycle_set(
+void EcsOnSetComponentLifecycle(
     ecs_rows_t *rows)
 {
     ECS_COLUMN(rows, EcsComponentLifecycle, cl, 1);
@@ -155,24 +155,23 @@ void ecs_component_lifecycle_set(
 void ecs_init_builtins(
     ecs_world_t *world)
 {
-    /* Bootstrap the on_set trigger for EcsComponentTrigger. After this we'll be
+    /* Bootstrap the on_set trigger for EcsTrigger. After this we'll be
      * able to set triggers for components */
-    EcsComponentTrigger tr = {
+    EcsTrigger tr = {
         .kind = EcsOnSet,
-        .callback = ecs_component_trigger_set
+        .action = EcsOnSetTrigger,
+        .component = EEcsTrigger
     };
 
-    ecs_entity_t e = EEcsComponentTrigger;
-    ecs_add(world, e, EcsComponentTrigger);
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_set(world, e, EcsName, {"EcsSetTrigger"});
+    ecs_add(world, e, EcsTrigger);
     ecs_component_set_intern(world, &e, &tr, 1);
 
     /* From here on we can use ecs_set to register component triggers */
 
     /* Register the OnSet trigger for EcsComponentLifecycle */
-    ecs_set(world, EEcsComponentLifecycle, EcsComponentTrigger, {
-        .kind = EcsOnSet,
-        .callback = ecs_component_lifecycle_set
-    });
+    ECS_TRIGGER(world, EcsOnSetComponentLifecycle, EcsOnSet, EcsComponentLifecycle, NULL);
 
     /* From here on we can use ecs_set to register component lifecycle */
 
@@ -182,7 +181,10 @@ void ecs_init_builtins(
         .dtor = ecs_parent_dtor,
         .copy = ecs_parent_copy,
         .move = ecs_parent_move
-    }); 
+    });
+
+    /* Initialize timer feature */
+    ecs_init_system_builtins(world);     
 
     /* Initialize timer feature */
     ecs_init_timer_builtins(world);

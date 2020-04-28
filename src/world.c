@@ -4,10 +4,11 @@
 
 ecs_type_t TEcsComponent;
 ecs_type_t TEcsComponentLifecycle;
-ecs_type_t TEcsComponentTrigger;
+ecs_type_t TEcsTrigger;
 ecs_type_t TEcsTypeComponent;
 ecs_type_t TEcsParent;
 ecs_type_t TEcsPrefab;
+ecs_type_t TEcsSystem;
 ecs_type_t TEcsColSystem;
 ecs_type_t TEcsName;
 ecs_type_t TEcsHidden;
@@ -19,10 +20,11 @@ ecs_type_t TEcsTickSource;
 
 static const char *ECS_COMPONENT_NAME =      "EcsComponent";
 static const char *ECS_COMPONENT_LIFECYCLE_NAME = "EcsComponentLifecycle";
-static const char *ECS_COMPONENT_TRIGGER_NAME = "EcsComponentTrigger";
+static const char *ECS_COMPONENT_TRIGGER_NAME = "EcsTrigger";
 static const char *ECS_TYPE_COMPONENT_NAME = "EcsTypeComponent";
 static const char *ECS_PARENT_NAME =         "EcsParent";
 static const char *ECS_PREFAB_NAME =         "EcsPrefab";
+static const char *ECS_SYSTEM_NAME =         "EcsSystem";
 static const char *ECS_COL_SYSTEM_NAME =     "EcsColSystem";
 static const char *ECS_NAME_NAME =           "EcsName";
 static const char *ECS_HIDDEN_NAME =         "EcsHidden";
@@ -488,10 +490,11 @@ ecs_world_t *ecs_init(void) {
     /* Create records for internal components */
     bootstrap_component(world, table, EEcsComponent, ECS_COMPONENT_NAME, sizeof(EcsComponent));
     bootstrap_component(world, table, EEcsComponentLifecycle, ECS_COMPONENT_LIFECYCLE_NAME, sizeof(EcsComponentLifecycle));
-    bootstrap_component(world, table, EEcsComponentTrigger, ECS_COMPONENT_TRIGGER_NAME, sizeof(EcsComponentTrigger));
+    bootstrap_component(world, table, EEcsTrigger, ECS_COMPONENT_TRIGGER_NAME, sizeof(EcsTrigger));
     bootstrap_component(world, table, EEcsTypeComponent, ECS_TYPE_COMPONENT_NAME, sizeof(EcsTypeComponent));
     bootstrap_component(world, table, EEcsParent, ECS_PARENT_NAME, sizeof(EcsParent));
     bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_NAME, 0);
+    bootstrap_component(world, table, EEcsSystem, ECS_SYSTEM_NAME, sizeof(EcsSystem));
     bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_NAME, sizeof(EcsColSystem));
     bootstrap_component(world, table, EEcsName, ECS_NAME_NAME, sizeof(EcsName));
     bootstrap_component(world, table, EEcsHidden, ECS_HIDDEN_NAME, 0);

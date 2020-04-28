@@ -150,14 +150,6 @@ ecs_entity_t ecs_new_component(
     size_t size);
 
 FLECS_EXPORT
-ecs_entity_t ecs_new_system(
-    ecs_world_t *world,
-    const char *id,
-    ecs_system_kind_t kind,
-    const char *sig,
-    ecs_system_action_t action);
-
-FLECS_EXPORT
 ecs_entity_t ecs_new_type(
     ecs_world_t *world,
     const char *id,
@@ -169,6 +161,22 @@ ecs_entity_t ecs_new_prefab(
     const char *id,
     const char *sig);
 
+FLECS_EXPORT
+ecs_entity_t ecs_new_system(
+    ecs_world_t *world,
+    const char *name,
+    ecs_system_kind_t kind,
+    char *signature,
+    ecs_system_action_t action);
+
+FLECS_EXPORT
+ecs_entity_t ecs_new_trigger(
+    ecs_world_t *world,
+    const char *name,
+    ecs_trigger_kind_t kind,
+    ecs_entity_t component,
+    ecs_trigger_action_t action,
+    void *ctx);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Error API
