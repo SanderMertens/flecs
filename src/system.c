@@ -299,7 +299,7 @@ void set_system(
     ecs_entity_t system,
     const char *name,
     ecs_system_kind_t kind,
-    ecs_system_action_t action,
+    ecs_iter_action_t action,
     char *signature)
 {
     /* Parse signature */
@@ -578,7 +578,7 @@ ecs_entity_t ecs_run_intern(
         qiter.rows.param = system_data->ctx;
     }
 
-    ecs_system_action_t action = system_data->action;
+    ecs_iter_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
     if (!filter) {

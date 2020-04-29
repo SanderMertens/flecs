@@ -130,6 +130,14 @@ bool ecs_table_match_filter(
     ecs_table_t *table,
     const ecs_filter_t *filter);
 
+/* Get dirty state for table columns */
+int32_t* ecs_table_get_dirty_state(
+    ecs_table_t *table);
+
+/* Get monitor for monitoring table changes */
+int32_t* ecs_table_get_monitor(
+    ecs_table_t *table);
+
 #ifdef __cplusplus
 }
 #endif

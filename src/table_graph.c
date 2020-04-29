@@ -114,6 +114,7 @@ void init_table(
     table->type = entities_to_type(entities);
     table->stage_data = NULL;
     table->flags = 0;
+    table->dirty_state = NULL;
     
     init_edges(world, stage, table);
 

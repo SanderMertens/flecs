@@ -145,13 +145,16 @@ typedef struct ecs_edge_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
 struct ecs_table_t {
-    ecs_vector_t *stage_data;         /* Data per stage */
-    ecs_vector_t *queries;            /* Queries matched with table */
     ecs_type_t type;                  /* Identifies table type in type_index */
     ecs_edge_t *lo_edges;             /* Edges to low entity ids */
     ecs_map_t *hi_edges;              /* Edges to high entity ids */
+
+    /* Only set when table has data */
+    ecs_vector_t *stage_data;         /* Data per stage */
+    ecs_vector_t *queries;            /* Queries matched with table */
     ecs_vector_t *on_new;             /* Systems executed when new entity is
                                        * added to table */
+    int32_t *dirty_state;             /* Keep track of changes in columns */
     int32_t flags;                    /* Flags for testing table properties */
 };
 
@@ -169,6 +172,7 @@ typedef struct ecs_matched_table_t {
     ecs_entity_t *components;       /* Actual components of system columns */
     ecs_vector_t *references;       /* Reference columns and cached pointers */
     int32_t depth;                  /* Depth of table (when using CASCADE) */
+    int32_t *monitor;               /* Used to monitor table for changes */
 } ecs_matched_table_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -223,10 +227,19 @@ struct ecs_query_t {
     ecs_entity_t system;        
 };
 
-/** Base type for a system */
-typedef struct _EcsSystem {
-    int __dummy;
-} __EcsSystem;
+typedef struct ecs_table_range_t {
+    ecs_table_t *table;
+    int32_t offset;
+    int32_t limit;
+} ecs_table_range_t;
+
+struct ecs_sorted_query_t {
+    ecs_query_t *query;
+    ecs_vector_t *monitored_tables;
+    ecs_vector_t *sorted_tables;
+    ecs_entity_t sort_on_component;
+    ecs_compare_action_t compare;
+};
 
 /** A column system is a system that is ran periodically (default = every frame)
  * on all entities that match the system signature expression. Column systems
@@ -267,7 +280,7 @@ typedef struct _EcsSystem {
  * ran, and 'time_passed' is decreased by 'period'. 
  */
 typedef struct EcsColSystem {
-    ecs_system_action_t action;    /* Callback to be invoked for matching rows */
+    ecs_iter_action_t action;    /* Callback to be invoked for matching rows */
     void *ctx;                     /* Userdata for system */
     ecs_system_kind_t kind;        /* Kind of system */
     float time_spent;              /* Time spent on running system */
@@ -417,7 +430,8 @@ struct ecs_world_t {
 
     /* --  Queries -- */
 
-    ecs_sparse_t *queries;    
+    ecs_sparse_t *queries;
+    ecs_sparse_t *sorted_queries;   
 
     /* -- OnDemand systems -- */
     

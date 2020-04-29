@@ -167,7 +167,7 @@ ecs_entity_t ecs_new_system(
     const char *name,
     ecs_system_kind_t kind,
     char *signature,
-    ecs_system_action_t action);
+    ecs_iter_action_t action);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_trigger(
@@ -175,7 +175,7 @@ ecs_entity_t ecs_new_trigger(
     const char *name,
     ecs_trigger_kind_t kind,
     ecs_entity_t component,
-    ecs_trigger_action_t action,
+    ecs_iter_action_t action,
     void *ctx);
 
 ////////////////////////////////////////////////////////////////////////////////

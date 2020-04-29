@@ -208,17 +208,7 @@ void ecs_table_swap(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t row_1,
-    int32_t row_2,
-    ecs_record_t *record_ptr_1,
-    ecs_record_t *record_ptr_2);
-
-void ecs_table_move_back_and_swap(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count);
+    int32_t row_2);
 
 ecs_table_t *ecs_table_traverse_add(
     ecs_world_t *world,
@@ -303,7 +293,7 @@ ecs_entity_t ecs_new_col_system(
     const char *name,
     ecs_system_kind_t kind,
     ecs_sig_t *sig,
-    ecs_system_action_t action);
+    ecs_iter_action_t action);
 
 /* Notify row system of a new type, which initiates system-type matching */
 void ecs_row_system_notify_of_type(

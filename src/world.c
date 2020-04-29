@@ -435,6 +435,7 @@ ecs_world_t *ecs_init(void) {
     world->manual_systems = ecs_vector_new(ecs_entity_t, 0);
 
     world->queries = ecs_sparse_new(ecs_query_t, 0);
+    world->sorted_queries = ecs_sparse_new(ecs_sorted_query_t, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
 
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
@@ -1248,7 +1249,7 @@ bool ecs_enable_range_check(
 
 ecs_entity_t _ecs_import(
     ecs_world_t *world,
-    ecs_module_init_action_t init_action,
+    ecs_module_action_t init_action,
     const char *module_name,
     int flags,
     void *handles_out,
@@ -1361,7 +1362,7 @@ ecs_entity_t ecs_import_from_library(
             library_name, library_filename);
     }
 
-    ecs_module_init_action_t action = (ecs_module_init_action_t)
+    ecs_module_action_t action = (ecs_module_action_t)
         ecs_os_dlproc(dl, import_func);
     if (!action) {
         ecs_os_err("failed to load import function %s from library %s",

@@ -112,6 +112,7 @@ void add_table(
     table_data->references = NULL;
     table_data->columns = NULL;
     table_data->components = NULL;
+    table_data->monitor = NULL;
 
     if (column_count) {
         /* Array that contains the system column to table column mapping */

@@ -44,6 +44,7 @@ extern "C" {
 
 typedef struct ecs_world_t ecs_world_t;
 typedef struct ecs_query_t ecs_query_t;
+typedef struct ecs_sorted_query_t ecs_sorted_query_t;
 typedef struct ecs_stage_t ecs_stage_t;
 typedef struct ecs_record_t ecs_record_t;
 typedef struct ecs_table_t ecs_table_t;
@@ -83,12 +84,19 @@ typedef enum ecs_trigger_kind_t {
     EcsOnSet    
 } ecs_trigger_kind_t;
 
-/** System action callback */
-typedef void (*ecs_system_action_t)(
+/** Action callback for systems and triggers */
+typedef void (*ecs_iter_action_t)(
     ecs_rows_t *data);
 
-/** Initialization function signature of modules */
-typedef void (*ecs_module_init_action_t)(
+/** Compare callback used for sorting */
+typedef bool (*ecs_compare_action_t)(
+    ecs_entity_t e1,
+    void *ptr1,
+    ecs_entity_t e2,
+    void *ptr2);    
+
+/** Initialization action for modules */
+typedef void (*ecs_module_action_t)(
     ecs_world_t *world,
     int flags);    
 
@@ -185,10 +193,6 @@ typedef void (*ecs_move_t)(
     int32_t count,
     void *ctx);
 
-/* Callback for on_add, on_remove and on_change triggers */
-typedef void (*ecs_trigger_action_t)(
-    ecs_rows_t *rows);
-
 /** The ecs_rows_t struct passes data from a system to a system callback.  */
 struct ecs_rows_t {
     ecs_world_t *world;          /* Current world */
@@ -242,7 +246,7 @@ typedef struct EcsComponentLifecycle {
 /* Component used for registering component triggers */
 typedef struct EcsTrigger {
     ecs_trigger_kind_t kind;
-    ecs_trigger_action_t action;
+    ecs_iter_action_t action;
     ecs_entity_t component;
     void *ctx;
 } EcsTrigger;
@@ -250,7 +254,7 @@ typedef struct EcsTrigger {
 /* Component used for registering systems */
 typedef struct EcsSystem {
     ecs_system_kind_t kind;
-    ecs_system_action_t action;
+    ecs_iter_action_t action;
     char *signature;
 } EcsSystem;
 
@@ -1800,6 +1804,13 @@ ecs_query_t* ecs_query_new(
     ecs_world_t *world,
     const char *sig);
 
+FLECS_EXPORT
+ecs_sorted_query_t* ecs_sorted_query_new(
+    ecs_world_t *world,
+    const char *sig,
+    ecs_entity_t sort_on_component,
+    ecs_compare_action_t compare);
+
 /** Cleanup a query.
  * This operation frees a query.
  *
@@ -2033,7 +2044,7 @@ int ecs_writer_write(
 FLECS_EXPORT
 ecs_entity_t _ecs_import(
     ecs_world_t *world,
-    ecs_module_init_action_t module,
+    ecs_module_action_t module,
     const char *module_name,
     int flags,
     void *handles_out,
