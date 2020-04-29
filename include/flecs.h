@@ -44,7 +44,7 @@ extern "C" {
 
 typedef struct ecs_world_t ecs_world_t;
 typedef struct ecs_query_t ecs_query_t;
-typedef struct ecs_sorted_query_t ecs_sorted_query_t;
+typedef struct ecs_query_t ecs_query_t;
 typedef struct ecs_stage_t ecs_stage_t;
 typedef struct ecs_record_t ecs_record_t;
 typedef struct ecs_table_t ecs_table_t;
@@ -89,7 +89,7 @@ typedef void (*ecs_iter_action_t)(
     ecs_rows_t *data);
 
 /** Compare callback used for sorting */
-typedef bool (*ecs_compare_action_t)(
+typedef int (*ecs_compare_action_t)(
     ecs_entity_t e1,
     void *ptr1,
     ecs_entity_t e2,
@@ -1805,10 +1805,10 @@ ecs_query_t* ecs_query_new(
     const char *sig);
 
 FLECS_EXPORT
-ecs_sorted_query_t* ecs_sorted_query_new(
+void ecs_query_sort(
     ecs_world_t *world,
-    const char *sig,
-    ecs_entity_t sort_on_component,
+    ecs_query_t *query,
+    ecs_entity_t sort_component,
     ecs_compare_action_t compare);
 
 /** Cleanup a query.

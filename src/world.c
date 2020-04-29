@@ -435,7 +435,6 @@ ecs_world_t *ecs_init(void) {
     world->manual_systems = ecs_vector_new(ecs_entity_t, 0);
 
     world->queries = ecs_sparse_new(ecs_query_t, 0);
-    world->sorted_queries = ecs_sparse_new(ecs_sorted_query_t, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
 
     world->type_handles = ecs_map_new(ecs_entity_t, 0);

@@ -624,6 +624,267 @@ void resolve_cascade_container(
     }
 }
 
+#define ELEM(ptr, size, index) ECS_OFFSET(ptr, size * index)
+
+static
+int32_t qsort_table(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    ecs_entity_t *entities,
+    void *ptr,    
+    int32_t elem_size,
+    int32_t lo,
+    int32_t hi,
+    ecs_compare_action_t compare)
+{
+repeat:
+    {
+        int32_t p = (hi + lo) / 2;
+        void *pivot = ELEM(ptr, elem_size, p);
+        int32_t i = lo - 1, j = hi;
+        void *el;
+
+        do {
+            i ++;
+            el = ELEM(ptr, elem_size, i);
+        } while ( compare(entities[i], el, entities[p], pivot) < 0);
+
+        do {
+            j --;
+            el = ELEM(ptr, elem_size, j);
+        } while ( compare(entities[j], el, entities[p], pivot) > 0);
+
+        if (i >= j) {
+            return j;
+        }
+
+        ecs_table_swap(world, &world->stage, table, data, i, j);
+        goto repeat;
+    }
+}
+
+static
+void sort_table(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t sort_on_component,
+    int32_t column_index,
+    ecs_compare_action_t compare)
+{
+    ecs_data_t *data = ecs_table_get_data(world, table);
+    if (!data || !data->columns) {
+        /* Nothing to sort */
+        return;
+    }
+
+    int32_t count = ecs_table_data_count(data);
+    if (count < 2) {
+        return;
+    }
+
+    ecs_entity_t *entities = ecs_vector_first(data->entities);
+
+    void *ptr = NULL;
+    int32_t size = 0;
+    if (column_index != -1) {
+        ecs_column_t *column = &data->columns[column_index];
+        ptr = ecs_vector_first(column->data);
+        size = column->size;
+    }
+
+    int32_t p = qsort_table(
+        world, table, data, entities, ptr, size, 0, count, compare);
+
+    qsort_table(
+        world, table, data, entities, ptr, size, 0, p, compare);        
+
+    qsort_table(
+        world, table, data, entities, ptr, size, p + 1, count, compare);
+}
+
+/* Helper struct for building sorted table ranges */
+typedef struct sort_helper_t {
+    ecs_matched_table_t *table;
+    ecs_entity_t *entities;
+    void *ptr;
+    int32_t row;
+    int32_t elem_size;
+    int32_t count;
+} sort_helper_t;
+
+static
+void* ptr_from_helper(
+    sort_helper_t *helper)
+{
+    ecs_assert(helper->row < helper->count, ECS_INTERNAL_ERROR, NULL);
+    return ELEM(helper->ptr, helper->elem_size, helper->row);
+}
+
+static
+ecs_entity_t e_from_helper(
+    sort_helper_t *helper)
+{
+    if (helper->row < helper->count) {
+        return helper->entities[helper->row];
+    } else {
+        return 0;
+    }
+}
+
+static
+void build_sorted_tables(
+    ecs_world_t *world,
+    ecs_query_t *query)
+{
+    ecs_entity_t component = query->sort_on_component;
+    ecs_compare_action_t compare = query->compare;
+
+    /* Clean previous sorted tables */
+    ecs_vector_free(query->table_ranges);
+    query->table_ranges = NULL;
+
+    /* Fetch data from all matched tables */
+    int32_t table_count = ecs_vector_count(query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables);
+    sort_helper_t *helper = ecs_os_malloc(table_count * sizeof(sort_helper_t));
+
+    int i, to_sort = 0;
+    for (i = 0; i < table_count; i ++) {
+        ecs_matched_table_t *table = &tables[i];
+        ecs_data_t *data = ecs_table_get_data(world, table->table);
+        if (!data || !data->columns || !ecs_table_count(table->table)) {
+            continue;
+        }
+
+        int32_t index = ecs_type_index_of(table->table->type, component);
+        if (index != -1) {
+            ecs_column_t *column = &data->columns[index];
+            helper[to_sort].ptr = ecs_vector_first(column->data);
+            helper[to_sort].elem_size = column->size;
+        }
+
+        helper[to_sort].table = table;
+        helper[to_sort].entities = ecs_vector_first(data->entities);
+        helper[to_sort].row = 0;
+        helper[to_sort].count = ecs_table_count(table->table);
+        to_sort ++;
+    }
+
+    ecs_table_range_t *cur = NULL;
+
+    bool proceed;
+    do {
+        int32_t j, min = 0;
+        proceed = true;
+
+        ecs_entity_t e1;
+        while (!(e1 = e_from_helper(&helper[min]))) {
+            min ++;
+            if (min == to_sort) {
+                proceed = false;
+                break;
+            }
+        }
+
+        if (!proceed) {
+            break;
+        }
+
+        for (j = min + 1; j < to_sort; j++) {
+            ecs_entity_t e2 = e_from_helper(&helper[j]);
+            if (!e2) {
+                continue;
+            }
+
+            void *ptr1 = ptr_from_helper(&helper[min]);
+            void *ptr2 = ptr_from_helper(&helper[j]);
+
+            if (compare(e1, ptr1, e2, ptr2) > 0) {
+                min = j;
+            }
+        }
+
+        sort_helper_t *cur_helper = &helper[min];
+
+        if (!cur || cur->table != cur_helper->table) {
+            cur = ecs_vector_add(
+                &query->table_ranges, ecs_table_range_t);
+            ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
+            cur->table = cur_helper->table;
+            cur->start_row = cur_helper->row;
+            cur->count = 1;
+        } else {
+            cur->count ++;
+        }
+
+        cur_helper->row ++;
+    } while (proceed);
+
+    ecs_os_free(helper);
+}
+
+static
+void sort_query_tables(
+    ecs_world_t *world,
+    ecs_query_t *query)
+{
+    ecs_entity_t sort_on_component = query->sort_on_component;
+    ecs_compare_action_t compare = query->compare;
+
+    /* Iterate over active tables. Don't bother with inactive tables, since
+     * they're empty */
+    int32_t i, count = ecs_vector_count(query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables);
+    bool tables_sorted = false;
+
+    for (i = 0; i < count; i ++) {
+        ecs_matched_table_t *m_table = &tables[i];
+        ecs_table_t *table = m_table->table;
+
+        /* If no monitor had been created for the table yet, create it now */
+        bool is_dirty = false;
+        if (!m_table->monitor) {
+            m_table->monitor = ecs_table_get_monitor(table);
+
+            /* A new table is always dirty */
+            is_dirty = true;
+        }
+
+        int32_t *dirty_state = ecs_table_get_dirty_state(table);
+
+        is_dirty |= dirty_state[0] != m_table->monitor[0];
+
+        int32_t index = -1;
+        if (sort_on_component) {
+            /* Get index of sorted component. We only care if the component we're
+            * sorting on has changed or if entities have been added / re(moved) */
+            int32_t column_count = ecs_vector_count(table->type);
+            index = ecs_type_index_of(table->type, sort_on_component);
+            ecs_assert(index != -1, ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(index < column_count, ECS_INTERNAL_ERROR, NULL);
+
+            is_dirty |= dirty_state[index + 1] != m_table->monitor[index + 1];
+        }      
+        
+        /* Check both if entities have moved (element 0) or if the component
+         * we're sorting on has changed (index + 1) */
+        if (is_dirty) {
+            /* Sort the tables */
+            sort_table(world, table, sort_on_component, index, compare);
+
+            /* Sorting the table will make it dirty again, so update our monitor
+             * after the sort */
+            m_table->monitor[0] = dirty_state[0];
+            m_table->monitor[index + 1] = dirty_state[index + 1];
+            tables_sorted = true;
+        }
+    }
+
+    if (tables_sorted) {
+        build_sorted_tables(world, query);
+    }
+}
 
 /* -- Private API -- */
 
@@ -828,6 +1089,15 @@ ecs_query_iter_t ecs_query_iter(
 {
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    sort_query_tables(query->world, query);
+
+    int32_t table_count;
+    if (query->table_ranges) {
+        table_count = ecs_vector_count(query->table_ranges);
+    } else {
+        table_count = ecs_vector_count(query->tables);
+    }
+
     return (ecs_query_iter_t){
         .query = query,
         .offset = offset,
@@ -838,7 +1108,7 @@ ecs_query_iter_t ecs_query_iter(
             .world = query->world,
             .query = query,
             .column_count = ecs_vector_count(query->sig.columns),
-            .table_count = ecs_vector_count(query->tables),
+            .table_count = table_count,
             .inactive_table_count = ecs_vector_count(query->inactive_tables)
         }
     };
@@ -853,8 +1123,16 @@ bool ecs_query_next(
     ecs_query_t *query = iter->query;
     ecs_rows_t *rows = &iter->rows;
     ecs_world_t *world = rows->world;
-    int32_t table_count = ecs_vector_count(query->tables);
+
     ecs_matched_table_t *tables = ecs_vector_first(query->tables);
+    ecs_table_range_t *ranges = ecs_vector_first(query->table_ranges);
+    
+    int32_t table_count = iter->rows.table_count;
+    if (ranges) {
+        table_count = ecs_vector_count(query->table_ranges);
+    } else {
+        table_count = ecs_vector_count(query->tables);
+    }
 
     ecs_world_t *real_world = world;
     ecs_get_stage(&real_world);
@@ -867,19 +1145,30 @@ bool ecs_query_next(
 
     int i;
     for (i = iter->index; i < table_count; i ++) {
-        ecs_matched_table_t *table = &tables[i];
+        ecs_matched_table_t *table;
+
+        if (ranges) {
+            table = ranges[i].table;
+        } else {
+            table = &tables[i];
+        }
+
         ecs_table_t *world_table = table->table;
         ecs_data_t *table_data = NULL;
+        int32_t first = 0, count = 0;
 
         if (world_table) {
             table_data = ecs_table_get_data(real_world, world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
             rows->table_columns = table_data->columns;
+            
+            if (ranges) {
+                first = ranges[i].start_row;
+                count = ranges[i].count;
+            }
         }
 
         if (table_data) {
-            int32_t first = 0, count = ecs_table_count(world_table);
-
             if (offset_limit) {
                 if (offset) {
                     if (offset > count) {
@@ -930,6 +1219,25 @@ bool ecs_query_next(
     }
 
     return false;
+}
+
+void ecs_query_sort(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t sort_component,
+    ecs_compare_action_t compare)
+{
+    query->sort_on_component = sort_component;
+    query->compare = compare;
+
+    ecs_vector_free(query->table_ranges);
+    query->table_ranges = NULL;
+
+    sort_query_tables(world, query);    
+
+    if (!query->table_ranges) {
+        build_sorted_tables(world, query);
+    }
 }
 
 /* -- Debug functionality -- */

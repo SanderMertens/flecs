@@ -211,6 +211,12 @@ typedef struct ecs_sig_t {
     ecs_type_t and_from_container; /* Used to auto-add components to system */
 } ecs_sig_t;
 
+typedef struct ecs_table_range_t {
+    ecs_matched_table_t *table;
+    int32_t start_row;
+    int32_t count;
+} ecs_table_range_t;
+
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
     /* Signature of query */
@@ -224,22 +230,14 @@ struct ecs_query_t {
     ecs_vector_t *inactive_tables;
 
     /* Handle to system (optional) */
-    ecs_entity_t system;        
-};
+    ecs_entity_t system;   
 
-typedef struct ecs_table_range_t {
-    ecs_table_t *table;
-    int32_t offset;
-    int32_t limit;
-} ecs_table_range_t;
-
-struct ecs_sorted_query_t {
-    ecs_query_t *query;
-    ecs_vector_t *monitored_tables;
-    ecs_vector_t *sorted_tables;
+    /* Members used for sorting */
     ecs_entity_t sort_on_component;
-    ecs_compare_action_t compare;
+    ecs_compare_action_t compare;   
+    ecs_vector_t *table_ranges;     
 };
+
 
 /** A column system is a system that is ran periodically (default = every frame)
  * on all entities that match the system signature expression. Column systems
@@ -431,7 +429,6 @@ struct ecs_world_t {
     /* --  Queries -- */
 
     ecs_sparse_t *queries;
-    ecs_sparse_t *sorted_queries;   
 
     /* -- OnDemand systems -- */
     
