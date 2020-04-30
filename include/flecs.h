@@ -94,6 +94,12 @@ typedef int (*ecs_compare_action_t)(
     ecs_entity_t e2,
     void *ptr2);    
 
+/** Compare callback used for sorting */
+typedef int32_t (*ecs_rank_type_action_t)(
+    ecs_world_t *world,
+    ecs_entity_t rank_component,
+    ecs_type_t type);
+
 /** Initialization action for modules */
 typedef void (*ecs_module_action_t)(
     ecs_world_t *world,
@@ -382,9 +388,7 @@ extern ecs_type_t
  */ 
 #define ECS_ENTITY(world, id, ...)\
     ecs_entity_t id = ecs_new_entity(world, #id, #__VA_ARGS__);\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
-    (void)id;\
-    (void)ecs_type(id);
+    (void)id;
 
 /** Declare a prefab.
  * This macro will declare a new prefab with the provided id and components. The
@@ -403,9 +407,7 @@ extern ecs_type_t
  */
 #define ECS_PREFAB(world, id, ...) \
     ecs_entity_t id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
-    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
-    (void)id;\
-    (void)ecs_type(id);\
+    (void)id;
 
 /** Declare a component.
  * This macro declares a new component with the provided type. The type must be 
@@ -822,7 +824,7 @@ void ecs_trace_push(void);
 void ecs_trace_pop(void);
 
 FLECS_EXPORT
-void ecs_trace_enable(
+void ecs_tracing_enable(
     bool enabled);
 
 #if !defined(NDEBUG) && !(defined(ECS_VERBOSITY_0) || defined(ECS_VERBOSITY_1) || defined(ECS_VERBOSITY_3))
@@ -1816,12 +1818,20 @@ ecs_query_t* ecs_query_new(
     ecs_world_t *world,
     const char *sig);
 
+/** Sort the output of a query */
 FLECS_EXPORT
 void ecs_query_sort(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t sort_component,
     ecs_compare_action_t compare);
+
+FLECS_EXPORT
+void ecs_query_sort_types(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t monitor_component,
+    ecs_rank_type_action_t rank_type);
 
 /** Cleanup a query.
  * This operation frees a query.
@@ -2223,6 +2233,11 @@ bool ecs_type_has_owned_type(
     ecs_type_t has,
     bool owned);
 
+FLECS_EXPORT
+ecs_entity_t ecs_type_get_entity_for_xor(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t xor);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Threading / Staging API

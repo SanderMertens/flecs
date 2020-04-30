@@ -134,6 +134,15 @@ bool has_refs(
 }
 
 static
+void vec_add_entity(
+    ecs_vector_t **vec,
+    ecs_entity_t entity)
+{
+    ecs_entity_t *e = ecs_vector_add(vec, ecs_entity_t);
+    *e = entity;
+}
+
+static
 void compute_sig_types(
     ecs_world_t *world,
     ecs_sig_t *sig)
@@ -155,49 +164,27 @@ void compute_sig_types(
             /* Nothing to be done here */
         } else if (op == EcsOperNot) {
             if (from == EcsFromSelf) {
-                sig->not_from_self =
-                    ecs_type_add_intern(
-                        world, &world->stage, sig->not_from_self, elem->is.component);
-
+                vec_add_entity(&sig->not_from_self, elem->is.component);
             } else if (from == EcsFromOwned) {
-                sig->not_from_owned =
-                    ecs_type_add_intern(
-                        world, &world->stage, sig->not_from_owned, elem->is.component);
-
+                vec_add_entity(&sig->not_from_owned, elem->is.component);
             } else if (from == EcsFromShared) {
-                sig->not_from_shared =
-                    ecs_type_add_intern(
-                        world, &world->stage, sig->not_from_shared, elem->is.component);
-
+                vec_add_entity(&sig->not_from_shared, elem->is.component);
             } else if (from == EcsFromEntity) {
                 /* Nothing to be done here */
-
             } else if (from == EcsFromContainer) {
-                sig->not_from_container =
-                    ecs_type_add_intern(
-                      world, &world->stage, sig->not_from_container, elem->is.component);
+                vec_add_entity(&sig->not_from_container, elem->is.component);
             }
         } else if (op == EcsOperAnd) {
             if (from == EcsFromSelf) {
-                sig->and_from_self = ecs_type_add_intern(
-                    world, &world->stage, sig->and_from_self, elem->is.component);
-
+                vec_add_entity(&sig->and_from_self, elem->is.component);
             } else if (from == EcsFromOwned) {
-                sig->and_from_owned = ecs_type_add_intern(
-                    world, &world->stage, sig->and_from_owned, elem->is.component);
-
+                vec_add_entity(&sig->and_from_owned, elem->is.component);
             } else if (from == EcsFromShared) {
-                sig->and_from_shared = ecs_type_add_intern(
-                    world, &world->stage, sig->and_from_shared, elem->is.component);
-
+                vec_add_entity(&sig->and_from_shared, elem->is.component);
             } else if (from == EcsFromSystem) {
-                sig->and_from_system = ecs_type_add_intern(
-                    world, &world->stage, sig->and_from_system, elem->is.component);
-
+                vec_add_entity(&sig->and_from_system, elem->is.component);
             } else if (from == EcsFromContainer) {
-                sig->and_from_container = ecs_type_add_intern(
-                    world, &world->stage, sig->and_from_container, elem->is.component);
-
+                vec_add_entity(&sig->and_from_container, elem->is.component);
             }  else if (from == EcsCascade) {
                 sig->cascade_by = i + 1;
             }
@@ -562,25 +549,16 @@ int ecs_parse_signature_action(
         elem->source = 0;
 
         if (from_kind == EcsFromSelf) {
-            sig->not_from_self = ecs_type_add_intern(
-                world, &world->stage, sig->not_from_self, component);
-
+            vec_add_entity(&sig->not_from_self, component);
         } else if (from_kind == EcsFromOwned) {
-            sig->not_from_owned = ecs_type_add_intern(
-                world, &world->stage, sig->not_from_owned, component);
-
+            vec_add_entity(&sig->not_from_owned, component);
         } else if (from_kind == EcsFromShared) {
-            sig->not_from_shared = ecs_type_add_intern(
-                world, &world->stage, sig->not_from_shared, component); 
-
+            vec_add_entity(&sig->not_from_shared, component); 
         } else if (from_kind == EcsFromEntity) {
             elem->from_kind = EcsFromEntity;
             elem->source = ecs_lookup(world, source_id);
-
         } else {
-            sig->not_from_container =
-              ecs_type_add_intern(
-                  world, &world->stage, sig->not_from_container, component);
+            vec_add_entity(&sig->not_from_container, component);
         }
     }
 

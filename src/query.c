@@ -36,7 +36,8 @@ ecs_entity_t components_contains(
 }
 
 /* Get actual entity on which specified component is stored */
-ecs_entity_t ecs_get_entity_for_component(
+static
+ecs_entity_t get_entity_for_component(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_type_t type,
@@ -68,6 +69,105 @@ ecs_entity_t ecs_get_entity_for_component(
     return entity;
 }
 
+static
+ecs_entity_t get_cascade_component(
+    ecs_query_t *query)
+{
+    ecs_sig_column_t *column = ecs_vector_first(query->sig.columns);
+    return column[query->sig.cascade_by - 1].is.component;
+}
+
+static
+int32_t rank_by_depth(
+    ecs_world_t *world,
+    ecs_entity_t rank_by_component,
+    ecs_type_t type)
+{
+    int32_t result = 0;
+    int32_t i, count = ecs_vector_count(type);
+    ecs_entity_t *array = ecs_vector_first(type);
+
+    for (i = count - 1; i >= 0; i --) {
+        if (array[i] & ECS_CHILDOF) {
+            ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_ENTITY_MASK);
+            int32_t j, c_count = ecs_vector_count(c_type);
+            ecs_entity_t *c_array = ecs_vector_first(c_type);
+
+            for (j = 0; j < c_count; j ++) {
+                if (c_array[j] == rank_by_component) {
+                    result ++;
+                    result += rank_by_depth(world, rank_by_component, c_type);
+                    break;
+                }
+            }
+
+            if (j != c_count) {
+                break;
+            }
+        } else if (!(array[i] & ECS_TYPE_FLAG_MASK)) {
+            /* No more parents after this */
+            break;
+        }
+    }
+
+    return result;
+}
+
+static
+int table_compare(
+    const void *t1,
+    const void *t2)
+{
+    const ecs_matched_table_t *table_1 = t1;
+    const ecs_matched_table_t *table_2 = t2;
+
+    return table_1->rank - table_2->rank;
+}
+
+static
+void order_ranked_tables(
+    ecs_world_t *world,
+    ecs_query_t *query)
+{
+    ecs_vector_sort(query->tables, ecs_matched_table_t, table_compare);
+}
+
+static
+void rank_table(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_matched_table_t *table)
+{
+    if (query->rank_table) {
+        table->rank = query->rank_table(
+            world, query->rank_on_component, table->table->type);
+    }
+}
+
+/* Rank all tables of query. Only necessary if a new ranking function was
+ * provided or if a monitored entity set the component used for ranking. */
+static
+void rank_tables(
+    ecs_world_t *world,
+    ecs_query_t *query)
+{
+    if (query->rank_table) {
+        int i, count = ecs_vector_count(query->tables);
+        ecs_matched_table_t *tables = ecs_vector_first(query->tables);
+        for (i = 0; i < count; i ++) {
+            ecs_matched_table_t *table = &tables[i];
+            rank_table(world, query, table);
+        }
+
+        count = ecs_vector_count(query->inactive_tables);
+        tables = ecs_vector_first(query->inactive_tables);
+        for (i = 0; i < count; i ++) {
+            ecs_matched_table_t *table = &tables[i];
+            rank_table(world, query, table);
+        }        
+    }
+}
+
 /** Add table to system, compute offsets for system components in table rows */
 static
 void add_table(
@@ -86,6 +186,11 @@ void add_table(
         table_type = table->type;
         table_data = ecs_vector_add(
             &query->inactive_tables, ecs_matched_table_t);
+
+        table_data->table = table;
+
+        /* Assign a rank to the table if table sorting is enabled for query */
+        rank_table(world, query, table_data);
 
 #ifndef NDEBUG
         char *type_expr = ecs_type_str(world, table->type);
@@ -106,9 +211,10 @@ void add_table(
          * would never get activated otherwise. */
         table_data = ecs_vector_add(
             &query->tables, ecs_matched_table_t);
+
+        table_data->table = NULL;
     }
 
-    table_data->table = table;
     table_data->references = NULL;
     table_data->columns = NULL;
     table_data->components = NULL;
@@ -259,7 +365,7 @@ void add_table(
                 } else if (from == EcsFromSystem) {
                     e = entity;
                 } else {
-                    e = ecs_get_entity_for_component(
+                    e = get_entity_for_component(
                         world, entity, table_type, component);
                 }
 
@@ -486,45 +592,6 @@ bool match_table(
     return true;
 }
 
-static
-ecs_entity_t get_cascade_component(
-    ecs_query_t *query)
-{
-    ecs_sig_column_t *column = ecs_vector_first(query->sig.columns);
-    return column[query->sig.cascade_by - 1].is.component;
-}
-
-static
-int table_compare(
-    const void *t1,
-    const void *t2)
-{
-    const ecs_matched_table_t *table_1 = t1;
-    const ecs_matched_table_t *table_2 = t2;
-
-    return table_1->depth - table_2->depth;
-}
-
-static
-void order_cascade_tables(
-    ecs_world_t *world,
-    ecs_query_t *query)
-{
-    int32_t i, count = ecs_vector_count(query->tables);
-    ecs_entity_t cascade_component = get_cascade_component(query);
-
-    for (i = 0; i < count; i ++) {
-        ecs_matched_table_t *table_data = ecs_vector_get(
-            query->tables, ecs_matched_table_t, i);
-
-        ecs_type_t type = table_data->table->type;
-        table_data->depth = ecs_type_container_depth(
-            world, type, cascade_component);
-    }
-
-    ecs_vector_sort(query->tables, ecs_matched_table_t, table_compare);
-}
-
 /** Match existing tables against system (table is created before system) */
 static
 void match_tables(
@@ -542,9 +609,7 @@ void match_tables(
         }
     }
 
-    if (query->sig.cascade_by) {
-        order_cascade_tables(world, query);
-    }
+    order_ranked_tables(world, query);
 }
 
 /** Get index of table in system's matched tables */
@@ -733,24 +798,21 @@ ecs_entity_t e_from_helper(
 }
 
 static
-void build_sorted_tables(
+void build_sorted_table_range(
     ecs_world_t *world,
-    ecs_query_t *query)
+    ecs_query_t *query,
+    int32_t start,
+    int32_t end)
 {
     ecs_entity_t component = query->sort_on_component;
     ecs_compare_action_t compare = query->compare;
 
-    /* Clean previous sorted tables */
-    ecs_vector_free(query->table_ranges);
-    query->table_ranges = NULL;
-
     /* Fetch data from all matched tables */
-    int32_t table_count = ecs_vector_count(query->tables);
     ecs_matched_table_t *tables = ecs_vector_first(query->tables);
-    sort_helper_t *helper = ecs_os_malloc(table_count * sizeof(sort_helper_t));
+    sort_helper_t *helper = ecs_os_malloc((end - start) * sizeof(sort_helper_t));
 
     int i, to_sort = 0;
-    for (i = 0; i < table_count; i ++) {
+    for (i = start; i < end; i ++) {
         ecs_matched_table_t *table = &tables[i];
         ecs_data_t *data = ecs_table_get_data(world, table->table);
         if (!data || !data->columns || !ecs_table_count(table->table)) {
@@ -825,7 +887,35 @@ void build_sorted_tables(
 }
 
 static
-void sort_query_tables(
+void build_sorted_tables(
+    ecs_world_t *world,
+    ecs_query_t *query)
+{
+    /* Clean previous sorted tables */
+    ecs_vector_free(query->table_ranges);
+    query->table_ranges = NULL;
+
+    int32_t i, count = ecs_vector_count(query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables);
+    ecs_matched_table_t *table = NULL;
+
+    int32_t start = 0, rank = 0;
+    for (i = 0; i < count; i ++) {
+        table = &tables[i];
+        if (rank != table->rank && start != i) {
+            build_sorted_table_range(world, query, start, i);
+            start = i;
+            rank = table->rank;
+        }
+    }
+
+    if (start != i) {
+        build_sorted_table_range(world, query, start, i);
+    }    
+}
+
+static
+void sort_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
@@ -885,6 +975,7 @@ void sort_query_tables(
         build_sorted_tables(world, query);
     }
 }
+
 
 /* -- Private API -- */
 
@@ -947,6 +1038,8 @@ void ecs_query_activate_table(
             }
         }
     }
+
+    order_ranked_tables(world, query);
 }
 
 /* Remove table */
@@ -1000,11 +1093,7 @@ void ecs_rematch_query(
         }
     }
 
-    /* If the system has a CASCADE column and modifications were made, 
-        * reorder the system tables so that the depth order is preserved */
-    if (query->sig.cascade_by) {
-        order_cascade_tables(world, query);
-    }
+    order_ranked_tables(world, query);
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
@@ -1044,6 +1133,11 @@ ecs_query_t* ecs_query_new_w_sig(
         add_table(world, result, NULL);
     } else {
         match_tables(world, result);
+    }
+
+    if (result->sig.cascade_by) {
+        result->rank_on_component = result->sig.cascade_by;
+        result->rank_table = rank_by_depth;
     }
 
     ecs_trace_pop();
@@ -1089,7 +1183,7 @@ ecs_query_iter_t ecs_query_iter(
 {
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    sort_query_tables(query->world, query);
+    sort_tables(query->world, query);
 
     int32_t table_count;
     if (query->table_ranges) {
@@ -1233,11 +1327,27 @@ void ecs_query_sort(
     ecs_vector_free(query->table_ranges);
     query->table_ranges = NULL;
 
-    sort_query_tables(world, query);    
+    sort_tables(world, query);    
 
     if (!query->table_ranges) {
         build_sorted_tables(world, query);
     }
+}
+
+void ecs_query_sort_types(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t sort_component,
+    ecs_rank_type_action_t rank_table)
+{
+    query->rank_on_component = sort_component;
+    query->rank_table = rank_table;
+
+    rank_tables(world, query);
+
+    order_ranked_tables(world, query);
+
+    build_sorted_tables(world, query);
 }
 
 /* -- Debug functionality -- */

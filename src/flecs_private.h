@@ -46,12 +46,6 @@ bool ecs_components_contains_component(
     ecs_entity_t flags,
     ecs_entity_t *entity_out);
 
-ecs_entity_t ecs_get_entity_for_component(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_type_t type_id,
-    ecs_entity_t component);
-
 void ecs_clear_w_filter(
     ecs_world_t *world,
     const ecs_filter_t *filter);

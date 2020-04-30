@@ -172,7 +172,7 @@ typedef struct ecs_matched_table_t {
     int32_t *columns;               /* Mapping of system columns to table */
     ecs_entity_t *components;       /* Actual components of system columns */
     ecs_vector_t *references;       /* Reference columns and cached pointers */
-    int32_t depth;                  /* Rank used to sort tables */
+    int32_t rank;                   /* Rank used to sort tables */
     int32_t *monitor;               /* Used to monitor table for changes */
 } ecs_matched_table_t;
 
@@ -201,15 +201,15 @@ typedef struct ecs_sig_t {
     bool needs_tables;          /* Does signature match with tables */
 
     /* Precomputed types for quick comparisons */
-    ecs_type_t not_from_self;      /* Exclude components from self */
-    ecs_type_t not_from_owned;     /* Exclude components from self only if owned */
-    ecs_type_t not_from_shared;    /* Exclude components from self only if shared */
-    ecs_type_t not_from_container; /* Exclude components from components */
-    ecs_type_t and_from_self;      /* Which components are required from entity */
-    ecs_type_t and_from_owned;     /* Which components are required from entity */
-    ecs_type_t and_from_shared;    /* Which components are required from entity */
-    ecs_type_t and_from_system;    /* Used to auto-add components to system */
-    ecs_type_t and_from_container; /* Used to auto-add components to system */
+    ecs_vector_t *not_from_self;      /* Exclude components from self */
+    ecs_vector_t *not_from_owned;     /* Exclude components from self only if owned */
+    ecs_vector_t *not_from_shared;    /* Exclude components from self only if shared */
+    ecs_vector_t *not_from_container; /* Exclude components from components */
+    ecs_vector_t *and_from_self;      /* Which components are required from entity */
+    ecs_vector_t *and_from_owned;     /* Which components are required from entity */
+    ecs_vector_t *and_from_shared;    /* Which components are required from entity */
+    ecs_vector_t *and_from_system;    /* Used to auto-add components to system */
+    ecs_vector_t *and_from_container; /* Used to auto-add components to system */
 } ecs_sig_t;
 
 typedef struct ecs_table_range_t {
@@ -233,10 +233,14 @@ struct ecs_query_t {
     /* Handle to system (optional) */
     ecs_entity_t system;   
 
-    /* Members used for sorting */
+    /* Used for sorting */
     ecs_entity_t sort_on_component;
     ecs_compare_action_t compare;   
     ecs_vector_t *table_ranges;     
+
+    /* Used for table sorting */
+    ecs_entity_t rank_on_component;
+    ecs_rank_type_action_t rank_table;
 };
 
 

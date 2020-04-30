@@ -617,13 +617,26 @@ int32_t count_occurrences(
     return count;
 }
 
+#ifndef NDEBUG
+static
+char *entities_to_str(
+    ecs_world_t *world,
+    ecs_entities_t *entities)
+{
+    ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, entities->count);
+    ecs_entity_t *array = ecs_vector_first(vec);
+    memcpy(array, entities->array, sizeof(ecs_entity_t) * entities->count);
+    ecs_vector_set_count(&vec, ecs_entity_t, entities->count);
+    return ecs_type_str(world, vec);
+}
+#endif
+
 static
 void verify_constraints(
     ecs_world_t *world,
     ecs_entities_t *entities)
 {
     int i, count = entities->count;
-
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities->array[i];
         ecs_entity_t mask = e & ECS_TYPE_FLAG_MASK;
@@ -637,15 +650,15 @@ void verify_constraints(
         switch(mask) {
         case ECS_OR:
             ecs_assert(matches >= 1, ECS_TYPE_CONSTRAINT_VIOLATION, 
-                ecs_get_name(world, entity));
+                entities_to_str(world, entities));
             break;
         case ECS_XOR:
             ecs_assert(matches == 1, ECS_TYPE_CONSTRAINT_VIOLATION, 
-                ecs_get_name(world, entity));
+                entities_to_str(world, entities));
             break;
         case ECS_NOT:
             ecs_assert(matches == 0, ECS_TYPE_CONSTRAINT_VIOLATION, 
-                ecs_get_name(world, entity));    
+                entities_to_str(world, entities));    
             break;
         }
     }

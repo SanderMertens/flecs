@@ -118,42 +118,6 @@ ecs_type_t ecs_type_remove_intern(
     return table->type;
 }
 
-int32_t ecs_type_container_depth(
-   ecs_world_t *world,
-   ecs_type_t type,
-   ecs_entity_t component)     
-{
-    int result = 0;
-
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type);
-
-    for (i = count - 1; i >= 0; i --) {
-        if (array[i] & ECS_CHILDOF) {
-            ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_ENTITY_MASK);
-            int32_t j, c_count = ecs_vector_count(c_type);
-            ecs_entity_t *c_array = ecs_vector_first(c_type);
-
-            for (j = 0; j < c_count; j ++) {
-                if (c_array[j] == component) {
-                    result ++;
-                    result += ecs_type_container_depth(world, c_type, component);
-                    break;
-                }
-            }
-
-            if (j != c_count) {
-                break;
-            }
-        } else if (!(array[i] & ECS_TYPE_FLAG_MASK)) {
-            /* No more parents after this */
-            break;
-        }
-    }
-
-    return result;
-}
-
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
 ecs_entity_t ecs_type_contains(
     ecs_world_t *world,
@@ -479,4 +443,30 @@ char* ecs_type_str(
     char* result = ecs_os_strdup(ecs_vector_first(chbuf));
     ecs_vector_free(chbuf);
     return result;
+}
+
+ecs_entity_t ecs_type_get_entity_for_xor(
+    ecs_world_t *world,
+    ecs_type_t type,
+    ecs_entity_t xor)
+{
+    ecs_assert(
+        ecs_type_has_owned_entity(world, type, ECS_XOR | xor, true),
+        ECS_INVALID_PARAMETER, NULL);
+
+    EcsType *type_ptr = ecs_get_ptr(world, xor, EcsType);
+    ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_type_t xor_type = type_ptr->normalized;
+    ecs_assert(xor_type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t i, count = ecs_vector_count(type);
+    ecs_entity_t *array = ecs_vector_first(type);
+    for (i = 0; i < count; i ++) {
+        if (ecs_type_has_owned_entity(world, xor_type, array[i], true)) {
+            return array[i];
+        }
+    }
+
+    return 0;
 }
