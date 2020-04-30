@@ -833,8 +833,8 @@ void ecs_table_merge(
             size = sizeof(ecs_entity_t);
         }
 
-        if ((new_component & ECS_ENTITY_FLAGS_MASK) || 
-            (old_component & ECS_ENTITY_FLAGS_MASK)) 
+        if ((new_component & ECS_TYPE_FLAG_MASK) || 
+            (old_component & ECS_TYPE_FLAG_MASK)) 
         {
             break;
         }
@@ -936,8 +936,8 @@ void ecs_table_move(
         ecs_entity_t new_component = new_components[i_new];
         ecs_entity_t old_component = old_components[i_old];
 
-        if ((new_component & ECS_ENTITY_FLAGS_MASK) || 
-            (old_component & ECS_ENTITY_FLAGS_MASK)) 
+        if ((new_component & ECS_TYPE_FLAG_MASK) || 
+            (old_component & ECS_TYPE_FLAG_MASK)) 
         {
             break;
         }

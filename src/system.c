@@ -470,8 +470,8 @@ void ecs_enable(
         ecs_enable_intern(world, system, system_data, enabled, true);
     } else {
         /* If entity is neither ColSystem nor RowSystem, it should be a type */
-        EcsTypeComponent *type_data = ecs_get_ptr(
-            world, system, EcsTypeComponent);
+        EcsType *type_data = ecs_get_ptr(
+            world, system, EcsType);
 
         assert(type_data != NULL);
 

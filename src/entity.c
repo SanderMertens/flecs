@@ -262,7 +262,7 @@ void override_component(
     do {
         ecs_entity_t e = type_array[i];
 
-        if (e < ECS_ENTITY_FLAGS_START) {
+        if (e < ECS_TYPE_FLAG_START) {
             break;
         }
 
@@ -1782,7 +1782,7 @@ ecs_type_t ecs_type_from_entity(
         return NULL;
     }
 
-    EcsTypeComponent *type = ecs_get_ptr(world, entity, EcsTypeComponent);
+    EcsType *type = ecs_get_ptr(world, entity, EcsType);
     if (type) {
         return type->normalized;
     }

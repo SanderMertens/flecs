@@ -79,6 +79,14 @@ char* parse_complex_elem(
             *flags = ECS_CHILDOF;
         } else if (!strncmp(bptr, "INSTANCEOF", or - bptr)) {
             *flags = ECS_INSTANCEOF;
+        } else if (!strncmp(bptr, "AND", or - bptr)) {
+            *flags = ECS_AND;
+        } else if (!strncmp(bptr, "OR", or - bptr)) {
+            *flags = ECS_OR;
+        } else if (!strncmp(bptr, "XOR", or - bptr)) {
+            *flags = ECS_XOR;
+        } else if (!strncmp(bptr, "NOT", or - bptr)) {
+            *flags = ECS_NOT;
         } else {
             ecs_parser_error(
                 system_id, sig, column + or - bptr,

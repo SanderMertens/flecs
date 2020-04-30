@@ -119,9 +119,9 @@ typedef struct ecs_writer_t {
 //// Error API
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_ENTITY_FLAGS_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF))
-#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ENTITY_FLAGS_MASK)
-#define ECS_ENTITY_FLAGS_START ECS_CHILDOF
+#define ECS_TYPE_FLAG_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF | ECS_AND | ECS_OR | ECS_XOR | ECS_NOT))
+#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_TYPE_FLAG_MASK)
+#define ECS_TYPE_FLAG_START ECS_CHILDOF
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -263,6 +263,7 @@ void _ecs_parser_error(
 #define ECS_DESERIALIZE_FORMAT_ERROR (39)
 #define ECS_INVALID_REACTIVE_SIGNATURE (40)
 #define ECS_INCONSISTENT_COMPONENT_NAME (41)
+#define ECS_TYPE_CONSTRAINT_VIOLATION (42)
 
 /** Declare type variable */
 #define ECS_TYPE_VAR(type)\

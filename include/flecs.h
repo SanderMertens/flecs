@@ -44,7 +44,6 @@ extern "C" {
 
 typedef struct ecs_world_t ecs_world_t;
 typedef struct ecs_query_t ecs_query_t;
-typedef struct ecs_query_t ecs_query_t;
 typedef struct ecs_stage_t ecs_stage_t;
 typedef struct ecs_record_t ecs_record_t;
 typedef struct ecs_table_t ecs_table_t;
@@ -259,10 +258,10 @@ typedef struct EcsSystem {
 } EcsSystem;
 
 /** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
-typedef struct EcsTypeComponent {
+typedef struct EcsType {
     ecs_type_t type;        /* Preserved nested types */
     ecs_type_t normalized;  /* Resolved nested types */
-} EcsTypeComponent;
+} EcsType;
 
 typedef struct EcsParent {
     /* The tables with child entities for this parent. Useful when doing depth-
@@ -300,9 +299,22 @@ typedef struct EcsTickSource {
 //// Public constants
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Type masks used for marking entities as base or parent */
-#define ECS_INSTANCEOF ((ecs_entity_t)1 << 63)
-#define ECS_CHILDOF ((ecs_entity_t)1 << 62) 
+/* Type flags are used to indicate the role of an entity in a type. No flag  
+ * means a regular component / tag. */
+#define ECS_INSTANCEOF ((ecs_entity_t)1 << 63)/* Share components with entity */
+#define ECS_CHILDOF ((ecs_entity_t)1 << 62)   /* Entity is a parent */
+
+/* The following type flags operate on a type entity, and add constraints to
+ * what a type can and can't have. In this example 'Movable' MUST have either
+ * Velocity or Speed, or creation of the type will fail.
+ *
+ * ECS_TYPE(world, SpeedType, Velocity, Speed);
+ * ECS_TYPE(world, Movable, Position, XOR | SpeedType, Velocity);
+ */
+#define ECS_AND ((ecs_entity_t)1 << 61) /* All entities of type must be present */
+#define ECS_OR ((ecs_entity_t)1 << 60)  /* At least one entity of type must be present */
+#define ECS_XOR ((ecs_entity_t)1 << 59) /* Exactly one entity of type must be present */
+#define ECS_NOT ((ecs_entity_t)1 << 58) /* None of the entities in the type can be added */
 
 /** Type handles to builtin components */
 FLECS_EXPORT
@@ -310,7 +322,7 @@ extern ecs_type_t
     TEcsComponent,
     TEcsComponentLifecycle,
     TEcsTrigger,
-    TEcsTypeComponent,
+    TEcsType,
     TEcsParent,
     TEcsPrefab,
     TEcsSystem,
@@ -327,7 +339,7 @@ extern ecs_type_t
 #define EEcsComponent (1)
 #define EEcsComponentLifecycle (2)
 #define EEcsTrigger (3)
-#define EEcsTypeComponent (4)
+#define EEcsType (4)
 #define EEcsParent (5)
 #define EEcsPrefab (6)
 #define EEcsSystem (7)

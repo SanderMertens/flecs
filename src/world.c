@@ -5,7 +5,7 @@
 ecs_type_t TEcsComponent;
 ecs_type_t TEcsComponentLifecycle;
 ecs_type_t TEcsTrigger;
-ecs_type_t TEcsTypeComponent;
+ecs_type_t TEcsType;
 ecs_type_t TEcsParent;
 ecs_type_t TEcsPrefab;
 ecs_type_t TEcsSystem;
@@ -21,7 +21,7 @@ ecs_type_t TEcsTickSource;
 static const char *ECS_COMPONENT_NAME =      "EcsComponent";
 static const char *ECS_COMPONENT_LIFECYCLE_NAME = "EcsComponentLifecycle";
 static const char *ECS_COMPONENT_TRIGGER_NAME = "EcsTrigger";
-static const char *ECS_TYPE_COMPONENT_NAME = "EcsTypeComponent";
+static const char *ECS_TYPE_NAME =           "EcsType";
 static const char *ECS_PARENT_NAME =         "EcsParent";
 static const char *ECS_PREFAB_NAME =         "EcsPrefab";
 static const char *ECS_SYSTEM_NAME =         "EcsSystem";
@@ -71,7 +71,7 @@ void bootstrap_types(
     
     TEcsComponent = bootstrap_type(world, EEcsComponent);
     TEcsComponentLifecycle = bootstrap_type(world, EEcsComponentLifecycle);
-    TEcsTypeComponent = bootstrap_type(world, EEcsTypeComponent);
+    TEcsType = bootstrap_type(world, EEcsType);
     TEcsParent = bootstrap_type(world, EEcsParent);
     TEcsPrefab = bootstrap_type(world, EEcsPrefab);
     TEcsColSystem = bootstrap_type(world, EEcsColSystem);
@@ -84,7 +84,7 @@ void bootstrap_types(
     TEcsTickSource = bootstrap_type(world, EEcsTickSource);
 
     world->t_component = ecs_type_merge_intern(world, stage, TEcsComponent, TEcsName, 0);
-    world->t_type = ecs_type_merge_intern(world, stage, TEcsTypeComponent, TEcsName, 0);
+    world->t_type = ecs_type_merge_intern(world, stage, TEcsType, TEcsName, 0);
     world->t_prefab = ecs_type_merge_intern(world, stage, TEcsPrefab, TEcsName, 0);
     world->t_col_system = ecs_type_merge_intern(world, stage, TEcsColSystem, TEcsName, 0);
 
@@ -491,7 +491,7 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsComponent, ECS_COMPONENT_NAME, sizeof(EcsComponent));
     bootstrap_component(world, table, EEcsComponentLifecycle, ECS_COMPONENT_LIFECYCLE_NAME, sizeof(EcsComponentLifecycle));
     bootstrap_component(world, table, EEcsTrigger, ECS_COMPONENT_TRIGGER_NAME, sizeof(EcsTrigger));
-    bootstrap_component(world, table, EEcsTypeComponent, ECS_TYPE_COMPONENT_NAME, sizeof(EcsTypeComponent));
+    bootstrap_component(world, table, EEcsType, ECS_TYPE_NAME, sizeof(EcsType));
     bootstrap_component(world, table, EEcsParent, ECS_PARENT_NAME, sizeof(EcsParent));
     bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_NAME, 0);
     bootstrap_component(world, table, EEcsSystem, ECS_SYSTEM_NAME, sizeof(EcsSystem));

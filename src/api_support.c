@@ -50,33 +50,70 @@ int parse_type_action(
 }
 
 static
-EcsTypeComponent type_from_vec(
+EcsType type_from_vec(
     ecs_world_t *world,
     ecs_vector_t *vec)
 {
-    EcsTypeComponent result = {0, 0};
+    EcsType result = {0, 0};
     ecs_entity_t *array = ecs_vector_first(vec);
     int32_t i, count = ecs_vector_count(vec);
 
+    ecs_entities_t entities = {
+        .array = array,
+        .count = count
+    };
+
+    ecs_table_t *table = ecs_table_find_or_create(
+        world, &world->stage, &entities);
+    if (!table) {
+        return (EcsType){ 0 };
+    }    
+
+    result.type = table->type;
+
+    /* Create normalized type. A normalized type resolves all elements with an
+     * AND flag and appends them to the resulting type, where the default type
+     * maintains the original type hierarchy. */
+    ecs_vector_t *normalized = NULL;
+
     for (i = 0; i < count; i ++) {
-        ecs_entity_t entity = array[i];
+        ecs_entity_t e = array[i];
+        if (e & ECS_AND) {
+            ecs_entity_t entity = e & ECS_ENTITY_MASK;
+            EcsType *type_ptr = ecs_get_ptr(world, entity, EcsType);
+            ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
+                "flag must be applied to type");
 
-        ecs_type_t entity_type = ecs_type_find(world, &entity, 1);
-        ecs_type_t resolved_type = ecs_type_from_entity(world, entity);
-        assert(resolved_type != 0);
+            int j, count = ecs_vector_count(type_ptr->normalized);
+            ecs_entity_t *type_array = ecs_vector_first(type_ptr->normalized);
 
-        result.type = ecs_type_merge_intern(
-            world, &world->stage, result.type, entity_type, 0);
+            for (j = 0; j < count; j++) {
+                ecs_entity_t *el = ecs_vector_add(&normalized, ecs_entity_t);
+                *el = type_array[i];
+            }
+        }       
+    }
 
-        result.normalized = ecs_type_merge_intern(
-            world, &world->stage, result.normalized, resolved_type, 0);
+    /* Only get normalized type if it's different from the type */
+    if (normalized) {
+        ecs_entities_t normalized_array = {
+            .array = ecs_vector_first(normalized),
+            .count = ecs_vector_count(normalized)
+        };
+
+        ecs_table_t *norm_table = ecs_table_traverse_add(
+            world, &world->stage, table, &normalized_array, NULL);
+
+        result.normalized = norm_table->type;
+    } else {
+        result.normalized = result.type;
     }
 
     return result;
 }
 
 static
-EcsTypeComponent type_from_expr(
+EcsType type_from_expr(
     ecs_world_t *world,
     const char *id,
     const char *expr)
@@ -84,11 +121,11 @@ EcsTypeComponent type_from_expr(
     if (expr) {
         ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
         ecs_parse_expr(world, expr, parse_type_action, id, &vec);
-        EcsTypeComponent result = type_from_vec(world, vec);
+        EcsType result = type_from_vec(world, vec);
         ecs_vector_free(vec);
         return result;
     } else {
-        return (EcsTypeComponent){0, 0};
+        return (EcsType){0, 0};
     }
 }
 
@@ -116,7 +153,7 @@ ecs_entity_t ecs_new_entity(
     const char *name,
     const char *expr)
 {
-    EcsTypeComponent type = type_from_expr(world, name, expr);
+    EcsType type = type_from_expr(world, name, expr);
 
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
@@ -132,7 +169,7 @@ ecs_entity_t ecs_new_prefab(
     const char *name,
     const char *expr)
 {
-    EcsTypeComponent type = type_from_expr(world, name, expr);
+    EcsType type = type_from_expr(world, name, expr);
 
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
@@ -177,19 +214,19 @@ ecs_entity_t ecs_new_type(
     const char *expr)
 {
     assert(world->magic == ECS_WORLD_MAGIC);  
-    EcsTypeComponent type = type_from_expr(world, name, expr);
+    EcsType type = type_from_expr(world, name, expr);
     
-    ecs_entity_t result = lookup(world, name, ecs_type(EcsTypeComponent));
+    ecs_entity_t result = lookup(world, name, ecs_type(EcsType));
     if (!result) {
         result = ecs_set(world, result, EcsName, {name});
-        ecs_set(world, result, EcsTypeComponent, {
+        ecs_set(world, result, EcsType, {
             .type = type.type, .normalized = type.normalized
         });        
 
         /* This will allow the type to show up in debug tools */
         ecs_map_set(world->type_handles, (uintptr_t)type.type, &result);
     } else {
-        EcsTypeComponent *ptr = ecs_get_ptr(world, result, EcsTypeComponent);
+        EcsType *ptr = ecs_get_ptr(world, result, EcsType);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (ptr->type != type.type || 

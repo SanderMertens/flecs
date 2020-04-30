@@ -560,7 +560,7 @@ void StatsCollectTableStats(ecs_rows_t *rows) {
 
 static
 void StatsCollectTypeStats(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, EcsTypeComponent, type_component, 1);
+    ECS_COLUMN(rows, EcsType, type_component, 1);
     ECS_COLUMN(rows, EcsTypeStats, stats, 2);
 
     ecs_world_t *world = rows->world;
@@ -683,7 +683,7 @@ void FlecsStatsImport(
         SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
 
     ECS_SYSTEM(world, StatsAddTypeStats, EcsOnStore,
-        EcsTypeComponent, [out] !EcsTypeStats,
+        EcsType, [out] !EcsTypeStats,
         SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
 
     /* -- Metrics collection systems -- */
@@ -732,7 +732,7 @@ void FlecsStatsImport(
         ecs_type(EcsTablePtr));
 
     ECS_SYSTEM(world, StatsCollectTypeStats, EcsPostLoad,
-        EcsTypeComponent, [out] EcsTypeStats,
+        EcsType, [out] EcsTypeStats,
         SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
 
     /* Export components to module */

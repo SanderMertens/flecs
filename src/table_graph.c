@@ -81,6 +81,10 @@ void init_edges(
             table->flags |= EcsTableHasComponentData;
         }
 
+        if (e & ECS_XOR) {
+            table->flags |= EcsTableHasXor;
+        }
+
         if (e & ECS_INSTANCEOF) {
             table->flags |= EcsTableHasPrefab;
         }
@@ -165,6 +169,7 @@ static
 void add_entity_to_type(
     ecs_type_t type,
     ecs_entity_t add,
+    ecs_entity_t replace,
     ecs_entities_t *out)
 {
     uint32_t count = ecs_vector_count(type);
@@ -174,6 +179,10 @@ void add_entity_to_type(
     int i, el = 0;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
+        if (e == replace) {
+            continue;
+        }
+
         if (e > add && !added) {
             out->array[el ++] = add;
             added = true;
@@ -185,8 +194,10 @@ void add_entity_to_type(
     }
 
     if (!added) {
-        out->array[el] = add;
+        out->array[el ++] = add;
     }
+
+    out->count = el;
 }
 
 static
@@ -269,7 +280,40 @@ ecs_table_t *find_or_create_table_include(
         .count = count + 1
     };
 
-    add_entity_to_type(type, add, &entities);
+    /* If table has a XOR column, check if the entity that is being added to the
+     * table is part of the XOR type, and if it is, find the current entity in
+     * the table type matching the XOR type. This entity must be replaced in
+     * the new table, to ensure the XOR constraint isn't violated. */
+    ecs_entity_t replace = 0;
+    if (node->flags & EcsTableHasXor) {
+        ecs_entity_t *array = ecs_vector_first(type);
+        int32_t i, count = ecs_vector_count(type);
+        ecs_type_t xor_type = NULL;
+
+        for (i = count - 1; i >= 0; i --) {
+            ecs_entity_t e = array[i];
+            if (e & ECS_XOR) {
+                ecs_entity_t type = e & ECS_ENTITY_MASK;
+                EcsType *type_ptr = ecs_get_ptr(world, type, EcsType);
+                ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                if (ecs_type_has_owned_entity(
+                    world, type_ptr->normalized, add, true)) 
+                {
+                    xor_type = type_ptr->normalized;
+                }
+            } else if (xor_type) {
+                if (ecs_type_has_owned_entity(world, xor_type, e, true)) {
+                    replace = e;
+                    break;
+                }
+            }
+        }
+
+        ecs_assert(!xor_type || replace != 0, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    add_entity_to_type(type, add, replace, &entities);
 
     ecs_table_t *result = ecs_table_find_or_create(world, stage, &entities);
     
@@ -545,7 +589,70 @@ void ecs_entity_array_dedup(
 }
 
 static
-ecs_table_t *ecs_table_find_or_create_intern(
+int32_t count_occurrences(
+    ecs_world_t *world,
+    ecs_entities_t *entities,
+    ecs_entity_t entity,
+    int32_t constraint_index)    
+{
+    EcsType *type_ptr = ecs_get_ptr(world, entity, EcsType);
+    ecs_assert(type_ptr != NULL, 
+        ECS_INVALID_PARAMETER, "flag must be applied to type");
+
+    ecs_type_t type = type_ptr->normalized;
+    int32_t count = 0;
+    
+    int i;
+    for (i = 0; i < constraint_index; i ++) {
+        ecs_entity_t e = entities->array[i];
+        if (e & ECS_TYPE_FLAG_MASK) {
+            break;
+        }
+
+        if (ecs_type_has_entity(world, type, e)) {
+            count ++;
+        }
+    }
+
+    return count;
+}
+
+static
+void verify_constraints(
+    ecs_world_t *world,
+    ecs_entities_t *entities)
+{
+    int i, count = entities->count;
+
+    for (i = count - 1; i >= 0; i --) {
+        ecs_entity_t e = entities->array[i];
+        ecs_entity_t mask = e & ECS_TYPE_FLAG_MASK;
+        if (!mask || !(mask & (ECS_OR | ECS_XOR | ECS_NOT))) {
+            break;
+        }
+
+        ecs_entity_t entity = e & ECS_ENTITY_MASK;
+        int32_t matches = count_occurrences(world, entities, entity, i);
+
+        switch(mask) {
+        case ECS_OR:
+            ecs_assert(matches >= 1, ECS_TYPE_CONSTRAINT_VIOLATION, 
+                ecs_get_name(world, entity));
+            break;
+        case ECS_XOR:
+            ecs_assert(matches == 1, ECS_TYPE_CONSTRAINT_VIOLATION, 
+                ecs_get_name(world, entity));
+            break;
+        case ECS_NOT:
+            ecs_assert(matches == 0, ECS_TYPE_CONSTRAINT_VIOLATION, 
+                ecs_get_name(world, entity));    
+            break;
+        }
+    }
+}
+
+static
+ecs_table_t *find_or_create(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *root,
@@ -604,6 +711,9 @@ ecs_table_t *ecs_table_find_or_create_intern(
                     .count = i + 1
                 };
 
+                /* Check for constraint violations */
+                verify_constraints(world, &table_entities);
+
                 /* If the original array is ordered and the edge was empty, 
                     * the table does not exist, so create it */
                 if (stage != &world->stage) {
@@ -615,8 +725,8 @@ ecs_table_t *ecs_table_find_or_create_intern(
                         * eventually the main stage will have tables for all of
                         * the entity types. */
                     if (root == &world->stage.root) {
-                        return ecs_table_find_or_create_intern(
-                            world, stage, &stage->root, entities);
+                        return find_or_create(
+                            world, stage, &stage->root, &table_entities);
                     } else {
                         /* If we are staged and we were looking in the table
                             * root of the stage, the table doesn't exist yet
@@ -634,22 +744,20 @@ ecs_table_t *ecs_table_find_or_create_intern(
                     table = create_table(world, stage, &table_entities);
                 }
             } else {
-                uint32_t count_now = i + 1;
-
                 /* Create an ordered array if we don't have one yet */
                 if (!ordered_entities) {
                     ordered_entities = ecs_os_alloca(ecs_entity_t, count);
                 }
                 
                 memcpy(ordered_entities, array, 
-                    count_now * sizeof(ecs_entity_t));
+                    count * sizeof(ecs_entity_t));
 
-                qsort(ordered_entities, count_now, 
+                qsort(ordered_entities, count, 
                     sizeof(ecs_entity_t), ecs_entity_compare);
 
                 ecs_entities_t table_entities = {
                     .array = ordered_entities,
-                    .count = count_now
+                    .count = count
                 };
 
                 /* Now that the array is sorted, dedup */
@@ -657,8 +765,8 @@ ecs_table_t *ecs_table_find_or_create_intern(
 
                 /* If the original array is unordered we want to check if an
                 * existing table can be found using the ordered array */
-                table = ecs_table_find_or_create_intern(
-                    world, stage, root, &table_entities);                                
+                table = find_or_create(
+                    world, stage, root, &table_entities);                            
             }
 
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -679,7 +787,7 @@ ecs_table_t *ecs_table_find_or_create(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    return ecs_table_find_or_create_intern(
+    return find_or_create(
         world, stage, &world->stage.root, components);
 }
 

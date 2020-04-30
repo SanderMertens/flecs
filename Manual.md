@@ -888,7 +888,7 @@ Flecs uses a set of builtin components to implement some of its features. Some o
 Name | Description | Access
 -----|-------------|-------
 EcsComponent | Stores the size of a component | Read
-EcsTypeComponent | Stores information about a named type | Opaque 
+EcsType | Stores information about a named type | Opaque 
 EcsPrefab | Indicates that entity can be used as prefab, stores optional prefab parent | Read / Write
 EcsPrefabParent | Internal data for prefab parents | Opaque 
 EcsPrefabBuilder | Internal data for prefab parents | Opaque 

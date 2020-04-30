@@ -145,7 +145,7 @@ int32_t ecs_type_container_depth(
             if (j != c_count) {
                 break;
             }
-        } else if (!(array[i] & ECS_ENTITY_FLAGS_MASK)) {
+        } else if (!(array[i] & ECS_TYPE_FLAG_MASK)) {
             /* No more parents after this */
             break;
         }
@@ -413,7 +413,7 @@ char* ecs_type_str(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t h;
-        ecs_entity_t flags = split_entity_id(handles[i], &h) & ECS_ENTITY_FLAGS_MASK;
+        ecs_entity_t flags = split_entity_id(handles[i], &h) & ECS_TYPE_FLAG_MASK;
 
         if (i) {
             *(char*)ecs_vector_add(&chbuf, char) = ',';
@@ -429,6 +429,30 @@ char* ecs_type_str(
             int len = sizeof("CHILDOF|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             memcpy(dst, "CHILDOF|", len);
+        }
+
+        if (flags & ECS_XOR) {
+            int len = sizeof("XOR|") - 1;
+            dst = ecs_vector_addn(&chbuf, char, len);
+            memcpy(dst, "XOR|", len);
+        }
+
+        if (flags & ECS_OR) {
+            int len = sizeof("OR|") - 1;
+            dst = ecs_vector_addn(&chbuf, char, len);
+            memcpy(dst, "OR|", len);
+        }
+
+        if (flags & ECS_AND) {
+            int len = sizeof("AND|") - 1;
+            dst = ecs_vector_addn(&chbuf, char, len);
+            memcpy(dst, "AND|", len);
+        }        
+
+        if (flags & ECS_NOT) {
+            int len = sizeof("NOT|") - 1;
+            dst = ecs_vector_addn(&chbuf, char, len);
+            memcpy(dst, "NOT|", len);
         }
 
         const char *str = NULL;

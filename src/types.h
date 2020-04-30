@@ -133,6 +133,7 @@ struct ecs_data_t {
 #define EcsTableHasPrefab (4)
 #define EcsTableHasParent (8)
 #define EcsTableHasComponentData (16)
+#define EcsTableHasXor (32)
 
 /** Edge used for traversing the table graph */
 typedef struct ecs_edge_t {
@@ -171,7 +172,7 @@ typedef struct ecs_matched_table_t {
     int32_t *columns;               /* Mapping of system columns to table */
     ecs_entity_t *components;       /* Actual components of system columns */
     ecs_vector_t *references;       /* Reference columns and cached pointers */
-    int32_t depth;                  /* Depth of table (when using CASCADE) */
+    int32_t depth;                  /* Rank used to sort tables */
     int32_t *monitor;               /* Used to monitor table for changes */
 } ecs_matched_table_t;
 
