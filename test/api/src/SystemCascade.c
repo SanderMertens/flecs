@@ -60,7 +60,7 @@ void SystemCascade_cascade_depth_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
@@ -129,7 +129,7 @@ void SystemCascade_cascade_depth_2() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
@@ -227,7 +227,7 @@ void SystemCascade_add_after_match() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
@@ -294,7 +294,7 @@ void SystemCascade_adopt_after_match() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);

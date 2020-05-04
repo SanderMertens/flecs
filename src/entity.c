@@ -450,10 +450,11 @@ void run_component_trigger(
             .components = components,
             .entities = entities,
             .offset = row,
-            .count = count
+            .count = count,
         };
 
         for (i = 0; i < trigger_count; i ++) {
+            rows.system = triggers[i].self;
             rows.param = triggers[i].ctx;
             triggers[i].action(&rows);
         }
@@ -1445,7 +1446,7 @@ void ecs_bulk_add_remove_type(
 
         ecs_table_t *dst_table = ecs_table_traverse_remove(
             world, stage, table, &to_remove_components, NULL);
-
+        
         dst_table = ecs_table_traverse_add(
             world, stage, dst_table, &to_add_components, NULL);
 
@@ -1669,7 +1670,7 @@ const void* ecs_get_cached_ptr_w_entity(
     return cached_ptr->ptr;
 }
 
-void* ecs_get_mutable_w_entity(
+void* ecs_get_mut_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,
@@ -1711,6 +1712,8 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
     ecs_entity_info_t info;
     void *dst = get_mutable(world, entity, component, &info, NULL);
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (ptr) {
         memcpy(dst, ptr, size);
     } else {
@@ -1763,7 +1766,7 @@ const char* ecs_get_name(
         return "$";
     }
 
-    EcsName *id = ecs_get_ptr(world, entity, EcsName);
+    const EcsName *id = ecs_get_ptr(world, entity, EcsName);
 
     if (id) {
         return *id;
@@ -1782,7 +1785,7 @@ ecs_type_t ecs_type_from_entity(
         return NULL;
     }
 
-    EcsType *type = ecs_get_ptr(world, entity, EcsType);
+    const EcsType *type = ecs_get_ptr(world, entity, EcsType);
     if (type) {
         return type->normalized;
     }
@@ -1909,3 +1912,4 @@ void ecs_dbg_entity(
         dbg_out->type = info.table ? info.table->type : NULL;
     }
 }
+

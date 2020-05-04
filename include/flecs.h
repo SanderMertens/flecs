@@ -62,20 +62,6 @@ typedef uint64_t ecs_entity_t;
 /* A vector containing component identifiers used to describe an entity type. */
 typedef const ecs_vector_t* ecs_type_t;
 
-/** System kinds that determine when and how systems are ran */
-typedef enum ecs_system_kind_t {
-    EcsOnLoad,
-    EcsPostLoad,
-    EcsPreUpdate,
-    EcsOnUpdate,
-    EcsOnValidate,
-    EcsPostUpdate,
-    EcsPreStore,
-    EcsOnStore,
-    EcsManual,
-    EcsOnNew
-} ecs_system_kind_t;
-
 /* Trigger kinds enable specifying when a trigger is executed */
 typedef enum ecs_trigger_kind_t {
     EcsOnAdd,
@@ -239,6 +225,19 @@ typedef struct EcsComponent {
     size_t size;
 } EcsComponent;
 
+/** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
+typedef struct EcsType {
+    ecs_type_t type;        /* Preserved nested types */
+    ecs_type_t normalized;  /* Resolved nested types */
+} EcsType;
+
+/* Component that is automatically added to entities with children */
+typedef struct EcsParent {
+    /* The tables with child entities for this parent. Useful when doing depth-
+     * first walks */
+    ecs_vector_t *child_tables;
+} EcsParent;
+
 /* Component that contains lifecycle callbacks for a component */
 typedef struct EcsComponentLifecycle {
     ecs_xtor_t ctor;
@@ -253,27 +252,27 @@ typedef struct EcsTrigger {
     ecs_trigger_kind_t kind;
     ecs_iter_action_t action;
     ecs_entity_t component;
+    ecs_entity_t self;
     void *ctx;
 } EcsTrigger;
 
 /* Component used for registering systems */
 typedef struct EcsSystem {
-    ecs_system_kind_t kind;
     ecs_iter_action_t action;
     char *signature;
+    ecs_entity_t pipeline;
+    ecs_entity_t phase;
 } EcsSystem;
 
-/** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
-typedef struct EcsType {
-    ecs_type_t type;        /* Preserved nested types */
-    ecs_type_t normalized;  /* Resolved nested types */
-} EcsType;
+/* Pipeline for runing systems */
+typedef struct EcsPipeline {
+    ecs_type_t phases;
+} EcsPipeline;
 
-typedef struct EcsParent {
-    /* The tables with child entities for this parent. Useful when doing depth-
-     * first walks */
-    ecs_vector_t *child_tables;
-} EcsParent;
+/* Runtime properties of pipeline */
+typedef struct EcsPipelineQuery {
+    ecs_query_t *query;
+} EcsPipelineQuery;
 
 /** Component used for timer functionality */
 typedef struct EcsTimer {
@@ -336,7 +335,11 @@ extern ecs_type_t
     TEcsName,
     TEcsHidden,
     TEcsDisabled,
+    TEcsDisabledIntern,
+    TEcsInactive,
     TEcsOnDemand,
+    TEcsPipeline,
+    TEcsPipelineQuery,
     TEcsTimer,
     TEcsRateFilter,
     TEcsTickSource;
@@ -353,13 +356,29 @@ extern ecs_type_t
 #define EEcsName (9)
 #define EEcsHidden (10)
 #define EEcsDisabled (11)
-#define EEcsOnDemand (12)
-#define EEcsTimer (13)
-#define EEcsRateFilter (14)
-#define EEcsTickSource (15)
+#define EEcsDisabledIntern (12)
+#define EEcsInactive (13)
+#define EEcsOnDemand (14)
+#define EEcsPipeline (15)
+#define EEcsPipelineQuery (16)
+#define EEcsTimer (17)
+#define EEcsRateFilter (18)
+#define EEcsTickSource (19)
+
+/* Builtin pipeline tags */
+#define EcsPreFrame (20)
+#define EcsOnLoad (21)
+#define EcsPostLoad (22)
+#define EcsPreUpdate (23)
+#define EcsOnUpdate (24)
+#define EcsOnValidate (25)
+#define EcsPostUpdate (27)
+#define EcsPreStore (28)
+#define EcsOnStore (29)
+#define EcsPostFrame (30)
 
 /** Builtin entity ids */
-#define EcsWorld (16)
+#define EcsWorld (31)
 #define ECS_SINGLETON (EcsSingleton)
 
 /** Value used to quickly check if component is builtin */
@@ -585,31 +604,7 @@ void ecs_quit(
 FLECS_EXPORT
 bool ecs_progress(
     ecs_world_t *world,
-    float delta_time);
-
-/** Returns number of active systems.
- * This operation returns the number of currently active systems. Active systems
- * are systems that are both enabled and are matched with 1 or more entities. If
- * this operation returns 0, invoking ecs_progress will not run any systems.
- *
- * @param world The world.
- * @return The number of active systems.
- */
-FLECS_EXPORT
-int32_t ecs_active_system_count(
-    ecs_world_t *world);
-
-/** Returns number of inactive systems.
- * This operation returns the number of currently inactive systems. Inactive
- * systems are systems that are either disabled or do not match with any 
- * entities.
- *
- * @param world The world.
- * @return The number of inactive systems.
- */
-FLECS_EXPORT
-int32_t ecs_inactive_system_count(
-    ecs_world_t *world);    
+    float delta_time);   
 
 /** Set target frames per second (FPS) for application.
  * Setting the target FPS ensures that ecs_progress is not invoked faster than
@@ -1026,10 +1021,10 @@ const void* ecs_get_ptr_w_entity(
     ecs_entity_t component);
 
 #define ecs_get_ptr(world, entity, component)\
-    (component*)ecs_get_ptr_w_entity(world, entity, E##component)
+    (const component*)ecs_get_ptr_w_entity(world, entity, E##component)
 
 #define ecs_get(world, entity, component)\
-  (*(component*)ecs_get_ptr_w_entity(world, entity, E##component))
+  (*(const component*)ecs_get_ptr_w_entity(world, entity, E##component))
 
 
 /* -- Get cached -- */
@@ -1042,20 +1037,20 @@ const void* ecs_get_cached_ptr_w_entity(
     ecs_entity_t component);
 
 #define ecs_get_cached_ptr(world, cached_ptr, entity, component)\
-    (component*)ecs_get_cached_ptr_w_entity(world, cached_ptr, entity, E##component)
+    (const component*)ecs_get_cached_ptr_w_entity(world, cached_ptr, entity, E##component)
 
 
 /* -- Get mutable -- */
 
 FLECS_EXPORT
-void* ecs_get_mutable_w_entity(
+void* ecs_get_mut_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,
     bool *is_added);
 
-#define ecs_get_mutable(world, entity, component, is_added)\
-    ecs_get_mutable_w_entity(world, entity, ecs_entity(component), is_added)
+#define ecs_get_mut(world, entity, component, is_added)\
+    ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added)
 
 
 /* -- Modified -- */
@@ -2103,7 +2098,7 @@ ecs_entity_t ecs_import_from_library(
 #define ECS_MODULE(world, id)\
     ECS_COMPONENT(world, id);\
     ecs_set_ptr(world, EcsSingleton, id, NULL);\
-    id *handles = (id*)ecs_get_mutable(world, EcsSingleton, id, NULL);\
+    id *handles = (id*)ecs_get_mut(world, EcsSingleton, id, NULL);\
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can

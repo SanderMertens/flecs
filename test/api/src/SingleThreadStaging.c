@@ -3,6 +3,7 @@
 static
 void NewEmpty(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
+
     int i;
     for (i = 0; i < rows->count; i ++) {
         ctx->new_entities[ctx->entity_count] = ecs_new(rows->world, 0);
@@ -651,9 +652,11 @@ void Add_to_current(ecs_rows_t *rows) {
             ecs_add_entity(rows->world, rows->entities[i], ctx->component_2);
 
             test_assert( !!ecs_get_type(rows->world, rows->entities[i]));
-            test_assert( ecs_has_entity(rows->world,  rows->entities[i], ctx->component_2)); 
+            test_assert( ecs_has_entity(rows->world, rows->entities[i], ctx->component_2)); 
             test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_2) != NULL);           
         }
+
+        
 
         ctx->entity_count ++;
     }
@@ -730,6 +733,7 @@ void SingleThreadStaging_2_add_to_current() {
 static
 void Remove_from_current(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
+
     int i;
     for (i = 0; i < rows->count; i ++) {
         if (ctx->component) {
@@ -2094,7 +2098,7 @@ void SingleThreadStaging_add_to_current_in_on_add() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Add_to_current, EcsOnAdd, Position);
+    ECS_TRIGGER(world, Add_to_current, EcsOnAdd, Position, NULL);
 
     IterData ctx = {.component = ecs_entity(Velocity)};
     ecs_set_context(world, &ctx);
@@ -2121,7 +2125,7 @@ void SingleThreadStaging_remove_from_current_in_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Remove_from_current, EcsOnAdd, Position);
+    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position, NULL);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2147,7 +2151,7 @@ void SingleThreadStaging_add_to_current_in_on_set() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Add_to_current, EcsOnSet, Position);
+    ECS_TRIGGER(world, Add_to_current, EcsOnSet, Position, NULL);
 
     IterData ctx = {.component = ecs_entity(Velocity)};
     ecs_set_context(world, &ctx);
@@ -2165,7 +2169,7 @@ void SingleThreadStaging_add_to_current_in_on_set() {
     test_assert( ecs_has(world, e_2, Velocity));
     test_assert( ecs_has(world, e_3, Velocity));
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -2186,7 +2190,7 @@ void SingleThreadStaging_remove_from_current_in_on_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
+    ECS_TRIGGER(world, Remove_from_current, EcsOnSet, Position, NULL);
 
     IterData ctx = {.component = ecs_entity(Velocity)};
     ecs_set_context(world, &ctx);
@@ -2208,7 +2212,7 @@ void SingleThreadStaging_remove_from_current_in_on_set() {
     test_assert( !ecs_has(world, e_2, Velocity));
     test_assert( !ecs_has(world, e_3, Velocity));
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -2229,7 +2233,7 @@ void SingleThreadStaging_remove_set_component_in_on_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
+    ECS_TRIGGER(world, Remove_from_current, EcsOnSet, Position, NULL);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2260,7 +2264,7 @@ void SingleThreadStaging_remove_added_component_in_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Remove_from_current, EcsOnAdd, Position);
+    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position, NULL);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2287,7 +2291,7 @@ void SingleThreadStaging_remove_added_component_in_on_add_w_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Remove_from_current, EcsOnAdd, Position);
+    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position, NULL);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2333,8 +2337,8 @@ void SingleThreadStaging_on_add_in_on_add() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_SYSTEM(world, Add_to_current, EcsOnAdd, Position);
-    ECS_SYSTEM(world, Add_3_to_current, EcsOnAdd, Velocity);
+    ECS_TRIGGER(world, Add_to_current, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, Add_3_to_current, EcsOnAdd, Velocity, NULL);
 
     IterData ctx = {.component = ecs_entity(Velocity), .component_3 = ecs_entity(Mass)};
     ecs_set_context(world, &ctx);
@@ -2372,8 +2376,8 @@ void SingleThreadStaging_on_remove_in_on_add() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, Remove_from_current, EcsOnAdd, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnRemove, Velocity);
+    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, Dummy, EcsOnRemove, Velocity, NULL);
 
     IterData ctx = {.component = ecs_entity(Velocity)};
     ecs_set_context(world, &ctx);
@@ -2402,8 +2406,8 @@ void SingleThreadStaging_on_set_in_on_add() {
     ECS_COMPONENT(world, Rotation);
     ECS_COMPONENT(world, Mass);
 
-    ECS_SYSTEM(world, Set_current, EcsOnAdd, Position);
-    ECS_SYSTEM(world, Add_3_to_current, EcsOnSet, Rotation);
+    ECS_TRIGGER(world, Set_current, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, Add_3_to_current, EcsOnSet, Rotation, NULL);
 
     IterData ctx = {.component = ecs_entity(Rotation), .component_3 = ecs_entity(Mass)};
     ecs_set_context(world, &ctx);
@@ -2424,7 +2428,7 @@ void SingleThreadStaging_on_set_in_on_add() {
     test_assert( ecs_has(world, e_2, Mass));
     test_assert( ecs_has(world, e_3, Mass));
 
-    Rotation *r = ecs_get_ptr(world, e_1, Rotation);
+    const Rotation *r = ecs_get_ptr(world, e_1, Rotation);
     test_assert(r != NULL);
     test_int(*r, 10 + e_1);
 
@@ -2447,7 +2451,7 @@ void SingleThreadStaging_on_add_in_on_update() {
     ECS_COMPONENT(world, Mass);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
-    ECS_SYSTEM(world, Add_3_to_current, EcsOnAdd, Velocity);
+    ECS_TRIGGER(world, Add_3_to_current, EcsOnAdd, Velocity, NULL);
 
     IterData ctx = {.component = ecs_entity(Velocity), .component_3 = ecs_entity(Mass)};
     ecs_set_context(world, &ctx);
@@ -2481,7 +2485,7 @@ void SingleThreadStaging_on_remove_in_on_update() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, Remove_from_current, EcsOnUpdate, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnRemove, Velocity);
+    ECS_TRIGGER(world, Dummy, EcsOnRemove, Velocity, NULL);
 
     IterData ctx = {.component = ecs_entity(Velocity)};
     ecs_set_context(world, &ctx);
@@ -2567,7 +2571,7 @@ void SingleThreadStaging_match_table_created_w_add_in_on_set() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_SYSTEM(world, Add_to_current, EcsOnSet, Position);
+    ECS_TRIGGER(world, Add_to_current, EcsOnSet, Position, NULL);
     ECS_SYSTEM(world, On_PV, EcsOnUpdate, Position, Velocity);
 
     IterData add_ctx = {.component = ecs_entity(Velocity)};
@@ -2617,7 +2621,7 @@ void SingleThreadStaging_match_table_created_w_set_in_on_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Set_velocity, EcsOnSet, Position);
+    ECS_TRIGGER(world, Set_velocity, EcsOnSet, Position, NULL);
     ECS_SYSTEM(world, On_PV, EcsOnUpdate, Position, Velocity);
 
     IterData add_ctx = {.component = ecs_entity(Velocity)};
@@ -2714,7 +2718,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Set_velocity_on_new, EcsOnSet, Position);
+    ECS_TRIGGER(world, Set_velocity_on_new, EcsOnSet, Position, NULL);
     ECS_SYSTEM(world, On_V, EcsOnUpdate, Velocity);
 
     IterData add_ctx = {.component = ecs_entity(Velocity)};
@@ -2781,7 +2785,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Create_container, EcsOnSet, Position);
+    ECS_TRIGGER(world, Create_container, EcsOnSet, Position, NULL);
 
     /* Entity is not yet a container. Adding this entity to another entity would
      * cause an error */
@@ -2835,7 +2839,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Create_container_reverse, EcsOnSet, Position);
+    ECS_TRIGGER(world, Create_container_reverse, EcsOnSet, Position, NULL);
 
     /* Entity is not yet a container. Adding this entity to another entity would
      * cause an error */
@@ -2910,7 +2914,7 @@ void OverrideAfterRemove(ecs_rows_t *rows) {
         ecs_add(rows->world, rows->entities[i], Position);
         test_assert(ecs_has(rows->world, rows->entities[i], Position));
 
-        Position *p_ptr = ecs_get_ptr(rows->world, rows->entities[i], Position);
+        const Position *p_ptr = ecs_get_ptr(rows->world, rows->entities[i], Position);
         test_assert(p_ptr != NULL);
         test_int(p_ptr->x, 10);
         test_int(p_ptr->y, 20);
@@ -2940,7 +2944,7 @@ void SingleThreadStaging_override_after_remove_in_progress() {
     ecs_progress(world, 1);
 
     test_assert( ecs_has(world, e, Position));
-    Position *p_ptr = ecs_get_ptr(world, e, Position);
+    const Position *p_ptr = ecs_get_ptr(world, e, Position);
     test_assert(p_ptr != NULL);
     test_int(p_ptr->x, 10);
     test_int(p_ptr->y, 20);    
@@ -3002,7 +3006,7 @@ void AddInProgress(ecs_rows_t *rows) {
 
         /* Make sure we can now access velocity from stage */
         test_assert( ecs_has(world, rows->entities[i], Velocity));
-        Velocity *v_ptr = ecs_get_ptr(world, rows->entities[i], Velocity);
+        const Velocity *v_ptr = ecs_get_ptr(world, rows->entities[i], Velocity);
         test_assert(v_ptr != NULL);
         test_int(v_ptr->x, 2);
         test_int(v_ptr->y, 2);
@@ -3038,11 +3042,11 @@ void SingleThreadStaging_merge_once() {
     ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 1);
     test_int(p->y, 1);
 
-    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e, Velocity);
     test_int(v->x, 2);
     test_int(v->y, 2);
 
@@ -3069,7 +3073,7 @@ void MutableTest(ecs_rows_t *rows) {
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
         bool is_added;
-        Velocity *v_mut = ecs_get_mutable(
+        Velocity *v_mut = ecs_get_mut(
             world, rows->entities[i], Velocity, &is_added);
 
         test_assert(v_mut != NULL);
@@ -3113,7 +3117,7 @@ void SingleThreadStaging_get_mutable() {
     ecs_progress(world, 0);
     test_assert( ecs_has(world, e, Velocity));
     
-    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 1);
     test_int(v->y, 1);
@@ -3145,7 +3149,7 @@ void SingleThreadStaging_get_mutable_from_main() {
     ecs_progress(world, 0);
     test_assert( ecs_has(world, e, Velocity));
     
-    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 2);
     test_int(v->y, 2);
@@ -3173,7 +3177,7 @@ void MutableTest_w_Add(ecs_rows_t *rows) {
         ecs_add(world, rows->entities[i], MyTag);
 
         bool is_added;
-        Velocity *v_mut = ecs_get_mutable(
+        Velocity *v_mut = ecs_get_mut(
             world, rows->entities[i], Velocity, &is_added);
 
         // Even though component is added to stage, is_added should only be true
@@ -3217,7 +3221,7 @@ void SingleThreadStaging_get_mutable_w_add() {
     ecs_progress(world, 0);
     test_assert( ecs_has(world, e, Velocity));
     
-    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 1);
     test_int(v->y, 1);
@@ -3266,14 +3270,14 @@ void SingleThreadStaging_on_add_after_new_type_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, AddInProgress2, EcsOnUpdate, Position, .Velocity);
-    ECS_SYSTEM(world, OnAdd, EcsOnAdd, Velocity);
+    ECS_TRIGGER(world, OnAdd, EcsOnAdd, Velocity, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
 
     ecs_progress(world, 1);
 
     test_assert( ecs_has(world, e, Velocity));
-    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 1);
     test_int(v->y, 2);

@@ -28,9 +28,8 @@ void Count_count_2_components() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_ENTITY(world, e1, Type);
-
-    ECS_ENTITY(world, e2, Type);
+    ECS_ENTITY(world, e1, AND | Type);
+    ECS_ENTITY(world, e2, AND | Type);
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Velocity);
 
@@ -47,8 +46,8 @@ void Count_count_3_components() {
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity, Mass);
 
-    ECS_ENTITY(world, e1, Type);
-    ECS_ENTITY(world, e2, Type);
+    ECS_ENTITY(world, e1, AND | Type);
+    ECS_ENTITY(world, e2, AND | Type);
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Velocity);
     ECS_ENTITY(world, e5, Position, Velocity);
@@ -68,8 +67,8 @@ void Count_count_2_types_2_comps() {
     ECS_COMPONENT(world, Mass);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_ENTITY(world, e1, Type);
-    ECS_ENTITY(world, e2, Type);
+    ECS_ENTITY(world, e1, AND | Type);
+    ECS_ENTITY(world, e2, AND | Type);
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Velocity);
     ECS_ENTITY(world, e5, Position, Velocity, Mass);

@@ -117,7 +117,7 @@ int ecs_dbg_col_system(
     ecs_entity_t system,
     ecs_dbg_col_system_t *dbg_out)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     if (!system_data) {
         return -1;
     }
@@ -125,7 +125,7 @@ int ecs_dbg_col_system(
     *dbg_out = (ecs_dbg_col_system_t){.system = system};
     dbg_out->active_table_count = ecs_vector_count(system_data->query->tables);
     dbg_out->inactive_table_count = ecs_vector_count(system_data->query->inactive_tables);
-    dbg_out->enabled = system_data->enabled;
+    dbg_out->enabled = !ecs_has(world, system, EcsDisabled);
 
     ecs_matched_table_t *mt = ecs_vector_first(system_data->query->tables);
     int32_t i, count = ecs_vector_count(system_data->query->tables);
@@ -182,7 +182,7 @@ ecs_type_t ecs_dbg_get_column_type(
     ecs_entity_t system,
     int32_t column_index)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     if (!system_data) {
         return NULL;
     }

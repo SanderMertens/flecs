@@ -28,7 +28,7 @@ const void* get_shared_column(
 
 #ifndef NDEBUG
     if (size) {
-        EcsComponent *cdata = ecs_get_ptr(
+        const EcsComponent *cdata = ecs_get_ptr(
             rows->world, rows->references[-table_column - 1].component, 
             EcsComponent);
         ecs_assert(cdata != NULL, ECS_INTERNAL_ERROR, NULL);

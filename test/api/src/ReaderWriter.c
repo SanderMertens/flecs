@@ -146,7 +146,7 @@ int simple_test(int buffer_size) {
         test_assert( ecs_has(world, e2, Position));
         test_assert( ecs_has(world, e3, Position));
 
-        Position *
+        const Position *
         p = ecs_get_ptr(world, e1, Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
@@ -345,7 +345,7 @@ int id_w_simple_test(int buffer_size) {
         test_assert( ecs_has(world, e7, EcsName));
         test_assert( ecs_has(world, e8, EcsName));    
 
-        Position *
+        const Position *
         p = ecs_get_ptr(world, e1, Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
@@ -451,7 +451,7 @@ int unaligned_test(int buffer_size, int entity_count) {
         for (i = 0; i < entity_count; i ++) {
             test_assert( !!ecs_get_type(world, first + i));
             test_assert( ecs_has(world, first + i, Byte));
-            Byte *b = ecs_get_ptr(world, first + i, Byte);
+            const Byte *b = ecs_get_ptr(world, first + i, Byte);
             test_assert(b != NULL);
             test_int(*b, i);
         }
@@ -503,9 +503,9 @@ int tag_test(int buffer_size) {
 
     ECS_ENTITY(world, Tag, 0);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_entity(world, Tag);
+    ecs_entity_t e2 = ecs_new_w_entity(world, Tag);
+    ecs_entity_t e3 = ecs_new_w_entity(world, Tag);
 
     ecs_vector_t *v = serialize_to_vector(world, buffer_size);
 
@@ -559,13 +559,13 @@ int simple_w_tag_test(int buffer_size) {
     ECS_COMPONENT(world, Position);
     ECS_ENTITY(world, Tag, 0);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_entity(world, Tag);
     ecs_set(world, e1, Position, {1, 2});
 
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new_w_entity(world, Tag);
     ecs_set(world, e2, Position, {3, 4});
 
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w_entity(world, Tag);
     ecs_set(world, e3, Position, {5, 6});
 
     ecs_vector_t *v = serialize_to_vector(world, buffer_size);
@@ -593,7 +593,7 @@ int simple_w_tag_test(int buffer_size) {
         test_assert( ecs_has(world, e2, Position));
         test_assert( ecs_has(world, e3, Position));
 
-        Position *
+        const Position *
         p = ecs_get_ptr(world, e1, Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
@@ -642,13 +642,13 @@ int tag_w_simple_test(int buffer_size) {
     ECS_ENTITY(world, Tag, 0);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_entity(world, Tag);
     ecs_set(world, e1, Position, {1, 2});
 
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new_w_entity(world, Tag);
     ecs_set(world, e2, Position, {3, 4});
 
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w_entity(world, Tag);
     ecs_set(world, e3, Position, {5, 6});
 
     ecs_vector_t *v = serialize_to_vector(world, buffer_size);
@@ -676,7 +676,7 @@ int tag_w_simple_test(int buffer_size) {
         test_assert( ecs_has(world, e2, Position));
         test_assert( ecs_has(world, e3, Position));
 
-        Position *
+        const Position *
         p = ecs_get_ptr(world, e1, Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
@@ -879,7 +879,7 @@ int simple_w_parent_test(int buffer_size) {
         test_assert( ecs_has_entity(world, e2, ECS_CHILDOF | parent));
         test_assert( ecs_has_entity(world, e3, ECS_CHILDOF | parent)); 
 
-        Position *
+        const Position *
         p = ecs_get_ptr(world, e1, Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
@@ -1039,7 +1039,7 @@ int simple_w_inheritance_test(int buffer_size) {
         test_assert( !ecs_has_owned(world, e2, Position, true));
         test_assert( !ecs_has_owned(world, e3, Position, true));
 
-        Velocity *
+        const Velocity *
         p = ecs_get_ptr(world, e1, Velocity);
         test_assert(p != NULL);
         test_int(p->x, 3);
@@ -1110,7 +1110,7 @@ int deserialize_twice_test(int buffer_size) {
         test_assert( ecs_has(world, e2, Position));
         test_assert( ecs_has(world, e3, Position));
 
-        Position *
+        const Position *
         p = ecs_get_ptr(world, e1, Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
@@ -1185,7 +1185,7 @@ void ReaderWriter_entity_conflict() {
         test_assert( ecs_has(world, e1, Position));
         test_assert( !ecs_has(world, e1, Velocity));
 
-        Position *p = ecs_get_ptr(world, e1, Position);
+        const Position *p = ecs_get_ptr(world, e1, Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
         test_int(p->y, 2);
@@ -1234,7 +1234,7 @@ void ReaderWriter_snapshot_reader_simple() {
         test_assert( ecs_has(world, e2, Position));
         test_assert( ecs_has(world, e3, Position));
 
-        Position *
+        const Position *
         p = ecs_get_ptr(world, e1, Position);
         test_assert(p != NULL);
         test_int(p->x, 1);

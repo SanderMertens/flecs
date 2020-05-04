@@ -424,7 +424,7 @@ char* ecs_type_str(
             /* Prevent issues during bootstrap */
             str = "EcsComponent";
         } else {
-            EcsName *id = ecs_get_ptr(world, h, EcsName);
+            const EcsName *id = ecs_get_ptr(world, h, EcsName);
             if (id) {
                 str = *id;
             } else {
@@ -454,7 +454,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
         ecs_type_has_owned_entity(world, type, ECS_XOR | xor, true),
         ECS_INVALID_PARAMETER, NULL);
 
-    EcsType *type_ptr = ecs_get_ptr(world, xor, EcsType);
+    const EcsType *type_ptr = ecs_get_ptr(world, xor, EcsType);
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_type_t xor_type = type_ptr->normalized;

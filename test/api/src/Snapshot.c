@@ -11,7 +11,7 @@ void Snapshot_simple_snapshot() {
 
     ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    Position *p = ecs_get_mut(world, e, Position, NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -21,7 +21,7 @@ void Snapshot_simple_snapshot() {
     ecs_snapshot_restore(world, s);
 
     test_assert(ecs_has(world, e, Position));
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get_mut(world, e, Position, NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);    
 
@@ -69,7 +69,7 @@ void Snapshot_snapshot_after_delete() {
     ecs_snapshot_restore(world, s);    
 
     test_assert(ecs_has(world, e, Position));
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -172,7 +172,7 @@ void Snapshot_snapshot_w_include_filter() {
         .include = ecs_type(Position)
     });
 
-    Position *p = ecs_get_ptr(world, e1, Position);
+    Position *p = ecs_get_mut(world, e1, Position, NULL);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -180,7 +180,7 @@ void Snapshot_snapshot_w_include_filter() {
     p->x ++;
     p->y ++;
 
-    p = ecs_get_ptr(world, e2, Position);
+    p = ecs_get_mut(world, e2, Position, NULL);
     test_assert(p != NULL);
     test_int(p->x, 15);
     test_int(p->y, 25);
@@ -188,7 +188,7 @@ void Snapshot_snapshot_w_include_filter() {
     p->x ++;
     p->y ++;
 
-    Velocity *v = ecs_get_ptr(world, e3, Velocity);
+    Velocity *v = ecs_get_mut(world, e3, Velocity, NULL);
     test_assert(v != NULL);
     test_int(v->x, 25); 
     test_int(v->y, 35);
@@ -199,19 +199,19 @@ void Snapshot_snapshot_w_include_filter() {
     ecs_snapshot_restore(world, s);
 
     /* Restored */
-    p = ecs_get_ptr(world, e1, Position);
+    p = ecs_get_mut(world, e1, Position, NULL);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     /* Restored */
-    p = ecs_get_ptr(world, e2, Position);
+    p = ecs_get_mut(world, e2, Position, NULL);
     test_assert(p != NULL);
     test_int(p->x, 15);
     test_int(p->y, 25);
 
     /* Not restored */
-    v = ecs_get_ptr(world, e3, Velocity);
+    v = ecs_get_mut(world, e3, Velocity, NULL);
     test_assert(v != NULL);
     test_int(v->x, 26); 
     test_int(v->y, 36);
@@ -245,7 +245,7 @@ void Snapshot_snapshot_w_exclude_filter() {
         .exclude = ecs_type(Position)
     });
 
-    Position *p = ecs_get_ptr(world, e1, Position);
+    Position *p = ecs_get_mut(world, e1, Position, NULL);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -253,7 +253,7 @@ void Snapshot_snapshot_w_exclude_filter() {
     p->x ++;
     p->y ++;
 
-    p = ecs_get_ptr(world, e2, Position);
+    p = ecs_get_mut(world, e2, Position, NULL);
     test_assert(p != NULL);
     test_int(p->x, 15);
     test_int(p->y, 25);
@@ -261,7 +261,7 @@ void Snapshot_snapshot_w_exclude_filter() {
     p->x ++;
     p->y ++;
 
-    Velocity *v = ecs_get_ptr(world, e3, Velocity);
+    Velocity *v = ecs_get_mut(world, e3, Velocity, NULL);
     test_assert(v != NULL);
     test_int(v->x, 25); 
     test_int(v->y, 35);
@@ -272,19 +272,19 @@ void Snapshot_snapshot_w_exclude_filter() {
     ecs_snapshot_restore(world, s);
 
     /* Not restored */
-    p = ecs_get_ptr(world, e1, Position);
+    p = ecs_get_mut(world, e1, Position, NULL);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 21);
 
     /* Not restored */
-    p = ecs_get_ptr(world, e2, Position);
+    p = ecs_get_mut(world, e2, Position, NULL);
     test_assert(p != NULL);
     test_int(p->x, 16);
     test_int(p->y, 26);
 
     /* Restored */
-    v = ecs_get_ptr(world, e3, Velocity);
+    v = ecs_get_mut(world, e3, Velocity, NULL);
     test_assert(v != NULL);
     test_int(v->x, 25); 
     test_int(v->y, 35);
@@ -469,7 +469,7 @@ void Snapshot_snapshot_copy() {
     ecs_snapshot_t *s_copy = ecs_snapshot_copy(world, s, NULL);
     ecs_snapshot_free(world, s);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    Position *p = ecs_get_mut(world, e, Position, NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -479,7 +479,7 @@ void Snapshot_snapshot_copy() {
     ecs_snapshot_restore(world, s_copy);
 
     test_assert(ecs_has(world, e, Position));
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get_mut(world, e, Position, NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);    
 
@@ -507,7 +507,7 @@ void Snapshot_snapshot_copy_filtered() {
     ecs_snapshot_t *s_copy = ecs_snapshot_copy(world, s, NULL);
     ecs_snapshot_free(world, s);
 
-    Position *p = ecs_get_ptr(world, e1, Position);
+    Position *p = ecs_get_mut(world, e1, Position, NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -524,7 +524,7 @@ void Snapshot_snapshot_copy_filtered() {
     test_assert( ecs_has(world, e1, Position));
     test_assert( !ecs_get_type(world, e2));    
 
-    p = ecs_get_ptr(world, e1, Position);
+    p = ecs_get_mut(world, e1, Position, NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);    
 
@@ -551,7 +551,7 @@ void Snapshot_snapshot_copy_w_filter() {
     });
     ecs_snapshot_free(world, s);
 
-    Position *p = ecs_get_ptr(world, e1, Position);
+    Position *p = ecs_get_mut(world, e1, Position, NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -568,7 +568,7 @@ void Snapshot_snapshot_copy_w_filter() {
     test_assert( ecs_has(world, e1, Position));
     test_assert( !ecs_get_type(world, e2));    
 
-    p = ecs_get_ptr(world, e1, Position);
+    p = ecs_get_mut(world, e1, Position, NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);    
 

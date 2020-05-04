@@ -105,7 +105,6 @@ void StatsCollectWorldStats(ecs_rows_t *rows) {
     stats->entities_count = ecs_eis_count(&world->stage);
     stats->components_count = ecs_count(world, EcsComponent);
     stats->col_systems_count = ecs_count(world, EcsColSystem);
-    stats->inactive_systems_count = ecs_vector_count(world->inactive_systems);
     stats->tables_count = ecs_sparse_count(world->stage.tables);
     stats->threads_count = ecs_vector_count(world->worker_threads);
     stats->frame_seconds_total = world->frame_time_total;
@@ -201,28 +200,6 @@ void compute_world_memory(
         &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);        
     ecs_map_memory(world->on_activate_components,
         &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);     
-
-    /* Add memory spent on system arrays to system memory */
-    ecs_vector_memory(world->on_load_systems, ecs_entity_t,
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->post_load_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->pre_update_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->on_update_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->on_validate_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->post_update_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->pre_store_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->on_store_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->manual_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
-    ecs_vector_memory(world->inactive_systems, ecs_entity_t, 
-        &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
 
     ecs_vector_memory(world->fini_tasks, ecs_entity_t,
         &stats->systems_memory.allocd_bytes, &stats->systems_memory.used_bytes);
@@ -349,13 +326,13 @@ void StatsCollectSystemStats(ecs_rows_t *rows) {
         stats[i].entity = entity;
         stats[i].name = ecs_get_name(rows->world, entity);
         stats[i].signature = system[i].query->sig.expr;
-        stats[i].kind = system[i].kind;
+        stats[i].phase = 0;
         stats[i].tables_matched_count = system_tables_matched(&system[i]);
         stats[i].entities_matched_count = system_entities_matched(&system[i]);
         stats[i].period_seconds = ecs_get_interval(rows->world, system[i].tick_source);
         stats[i].seconds_total = system[i].time_spent;
         stats[i].invoke_count_total = system[i].invoke_count;
-        stats[i].is_enabled = system[i].enabled;
+        stats[i].is_enabled = !ecs_has(rows->world, entity, EcsDisabled);
         stats[i].is_active = ecs_vector_count(system[i].query->tables) != 0;
         stats[i].is_hidden = ecs_has(rows->world, entity, EcsHidden);
     }
@@ -606,7 +583,7 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
                         stats[i].enabled_systems_count ++;
                     }
 
-                    EcsColSystem *ptr = ecs_get_ptr(world, e, EcsColSystem);
+                    const EcsColSystem *ptr = ecs_get_ptr(world, e, EcsColSystem);
                     if (ecs_vector_count(ptr->query->tables)) {
                         stats[i].active_systems_count ++;
                     }
@@ -643,12 +620,12 @@ void FlecsStatsImport(
 
     /* -- Helper systems -- */
 
-    ECS_SYSTEM(world, StatsCollectColSystemMemoryTotals, EcsManual, 
+    ECS_SYSTEM(world, StatsCollectColSystemMemoryTotals, 0, 
         [in] EcsColSystemMemoryStats,
         [out] EcsWorld.EcsMemoryStats,
         SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
 
-    ECS_SYSTEM(world, StatsCollectTableMemoryTotals, EcsManual, 
+    ECS_SYSTEM(world, StatsCollectTableMemoryTotals, 0, 
         [in] EcsTableStats,
         [out] EcsWorld.EcsMemoryStats,
         SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);

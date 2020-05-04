@@ -21,15 +21,15 @@ void* ecs_worker(void *arg) {
         ecs_os_mutex_unlock(world->thread_mutex);
 
         for (i = 0; i < job_count; i ++) {
-            ecs_run_intern(
-                (ecs_world_t*)thread, /* magic */
-                world,
-                jobs[i]->system, 
-                world->delta_time, 
-                jobs[i]->offset, 
-                jobs[i]->limit, 
-                NULL, 
-                NULL);
+            // ecs_run_intern(
+            //     (ecs_world_t*)thread, /* magic */
+            //     world,
+            //     jobs[i]->system, 
+            //     world->delta_time, 
+            //     jobs[i]->offset, 
+            //     jobs[i]->limit, 
+            //     NULL, 
+            //     NULL);
         }
 
         ecs_os_mutex_lock(world->thread_mutex);
@@ -164,7 +164,7 @@ void ecs_schedule_jobs(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    EcsColSystem *system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
     int32_t thread_count = ecs_vector_count(world->worker_threads);
     int32_t total_rows = 0;
     bool is_task = false;
@@ -228,7 +228,7 @@ void ecs_prepare_jobs(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     ecs_vector_t *threads = world->worker_threads;
     ecs_vector_t *jobs = system_data->jobs;
     int32_t i;

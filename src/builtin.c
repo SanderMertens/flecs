@@ -1,6 +1,25 @@
 #include "flecs_private.h"
 
 static
+int compare_entity(
+    ecs_entity_t e1, 
+    void *ptr1, 
+    ecs_entity_t e2, 
+    void *ptr2) 
+{
+    return e1 - e2;
+}
+
+static
+int rank_phase(
+    ecs_world_t *world,
+    ecs_entity_t rank_component,
+    ecs_type_t type) 
+{
+    return ecs_type_get_entity_for_xor(world, type, rank_component);
+}
+
+static
 void ecs_parent_ctor(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -114,6 +133,7 @@ void ecs_component_set_intern(
         ecs_assert(el != NULL, ECS_INTERNAL_ERROR, NULL);
 
         *el = ct[i];
+        el->self = entities[i];
 
         ecs_trace_1("trigger #[green]%s#[normal] created for component #[red]%s",
             ct[i].kind == EcsOnAdd
@@ -152,6 +172,86 @@ void EcsOnSetComponentLifecycle(
     }
 }
 
+static 
+void EcsOnAddPipeline(
+    ecs_rows_t *rows)
+{
+    ecs_world_t *world = rows->world;
+    ecs_entity_t *entities = rows->entities;
+
+    int32_t i;
+    for (i = rows->count - 1; i >= 0; i --) {
+        ecs_entity_t pipeline = entities[i];
+        ecs_sig_t sig = { 0 };
+
+#ifndef NDEBUG
+        const EcsType *type_ptr = ecs_get_ptr(world, pipeline, EcsType);
+        ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        char *str = ecs_type_str(world, type_ptr->normalized);
+        ecs_trace_1("pipeline #[green]%s#[normal] created with #[red][%s]",
+            ecs_get_name(world, pipeline), str);
+        free(str);
+#endif
+        ecs_trace_push();
+
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, EEcsColSystem, 0);
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EEcsInactive, 0);
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EEcsDisabledIntern, 0);
+
+        ecs_query_t *query = ecs_query_new_w_sig(world, 0, &sig);
+        ecs_query_sort(world, query, 0, compare_entity);
+        ecs_query_sort_types(world, query, pipeline, rank_phase);
+
+        ecs_set(world, pipeline, EcsPipelineQuery, { .query = query });
+
+        ecs_trace_pop();
+    }
+}
+
+static 
+void EcsOnSetSystem(
+    ecs_rows_t *rows)
+{
+    ECS_COLUMN(rows, EcsSystem, sys, 1);
+
+    ecs_world_t *world = rows->world;
+    ecs_entity_t *entities = rows->entities;
+
+    int32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_entity_t e = entities[i];
+        ecs_init_system(world, entities[i], ecs_get_name(world, e), sys[i].phase, 
+            sys[i].action, sys[i].signature);
+    }
+}
+
+void ecs_init_system_builtins(
+    ecs_world_t *world)
+{
+    ecs_set(world, EcsPreFrame, EcsName, {"EcsPreFrame"});
+    ecs_set(world, EcsOnLoad, EcsName, {"EcsOnLoad"});
+    ecs_set(world, EcsPostLoad, EcsName, {"EcsPostLoad"});
+    ecs_set(world, EcsPreUpdate, EcsName, {"EcsPreUpdate"});
+    ecs_set(world, EcsOnUpdate, EcsName, {"EcsOnUpdate"});
+    ecs_set(world, EcsOnValidate, EcsName, {"EcsOnValidate"});
+    ecs_set(world, EcsPostUpdate, EcsName, {"EcsPostUpdate"});
+    ecs_set(world, EcsPreStore, EcsName, {"EcsPreStore"});
+    ecs_set(world, EcsOnStore, EcsName, {"EcsOnStore"});
+    ecs_set(world, EcsPostFrame, EcsName, {"EcsPostFrame"});
+
+    ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline, 0);
+    ECS_TRIGGER(world, EcsOnSetSystem, EcsOnSet, EcsSystem, 0);
+
+    // ECS_WATCH(world, EcsSystemEnabled, EcsSystem, !EcsDisabled, !EcsDisabledIntern);
+    // ECS_WATCH(world, EcsSystemDisabled, EcsSystem, EcsDisabled || EcsDisabledIntern);
+
+    world->builtin_pipeline = ecs_new_pipeline(world, "EcsBuiltinPipeline",
+        "EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,"
+        " EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame");
+}
+
 void ecs_init_builtins(
     ecs_world_t *world)
 {
@@ -183,7 +283,7 @@ void ecs_init_builtins(
         .move = ecs_parent_move
     });
 
-    /* Initialize timer feature */
+    /* Initialize system builtins */
     ecs_init_system_builtins(world);     
 
     /* Initialize timer feature */

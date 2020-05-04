@@ -158,7 +158,7 @@ void Internals_no_double_system_table_after_merge() {
     ECS_ENTITY(world, e, Position);
 
     ECS_SYSTEM(world, CreateNewTable, EcsOnUpdate, Position, .Velocity);
-    ECS_SYSTEM(world, ManualSystem, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, ManualSystem, 0, Position, Velocity);
 
     /* CreateNewTable system created a new, non-empty table. This will be merged
      * which will trigger activation of ManualSystem. This will cause the system

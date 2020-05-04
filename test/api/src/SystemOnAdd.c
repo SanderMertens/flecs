@@ -52,7 +52,7 @@ void SystemOnAdd_new_match_1_of_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -83,7 +83,7 @@ void SystemOnAdd_new_match_1_of_2() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -134,7 +134,7 @@ void SystemOnAdd_add_match_1_of_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -169,7 +169,7 @@ void SystemOnAdd_add_match_1_of_2() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -224,7 +224,7 @@ void SystemOnAdd_set_match_1_of_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
@@ -277,7 +277,7 @@ void SystemOnAdd_clone_match_1_of_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_2, Position);
+    const Position *p = ecs_get_ptr(world, e_2, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -310,7 +310,7 @@ void SystemOnAdd_clone_match_1_of_2() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_2, Position);
+    const Position *p = ecs_get_ptr(world, e_2, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -406,7 +406,7 @@ void SystemOnAdd_new_w_count_match_1_of_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -442,7 +442,7 @@ void SystemOnAdd_override_after_add_in_on_add() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new(world, Prefab);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -460,7 +460,7 @@ void SystemOnAdd_override_after_add_in_on_add() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
@@ -508,7 +508,7 @@ void SystemOnAdd_set_after_add_in_on_add() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 2);
     test_int(p->y, 3);
 
@@ -580,7 +580,7 @@ void SystemOnAdd_add_in_progress_before_system_def() {
     ecs_add(world, e, Mass);
     test_assert( ecs_has(world, e, Mass));
     
-    Mass *m = ecs_get_ptr(world, e, Mass);
+    const Mass *m = ecs_get_ptr(world, e, Mass);
     test_assert(m != NULL);
     test_int(*m, 10);
 

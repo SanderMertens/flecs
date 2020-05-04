@@ -60,7 +60,7 @@ void EcsProgressRateFilters(ecs_rows_t *rows) {
         filter[i].time_elapsed += rows->delta_time;
 
         if (src) {
-            EcsTickSource *tick_src = ecs_get_ptr(rows->world, src, EcsTickSource);
+            const EcsTickSource *tick_src = ecs_get_ptr(rows->world, src, EcsTickSource);
             if (tick_src) {
                 inc = tick_src->tick;
             }
@@ -89,19 +89,19 @@ void ecs_init_timer_builtins(
 {
     /* Add EcsTickSource to timers and rate filters */
     world->add_tick_source =
-    ecs_new_system(world, "EcsAddTickSource", EcsManual, 
+    ecs_new_system(world, "EcsAddTickSource", 0, 
         "[in] EcsTimer || EcsRateFilter, [out] !EcsTickSource", 
         EcsAddTickSource);
 
     /* Timer handling */
     world->progress_timers = 
-    ecs_new_system(world, "EcsProgressTimers", EcsManual, 
+    ecs_new_system(world, "EcsProgressTimers", 0, 
         "EcsTimer, EcsTickSource", 
         EcsProgressTimers);
     
     /* Rate filter handling */
     world->progress_rate_filters = 
-    ecs_new_system(world, "EcsProgressRateFilters", EcsManual, 
+    ecs_new_system(world, "EcsProgressRateFilters", 0, 
         "[in] EcsRateFilter, [out] EcsTickSource", 
         EcsProgressRateFilters);    
 }
@@ -119,7 +119,7 @@ ecs_entity_t ecs_set_timeout(
         .active = true
     });
 
-    EcsColSystem *system_data = ecs_get_ptr(world, timer, EcsColSystem);
+    EcsColSystem *system_data = ecs_get_mut(world, timer, EcsColSystem, NULL);
     if (system_data) {
         system_data->tick_source = timer;
     }
@@ -134,7 +134,7 @@ float ecs_get_timeout(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(timer != 0, ECS_INVALID_PARAMETER, NULL);
 
-    EcsTimer *value = ecs_get_ptr(world, timer, EcsTimer);
+    EcsTimer *value = ecs_get_mut(world, timer, EcsTimer, NULL);
     if (value) {
         return value->timeout;
     } else {
@@ -154,7 +154,7 @@ ecs_entity_t ecs_set_interval(
         .active = true
     });
 
-    EcsColSystem *system_data = ecs_get_ptr(world, timer, EcsColSystem);
+    EcsColSystem *system_data = ecs_get_mut(world, timer, EcsColSystem, NULL);
     if (system_data) {
         system_data->tick_source = timer;
     }  
@@ -172,7 +172,7 @@ float ecs_get_interval(
         return 0;
     }
 
-    EcsTimer *value = ecs_get_ptr(world, timer, EcsTimer);
+    EcsTimer *value = ecs_get_mut(world, timer, EcsTimer, NULL);
     if (value) {
         return value->timeout;
     } else {
@@ -184,7 +184,7 @@ void ecs_start_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_ptr(world, timer, EcsTimer);
+    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer, NULL);
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ptr->active = true;
@@ -195,7 +195,7 @@ void ecs_stop_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_ptr(world, timer, EcsTimer);
+    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer, NULL);
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ptr->active = false;
@@ -214,7 +214,7 @@ ecs_entity_t ecs_set_rate_filter(
         .src = source
     });
 
-    EcsColSystem *system_data = ecs_get_ptr(world, filter, EcsColSystem);
+    EcsColSystem *system_data = ecs_get_mut(world, filter, EcsColSystem, NULL);
     if (system_data) {
         system_data->tick_source = filter;
     }  
@@ -231,7 +231,7 @@ void ecs_set_tick_source(
     ecs_assert(system != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(tick_source != 0, ECS_INVALID_PARAMETER, NULL);
 
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    EcsColSystem *system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     system_data->tick_source = tick_source;

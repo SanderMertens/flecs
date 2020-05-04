@@ -298,7 +298,6 @@
                 "dont_enable_after_rematch",
                 "ensure_single_merge",
                 "table_count",
-                "active_system_count",
                 "match_system",
                 "match_system_w_filter"
             ]
@@ -333,18 +332,10 @@
             "testcases": [
                 "remove_match_1_of_1",
                 "remove_match_1_of_2",
-                "remove_match_2_of_2",
-                "remove_match_2_of_3",
                 "remove_no_match_1",
-                "remove_no_match_2_of_1",
-                "remove_no_match_2_of_3",
                 "delete_match_1_of_1",
                 "delete_match_1_of_2",
-                "delete_match_2_of_2",
-                "delete_match_2_of_3",
                 "delete_no_match_1",
-                "delete_no_match_2_of_1",
-                "delete_no_match_2_of_3",
                 "disabled_system",
                 "remove_watched",
                 "delete_watched"
@@ -357,7 +348,6 @@
                 "set_again",
                 "clone",
                 "clone_w_value",
-                "set_w_optional",
                 "set_and_add_system",
                 "on_set_after_override",
                 "on_set_after_override_w_new",

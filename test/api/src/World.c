@@ -50,7 +50,7 @@ void World_progress_w_0() {
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_assert(p->x != 0);
     test_assert(p->y != 0);
@@ -88,7 +88,7 @@ void World_progress_w_t() {
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 4);
@@ -156,7 +156,7 @@ void World_entity_range_out_of_range_check_disabled() {
     test_int(e2, 49);
     test_assert( ecs_has(world, e2, Position));
     
-    Position *p = ecs_get_ptr(world, e2, Position);
+    const Position *p = ecs_get_ptr(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -444,7 +444,7 @@ void World_phases() {
     ECS_SYSTEM(world, TPostUpdate, EcsPostUpdate, Position);
     ECS_SYSTEM(world, TPreStore, EcsPreStore, Position);
     ECS_SYSTEM(world, TOnStore, EcsOnStore, Position);
-    ECS_SYSTEM(world, TManual, EcsManual, Position);
+    ECS_SYSTEM(world, TManual, 0, Position);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -453,7 +453,7 @@ void World_phases() {
 
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 8);
 
     ecs_run(world, TManual, 0, NULL);
@@ -481,11 +481,11 @@ void World_phases_match_in_create() {
     ECS_SYSTEM(world, TPostUpdate, EcsPostUpdate, Position);
     ECS_SYSTEM(world, TPreStore, EcsPreStore, Position);
     ECS_SYSTEM(world, TOnStore, EcsOnStore, Position);
-    ECS_SYSTEM(world, TManual, EcsManual, Position);
+    ECS_SYSTEM(world, TManual, 0, Position);
 
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 8);
 
     ecs_run(world, TManual, 0, NULL);
@@ -616,7 +616,7 @@ void World_phases_w_merging() {
     ECS_SYSTEM(world, TMergePostUpdate, EcsPostUpdate, Position);
     ECS_SYSTEM(world, TMergePreStore, EcsPreStore, Position);
     ECS_SYSTEM(world, TMergeOnStore, EcsOnStore, Position);
-    ECS_SYSTEM(world, TMergeManual, EcsManual, Position);
+    ECS_SYSTEM(world, TMergeManual, 0, Position);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -625,7 +625,7 @@ void World_phases_w_merging() {
 
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 8);
 
     ecs_run(world, TMergeManual, 0, NULL);
@@ -836,7 +836,7 @@ void World_world_stats() {
     ECS_COMPONENT(world, Velocity);
 
     /* Make sure that stats are collected by requiring EcsWorldStats */
-    ecs_new_system(world, "CollectWorldStats", EcsManual, "[in] EcsWorldStats", NULL);
+    ecs_new_system(world, "CollectWorldStats", 0, "[in] EcsWorldStats", NULL);
 
     EcsWorldStats stats = {0};
 

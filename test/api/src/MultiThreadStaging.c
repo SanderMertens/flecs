@@ -314,7 +314,7 @@ void Set_random(ecs_rows_t *rows) {
             ecs_entity_t e = ecs_set(rows->world, 0, Position, {10, 20});
             test_assert( !!ecs_get_type(rows->world, e));
             test_assert( ecs_has(rows->world, e, Position));
-            Position *p = ecs_get_ptr(rows->world, e, Position);
+            const Position *p = ecs_get_ptr(rows->world, e, Position);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
@@ -325,7 +325,7 @@ void Set_random(ecs_rows_t *rows) {
             
             test_assert( !!ecs_get_type(rows->world, rows->entities[i]));
             test_assert( ecs_has(rows->world, rows->entities[i], Velocity));
-            Velocity *v = ecs_get_ptr(rows->world, rows->entities[i], Velocity);            
+            const Velocity *v = ecs_get_ptr(rows->world, rows->entities[i], Velocity);            
             test_assert(v != NULL);
             test_int(v->x, 31);
             test_int(v->y, 41);
@@ -336,7 +336,7 @@ void Set_random(ecs_rows_t *rows) {
 
             test_assert( !!ecs_get_type(rows->world, rows->entities[i]));
             test_assert( ecs_has(rows->world, rows->entities[i], Rotation));
-            Rotation *r = ecs_get_ptr(rows->world, rows->entities[i], Rotation);            
+            const Rotation *r = ecs_get_ptr(rows->world, rows->entities[i], Rotation);            
             test_assert(r != NULL);
             test_int(*r, 50);
         }
@@ -418,7 +418,7 @@ void MultiThreadStaging_2_threads_on_add() {
     ecs_entity_t i;
     for (i = e; i < e + 10; i ++) {
         test_assert( ecs_has(world, i, Velocity));
-        Velocity *v = ecs_get_ptr(world, i, Velocity);
+        const Velocity *v = ecs_get_ptr(world, i, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 10);
         test_int(v->y, 20);

@@ -48,7 +48,7 @@ enum system_kind {
     PostUpdate = EcsPostUpdate,
     PreStore = EcsPreStore,
     OnStore = EcsOnStore,
-    Manual = EcsManual,
+    Manual = 0,
     OnAdd = EcsOnAdd,
     OnRemove = EcsOnRemove,
     OnSet = EcsOnSet
@@ -652,7 +652,7 @@ public:
         [&func](world_t *world, entity_t id) {
             bool is_added;
 
-            T *ptr = static_cast<T*>(_ecs_get_mutable(
+            T *ptr = static_cast<T*>(_ecs_get_mut(
                 world, id, component_base<T>::s_entity, sizeof(T), &is_added));
 
             if (ptr) {
@@ -669,7 +669,7 @@ public:
         [&func](world_t *world, entity_t id) {
             bool is_added;
 
-            T *ptr = static_cast<T*>(_ecs_get_mutable(
+            T *ptr = static_cast<T*>(_ecs_get_mut(
                 world, id, component_base<T>::s_entity, sizeof(T), &is_added));
 
             if (ptr) {
@@ -1524,7 +1524,7 @@ template<typename ... Components>
 class system final : public entity {
 public:
     system(const world& world, const char *name = nullptr)
-        : m_kind(static_cast<ecs_system_kind_t>(OnUpdate))
+        : m_kind(static_cast<ecs_entity_t>(OnUpdate))
         , m_name(name) 
         , m_period(0.0)
         , m_on_demand(false)
@@ -1541,7 +1541,7 @@ public:
 
     system& kind(system_kind kind) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
-        m_kind = static_cast<ecs_system_kind_t>(kind);
+        m_kind = static_cast<ecs_entity_t>(kind);
         return *this;
     }
 
@@ -1727,7 +1727,7 @@ private:
         return "";
     }
 
-    ecs_system_kind_t m_kind;
+    ecs_entity_t m_phase;
     const char *m_name;
     const char *m_signature = nullptr;
     float m_period;

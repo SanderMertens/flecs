@@ -94,7 +94,7 @@ void init_edges(
 
             /* Register child table with parent */
             ecs_entity_t parent = e & ECS_ENTITY_MASK;
-            EcsParent *ptr = ecs_get_mutable(world, parent, EcsParent, NULL);
+            EcsParent *ptr = ecs_get_mut(world, parent, EcsParent, NULL);
             ecs_table_t **el = ecs_vector_add(&ptr->child_tables, ecs_table_t*);
             *el = table;
             ecs_modified(world, parent, EcsParent);
@@ -294,7 +294,7 @@ ecs_table_t *find_or_create_table_include(
             ecs_entity_t e = array[i];
             if (e & ECS_XOR) {
                 ecs_entity_t type = e & ECS_ENTITY_MASK;
-                EcsType *type_ptr = ecs_get_ptr(world, type, EcsType);
+                const EcsType *type_ptr = ecs_get_ptr(world, type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 if (ecs_type_has_owned_entity(
@@ -544,9 +544,15 @@ int ecs_entity_compare(
     const void *e1,
     const void *e2)
 {
-    const ecs_entity_t v1 = *(ecs_entity_t*)e1;
-    const ecs_entity_t v2 = *(ecs_entity_t*)e2;
-    return v1 - v2;
+    ecs_entity_t v1 = *(ecs_entity_t*)e1;
+    ecs_entity_t v2 = *(ecs_entity_t*)e2;
+    if (v1 < v2) {
+        return -1;
+    } else if (v1 > v2) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 static
@@ -595,7 +601,7 @@ int32_t count_occurrences(
     ecs_entity_t entity,
     int32_t constraint_index)    
 {
-    EcsType *type_ptr = ecs_get_ptr(world, entity, EcsType);
+    const EcsType *type_ptr = ecs_get_ptr(world, entity, EcsType);
     ecs_assert(type_ptr != NULL, 
         ECS_INVALID_PARAMETER, "flag must be applied to type");
 
@@ -675,7 +681,6 @@ ecs_table_t *find_or_create(
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
 
     uint32_t count = entities->count;
-
     bool is_ordered = true, order_checked = false;
     ecs_entity_t *ordered_entities = NULL;
 
@@ -739,7 +744,7 @@ ecs_table_t *find_or_create(
                         * the entity types. */
                     if (root == &world->stage.root) {
                         return find_or_create(
-                            world, stage, &stage->root, &table_entities);
+                            world, stage, &stage->root, entities);
                     } else {
                         /* If we are staged and we were looking in the table
                             * root of the stage, the table doesn't exist yet
@@ -751,17 +756,13 @@ ecs_table_t *find_or_create(
                             ECS_INTERNAL_ERROR, NULL);
                         
                         table = create_table(world, stage, &table_entities);
-                        
                     }
                 } else {
                     table = create_table(world, stage, &table_entities);
                 }
             } else {
-                /* Create an ordered array if we don't have one yet */
-                if (!ordered_entities) {
-                    ordered_entities = ecs_os_alloca(ecs_entity_t, count);
-                }
-                
+                ordered_entities = ecs_os_alloca(ecs_entity_t, count);
+
                 memcpy(ordered_entities, array, 
                     count * sizeof(ecs_entity_t));
 
@@ -778,7 +779,7 @@ ecs_table_t *find_or_create(
 
                 /* If the original array is unordered we want to check if an
                 * existing table can be found using the ordered array */
-                table = find_or_create(
+                return find_or_create(
                     world, stage, root, &table_entities);                            
             }
 
@@ -788,6 +789,9 @@ ecs_table_t *find_or_create(
             edge->add = table;
         }
     }
+
+    ecs_assert(entities->count == ecs_vector_count(table->type), 
+        ECS_INTERNAL_ERROR, NULL);
     
     return table;
 }

@@ -69,13 +69,6 @@ void ecs_notify_queries_of_table(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Activate system (move from inactive array to on_update array or vice versa) */
-void ecs_world_activate_system(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_system_kind_t kind,
-    bool active);
-
 /* Get current thread-specific stage */
 ecs_stage_t *ecs_get_stage(
     ecs_world_t **world_ptr);
@@ -256,12 +249,14 @@ void ecs_sig_deinit(
 //// System API
 ////////////////////////////////////////////////////////////////////////////////
 
-void ecs_enable_intern(
+/* Initialize new system */
+void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsColSystem *system_data,
-    bool enabled,
-    bool by_user);
+    const char *name,
+    ecs_entity_t phase,
+    ecs_iter_action_t action,
+    char *signature);
 
 /* Invoked when system becomes active / inactive */
 void ecs_system_activate(
@@ -273,21 +268,13 @@ void ecs_system_activate(
 void ecs_invoke_status_action(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsColSystem *system_data,
+    const EcsColSystem *system_data,
     ecs_system_status_t status);
 
 /* Check if all non-table column constraints are met */
 bool ecs_sig_check_constraints(
     ecs_world_t *world,
     ecs_sig_t *sig);
-
-/* Create new table system */
-ecs_entity_t ecs_new_col_system(
-    ecs_world_t *world,
-    const char *name,
-    ecs_system_kind_t kind,
-    ecs_sig_t *sig,
-    ecs_iter_action_t action);
 
 /* Notify row system of a new type, which initiates system-type matching */
 void ecs_row_system_notify_of_type(
@@ -308,6 +295,7 @@ ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
     ecs_world_t *real_world,
     ecs_entity_t system,
+    EcsColSystem *system_data,
     float delta_time,
     uint32_t offset,
     uint32_t limit,

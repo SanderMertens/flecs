@@ -80,7 +80,7 @@ EcsType type_from_vec(
         ecs_entity_t e = array[i];
         if (e & ECS_AND) {
             ecs_entity_t entity = e & ECS_ENTITY_MASK;
-            EcsType *type_ptr = ecs_get_ptr(world, entity, EcsType);
+            const EcsType *type_ptr = ecs_get_ptr(world, entity, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
                 "flag must be applied to type");
 
@@ -89,7 +89,7 @@ EcsType type_from_vec(
 
             for (j = 0; j < count; j++) {
                 ecs_entity_t *el = ecs_vector_add(&normalized, ecs_entity_t);
-                *el = type_array[i];
+                *el = type_array[j];
             }
         }       
     }
@@ -138,7 +138,7 @@ ecs_entity_t lookup(
     ecs_entity_t result = ecs_lookup(world, name);
     if (result) {
         ecs_type_t entity_type = ecs_get_type(world, result);
-        if (!ecs_type_contains(world, entity_type, type, true, false)) {
+        if (!entity_type || !ecs_type_contains(world, entity_type, type, true, false)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
     }
@@ -198,7 +198,7 @@ ecs_entity_t ecs_new_component(
         result = ecs_set(world, 0, EcsName, {name});
         ecs_set(world, result, EcsComponent, {.size = size});
     } else {
-        EcsComponent *ptr = ecs_get_ptr(world, result, EcsComponent);
+        const EcsComponent *ptr = ecs_get_ptr(world, result, EcsComponent);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, name);
         if (ptr->size != size) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, name);
@@ -226,7 +226,7 @@ ecs_entity_t ecs_new_type(
         /* This will allow the type to show up in debug tools */
         ecs_map_set(world->type_handles, (uintptr_t)type.type, &result);
     } else {
-        EcsType *ptr = ecs_get_ptr(world, result, EcsType);
+        const EcsType *ptr = ecs_get_ptr(world, result, EcsType);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (ptr->type != type.type || 
@@ -242,7 +242,7 @@ ecs_entity_t ecs_new_type(
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
     const char *name,
-    ecs_system_kind_t kind,
+    ecs_entity_t phase,
     char *signature,
     ecs_iter_action_t action)
 {
@@ -251,16 +251,20 @@ ecs_entity_t ecs_new_system(
     ecs_entity_t result = lookup(world, name, ecs_type(EcsSystem));
     if (!result) {
         result = ecs_set(world, result, EcsName, {name});
+        if (phase) {
+            ecs_add_entity(world, result, phase);
+            ecs_add_entity(world, result, ECS_XOR | world->builtin_pipeline);
+        }
+
         ecs_set(world, result, EcsSystem, {
-            .kind = kind,
             .action = action,
             .signature = signature
         });
     } else {
-        EcsSystem *ptr = ecs_get_ptr(world, result, EcsSystem);
+        EcsSystem *ptr = ecs_get_mut(world, result, EcsSystem, NULL);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (ptr->kind != kind) {
+        if (ptr->phase != phase) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
 
@@ -282,9 +286,9 @@ ecs_entity_t ecs_new_trigger(
     ecs_trigger_kind_t kind,
     ecs_entity_t component,
     ecs_iter_action_t action,
-    void *ctx)
+    const void *ctx)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);  
+    assert(world->magic == ECS_WORLD_MAGIC);
     
     ecs_entity_t result = lookup(world, name, ecs_type(EcsTrigger));
     if (!result) {
@@ -293,10 +297,10 @@ ecs_entity_t ecs_new_trigger(
             .kind = kind,
             .action = action,
             .component = component,
-            .ctx = ctx
+            .ctx = (void*)ctx
         });
     } else {
-        EcsTrigger *ptr = ecs_get_ptr(world, result, EcsTrigger);
+        EcsTrigger *ptr = ecs_get_mut(world, result, EcsTrigger, NULL);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (ptr->kind != kind) {
@@ -311,6 +315,22 @@ ecs_entity_t ecs_new_trigger(
             ptr->action = action;
         }
     }
+
+    return result;
+}
+
+ecs_entity_t ecs_new_pipeline(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr)
+{
+    assert(world->magic == ECS_WORLD_MAGIC);  
+
+    ecs_entity_t result = ecs_new_type(world, name, expr);
+    const EcsType *type_ptr = ecs_get_ptr(world, result, EcsType);
+    ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_add(world, result, EcsPipeline);
 
     return result;
 }

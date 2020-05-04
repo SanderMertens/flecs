@@ -147,7 +147,7 @@ void Add_type_w_type() {
 
     ECS_COMPONENT(world, Position);
     ECS_TYPE(world, Type_1, Position);
-    ECS_TYPE(world, Type_2, Type_1);
+    ECS_TYPE(world, Type_2, AND | Type_1);
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -165,7 +165,7 @@ void Add_type_w_2_types() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type_1, Position);
     ECS_TYPE(world, Type_2, Velocity);
-    ECS_TYPE(world, Type_3, Type_1, Type_2);
+    ECS_TYPE(world, Type_3, AND | Type_1, AND | Type_2);
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -183,7 +183,7 @@ void Add_type_mixed() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type_1, Position);
-    ECS_TYPE(world, Type_2, Type_1, Velocity);
+    ECS_TYPE(world, Type_2, AND | Type_1, Velocity);
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
@@ -396,8 +396,8 @@ void Add_tag() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_add(world, e, Tag);
-    test_assert(ecs_has(world, e, Tag));
+    ecs_add_entity(world, e, Tag);
+    test_assert(ecs_has_entity(world, e, Tag));
 
     ecs_fini(world);
 }
@@ -413,7 +413,7 @@ void Add_type_w_tag() {
 
     ecs_add(world, e, Type);
     test_assert(ecs_has(world, e, Type));
-    test_assert(ecs_has(world, e, Tag));
+    test_assert(ecs_has_entity(world, e, Tag));
 
     ecs_fini(world);
 }
@@ -430,8 +430,8 @@ void Add_type_w_2_tags() {
 
     ecs_add(world, e, Type);
     test_assert(ecs_has(world, e, Type));
-    test_assert(ecs_has(world, e, Tag_1));
-    test_assert(ecs_has(world, e, Tag_2));
+    test_assert(ecs_has_entity(world, e, Tag_1));
+    test_assert(ecs_has_entity(world, e, Tag_2));
 
     ecs_fini(world);
 }
@@ -449,8 +449,8 @@ void Add_type_w_tag_mixed() {
 
     ecs_add(world, e, Type);
     test_assert(ecs_has(world, e, Type));
-    test_assert(ecs_has(world, e, Tag_1));
-    test_assert(ecs_has(world, e, Tag_2));
+    test_assert(ecs_has_entity(world, e, Tag_1));
+    test_assert(ecs_has_entity(world, e, Tag_2));
     test_assert(ecs_has(world, e, Position));
 
     ecs_fini(world);
@@ -467,15 +467,17 @@ void Add_add_remove() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
+    ecs_type_t ecs_type(Tag_1) = ecs_type_from_entity(world, Tag_1);
     ecs_add_remove(world, e, Tag_1, Type);
-    test_assert(ecs_has(world, e, Tag_1));
-    test_assert(!ecs_has(world, e, Tag_2));
-    test_assert(!ecs_has(world, e, Tag_3));
+    test_assert(ecs_has_entity(world, e, Tag_1));
+    test_assert(!ecs_has_entity(world, e, Tag_2));
+    test_assert(!ecs_has_entity(world, e, Tag_3));
 
+    ecs_type_t ecs_type(Tag_2) = ecs_type_from_entity(world, Tag_2);
     ecs_add_remove(world, e, Tag_2, Type);
-    test_assert(!ecs_has(world, e, Tag_1));
-    test_assert(ecs_has(world, e, Tag_2));
-    test_assert(!ecs_has(world, e, Tag_3));
+    test_assert(!ecs_has_entity(world, e, Tag_1));
+    test_assert(ecs_has_entity(world, e, Tag_2));
+    test_assert(!ecs_has_entity(world, e, Tag_3));
 
     ecs_fini(world);
 }
@@ -488,8 +490,9 @@ void Add_add_remove_same() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
+    ecs_type_t ecs_type(Tag_1) = ecs_type_from_entity(world, Tag_1);
     ecs_add_remove(world, e, Tag_1, Tag_1);
-    test_assert(ecs_has(world, e, Tag_1));
+    test_assert(ecs_has_entity(world, e, Tag_1));
 
     ecs_fini(world);
 }
@@ -508,14 +511,14 @@ void Add_add_2_remove() {
     test_assert(e != 0);
 
     ecs_add_remove(world, e, Type2, Type1);
-    test_assert(ecs_has(world, e, Tag_1));
-    test_assert(ecs_has(world, e, Tag_2));
-    test_assert(!ecs_has(world, e, Tag_3));
+    test_assert(ecs_has_entity(world, e, Tag_1));
+    test_assert(ecs_has_entity(world, e, Tag_2));
+    test_assert(!ecs_has_entity(world, e, Tag_3));
 
     ecs_add_remove(world, e, Type3, Type1);
-    test_assert(!ecs_has(world, e, Tag_1));
-    test_assert(ecs_has(world, e, Tag_2));
-    test_assert(ecs_has(world, e, Tag_3));
+    test_assert(!ecs_has_entity(world, e, Tag_1));
+    test_assert(ecs_has_entity(world, e, Tag_2));
+    test_assert(ecs_has_entity(world, e, Tag_3));
 
     ecs_fini(world);
 }

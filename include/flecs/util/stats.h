@@ -74,7 +74,7 @@ typedef struct EcsSystemStats {
     ecs_entity_t entity;                    /* Entity handle of component */
     const char *name;                       /* Entity name */
     const char *signature;                  /* System signature */
-    ecs_system_kind_t kind;                     /* System kind */
+    ecs_entity_t phase;                     /* System kind */
     float period_seconds;                   /* Period at which system runs */                       
     int32_t tables_matched_count;           /* Number of tables matched */
     int32_t entities_matched_count;         /* Number of entities matched */

@@ -58,35 +58,6 @@
  * Increasing this value will increase consumption of stack space. */
 #define ECS_MAX_ADD_REMOVE (32)
 
-/* -- Builtin component types -- */
-
-typedef enum ecs_sig_inout_kind_t {
-    EcsInOut,
-    EcsIn,
-    EcsOut
-} ecs_sig_inout_kind_t;
-
-/** Type that is used by systems to indicate where to fetch a component from */
-typedef enum ecs_sig_from_kind_t {
-    EcsFromSelf,            /* Get component from self (default) */
-    EcsFromOwned,           /* Get owned component from self */
-    EcsFromShared,          /* Get shared component from self */
-    EcsFromContainer,       /* Get component from container */
-    EcsFromSystem,          /* Get component from system */
-    EcsFromEmpty,           /* Get entity handle by id */
-    EcsFromEntity,          /* Get component from other entity */
-    EcsCascade              /* Walk component in cascading (hierarchy) order */
-} ecs_sig_from_kind_t;
-
-/** Type describing an operator used in an signature of a system signature */
-typedef enum ecs_sig_oper_kind_t {
-    EcsOperAnd = 0,
-    EcsOperOr = 1,
-    EcsOperNot = 2,
-    EcsOperOptional = 3,
-    EcsOperLast = 4
-} ecs_sig_oper_kind_t;
-
 /** Callback used by the system signature expression parser */
 typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,
@@ -100,18 +71,6 @@ typedef int (*ecs_parse_action_t)(
     const char *component,
     const char *source,
     void *ctx);
-
-/** Type that describes a single column in the system signature */
-typedef struct ecs_sig_column_t {
-    ecs_sig_from_kind_t from_kind;        /* Element kind (Entity, Component) */
-    ecs_sig_oper_kind_t oper_kind;   /* Operator kind (AND, OR, NOT) */
-    ecs_sig_inout_kind_t inout_kind; /* Is component read or written */
-    union {
-        ecs_type_t type;             /* Used for OR operator */
-        ecs_entity_t component;      /* Used for AND operator */
-    } is;
-    ecs_entity_t source;             /* Source entity (used with FromEntity) */
-} ecs_sig_column_t;
 
 /** A component array in a table */
 struct ecs_column_t {
@@ -176,42 +135,6 @@ typedef struct ecs_matched_table_t {
     int32_t *monitor;               /* Used to monitor table for changes */
 } ecs_matched_table_t;
 
-/** Keep track of how many [in] columns are active for [out] columns of OnDemand
- * systems. */
-typedef struct ecs_on_demand_out_t {
-    ecs_entity_t system;    /* Handle to system */
-    int32_t count;         /* Total number of times [out] columns are used */
-} ecs_on_demand_out_t;
-
-/** Keep track of which OnDemand systems are matched with which [in] columns */
-typedef struct ecs_on_demand_in_t {
-    int32_t count;         /* Number of active systems with [in] column */
-    ecs_vector_t *systems;  /* Systems that have this column as [out] column */
-} ecs_on_demand_in_t;
-
-/** Type that stores a parsed signature */
-typedef struct ecs_sig_t {
-    const char *name;           /* Optional name used for debugging */
-    char *expr;                 /* Original expression string */
-    ecs_vector_t *columns;      /* Columns that contain parsed data */
-    int32_t cascade_by;         /* Identify CASCADE column */
-    bool match_prefab;          /* Does signature match prefabs */
-    bool match_disabled;        /* Does signature match disabled */
-    bool has_refs;              /* Does signature have references */
-    bool needs_tables;          /* Does signature match with tables */
-
-    /* Precomputed types for quick comparisons */
-    ecs_vector_t *not_from_self;      /* Exclude components from self */
-    ecs_vector_t *not_from_owned;     /* Exclude components from self only if owned */
-    ecs_vector_t *not_from_shared;    /* Exclude components from self only if shared */
-    ecs_vector_t *not_from_container; /* Exclude components from components */
-    ecs_vector_t *and_from_self;      /* Which components are required from entity */
-    ecs_vector_t *and_from_owned;     /* Which components are required from entity */
-    ecs_vector_t *and_from_shared;    /* Which components are required from entity */
-    ecs_vector_t *and_from_system;    /* Used to auto-add components to system */
-    ecs_vector_t *and_from_container; /* Used to auto-add components to system */
-} ecs_sig_t;
-
 typedef struct ecs_table_range_t {
     ecs_matched_table_t *table;
     int32_t start_row;
@@ -241,8 +164,26 @@ struct ecs_query_t {
     /* Used for table sorting */
     ecs_entity_t rank_on_component;
     ecs_rank_type_action_t rank_table;
+
+    bool match_prefab;          /* Does query match prefabs */
+    bool match_disabled;        /* Does query match disabled */
+    bool has_refs;              /* Does query have references */
+    int32_t cascade_by;         /* Identify CASCADE column */
+    bool needs_matching;        /* Does sig need to be matched with tables */
 };
 
+/** Keep track of how many [in] columns are active for [out] columns of OnDemand
+ * systems. */
+typedef struct ecs_on_demand_out_t {
+    ecs_entity_t system;    /* Handle to system */
+    int32_t count;         /* Total number of times [out] columns are used */
+} ecs_on_demand_out_t;
+
+/** Keep track of which OnDemand systems are matched with which [in] columns */
+typedef struct ecs_on_demand_in_t {
+    int32_t count;         /* Number of active systems with [in] column */
+    ecs_vector_t *systems;  /* Systems that have this column as [out] column */
+} ecs_on_demand_in_t;
 
 /** A column system is a system that is ran periodically (default = every frame)
  * on all entities that match the system signature expression. Column systems
@@ -285,10 +226,8 @@ struct ecs_query_t {
 typedef struct EcsColSystem {
     ecs_iter_action_t action;    /* Callback to be invoked for matching rows */
     void *ctx;                     /* Userdata for system */
-    ecs_system_kind_t kind;        /* Kind of system */
     float time_spent;              /* Time spent on running system */
     int32_t invoke_count;          /* Number of times system is invoked */
-    bool enabled;                  /* Is system enabled or not */
 
     ecs_entity_t entity;                  /* Entity id of system, used for ordering */
     ecs_query_t *query;                   /* System query */
@@ -298,8 +237,6 @@ typedef struct EcsColSystem {
     void *status_ctx;                     /* User data for status action */    
     ecs_entity_t tick_source;             /* Tick source associated with system */
     float time_passed;                    /* Time passed since last invocation */
-    bool enabled_by_demand;               /* Is system enabled by on demand systems */
-    bool enabled_by_user;                 /* Is system enabled by user */
 } EcsColSystem;
 
 #define ECS_TYPE_DB_MAX_CHILD_NODES (256)
@@ -418,34 +355,22 @@ struct ecs_world_t {
 
     ecs_vector_t *component_data;
 
-    /* -- Column systems -- */
-
-    ecs_vector_t *on_load_systems;  
-    ecs_vector_t *post_load_systems;  
-    ecs_vector_t *pre_update_systems;  
-    ecs_vector_t *on_update_systems;   
-    ecs_vector_t *on_validate_systems; 
-    ecs_vector_t *post_update_systems; 
-    ecs_vector_t *pre_store_systems; 
-    ecs_vector_t *on_store_systems;   
-    ecs_vector_t *manual_systems;  
-    ecs_vector_t *inactive_systems;
 
     /* --  Queries -- */
 
     ecs_sparse_t *queries;
 
-    /* -- OnDemand systems -- */
+
+    /* -- Systems -- */
     
+    ecs_entity_t builtin_pipeline;     /* Pipeline with builtin phases */
     ecs_map_t *on_activate_components; /* Trigger on activate of [in] column */
-    ecs_map_t *on_enable_components; /* Trigger on enable of [in] column */
-
-
-    /* -- Tasks -- */
-    ecs_vector_t *fini_tasks;         /* Tasks to execute on ecs_fini */
+    ecs_map_t *on_enable_components;   /* Trigger on enable of [in] column */
+    ecs_vector_t *fini_tasks;          /* Tasks to execute on ecs_fini */
 
 
     /* -- Lookup Indices -- */
+
     ecs_map_t *type_handles;          /* Handles to named types */
 
 
@@ -471,13 +396,6 @@ struct ecs_world_t {
     ecs_entity_t min_handle;         /* First allowed handle */
     ecs_entity_t max_handle;         /* Last allowed handle */
 
-
-    /* -- Handles to builtin components types -- */
-
-    ecs_type_t t_component;
-    ecs_type_t t_type;
-    ecs_type_t t_prefab;
-    ecs_type_t t_col_system;
 
     /* -- Time management -- */
 
@@ -505,8 +423,11 @@ struct ecs_world_t {
     int arg_fps;
     int arg_threads;
 
+
     /* -- World lock -- */
+
     ecs_os_mutex_t mutex;         /* Locks the world if locking enabled */
+
 
     /* -- World state -- */
 

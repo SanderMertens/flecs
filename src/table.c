@@ -137,11 +137,13 @@ void ecs_table_activate(
         }
 
         #ifndef NDEBUG
-            char *expr = ecs_type_str(world, table->type);
-            ecs_trace_1("table #[green][%s]#[reset] %s for %d queries", expr, 
-                activate ? "activated" : "deactivated",
-                ecs_vector_count(queries));
-            ecs_os_free(expr);
+            if (ecs_vector_count(queries)) {
+                char *expr = ecs_type_str(world, table->type);
+                ecs_trace_1("table #[green][%s]#[reset] %s for %d queries", expr, 
+                    activate ? "activated" : "deactivated",
+                    ecs_vector_count(queries));
+                ecs_os_free(expr);
+            }
         #endif         
     }     
 }

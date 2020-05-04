@@ -165,7 +165,7 @@ FLECS_EXPORT
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
     const char *name,
-    ecs_system_kind_t kind,
+    ecs_entity_t phase,
     char *signature,
     ecs_iter_action_t action);
 
@@ -176,7 +176,71 @@ ecs_entity_t ecs_new_trigger(
     ecs_trigger_kind_t kind,
     ecs_entity_t component,
     ecs_iter_action_t action,
-    void *ctx);
+    const void *ctx);
+
+FLECS_EXPORT
+ecs_entity_t ecs_new_pipeline(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr);
+
+////////////////////////////////////////////////////////////////////////////////
+//// Signature API
+////////////////////////////////////////////////////////////////////////////////
+
+typedef enum ecs_sig_inout_kind_t {
+    EcsInOut,
+    EcsIn,
+    EcsOut
+} ecs_sig_inout_kind_t;
+
+/** Type that is used by systems to indicate where to fetch a component from */
+typedef enum ecs_sig_from_kind_t {
+    EcsFromSelf,            /* Get component from self (default) */
+    EcsFromOwned,           /* Get owned component from self */
+    EcsFromShared,          /* Get shared component from self */
+    EcsFromContainer,       /* Get component from container */
+    EcsFromSystem,          /* Get component from system */
+    EcsFromEmpty,           /* Get entity handle by id */
+    EcsFromEntity,          /* Get component from other entity */
+    EcsCascade              /* Walk component in cascading (hierarchy) order */
+} ecs_sig_from_kind_t;
+
+/** Type describing an operator used in an signature of a system signature */
+typedef enum ecs_sig_oper_kind_t {
+    EcsOperAnd = 0,
+    EcsOperOr = 1,
+    EcsOperNot = 2,
+    EcsOperOptional = 3,
+    EcsOperLast = 4
+} ecs_sig_oper_kind_t;
+
+/** Type that describes a single column in the system signature */
+typedef struct ecs_sig_column_t {
+    ecs_sig_from_kind_t from_kind;        /* Element kind (Entity, Component) */
+    ecs_sig_oper_kind_t oper_kind;   /* Operator kind (AND, OR, NOT) */
+    ecs_sig_inout_kind_t inout_kind; /* Is component read or written */
+    union {
+        ecs_vector_t *type;          /* Used for OR operator */
+        ecs_entity_t component;      /* Used for AND operator */
+    } is;
+    ecs_entity_t source;             /* Source entity (used with FromEntity) */
+} ecs_sig_column_t;
+
+/** Type that stores a parsed signature */
+typedef struct ecs_sig_t {
+    const char *name;           /* Optional name used for debugging */
+    char *expr;                 /* Original expression string */
+    ecs_vector_t *columns;      /* Columns that contain parsed data */
+} ecs_sig_t;
+
+int ecs_sig_add(
+    ecs_sig_t *sig,
+    ecs_sig_from_kind_t from_kind,
+    ecs_sig_oper_kind_t oper_kind,
+    ecs_sig_inout_kind_t access_kind,
+    ecs_entity_t component,
+    ecs_entity_t source);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Error API

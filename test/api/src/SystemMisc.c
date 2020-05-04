@@ -401,11 +401,11 @@ void SystemMisc_redefine_row_system() {
 
     ecs_entity_t s;
     {
-        ECS_SYSTEM(world, Dummy, EcsOnAdd, Position);
+        ECS_TRIGGER(world, Dummy, EcsOnAdd, Position, NULL);
         s = Dummy;
     }
 
-    ECS_SYSTEM(world, Dummy, EcsOnAdd, Position);
+    ECS_TRIGGER(world, Dummy, EcsOnAdd, Position, NULL);
 
     test_assert(s == Dummy);
 
@@ -860,42 +860,14 @@ void SystemMisc_table_count() {
     ecs_fini(world);
 }
 
-void SystemMisc_active_system_count() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    int32_t initial_active_count = ecs_active_system_count(world);
-    int32_t initial_inactive_count = ecs_inactive_system_count(world);
-
-    ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
-    ECS_SYSTEM(world, SysB, EcsOnUpdate, Position, Velocity);
-
-    test_int( ecs_active_system_count(world) - initial_active_count, 0);
-    test_int( ecs_inactive_system_count(world) - initial_inactive_count, 2);
-
-    ecs_entity_t e = ecs_new(world, Position);
-
-    test_int( ecs_active_system_count(world) - initial_active_count, 1);
-    test_int( ecs_inactive_system_count(world) - initial_inactive_count, 1);
-
-    ecs_add(world, e, Velocity);
-
-    test_int( ecs_active_system_count(world) - initial_active_count, 2);
-    test_int( ecs_inactive_system_count(world) - initial_inactive_count, 0);
-    
-    ecs_fini(world);
-}
-
 void SystemMisc_match_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, SysA, EcsManual, SYSTEM.Position);
-    ECS_SYSTEM(world, SysB, EcsManual, Position);
+    ECS_SYSTEM(world, SysA, 0, SYSTEM.Position);
+    ECS_SYSTEM(world, SysB, 0, Position);
 
     ecs_run(world, SysB, 0, NULL);
 
@@ -911,8 +883,8 @@ void SystemMisc_match_system_w_filter() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, SysA, EcsManual, SYSTEM.Position);
-    ECS_SYSTEM(world, SysB, EcsManual, Position);
+    ECS_SYSTEM(world, SysA, 0, SYSTEM.Position);
+    ECS_SYSTEM(world, SysB, 0, Position);
 
     ecs_run_w_filter(world, SysB, 0, 0, 0, &(ecs_filter_t){
         .include = ecs_type(Position)

@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Foo);
     ECS_COMPONENT(world, Bar);
 
-    ECS_SYSTEM(world, GetChildren, EcsManual, EcsName);
+    ECS_SYSTEM(world, GetChildren, 0, EcsName);
 
     /* Create two parents */
     ecs_entity_t parent_1 = ecs_new(world, 0);

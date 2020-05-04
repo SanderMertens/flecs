@@ -268,8 +268,8 @@ void _ecs_trace(
 
     char *msg = ecs_vasprintf(fmt, valist);
     char *color_msg = ecs_colorize(msg);
-    fprintf(stdout, "%s%12s:%4d: %sinfo%s: %s%s%s%s\n",
-        ECS_BOLD, file, line, ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+    fprintf(stdout, "%sinfo%s: %s%s%s%s\n",
+        ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
     ecs_os_free(color_msg);
     ecs_os_free(msg);
 }

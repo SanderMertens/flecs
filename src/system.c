@@ -54,13 +54,9 @@ void activate_in_columns(
                     /* If this is the first out column that is requested from
                      * the OnDemand system, enable it */
                     if (activate && out[s]->count == 1) {
-                        EcsColSystem *ptr = ecs_get_ptr(world, out[s]->system, EcsColSystem);
-                        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-                        ecs_enable_intern(world, out[s]->system, ptr, true, false);
+                        ecs_remove(world, out[s]->system, EcsDisabledIntern);
                     } else if (!activate && !out[s]->count) {
-                        EcsColSystem *ptr = ecs_get_ptr(world, out[s]->system, EcsColSystem); 
-                        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);               
-                        ecs_enable_intern(world, out[s]->system, ptr, false, false);
+                        ecs_add(world, out[s]->system, EcsDisabledIntern);             
                     }
                 }
             }
@@ -135,11 +131,23 @@ void ecs_system_activate(
     ecs_entity_t system,
     bool activate)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    if (activate) {
+        ecs_remove(world, system, EcsInactive);
+    } else {
+        ecs_add(world, system, EcsInactive);
+    }
+
+    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    /* During initialization it is possible that the query is not yet set */
+    if (!system_data->query) {
+        return;
+    }
+
     /* If system contains in columns, signal that they are now in use */
-    activate_in_columns(world, system_data->query, world->on_activate_components, activate);
+    activate_in_columns(
+        world, system_data->query, world->on_activate_components, activate);
 
     /* Invoke system status action */
     ecs_invoke_status_action(world, system, system_data, 
@@ -151,21 +159,31 @@ void ecs_system_activate(
 }
 
 /* Actually enable or disable system */
-void ecs_enable_system(
+EcsColSystem* ecs_enable_system(
     ecs_world_t *world,
     ecs_entity_t system,
     EcsColSystem *system_data,
     bool enabled)
 {
     ecs_query_t *query = system_data->query;
+    bool system_enabled = !ecs_has(world, system, EcsDisabled);
 
-    if (system_data->enabled != enabled) {
-        system_data->enabled = enabled;
+    if (system_enabled != enabled) {
+        if (enabled) {
+            ecs_remove(world, system, EcsDisabled);
+        } else {
+            ecs_add(world, system, EcsDisabled);
+        }
 
         if (ecs_vector_count(query->tables)) {
             /* Only (de)activate system if it has non-empty tables. */
-            ecs_world_activate_system(
-                world, system, system_data->kind, enabled);
+            if (enabled) {
+                ecs_remove(world, system, EcsInactive);
+            } else {
+                ecs_add(world, system, EcsInactive);
+            }
+
+            system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
         }
 
         /* Enable/disable systems that trigger on [in] enablement */
@@ -180,125 +198,15 @@ void ecs_enable_system(
             world, system, system_data,
             enabled ? EcsSystemEnabled : EcsSystemDisabled);
     }
+
+    return system_data;
 }
-
-/* Evaluate user & demand state, and determine whether the system actually needs
- * to be enabled or disabled */
-void ecs_enable_intern(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    EcsColSystem *system_data,
-    bool enabled,
-    bool by_user)
-{
-    if (by_user) {
-        /* If the user state did not change, nothing needs to be done */
-        if (system_data->enabled_by_user != enabled) {
-            if (enabled) {
-                ecs_assert(
-                    system_data->enabled == false, 
-                    ECS_INTERNAL_ERROR, 
-                    NULL);
-
-                if (system_data->enabled_by_demand) {
-                    /* System can be turned on as there is demand for it */                    
-                    ecs_enable_system(world, system, system_data, true);
-
-                    ecs_trace_1("system #[green]%s#[reset] %s by user", 
-                        ecs_get_name(world, system), 
-                        enabled ? "enabled" : "disabled");                    
-                } else {
-                    /* User enabled system but there is no demand for it, so
-                        * don't turn it on. System will turn on when demand is
-                        * created. */                        
-                }
-            } else {
-                if (!system_data->enabled_by_demand) {
-                    ecs_assert(
-                        system_data->enabled == false, 
-                        ECS_INTERNAL_ERROR, 
-                        NULL);
-
-                    /* If the user disabled the system but it was already
-                        * disabled because there was no demand for it, nothing
-                        * needs to be done right now. */                       
-                } else {
-                    ecs_assert(
-                        system_data->enabled == true, 
-                        ECS_INTERNAL_ERROR, 
-                        NULL);
-
-                    /* If the user disabled the system and it was enabled
-                        * because there was demand for it, it needs to be
-                        * disabled. */
-                    ecs_enable_system(world, system, system_data, false);
-
-                    ecs_trace_1("system #[green]%s#[reset] %s by user", 
-                        ecs_get_name(world, system), 
-                        enabled ? "enabled" : "disabled");                    
-                }
-            }
-
-            system_data->enabled_by_user = enabled;
-        }
-    } else {
-        /* If the demand state did not change, nothing needs to be done */
-        if (system_data->enabled_by_demand != enabled) {
-            if (enabled) {
-                ecs_assert(
-                    system_data->enabled == false, 
-                    ECS_INTERNAL_ERROR, 
-                    NULL);
-
-                if (system_data->enabled_by_user) {
-                    /* System can be turned on since the user has enabled it
-                        * and there is now demand. */
-                    ecs_enable_system(world, system, system_data, true);
-
-                    ecs_trace_1("system #[green]%s#[reset] %s by framework", 
-                        ecs_get_name(world, system), 
-                        enabled ? "enabled" : "disabled");                    
-                } else {
-                    /* Demand was created, but the user explicitly disabled
-                        * the system. Don't do anything. */
-                }
-            } else {
-                if (!system_data->enabled_by_user) {
-                    ecs_assert(
-                        system_data->enabled == false, 
-                        ECS_INTERNAL_ERROR, 
-                        NULL); 
-
-                    /* If the system is disabled because the user disabled
-                        * it and now there is also no more demand for it,
-                        * nothing needs to be done. */
-                } else {
-                    ecs_assert(
-                        system_data->enabled == true, 
-                        ECS_INTERNAL_ERROR, 
-                        NULL);                        
-
-                    /* If the system was enabled by the user and now there
-                        * is no more demand for it, disable the system */
-                    ecs_enable_system(world, system, system_data, false);
-
-                    ecs_trace_1("system #[green]%s#[reset] %s by framework", 
-                        ecs_get_name(world, system), 
-                        enabled ? "enabled" : "disabled");                    
-                }
-            }
-
-            system_data->enabled_by_demand = enabled;
-        }
-    }
-}
-
-static 
-void set_system(
+ 
+void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
     const char *name,
-    ecs_system_kind_t kind,
+    ecs_entity_t phase,
     ecs_iter_action_t action,
     char *signature)
 {
@@ -311,136 +219,76 @@ void set_system(
     ecs_trace_push();
 
     bool is_added = false;
-    EcsColSystem *system_data = ecs_get_mutable(
+    EcsColSystem *system_data = ecs_get_mut(
         world, system, EcsColSystem, &is_added);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(is_added == true, ECS_UNSUPPORTED, NULL);
 
     memset(system_data, 0, sizeof(EcsColSystem));
     system_data->action = action;
-    system_data->enabled = true;
-    system_data->enabled_by_user = true;
-    system_data->enabled_by_demand = true;
     system_data->time_spent = 0;
-    system_data->kind = kind;
     system_data->query = ecs_query_new_w_sig(world, system, &sig);
     ecs_assert(system_data->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
     system_data->tick_source = 0;
     system_data->entity = system;
 
-    ecs_entity_t *elem = NULL;
-
-    if (!ecs_vector_count(system_data->query->tables)) {
-        elem = ecs_vector_add(&world->inactive_systems, ecs_entity_t);
-    } else {
-        if (kind == EcsManual) {
-            elem = ecs_vector_add(&world->manual_systems, ecs_entity_t);
-        } else if (kind == EcsOnUpdate) {
-            elem = ecs_vector_add(&world->on_update_systems, ecs_entity_t);
-        } else if (kind == EcsOnValidate) {
-            elem = ecs_vector_add(&world->on_validate_systems, ecs_entity_t);            
-        } else if (kind == EcsPreUpdate) {
-            elem = ecs_vector_add(&world->pre_update_systems, ecs_entity_t);
-        } else if (kind == EcsPostUpdate) {
-            elem = ecs_vector_add(&world->post_update_systems, ecs_entity_t);
-        } else if (kind == EcsOnLoad) {
-            elem = ecs_vector_add(&world->on_load_systems, ecs_entity_t);
-        } else if (kind == EcsPostLoad) {
-            elem = ecs_vector_add(&world->post_load_systems, ecs_entity_t);            
-        } else if (kind == EcsPreStore) {
-            elem = ecs_vector_add(&world->pre_store_systems, ecs_entity_t);
-        } else if (kind == EcsOnStore) {
-            elem = ecs_vector_add(&world->on_store_systems, ecs_entity_t);
-        }
-
+    if (ecs_vector_count(system_data->query->tables)) {
         /* If tables have been matched with this system it is active, and we
         * should activate the in-columns, if any. This will ensure that any
         * OnDemand systems get enabled. */
         ecs_system_activate(world, system, true);
     }
 
-    *elem = system;
-
     /* If system is enabled, trigger enable components */
-    if (system_data->enabled) {
-        activate_in_columns(
-            world, system_data->query, 
-            world->on_enable_components, 
-            true);   
-    }
+    activate_in_columns(
+        world, system_data->query, 
+        world->on_enable_components, 
+        true);   
 
     /* Check if all non-table column constraints are met. If not, disable
      * system (system will be enabled once constraints are met) */
     if (!ecs_sig_check_constraints(world, &system_data->query->sig)) {
-        ecs_enable_intern(world, system, system_data, false, false);
+        ecs_add(world, system, EcsDisabledIntern);
     }
+
+    /* If system has FromSystem columns, add components to the system entity */
+    ecs_vector_each(system_data->query->sig.columns, ecs_sig_column_t, column, {
+        if (column->from_kind == EcsFromSystem) {
+            ecs_add_entity(world, system, column->is.component);
+        }
+    });
+
+    /* Re-obtain system_data, as it might have changed */
+    system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
+    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* If the query has a OnDemand system tag, register its [out] columns */
-    if (ecs_type_contains(
-        world, system_data->query->sig.and_from_system, 
-        TEcsOnDemand, true, false)) 
-    {
+    if (ecs_has(world, system, EcsOnDemand)) {
         register_out_columns(world, system, system_data);
-    }
 
-    /* If system contains FromSystem params, add them tot the system */
-    ecs_type_t and_from_system = system_data->query->sig.and_from_system;
-    if (and_from_system) {
-        ecs_entity_t *array = ecs_vector_first(and_from_system);
-        int32_t i, count = ecs_vector_count(and_from_system);
-        for (i = 0; i < count; i ++) {
-            ecs_add_entity(world, system, array[i]);
-        }
+        ecs_assert(system_data->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Re-obtain system_data, as it might have changed */
-        system_data = ecs_get_ptr(world, system, EcsColSystem);
+        system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
         ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    /* If this is an OnDemand system, register its [out] columns */
-    if (ecs_has(world, system, EcsOnDemand)) {
-        ecs_assert(system_data->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* If there are no systems currently interested in any of the [out]
          * columns of the on demand system, disable it */
         if (!system_data->on_demand->count) {
-            ecs_enable_intern(world, system, system_data, false, false);
-        }
-    } 
+            ecs_add(world, system, EcsDisabledIntern);
+        }        
+    }
 
     ecs_trace_pop();
 }
 
-static 
-void EcsOnSetSystem(
-    ecs_rows_t *rows)
-{
-    ECS_COLUMN(rows, EcsSystem, sys, 1);
-
-    ecs_world_t *world = rows->world;
-    ecs_entity_t *entities = rows->entities;
-
-    int32_t i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = entities[i];
-        set_system(world, entities[i], ecs_get_name(world, e), sys[i].kind, 
-            sys[i].action, sys[i].signature);
-    }
-}
-
 /* -- Private API -- */
-
-void ecs_init_system_builtins(
-    ecs_world_t *world)
-{
-    ECS_TRIGGER(world, EcsOnSetSystem, EcsOnSet, EcsSystem, 0);
-}
 
 void ecs_invoke_status_action(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsColSystem *system_data,
+    const EcsColSystem *system_data,
     ecs_system_status_t status)
 {
     ecs_system_status_action_t action = system_data->status_action;
@@ -460,28 +308,23 @@ void ecs_col_system_free(
 
 void ecs_enable(
     ecs_world_t *world,
-    ecs_entity_t system,
+    ecs_entity_t entity,
     bool enabled)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
-    if (system_data) {
-        ecs_enable_intern(world, system, system_data, enabled, true);
+    const EcsType *type_ptr = ecs_get_ptr( world, entity, EcsType);
+    if (type_ptr) {
+        /* If entity is a type, disable all entities in the type */
+        ecs_vector_each(type_ptr->normalized, ecs_entity_t, e, {
+            ecs_enable(world, *e, enabled);
+        });
     } else {
-        /* If entity is neither ColSystem nor RowSystem, it should be a type */
-        EcsType *type_data = ecs_get_ptr(
-            world, system, EcsType);
-
-        assert(type_data != NULL);
-
-        ecs_type_t type = type_data->type;
-        ecs_entity_t *array = ecs_vector_first(type);
-        uint32_t i, count = ecs_vector_count(type);
-        for (i = 0; i < count; i ++) {
-            /* Enable/disable all systems in type */
-            ecs_enable(world, array[i], enabled);
-        }        
+        if (enabled) {
+            ecs_remove(world, entity, EcsDisabled);
+        } else {
+            ecs_add(world, entity, EcsDisabled);
+        }
     }
 }
 
@@ -491,13 +334,13 @@ void ecs_set_system_status_action(
     ecs_system_status_action_t action,
     const void *ctx)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    EcsColSystem *system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     system_data->status_action = action;
     system_data->status_ctx = (void*)ctx;
 
-    if (system_data->enabled) {
+    if (!ecs_has(world, system, EcsDisabled)) {
         /* If system is already enabled, generate enable status. The API 
          * should guarantee that it exactly matches enable-disable 
          * notifications and activate-deactivate notifications. */
@@ -516,19 +359,13 @@ ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
     ecs_world_t *real_world,
     ecs_entity_t system,
+    EcsColSystem *system_data,
     float delta_time,
     uint32_t offset,
     uint32_t limit,
     const ecs_filter_t *filter,
     void *param) 
 {
-    EcsColSystem *system_data = ecs_get_ptr(real_world, system, EcsColSystem);
-    assert(system_data != NULL);
-
-    if (!system_data->enabled) {
-        return 0;
-    }
-
     if (!param) {
         param = system_data->ctx;
     }
@@ -537,7 +374,7 @@ ecs_entity_t ecs_run_intern(
     ecs_entity_t tick_source = system_data->tick_source;
 
     if (tick_source) {
-        EcsTickSource *tick = ecs_get_ptr(real_world, tick_source, EcsTickSource);
+        const EcsTickSource *tick = ecs_get_ptr(real_world, tick_source, EcsTickSource);
 
         if (tick) {
             time_elapsed = tick->time_elapsed;
@@ -627,8 +464,13 @@ ecs_entity_t ecs_run_w_filter(
     ecs_get_stage(&real_world);
     bool in_progress = ecs_staging_begin(real_world);
 
+    EcsColSystem *system_data = (EcsColSystem*)ecs_get_ptr(
+        real_world, system, EcsColSystem);
+    assert(system_data != NULL);
+
     ecs_entity_t interrupted_by = ecs_run_intern(
-        world, real_world, system, delta_time, offset, limit, filter, param);
+        world, real_world, system, system_data, delta_time, offset, limit, 
+        filter, param);
 
     /* If world wasn't in progress when we entered this function, we need to
      * merge and reset the in_progress value */
@@ -650,12 +492,7 @@ bool ecs_is_enabled(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
-    if (system_data) {
-        return system_data->enabled;
-    } else {
-        return true;
-    }
+    return !ecs_has(world, system, EcsDisabled);
 }
 
 void ecs_set_system_context(
@@ -663,7 +500,7 @@ void ecs_set_system_context(
     ecs_entity_t system,
     const void *ctx)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    EcsColSystem *system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
     system_data->ctx = (void*)ctx;
 }
@@ -672,7 +509,7 @@ void* ecs_get_system_context(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
     return system_data->ctx;
 }

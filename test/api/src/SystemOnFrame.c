@@ -68,7 +68,7 @@ void SystemOnFrame_1_type_1_component() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -120,7 +120,7 @@ void SystemOnFrame_1_type_3_component() {
     test_int(ctx.c[0][2], ecs_entity(Mass));
     test_int(ctx.s[0][2], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -136,7 +136,7 @@ void SystemOnFrame_1_type_3_component() {
     test_int(p->y, 20);
 
     
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -152,7 +152,7 @@ void SystemOnFrame_1_type_3_component() {
     test_int(v->y, 40);
 
 
-    Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get_ptr(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -201,7 +201,7 @@ void SystemOnFrame_3_type_1_component() {
     test_int(ctx.c[2][0], ecs_entity(Position));
     test_int(ctx.s[2][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -260,7 +260,7 @@ void SystemOnFrame_2_type_3_component() {
     test_int(ctx.c[1][2], ecs_entity(Mass));
     test_int(ctx.s[1][2], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -276,7 +276,7 @@ void SystemOnFrame_2_type_3_component() {
     test_int(p->y, 20);
 
     
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -292,7 +292,7 @@ void SystemOnFrame_2_type_3_component() {
     test_int(v->y, 40);
 
 
-    Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get_ptr(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -338,7 +338,7 @@ void SystemOnFrame_1_type_1_component_1_tag() {
     test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -386,7 +386,7 @@ void SystemOnFrame_2_type_1_component_1_tag() {
     test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -430,7 +430,7 @@ void SystemOnFrame_2_type_1_and_1_not() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -476,7 +476,7 @@ void SystemOnFrame_2_type_2_and_1_not() {
     test_int(ctx.c[0][2], ecs_entity(Mass));
     test_int(ctx.s[0][2], 0);
     
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -486,7 +486,7 @@ void SystemOnFrame_2_type_2_and_1_not() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -534,12 +534,12 @@ void SystemOnFrame_2_type_2_and_2_not() {
     test_int(ctx.c[0][3], ecs_entity(Rotation));
     test_int(ctx.s[0][3], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -595,7 +595,7 @@ void SystemOnFrame_4_type_1_and_1_or() {
     test_int(ctx.c[2][1], ecs_entity(Velocity));
     test_int(ctx.s[2][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -615,7 +615,7 @@ void SystemOnFrame_4_type_1_and_1_or() {
     test_int(p->x, 0);
     test_int(p->y, 0);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -684,7 +684,7 @@ void SystemOnFrame_4_type_1_and_1_or_of_3() {
     test_int(ctx.c[2][1], ecs_entity(Velocity));
     test_int(ctx.s[2][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -704,7 +704,7 @@ void SystemOnFrame_4_type_1_and_1_or_of_3() {
     test_int(p->x, 0);
     test_int(p->y, 0);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -819,7 +819,7 @@ void SystemOnFrame_2_type_1_and_1_optional() {
     test_int(ctx.c[1][1], ecs_entity(Velocity));
     test_int(ctx.s[1][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -834,7 +834,7 @@ void SystemOnFrame_2_type_1_and_1_optional() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -888,7 +888,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
     test_int(ctx.c[1][2], ecs_entity(Mass));
     test_int(ctx.s[1][2], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -903,7 +903,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -918,7 +918,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get_ptr(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -982,7 +982,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
     test_int(ctx.c[3][2], ecs_entity(Mass));
     test_int(ctx.s[3][2], 0);   
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -1002,7 +1002,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -1012,7 +1012,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    Mass *m = ecs_get_ptr(world, e_2, Mass);
+    const Mass *m = ecs_get_ptr(world, e_2, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -1049,8 +1049,8 @@ void SystemOnFrame_use_fields_2_owned() {
 
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_int(p->x, 11);
     test_int(p->y, 22);
     test_int(v->x, 10);
@@ -1073,8 +1073,8 @@ void SystemOnFrame_use_fields_1_owned_1_shared() {
 
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
-    Velocity *v = ecs_get_ptr(world, parent, Velocity);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Velocity *v = ecs_get_ptr(world, parent, Velocity);
     test_int(p->x, 11);
     test_int(p->y, 22);
     test_int(v->x, 10);

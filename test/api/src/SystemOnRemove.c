@@ -27,7 +27,7 @@ void SystemOnRemove_remove_match_1_of_1() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position);
+    ECS_TRIGGER(world, Deinit, EcsOnRemove, Position, NULL);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -56,7 +56,7 @@ void SystemOnRemove_remove_match_1_of_2() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position);
+    ECS_TRIGGER(world, Deinit, EcsOnRemove, Position, NULL);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -79,75 +79,12 @@ void SystemOnRemove_remove_match_1_of_2() {
     ecs_fini(world);
 }
 
-void SystemOnRemove_remove_match_2_of_2() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position, Velocity);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Type);
-    test_assert(e != 0);
-
-    test_int(ctx.count, 0);
-
-    ecs_remove(world, e, Type);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.column_count, 2);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
-    test_int(ctx.s[0][1], 0);
-
-    ecs_fini(world);
-}
-
-void SystemOnRemove_remove_match_2_of_3() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_TYPE(world, Type, Position, Velocity, Mass);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position, Velocity);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Type);
-    test_assert(e != 0);
-
-    test_int(ctx.count, 0);
-
-    ecs_remove(world, e, Type);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.column_count, 2);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
-    test_int(ctx.s[0][1], 0);
-
-    ecs_fini(world);
-}
-
 void SystemOnRemove_remove_no_match_1() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position);
+    ECS_TRIGGER(world, Deinit, EcsOnRemove, Position, NULL);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -164,59 +101,11 @@ void SystemOnRemove_remove_no_match_1() {
     ecs_fini(world);
 }
 
-void SystemOnRemove_remove_no_match_2_of_1() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position, Velocity);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Type);
-    test_assert(e != 0);
-
-    test_int(ctx.count, 0);
-
-    ecs_remove(world, e, Velocity);
-
-    test_int(ctx.count, 0);
-
-    ecs_fini(world);
-}
-
-void SystemOnRemove_remove_no_match_2_of_3() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
-    ECS_TYPE(world, Type, Position, Velocity, Mass);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position, Rotation);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Type);
-    test_assert(e != 0);
-
-    test_int(ctx.count, 0);
-
-    ecs_remove(world, e, Type);
-
-    test_int(ctx.count, 0);
-
-    ecs_fini(world);
-}
-
 void SystemOnRemove_delete_match_1_of_1() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position);
+    ECS_TRIGGER(world, Deinit, EcsOnRemove, Position, NULL);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -245,7 +134,7 @@ void SystemOnRemove_delete_match_1_of_2() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position);
+    ECS_TRIGGER(world, Deinit, EcsOnRemove, Position, NULL);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -268,127 +157,17 @@ void SystemOnRemove_delete_match_1_of_2() {
     ecs_fini(world);
 }
 
-void SystemOnRemove_delete_match_2_of_2() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position, Velocity);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Type);
-    test_assert(e != 0);
-
-    test_int(ctx.count, 0);
-
-    ecs_delete(world, e);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.column_count, 2);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
-    test_int(ctx.s[0][1], 0);    
-
-    ecs_fini(world);
-}
-
-void SystemOnRemove_delete_match_2_of_3() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_TYPE(world, Type, Position, Velocity, Mass);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position, Velocity);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Type);
-    test_assert(e != 0);
-
-    test_int(ctx.count, 0);
-
-    ecs_delete(world, e);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.column_count, 2);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
-    test_int(ctx.s[0][1], 0);
-
-    ecs_fini(world);
-}
-
 void SystemOnRemove_delete_no_match_1() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position);
+    ECS_TRIGGER(world, Deinit, EcsOnRemove, Position, NULL);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_entity_t e = ecs_new(world, Velocity);
-    test_assert(e != 0);
-
-    test_int(ctx.count, 0);
-
-    ecs_delete(world, e);
-
-    test_int(ctx.count, 0); 
-
-    ecs_fini(world);
-}
-
-void SystemOnRemove_delete_no_match_2_of_1() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position, Velocity);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Velocity);
-    test_assert(e != 0);
-
-    test_int(ctx.count, 0);
-
-    ecs_delete(world, e);
-
-    test_int(ctx.count, 0); 
-
-    ecs_fini(world);
-}
-
-void SystemOnRemove_delete_no_match_2_of_3() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
-    ECS_TYPE(world, Type, Position, Velocity, Mass);
-    ECS_SYSTEM(world, Deinit, EcsOnRemove, Position, Rotation);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -411,7 +190,7 @@ void SystemOnRemove_disabled_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, IsInvoked, EcsOnRemove, Position);
+    ECS_TRIGGER(world, IsInvoked, EcsOnRemove, Position, NULL);
 
     ecs_enable(world, IsInvoked, false);
 
@@ -446,7 +225,7 @@ void SystemOnRemove_remove_watched() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, RemovePosition, EcsOnRemove, Position);
+    ECS_TRIGGER(world, RemovePosition, EcsOnRemove, Position, NULL);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     test_assert(e != 0);
@@ -468,7 +247,7 @@ void SystemOnRemove_delete_watched() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, RemovePosition, EcsOnRemove, Position);
+    ECS_TRIGGER(world, RemovePosition, EcsOnRemove, Position, NULL);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     test_assert(e != 0);
