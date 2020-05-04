@@ -277,7 +277,14 @@ void ecs_init_system(
          * columns of the on demand system, disable it */
         if (!system_data->on_demand->count) {
             ecs_add(world, system, EcsDisabledIntern);
+            
+            system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
+            ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
         }        
+    }
+
+    if (ecs_has(world, system, EcsMonitor)) {
+        ecs_query_set_monitor(world, system_data->query, true);
     }
 
     ecs_trace_pop();
@@ -486,6 +493,25 @@ ecs_entity_t ecs_run(
     void *param)
 {
     return ecs_run_w_filter(world, system, delta_time, 0, 0, NULL, param);
+}
+
+void ecs_run_monitor(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_monitor_t *monitor,
+    int32_t row,
+    int32_t count)
+{
+    ecs_entity_t system = monitor->system;
+    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_rows_t rows = {0};
+    ecs_query_set_rows( world, stage, system_data->query, &rows, 
+        monitor->matched_table_index, row, count);
+
+    rows.system = system;
+    system_data->action(&rows);
 }
 
 bool ecs_is_enabled(

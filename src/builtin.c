@@ -244,9 +244,6 @@ void ecs_init_system_builtins(
     ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline, 0);
     ECS_TRIGGER(world, EcsOnSetSystem, EcsOnSet, EcsSystem, 0);
 
-    // ECS_WATCH(world, EcsSystemEnabled, EcsSystem, !EcsDisabled, !EcsDisabledIntern);
-    // ECS_WATCH(world, EcsSystemDisabled, EcsSystem, EcsDisabled || EcsDisabledIntern);
-
     world->builtin_pipeline = ecs_new_pipeline(world, "EcsBuiltinPipeline",
         "EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,"
         " EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame");

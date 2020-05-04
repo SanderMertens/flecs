@@ -609,6 +609,54 @@ void ecs_run_deinit_actions(
 }
 
 static
+void run_monitors(
+    ecs_world_t *world, 
+    ecs_stage_t *stage, 
+    ecs_table_t *dst_table, 
+    ecs_data_t *dst_data, 
+    int32_t dst_row, 
+    int32_t count, 
+    ecs_table_t *src_table)
+{
+    if (!dst_table->monitors) {
+        return;
+    }
+
+    if (!src_table->monitors) {
+        ecs_vector_each(dst_table->monitors, ecs_monitor_t, monitor, {
+            ecs_run_monitor(world, stage, monitor, dst_row, count);
+        });
+    } else {
+        /* If both tables have monitors, run the ones that dst_table has and
+         * src_table doesn't have */
+        int32_t i, count = ecs_vector_count(dst_table->monitors);
+        int32_t j = 0, src_count = ecs_vector_count(src_table->monitors);
+        ecs_monitor_t *dst_monitors = ecs_vector_first(dst_table->monitors);
+        ecs_monitor_t *src_monitors = ecs_vector_first(src_table->monitors);
+
+        for (i = 0; i < count; i ++) {
+            ecs_monitor_t *dst = &dst_monitors[i];
+
+            ecs_monitor_t *src = 0;
+            while (j < src_count) {
+                src = &src_monitors[j];
+                if (src->system < dst->system) {
+                    j ++;
+                } else {
+                    break;
+                }
+            }
+
+            if (src->system == dst->system) {
+                continue;
+            }
+
+            ecs_run_monitor(world, stage, dst, dst_row, count);
+        }
+    }
+}
+
+static
 uint32_t new_entity(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -649,15 +697,7 @@ uint32_t new_entity(
 
     run_init_actions(world, stage, new_table, dst_data, new_row, 1, *added);
 
-    ecs_vector_t *new_systems = new_table->on_new;
-    // if (new_systems) {
-    //     int32_t i, count = ecs_vector_count(new_systems);
-    //     ecs_entity_t *sys_array = ecs_vector_first(new_systems);
-
-    //     for (i = 0; i < count; i ++) {
-    //         //TODO invoke on_new trigger
-    //     }
-    // }
+    run_monitors(world, stage, new_table, dst_data, new_row, 1, NULL);
 
     info->data = dst_data;
     
@@ -722,6 +762,8 @@ uint32_t move_entity(
         run_init_actions(
             world, stage, dst_table, dst_data, dst_row, 1, *added);
     }
+
+    run_monitors(world, stage, dst_table, dst_data, dst_row, 1, src_table);
 
     info->data = dst_data;
 
@@ -810,7 +852,7 @@ void commit(
             ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, 0);
             ecs_assert(entity >= world->min_handle, ECS_OUT_OF_RANGE, 0);
         }
-    }    
+    }
 }
 
 static
@@ -947,6 +989,8 @@ int32_t new_w_data(
                 row, count);
         }
     }
+
+    run_monitors(world, stage, table, data, row, count, NULL);
 
     return row;
 }

@@ -123,7 +123,6 @@ void init_table(
     init_edges(world, stage, table);
 
     table->queries = NULL;
-    table->on_new = NULL;
 }
 
 static

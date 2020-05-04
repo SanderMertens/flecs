@@ -338,6 +338,7 @@ extern ecs_type_t
     TEcsDisabledIntern,
     TEcsInactive,
     TEcsOnDemand,
+    TEcsMonitor,
     TEcsPipeline,
     TEcsPipelineQuery,
     TEcsTimer,
@@ -359,26 +360,27 @@ extern ecs_type_t
 #define EEcsDisabledIntern (12)
 #define EEcsInactive (13)
 #define EEcsOnDemand (14)
-#define EEcsPipeline (15)
-#define EEcsPipelineQuery (16)
-#define EEcsTimer (17)
-#define EEcsRateFilter (18)
-#define EEcsTickSource (19)
+#define EEcsMonitor (15)
+#define EEcsPipeline (17)
+#define EEcsPipelineQuery (18)
+#define EEcsTimer (19)
+#define EEcsRateFilter (20)
+#define EEcsTickSource (21)
 
 /* Builtin pipeline tags */
-#define EcsPreFrame (20)
-#define EcsOnLoad (21)
-#define EcsPostLoad (22)
-#define EcsPreUpdate (23)
-#define EcsOnUpdate (24)
-#define EcsOnValidate (25)
-#define EcsPostUpdate (27)
-#define EcsPreStore (28)
-#define EcsOnStore (29)
-#define EcsPostFrame (30)
+#define EcsPreFrame (22)
+#define EcsOnLoad (23)
+#define EcsPostLoad (24)
+#define EcsPreUpdate (25)
+#define EcsOnUpdate (26)
+#define EcsOnValidate (27)
+#define EcsPostUpdate (28)
+#define EcsPreStore (29)
+#define EcsOnStore (30)
+#define EcsPostFrame (31)
 
 /** Builtin entity ids */
-#define EcsWorld (31)
+#define EcsWorld (32)
 #define ECS_SINGLETON (EcsSingleton)
 
 /** Value used to quickly check if component is builtin */

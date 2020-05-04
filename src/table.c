@@ -166,6 +166,84 @@ void ecs_table_register_query(
     }
 }
 
+int compare_entity(
+    const void *ptr1,
+    const void *ptr2)
+{
+    const ecs_monitor_t *m1 = ptr1;
+    const ecs_monitor_t *m2 = ptr2;
+    return m1->system - m2->system;
+}
+
+/* This function is called when a query is matched with a table. A table keeps
+ * a list of tables that match so that they can be notified when the table
+ * becomes empty / non-empty. */
+void ecs_table_register_monitor(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t system,
+    int32_t matched_table_index)
+{
+    ecs_assert(system != 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* First check if system is already registered as monitor. It is possible
+     * the query just wants to update the matched_table_index (for example, if
+     * query tables got reordered) */
+    ecs_vector_each(table->monitors, ecs_monitor_t, m, {
+        if (m->system == system) {
+            m->matched_table_index = matched_table_index;
+            return;
+        }
+    });
+
+    /* Monitor hasn't been registered with table, register it now */
+    ecs_monitor_t *m = ecs_vector_add(&table->monitors, ecs_monitor_t);
+    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    m->system = system;
+    m->matched_table_index = matched_table_index;
+
+    /* Sort the vector so we can quickly compare monitors between tables */
+    qsort(
+        ecs_vector_first(table->monitors), 
+        ecs_vector_count(table->monitors), 
+        sizeof(ecs_monitor_t), 
+        compare_entity);
+
+#ifndef NDEBUG
+    char *str = ecs_type_str(world, table->type);
+    ecs_trace_1("monitor #[green]%s#[reset] registered with table #[red]%s",
+        ecs_get_name(world, system), str);
+    ecs_os_free(str);
+#endif
+}
+
+void ecs_table_unregister_monitor(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t system)
+{
+    bool removed = false;
+
+    ecs_vector_each(table->monitors, ecs_monitor_t, m, {
+        if (m->system == system) {
+            ecs_vector_remove_index(table->monitors, ecs_monitor_t, m_i);
+            removed = true;
+            break;
+        }
+    });
+
+    if (!removed) {
+        return;
+    }
+
+    qsort(
+        ecs_vector_first(table->monitors), 
+        ecs_vector_count(table->monitors), 
+        sizeof(ecs_monitor_t), 
+        compare_entity);    
+}
+
 static
 ecs_data_t* ecs_table_get_data_intern(
     ecs_world_t *world,

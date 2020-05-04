@@ -129,7 +129,16 @@ void order_ranked_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    ecs_vector_sort(query->tables, ecs_matched_table_t, table_compare);
+    if (query->rank_table) {
+        ecs_vector_sort(query->tables, ecs_matched_table_t, table_compare);
+    }
+
+    if (query->is_monitor) {
+        ecs_vector_each(query->tables, ecs_matched_table_t, table, {
+            ecs_table_register_monitor(
+                world, table->table, query->system, table_i);
+        })
+    }
 }
 
 static
@@ -1037,7 +1046,7 @@ void ecs_query_activate_table(
     bool active)
 {
     ecs_vector_t *src_array, *dst_array;
-    
+
     if (active) {
         src_array = query->inactive_tables;
         dst_array = query->tables;
@@ -1131,6 +1140,23 @@ void ecs_rematch_query(
         } else {
             ecs_add(world, query->system, EcsDisabledIntern);
         }
+    }
+}
+
+void ecs_query_set_monitor(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    bool is_monitor)
+{
+    ecs_assert(!is_monitor || query->system != 0, ECS_INTERNAL_ERROR, NULL);
+
+    query->is_monitor = is_monitor;
+
+    if (is_monitor) {
+        ecs_vector_each(query->tables, ecs_matched_table_t, table, {
+            ecs_table_register_monitor(
+                world, table->table, query->system, table_i);
+        });
     }
 }
 
@@ -1242,6 +1268,39 @@ ecs_query_iter_t ecs_query_iter(
         }
     };
 }
+
+void ecs_query_set_rows(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_query_t *query,
+    ecs_rows_t *rows,
+    int32_t table_index,
+    int32_t row,
+    int32_t count)
+{
+    ecs_matched_table_t *table = ecs_vector_get(
+        query->tables, ecs_matched_table_t, table_index);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_t *world_table = table->table;
+    ecs_data_t *table_data = ecs_table_get_staged_data(world, stage, world_table);
+    ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities);            
+    rows->entities = &entity_buffer[row];
+
+    rows->world = world;
+    rows->query = query;
+    rows->column_count = ecs_vector_count(query->sig.columns);
+    rows->table_count = 1;
+    rows->inactive_table_count = 0;
+    rows->table = world_table;
+    rows->table_columns = table_data->columns;
+    rows->columns = table->columns;
+    rows->components = table->components;
+    rows->references = ecs_vector_first(table->references);
+    rows->offset = row;
+    rows->count = count;
+}
+
 
 /* Return next table */
 bool ecs_query_next(

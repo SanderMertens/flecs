@@ -100,6 +100,12 @@ typedef struct ecs_edge_t {
     ecs_table_t *remove;
 } ecs_edge_t;
 
+/* Table monitor */
+typedef struct ecs_monitor_t {
+    ecs_entity_t system;
+    int32_t matched_table_index;
+} ecs_monitor_t;
+
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
  * entity has a set of components not previously observed before. When a new
@@ -112,8 +118,8 @@ struct ecs_table_t {
     /* Only set when table has data */
     ecs_vector_t *stage_data;         /* Data per stage */
     ecs_vector_t *queries;            /* Queries matched with table */
-    ecs_vector_t *on_new;             /* Systems executed when new entity is
-                                       * added to table */
+    ecs_vector_t *monitors;           /* Monitor systems */
+
     int32_t *dirty_state;             /* Keep track of changes in columns */
     int32_t flags;                    /* Flags for testing table properties */
 };
@@ -168,6 +174,7 @@ struct ecs_query_t {
     bool match_prefab;          /* Does query match prefabs */
     bool match_disabled;        /* Does query match disabled */
     bool has_refs;              /* Does query have references */
+    bool is_monitor;            /* Should query register as monitor? */
     int32_t cascade_by;         /* Identify CASCADE column */
     bool needs_matching;        /* Does sig need to be matched with tables */
 };
