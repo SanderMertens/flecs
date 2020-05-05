@@ -925,7 +925,7 @@ void sort_tables(
         }
     }
 
-    if (tables_sorted) {
+    if (tables_sorted || !count) {
         build_sorted_tables(world, query);
     }
 }
@@ -972,8 +972,8 @@ void process_signature(
         if (!query->match_disabled) {
             if (op == EcsOperOr) {
                 /* If the signature explicitly indicates interest in EcsDisabled,
-                * signal that disabled entities should be matched. By default,
-                * disabled entities are not matched. */
+                 * signal that disabled entities should be matched. By default,
+                 * disabled entities are not matched. */
                 if (ecs_type_has_owned_entity(
                     world, column->is.type, ecs_entity(EcsDisabled), true))
                 {

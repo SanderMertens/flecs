@@ -289,24 +289,12 @@ void OnSetShared(ecs_rows_t *rows) {
     probe_system(rows);
 
     int i;
-
-    if (!ecs_is_shared(rows, 1)) {
-        for (i = 0; i < rows->count; i ++) {
-            p[i].x ++;
-
-            if (v) {
-                v[i].x = p[i].x;
-                v[i].y = p[i].y;
-            }
+    for (i = 0; i < rows->count; i ++) {
+        if (v) {
+            v[i].x = p->x;
+            v[i].y = p->y;
         }
-    } else {
-        for (i = 0; i < rows->count; i ++) {
-            if (v) {
-                v[i].x = p->x;
-                v[i].y = p->y;
-            }
-        }        
-    }
+    }        
 }
 
 void SystemOnSet_on_set_after_override() {
@@ -323,7 +311,6 @@ void SystemOnSet_on_set_after_override() {
     ecs_set_context(world, &ctx);
 
     /* instantiate prefab */
-
     ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
 
     test_int(ctx.count, 1);
@@ -335,13 +322,13 @@ void SystemOnSet_on_set_after_override() {
 
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], Prefab);
+    test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
     test_assert(p == ecs_get_ptr(world, Prefab, Position));
     test_int(p->x, 1);
-    test_int(p->y, 3);     
+    test_int(p->y, 3);
 
     /* override component (doesn't call system) */
 
@@ -358,7 +345,7 @@ void SystemOnSet_on_set_after_override() {
     test_int(p_after->x, 1);
     test_int(p_after->y, 3);
 
-    /* set component */
+    /* Set component */
 
     ecs_set(world, e, Position, {2, 4});
 
@@ -376,7 +363,7 @@ void SystemOnSet_on_set_after_override() {
     p_after = ecs_get_ptr(world, e, Position);
     test_assert(p_after != NULL);
     test_assert(p != p_after);
-    test_int(p_after->x, 3);
+    test_int(p_after->x, 2);
     test_int(p_after->y, 4);
 
     ecs_fini(world);

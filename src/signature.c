@@ -422,7 +422,7 @@ int ecs_sig_add(
             ecs_entity_t prev = elem->is.component;
             elem->is.type = NULL;
             vec_add_entity(&elem->is.type, prev);
-            vec_add_entity(&elem->is.type, elem->is.component);
+            vec_add_entity(&elem->is.type, component);
         } else {
             if (elem->from_kind != from_kind) {
                 /* Cannot mix FromEntity and FromComponent in OR */

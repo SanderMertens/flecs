@@ -196,6 +196,70 @@ bool ecs_get_info(
 }
 
 static
+void run_component_trigger_for_entities(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_vector_t *trigger_vec,
+    ecs_entity_t component,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    ecs_entity_t *entities)
+{
+    int32_t i, trigger_count = ecs_vector_count(trigger_vec);
+    if (trigger_count) {
+        EcsTrigger *triggers = ecs_vector_first(trigger_vec);
+        int32_t index = ecs_type_index_of(table->type, component);
+        ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+        index ++;
+
+        ecs_entity_t components[1] = { component };
+        int32_t columns[1] = { index };
+
+        ecs_rows_t rows = {
+            .world = world,
+            .columns = columns,
+            .table_count = 1,
+            .inactive_table_count = 1,
+            .column_count = 1,
+            .table = table,
+            .table_columns = data->columns,
+            .components = components,
+            .entities = entities,
+            .offset = row,
+            .count = count,
+        };
+
+        for (i = 0; i < trigger_count; i ++) {
+            rows.system = triggers[i].self;
+            rows.param = triggers[i].ctx;
+            triggers[i].action(&rows);
+        }
+    }
+}
+
+static
+void run_component_trigger(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_vector_t *trigger_vec,
+    ecs_entity_t component,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count)
+{
+    ecs_entity_t *entities = ecs_vector_first(data->entities);        
+    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
+    entities = ECS_OFFSET(entities, sizeof(ecs_entity_t) * row);
+
+    run_component_trigger_for_entities(
+        world, stage, trigger_vec, component, table, data, row, count,
+        entities);
+}
+
+static
 int32_t find_prefab(
     ecs_type_t type,
     int32_t n)
@@ -381,7 +445,7 @@ void instantiate_children(
                 instantiate(world, stage, child, table, i_data, child_row, 1);
             }
         }
-    }
+    }    
 }
 
 static
@@ -396,68 +460,46 @@ void instantiate(
 {    
     /* If base is a parent, instantiate children of base for instances */
     const EcsParent *parent_data = ecs_get_ptr(world, base, EcsParent);
-    if (!parent_data) {
-        return;
+    if (parent_data) {
+        int t, table_count = ecs_vector_count(parent_data->child_tables);
+        ecs_table_t **tables = ecs_vector_first(parent_data->child_tables);
+
+        for (t = 0; t < table_count; t ++) {
+            ecs_table_t *child_table = tables[t];
+            if (!ecs_table_count(child_table)) {
+                continue;
+            }
+
+            instantiate_children(
+                world, stage, base, table, data, row, count, child_table);
+        }
     }
 
-    int t, table_count = ecs_vector_count(parent_data->child_tables);
-    ecs_table_t **tables = ecs_vector_first(parent_data->child_tables);
+    /* Run OnSet handlers for prefab components */
+    ecs_entity_info_t info;
+    if (get_info(world, base, &info) && info.table) {
+        ecs_component_data_t* cdata_array = ecs_vector_first(world->component_data);
+        ecs_type_t base_type = info.table->type;
 
-    for (t = 0; t < table_count; t ++) {
-        ecs_table_t *child_table = tables[t];
-        if (!ecs_table_count(child_table)) {
-            continue;
-        }
+        /* Iterate components of base type */
+        ecs_vector_each(base_type, ecs_entity_t, component, {
+            ecs_component_data_t *cdata = &cdata_array[*component];
+            ecs_vector_t *on_set = cdata->on_set;
+            if (on_set) {
+                /* Run trigger separately for each entity. We can't call the
+                 * trigger on the range because we must "trick" the trigger to 
+                 * use data from the base but the instance id. */
+                int j;
+                for (j = row; j < count; j ++) {
+                    ecs_entity_t *entities = ecs_vector_first(data->entities);
 
-        instantiate_children(
-            world, stage, base, table, data, row, count, child_table);
-    }
-}
-
-static
-void run_component_trigger(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_vector_t *trigger_vec,
-    ecs_entity_t component,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count)
-{
-    int32_t i, trigger_count = ecs_vector_count(trigger_vec);
-    if (trigger_count) {
-        EcsTrigger *triggers = ecs_vector_first(trigger_vec);
-        int32_t index = ecs_type_index_of(table->type, component);
-        ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-        index ++;
-
-        ecs_entity_t *entities = ecs_vector_first(data->entities);        
-        ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
-        entities = ECS_OFFSET(entities, sizeof(ecs_entity_t) * row);
-
-        ecs_entity_t components[1] = { component };
-        int32_t columns[1] = { index };
-
-        ecs_rows_t rows = {
-            .world = world,
-            .columns = columns,
-            .table_count = 1,
-            .inactive_table_count = 1,
-            .column_count = 1,
-            .table = table,
-            .table_columns = data->columns,
-            .components = components,
-            .entities = entities,
-            .offset = row,
-            .count = count,
-        };
-
-        for (i = 0; i < trigger_count; i ++) {
-            rows.system = triggers[i].self;
-            rows.param = triggers[i].ctx;
-            triggers[i].action(&rows);
-        }
+                    /* Run trigger on base data with instance id */
+                    run_component_trigger_for_entities(world, stage, on_set, 
+                        *component, info.table, info.data, info.row, 1, 
+                        &entities[j]);
+                }
+            }
+        });
     }
 }
 
@@ -618,6 +660,10 @@ void run_monitors(
     int32_t count, 
     ecs_table_t *src_table)
 {
+    if (dst_table == src_table) {
+        return;
+    }
+
     if (!dst_table->monitors) {
         return;
     }

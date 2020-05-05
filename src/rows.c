@@ -31,6 +31,7 @@ const void* get_shared_column(
         const EcsComponent *cdata = ecs_get_ptr(
             rows->world, rows->references[-table_column - 1].component, 
             EcsComponent);
+
         ecs_assert(cdata != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(cdata->size == size, ECS_COLUMN_TYPE_MISMATCH, 
             ecs_get_name(rows->world, rows->system));

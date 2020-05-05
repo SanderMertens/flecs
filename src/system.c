@@ -159,47 +159,34 @@ void ecs_system_activate(
 }
 
 /* Actually enable or disable system */
-EcsColSystem* ecs_enable_system(
+void ecs_enable_system(
     ecs_world_t *world,
     ecs_entity_t system,
     EcsColSystem *system_data,
     bool enabled)
 {
     ecs_query_t *query = system_data->query;
-    bool system_enabled = !ecs_has(world, system, EcsDisabled);
-
-    if (system_enabled != enabled) {
-        if (enabled) {
-            ecs_remove(world, system, EcsDisabled);
-        } else {
-            ecs_add(world, system, EcsDisabled);
-        }
-
-        if (ecs_vector_count(query->tables)) {
-            /* Only (de)activate system if it has non-empty tables. */
-            if (enabled) {
-                ecs_remove(world, system, EcsInactive);
-            } else {
-                ecs_add(world, system, EcsInactive);
-            }
-
-            system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
-        }
-
-        /* Enable/disable systems that trigger on [in] enablement */
-        activate_in_columns(
-            world, 
-            query, 
-            world->on_enable_components, 
-            enabled);
-        
-        /* Invoke action for enable/disable status */
-        ecs_invoke_status_action(
-            world, system, system_data,
-            enabled ? EcsSystemEnabled : EcsSystemDisabled);
+    if (!query) {
+        return;
     }
 
-    return system_data;
+    if (ecs_vector_count(query->tables)) {
+        /* Only (de)activate system if it has non-empty tables. */
+        ecs_system_activate(world, system, enabled);
+        system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
+    }
+
+    /* Enable/disable systems that trigger on [in] enablement */
+    activate_in_columns(
+        world, 
+        query, 
+        world->on_enable_components, 
+        enabled);
+    
+    /* Invoke action for enable/disable status */
+    ecs_invoke_status_action(
+        world, system, system_data,
+        enabled ? EcsSystemEnabled : EcsSystemDisabled);
 }
  
 void ecs_init_system(
@@ -219,6 +206,7 @@ void ecs_init_system(
     ecs_trace_push();
 
     bool is_added = false;
+    
     EcsColSystem *system_data = ecs_get_mut(
         world, system, EcsColSystem, &is_added);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);

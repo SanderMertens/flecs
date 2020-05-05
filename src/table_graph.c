@@ -119,6 +119,7 @@ void init_table(
     table->stage_data = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
+    table->monitors = NULL;
     
     init_edges(world, stage, table);
 

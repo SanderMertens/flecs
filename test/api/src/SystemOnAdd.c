@@ -417,6 +417,10 @@ static
 void AddVelocity(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     ecs_type_t v = rows->param;
+    if (!v) {
+        ecs_entity_t e = ecs_column_entity(rows, 2);
+        v = ecs_type_from_entity(rows->world, e);
+    }
 
     probe_system(rows);
 
@@ -454,7 +458,7 @@ void SystemOnAdd_override_after_add_in_on_add() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, AddVelocity);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.column_count, 1);
 
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_entity(Position));
@@ -587,33 +591,6 @@ void SystemOnAdd_add_in_progress_before_system_def() {
     ecs_fini(world);
 }
 
-static int is_invoked;
-
-static
-void IsInvoked(ecs_rows_t *rows) {
-    is_invoked ++;
-}
-
-void SystemOnAdd_disabled_system() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TRIGGER(world, IsInvoked, EcsOnAdd, Position, 0);
-
-    ecs_enable(world, IsInvoked, false);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Position);
-    test_assert(e != 0);
-    test_assert( ecs_has(world, e, Position));
-
-    test_int(is_invoked, 0);
-
-    ecs_fini(world);
-}
-
 void SystemA(ecs_rows_t *rows) {
     int i, tag;
     for (i = 0; i < rows->count; i ++) {
@@ -676,7 +653,6 @@ void TestContext(ecs_rows_t *rows) {
     (*param) ++;
 }
 
-
 void SystemOnAdd_sys_context() {
     ecs_world_t *world = ecs_init();
     uint32_t param = 0;
@@ -698,7 +674,7 @@ void SystemOnAdd_get_sys_context_from_param() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, TestContext, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, TestContext, EcsOnAdd, Position, &param);
 
     /* Set world context so system can compare if pointer is correct */
     ecs_set_context(world, &param);
@@ -710,4 +686,8 @@ void SystemOnAdd_get_sys_context_from_param() {
     test_int(param, 1);
 
     ecs_fini(world);
+}
+
+void SystemOnAdd_disabled_system() {
+    // Implement testcase
 }

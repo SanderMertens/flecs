@@ -775,6 +775,9 @@ void ecs_progress_pipeline(
     const EcsPipelineQuery *query = ecs_get_ptr(
         world, pipeline, EcsPipelineQuery);
 
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(query->query != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_time_t start = {0};
     ecs_time_measure(&start);
     

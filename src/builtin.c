@@ -20,7 +20,7 @@ int rank_phase(
 }
 
 static
-void ecs_parent_ctor(
+void ctor_init_zero(
     ecs_world_t *world,
     ecs_entity_t component,
     const ecs_entity_t *entities,
@@ -29,12 +29,7 @@ void ecs_parent_ctor(
     int32_t count,
     void *ctx)
 {
-    EcsParent *array = ptr;
-
-    int i;
-    for (i = 0; i < count; i ++) {
-        array[i].child_tables = NULL;
-    }
+    memset(ptr, 0, size * count);
 }
 
 static
@@ -227,9 +222,39 @@ void EcsOnSetSystem(
     }
 }
 
+static 
+void EcsDisableSystem(
+    ecs_rows_t *rows)
+{
+    ECS_COLUMN(rows, EcsColSystem, system_data, 1);
+
+    int32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_enable_system(
+            rows->world, rows->entities[i], &system_data[i], false);
+    }
+}
+
+static
+void EcsEnableSystem(
+    ecs_rows_t *rows)
+{
+    ECS_COLUMN(rows, EcsColSystem, system_data, 1);
+
+    int32_t i;
+    for (i = 0; i < rows->count; i ++) {
+        ecs_enable_system(
+            rows->world, rows->entities[i], &system_data[i], true);
+    }
+}
+
 void ecs_init_system_builtins(
     ecs_world_t *world)
 {
+    /* -- Pipeline creation infrastructure & create builtin pipeline -- */
+
+    /* Phases of the builtin pipeline are regular entities. Names are set so
+     * they can be resolved by type expressions. */
     ecs_set(world, EcsPreFrame, EcsName, {"EcsPreFrame"});
     ecs_set(world, EcsOnLoad, EcsName, {"EcsOnLoad"});
     ecs_set(world, EcsPostLoad, EcsName, {"EcsPostLoad"});
@@ -241,12 +266,27 @@ void ecs_init_system_builtins(
     ecs_set(world, EcsOnStore, EcsName, {"EcsOnStore"});
     ecs_set(world, EcsPostFrame, EcsName, {"EcsPostFrame"});
 
+    /* When the Pipeline tag is added a pipeline will be created */
     ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline, 0);
-    ECS_TRIGGER(world, EcsOnSetSystem, EcsOnSet, EcsSystem, 0);
 
+    /* Create the builtin pipeline */
     world->builtin_pipeline = ecs_new_pipeline(world, "EcsBuiltinPipeline",
         "EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,"
         " EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame");
+
+    /* -- System creation / enabling / disabling infrastructure -- */
+
+    /* When EcsSystem is set, a new system will be created */
+    ECS_TRIGGER(world, EcsOnSetSystem, EcsOnSet, EcsSystem, 0);
+
+    /* Initialize EcsColSystem to zero when created */
+    ecs_set(world, ecs_entity(EcsColSystem), EcsComponentLifecycle, {
+        .ctor = ctor_init_zero
+    });
+
+    /* Monitors that trigger when a system is enabled or disabled */
+    ECS_SYSTEM(world, EcsDisableSystem, 0, EcsColSystem, EcsDisabled || EcsDisabledIntern, SYSTEM.EcsMonitor);
+    ECS_SYSTEM(world, EcsEnableSystem, 0, EcsColSystem, !EcsDisabled, !EcsDisabledIntern, SYSTEM.EcsMonitor);
 }
 
 void ecs_init_builtins(
@@ -273,8 +313,8 @@ void ecs_init_builtins(
     /* From here on we can use ecs_set to register component lifecycle */
 
     /* Set component callbacks for EcsParent */
-    ecs_set(world, EEcsParent, EcsComponentLifecycle, {
-        .ctor = ecs_parent_ctor,
+    ecs_set(world, ecs_entity(EcsParent), EcsComponentLifecycle, {
+        .ctor = ctor_init_zero,
         .dtor = ecs_parent_dtor,
         .copy = ecs_parent_copy,
         .move = ecs_parent_move
