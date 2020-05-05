@@ -47,7 +47,7 @@ char* parse_complex_elem(
         if (bptr == dot) {
             *from_kind = EcsFromEmpty;
         } else if (!strncmp(bptr, "PARENT", dot - bptr)) {
-            *from_kind = EcsFromContainer;
+            *from_kind = EcsFromParent;
         } else if (!strncmp(bptr, "SYSTEM", dot - bptr)) {
             *from_kind = EcsFromSystem;
         } else if (!strncmp(bptr, "SELF", dot - bptr)) {

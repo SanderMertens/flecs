@@ -139,6 +139,8 @@ void order_ranked_tables(
                 world, table->table, query->system, table_i);
         })
     }
+
+    query->match_count ++; 
 }
 
 static
@@ -254,6 +256,7 @@ void add_table(
 
         if (op == EcsOperNot) {
             from = EcsFromEmpty;
+            entity = column->source;
         }        
 
         /* Column that retrieves data from self or a fixed entity */
@@ -280,7 +283,7 @@ void add_table(
             table_data->columns[c] = 0;
 
         /* Column that retrieves data from a dynamic entity */
-        } else if (from == EcsFromContainer || from == EcsCascade) {
+        } else if (from == EcsFromParent || from == EcsCascade) {
             if (op == EcsOperAnd ||
                 op == EcsOperOptional)
             {
@@ -308,7 +311,7 @@ void add_table(
         }
 
         /* This column does not retrieve data from a static entity (either
-         * EcsFromSystem or EcsFromContainer) and is not just a handle */
+         * EcsFromSystem or EcsFromParent) and is not just a handle */
         if (!entity && from != EcsFromEmpty) {
             if (component) {
                 /* Retrieve offset for component */
@@ -393,9 +396,9 @@ void add_table(
                 ref->component = component;
 
                 if (component_data->size) {
-                    if (e) {
-                        ref->cached_ptr = (ecs_cached_ptr_t){0};
+                    ref->cached_ptr = (ecs_cached_ptr_t){0};
 
+                    if (e) {
                         ecs_get_cached_ptr_w_entity(
                             world, &ref->cached_ptr, e, component);
                         ecs_set_watch(world, &world->stage, e);                     
@@ -439,7 +442,7 @@ bool match_column(
         return !ecs_type_has_owned_entity(world, type, component, true) &&
             ecs_type_has_owned_entity(world, type, component, false);
 
-    } else if (from_kind == EcsFromContainer) {
+    } else if (from_kind == EcsFromParent) {
         failure_info->reason = EcsMatchFromContainer;
         return ecs_components_contains_component(
             world, type, component, ECS_CHILDOF, NULL);
@@ -529,7 +532,7 @@ bool match_table(
                     failure_info->reason = EcsMatchOrFromSelf;
                     return false;
                 }
-            } else if (from_kind == EcsFromContainer) {
+            } else if (from_kind == EcsFromParent) {
                 if (!components_contains(
                     world, table_type, type, NULL, false))
                 {
@@ -862,7 +865,9 @@ void build_sorted_tables(
 
     if (start != i) {
         build_sorted_table_range(world, query, start, i);
-    }    
+    }
+
+    query->match_count ++; 
 }
 
 static
@@ -1006,13 +1011,14 @@ void process_signature(
         if (from == EcsFromSelf || 
             from == EcsFromOwned ||
             from == EcsFromShared ||
-            from == EcsFromContainer) 
+            from == EcsFromParent) 
         {
             query->needs_matching = true;
         }
 
         if (from == EcsCascade) {
             query->cascade_by = i;
+            query->rank_on_component = column->is.component;
         }
 
         if (from == EcsFromEntity) {
@@ -1174,6 +1180,7 @@ ecs_query_t* ecs_query_new_w_sig(
     result->tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->inactive_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = system;
+    result->match_count = 0;
 
     process_signature(world, result);
 
@@ -1194,7 +1201,6 @@ ecs_query_t* ecs_query_new_w_sig(
     }
 
     if (result->cascade_by) {
-        result->rank_on_component = result->cascade_by;
         result->rank_table = rank_by_depth;
     }
 
@@ -1218,21 +1224,23 @@ ecs_query_t* ecs_query_new(
 void ecs_query_free(
     ecs_query_t *query)
 {
-    int32_t t;
-    ecs_matched_table_t *tables = ecs_vector_first(query->inactive_tables);
-    for (t = 0; t < ecs_vector_count(query->inactive_tables); t ++) {
-        ecs_os_free(tables[t].columns);
-        ecs_os_free(tables[t].components);
-    }
+    ecs_vector_each(query->inactive_tables, ecs_matched_table_t, table, {
+        ecs_os_free(table->columns);
+        ecs_os_free(table->components);
+        ecs_vector_free(table->references);
+        ecs_os_free(table->monitor);
+    });
 
-    tables = ecs_vector_first(query->tables);
-    for (t = 0; t < ecs_vector_count(query->tables); t ++) {
-        ecs_os_free(tables[t].columns);
-        ecs_os_free(tables[t].components);
-    }
+    ecs_vector_each(query->tables, ecs_matched_table_t, table, {
+        ecs_os_free(table->columns);
+        ecs_os_free(table->components);
+        ecs_vector_free(table->references);
+        ecs_os_free(table->monitor);
+    });
 
     ecs_vector_free(query->tables);
     ecs_vector_free(query->inactive_tables);
+    ecs_vector_free(query->table_ranges);
     ecs_sig_deinit(&query->sig);
 }
 

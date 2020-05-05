@@ -33,8 +33,7 @@ void EcsProgressTimers(ecs_rows_t *rows) {
                 t = 0;
             }
 
-            timer[i].time = t; /* Initialize with remainder */
-            
+            timer[i].time = t; /* Initialize with remainder */            
             tick_source[i].tick = true;
             tick_source[i].time_elapsed = time_elapsed;
 
@@ -89,19 +88,19 @@ void ecs_init_timer_builtins(
 {
     /* Add EcsTickSource to timers and rate filters */
     world->add_tick_source =
-    ecs_new_system(world, "EcsAddTickSource", 0, 
+    ecs_new_system(world, "EcsAddTickSource", EcsPreFrame, 
         "[in] EcsTimer || EcsRateFilter, [out] !EcsTickSource", 
         EcsAddTickSource);
 
     /* Timer handling */
     world->progress_timers = 
-    ecs_new_system(world, "EcsProgressTimers", 0, 
+    ecs_new_system(world, "EcsProgressTimers", EcsPreFrame, 
         "EcsTimer, EcsTickSource", 
         EcsProgressTimers);
     
     /* Rate filter handling */
     world->progress_rate_filters = 
-    ecs_new_system(world, "EcsProgressRateFilters", 0, 
+    ecs_new_system(world, "EcsProgressRateFilters", EcsPreFrame, 
         "[in] EcsRateFilter, [out] EcsTickSource", 
         EcsProgressRateFilters);    
 }

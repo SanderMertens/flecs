@@ -72,6 +72,16 @@ typedef int (*ecs_parse_action_t)(
     const char *source,
     void *ctx);
 
+typedef enum EcsPipelineOp {
+    EcsPipelineRun,
+    EcsPipelineMerge
+} EcsPipelineOp;
+
+typedef struct ecs_pipeline_op_t {
+    EcsPipelineOp kind;
+    int32_t count;
+} ecs_pipeline_op_t;
+
 /** A component array in a table */
 struct ecs_column_t {
     ecs_vector_t *data;              /* Column data */
@@ -177,6 +187,7 @@ struct ecs_query_t {
     bool is_monitor;            /* Should query register as monitor? */
     int32_t cascade_by;         /* Identify CASCADE column */
     bool needs_matching;        /* Does sig need to be matched with tables */
+    int32_t match_count;        /* How often has table administration changed */
 };
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand

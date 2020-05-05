@@ -735,17 +735,19 @@ void Remove_from_current(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = rows->count - 1; i >= 0; i --) {
+        ecs_entity_t e = rows->entities[i];
+
         if (ctx->component) {
-            ecs_remove_entity(rows->world, rows->entities[i], ctx->component);
-            test_assert( !ecs_has_entity(rows->world,  rows->entities[i], ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component) == NULL);
+            ecs_remove_entity(rows->world, e, ctx->component);
+            test_assert( !ecs_has_entity(rows->world,  e, ctx->component));
+            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component) == NULL);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(rows->world, rows->entities[i], ctx->component_2);
-            test_assert( !ecs_has_entity(rows->world,  rows->entities[i], ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_2) == NULL);
+            ecs_remove_entity(rows->world, e, ctx->component_2);
+            test_assert( !ecs_has_entity(rows->world, e, ctx->component_2));
+            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component_2) == NULL);
         }
 
         ctx->entity_count ++;

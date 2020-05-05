@@ -173,8 +173,8 @@ ecs_entity_t ecs_new_prefab(
 
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
-        result = ecs_new_w_type(world, type.normalized);
-        ecs_add(world, result, EcsPrefab);
+        result = ecs_new_w_entity(world, EEcsPrefab);
+        ecs_add_type(world, result, type.normalized);
         ecs_set(world, result, EcsName, {name});
     } else {
         if (!ecs_has(world, result, EcsPrefab)) {

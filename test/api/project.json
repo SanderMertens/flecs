@@ -321,7 +321,6 @@
                 "override_after_add_in_on_add",
                 "add_again_in_progress",
                 "add_in_progress_before_system_def",
-                "disabled_system",
                 "2_systems_w_table_creation",
                 "2_systems_w_table_creation_in_progress",
                 "sys_context",
@@ -336,7 +335,6 @@
                 "delete_match_1_of_1",
                 "delete_match_1_of_2",
                 "delete_no_match_1",
-                "disabled_system",
                 "remove_watched",
                 "delete_watched"
             ]
@@ -352,8 +350,7 @@
                 "on_set_after_override",
                 "on_set_after_override_w_new",
                 "on_set_after_override_w_new_w_count",
-                "on_set_after_override_1_of_2_overridden",
-                "disabled_system"
+                "on_set_after_override_1_of_2_overridden"
             ]
         }, {
             "id": "SystemOnFrame",
@@ -582,9 +579,6 @@
             "testcases": [
                 "2_column_1_from_system",
                 "3_column_2_from_system",
-                "2_column_1_from_system_on_add",
-                "2_column_1_from_system_on_remove",
-                "2_column_1_from_system_on_set",
                 "auto_add_tag"
             ]
         }, {

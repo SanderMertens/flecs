@@ -221,46 +221,6 @@ void clean_tables(
     }
 }
 
-/* -- Private functions -- */
-
-void ecs_stage_init(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{
-    bool is_main_stage = stage == &world->stage;
-    bool is_temp_stage = stage == &world->temp_stage;
-
-    memset(stage, 0, sizeof(ecs_stage_t));
-
-    /* Initialize entity index */
-    ecs_eis_new(stage);
-
-    if (is_main_stage) {
-        stage->id = 0;
-    } else if (is_temp_stage) {
-        stage->id = 1;
-    }
-
-    /* Initialize root table */
-    stage->tables = ecs_sparse_new(ecs_table_t, 64);
-
-    /* Initialize one root table per stage */
-    ecs_init_root_table(world, stage);
-
-    stage->range_check_enabled = true;
-}
-
-void ecs_stage_deinit(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{
-    clean_tables(world, stage);
-    ecs_sparse_free(stage->tables);
-    ecs_table_free(world, &stage->root);
-    ecs_vector_free(stage->dirty_tables);
-    ecs_eis_free(stage);
-}
-
 static
 void merge_tables(
     ecs_world_t *world,
@@ -331,6 +291,8 @@ void merge_tables(
     }
 }
 
+/* -- Private functions -- */
+
 void ecs_stage_merge(
     ecs_world_t *world,
     ecs_stage_t *stage)
@@ -353,4 +315,42 @@ void ecs_stage_merge(
     clean_tables(world, stage);
     ecs_sparse_clear(stage->tables);
     ecs_eis_clear(stage);
+}
+
+void ecs_stage_init(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    bool is_main_stage = stage == &world->stage;
+    bool is_temp_stage = stage == &world->temp_stage;
+
+    memset(stage, 0, sizeof(ecs_stage_t));
+
+    /* Initialize entity index */
+    ecs_eis_new(stage);
+
+    if (is_main_stage) {
+        stage->id = 0;
+    } else if (is_temp_stage) {
+        stage->id = 1;
+    }
+
+    /* Initialize root table */
+    stage->tables = ecs_sparse_new(ecs_table_t, 64);
+
+    /* Initialize one root table per stage */
+    ecs_init_root_table(world, stage);
+
+    stage->range_check_enabled = true;
+}
+
+void ecs_stage_deinit(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    clean_tables(world, stage);
+    ecs_sparse_free(stage->tables);
+    ecs_table_free(world, &stage->root);
+    ecs_vector_free(stage->dirty_tables);
+    ecs_eis_free(stage);
 }

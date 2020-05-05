@@ -398,7 +398,7 @@ void SystemOnSet_on_set_after_override_w_new() {
 
     const Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
-    test_int(p->x, 2);
+    test_int(p->x, 1);
     test_int(p->y, 3);
 }
 
@@ -476,31 +476,4 @@ void SystemOnSet_on_set_after_override_1_of_2_overridden() {
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
-}
-
-static int is_invoked;
-
-static
-void IsInvoked(ecs_rows_t *rows) {
-    is_invoked ++;
-}
-
-void SystemOnSet_disabled_system() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TRIGGER(world, IsInvoked, EcsOnSet, Position, NULL);
-
-    ecs_enable(world, IsInvoked, false);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
-    test_assert(e != 0);
-    test_assert( ecs_has(world, e, Position));
-
-    test_int(is_invoked, 0);
-
-    ecs_fini(world);
 }

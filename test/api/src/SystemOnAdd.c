@@ -1,13 +1,5 @@
 #include <api.h>
 
-static
-void install_test_abort() {
-    ecs_os_set_api_defaults();
-    ecs_os_api_t os_api = ecs_os_api;
-    os_api.abort = test_abort;
-    ecs_os_set_api(&os_api);
-}
-
 void Init(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     
@@ -505,7 +497,7 @@ void SystemOnAdd_set_after_add_in_on_add() {
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
-    test_int(ctx.system, Init);
+    test_int(ctx.system, AddVelocity);
     test_int(ctx.column_count, 2);
 
     test_int(ctx.e[0], e);
@@ -686,8 +678,4 @@ void SystemOnAdd_get_sys_context_from_param() {
     test_int(param, 1);
 
     ecs_fini(world);
-}
-
-void SystemOnAdd_disabled_system() {
-    // Implement testcase
 }

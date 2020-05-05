@@ -211,19 +211,6 @@ ecs_stage_t *ecs_get_stage(
     return NULL;
 }
 
-static
-void deinit_tables(
-    ecs_world_t *world)
-{
-    ecs_sparse_t *tables = world->stage.tables;
-    int32_t i, count = ecs_sparse_count(tables);
-
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
-        ecs_table_deinit_components(world, table);
-    }
-}
-
 /* -- Public functions -- */
 
 ecs_world_t *ecs_init(void) {
@@ -480,16 +467,20 @@ int ecs_fini(
     assert(!world->in_progress);
     assert(!world->is_merging);
 
+    /* Cleanup threading administration */
     if (world->worker_threads) {
         ecs_set_threads(world, 0);
     }
 
     if (world->locking_enabled) {
         ecs_os_mutex_free(world->mutex);
-    }    
+    }
 
-    deinit_tables(world);
+    /* Cleanup stages */
+    ecs_stage_deinit(world, &world->stage);
+    ecs_stage_deinit(world, &world->temp_stage);
 
+    /* Cleanup component lifecycle callbacks & systems */
     int32_t i, count = ecs_vector_count(world->component_data);
     ecs_component_data_t *cdata = ecs_vector_first(world->component_data);
 
@@ -500,25 +491,25 @@ int ecs_fini(
     }
     ecs_vector_free(world->component_data);
 
+    /* Cleanup queries */
     count = ecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
         ecs_query_t *q = ecs_sparse_get(world->queries, ecs_query_t, i);
         ecs_query_free(q);
     }
-
     ecs_sparse_free(world->queries);
-    ecs_map_free(world->type_handles);
 
-    ecs_stage_deinit(world, &world->stage);
-    ecs_stage_deinit(world, &world->temp_stage);
-
+    /* Cleanup misc data structures */
     on_demand_in_map_deinit(world->on_activate_components);
     on_demand_in_map_deinit(world->on_enable_components);
-
+    ecs_map_free(world->type_handles);
     ecs_vector_free(world->fini_tasks);
 
+    /* In case the application tries to use the memory of the freed world, this
+     * will trigger an assert */
     world->magic = 0;
 
+    /* The end of the world */
     ecs_os_free(world);
 
 #ifdef __BAKE__
@@ -748,7 +739,7 @@ float ecs_frame_begin(
     bool is_staged = ecs_staging_begin(world);
     ecs_assert(!is_staged, ECS_INTERNAL_ERROR, NULL);
     
-    return delta_time;
+    return user_delta_time;
 }
 
 void ecs_frame_end(
@@ -765,36 +756,6 @@ void ecs_frame_end(
     }
 
     stop_measure_frame(world, delta_time);   
-}
-
-void ecs_progress_pipeline(
-    ecs_world_t *world,
-    ecs_entity_t pipeline,
-    float delta_time)
-{
-    const EcsPipelineQuery *query = ecs_get_ptr(
-        world, pipeline, EcsPipelineQuery);
-
-    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(query->query != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_time_t start = {0};
-    ecs_time_measure(&start);
-    
-    ecs_query_iter_t it = ecs_query_iter(query->query, 0, 0);
-    while (ecs_query_next(&it)) {
-        ecs_rows_t *rows = &it.rows;
-        ECS_COLUMN(rows, EcsColSystem, sys, 1);
-
-        int32_t i;
-        for(i = 0; i < rows->count; i ++) {
-            ecs_entity_t e = rows->entities[i];
-            ecs_run_intern(world, world, e, &sys[i], delta_time, 0, 0, 
-                NULL, NULL);
-        }
-    }
-
-    world->system_time_total += ecs_time_measure(&start);
 }
 
 bool ecs_progress(

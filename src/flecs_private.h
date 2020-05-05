@@ -19,6 +19,9 @@ void ecs_init_timer_builtins(
 void ecs_init_system_builtins(
     ecs_world_t *world);    
 
+void ecs_init_pipeline_builtins(
+    ecs_world_t *world);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,6 +80,11 @@ ecs_stage_t *ecs_get_stage(
 ecs_component_data_t *ecs_get_component_data(
     ecs_world_t *world,
     ecs_entity_t component);
+
+void ecs_progress_pipeline(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    float delta_time);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
@@ -151,7 +159,8 @@ void ecs_run_deinit_actions(
     ecs_data_t *data,
     uint32_t row,
     uint32_t count,
-    ecs_entities_t components);
+    ecs_entities_t components,
+    bool run_triggers);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table API
@@ -177,11 +186,6 @@ void ecs_table_unregister_monitor(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t system);
-
-/* Deinitialize table. This invokes all matching on_remove systems */
-void ecs_table_deinit_components(
-    ecs_world_t *world,
-    ecs_table_t *table);
 
 /* Free table */
 void ecs_table_free(

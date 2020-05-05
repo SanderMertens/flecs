@@ -101,8 +101,9 @@ void run_on_remove_handlers(
             .count = ecs_vector_count(table->type)
         };
 
+        /* Run deinit actions (dtors) for components. Don't run triggers */
         ecs_run_deinit_actions(
-            world, &world->stage, table, data, 0, count, components);
+            world, &world->stage, table, data, 0, count, components, false);
     }
 }
 
@@ -393,15 +394,6 @@ void ecs_table_clear(
     ecs_table_clear_silent(world, table);
 }
 
-/* This operation is called when the world is freed. Because of the sequence in
- * which things are cleaned up, this cannot be combined with ecs_table_free. */
-void ecs_table_deinit_components(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    run_on_remove_handlers(world, table);
-}
-
 /* Free table resources. Do not invoke handlers and do not activate/deactivate
  * table with systems. This function is used when the world is freed. */
 void ecs_table_free(
@@ -409,11 +401,14 @@ void ecs_table_free(
     ecs_table_t *table)
 {
     (void)world;
+    run_on_remove_handlers(world, table);
     deinit_all_data(table);
     ecs_os_free(table->lo_edges);
     ecs_map_free(table->hi_edges);
     ecs_vector_free(table->queries);
     ecs_vector_free((ecs_vector_t*)table->type);
+    ecs_os_free(table->dirty_state);
+    ecs_vector_free(table->monitors);
 }
 
 /* Replace columns. Activate / deactivate table with systems if necessary. */

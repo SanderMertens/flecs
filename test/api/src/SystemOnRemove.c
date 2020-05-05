@@ -179,36 +179,6 @@ void SystemOnRemove_delete_no_match_1() {
     ecs_fini(world);
 }
 
-static int is_invoked;
-
-static
-void IsInvoked(ecs_rows_t *rows) {
-    is_invoked ++;
-}
-
-void SystemOnRemove_disabled_system() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TRIGGER(world, IsInvoked, EcsOnRemove, Position, NULL);
-
-    ecs_enable(world, IsInvoked, false);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_new(world, Position);
-    test_assert(e != 0);
-    test_assert( ecs_has(world, e, Position));
-
-    ecs_remove(world, e, Position);
-    test_assert( !ecs_has(world, e, Position));
-
-    test_int(is_invoked, 0);
-
-    ecs_fini(world);
-}
-
 static Position old_position = {0};
 
 static

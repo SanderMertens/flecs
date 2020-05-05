@@ -272,6 +272,8 @@ typedef struct EcsPipeline {
 /* Runtime properties of pipeline */
 typedef struct EcsPipelineQuery {
     ecs_query_t *query;
+    int32_t match_count;
+    ecs_vector_t *ops;
 } EcsPipelineQuery;
 
 /** Component used for timer functionality */
@@ -1213,6 +1215,16 @@ void* _ecs_column(
 #define ecs_column(rows, type, column)\
     ((type*)_ecs_column(rows, sizeof(type), column))
 
+/** Same as ecs_column, but for const ([in]) columns */
+FLECS_EXPORT
+const void* _ecs_const_column(
+    const ecs_rows_t *rows,
+    size_t size,
+    int32_t column);
+
+#define ecs_const_column(rows, type, column)\
+    ((const type*)_ecs_const_column(rows, sizeof(type), column))
+
 /** Test if column is shared or not. 
  * The following signature shows an example of owned components and shared
  * components:
@@ -1362,6 +1374,10 @@ void* ecs_table_column(
 /** Get a strongly typed pointer to a column (owned or shared). */
 #define ECS_COLUMN(rows, type, id, column)\
     type *id = ecs_column(rows, type, column)
+
+/** Get a strongly typed pointer to a column (owned or shared). */
+#define ECS_CONST_COLUMN(rows, type, id, column)\
+    const type *id = ecs_const_column(rows, type, column)
 
 /** Obtain a handle to the component of a column */
 #define ECS_COLUMN_COMPONENT(rows, id, column)\

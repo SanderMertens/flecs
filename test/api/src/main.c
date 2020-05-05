@@ -286,7 +286,6 @@ void SystemOnAdd_add_again_2(void);
 void SystemOnAdd_override_after_add_in_on_add(void);
 void SystemOnAdd_add_again_in_progress(void);
 void SystemOnAdd_add_in_progress_before_system_def(void);
-void SystemOnAdd_disabled_system(void);
 void SystemOnAdd_2_systems_w_table_creation(void);
 void SystemOnAdd_2_systems_w_table_creation_in_progress(void);
 void SystemOnAdd_sys_context(void);
@@ -299,7 +298,6 @@ void SystemOnRemove_remove_no_match_1(void);
 void SystemOnRemove_delete_match_1_of_1(void);
 void SystemOnRemove_delete_match_1_of_2(void);
 void SystemOnRemove_delete_no_match_1(void);
-void SystemOnRemove_disabled_system(void);
 void SystemOnRemove_remove_watched(void);
 void SystemOnRemove_delete_watched(void);
 
@@ -314,7 +312,6 @@ void SystemOnSet_on_set_after_override(void);
 void SystemOnSet_on_set_after_override_w_new(void);
 void SystemOnSet_on_set_after_override_w_new_w_count(void);
 void SystemOnSet_on_set_after_override_1_of_2_overridden(void);
-void SystemOnSet_disabled_system(void);
 
 // Testsuite 'SystemOnFrame'
 void SystemOnFrame_1_type_1_component(void);
@@ -523,9 +520,6 @@ void System_w_FromId_column_type(void);
 // Testsuite 'System_w_FromSystem'
 void System_w_FromSystem_2_column_1_from_system(void);
 void System_w_FromSystem_3_column_2_from_system(void);
-void System_w_FromSystem_2_column_1_from_system_on_add(void);
-void System_w_FromSystem_2_column_1_from_system_on_remove(void);
-void System_w_FromSystem_2_column_1_from_system_on_set(void);
 void System_w_FromSystem_auto_add_tag(void);
 
 // Testsuite 'System_w_FromEntity'
@@ -1857,7 +1851,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 22,
+        .testcase_count = 21,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -1928,10 +1922,6 @@ static bake_test_suite suites[] = {
                 .function = SystemOnAdd_add_in_progress_before_system_def
             },
             {
-                .id = "disabled_system",
-                .function = SystemOnAdd_disabled_system
-            },
-            {
                 .id = "2_systems_w_table_creation",
                 .function = SystemOnAdd_2_systems_w_table_creation
             },
@@ -1951,7 +1941,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnRemove",
-        .testcase_count = 9,
+        .testcase_count = 8,
         .testcases = (bake_test_case[]){
             {
                 .id = "remove_match_1_of_1",
@@ -1978,10 +1968,6 @@ static bake_test_suite suites[] = {
                 .function = SystemOnRemove_delete_no_match_1
             },
             {
-                .id = "disabled_system",
-                .function = SystemOnRemove_disabled_system
-            },
-            {
                 .id = "remove_watched",
                 .function = SystemOnRemove_remove_watched
             },
@@ -1993,7 +1979,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 11,
+        .testcase_count = 10,
         .testcases = (bake_test_case[]){
             {
                 .id = "set",
@@ -2034,10 +2020,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "on_set_after_override_1_of_2_overridden",
                 .function = SystemOnSet_on_set_after_override_1_of_2_overridden
-            },
-            {
-                .id = "disabled_system",
-                .function = SystemOnSet_disabled_system
             }
         }
     },
@@ -2841,7 +2823,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "System_w_FromSystem",
-        .testcase_count = 6,
+        .testcase_count = 3,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_column_1_from_system",
@@ -2850,18 +2832,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "3_column_2_from_system",
                 .function = System_w_FromSystem_3_column_2_from_system
-            },
-            {
-                .id = "2_column_1_from_system_on_add",
-                .function = System_w_FromSystem_2_column_1_from_system_on_add
-            },
-            {
-                .id = "2_column_1_from_system_on_remove",
-                .function = System_w_FromSystem_2_column_1_from_system_on_remove
-            },
-            {
-                .id = "2_column_1_from_system_on_set",
-                .function = System_w_FromSystem_2_column_1_from_system_on_set
             },
             {
                 .id = "auto_add_tag",

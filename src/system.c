@@ -232,7 +232,7 @@ void ecs_init_system(
     activate_in_columns(
         world, system_data->query, 
         world->on_enable_components, 
-        true);   
+        true);
 
     /* Check if all non-table column constraints are met. If not, disable
      * system (system will be enabled once constraints are met) */

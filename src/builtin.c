@@ -1,25 +1,6 @@
 #include "flecs_private.h"
 
 static
-int compare_entity(
-    ecs_entity_t e1, 
-    void *ptr1, 
-    ecs_entity_t e2, 
-    void *ptr2) 
-{
-    return e1 - e2;
-}
-
-static
-int rank_phase(
-    ecs_world_t *world,
-    ecs_entity_t rank_component,
-    ecs_type_t type) 
-{
-    return ecs_type_get_entity_for_xor(world, type, rank_component);
-}
-
-static
 void ctor_init_zero(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -30,6 +11,40 @@ void ctor_init_zero(
     void *ctx)
 {
     memset(ptr, 0, size * count);
+}
+
+static
+void ecs_colsystem_dtor(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entities,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    EcsColSystem *system_data = ptr;
+
+    int i;
+    for (i = 0; i < count; i ++) {
+        EcsColSystem *cur = &system_data[i];
+        ecs_entity_t e = entities[i];
+
+        /* Invoke Deactivated action for active systems */
+        if (cur->query && ecs_vector_count(cur->query->tables)) {
+            ecs_invoke_status_action(world, e, ptr, EcsSystemDeactivated);
+        }
+
+        /* Invoke Disabled action for enabled systems */
+        if (!ecs_has_entity(world, e, EEcsDisabled) && 
+            !ecs_has_entity(world, e, EEcsDisabledIntern)) 
+        {
+            ecs_invoke_status_action(world, e, ptr, EcsSystemDisabled);
+        }           
+
+        ecs_os_free(cur->on_demand);
+        ecs_vector_free(cur->jobs);
+    }
 }
 
 static
@@ -168,44 +183,6 @@ void EcsOnSetComponentLifecycle(
 }
 
 static 
-void EcsOnAddPipeline(
-    ecs_rows_t *rows)
-{
-    ecs_world_t *world = rows->world;
-    ecs_entity_t *entities = rows->entities;
-
-    int32_t i;
-    for (i = rows->count - 1; i >= 0; i --) {
-        ecs_entity_t pipeline = entities[i];
-        ecs_sig_t sig = { 0 };
-
-#ifndef NDEBUG
-        const EcsType *type_ptr = ecs_get_ptr(world, pipeline, EcsType);
-        ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        char *str = ecs_type_str(world, type_ptr->normalized);
-        ecs_trace_1("pipeline #[green]%s#[normal] created with #[red][%s]",
-            ecs_get_name(world, pipeline), str);
-        free(str);
-#endif
-        ecs_trace_push();
-
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, EEcsColSystem, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EEcsInactive, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EEcsDisabledIntern, 0);
-
-        ecs_query_t *query = ecs_query_new_w_sig(world, 0, &sig);
-        ecs_query_sort(world, query, 0, compare_entity);
-        ecs_query_sort_types(world, query, pipeline, rank_phase);
-
-        ecs_set(world, pipeline, EcsPipelineQuery, { .query = query });
-
-        ecs_trace_pop();
-    }
-}
-
-static 
 void EcsOnSetSystem(
     ecs_rows_t *rows)
 {
@@ -251,29 +228,6 @@ void EcsEnableSystem(
 void ecs_init_system_builtins(
     ecs_world_t *world)
 {
-    /* -- Pipeline creation infrastructure & create builtin pipeline -- */
-
-    /* Phases of the builtin pipeline are regular entities. Names are set so
-     * they can be resolved by type expressions. */
-    ecs_set(world, EcsPreFrame, EcsName, {"EcsPreFrame"});
-    ecs_set(world, EcsOnLoad, EcsName, {"EcsOnLoad"});
-    ecs_set(world, EcsPostLoad, EcsName, {"EcsPostLoad"});
-    ecs_set(world, EcsPreUpdate, EcsName, {"EcsPreUpdate"});
-    ecs_set(world, EcsOnUpdate, EcsName, {"EcsOnUpdate"});
-    ecs_set(world, EcsOnValidate, EcsName, {"EcsOnValidate"});
-    ecs_set(world, EcsPostUpdate, EcsName, {"EcsPostUpdate"});
-    ecs_set(world, EcsPreStore, EcsName, {"EcsPreStore"});
-    ecs_set(world, EcsOnStore, EcsName, {"EcsOnStore"});
-    ecs_set(world, EcsPostFrame, EcsName, {"EcsPostFrame"});
-
-    /* When the Pipeline tag is added a pipeline will be created */
-    ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline, 0);
-
-    /* Create the builtin pipeline */
-    world->builtin_pipeline = ecs_new_pipeline(world, "EcsBuiltinPipeline",
-        "EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,"
-        " EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame");
-
     /* -- System creation / enabling / disabling infrastructure -- */
 
     /* When EcsSystem is set, a new system will be created */
@@ -281,7 +235,8 @@ void ecs_init_system_builtins(
 
     /* Initialize EcsColSystem to zero when created */
     ecs_set(world, ecs_entity(EcsColSystem), EcsComponentLifecycle, {
-        .ctor = ctor_init_zero
+        .ctor = ctor_init_zero,
+        .dtor = ecs_colsystem_dtor
     });
 
     /* Monitors that trigger when a system is enabled or disabled */
@@ -319,6 +274,9 @@ void ecs_init_builtins(
         .copy = ecs_parent_copy,
         .move = ecs_parent_move
     });
+
+    /* Initialize pipeline builtins */
+    ecs_init_pipeline_builtins(world);
 
     /* Initialize system builtins */
     ecs_init_system_builtins(world);     

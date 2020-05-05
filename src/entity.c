@@ -250,6 +250,10 @@ void run_component_trigger(
     int32_t row,
     int32_t count)
 {
+    if (table->flags & EcsTableIsPrefab) {
+        return;
+    }
+
     ecs_entity_t *entities = ecs_vector_first(data->entities);        
     ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
     entities = ECS_OFFSET(entities, sizeof(ecs_entity_t) * row);
@@ -489,10 +493,10 @@ void instantiate(
                 /* Run trigger separately for each entity. We can't call the
                  * trigger on the range because we must "trick" the trigger to 
                  * use data from the base but the instance id. */
+
+                ecs_entity_t *entities = ecs_vector_first(data->entities);
                 int j;
                 for (j = row; j < count; j ++) {
-                    ecs_entity_t *entities = ecs_vector_first(data->entities);
-
                     /* Run trigger on base data with instance id */
                     run_component_trigger_for_entities(world, stage, on_set, 
                         *component, info.table, info.data, info.row, 1, 
@@ -531,7 +535,7 @@ void run_init_actions(
 
     int i, cur;
     for (i = 0; i < components.count; i ++) {
-        /* Retrieve component callbacks & systems for component */
+        /* Retrieve component callbacks & triggers for component */
         ecs_entity_t component = components.array[i];
 
         if (component >= ECS_HI_COMPONENT_ID) {
@@ -546,8 +550,8 @@ void run_init_actions(
         void *ctx = cdata->lifecycle.ctx;
         
         ecs_xtor_t ctor = cdata->lifecycle.ctor;
-        ecs_vector_t *systems = cdata->on_add;
-        if (!ctor && !systems && !has_base) {
+        ecs_vector_t *triggers = cdata->on_add;
+        if (!ctor && !triggers && !has_base) {
             continue;
         }
 
@@ -575,9 +579,9 @@ void run_init_actions(
             override_component(world, component, type, column, row, count);
         }
 
-        if (systems) {
+        if (triggers) {
             run_component_trigger(
-                world, stage, systems, component, table, data, 
+                world, stage, triggers, component, table, data, 
                 row, count);
         }
     }
@@ -590,7 +594,8 @@ void ecs_run_deinit_actions(
     ecs_data_t *data,
     uint32_t row,
     uint32_t count,
-    ecs_entities_t components)
+    ecs_entities_t components,
+    bool run_triggers)
 {
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -609,7 +614,7 @@ void ecs_run_deinit_actions(
 
     int i, cur;
     for (i = 0; i < components.count; i ++) {
-        /* Retrieve component callbacks & systems for component */
+        /* Retrieve component callbacks & triggers for component */
         ecs_entity_t component = components.array[i];
         if (component >= ECS_HI_COMPONENT_ID) {
             continue;
@@ -618,9 +623,9 @@ void ecs_run_deinit_actions(
         ecs_component_data_t *cdata = &cdata_array[component];
         void *ctx = cdata->lifecycle.ctx;
         ecs_xtor_t dtor = cdata->lifecycle.dtor;
-        ecs_vector_t *systems = cdata->on_remove;
+        ecs_vector_t *triggers = cdata->on_remove;
         
-        if (!dtor && !systems) {
+        if (!dtor && !triggers) {
             continue;
         }
 
@@ -639,8 +644,10 @@ void ecs_run_deinit_actions(
         void *array = ecs_vector_first(column->data);
         void *ptr = ECS_OFFSET(array, size * row);
 
-        if (systems) {
-
+        if (triggers && run_triggers) {
+            run_component_trigger(
+                world, stage, triggers, component, table, data, 
+                row, count);
         }
 
         if (dtor) {
@@ -665,6 +672,10 @@ void run_monitors(
     }
 
     if (!dst_table->monitors) {
+        return;
+    }
+
+    if (dst_table->flags & EcsTableIsPrefab) {
         return;
     }
 
@@ -786,7 +797,7 @@ uint32_t move_entity(
 
     if (removed) {
         ecs_run_deinit_actions(
-            world, stage, src_table, src_data, src_row, 1, *removed);
+            world, stage, src_table, src_data, src_row, 1, *removed, true);
     }
 
     /* Only delete from source table if it is in the same stage */
@@ -828,7 +839,7 @@ void delete_entity(
 {
     if (removed) {
         ecs_run_deinit_actions(
-            world, stage, src_table, src_data, src_row, 1, *removed);
+            world, stage, src_table, src_data, src_row, 1, *removed, true);
     }
 
     ecs_table_delete(world, stage, src_table, src_data, src_row);

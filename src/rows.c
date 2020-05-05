@@ -104,6 +104,15 @@ void* _ecs_column(
     size_t size,
     int32_t column)
 {
+    // ecs_assert(!ecs_is_readonly(rows, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
+    return get_column(rows, size, column, 0);
+}
+
+const void* _ecs_const_column(
+    const ecs_rows_t *rows,
+    size_t size,
+    int32_t column)
+{
     return get_column(rows, size, column, 0);
 }
 
@@ -137,10 +146,14 @@ bool ecs_is_readonly(
         return true;
     }
 
-    ecs_sig_column_t *column_data = ecs_vector_get(
-        rows->query->sig.columns, ecs_sig_column_t, column - 1);
-
-    return column_data->inout_kind == EcsIn;
+    ecs_query_t *query = rows->query;
+    if (query) {
+        ecs_sig_column_t *column_data = ecs_vector_get(
+            rows->query->sig.columns, ecs_sig_column_t, column - 1);
+        return column_data->inout_kind == EcsIn;
+    } else {
+        return true;
+    }
 }
 
 ecs_entity_t ecs_column_source(

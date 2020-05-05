@@ -199,7 +199,7 @@ typedef enum ecs_sig_from_kind_t {
     EcsFromSelf,            /* Get component from self (default) */
     EcsFromOwned,           /* Get owned component from self */
     EcsFromShared,          /* Get shared component from self */
-    EcsFromContainer,       /* Get component from container */
+    EcsFromParent,       /* Get component from container */
     EcsFromSystem,          /* Get component from system */
     EcsFromEmpty,           /* Get entity handle by id */
     EcsFromEntity,          /* Get component from other entity */
