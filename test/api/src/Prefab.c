@@ -2477,14 +2477,15 @@ void CloneInOnAdd(ecs_rows_t *rows)
         p[i].y = 20;
 
         if (!has_cloned_test) {
-            ecs_entity_t clone = ecs_copy(rows->world, 0, rows->entities[i], true);
+            ecs_entity_t e = rows->entities[i];
+            ecs_entity_t clone = ecs_copy(rows->world, 0, e, true);
             test_assert( ecs_has(rows->world, clone, Position));
 
             const Position *p_clone = ecs_get_ptr(rows->world, clone, Position);
             test_int(p_clone->x, 10);
             test_int(p_clone->y, 20);
 
-            ecs_add_entity(rows->world, ECS_INSTANCEOF | clone, rows->entities[i]);
+            ecs_add_entity(rows->world, ECS_INSTANCEOF | clone, e);
         }
     }
 }

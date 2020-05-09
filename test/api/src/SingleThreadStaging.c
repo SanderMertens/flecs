@@ -2511,12 +2511,14 @@ void SingleThreadStaging_on_remove_in_on_update() {
     ecs_fini(world);
 }
 
+static Probe pv_probe;
+
 static
 void On_PV(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     ECS_COLUMN(rows, Velocity, v, 2);
 
-    probe_system(rows);
+    probe_system_w_ctx(rows, &pv_probe);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -2544,24 +2546,19 @@ void SingleThreadStaging_match_table_created_in_progress() {
 
     ecs_progress(world, 1);
 
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    test_int(pv_probe.count, 3);
+    test_int(pv_probe.invoked, 1);
+    test_int(pv_probe.system, On_PV);
+    test_int(pv_probe.column_count, 2);
+    test_null(pv_probe.param);
 
-    ecs_progress(world, 1);
-
-    test_int(ctx.count, 3);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, On_PV);
-    test_int(ctx.column_count, 2);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
-    test_int(ctx.s[0][1], 0);
+    test_int(pv_probe.e[0], e_1);
+    test_int(pv_probe.e[1], e_2);
+    test_int(pv_probe.e[2], e_3);
+    test_int(pv_probe.c[0][0], ecs_entity(Position));
+    test_int(pv_probe.s[0][0], 0);
+    test_int(pv_probe.c[0][1], ecs_entity(Velocity));
+    test_int(pv_probe.s[0][1], 0);
 
     ecs_fini(world);
 }
@@ -2583,24 +2580,21 @@ void SingleThreadStaging_match_table_created_w_add_in_on_set() {
     ecs_entity_t e_2 = ecs_set(world, 0, Position, {10, 20});
     ecs_entity_t e_3 = ecs_set(world, 0, Position, {10, 20});
 
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
     ecs_progress(world, 1);
 
-    test_int(ctx.count, 3);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, On_PV);
-    test_int(ctx.column_count, 2);
-    test_null(ctx.param);
+    test_int(pv_probe.count, 3);
+    test_int(pv_probe.invoked, 1);
+    test_int(pv_probe.system, On_PV);
+    test_int(pv_probe.column_count, 2);
+    test_null(pv_probe.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
-    test_int(ctx.s[0][1], 0);
+    test_int(pv_probe.e[0], e_1);
+    test_int(pv_probe.e[1], e_2);
+    test_int(pv_probe.e[2], e_3);
+    test_int(pv_probe.c[0][0], ecs_entity(Position));
+    test_int(pv_probe.s[0][0], 0);
+    test_int(pv_probe.c[0][1], ecs_entity(Velocity));
+    test_int(pv_probe.s[0][1], 0);
 
     ecs_fini(world);
 }
@@ -2633,24 +2627,21 @@ void SingleThreadStaging_match_table_created_w_set_in_on_set() {
     ecs_entity_t e_2 = ecs_set(world, 0, Position, {10, 20});
     ecs_entity_t e_3 = ecs_set(world, 0, Position, {10, 20});
 
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
     ecs_progress(world, 1);
 
-    test_int(ctx.count, 3);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, On_PV);
-    test_int(ctx.column_count, 2);
-    test_null(ctx.param);
+    test_int(pv_probe.count, 3);
+    test_int(pv_probe.invoked, 1);
+    test_int(pv_probe.system, On_PV);
+    test_int(pv_probe.column_count, 2);
+    test_null(pv_probe.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.c[0][0], ecs_entity(Position));
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(Velocity));
-    test_int(ctx.s[0][1], 0);
+    test_int(pv_probe.e[0], e_1);
+    test_int(pv_probe.e[1], e_2);
+    test_int(pv_probe.e[2], e_3);
+    test_int(pv_probe.c[0][0], ecs_entity(Position));
+    test_int(pv_probe.s[0][0], 0);
+    test_int(pv_probe.c[0][1], ecs_entity(Velocity));
+    test_int(pv_probe.s[0][1], 0);
 
     ecs_fini(world);
 }

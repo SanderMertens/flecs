@@ -256,6 +256,9 @@ void run_component_trigger(
 
     ecs_entity_t *entities = ecs_vector_first(data->entities);        
     ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert((row + count) <= ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
+
     entities = ECS_OFFSET(entities, sizeof(ecs_entity_t) * row);
 
     run_component_trigger_for_entities(
@@ -372,7 +375,7 @@ void instantiate_children(
 
     /* Create component array for creating the table */
     ecs_entities_t components = {
-        .array = ecs_os_alloca(type_count, sizeof(ecs_entity_t)),
+        .array = ecs_os_alloca(ecs_entity_t, type_count),
     };
 
     void **component_data = NULL;

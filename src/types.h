@@ -168,6 +168,7 @@ struct ecs_query_t {
     /* Tables matched with query */
     ecs_vector_t *tables;
     ecs_vector_t *inactive_tables;
+    int32_t prev_table_count;    /* Used to check if sorting is needed */
 
     /* Handle to system (optional) */
     ecs_entity_t system;   

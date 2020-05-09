@@ -1433,9 +1433,9 @@ void ReaderWriter_invalid_header() {
 
     ecs_writer_t writer = ecs_writer_init(world);
 
-    char b = 42; // nonsense data
+    int32_t b = 42; // nonsense data
 
-    test_assert( ecs_writer_write(&b, 4, &writer) != 0);
+    test_assert( ecs_writer_write((char*)&b, 4, &writer) != 0);
 
     test_assert( writer.error == ECS_DESERIALIZE_FORMAT_ERROR);
 

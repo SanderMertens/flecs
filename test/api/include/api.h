@@ -53,10 +53,11 @@ typedef struct Color {
     float a;
 } Color;
 
-void probe_system(ecs_rows_t *rows);
+void probe_system_w_ctx(
+    ecs_rows_t *rows,
+    Probe *ctx);
 
-void probe_trigger(
-    ecs_rows_t *rows);
+void probe_system(ecs_rows_t *rows);
 
 void probe_has_entity(Probe *probe, ecs_entity_t e);
 

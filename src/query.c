@@ -355,9 +355,6 @@ void add_table(
          * must come from a prefab. This is guaranteed, as at this point it is
          * already validated that the table matches with the system.
          * 
-         * If the column from is FromSingleton, the entity will be 0, but still
-         * a reference needs to be added to the singleton component.
-         * 
          * If the column from is Cascade, there may not be an entity in case the
          * current table contains root entities. In that case, still add a
          * reference field. The application can, after the table has matched,
@@ -365,7 +362,7 @@ void add_table(
          * reference. Having the reference already linked to the system table
          * makes changing this administation easier when the change happens.
          * */
-        if (entity || table_data->columns[c] == -1 || from == EcsCascade) {
+        if (from != EcsFromEmpty && (entity || table_data->columns[c] == -1 || from == EcsCascade)) {
             if (ecs_has(world, component, EcsComponent)) {
                 const EcsComponent *component_data = ecs_get_ptr(
                         world, component, EcsComponent);
@@ -623,6 +620,9 @@ void resolve_cascade_container(
 
     /* Obtain pointer to the reference data */
     ecs_reference_t *references = ecs_vector_first(table_data->references);
+    ecs_assert(ref_index < ecs_vector_count(table_data->references), 
+        ECS_INTERNAL_ERROR, NULL);
+
     ecs_reference_t *ref = &references[ref_index];
     ecs_assert(ref->component == get_cascade_component(query), 
         ECS_INTERNAL_ERROR, NULL);
@@ -663,7 +663,7 @@ repeat:
         void *pivot = ELEM(ptr, elem_size, p);
         int32_t i = lo - 1, j = hi;
         void *el;
-
+        
         do {
             i ++;
             el = ELEM(ptr, elem_size, i);
@@ -713,7 +713,7 @@ void sort_table(
     }
 
     int32_t p = qsort_table(
-        world, table, data, entities, ptr, size, 0, count, compare);
+        world, table, data, entities, ptr, size, 0, count - 1, compare);
 
     qsort_table(
         world, table, data, entities, ptr, size, 0, p, compare);        
@@ -867,7 +867,8 @@ void build_sorted_tables(
         build_sorted_table_range(world, query, start, i);
     }
 
-    query->match_count ++; 
+    query->match_count ++;
+    query->prev_table_count = count;
 }
 
 static
@@ -930,7 +931,7 @@ void sort_tables(
         }
     }
 
-    if (tables_sorted || !count) {
+    if (tables_sorted || !count || query->prev_table_count != count) {
         build_sorted_tables(world, query);
     }
 }
@@ -1017,7 +1018,7 @@ void process_signature(
         }
 
         if (from == EcsCascade) {
-            query->cascade_by = i;
+            query->cascade_by = i + 1;
             query->rank_on_component = column->is.component;
         }
 
@@ -1181,6 +1182,7 @@ ecs_query_t* ecs_query_new_w_sig(
     result->inactive_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = system;
     result->match_count = 0;
+    result->prev_table_count = 0;
 
     process_signature(world, result);
 

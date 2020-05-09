@@ -1,9 +1,9 @@
 #include <api.h>
 
-void probe_system(
-    ecs_rows_t *rows) 
+void probe_system_w_ctx(
+    ecs_rows_t *rows,
+    Probe *ctx) 
 {
-    Probe *ctx = ecs_get_context(rows->world);
     if (!ctx) {
         return;
     }
@@ -49,29 +49,12 @@ void probe_system(
     ctx->invoked ++;
 }
 
-void probe_trigger(
-    ecs_rows_t *rows)
+void probe_system(
+    ecs_rows_t *rows) 
 {
-    // Probe *probe = rows->param;
-    // if (!ctx) {
-    //     return;
-    // }
-
-    // probe->system = 0;
-    // probe->param = NULL;
-    // probe->offset = 0;
-    // probe->column_count = 1;
-    // probe->c[probe->invoked][0] = component;
-    // probe->s[probe->invoked][0] = 0;
-
-    // int32_t i;
-    // for (i = 0; i < count; i ++) {
-    //     probe->e[i] = entities[i];
-    // }
-
-    // probe->count = count;
-    // probe->invoked ++;
- }
+    Probe *ctx = ecs_get_context(rows->world);
+    probe_system_w_ctx(rows, ctx);
+}
 
 void probe_has_entity(Probe *probe, ecs_entity_t e) {
     int i;
