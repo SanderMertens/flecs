@@ -75,6 +75,11 @@ void init_edges(
 
         if (e == EEcsPrefab) {
             table->flags |= EcsTableIsPrefab;
+            table->flags |= EcsTableIsDisabled;
+        }
+
+        if (e == EEcsDisabled) {
+            table->flags |= EcsTableIsDisabled;
         }
 
         if (e == EEcsComponent) {
@@ -134,6 +139,7 @@ ecs_table_t *create_table(
     ecs_entities_t *entities)
 {
     ecs_table_t *result = ecs_sparse_add(stage->tables, ecs_table_t);
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
     init_table(world, stage, result, entities);
 

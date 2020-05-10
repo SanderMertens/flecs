@@ -367,6 +367,10 @@ char* ecs_type_str(
     ecs_world_t *world,
     ecs_type_t type)
 {
+    if (!type) {
+        return ecs_os_strdup("[]");
+    }
+
     ecs_vector_t *chbuf = ecs_vector_new(char, 32);
     char *dst;
     int32_t len;
@@ -427,6 +431,7 @@ char* ecs_type_str(
             const EcsName *id = ecs_get_ptr(world, h, EcsName);
             if (id) {
                 str = *id;
+                ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);
             } else {
                 int h_int = h;
                 sprintf(buf, "%u", h_int);

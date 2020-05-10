@@ -398,7 +398,7 @@ void SystemOnSet_on_set_after_override_w_new() {
 
     const Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
-    test_int(p->x, 1);
+    test_int(p->x, 2);
     test_int(p->y, 3);
 }
 

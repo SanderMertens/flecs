@@ -534,14 +534,11 @@
                 "inherit_in_system",
                 "add_to_empty_base_in_system",
                 "dont_inherit_disabled",
-                "cyclic_inheritance",
-                "cyclic_inheritance_w_clone_in_progress",
-                "cyclic_inheritance_get_unavailable",
-                "cyclic_inheritance_has_unavailable",
                 "clone_after_inherit_in_on_add",
                 "override_from_nested",
-                "create_multiple_nested_w_on_add",
-                "create_multiple_nested_w_on_add_in_progress"
+                "create_multiple_nested_w_on_set",
+                "create_multiple_nested_w_on_set_in_progress",
+                "single_on_set_on_child_w_override"
             ]
         }, {
             "id": "System_w_FromContainer",

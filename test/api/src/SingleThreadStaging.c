@@ -3036,8 +3036,8 @@ void SingleThreadStaging_merge_once() {
     ecs_progress(world, 1);
 
     const Position *p = ecs_get_ptr(world, e, Position);
-    test_int(p->x, 1);
-    test_int(p->y, 1);
+    test_int(p->x, 3);
+    test_int(p->y, 3);
 
     const Velocity *v = ecs_get_ptr(world, e, Velocity);
     test_int(v->x, 2);
@@ -3047,8 +3047,8 @@ void SingleThreadStaging_merge_once() {
     ecs_progress(world, 1);
 
     p = ecs_get_ptr(world, e, Position);
-    test_int(p->x, 5);
-    test_int(p->y, 5);
+    test_int(p->x, 7);
+    test_int(p->y, 7);
 
     v = ecs_get_ptr(world, e, Velocity);
     test_int(v->x, 2);

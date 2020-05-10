@@ -481,14 +481,11 @@ void Prefab_rematch_twice(void);
 void Prefab_inherit_in_system(void);
 void Prefab_add_to_empty_base_in_system(void);
 void Prefab_dont_inherit_disabled(void);
-void Prefab_cyclic_inheritance(void);
-void Prefab_cyclic_inheritance_w_clone_in_progress(void);
-void Prefab_cyclic_inheritance_get_unavailable(void);
-void Prefab_cyclic_inheritance_has_unavailable(void);
 void Prefab_clone_after_inherit_in_on_add(void);
 void Prefab_override_from_nested(void);
-void Prefab_create_multiple_nested_w_on_add(void);
-void Prefab_create_multiple_nested_w_on_add_in_progress(void);
+void Prefab_create_multiple_nested_w_on_set(void);
+void Prefab_create_multiple_nested_w_on_set_in_progress(void);
+void Prefab_single_on_set_on_child_w_override(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -2461,7 +2458,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Prefab",
-        .testcase_count = 63,
+        .testcase_count = 60,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -2684,22 +2681,6 @@ static bake_test_suite suites[] = {
                 .function = Prefab_dont_inherit_disabled
             },
             {
-                .id = "cyclic_inheritance",
-                .function = Prefab_cyclic_inheritance
-            },
-            {
-                .id = "cyclic_inheritance_w_clone_in_progress",
-                .function = Prefab_cyclic_inheritance_w_clone_in_progress
-            },
-            {
-                .id = "cyclic_inheritance_get_unavailable",
-                .function = Prefab_cyclic_inheritance_get_unavailable
-            },
-            {
-                .id = "cyclic_inheritance_has_unavailable",
-                .function = Prefab_cyclic_inheritance_has_unavailable
-            },
-            {
                 .id = "clone_after_inherit_in_on_add",
                 .function = Prefab_clone_after_inherit_in_on_add
             },
@@ -2708,12 +2689,16 @@ static bake_test_suite suites[] = {
                 .function = Prefab_override_from_nested
             },
             {
-                .id = "create_multiple_nested_w_on_add",
-                .function = Prefab_create_multiple_nested_w_on_add
+                .id = "create_multiple_nested_w_on_set",
+                .function = Prefab_create_multiple_nested_w_on_set
             },
             {
-                .id = "create_multiple_nested_w_on_add_in_progress",
-                .function = Prefab_create_multiple_nested_w_on_add_in_progress
+                .id = "create_multiple_nested_w_on_set_in_progress",
+                .function = Prefab_create_multiple_nested_w_on_set_in_progress
+            },
+            {
+                .id = "single_on_set_on_child_w_override",
+                .function = Prefab_single_on_set_on_child_w_override
             }
         }
     },

@@ -58,6 +58,8 @@
  * Increasing this value will increase consumption of stack space. */
 #define ECS_MAX_ADD_REMOVE (32)
 
+typedef int64_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
+
 /** Callback used by the system signature expression parser */
 typedef int (*ecs_parse_action_t)(
     ecs_world_t *world,
@@ -103,6 +105,7 @@ struct ecs_data_t {
 #define EcsTableHasParent (8)
 #define EcsTableHasComponentData (16)
 #define EcsTableHasXor (32)
+#define EcsTableIsDisabled (64)
 
 /** Edge used for traversing the table graph */
 typedef struct ecs_edge_t {
