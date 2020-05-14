@@ -96,14 +96,24 @@ void init_edges(
 
         if (e & ECS_CHILDOF) {
             table->flags |= EcsTableHasParent;
+            if (stage == &world->stage) {
+                /* Register child table with parent */
+                ecs_entity_t parent = e & ECS_ENTITY_MASK;
+                ecs_vector_t *child_tables = ecs_map_get_ptr(
+                        world->child_tables, ecs_vector_t*, parent);
+                if (!child_tables) {
+                    child_tables = ecs_vector_new(ecs_table_t*, 1);
+                }
+                
+                ecs_table_t **el = ecs_vector_add(&child_tables, ecs_table_t*);
+                *el = table;
 
-            /* Register child table with parent */
-            ecs_entity_t parent = e & ECS_ENTITY_MASK;
+                if (!world->child_tables) {
+                    world->child_tables = ecs_map_new(ecs_table_t*, 1);
+                }
 
-            EcsParent *ptr = ecs_get_mut(world, parent, EcsParent, NULL);
-            ecs_table_t **el = ecs_vector_add(&ptr->child_tables, ecs_table_t*);
-            *el = table;
-            ecs_modified(world, parent, EcsParent);
+                ecs_map_set(world->child_tables, parent, &child_tables);
+            }
         }
 
         if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {

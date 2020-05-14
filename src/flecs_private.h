@@ -86,6 +86,15 @@ void ecs_progress_pipeline(
     ecs_entity_t pipeline,
     float delta_time);
 
+void ecs_component_monitor_mark(
+    ecs_component_monitor_t *mon,
+    int32_t component);
+
+void ecs_component_monitor_register(
+    ecs_component_monitor_t *mon,
+    ecs_entity_t component,
+    ecs_query_t *query);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
 ////////////////////////////////////////////////////////////////////////////////
@@ -346,7 +355,7 @@ int ecs_parse_signature_action(
     void *data);
 
 /* Trigger rematch of system */
-void ecs_rematch_query(
+void ecs_query_rematch(
     ecs_world_t *world,
     ecs_query_t *query);
 

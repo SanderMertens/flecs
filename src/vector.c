@@ -385,7 +385,7 @@ void _ecs_vector_sort(
     int32_t count = vector->count;
     void *buffer = ARRAY_BUFFER(vector);
 
-    if (count) {
+    if (count > 1) {
         qsort(buffer, count, elem_size, compare_action);
     }
 }

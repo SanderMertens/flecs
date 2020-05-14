@@ -104,10 +104,10 @@ void SystemCascade_cascade_depth_2() {
     ecs_set(world, e_5, Position, {1, 2});
     ecs_set(world, e_6, Position, {1, 2});
 
-    ecs_add_entity(world, e_3, ECS_CHILDOF | e_1);
-    ecs_add_entity(world, e_4, ECS_CHILDOF | e_2);
-    ecs_add_entity(world, e_5, ECS_CHILDOF | e_3);
-    ecs_add_entity(world, e_6, ECS_CHILDOF | e_4);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | e_1); /* depth 1 */
+    ecs_add_entity(world, e_4, ECS_CHILDOF | e_2); /* depth 1 */
+    ecs_add_entity(world, e_5, ECS_CHILDOF | e_3); /* depth 2 */
+    ecs_add_entity(world, e_6, ECS_CHILDOF | e_4); /* depth 2 */
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -120,12 +120,10 @@ void SystemCascade_cascade_depth_2() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.e[3], e_4);
-    test_int(ctx.e[4], e_5);
-    test_int(ctx.e[5], e_6);    
+    test_assert((ctx.e[0] == e_1 && ctx.e[1] == e_2) || (ctx.e[0] == e_2 && ctx.e[1] == e_1));
+    test_assert((ctx.e[2] == e_3 && ctx.e[3] == e_4) || (ctx.e[2] == e_4 && ctx.e[3] == e_3));
+    test_assert((ctx.e[4] == e_5 && ctx.e[5] == e_6) || (ctx.e[4] == e_6 && ctx.e[5] == e_5));
+
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
@@ -198,14 +196,17 @@ void SystemCascade_add_after_match() {
     ecs_set(world, e_3, Position, {1, 2});
     ecs_set(world, e_4, Position, {1, 2});
 
-    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
-    ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent); /* depth 1 */
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent); /* depth 1 */
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
 
+    /* Before adding Position to parent, it wasn't being considered for the
+     * CASCADE column, so tables could have been ordered randomly. Make sure
+     * that queries can handle changes to depth after all tables are matched */
     ecs_set(world, parent, Position, {1, 2});
 
     ctx = (Probe){0};

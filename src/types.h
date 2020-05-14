@@ -368,6 +368,13 @@ typedef struct ecs_component_data_t {
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
 } ecs_component_data_t;
 
+/* Component monitors */
+typedef struct ecs_component_monitor_t {
+    bool dirty_flags[ECS_HI_COMPONENT_ID];
+    ecs_vector_t *monitors[ECS_HI_COMPONENT_ID];
+    bool rematch;
+} ecs_component_monitor_t;
+
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
@@ -380,7 +387,27 @@ struct ecs_world_t {
 
     /* --  Queries -- */
 
+    /* Persistent queries registered with the world. Persistent queries are
+     * stateful and automatically matched with existing and new tables. */
     ecs_sparse_t *queries;
+
+    /* Keep track of components that were added/removed to/from monitored
+     * entities. Monitored entities are entities that a query has matched with
+     * specifically, as is the case with PARENT / CASCADE columns, FromEntity
+     * columns and columns matched from prefabs. 
+     * When these entities change type, queries may have to be rematched.
+     * Queries register themselves as component monitors for specific components
+     * and when these components change they are rematched. The component 
+     * monitors are evaluated during a merge. */
+    ecs_component_monitor_t component_monitors;
+
+    /* Parent monitors are like normal component monitors except that the
+     * conditions under which a parent component is flagged dirty is different.
+     * Parent component flags are marked dirty when an entity that is a parent
+     * adds or removes a CHILDOF flag. In that case, every component of that
+     * parent will be marked dirty. This allows column modifiers like CASCADE
+     * to correctly determine when the depth ranking of a table has changed. */
+    ecs_component_monitor_t parent_monitors; 
 
 
     /* -- Systems -- */
@@ -402,6 +429,11 @@ struct ecs_world_t {
     ecs_stage_t temp_stage;          /* Stage for when processing systems */
     ecs_vector_t *worker_stages;     /* Stages for worker threads */
     uint32_t stage_count;            /* Number of stages in world */
+
+
+    /* -- Child administration -- */
+
+    ecs_map_t *child_tables;        /* Child tables per parent entity */
 
 
     /* -- Multithreading -- */
@@ -461,7 +493,7 @@ struct ecs_world_t {
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */
     bool should_quit;             /* Did a system signal that app should quit */
-    bool should_match;            /* Should tablea be rematched */
+    bool rematch;            /* Should tablea be rematched */
     bool locking_enabled;         /* Lock world when in progress */    
 };
 

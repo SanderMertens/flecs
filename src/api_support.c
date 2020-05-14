@@ -138,7 +138,7 @@ ecs_entity_t lookup(
     ecs_entity_t result = ecs_lookup(world, name);
     if (result) {
         ecs_type_t entity_type = ecs_get_type(world, result);
-        if (!entity_type || !ecs_type_contains(world, entity_type, type, true, false)) {
+        if (type && (!entity_type || !ecs_type_contains(world, entity_type, type, true, false))) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
     }

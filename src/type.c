@@ -368,7 +368,7 @@ char* ecs_type_str(
     ecs_type_t type)
 {
     if (!type) {
-        return ecs_os_strdup("[]");
+        return ecs_os_strdup("");
     }
 
     ecs_vector_t *chbuf = ecs_vector_new(char, 32);

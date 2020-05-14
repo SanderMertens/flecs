@@ -419,7 +419,6 @@ void ecs_table_replace_data(
 {
     int32_t prev_count = 0;
     ecs_data_t *table_data = ecs_vector_first(table->stage_data);
-
     ecs_assert(!data || data != table_data, ECS_INTERNAL_ERROR, NULL);
 
     if (table_data) {
@@ -660,6 +659,7 @@ int16_t ecs_table_set_size(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_column_t *columns = data->columns;
 
     if (!columns) {
@@ -691,6 +691,7 @@ int16_t ecs_table_set_count(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_column_t *columns = data->columns;
 
     if (!columns) {

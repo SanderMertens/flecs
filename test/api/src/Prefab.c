@@ -2511,8 +2511,9 @@ void Prefab_create_multiple_nested_w_on_set_in_progress() {
         ecs_set(world, Prefab, Position, {1, 2});
 
         ECS_PREFAB(world, ChildPrefab, Velocity);
-        ECS_PREFAB(world, Child, CHILDOF | Prefab, INSTANCEOF | ChildPrefab, ecs_entity_t);
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
+            
+        ECS_PREFAB(world, Child, CHILDOF | Prefab, INSTANCEOF | ChildPrefab, ecs_entity_t);
 
     ECS_SYSTEM(world, CreateInstances, EcsOnUpdate, .Prefab);
     ECS_TRIGGER(world, OnAddEntity, EcsOnSet, ecs_entity_t, NULL);

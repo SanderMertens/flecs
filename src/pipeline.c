@@ -101,6 +101,16 @@ ecs_vector_t* build_pipeline(
                 /* After merge all components will be merged, so reset state */
                 memset(write_state, 0, ECS_HI_COMPONENT_ID * sizeof(int8_t));
                 op = NULL;
+
+                /* Re-evaluate columns to set write flags */
+                needs_merge = false;
+                ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
+                    needs_merge |= check_column(column, write_state);
+                });
+
+                /* The component states were just reset, so if we conclude that
+                 * another merge is needed something is wrong. */
+                ecs_assert(needs_merge == false, ECS_INTERNAL_ERROR, NULL);        
             }
 
             if (!op) {
@@ -196,6 +206,11 @@ void ecs_progress_pipeline(
     ecs_entity_t pipeline,
     float delta_time)
 {
+    /* Start with a merge so we know for sure that we start with a consistent
+     * state. If there is nothing to merge, this will essentially be a no-op. */
+    ecs_staging_end(world, false);
+    ecs_staging_begin(world);
+
     EcsPipelineQuery *query = ecs_get_mut(
         world, pipeline, EcsPipelineQuery, NULL);
 
@@ -222,6 +237,7 @@ void ecs_progress_pipeline(
         int32_t i;
         for(i = 0; i < rows->count; i ++) {
             ecs_entity_t e = rows->entities[i];
+
             ecs_run_intern(world, world, e, &sys[i], delta_time, 0, 0, 
                 NULL, NULL);
 
@@ -229,7 +245,6 @@ void ecs_progress_pipeline(
 
             if (count_since_merge == op->count) {
                 ecs_staging_end(world, false);
-                ecs_merge(world);
                 ecs_staging_begin(world);
                 count_since_merge = 0;
                 op ++;

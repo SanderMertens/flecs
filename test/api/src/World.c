@@ -114,11 +114,11 @@ void World_entity_range_offset_out_of_range() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_entity_range(world, 50, 0);
+    ecs_set_entity_range(world, 2000, 0);
 
     test_expect_abort();
 
-    ecs_add(world, 40, Position);
+    ecs_add(world, 1500, Position);
 
     ecs_fini(world);
 }
@@ -130,11 +130,11 @@ void World_entity_range_limit_out_of_range() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_entity_range(world, 0, 50);
+    ecs_set_entity_range(world, 0, 2000);
 
     test_expect_abort();
 
-    ecs_add(world, 60, Position);
+    ecs_add(world, 2500, Position);
 
     ecs_fini(world);
 }
@@ -608,14 +608,14 @@ void World_phases_w_merging() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, TMergeOnLoad, EcsOnLoad, Position);
-    ECS_SYSTEM(world, TMergePostLoad, EcsPostLoad, Position);
-    ECS_SYSTEM(world, TMergePreUpdate, EcsPreUpdate, Position);
-    ECS_SYSTEM(world, TMergeOnUpdate, EcsOnUpdate, Position);
-    ECS_SYSTEM(world, TMergeOnValidate, EcsOnValidate, Position);
-    ECS_SYSTEM(world, TMergePostUpdate, EcsPostUpdate, Position);
-    ECS_SYSTEM(world, TMergePreStore, EcsPreStore, Position);
-    ECS_SYSTEM(world, TMergeOnStore, EcsOnStore, Position);
+    ECS_SYSTEM(world, TMergeOnLoad, EcsOnLoad, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergePostLoad, EcsPostLoad, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergePreUpdate, EcsPreUpdate, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergeOnUpdate, EcsOnUpdate, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergeOnValidate, EcsOnValidate, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergePostUpdate, EcsPostUpdate, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergePreStore, EcsPreStore, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergeOnStore, EcsOnStore, Position, [out] .Position);
     ECS_SYSTEM(world, TMergeManual, 0, Position);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -870,7 +870,7 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 0);
-    test_int(stats.tables_count - init_table_count, 0);
+    test_int(stats.tables_count - init_table_count, 1);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 1);
 
@@ -891,7 +891,6 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 1);
-    test_int(stats.tables_count - init_table_count, 1);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 3);
 
@@ -901,7 +900,6 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 2);
-    test_int(stats.tables_count - init_table_count, 1);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 4);
 
@@ -911,7 +909,6 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 2);
-    test_int(stats.tables_count - init_table_count, 2);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 5);
 
@@ -921,7 +918,6 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 2);
-    test_int(stats.tables_count - init_table_count, 4);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 6);
 

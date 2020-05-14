@@ -6,7 +6,6 @@ ecs_type_t TEcsComponent;
 ecs_type_t TEcsComponentLifecycle;
 ecs_type_t TEcsTrigger;
 ecs_type_t TEcsType;
-ecs_type_t TEcsParent;
 ecs_type_t TEcsPrefab;
 ecs_type_t TEcsSystem;
 ecs_type_t TEcsColSystem;
@@ -27,7 +26,6 @@ static const char *ECS_COMPONENT_NAME =      "EcsComponent";
 static const char *ECS_COMPONENT_LIFECYCLE_NAME = "EcsComponentLifecycle";
 static const char *ECS_COMPONENT_TRIGGER_NAME = "EcsTrigger";
 static const char *ECS_TYPE_NAME =           "EcsType";
-static const char *ECS_PARENT_NAME =         "EcsParent";
 static const char *ECS_PREFAB_NAME =         "EcsPrefab";
 static const char *ECS_SYSTEM_NAME =         "EcsSystem";
 static const char *ECS_COL_SYSTEM_NAME =     "EcsColSystem";
@@ -72,7 +70,6 @@ void bootstrap_types(
     TEcsComponentLifecycle = bootstrap_type(world, EEcsComponentLifecycle);
     TEcsTrigger = bootstrap_type(world, EEcsTrigger);
     TEcsType = bootstrap_type(world, EEcsType);
-    TEcsParent = bootstrap_type(world, EEcsParent);
     TEcsPrefab = bootstrap_type(world, EEcsPrefab);
     TEcsColSystem = bootstrap_type(world, EEcsColSystem);
     TEcsName = bootstrap_type(world, EEcsName);
@@ -155,19 +152,6 @@ void bootstrap_component(
     id_data[index] = id;
 }
 
-static
-void rematch_queries(
-    ecs_world_t *world)
-{
-    ecs_sparse_t *queries = world->queries;
-    int32_t i, count = ecs_sparse_count(queries);
-
-    for (i = 0; i < count; i ++) {
-        ecs_query_t *query = ecs_sparse_get(queries, ecs_query_t, i);
-        ecs_rematch_query(world, query);
-    }
-}
-
 #ifndef NDEBUG
 static
 void no_threading(
@@ -209,6 +193,68 @@ ecs_stage_t *ecs_get_stage(
     }
     
     return NULL;
+}
+
+/* Evaluate component monitor. If a monitored entity changed it will have set a
+ * flag in one of the world's component monitors. Queries can register 
+ * themselves with component monitors to determine whether they need to rematch
+ * with tables. */
+static
+void eval_component_monitor(
+    ecs_world_t *world,
+    ecs_component_monitor_t *mon)
+{
+    if (!mon->rematch) {
+        return;
+    }
+
+    ecs_vector_t *eval[ECS_HI_COMPONENT_ID];
+    int32_t eval_count = 0;
+
+    int32_t i;
+    for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+        if (mon->dirty_flags[i]) {
+            eval[eval_count ++] = mon->monitors[i];
+            mon->dirty_flags[i] = 0;
+        }
+    }
+
+    for (i = 0; i < eval_count; i ++) {
+        ecs_vector_each(eval[i], ecs_query_t*, q_ptr, {
+            ecs_query_rematch(world, *q_ptr);
+        });
+    }
+    
+    mon->rematch = false;
+}
+
+void ecs_component_monitor_mark(
+    ecs_component_monitor_t *mon,
+    int32_t component)
+{
+    /* Only flag if there are actually monitors registered, so that we
+     * don't waste cycles evaluating monitors if there's no interest */
+    if (mon->monitors[component]) {
+        mon->dirty_flags[component] = true;
+        mon->rematch = true;
+    }
+}
+
+void ecs_component_monitor_register(
+    ecs_component_monitor_t *mon,
+    ecs_entity_t component,
+    ecs_query_t *query)
+{
+    ecs_assert(mon != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Ignore component ids > ECS_HI_COMPONENT_ID */
+    if(component >= ECS_HI_COMPONENT_ID) {
+        return;
+    }    
+
+    ecs_query_t **q = ecs_vector_add(&mon->monitors[component], ecs_query_t*);
+    *q = query;
 }
 
 /* -- Public functions -- */
@@ -272,6 +318,10 @@ ecs_world_t *ecs_init(void) {
 
     world->queries = ecs_sparse_new(ecs_query_t, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
+    world->child_tables = NULL;
+
+    memset(&world->component_monitors, 0, sizeof(world->component_monitors));
+    memset(&world->parent_monitors, 0, sizeof(world->parent_monitors));
 
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
     world->on_activate_components = ecs_map_new(ecs_on_demand_in_t, 0);
@@ -291,7 +341,7 @@ ecs_world_t *ecs_init(void) {
     world->measure_system_time = false;
     world->last_handle = 0;
     world->should_quit = false;
-    world->should_match = false;
+    world->rematch = false;
     world->locking_enabled = false;
 
     world->frame_start_time = (ecs_time_t){0, 0};
@@ -328,7 +378,6 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, EEcsComponentLifecycle, ECS_COMPONENT_LIFECYCLE_NAME, sizeof(EcsComponentLifecycle));
     bootstrap_component(world, table, EEcsTrigger, ECS_COMPONENT_TRIGGER_NAME, sizeof(EcsTrigger));
     bootstrap_component(world, table, EEcsType, ECS_TYPE_NAME, sizeof(EcsType));
-    bootstrap_component(world, table, EEcsParent, ECS_PARENT_NAME, sizeof(EcsParent));
     bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_NAME, 0);
     bootstrap_component(world, table, EEcsSystem, ECS_SYSTEM_NAME, sizeof(EcsSystem));
     bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_NAME, sizeof(EcsColSystem));
@@ -729,12 +778,6 @@ float ecs_frame_begin(
 
     world->delta_time = user_delta_time;
 
-    if (world->should_match) {
-        ecs_trace_2("rematching queries");
-        rematch_queries(world);
-        world->should_match = false;
-    }
-
     /* Evaluate tick sources */
     bool is_staged = ecs_staging_begin(world);
     ecs_assert(!is_staged, ECS_INTERNAL_ERROR, NULL);
@@ -809,11 +852,15 @@ void ecs_merge(
         }
     }
 
+    world->is_merging = false;
+
+    /* Monitored entities have been modified, evaluate component monitors */
+    eval_component_monitor(world, &world->component_monitors);
+    eval_component_monitor(world, &world->parent_monitors);
+
     if (measure_frame_time) {
         world->merge_time_total += ecs_time_measure(&t_start);
     }
-
-    world->is_merging = false;
 }
 
 void ecs_set_automerge(
@@ -1173,14 +1220,18 @@ bool ecs_staging_begin(
     return in_progress;
 }
 
-void ecs_staging_end(
+bool ecs_staging_end(
     ecs_world_t *world,
     bool is_staged)
 {
+    bool result = world->in_progress;
+
     if (!is_staged) {
         world->in_progress = false;
         if (world->auto_merge) {
             ecs_merge(world);
         }
     }
+
+    return result;
 }

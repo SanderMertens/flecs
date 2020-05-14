@@ -69,7 +69,6 @@ void EcsProgressRateFilters(ecs_rows_t *rows) {
 
         if (inc) {
             filter[i].tick_count ++;
-
             bool triggered = !(filter[i].tick_count % filter[i].rate);
             tick_dst[i].tick = triggered;
             tick_dst[i].time_elapsed = filter[i].time_elapsed;

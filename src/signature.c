@@ -107,6 +107,20 @@ char* parse_complex_elem(
     return bptr;
 }
 
+int entity_compare(
+    const void *ptr1,
+    const void *ptr2)
+{
+    int64_t e1 = *(ecs_entity_t*)ptr1;
+    int64_t e2 = *(ecs_entity_t*)ptr2;
+
+    return (e1 - e2 < 0) 
+        ? -1 
+        : ((e1 - e2 > 0) 
+            ? 1 
+            : 0);
+}
+
 static
 void vec_add_entity(
     ecs_vector_t **vec,
@@ -114,6 +128,9 @@ void vec_add_entity(
 {
     ecs_entity_t *e = ecs_vector_add(vec, ecs_entity_t);
     *e = entity;
+
+    /* Keep array sorted so that we can use it in type compare operations */
+    ecs_vector_sort(*vec, ecs_entity_t, entity_compare);
 }
 
 

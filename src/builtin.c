@@ -47,71 +47,6 @@ void ecs_colsystem_dtor(
     }
 }
 
-static
-void ecs_parent_dtor(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entities,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    EcsParent *array = ptr;
-
-    int i;
-    for (i = 0; i < count; i ++) {
-        ecs_vector_free(array[i].child_tables);
-    }
-}
-
-static
-void ecs_parent_copy(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *dst_entities,
-    const ecs_entity_t *src_entities,
-    void *dst,
-    const void *src,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    EcsParent *dst_array = dst;
-    const EcsParent *src_array = src;
-
-    ecs_parent_dtor(world, component, dst_entities, dst, size, count, ctx);    
-
-    int i;
-    for (i = 0; i < count; i ++) {
-        dst_array[i].child_tables = ecs_vector_copy(
-            src_array[i].child_tables, ecs_table_t *);
-    }
-}
-
-static
-void ecs_parent_move(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *dst_entities,
-    const ecs_entity_t *src_entities,
-    void *dst,
-    void *src,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    EcsParent *dst_array = dst;
-    EcsParent *src_array = src;
-
-    ecs_parent_dtor(world, component, dst_entities, dst, size, count, ctx);
-
-    int i;
-    for (i = 0; i < count; i ++) {
-        dst_array[i].child_tables = src_array[i].child_tables;
-        src_array[i].child_tables = NULL;
-    }
-}
 
 static
 void ecs_component_set_intern(
@@ -266,14 +201,6 @@ void ecs_init_builtins(
     ECS_TRIGGER(world, EcsOnSetComponentLifecycle, EcsOnSet, EcsComponentLifecycle, NULL);
 
     /* From here on we can use ecs_set to register component lifecycle */
-
-    /* Set component callbacks for EcsParent */
-    ecs_set(world, ecs_entity(EcsParent), EcsComponentLifecycle, {
-        .ctor = ctor_init_zero,
-        .dtor = ecs_parent_dtor,
-        .copy = ecs_parent_copy,
-        .move = ecs_parent_move
-    });
 
     /* Initialize pipeline builtins */
     ecs_init_pipeline_builtins(world);

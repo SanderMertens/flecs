@@ -165,19 +165,13 @@ void rank_tables(
     ecs_query_t *query)
 {
     if (query->rank_table) {
-        int i, count = ecs_vector_count(query->tables);
-        ecs_matched_table_t *tables = ecs_vector_first(query->tables);
-        for (i = 0; i < count; i ++) {
-            ecs_matched_table_t *table = &tables[i];
+        ecs_vector_each(query->tables, ecs_matched_table_t, table, {
             rank_table(world, query, table);
-        }
+        });
 
-        count = ecs_vector_count(query->inactive_tables);
-        tables = ecs_vector_first(query->inactive_tables);
-        for (i = 0; i < count; i ++) {
-            ecs_matched_table_t *table = &tables[i];
+        ecs_vector_each(query->inactive_tables, ecs_matched_table_t, table, {
             rank_table(world, query, table);
-        }        
+        });              
     }
 }
 
@@ -201,10 +195,7 @@ void add_table(
             &query->inactive_tables, ecs_matched_table_t);
 
         table_data->table = table;
-
-        /* Assign a rank to the table if table sorting is enabled for query */
-        rank_table(world, query, table_data);
-
+        
 #ifndef NDEBUG
         char *type_expr = ecs_type_str(world, table->type);
         if (query->system) {
@@ -530,6 +521,11 @@ bool match_table(
                     return false;
                 }
             } else if (from_kind == EcsFromParent) {
+                if (!(table->flags & EcsTableHasParent)) {
+                    failure_info->reason = EcsMatchOrFromContainer;
+                    return false;
+                }
+
                 if (!components_contains(
                     world, table_type, type, NULL, false))
                 {
@@ -661,18 +657,19 @@ repeat:
     {
         int32_t p = (hi + lo) / 2;
         void *pivot = ELEM(ptr, elem_size, p);
-        int32_t i = lo - 1, j = hi;
+        ecs_entity_t pivot_e = entities[p];
+        int32_t i = lo - 1, j = hi + 1;
         void *el;
         
         do {
             i ++;
             el = ELEM(ptr, elem_size, i);
-        } while ( compare(entities[i], el, entities[p], pivot) < 0);
+        } while ( compare(entities[i], el, pivot_e, pivot) < 0);
 
         do {
             j --;
             el = ELEM(ptr, elem_size, j);
-        } while ( compare(entities[j], el, entities[p], pivot) > 0);
+        } while ( compare(entities[j], el, pivot_e, pivot) > 0);
 
         if (i >= j) {
             return j;
@@ -719,7 +716,7 @@ void sort_table(
         world, table, data, entities, ptr, size, 0, p, compare);        
 
     qsort_table(
-        world, table, data, entities, ptr, size, p + 1, count, compare);
+        world, table, data, entities, ptr, size, p + 1, count - 1, compare);
 }
 
 /* Helper struct for building sorted table ranges */
@@ -963,6 +960,57 @@ bool has_refs(
 }
 
 static
+void register_monitors(
+    ecs_world_t *world,
+    ecs_query_t *query)
+{
+    ecs_vector_each(query->sig.columns, ecs_sig_column_t, column, {
+        /* If component is requested with CASCADE source register component as a
+         * parent monitor. Parent monitors keep track of whether an entity moved
+         * in the hierarchy, which potentially requires the query to reorder its
+         * tables. 
+         * Also register a regular component monitor for EcsCascade columns.
+         * This ensures that when the component used in the CASCADE column
+         * is added or removed tables are updated accordingly*/
+        if (column->from_kind == EcsCascade) {
+            if (column->oper_kind != EcsOperOr) {
+                ecs_component_monitor_register(
+                    &world->parent_monitors, column->is.component, query);
+
+                ecs_component_monitor_register(
+                    &world->component_monitors, column->is.component, query);
+            } else {
+                ecs_vector_each(column->is.type, ecs_entity_t, e_ptr, {
+                    ecs_component_monitor_register(
+                        &world->parent_monitors, *e_ptr, query);
+
+                    ecs_component_monitor_register(
+                        &world->component_monitors, *e_ptr, query);
+                });
+            }
+
+        /* FromSelf also requires registering a monitor, as FromSelf columns can
+         * be matched with prefabs. The only column kinds that do not require
+         * registering a monitor are FromOwned and FromNothing. */
+        } else if (column->from_kind == EcsFromSelf || 
+            column->from_kind == EcsFromShared ||
+            column->from_kind == EcsFromEntity ||
+            column->from_kind == EcsFromParent)
+        {
+            if (column->oper_kind != EcsOperOr) {
+                ecs_component_monitor_register(
+                    &world->component_monitors, column->is.component, query);
+            } else {
+                ecs_vector_each(column->is.type, ecs_entity_t, e_ptr, {
+                    ecs_component_monitor_register(
+                        &world->component_monitors, *e_ptr, query);
+                });
+            }
+        }
+    });
+}
+
+static
 void process_signature(
     ecs_world_t *world,
     ecs_query_t *query)
@@ -1029,6 +1077,8 @@ void process_signature(
     }
 
     query->has_refs = has_refs(&query->sig);
+
+    register_monitors(world, query);
 }
 
 
@@ -1095,8 +1145,8 @@ void remove_table(
     ecs_vector_remove_index(tables, ecs_matched_table_t, index);
 }
 
-/* Rematch system with tables after a change happened to a container or prefab */
-void ecs_rematch_query(
+/* Rematch system with tables after a change happened to a watched entity */
+void ecs_query_rematch(
     ecs_world_t *world,
     ecs_query_t *query)
 {
@@ -1136,6 +1186,8 @@ void ecs_rematch_query(
             }
         }
     }
+
+    rank_tables(world, query);
 
     order_ranked_tables(world, query);
 
@@ -1310,7 +1362,6 @@ void ecs_query_set_rows(
     rows->offset = row;
     rows->count = count;
 }
-
 
 /* Return next table */
 bool ecs_query_next(

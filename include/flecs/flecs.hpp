@@ -68,7 +68,6 @@ enum match_kind {
 
 using Component = EcsComponent;
 using TypeComponent = EcsType;
-using Parent = EcsParent;
 static const entity_t Prefab = EEcsPrefab;
 static const entity_t RowSystem = EEcsRowSystem;
 static const entity_t ColSystem = EEcsColSystem;
@@ -2135,7 +2134,6 @@ inline int world::count(flecs::filter filter) const {
 inline void world::init_builtin_components() {
     component<Component>(*this, "EcsComponent");
     component<TypeComponent>(*this, "EcsType");
-    component<Parent>(*this, "EcsParent");
     component<Name>(*this, "EcsName");
 }
 

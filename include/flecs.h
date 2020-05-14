@@ -231,13 +231,6 @@ typedef struct EcsType {
     ecs_type_t normalized;  /* Resolved nested types */
 } EcsType;
 
-/* Component that is automatically added to entities with children */
-typedef struct EcsParent {
-    /* The tables with child entities for this parent. Useful when doing depth-
-     * first walks */
-    ecs_vector_t *child_tables;
-} EcsParent;
-
 /* Component that contains lifecycle callbacks for a component */
 typedef struct EcsComponentLifecycle {
     ecs_xtor_t ctor;
@@ -330,7 +323,6 @@ extern ecs_type_t
     TEcsComponentLifecycle,
     TEcsTrigger,
     TEcsType,
-    TEcsParent,
     TEcsPrefab,
     TEcsSystem,
     TEcsColSystem,
@@ -352,7 +344,6 @@ extern ecs_type_t
 #define EEcsComponentLifecycle (2)
 #define EEcsTrigger (3)
 #define EEcsType (4)
-#define EEcsParent (5)
 #define EEcsPrefab (6)
 #define EEcsSystem (7)
 #define EEcsColSystem (8)
@@ -2283,7 +2274,7 @@ bool ecs_staging_begin(
     ecs_world_t *world);
 
 FLECS_EXPORT
-void ecs_staging_end(
+bool ecs_staging_end(
     ecs_world_t *world,
     bool is_staged);
 

@@ -461,7 +461,6 @@
             "id": "SystemManual",
             "testcases": [
                 "1_type_1_component",
-                "disabled",
                 "activate_status",
                 "no_automerge"
             ]
@@ -471,9 +470,6 @@
                 "no_components",
                 "one_tag",
                 "from_system",
-                "on_remove_no_components",
-                "on_remove_one_tag",
-                "on_remove_from_system",
                 "tasks_in_phases"
             ]
         }, {

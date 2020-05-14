@@ -412,7 +412,6 @@ void SystemCascade_adopt_after_match(void);
 
 // Testsuite 'SystemManual'
 void SystemManual_1_type_1_component(void);
-void SystemManual_disabled(void);
 void SystemManual_activate_status(void);
 void SystemManual_no_automerge(void);
 
@@ -420,9 +419,6 @@ void SystemManual_no_automerge(void);
 void Tasks_no_components(void);
 void Tasks_one_tag(void);
 void Tasks_from_system(void);
-void Tasks_on_remove_no_components(void);
-void Tasks_on_remove_one_tag(void);
-void Tasks_on_remove_from_system(void);
 void Tasks_tasks_in_phases(void);
 
 // Testsuite 'Prefab'
@@ -2402,15 +2398,11 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemManual",
-        .testcase_count = 4,
+        .testcase_count = 3,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
                 .function = SystemManual_1_type_1_component
-            },
-            {
-                .id = "disabled",
-                .function = SystemManual_disabled
             },
             {
                 .id = "activate_status",
@@ -2424,7 +2416,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Tasks",
-        .testcase_count = 7,
+        .testcase_count = 4,
         .testcases = (bake_test_case[]){
             {
                 .id = "no_components",
@@ -2437,18 +2429,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "from_system",
                 .function = Tasks_from_system
-            },
-            {
-                .id = "on_remove_no_components",
-                .function = Tasks_on_remove_no_components
-            },
-            {
-                .id = "on_remove_one_tag",
-                .function = Tasks_on_remove_one_tag
-            },
-            {
-                .id = "on_remove_from_system",
-                .function = Tasks_on_remove_from_system
             },
             {
                 .id = "tasks_in_phases",

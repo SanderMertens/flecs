@@ -336,11 +336,6 @@ void override(
     ecs_vector_each(base_type, ecs_entity_t, c_ptr, {
         ecs_entity_t c = *c_ptr;
 
-        /* Never override EcsParent */
-        if (c == ecs_entity(EcsParent)) {
-            continue;
-        }
-
         if (c & ECS_TYPE_FLAG_MASK) {
             /* If the base has a base, check if it has components to override */
             if (c & ECS_INSTANCEOF) {
@@ -445,7 +440,6 @@ void instantiate_children(
     ecs_data_t *child_data = ecs_table_get_data(world, child_table);
     int32_t type_count = ecs_vector_count(type);
     ecs_entity_t *type_array = ecs_vector_first(type);
-    EcsParent *parent_array = NULL;
 
     /* Instantiate child table for each instance */
 
@@ -472,24 +466,16 @@ void instantiate_children(
             continue;
         }
 
-        /* If prefab children have a EcsParent component, that means this is a 
-         * prefab hierarchy. Store pointer to array as we'll need it later */
-        if (c == ecs_entity(EcsParent)) {
-            ecs_assert(parent_array == NULL, ECS_INTERNAL_ERROR, NULL);
-            parent_array = ecs_vector_first(child_data->columns[i].data);
-            component_data[pos] = NULL;
-        } else {
-            /* Keep track of the element that creates the CHILDOF relationship with
-            * the prefab parent. We need to replace this element to make sure the
-            * created children point to the instance and not the prefab */ 
-            if (c & ECS_CHILDOF && (c & ECS_ENTITY_MASK) == base) {
-                base_index = pos;
-            }        
+        /* Keep track of the element that creates the CHILDOF relationship with
+        * the prefab parent. We need to replace this element to make sure the
+        * created children point to the instance and not the prefab */ 
+        if (c & ECS_CHILDOF && (c & ECS_ENTITY_MASK) == base) {
+            base_index = pos;
+        }        
 
-            /* Store pointer to component array. We'll use this component array to
-            * create our new entities in bulk with new_w_data */
-            component_data[pos] = ecs_vector_first(child_data->columns[i].data);
-        }
+        /* Store pointer to component array. We'll use this component array to
+        * create our new entities in bulk with new_w_data */
+        component_data[pos] = ecs_vector_first(child_data->columns[i].data);
 
         components.array[pos] = c;
         pos ++;
@@ -499,10 +485,9 @@ void instantiate_children(
 
     /* Instantiate the prefab child table for each new instance */
     ecs_entity_t *entities = ecs_vector_first(data->entities);
-    int32_t entity_count = ecs_vector_count(data->entities);
     int32_t child_count = ecs_vector_count(child_data->entities);
 
-    for (i = row; i < (entity_count + row); i ++) {
+    for (i = row; i < count + row; i ++) {
         ecs_entity_t e = entities[i];
 
         /* Replace CHILDOF element in the component array with instance id */
@@ -518,15 +503,13 @@ void instantiate_children(
             world, stage, table, child_count, component_data);
 
         /* If prefab child table has children itself, recursively instantiate */
-        if (parent_array) {
-            ecs_data_t *i_data = ecs_table_get_staged_data(world, stage, table);
-            ecs_entity_t *children = ecs_vector_first(child_data->entities);
+        ecs_data_t *i_data = ecs_table_get_staged_data(world, stage, table);
+        ecs_entity_t *children = ecs_vector_first(child_data->entities);
 
-            int j;
-            for (j = 0; j < child_count; j ++) {
-                ecs_entity_t child = children[j];
-                instantiate(world, stage, child, table, i_data, child_row, 1);
-            }
+        int j;
+        for (j = 0; j < child_count; j ++) {
+            ecs_entity_t child = children[j];
+            instantiate(world, stage, child, table, i_data, child_row, 1);
         }
     }    
 }
@@ -542,21 +525,19 @@ void instantiate(
     int32_t count)
 {    
     /* If base is a parent, instantiate children of base for instances */
-    const EcsParent *parent_data = ecs_get_ptr(world, base, EcsParent);
+    ecs_vector_t *child_tables = ecs_map_get_ptr(
+        world->child_tables, ecs_vector_t*, base);
 
-    if (parent_data) {
-        int t, table_count = ecs_vector_count(parent_data->child_tables);
-        ecs_table_t **tables = ecs_vector_first(parent_data->child_tables);
-
-        for (t = 0; t < table_count; t ++) {
-            ecs_table_t *child_table = tables[t];
+    if (child_tables) {
+        ecs_vector_each(child_tables, ecs_table_t*, child_table_ptr, {
+            ecs_table_t *child_table = *child_table_ptr;
             if (!ecs_table_count(child_table)) {
                 continue;
             }
 
             instantiate_children(
                 world, stage, base, table, data, row, count, child_table);
-        }
+        });
     }
 }
 
@@ -877,12 +858,23 @@ uint32_t move_entity(
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_vector_count(src_data->entities) > src_row, ECS_INTERNAL_ERROR, NULL);
 
     bool main_stage = stage == &world->stage;
     ecs_record_t *record = info->record;
     ecs_assert(!record || record == ecs_eis_get(&world->stage, entity), ECS_INTERNAL_ERROR, NULL);
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record);
+
+    if (main_stage) {
+        record->table = dst_table;
+        record->row = ecs_row_to_record(dst_row, info->is_watched);
+    } else {
+        ecs_eis_set(stage, entity, &(ecs_record_t){
+            .table = dst_table,
+            .row = ecs_row_to_record(dst_row, info->is_watched)
+        });
+    }
+
+    ecs_assert(ecs_vector_count(src_data->entities) > src_row, ECS_INTERNAL_ERROR, NULL);
 
     /* Copy entity & components from src_table to dst_table */
     if (src_table->type) {
@@ -898,16 +890,6 @@ uint32_t move_entity(
     /* Only delete from source table if it is in the same stage */
     if (src_data->stage == stage) {
         ecs_table_delete(world, stage, src_table, src_data, src_row);
-    }
-
-    if (main_stage) {
-        record->table = dst_table;
-        record->row = ecs_row_to_record(dst_row, info->is_watched);
-    } else {
-        ecs_eis_set(stage, entity, &(ecs_record_t){
-            .table = dst_table,
-            .row = ecs_row_to_record(dst_row, info->is_watched)
-        });
     }
 
     if (added) {
@@ -940,6 +922,65 @@ void delete_entity(
     }
 
     ecs_table_delete(world, stage, src_table, src_data, src_row);
+}
+
+/* Updating component monitors is a relatively expensive operation that only
+ * happens for entities that are monitored. The approach balances the amount of
+ * processing between the operation on the entity vs the amount of work that
+ * needs to be done to rematch queries, as a simple brute force approach does
+ * not scale when there are many tables / queries. Therefore we need to do a bit
+ * of bookkeeping that is more intelligent than simply flipping a flag */
+static
+bool update_component_monitor_w_array(
+    ecs_component_monitor_t *mon,
+    ecs_entities_t *entities)
+{
+    bool childof_changed = false;
+
+    if (!entities) {
+        return false;
+    }
+
+    int i;
+    for (i = 0; i < entities->count; i ++) {
+        ecs_entity_t component = entities->array[i];
+        if (component < ECS_HI_COMPONENT_ID) {
+            ecs_component_monitor_mark(mon, component);
+        } else if (component & ECS_CHILDOF) {
+            childof_changed = true;
+        }
+    }
+
+    return childof_changed;
+}
+
+static
+void update_component_monitors(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entities_t *added,
+    ecs_entities_t *removed)
+{
+    bool childof_changed = update_component_monitor_w_array(
+        &world->component_monitors, added);
+
+    childof_changed |= update_component_monitor_w_array(
+        &world->component_monitors, removed);
+
+    /* If this entity is a parent, check if anything changed that could impact
+     * its place in the hierarchy. If so, we need to mark all of the parent's
+     * entities as dirty. */
+    if (childof_changed && 
+        ecs_map_get(world->child_tables, ecs_vector_t*, entity)) 
+    {
+        ecs_type_t type = ecs_get_type(world, entity);
+        ecs_entities_t entities = {
+            .array = ecs_vector_first(type),
+            .count = ecs_vector_count(type)
+        };
+
+        update_component_monitor_w_array(&world->parent_monitors, &entities);
+    }
 }
 
 static
@@ -976,16 +1017,7 @@ void commit(
             ecs_eis_set(stage, entity, &(ecs_record_t){
                 NULL, -info->is_watched
             });
-        }
-
-        /* If the entity is being watched, it is being monitored for changes and
-        * requires rematching systems when components are added or removed. This
-        * ensures that systems that rely on components from containers or prefabs
-        * update the matched tables when the application adds or removes a 
-        * component from, for example, a container. */
-        if (info->is_watched) {
-            world->should_match = true;
-        }        
+        }      
     } else {        
         if (dst_table->type) {
             info->row = new_entity(world, stage, entity, info, dst_table, added);
@@ -993,19 +1025,18 @@ void commit(
         }        
     }
 
-    if (!in_progress) {
-        /* Entity ranges are only checked when not iterating. It is allowed to
-         * modify entities that existed before setting the range, and thus the
-         * range checks are only applied if the src_table is NULL, meaning the
-         * entity did not yet exist/was empty. When iterating, src_table refers
-         * to a table in the data stage, not to the table in the main stage.
-         * Therefore it is not possible to check while in progress if the entity
-         * already existed. Instead, the check will be applied when the entity
-         * is merged, which will invoke commit again. */
-        if (stage->range_check_enabled) {
-            ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, 0);
-            ecs_assert(entity >= world->min_handle, ECS_OUT_OF_RANGE, 0);
-        }
+    /* If the entity is being watched, it is being monitored for changes and
+    * requires rematching systems when components are added or removed. This
+    * ensures that systems that rely on components from containers or prefabs
+    * update the matched tables when the application adds or removes a 
+    * component from, for example, a container. */
+    if (info->is_watched) {
+        update_component_monitors(world, entity, added, removed);
+    }
+
+    if ((!src_table || !src_table->type) && stage->range_check_enabled) {
+        ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, 0);
+        ecs_assert(entity >= world->min_handle, ECS_OUT_OF_RANGE, 0);
     }
 }
 
@@ -1113,18 +1144,35 @@ int32_t new_w_data(
     ecs_comp_mask_t set_mask = { 0 };
 
     if (component_data) {
+        /* Set components that we're setting in the component mask so the init
+         * actions won't call OnSet triggers for them. This ensures we won't
+         * call OnSet triggers multiple times for the same component */
         ecs_vector_each(type, ecs_entity_t, c_ptr, {
             ecs_entity_t c = *c_ptr;
-            if (c & ECS_TYPE_FLAG_MASK) {
+            if (c >= ECS_HI_COMPONENT_ID) {
                 break;
             }
+            
             comp_mask_set(set_mask, c);
+
+            /* Copy component data */
+            void *src_ptr = component_data[c_ptr_i];
+            if (!src_ptr) {
+                continue;
+            }
+
+            /* Bulk copy column data into new table */
+            ecs_column_t *column = &data->columns[c_ptr_i];
+            int32_t size = column->size;
+            void *ptr = ecs_vector_first(column->data);
+            ptr = ECS_OFFSET(ptr, size * row);
+            memcpy(ptr, src_ptr, size * count);
         });
     }
 
     run_init_actions(world, stage, table, data, row, count, added, set_mask);
 
-    /* If data was provided, copy each of the columns into the new table */
+    /* Run OnSet triggers */
     if (component_data) {
         int column_count = ecs_vector_count(type);
         for (i = 0; i < column_count; i ++) {
@@ -1133,18 +1181,6 @@ int32_t new_w_data(
             if (component >= ECS_HI_COMPONENT_ID) {
                 continue;
             }
-
-            void *src_ptr = component_data[i];
-            if (!src_ptr) {
-                continue;
-            }
-
-            /* Bulk copy column data into new table */
-            ecs_column_t *column = &data->columns[i];
-            int32_t size = column->size;
-            void *ptr = ecs_vector_first(column->data);
-            ptr = ECS_OFFSET(ptr, size * row);
-            memcpy(ptr, component_data[i], size * count);
 
             /* Invoke OnSet systems */
             ecs_component_data_t *cdata = ecs_get_component_data(

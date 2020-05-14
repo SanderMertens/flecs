@@ -556,14 +556,14 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
     ecs_entity_t parent_3 = ecs_set(world, 0, Rotation, {4});
-        ecs_set(world, parent_3, Mass, {5});
+                            ecs_set(world, parent_3, Mass, {5});
     ecs_entity_t parent_4 = ecs_set(world, 0, Velocity, {10, 20});
 
     ecs_add_entity(world, e_1, ECS_CHILDOF | parent_1);
     ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
     ecs_add_entity(world, e_3, ECS_CHILDOF | parent_3);
     ecs_add_entity(world, e_4, ECS_CHILDOF | parent_4);
-    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_2); 
+    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_2);
     ecs_add_entity(world, e_5, ECS_CHILDOF | parent_3);
 
     Probe ctx = {0};
