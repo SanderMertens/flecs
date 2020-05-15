@@ -34,6 +34,7 @@ void New_w_Count_tag(void);
 void New_w_Count_type_w_tag(void);
 void New_w_Count_type_w_2_tags(void);
 void New_w_Count_type_w_tag_mixed(void);
+void New_w_Count_new_w_on_add_on_set_monitor(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -744,10 +745,20 @@ void MultiThreadStaging_3_threads_add_to_current(void);
 void MultiThreadStaging_4_threads_add_to_current(void);
 void MultiThreadStaging_5_threads_add_to_current(void);
 void MultiThreadStaging_6_threads_add_to_current(void);
-void MultiThreadStaging_stress_create_delete_entity_random_components(void);
-void MultiThreadStaging_stress_set_entity_random_components(void);
 void MultiThreadStaging_2_threads_on_add(void);
 void MultiThreadStaging_new_w_count(void);
+
+// Testsuite 'Stresstests'
+void Stresstests_create_delete_entity_random_components(void);
+void Stresstests_set_entity_random_components(void);
+void Stresstests_create_delete_entity_random_components_staged(void);
+void Stresstests_set_entity_random_components_staged(void);
+void Stresstests_create_delete_entity_random_components_2_threads(void);
+void Stresstests_set_entity_random_components_2_threads(void);
+void Stresstests_create_delete_entity_random_components_6_threads(void);
+void Stresstests_set_entity_random_components_6_threads(void);
+void Stresstests_create_delete_entity_random_components_12_threads(void);
+void Stresstests_set_entity_random_components_12_threads(void);
 
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
@@ -786,9 +797,6 @@ void ReaderWriter_deserialize_twice(void);
 void ReaderWriter_entity_conflict(void);
 void ReaderWriter_snapshot_reader_simple(void);
 void ReaderWriter_snapshot_reader_id(void);
-void ReaderWriter_component_id_conflict_w_component(void);
-void ReaderWriter_component_id_conflict_w_entity(void);
-void ReaderWriter_component_size_conflict(void);
 void ReaderWriter_read_zero_size(void);
 void ReaderWriter_write_zero_size(void);
 void ReaderWriter_invalid_header(void);
@@ -805,8 +813,6 @@ void FilterIter_iter_snapshot_filtered_table(void);
 // Testsuite 'Modules'
 void Modules_simple_module(void);
 void Modules_import_module_from_system(void);
-void Modules_import_from_on_add_system(void);
-void Modules_import_from_on_set_system(void);
 void Modules_import_again(void);
 
 // Testsuite 'Internals'
@@ -888,7 +894,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "New_w_Count",
-        .testcase_count = 11,
+        .testcase_count = 12,
         .testcases = (bake_test_case[]){
             {
                 .id = "empty",
@@ -933,6 +939,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_w_tag_mixed",
                 .function = New_w_Count_type_w_tag_mixed
+            },
+            {
+                .id = "new_w_on_add_on_set_monitor",
+                .function = New_w_Count_new_w_on_add_on_set_monitor
             }
         }
     },
@@ -3686,7 +3696,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "MultiThreadStaging",
-        .testcase_count = 9,
+        .testcase_count = 7,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_threads_add_to_current",
@@ -3709,20 +3719,58 @@ static bake_test_suite suites[] = {
                 .function = MultiThreadStaging_6_threads_add_to_current
             },
             {
-                .id = "stress_create_delete_entity_random_components",
-                .function = MultiThreadStaging_stress_create_delete_entity_random_components
-            },
-            {
-                .id = "stress_set_entity_random_components",
-                .function = MultiThreadStaging_stress_set_entity_random_components
-            },
-            {
                 .id = "2_threads_on_add",
                 .function = MultiThreadStaging_2_threads_on_add
             },
             {
                 .id = "new_w_count",
                 .function = MultiThreadStaging_new_w_count
+            }
+        }
+    },
+    {
+        .id = "Stresstests",
+        .testcase_count = 10,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "create_delete_entity_random_components",
+                .function = Stresstests_create_delete_entity_random_components
+            },
+            {
+                .id = "set_entity_random_components",
+                .function = Stresstests_set_entity_random_components
+            },
+            {
+                .id = "create_delete_entity_random_components_staged",
+                .function = Stresstests_create_delete_entity_random_components_staged
+            },
+            {
+                .id = "set_entity_random_components_staged",
+                .function = Stresstests_set_entity_random_components_staged
+            },
+            {
+                .id = "create_delete_entity_random_components_2_threads",
+                .function = Stresstests_create_delete_entity_random_components_2_threads
+            },
+            {
+                .id = "set_entity_random_components_2_threads",
+                .function = Stresstests_set_entity_random_components_2_threads
+            },
+            {
+                .id = "create_delete_entity_random_components_6_threads",
+                .function = Stresstests_create_delete_entity_random_components_6_threads
+            },
+            {
+                .id = "set_entity_random_components_6_threads",
+                .function = Stresstests_set_entity_random_components_6_threads
+            },
+            {
+                .id = "create_delete_entity_random_components_12_threads",
+                .function = Stresstests_create_delete_entity_random_components_12_threads
+            },
+            {
+                .id = "set_entity_random_components_12_threads",
+                .function = Stresstests_set_entity_random_components_12_threads
             }
         }
     },
@@ -3802,7 +3850,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "ReaderWriter",
-        .testcase_count = 23,
+        .testcase_count = 20,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple",
@@ -3873,18 +3921,6 @@ static bake_test_suite suites[] = {
                 .function = ReaderWriter_snapshot_reader_id
             },
             {
-                .id = "component_id_conflict_w_component",
-                .function = ReaderWriter_component_id_conflict_w_component
-            },
-            {
-                .id = "component_id_conflict_w_entity",
-                .function = ReaderWriter_component_id_conflict_w_entity
-            },
-            {
-                .id = "component_size_conflict",
-                .function = ReaderWriter_component_size_conflict
-            },
-            {
                 .id = "read_zero_size",
                 .function = ReaderWriter_read_zero_size
             },
@@ -3934,7 +3970,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Modules",
-        .testcase_count = 5,
+        .testcase_count = 3,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_module",
@@ -3943,14 +3979,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "import_module_from_system",
                 .function = Modules_import_module_from_system
-            },
-            {
-                .id = "import_from_on_add_system",
-                .function = Modules_import_from_on_add_system
-            },
-            {
-                .id = "import_from_on_set_system",
-                .function = Modules_import_from_on_set_system
             },
             {
                 .id = "import_again",
@@ -4043,5 +4071,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 41);
+    return bake_test_run("api", argc, argv, suites, 42);
 }

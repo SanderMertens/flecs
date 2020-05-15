@@ -365,7 +365,11 @@ void* _ecs_vector_last(
     if (vector) {
         ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
         int32_t count = vector->count;
-        return ECS_OFFSET(ARRAY_BUFFER(vector), elem_size * (count - 1));
+        if (!count) {
+            return NULL;
+        } else {
+            return ECS_OFFSET(ARRAY_BUFFER(vector), elem_size * (count - 1));
+        }
     } else {
         return NULL;
     }

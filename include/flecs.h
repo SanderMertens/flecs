@@ -323,6 +323,7 @@ extern ecs_type_t
     TEcsComponentLifecycle,
     TEcsTrigger,
     TEcsType,
+    TEcsModule,
     TEcsPrefab,
     TEcsSystem,
     TEcsColSystem,
@@ -344,6 +345,7 @@ extern ecs_type_t
 #define EEcsComponentLifecycle (2)
 #define EEcsTrigger (3)
 #define EEcsType (4)
+#define EEcsModule (5)
 #define EEcsPrefab (6)
 #define EEcsSystem (7)
 #define EEcsColSystem (8)
@@ -2068,16 +2070,13 @@ int ecs_writer_write(
  * @param handles_out A struct with handles to the module components/systems.
  */
 FLECS_EXPORT
-ecs_entity_t _ecs_import(
+ecs_entity_t ecs_import(
     ecs_world_t *world,
     ecs_module_action_t module,
     const char *module_name,
     int flags,
     void *handles_out,
     size_t handles_size);
-
-#define ecs_import(world, module, flags, handles_out)\
-    _ecs_import(world, module##Import, #module, flags, handles_out, sizeof(module))
 
 /* Import a module from a library.
  * If a module is stored in another library, it can be dynamically loaded with
@@ -2105,9 +2104,11 @@ ecs_entity_t ecs_import_from_library(
 /** Define module
  */
 #define ECS_MODULE(world, id)\
-    ECS_COMPONENT(world, id);\
-    ecs_set_ptr(world, EcsSingleton, id, NULL);\
-    id *handles = (id*)ecs_get_mut(world, EcsSingleton, id, NULL);\
+    ECS_ENTITY_VAR(id) = ecs_new_module(world, #id, sizeof(id));\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
+    (void)ecs_entity(id);\
+    (void)ecs_type(id);\
+    id *handles = (id*)ecs_get_mut(world, ecs_entity(id), id, NULL);\
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
@@ -2125,7 +2126,8 @@ ecs_entity_t ecs_import_from_library(
  */
 #define ECS_IMPORT(world, id, flags) \
     id M##id;\
-    ECS_ENTITY_VAR(id) = ecs_import(world, id, flags, &M##id);\
+    ECS_ENTITY_VAR(id) = ecs_import(\
+        world, id##Import, #id, flags, &M##id, sizeof(id));\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
     id##ImportHandles(M##id);\
     (void)ecs_entity(id);\

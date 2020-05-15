@@ -40,7 +40,8 @@
                 "tag",
                 "type_w_tag",
                 "type_w_2_tags",
-                "type_w_tag_mixed"
+                "type_w_tag_mixed",
+                "new_w_on_add_on_set_monitor"
             ]
         }, {
             "id": "Add",
@@ -817,10 +818,22 @@
                 "4_threads_add_to_current",
                 "5_threads_add_to_current",
                 "6_threads_add_to_current",
-                "stress_create_delete_entity_random_components",
-                "stress_set_entity_random_components",
                 "2_threads_on_add",
                 "new_w_count"   
+            ]
+        }, {
+            "id": "Stresstests",
+            "testcases": [
+                "create_delete_entity_random_components",
+                "set_entity_random_components",
+                "create_delete_entity_random_components_staged",
+                "set_entity_random_components_staged",
+                "create_delete_entity_random_components_2_threads",
+                "set_entity_random_components_2_threads",
+                "create_delete_entity_random_components_6_threads",
+                "set_entity_random_components_6_threads",
+                "create_delete_entity_random_components_12_threads",
+                "set_entity_random_components_12_threads"
             ]
         }, {
             "id": "Snapshot",
@@ -863,9 +876,6 @@
                 "entity_conflict",
                 "snapshot_reader_simple",
                 "snapshot_reader_id",
-                "component_id_conflict_w_component",
-                "component_id_conflict_w_entity",
-                "component_size_conflict",
                 "read_zero_size",
                 "write_zero_size",
                 "invalid_header"
@@ -886,8 +896,6 @@
             "testcases": [
                 "simple_module",
                 "import_module_from_system",
-                "import_from_on_add_system",
-                "import_from_on_set_system",
                 "import_again"
             ]
         }, {

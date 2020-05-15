@@ -219,6 +219,11 @@ void clean_tables(
         ecs_table_t *t = ecs_sparse_get(stage->tables, ecs_table_t, i);
         ecs_table_free(world, t);
     }
+
+    /* Clear the root table */
+    if (count) {
+        ecs_table_reset(world, &stage->root);
+    }
 }
 
 static
@@ -240,6 +245,7 @@ void merge_tables(
          * already created in the main stage, or they will be created as the
          * tables with actual data are merged. */
         if (ecs_table_data_count(data)) {
+
             /* Find or create the table in the main stage. Even though the
              * table may not have been created in the main stage when the stage
              * looked for it, other stages could have been merged before this
@@ -270,7 +276,7 @@ void merge_tables(
                 world, stage, main_table);
             
             ecs_assert(main_staged_data != NULL, ECS_INTERNAL_ERROR, NULL);
-                
+
             /* Move the staged data from the staged table to the stage-specific
              * location in the main stage. This will ensure that the data will
              * be merged in the next step. Reset the data pointer to NULL in the

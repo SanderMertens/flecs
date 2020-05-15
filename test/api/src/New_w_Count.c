@@ -198,3 +198,86 @@ void New_w_Count_type_w_tag_mixed() {
 
     ecs_fini(world);
 }
+
+static
+void AddPosition(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+
+    ecs_entity_t velocity = *(ecs_entity_t*)rows->param;
+
+    int i;
+    for (i = rows->count - 1; i >= 0; i --) {
+        test_int(p[i].x, 10 + 20 * i);
+        test_int(p[i].y, 20 + 20 * i);
+
+        p[i].x ++;
+
+        ecs_set_ptr_w_entity(
+            rows->world, rows->entities[i], velocity, 
+            sizeof(Velocity), &(Velocity){2, 3});
+    }
+}
+
+static
+void SetPosition(ecs_rows_t *rows) {
+    ECS_COLUMN(rows, Position, p, 1);
+
+    ecs_entity_t rotation = *(ecs_entity_t*)rows->param;
+
+    int i;
+    for (i = rows->count - 1; i >= 0; i --) {
+        p[i].y ++;
+        ecs_add_entity(rows->world, rows->entities[i], rotation);
+    }
+}
+
+static int32_t on_movable_count = 0;
+
+static
+void OnMovable(ecs_rows_t *rows) {
+    on_movable_count += rows->count;
+}
+
+void New_w_Count_new_w_on_add_on_set_monitor() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position, &ecs_entity(Velocity));
+    ECS_TRIGGER(world, SetPosition, EcsOnSet, Position, &ecs_entity(Rotation));
+    ECS_SYSTEM(world, OnMovable, 0, Position, Velocity, SYSTEM.EcsMonitor);
+
+    ecs_entity_t e = ecs_bulk_new_w_type(world, ecs_type(Position), 3, 
+        (void*[]){ 
+            (Position[]){
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            }
+        }
+    );
+
+    test_assert(e != 0);
+    test_int(on_movable_count, 3);
+
+    int i;
+    for (i = 0; i < 3; i ++) {
+        test_assert( ecs_has(world, e + i, Position) );
+        test_assert( ecs_has(world, e + i, Velocity) );
+        test_assert( ecs_has(world, e + i, Rotation) );
+
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10 + i * 20 + 1);
+        test_int(p->y, 20 + i * 20 + 1);
+
+        const Velocity *v = ecs_get_ptr(world, e + i, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 2);
+        test_int(v->y, 3);        
+    }
+
+    ecs_fini(world);
+}

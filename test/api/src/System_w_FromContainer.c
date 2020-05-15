@@ -1015,7 +1015,7 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
 
 static
 void AddMass(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Mass, 2);
+    ecs_entity_t ecs_entity(Mass) = *(ecs_entity_t*)rows->param;
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -1029,6 +1029,7 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
     ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t ecs_entity(Tag) = Tag;
 
     ECS_ENTITY(world, e_1, Position);
     ECS_ENTITY(world, e_2, Position);
@@ -1036,7 +1037,7 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ECS_ENTITY(world, e_4, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT.Mass, Position);
-    ECS_SYSTEM(world, AddMass, EcsOnAdd, Tag, .Mass);
+    ECS_TRIGGER(world, AddMass, EcsOnAdd, Tag, &ecs_entity(Mass));
 
     ecs_entity_t parent = ecs_new(world, 0);
     ecs_add_entity(world, e_1, ECS_CHILDOF | parent);

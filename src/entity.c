@@ -753,7 +753,7 @@ void run_monitors(
         return;
     }
 
-    if (!src_table->monitors) {
+    if (!src_table || !src_table->monitors) {
         ecs_vector_each(dst_table->monitors, ecs_monitor_t, monitor, {
             ecs_run_monitor(world, stage, monitor, dst_row, count);
         });
@@ -1103,7 +1103,8 @@ int32_t new_w_data(
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
-        
+    
+    bool changed = false;
     ecs_type_t type = table->type;
     ecs_entity_t e = world->last_handle + 1;
     world->last_handle += count;
@@ -1166,11 +1167,14 @@ int32_t new_w_data(
             int32_t size = column->size;
             void *ptr = ecs_vector_first(column->data);
             ptr = ECS_OFFSET(ptr, size * row);
+
             memcpy(ptr, src_ptr, size * count);
         });
     }
 
+    int32_t change_count = data->change_count;
     run_init_actions(world, stage, table, data, row, count, added, set_mask);
+    changed = change_count != data->change_count;
 
     /* Run OnSet triggers */
     if (component_data) {
@@ -1186,13 +1190,30 @@ int32_t new_w_data(
             ecs_component_data_t *cdata = ecs_get_component_data(
                 world, component);
 
-            run_component_trigger(
-                world, stage, cdata->on_set, component, table, data, 
-                row, count);
+            if (cdata->on_set) {
+                if (changed) {
+                    int32_t j;
+                    for (j = 0; j < count; j ++) {
+                        ecs_entity_info_t info;
+                        ecs_get_info(world, stage, e + j, &info);
+                        run_component_trigger(
+                            world, stage, cdata->on_set, component, info.table, 
+                            info.data, info.row, 1);
+                    }
+                } else {
+                    run_component_trigger(
+                        world, stage, cdata->on_set, component, table, data, 
+                        row, count);
+                }
+            }
         }
     }
 
-    run_monitors(world, stage, table, data, row, count, NULL);
+    /* Only invoke monitors if entity hasn't changed. If components did change,
+     * the monitor will already have been invoked. */
+    if (!changed) {
+        run_monitors(world, stage, table, data, row, count, NULL);
+    }
 
     return row;
 }
@@ -1412,7 +1433,7 @@ void *get_mutable(
         if (get_staged_info(world, stage, entity, info)) {
             dst = get_component(info, component);
         } else {
-            /* If the entity isn't store din the current stage, we still need to
+            /* If the entity isn't stored in the current stage, we still need to
              * get the data from the main stage to pass it to commit */
             get_info(world, entity, info);
         }

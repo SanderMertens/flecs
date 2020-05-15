@@ -77,6 +77,8 @@ void* add_sparse(
     int32_t index)
 {
     sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse);
+    
+    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
     sparse_arr[index].dense = ecs_vector_count(sparse->dense);
     int32_t *dense = ecs_vector_add(&sparse->dense, int32_t);
@@ -259,6 +261,8 @@ void* _ecs_sparse_add(
         ecs_assert(chunk->count < elements_per_chunk, ECS_INTERNAL_ERROR, NULL);
 
         int32_t chunk_count = ecs_vector_count(sparse->chunks);
+        ecs_assert(chunk_count > 0, ECS_INTERNAL_ERROR, NULL);
+
         index = (chunk_count - 1) * elements_per_chunk + chunk->count;
         chunk->count ++;
 

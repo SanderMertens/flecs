@@ -55,9 +55,9 @@ void Modules_import_module_from_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule, 0);
-    ECS_SYSTEM(world, AddVtoP, EcsOnUpdate, Position, $.SimpleModule);
+    ECS_SYSTEM(world, AddVtoP, EcsOnUpdate, Position, SimpleModule.SimpleModule);
 
-    const void *module_ptr = ecs_get_ptr(world, EcsSingleton, SimpleModule);
+    const void *module_ptr = ecs_get_ptr(world, ecs_entity(SimpleModule), SimpleModule);
     test_assert(module_ptr != NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -68,44 +68,6 @@ void Modules_import_module_from_system() {
 
     test_assert( ecs_has(world, e, Velocity));
     
-    ecs_fini(world);
-}
-
-void Modules_import_from_on_add_system() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_IMPORT(world, SimpleModule, 0);
-    ECS_SYSTEM(world, AddVtoP, EcsOnAdd, Position, $.SimpleModule);
-
-    const void *module_ptr = ecs_get_ptr(world, EcsSingleton, SimpleModule);
-    test_assert(module_ptr != NULL);
-
-    ecs_entity_t e = ecs_new(world, Position);
-    test_assert(e != 0);
-    test_assert( ecs_has(world, e, Position));
-    test_assert( ecs_has(world, e, Velocity));
-    
-    ecs_fini(world);
-}
-
-void Modules_import_from_on_set_system() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_IMPORT(world, SimpleModule, 0);
-    ECS_SYSTEM(world, AddVtoP, EcsOnSet, Position, $.SimpleModule);
-
-    const void *module_ptr = ecs_get_ptr(world, EcsSingleton, SimpleModule);
-    test_assert(module_ptr != NULL);
-
-    ecs_entity_t e = ecs_new(world, Position);
-    test_assert(e != 0);
-    test_assert( ecs_has(world, e, Position));
-    test_assert( !ecs_has(world, e, Velocity));
-
-    ecs_set(world, e, Position, {10, 20});
-
-    test_assert( ecs_has(world, e, Velocity));
-
     ecs_fini(world);
 }
 

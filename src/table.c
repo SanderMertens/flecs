@@ -269,6 +269,7 @@ ecs_data_t* ecs_table_get_data_intern(
     int32_t id = stage->id;
 
     ecs_assert(id < stage_count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!create || id || !world->in_progress, ECS_INTERNAL_ERROR, NULL);
 
     /* Make sure the array is large enough for the number of active stages. This
      * guarantees that any pointers returned by this function are stable, unless
@@ -411,6 +412,19 @@ void ecs_table_free(
     ecs_vector_free(table->monitors);
 }
 
+/* Reset a table to its initial state. This is used to reset the root table of a
+ * stage after a merge has occurred, so that it no longer refers to tables that
+ * were created in the stage. */
+void ecs_table_reset(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    if (table->lo_edges) {
+        memset(table->lo_edges, 0, sizeof(ecs_edge_t) * ECS_HI_COMPONENT_ID);
+        ecs_map_clear(table->hi_edges);
+    }
+}
+
 /* Replace columns. Activate / deactivate table with systems if necessary. */
 void ecs_table_replace_data(
     ecs_world_t *world,
@@ -446,8 +460,11 @@ void ecs_table_replace_data(
 static
 void mark_dirty(
     ecs_table_t *table,
+    ecs_data_t *data,
     int32_t index)
 {
+    data->change_count ++;
+
     if (table->dirty_state) {
         table->dirty_state[index] ++;
     }
@@ -497,7 +514,7 @@ int32_t ecs_table_append(
     *r = record;
 
     /* If the table is monitored indicate that there has been a change */
-    mark_dirty(table, 0);
+    mark_dirty(table, data, 0);
 
     int32_t index = ecs_vector_count(data->entities) - 1;
 
@@ -582,7 +599,7 @@ void ecs_table_delete(
     }
 
     /* If the table is monitored indicate that there has been a change */
-    mark_dirty(table, 0);    
+    mark_dirty(table, data, 0);    
 
     if (!world->in_progress && !count) {
         ecs_table_activate(world, table, NULL, false);
@@ -640,7 +657,7 @@ int32_t ecs_table_grow(
     }
 
     /* If the table is monitored indicate that there has been a change */
-    mark_dirty(table, 0);    
+    mark_dirty(table, data, 0);    
 
     int32_t row_count = ecs_vector_count(data->entities);
     if (!world->in_progress && row_count == count) {
@@ -795,7 +812,7 @@ void ecs_table_swap(
     }
 
     /* If the table is monitored indicate that there has been a change */
-    mark_dirty(table, 0);    
+    mark_dirty(table, data, 0);    
 }
 
 static
@@ -921,7 +938,7 @@ void ecs_table_merge(
             old_columns[i_old].data = NULL;
 
             /* Mark component column as dirty */
-            mark_dirty(new_table, i_new + 1);
+            mark_dirty(new_table, new_data, i_new + 1);
             
             i_new ++;
             i_old ++;
@@ -941,7 +958,7 @@ void ecs_table_merge(
     old_data->entities = NULL;
 
     /* Mark entity column as dirty */
-    mark_dirty(new_table, 0);    
+    mark_dirty(new_table, new_data, 0);    
 }
 
 static

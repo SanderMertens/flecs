@@ -353,7 +353,7 @@ void add_table(
          * reference. Having the reference already linked to the system table
          * makes changing this administation easier when the change happens.
          * */
-        if (from != EcsFromEmpty && (entity || table_data->columns[c] == -1 || from == EcsCascade)) {
+        if ((entity || table_data->columns[c] == -1 || from == EcsCascade)) {
             if (ecs_has(world, component, EcsComponent)) {
                 const EcsComponent *component_data = ecs_get_ptr(
                         world, component, EcsComponent);
@@ -365,7 +365,7 @@ void add_table(
                 table_data->columns[c] = -ecs_vector_count(table_data->references);
 
                 /* Find the entity for the component */
-                if (from == EcsFromEntity) {
+                if (from == EcsFromEntity || from == EcsFromEmpty) {
                     e = entity;
                 } else if (from == EcsCascade) {
                     e = entity;
@@ -382,23 +382,20 @@ void add_table(
                 
                 ref->entity = e;
                 ref->component = component;
-
-                if (component_data->size) {
-                    ref->cached_ptr = (ecs_cached_ptr_t){0};
-
+                ref->cached_ptr = (ecs_cached_ptr_t){0};
+                
+                if (component_data->size && from != EcsFromEmpty) {
                     if (e) {
                         ecs_get_cached_ptr_w_entity(
                             world, &ref->cached_ptr, e, component);
                         ecs_set_watch(world, &world->stage, e);                     
                     }
 
-                    /* Negative number indicates ref instead of offset to ecs_data */
                     query->has_refs = true;
                 }
             }
         }
 
-        /* component_data index is not offset by anything */
         table_data->components[c] = component;
     }
 

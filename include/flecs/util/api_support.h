@@ -150,6 +150,12 @@ ecs_entity_t ecs_new_component(
     size_t size);
 
 FLECS_EXPORT
+ecs_entity_t ecs_new_module(
+    ecs_world_t *world,
+    const char *name,
+    size_t size);
+
+FLECS_EXPORT
 ecs_entity_t ecs_new_type(
     ecs_world_t *world,
     const char *id,

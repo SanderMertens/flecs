@@ -58,6 +58,11 @@ void ecs_table_clear(
     ecs_world_t *world,
     ecs_table_t *table);
 
+/* Reset a table to its initial state */
+void ecs_table_reset(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
 /* Clear all entities from the table. Do not invoke OnRemove systems */
 void ecs_table_clear_silent(
     ecs_world_t *world,

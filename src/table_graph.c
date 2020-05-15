@@ -426,7 +426,7 @@ ecs_table_t* ecs_table_traverse_remove(
 {
     uint32_t i, count = to_remove->count;
     ecs_entity_t *entities = to_remove->array;
-    node = node ? node : &stage->root;
+    node = node ? node : &world->stage.root;
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
@@ -521,7 +521,7 @@ ecs_table_t* ecs_table_traverse_add(
 {
     uint32_t i, count = to_add->count;
     ecs_entity_t *entities = to_add->array;
-    node = node ? node : &stage->root;
+    node = node ? node : &world->stage.root;
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
@@ -736,12 +736,12 @@ ecs_table_t *find_or_create(
                     * the table does not exist, so create it */
                 if (stage != &world->stage) {
                     /* If we're in staged mode and we have been searching
-                        * the main stage tables, find or create the table in 
-                        * the thread specific staging area.
-                        *
-                        * This is expensive, but should rarely happen as 
-                        * eventually the main stage will have tables for all of
-                        * the entity types. */
+                     * the main stage tables, find or create the table in 
+                     * the thread specific staging area.
+                     *
+                     * This is expensive, but should rarely happen as 
+                     * eventually the main stage will have tables for all of
+                     * the entity types. */
                     if (root == &world->stage.root) {
                         return find_or_create(
                             world, stage, &stage->root, entities);
@@ -796,7 +796,7 @@ ecs_table_t *find_or_create(
     return table;
 }
 
-ecs_table_t *ecs_table_find_or_create(
+ecs_table_t* ecs_table_find_or_create(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entities_t *components)
@@ -818,5 +818,6 @@ ecs_table_t* ecs_table_from_type(
         .count = ecs_vector_count(type)
     };
 
-    return ecs_table_find_or_create(world, stage, &components);
+    return ecs_table_find_or_create(
+        world, stage, &components);
 }

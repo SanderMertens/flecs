@@ -158,7 +158,6 @@ void ecs_snapshot_restore(
          * restored. */
         ecs_data_t *data = ecs_vector_first(src->stage_data);
         if (!data) {
-            filter_used = true;
             continue;
         }
 

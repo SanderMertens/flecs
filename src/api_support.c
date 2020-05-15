@@ -208,6 +208,27 @@ ecs_entity_t ecs_new_component(
     return result;
 }
 
+ecs_entity_t ecs_new_module(
+    ecs_world_t *world,
+    const char *name,
+    size_t size)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    assert(world->magic == ECS_WORLD_MAGIC);
+
+    ecs_entity_t result = ecs_new_component(world, name, size);
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* Add module tag */
+    ecs_add(world, result, EcsModule);
+
+    /* Add module to itself. This way we have all the module information stored
+     * in a single contained entity that we can use for namespacing */
+    ecs_set_ptr_w_entity(world, result, result, size, NULL);
+
+    return result;
+}
+
 ecs_entity_t ecs_new_type(
     ecs_world_t *world,
     const char *name,

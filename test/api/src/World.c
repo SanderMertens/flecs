@@ -844,6 +844,8 @@ void World_world_stats() {
     ecs_progress(world, 1);
     ecs_progress(world, 1);
 
+    test_assert(ecs_has(world, EcsWorld, EcsWorldStats));
+
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     int init_system_count = stats.col_systems_count;
