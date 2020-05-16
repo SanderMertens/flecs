@@ -6,7 +6,7 @@ void FilterIter_iter_one_table() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, 3);
+    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
     test_assert(e != 0);
 
     int i;
@@ -49,7 +49,7 @@ void FilterIter_iter_two_tables() {
 
     ECS_TYPE(world, Movable, Position, Velocity);
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, 3);
+    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
     test_assert(e != 0);
 
     int i;
@@ -57,7 +57,7 @@ void FilterIter_iter_two_tables() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    e = ecs_new_w_count(world, Movable, 3);
+    e = ecs_bulk_new(world, Movable, 3);
     test_assert(e != 0);
 
     for (i = 0; i < 3; i ++) {
@@ -98,7 +98,7 @@ void FilterIter_iter_two_comps() {
 
     ECS_TYPE(world, Movable, Position, Velocity);
 
-    ecs_entity_t e = ecs_new_w_count(world, Movable, 3);
+    ecs_entity_t e = ecs_bulk_new(world, Movable, 3);
     test_assert(e != 0);
 
     int i;
@@ -119,8 +119,9 @@ void FilterIter_iter_two_comps() {
         entity_count += it.rows.count;
 
         ecs_type_t table_type = ecs_table_type(&it.rows);
-        test_assert(ecs_type_get_entity(world, table_type, 0) == ecs_entity(Position));
-        test_assert(ecs_type_get_entity(world, table_type, 1) == ecs_entity(Velocity));
+        ecs_entity_t *array = ecs_vector_first(table_type);
+        test_assert(array[0] == ecs_entity(Position));
+        test_assert(array[1] == ecs_entity(Velocity));
         
         Position *p_row = ecs_table_column(&it.rows, 0);
         test_assert(p_row != NULL);
@@ -148,7 +149,7 @@ void FilterIter_iter_snapshot_one_table() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, 3);
+    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
     test_assert(e != 0);
 
     int i;
@@ -163,7 +164,7 @@ void FilterIter_iter_snapshot_one_table() {
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
-    ecs_delete_w_filter(world, &filter);
+    ecs_bulk_delete(world, &filter);
 
     /* Ensure world is empty */
     test_int( ecs_count(world, Position), 0);
@@ -177,7 +178,8 @@ void FilterIter_iter_snapshot_one_table() {
         entity_count += it.rows.count;
 
         ecs_type_t table_type = ecs_table_type(&it.rows);
-        test_assert(ecs_type_get_entity(world, table_type, 0) == ecs_entity(Position));
+        ecs_entity_t *array = ecs_vector_first(table_type);
+        test_assert(array[0] == ecs_entity(Position));
         
         Position *p_row = ecs_table_column(&it.rows, 0);
         test_assert(p_row != NULL);    
@@ -204,7 +206,7 @@ void FilterIter_iter_snapshot_two_tables() {
 
     ECS_TYPE(world, Movable, Position, Velocity);
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, 3);
+    ecs_entity_t e = ecs_bulk_new(world, Position, 3);
     test_assert(e != 0);
 
     int i;
@@ -212,7 +214,7 @@ void FilterIter_iter_snapshot_two_tables() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    e = ecs_new_w_count(world, Movable, 3);
+    e = ecs_bulk_new(world, Movable, 3);
     test_assert(e != 0);
 
     for (i = 0; i < 3; i ++) {
@@ -226,7 +228,7 @@ void FilterIter_iter_snapshot_two_tables() {
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
-    ecs_delete_w_filter(world, &filter);
+    ecs_bulk_delete(world, &filter);
 
     /* Ensure world is empty */
     test_int( ecs_count(world, Position), 0);
@@ -240,7 +242,8 @@ void FilterIter_iter_snapshot_two_tables() {
         entity_count += it.rows.count;
 
         ecs_type_t table_type = ecs_table_type(&it.rows);
-        test_assert(ecs_type_get_entity(world, table_type, 0) == ecs_entity(Position));
+        ecs_entity_t *array = ecs_vector_first(table_type);
+        test_assert(array[0] == ecs_entity(Position));
         
         Position *p_row = ecs_table_column(&it.rows, 0);
         test_assert(p_row != NULL);     
@@ -267,7 +270,7 @@ void FilterIter_iter_snapshot_two_comps() {
 
     ECS_TYPE(world, Movable, Position, Velocity);
 
-    ecs_entity_t e = ecs_new_w_count(world, Movable, 3);
+    ecs_entity_t e = ecs_bulk_new(world, Movable, 3);
     test_assert(e != 0);
 
     int i;
@@ -283,7 +286,7 @@ void FilterIter_iter_snapshot_two_comps() {
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
-    ecs_delete_w_filter(world, &filter);
+    ecs_bulk_delete(world, &filter);
 
     /* Ensure world is empty */
     test_int( ecs_count(world, Movable), 0);
@@ -297,8 +300,9 @@ void FilterIter_iter_snapshot_two_comps() {
         entity_count += it.rows.count;
 
         ecs_type_t table_type = ecs_table_type(&it.rows);
-        test_assert(ecs_type_get_entity(world, table_type, 0) == ecs_entity(Position));
-        test_assert(ecs_type_get_entity(world, table_type, 1) == ecs_entity(Velocity));
+        ecs_entity_t *array = ecs_vector_first(table_type);
+        test_assert(array[0] == ecs_entity(Position));      
+        test_assert(array[1] == ecs_entity(Velocity));        
         
         Position *p_row = ecs_table_column(&it.rows, 0);
         test_assert(p_row != NULL);
@@ -331,7 +335,7 @@ void FilterIter_iter_snapshot_filtered_table() {
 
     ECS_TYPE(world, Movable, Position, Velocity);
 
-    ecs_entity_t e = ecs_new_w_count(world, Movable, 3);
+    ecs_entity_t e = ecs_bulk_new(world, Movable, 3);
     test_assert(e != 0);
 
     int i;
@@ -339,7 +343,7 @@ void FilterIter_iter_snapshot_filtered_table() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    e = ecs_new_w_count(world, Position, 3);
+    e = ecs_bulk_new(world, Position, 3);
     test_assert(e != 0);
 
     for (i = 0; i < 3; i ++) {
@@ -355,7 +359,7 @@ void FilterIter_iter_snapshot_filtered_table() {
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
-    ecs_delete_w_filter(world, &filter);
+    ecs_bulk_delete(world, &filter);
 
     /* Ensure world is empty */
     test_int( ecs_count(world, Position), 0);
@@ -369,7 +373,8 @@ void FilterIter_iter_snapshot_filtered_table() {
         entity_count += it.rows.count;
 
         ecs_type_t table_type = ecs_table_type(&it.rows);
-        test_assert(ecs_type_get_entity(world, table_type, 0) == ecs_entity(Position));
+        ecs_entity_t *array = ecs_vector_first(table_type);
+        test_assert(array[0] == ecs_entity(Position));        
         
         Position *p_row = ecs_table_column(&it.rows, 0);
         test_assert(p_row != NULL);

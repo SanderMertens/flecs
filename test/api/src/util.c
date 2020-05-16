@@ -1,17 +1,17 @@
 #include <api.h>
 
-void ProbeSystem(
-    ecs_rows_t *rows) 
+void probe_system_w_ctx(
+    ecs_rows_t *rows,
+    Probe *ctx) 
 {
-    SysTestData *ctx = ecs_get_context(rows->world);
     if (!ctx) {
         return;
     }
 
+    ctx->param = rows->param;
     ctx->system = rows->system;
     ctx->offset = 0;
     ctx->column_count = rows->column_count;
-    ctx->param = rows->param;
 
     int i;
     for (i = 0; i < ctx->column_count; i ++) {
@@ -47,4 +47,22 @@ void ProbeSystem(
     }
 
     ctx->invoked ++;
+}
+
+void probe_system(
+    ecs_rows_t *rows) 
+{
+    Probe *ctx = ecs_get_context(rows->world);
+    probe_system_w_ctx(rows, ctx);
+}
+
+void probe_has_entity(Probe *probe, ecs_entity_t e) {
+    int i;
+    for (i = 0; i < probe->count; i ++) {
+        if (probe->e[i] == e) {
+            break;
+        }
+    }
+
+    test_assert(i != probe->count);
 }

@@ -22,7 +22,7 @@ void Iter(ecs_rows_t *rows) {
         m = ecs_column(rows, Mass, 3);
     }
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -51,7 +51,7 @@ void SystemOnFrame_1_type_1_component() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -68,7 +68,7 @@ void SystemOnFrame_1_type_1_component() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -99,7 +99,7 @@ void SystemOnFrame_1_type_3_component() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, Mass);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -120,7 +120,7 @@ void SystemOnFrame_1_type_3_component() {
     test_int(ctx.c[0][2], ecs_entity(Mass));
     test_int(ctx.s[0][2], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -136,7 +136,7 @@ void SystemOnFrame_1_type_3_component() {
     test_int(p->y, 20);
 
     
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -152,7 +152,7 @@ void SystemOnFrame_1_type_3_component() {
     test_int(v->y, 40);
 
 
-    Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get_ptr(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -180,7 +180,7 @@ void SystemOnFrame_3_type_1_component() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -201,7 +201,7 @@ void SystemOnFrame_3_type_1_component() {
     test_int(ctx.c[2][0], ecs_entity(Position));
     test_int(ctx.s[2][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -233,7 +233,7 @@ void SystemOnFrame_2_type_3_component() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, Mass);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -260,7 +260,7 @@ void SystemOnFrame_2_type_3_component() {
     test_int(ctx.c[1][2], ecs_entity(Mass));
     test_int(ctx.s[1][2], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -276,7 +276,7 @@ void SystemOnFrame_2_type_3_component() {
     test_int(p->y, 20);
 
     
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -292,7 +292,7 @@ void SystemOnFrame_2_type_3_component() {
     test_int(v->y, 40);
 
 
-    Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get_ptr(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -310,7 +310,7 @@ void SystemOnFrame_2_type_3_component() {
 void SystemOnFrame_1_type_1_component_1_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, e_1, Position, Tag);
@@ -319,7 +319,7 @@ void SystemOnFrame_1_type_1_component_1_tag() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Tag);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -338,7 +338,7 @@ void SystemOnFrame_1_type_1_component_1_tag() {
     test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -359,7 +359,7 @@ void SystemOnFrame_1_type_1_component_1_tag() {
 void SystemOnFrame_2_type_1_component_1_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
     ECS_COMPONENT(world, Position);
 
     ECS_ENTITY(world, e_1, Position, Tag);
@@ -368,7 +368,7 @@ void SystemOnFrame_2_type_1_component_1_tag() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Tag);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -386,7 +386,7 @@ void SystemOnFrame_2_type_1_component_1_tag() {
     test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -412,7 +412,7 @@ void SystemOnFrame_2_type_1_and_1_not() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -430,7 +430,7 @@ void SystemOnFrame_2_type_1_and_1_not() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -456,7 +456,7 @@ void SystemOnFrame_2_type_2_and_1_not() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, !Mass);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -476,7 +476,7 @@ void SystemOnFrame_2_type_2_and_1_not() {
     test_int(ctx.c[0][2], ecs_entity(Mass));
     test_int(ctx.s[0][2], 0);
     
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -486,7 +486,7 @@ void SystemOnFrame_2_type_2_and_1_not() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -513,7 +513,7 @@ void SystemOnFrame_2_type_2_and_2_not() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, !Mass, !Rotation);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -534,12 +534,12 @@ void SystemOnFrame_2_type_2_and_2_not() {
     test_int(ctx.c[0][3], ecs_entity(Rotation));
     test_int(ctx.s[0][3], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -562,12 +562,12 @@ void SystemOnFrame_4_type_1_and_1_or() {
     ECS_ENTITY(world, e_3, Position, Position_1, Velocity);
     ECS_ENTITY(world, e_4, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position | Position_1, Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position || Position_1, Velocity);
 
     ecs_set(world, e_3, Position_1, {0, 0});
     ecs_set(world, e_4, Velocity, {0, 0});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -595,7 +595,7 @@ void SystemOnFrame_4_type_1_and_1_or() {
     test_int(ctx.c[2][1], ecs_entity(Velocity));
     test_int(ctx.s[2][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -615,7 +615,7 @@ void SystemOnFrame_4_type_1_and_1_or() {
     test_int(p->x, 0);
     test_int(p->y, 0);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -651,12 +651,12 @@ void SystemOnFrame_4_type_1_and_1_or_of_3() {
     ECS_ENTITY(world, e_3, Position_1, Position_2, Velocity);
     ECS_ENTITY(world, e_4, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position | Position_1 | Position_2, Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position || Position_1 || Position_2, Velocity);
 
     ecs_set(world, e_3, Position_2, {0, 0});
     ecs_set(world, e_4, Velocity, {0, 0});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -684,7 +684,7 @@ void SystemOnFrame_4_type_1_and_1_or_of_3() {
     test_int(ctx.c[2][1], ecs_entity(Velocity));
     test_int(ctx.s[2][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -704,7 +704,7 @@ void SystemOnFrame_4_type_1_and_1_or_of_3() {
     test_int(p->x, 0);
     test_int(p->y, 0);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -737,9 +737,9 @@ void SystemOnFrame_1_type_1_and_1_or() {
     ECS_ENTITY(world, e_1, Position, Velocity);
     ECS_ENTITY(world, e_2, Position, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position | Position_1, Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position || Position_1, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -758,7 +758,7 @@ void SystemOnFrame_1_type_1_and_1_or() {
     test_int(ctx.s[0][1], 0);
 
     /* Now repeat test, with entities that have Position_1 */
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
 
     ecs_delete(world, e_1);
     ecs_delete(world, e_2);
@@ -796,7 +796,7 @@ void SystemOnFrame_2_type_1_and_1_optional() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -807,9 +807,9 @@ void SystemOnFrame_2_type_1_and_1_optional() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
+    test_int(ctx.e[0], e_3);
+    test_int(ctx.e[1], e_1);
+    test_int(ctx.e[2], e_2);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_entity(Velocity));
@@ -819,7 +819,7 @@ void SystemOnFrame_2_type_1_and_1_optional() {
     test_int(ctx.c[1][1], ecs_entity(Velocity));
     test_int(ctx.s[1][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -834,7 +834,7 @@ void SystemOnFrame_2_type_1_and_1_optional() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -860,7 +860,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, ?Mass);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -871,9 +871,10 @@ void SystemOnFrame_2_type_2_and_1_optional() {
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
+    probe_has_entity(&ctx, e_1);
+    probe_has_entity(&ctx, e_2);
+    probe_has_entity(&ctx, e_3);
+
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_entity(Velocity));
@@ -887,7 +888,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
     test_int(ctx.c[1][2], ecs_entity(Mass));
     test_int(ctx.s[1][2], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -902,7 +903,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -917,7 +918,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get_ptr(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -940,7 +941,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity, ?Mass);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -951,10 +952,11 @@ void SystemOnFrame_6_type_1_and_2_optional() {
     test_int(ctx.column_count, 3);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.e[3], e_4);
+    probe_has_entity(&ctx, e_1);
+    probe_has_entity(&ctx, e_2);
+    probe_has_entity(&ctx, e_3);
+    probe_has_entity(&ctx, e_4);
+
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_entity(Velocity));
@@ -980,7 +982,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
     test_int(ctx.c[3][2], ecs_entity(Mass));
     test_int(ctx.s[3][2], 0);   
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -1000,7 +1002,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -1010,7 +1012,7 @@ void SystemOnFrame_6_type_1_and_2_optional() {
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    Mass *m = ecs_get_ptr(world, e_2, Mass);
+    const Mass *m = ecs_get_ptr(world, e_2, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -1047,8 +1049,8 @@ void SystemOnFrame_use_fields_2_owned() {
 
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_int(p->x, 11);
     test_int(p->y, 22);
     test_int(v->x, 10);
@@ -1063,16 +1065,16 @@ void SystemOnFrame_use_fields_1_owned_1_shared() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Use_field, EcsOnUpdate, Position, CONTAINER.Velocity);
+    ECS_SYSTEM(world, Use_field, EcsOnUpdate, Position, PARENT.Velocity);
 
     ecs_entity_t e_1 = ecs_set(world, 0, Position, {1, 2});
     ecs_entity_t parent = ecs_set(world, 0, Velocity, {10, 20});
-    ecs_adopt(world, e_1, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
 
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
-    Velocity *v = ecs_get_ptr(world, parent, Velocity);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Velocity *v = ecs_get_ptr(world, parent, Velocity);
     test_int(p->x, 11);
     test_int(p->y, 22);
     test_int(v->x, 10);
@@ -1081,8 +1083,8 @@ void SystemOnFrame_use_fields_1_owned_1_shared() {
     ecs_fini(world);
 }
 
-static void Dummy_1(ecs_rows_t *rows) { ProbeSystem(rows); }
-static void Dummy_2(ecs_rows_t *rows) { ProbeSystem(rows); }
+static void Dummy_1(ecs_rows_t *rows) { probe_system(rows); }
+static void Dummy_2(ecs_rows_t *rows) { probe_system(rows); }
 
 void SystemOnFrame_match_2_systems_w_populated_table() {
     ecs_world_t *world = ecs_init();
@@ -1094,7 +1096,7 @@ void SystemOnFrame_match_2_systems_w_populated_table() {
     ECS_SYSTEM(world, Dummy_1, EcsOnUpdate, Position);
     ECS_SYSTEM(world, Dummy_2, EcsOnUpdate, Position);
     
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1118,7 +1120,7 @@ void TestOptional_w_column(ecs_rows_t *rows) {
     test_assert(p != NULL);
     test_assert(v == NULL);
 
-    ProbeSystem(rows);
+    probe_system(rows);
 }
 
 void TestOptional_w_shared(ecs_rows_t *rows) {
@@ -1128,7 +1130,7 @@ void TestOptional_w_shared(ecs_rows_t *rows) {
     test_assert(p != NULL);
     test_assert(v == NULL);
 
-    ProbeSystem(rows);
+    probe_system(rows);
 }
 
 void TestOptional_w_field(ecs_rows_t *rows) {
@@ -1136,7 +1138,7 @@ void TestOptional_w_field(ecs_rows_t *rows) {
 
     test_assert(p != NULL);
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     for (int i = 0; i < rows->count; i ++) {
         Velocity *v = ecs_field(rows, Velocity, 2, i);
@@ -1154,7 +1156,7 @@ void SystemOnFrame_ensure_optional_is_unset_column() {
 
     ECS_SYSTEM(world, TestOptional_w_column, EcsOnUpdate, Position, ?Velocity);
     
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1180,9 +1182,9 @@ void SystemOnFrame_ensure_optional_is_null_shared() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?CONTAINER.Velocity);
+    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?PARENT.Velocity);
     
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1210,7 +1212,7 @@ void SystemOnFrame_ensure_optional_is_null_field_owned() {
 
     ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?Velocity);
     
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1236,9 +1238,9 @@ void SystemOnFrame_ensure_optional_is_null_field_shared() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?CONTAINER.Velocity);
+    ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?PARENT.Velocity);
     
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1290,7 +1292,7 @@ void SystemOnFrame_on_period() {
     ECS_SYSTEM(world, OnPeriodSystem, EcsOnUpdate, Position);
     ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
 
-    ecs_set_period(world, OnPeriodSystem, 0.5);
+    ecs_set_interval(world, OnPeriodSystem, 0.5);
 
     ecs_set_target_fps(world, 60);
 
@@ -1324,7 +1326,7 @@ void SystemOnFrame_on_period_long_delta() {
     ECS_SYSTEM(world, OnPeriodSystem, EcsOnUpdate, Position);
     ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
 
-    ecs_set_period(world, OnPeriodSystem, 0.5);
+    ecs_set_interval(world, OnPeriodSystem, 0.5);
 
     ecs_progress(world, 0);
 
@@ -1456,7 +1458,7 @@ void TwoRefs(ecs_rows_t *rows) {
     (void)p;
     (void)v;
 
-    ProbeSystem(rows);
+    probe_system(rows);
 }
 
 void SystemOnFrame_two_refs() {
@@ -1471,7 +1473,7 @@ void SystemOnFrame_two_refs() {
 
     ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, E.Position, E.Velocity, .E, Mass);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1503,7 +1505,7 @@ void SystemOnFrame_filter_disabled() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1528,7 +1530,7 @@ void SystemOnFrame_match_disabled() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, EcsDisabled);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1555,7 +1557,7 @@ void SystemOnFrame_match_disabled_and_enabled() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?EcsDisabled);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1583,7 +1585,7 @@ void SystemOnFrame_match_prefab() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, EcsPrefab);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1610,7 +1612,7 @@ void SystemOnFrame_match_prefab_and_normal() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?EcsPrefab);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1664,7 +1666,7 @@ void SystemOnFrame_owned_column() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, OWNED.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1693,7 +1695,7 @@ void SystemOnFrame_owned_not_column() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !OWNED.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1723,7 +1725,7 @@ void SystemOnFrame_shared_column() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SHARED.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1752,7 +1754,7 @@ void SystemOnFrame_shared_not_column() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !SHARED.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1779,9 +1781,9 @@ void SystemOnFrame_container_dont_match_inheritance() {
     ECS_ENTITY(world, e1, Position, INSTANCEOF | base);
     ECS_ENTITY(world, e2, Position, CHILDOF | base);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CONTAINER.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, PARENT.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1810,7 +1812,7 @@ void SystemOnFrame_cascade_dont_match_inheritance() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1842,14 +1844,14 @@ void SystemOnFrame_not_from_singleton() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !$.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
 
     test_int(ctx.count, 1);
 
-    ecs_add(world, ECS_SINGLETON, Velocity);
+    ecs_add(world, EcsSingleton, Velocity);
 
     ecs_progress(world, 1);
     
@@ -1869,7 +1871,7 @@ void SystemOnFrame_not_from_entity() {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !e2.Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1990,7 +1992,7 @@ void SystemOnFrame_shared_only() {
     ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, SHARED.Position);
 
     ecs_entity_t base = ecs_new(world, Position);
-    ecs_entity_t e = ecs_new_instance(world, base, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
 
     ecs_progress(world, 0);
 
@@ -2011,6 +2013,20 @@ void SystemOnFrame_is_in_readonly() {
     ecs_progress(world, 0);
 
     test_assert(dummy_invoked == e);
+
+    ecs_fini(world);
+}
+
+void SystemOnFrame_get_period() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, [in] Position);
+
+    ecs_set_interval(world, Dummy, 10.0);
+
+    test_flt( ecs_get_interval(world, Dummy), 10.0);
 
     ecs_fini(world);
 }

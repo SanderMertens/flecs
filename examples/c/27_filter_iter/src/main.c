@@ -22,12 +22,12 @@ int main(int argc, char *argv[]) {
     ECS_TYPE(world, Movable, Position, Velocity);
 
     ecs_entity_t e1 = 
-    ecs_set(world, 0, EcsId, {"e1"});
+    ecs_set(world, 0, EcsName, {"e1"});
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Velocity, {1, 1});
 
     ecs_entity_t e2 = 
-    ecs_set(world, 0, EcsId, {"e2"});
+    ecs_set(world, 0, EcsName, {"e2"});
     ecs_set(world, e2, Position, {10, 20});
     ecs_set(world, e2, Velocity, {1, 1});
 
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
             p[i].y += v[i].y;
 
             printf("moved %s to {%f, %f}\n", 
-                ecs_get_id(world, rows->entities[i]), p[i].x, p[i].y);
+                ecs_get_name(world, rows->entities[i]), p[i].x, p[i].y);
         }
     }
 

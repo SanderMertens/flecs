@@ -23,7 +23,7 @@ void Move(ecs_rows_t *rows) {
         /* Print something to the console so we can see the system is being
          * invoked */
         printf("%s moved to {.x = %f, .y = %f}\n",
-            ecs_get_id(rows->world, rows->entities[i]),
+            ecs_get_name(rows->world, rows->entities[i]),
             p[i].x, p[i].y);
     }
 }
@@ -45,20 +45,20 @@ int main(int argc, char *argv[]) {
     ecs_new_system(world, "Move", EcsOnUpdate, "Position, Velocity", Move);
 
     /* Create entity */
-    ecs_entity_t MyEntity = _ecs_new(world, 0);
+    ecs_entity_t MyEntity = ecs_new_w_type(world, 0);
 
     /* Set entity identifier using builtin component */
-    _ecs_set_ptr(world, MyEntity, EEcsId, sizeof(EcsId), &(EcsId){"MyEntity"});
+    ecs_set_ptr_w_entity(world, MyEntity, EEcsName, sizeof(EcsName), &(EcsName){"MyEntity"});
 
     /* Components are automatically added when doing an ecs_set, but this is for
      * demonstration purposes. The ecs_add operation accepts a type variable, as
      * it can add multiple components in a single operation. */
-    _ecs_add(world, MyEntity, TPosition);
-    _ecs_add(world, MyEntity, TVelocity);
+    ecs_add_type(world, MyEntity, TPosition);
+    ecs_add_type(world, MyEntity, TVelocity);
 
     /* Set values for entity. */
-    _ecs_set_ptr(world, MyEntity, EPosition, sizeof(Position), &(Position){0, 0});
-    _ecs_set_ptr(world, MyEntity, EVelocity, sizeof(Velocity), &(Velocity){1, 1});
+    ecs_set_ptr_w_entity(world, MyEntity, EPosition, sizeof(Position), &(Position){0, 0});
+    ecs_set_ptr_w_entity(world, MyEntity, EVelocity, sizeof(Velocity), &(Velocity){1, 1});
 
     /* Set target FPS for main loop to 1 frame per second */
     ecs_set_target_fps(world, 1);

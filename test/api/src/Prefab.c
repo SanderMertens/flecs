@@ -12,7 +12,7 @@ void Iter(ecs_rows_t *rows) {
         v = ecs_column(rows, Velocity, 3);
     }
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -44,57 +44,50 @@ void Prefab_new_w_prefab() {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    ecs_entity_t e_1 = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e_1 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert(e_1 != 0);
     test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
     ecs_add(world, e_1, Velocity);
     test_assert( ecs_has(world, e_1, Position));
     test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
-    ecs_entity_t e_2 = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e_2 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_2, Prefab));
+    test_assert( ecs_has_entity(world, e_2,  ECS_INSTANCEOF | Prefab));
     test_assert( !ecs_has(world, e_2, EcsPrefab));
-    test_assert( !ecs_has(world, e_2, EcsId));
-    test_assert( !ecs_get_ptr(world, e_2, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_2, EcsId));
+    test_assert( !ecs_has(world, e_2, EcsName));
+    test_assert( !ecs_get_ptr(world, e_2, EcsName));
 
     ecs_add(world, e_2, Velocity);
     test_assert( ecs_has(world, e_2, Position));
     test_assert( ecs_has(world, e_2, Velocity));
-    test_assert( ecs_has(world, e_2, Prefab));
+    test_assert( ecs_has_entity(world, e_2,  ECS_INSTANCEOF | Prefab));
     test_assert( !ecs_has(world, e_2, EcsPrefab));
-    test_assert( !ecs_has(world, e_2, EcsId));
-    test_assert( !ecs_get_ptr(world, e_2, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_2, EcsId));
+    test_assert( !ecs_has(world, e_2, EcsName));
+    test_assert( !ecs_get_ptr(world, e_2, EcsName));
 
-    Position *p_1 = ecs_get_ptr(world, e_1, Position);
-    Position *p_2 = ecs_get_ptr(world, e_2, Position);
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_1 = ecs_get_ptr(world, e_1, Position);
+    const Position *p_2 = ecs_get_ptr(world, e_2, Position);
 
     test_assert(p_1 != NULL);
     test_assert(p_2 != NULL);
-    test_assert(p_prefab != NULL);
     test_assert(p_1 == p_2);
-    test_assert(p_1 == p_prefab);
 
     test_int(p_1->x, 10);
     test_int(p_1->y, 20);
 
-    Velocity *v_1 = ecs_get_ptr(world, e_1, Velocity);
-    Velocity *v_2 = ecs_get_ptr(world, e_2, Velocity);
+    const Velocity *v_1 = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v_2 = ecs_get_ptr(world, e_2, Velocity);
     
     test_assert(v_1 != NULL);
     test_assert(v_2 != NULL);
@@ -113,12 +106,12 @@ void Prefab_new_w_count_prefab() {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    ecs_entity_t e_start = ecs_new_instance_w_count(world, Prefab, 0, 10);
+    ecs_entity_t e_start = ecs_bulk_new_w_entity(world, ECS_INSTANCEOF | Prefab, 10);
 
     int i;
-    Position *p_prev = NULL;
+    const Position *p_prev = NULL;
     for (i = e_start; i < (e_start + 10); i ++) {
-        Position *p = ecs_get_ptr(world, i, Position);
+        const Position *p = ecs_get_ptr(world, i, Position);
         test_assert(p != NULL);
 
         if (p_prev) test_ptr(p, p_prev);
@@ -144,20 +137,20 @@ void Prefab_new_w_type_w_prefab() {
     ecs_entity_t e_1 = ecs_new(world, Type);
     test_assert(e_1 != 0);
     test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
 
     ecs_entity_t e_2 = ecs_new(world, Type);
     test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_2, Prefab));
+    test_assert( ecs_has_entity(world, e_2,  ECS_INSTANCEOF | Prefab));
     test_assert( !ecs_has(world, e_2, EcsPrefab));
-    test_assert( !ecs_has(world, e_2, EcsId));
+    test_assert( !ecs_has(world, e_2, EcsName));
 
-    Position *p_1 = ecs_get_ptr(world, e_1, Position);
-    Position *p_2 = ecs_get_ptr(world, e_2, Position);
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_1 = ecs_get_ptr(world, e_1, Position);
+    const Position *p_2 = ecs_get_ptr(world, e_2, Position);
+    const Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
 
     test_assert(p_1 != NULL);
     test_assert(p_2 != NULL);
@@ -167,8 +160,8 @@ void Prefab_new_w_type_w_prefab() {
     test_int(p_1->x, 10);
     test_int(p_1->y, 20);
 
-    Velocity *v_1 = ecs_get_ptr(world, e_1, Velocity);
-    Velocity *v_2 = ecs_get_ptr(world, e_2, Velocity);
+    const Velocity *v_1 = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v_2 = ecs_get_ptr(world, e_2, Velocity);
     
     test_assert(v_1 != NULL);
     test_assert(v_2 != NULL);
@@ -189,25 +182,25 @@ void Prefab_add_prefab() {
     ecs_entity_t e_1 = ecs_new(world, Velocity);
     test_assert(e_1 != 0);
 
-    ecs_inherit(world, e_1, Prefab);
+    ecs_add_entity(world, e_1, ECS_INSTANCEOF | Prefab);
     test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
 
     ecs_entity_t e_2 = ecs_new(world, Velocity);
     test_assert(e_2 != 0);
 
-    ecs_inherit(world, e_2, Prefab);
+    ecs_add_entity(world, e_2, ECS_INSTANCEOF | Prefab);
     test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_2, Prefab));
+    test_assert( ecs_has_entity(world, e_2,  ECS_INSTANCEOF | Prefab));
     test_assert( !ecs_has(world, e_2, EcsPrefab));
-    test_assert( !ecs_has(world, e_2, EcsId));
+    test_assert( !ecs_has(world, e_2, EcsName));
 
-    Position *p_1 = ecs_get_ptr(world, e_1, Position);
-    Position *p_2 = ecs_get_ptr(world, e_2, Position);
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_1 = ecs_get_ptr(world, e_1, Position);
+    const Position *p_2 = ecs_get_ptr(world, e_2, Position);
+    const Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
 
     test_assert(p_1 != NULL);
     test_assert(p_2 != NULL);
@@ -217,8 +210,8 @@ void Prefab_add_prefab() {
     test_int(p_1->x, 10);
     test_int(p_1->y, 20);
 
-    Velocity *v_1 = ecs_get_ptr(world, e_1, Velocity);
-    Velocity *v_2 = ecs_get_ptr(world, e_2, Velocity);
+    const Velocity *v_1 = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v_2 = ecs_get_ptr(world, e_2, Velocity);
     
     test_assert(v_1 != NULL);
     test_assert(v_2 != NULL);
@@ -242,22 +235,22 @@ void Prefab_add_type_w_prefab() {
 
     ecs_add(world, e_1, Type);
     test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
 
     ecs_entity_t e_2 = ecs_new(world, 0);
 
     ecs_add(world, e_2, Type);
     test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_2, Prefab));
+    test_assert( ecs_has_entity(world, e_2,  ECS_INSTANCEOF | Prefab));
     test_assert( !ecs_has(world, e_2, EcsPrefab));
-    test_assert( !ecs_has(world, e_2, EcsId));
+    test_assert( !ecs_has(world, e_2, EcsName));
 
-    Position *p_1 = ecs_get_ptr(world, e_1, Position);
-    Position *p_2 = ecs_get_ptr(world, e_2, Position);
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_1 = ecs_get_ptr(world, e_1, Position);
+    const Position *p_2 = ecs_get_ptr(world, e_2, Position);
+    const Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
 
     test_assert(p_1 != NULL);
     test_assert(p_2 != NULL);
@@ -267,8 +260,8 @@ void Prefab_add_type_w_prefab() {
     test_int(p_1->x, 10);
     test_int(p_1->y, 20);
 
-    Velocity *v_1 = ecs_get_ptr(world, e_1, Velocity);
-    Velocity *v_2 = ecs_get_ptr(world, e_2, Velocity);
+    const Velocity *v_1 = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v_2 = ecs_get_ptr(world, e_2, Velocity);
     
     test_assert(v_1 != NULL);
     test_assert(v_2 != NULL);
@@ -285,24 +278,22 @@ void Prefab_remove_prefab_after_new() {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    ecs_entity_t e_1 = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e_1 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert(e_1 != 0);
     test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
-    ecs_disinherit(world, e_1, Prefab);
+    ecs_remove_entity(world, e_1, ECS_INSTANCEOF | Prefab);
     test_assert( !ecs_has(world, e_1, Position));
-    test_assert( !ecs_has(world, e_1, Prefab));
+    test_assert( !ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
     ecs_fini(world);
 }
@@ -318,23 +309,21 @@ void Prefab_remove_prefab_after_add() {
     ecs_entity_t e_1 = ecs_new(world, 0);
     test_assert(e_1 != 0);
 
-    ecs_inherit(world, e_1, Prefab);
+    ecs_add_entity(world, e_1, ECS_INSTANCEOF | Prefab);
     test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
-    ecs_disinherit(world, e_1, Prefab);
+    ecs_remove_entity(world, e_1, ECS_INSTANCEOF | Prefab);
     test_assert( !ecs_has(world, e_1, Position));
-    test_assert( !ecs_has(world, e_1, Prefab));
+    test_assert( !ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
     ecs_fini(world);
 }
@@ -347,17 +336,16 @@ void Prefab_override_component() {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    ecs_entity_t e_1 = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e_1 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert(e_1 != 0);
     test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -367,7 +355,7 @@ void Prefab_override_component() {
     test_int(p->x, 20);
     test_int(p->y, 30);
 
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
     test_assert(p != p_prefab);
     test_int(p_prefab->x, 10);
     test_int(p_prefab->y, 20);
@@ -383,17 +371,16 @@ void Prefab_override_remove_component() {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    ecs_entity_t e_1 = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e_1 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert(e_1 != 0);
     test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -403,7 +390,7 @@ void Prefab_override_remove_component() {
     test_int(p->x, 20);
     test_int(p->y, 30);
 
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
     test_assert(p_prefab != NULL);
     test_assert(p != p_prefab);
     test_int(p_prefab->x, 10);
@@ -432,7 +419,7 @@ void Prefab_override_2_of_3_components_1_self() {
     ecs_set(world, Prefab, Velocity, {30, 40});
     ecs_set(world, Prefab, Mass, {50});
 
-    ecs_entity_t e_1 = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e_1 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert(e_1 != 0);
 
     ecs_set(world, e_1, Rotation, {60});
@@ -441,14 +428,13 @@ void Prefab_override_2_of_3_components_1_self() {
     test_assert( ecs_has(world, e_1, Velocity));
     test_assert( ecs_has(world, e_1, Mass));
     test_assert( ecs_has(world, e_1, Rotation));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -458,12 +444,12 @@ void Prefab_override_2_of_3_components_1_self() {
     test_int(p->x, 20);
     test_int(p->y, 30);
 
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
     test_assert(p != p_prefab);
     test_int(p_prefab->x, 10);
     test_int(p_prefab->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -473,20 +459,20 @@ void Prefab_override_2_of_3_components_1_self() {
     test_int(v->x, 40);
     test_int(v->y, 50);
 
-    Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
+    const Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
     test_assert(v != v_prefab);
     test_int(v_prefab->x, 30);
     test_int(v_prefab->y, 40);
 
-    Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get_ptr(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    Mass *m_prefab = ecs_get_ptr(world, Prefab, Mass);
+    const Mass *m_prefab = ecs_get_ptr(world, Prefab, Mass);
     test_assert(m_prefab != NULL);
     test_ptr(m_prefab, m);
 
-    Rotation *r = ecs_get_ptr(world, e_1, Rotation);
+    const Rotation *r = ecs_get_ptr(world, e_1, Rotation);
     test_assert(r != NULL);
     test_int(*r, 60);
 
@@ -508,31 +494,30 @@ void Prefab_new_type_w_1_override() {
     test_assert(e_1 != 0);
     test_assert( ecs_has(world, e_1, Position));
     test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     test_assert( ecs_has(world, e_1, Type));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
     test_assert(p_prefab != NULL);
     test_assert(p != p_prefab);
     test_int(p_prefab->x, 10);
     test_int(p_prefab->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
+    const Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
     test_assert(v_prefab != NULL);
     test_assert(v == v_prefab);
     test_int(v_prefab->x, 30);
@@ -556,31 +541,30 @@ void Prefab_new_type_w_2_overrides() {
     test_assert(e_1 != 0);
     test_assert( ecs_has(world, e_1, Position));
     test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     test_assert( ecs_has(world, e_1, Type));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
     test_assert(p_prefab != NULL);
     test_assert(p != p_prefab);
     test_int(p_prefab->x, 10);
     test_int(p_prefab->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
+    const Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
     test_assert(v_prefab != NULL);
     test_assert(v != v_prefab);
     test_int(v_prefab->x, 30);
@@ -606,31 +590,30 @@ void Prefab_add_type_w_1_overrides() {
     ecs_add(world, e_1, Type);
     test_assert( ecs_has(world, e_1, Position));
     test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     test_assert( ecs_has(world, e_1, Type));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
     test_assert(p_prefab != NULL);
     test_assert(p != p_prefab);
     test_int(p_prefab->x, 10);
     test_int(p_prefab->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
+    const Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
     test_assert(v_prefab != NULL);
     test_assert(v == v_prefab);
     test_int(v_prefab->x, 30);
@@ -656,31 +639,30 @@ void Prefab_add_type_w_2_overrides() {
     ecs_add(world, e_1, Type);
     test_assert( ecs_has(world, e_1, Position));
     test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_1, Prefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
     test_assert( ecs_has(world, e_1, Type));
     /* These components should never be inherited from prefabs */
     test_assert( !ecs_has(world, e_1, EcsPrefab));
-    test_assert( !ecs_has(world, e_1, EcsId));
-    test_assert( !ecs_get_ptr(world, e_1, EcsPrefab));
-    test_assert( !ecs_get_ptr(world, e_1, EcsId));
+    test_assert( !ecs_has(world, e_1, EcsName));
+    test_assert( !ecs_get_ptr(world, e_1, EcsName));
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
+    const Position *p_prefab = ecs_get_ptr(world, Prefab, Position);
     test_assert(p_prefab != NULL);
     test_assert(p != p_prefab);
     test_int(p_prefab->x, 10);
     test_int(p_prefab->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
+    const Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
     test_assert(v_prefab != NULL);
     test_assert(v != v_prefab);
     test_int(v_prefab->x, 30);
@@ -697,17 +679,17 @@ void Prefab_get_ptr_prefab() {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    ecs_entity_t e_1 = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e_1 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert(e_1 != 0);
-    test_assert( ecs_has(world, e_1, Prefab));
-    test_assert( _ecs_get_ptr(world, e_1, ecs_type(Prefab)) == NULL);
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | Prefab));
+    test_assert( ecs_get_ptr_w_entity(world, e_1, Prefab) == NULL);
 
     ecs_fini(world);
 }
 
 static
 void Prefab_w_field(ecs_rows_t *rows) {
-    ProbeSystem(rows);
+    probe_system(rows);
 
     for (int i = 0; i < rows->count; i ++) {
         Position *p = ecs_field(rows, Position, 1, i);
@@ -732,7 +714,7 @@ void Prefab_iterate_w_prefab_field() {
     test_assert(e_1 != 0);
     ecs_set(world, e_1, Position, {0, 0});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -749,7 +731,7 @@ void Prefab_iterate_w_prefab_field() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], Prefab);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);    
@@ -772,7 +754,7 @@ void Prefab_w_shared(ecs_rows_t *rows) {
         m = ecs_column(rows, Mass, 3);
     }
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     for (int i = 0; i < rows->count; i ++) {
         Position *p = ecs_field(rows, Position, 1, i);
@@ -801,7 +783,7 @@ void Prefab_iterate_w_prefab_shared() {
     test_assert(e_1 != 0);
     ecs_set(world, e_1, Position, {0, 0});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -818,7 +800,7 @@ void Prefab_iterate_w_prefab_shared() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], Prefab);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
@@ -844,7 +826,7 @@ void Prefab_match_entity_prefab_w_system_optional() {
     test_assert(e_1 != 0);
     ecs_set(world, e_1, Position, {0, 0});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -863,7 +845,7 @@ void Prefab_match_entity_prefab_w_system_optional() {
     test_int(ctx.c[0][2], ecs_entity(Mass));
     test_int(ctx.s[0][2], Prefab);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 4);
     test_int(p->y, 5);
@@ -876,17 +858,18 @@ void Prefab_prefab_in_system_expr() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
 
     ECS_PREFAB(world, Prefab1, Velocity);
     ECS_PREFAB(world, Prefab2, Velocity);
-    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, Velocity, Prefab1);
+    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, Velocity, Mass, INSTANCEOF | Prefab1);
 
     ecs_set(world, Prefab1, Velocity, {1, 2});
     ecs_set(world, Prefab2, Velocity, {1, 2});
 
-    ecs_entity_t e_1 = ecs_new_instance(world, Prefab1, 0);
-    ecs_entity_t e_2 = ecs_new_instance(world, Prefab1, 0);
-    ecs_entity_t e_3 = ecs_new_instance(world, Prefab2, 0);
+    ecs_entity_t e_1 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab1);
+    ecs_entity_t e_2 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab1);
+    ecs_entity_t e_3 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab2);
 
     test_assert(e_1 != 0);
     test_assert(e_2 != 0);
@@ -896,7 +879,11 @@ void Prefab_prefab_in_system_expr() {
     ecs_set(world, e_2, Position, {0, 0});
     ecs_set(world, e_3, Position, {0, 0});
 
-    SysTestData ctx = {0};
+    ecs_set(world, e_1, Mass, {0});
+    ecs_set(world, e_2, Mass, {0});
+    ecs_set(world, e_3, Mass, {0});
+
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -904,7 +891,7 @@ void Prefab_prefab_in_system_expr() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Prefab_w_shared);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.column_count, 4);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e_1);
@@ -913,10 +900,12 @@ void Prefab_prefab_in_system_expr() {
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], Prefab1);
-    test_int(ctx.c[0][2], Prefab1);
-    test_int(ctx.s[0][2], 0);
+    test_int(ctx.c[0][2], ecs_entity(Mass));
+    test_int(ctx.s[0][2], 0);    
+    test_int(ctx.c[0][3], ECS_INSTANCEOF | Prefab1);
+    test_int(ctx.s[0][3], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
@@ -931,7 +920,7 @@ void Prefab_prefab_in_system_expr() {
 
 static
 void Dummy(ecs_rows_t *rows) {
-    ProbeSystem(rows);
+    probe_system(rows);
 }
 
 void Prefab_dont_match_prefab() {
@@ -942,7 +931,7 @@ void Prefab_dont_match_prefab() {
     ECS_PREFAB(world, Prefab, Position);
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -964,29 +953,29 @@ void Prefab_new_w_count_w_override() {
     ecs_set(world, Prefab, Position, {10, 20});
     ecs_set(world, Prefab, Velocity, {30, 40});
 
-    ecs_entity_t e_1 = ecs_new_w_count(world, Type, 100);
+    ecs_entity_t e_1 = ecs_bulk_new(world, Type, 100);
     test_assert(e_1 != 0);
 
-    Position *prefab_p = ecs_get_ptr(world, Prefab, Position);
-    Velocity *prefab_v = ecs_get_ptr(world, Prefab, Velocity);
+    const Position *prefab_p = ecs_get_ptr(world, Prefab, Position);
+    const Velocity *prefab_v = ecs_get_ptr(world, Prefab, Velocity);
 
     ecs_entity_t e;
     for (e = e_1; e < (e_1 + 100); e ++) {
         test_assert( ecs_has(world, e, Position));
         test_assert( ecs_has(world, e, Velocity));
-        test_assert( ecs_has(world, e, Prefab));
+        test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | Prefab));
 
-        Position *p = ecs_get_ptr(world, e, Position);
+        const Position *p = ecs_get_ptr(world, e, Position);
         test_assert(p != NULL);
+        test_assert(p == prefab_p);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        test_assert(p == prefab_p);
 
-        Velocity *v = ecs_get_ptr(world, e, Velocity);
+        const Velocity *v = ecs_get_ptr(world, e, Velocity);
         test_assert(v != NULL);
+        test_assert(v != prefab_v);
         test_int(v->x, 30);
         test_int(v->y, 40);
-        test_assert(v != prefab_v);
     }
 
     ecs_fini(world);
@@ -1005,14 +994,14 @@ void Prefab_override_2_components_different_size() {
     ecs_set(world, Prefab, Velocity, {30, 40});
     ecs_set(world, Prefab, Color, {1, 2, 3, 4});
 
-    // TODO: investigate crash when replacing ecs_new_w_count with 
-    // ecs_new_instance_w_count
-    ecs_entity_t e_1 = ecs_new_w_count(world, Type, 100);
+    // TODO: investigate crash when replacing ecs_bulk_new with 
+    // ecs_new_w_entity_w_count
+    ecs_entity_t e_1 = ecs_bulk_new(world, Type, 100);
     test_assert(e_1 != 0);
 
-    Position *prefab_p = ecs_get_ptr(world, Prefab, Position);
-    Velocity *prefab_v = ecs_get_ptr(world, Prefab, Velocity);
-    Color *prefab_c = ecs_get_ptr(world, Prefab, Color);
+    const Position *prefab_p = ecs_get_ptr(world, Prefab, Position);
+    const Velocity *prefab_v = ecs_get_ptr(world, Prefab, Velocity);
+    const Color *prefab_c = ecs_get_ptr(world, Prefab, Color);
 
     test_assert(prefab_p != NULL);
     test_assert(prefab_v != NULL);
@@ -1022,21 +1011,21 @@ void Prefab_override_2_components_different_size() {
     for (e = e_1; e < (e_1 + 100); e ++) {
         test_assert( ecs_has(world, e, Position));
         test_assert( ecs_has(world, e, Velocity));
-        test_assert( ecs_has(world, e, Prefab));
+        test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | Prefab));
 
-        Position *p = ecs_get_ptr(world, e, Position);
+        const Position *p = ecs_get_ptr(world, e, Position);
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
         test_assert(p == prefab_p);
 
-        Velocity *v = ecs_get_ptr(world, e, Velocity);
+        const Velocity *v = ecs_get_ptr(world, e, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 30);
         test_int(v->y, 40);
         test_assert(v != prefab_v);
 
-        Color *c = ecs_get_ptr(world, e, Color);
+        const Color *c = ecs_get_ptr(world, e, Color);
         test_assert(c != NULL);
         test_int(c->r, 1);
         test_int(c->g, 2);
@@ -1055,11 +1044,9 @@ void Prefab_ignore_prefab_parent_component() {
     ECS_COMPONENT(world, Velocity);
 
     ECS_ENTITY(world, parent, EcsPrefab, Position);
-    ECS_ENTITY(world, child, EcsPrefab, Velocity);
+    ECS_ENTITY(world, child, EcsPrefab, CHILDOF | parent, Velocity);
 
-    ecs_set(world, child, EcsPrefab, {.parent = parent});
-
-    test_assert( ecs_contains(world, parent, child));
+    test_assert( ecs_has_entity(world, child, ECS_CHILDOF | parent));
     test_assert( !ecs_has(world, child, Position));
     test_assert( ecs_has(world, child, Velocity));
 
@@ -1113,17 +1100,17 @@ void Prefab_match_table_created_in_progress() {
 
     test_assert( ecs_has(world, e, Velocity));
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
-    test_int(p->x, 0);
-    test_int(p->y, 0);
+    test_int(p->x, 1);
+    test_int(p->y, 1);
 
     ecs_progress(world, 1);
 
     p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
-    test_int(p->x, 1);
-    test_int(p->y, 1);
+    test_int(p->x, 2);
+    test_int(p->y, 2);
 
     ecs_fini(world);
 }
@@ -1133,18 +1120,17 @@ void Prefab_prefab_w_1_child() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, Parent, EcsPrefab, Position);
+    ECS_PREFAB(world, Parent, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, Position);
-            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+        ECS_PREFAB(world, Child, CHILDOF | Parent, Position);
             ecs_set(world, Child, Position, {2, 3});
 
-    ecs_entity_t e = ecs_new_instance(world, Parent, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
-    Position *p_e = ecs_get_ptr(world, e, Position);
+    const Position *p_e = ecs_get_ptr(world, e, Position);
     test_assert(p_e != NULL);
     test_int(p_e->x, 1);
     test_int(p_e->y, 2);
@@ -1153,14 +1139,14 @@ void Prefab_prefab_w_1_child() {
     test_assert(e_child != 0);
 
     test_assert(ecs_has(world, e_child, Position));
-    test_assert(ecs_contains(world, e, e_child));
+    test_assert(ecs_has_entity(world, e_child, ECS_CHILDOF | e));
 
-    Position *p_child = ecs_get_ptr(world, e_child, Position);
+    const Position *p_child = ecs_get_ptr(world, e_child, Position);
     test_assert(p_child != NULL);
     test_int(p_child->x, 2);
     test_int(p_child->y, 3);
 
-    ecs_entity_t e2 = ecs_new_instance(world, Parent, 0);
+    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
     test_assert(e2 != 0);
     test_assert( ecs_has(world, e, Position));
     test_assert( ecs_get_ptr(world, e2, Position) == p_e);
@@ -1168,8 +1154,13 @@ void Prefab_prefab_w_1_child() {
     ecs_entity_t e_child2 = ecs_lookup_child(world, e2, "Child");
     test_assert(e_child2 != 0);
     test_assert(ecs_has(world, e_child2, Position));
-    test_assert(ecs_contains(world, e2, e_child2));
-    test_assert( ecs_get_ptr(world, e_child2, Position) == p_child);
+    test_assert(ecs_has_entity(world, e_child2, ECS_CHILDOF | e2));
+    test_assert( ecs_get_ptr(world, e_child2, Position) != p_child);
+    
+    p_child = ecs_get_ptr(world, e_child2, Position);
+    test_assert(p_child != NULL);
+    test_int(p_child->x, 2);
+    test_int(p_child->y, 3);
 
     ecs_fini(world);
 }
@@ -1182,19 +1173,17 @@ void Prefab_prefab_w_2_children() {
     ECS_ENTITY(world, Parent, EcsPrefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child1, EcsPrefab, Position);
-            ecs_set(world, Child1, EcsPrefab, {.parent = Parent});
+        ECS_ENTITY(world, Child1, EcsPrefab, CHILDOF | Parent, Position);
             ecs_set(world, Child1, Position, {2, 3});
 
-        ECS_ENTITY(world, Child2, EcsPrefab, Position);
-            ecs_set(world, Child2, EcsPrefab, {.parent = Parent});
+        ECS_ENTITY(world, Child2, EcsPrefab, CHILDOF | Parent, Position);
             ecs_set(world, Child2, Position, {3, 4});
 
-    ecs_entity_t e = ecs_new_instance(world, Parent, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
@@ -1202,7 +1191,7 @@ void Prefab_prefab_w_2_children() {
     ecs_entity_t e_child = ecs_lookup_child(world, e, "Child1");
     test_assert(e_child != 0);
     test_assert(ecs_has(world, e_child, Position));
-    test_assert(ecs_contains(world, e, e_child));
+    test_assert(ecs_has_entity(world, e_child, ECS_CHILDOF | e));
 
     p = ecs_get_ptr(world, e_child, Position);
     test_assert(p != NULL);
@@ -1212,7 +1201,7 @@ void Prefab_prefab_w_2_children() {
     e_child = ecs_lookup_child(world, e, "Child2");
     test_assert(e_child != 0);
     test_assert(ecs_has(world, e_child, Position));
-    test_assert(ecs_contains(world, e, e_child));
+    test_assert(ecs_has_entity(world, e_child, ECS_CHILDOF | e));
 
     p = ecs_get_ptr(world, e_child, Position);
     test_assert(p != NULL);
@@ -1226,23 +1215,22 @@ void Prefab_prefab_w_grandchild() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Rotation);
 
     ECS_ENTITY(world, Parent, EcsPrefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, Position);
-            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, Position);
             ecs_set(world, Child, Position, {2, 3});
 
-            ECS_ENTITY(world, GrandChild, EcsPrefab, Position);
-                ecs_set(world, GrandChild, EcsPrefab, {.parent = Child});
+            ECS_ENTITY(world, GrandChild, EcsPrefab, CHILDOF | Child, Position, Rotation);
                 ecs_set(world, GrandChild, Position, {3, 4});
 
-    ecs_entity_t e = ecs_new_instance(world, Parent, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
@@ -1250,7 +1238,7 @@ void Prefab_prefab_w_grandchild() {
     ecs_entity_t e_child = ecs_lookup_child(world, e, "Child");
     test_assert(e_child != 0);
     test_assert(ecs_has(world, e_child, Position));
-    test_assert(ecs_contains(world, e, e_child));
+    test_assert(ecs_has_entity(world, e_child, ECS_CHILDOF | e));
 
     p = ecs_get_ptr(world, e_child, Position);
     test_assert(p != NULL);
@@ -1260,7 +1248,7 @@ void Prefab_prefab_w_grandchild() {
     ecs_entity_t e_grandchild = ecs_lookup_child(world, e_child, "GrandChild");
     test_assert(e_grandchild != 0);
     test_assert(ecs_has(world, e_grandchild, Position));
-    test_assert(ecs_contains(world, e_child, e_grandchild));
+    test_assert(ecs_has_entity(world, e_grandchild, ECS_CHILDOF | e_child));
 
     p = ecs_get_ptr(world, e_grandchild, Position);
     test_assert(p != NULL);
@@ -1280,21 +1268,20 @@ void Prefab_prefab_w_base_w_child() {
     ECS_ENTITY(world, Parent, EcsPrefab, INSTANCEOF | Base, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, Position);
-            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, Position);
             ecs_set(world, Child, Position, {2, 3});
 
-    ecs_entity_t e = ecs_new_instance(world, Parent, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
     test_assert( ecs_has(world, e, Velocity));
 
-    Position *p_e = ecs_get_ptr(world, e, Position);
+    const Position *p_e = ecs_get_ptr(world, e, Position);
     test_assert(p_e != NULL);
     test_int(p_e->x, 1);
     test_int(p_e->y, 2);
 
-    Velocity *v_e = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v_e = ecs_get_ptr(world, e, Velocity);
     test_assert(v_e != NULL);
     test_int(v_e->x, 3);
     test_int(v_e->y, 4);    
@@ -1303,9 +1290,9 @@ void Prefab_prefab_w_base_w_child() {
     test_assert(e_child != 0);
     test_assert(ecs_has(world, e_child, Position));
     test_assert(!ecs_has(world, e_child, Velocity));
-    test_assert(ecs_contains(world, e, e_child));
+    test_assert(ecs_has_entity(world, e_child, ECS_CHILDOF | e));
 
-    Position *p_child = ecs_get_ptr(world, e_child, Position);
+    const Position *p_child = ecs_get_ptr(world, e_child, Position);
     test_assert(p_child != NULL);
     test_int(p_child->x, 2);
     test_int(p_child->y, 3);    
@@ -1323,15 +1310,14 @@ void Prefab_prefab_w_child_w_base() {
     ECS_ENTITY(world, Parent, EcsPrefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, INSTANCEOF | Base, Position);
-            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, INSTANCEOF | Base, Position);
             ecs_set(world, Child, Position, {2, 3});
 
-    ecs_entity_t e = ecs_new_instance(world, Parent, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
-    Position *p_e = ecs_get_ptr(world, e, Position);
+    const Position *p_e = ecs_get_ptr(world, e, Position);
     test_assert(p_e != NULL);
     test_int(p_e->x, 1);
     test_int(p_e->y, 2);   
@@ -1340,14 +1326,14 @@ void Prefab_prefab_w_child_w_base() {
     test_assert(e_child != 0);
     test_assert(ecs_has(world, e_child, Position));
     test_assert(ecs_has(world, e_child, Velocity));
-    test_assert(ecs_contains(world, e, e_child));
+    test_assert(ecs_has_entity(world, e_child, ECS_CHILDOF | e));
 
-    Position *p_child = ecs_get_ptr(world, e_child, Position);
+    const Position *p_child = ecs_get_ptr(world, e_child, Position);
     test_assert(p_child != NULL);
     test_int(p_child->x, 2);
     test_int(p_child->y, 3);
 
-    Velocity *v_child = ecs_get_ptr(world, e_child, Velocity);
+    const Velocity *v_child = ecs_get_ptr(world, e_child, Velocity);
     test_assert(v_child != NULL);
     test_int(v_child->x, 3);
     test_int(v_child->y, 4);     
@@ -1362,22 +1348,20 @@ void Prefab_prefab_w_child_w_base_w_children() {
     ECS_ENTITY(world, Base, EcsPrefab, Velocity);
         ecs_set(world, Base, Velocity, {3, 4});
 
-        ECS_ENTITY(world, BaseChild, EcsPrefab, Position);
-            ecs_set(world, BaseChild, EcsPrefab, {.parent = Base});
+        ECS_ENTITY(world, BaseChild, EcsPrefab, CHILDOF | Base, Position);
             ecs_set(world, BaseChild, Position, {4, 5});
 
     ECS_ENTITY(world, Parent, EcsPrefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, INSTANCEOF | Base, Position);
-            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, INSTANCEOF | Base, Position);
             ecs_set(world, Child, Position, {2, 3});
 
-    ecs_entity_t e = ecs_new_instance(world, Parent, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
-    Position *p_e = ecs_get_ptr(world, e, Position);
+    const Position *p_e = ecs_get_ptr(world, e, Position);
     test_assert(p_e != NULL);
     test_int(p_e->x, 1);
     test_int(p_e->y, 2);   
@@ -1386,14 +1370,14 @@ void Prefab_prefab_w_child_w_base_w_children() {
     test_assert(e_child != 0);
     test_assert(ecs_has(world, e_child, Position));
     test_assert(ecs_has(world, e_child, Velocity));
-    test_assert(ecs_contains(world, e, e_child));
+    test_assert(ecs_has_entity(world, e_child, ECS_CHILDOF | e));
 
-    Position *p_child = ecs_get_ptr(world, e_child, Position);
+    const Position *p_child = ecs_get_ptr(world, e_child, Position);
     test_assert(p_child != NULL);
     test_int(p_child->x, 2);
     test_int(p_child->y, 3);
 
-    Velocity *v_child = ecs_get_ptr(world, e_child, Velocity);
+    const Velocity *v_child = ecs_get_ptr(world, e_child, Velocity);
     test_assert(v_child != NULL);
     test_int(v_child->x, 3);
     test_int(v_child->y, 4); 
@@ -1402,9 +1386,9 @@ void Prefab_prefab_w_child_w_base_w_children() {
     test_assert(e_base_child != 0);
     test_assert(ecs_has(world, e_base_child, Position));
     test_assert(!ecs_has(world, e_base_child, Velocity));
-    test_assert(ecs_contains(world, e_child, e_base_child)); 
+    test_assert(ecs_has_entity(world, e_base_child, ECS_CHILDOF | e_child)); 
 
-    Position *p_base_child = ecs_get_ptr(world, e_base_child, Position);
+    const Position *p_base_child = ecs_get_ptr(world, e_base_child, Position);
     test_assert(p_base_child != NULL);
     test_assert(p_base_child != p_child);
     test_int(p_base_child->x, 4);
@@ -1419,18 +1403,17 @@ void Prefab_prefab_w_child_new_w_count() {
     ECS_ENTITY(world, Parent, EcsPrefab, Position);
         ecs_set(world, Parent, Position, {1, 2});
 
-        ECS_ENTITY(world, Child, EcsPrefab, Position);
-            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
+        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, Position);
             ecs_set(world, Child, Position, {2, 3});
 
-    ecs_entity_t e = ecs_new_instance_w_count(world, Parent, 0, 3);
+    ecs_entity_t e = ecs_bulk_new_w_entity(world, ECS_INSTANCEOF | Parent, 3);
     test_assert(e != 0);
 
     int end = e + 3;
     for (; e < end; e ++) {
         test_assert( ecs_has(world, e, Position));
 
-        Position *p_e = ecs_get_ptr(world, e, Position);
+        const Position *p_e = ecs_get_ptr(world, e, Position);
         test_assert(p_e != NULL);
         test_int(p_e->x, 1);
         test_int(p_e->y, 2);
@@ -1438,9 +1421,9 @@ void Prefab_prefab_w_child_new_w_count() {
         ecs_entity_t e_child = ecs_lookup_child(world, e, "Child");
         test_assert(e_child != 0);
         test_assert(ecs_has(world, e_child, Position));
-        test_assert(ecs_contains(world, e, e_child));
+        test_assert(ecs_has_entity(world, e_child, ECS_CHILDOF | e));
 
-        Position *p_child = ecs_get_ptr(world, e_child, Position);
+        const Position *p_child = ecs_get_ptr(world, e_child, Position);
         test_assert(p_child != NULL);
         test_int(p_child->x, 2);
         test_int(p_child->y, 3);
@@ -1459,25 +1442,25 @@ void Prefab_prefab_auto_override_child_component() {
         ecs_set(world, Parent, Position, {1, 2});
 
         ECS_ENTITY(world, ChildPrefab, EcsPrefab, Position, Velocity);
-        ECS_TYPE(world, Child, INSTANCEOF | ChildPrefab, Velocity);
-            ecs_set(world, Child, EcsPrefab, {.parent = Parent});
             ecs_set(world, ChildPrefab, Position, {2, 3});
             ecs_set(world, ChildPrefab, Velocity, {4, 5});
 
-    ecs_entity_t e1 = ecs_new_instance(world, Parent, 0);
+        ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, INSTANCEOF | ChildPrefab, Velocity);
+
+    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
     test_assert(e1 != 0);
     test_assert( ecs_has(world, e1, Position));
 
-    ecs_entity_t e2 = ecs_new_instance(world, Parent, 0);
+    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
     test_assert(e2 != 0);
     test_assert( ecs_has(world, e2, Position));
 
-    Position *p1 = ecs_get_ptr(world, e1, Position);
+    const Position *p1 = ecs_get_ptr(world, e1, Position);
     test_assert(p1 != NULL);
     test_int(p1->x, 1);
     test_int(p1->y, 2);
 
-    Position *p2 = ecs_get_ptr(world, e2, Position);
+    const Position *p2 = ecs_get_ptr(world, e2, Position);
     test_assert(p2 != NULL);
     test_int(p2->x, 1);
     test_int(p2->y, 2);    
@@ -1488,31 +1471,31 @@ void Prefab_prefab_auto_override_child_component() {
 
     test_assert( ecs_has(world, child_1, Position));
     test_assert( ecs_has(world, child_1, Velocity));
-    test_assert( !ecs_has(world, child_1, EcsTypeComponent));
+    test_assert( !ecs_has(world, child_1, EcsType));
 
     ecs_entity_t child_2 = ecs_lookup_child(world, e2, "Child");
     test_assert(child_2 != 0);
     test_assert( ecs_has(world, child_2, Position));
     test_assert( ecs_has(world, child_2, Velocity));
-    test_assert( !ecs_has(world, child_2, EcsTypeComponent));
+    test_assert( !ecs_has(world, child_2, EcsType));
 
-    Position *child_p1 = ecs_get_ptr(world, child_1, Position);
+    const Position *child_p1 = ecs_get_ptr(world, child_1, Position);
     test_assert(child_p1 != NULL);
     test_int(child_p1->x, 2);
     test_int(child_p1->y, 3);
 
-    Position *child_p2 = ecs_get_ptr(world, child_2, Position);
+    const Position *child_p2 = ecs_get_ptr(world, child_2, Position);
     test_assert(child_p2 != NULL);
     test_int(child_p2->x, 2);
     test_int(child_p2->y, 3);   
     test_assert(child_p1 == child_p2); 
 
-    Velocity *child_v1 = ecs_get_ptr(world, child_1, Velocity);
+    const Velocity *child_v1 = ecs_get_ptr(world, child_1, Velocity);
     test_assert(child_v1 != NULL);
     test_int(child_v1->x, 4);
     test_int(child_v1->y, 5);
 
-    Velocity *child_v2 = ecs_get_ptr(world, child_2, Velocity);
+    const Velocity *child_v2 = ecs_get_ptr(world, child_2, Velocity);
     test_assert(child_v2 != NULL);
     test_int(child_v2->x, 4);
     test_int(child_v2->y, 5); 
@@ -1532,7 +1515,7 @@ void Prefab_ignore_on_add() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnAdd, Position);
+    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnAdd, Position, NULL);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -1546,7 +1529,7 @@ void Prefab_ignore_on_remove() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnRemove, Position);
+    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnRemove, Position, NULL);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -1564,7 +1547,7 @@ void Prefab_ignore_on_set() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnSet, Position);
+    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnSet, Position, NULL);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -1582,7 +1565,7 @@ void Prefab_on_set_on_instance() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnSet, Position);
+    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnSet, Position, NULL);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -1592,12 +1575,12 @@ void Prefab_on_set_on_instance() {
 
     test_int(invoked, 0);
 
-    ecs_entity_t e = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
     test_int(invoked, 1);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
@@ -1612,7 +1595,7 @@ void InstantiateInProgress(ecs_rows_t *rows) {
 
     int i;
     for (i = 0; i < rows->count; i ++) {
-        ids[i] = ecs_new_instance(rows->world, Prefab, 0);
+        ids[i] = ecs_new_w_entity(rows->world, ECS_INSTANCEOF | Prefab);
     }
 }
 
@@ -1627,7 +1610,7 @@ void Prefab_instantiate_in_progress() {
 
     ECS_SYSTEM(world, InstantiateInProgress, EcsOnUpdate, Position, .Prefab);
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, 10);
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
     test_assert(e != 0);
 
     ecs_entity_t ids[10];
@@ -1635,13 +1618,13 @@ void Prefab_instantiate_in_progress() {
 
     ecs_progress(world, 1);
 
-    test_int(ecs_count(world, Prefab), 10);
+    test_int(ecs_count_entity(world, ECS_INSTANCEOF | Prefab), 10);
 
-    Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
+    const Velocity *v_prefab = ecs_get_ptr(world, Prefab, Velocity);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        Velocity *v = ecs_get_ptr(world, ids[i], Velocity);
+        const Velocity *v = ecs_get_ptr(world, ids[i], Velocity);
         test_assert(v == v_prefab);
     }
 
@@ -1675,7 +1658,7 @@ void Prefab_copy_from_prefab_in_progress() {
     ecs_entity_t ids[10];
     ecs_set_context(world, ids);
 
-    ecs_entity_t e_dummy = ecs_new_w_count(world, Position, 10);
+    ecs_entity_t e_dummy = ecs_bulk_new(world, Position, 10);
     test_assert(e_dummy != 0);
 
     /* Create one prefab instance so table is already created (case where table
@@ -1685,11 +1668,11 @@ void Prefab_copy_from_prefab_in_progress() {
 
     ecs_progress(world, 1);
 
-    test_int(ecs_count(world, Prefab), 11);
+    test_int(ecs_count_entity(world, ECS_INSTANCEOF | Prefab), 11);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        Velocity *v = ecs_get_ptr(world, ids[i], Velocity);
+        const Velocity *v = ecs_get_ptr(world, ids[i], Velocity);
         test_int(v->x, 1);
         test_int(v->y, 2);
     }
@@ -1713,16 +1696,16 @@ void Prefab_copy_from_prefab_first_instance_in_progress() {
     ecs_entity_t ids[10];
     ecs_set_context(world, ids);
 
-    ecs_entity_t e = ecs_new_w_count(world, Position, 10);
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
     test_assert(e != 0);
 
     ecs_progress(world, 1);
 
-    test_int(ecs_count(world, Prefab), 10);
+    test_int(ecs_count_entity(world, ECS_INSTANCEOF | Prefab), 10);
 
     int i;
     for (i = 0; i < 10; i ++) {
-        Velocity *v = ecs_get_ptr(world, ids[i], Velocity);
+        const Velocity *v = ecs_get_ptr(world, ids[i], Velocity);
         test_int(v->x, 1);
         test_int(v->y, 2);
     }
@@ -1751,12 +1734,12 @@ void Prefab_cached_ptr_after_realloc() {
 
     /* Trigger a realloc of the table in which the prefab is stored. This should
      * cause systems with refs to re-resolve their cached ref ptrs  */
-    _ecs_new_w_count(world, prefab_type, 1000);
+    ecs_bulk_new_w_type(world, prefab_type, 1000, NULL);
     
     ecs_set(world, Prefab, Mass, {2});
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);
@@ -1789,12 +1772,12 @@ void Prefab_revalidate_cached_ptr_w_mixed_table_refs() {
 
     /* Trigger a realloc of the table in which the prefab is stored. This should
      * cause systems with refs to re-resolve their cached ref ptrs  */
-    _ecs_new_w_count(world, prefab_type, 1000);
+    ecs_bulk_new_w_type(world, prefab_type, 1000, NULL);
     
     ecs_set(world, Prefab, Mass, {2});
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e_2, Position);
+    const Position *p = ecs_get_ptr(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);
@@ -1836,7 +1819,7 @@ void AddPrefab(ecs_rows_t *rows) {
 
     int i;
     for (i = 0; i < rows->count; i ++) {
-        ecs_inherit(rows->world, rows->entities[i], Prefab);
+        ecs_add_entity(rows->world, ECS_INSTANCEOF | rows->entities[i], Prefab);
     }
 }
 
@@ -1876,22 +1859,21 @@ void Prefab_no_instantiate_on_2nd_add() {
     ECS_PREFAB(world, Prefab, Position);
         ecs_set(world, Prefab, Position, {1, 2});
 
-        ECS_PREFAB(world, ChildPrefab, Velocity);
-            ecs_set(world, ChildPrefab, EcsPrefab, {.parent = Prefab});
+        ECS_PREFAB(world, ChildPrefab, CHILDOF | Prefab, Velocity);
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
 
     ECS_SYSTEM(world, AddPrefab, EcsOnUpdate, Position, .Prefab);
 
-    ecs_entity_t e = ecs_new_instance(world, Prefab, 0);
-    test_assert( ecs_has(world, e, Prefab));
-    Position *p = ecs_get_ptr(world, e, Position);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | Prefab));
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
     ecs_entity_t e_child = ecs_lookup_child(world, e, "ChildPrefab");
     test_assert(e_child != 0);
-    Velocity *v = ecs_get_ptr(world, e_child, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_child, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 3);
     test_int(v->y, 4);
@@ -1902,7 +1884,7 @@ void Prefab_no_instantiate_on_2nd_add() {
     test_int(v->x, 4);
     test_int(v->y, 5);
 
-    ecs_inherit(world, e, Prefab);
+    ecs_add_entity(world, e, ECS_INSTANCEOF | Prefab);
 
     ecs_entity_t e_child_2 = ecs_lookup_child(world, e, "ChildPrefab");
     test_assert(e_child == e_child_2);
@@ -1924,22 +1906,21 @@ void Prefab_no_instantiate_on_2nd_add_in_progress() {
     ECS_PREFAB(world, Prefab, Position);
         ecs_set(world, Prefab, Position, {1, 2});
 
-        ECS_PREFAB(world, ChildPrefab, Velocity);
-            ecs_set(world, ChildPrefab, EcsPrefab, {.parent = Prefab});
+        ECS_PREFAB(world, ChildPrefab, CHILDOF | Prefab, Velocity);
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
 
     ECS_SYSTEM(world, AddPrefab, EcsOnUpdate, Position, .Prefab);
 
-    ecs_entity_t e = ecs_new_instance(world, Prefab, 0);
-    test_assert( ecs_has(world, e, Prefab));
-    Position *p = ecs_get_ptr(world, e, Position);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | Prefab));
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
     ecs_entity_t e_child = ecs_lookup_child(world, e, "ChildPrefab");
     test_assert(e_child != 0);
-    Velocity *v = ecs_get_ptr(world, e_child, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_child, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 3);
     test_int(v->y, 4);
@@ -1965,7 +1946,7 @@ void Prefab_no_instantiate_on_2nd_add_in_progress() {
 void NewPrefab_w_count(ecs_rows_t *rows) {
     ecs_entity_t *result = ecs_get_context(rows->world);
     ECS_COLUMN_ENTITY(rows, Prefab, 1);
-    *result = ecs_new_instance_w_count(rows->world, Prefab, 0, 3);
+    *result = ecs_bulk_new_w_entity(rows->world, ECS_INSTANCEOF | Prefab, 3);
 }
 
 void Prefab_nested_prefab_in_progress_w_count() {
@@ -1978,8 +1959,7 @@ void Prefab_nested_prefab_in_progress_w_count() {
     ECS_PREFAB(world, Prefab, Position);
         ecs_set(world, Prefab, Position, {1, 2});
 
-        ECS_PREFAB(world, ChildPrefab, Velocity);
-            ecs_set(world, ChildPrefab, EcsPrefab, {.parent = Prefab});
+        ECS_PREFAB(world, ChildPrefab, CHILDOF | Prefab, Velocity);
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
 
     ECS_SYSTEM(world, NewPrefab_w_count, EcsOnUpdate, .Prefab);
@@ -1993,9 +1973,9 @@ void Prefab_nested_prefab_in_progress_w_count() {
 
     int i;
     for (i = 0; i < 3; i ++) {
-        ecs_has(world, result + i, Prefab);
+        ecs_has_entity(world, result + i, ECS_INSTANCEOF | Prefab);
 
-        Position *p = ecs_get_ptr(world, result + i, Position);
+        const Position *p = ecs_get_ptr(world, result + i, Position);
         test_assert(p != NULL); 
         test_int(p->x, 1);
         test_int(p->y, 2);
@@ -2003,7 +1983,7 @@ void Prefab_nested_prefab_in_progress_w_count() {
         ecs_entity_t child = ecs_lookup_child(world, result + i, "ChildPrefab");
         test_assert(child != 0);
 
-        Velocity *v = ecs_get_ptr(world, child, Velocity);
+        const Velocity *v = ecs_get_ptr(world, child, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 3);
         test_int(v->y, 4);
@@ -2024,7 +2004,10 @@ void OnSetVelocity(ecs_rows_t *rows) {
     int i;
     for (i = 0; i < rows->count; i ++) {
         ecs_add(rows->world, rows->entities[i], Velocity);
-        Velocity *staged_v = ecs_get_ptr(rows->world, rows->entities[i], Velocity);
+
+        Velocity *staged_v = ecs_get_mut(rows->world, rows->entities[i], Velocity, NULL);
+        test_assert(ecs_get_ptr(rows->world, rows->entities[i], Velocity) == staged_v);
+
         staged_v->x = v->x + 1;
         staged_v->y = v->y + 1;
     }
@@ -2040,12 +2023,11 @@ void Prefab_nested_prefab_in_progress_w_count_set_after_override() {
     ECS_PREFAB(world, Prefab, Position);
         ecs_set(world, Prefab, Position, {1, 2});
 
-        ECS_PREFAB(world, ChildPrefab, Velocity);
-            ecs_set(world, ChildPrefab, EcsPrefab, {.parent = Prefab});
+        ECS_PREFAB(world, ChildPrefab, CHILDOF | Prefab, Velocity);
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
 
     ECS_SYSTEM(world, NewPrefab_w_count, EcsOnUpdate, .Prefab);
-    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity, NULL);
 
     ecs_entity_t result = 0;
     ecs_set_context(world, &result);
@@ -2053,13 +2035,13 @@ void Prefab_nested_prefab_in_progress_w_count_set_after_override() {
     ecs_progress(world, 1);
 
     test_assert(result != 0);
-    test_int(on_set_velocity_invoked, 1);
+    test_int(on_set_velocity_invoked, 3);
 
     int i;
     for (i = 0; i < 3; i ++) {
-        ecs_has(world, result + i, Prefab);
+        ecs_has_entity(world, result + i, ECS_INSTANCEOF | Prefab);
 
-        Position *p = ecs_get_ptr(world, result + i, Position);
+        const Position *p = ecs_get_ptr(world, result + i, Position);
         test_assert(p != NULL); 
         test_int(p->x, 1);
         test_int(p->y, 2);
@@ -2067,7 +2049,7 @@ void Prefab_nested_prefab_in_progress_w_count_set_after_override() {
         ecs_entity_t child = ecs_lookup_child(world, result + i, "ChildPrefab");
         test_assert(child != 0);
 
-        Velocity *v = ecs_get_ptr(world, child, Velocity);
+        const Velocity *v = ecs_get_ptr(world, child, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 3 + 1);
         test_int(v->y, 4 + 1);
@@ -2084,11 +2066,11 @@ void AddPrefabInProgress(ecs_rows_t *rows) {
 
     int i;
     for (i = 0; i < rows->count; i ++) {
-        ecs_inherit(rows->world, rows->entities[i], Prefab);
+        ecs_add_entity(rows->world, ECS_INSTANCEOF | rows->entities[i], Prefab);
         test_assert( ecs_has(rows->world, rows->entities[i], Prefab));
         test_assert( ecs_has(rows->world, rows->entities[i], Velocity));
         
-        Velocity *v = ecs_get_ptr(rows->world, rows->entities[i], Velocity);
+        const Velocity *v = ecs_get_ptr(rows->world, rows->entities[i], Velocity);
         test_assert(v != NULL);
         test_int(v->x, 1);
         test_int(v->y, 2);
@@ -2107,14 +2089,14 @@ void Prefab_get_ptr_from_prefab_from_new_table_in_progress() {
 
     ECS_SYSTEM(world, AddPrefabInProgress, EcsOnUpdate, Position, .Prefab, .Velocity);
 
-    ecs_entity_t e = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
 
     ecs_progress(world, 1);
 
-    test_assert( ecs_has(world, e, Prefab));
+    test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | Prefab));
     test_assert( ecs_has(world, e, Velocity));
     
-    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 1);
     test_int(v->y, 2);
@@ -2145,7 +2127,7 @@ void Prefab_match_base() {
 
     ECS_PREFAB(world, Child, INSTANCEOF | Base);
 
-    ecs_entity_t e = ecs_new_instance(world, Child, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Child);
     ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, TestBase, EcsOnUpdate, Position, Velocity);
@@ -2176,7 +2158,7 @@ void Prefab_match_base_after_add_in_prev_phase() {
 
     ECS_PREFAB(world, Child, INSTANCEOF | Base);
 
-    ecs_entity_t e = ecs_new_instance(world, Child, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Child);
     ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, AddMass, EcsPreUpdate, Position, !Mass);
@@ -2207,9 +2189,9 @@ void Prefab_override_watched_prefab() {
      * needs to flip sign on the index, or this will fail. */
     ECS_ENTITY(world, Entity2, INSTANCEOF | Prefab, Position);
 
-    Position *p1 = ecs_get_ptr(world, Prefab, Position);
-    Position *p2 = ecs_get_ptr(world, Entity1, Position);
-    Position *p3 = ecs_get_ptr(world, Entity2, Position);
+    const Position *p1 = ecs_get_ptr(world, Prefab, Position);
+    const Position *p2 = ecs_get_ptr(world, Entity1, Position);
+    const Position *p3 = ecs_get_ptr(world, Entity2, Position);
 
     test_assert(p1 == p2);
     test_assert(p2 != p3);
@@ -2229,7 +2211,7 @@ void Prefab_rematch_twice() {
     ECS_PREFAB(world, Prefab, Position);
     ECS_ENTITY(world, Entity, INSTANCEOF | Prefab);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -2263,7 +2245,7 @@ void Inherit(ecs_rows_t *rows) {
         test_assert(e_backup != 0);
         test_assert( ecs_has(rows->world, e_backup, Position));
 
-        ecs_inherit(rows->world, e, e_backup);
+        ecs_add_entity(rows->world, e, ECS_INSTANCEOF | e_backup);
         test_assert( ecs_has_entity(rows->world, e, e_backup | ECS_INSTANCEOF));
 
         *param = e_backup;
@@ -2309,7 +2291,7 @@ void Prefab_add_to_empty_base_in_system() {
 
     ecs_entity_t base = ecs_new(world, 0);
     ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_inherit(world, e1, base);
+    ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
 
     ECS_SYSTEM(world, AddPosition, EcsOnUpdate, .Position);
 
@@ -2318,102 +2300,6 @@ void Prefab_add_to_empty_base_in_system() {
     ecs_progress(world, 1);
 
     test_assert( ecs_has(world, base, Position));
-
-    ecs_fini(world);
-}
-
-void Prefab_cyclic_inheritance() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t e_1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_set(world, e_1, Velocity, {1, 2});
-    ecs_entity_t e_2 = ecs_set(world, 0, Position, {30, 40});
-    ecs_set(world, e_2, Velocity, {3, 4});
-
-    ecs_inherit(world, e_1, e_2);
-    ecs_inherit(world, e_2, e_1);
-
-    test_assert( ecs_has(world, e_1, Position));
-    test_assert( ecs_has(world, e_1, Velocity));
-    test_assert( ecs_has_entity(world, e_1, e_2 | ECS_INSTANCEOF));
-    test_assert( ecs_has(world, e_2, Position));
-    test_assert( ecs_has(world, e_2, Velocity));
-    test_assert( ecs_has_entity(world, e_2, e_1 | ECS_INSTANCEOF));
-
-    /* Override Position from e_2 */
-    ecs_remove(world, e_1, Position);
-    ecs_add(world, e_1, Position);
-    Position *p = ecs_get_ptr(world, e_1, Position);
-    test_int(p->x, 30);
-    test_int(p->y, 40);
-
-    /* Override Velocity from e_1 */
-    ecs_remove(world, e_2, Velocity);
-    ecs_add(world, e_2, Velocity);
-    Velocity *v = ecs_get_ptr(world, e_2, Velocity);
-    test_int(v->x, 1);
-    test_int(v->y, 2);
-
-    ecs_fini(world);
-}
-
-typedef struct Backup {
-    ecs_entity_t backup;
-} Backup;
-
-void CloneInProgress(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Backup, 2);
-    ECS_COLUMN_COMPONENT(rows, Position, 3);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 4);
-
-    ecs_world_t *world = rows->world;
-
-    int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
-
-        ecs_entity_t backup = ecs_clone(world, e, true);
-        test_assert( ecs_has(world, backup, Position));
-        test_assert( ecs_has(world, backup, Velocity));
-
-        ecs_inherit(world, e, backup);
-        ecs_inherit(world, backup, e);
-
-        test_assert( ecs_has_entity(world, e, backup));
-        test_assert( ecs_has_entity(world, backup, e));
-
-        ecs_set(world, e, Backup, { backup });
-    }
-}
-
-void Prefab_cyclic_inheritance_w_clone_in_progress() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Backup);
-    ECS_TAG(world, NeedsBackup);
-
-    ECS_SYSTEM(world, CloneInProgress, EcsOnUpdate, NeedsBackup, !Backup, .Position, .Velocity);
-
-    ecs_entity_t e = ecs_new(world, NeedsBackup);
-    ecs_set(world, e, Position, {10, 20});
-    ecs_set(world, e, Velocity, {1, 2});
-
-    ecs_progress(world, 1);
-
-    test_assert( ecs_has(world, e, Backup));
-    Backup *b = ecs_get_ptr(world, e, Backup);
-    test_assert(b != NULL);
-
-    ecs_entity_t backup = b->backup;
-    test_assert(backup != 0);
-    test_assert( ecs_has_owned(world, backup, Position));
-    test_assert( ecs_has_owned(world, backup, Velocity));
-    test_assert( ecs_has_entity(world, backup, e));
 
     ecs_fini(world);
 }
@@ -2428,7 +2314,7 @@ void Prefab_dont_inherit_disabled() {
     ecs_entity_t e_2 = ecs_new(world, Velocity);
     
     ecs_add(world, e_2, EcsDisabled);
-    ecs_inherit(world, e_1, e_2);
+    ecs_add_entity(world, e_1, ECS_INSTANCEOF | e_2);
 
     test_assert( ecs_has(world, e_1, Position));
     test_assert( ecs_has(world, e_1, Velocity));
@@ -2437,41 +2323,6 @@ void Prefab_dont_inherit_disabled() {
     test_assert( !ecs_has(world, e_2, Position));
     test_assert( ecs_has(world, e_2, Velocity));
     test_assert( ecs_has(world, e_2, EcsDisabled));
-
-    ecs_fini(world);
-}
-
-void Prefab_cyclic_inheritance_get_unavailable() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-
-    ecs_inherit(world, e1, e2);
-    ecs_inherit(world, e2, e1);
-
-    Velocity *v = ecs_get_ptr(world, e1, Velocity);
-    test_assert(v == NULL);
-
-    ecs_fini(world);
-}
-
-void Prefab_cyclic_inheritance_has_unavailable() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-
-    ecs_inherit(world, e1, e2);
-    ecs_inherit(world, e2, e1);
-
-    test_assert(!ecs_has(world, e1, Velocity));
 
     ecs_fini(world);
 }
@@ -2495,14 +2346,15 @@ void CloneInOnAdd(ecs_rows_t *rows)
         p[i].y = 20;
 
         if (!has_cloned_test) {
-            ecs_entity_t clone = ecs_clone(rows->world, rows->entities[i], true);
+            ecs_entity_t e = rows->entities[i];
+            ecs_entity_t clone = ecs_copy(rows->world, 0, e, true);
             test_assert( ecs_has(rows->world, clone, Position));
 
-            Position *p_clone = ecs_get_ptr(rows->world, clone, Position);
+            const Position *p_clone = ecs_get_ptr(rows->world, clone, Position);
             test_int(p_clone->x, 10);
             test_int(p_clone->y, 20);
 
-            ecs_inherit(rows->world, clone, rows->entities[i]);
+            ecs_add_entity(rows->world, ECS_INSTANCEOF | clone, e);
         }
     }
 }
@@ -2511,12 +2363,12 @@ void Prefab_clone_after_inherit_in_on_add() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, CloneInOnAdd, EcsOnAdd, Position);
+    ECS_TRIGGER(world, CloneInOnAdd, EcsOnAdd, Position, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -2541,19 +2393,19 @@ void Prefab_override_from_nested() {
 
     ecs_entity_t e_1 = ecs_new(world, Sub);
     test_assert(e_1 != 0);
-    test_assert( ecs_has_owned(world, e_1, Position));
-    test_assert( ecs_has_owned(world, e_1, Velocity));
-    test_assert( ecs_has_owned(world, e_1, Position));
-    test_assert( ecs_has_owned(world, e_1, Velocity));
-    test_assert( ecs_has(world, e_1, SubPrefab));
-    test_assert( ecs_has(world, e_1, BasePrefab));
+    test_assert( ecs_has_owned(world, e_1, Position, true));
+    test_assert( ecs_has_owned(world, e_1, Velocity, true));
+    test_assert( ecs_has_owned(world, e_1, Position, true));
+    test_assert( ecs_has_owned(world, e_1, Velocity, true));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | SubPrefab));
+    test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | BasePrefab));
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -2572,7 +2424,7 @@ void OnAddEntity(ecs_rows_t *rows) {
     }
 }
 
-void Prefab_create_multiple_nested_w_on_add() {
+void Prefab_create_multiple_nested_w_on_set() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2584,16 +2436,18 @@ void Prefab_create_multiple_nested_w_on_add() {
         ecs_set(world, Prefab, Position, {1, 2});
 
         ECS_PREFAB(world, ChildPrefab, Velocity);
-        ECS_TYPE(world, Child, INSTANCEOF | ChildPrefab, ecs_entity_t);
-            ecs_set(world, Child, EcsPrefab, {.parent = Prefab});
-            ecs_set(world, ChildPrefab, Velocity, {3, 4});
 
-    ECS_SYSTEM(world, OnAddEntity, EcsOnAdd, ecs_entity_t);
-    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+        ECS_PREFAB(world, Child, CHILDOF | Prefab, Velocity, ecs_entity_t);
+            ecs_set(world, Child, Velocity, {3, 4});
+
+    ECS_TRIGGER(world, OnAddEntity, EcsOnSet, ecs_entity_t, NULL);
+    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity, NULL);
+
+    test_int(on_set_velocity_invoked, 0);
 
     /* Create two entities with separate calls */ 
-    ecs_entity_t e1 = ecs_new_instance(world, Prefab, 0);
-    ecs_entity_t e2 = ecs_new_instance(world, Prefab, 0);
+    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
 
     test_int(on_set_velocity_invoked, 2);
 
@@ -2607,26 +2461,26 @@ void Prefab_create_multiple_nested_w_on_add() {
     test_assert(child2 != 0);
     test_assert(child1 != child2);
 
-    ecs_entity_t *self1 = ecs_get_ptr(world, child1, ecs_entity_t);
+    const ecs_entity_t *self1 = ecs_get_ptr(world, child1, ecs_entity_t);
     test_assert(self1 != NULL);
     test_assert(*self1 == child1);
 
-    ecs_entity_t *self2 = ecs_get_ptr(world, child2, ecs_entity_t);
+    const ecs_entity_t *self2 = ecs_get_ptr(world, child2, ecs_entity_t);
     test_assert(self2 != NULL);
     test_assert(self1 != self2);
     test_assert(*self2 == child2);
 
     test_assert( ecs_has(world, child1, Velocity));
     test_assert( ecs_has(world, child2, Velocity));
-    test_assert( ecs_has_owned(world, child1, Velocity));
-    test_assert( ecs_has_owned(world, child2, Velocity));
+    test_assert( ecs_has_owned(world, child1, Velocity, true));
+    test_assert( ecs_has_owned(world, child2, Velocity, true));
 
-    Velocity *v1 = ecs_get_ptr(world, child1, Velocity);
+    const Velocity *v1 = ecs_get_ptr(world, child1, Velocity);
     test_assert(v1 != NULL);
     test_int(v1->x, 4);
     test_int(v1->y, 5);
 
-    Velocity *v2 = ecs_get_ptr(world, child2, Velocity);
+    const Velocity *v2 = ecs_get_ptr(world, child2, Velocity);
     test_assert(v2 != NULL);
     test_assert(v1 != v2);
     test_int(v2->x, 4);
@@ -2641,11 +2495,11 @@ static
 void CreateInstances(ecs_rows_t *rows) {
     ECS_COLUMN_ENTITY(rows, Prefab, 1);
 
-    new_instance_1 = ecs_new_instance(rows->world, Prefab, 0);
-    new_instance_2 = ecs_new_instance(rows->world, Prefab, 0);
+    new_instance_1 = ecs_new_w_entity(rows->world, ECS_INSTANCEOF | Prefab);
+    new_instance_2 = ecs_new_w_entity(rows->world, ECS_INSTANCEOF | Prefab);
 }
 
-void Prefab_create_multiple_nested_w_on_add_in_progress() {
+void Prefab_create_multiple_nested_w_on_set_in_progress() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2657,13 +2511,13 @@ void Prefab_create_multiple_nested_w_on_add_in_progress() {
         ecs_set(world, Prefab, Position, {1, 2});
 
         ECS_PREFAB(world, ChildPrefab, Velocity);
-        ECS_TYPE(world, Child, INSTANCEOF | ChildPrefab, ecs_entity_t);
-            ecs_set(world, Child, EcsPrefab, {.parent = Prefab});
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
+            
+        ECS_PREFAB(world, Child, CHILDOF | Prefab, INSTANCEOF | ChildPrefab, ecs_entity_t);
 
     ECS_SYSTEM(world, CreateInstances, EcsOnUpdate, .Prefab);
-    ECS_SYSTEM(world, OnAddEntity, EcsOnAdd, ecs_entity_t);
-    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+    ECS_TRIGGER(world, OnAddEntity, EcsOnSet, ecs_entity_t, NULL);
+    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity, NULL);
 
     ecs_progress(world, 1);
 
@@ -2682,30 +2536,74 @@ void Prefab_create_multiple_nested_w_on_add_in_progress() {
     test_assert(child2 != 0);
     test_assert(child1 != child2);
 
-    ecs_entity_t *self1 = ecs_get_ptr(world, child1, ecs_entity_t);
+    const ecs_entity_t *self1 = ecs_get_ptr(world, child1, ecs_entity_t);
     test_assert(self1 != NULL);
     test_assert(*self1 == child1);
 
-    ecs_entity_t *self2 = ecs_get_ptr(world, child2, ecs_entity_t);
+    const ecs_entity_t *self2 = ecs_get_ptr(world, child2, ecs_entity_t);
     test_assert(self2 != NULL);
     test_assert(self1 != self2);
     test_assert(*self2 == child2);
 
     test_assert( ecs_has(world, child1, Velocity));
     test_assert( ecs_has(world, child2, Velocity));
-    test_assert( ecs_has_owned(world, child1, Velocity));
-    test_assert( ecs_has_owned(world, child2, Velocity));
+    test_assert( ecs_has_owned(world, child1, Velocity, true));
+    test_assert( ecs_has_owned(world, child2, Velocity, true));
 
-    Velocity *v1 = ecs_get_ptr(world, child1, Velocity);
+    const Velocity *v1 = ecs_get_ptr(world, child1, Velocity);
     test_assert(v1 != NULL);
     test_int(v1->x, 4);
     test_int(v1->y, 5);
 
-    Velocity *v2 = ecs_get_ptr(world, child2, Velocity);
+    const Velocity *v2 = ecs_get_ptr(world, child2, Velocity);
     test_assert(v2 != NULL);
     test_assert(v1 != v2);
     test_int(v2->x, 4);
     test_int(v2->y, 5);
+
+    ecs_fini(world);
+}
+
+void Prefab_single_on_set_on_child_w_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, ecs_entity_t);
+
+    ECS_PREFAB(world, Prefab, Position);
+        ecs_set(world, Prefab, Position, {1, 2});
+
+        ECS_PREFAB(world, ChildPrefab, Velocity);
+            ecs_set(world, ChildPrefab, Velocity, {3, 4});
+
+        ECS_PREFAB(world, Child, CHILDOF | Prefab, INSTANCEOF | ChildPrefab, Velocity);
+
+    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity, NULL);
+
+    test_int(on_set_velocity_invoked, 0);
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
+
+    /* Make sure OnSet is invoked only once, even though Child overrides a
+     * component from a ChildPrefab. Velocity is already overridden for Child,
+     * and while it would technically not be incorrect to issue an OnSet for the
+     * override, we don't want to spam the application with redundant triggers. */
+    test_int(on_set_velocity_invoked, 1);
+
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_entity_t child = ecs_lookup_child(world, e, "Child");
+    test_assert(child != 0);
+
+    test_assert( ecs_has(world, child, Velocity));
+    test_assert( ecs_has_owned(world, child, Velocity, true));
+
+    const Velocity *v = ecs_get_ptr(world, child, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 4);
+    test_int(v->y, 5);
 
     ecs_fini(world);
 }

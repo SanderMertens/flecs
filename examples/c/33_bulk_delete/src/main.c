@@ -21,10 +21,10 @@ int main(int argc, char *argv[]) {
     ECS_TYPE(world, Movable, Position, Velocity);
 
     /* Create 3 entities with Position */
-    ecs_new_w_count(world, Position, 3);
+    ecs_bulk_new(world, Position, 3);
 
     /* Create 3 entities with Position, Velocity */
-    ecs_new_w_count(world, Movable, 3);
+    ecs_bulk_new(world, Movable, 3);
 
     /* There will be 6 entities with Position, 3 with Velocity */
     printf("There are %d entities with Position\n", ecs_count(world, Position));
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
     printf("\n -- Bulk delete all entities with Velocity -- \n\n");
 
-    ecs_delete_w_filter(world, &(ecs_filter_t){
+    ecs_bulk_delete(world, &(ecs_filter_t){
         .include = ecs_type(Velocity)
     });
 

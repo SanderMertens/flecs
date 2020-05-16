@@ -8,7 +8,7 @@ void ${id pascalcase}Import(
 
     /*
      * ECS_COMPONENT(world, MyComponent);
-     * ECS_TAG(world, MyTag);
+     * ECS_ENTITY(world, MyTag, 0);
      * 
      * ECS_EXPORT_COMPONENT(MyComponent);
      * ECS_EXPORT_ENTITY(MyTag);

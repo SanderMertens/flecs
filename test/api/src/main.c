@@ -34,42 +34,7 @@ void New_w_Count_tag(void);
 void New_w_Count_type_w_tag(void);
 void New_w_Count_type_w_2_tags(void);
 void New_w_Count_type_w_tag_mixed(void);
-
-// Testsuite 'Set_w_data'
-void Set_w_data_1_column_3_rows(void);
-void Set_w_data_2_columns_3_rows(void);
-void Set_w_data_1_column_3_rows_w_entities(void);
-void Set_w_data_2_columns_3_rows_w_entities(void);
-void Set_w_data_1_column_3_rows_overwrite_entities(void);
-void Set_w_data_2_columns_3_rows_overwrite_entities(void);
-void Set_w_data_overwrite_different_order(void);
-void Set_w_data_overwrite_different_type(void);
-void Set_w_data_2_columns_3_rows_no_data(void);
-void Set_w_data_2_columns_3_rows_1_tag(void);
-void Set_w_data_2_columns_3_rows_1_parent(void);
-void Set_w_data_2_columns_3_rows_1_base(void);
-void Set_w_data_2_columns_3_rows_1_base_w_entities(void);
-void Set_w_data_2_columns_3_rows_1_nested_prefab(void);
-void Set_w_data_2_columns_3_rows_component_order(void);
-void Set_w_data_overwrite_w_unset_column(void);
-void Set_w_data_overwrite_from_other_type_w_unset_column(void);
-void Set_w_data_staged_1_column_3_rows(void);
-void Set_w_data_staged_1_column_3_rows_w_entities(void);
-void Set_w_data_staged_1_column_3_rows_w_entities_w_base(void);
-void Set_w_data_staged_set_existing_in_stage(void);
-void Set_w_data_on_add(void);
-void Set_w_data_on_add_w_entities(void);
-void Set_w_data_on_add_w_entities_again(void);
-void Set_w_data_on_set(void);
-void Set_w_data_on_set_w_entities(void);
-void Set_w_data_on_set_no_data_after_on_add(void);
-void Set_w_data_on_remove_existing(void);
-void Set_w_data_on_add_different_origin(void);
-void Set_w_data_on_add_different_overlapping_origin(void);
-void Set_w_data_on_add_different_overlapping_origin_reorder(void);
-void Set_w_data_on_set_different_origin(void);
-void Set_w_data_on_remove_different_origin(void);
-void Set_w_data_existing_different_type_out_of_order(void);
+void New_w_Count_new_w_on_add_on_set_monitor(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -100,7 +65,6 @@ void Add_type_w_tag_mixed(void);
 void Add_add_remove(void);
 void Add_add_remove_same(void);
 void Add_add_2_remove(void);
-void Add_on_add_after_new_type_in_progress(void);
 void Add_add_entity(void);
 void Add_remove_entity(void);
 
@@ -150,20 +114,9 @@ void Has_2_of_2(void);
 void Has_3_of_2(void);
 void Has_2_of_1(void);
 void Has_1_of_empty(void);
-void Has_any_of_1_of_1(void);
-void Has_any_of_1_of_2(void);
-void Has_any_of_2_of_3(void);
-void Has_any_of_3_of_2(void);
-void Has_any_of_2_of_1(void);
-void Has_any_of_1_of_0(void);
-void Has_any_2_of_2_disjunct(void);
-void Has_any_of_0_0(void);
-void Has_any_of_0_1(void);
-void Has_any_of_0_zero_entity(void);
 void Has_has_in_progress(void);
 void Has_has_of_zero(void);
 void Has_has_owned(void);
-void Has_has_owned_any(void);
 void Has_has_entity(void);
 void Has_has_entity_0(void);
 void Has_has_entity_0_component(void);
@@ -228,13 +181,15 @@ void Set_set_remove_other(void);
 void Set_set_remove_twice(void);
 void Set_set_and_new(void);
 void Set_set_null(void);
+void Set_get_mutable_new(void);
+void Set_get_mutable_existing(void);
+void Set_modified_w_on_set(void);
 
 // Testsuite 'Lookup'
 void Lookup_lookup(void);
 void Lookup_lookup_component(void);
 void Lookup_lookup_not_found(void);
 void Lookup_lookup_child(void);
-void Lookup_lookup_child_w_component(void);
 void Lookup_lookup_in_progress(void);
 void Lookup_lookup_child_in_progress(void);
 void Lookup_lookup_w_null_id(void);
@@ -311,7 +266,6 @@ void SystemMisc_status_deactivate_after_delete(void);
 void SystemMisc_dont_enable_after_rematch(void);
 void SystemMisc_ensure_single_merge(void);
 void SystemMisc_table_count(void);
-void SystemMisc_active_system_count(void);
 void SystemMisc_match_system(void);
 void SystemMisc_match_system_w_filter(void);
 
@@ -319,56 +273,32 @@ void SystemMisc_match_system_w_filter(void);
 void SystemOnAdd_new_match_1_of_1(void);
 void SystemOnAdd_new_match_1_of_2(void);
 void SystemOnAdd_new_no_match_1(void);
-void SystemOnAdd_new_no_match_2_of_1(void);
-void SystemOnAdd_new_no_match_2_of_3(void);
 void SystemOnAdd_new_w_count_match_1_of_1(void);
 void SystemOnAdd_add_match_1_of_1(void);
 void SystemOnAdd_add_match_1_of_2(void);
-void SystemOnAdd_add_match_2_of_2(void);
-void SystemOnAdd_add_match_2_of_3(void);
 void SystemOnAdd_add_no_match_1(void);
-void SystemOnAdd_add_no_match_2_of_1(void);
-void SystemOnAdd_add_no_match_2_of_3(void);
 void SystemOnAdd_set_match_1_of_1(void);
 void SystemOnAdd_set_no_match_1(void);
 void SystemOnAdd_clone_match_1_of_1(void);
 void SystemOnAdd_clone_match_1_of_2(void);
-void SystemOnAdd_clone_match_2_of_2(void);
-void SystemOnAdd_clone_match_2_of_3(void);
 void SystemOnAdd_add_again_1(void);
 void SystemOnAdd_set_again_1(void);
 void SystemOnAdd_add_again_2(void);
 void SystemOnAdd_override_after_add_in_on_add(void);
-void SystemOnAdd_set_after_add_in_on_add(void);
 void SystemOnAdd_add_again_in_progress(void);
 void SystemOnAdd_add_in_progress_before_system_def(void);
-void SystemOnAdd_disabled_system(void);
 void SystemOnAdd_2_systems_w_table_creation(void);
 void SystemOnAdd_2_systems_w_table_creation_in_progress(void);
 void SystemOnAdd_sys_context(void);
 void SystemOnAdd_get_sys_context_from_param(void);
-void SystemOnAdd_container_column(void);
-void SystemOnAdd_owned_only(void);
-void SystemOnAdd_shared_only(void);
-void SystemOnAdd_add_with_owned(void);
-void SystemOnAdd_add_with_shared(void);
 
 // Testsuite 'SystemOnRemove'
 void SystemOnRemove_remove_match_1_of_1(void);
 void SystemOnRemove_remove_match_1_of_2(void);
-void SystemOnRemove_remove_match_2_of_2(void);
-void SystemOnRemove_remove_match_2_of_3(void);
 void SystemOnRemove_remove_no_match_1(void);
-void SystemOnRemove_remove_no_match_2_of_1(void);
-void SystemOnRemove_remove_no_match_2_of_3(void);
 void SystemOnRemove_delete_match_1_of_1(void);
 void SystemOnRemove_delete_match_1_of_2(void);
-void SystemOnRemove_delete_match_2_of_2(void);
-void SystemOnRemove_delete_match_2_of_3(void);
 void SystemOnRemove_delete_no_match_1(void);
-void SystemOnRemove_delete_no_match_2_of_1(void);
-void SystemOnRemove_delete_no_match_2_of_3(void);
-void SystemOnRemove_disabled_system(void);
 void SystemOnRemove_remove_watched(void);
 void SystemOnRemove_delete_watched(void);
 
@@ -378,17 +308,11 @@ void SystemOnSet_set_new(void);
 void SystemOnSet_set_again(void);
 void SystemOnSet_clone(void);
 void SystemOnSet_clone_w_value(void);
-void SystemOnSet_set_w_optional(void);
 void SystemOnSet_set_and_add_system(void);
-void SystemOnSet_on_set_after_on_add(void);
-void SystemOnSet_on_set_after_on_add_w_new(void);
-void SystemOnSet_on_set_after_on_add_w_new_w_count(void);
-void SystemOnSet_on_set_after_on_add_1_of_2_matched(void);
 void SystemOnSet_on_set_after_override(void);
 void SystemOnSet_on_set_after_override_w_new(void);
 void SystemOnSet_on_set_after_override_w_new_w_count(void);
 void SystemOnSet_on_set_after_override_1_of_2_overridden(void);
-void SystemOnSet_disabled_system(void);
 
 // Testsuite 'SystemOnFrame'
 void SystemOnFrame_1_type_1_component(void);
@@ -439,6 +363,18 @@ void SystemOnFrame_use_field_w_0_size(void);
 void SystemOnFrame_owned_only(void);
 void SystemOnFrame_shared_only(void);
 void SystemOnFrame_is_in_readonly(void);
+void SystemOnFrame_get_period(void);
+
+// Testsuite 'Timer'
+void Timer_timeout(void);
+void Timer_interval(void);
+void Timer_shared_timeout(void);
+void Timer_shared_interval(void);
+void Timer_start_stop_one_shot(void);
+void Timer_start_stop_interval(void);
+void Timer_rate_filter(void);
+void Timer_rate_filter_w_rate_filter_src(void);
+void Timer_rate_filter_w_timer_src(void);
 
 // Testsuite 'SystemOnDemand'
 void SystemOnDemand_enable_out_after_in(void);
@@ -477,7 +413,6 @@ void SystemCascade_adopt_after_match(void);
 
 // Testsuite 'SystemManual'
 void SystemManual_1_type_1_component(void);
-void SystemManual_disabled(void);
 void SystemManual_activate_status(void);
 void SystemManual_no_automerge(void);
 
@@ -485,39 +420,7 @@ void SystemManual_no_automerge(void);
 void Tasks_no_components(void);
 void Tasks_one_tag(void);
 void Tasks_from_system(void);
-void Tasks_on_remove_no_components(void);
-void Tasks_on_remove_one_tag(void);
-void Tasks_on_remove_from_system(void);
 void Tasks_tasks_in_phases(void);
-
-// Testsuite 'Container'
-void Container_child(void);
-void Container_child_w_component(void);
-void Container_child_w_type(void);
-void Container_child_w_type_w_childof(void);
-void Container_child_w_count_component(void);
-void Container_child_w_count_w_type(void);
-void Container_child_w_count_type_w_childof(void);
-void Container_contains_w_empty_parent(void);
-void Container_contains_w_child_as_parent(void);
-void Container_contains_w_0_as_child(void);
-void Container_contains_w_0_as_parent(void);
-void Container_contains_w_0_for_both(void);
-void Container_adopt(void);
-void Container_adopt_again(void);
-void Container_adopt_twice(void);
-void Container_orphan_empty(void);
-void Container_orphan(void);
-void Container_orphan_again(void);
-void Container_orphan_twice(void);
-void Container_adopt_orphan(void);
-void Container_adopt_2_orphan_1(void);
-void Container_get_ptr_container(void);
-void Container_get_parent(void);
-void Container_get_parent_no_matching_comp(void);
-void Container_get_parent_two_parents(void);
-void Container_get_parent_no_parent(void);
-void Container_singleton_as_container(void);
 
 // Testsuite 'Prefab'
 void Prefab_new_w_prefab(void);
@@ -575,14 +478,11 @@ void Prefab_rematch_twice(void);
 void Prefab_inherit_in_system(void);
 void Prefab_add_to_empty_base_in_system(void);
 void Prefab_dont_inherit_disabled(void);
-void Prefab_cyclic_inheritance(void);
-void Prefab_cyclic_inheritance_w_clone_in_progress(void);
-void Prefab_cyclic_inheritance_get_unavailable(void);
-void Prefab_cyclic_inheritance_has_unavailable(void);
 void Prefab_clone_after_inherit_in_on_add(void);
 void Prefab_override_from_nested(void);
-void Prefab_create_multiple_nested_w_on_add(void);
-void Prefab_create_multiple_nested_w_on_add_in_progress(void);
+void Prefab_create_multiple_nested_w_on_set(void);
+void Prefab_create_multiple_nested_w_on_set_in_progress(void);
+void Prefab_single_on_set_on_child_w_override(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_1_column_from_container(void);
@@ -614,9 +514,6 @@ void System_w_FromId_column_type(void);
 // Testsuite 'System_w_FromSystem'
 void System_w_FromSystem_2_column_1_from_system(void);
 void System_w_FromSystem_3_column_2_from_system(void);
-void System_w_FromSystem_2_column_1_from_system_on_add(void);
-void System_w_FromSystem_2_column_1_from_system_on_remove(void);
-void System_w_FromSystem_2_column_1_from_system_on_set(void);
 void System_w_FromSystem_auto_add_tag(void);
 
 // Testsuite 'System_w_FromEntity'
@@ -636,7 +533,6 @@ void World_entity_range_add_in_range_in_progress(void);
 void World_entity_range_add_out_of_range_in_progress(void);
 void World_entity_range_out_of_range_check_disabled(void);
 void World_dim(void);
-void World_dim_type(void);
 void World_dim_dim_type(void);
 void World_phases(void);
 void World_phases_w_merging(void);
@@ -837,6 +733,11 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse(void);
 void SingleThreadStaging_merge_after_tasks(void);
 void SingleThreadStaging_override_after_remove_in_progress(void);
 void SingleThreadStaging_get_parent_in_progress(void);
+void SingleThreadStaging_merge_once(void);
+void SingleThreadStaging_get_mutable(void);
+void SingleThreadStaging_get_mutable_from_main(void);
+void SingleThreadStaging_get_mutable_w_add(void);
+void SingleThreadStaging_on_add_after_new_type_in_progress(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_2_threads_add_to_current(void);
@@ -844,10 +745,20 @@ void MultiThreadStaging_3_threads_add_to_current(void);
 void MultiThreadStaging_4_threads_add_to_current(void);
 void MultiThreadStaging_5_threads_add_to_current(void);
 void MultiThreadStaging_6_threads_add_to_current(void);
-void MultiThreadStaging_stress_create_delete_entity_random_components(void);
-void MultiThreadStaging_stress_set_entity_random_components(void);
 void MultiThreadStaging_2_threads_on_add(void);
 void MultiThreadStaging_new_w_count(void);
+
+// Testsuite 'Stresstests'
+void Stresstests_create_delete_entity_random_components(void);
+void Stresstests_set_entity_random_components(void);
+void Stresstests_create_delete_entity_random_components_staged(void);
+void Stresstests_set_entity_random_components_staged(void);
+void Stresstests_create_delete_entity_random_components_2_threads(void);
+void Stresstests_set_entity_random_components_2_threads(void);
+void Stresstests_create_delete_entity_random_components_6_threads(void);
+void Stresstests_set_entity_random_components_6_threads(void);
+void Stresstests_create_delete_entity_random_components_12_threads(void);
+void Stresstests_set_entity_random_components_12_threads(void);
 
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
@@ -886,9 +797,6 @@ void ReaderWriter_deserialize_twice(void);
 void ReaderWriter_entity_conflict(void);
 void ReaderWriter_snapshot_reader_simple(void);
 void ReaderWriter_snapshot_reader_id(void);
-void ReaderWriter_component_id_conflict_w_component(void);
-void ReaderWriter_component_id_conflict_w_entity(void);
-void ReaderWriter_component_size_conflict(void);
 void ReaderWriter_read_zero_size(void);
 void ReaderWriter_write_zero_size(void);
 void ReaderWriter_invalid_header(void);
@@ -905,8 +813,6 @@ void FilterIter_iter_snapshot_filtered_table(void);
 // Testsuite 'Modules'
 void Modules_simple_module(void);
 void Modules_import_module_from_system(void);
-void Modules_import_from_on_add_system(void);
-void Modules_import_from_on_set_system(void);
 void Modules_import_again(void);
 
 // Testsuite 'Internals'
@@ -988,7 +894,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "New_w_Count",
-        .testcase_count = 11,
+        .testcase_count = 12,
         .testcases = (bake_test_case[]){
             {
                 .id = "empty",
@@ -1033,154 +939,16 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_w_tag_mixed",
                 .function = New_w_Count_type_w_tag_mixed
-            }
-        }
-    },
-    {
-        .id = "Set_w_data",
-        .testcase_count = 34,
-        .testcases = (bake_test_case[]){
-            {
-                .id = "1_column_3_rows",
-                .function = Set_w_data_1_column_3_rows
             },
             {
-                .id = "2_columns_3_rows",
-                .function = Set_w_data_2_columns_3_rows
-            },
-            {
-                .id = "1_column_3_rows_w_entities",
-                .function = Set_w_data_1_column_3_rows_w_entities
-            },
-            {
-                .id = "2_columns_3_rows_w_entities",
-                .function = Set_w_data_2_columns_3_rows_w_entities
-            },
-            {
-                .id = "1_column_3_rows_overwrite_entities",
-                .function = Set_w_data_1_column_3_rows_overwrite_entities
-            },
-            {
-                .id = "2_columns_3_rows_overwrite_entities",
-                .function = Set_w_data_2_columns_3_rows_overwrite_entities
-            },
-            {
-                .id = "overwrite_different_order",
-                .function = Set_w_data_overwrite_different_order
-            },
-            {
-                .id = "overwrite_different_type",
-                .function = Set_w_data_overwrite_different_type
-            },
-            {
-                .id = "2_columns_3_rows_no_data",
-                .function = Set_w_data_2_columns_3_rows_no_data
-            },
-            {
-                .id = "2_columns_3_rows_1_tag",
-                .function = Set_w_data_2_columns_3_rows_1_tag
-            },
-            {
-                .id = "2_columns_3_rows_1_parent",
-                .function = Set_w_data_2_columns_3_rows_1_parent
-            },
-            {
-                .id = "2_columns_3_rows_1_base",
-                .function = Set_w_data_2_columns_3_rows_1_base
-            },
-            {
-                .id = "2_columns_3_rows_1_base_w_entities",
-                .function = Set_w_data_2_columns_3_rows_1_base_w_entities
-            },
-            {
-                .id = "2_columns_3_rows_1_nested_prefab",
-                .function = Set_w_data_2_columns_3_rows_1_nested_prefab
-            },
-            {
-                .id = "2_columns_3_rows_component_order",
-                .function = Set_w_data_2_columns_3_rows_component_order
-            },
-            {
-                .id = "overwrite_w_unset_column",
-                .function = Set_w_data_overwrite_w_unset_column
-            },
-            {
-                .id = "overwrite_from_other_type_w_unset_column",
-                .function = Set_w_data_overwrite_from_other_type_w_unset_column
-            },
-            {
-                .id = "staged_1_column_3_rows",
-                .function = Set_w_data_staged_1_column_3_rows
-            },
-            {
-                .id = "staged_1_column_3_rows_w_entities",
-                .function = Set_w_data_staged_1_column_3_rows_w_entities
-            },
-            {
-                .id = "staged_1_column_3_rows_w_entities_w_base",
-                .function = Set_w_data_staged_1_column_3_rows_w_entities_w_base
-            },
-            {
-                .id = "staged_set_existing_in_stage",
-                .function = Set_w_data_staged_set_existing_in_stage
-            },
-            {
-                .id = "on_add",
-                .function = Set_w_data_on_add
-            },
-            {
-                .id = "on_add_w_entities",
-                .function = Set_w_data_on_add_w_entities
-            },
-            {
-                .id = "on_add_w_entities_again",
-                .function = Set_w_data_on_add_w_entities_again
-            },
-            {
-                .id = "on_set",
-                .function = Set_w_data_on_set
-            },
-            {
-                .id = "on_set_w_entities",
-                .function = Set_w_data_on_set_w_entities
-            },
-            {
-                .id = "on_set_no_data_after_on_add",
-                .function = Set_w_data_on_set_no_data_after_on_add
-            },
-            {
-                .id = "on_remove_existing",
-                .function = Set_w_data_on_remove_existing
-            },
-            {
-                .id = "on_add_different_origin",
-                .function = Set_w_data_on_add_different_origin
-            },
-            {
-                .id = "on_add_different_overlapping_origin",
-                .function = Set_w_data_on_add_different_overlapping_origin
-            },
-            {
-                .id = "on_add_different_overlapping_origin_reorder",
-                .function = Set_w_data_on_add_different_overlapping_origin_reorder
-            },
-            {
-                .id = "on_set_different_origin",
-                .function = Set_w_data_on_set_different_origin
-            },
-            {
-                .id = "on_remove_different_origin",
-                .function = Set_w_data_on_remove_different_origin
-            },
-            {
-                .id = "existing_different_type_out_of_order",
-                .function = Set_w_data_existing_different_type_out_of_order
+                .id = "new_w_on_add_on_set_monitor",
+                .function = New_w_Count_new_w_on_add_on_set_monitor
             }
         }
     },
     {
         .id = "Add",
-        .testcase_count = 31,
+        .testcase_count = 30,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -1293,10 +1061,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_2_remove",
                 .function = Add_add_2_remove
-            },
-            {
-                .id = "on_add_after_new_type_in_progress",
-                .function = Add_on_add_after_new_type_in_progress
             },
             {
                 .id = "add_entity",
@@ -1446,7 +1210,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Has",
-        .testcase_count = 30,
+        .testcase_count = 19,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -1489,46 +1253,6 @@ static bake_test_suite suites[] = {
                 .function = Has_1_of_empty
             },
             {
-                .id = "any_of_1_of_1",
-                .function = Has_any_of_1_of_1
-            },
-            {
-                .id = "any_of_1_of_2",
-                .function = Has_any_of_1_of_2
-            },
-            {
-                .id = "any_of_2_of_3",
-                .function = Has_any_of_2_of_3
-            },
-            {
-                .id = "any_of_3_of_2",
-                .function = Has_any_of_3_of_2
-            },
-            {
-                .id = "any_of_2_of_1",
-                .function = Has_any_of_2_of_1
-            },
-            {
-                .id = "any_of_1_of_0",
-                .function = Has_any_of_1_of_0
-            },
-            {
-                .id = "any_2_of_2_disjunct",
-                .function = Has_any_2_of_2_disjunct
-            },
-            {
-                .id = "any_of_0_0",
-                .function = Has_any_of_0_0
-            },
-            {
-                .id = "any_of_0_1",
-                .function = Has_any_of_0_1
-            },
-            {
-                .id = "any_of_0_zero_entity",
-                .function = Has_any_of_0_zero_entity
-            },
-            {
                 .id = "has_in_progress",
                 .function = Has_has_in_progress
             },
@@ -1539,10 +1263,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "has_owned",
                 .function = Has_has_owned
-            },
-            {
-                .id = "has_owned_any",
-                .function = Has_has_owned_any
             },
             {
                 .id = "has_entity",
@@ -1736,7 +1456,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Set",
-        .testcase_count = 13,
+        .testcase_count = 16,
         .testcases = (bake_test_case[]){
             {
                 .id = "set_empty",
@@ -1789,12 +1509,24 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_null",
                 .function = Set_set_null
+            },
+            {
+                .id = "get_mutable_new",
+                .function = Set_get_mutable_new
+            },
+            {
+                .id = "get_mutable_existing",
+                .function = Set_get_mutable_existing
+            },
+            {
+                .id = "modified_w_on_set",
+                .function = Set_modified_w_on_set
             }
         }
     },
     {
         .id = "Lookup",
-        .testcase_count = 11,
+        .testcase_count = 10,
         .testcases = (bake_test_case[]){
             {
                 .id = "lookup",
@@ -1811,10 +1543,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "lookup_child",
                 .function = Lookup_lookup_child
-            },
-            {
-                .id = "lookup_child_w_component",
-                .function = Lookup_lookup_child_w_component
             },
             {
                 .id = "lookup_in_progress",
@@ -1940,7 +1668,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 46,
+        .testcase_count = 45,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -2115,10 +1843,6 @@ static bake_test_suite suites[] = {
                 .function = SystemMisc_table_count
             },
             {
-                .id = "active_system_count",
-                .function = SystemMisc_active_system_count
-            },
-            {
                 .id = "match_system",
                 .function = SystemMisc_match_system
             },
@@ -2130,7 +1854,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnAdd",
-        .testcase_count = 36,
+        .testcase_count = 21,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -2145,14 +1869,6 @@ static bake_test_suite suites[] = {
                 .function = SystemOnAdd_new_no_match_1
             },
             {
-                .id = "new_no_match_2_of_1",
-                .function = SystemOnAdd_new_no_match_2_of_1
-            },
-            {
-                .id = "new_no_match_2_of_3",
-                .function = SystemOnAdd_new_no_match_2_of_3
-            },
-            {
                 .id = "new_w_count_match_1_of_1",
                 .function = SystemOnAdd_new_w_count_match_1_of_1
             },
@@ -2165,24 +1881,8 @@ static bake_test_suite suites[] = {
                 .function = SystemOnAdd_add_match_1_of_2
             },
             {
-                .id = "add_match_2_of_2",
-                .function = SystemOnAdd_add_match_2_of_2
-            },
-            {
-                .id = "add_match_2_of_3",
-                .function = SystemOnAdd_add_match_2_of_3
-            },
-            {
                 .id = "add_no_match_1",
                 .function = SystemOnAdd_add_no_match_1
-            },
-            {
-                .id = "add_no_match_2_of_1",
-                .function = SystemOnAdd_add_no_match_2_of_1
-            },
-            {
-                .id = "add_no_match_2_of_3",
-                .function = SystemOnAdd_add_no_match_2_of_3
             },
             {
                 .id = "set_match_1_of_1",
@@ -2201,14 +1901,6 @@ static bake_test_suite suites[] = {
                 .function = SystemOnAdd_clone_match_1_of_2
             },
             {
-                .id = "clone_match_2_of_2",
-                .function = SystemOnAdd_clone_match_2_of_2
-            },
-            {
-                .id = "clone_match_2_of_3",
-                .function = SystemOnAdd_clone_match_2_of_3
-            },
-            {
                 .id = "add_again_1",
                 .function = SystemOnAdd_add_again_1
             },
@@ -2225,20 +1917,12 @@ static bake_test_suite suites[] = {
                 .function = SystemOnAdd_override_after_add_in_on_add
             },
             {
-                .id = "set_after_add_in_on_add",
-                .function = SystemOnAdd_set_after_add_in_on_add
-            },
-            {
                 .id = "add_again_in_progress",
                 .function = SystemOnAdd_add_again_in_progress
             },
             {
                 .id = "add_in_progress_before_system_def",
                 .function = SystemOnAdd_add_in_progress_before_system_def
-            },
-            {
-                .id = "disabled_system",
-                .function = SystemOnAdd_disabled_system
             },
             {
                 .id = "2_systems_w_table_creation",
@@ -2255,32 +1939,12 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_sys_context_from_param",
                 .function = SystemOnAdd_get_sys_context_from_param
-            },
-            {
-                .id = "container_column",
-                .function = SystemOnAdd_container_column
-            },
-            {
-                .id = "owned_only",
-                .function = SystemOnAdd_owned_only
-            },
-            {
-                .id = "shared_only",
-                .function = SystemOnAdd_shared_only
-            },
-            {
-                .id = "add_with_owned",
-                .function = SystemOnAdd_add_with_owned
-            },
-            {
-                .id = "add_with_shared",
-                .function = SystemOnAdd_add_with_shared
             }
         }
     },
     {
         .id = "SystemOnRemove",
-        .testcase_count = 17,
+        .testcase_count = 8,
         .testcases = (bake_test_case[]){
             {
                 .id = "remove_match_1_of_1",
@@ -2291,24 +1955,8 @@ static bake_test_suite suites[] = {
                 .function = SystemOnRemove_remove_match_1_of_2
             },
             {
-                .id = "remove_match_2_of_2",
-                .function = SystemOnRemove_remove_match_2_of_2
-            },
-            {
-                .id = "remove_match_2_of_3",
-                .function = SystemOnRemove_remove_match_2_of_3
-            },
-            {
                 .id = "remove_no_match_1",
                 .function = SystemOnRemove_remove_no_match_1
-            },
-            {
-                .id = "remove_no_match_2_of_1",
-                .function = SystemOnRemove_remove_no_match_2_of_1
-            },
-            {
-                .id = "remove_no_match_2_of_3",
-                .function = SystemOnRemove_remove_no_match_2_of_3
             },
             {
                 .id = "delete_match_1_of_1",
@@ -2319,28 +1967,8 @@ static bake_test_suite suites[] = {
                 .function = SystemOnRemove_delete_match_1_of_2
             },
             {
-                .id = "delete_match_2_of_2",
-                .function = SystemOnRemove_delete_match_2_of_2
-            },
-            {
-                .id = "delete_match_2_of_3",
-                .function = SystemOnRemove_delete_match_2_of_3
-            },
-            {
                 .id = "delete_no_match_1",
                 .function = SystemOnRemove_delete_no_match_1
-            },
-            {
-                .id = "delete_no_match_2_of_1",
-                .function = SystemOnRemove_delete_no_match_2_of_1
-            },
-            {
-                .id = "delete_no_match_2_of_3",
-                .function = SystemOnRemove_delete_no_match_2_of_3
-            },
-            {
-                .id = "disabled_system",
-                .function = SystemOnRemove_disabled_system
             },
             {
                 .id = "remove_watched",
@@ -2354,7 +1982,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 16,
+        .testcase_count = 10,
         .testcases = (bake_test_case[]){
             {
                 .id = "set",
@@ -2377,28 +2005,8 @@ static bake_test_suite suites[] = {
                 .function = SystemOnSet_clone_w_value
             },
             {
-                .id = "set_w_optional",
-                .function = SystemOnSet_set_w_optional
-            },
-            {
                 .id = "set_and_add_system",
                 .function = SystemOnSet_set_and_add_system
-            },
-            {
-                .id = "on_set_after_on_add",
-                .function = SystemOnSet_on_set_after_on_add
-            },
-            {
-                .id = "on_set_after_on_add_w_new",
-                .function = SystemOnSet_on_set_after_on_add_w_new
-            },
-            {
-                .id = "on_set_after_on_add_w_new_w_count",
-                .function = SystemOnSet_on_set_after_on_add_w_new_w_count
-            },
-            {
-                .id = "on_set_after_on_add_1_of_2_matched",
-                .function = SystemOnSet_on_set_after_on_add_1_of_2_matched
             },
             {
                 .id = "on_set_after_override",
@@ -2415,16 +2023,12 @@ static bake_test_suite suites[] = {
             {
                 .id = "on_set_after_override_1_of_2_overridden",
                 .function = SystemOnSet_on_set_after_override_1_of_2_overridden
-            },
-            {
-                .id = "disabled_system",
-                .function = SystemOnSet_disabled_system
             }
         }
     },
     {
         .id = "SystemOnFrame",
-        .testcase_count = 48,
+        .testcase_count = 49,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -2617,6 +2221,52 @@ static bake_test_suite suites[] = {
             {
                 .id = "is_in_readonly",
                 .function = SystemOnFrame_is_in_readonly
+            },
+            {
+                .id = "get_period",
+                .function = SystemOnFrame_get_period
+            }
+        }
+    },
+    {
+        .id = "Timer",
+        .testcase_count = 9,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "timeout",
+                .function = Timer_timeout
+            },
+            {
+                .id = "interval",
+                .function = Timer_interval
+            },
+            {
+                .id = "shared_timeout",
+                .function = Timer_shared_timeout
+            },
+            {
+                .id = "shared_interval",
+                .function = Timer_shared_interval
+            },
+            {
+                .id = "start_stop_one_shot",
+                .function = Timer_start_stop_one_shot
+            },
+            {
+                .id = "start_stop_interval",
+                .function = Timer_start_stop_interval
+            },
+            {
+                .id = "rate_filter",
+                .function = Timer_rate_filter
+            },
+            {
+                .id = "rate_filter_w_rate_filter_src",
+                .function = Timer_rate_filter_w_rate_filter_src
+            },
+            {
+                .id = "rate_filter_w_timer_src",
+                .function = Timer_rate_filter_w_timer_src
             }
         }
     },
@@ -2758,15 +2408,11 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemManual",
-        .testcase_count = 4,
+        .testcase_count = 3,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
                 .function = SystemManual_1_type_1_component
-            },
-            {
-                .id = "disabled",
-                .function = SystemManual_disabled
             },
             {
                 .id = "activate_status",
@@ -2780,7 +2426,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Tasks",
-        .testcase_count = 7,
+        .testcase_count = 4,
         .testcases = (bake_test_case[]){
             {
                 .id = "no_components",
@@ -2795,140 +2441,14 @@ static bake_test_suite suites[] = {
                 .function = Tasks_from_system
             },
             {
-                .id = "on_remove_no_components",
-                .function = Tasks_on_remove_no_components
-            },
-            {
-                .id = "on_remove_one_tag",
-                .function = Tasks_on_remove_one_tag
-            },
-            {
-                .id = "on_remove_from_system",
-                .function = Tasks_on_remove_from_system
-            },
-            {
                 .id = "tasks_in_phases",
                 .function = Tasks_tasks_in_phases
             }
         }
     },
     {
-        .id = "Container",
-        .testcase_count = 27,
-        .testcases = (bake_test_case[]){
-            {
-                .id = "child",
-                .function = Container_child
-            },
-            {
-                .id = "child_w_component",
-                .function = Container_child_w_component
-            },
-            {
-                .id = "child_w_type",
-                .function = Container_child_w_type
-            },
-            {
-                .id = "child_w_type_w_childof",
-                .function = Container_child_w_type_w_childof
-            },
-            {
-                .id = "child_w_count_component",
-                .function = Container_child_w_count_component
-            },
-            {
-                .id = "child_w_count_w_type",
-                .function = Container_child_w_count_w_type
-            },
-            {
-                .id = "child_w_count_type_w_childof",
-                .function = Container_child_w_count_type_w_childof
-            },
-            {
-                .id = "contains_w_empty_parent",
-                .function = Container_contains_w_empty_parent
-            },
-            {
-                .id = "contains_w_child_as_parent",
-                .function = Container_contains_w_child_as_parent
-            },
-            {
-                .id = "contains_w_0_as_child",
-                .function = Container_contains_w_0_as_child
-            },
-            {
-                .id = "contains_w_0_as_parent",
-                .function = Container_contains_w_0_as_parent
-            },
-            {
-                .id = "contains_w_0_for_both",
-                .function = Container_contains_w_0_for_both
-            },
-            {
-                .id = "adopt",
-                .function = Container_adopt
-            },
-            {
-                .id = "adopt_again",
-                .function = Container_adopt_again
-            },
-            {
-                .id = "adopt_twice",
-                .function = Container_adopt_twice
-            },
-            {
-                .id = "orphan_empty",
-                .function = Container_orphan_empty
-            },
-            {
-                .id = "orphan",
-                .function = Container_orphan
-            },
-            {
-                .id = "orphan_again",
-                .function = Container_orphan_again
-            },
-            {
-                .id = "orphan_twice",
-                .function = Container_orphan_twice
-            },
-            {
-                .id = "adopt_orphan",
-                .function = Container_adopt_orphan
-            },
-            {
-                .id = "adopt_2_orphan_1",
-                .function = Container_adopt_2_orphan_1
-            },
-            {
-                .id = "get_ptr_container",
-                .function = Container_get_ptr_container
-            },
-            {
-                .id = "get_parent",
-                .function = Container_get_parent
-            },
-            {
-                .id = "get_parent_no_matching_comp",
-                .function = Container_get_parent_no_matching_comp
-            },
-            {
-                .id = "get_parent_two_parents",
-                .function = Container_get_parent_two_parents
-            },
-            {
-                .id = "get_parent_no_parent",
-                .function = Container_get_parent_no_parent
-            },
-            {
-                .id = "singleton_as_container",
-                .function = Container_singleton_as_container
-            }
-        }
-    },
-    {
         .id = "Prefab",
-        .testcase_count = 63,
+        .testcase_count = 60,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_w_prefab",
@@ -3151,22 +2671,6 @@ static bake_test_suite suites[] = {
                 .function = Prefab_dont_inherit_disabled
             },
             {
-                .id = "cyclic_inheritance",
-                .function = Prefab_cyclic_inheritance
-            },
-            {
-                .id = "cyclic_inheritance_w_clone_in_progress",
-                .function = Prefab_cyclic_inheritance_w_clone_in_progress
-            },
-            {
-                .id = "cyclic_inheritance_get_unavailable",
-                .function = Prefab_cyclic_inheritance_get_unavailable
-            },
-            {
-                .id = "cyclic_inheritance_has_unavailable",
-                .function = Prefab_cyclic_inheritance_has_unavailable
-            },
-            {
                 .id = "clone_after_inherit_in_on_add",
                 .function = Prefab_clone_after_inherit_in_on_add
             },
@@ -3175,12 +2679,16 @@ static bake_test_suite suites[] = {
                 .function = Prefab_override_from_nested
             },
             {
-                .id = "create_multiple_nested_w_on_add",
-                .function = Prefab_create_multiple_nested_w_on_add
+                .id = "create_multiple_nested_w_on_set",
+                .function = Prefab_create_multiple_nested_w_on_set
             },
             {
-                .id = "create_multiple_nested_w_on_add_in_progress",
-                .function = Prefab_create_multiple_nested_w_on_add_in_progress
+                .id = "create_multiple_nested_w_on_set_in_progress",
+                .function = Prefab_create_multiple_nested_w_on_set_in_progress
+            },
+            {
+                .id = "single_on_set_on_child_w_override",
+                .function = Prefab_single_on_set_on_child_w_override
             }
         }
     },
@@ -3290,7 +2798,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "System_w_FromSystem",
-        .testcase_count = 6,
+        .testcase_count = 3,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_column_1_from_system",
@@ -3299,18 +2807,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "3_column_2_from_system",
                 .function = System_w_FromSystem_3_column_2_from_system
-            },
-            {
-                .id = "2_column_1_from_system_on_add",
-                .function = System_w_FromSystem_2_column_1_from_system_on_add
-            },
-            {
-                .id = "2_column_1_from_system_on_remove",
-                .function = System_w_FromSystem_2_column_1_from_system_on_remove
-            },
-            {
-                .id = "2_column_1_from_system_on_set",
-                .function = System_w_FromSystem_2_column_1_from_system_on_set
             },
             {
                 .id = "auto_add_tag",
@@ -3338,7 +2834,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 33,
+        .testcase_count = 32,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -3383,10 +2879,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "dim",
                 .function = World_dim
-            },
-            {
-                .id = "dim_type",
-                .function = World_dim_type
             },
             {
                 .id = "dim_dim_type",
@@ -3918,7 +3410,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 65,
+        .testcase_count = 70,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -4179,12 +3671,32 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_parent_in_progress",
                 .function = SingleThreadStaging_get_parent_in_progress
+            },
+            {
+                .id = "merge_once",
+                .function = SingleThreadStaging_merge_once
+            },
+            {
+                .id = "get_mutable",
+                .function = SingleThreadStaging_get_mutable
+            },
+            {
+                .id = "get_mutable_from_main",
+                .function = SingleThreadStaging_get_mutable_from_main
+            },
+            {
+                .id = "get_mutable_w_add",
+                .function = SingleThreadStaging_get_mutable_w_add
+            },
+            {
+                .id = "on_add_after_new_type_in_progress",
+                .function = SingleThreadStaging_on_add_after_new_type_in_progress
             }
         }
     },
     {
         .id = "MultiThreadStaging",
-        .testcase_count = 9,
+        .testcase_count = 7,
         .testcases = (bake_test_case[]){
             {
                 .id = "2_threads_add_to_current",
@@ -4207,20 +3719,58 @@ static bake_test_suite suites[] = {
                 .function = MultiThreadStaging_6_threads_add_to_current
             },
             {
-                .id = "stress_create_delete_entity_random_components",
-                .function = MultiThreadStaging_stress_create_delete_entity_random_components
-            },
-            {
-                .id = "stress_set_entity_random_components",
-                .function = MultiThreadStaging_stress_set_entity_random_components
-            },
-            {
                 .id = "2_threads_on_add",
                 .function = MultiThreadStaging_2_threads_on_add
             },
             {
                 .id = "new_w_count",
                 .function = MultiThreadStaging_new_w_count
+            }
+        }
+    },
+    {
+        .id = "Stresstests",
+        .testcase_count = 10,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "create_delete_entity_random_components",
+                .function = Stresstests_create_delete_entity_random_components
+            },
+            {
+                .id = "set_entity_random_components",
+                .function = Stresstests_set_entity_random_components
+            },
+            {
+                .id = "create_delete_entity_random_components_staged",
+                .function = Stresstests_create_delete_entity_random_components_staged
+            },
+            {
+                .id = "set_entity_random_components_staged",
+                .function = Stresstests_set_entity_random_components_staged
+            },
+            {
+                .id = "create_delete_entity_random_components_2_threads",
+                .function = Stresstests_create_delete_entity_random_components_2_threads
+            },
+            {
+                .id = "set_entity_random_components_2_threads",
+                .function = Stresstests_set_entity_random_components_2_threads
+            },
+            {
+                .id = "create_delete_entity_random_components_6_threads",
+                .function = Stresstests_create_delete_entity_random_components_6_threads
+            },
+            {
+                .id = "set_entity_random_components_6_threads",
+                .function = Stresstests_set_entity_random_components_6_threads
+            },
+            {
+                .id = "create_delete_entity_random_components_12_threads",
+                .function = Stresstests_create_delete_entity_random_components_12_threads
+            },
+            {
+                .id = "set_entity_random_components_12_threads",
+                .function = Stresstests_set_entity_random_components_12_threads
             }
         }
     },
@@ -4300,7 +3850,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "ReaderWriter",
-        .testcase_count = 23,
+        .testcase_count = 20,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple",
@@ -4371,18 +3921,6 @@ static bake_test_suite suites[] = {
                 .function = ReaderWriter_snapshot_reader_id
             },
             {
-                .id = "component_id_conflict_w_component",
-                .function = ReaderWriter_component_id_conflict_w_component
-            },
-            {
-                .id = "component_id_conflict_w_entity",
-                .function = ReaderWriter_component_id_conflict_w_entity
-            },
-            {
-                .id = "component_size_conflict",
-                .function = ReaderWriter_component_size_conflict
-            },
-            {
                 .id = "read_zero_size",
                 .function = ReaderWriter_read_zero_size
             },
@@ -4432,7 +3970,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Modules",
-        .testcase_count = 5,
+        .testcase_count = 3,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_module",
@@ -4441,14 +3979,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "import_module_from_system",
                 .function = Modules_import_module_from_system
-            },
-            {
-                .id = "import_from_on_add_system",
-                .function = Modules_import_from_on_add_system
-            },
-            {
-                .id = "import_from_on_set_system",
-                .function = Modules_import_from_on_set_system
             },
             {
                 .id = "import_again",

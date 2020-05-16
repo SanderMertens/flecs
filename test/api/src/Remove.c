@@ -7,7 +7,7 @@ void Remove_zero() {
     test_assert(e != 0);
 
     ecs_remove(world, e, 0);
-    test_assert(ecs_is_empty(world, e));
+    test_assert(!ecs_get_type(world, e));
     
     ecs_fini(world);
 }

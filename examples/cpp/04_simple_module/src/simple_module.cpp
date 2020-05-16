@@ -12,16 +12,11 @@ SimpleModule::SimpleModule(flecs::world& world, int flags)
 
     /* Register system */
     this->move = flecs::system<Position, Velocity>(world, "Move")
-        .action([](const flecs::rows& rows, 
-            flecs::column<Position> p, 
-            flecs::column<Velocity> v) 
-        {    
-            for (auto row : rows) {
-                p[row].x += v[row].x;
-                p[row].y += v[row].y;
+        .each([](flecs::entity e, Position& p, Velocity& v) {    
+            p.x += v.x;
+            p.y += v.y;
 
-                std::cout << "Moved " << rows.entity(row).name() << "to {" <<
-                    p[row].x << ", " << p[row].y << "}" << std::endl;
-            }
+            std::cout << "Moved " << e.name() << " to {" <<
+                p.x << ", " << p.y << "}" << std::endl;
         });
 }

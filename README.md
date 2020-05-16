@@ -339,10 +339,10 @@ ecs_enable(world, LogPoints, false);
 [Learn more](Manual.md#systems)
 
 ### Identifier
-Entities in flecs may have an optional string-based identifier. An identifier can be added to an entity by setting the `EcsId` component, like this:
+Entities in flecs may have an optional string-based identifier. An identifier can be added to an entity by setting the `EcsName` component, like this:
 
 ```c
-ecs_set(world, e, EcsId, {"MyEntity"});
+ecs_set(world, e, EcsName, {"MyEntity"});
 ```
 
 After a string identifier is added, the entity can be looked up like this:
@@ -351,13 +351,13 @@ After a string identifier is added, the entity can be looked up like this:
 ecs_entity_t e = ecs_lookup(world, "MyEntity");
 ```
 
-Additionally, applications can define entities with the `ECS_ENTITY` macro, which automatically adds `EcsId` and initializes it with the provided name:
+Additionally, applications can define entities with the `ECS_ENTITY` macro, which automatically adds `EcsName` and initializes it with the provided name:
 
 ```c
 ECS_ENTITY(world, MyEntity, Point);
 ```
 
-Components, systems, tasks, types and prefabs automatically register the `EcsId` component when they are created, and can thus be looked up with `ecs_lookup`.
+Components, systems, tasks, types and prefabs automatically register the `EcsName` component when they are created, and can thus be looked up with `ecs_lookup`.
 
 ### Task
 A task is a system that has no interest expression. Tasks are run once every frame. Tasks are defined the same way as normal systems, but instead of an interest expression, you specify `0`:
@@ -407,41 +407,29 @@ ecs_enable(World, MyFeature, true);
 
 [Learn more](Manual.md#features)
 
-### Tag
-A tag is a component that does not contain any data. Internally it is represented as a component with data-size 0. Tags can be useful for subdividing entities into categories, without adding any data. A tag can be defined with the `ECS_TAG` macro:
-
-```c
-ECS_TAG(world, MyTag);
-```
-
-Tags can be added/removed like any other component:
-
-```c
-ecs_add(world, e, MyTag);
-```
-
-[Learn more](Manual.md#tags)
-
-### Container
-A container is an entity that can contain other entities. There are several methods to add a child entity to a container entity. The easiest way is with the `ecs_new_child` function:
+### Parents
+In flecs, the ability to add entities to entities is used to construct hierarchies. The following example demonstrates how to create a simple hierarchy:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
-ecs_entity_t child = ecs_new_child(world, parent, 0);
+ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
 ```
 
-Alternatively, you can add an entity to a container entity after its creation using `ecs_adopt`:
+The `ECS_CHILDOF` constant is a "type flag", which tells flecs what the role of an entity is. In this case, we use it to describe that the newly created entity is a child of the `parent` entity.
+
+
+Alternatively, you can add an entity to a container entity after its creation using `ecs_add_entity`:
 
 ```c
 ecs_entity_t parent = ecs_new(world, 0);
 ecs_entity_t child = ecs_new(world, 0);
-ecs_adopt(world, child, parent);
+ecs_add_entity(world, child, ECS_CHILDOF | parent);
 ```
 
-With the `ecs_contains` function you can check whether an entity contains another entity:
+We can use `ecs_has_entity` to check if an entity is a child of a parent:
 
 ```c
-if (ecs_contains(world, parent, child) {
+if (ecs_has_entity(world, child, ECS_CHILDOF | parent) {
     printf("entity %u is a child of %u\n", child, parent);
 }
 ```
@@ -449,7 +437,7 @@ if (ecs_contains(world, parent, child) {
 Systems can request components from containers. If a system requests component `EcsPosition2D` from a container, but an entity does not have a container, or the container does not have `EcsPosition2D`, the system will not match the entity. This system definition shows an example of how a system can access container components:
 
 ```c
-ECS_SYSTEM(world, MySystem, EcsOnUpdate, CONTAINER.Foo, Bar);
+ECS_SYSTEM(world, MySystem, EcsOnUpdate, PARENT.Foo, Bar);
 ```
 
 [Learn more](Manual.md#containers)

@@ -1,5 +1,5 @@
 flecs_src += files([
-    'chunked.c',
+    'sparse.c',
     'column_system.c',
     'dbg.c',
     'entity.c',

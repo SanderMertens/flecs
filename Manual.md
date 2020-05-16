@@ -64,7 +64,7 @@
        - [OWNED source](#owned-source)
        - [SHARED source](#shared-source)
        - [NOTHING source](#nothing-source)
-       - [CONTAINER source](#container-source)
+       - [PARENT source](#container-source)
        - [CASCADE source](#cascade-source)
        - [SYSTEM source](#system-source)
        - [SINGLETON source](#singleton-source)
@@ -254,16 +254,16 @@ ecs_fini(world);
 This also means that the application is fully responsible for ensuring that if a component contains pointers, these pointers are kept valid, and are cleaned up. In some cases this is straightforward, if the memory outlives a component as is often the case with entity identifiers:
 
 ```c
-ecs_set(world, e, EcsId, {"MyEntity"}); 
+ecs_set(world, e, EcsName, {"MyEntity"}); 
 ```
 
-This sets the `EcsId` component on an entity which is used by Flecs to assign names to entities. The `"MyEntity"` string is a literal and will certainly outlive the lifespan of the component, as it is tied to the lifecycle of the process, therefore it is safe to assign it like this. It can subsequently be obtained with this function:
+This sets the `EcsName` component on an entity which is used by Flecs to assign names to entities. The `"MyEntity"` string is a literal and will certainly outlive the lifespan of the component, as it is tied to the lifecycle of the process, therefore it is safe to assign it like this. It can subsequently be obtained with this function:
 
 ```c
-const char *id = ecs_get_id(world, e);
+const char *id = ecs_get_name(world, e);
 ```
 
-This function returns the verbatim address that is stored in the `EcsId` component, and thus should not be freed.
+This function returns the verbatim address that is stored in the `EcsName` component, and thus should not be freed.
 
 If memory is tied to the lifecycle of a component, applications can use `OnAdd` and `OnRemove` components to initialize and free the memory when components are added/removed. This example shows how to create two systems for a dynamic buffer that automatically allocate/free the memory for the dynamic buffer when it is added to an entity:
 
@@ -348,10 +348,10 @@ ECS_ENTITY(world, Player, Position, Velocity);
 You may find that certain things cannot be expressed through declarative statements yet, like setting component values on individual entities (you need `ecs_set` for that). These use cases represent areas in the API that we want to improve. Eventually, we would like applications to be able to define applications fully declaratively (except for the system implementations, of course!). 
 
 ### Create entities in bulk
-It is much more efficient to [create entities in bulk](#create-entities-in-bulk) (using the `ecs_new_w_count` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
+It is much more efficient to [create entities in bulk](#create-entities-in-bulk) (using the `ecs_bulk_new` function) than it is to create entities individually. When entities are created in bulk, memory for N entities is reserved in one operation, which is much faster than repeatedly calling `ecs_new`. What can provide an even bigger performance boost is that when entities are created in bulk with an initial set of components, the `EcsOnAdd` handler for initializing those components is called with an array that contains the new entities vs. for each entity individually. If your application heavily relies on `EcsOnAdd` systems to initialize data, bulk creation is the way to go!
 
 ### Limit usage of ecs_lookup
-You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsId` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `NOTHING` modifier, like so:
+You can use `ecs_lookup` to find entities, components and systems that are named (that have the `EcsName` component). This operation is however not cheap, and you will want to limit the amount of times you call it in the main loop, and preferably avoid it alltogether. A better alternative to `ecs_lookup` is to specify entities in your system expression with the `NOTHING` modifier, like so:
 
 ```c
 ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, .MyEntity);
@@ -411,10 +411,10 @@ ecs_entity_t e = ecs_new(world, Position);
 As it is functionally equivalent to first calling `ecs_new` followed by `ecs_add`, `EcsOnAdd` systems will be invoked for the `Position` component as a result of this operation.
 
 #### Creating entities in bulk
-When creating a large number of new entities, it can be much faster do this them in bulk, especially when adding initial components. This can be achieved with the `ecs_new_w_count` function. This function is equivalent to `ecs_new` but it has an additional `count` parameter which indicates the number of entities to be returned. An application can use it like this:
+When creating a large number of new entities, it can be much faster do this them in bulk, especially when adding initial components. This can be achieved with the `ecs_bulk_new` function. This function is equivalent to `ecs_new` but it has an additional `count` parameter which indicates the number of entities to be returned. An application can use it like this:
 
 ```c
-ecs_entity_t e = ecs_new_w_count(world, Position, 100);
+ecs_entity_t e = ecs_bulk_new(world, Position, 100);
 ```
 
 This operation is functionally equivalent to calling `ecs_new` 100 times, but has the added benefit that all the resource allocations, updating of the internal administration and invoking of reactive systems can all happen in bulk. The function returns the first of the created entities, and it is guaranteed that the entity identifiers are consecutive, so that if the first entity identifier is 1, the last entity identifier is 101.
@@ -447,27 +447,27 @@ Flecs has an API to create a new entity which also specifies a parent entity. Th
 
 ```c
 ecs_entity_t my_root = ecs_new(world, 0);
-ecs_entity_t my_child = ecs_new_child(world, my_root, 0);
+ecs_entity_t my_child = ecs_new_w_entity(world, ECS_CHILDOF | my_root);
 ```
 
 Any entity can be specifed as a parent entity (`my_root`, in this example).
 
 #### Adopting entities
-The API allows applications to adopt entities by containers after they have been created with the `ecs_adopt` operation. The `ecs_adopt` operation is almost equivalent to an `ecs_add`, with as only difference that it accepts an `ecs_entity_t` (instead of an `ecs_type_t`), and it adds the `EcsContainer` component to the parent if it didn't have it already. The operation can be used like this:
+The API allows applications to adopt entities by containers after they have been created with the `ecs_add_entity` operation in combination with the `ECS_CHILDOF` flag:
 
 ```c
 ecs_entity_t my_root = ecs_new(world, 0);
 ecs_entity_t e = ecs_new(world, 0);
-ecs_adopt(world, e, my_root);
+ecs_add(world, e, ECS_CHILDOF | my_root);
 ```
 
 If the entity was already a child of the container, the operation has no side effects.
 
 #### Orphaning entities
-The API allows applications to orphan entities from containers after they have been created with the `ecs_orphan` operation. The `ecs_orphan` operation is almost equivalent to an `ecs_remove`, with as only difference that it accepts an `ecs_entity_t` (instead of an `ecs_type_t`). The operation can be used like this:
+The API allows applications to orphan entities from containers after they have been created with the `ecs_remove_entity` operation in combination with the `ECS_CHILDOF` flag:
 
 ```c
-ecs_orphan(world, e, my_root);
+ecs_remove_entity(world, e, ECS_CHILDOF | my_root);
 ```
 
 If the entity was not a child of the container, the operation has no side effects. This operation will not add the `EcsContainer` tag to `my_root`.
@@ -490,11 +490,12 @@ ECS_ENTITY(world, MyParent, Position);
 ECS_ENTITY(world, MyChild, CHILDOF | MyParent, Position);
 ```
 
-Note that in order to be able to use entity flags, the parent entity must be named (it must have an `EcsId` component). When not considering the entity identifiers, the above examples are equivalent to:
+Note that in order to be able to use entity flags, the parent entity must be named (it must have an `EcsName` component). When not considering the entity identifiers, the above examples are equivalent to:
 
 ```c
 ecs_entity_t MyParent = ecs_new(world, Position);
-ecs_entity_t MyChild = ecs_new_child(world, MyParent, Position);
+ecs_entity_t MyChild = ecs_new_w_entity(world, ECS_CHILDOF | MyParent);
+ecs_add(world, MyChild, Position);
 ```
 
 ### Inheritance
@@ -503,11 +504,11 @@ Inheritance is a mechanism in flecs that allows entities to "inherit", or share 
 The entity that inherits components is called the "instance". The entity from which the components are inherited is called the "base" entity.
 
 #### Creating instances
-Flecs has an API to create a new entity which also specifies a base entity. The API can be invoked like this:
+New instances in flecs can be created with the `ecs_new_w_entity` operation in combination with the `ECS_INSTANCEOF` flag:
 
 ```c
 ecs_entity_t my_base = ecs_new(world, Position);
-ecs_entity_t my_instance = ecs_new_instance(world, my_base, Velocity);
+ecs_entity_t my_instance = ecs_new_w_entity(world, ECS_INSTANCEOF | my_base);
 ```
 
 In this example, `my_instance` will now share the `Position` component from the `my_base` entity. If an application were to retrieve the Position component from both `my_base` and `my_instance`, it would observe that they are the same. Consider the following code snippet:
@@ -521,27 +522,27 @@ assert(p_base == p_instance); // condition will be true
 From this follows that modifying the component value of the base will also modify components of all its instances. Any entity can be specifed as a base entity (`my_root`, in this example).
 
 #### Adding inheritance relationships
-Inheritance relationships can be added after entities have been created with the `ecs_inherit` method. Consider:
+Inheritance relationships can be added after entities have been created with the `ecs_add_w_entity` operation. Consider:
 
 ```c
 ecs_entity_t my_base = ecs_new(world, Position);
 ecs_entity_t my_instance = ecs_new(world, Velocity);
 
 // Create inheritance relationship where my_instance inherits from my_base
-ecs_inherit(world, my_instance, my_base);
+ecs_add_entity(world, my_instance, ECS_INSTANCEOF | my_base);
 ```
 
 If the inheritance relationship was already added to the entity, this operation will have no effects.
 
 #### Removing inheritance relationships
-Inheritance relationships can be removed after they have been added with the `ecs_disinherit` method. Consider:
+Inheritance relationships can be removed after they have been added with the `ecs_remove_entity` operation. Consider:
 
 ```c
 ecs_entity_t my_base = ecs_new(world, Position);
-ecs_entity_t my_instance = ecs_new_instance(world, my_base, Velocity);
+ecs_entity_t my_instance = ecs_new_w_entity(world, ECS_INSTANCEOF | my_base);
 
 // Remove inheritance relationship
-ecs_disinherit(world, my_instance, my_base);
+ecs_remove_entity(world, my_instance, ECS_INSTANCEOF | my_base);
 ```
 
 If the inheritance relationship was not added to the entity, this operation will have no effects.
@@ -564,15 +565,15 @@ ECS_ENTITY(world, MyBase, Position);
 ECS_ENTITY(world, MyInstance, INSTANCEOF | MyBase, Velocity);
 ```
 
-Note that in order to be able to use entity flags, the parent entity must be named (it must have an `EcsId` component). When not considering the entity identifiers, the above examples are equivalent to:
+Note that in order to be able to use entity flags, the parent entity must be named (it must have an `EcsName` component). When not considering the entity identifiers, the above examples are equivalent to:
 
 ```c
 ecs_entity_t MyBase = ecs_new(world, Position);
-ecs_entity_t MyInstance = ecs_new_instance(world, MyBase, Velocity);
+ecs_entity_t MyInstance = ecs_new_w_entity(world, ECS_INSTANCEOF | MyBase);
 ```
 
 #### Multiple inheritance
-An entity may inherit from multiple base entities. Consider the following example:
+An entity may have multiple base entities. Consider the following example:
 
 ```c
 ECS_ENTITY(world, MyBase1, Position);
@@ -587,7 +588,7 @@ An instance may override the components of a base entity. Consider the following
 
 ```c
 ecs_entity_t MyBase = ecs_new(world, Position);
-ecs_entity_t MyInstance = ecs_new_instance(world, MyBase, 0);
+ecs_entity_t MyInstance = ecs_new_w_entity(world, ECS_INSTANCEOF | MyBase);
 
 // Override Position from MyBase
 ecs_add(world, MyInstance, Position);
@@ -610,7 +611,8 @@ ecs_entity_t MyBase = ecs_new(world, Position);
     ecs_set(world, MyBase, Position, {10, 20});
 
 // Override Position on creation, copies the value from MyBase into MyInstance
-ecs_entity_t MyInstance = ecs_new_instance(world, MyBase, Position);
+ecs_entity_t MyInstance = ecs_new_w_entity(world, ECS_INSTANCEOF | MyBase);
+ecs_add(world, MyInstance, Position);
 ```
 
 After this operation, `MyInstance` will have a private `Position` component that is initialized to `{10, 20}`. The utility of this pattern becomes more obvious when combined when used in combination with types in which the inheritance relationship is encoded:
@@ -679,7 +681,7 @@ ECS_ENTITY(world, MyEntity, INSTANCEOF | MyPrefab);
 or:
 
 ```c
-ecs_entity_t e = ecs_new_instance(world, MyPrefab);
+ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | MyPrefab);
 ```
 
 #### Prefab nesting
@@ -687,10 +689,9 @@ Prefabs can be created as children of other prefabs. This lets applications crea
 
 ```c
 ECS_PREFAB(world, ParentPrefab, EcsPosition2D);
-  ECS_PREFAB(world, ChildPrefab, EcsPosition2D);
-     ecs_set(world, ChildPrefab, EcsPrefab, {.parent = ParentPrefab});
+  ECS_PREFAB(world, ChildPrefab, CHILDOF | ParentPrefab, EcsPosition2D);
      
-ecs_entity_t e = ecs_new_instance(world, ParentPrefab);
+ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | ParentPrefab);
 ```
 
 After running this example, entity `e` will contain a child entity called `ChildPrefab`. All components of `e` will be shared with `ParentPrefab`, and all components of `e`'s child will be shared with `ChildPrefab`. Just like with regular prefabs, component values can be overridden. To override the component of a child entity, an application can use the following method:
@@ -703,7 +704,7 @@ ecs_set(world, child, Position, {10, 20}); // Override the component of the chil
 An application can also choose to instantiate a child prefab directly:
 
 ```c
-ecs_entity_t e = ecs_new_instance(world, ChildPrefab);
+ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | ChildPrefab);
 ```
 
 Applications may want to compose a prefab out of various existing prefabs. This can be achieved by combining nested prefabs with prefab variants, as is shown in the following example:
@@ -711,16 +712,13 @@ Applications may want to compose a prefab out of various existing prefabs. This 
 ```c
 // Prefab that defines a wheel
 ECS_PREFAB(world, Wheel, EcsPosition2D, EcsCircle2D);
-  ECS_PREFAB(world, Tire, EcsPosition2D, EcsCircle2D, Pressure);
-      ecs_set(world, Tire, EcsPrefab, {.parent = Wheel});
+  ECS_PREFAB(world, Tire, CHILDOF | Wheel, EcsPosition2D, EcsCircle2D, Pressure);
 
 // Prefab that defines a car
 ECS_PREFAB(world, Car, EcsPosition2D);
-  ECS_PREFAB(world, FrontWheel, INSTANCEOF | Wheel);
-     ecs_set(world, FrontWheel, EcsPrefab, {.parent = Car});
+  ECS_PREFAB(world, FrontWheel, CHILDOF | Car, INSTANCEOF | Wheel);
      ecs_set(world, FrontWheel, EcsPosition, {-100, 0});
-  ECS_PREFAB(world, BackWheel, INSTANCEOF | Wheel);
-     ecs_set(world, BackWheel, EcsPrefab, {.parent = Car});
+  ECS_PREFAB(world, BackWheel, CHILDOF | Car, INSTANCEOF | Wheel);
      ecs_set(world, BackWheel, EcsPosition, {100, 0});     
 ```
 
@@ -728,7 +726,7 @@ In this example, the `FrontWheel` and `BackWheel` prefabs of the car inherit fro
 
 ```c
 // Also creates FrontWheel, FrontWheel/Tire, BackWheel, BackWheel/Tire
-ecs_entity_t e = ecs_new_instance(world, Car); 
+ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Car);
 ```
 
 ## Components and Types
@@ -853,10 +851,10 @@ ecs_set(world, e, Position, {10, 20});
 After the operation it is guaranteed that `e` has `Position`, and that it is set to `{10, 20}`. If the entity did not yet have `Position`, it will be added by the operation. If the entity already had `Position`, it will only assign the value. If there are any `EcsOnSet` systems that match with the `Position` component, they will be invoked after the value is assigned.
 
 ### Tags
-Tags are components that do not contain any data. Internally it is represented as a component with data-size 0. Tags can be useful for subdividing entities into categories, without adding any data. A tag can be defined with the ECS_TAG macro:
+A tag is a component that has no data associated with it. Because components are represented as entities in Flecs, a tag can be created by simply creating an empty entity:
 
 ```c
-ECS_TAG(world, MyTag);
+ECS_ENTITY(world, MyTag, 0);
 ```
 
 Tags can be added/removed just like regular components with `ecs_new`, `ecs_add` and `ecs_remove`:
@@ -890,13 +888,12 @@ Flecs uses a set of builtin components to implement some of its features. Some o
 Name | Description | Access
 -----|-------------|-------
 EcsComponent | Stores the size of a component | Read
-EcsTypeComponent | Stores information about a named type | Opaque 
+EcsType | Stores information about a named type | Opaque 
 EcsPrefab | Indicates that entity can be used as prefab, stores optional prefab parent | Read / Write
 EcsPrefabParent | Internal data for prefab parents | Opaque 
 EcsPrefabBuilder | Internal data for prefab parents | Opaque 
-EcsRowSystem | Internal data for row systems | Opaque
 EcsColSystem | Internal data for column systems | Opaque
-EcsId | Stores the name of an entity | Read / Write
+EcsName | Stores the name of an entity | Read / Write
 EcsHidden | Tag that indicates an entity should be hidden by UIs | Read / Write
 EcsDisabled | Tag that indicates an entity should not be matched with systems | Read / Write
 
@@ -990,7 +987,7 @@ for (int i = 0; i < rows->count; i ++) {
 ```
 
 ##### OWNED source
-OWNED is similar to SELF in that the component is matched with the entities to be iterated over, but will only match entities that own the component. Components from base entities (added either with `ecs_new_instance` or `ecs_inherit`) will not be matched.
+OWNED is similar to SELF in that the component is matched with the entities to be iterated over, but will only match entities that own the component. Components from base entities will not be matched.
 
 ```
 Position, OWNED.Velocity
@@ -1011,7 +1008,7 @@ for (int i = 0; i < rows->count; i ++) {
 ```
 
 ##### SHARED source
-SHARED is similar to SELF in that the component is matched with the entities to be iterated over, but will only match entities that do not own the component. Only components from base entities (added either with `ecs_new_instance` or `ecs_inherit`) will be matched.
+SHARED is similar to SELF in that the component is matched with the entities to be iterated over, but will only match entities that do not own the component. Only components from base entities.
 
 ```
 Position, SHARED.Velocity
@@ -1068,19 +1065,19 @@ for (int i = 0; i < rows->count; i ++) {
 
 Empty columns have no data, and as such should not be accessed as owned or shared columns. Instead, the system should only attempt to obtain the handle to the component or component type.
 
-##### CONTAINER source
-The `CONTAINER` source allows a system to select a component from the entity that contains the currently iterated over entity. An example of the `CONTAINER` modifier is:
+##### PARENT source
+The `PARENT` source allows a system to select a component from the entity that contains the currently iterated over entity. An example of the `PARENT` modifier is:
 
 ```
-CONTAINER.Position, Position, Velocity
+PARENT.Position, Position, Velocity
 ```
 
 This will match all entities that have `Position, Velocity`, _and_ that have a container (parent) entity that has the `Position` component. This facilitates building systems that must traverse entities in a hierarchical manner.
 
-`CONTAINER` columns can be accessed the same way as `SHARED` columns.
+`PARENT` columns can be accessed the same way as `SHARED` columns.
 
 ##### CASCADE source
-The `CASCADE` source is similar to an _optional_ `CONTAINER` column, but in addition it ensures that entities are iterated over in the order of the container hierarchy. 
+The `CASCADE` source is similar to an _optional_ `PARENT` column, but in addition it ensures that entities are iterated over in the order of the container hierarchy. 
 
 For a hierarchy like this:
 
@@ -1194,7 +1191,7 @@ void Move(ecs_rows_t *rows) {
 }
 ```
 
-When a column contains shared data, a system should not access the data as an array. Colummns that are guaranteed to be shared are columns with the `CONTAINER` modifier, `SYSTEM` modifier or `ENTITIY` modifier. In this case, a system should treat the column pointer as an ordinary pointer instead of an array:
+When a column contains shared data, a system should not access the data as an array. Colummns that are guaranteed to be shared are columns with the `PARENT` modifier, `SYSTEM` modifier or `ENTITIY` modifier. In this case, a system should treat the column pointer as an ordinary pointer instead of an array:
 
 ```c
 void Move(ecs_rows_t *rows) {
@@ -1871,7 +1868,7 @@ Because the elements in a type are of `ecs_entity_t`, it is possible to add regu
 
 There are currently two type flags in Flecs: `CHILDOF` and `INSTANCEOF`. The values of these flags are single bits, starting from the MSB and counting backwards. This makes the addressing space for type flags limited: with each new flag the entity addressing space is halved. However, since the `ecs_entity_t` type is a 64-bit integer, this will not quickly become an issue.
 
-A type with a `CHILDOF` flag could look like `[Position, Velocity, CHILDOF | my_parent]`, where `my_parent` can be any regular entity. This indicates to Flecs that `my_parent` should be treated as a parent of entities of this type. This knowledge is used to optimize storage for hierarchies, and to implement certain features like `CONTAINER` and `CASCADE` columns in queries (see [Hierarchies](#hierarches)).
+A type with a `CHILDOF` flag could look like `[Position, Velocity, CHILDOF | my_parent]`, where `my_parent` can be any regular entity. This indicates to Flecs that `my_parent` should be treated as a parent of entities of this type. This knowledge is used to optimize storage for hierarchies, and to implement certain features like `PARENT` and `CASCADE` columns in queries (see [Hierarchies](#hierarches)).
 
 Similarly, a type with an `INSTANCEOF` flag looks like `[Position, Velocity, INSTANCEOF | my_base]`, where `my_base` can be any regular entity. This indicates to flecs that components of `my_base` should be shared with entities of this type (see [Inheritance](#inheritance)).
 
@@ -1882,7 +1879,7 @@ Entities are stored in archetypes which lets them to be iterated with systems, b
 
 In Flecs the entity index is implemented as a sparse set, where the entity identifier is the index in the sparse array. The dense array of the sparse set is used to test if an entity identifier is alive, and allows for iterating all entities. The data stored in the sparse set is a pointer to the archetype the entity is stored in, combined with an _row_ (array index) that points to where in the component arrays the entity is stored.
 
-Flecs has a mechanism whereby it can monitor specific entities for changes. This is required for ensuring that the set of archetypes matched with systems that have `CONTAINER` columns remains correct and up to date. For example, a system with `CONTAINER.Position` column can unmatch a previously matched archetype when the `Position` component is removed from one of the parents of the entities matched with the system. It would be expensive to reevaluate matched archetypes after updating _any_ entity, so instead Flecs needs a mechanism to monitor specific entities for updates. Monitored entities are stored with a negative row in the entity index. The actual index of an entity can be found by multiplying the row with -1. This allows Flecs to monitor entities for changes efficiently without having to do additional lookups.
+Flecs has a mechanism whereby it can monitor specific entities for changes. This is required for ensuring that the set of archetypes matched with systems that have `PARENT` columns remains correct and up to date. For example, a system with `PARENT.Position` column can unmatch a previously matched archetype when the `Position` component is removed from one of the parents of the entities matched with the system. It would be expensive to reevaluate matched archetypes after updating _any_ entity, so instead Flecs needs a mechanism to monitor specific entities for updates. Monitored entities are stored with a negative row in the entity index. The actual index of an entity can be found by multiplying the row with -1. This allows Flecs to monitor entities for changes efficiently without having to do additional lookups.
 
 Systems will occasionally need access to the entity identifier. Because systems access the entities directly from the archetypes and not from the entity index, they need to obtain the entity identifier in another way. Flecs accomplishes this by storing the entity identifiers as an additional column columns in an archetype. Applications can access the entity identifiers using `row->entities`, or by requesting the column at index 0:
 

@@ -9,8 +9,12 @@ void install_test_abort() {
 }
 
 static
+bool dummy_invoked = false;
+
+static
 void Dummy(ecs_rows_t *rows) {
-    ProbeSystem(rows);
+    dummy_invoked = true;
+    probe_system(rows);
 }
 
 void SystemMisc_invalid_not_without_id() {
@@ -56,7 +60,7 @@ void SystemMisc_invalid_container_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CONTAINER.);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.);
 
     ecs_fini(world);
 }
@@ -148,7 +152,7 @@ void SystemMisc_invalid_empty_or() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, | Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, || Position);
 
     ecs_fini(world);
 }
@@ -162,7 +166,7 @@ void SystemMisc_invalid_empty_or_w_space() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate,| Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate,|| Position);
 
     ecs_fini(world);
 }
@@ -177,7 +181,7 @@ void SystemMisc_invalid_or_w_not() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position | !Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position || !Velocity);
 
     ecs_fini(world);
 }
@@ -192,7 +196,7 @@ void SystemMisc_invalid_not_w_or() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !Position | Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !Position || Velocity);
 
     ecs_fini(world);
 }
@@ -230,7 +234,7 @@ void SystemMisc_invalid_0_w_from_container() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CONTAINER.0);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.0);
 
     ecs_fini(world);
 }
@@ -295,7 +299,7 @@ void SystemMisc_invalid_or_w_empty() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, .Position | .Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, .Position || .Velocity);
 
     ecs_fini(world);
 }
@@ -348,31 +352,31 @@ void SystemMisc_invalid_or_from_system() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM.Position | SYSTEM.Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM.Position || SYSTEM.Velocity);
 
     ecs_fini(world);
 }
 
 void SystemMisc_invalid_null_string() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
-    test_expect_abort();
-
     ecs_new_system(world, "Dummy", EcsOnUpdate, NULL, Dummy);
+
+    ecs_progress(world, 0);
+
+    test_assert(dummy_invoked == true);
 
     ecs_fini(world);
 }
 
 void SystemMisc_invalid_empty_string() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
-    test_expect_abort();
-
     ecs_new_system(world, "Dummy", EcsOnUpdate, "", Dummy);
+
+    ecs_progress(world, 0);
+
+    test_assert(dummy_invoked == true);    
 
     ecs_fini(world);
 }
@@ -397,11 +401,11 @@ void SystemMisc_redefine_row_system() {
 
     ecs_entity_t s;
     {
-        ECS_SYSTEM(world, Dummy, EcsOnAdd, Position);
+        ECS_TRIGGER(world, Dummy, EcsOnAdd, Position, NULL);
         s = Dummy;
     }
 
-    ECS_SYSTEM(world, Dummy, EcsOnAdd, Position);
+    ECS_TRIGGER(world, Dummy, EcsOnAdd, Position, NULL);
 
     test_assert(s == Dummy);
 
@@ -421,7 +425,7 @@ void SystemMisc_system_w_or_prefab() {
     ECS_COMPONENT(world, Position);
     ECS_PREFAB(world, Prefab, Position);
 
-    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab | EcsDisabled);
+    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab || EcsDisabled);
 
     test_int(is_invoked, 0);
 
@@ -438,7 +442,7 @@ void SystemMisc_system_w_or_disabled() {
     ECS_COMPONENT(world, Position);
     ECS_ENTITY(world, Entity, Position, EcsDisabled);
 
-    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab | EcsDisabled);
+    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab || EcsDisabled);
 
     test_int(is_invoked, 0);
 
@@ -456,7 +460,7 @@ void SystemMisc_system_w_or_disabled_and_prefab() {
     ECS_PREFAB(world, Prefab, Position);
     ECS_ENTITY(world, Entity, Position, EcsDisabled);
 
-    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab | EcsDisabled);
+    ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, EcsPrefab || EcsDisabled);
 
     test_int(is_invoked, 0);
 
@@ -759,7 +763,7 @@ void SystemMisc_dont_enable_after_rematch() {
 
     ECS_ENTITY(world, Entity, INSTANCEOF | Prefab);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* System is enabled but doesn't match with any entities */
@@ -856,39 +860,14 @@ void SystemMisc_table_count() {
     ecs_fini(world);
 }
 
-void SystemMisc_active_system_count() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
-    ECS_SYSTEM(world, SysB, EcsOnUpdate, Position, Velocity);
-
-    test_int( ecs_active_system_count(world), 0);
-    test_int( ecs_inactive_system_count(world), 2);
-
-    ecs_entity_t e = ecs_new(world, Position);
-
-    test_int( ecs_active_system_count(world), 1);
-    test_int( ecs_inactive_system_count(world), 1);
-
-    ecs_add(world, e, Velocity);
-
-    test_int( ecs_active_system_count(world), 2);
-    test_int( ecs_inactive_system_count(world), 0);
-    
-    ecs_fini(world);
-}
-
 void SystemMisc_match_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, SysA, EcsManual, SYSTEM.Position);
-    ECS_SYSTEM(world, SysB, EcsManual, Position);
+    ECS_SYSTEM(world, SysA, 0, SYSTEM.Position);
+    ECS_SYSTEM(world, SysB, 0, Position);
 
     ecs_run(world, SysB, 0, NULL);
 
@@ -904,10 +883,12 @@ void SystemMisc_match_system_w_filter() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, SysA, EcsManual, SYSTEM.Position);
-    ECS_SYSTEM(world, SysB, EcsManual, Position);
+    ECS_SYSTEM(world, SysA, 0, SYSTEM.Position);
+    ECS_SYSTEM(world, SysB, 0, Position);
 
-    ecs_run_w_filter(world, SysB, 0, 0, 0, Position, NULL);
+    ecs_run_w_filter(world, SysB, 0, 0, 0, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    }, NULL);
 
     test_assert(b_invoked != 0);
     test_assert(b_entity == SysA);

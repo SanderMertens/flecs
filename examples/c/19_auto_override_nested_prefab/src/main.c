@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     /* Create type that automatically overrides Position from RootPrefab */
     ECS_TYPE(world, Root, INSTANCEOF | RootPrefab, Position);
 
-    /* Create new entity from Root. Don't use ecs_new_instance, as we're using a
+    /* Create new entity from Root. Don't use ECS_INSTANCEOF, as we're using a
      * regular type which already has the INSTANCEOF relationship. */
     ecs_entity_t e = ecs_new(world, Root);
 
@@ -41,16 +41,16 @@ int main(int argc, char *argv[]) {
      * its type with a CHILDOF mask, and the prefab ChildPrefab in its type with
      * an INSTANCEOF mask. Note how the identifier is Child, not ChildPrefab. */
     ecs_entity_t child = ecs_lookup_child(world, e, "Child");
-    printf("Child type = [%s]\n", ecs_type_to_expr(world, ecs_get_type(world, child)));
+    printf("Child type = [%s]\n", ecs_type_str(world, ecs_get_type(world, child)));
 
     /* Print position of e and of the child. Note that since types were used to
      * automatically override the components, the components are owned by both
      * e and child. */
     Position *p = ecs_get_ptr(world, e, Position);
-    printf("Position of e = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, e, Position));
+    printf("Position of e = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, e, Position, true));
 
     p = ecs_get_ptr(world, child, Position);
-    printf("Position of Child = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, child, Position));
+    printf("Position of Child = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, child, Position, true));
 
     /* Cleanup */
     return ecs_fini(world);

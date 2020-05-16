@@ -7,7 +7,7 @@ void Iter(ecs_rows_t *rows) {
 
     test_assert(!p_parent || ecs_is_shared(rows, 2));
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -38,10 +38,10 @@ void SystemCascade_cascade_depth_1() {
     ecs_set(world, e_3, Position, {1, 2});
     ecs_set(world, e_4, Position, {1, 2});
 
-    ecs_adopt(world, e_3, e_1);
-    ecs_adopt(world, e_4, e_2);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | e_1);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | e_2);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -52,14 +52,15 @@ void SystemCascade_cascade_depth_1() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.e[3], e_4);
+    probe_has_entity(&ctx, e_1);
+    probe_has_entity(&ctx, e_2);
+    probe_has_entity(&ctx, e_3);
+    probe_has_entity(&ctx, e_4);
+
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
@@ -103,12 +104,12 @@ void SystemCascade_cascade_depth_2() {
     ecs_set(world, e_5, Position, {1, 2});
     ecs_set(world, e_6, Position, {1, 2});
 
-    ecs_adopt(world, e_3, e_1);
-    ecs_adopt(world, e_4, e_2);
-    ecs_adopt(world, e_5, e_3);
-    ecs_adopt(world, e_6, e_4);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | e_1); /* depth 1 */
+    ecs_add_entity(world, e_4, ECS_CHILDOF | e_2); /* depth 1 */
+    ecs_add_entity(world, e_5, ECS_CHILDOF | e_3); /* depth 2 */
+    ecs_add_entity(world, e_6, ECS_CHILDOF | e_4); /* depth 2 */
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -119,16 +120,14 @@ void SystemCascade_cascade_depth_2() {
     test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_1);
-    test_int(ctx.e[1], e_2);
-    test_int(ctx.e[2], e_3);
-    test_int(ctx.e[3], e_4);
-    test_int(ctx.e[4], e_5);
-    test_int(ctx.e[5], e_6);    
+    test_assert((ctx.e[0] == e_1 && ctx.e[1] == e_2) || (ctx.e[0] == e_2 && ctx.e[1] == e_1));
+    test_assert((ctx.e[2] == e_3 && ctx.e[3] == e_4) || (ctx.e[2] == e_4 && ctx.e[3] == e_3));
+    test_assert((ctx.e[4] == e_5 && ctx.e[5] == e_6) || (ctx.e[4] == e_6 && ctx.e[5] == e_5));
+
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
@@ -168,7 +167,7 @@ void AddParent(ecs_rows_t *rows) {
 
     test_assert(!p_parent || ecs_is_shared(rows, 2));
 
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -197,17 +196,20 @@ void SystemCascade_add_after_match() {
     ecs_set(world, e_3, Position, {1, 2});
     ecs_set(world, e_4, Position, {1, 2});
 
-    ecs_adopt(world, e_3, parent);
-    ecs_adopt(world, e_4, parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent); /* depth 1 */
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent); /* depth 1 */
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
 
+    /* Before adding Position to parent, it wasn't being considered for the
+     * CASCADE column, so tables could have been ordered randomly. Make sure
+     * that queries can handle changes to depth after all tables are matched */
     ecs_set(world, parent, Position, {1, 2});
 
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
 
     ecs_progress(world, 1);
 
@@ -226,7 +228,7 @@ void SystemCascade_add_after_match() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
@@ -267,15 +269,15 @@ void SystemCascade_adopt_after_match() {
     ecs_set(world, e_3, Position, {1, 2});
     ecs_set(world, e_4, Position, {1, 2});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
 
-    ecs_adopt(world, e_3, parent);
-    ecs_adopt(world, e_4, parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
 
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
 
     ecs_progress(world, 1);
 
@@ -293,7 +295,7 @@ void SystemCascade_adopt_after_match() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);

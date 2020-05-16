@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Printable);
+    ECS_ENTITY(world, Printable, 0);
 
     /* The 'Move' system has the 'EcsOnDemand' tag which means Flecs will only
      * run this system if there is interest in any of its [out] columns. In this

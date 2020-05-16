@@ -30,7 +30,6 @@ void Vector_sort_rnd(void);
 void Vector_sort_sorted(void);
 void Vector_sort_empty(void);
 void Vector_size_of_null(void);
-void Vector_remove_index_w_move(void);
 void Vector_set_size_smaller_than_count(void);
 void Vector_pop_elements(void);
 
@@ -52,6 +51,7 @@ void Map_remove(void);
 void Map_remove_empty(void);
 void Map_remove_unknown(void);
 void Map_grow(void);
+void Map_set_size_0(void);
 
 // Testsuite 'Chunked'
 void Chunked_setup(void);
@@ -74,7 +74,7 @@ void Chunked_memory_null(void);
 static bake_test_suite suites[] = {
     {
         .id = "Vector",
-        .testcase_count = 23,
+        .testcase_count = 22,
         .setup = Vector_setup,
         .testcases = (bake_test_case[]){
             {
@@ -158,10 +158,6 @@ static bake_test_suite suites[] = {
                 .function = Vector_size_of_null
             },
             {
-                .id = "remove_index_w_move",
-                .function = Vector_remove_index_w_move
-            },
-            {
                 .id = "set_size_smaller_than_count",
                 .function = Vector_set_size_smaller_than_count
             },
@@ -173,7 +169,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Map",
-        .testcase_count = 16,
+        .testcase_count = 17,
         .setup = Map_setup,
         .testcases = (bake_test_case[]){
             {
@@ -239,6 +235,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "grow",
                 .function = Map_grow
+            },
+            {
+                .id = "set_size_0",
+                .function = Map_set_size_0
             }
         }
     },

@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
         .add_instanceof(RootPrefab)
         .add<Position>();
 
-    /* Create new entity from Root. Don't use ecs_new_instance, as we're using a
+    /* Create new entity from Root. Don't use add_instanceof, as we're using a
      * regular type which already has the INSTANCEOF relationship. */
     auto e = flecs::entity(world)
         .add(Root);

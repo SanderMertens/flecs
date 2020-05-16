@@ -7,7 +7,7 @@ ecs_filter_iter_t ecs_filter_iter(
 {
     return (ecs_filter_iter_t){
         .filter = filter ? *filter : (ecs_filter_t){0},
-        .tables = world->main_stage.tables,
+        .tables = world->stage.tables,
         .index = 0,
         .rows = {
             .world = world
@@ -33,26 +33,29 @@ ecs_filter_iter_t ecs_snapshot_filter_iter(
 bool ecs_filter_next(
     ecs_filter_iter_t *iter)
 {
-    ecs_chunked_t *tables = iter->tables;
-    int32_t count = ecs_chunked_count(tables);
+    ecs_sparse_t *tables = iter->tables;
+    int32_t count = ecs_sparse_count(tables);
     int32_t i;
 
     for (i = iter->index; i < count; i ++) {
-        ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+        
+        ecs_data_t *data = ecs_vector_first(table->stage_data);
 
-        if (!table->columns) {
+        if (!data) {
             continue;
         }
 
-        if (!ecs_type_match_w_filter(iter->rows.world, table->type, &iter->filter)) {
+        if (!ecs_table_match_filter(iter->rows.world, table, &iter->filter)) {
             continue;
         }
 
         ecs_rows_t *rows = &iter->rows;
         rows->table = table;
-        rows->table_columns = table->columns;
+        rows->table_columns = data->columns;
         rows->count = ecs_table_count(table);
-        rows->entities = ecs_vector_first(table->columns[0].data);
+        rows->entities = ecs_vector_first(data->entities);
         iter->index = ++i;
         return true;
     }

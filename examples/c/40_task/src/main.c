@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
      // Task that is executed every 2 seconds
     ECS_SYSTEM(world, My2ndTask, EcsOnUpdate, 0);
-    ecs_set_period(world, My2ndTask, 2.0);
+    ecs_set_interval(world, My2ndTask, 2.0);
 
     // It is possible to add components to a task, just like regular systems
     ECS_SYSTEM(world, My3rdTask, EcsOnUpdate, SYSTEM.TaskContext);

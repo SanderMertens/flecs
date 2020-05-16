@@ -9,7 +9,7 @@ void install_test_abort() {
 }
 
 void Move(ecs_rows_t *rows) {
-    ProbeSystem(rows);
+    probe_system(rows);
 
     int row;
     for (row = 0; row < rows->count; row ++) {
@@ -30,7 +30,7 @@ void World_progress_w_0() {
 
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_set(world, e_1, Position, {0, 0});
@@ -50,7 +50,7 @@ void World_progress_w_0() {
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_assert(p->x != 0);
     test_assert(p->y != 0);
@@ -68,7 +68,7 @@ void World_progress_w_t() {
 
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_set(world, e_1, Position, {0, 0});
@@ -88,7 +88,7 @@ void World_progress_w_t() {
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get_ptr(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 4);
@@ -114,11 +114,11 @@ void World_entity_range_offset_out_of_range() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_entity_range(world, 50, 0);
+    ecs_set_entity_range(world, 2000, 0);
 
     test_expect_abort();
 
-    ecs_add(world, 20, Position);
+    ecs_add(world, 1500, Position);
 
     ecs_fini(world);
 }
@@ -130,11 +130,11 @@ void World_entity_range_limit_out_of_range() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set_entity_range(world, 0, 50);
+    ecs_set_entity_range(world, 0, 2000);
 
     test_expect_abort();
 
-    ecs_add(world, 60, Position);
+    ecs_add(world, 2500, Position);
 
     ecs_fini(world);
 }
@@ -156,7 +156,7 @@ void World_entity_range_out_of_range_check_disabled() {
     test_int(e2, 49);
     test_assert( ecs_has(world, e2, Position));
     
-    Position *p = ecs_get_ptr(world, e2, Position);
+    const Position *p = ecs_get_ptr(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -298,44 +298,15 @@ void World_dim() {
 
     malloc_count = 0;
 
-    ecs_new_w_count(world, Position, 500);
+    ecs_bulk_new(world, Position, 500);
 
-    test_int(malloc_count, 2);
-
-    malloc_count = 0;
-
-    ecs_new_w_count(world, Position, 500);
-
-    test_int(malloc_count, 2);
-
-    ecs_fini(world);
-}
-
-void World_dim_type() {
-    ecs_os_set_api_defaults();
-    ecs_os_api_t os_api = ecs_os_api;
-    os_api.malloc = test_malloc;
-    os_api.calloc = test_calloc;
-    os_api.realloc = test_realloc;
-    ecs_os_set_api(&os_api);    
-
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_dim_type(world, Position, 1000);
+    test_int(malloc_count, 3);
 
     malloc_count = 0;
 
-    ecs_new_w_count(world, Position, 500);
+    ecs_bulk_new(world, Position, 500);
 
-    test_int(malloc_count, 2);
-
-    malloc_count = 0;
-
-    ecs_new_w_count(world, Position, 400);
-
-    test_int(malloc_count, 2);
+    test_int(malloc_count, 3);
 
     ecs_fini(world);
 }
@@ -353,17 +324,17 @@ void World_dim_dim_type() {
     ECS_COMPONENT(world, Position);
 
     ecs_dim(world, 1000);
-    ecs_dim_type(world, Position, 1000);
+    ecs_dim_type(world, ecs_type(Position), 1000);
 
     malloc_count = 0;
 
-    ecs_new_w_count(world, Position, 500);
+    ecs_bulk_new(world, Position, 500);
 
     test_int(malloc_count, 0);
 
     malloc_count = 0;
 
-    ecs_new_w_count(world, Position, 400);
+    ecs_bulk_new(world, Position, 400);
 
     test_int(malloc_count, 0);
 
@@ -473,7 +444,7 @@ void World_phases() {
     ECS_SYSTEM(world, TPostUpdate, EcsPostUpdate, Position);
     ECS_SYSTEM(world, TPreStore, EcsPreStore, Position);
     ECS_SYSTEM(world, TOnStore, EcsOnStore, Position);
-    ECS_SYSTEM(world, TManual, EcsManual, Position);
+    ECS_SYSTEM(world, TManual, 0, Position);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -482,7 +453,7 @@ void World_phases() {
 
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 8);
 
     ecs_run(world, TManual, 0, NULL);
@@ -510,11 +481,11 @@ void World_phases_match_in_create() {
     ECS_SYSTEM(world, TPostUpdate, EcsPostUpdate, Position);
     ECS_SYSTEM(world, TPreStore, EcsPreStore, Position);
     ECS_SYSTEM(world, TOnStore, EcsOnStore, Position);
-    ECS_SYSTEM(world, TManual, EcsManual, Position);
+    ECS_SYSTEM(world, TManual, 0, Position);
 
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 8);
 
     ecs_run(world, TManual, 0, NULL);
@@ -637,15 +608,15 @@ void World_phases_w_merging() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, TMergeOnLoad, EcsOnLoad, Position);
-    ECS_SYSTEM(world, TMergePostLoad, EcsPostLoad, Position);
-    ECS_SYSTEM(world, TMergePreUpdate, EcsPreUpdate, Position);
-    ECS_SYSTEM(world, TMergeOnUpdate, EcsOnUpdate, Position);
-    ECS_SYSTEM(world, TMergeOnValidate, EcsOnValidate, Position);
-    ECS_SYSTEM(world, TMergePostUpdate, EcsPostUpdate, Position);
-    ECS_SYSTEM(world, TMergePreStore, EcsPreStore, Position);
-    ECS_SYSTEM(world, TMergeOnStore, EcsOnStore, Position);
-    ECS_SYSTEM(world, TMergeManual, EcsManual, Position);
+    ECS_SYSTEM(world, TMergeOnLoad, EcsOnLoad, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergePostLoad, EcsPostLoad, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergePreUpdate, EcsPreUpdate, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergeOnUpdate, EcsOnUpdate, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergeOnValidate, EcsOnValidate, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergePostUpdate, EcsPostUpdate, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergePreStore, EcsPreStore, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergeOnStore, EcsOnStore, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergeManual, 0, Position);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -654,7 +625,7 @@ void World_phases_w_merging() {
 
     ecs_progress(world, 1);
 
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     test_int(p->x, 8);
 
     ecs_run(world, TMergeManual, 0, NULL);
@@ -865,7 +836,7 @@ void World_world_stats() {
     ECS_COMPONENT(world, Velocity);
 
     /* Make sure that stats are collected by requiring EcsWorldStats */
-    ecs_new_system(world, "CollectWorldStats", EcsManual, "[in] EcsWorldStats", NULL);
+    ecs_new_system(world, "CollectWorldStats", 0, "[in] EcsWorldStats", NULL);
 
     EcsWorldStats stats = {0};
 
@@ -873,12 +844,18 @@ void World_world_stats() {
     ecs_progress(world, 1);
     ecs_progress(world, 1);
 
+    test_assert(ecs_has(world, EcsWorld, EcsWorldStats));
+
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     int init_system_count = stats.col_systems_count;
     int init_table_count = stats.tables_count;
     int init_component_count = stats.components_count;
     int init_entity_count = stats.entities_count;
+
+    test_assert(init_table_count != 0);
+    test_assert(init_component_count != 0);
+    test_assert(init_entity_count != 0);
 
     ecs_progress(world, 1);
 
@@ -895,7 +872,7 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 0);
-    test_int(stats.tables_count - init_table_count, 0);
+    test_int(stats.tables_count - init_table_count, 1);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 1);
 
@@ -916,7 +893,6 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 1);
-    test_int(stats.tables_count - init_table_count, 1);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 3);
 
@@ -926,7 +902,6 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 2);
-    test_int(stats.tables_count - init_table_count, 1);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 4);
 
@@ -936,7 +911,6 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 2);
-    test_int(stats.tables_count - init_table_count, 2);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 5);
 
@@ -946,7 +920,6 @@ void World_world_stats() {
     stats = ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 2);
-    test_int(stats.tables_count - init_table_count, 3);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 6);
 

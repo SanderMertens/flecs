@@ -9,8 +9,8 @@
 extern "C" {
 #endif
 
-typedef struct ecs_table_t ecs_table_t;
-typedef struct ecs_table_column_t ecs_table_column_t;
+typedef struct ecs_column_t ecs_column_t;
+typedef struct ecs_data_t ecs_data_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Private datatypes
@@ -20,16 +20,8 @@ typedef enum ecs_blob_header_kind_t {
     EcsStreamHeader,
 
     /* Stream states */
-    EcsComponentSegment,
     EcsTableSegment,
     EcsFooterSegment,
-
-    /* Component segment */
-    EcsComponentHeader,
-    EcsComponentId,
-    EcsComponentSize,
-    EcsComponentNameLength,
-    EcsComponentName,
 
     /* Table segment */
     EcsTableHeader,
@@ -41,7 +33,7 @@ typedef enum ecs_blob_header_kind_t {
     EcsTableColumnSize,
     EcsTableColumnData,
 
-    /* Name column (EcsId) */
+    /* Name column (EcsName) */
     EcsTableColumnNameHeader,
     EcsTableColumnNameLength,
     EcsTableColumnName,
@@ -49,37 +41,19 @@ typedef enum ecs_blob_header_kind_t {
     EcsStreamFooter  
 } ecs_blob_header_kind_t;
 
-typedef struct ecs_component_reader_t {
-    ecs_blob_header_kind_t state;
-
-    /* Component data fetched from the world */
-    ecs_entity_t *id_column;
-    EcsComponent *data_column;
-    EcsId *name_column;
-
-    /* Current component & total number of components */
-    int32_t index;
-    int32_t count;
-
-    /* Keep track how much of the component name has been written */
-    const char *name;
-    size_t len;
-    size_t written;
-} ecs_component_reader_t;
-
 typedef struct ecs_table_reader_t {
     ecs_blob_header_kind_t state;
 
-    uint32_t table_index;
+    int32_t table_index;
     ecs_table_t *table;
-    ecs_table_column_t *columns;
+    ecs_data_t *data;
 
     /* Current index in type */
-    int32_t type_written;
+    size_t type_written;
     ecs_type_t type;
 
     /* Current column */
-    ecs_table_column_t *column;
+    ecs_vector_t *column_vector;
     int32_t column_index;
     int32_t total_columns;
 
@@ -90,7 +64,7 @@ typedef struct ecs_table_reader_t {
 
     /* Keep track of row when writing non-blittable data */
     int32_t row_index;
-    uint32_t row_count;
+    int32_t row_count;
 
     /* Keep track of how much of an entity name has been written */
     const char *name;
@@ -101,8 +75,7 @@ typedef struct ecs_table_reader_t {
 typedef struct ecs_reader_t {
     ecs_world_t *world;
     ecs_blob_header_kind_t state;
-    ecs_chunked_t *tables;
-    ecs_component_reader_t component;
+    ecs_sparse_t *tables;
     ecs_table_reader_t table;
 } ecs_reader_t;
 
@@ -113,32 +86,24 @@ typedef struct ecs_name_writer_t {
     int32_t max_len;
 } ecs_name_writer_t;
 
-typedef struct ecs_component_writer_t {
-    ecs_blob_header_kind_t state;
-
-    int32_t id;
-    size_t size;
-    ecs_name_writer_t name;
-} ecs_component_writer_t;
-
 typedef struct ecs_table_writer_t {
     ecs_blob_header_kind_t state;
 
     ecs_table_t *table;
-    ecs_table_column_t *column;
+    ecs_vector_t *column_vector;
 
     /* Keep state for parsing type */
-    uint32_t type_count;
-    uint32_t type_max_count;
-    uint32_t type_written;
+    int32_t type_count;
+    int32_t type_max_count;
+    size_t type_written;
     ecs_entity_t *type_array;
     
-    uint32_t column_index;
-    uint32_t column_size;
-    uint32_t column_written;
+    int32_t column_index;
+    size_t column_size;
+    size_t column_written;
     void *column_data;
 
-    uint32_t row_count;
+    int32_t row_count;
     int32_t row_index;
     ecs_name_writer_t name; 
 } ecs_table_writer_t;
@@ -146,7 +111,6 @@ typedef struct ecs_table_writer_t {
 typedef struct ecs_writer_t {
     ecs_world_t *world;
     ecs_blob_header_kind_t state;
-    ecs_component_writer_t component;
     ecs_table_writer_t table;
     int error;
 } ecs_writer_t;
@@ -155,41 +119,19 @@ typedef struct ecs_writer_t {
 //// Error API
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_ENTITY_FLAGS_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF))
-#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_ENTITY_FLAGS_MASK)
+#define ECS_TYPE_FLAG_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF | ECS_AND | ECS_OR | ECS_XOR | ECS_NOT))
+#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_TYPE_FLAG_MASK)
+#define ECS_TYPE_FLAG_START ECS_CHILDOF
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Deprecated names
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_SINGLETON ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
-#define ECS_INVALID_ENTITY (0)
+#define EcsSingleton ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
 
 struct ecs_filter_t;
 typedef struct ecs_filter_t ecs_type_filter_t;
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Deprecated functions / function wrappers
-////////////////////////////////////////////////////////////////////////////////
-
-#define ecs_get_singleton(world, type)\
-    (*(type*)_ecs_get_ptr(world, EcsSingleton, T##type))
-
-#define ecs_get_singleton_ptr(world, type)\
-    (type*)_ecs_get_ptr(world, EcsSingleton, T##type)
-
-#ifndef __BAKE_LEGACY__
-#define ecs_set_singleton(world, component, ...)\
-    _ecs_set_ptr(world, EcsSingleton, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
-#endif
-
-#define ecs_set_singleton_ptr(world, component, ptr)\
-    _ecs_set_ptr(world, EcsSingleton, ecs_entity(component), sizeof(component), ptr)
-
-#define ecs_is_empty(world, entity) (ecs_get_type(world, entity) == NULL)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Functions used in declarative (macro) API
@@ -208,12 +150,10 @@ ecs_entity_t ecs_new_component(
     size_t size);
 
 FLECS_EXPORT
-ecs_entity_t ecs_new_system(
+ecs_entity_t ecs_new_module(
     ecs_world_t *world,
-    const char *id,
-    EcsSystemKind kind,
-    const char *sig,
-    ecs_system_action_t action);
+    const char *name,
+    size_t size);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_type(
@@ -227,6 +167,86 @@ ecs_entity_t ecs_new_prefab(
     const char *id,
     const char *sig);
 
+FLECS_EXPORT
+ecs_entity_t ecs_new_system(
+    ecs_world_t *world,
+    const char *name,
+    ecs_entity_t phase,
+    char *signature,
+    ecs_iter_action_t action);
+
+FLECS_EXPORT
+ecs_entity_t ecs_new_trigger(
+    ecs_world_t *world,
+    const char *name,
+    ecs_trigger_kind_t kind,
+    ecs_entity_t component,
+    ecs_iter_action_t action,
+    const void *ctx);
+
+FLECS_EXPORT
+ecs_entity_t ecs_new_pipeline(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr);
+
+////////////////////////////////////////////////////////////////////////////////
+//// Signature API
+////////////////////////////////////////////////////////////////////////////////
+
+typedef enum ecs_sig_inout_kind_t {
+    EcsInOut,
+    EcsIn,
+    EcsOut
+} ecs_sig_inout_kind_t;
+
+/** Type that is used by systems to indicate where to fetch a component from */
+typedef enum ecs_sig_from_kind_t {
+    EcsFromSelf,            /* Get component from self (default) */
+    EcsFromOwned,           /* Get owned component from self */
+    EcsFromShared,          /* Get shared component from self */
+    EcsFromParent,          /* Get component from container */
+    EcsFromSystem,          /* Get component from system */
+    EcsFromEmpty,           /* Get entity handle by id */
+    EcsFromEntity,          /* Get component from other entity */
+    EcsCascade              /* Walk component in cascading (hierarchy) order */
+} ecs_sig_from_kind_t;
+
+/** Type describing an operator used in an signature of a system signature */
+typedef enum ecs_sig_oper_kind_t {
+    EcsOperAnd = 0,
+    EcsOperOr = 1,
+    EcsOperNot = 2,
+    EcsOperOptional = 3,
+    EcsOperLast = 4
+} ecs_sig_oper_kind_t;
+
+/** Type that describes a single column in the system signature */
+typedef struct ecs_sig_column_t {
+    ecs_sig_from_kind_t from_kind;        /* Element kind (Entity, Component) */
+    ecs_sig_oper_kind_t oper_kind;   /* Operator kind (AND, OR, NOT) */
+    ecs_sig_inout_kind_t inout_kind; /* Is component read or written */
+    union {
+        ecs_vector_t *type;          /* Used for OR operator */
+        ecs_entity_t component;      /* Used for AND operator */
+    } is;
+    ecs_entity_t source;             /* Source entity (used with FromEntity) */
+} ecs_sig_column_t;
+
+/** Type that stores a parsed signature */
+typedef struct ecs_sig_t {
+    const char *name;           /* Optional name used for debugging */
+    char *expr;                 /* Original expression string */
+    ecs_vector_t *columns;      /* Columns that contain parsed data */
+} ecs_sig_t;
+
+int ecs_sig_add(
+    ecs_sig_t *sig,
+    ecs_sig_from_kind_t from_kind,
+    ecs_sig_oper_kind_t oper_kind,
+    ecs_sig_inout_kind_t access_kind,
+    ecs_entity_t component,
+    ecs_entity_t source);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Error API
@@ -235,25 +255,25 @@ ecs_entity_t ecs_new_prefab(
 /** Get description for error code */
 FLECS_EXPORT
 const char* ecs_strerror(
-    uint32_t error_code);
+    int32_t error_code);
 
 /** Abort */
 FLECS_EXPORT
 void _ecs_abort(
-    uint32_t error_code,
+    int32_t error_code,
     const char *param,
     const char *file,
-    uint32_t line);
+    int32_t line);
 
 /** Assert */
 FLECS_EXPORT
 void _ecs_assert(
     bool condition,
-    uint32_t error_code,
+    int32_t error_code,
     const char *param,
     const char *condition_str,
     const char *file,
-    uint32_t line);
+    int32_t line);
 
 /** Parse error */
 void _ecs_parser_error(
@@ -316,6 +336,7 @@ void _ecs_parser_error(
 #define ECS_DESERIALIZE_FORMAT_ERROR (39)
 #define ECS_INVALID_REACTIVE_SIGNATURE (40)
 #define ECS_INCONSISTENT_COMPONENT_NAME (41)
+#define ECS_TYPE_CONSTRAINT_VIOLATION (42)
 
 /** Declare type variable */
 #define ECS_TYPE_VAR(type)\

@@ -27,14 +27,14 @@ int main(int argc, char *argv[]) {
     ECS_TYPE(world, Movable, Position, Velocity);
 
     /* Create 3 entities with Position */
-    ecs_new_w_count(world, Position_Mass, 3);
+    ecs_bulk_new(world, Position_Mass, 3);
 
     /* There will be 3 entities with Position, 0 with Velocity */
     printf("There are %d entities with Position\n", ecs_count(world, Position));
     printf("There are %d entities with Velocity\n", ecs_count(world, Velocity));
 
     /* Bulk-add Velocity to all entities with Position */
-    ecs_add_remove_w_filter(world, Velocity, 0, &(ecs_filter_t) {
+    ecs_bulk_add_remove(world, Velocity, 0, &(ecs_filter_t) {
         .include = ecs_type(Position)
     });
 
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     printf("There are %d entities with Position, Velocity\n", ecs_count(world, Movable));
 
     /* Bulk-remove Position from all entities with Velocity */
-    ecs_add_remove_w_filter(world, 0, Position, &(ecs_filter_t) {
+    ecs_bulk_add_remove(world, 0, Position, &(ecs_filter_t) {
         .include = ecs_type(Velocity)
     });
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
     printf("\n -- Bulk remove Mass -- \n\n");
 
     /* Remove Mass from all entities */
-    ecs_add_remove_w_filter(world, 0, Mass, NULL);
+    ecs_bulk_add_remove(world, 0, Mass, NULL);
     printf("There are %d entities with Mass\n", ecs_count(world, Mass));
 
     /* Cleanup: will invoke OnRemove system */

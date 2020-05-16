@@ -27,23 +27,21 @@ int main(int argc, char *argv[]) {
         ecs_set(world, RootPrefab, Position, {10, 20});
 
         /* Create two child prefabs that inherit from BasePrefab */
-        ECS_PREFAB(world, Child1, INSTANCEOF | BasePrefab, Velocity);
-            ecs_set(world, Child1, EcsPrefab, {.parent = RootPrefab});
+        ECS_PREFAB(world, Child1, CHILDOF | RootPrefab, INSTANCEOF | BasePrefab, Velocity);
             ecs_set(world, Child1, Velocity, {30, 40});
 
-        ECS_PREFAB(world, Child2, INSTANCEOF | BasePrefab, Velocity);
-            ecs_set(world, Child2, EcsPrefab, {.parent = RootPrefab});
+        ECS_PREFAB(world, Child2, CHILDOF | RootPrefab, INSTANCEOF | BasePrefab, Velocity);
             ecs_set(world, Child2, Velocity, {50, 60});
 
     /* Create instance of RootPrefab */
-    ecs_entity_t e = ecs_new_instance(world, RootPrefab, 0);
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | RootPrefab);
 
     /* Print types of child1 and child2 */
     ecs_entity_t child1 = ecs_lookup_child(world, e, "Child1");
-    printf("Child1 type = [%s]\n", ecs_type_to_expr(world, ecs_get_type(world, child1)));
+    printf("Child1 type = [%s]\n", ecs_type_str(world, ecs_get_type(world, child1)));
 
     ecs_entity_t child2 = ecs_lookup_child(world, e, "Child2");
-    printf("Child2 type = [%s]\n", ecs_type_to_expr(world, ecs_get_type(world, child2)));
+    printf("Child2 type = [%s]\n", ecs_type_str(world, ecs_get_type(world, child2)));
 
     /* e shares Position from RootPrefab */
     Position *p = ecs_get_ptr(world, e, Position);

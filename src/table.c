@@ -1,183 +1,398 @@
 #include "flecs_private.h"
 
-/** Notify systems that a table has changed its active state */
 static
-void activate_table(
+ecs_data_t* init_data(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entity_t system,
-    bool activate)
+    ecs_data_t *result)
 {
-    if (system) {
-        ecs_system_activate_table(world, system, table, activate);
-    } else {
-        ecs_vector_t *systems = table->frame_systems;
-        
-        if (systems) {
-            ecs_entity_t *buffer = ecs_vector_first(systems);
-            uint32_t i, count = ecs_vector_count(systems);
-            for (i = 0; i < count; i ++) {
-                ecs_system_activate_table(world, buffer[i], table, activate);
+    ecs_type_t type = table->type; 
+    int32_t i, count = ecs_vector_count(type);
+    
+    result->entities = NULL;
+    result->record_ptrs = NULL;
+    result->marked_dirty = false;
+
+    /* Root tables don't have columns */
+    if (!count) {
+        result->columns = NULL;
+        return result;
+    }
+
+    result->columns = ecs_os_calloc(sizeof(ecs_column_t), count);
+    
+    ecs_entity_t *entities = ecs_vector_first(type);
+
+    for (i = 0; i < count; i ++) {
+        const EcsComponent *component = ecs_get_ptr(
+                world, entities[i], EcsComponent);
+
+        /* Is the column a component? */
+        if (component) {
+            /* Is the component associated wit a (non-empty) type? */
+            if (component->size) {
+                /* This is a regular component column */
+                result->columns[i].size = component->size;
+            } else {
+                /* This is a tag */
             }
+        } else {
+            /* This is an entity that was added to the type */
         }
     }
+
+    return result;
+}
+
+/* Delete data for a stage */
+static
+void deinit_data(
+    ecs_table_t *table,
+    ecs_data_t *data)
+{
+    ecs_column_t *columns = data->columns;
+    if (columns) {
+        int32_t c, column_count = ecs_vector_count(table->type);
+        for (c = 0; c < column_count; c ++) {
+            ecs_vector_free(columns[c].data);
+        }
+        ecs_os_free(columns);
+        data->columns = NULL;
+    }
+
+    ecs_vector_free(data->entities);
+    ecs_vector_free(data->record_ptrs);
+
+    data->entities = NULL;
+    data->record_ptrs = NULL;
+}
+
+/* Utility function to free data for all stages */
+static
+void deinit_all_data(
+    ecs_table_t *table)
+{
+    ecs_data_t *stage_data = ecs_vector_first(table->stage_data);
+    int32_t i, count = ecs_vector_count(table->stage_data);
+    
+    for (i = 0; i < count; i ++) {
+        deinit_data(table, &stage_data[i]);
+    }
+
+    ecs_vector_free(table->stage_data);
+
+    table->stage_data = NULL; 
 }
 
 static
-ecs_table_column_t* new_columns(
+void run_on_remove_handlers(
     ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_type_t type)
+    ecs_table_t *table)
 {
-    ecs_table_column_t *result = ecs_os_calloc(
-        sizeof(ecs_table_column_t), ecs_vector_count(type) + 1);
-
-    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
-
-    ecs_entity_t *buf = ecs_vector_first(type);
-    uint32_t i, count = ecs_vector_count(type);
-
-    /* First column is reserved for storing entity id's */
-    result[0].size = sizeof(ecs_entity_t);
-    result[0].data = NULL;
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_info_t info = {.entity = buf[i]};
-        EcsComponent *component = ecs_get_ptr_intern(
-            world, stage, &info, EEcsComponent, false, false);
-
-        if (component) {    
-            if (component->size) {
-                /* Regular column data */
-                result[i + 1].size = component->size;
-            }
-        }
-
-        if (table && buf[i] <= EcsLastBuiltin) {
-            table->flags |= EcsTableHasBuiltins;
-        }        
-
-        if (table && buf[i] == EEcsPrefab) {
-            table->flags |= EcsTableIsPrefab;
-        }
+    ecs_data_t *data = ecs_table_get_data(world, table);
+    if (!data) {
+        return;
     }
-    
-    return result;
+
+    int32_t count = ecs_vector_count(data->entities);
+    if (count) {
+        ecs_entities_t components = {
+            .array = ecs_vector_first(table->type),
+            .count = ecs_vector_count(table->type)
+        };
+
+        /* Run deinit actions (dtors) for components. Don't run triggers */
+        ecs_run_deinit_actions(
+            world, &world->stage, table, data, 0, count, components, false);
+    }
 }
 
 /* -- Private functions -- */
 
-ecs_table_column_t* ecs_table_get_columns(
+/* If table goes from 0 to >0 entities or from >0 entities to 0 entities notify
+ * queries. This allows systems associated with queries to move inactive tables
+ * out of the main loop. */
+void ecs_table_activate(
     ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_table_t *table)
+    ecs_table_t *table,
+    ecs_query_t *query,
+    bool activate)
 {
-    if (!world->in_progress) {
-        return table->columns;
+    if (query) {
+        ecs_query_activate_table(world, query, table, activate);
+        #ifndef NDEBUG
+            char *expr = ecs_type_str(world, table->type);
+            ecs_trace_1("table #[green][%s]#[reset] %s for single query", expr, 
+                activate ? "activated" : "deactivatd");
+            ecs_os_free(expr);
+        #endif           
     } else {
-        ecs_type_t type = table->type;
-        ecs_table_column_t *columns;
-
-        if (!ecs_map_has(stage->data_stage, (uintptr_t)type, &columns)) {
-            ecs_type_t type = table->type;
-            columns = new_columns(world, stage, table, type);
-            ecs_map_set(stage->data_stage, (uintptr_t)type, &columns);
+        ecs_vector_t *queries = table->queries;
+        
+        if (queries) {
+            ecs_query_t **buffer = ecs_vector_first(queries);
+            int32_t i, count = ecs_vector_count(queries);
+            for (i = 0; i < count; i ++) {
+                ecs_query_activate_table(world, buffer[i], table, activate);
+            }
         }
 
-        return columns;
+        #ifndef NDEBUG
+            if (ecs_vector_count(queries)) {
+                char *expr = ecs_type_str(world, table->type);
+                ecs_trace_1("table #[green][%s]#[reset] %s for %d queries", expr, 
+                    activate ? "activated" : "deactivated",
+                    ecs_vector_count(queries));
+                ecs_os_free(expr);
+            }
+        #endif         
+    }     
+}
+
+/* This function is called when a query is matched with a table. A table keeps
+ * a list of tables that match so that they can be notified when the table
+ * becomes empty / non-empty. */
+void ecs_table_register_query(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_query_t *query)
+{
+    /* Register system with the table */
+    ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
+    if (q) *q = query;
+
+    ecs_data_t *data = ecs_table_get_data(world, table);
+    if (data && ecs_vector_count(data->entities)) {
+        ecs_table_activate(world, table, query, true);
     }
 }
 
-void ecs_table_init(
+int compare_entity(
+    const void *ptr1,
+    const void *ptr2)
+{
+    const ecs_monitor_t *m1 = ptr1;
+    const ecs_monitor_t *m2 = ptr2;
+    return m1->system - m2->system;
+}
+
+/* This function is called when a query is matched with a table. A table keeps
+ * a list of tables that match so that they can be notified when the table
+ * becomes empty / non-empty. */
+void ecs_table_register_monitor(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t system,
+    int32_t matched_table_index)
+{
+    ecs_assert(system != 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* First check if system is already registered as monitor. It is possible
+     * the query just wants to update the matched_table_index (for example, if
+     * query tables got reordered) */
+    ecs_vector_each(table->monitors, ecs_monitor_t, m, {
+        if (m->system == system) {
+            m->matched_table_index = matched_table_index;
+            return;
+        }
+    });
+
+    /* Monitor hasn't been registered with table, register it now */
+    ecs_monitor_t *m = ecs_vector_add(&table->monitors, ecs_monitor_t);
+    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    m->system = system;
+    m->matched_table_index = matched_table_index;
+
+    /* Sort the vector so we can quickly compare monitors between tables */
+    qsort(
+        ecs_vector_first(table->monitors), 
+        ecs_vector_count(table->monitors), 
+        sizeof(ecs_monitor_t), 
+        compare_entity);
+
+#ifndef NDEBUG
+    char *str = ecs_type_str(world, table->type);
+    ecs_trace_1("monitor #[green]%s#[reset] registered with table #[red]%s",
+        ecs_get_name(world, system), str);
+    ecs_os_free(str);
+#endif
+}
+
+void ecs_table_unregister_monitor(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t system)
+{
+    bool removed = false;
+
+    ecs_vector_each(table->monitors, ecs_monitor_t, m, {
+        if (m->system == system) {
+            ecs_vector_remove_index(table->monitors, ecs_monitor_t, m_i);
+            removed = true;
+            break;
+        }
+    });
+
+    if (!removed) {
+        return;
+    }
+
+    qsort(
+        ecs_vector_first(table->monitors), 
+        ecs_vector_count(table->monitors), 
+        sizeof(ecs_monitor_t), 
+        compare_entity);    
+}
+
+static
+ecs_data_t* ecs_table_get_data_intern(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    bool create)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_vector_t *stage_data = table->stage_data;
+
+    /* If the table doesn't contain any staged data and we're not asked to
+     * create data, don't allocate the array. This will reduce memory footprint
+     * for tables that don't contain data but are used for graph traversal */
+    if (!stage_data && !create) {
+        return NULL;
+    }
+
+    ecs_data_t *data_array = ecs_vector_first(stage_data);
+    int32_t count = ecs_vector_count(stage_data);
+    int32_t stage_count = world->stage_count;
+    int32_t id = stage->id;
+
+    ecs_assert(id < stage_count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!create || id || !world->in_progress, ECS_INTERNAL_ERROR, NULL);
+
+    /* Make sure the array is large enough for the number of active stages. This
+     * guarantees that any pointers returned by this function are stable, unless
+     * the number of stages changes (can happen when the number of worker 
+     * threads changes) */
+    if (count != stage_count) {
+        if (stage_count > count) {
+            /* Grow array, initialize table data to 0 */
+            ecs_vector_set_count(&table->stage_data, ecs_data_t, stage_count);
+            data_array = ecs_vector_first(table->stage_data);
+            memset(&data_array[count], 
+                0, sizeof(ecs_data_t) * (stage_count - count));
+        } else {
+            /* If the number of stages is reduced, deinit redudant stages */
+            int i;
+            for (i = stage_count; i < count; i ++) {
+                deinit_data(table, &data_array[i]);
+            }
+
+            ecs_vector_set_count(&table->stage_data, ecs_data_t, stage_count);
+            data_array = ecs_vector_first(table->stage_data);           
+        }
+
+        int i;
+        for (i = 0; i < stage_count; i ++) {
+            ecs_data_t *data_array = ecs_vector_first(table->stage_data);
+            ecs_stage_t *stage_array = ecs_vector_first(world->worker_stages);
+
+            data_array[0].stage = &world->stage;
+            data_array[1].stage = &world->temp_stage;
+
+            for (i = 2; i < stage_count; i ++) {
+                data_array[i].stage = &stage_array[i - 2];
+            }
+        }
+    }
+    
+    return &data_array[id];
+}
+
+ecs_data_t* ecs_table_get_data(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    return ecs_table_get_data_intern(world, &world->stage, table, false);
+}
+
+ecs_data_t* ecs_table_get_staged_data(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table)
 {
-    table->frame_systems = NULL;
-    table->flags = 0;
-    table->columns = new_columns(world, stage, table, table->type);
+    return ecs_table_get_data_intern(world, stage, table, false);
 }
 
-void ecs_table_deinit(
+ecs_data_t* ecs_table_get_or_create_data(
     ecs_world_t *world,
+    ecs_stage_t *stage,
     ecs_table_t *table)
 {
-    uint32_t count = ecs_vector_count(table->columns[0].data);
-    if (count) {
-        ecs_notify(
-            world, &world->main_stage, world->type_sys_remove_index, 
-            table->type, table, table->columns, 0, count);
+    ecs_data_t *result = ecs_table_get_data_intern(world, stage, table, true);
+
+    /* If write access is requested from table and stage is not the main 
+     * stage mark this table as dirty as it will contain staged data. */
+    if (world->in_progress && !result->marked_dirty) {
+        ecs_table_t** table_ptr = ecs_vector_add(
+                &stage->dirty_tables, ecs_table_t*);
+        *table_ptr = table;
+
+        /* Don't add table multiple times. Value is reset during merge */
+        result->marked_dirty = true;
     }
+
+    return result;   
 }
 
-/* Utility function to free column data */
-void clear_columns(
-    ecs_table_t *table)
+void ecs_table_clear_data(
+    ecs_table_t *table,
+    ecs_data_t *data)
 {
-    uint32_t i, column_count = ecs_vector_count(table->type);
-    
-    for (i = 0; i < column_count + 1; i ++) {
-        ecs_vector_free(table->columns[i].data);
-        table->columns[i].data = NULL;
-    }
+    deinit_data(table, data);
 }
 
 /* Clear columns. Deactivate table in systems if necessary, but do not invoke
  * OnRemove handlers. This is typically used when restoring a table to a
  * previous state. */
-void ecs_table_clear(
+void ecs_table_clear_silent(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    uint32_t count = ecs_vector_count(table->columns[0].data);
+    ecs_data_t *data = ecs_table_get_data(world, table);
+    if (!data) {
+        return;
+    }
+
+    int32_t count = ecs_vector_count(data->entities);
     
-    clear_columns(table);
+    deinit_all_data(table);
 
     if (count) {
-        activate_table(world, table, 0, false);
-    }
-}
-
-/* Replace columns. Activate / deactivate table with systems if necessary. */
-void ecs_table_replace_columns(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_table_column_t *columns)
-{
-    uint32_t prev_count = 0;
-
-    if (table->columns) {
-        prev_count = ecs_vector_count(table->columns[0].data);
-        clear_columns(table);
-    }
-
-    if (columns) {
-        ecs_os_free(table->columns);
-        table->columns = columns;
-    }
-
-    uint32_t count = 0;
-    if (table->columns) {
-        count = ecs_vector_count(table->columns[0].data);
-    }
-
-    if (!prev_count && count) {
-        activate_table(world, table, 0, true);
-    } else if (prev_count && !count) {
-        activate_table(world, table, 0, false);
+        ecs_table_activate(world, table, 0, false);
     }
 }
 
 /* Delete all entities in table, invoke OnRemove handlers. This function is used
- * when an application invokes delete_w_filter. Use ecs_table_clear, as the
+ * when an application invokes delete_w_filter. Use ecs_table_clear_silent, as the
  * table may have to be deactivated with systems. */
-void ecs_table_delete_all(
+void ecs_table_clear(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_table_deinit(world, table);
-    ecs_table_clear(world, table);
+    run_on_remove_handlers(world, table);
+
+    ecs_data_t *data = ecs_table_get_data(world, table);
+    if (data) {
+        ecs_entity_t *entities = ecs_vector_first(data->entities);
+        int32_t i, count = ecs_vector_count(data->entities);
+        for(i = 0; i < count; i ++) {
+            ecs_eis_delete(&world->stage, entities[i]);
+        }
+    }
+
+    ecs_table_clear_silent(world, table);
 }
 
 /* Free table resources. Do not invoke handlers and do not activate/deactivate
@@ -187,275 +402,402 @@ void ecs_table_free(
     ecs_table_t *table)
 {
     (void)world;
-    clear_columns(table);
-    ecs_os_free(table->columns);
-    ecs_vector_free(table->frame_systems);
+    run_on_remove_handlers(world, table);
+    deinit_all_data(table);
+    ecs_os_free(table->lo_edges);
+    ecs_map_free(table->hi_edges);
+    ecs_vector_free(table->queries);
+    ecs_vector_free((ecs_vector_t*)table->type);
+    ecs_os_free(table->dirty_state);
+    ecs_vector_free(table->monitors);
 }
 
-void ecs_table_register_system(
+/* Reset a table to its initial state. This is used to reset the root table of a
+ * stage after a merge has occurred, so that it no longer refers to tables that
+ * were created in the stage. */
+void ecs_table_reset(
     ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t system)
+    ecs_table_t *table)
 {
-    /* Register system with the table */
-    ecs_entity_t *h = ecs_vector_add(&table->frame_systems, &handle_arr_params);
-    if (h) *h = system;
-
-    if (ecs_vector_count(table->columns[0].data)) {
-        activate_table(world, table, system, true);
+    if (table->lo_edges) {
+        memset(table->lo_edges, 0, sizeof(ecs_edge_t) * ECS_HI_COMPONENT_ID);
+        ecs_map_clear(table->hi_edges);
     }
 }
 
-uint32_t ecs_table_insert(
+/* Replace columns. Activate / deactivate table with systems if necessary. */
+void ecs_table_replace_data(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
-    ecs_entity_t entity)
+    ecs_data_t *data)
 {
-    uint32_t column_count = ecs_vector_count(table->type);
+    int32_t prev_count = 0;
+    ecs_data_t *table_data = ecs_vector_first(table->stage_data);
+    ecs_assert(!data || data != table_data, ECS_INTERNAL_ERROR, NULL);
 
-    /* Fist add entity to column with entity ids */
-    ecs_entity_t *e = ecs_vector_add(&columns[0].data, &handle_arr_params);
-    ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (table_data) {
+        prev_count = ecs_vector_count(table_data->entities);
+        deinit_data(table, table_data);
+    }
 
-    *e = entity;
+    table_data = ecs_table_get_or_create_data(world, &world->stage, table);
+    if (data) {
+        *table_data = *data;
+    }
 
-    /* Add elements to each column array */
-    uint32_t i;
-    bool reallocd = false;
+    int32_t count = 0;
+    if (table_data) {
+        count = ecs_vector_count(table_data->entities);
+    }
 
-    for (i = 1; i < column_count + 1; i ++) {
-        uint32_t size = columns[i].size;
-        if (size) {
-            ecs_vector_params_t params = {.element_size = size};
-            void *old_vector = columns[i].data;
+    if (!prev_count && count) {
+        ecs_table_activate(world, table, 0, true);
+    } else if (prev_count && !count) {
+        ecs_table_activate(world, table, 0, false);
+    }
+}
 
-            ecs_vector_add(&columns[i].data, &params);
-            
-            if (old_vector != columns[i].data) {
-                reallocd = true;
+static
+void mark_dirty(
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t index)
+{
+    data->change_count ++;
+
+    if (table->dirty_state) {
+        table->dirty_state[index] ++;
+    }
+}
+
+int32_t ecs_table_append(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    ecs_entity_t entity,
+    ecs_record_t *record)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    int32_t column_count = ecs_vector_count(table->type);
+
+    if (column_count) {
+        ecs_column_t *columns = data->columns;
+
+        /* It is possible that the table data was created without content. Now that
+        * data is going to be written to the table, initialize it */ 
+        if (!columns) {
+            init_data(world, table, data);
+            columns = data->columns;
+        }
+
+        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* Add elements to each column array */
+        int32_t i;
+        for (i = 0; i < column_count; i ++) {
+            int32_t size = columns[i].size;
+            if (size) {
+                _ecs_vector_add(&columns[i].data, size);
             }
         }
     }
 
-    uint32_t index = ecs_vector_count(columns[0].data) - 1;
+    /* Fist add entity to array with entity ids */
+    ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
+    ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
+    *e = entity;
+
+    /* Add record ptr to array with record ptrs */
+    ecs_record_t **r = ecs_vector_add(&data->record_ptrs, ecs_record_t*);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    *r = record;
+
+    /* If the table is monitored indicate that there has been a change */
+    mark_dirty(table, data, 0);
+
+    int32_t index = ecs_vector_count(data->entities) - 1;
 
     if (!world->in_progress && !index) {
-        activate_table(world, table, 0, true);
-    }
-
-    if (reallocd && table->columns == columns) {
-        world->should_resolve = true;
+        ecs_table_activate(world, table, 0, true);
     }
 
     /* Return index of last added entity */
-    return index + 1;
+    return index;
 }
 
 void ecs_table_delete(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
-    int32_t sindex)
+    ecs_data_t *data,
+    int32_t index)
 {
-    if (!stage) {
-        stage = &world->main_stage;
-    }
-    if (!columns) {
-        columns = table->columns;
-    }
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_vector_t *entity_column = columns[0].data;
-    uint32_t index, count = ecs_vector_count(entity_column);
+    ecs_vector_t *entity_column = data->entities;
+    int32_t count = ecs_vector_count(entity_column);
 
-    if (sindex < 0) {
-        index = -sindex;
-    } else {
-        index = sindex;
-    }
-
-    index --;
-
-    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
-
+    ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
     count --;
     
     ecs_assert(index <= count, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t column_last = ecs_vector_count(table->type) + 1;
+    uint32_t column_count = ecs_vector_count(table->type);
     uint32_t i;
 
-    if (index != count) {
-        /* Move last entity in array to index */
+    if (index != count) {   
+        /* Move last entity id to index */     
         ecs_entity_t *entities = ecs_vector_first(entity_column);
-        ecs_entity_t to_move = entities[count];
-        entities[index] = to_move;
+        ecs_entity_t entity_to_move = entities[count];
+        entities[index] = entity_to_move;
+        ecs_vector_remove_last(entity_column);
 
-        for (i = 1; i < column_last; i ++) {
-            if (columns[i].size) {
-                ecs_vector_params_t params = {.element_size = columns[i].size};
-                ecs_vector_remove_index(columns[i].data, &params, index);
+        /* Move last record ptr to index */
+        ecs_vector_t *record_column = data->record_ptrs;     
+        ecs_record_t **records = ecs_vector_first(record_column);
+        ecs_record_t *record_to_move = records[count];
+        records[index] = record_to_move;
+        ecs_vector_remove_last(record_column);
+
+        /* Move each component value in array to index */
+        ecs_column_t *components = data->columns;
+        for (i = 0; i < column_count; i ++) {
+            ecs_column_t *component_column = &components[i];
+            uint32_t size = component_column->size;
+            if (size) {
+                _ecs_vector_remove_index(
+                    component_column->data, size, index);
             }
         }
 
-        /* Last entity in table is now moved to index of removed entity */
-        ecs_row_t row;
-        row.type = table->type;
-        row.index = index + 1;
-        ecs_map_set(stage->entity_index, to_move, &row);
+        /* Update record of moved entity in entity index */
+        if (!world->in_progress && record_to_move) {
+            record_to_move->row = index + 1;
+        } else {
+            ecs_record_t row;
+            row.table = table;
+            row.row = index + 1;
+            ecs_eis_set(stage, entity_to_move, &row);
+        }
 
-        /* Decrease size of entity column */
-        ecs_vector_remove_last(entity_column);
-
-    /* This is the last entity in the table, just decrease column counts */
+    /* If this is the last entity in the table, just decrease column counts */
     } else {
         ecs_vector_remove_last(entity_column);
+        ecs_vector_remove_last(data->record_ptrs);
 
-        for (i = 1; i < column_last; i ++) {
-            if (columns[i].size) {
-                ecs_vector_remove_last(columns[i].data);
+        ecs_column_t *components = data->columns;
+        for (i = 0; i < column_count; i ++) {
+            ecs_column_t *component_column = &components[i];
+            if (component_column->size) {
+                ecs_vector_remove_last(component_column->data);
             }
         }
     }
-    
+
+    /* If the table is monitored indicate that there has been a change */
+    mark_dirty(table, data, 0);    
+
     if (!world->in_progress && !count) {
-        activate_table(world, table, 0, false);
+        ecs_table_activate(world, table, NULL, false);
     }
 }
 
-uint32_t ecs_table_grow(
+int32_t ecs_table_grow(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
-    uint32_t count,
+    ecs_data_t *data,
+    int32_t count,
     ecs_entity_t first_entity)
 {
-    uint32_t column_count = ecs_vector_count(table->type);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t column_count = ecs_vector_count(table->type);
+    ecs_column_t *columns = NULL;
+
+    if (column_count) {
+        columns = data->columns;
+
+        /* It is possible that the table data was created without content. Now that
+        * data is going to be written to the table, initialize it */ 
+        if (!columns) {
+            init_data(world, table, data);
+            columns = data->columns;
+        }
+
+        ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    /* Fist grow record ptr array */
+    ecs_record_t **r = ecs_vector_addn(&data->record_ptrs, ecs_record_t*, count);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);    
 
     /* Fist add entity to column with entity ids */
-    ecs_entity_t *e = ecs_vector_addn(&columns[0].data, &handle_arr_params, count);
+    ecs_entity_t *e = ecs_vector_addn(&data->entities, ecs_entity_t, count);
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < count; i ++) {
         e[i] = first_entity + i;
+        r[i] = NULL;
     }
-
-    bool reallocd = false;
 
     /* Add elements to each column array */
-    for (i = 1; i < column_count + 1; i ++) {
-        ecs_vector_params_t params = {.element_size = columns[i].size};
-        if (!params.element_size) {
+    for (i = 0; i < column_count; i ++) {
+        size_t column_size = columns[i].size;
+        if (!column_size) {
             continue;
         }
-        void *old_vector = columns[i].data;
 
-        ecs_vector_addn(&columns[i].data, &params, count);
-
-        if (old_vector != columns[i].data) {
-            reallocd = true;
-        }
+        _ecs_vector_addn(&columns[i].data, column_size, count);
     }
 
-    uint32_t row_count = ecs_vector_count(columns[0].data);
+    /* If the table is monitored indicate that there has been a change */
+    mark_dirty(table, data, 0);    
+
+    int32_t row_count = ecs_vector_count(data->entities);
     if (!world->in_progress && row_count == count) {
-        activate_table(world, table, 0, true);
-    }
-
-    if (reallocd && table->columns == columns) {
-        world->should_resolve = true;
+        ecs_table_activate(world, table, 0, true);
     }
 
     /* Return index of first added entity */
-    return row_count - count + 1;
+    return row_count - count;
 }
 
-int16_t ecs_table_dim(
+int16_t ecs_table_set_size(
+    ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
-    uint32_t count)
+    ecs_data_t *data,
+    int32_t count)
 {
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_column_t *columns = data->columns;
+
     if (!columns) {
-        columns = table->columns;
+        init_data(world, table, data);
+        columns = data->columns;
     }
 
-    uint32_t column_count = ecs_vector_count(table->type);
+    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t size = ecs_vector_set_size(
-        &columns[0].data, &handle_arr_params, count);
-    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-    (void)size;
+    ecs_vector_set_size(&data->entities, ecs_entity_t, count);
+    ecs_vector_set_size(&data->record_ptrs, ecs_record_t*, count);
 
-    uint32_t i;
-    for (i = 1; i < column_count + 1; i ++) {
-        uint32_t column_size = columns[i].size;
-
+    int32_t i, column_count = ecs_vector_count(table->type);
+    for (i = 0; i < column_count; i ++) {
+        int32_t column_size = columns[i].size;
         if (column_size) {
-            ecs_vector_params_t params = {.element_size = column_size};
-            uint32_t size = ecs_vector_set_size(&columns[i].data, &params, count);
-            ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-            (void)size;
-        } else {
-            ecs_assert(columns[i].data == NULL, ECS_INTERNAL_ERROR, NULL);
+            _ecs_vector_set_size(&columns[i].data, column_size, count);
         }
     }
 
     return 0;
 }
 
+int16_t ecs_table_set_count(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t count)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_column_t *columns = data->columns;
+
+    if (!columns) {
+        init_data(world, table, data);
+        columns = data->columns;
+    }
+
+    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_vector_set_count(&data->entities, ecs_entity_t, count);
+    ecs_vector_set_count(&data->record_ptrs, ecs_record_t*, count);
+
+    int32_t i, column_count = ecs_vector_count(table->type);
+    for (i = 0; i < column_count; i ++) {
+        int32_t column_size = columns[i].size;
+        if (column_size) {
+            _ecs_vector_set_count(&columns[i].data, column_size, count);
+        }
+    }
+
+    return 0;
+}
+
+uint64_t ecs_table_data_count(
+    ecs_data_t *data)
+{
+    return data ? ecs_vector_count(data->entities) : 0;
+}
+
 uint64_t ecs_table_count(
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->columns[0].data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_data_t *data = ecs_vector_first(table->stage_data);
+    if (!data) {
+        return 0;
+    }
 
-    return ecs_vector_count(table->columns[0].data);
+    return ecs_table_data_count(data);
 }
 
 void ecs_table_swap(
+    ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
-    ecs_table_column_t *columns,
+    ecs_data_t *data,
     int32_t row_1,
-    int32_t row_2,
-    ecs_row_t *row_ptr_1,
-    ecs_row_t *row_ptr_2)
+    int32_t row_2)
 {    
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_column_t *columns = data->columns;
+    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
-
+    
     if (row_1 == row_2) {
         return;
     }
 
-    ecs_entity_t *entities = ecs_vector_first(columns[0].data);
+    ecs_entity_t *entities = ecs_vector_first(data->entities);
     ecs_entity_t e1 = entities[row_1];
     ecs_entity_t e2 = entities[row_2];
+
+    ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs);
+    ecs_record_t *record_ptr_1 = record_ptrs[row_1];
+    ecs_record_t *record_ptr_2 = record_ptrs[row_2];
     
     /* Get pointers to records in entity index */
-    if (!row_ptr_1) {
-        row_ptr_1 = ecs_map_get_ptr(stage->entity_index, e1);
+    if (!record_ptr_1) {
+        record_ptr_1 = ecs_eis_get(stage, e1);
     }
 
-    if (!row_ptr_2) {
-        row_ptr_2 = ecs_map_get_ptr(stage->entity_index, e2);
+    if (!record_ptr_2) {
+        record_ptr_2 = ecs_eis_get(stage, e2);
     }
 
     /* Swap entities */
     entities[row_1] = e2;
     entities[row_2] = e1;
-    row_ptr_1->index = row_2 + 1;
-    row_ptr_2->index = row_1 + 1;
+    record_ptr_1->row = row_2 + 1;
+    record_ptr_2->row = row_1 + 1;
 
     /* Swap columns */
-    uint32_t i, column_count = ecs_vector_count(table->type);
+    int32_t i, column_count = ecs_vector_count(table->type);
     
     for (i = 0; i < column_count; i ++) {
-        void *data = ecs_vector_first(columns[i + 1].data);
-        uint32_t size = columns[i + 1].size;
+        void *data = ecs_vector_first(columns[i].data);
+        int32_t size = columns[i].size;
 
         if (size) {
             void *tmp = _ecs_os_alloca(size, 1);
@@ -468,58 +810,42 @@ void ecs_table_swap(
             memcpy(el_2, tmp, size);
         }
     }
+
+    /* If the table is monitored indicate that there has been a change */
+    mark_dirty(table, data, 0);    
 }
 
-void ecs_table_move_back_and_swap(
-    ecs_stage_t *stage,
-    ecs_table_t *table,
-    ecs_table_column_t *columns,
-    uint32_t row,
-    uint32_t count)
+static
+void merge_vector(
+    ecs_vector_t **dst_out,
+    ecs_vector_t *src,
+    uint32_t size)
 {
-    ecs_entity_t *entities = ecs_vector_first(columns[0].data);
-    uint32_t i;
+    ecs_vector_t *dst = *dst_out;
+    uint32_t dst_count = ecs_vector_count(dst);
 
-    /* First move back and swap entities */
-    ecs_entity_t e = entities[row - 1];
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t cur = entities[row + i];
-        entities[row + i - 1] = cur;
-
-        ecs_row_t *row_ptr = ecs_map_get_ptr(stage->entity_index, cur);
-        row_ptr->index = row + i;
-    }
-
-    entities[row + count - 1] = e;
-    ecs_row_t *row_ptr = ecs_map_get_ptr(stage->entity_index, e);
-    row_ptr->index = row + count;
-
-    /* Move back and swap columns */
-    uint32_t column_count = ecs_vector_count(table->type);
-    
-    for (i = 0; i < column_count; i ++) {
-        void *data = ecs_vector_first(columns[i + 1].data);
-        uint32_t size = columns[i + 1].size;
-
-        if (size) {
-            /* Backup first element */
-            void *tmp = _ecs_os_alloca(size, 1);
-            void *el = ECS_OFFSET(data, size * (row - 1));
-            memcpy(tmp, el, size);
-
-            /* Move component values */
-            uint32_t j;
-            for (j = 0; j < count; j ++) {
-                void *dst = ECS_OFFSET(data, size * (row + j - 1));
-                void *src = ECS_OFFSET(data, size * (row + j));
-                memcpy(dst, src, size);
-            }
-
-            /* Move first element to last element */
-            void *dst = ECS_OFFSET(data, size * (row + count - 1));
-            memcpy(dst, tmp, size);
+    if (!dst_count) {
+        if (dst) {
+            ecs_vector_free(dst);
         }
-    }
+
+        *dst_out = src;
+    
+    /* If the new table is not empty, copy the contents from the
+     * src into the dst. */
+    } else {
+        uint32_t src_count = ecs_vector_count(src);
+        _ecs_vector_set_count(&dst, size, dst_count + src_count);
+        
+        void *dst_ptr = ecs_vector_first(dst);
+        void *src_ptr = ecs_vector_first(src);
+
+        dst_ptr = ECS_OFFSET(dst_ptr, size * src_count);
+        memcpy(dst_ptr, src_ptr, size * src_count);
+
+        ecs_vector_free(src);
+        *dst_out = dst;
+    }    
 }
 
 void ecs_table_merge(
@@ -528,32 +854,49 @@ void ecs_table_merge(
     ecs_table_t *old_table)
 {
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_table != old_table, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_type_t new_type = new_table ? new_table->type : NULL;
+    /* If there is no data to merge, drop out */
+    ecs_data_t *old_data = ecs_table_get_data(world, old_table);
+    if (!old_data) {
+        return;
+    }
+
+    ecs_type_t new_type = new_table->type;
     ecs_type_t old_type = old_table->type;
     ecs_assert(new_type != old_type, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_column_t *new_columns = new_table ? new_table->columns : NULL;
-    ecs_table_column_t *old_columns = old_table->columns;
+    ecs_data_t *new_data = ecs_table_get_or_create_data(
+        world, &world->stage, new_table);
+    ecs_assert(new_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_column_t *old_columns = old_data->columns;
+    ecs_column_t *new_columns = new_data->columns;
+    if (!new_columns) {
+        init_data(world, new_table, new_data);
+        new_columns = new_data->columns;
+    }
+
+    ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(old_columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t old_count = old_columns->data ? ecs_vector_count(old_columns->data) : 0;
-    uint32_t new_count = 0;
+    int32_t old_count = old_columns->data ? ecs_vector_count(old_columns->data) : 0;
+    int32_t new_count = 0;
     if (new_columns) {
         new_count = new_columns->data ? ecs_vector_count(new_columns->data) : 0;
     }
 
     /* First, update entity index so old entities point to new type */
-    ecs_entity_t *old_entities = ecs_vector_first(old_columns[0].data);
-    uint32_t i;
+    ecs_entity_t *old_entities = ecs_vector_first(old_data->entities);
+    int32_t i;
     for(i = 0; i < old_count; i ++) {
-        ecs_row_t row = {.type = new_type, .index = i + new_count};
-        ecs_map_set(world->main_stage.entity_index, old_entities[i], &row);
+        ecs_record_t record = {.table = new_table, .row = i + new_count};
+        ecs_eis_set(&world->stage, old_entities[i], &record);
     }
 
     if (!new_table) {
-        ecs_table_delete_all(world, old_table);
+        ecs_table_clear(world, old_table);
         return;
     }
 
@@ -566,14 +909,14 @@ void ecs_table_merge(
         return;
     }
 
-    for (i_new = 0; i_new <= new_component_count; ) {
+    for (i_new = 0; i_new < new_component_count; ) {
         if (i_old == old_component_count) {
             break;
         }
 
         ecs_entity_t new_component = 0;
         ecs_entity_t old_component = 0;
-        uint32_t size = 0;
+        int32_t size = 0;
 
         if (i_new) {
             new_component = new_components[i_new - 1];
@@ -583,41 +926,19 @@ void ecs_table_merge(
             size = sizeof(ecs_entity_t);
         }
 
-        if ((new_component & ECS_ENTITY_FLAGS_MASK) || 
-            (old_component & ECS_ENTITY_FLAGS_MASK)) 
+        if ((new_component & ECS_TYPE_FLAG_MASK) || 
+            (old_component & ECS_TYPE_FLAG_MASK)) 
         {
             break;
         }
 
         if (new_component == old_component) {
-            /* If the new table is empty, move column to new table */
-            if (!new_count) {
-                ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-                if (new_columns[i_new].data) {
-                    ecs_vector_free(new_columns[i_new].data);
-                }
-                new_columns[i_new].data = old_columns[i_old].data;
-                old_columns[i_old].data = NULL;
-            
-            /* If the new table is not empty, copy the contents from the
-             * smallest into the largest vector. */
-            } else {
-                ecs_vector_t *dst = new_columns[i_new].data;
-                ecs_vector_t *src = old_columns[i_old].data;
+            merge_vector(
+                &new_columns[i_new].data, old_columns[i_old].data, size);
+            old_columns[i_old].data = NULL;
 
-                ecs_vector_params_t params = {.element_size = size};
-                ecs_vector_set_count(&dst, &params, new_count + old_count);
-                
-                void *dst_ptr = ecs_vector_first(dst);
-                void *src_ptr = ecs_vector_first(src);
-
-                dst_ptr = ECS_OFFSET(dst_ptr, size * old_count);
-                memcpy(dst_ptr, src_ptr, size * old_count);
-
-                ecs_vector_free(src);
-                old_columns[i_old].data = NULL;
-                new_columns[i_new].data = dst;
-            }
+            /* Mark component column as dirty */
+            mark_dirty(new_table, new_data, i_new + 1);
             
             i_new ++;
             i_old ++;
@@ -632,4 +953,170 @@ void ecs_table_merge(
             i_old ++;
         }
     }
+
+    merge_vector(&new_data->entities, old_data->entities, sizeof(ecs_entity_t));
+    old_data->entities = NULL;
+
+    /* Mark entity column as dirty */
+    mark_dirty(new_table, new_data, 0);    
+}
+
+static
+void copy_column(
+    ecs_column_t *new_column,
+    int32_t new_index,
+    ecs_column_t *old_column,
+    int32_t old_index)
+{
+    ecs_assert(old_index >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new_index >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t size = new_column->size;
+
+    if (size) {
+        size_t column_size = new_column->size;
+        
+        void *dst = _ecs_vector_get(new_column->data, column_size, new_index);
+        void *src = _ecs_vector_get(old_column->data, column_size, old_index);
+            
+        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        memcpy(dst, src, column_size);
+    }
+}
+
+void ecs_table_move(
+    ecs_table_t *new_table,
+    ecs_data_t *new_data,
+    int32_t new_index,
+    ecs_table_t *old_table,
+    ecs_data_t *old_data,
+    int32_t old_index)
+{
+    ecs_assert(new_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_type_t new_type = new_table->type;
+    ecs_type_t old_type = old_table->type;
+
+    uint16_t i_new, new_column_count = ecs_vector_count(new_type);
+    if (!new_column_count) {
+        return;
+    }
+
+    uint16_t i_old = 0, old_column_count = ecs_vector_count(old_type);
+    ecs_entity_t *new_components = ecs_vector_first(new_type);
+    ecs_entity_t *old_components = ecs_vector_first(old_type);
+
+    ecs_assert(old_index >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new_index >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_assert(old_data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_column_t *old_columns = old_data->columns;
+    ecs_column_t *new_columns = new_data->columns;
+
+    ecs_assert(old_columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    for (i_new = 0; i_new < new_column_count; ) {
+        if (i_old == old_column_count) {
+            break;
+        }
+
+        ecs_entity_t new_component = new_components[i_new];
+        ecs_entity_t old_component = old_components[i_old];
+
+        if ((new_component & ECS_TYPE_FLAG_MASK) || 
+            (old_component & ECS_TYPE_FLAG_MASK)) 
+        {
+            break;
+        }
+
+        if (new_component == old_component) {
+            copy_column(&new_columns[i_new], new_index, &old_columns[i_old], old_index);
+            i_new ++;
+            i_old ++;
+        } else if (new_component < old_component) {
+            i_new ++;
+        } else if (new_component > old_component) {
+            i_old ++;
+        }
+    }
+}
+
+bool ecs_table_match_filter(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    const ecs_filter_t *filter)
+{
+    if (!filter) {
+        return true;
+    }
+
+    ecs_type_t type = table->type;
+    
+    if (filter->include) {
+        /* If filter kind is exact, types must be the same */
+        if (filter->include_kind == EcsMatchExact) {
+            if (type != filter->include) {
+                return false;
+            }
+
+        /* Default for include_kind is MatchAll */
+        } else if (!ecs_type_contains(world, type, filter->include, 
+            filter->include_kind != EcsMatchAny, true)) 
+        {
+            return false;
+        }
+    
+    /* If no include filter is specified, make sure that builtin components
+     * aren't matched by default. */
+    } else {
+        if (table->flags & EcsTableHasBuiltins)
+        {
+            /* Continue if table contains any of the builtin components */
+            return false;
+        }
+    }
+
+    if (filter->exclude) {
+        /* If filter kind is exact, types must be the same */
+        if (filter->exclude_kind == EcsMatchExact) {
+            if (type == filter->exclude) {
+                return false;
+            }
+        
+        /* Default for exclude_kind is MatchAny */                
+        } else if (ecs_type_contains(world, type, filter->exclude, 
+            filter->exclude_kind == EcsMatchAll, true))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+int32_t* ecs_table_get_dirty_state(
+    ecs_table_t *table)
+{
+    if (!table->dirty_state) {
+        int32_t column_count = ecs_vector_size(table->type);
+        table->dirty_state = ecs_os_calloc(column_count + 1, sizeof(int32_t));
+        ecs_assert(table->dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+    return table->dirty_state;
+}
+
+int32_t* ecs_table_get_monitor(
+    ecs_table_t *table)
+{
+    int32_t *dirty_state = ecs_table_get_dirty_state(table);
+    ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t column_count = ecs_vector_size(table->type);
+    return ecs_os_memdup(dirty_state, (column_count + 1) * sizeof(int32_t));
 }

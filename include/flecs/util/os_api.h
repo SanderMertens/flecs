@@ -15,7 +15,7 @@ extern "C" {
 
 typedef struct ecs_time_t {
     int32_t sec;
-    uint32_t nanosec;
+    int32_t nanosec;
 } ecs_time_t;
 
 /* Allocation counters (not thread safe) */
@@ -113,8 +113,8 @@ void (*ecs_os_api_cond_wait_t)(
 
 typedef 
 void (*ecs_os_api_sleep_t)(
-    uint32_t sec,
-    uint32_t nanosec);
+    int32_t sec,
+    int32_t nanosec);
 
 typedef
 void (*ecs_os_api_get_time_t)(

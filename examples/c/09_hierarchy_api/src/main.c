@@ -23,7 +23,7 @@ void Move(ecs_rows_t *rows) {
         /* Print something to the console so we can see the system is being
          * invoked */
         printf("%s moved to {.x = %f, .y = %f}\n",
-            ecs_get_id(rows->world, rows->entities[i]),
+            ecs_get_name(rows->world, rows->entities[i]),
             p[i].x, p[i].y);
     }
 }
@@ -47,7 +47,7 @@ void Transform(ecs_rows_t *rows) {
             /* Print something to the console so we can see the system is being
             * invoked */
             printf("%s transformed to {.x = %f, .y = %f} <<root>>\n",
-                ecs_get_id(rows->world, rows->entities[i]),
+                ecs_get_name(rows->world, rows->entities[i]),
                 wp[i].x, wp[i].y);
         }
     } else {
@@ -58,7 +58,7 @@ void Transform(ecs_rows_t *rows) {
             /* Print something to the console so we can see the system is being
             * invoked */
             printf("%s transformed to {.x = %f, .y = %f} <<child>>\n",
-                ecs_get_id(rows->world, rows->entities[i]),
+                ecs_get_name(rows->world, rows->entities[i]),
                 wp[i].x, wp[i].y);
         }
     }
@@ -85,28 +85,28 @@ int main(int argc, char *argv[]) {
 
     /* Create root of the hierachy which moves around */
     ecs_entity_t Root = ecs_new(world, 0);
-    ecs_set(world, Root, EcsId, {"Root"});
+    ecs_set(world, Root, EcsName, {"Root"});
     ecs_add(world, Root, WorldPosition);
     ecs_set(world, Root, Position, {0, 0});
     ecs_set(world, Root, Velocity, {1, 2});
 
-        ecs_entity_t Child1 = ecs_new_child(world, Root, 0);
-        ecs_set(world, Child1, EcsId, {"Child1"});
+        ecs_entity_t Child1 = ecs_new_w_entity(world, ECS_CHILDOF | Root);
+        ecs_set(world, Child1, EcsName, {"Child1"});
         ecs_add(world, Child1, WorldPosition);
         ecs_set(world, Child1, Position, {100, 100});
 
-            ecs_entity_t GChild1 = ecs_new_child(world, Child1, 0);
-            ecs_set(world, GChild1, EcsId, {"GChild1"});
+            ecs_entity_t GChild1 = ecs_new_w_entity(world, ECS_CHILDOF | Child1);
+            ecs_set(world, GChild1, EcsName, {"GChild1"});
             ecs_add(world, GChild1, WorldPosition);
             ecs_set(world, GChild1, Position, {1000, 1000});
 
-        ecs_entity_t Child2 = ecs_new_child(world, Root, 0);
-        ecs_set(world, Child2, EcsId, {"Child2"});
+        ecs_entity_t Child2 = ecs_new_w_entity(world, ECS_CHILDOF | Root);
+        ecs_set(world, Child2, EcsName, {"Child2"});
         ecs_add(world, Child2, WorldPosition);
         ecs_set(world, Child2, Position, {100, 100});
 
-            ecs_entity_t GChild2 = ecs_new_child(world, Child1, 0);
-            ecs_set(world, GChild2, EcsId, {"GChild1"});
+            ecs_entity_t GChild2 = ecs_new_w_entity(world, ECS_CHILDOF | Child1);
+            ecs_set(world, GChild2, EcsName, {"GChild1"});
             ecs_add(world, GChild2, WorldPosition);
             ecs_set(world, GChild2, Position, {1000, 1000});
 
