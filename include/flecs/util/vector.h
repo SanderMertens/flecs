@@ -184,6 +184,7 @@ ecs_vector_t* _ecs_vector_copy(
 #define ecs_vector_copy(src, T) \
     _ecs_vector_copy(src, sizeof(T))    
 
+#ifndef __BAKE_LEGACY__
 #define ecs_vector_each(vector, T, var, ...)\
     {\
         int var##_i, var##_count = ecs_vector_count(vector);\
@@ -193,7 +194,7 @@ ecs_vector_t* _ecs_vector_copy(
             __VA_ARGS__\
         }\
     }
-
+#endif
 #ifdef __cplusplus
 }
 #endif
