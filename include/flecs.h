@@ -442,6 +442,15 @@ extern ecs_type_t
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
 
+/** Declare a tag.
+ * A tag is a regular entity. This macro is provided for convenience, as in
+ * addition to creating an entity, it also declares a type variable. This makes
+ * it easier to use the entity in function calls that expect a component. */
+#define ECS_TAG(world, id) \
+    ECS_ENTITY(world, id, 0);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
+    (void)ecs_type(id);\
+
 /** Declare a type.
  * This macro declares a type with the provided id and components. Types are
  * similar to components in that they can be added to an entity, but instead of
@@ -823,6 +832,8 @@ void ecs_tracing_enable(
 #define ECS_VERBOSITY_2
 #endif
 
+#ifndef NDEBUG
+
 #if defined(ECS_VERBOSITY_3)
 #define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
 #define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
@@ -839,6 +850,13 @@ void ecs_tracing_enable(
 #define ecs_trace_3(...)
 #endif
 
+#else
+
+#define ecs_trace_1(...)
+#define ecs_trace_2(...)
+#define ecs_trace_3(...)
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API
@@ -921,19 +939,17 @@ void ecs_remove_type(
 FLECS_EXPORT
 void ecs_bulk_add_entity(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_entity_t component,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 FLECS_EXPORT
 void ecs_bulk_add_type(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_type_t type,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
-#define ecs_bulk_add(world, entity, type, filter)\
-    ecs_bulk_add_type(world, entity, T##type, filter)
+#define ecs_bulk_add(world, type, filter)\
+    ecs_bulk_add_type(world, T##type, filter)
 
 
 /* -- Bulk remove -- */
@@ -941,19 +957,17 @@ void ecs_bulk_add_type(
 FLECS_EXPORT
 void ecs_bulk_remove_entity(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_entity_t component,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 FLECS_EXPORT
 void ecs_bulk_remove_type(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_type_t type,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
-#define ecs_bulk_remove(world, entity, type, filter)\
-    ecs_bulk_remove_type(world, entity, T##type, filter)
+#define ecs_bulk_remove(world, type, filter)\
+    ecs_bulk_remove_type(world, T##type, filter)
 
 
 /* -- Add remove / Bulk add remove -- */
@@ -2187,6 +2201,11 @@ FLECS_EXPORT
 char* ecs_type_str(
     ecs_world_t *world,
     ecs_type_t type);
+
+FLECS_EXPORT
+ecs_type_t ecs_type_from_str(
+    ecs_world_t *world,
+    const char *expr);    
 
 FLECS_EXPORT
 ecs_type_t ecs_type_find(

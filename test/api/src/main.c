@@ -85,23 +85,23 @@ void Remove_1_from_empty(void);
 void Remove_type_from_empty(void);
 void Remove_not_added(void);
 
-// Testsuite 'Add_remove_w_filter'
-void Add_remove_w_filter_remove_1_no_filter(void);
-void Add_remove_w_filter_remove_2_no_filter(void);
-void Add_remove_w_filter_remove_1_to_empty_no_filter(void);
-void Add_remove_w_filter_remove_2_to_empty_no_filter(void);
-void Add_remove_w_filter_remove_1_all_no_filter(void);
-void Add_remove_w_filter_remove_2_all_no_filter(void);
-void Add_remove_w_filter_remove_1_exclude_1(void);
-void Add_remove_w_filter_remove_1_exclude_2(void);
-void Add_remove_w_filter_remove_1_include_1(void);
-void Add_remove_w_filter_remove_1_include_2(void);
-void Add_remove_w_filter_add_1(void);
-void Add_remove_w_filter_add_2(void);
-void Add_remove_w_filter_add_existing(void);
-void Add_remove_w_filter_remove_existing(void);
-void Add_remove_w_filter_remove_existing_no_filter(void);
-void Add_remove_w_filter_add_remove_nothing(void);
+// Testsuite 'Add_bulk'
+void Add_bulk_add_comp_from_comp_to_empty(void);
+void Add_bulk_add_comp_from_comp_to_existing(void);
+void Add_bulk_add_comp_from_tag_to_empty(void);
+void Add_bulk_add_comp_from_tag_to_existing(void);
+void Add_bulk_add_tag_from_tag_to_empty(void);
+void Add_bulk_add_tag_from_tag_to_existing(void);
+
+// Testsuite 'Remove_bulk'
+void Remove_bulk_remove_comp_from_comp_to_empty(void);
+void Remove_bulk_remove_comp_from_comp_to_existing(void);
+void Remove_bulk_remove_comp_from_tag_to_empty(void);
+void Remove_bulk_remove_comp_from_tag_to_existing(void);
+void Remove_bulk_remove_tag_from_tag_to_empty(void);
+void Remove_bulk_remove_tag_from_tag_to_existing(void);
+void Remove_bulk_remove_all_comp(void);
+void Remove_bulk_remove_all_tag(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -1139,72 +1139,70 @@ static bake_test_suite suites[] = {
         }
     },
     {
-        .id = "Add_remove_w_filter",
-        .testcase_count = 16,
+        .id = "Add_bulk",
+        .testcase_count = 6,
         .testcases = (bake_test_case[]){
             {
-                .id = "remove_1_no_filter",
-                .function = Add_remove_w_filter_remove_1_no_filter
+                .id = "add_comp_from_comp_to_empty",
+                .function = Add_bulk_add_comp_from_comp_to_empty
             },
             {
-                .id = "remove_2_no_filter",
-                .function = Add_remove_w_filter_remove_2_no_filter
+                .id = "add_comp_from_comp_to_existing",
+                .function = Add_bulk_add_comp_from_comp_to_existing
             },
             {
-                .id = "remove_1_to_empty_no_filter",
-                .function = Add_remove_w_filter_remove_1_to_empty_no_filter
+                .id = "add_comp_from_tag_to_empty",
+                .function = Add_bulk_add_comp_from_tag_to_empty
             },
             {
-                .id = "remove_2_to_empty_no_filter",
-                .function = Add_remove_w_filter_remove_2_to_empty_no_filter
+                .id = "add_comp_from_tag_to_existing",
+                .function = Add_bulk_add_comp_from_tag_to_existing
             },
             {
-                .id = "remove_1_all_no_filter",
-                .function = Add_remove_w_filter_remove_1_all_no_filter
+                .id = "add_tag_from_tag_to_empty",
+                .function = Add_bulk_add_tag_from_tag_to_empty
             },
             {
-                .id = "remove_2_all_no_filter",
-                .function = Add_remove_w_filter_remove_2_all_no_filter
+                .id = "add_tag_from_tag_to_existing",
+                .function = Add_bulk_add_tag_from_tag_to_existing
+            }
+        }
+    },
+    {
+        .id = "Remove_bulk",
+        .testcase_count = 8,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "remove_comp_from_comp_to_empty",
+                .function = Remove_bulk_remove_comp_from_comp_to_empty
             },
             {
-                .id = "remove_1_exclude_1",
-                .function = Add_remove_w_filter_remove_1_exclude_1
+                .id = "remove_comp_from_comp_to_existing",
+                .function = Remove_bulk_remove_comp_from_comp_to_existing
             },
             {
-                .id = "remove_1_exclude_2",
-                .function = Add_remove_w_filter_remove_1_exclude_2
+                .id = "remove_comp_from_tag_to_empty",
+                .function = Remove_bulk_remove_comp_from_tag_to_empty
             },
             {
-                .id = "remove_1_include_1",
-                .function = Add_remove_w_filter_remove_1_include_1
+                .id = "remove_comp_from_tag_to_existing",
+                .function = Remove_bulk_remove_comp_from_tag_to_existing
             },
             {
-                .id = "remove_1_include_2",
-                .function = Add_remove_w_filter_remove_1_include_2
+                .id = "remove_tag_from_tag_to_empty",
+                .function = Remove_bulk_remove_tag_from_tag_to_empty
             },
             {
-                .id = "add_1",
-                .function = Add_remove_w_filter_add_1
+                .id = "remove_tag_from_tag_to_existing",
+                .function = Remove_bulk_remove_tag_from_tag_to_existing
             },
             {
-                .id = "add_2",
-                .function = Add_remove_w_filter_add_2
+                .id = "remove_all_comp",
+                .function = Remove_bulk_remove_all_comp
             },
             {
-                .id = "add_existing",
-                .function = Add_remove_w_filter_add_existing
-            },
-            {
-                .id = "remove_existing",
-                .function = Add_remove_w_filter_remove_existing
-            },
-            {
-                .id = "remove_existing_no_filter",
-                .function = Add_remove_w_filter_remove_existing_no_filter
-            },
-            {
-                .id = "add_remove_nothing",
-                .function = Add_remove_w_filter_add_remove_nothing
+                .id = "remove_all_tag",
+                .function = Remove_bulk_remove_all_tag
             }
         }
     },
@@ -4071,5 +4069,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 42);
+    return bake_test_run("api", argc, argv, suites, 43);
 }

@@ -881,18 +881,26 @@ void ecs_table_merge(
     ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(old_columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t old_count = old_columns->data ? ecs_vector_count(old_columns->data) : 0;
+    int32_t old_count = old_data->entities ? ecs_vector_count(old_data->entities) : 0;
     int32_t new_count = 0;
     if (new_columns) {
-        new_count = new_columns->data ? ecs_vector_count(new_columns->data) : 0;
+        new_count = new_data->entities ? ecs_vector_count(new_data->entities) : 0;
     }
 
     /* First, update entity index so old entities point to new type */
     ecs_entity_t *old_entities = ecs_vector_first(old_data->entities);
+    ecs_record_t **old_records = ecs_vector_first(old_data->record_ptrs);
+
     int32_t i;
     for(i = 0; i < old_count; i ++) {
-        ecs_record_t record = {.table = new_table, .row = i + new_count};
-        ecs_eis_set(&world->stage, old_entities[i], &record);
+        ecs_record_t *record = old_records[i];
+        if (!record) {
+            record = ecs_eis_get(&world->stage, old_entities[i]);
+        }
+
+        bool is_monitored = record->row < 0;
+        record->row = ecs_row_to_record(new_count + i, is_monitored);
+        record->table = new_table;
     }
 
     if (!new_table) {
@@ -918,13 +926,9 @@ void ecs_table_merge(
         ecs_entity_t old_component = 0;
         int32_t size = 0;
 
-        if (i_new) {
-            new_component = new_components[i_new - 1];
-            old_component = old_components[i_old - 1];
-            size = new_columns[i_new].size;
-        } else {
-            size = sizeof(ecs_entity_t);
-        }
+        new_component = new_components[i_new];
+        old_component = old_components[i_old];
+        size = new_columns[i_new].size;
 
         if ((new_component & ECS_TYPE_FLAG_MASK) || 
             (old_component & ECS_TYPE_FLAG_MASK)) 
@@ -935,6 +939,7 @@ void ecs_table_merge(
         if (new_component == old_component) {
             merge_vector(
                 &new_columns[i_new].data, old_columns[i_old].data, size);
+
             old_columns[i_old].data = NULL;
 
             /* Mark component column as dirty */
@@ -957,8 +962,11 @@ void ecs_table_merge(
     merge_vector(&new_data->entities, old_data->entities, sizeof(ecs_entity_t));
     old_data->entities = NULL;
 
+    merge_vector(&new_data->record_ptrs, old_data->record_ptrs, sizeof(ecs_record_t*));
+    old_data->record_ptrs = NULL;    
+
     /* Mark entity column as dirty */
-    mark_dirty(new_table, new_data, 0);    
+    mark_dirty(new_table, new_data, 0);  
 }
 
 static

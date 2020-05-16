@@ -1010,7 +1010,7 @@ public:
 
 private:
     void sync_from_me() {
-        EcsType *tc = ecs_get_ptr(m_world, m_id, EcsType);
+        const EcsType *tc = ecs_get_ptr(m_world, m_id, EcsType);
         if (tc) {
             tc->type = m_type;
             tc->normalized = m_normalized;
@@ -1018,7 +1018,7 @@ private:
     }
 
     void sync_from_flecs() {
-        EcsType *tc = ecs_get_ptr(m_world, m_id, EcsType);
+        constEcsType *tc = ecs_get_ptr(m_world, m_id, EcsType);
         if (tc) {
             m_type = tc->type;
             m_normalized = tc->normalized;

@@ -260,6 +260,15 @@ void ecs_component_monitor_register(
     *q = query;
 }
 
+void ecs_component_monitor_free(
+    ecs_component_monitor_t *mon)
+{
+    int i;
+    for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+        ecs_vector_free(mon->monitors[i]);
+    }
+}
+
 /* -- Public functions -- */
 
 ecs_world_t *ecs_init(void) {
@@ -557,6 +566,8 @@ int ecs_fini(
     on_demand_in_map_deinit(world->on_enable_components);
     ecs_map_free(world->type_handles);
     ecs_vector_free(world->fini_tasks);
+    ecs_component_monitor_free(&world->component_monitors);
+    ecs_component_monitor_free(&world->parent_monitors);
 
     /* In case the application tries to use the memory of the freed world, this
      * will trigger an assert */

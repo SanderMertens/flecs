@@ -97,24 +97,26 @@
                 "not_added"
             ]
         }, {
-            "id": "Add_remove_w_filter",
+            "id": "Add_bulk",
             "testcases": [
-                "remove_1_no_filter",
-                "remove_2_no_filter",
-                "remove_1_to_empty_no_filter",
-                "remove_2_to_empty_no_filter",
-                "remove_1_all_no_filter",
-                "remove_2_all_no_filter",
-                "remove_1_exclude_1",
-                "remove_1_exclude_2",
-                "remove_1_include_1",
-                "remove_1_include_2",
-                "add_1",
-                "add_2",
-                "add_existing",
-                "remove_existing",
-                "remove_existing_no_filter",
-                "add_remove_nothing"
+                "add_comp_from_comp_to_empty",
+                "add_comp_from_comp_to_existing",
+                "add_comp_from_tag_to_empty",
+                "add_comp_from_tag_to_existing",
+                "add_tag_from_tag_to_empty",
+                "add_tag_from_tag_to_existing"
+            ]
+        }, {
+            "id": "Remove_bulk",
+            "testcases": [
+                "remove_comp_from_comp_to_empty",
+                "remove_comp_from_comp_to_existing",
+                "remove_comp_from_tag_to_empty",
+                "remove_comp_from_tag_to_existing",
+                "remove_tag_from_tag_to_empty",
+                "remove_tag_from_tag_to_existing",
+                "remove_all_comp",
+                "remove_all_tag"
             ]
         }, {
             "id": "Has",

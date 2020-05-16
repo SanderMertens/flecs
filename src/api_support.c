@@ -148,6 +148,14 @@ ecs_entity_t lookup(
 
 /* -- Public functions -- */
 
+ecs_type_t ecs_type_from_str(
+    ecs_world_t *world,
+    const char *expr)
+{
+    EcsType type = type_from_expr(world, NULL, expr);
+    return type.normalized;
+}
+
 ecs_entity_t ecs_new_entity(
     ecs_world_t *world,
     const char *name,
