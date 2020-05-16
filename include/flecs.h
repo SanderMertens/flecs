@@ -808,9 +808,6 @@ void _ecs_trace(
     const char *fmt,
     ...);
 
-#define ecs_trace(lvl, ...)\
-    _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
-
 FLECS_EXPORT
 void ecs_trace_push(void);
 void ecs_trace_pop(void);
@@ -819,9 +816,14 @@ FLECS_EXPORT
 void ecs_tracing_enable(
     bool enabled);
 
+#ifndef __BAKE_LEGACY__
+
 #if !defined(NDEBUG) && !(defined(ECS_VERBOSITY_0) || defined(ECS_VERBOSITY_1) || defined(ECS_VERBOSITY_3))
 #define ECS_VERBOSITY_2
 #endif
+
+#define ecs_trace(lvl, ...)\
+    _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
 
 #if defined(ECS_VERBOSITY_3)
 #define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
@@ -838,7 +840,7 @@ void ecs_tracing_enable(
 #define ecs_trace_2(...)
 #define ecs_trace_3(...)
 #endif
-
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API
