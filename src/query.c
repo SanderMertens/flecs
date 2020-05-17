@@ -862,9 +862,6 @@ void build_sorted_tables(
     if (start != i) {
         build_sorted_table_range(world, query, start, i);
     }
-
-    query->match_count ++;
-    query->prev_table_count = count;
 }
 
 static
@@ -872,11 +869,12 @@ void sort_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    ecs_entity_t sort_on_component = query->sort_on_component;
     ecs_compare_action_t compare = query->compare;
     if (!compare) {
         return;
     }
+    
+    ecs_entity_t sort_on_component = query->sort_on_component;
 
     /* Iterate over active tables. Don't bother with inactive tables, since
      * they're empty */
@@ -927,8 +925,9 @@ void sort_tables(
         }
     }
 
-    if (tables_sorted || !count || query->prev_table_count != count) {
+    if (tables_sorted || query->match_count != query->prev_match_count) {
         build_sorted_tables(world, query);
+        query->prev_match_count = query->match_count;
     }
 }
 
@@ -1234,7 +1233,7 @@ ecs_query_t* ecs_query_new_w_sig(
     result->inactive_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = system;
     result->match_count = 0;
-    result->prev_table_count = 0;
+    result->prev_match_count = -1;
 
     process_signature(world, result);
 

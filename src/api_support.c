@@ -135,6 +135,10 @@ ecs_entity_t lookup(
     const char *name,
     ecs_type_t type)
 {
+    if (!name) {
+        return 0;
+    }
+    
     ecs_entity_t result = ecs_lookup(world, name);
     if (result) {
         ecs_type_t entity_type = ecs_get_type(world, result);

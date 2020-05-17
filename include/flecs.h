@@ -230,6 +230,7 @@ typedef struct ecs_world_info_t {
     /* Counters */
     int32_t frame_count_total;  /* Total number of frames */
     int32_t merge_count_total;  /* Total number of merges */
+    int32_t pipeline_build_count_total; /* Total number of pipeline builds */
     int32_t systems_ran_frame;  /* Total number of systems ran in last frame */
 } ecs_world_info_t;
 

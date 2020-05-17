@@ -370,6 +370,7 @@ ecs_world_t *ecs_init(void) {
     world->stats.frame_count_total = 0;
     world->stats.merge_count_total = 0;
     world->stats.systems_ran_frame = 0;
+    world->stats.pipeline_build_count_total = 0;
 
     world->fps_sleep = 0;
 

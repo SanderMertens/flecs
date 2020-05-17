@@ -80,10 +80,12 @@ void build_pipeline(
     ecs_world_t *world,
     EcsPipelineQuery *pq)
 {
-    if (pq->match_count == pq->query->match_count) {
+    if (pq->query->prev_match_count == pq->query->match_count) {
         /* No need to rebuild the pipeline */
         return;
     }
+
+    world->stats.pipeline_build_count_total ++;
 
     int8_t *write_state = ecs_os_calloc(ECS_HI_COMPONENT_ID, sizeof(int8_t));
     ecs_pipeline_op_t *op = NULL;
@@ -328,7 +330,6 @@ void EcsOnAddPipeline(
         pq->build_query = build_query;
         pq->match_count = -1;
         pq->ops = NULL;
-        build_pipeline(world, pq);
 
         ecs_trace_pop();
     }

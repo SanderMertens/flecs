@@ -172,7 +172,6 @@ struct ecs_query_t {
     /* Tables matched with query */
     ecs_vector_t *tables;
     ecs_vector_t *inactive_tables;
-    int32_t prev_table_count;    /* Used to check if sorting is needed */
 
     /* Handle to system (optional) */
     ecs_entity_t system;   
@@ -192,7 +191,9 @@ struct ecs_query_t {
     bool is_monitor;            /* Should query register as monitor? */
     int32_t cascade_by;         /* Identify CASCADE column */
     bool needs_matching;        /* Does sig need to be matched with tables */
-    int32_t match_count;        /* How often has table administration changed */
+
+    int32_t match_count;        /* How often have tables been (un)matched */
+    int32_t prev_match_count;   /* Used to track if sorting is needed */
 };
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
