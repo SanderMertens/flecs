@@ -86,6 +86,9 @@ void ecs_progress_pipeline(
     ecs_entity_t pipeline,
     float delta_time);
 
+void ecs_eval_component_monitors(
+    ecs_world_t *world);
+
 void ecs_component_monitor_mark(
     ecs_component_monitor_t *mon,
     int32_t component);

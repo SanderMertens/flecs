@@ -1250,7 +1250,6 @@ void AddVelocity(ecs_rows_t *rows) {
     ecs_world_t *world = rows->world;
 
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
     ECS_COLUMN_COMPONENT(rows, Velocity, 2);
 
     int i;

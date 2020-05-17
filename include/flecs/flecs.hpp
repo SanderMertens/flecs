@@ -416,7 +416,8 @@ public:
     }
 
     float get_target_fps() const {
-        return ecs_get_target_fps(m_world);
+        const ecs_world_info_t *stats = ecs_get_world_stats(world);
+        return stats->target_fps;
     }
 
     std::int32_t get_tick() const {
@@ -691,24 +692,24 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class cached_ptr {
+class ref {
 public:
-    cached_ptr()
+    ref()
         : m_world( nullptr )
         , m_entity( 0 )
-        , m_cached_ptr({0}) { }
+        , m_ref({0}) { }
 
-    cached_ptr(world_t *world, entity_t entity) 
+    ref(world_t *world, entity_t entity) 
         : m_world( world )
         , m_entity( entity )
-        , m_cached_ptr({0}) {
-        _ecs_get_cached_ptr(
-            m_world, &m_cached_ptr, m_entity, component_base<T>::s_entity);
+        , m_ref({0}) {
+        _ecs_get_ref(
+            m_world, &m_ref, m_entity, component_base<T>::s_entity);
     }
 
     T* operator->() {
-        T* result = static_cast<T*>(_ecs_get_cached_ptr(
-            m_world, &m_cached_ptr, m_entity, component_base<T>::s_entity));
+        T* result = static_cast<T*>(_ecs_get_ref(
+            m_world, &m_ref, m_entity, component_base<T>::s_entity));
 
         ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -717,11 +718,11 @@ public:
 
     T* get() {
         if (m_entity) {
-            _ecs_get_cached_ptr(
-                m_world, &m_cached_ptr, m_entity, component_base<T>::s_entity);    
+            _ecs_get_ref(
+                m_world, &m_ref, m_entity, component_base<T>::s_entity);    
         }
 
-        return static_cast<T*>(m_cached_ptr.ptr);
+        return static_cast<T*>(m_ref.ptr);
     }
 
     flecs::entity entity() const;
@@ -729,7 +730,7 @@ public:
 private:
     world_t *m_world;
     entity_t m_entity;
-    ecs_cached_ptr_t m_cached_ptr;
+    ecs_ref_t m_ref;
 };
 
 
@@ -815,8 +816,8 @@ public:
     }
 
     template <typename T>
-    cached_ptr<T> get_cached_ptr() const {
-        return cached_ptr<T>(m_world, m_id);
+    ref<T> get_ref() const {
+        return ref<T>(m_world, m_id);
     }
 
     template <typename Func>
@@ -870,7 +871,8 @@ public:
     }
 
     float delta_time() {
-        return ecs_get_delta_time(m_world);
+        const ecs_world_info_t *stats = ecs_get_world_stats(world);
+        return stats->delta_time;
     }
 
     operator bool() {
@@ -1948,7 +1950,7 @@ inline query_iterator<Components...> query<Components...>::end() const {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-flecs::entity cached_ptr<T>::entity() const {
+flecs::entity ref<T>::entity() const {
     return flecs::entity(m_world, m_entity);
 }
 

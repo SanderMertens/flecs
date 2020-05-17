@@ -351,7 +351,6 @@ ecs_world_t *ecs_init(void) {
     world->auto_merge = true;
     world->measure_frame_time = false;
     world->measure_system_time = false;
-    world->last_handle = 0;
     world->should_quit = false;
     world->rematch = false;
     world->locking_enabled = false;
@@ -361,14 +360,18 @@ ecs_world_t *ecs_init(void) {
         ecs_os_get_time(&world->world_start_time);
     }
 
-    world->target_fps = 0;
-    world->fps_sleep = 0;
+    world->stats.target_fps = 0;
+    world->stats.last_handle = 0;
 
-    world->frame_time_total = 0;
-    world->system_time_total = 0;
-    world->merge_time_total = 0;
-    world->frame_count_total = 0;
-    world->world_time_total = 0;
+    world->stats.frame_time_total = 0;
+    world->stats.system_time_total = 0;
+    world->stats.merge_time_total = 0;
+    world->stats.world_time_total = 0;
+    world->stats.frame_count_total = 0;
+    world->stats.merge_count_total = 0;
+    world->stats.systems_ran_frame = 0;
+
+    world->fps_sleep = 0;
 
     world->context = NULL;
 
@@ -410,9 +413,9 @@ ecs_world_t *ecs_init(void) {
     /* Initialize types for builtin types */
     bootstrap_types(world);
 
-    world->last_handle = EcsWorld + 1;
-    world->min_handle = 0;
-    world->max_handle = 0;
+    world->stats.last_handle = EcsWorld + 1;
+    world->stats.min_handle = 0;
+    world->stats.max_handle = 0;
 
     ecs_trace_pop();
 
@@ -489,7 +492,7 @@ ecs_world_t* ecs_init_w_args(
 
             ARG(0, "fps", 
                 ecs_set_target_fps(world, atoi(argv[i + 1]));
-                world->arg_fps = world->target_fps; 
+                world->arg_fps = world->stats.target_fps; 
                 i ++);
 
             ARG(0, "admin", 
@@ -729,8 +732,8 @@ float start_measure_frame(
                 delta_time = ecs_time_measure(&t);
             } else {
                 ecs_time_measure(&t);
-                if (world->target_fps) {
-                    delta_time = 1.0 / world->target_fps;
+                if (world->stats.target_fps) {
+                    delta_time = 1.0 / world->stats.target_fps;
                 } else {
                     delta_time = 1.0 / 60.0; /* Best guess */
                 }
@@ -743,7 +746,7 @@ float start_measure_frame(
 
         /* Compute total time passed since start of simulation */
         ecs_time_t diff = ecs_time_sub(t, world->world_start_time);
-        world->world_time_total = ecs_time_to_double(diff);
+        world->stats.world_time_total = ecs_time_to_double(diff);
     }
 
     return delta_time;
@@ -757,10 +760,10 @@ void stop_measure_frame(
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
         double frame_time = ecs_time_measure(&t);
-        world->frame_time_total += frame_time;
+        world->stats.frame_time_total += frame_time;
 
         /* Sleep if processing faster than target FPS */
-        float target_fps = world->target_fps;
+        float target_fps = world->stats.target_fps;
         if (target_fps) {
             float sleep = (1.0 / target_fps) - delta_time + world->fps_sleep;
 
@@ -791,11 +794,7 @@ float ecs_frame_begin(
         user_delta_time = delta_time;
     }
 
-    world->delta_time = user_delta_time;
-
-    /* Evaluate tick sources */
-    bool is_staged = ecs_staging_begin(world);
-    ecs_assert(!is_staged, ECS_INTERNAL_ERROR, NULL);
+    world->stats.delta_time = user_delta_time;
     
     return user_delta_time;
 }
@@ -804,10 +803,7 @@ void ecs_frame_end(
     ecs_world_t *world,
     float delta_time)
 {
-    world->frame_count_total ++;
-
-    ecs_staging_end(world, false);
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    world->stats.frame_count_total ++;
 
     if (world->locking_enabled) {
         ecs_unlock(world);
@@ -822,17 +818,11 @@ bool ecs_progress(
 {
     float delta_time = ecs_frame_begin(world, user_delta_time);
 
-    ecs_progress_pipeline(world, world->builtin_pipeline, delta_time);
+    ecs_progress_pipeline(world, world->pipeline, delta_time);
 
     ecs_frame_end(world, delta_time);
 
     return !world->should_quit;
-}
-
-float ecs_get_delta_time(
-    ecs_world_t *world)
-{
-    return world->delta_time;
 }
 
 void ecs_quit(
@@ -840,6 +830,13 @@ void ecs_quit(
 {
     ecs_get_stage(&world);
     world->should_quit = true;
+}
+
+void ecs_eval_component_monitors(
+    ecs_world_t *world)
+{
+    eval_component_monitor(world, &world->component_monitors);
+    eval_component_monitor(world, &world->parent_monitors);
 }
 
 void ecs_merge(
@@ -869,13 +866,13 @@ void ecs_merge(
 
     world->is_merging = false;
 
-    /* Monitored entities have been modified, evaluate component monitors */
-    eval_component_monitor(world, &world->component_monitors);
-    eval_component_monitor(world, &world->parent_monitors);
+    ecs_eval_component_monitors(world);
 
     if (measure_frame_time) {
-        world->merge_time_total += ecs_time_measure(&t_start);
+        world->stats.merge_time_total += ecs_time_measure(&t_start);
     }
+
+    world->stats.merge_count_total ++;
 }
 
 void ecs_set_automerge(
@@ -892,7 +889,7 @@ void ecs_measure_frame_time(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(ecs_os_api.get_time != NULL, ECS_MISSING_OS_API, "get_time");
-    if (!world->target_fps || enable) {
+    if (!world->stats.target_fps || enable) {
         world->measure_frame_time = enable;
     }
 }
@@ -916,7 +913,7 @@ void ecs_set_target_fps(
 
     if (!world->arg_fps) {
         ecs_measure_frame_time(world, true);
-        world->target_fps = fps;
+        world->stats.target_fps = fps;
     }
 }
 
@@ -925,13 +922,6 @@ void* ecs_get_context(
 {
     ecs_get_stage(&world);
     return world->context;
-}
-
-int32_t ecs_get_tick(
-    ecs_world_t *world)
-{
-    ecs_get_stage(&world);
-    return world->frame_count_total;
 }
 
 void ecs_set_context(
@@ -949,14 +939,14 @@ void ecs_set_entity_range(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!id_end || id_end > world->last_handle, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!id_end || id_end > world->stats.last_handle, ECS_INVALID_PARAMETER, NULL);
 
-    if (world->last_handle < id_start) {
-        world->last_handle = id_start - 1;
+    if (world->stats.last_handle < id_start) {
+        world->stats.last_handle = id_start - 1;
     }
 
-    world->min_handle = id_start;
-    world->max_handle = id_end;
+    world->stats.min_handle = id_start;
+    world->stats.max_handle = id_end;
 }
 
 bool ecs_enable_range_check(
@@ -986,12 +976,6 @@ int32_t ecs_get_threads(
     ecs_world_t *world)
 {
     return ecs_vector_count(world->worker_threads);
-}
-
-float ecs_get_target_fps(
-    ecs_world_t *world)
-{
-    return world->target_fps;
 }
 
 bool ecs_enable_locking(
@@ -1058,4 +1042,24 @@ bool ecs_staging_end(
     }
 
     return result;
+}
+
+const ecs_world_info_t* ecs_get_world_stats(
+    ecs_world_t *world)
+{
+    return &world->stats;
+}
+
+void ecs_set_pipeline(
+    ecs_world_t *world,
+    ecs_entity_t pipeline)
+{
+    world->pipeline = pipeline;
+}      
+
+FLECS_EXPORT
+ecs_entity_t ecs_get_pipeline(
+    ecs_world_t *world)
+{
+    return world->pipeline;
 }

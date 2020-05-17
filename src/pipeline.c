@@ -28,6 +28,7 @@ typedef enum ComponentWriteState {
 static
 bool check_column_component(
     ecs_sig_column_t *column,
+    bool is_active,
     int32_t component,
     int8_t *write_state)    
 {
@@ -41,7 +42,7 @@ bool check_column_component(
                 return true;
             }
         case EcsOut:
-            if (column->inout_kind != EcsIn) {
+            if (is_active && column->inout_kind != EcsIn) {
                 write_state[component] = WriteToMain;
             }
         };
@@ -49,7 +50,9 @@ bool check_column_component(
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsOut:
-            write_state[component] = WriteToStage;
+            if (is_active) {
+                write_state[component] = WriteToStage;
+            }
         default:
             break;
         };
@@ -61,23 +64,35 @@ bool check_column_component(
 static
 bool check_column(
     ecs_sig_column_t *column,
+    bool is_active,
     int8_t *write_state)
 {
     if (column->oper_kind != EcsOperOr) {
-        return check_column_component(column, column->is.component, write_state);
+        return check_column_component(
+            column, is_active,column->is.component, write_state);
     }  
 
     return false;
 }
 
 static
-ecs_vector_t* build_pipeline(
+void build_pipeline(
     ecs_world_t *world,
-    ecs_query_t *query)
+    EcsPipelineQuery *pq)
 {
+    if (pq->match_count == pq->query->match_count) {
+        /* No need to rebuild the pipeline */
+        return;
+    }
+
     int8_t *write_state = ecs_os_calloc(ECS_HI_COMPONENT_ID, sizeof(int8_t));
-    ecs_vector_t *ops = NULL;
     ecs_pipeline_op_t *op = NULL;
+    ecs_vector_t *ops = NULL;
+    ecs_query_t *query = pq->build_query;
+
+    if (pq->ops) {
+        ecs_vector_free(pq->ops);
+    }
 
     /* Iterate systems in pipeline, add ops for running / merging */
     ecs_query_iter_t it = ecs_query_iter(query, 0, 0);
@@ -87,14 +102,17 @@ ecs_vector_t* build_pipeline(
 
         int i;
         for (i = 0; i < rows->count; i ++) {
+
             ecs_query_t *q = sys[i].query;
             if (!q) {
                 continue;
             }
 
             bool needs_merge = false;
+            bool is_active = !ecs_has(world, rows->entities[i], EcsInactive);
+
             ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
-                needs_merge |= check_column(column, write_state);
+                needs_merge |= check_column(column, is_active, write_state);
             });
 
             if (needs_merge) {
@@ -102,11 +120,15 @@ ecs_vector_t* build_pipeline(
                 memset(write_state, 0, ECS_HI_COMPONENT_ID * sizeof(int8_t));
                 op = NULL;
 
-                /* Re-evaluate columns to set write flags */
+                /* Re-evaluate columns to set write flags if system is active.
+                 * If system is inactive, it can't write anything and so it
+                 * should not insert unnecessary merges.  */
                 needs_merge = false;
-                ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
-                    needs_merge |= check_column(column, write_state);
-                });
+                if (is_active) {
+                    ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
+                        needs_merge |= check_column(column, true, write_state);
+                    });
+                }
 
                 /* The component states were just reset, so if we conclude that
                  * another merge is needed something is wrong. */
@@ -118,13 +140,134 @@ ecs_vector_t* build_pipeline(
                 op->count = 0;
             }
 
-            op->count ++;
+            /* Don't increase count for inactive systems, as they are ignored by
+             * the query used to run the pipeline. */
+            if (is_active) {
+                op->count ++;
+            }
         }
     }
 
     ecs_os_free(write_state);
 
-    return ops;
+    pq->ops = ops;
+}
+
+static
+int32_t iter_reset(
+    ecs_world_t *world,
+    EcsPipelineQuery *pq,
+    ecs_query_iter_t *it_out,
+    ecs_pipeline_op_t **op_out,
+    ecs_entity_t move_to)
+{
+    /* If query has matched with new tables, we need to rebuild the pipeline */
+    build_pipeline(world, pq);
+
+    ecs_pipeline_op_t *op = ecs_vector_first(pq->ops);
+    int32_t ran_since_merge = 0;
+
+    ecs_query_iter_t it = ecs_query_iter(pq->query, 0, 0);
+    while (ecs_query_next(&it)) {
+        ecs_rows_t *rows = &it.rows;
+
+        int32_t i;
+        for(i = 0; i < rows->count; i ++) {
+            ecs_entity_t e = rows->entities[i];
+
+            ran_since_merge ++;
+            if (ran_since_merge == op->count) {
+                ran_since_merge = 0;
+                op ++;
+            }
+
+            if (e == move_to) {
+                *it_out = it;
+                *op_out = op;
+                return i;
+            }
+        }
+    }
+
+    ecs_abort(ECS_UNSUPPORTED, NULL);
+
+    return -1;
+}
+
+void ecs_progress_pipeline(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    float delta_time)
+{
+    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+
+    /* Evaluate monitors and rebuild pipeline if rematching occurred */
+    ecs_eval_component_monitors(world);
+
+    EcsPipelineQuery *pq = ecs_get_mut(
+        world, pipeline, EcsPipelineQuery, NULL);
+
+    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    build_pipeline(world, pq);
+
+    ecs_time_t start = {0};
+    if (world->measure_frame_time) {
+        ecs_time_measure(&start);
+    }
+
+    ecs_vector_t *ops = pq->ops;
+    ecs_pipeline_op_t *op = ecs_vector_first(ops);
+    ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
+    int32_t ran_since_merge = 0;
+
+    world->stats.systems_ran_frame = 0;
+
+    ecs_staging_begin(world);
+    
+    ecs_query_iter_t it = ecs_query_iter(pq->query, 0, 0);
+    while (ecs_query_next(&it)) {
+        ecs_rows_t *rows = &it.rows;
+        EcsColSystem *sys = ecs_column(rows, EcsColSystem, 1);
+
+        int32_t i;
+        for(i = 0; i < rows->count; i ++) {
+            ecs_entity_t e = rows->entities[i];
+
+            ecs_run_intern(world, world, e, &sys[i], delta_time, 0, 0, 
+                NULL, NULL);
+
+            ran_since_merge ++;
+            world->stats.systems_ran_frame ++;
+
+            if (ran_since_merge == op->count) {
+                ran_since_merge = 0;
+
+                if (op++ != op_last) {
+                    ecs_staging_end(world, false);
+                    ecs_staging_begin(world);
+
+                    /* If the set of matched systems changed as a result of the
+                     * merge, we have to reset the iterator and move it to our
+                     * current position (system). If there are a lot of systems
+                     * in the pipeline this can be an expensive operation, but
+                     * should happen infrequently. */
+                    if (pq->match_count != pq->query->match_count) {
+                        i = iter_reset(world, pq, &it, &op, e);
+                        op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
+                        sys = ecs_column(rows, EcsColSystem, 1);
+                    }
+                }                
+            }
+        }
+    }
+
+    ecs_staging_end(world, false);
+
+    if (world->measure_frame_time) {
+        world->stats.system_time_total += ecs_time_measure(&start);
+    }
 }
 
 static 
@@ -164,11 +307,28 @@ void EcsOnAddPipeline(
         ecs_query_sort(world, query, 0, compare_entity);
         ecs_query_sort_types(world, query, pipeline, rank_phase);
 
-        ecs_set(world, pipeline, EcsPipelineQuery, { 
-            .query = query,
-            .match_count = query->match_count,
-            .ops = build_pipeline(world, query)
-        });
+        /* Build signature for pipeline build query. The build query includes
+         * systems that are inactive, as an inactive system may become active as
+         * a result of another system, and as a result the correct merge 
+         * operations need to be put in place. */
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, EEcsColSystem, 0);
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EEcsDisabledIntern, 0);
+
+        /* Use the same sorting functions for the build query */
+        ecs_query_t *build_query = ecs_query_new_w_sig(world, 0, &sig);
+        ecs_query_sort(world, build_query, 0, compare_entity);
+        ecs_query_sort_types(world, build_query, pipeline, rank_phase);       
+
+        EcsPipelineQuery *pq = ecs_get_mut(
+            world, pipeline, EcsPipelineQuery, NULL);
+        ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        pq->query = query;
+        pq->build_query = build_query;
+        pq->match_count = -1;
+        pq->ops = NULL;
+        build_pipeline(world, pq);
 
         ecs_trace_pop();
     }
@@ -196,61 +356,7 @@ void ecs_init_pipeline_builtins(
     ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline, 0);
 
     /* Create the builtin pipeline */
-    world->builtin_pipeline = ecs_new_pipeline(world, "EcsBuiltinPipeline",
+    world->pipeline = ecs_new_pipeline(world, "EcsBuiltinPipeline",
         "EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,"
         " EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame");
-}
-
-void ecs_progress_pipeline(
-    ecs_world_t *world,
-    ecs_entity_t pipeline,
-    float delta_time)
-{
-    /* Start with a merge so we know for sure that we start with a consistent
-     * state. If there is nothing to merge, this will essentially be a no-op. */
-    ecs_staging_end(world, false);
-    ecs_staging_begin(world);
-
-    EcsPipelineQuery *query = ecs_get_mut(
-        world, pipeline, EcsPipelineQuery, NULL);
-
-    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(query->query != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (query->match_count != query->query->match_count) {
-        ecs_vector_free(query->ops);
-        query->ops = build_pipeline(world, query->query);
-    }
-
-    ecs_time_t start = {0};
-    ecs_time_measure(&start);
-
-    int32_t count_since_merge = 0;
-    ecs_vector_t *ops = query->ops;
-    ecs_pipeline_op_t *op = ecs_vector_first(ops);
-    
-    ecs_query_iter_t it = ecs_query_iter(query->query, 0, 0);
-    while (ecs_query_next(&it)) {
-        ecs_rows_t *rows = &it.rows;
-        ECS_COLUMN(rows, EcsColSystem, sys, 1);
-
-        int32_t i;
-        for(i = 0; i < rows->count; i ++) {
-            ecs_entity_t e = rows->entities[i];
-
-            ecs_run_intern(world, world, e, &sys[i], delta_time, 0, 0, 
-                NULL, NULL);
-
-            count_since_merge ++;
-
-            if (count_since_merge == op->count) {
-                ecs_staging_end(world, false);
-                ecs_staging_begin(world);
-                count_since_merge = 0;
-                op ++;
-            }
-        }
-    }
-
-    world->system_time_total += ecs_time_measure(&start);
 }

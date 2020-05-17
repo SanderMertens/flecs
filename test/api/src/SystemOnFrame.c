@@ -1296,6 +1296,8 @@ void SystemOnFrame_on_period() {
 
     ecs_set_target_fps(world, 60);
 
+    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+
     double start, now = 0;
 
     /* Run for one second */
@@ -1303,10 +1305,10 @@ void SystemOnFrame_on_period() {
     do {    
         ecs_progress(world, 0);
         if (!count) {
-            start = ecs_get_delta_time(world);
+            start = stats->delta_time;
         }
 
-        now += ecs_get_delta_time(world);
+        now += stats->delta_time;
         count ++;
     } while ((now - start) < 1.0);
 

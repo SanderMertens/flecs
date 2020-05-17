@@ -141,14 +141,14 @@ typedef struct ecs_filter_t {
     ecs_match_kind_t exclude_kind;
 } ecs_filter_t;
 
-typedef struct ecs_cached_ptr_t {
+typedef struct ecs_ref_t {
     void *table;            /* Last known table */
     int32_t row;            /* Last known location in table */
     int32_t size;           /* Last known size of table (data reallocd?) */
     ecs_stage_t *stage;     /* Last known stage */
     ecs_record_t *record;   /* Pointer to record, if in main stage */
     const void *ptr;        /* Cached ptr */
-} ecs_cached_ptr_t;
+} ecs_ref_t;
 
 /* Constructor/destructor. Used for initializing / deinitializing components */
 typedef void (*ecs_xtor_t)(
@@ -212,6 +212,26 @@ struct ecs_rows_t {
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
 };
 
+/* World stats */
+typedef struct ecs_world_info_t {
+    /* Handle stats */
+    ecs_entity_t last_handle;   /* Last issued handle */
+    ecs_entity_t min_handle;    /* First allowed handle */
+    ecs_entity_t max_handle;    /* Last allowed handle */
+
+    /* Timing stats */
+    float delta_time;           /* Time passed to or computed by ecs_progress */
+    float target_fps;           /* Target fps */
+    double frame_time_total;    /* Total time spent in processing a frame */
+    double system_time_total;   /* Total time spent in periodic systems */
+    double merge_time_total;    /* Total time spent in merges */
+    double world_time_total;    /* Time elapsed since first frame */
+    
+    /* Counters */
+    int32_t frame_count_total;  /* Total number of frames */
+    int32_t merge_count_total;  /* Total number of merges */
+    int32_t systems_ran_frame;  /* Total number of systems ran in last frame */
+} ecs_world_info_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Public builtin components
@@ -265,6 +285,7 @@ typedef struct EcsPipeline {
 /* Runtime properties of pipeline */
 typedef struct EcsPipelineQuery {
     ecs_query_t *query;
+    ecs_query_t *build_query;
     int32_t match_count;
     ecs_vector_t *ops;
 } EcsPipelineQuery;
@@ -589,6 +610,15 @@ FLECS_EXPORT
 void ecs_quit(
     ecs_world_t *world);
 
+FLECS_EXPORT
+void ecs_set_pipeline(
+    ecs_world_t *world,
+    ecs_entity_t pipeline);       
+
+FLECS_EXPORT
+ecs_entity_t ecs_get_pipeline(
+    ecs_world_t *world);  
+
 /** Progress a world.
  * This operation progresses the world by running all systems that are both
  * enabled and periodic on their matching entities.
@@ -632,27 +662,6 @@ void ecs_set_target_fps(
     ecs_world_t *world,
     float fps);
 
-/** Get configured target frames per second.
- * This operation returns the FPS set with ecs_set_target_fps.
- * 
- * @param world The world.
- * @param return The current target FPS.
- */
-FLECS_EXPORT
-float ecs_get_target_fps(
-    ecs_world_t *world);   
-
-/** Get last delta time from world.
- * This operation returns the delta_time used in the last frame. If a non-zero
- * value was provided to ecs_progress then this value is returned, otherwise the
- * time measured by ecs_progress is returned.
- *
- * @param world The world.
- * @return The last used delta_time.
- */
-FLECS_EXPORT
-float ecs_get_delta_time(
-    ecs_world_t *world);
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
@@ -680,16 +689,11 @@ FLECS_EXPORT
 void* ecs_get_context(
     ecs_world_t *world);
 
-/** Get the world tick.
- * This operation retrieves the tick count (frame number). The tick count is 0
- * when ecs_process is called for the first time, and increases by one for every
- * subsequent call.
- *
+/** Get world statistics 
  * @param world The world.
- * @return The current tick.
  */
 FLECS_EXPORT
-int32_t ecs_get_tick(
+const ecs_world_info_t* ecs_get_world_stats(
     ecs_world_t *world);
 
 /** Dimension the world for a specified number of entities.
@@ -1041,14 +1045,14 @@ const void* ecs_get_ptr_w_entity(
 /* -- Get cached -- */
 
 FLECS_EXPORT
-const void* ecs_get_cached_ptr_w_entity(
+const void* ecs_get_ref_w_entity(
     ecs_world_t *world,
-    ecs_cached_ptr_t *cached_ptr,
+    ecs_ref_t *ref,
     ecs_entity_t entity,
     ecs_entity_t component);
 
-#define ecs_get_cached_ptr(world, cached_ptr, entity, component)\
-    (const component*)ecs_get_cached_ptr_w_entity(world, cached_ptr, entity, E##component)
+#define ecs_get_ref(world, ref, entity, component)\
+    (const component*)ecs_get_ref_w_entity(world, ref, entity, E##component)
 
 
 /* -- Get mutable -- */
@@ -1380,7 +1384,12 @@ void* ecs_table_column(
 
 /** Get a strongly typed pointer to a column (owned or shared). */
 #define ECS_COLUMN(rows, type, id, column)\
-    type *id = ecs_column(rows, type, column)
+    ECS_ENTITY_VAR(type) = ecs_column_entity(rows, column);\
+    ECS_TYPE_VAR(type) = ecs_column_type(rows, column);\
+    type *id = ecs_column(rows, type, column);\
+    (void)ecs_entity(type);\
+    (void)ecs_type(type);\
+    (void)id
 
 /** Get a strongly typed pointer to a column (owned or shared). */
 #define ECS_CONST_COLUMN(rows, type, id, column)\

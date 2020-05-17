@@ -261,7 +261,8 @@ void ecs_run_jobs(
 
     for (i = 0; i < job_count; i ++) {
         ecs_run_w_filter(
-            (ecs_world_t*)thread, jobs[i]->system, world->delta_time, jobs[i]->offset, jobs[i]->limit, 0, NULL);
+            (ecs_world_t*)thread, jobs[i]->system, world->stats.delta_time, 
+            jobs[i]->offset, jobs[i]->limit, 0, NULL);
     }
     thread->job_count = 0;
 

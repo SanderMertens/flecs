@@ -222,6 +222,21 @@ void Clone_tag_w_value(void);
 void Clone_1_tag_1_component(void);
 void Clone_1_tag_1_component_w_value(void);
 
+// Testsuite 'Pipeline'
+void Pipeline_system_order_same_phase(void);
+void Pipeline_system_order_same_phase_after_disable(void);
+void Pipeline_system_order_same_phase_after_activate(void);
+void Pipeline_system_order_different_phase(void);
+void Pipeline_system_order_different_phase_after_disable(void);
+void Pipeline_system_order_different_phase_after_activate(void);
+void Pipeline_system_order_after_new_system_lower_id(void);
+void Pipeline_system_order_after_new_system_inbetween_id(void);
+void Pipeline_system_order_after_new_system_higher_id(void);
+void Pipeline_merge_after_staged_out(void);
+void Pipeline_merge_after_not_out(void);
+void Pipeline_no_merge_after_main_out(void);
+void Pipeline_no_merge_after_staged_in_out(void);
+
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
 void SystemMisc_invalid_optional_without_id(void);
@@ -268,6 +283,7 @@ void SystemMisc_ensure_single_merge(void);
 void SystemMisc_table_count(void);
 void SystemMisc_match_system(void);
 void SystemMisc_match_system_w_filter(void);
+void SystemMisc_system_initial_state(void);
 
 // Testsuite 'SystemOnAdd'
 void SystemOnAdd_new_match_1_of_1(void);
@@ -462,8 +478,8 @@ void Prefab_on_set_on_instance(void);
 void Prefab_instantiate_in_progress(void);
 void Prefab_copy_from_prefab_in_progress(void);
 void Prefab_copy_from_prefab_first_instance_in_progress(void);
-void Prefab_cached_ptr_after_realloc(void);
-void Prefab_revalidate_cached_ptr_w_mixed_table_refs(void);
+void Prefab_ref_after_realloc(void);
+void Prefab_revalidate_ref_w_mixed_table_refs(void);
 void Prefab_no_overwrite_on_2nd_add(void);
 void Prefab_no_overwrite_on_2nd_add_in_progress(void);
 void Prefab_no_instantiate_on_2nd_add(void);
@@ -1665,8 +1681,66 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "Pipeline",
+        .testcase_count = 13,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "system_order_same_phase",
+                .function = Pipeline_system_order_same_phase
+            },
+            {
+                .id = "system_order_same_phase_after_disable",
+                .function = Pipeline_system_order_same_phase_after_disable
+            },
+            {
+                .id = "system_order_same_phase_after_activate",
+                .function = Pipeline_system_order_same_phase_after_activate
+            },
+            {
+                .id = "system_order_different_phase",
+                .function = Pipeline_system_order_different_phase
+            },
+            {
+                .id = "system_order_different_phase_after_disable",
+                .function = Pipeline_system_order_different_phase_after_disable
+            },
+            {
+                .id = "system_order_different_phase_after_activate",
+                .function = Pipeline_system_order_different_phase_after_activate
+            },
+            {
+                .id = "system_order_after_new_system_lower_id",
+                .function = Pipeline_system_order_after_new_system_lower_id
+            },
+            {
+                .id = "system_order_after_new_system_inbetween_id",
+                .function = Pipeline_system_order_after_new_system_inbetween_id
+            },
+            {
+                .id = "system_order_after_new_system_higher_id",
+                .function = Pipeline_system_order_after_new_system_higher_id
+            },
+            {
+                .id = "merge_after_staged_out",
+                .function = Pipeline_merge_after_staged_out
+            },
+            {
+                .id = "merge_after_not_out",
+                .function = Pipeline_merge_after_not_out
+            },
+            {
+                .id = "no_merge_after_main_out",
+                .function = Pipeline_no_merge_after_main_out
+            },
+            {
+                .id = "no_merge_after_staged_in_out",
+                .function = Pipeline_no_merge_after_staged_in_out
+            }
+        }
+    },
+    {
         .id = "SystemMisc",
-        .testcase_count = 45,
+        .testcase_count = 46,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -1847,6 +1921,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "match_system_w_filter",
                 .function = SystemMisc_match_system_w_filter
+            },
+            {
+                .id = "system_initial_state",
+                .function = SystemMisc_system_initial_state
             }
         }
     },
@@ -2605,12 +2683,12 @@ static bake_test_suite suites[] = {
                 .function = Prefab_copy_from_prefab_first_instance_in_progress
             },
             {
-                .id = "cached_ptr_after_realloc",
-                .function = Prefab_cached_ptr_after_realloc
+                .id = "ref_after_realloc",
+                .function = Prefab_ref_after_realloc
             },
             {
-                .id = "revalidate_cached_ptr_w_mixed_table_refs",
-                .function = Prefab_revalidate_cached_ptr_w_mixed_table_refs
+                .id = "revalidate_ref_w_mixed_table_refs",
+                .function = Prefab_revalidate_ref_w_mixed_table_refs
             },
             {
                 .id = "no_overwrite_on_2nd_add",
@@ -4069,5 +4147,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 43);
+    return bake_test_run("api", argc, argv, suites, 44);
 }

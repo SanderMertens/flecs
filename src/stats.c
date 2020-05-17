@@ -107,12 +107,13 @@ void StatsCollectWorldStats(ecs_rows_t *rows) {
     stats->col_systems_count = ecs_count(world, EcsColSystem);
     stats->tables_count = ecs_sparse_count(world->stage.tables);
     stats->threads_count = ecs_vector_count(world->worker_threads);
-    stats->frame_seconds_total = world->frame_time_total;
-    stats->system_seconds_total = world->system_time_total;
-    stats->merge_seconds_total = world->merge_time_total;
-    stats->world_seconds_total = world->world_time_total;
-    stats->target_fps_hz = world->target_fps;
-    stats->frame_count_total = world->frame_count_total;
+    
+    stats->frame_seconds_total = world->stats.frame_time_total;
+    stats->system_seconds_total = world->stats.system_time_total;
+    stats->merge_seconds_total = world->stats.merge_time_total;
+    stats->world_seconds_total = world->stats.world_time_total;
+    stats->target_fps_hz = world->stats.target_fps;
+    stats->frame_count_total = world->stats.frame_count_total;
 }
 
 static
@@ -316,7 +317,7 @@ int32_t system_entities_matched(EcsColSystem *system) {
 
 static
 void StatsCollectSystemStats(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, EcsColSystem, system, 1);
+    EcsColSystem *system = ecs_column(rows, EcsColSystem, 1);
     ECS_COLUMN(rows, EcsSystemStats, stats, 2);
 
     int32_t i;
@@ -370,7 +371,7 @@ void collect_system_table_metrics(
 
 static
 void StatsCollectColSystemMemoryStats(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, EcsColSystem, system, 1);
+    EcsColSystem *system = ecs_column(rows, EcsColSystem, 1);
     ECS_COLUMN(rows, EcsColSystemMemoryStats, stats, 2);
 
     int32_t i;
@@ -404,7 +405,7 @@ void StatsCollectColSystemMemoryStats(ecs_rows_t *rows) {
 
 static
 void StatsCollectComponentStats(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, EcsComponent, component, 1);
+    EcsComponent *component = ecs_column(rows, EcsComponent, 1);
     ECS_COLUMN(rows, EcsComponentStats, stats, 2);
 
     int32_t i;
@@ -537,7 +538,7 @@ void StatsCollectTableStats(ecs_rows_t *rows) {
 
 static
 void StatsCollectTypeStats(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, EcsType, type_component, 1);
+    EcsType *type_component = ecs_column(rows, EcsType, 1);
     ECS_COLUMN(rows, EcsTypeStats, stats, 2);
 
     ecs_world_t *world = rows->world;

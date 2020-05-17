@@ -100,7 +100,7 @@ ecs_snapshot_t* ecs_snapshot_take(
             world->stage.tables,
             filter);
 
-    result->last_handle = world->last_handle;
+    result->last_handle = world->stats.last_handle;
 
     return result;
 }
@@ -195,7 +195,7 @@ void ecs_snapshot_restore(
     world->rematch = true;
 
     if (!filter_used) {
-        world->last_handle = snapshot->last_handle;
+        world->stats.last_handle = snapshot->last_handle;
     }
 
     ecs_os_free(snapshot);    

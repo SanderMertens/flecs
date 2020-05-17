@@ -464,7 +464,6 @@ void mark_dirty(
     int32_t index)
 {
     data->change_count ++;
-
     if (table->dirty_state) {
         table->dirty_state[index] ++;
     }
@@ -560,6 +559,7 @@ void ecs_table_delete(
         ecs_vector_t *record_column = data->record_ptrs;     
         ecs_record_t **records = ecs_vector_first(record_column);
         ecs_record_t *record_to_move = records[count];
+
         records[index] = record_to_move;
         ecs_vector_remove_last(record_column);
 
@@ -577,6 +577,7 @@ void ecs_table_delete(
         /* Update record of moved entity in entity index */
         if (!world->in_progress && record_to_move) {
             record_to_move->row = index + 1;
+            ecs_assert(record_to_move->table == table, ECS_INTERNAL_ERROR, NULL);
         } else {
             ecs_record_t row;
             row.table = table;
@@ -791,6 +792,8 @@ void ecs_table_swap(
     entities[row_2] = e1;
     record_ptr_1->row = row_2 + 1;
     record_ptr_2->row = row_1 + 1;
+    record_ptrs[row_1] = record_ptr_2;
+    record_ptrs[row_2] = record_ptr_1;
 
     /* Swap columns */
     int32_t i, column_count = ecs_vector_count(table->type);

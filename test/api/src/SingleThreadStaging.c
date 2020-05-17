@@ -1186,7 +1186,7 @@ void SingleThreadStaging_remove_add_2_same_to_current() {
 
 static
 void AddRemoveAdd(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+    ECS_COLUMN(rows, Velocity, v, 2);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -2862,7 +2862,8 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
 
 static
 void Task(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
+    ECS_COLUMN(rows, Position, p, 1);
+
     ecs_entity_t *e = ecs_get_context(rows->world);
 
     ecs_add(rows->world, *e, Position);
@@ -2889,7 +2890,6 @@ void SingleThreadStaging_merge_after_tasks() {
 static
 void OverrideAfterRemove(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -2947,7 +2947,7 @@ void SingleThreadStaging_override_after_remove_in_progress() {
 
 static
 void GetParentInProgress(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+    ECS_COLUMN(rows, Velocity, v, 2);
     
     ecs_world_t *world = rows->world;
 
@@ -2989,8 +2989,7 @@ void AddInProgress(ecs_rows_t *rows) {
     ecs_world_t *world = rows->world;
 
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+    ECS_COLUMN(rows, Velocity, v, 2);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -3061,7 +3060,6 @@ void MutableTest(ecs_rows_t *rows) {
     ecs_world_t *world = rows->world;
 
     ECS_COLUMN(rows, Velocity, v, 2);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
 
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
@@ -3162,7 +3160,6 @@ void MutableTest_w_Add(ecs_rows_t *rows) {
     ecs_world_t *world = rows->world;
 
     ECS_COLUMN(rows, Velocity, v, 2);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
     ECS_COLUMN_COMPONENT(rows, MyTag, 3);
 
     int32_t i;
@@ -3249,7 +3246,7 @@ void OnAdd(ecs_rows_t *rows) {
 }
 
 void AddInProgress2(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+    ECS_COLUMN(rows, Velocity, v, 2);
 
     int i;
     for (i = 0; i < rows->count; i ++) {

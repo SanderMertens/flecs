@@ -95,8 +95,8 @@ static
 ecs_entity_t new_entity_handle(
     ecs_world_t *world)
 {
-    ecs_entity_t entity = ++ world->last_handle;
-    ecs_assert(!world->max_handle || entity <= world->max_handle, 
+    ecs_entity_t entity = ++ world->stats.last_handle;
+    ecs_assert(!world->stats.max_handle || entity <= world->stats.max_handle, 
         ECS_OUT_OF_RANGE, NULL);
     return entity;
 }
@@ -879,7 +879,7 @@ uint32_t move_entity(
     if (src_table->type) {
         ecs_table_move(
             dst_table, dst_data, dst_row, src_table, src_data, src_row);
-    }
+    }    
 
     if (removed) {
         ecs_run_deinit_actions(
@@ -1034,8 +1034,8 @@ void commit(
     }
 
     if ((!src_table || !src_table->type) && stage->range_check_enabled) {
-        ecs_assert(!world->max_handle || entity <= world->max_handle, ECS_OUT_OF_RANGE, 0);
-        ecs_assert(entity >= world->min_handle, ECS_OUT_OF_RANGE, 0);
+        ecs_assert(!world->stats.max_handle || entity <= world->stats.max_handle, ECS_OUT_OF_RANGE, 0);
+        ecs_assert(entity >= world->stats.min_handle, ECS_OUT_OF_RANGE, 0);
     }
 }
 
@@ -1105,8 +1105,8 @@ int32_t new_w_data(
     
     bool changed = false;
     ecs_type_t type = table->type;
-    ecs_entity_t e = world->last_handle + 1;
-    world->last_handle += count;
+    ecs_entity_t e = world->stats.last_handle + 1;
+    world->stats.last_handle += count;
 
     if (!type) {
         return e;
@@ -1539,7 +1539,7 @@ ecs_entity_t ecs_bulk_new_w_type(
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_table_t *table = ecs_table_from_type(world, stage, type);
-    ecs_entity_t result = world->last_handle + 1;
+    ecs_entity_t result = world->stats.last_handle + 1;
     new_w_data(world, stage, table, count, data);
     return result;
 }
@@ -1555,7 +1555,7 @@ ecs_entity_t ecs_bulk_new_w_entity(
         .count = 1
     };
     ecs_table_t *table = ecs_table_find_or_create(world, stage, &type);
-    ecs_entity_t result = world->last_handle + 1;
+    ecs_entity_t result = world->stats.last_handle + 1;
     new_w_data(world, stage, table, count, NULL);
     return result;
 }
@@ -1682,7 +1682,7 @@ ecs_entity_t ecs_copy(
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
     
     if (!dst) {
-        dst = ++ world->last_handle;
+        dst = ++ world->stats.last_handle;
     }
 
     ecs_entity_info_t src_info;
@@ -1750,15 +1750,15 @@ const void* ecs_get_ptr_w_entity(
     return ptr;
 }
 
-const void* ecs_get_cached_ptr_w_entity(
+const void* ecs_get_ref_w_entity(
     ecs_world_t *world,
-    ecs_cached_ptr_t *cached_ptr,
+    ecs_ref_t *ref,
     ecs_entity_t entity,
     ecs_entity_t component)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_record_t *record = cached_ptr->record;
+    ecs_record_t *record = ref->record;
 
     if (stage != &world->stage) {
         ecs_record_t *staged = ecs_eis_get(stage, entity);
@@ -1780,31 +1780,31 @@ const void* ecs_get_cached_ptr_w_entity(
     ecs_table_t *table = record->table;
     ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
 
-    if (cached_ptr->stage == stage &&
-        cached_ptr->record == record &&
-        cached_ptr->table == table &&
-        cached_ptr->row == record->row &&
-        cached_ptr->size == ecs_vector_size(data->entities))
+    if (ref->stage == stage &&
+        ref->record == record &&
+        ref->table == table &&
+        ref->row == record->row &&
+        ref->size == ecs_vector_size(data->entities))
     {
-        return cached_ptr->ptr;
+        return ref->ptr;
     }
 
-    cached_ptr->stage = stage;
-    cached_ptr->table = table;
-    cached_ptr->row = record->row;
-    cached_ptr->size = ecs_vector_size(data->entities);
+    ref->stage = stage;
+    ref->table = table;
+    ref->row = record->row;
+    ref->size = ecs_vector_size(data->entities);
 
     ecs_entity_info_t info = {0};
     set_info_from_record(world, &info, record);
-    cached_ptr->ptr = get_component(&info, component);
+    ref->ptr = get_component(&info, component);
 
     if (&world->stage == stage) {
-        cached_ptr->record = record;
+        ref->record = record;
     } else {
-        cached_ptr->record = NULL;
+        ref->record = NULL;
     }
 
-    return cached_ptr->ptr;
+    return ref->ptr;
 }
 
 void* ecs_get_mut_w_entity(

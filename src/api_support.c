@@ -282,7 +282,7 @@ ecs_entity_t ecs_new_system(
         result = ecs_set(world, result, EcsName, {name});
         if (phase) {
             ecs_add_entity(world, result, phase);
-            ecs_add_entity(world, result, ECS_XOR | world->builtin_pipeline);
+            ecs_add_entity(world, result, ECS_XOR | world->pipeline);
         }
 
         ecs_set(world, result, EcsSystem, {
@@ -353,7 +353,7 @@ ecs_entity_t ecs_new_pipeline(
     const char *name,
     const char *expr)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);  
+    assert(world->magic == ECS_WORLD_MAGIC);
 
     ecs_entity_t result = ecs_new_type(world, name, expr);
     const EcsType *type_ptr = ecs_get_ptr(world, result, EcsType);

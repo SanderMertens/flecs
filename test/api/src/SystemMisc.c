@@ -476,8 +476,6 @@ static
 void TableColumns(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
     ECS_COLUMN(rows, Velocity, v, 2);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
 
     ecs_type_t type = ecs_table_type(rows);
     test_int(2, ecs_vector_count(type));
@@ -893,5 +891,18 @@ void SystemMisc_match_system_w_filter() {
     test_assert(b_invoked != 0);
     test_assert(b_entity == SysA);
     
+    ecs_fini(world);
+}
+
+void SystemMisc_system_initial_state() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, SysA, 0, Position);
+
+    test_assert( ecs_has(world, SysA, EcsInactive));
+    test_assert( !ecs_has(world, SysA, EcsDisabled));
+    test_assert( !ecs_has(world, SysA, EcsDisabledIntern));
+
     ecs_fini(world);
 }

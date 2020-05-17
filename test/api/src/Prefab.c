@@ -1713,7 +1713,7 @@ void Prefab_copy_from_prefab_first_instance_in_progress() {
     ecs_fini(world);
 }
 
-void Prefab_cached_ptr_after_realloc() {
+void Prefab_ref_after_realloc() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1752,7 +1752,7 @@ void Prefab_cached_ptr_after_realloc() {
     ecs_fini(world);
 }
 
-void Prefab_revalidate_cached_ptr_w_mixed_table_refs() {
+void Prefab_revalidate_ref_w_mixed_table_refs() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1997,7 +1997,6 @@ static int on_set_velocity_invoked;
 static
 void OnSetVelocity(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Velocity, v, 1);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 1);
 
     on_set_velocity_invoked ++;
 
@@ -2333,7 +2332,6 @@ static
 void CloneInOnAdd(ecs_rows_t *rows)
 {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -2416,7 +2414,6 @@ void Prefab_override_from_nested() {
 static
 void OnAddEntity(ecs_rows_t *rows) {
     ECS_COLUMN(rows, ecs_entity_t, e, 1);
-    ECS_COLUMN_COMPONENT(rows, ecs_entity_t, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {

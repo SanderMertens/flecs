@@ -131,17 +131,16 @@ void ecs_system_activate(
     ecs_entity_t system,
     bool activate)
 {
+    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+
     if (activate) {
         ecs_remove(world, system, EcsInactive);
-    } else {
-        ecs_add(world, system, EcsInactive);
     }
 
     const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
-    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* During initialization it is possible that the query is not yet set */
-    if (!system_data->query) {
+    
+    /* If the system is being created, the component hasn't been set yet */
+    if (!system_data) {
         return;
     }
 
@@ -165,6 +164,8 @@ void ecs_enable_system(
     EcsColSystem *system_data,
     bool enabled)
 {
+    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+
     ecs_query_t *query = system_data->query;
     if (!query) {
         return;
@@ -197,6 +198,8 @@ void ecs_init_system(
     ecs_iter_action_t action,
     char *signature)
 {
+    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+
     /* Parse signature */
     ecs_sig_t sig = {0};
     ecs_sig_init(world, name, signature, &sig);
@@ -205,74 +208,67 @@ void ecs_init_system(
         name, system, signature);
     ecs_trace_push();
 
+    /* All systems start out inactive */
+    ecs_add(world, system, EcsInactive);
+
+    /* Create the query for the system */
+    ecs_query_t *query = ecs_query_new_w_sig(world, system, &sig);
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Add & initialize the EcsColSystem component */
     bool is_added = false;
-    
-    EcsColSystem *system_data = ecs_get_mut(
+    EcsColSystem *sptr = ecs_get_mut(
         world, system, EcsColSystem, &is_added);
-    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_assert(sptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(is_added == true, ECS_UNSUPPORTED, NULL);
 
-    memset(system_data, 0, sizeof(EcsColSystem));
-    system_data->action = action;
-    system_data->time_spent = 0;
-    system_data->query = ecs_query_new_w_sig(world, system, &sig);
-    ecs_assert(system_data->query != NULL, ECS_INTERNAL_ERROR, NULL);
+    memset(sptr, 0, sizeof(EcsColSystem));
+    sptr->query = query;
+    sptr->action = action;
+    sptr->entity = system;
+    sptr->tick_source = 0;
+    sptr->time_spent = 0;
 
-    system_data->tick_source = 0;
-    system_data->entity = system;
-
-    if (ecs_vector_count(system_data->query->tables)) {
-        /* If tables have been matched with this system it is active, and we
-        * should activate the in-columns, if any. This will ensure that any
-        * OnDemand systems get enabled. */
+    /* If tables have been matched with this system it is active, and we
+     * should activate the in-columns, if any. This will ensure that any
+     * OnDemand systems get enabled. */
+    if (ecs_vector_count(query->tables)) {
         ecs_system_activate(world, system, true);
     }
 
     /* If system is enabled, trigger enable components */
-    activate_in_columns(
-        world, system_data->query, 
-        world->on_enable_components, 
-        true);
+    activate_in_columns(world, query, world->on_enable_components, true);
 
     /* Check if all non-table column constraints are met. If not, disable
      * system (system will be enabled once constraints are met) */
-    if (!ecs_sig_check_constraints(world, &system_data->query->sig)) {
+    if (!ecs_sig_check_constraints(world, &query->sig)) {
         ecs_add(world, system, EcsDisabledIntern);
     }
 
     /* If system has FromSystem columns, add components to the system entity */
-    ecs_vector_each(system_data->query->sig.columns, ecs_sig_column_t, column, {
+    ecs_vector_each(query->sig.columns, ecs_sig_column_t, column, {
         if (column->from_kind == EcsFromSystem) {
             ecs_add_entity(world, system, column->is.component);
         }
     });
 
-    /* Re-obtain system_data, as it might have changed */
-    system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
-    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
-
     /* If the query has a OnDemand system tag, register its [out] columns */
     if (ecs_has(world, system, EcsOnDemand)) {
-        register_out_columns(world, system, system_data);
+        sptr = ecs_get_mut(world, system, EcsColSystem, NULL);
 
-        ecs_assert(system_data->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        /* Re-obtain system_data, as it might have changed */
-        system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
-        ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+        register_out_columns(world, system, sptr);
+        ecs_assert(sptr->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* If there are no systems currently interested in any of the [out]
          * columns of the on demand system, disable it */
-        if (!system_data->on_demand->count) {
+        if (!sptr->on_demand->count) {
             ecs_add(world, system, EcsDisabledIntern);
-            
-            system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
-            ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
         }        
     }
 
     if (ecs_has(world, system, EcsMonitor)) {
-        ecs_query_set_monitor(world, system_data->query, true);
+        ecs_query_set_monitor(world, query, true);
     }
 
     ecs_trace_pop();
@@ -400,7 +396,7 @@ ecs_entity_t ecs_run_intern(
     qiter.rows.system = system;
     qiter.rows.delta_time = delta_time;
     qiter.rows.delta_system_time = time_elapsed;
-    qiter.rows.world_time = real_world->world_time_total;
+    qiter.rows.world_time = real_world->stats.world_time_total;
     qiter.rows.frame_offset = offset;
     
     /* Set param if provided, otherwise use system context */
