@@ -49,6 +49,27 @@ void comp_copy(
     data->invoked ++;
 }
 
+void comp_move(
+    ecs_world_t *world,
+    ecs_entity_t component,    
+    const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity,
+    void *dst_ptr,
+    void *src_ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    xtor_ctx *data = ctx;
+    data->world = world;
+    data->component = component;
+    data->entity = dst_entity[0],
+    data->src_entity = src_entity[0],
+    data->size = size;
+    data->count = count;
+    data->invoked ++;
+}
+
 void ComponentLifecycle_ctor_on_add() {
     ecs_world_t *world = ecs_init();
 
@@ -246,10 +267,91 @@ void ComponentLifecycle_copy_on_clone() {
     test_int(ctx.count, 1);
 }
 
+void ComponentLifecycle_no_copy_on_move() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    xtor_ctx ctx = { 0 };
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .copy = comp_copy,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    memset(&ctx, 0, sizeof(ctx));
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
 void ComponentLifecycle_copy_on_stage() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    xtor_ctx ctx = { 0 };
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .copy = comp_copy,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    memset(&ctx, 0, sizeof(ctx));
+
+    ecs_staging_begin(world);
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 1);
+    test_assert(ctx.world == world);
+    test_int(ctx.component, ecs_entity(Position));
+    test_int(ctx.entity, e);
+    test_int(ctx.src_entity, e);
+    test_int(ctx.size, sizeof(Position));
+    test_int(ctx.count, 1);
+
+    ecs_staging_end(world, false);
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_move_on_merge() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    xtor_ctx ctx = { 0 };
+
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .move = comp_move,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_staging_begin(world);
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_staging_end(world, false);
+    test_int(ctx.invoked, 1);
+    test_assert(ctx.world == world);
+    test_int(ctx.component, ecs_entity(Position));
+    test_int(ctx.entity, e);
+    test_int(ctx.src_entity, e);
+    test_int(ctx.size, sizeof(Position));
+    test_int(ctx.count, 1);
+
+    ecs_fini(world);
 }

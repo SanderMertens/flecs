@@ -99,12 +99,16 @@ void ecs_table_delete(
 
 /* Move a row from one table to another */
 void ecs_table_move(
+    ecs_world_t *world,
+    ecs_entity_t dst_entity,
+    ecs_entity_t src_entity,
     ecs_table_t *new_table,
     ecs_data_t *new_data,
     int32_t new_index,
     ecs_table_t *old_table,
     ecs_data_t *old_data,
-    int32_t old_index);
+    int32_t old_index,
+    bool is_copy);
 
 /* Grow table with specified number of records. Populate table with entities,
  * starting from specified entity id. */

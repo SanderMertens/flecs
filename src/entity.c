@@ -872,6 +872,7 @@ uint32_t move_entity(
     ecs_record_t *record = info->record;
     ecs_assert(!record || record == ecs_eis_get(&world->stage, entity), ECS_INTERNAL_ERROR, NULL);
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record);
+    bool same_stage = src_data->stage == stage;
 
     if (main_stage) {
         record->table = dst_table;
@@ -888,16 +889,17 @@ uint32_t move_entity(
     /* Copy entity & components from src_table to dst_table */
     if (src_table->type) {
         ecs_table_move(
-            dst_table, dst_data, dst_row, src_table, src_data, src_row);
-    }    
+            world, entity, entity, dst_table, dst_data, dst_row, src_table, src_data, 
+            src_row, !same_stage);
 
-    if (removed) {
-        ecs_run_deinit_actions(
-            world, stage, src_table, src_data, src_row, 1, *removed, true);
+        if (removed) {
+            ecs_run_deinit_actions(
+                world, stage, src_table, src_data, src_row, 1, *removed, true);
+        }            
     }
 
     /* Only delete from source table if it is in the same stage */
-    if (src_data->stage == stage) {
+    if (same_stage) {
         ecs_table_delete(world, stage, src_table, src_data, src_row);
     }
 
@@ -1722,36 +1724,15 @@ ecs_entity_t ecs_clone(
         world, stage, dst, &dst_info, src_table, &to_add);
 
     if (copy_value) {
+        ecs_table_move(world, dst, src, src_table, dst_info.data, dst_info.row,
+            src_table, src_info.data, src_info.row, true);
+
         int i;
         for (i = 0; i < to_add.count; i ++) {
-            ecs_entity_t c = to_add.array[i];
-            
-            ecs_data_t *dst_data = dst_info.data;
-            ecs_data_t *src_data = src_info.data;
-            int32_t column_index = ecs_type_index_of(src_type, c);
-            ecs_assert(column_index != -1, ECS_INTERNAL_ERROR, NULL);
-            ecs_column_t *dst_column = &dst_data->columns[column_index];
-            ecs_column_t *src_column = &src_data->columns[column_index];
-
-            uint32_t size = dst_column->size;
-            int32_t dst_row = dst_info.row;
-            int32_t src_row = src_info.row;            
-            void *dst_array = ecs_vector_first(dst_column->data);
-            void *dst_ptr = ECS_OFFSET(dst_array, size * dst_row);
-            void *src_array = ecs_vector_first(src_column->data);
-            void *src_ptr = ECS_OFFSET(src_array, size * src_row);
-
-            ecs_component_data_t *cdata = ecs_get_component_data(world, c);
-            ecs_copy_t copy = cdata->lifecycle.copy;
-            if (copy) {
-                void *ctx = cdata->lifecycle.ctx;
-                copy(world, c, &dst, &src, dst_ptr, src_ptr, size, 1, ctx);
-            } else {
-                memcpy(dst_ptr, src_ptr, size);
-            }
-
+            ecs_entity_t component = to_add.array[i];
+            ecs_component_data_t *cdata = ecs_get_component_data(world, component);
             run_component_trigger(
-                world, stage, cdata->on_set, c, src_table, src_info.data, 
+                world, stage, cdata->on_set, component, src_table, src_info.data, 
                 dst_info.row, 1);
         }
     }    

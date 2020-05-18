@@ -267,6 +267,7 @@
                 "copy_on_new_w_data",
                 "copy_on_clone",
                 "copy_on_stage",
+                "no_copy_on_move",
                 "move_on_merge"
             ]
         }, {

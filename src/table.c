@@ -972,38 +972,17 @@ void ecs_table_merge(
     mark_dirty(new_table, new_data, 0);  
 }
 
-static
-void copy_column(
-    ecs_column_t *new_column,
-    int32_t new_index,
-    ecs_column_t *old_column,
-    int32_t old_index)
-{
-    ecs_assert(old_index >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(new_index >= 0, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t size = new_column->size;
-
-    if (size) {
-        size_t column_size = new_column->size;
-        
-        void *dst = _ecs_vector_get(new_column->data, column_size, new_index);
-        void *src = _ecs_vector_get(old_column->data, column_size, old_index);
-            
-        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        memcpy(dst, src, column_size);
-    }
-}
-
 void ecs_table_move(
+    ecs_world_t *world,
+    ecs_entity_t dst_entity,
+    ecs_entity_t src_entity,
     ecs_table_t *new_table,
     ecs_data_t *new_data,
     int32_t new_index,
     ecs_table_t *old_table,
     ecs_data_t *old_data,
-    int32_t old_index)
+    int32_t old_index,
+    bool is_copy)
 {
     ecs_assert(new_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(old_table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1011,12 +990,8 @@ void ecs_table_move(
     ecs_type_t new_type = new_table->type;
     ecs_type_t old_type = old_table->type;
 
-    uint16_t i_new, new_column_count = ecs_vector_count(new_type);
-    if (!new_column_count) {
-        return;
-    }
-
-    uint16_t i_old = 0, old_column_count = ecs_vector_count(old_type);
+    uint32_t i_new = 0, new_column_count = ecs_vector_count(new_type);
+    uint32_t i_old = 0, old_column_count = ecs_vector_count(old_type);
     ecs_entity_t *new_components = ecs_vector_first(new_type);
     ecs_entity_t *old_components = ecs_vector_first(old_type);
 
@@ -1029,32 +1004,42 @@ void ecs_table_move(
     ecs_column_t *old_columns = old_data->columns;
     ecs_column_t *new_columns = new_data->columns;
 
-    ecs_assert(old_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(new_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    for (i_new = 0; i_new < new_column_count; ) {
-        if (i_old == old_column_count) {
-            break;
-        }
-
+    for (; (i_new < new_column_count) && (i_old < old_column_count);) {
         ecs_entity_t new_component = new_components[i_new];
         ecs_entity_t old_component = old_components[i_old];
 
-        if ((new_component & ECS_TYPE_FLAG_MASK) || 
-            (old_component & ECS_TYPE_FLAG_MASK)) 
-        {
-            break;
+        if (new_component == old_component) {
+            ecs_column_t *new_column = &new_columns[i_new];
+            ecs_column_t *old_column = &old_columns[i_old];
+            int32_t size = new_column->size;
+
+            if (size) {
+                void *dst = _ecs_vector_get(new_column->data, size, new_index);
+                void *src = _ecs_vector_get(old_column->data, size, old_index);
+                    
+                ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                if (is_copy) {
+                    ecs_component_data_t *cdata = ecs_get_component_data(
+                        world, new_component);
+
+                    ecs_copy_t copy = cdata->lifecycle.copy;
+                    if (copy) {
+                        void *ctx = cdata->lifecycle.ctx;
+                        copy(world, new_component, &dst_entity, &src_entity, dst, src, 
+                            size, 1, ctx);
+                    } else {
+                        memcpy(dst, src, size);
+                    }
+                } else {
+                    memcpy(dst, src, size);
+                }
+            }
         }
 
-        if (new_component == old_component) {
-            copy_column(&new_columns[i_new], new_index, &old_columns[i_old], old_index);
-            i_new ++;
-            i_old ++;
-        } else if (new_component < old_component) {
-            i_new ++;
-        } else if (new_component > old_component) {
-            i_old ++;
-        }
+        i_new += new_component <= old_component;
+        i_old += new_component >= old_component;
     }
 }
 

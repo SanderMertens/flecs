@@ -232,6 +232,7 @@ void ComponentLifecycle_copy_on_override(void);
 void ComponentLifecycle_copy_on_new_w_data(void);
 void ComponentLifecycle_copy_on_clone(void);
 void ComponentLifecycle_copy_on_stage(void);
+void ComponentLifecycle_no_copy_on_move(void);
 void ComponentLifecycle_move_on_merge(void);
 
 // Testsuite 'Pipeline'
@@ -1694,7 +1695,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "ComponentLifecycle",
-        .testcase_count = 10,
+        .testcase_count = 11,
         .testcases = (bake_test_case[]){
             {
                 .id = "ctor_on_add",
@@ -1731,6 +1732,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "copy_on_stage",
                 .function = ComponentLifecycle_copy_on_stage
+            },
+            {
+                .id = "no_copy_on_move",
+                .function = ComponentLifecycle_no_copy_on_move
             },
             {
                 .id = "move_on_merge",
