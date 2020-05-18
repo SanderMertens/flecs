@@ -257,7 +257,7 @@ void SystemOnAdd_clone_match_1_of_1() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_2 = ecs_copy(world, 0, e_1, false);
+    ecs_entity_t e_2 = ecs_clone(world, 0, e_1, false);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -290,7 +290,7 @@ void SystemOnAdd_clone_match_1_of_2() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e_2 = ecs_copy(world, 0, e_1, false);
+    ecs_entity_t e_2 = ecs_clone(world, 0, e_1, false);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);

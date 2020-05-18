@@ -364,24 +364,34 @@ void override(
                 int32_t column_index = ecs_type_index_of(type, c);
                 ecs_assert(column_index != -1, ECS_INTERNAL_ERROR, NULL);
                 ecs_column_t *column = &data->columns[column_index];
+                ecs_component_data_t *cdata = ecs_get_component_data(world, c);
 
                 uint32_t data_size = column->size;
                 void *data_array = ecs_vector_first(column->data);
                 void *data_ptr = ECS_OFFSET(data_array, data_size * row);
                 void *base_ptr = get_component_w_index(&base_info, c_ptr_i);
-                
                 uint32_t index;
-                for (index = 0; index < count; index ++) {
-                    memcpy(data_ptr, base_ptr, data_size);
-                    data_ptr = ECS_OFFSET(data_ptr, data_size);
+
+                ecs_copy_t copy = cdata->lifecycle.copy;
+                if (copy) {
+                    void *ctx = cdata->lifecycle.ctx;
+                    ecs_entity_t *entities = ecs_vector_first(data->entities);
+                    for (index = 0; index < count; index ++) {
+                        copy(world, c, &base, &entities[row], 
+                            data_ptr, base_ptr, data_size, 1, ctx);
+                        data_ptr = ECS_OFFSET(data_ptr, data_size);
+                    }
+                } else {
+                    for (index = 0; index < count; index ++) {
+                        memcpy(data_ptr, base_ptr, data_size);
+                        data_ptr = ECS_OFFSET(data_ptr, data_size);
+                    }                    
                 }
 
                 /* Only run OnSet if base was added. OnSet triggers are not
-                * executed on an override because conceptually only the storage
-                * of the component changed, not its value. */
+                 * executed on an override because conceptually only the storage
+                 * of the component changed, not its value. */
                 if (base_added && !(table->flags & EcsTableIsDisabled)) {
-                    ecs_component_data_t *cdata = ecs_get_component_data(
-                        world, c);
                     if (cdata->on_set) {
                         run_component_trigger(world, stage, cdata->on_set, c, 
                             table, data, row, count);
@@ -1167,7 +1177,15 @@ int32_t new_w_data(
             void *ptr = ecs_vector_first(column->data);
             ptr = ECS_OFFSET(ptr, size * row);
 
-            memcpy(ptr, src_ptr, size * count);
+            ecs_component_data_t *cdata = ecs_get_component_data(world, c);
+            ecs_copy_t copy = cdata->lifecycle.copy;
+            if (copy) {
+                ecs_entity_t *entities = ecs_vector_first(data->entities);
+                copy(world, c, entities, entities, ptr, src_ptr, size, count, 
+                    cdata->lifecycle.ctx);
+            } else {
+                memcpy(ptr, src_ptr, size * count);
+            }
         });
     }
 
@@ -1671,7 +1689,7 @@ void ecs_add_remove_type(
     add_remove(world, entity, &components_add, &components_remove, false);
 }
 
-ecs_entity_t ecs_copy(
+ecs_entity_t ecs_clone(
     ecs_world_t *world,
     ecs_entity_t dst,
     ecs_entity_t src,
@@ -1704,15 +1722,36 @@ ecs_entity_t ecs_copy(
         world, stage, dst, &dst_info, src_table, &to_add);
 
     if (copy_value) {
-        ecs_table_move(src_table, dst_info.data, dst_info.row,
-            src_table, src_info.data, src_info.row);
-
         int i;
         for (i = 0; i < to_add.count; i ++) {
-            ecs_entity_t component = to_add.array[i];
-            ecs_component_data_t *cdata = ecs_get_component_data(world, component);
+            ecs_entity_t c = to_add.array[i];
+            
+            ecs_data_t *dst_data = dst_info.data;
+            ecs_data_t *src_data = src_info.data;
+            int32_t column_index = ecs_type_index_of(src_type, c);
+            ecs_assert(column_index != -1, ECS_INTERNAL_ERROR, NULL);
+            ecs_column_t *dst_column = &dst_data->columns[column_index];
+            ecs_column_t *src_column = &src_data->columns[column_index];
+
+            uint32_t size = dst_column->size;
+            int32_t dst_row = dst_info.row;
+            int32_t src_row = src_info.row;            
+            void *dst_array = ecs_vector_first(dst_column->data);
+            void *dst_ptr = ECS_OFFSET(dst_array, size * dst_row);
+            void *src_array = ecs_vector_first(src_column->data);
+            void *src_ptr = ECS_OFFSET(src_array, size * src_row);
+
+            ecs_component_data_t *cdata = ecs_get_component_data(world, c);
+            ecs_copy_t copy = cdata->lifecycle.copy;
+            if (copy) {
+                void *ctx = cdata->lifecycle.ctx;
+                copy(world, c, &dst, &src, dst_ptr, src_ptr, size, 1, ctx);
+            } else {
+                memcpy(dst_ptr, src_ptr, size);
+            }
+
             run_component_trigger(
-                world, stage, cdata->on_set, component, src_table, src_info.data, 
+                world, stage, cdata->on_set, c, src_table, src_info.data, 
                 dst_info.row, 1);
         }
     }    
@@ -1854,7 +1893,14 @@ ecs_entity_t ecs_set_ptr_w_entity(
     }
 
     if (ptr) {
-        memcpy(dst, ptr, size);
+        ecs_component_data_t *cdata = ecs_get_component_data(world, component);
+        ecs_copy_t copy = cdata->lifecycle.copy;
+        if (copy) {
+            copy(world, component, &entity, &entity, dst, ptr, size, 1, 
+                cdata->lifecycle.ctx);
+        } else {
+            memcpy(dst, ptr, size);
+        }
     } else {
         memset(dst, 0, size);
     }

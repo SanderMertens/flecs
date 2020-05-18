@@ -212,9 +212,9 @@ struct ecs_rows_t {
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
 };
 
-/* World stats */
+/* World info */
 typedef struct ecs_world_info_t {
-    /* Handle stats */
+    /* Handles */
     ecs_entity_t last_handle;   /* Last issued handle */
     ecs_entity_t min_handle;    /* First allowed handle */
     ecs_entity_t max_handle;    /* Last allowed handle */
@@ -222,8 +222,8 @@ typedef struct ecs_world_info_t {
     /* Timing stats */
     float delta_time;           /* Time passed to or computed by ecs_progress */
     float target_fps;           /* Target fps */
-    double frame_time_total;    /* Total time spent in processing a frame */
-    double system_time_total;   /* Total time spent in periodic systems */
+    double frame_time_total;    /* Total time spent processing a frame */
+    double system_time_total;   /* Total time spent in systems */
     double merge_time_total;    /* Total time spent in merges */
     double world_time_total;    /* Time elapsed since first frame */
     
@@ -694,7 +694,7 @@ void* ecs_get_context(
  * @param world The world.
  */
 FLECS_EXPORT
-const ecs_world_info_t* ecs_get_world_stats(
+const ecs_world_info_t* ecs_get_world_info(
     ecs_world_t *world);
 
 /** Dimension the world for a specified number of entities.
@@ -1021,7 +1021,7 @@ void ecs_bulk_delete(
 /* -- Copy -- */
 
 FLECS_EXPORT
-ecs_entity_t ecs_copy(
+ecs_entity_t ecs_clone(
     ecs_world_t *world,
     ecs_entity_t dst,
     ecs_entity_t src,

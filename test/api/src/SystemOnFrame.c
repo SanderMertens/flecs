@@ -1296,7 +1296,7 @@ void SystemOnFrame_on_period() {
 
     ecs_set_target_fps(world, 60);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     double start, now = 0;
 

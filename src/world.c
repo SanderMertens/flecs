@@ -1045,7 +1045,7 @@ bool ecs_staging_end(
     return result;
 }
 
-const ecs_world_info_t* ecs_get_world_stats(
+const ecs_world_info_t* ecs_get_world_info(
     ecs_world_t *world)
 {
     return &world->stats;

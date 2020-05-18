@@ -148,7 +148,7 @@ void SystemOnSet_clone() {
 
     ctx = (Probe){0};
 
-   ecs_copy(world, 0, e_1, false);
+   ecs_clone(world, 0, e_1, false);
 
     /* OnSet function should not have been called, because value has not been 
      * copied */
@@ -184,7 +184,7 @@ void SystemOnSet_clone_w_value() {
 
     ctx = (Probe){0};
 
-    ecs_entity_t e_2 = ecs_copy(world, 0, e_1, true);
+    ecs_entity_t e_2 = ecs_clone(world, 0, e_1, true);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);

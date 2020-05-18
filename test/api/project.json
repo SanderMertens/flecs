@@ -255,6 +255,20 @@
                 "1_tag_1_component",
                 "1_tag_1_component_w_value"
             ]
+        }, { 
+            "id": "ComponentLifecycle",
+            "testcases": [
+                "ctor_on_add",
+                "ctor_on_new",
+                "dtor_on_remove",
+                "dtor_on_delete",
+                "copy_on_set",
+                "copy_on_override",
+                "copy_on_new_w_data",
+                "copy_on_clone",
+                "copy_on_stage",
+                "move_on_merge"
+            ]
         }, {
             "id": "Pipeline",
             "testcases": [

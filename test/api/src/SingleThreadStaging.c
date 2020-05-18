@@ -531,7 +531,7 @@ void Clone_current(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     int i;
     for (i = 0; i < rows->count; i ++) {
-        ctx->new_entities[ctx->entity_count] = ecs_copy(rows->world, 0, rows->entities[i], false);
+        ctx->new_entities[ctx->entity_count] = ecs_clone(rows->world, 0, rows->entities[i], false);
         ctx->entity_count ++;
     }
 }
@@ -576,7 +576,7 @@ void Clone_current_w_value(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     int i;
     for (i = 0; i < rows->count; i ++) {
-        ctx->new_entities[ctx->entity_count] = ecs_copy(rows->world, 0, rows->entities[i], true);
+        ctx->new_entities[ctx->entity_count] = ecs_clone(rows->world, 0, rows->entities[i], true);
         ctx->entity_count ++;
     }
 }

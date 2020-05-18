@@ -2345,7 +2345,7 @@ void CloneInOnAdd(ecs_rows_t *rows)
 
         if (!has_cloned_test) {
             ecs_entity_t e = rows->entities[i];
-            ecs_entity_t clone = ecs_copy(rows->world, 0, e, true);
+            ecs_entity_t clone = ecs_clone(rows->world, 0, e, true);
             test_assert( ecs_has(rows->world, clone, Position));
 
             const Position *p_clone = ecs_get_ptr(rows->world, clone, Position);

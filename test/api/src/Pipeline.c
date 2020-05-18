@@ -26,7 +26,7 @@ void Pipeline_system_order_same_phase() {
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_progress(world, 1);
 
@@ -59,7 +59,7 @@ void Pipeline_system_order_same_phase_after_disable() {
     ecs_enable(world, SysB, true);
     test_assert( !ecs_has(world, SysB, EcsDisabled));
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_progress(world, 1);
 
@@ -87,7 +87,7 @@ void Pipeline_system_order_different_phase() {
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysA, EcsPreUpdate, Position);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_progress(world, 1);
 
@@ -115,7 +115,7 @@ void Pipeline_system_order_different_phase_after_disable() {
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysA, EcsPreUpdate, Position);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_enable(world, SysB, false);
     test_assert( ecs_has(world, SysB, EcsDisabled));
@@ -150,7 +150,7 @@ void Pipeline_system_order_same_phase_after_activate() {
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Velocity); /* System is deactivated */
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
     
     test_assert( ecs_has(world, SysB, EcsInactive));
     ecs_add(world, E, Velocity);
@@ -184,7 +184,7 @@ void Pipeline_system_order_different_phase_after_activate() {
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Velocity); /* System is deactivated */
     ECS_SYSTEM(world, SysA, EcsPreUpdate, Position);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
     
     test_assert( ecs_has(world, SysB, EcsInactive));
     ecs_add(world, E, Velocity);
@@ -218,7 +218,7 @@ void Pipeline_system_order_after_new_system_lower_id() {
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Create new system with SysA id */
     ecs_set(world, Sys, EcsSystem, {
@@ -257,7 +257,7 @@ void Pipeline_system_order_after_new_system_inbetween_id() {
     ECS_ENTITY(world, Sys, 0);
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Create new system with SysA id */
     ecs_set(world, Sys, EcsSystem, {
@@ -296,7 +296,7 @@ void Pipeline_system_order_after_new_system_higher_id() {
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
     ECS_ENTITY(world, Sys, 0);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Create new system with SysA id */
     ecs_set(world, Sys, EcsSystem, {
@@ -393,7 +393,7 @@ void Pipeline_merge_after_staged_out() {
     ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, .Velocity);
     ECS_SYSTEM(world, SysInMain, EcsOnUpdate, Velocity);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_progress(world, 1);
 
@@ -421,7 +421,7 @@ void Pipeline_merge_after_not_out() {
     ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, !Velocity);
     ECS_SYSTEM(world, SysInMain, EcsOnUpdate, Velocity);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_progress(world, 1);
 
@@ -449,7 +449,7 @@ void Pipeline_no_merge_after_main_out() {
     ECS_SYSTEM(world, SysOutMain, EcsOnUpdate, Position, Velocity);
     ECS_SYSTEM(world, SysInMain, EcsOnUpdate, Velocity);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_progress(world, 1);
 
@@ -477,7 +477,7 @@ void Pipeline_no_merge_after_staged_in_out() {
     ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, .Velocity);
     ECS_SYSTEM(world, SysIn, EcsOnUpdate, .Velocity);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_progress(world, 1);
 

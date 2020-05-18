@@ -222,6 +222,18 @@ void Clone_tag_w_value(void);
 void Clone_1_tag_1_component(void);
 void Clone_1_tag_1_component_w_value(void);
 
+// Testsuite 'ComponentLifecycle'
+void ComponentLifecycle_ctor_on_add(void);
+void ComponentLifecycle_ctor_on_new(void);
+void ComponentLifecycle_dtor_on_remove(void);
+void ComponentLifecycle_dtor_on_delete(void);
+void ComponentLifecycle_copy_on_set(void);
+void ComponentLifecycle_copy_on_override(void);
+void ComponentLifecycle_copy_on_new_w_data(void);
+void ComponentLifecycle_copy_on_clone(void);
+void ComponentLifecycle_copy_on_stage(void);
+void ComponentLifecycle_move_on_merge(void);
+
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
 void Pipeline_system_order_same_phase_after_disable(void);
@@ -1677,6 +1689,52 @@ static bake_test_suite suites[] = {
             {
                 .id = "1_tag_1_component_w_value",
                 .function = Clone_1_tag_1_component_w_value
+            }
+        }
+    },
+    {
+        .id = "ComponentLifecycle",
+        .testcase_count = 10,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "ctor_on_add",
+                .function = ComponentLifecycle_ctor_on_add
+            },
+            {
+                .id = "ctor_on_new",
+                .function = ComponentLifecycle_ctor_on_new
+            },
+            {
+                .id = "dtor_on_remove",
+                .function = ComponentLifecycle_dtor_on_remove
+            },
+            {
+                .id = "dtor_on_delete",
+                .function = ComponentLifecycle_dtor_on_delete
+            },
+            {
+                .id = "copy_on_set",
+                .function = ComponentLifecycle_copy_on_set
+            },
+            {
+                .id = "copy_on_override",
+                .function = ComponentLifecycle_copy_on_override
+            },
+            {
+                .id = "copy_on_new_w_data",
+                .function = ComponentLifecycle_copy_on_new_w_data
+            },
+            {
+                .id = "copy_on_clone",
+                .function = ComponentLifecycle_copy_on_clone
+            },
+            {
+                .id = "copy_on_stage",
+                .function = ComponentLifecycle_copy_on_stage
+            },
+            {
+                .id = "move_on_merge",
+                .function = ComponentLifecycle_move_on_merge
             }
         }
     },
@@ -4147,5 +4205,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 44);
+    return bake_test_run("api", argc, argv, suites, 45);
 }

@@ -245,7 +245,7 @@ void World_entity_range_add_out_of_range_in_progress() {
 void World_get_tick() {
     ecs_world_t *world = ecs_init();
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
     test_int(stats->frame_count_total, 0);
 
     ecs_progress(world, 1);
@@ -663,7 +663,7 @@ void World_control_fps() {
     double start, now = 0;
     ecs_set_target_fps(world, 60);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Run for one second */
     int count = 0;
@@ -707,7 +707,7 @@ void World_control_fps_busy_system() {
     double start, now = 0;
     ecs_set_target_fps(world, 60);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Run for one second */
     int count = 0;
@@ -735,7 +735,7 @@ void World_control_fps_busy_app() {
     double start, now = 0;
     ecs_set_target_fps(world, 60);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Run for one second */
     int count = 0;
@@ -774,7 +774,7 @@ void World_control_fps_random_system() {
     double start, now = 0;
     ecs_set_target_fps(world, 60);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Run for one second */
     int count = 0;
@@ -802,7 +802,7 @@ void World_control_fps_random_app() {
     double start, now = 0;
     ecs_set_target_fps(world, 60);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Run for one second */
     int count = 0;
@@ -952,7 +952,7 @@ void World_quit() {
 void World_get_delta_time() {
     ecs_world_t *world = ecs_init();
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     test_int(stats->delta_time, 0);
 
@@ -966,7 +966,7 @@ void World_get_delta_time() {
 void World_get_delta_time_auto() {
     ecs_world_t *world = ecs_init();
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     test_int(stats->delta_time, 0);
 
@@ -1010,7 +1010,7 @@ void World_init_w_args_set_fps() {
 
     test_assert(world != NULL);
 
-    const ecs_world_info_t *stats = ecs_get_world_stats(world);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     test_int(stats->target_fps, 60);
 

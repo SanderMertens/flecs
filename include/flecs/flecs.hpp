@@ -416,7 +416,7 @@ public:
     }
 
     float get_target_fps() const {
-        const ecs_world_info_t *stats = ecs_get_world_stats(world);
+        const ecs_world_info_t *stats = ecs_get_world_info(world);
         return stats->target_fps;
     }
 
@@ -871,7 +871,7 @@ public:
     }
 
     float delta_time() {
-        const ecs_world_info_t *stats = ecs_get_world_stats(world);
+        const ecs_world_info_t *stats = ecs_get_world_info(world);
         return stats->delta_time;
     }
 
