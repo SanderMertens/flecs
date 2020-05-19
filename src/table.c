@@ -843,12 +843,12 @@ void merge_vector(
         void *dst_ptr = ecs_vector_first(dst);
         void *src_ptr = ecs_vector_first(src);
 
-        dst_ptr = ECS_OFFSET(dst_ptr, size * src_count);
+        dst_ptr = ECS_OFFSET(dst_ptr, size * dst_count);
         memcpy(dst_ptr, src_ptr, size * src_count);
 
         ecs_vector_free(src);
         *dst_out = dst;
-    }    
+    }
 }
 
 void ecs_table_merge(
@@ -925,13 +925,9 @@ void ecs_table_merge(
             break;
         }
 
-        ecs_entity_t new_component = 0;
-        ecs_entity_t old_component = 0;
-        int32_t size = 0;
-
-        new_component = new_components[i_new];
-        old_component = old_components[i_old];
-        size = new_columns[i_new].size;
+        ecs_entity_t new_component = new_components[i_new];
+        ecs_entity_t old_component = old_components[i_old];
+        size_t size = new_columns[i_new].size;
 
         if ((new_component & ECS_TYPE_FLAG_MASK) || 
             (old_component & ECS_TYPE_FLAG_MASK)) 
@@ -951,14 +947,28 @@ void ecs_table_merge(
             i_new ++;
             i_old ++;
         } else if (new_component < old_component) {
-            /* This should not happen. A table should never be merged to
-             * another table of which the type is not a subset. */
-            ecs_abort(ECS_INTERNAL_ERROR, NULL);
+            /* New column does not occur in old table, make sure vector is large
+             * enough. */
+            if (size) {
+                ecs_vector_set_count(&new_columns[i_new].data, size, 
+                old_count + new_count);
+            }
+            i_new ++;
         } else if (new_component > old_component) {
             /* Old column does not occur in new table, remove */
             ecs_vector_free(old_columns[i_old].data);
             old_columns[i_old].data = NULL;
             i_old ++;
+        }
+    }
+
+    /* Initialize remaining columns */
+    for (; i_new < new_component_count; i_new ++) {
+        size_t size = new_columns[i_new].size;
+
+        if (size) {
+            ecs_vector_set_count(&new_columns[i_new].data, size, 
+            old_count + new_count);
         }
     }
 

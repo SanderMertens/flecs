@@ -550,8 +550,7 @@ void instantiate(
     }
 }
 
-static
-void run_init_actions(
+void ecs_run_init_actions(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
@@ -622,6 +621,7 @@ void run_init_actions(
         void *ptr = ECS_OFFSET(array, size * row);
 
         if (ctor) {
+            ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
             ctor(world, component, ecs_vector_first(data->entities), ptr, size, 
                 count, ctx);
         }
@@ -836,7 +836,7 @@ uint32_t new_entity(
         ECS_INTERNAL_ERROR, NULL);
 
     ecs_comp_mask_t set_mask = { 0 };
-    run_init_actions(world, stage, new_table, dst_data, new_row, 1, *added, 
+    ecs_run_init_actions(world, stage, new_table, dst_data, new_row, 1, *added, 
         set_mask);
 
     run_monitors(world, stage, new_table, dst_data, new_row, 1, NULL);
@@ -905,7 +905,7 @@ uint32_t move_entity(
 
     if (added) {
         ecs_comp_mask_t set_mask = { 0 };
-        run_init_actions(
+        ecs_run_init_actions(
             world, stage, dst_table, dst_data, dst_row, 1, *added, 
             set_mask);
     }
@@ -1192,7 +1192,7 @@ int32_t new_w_data(
     }
 
     int32_t change_count = data->change_count;
-    run_init_actions(world, stage, table, data, row, count, added, set_mask);
+    ecs_run_init_actions(world, stage, table, data, row, count, added, set_mask);
     changed = change_count != data->change_count;
 
     /* Run OnSet triggers */

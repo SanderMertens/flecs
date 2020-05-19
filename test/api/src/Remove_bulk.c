@@ -247,3 +247,143 @@ void Remove_bulk_remove_all_tag() {
 
     test_int( ecs_count(world, Tag), 0);
 }
+
+void RemoveVelocity(ecs_rows_t *rows) {
+    probe_system(rows);
+}
+
+void Remove_bulk_on_remove() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_TRIGGER(world, RemoveVelocity, EcsOnRemove, Velocity, NULL);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
+    test_assert(e != 0);
+
+    ecs_bulk_remove(world, Velocity, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 10);
+    test_int(ctx.system, RemoveVelocity);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_int(ctx.e[i], e + i);
+    }
+
+    test_int(ctx.c[0][0], ecs_entity(Velocity));
+}
+
+void Remove_bulk_remove_entity_comp() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
+    test_assert(e != 0);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        test_assert( ecs_has(world, e + i, Velocity));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    ecs_bulk_remove_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        test_assert( !ecs_has(world, e + i, Velocity));
+
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i);
+        test_int(p->y, i * 2);
+    }
+
+    test_int( ecs_count(world, Position), 10);
+    test_int( ecs_count(world, Velocity), 0);
+}
+
+void Remove_bulk_remove_entity_tag() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+    ECS_TYPE(world, Type, Position, Tag);
+
+    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
+    test_assert(e != 0);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        test_assert( ecs_has_entity(world, e + i, Tag));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    ecs_bulk_remove_entity(world, Tag, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        test_assert( !ecs_has_entity(world, e + i, Tag));
+
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i);
+        test_int(p->y, i * 2);
+    }
+
+    test_int( ecs_count(world, Position), 10);
+    test_int( ecs_count_entity(world, Tag), 0);
+}
+
+void Remove_bulk_remove_entity_on_remove() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ECS_TRIGGER(world, RemoveVelocity, EcsOnRemove, Velocity, NULL);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_bulk_new(world, Type, 10);
+    test_assert(e != 0);
+
+    ecs_bulk_remove_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 10);
+    test_int(ctx.system, RemoveVelocity);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_int(ctx.e[i], e + i);
+    }
+
+    test_int(ctx.c[0][0], ecs_entity(Velocity));
+}

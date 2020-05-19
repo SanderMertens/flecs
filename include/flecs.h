@@ -405,8 +405,8 @@ extern ecs_type_t
 #define EcsLastBuiltin (EEcsTickSource)
 
 /** This allows passing 0 as type to functions that accept types */
-#define T0 (0)
-
+#define TNULL NULL
+#define T0 NULL
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Declarative macro's

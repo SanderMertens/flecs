@@ -104,7 +104,14 @@
                 "add_comp_from_tag_to_empty",
                 "add_comp_from_tag_to_existing",
                 "add_tag_from_tag_to_empty",
-                "add_tag_from_tag_to_existing"
+                "add_tag_from_tag_to_existing",
+                "add_comp_to_more_existing",
+                "add_comp_to_fewer_existing",
+                "on_add",
+                "add_entity_comp",
+                "add_entity_tag",
+                "add_entity_on_add",
+                "add_entity_existing"
             ]
         }, {
             "id": "Remove_bulk",
@@ -116,7 +123,19 @@
                 "remove_tag_from_tag_to_empty",
                 "remove_tag_from_tag_to_existing",
                 "remove_all_comp",
-                "remove_all_tag"
+                "remove_all_tag",
+                "on_remove",
+                "remove_entity_comp",
+                "remove_entity_tag",
+                "remove_entity_on_remove"
+            ]
+        }, {
+            "id": "Add_remove_bulk",
+            "testcases": [
+                "add_remove_add_only",
+                "add_remove_remove_only",
+                "add_remove_both",
+                "add_remove_same"                
             ]
         }, {
             "id": "Has",
@@ -255,7 +274,7 @@
                 "1_tag_1_component",
                 "1_tag_1_component_w_value"
             ]
-        }, { 
+        }, {
             "id": "ComponentLifecycle",
             "testcases": [
                 "ctor_on_add",
@@ -268,7 +287,12 @@
                 "copy_on_clone",
                 "copy_on_stage",
                 "no_copy_on_move",
-                "move_on_merge"
+                "move_on_merge",
+                "ctor_on_bulk_add",
+                "dtor_on_bulk_remove",
+                "ctor_on_bulk_add_entity",
+                "dtor_on_bulk_remove_entity",
+                "ctor_dtor_on_bulk_add_remove"
             ]
         }, {
             "id": "Pipeline",

@@ -27,6 +27,8 @@ void Add_bulk_add_comp_from_comp_to_empty() {
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
+
+        test_assert(ecs_get_ptr(world, e + i, Velocity) != NULL);
     }
 
     test_int( ecs_count(world, Position), 10);
@@ -54,6 +56,7 @@ void Add_bulk_add_comp_from_tag_to_empty() {
     for (i = 0; i < 10; i ++) {
         test_assert( ecs_has(world, e + i, Tag));
         test_assert( ecs_has(world, e + i, Velocity));
+        test_assert(ecs_get_ptr(world, e + i, Velocity) != NULL);
     }
 
     test_int( ecs_count_entity(world, Tag), 10);
@@ -99,6 +102,8 @@ void Add_bulk_add_comp_from_comp_to_existing() {
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
+
+        test_assert(ecs_get_ptr(world, e + i, Velocity) != NULL);
     }
 
     for (i = 0; i < 10; i ++) {
@@ -151,6 +156,7 @@ void Add_bulk_add_comp_from_tag_to_existing() {
     for (i = 0; i < 10; i ++) {
         test_assert( ecs_has_entity(world, e + i, Tag));
         test_assert( ecs_has(world, e + i, Velocity));
+        test_assert(ecs_get_ptr(world, e + i, Velocity) != NULL);
     }
 
     for (i = 0; i < 10; i ++) {
@@ -233,4 +239,292 @@ void Add_bulk_add_tag_from_tag_to_existing() {
 
     test_int( ecs_count_entity(world, Tag), 20);
     test_int( ecs_count_entity(world, Tag2), 20);
+}
+
+void Add_bulk_add_comp_to_more_existing() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ecs_entity_t existing = ecs_bulk_new(world, Type, 20);
+    test_assert(existing != 0);
+
+    int i;
+    for (i = 0; i < 20; i ++) {
+        test_assert( ecs_has(world, existing + i, Position));
+        ecs_set(world, existing + i, Position, {i * 3, i * 4});
+        test_assert( ecs_has(world, existing + i, Velocity));
+        ecs_set(world, existing + i, Velocity, {i * 5, i * 6});        
+    }    
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+    test_assert(e != existing);
+
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    ecs_bulk_add(world, Velocity, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        test_assert( ecs_has(world, e + i, Velocity));
+
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i);
+        test_int(p->y, i * 2);
+    }
+
+    for (i = 0; i < 20; i ++) {
+        test_assert( ecs_has(world, existing + i, Position));
+        test_assert( ecs_has(world, existing + i, Velocity));
+
+        const Position *p = ecs_get_ptr(world, existing + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i * 3);
+        test_int(p->y, i * 4);
+
+        const Velocity *v = ecs_get_ptr(world, existing + i, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, i * 5);
+        test_int(v->y, i * 6);
+    }    
+
+    test_int( ecs_count(world, Position), 30);
+    test_int( ecs_count(world, Velocity), 30);
+}
+
+void Add_bulk_add_comp_to_fewer_existing() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ecs_entity_t existing = ecs_bulk_new(world, Type, 5);
+    test_assert(existing != 0);
+
+    int i;
+    for (i = 0; i < 5; i ++) {
+        test_assert( ecs_has(world, existing + i, Position));
+        ecs_set(world, existing + i, Position, {i * 3, i * 4});
+        test_assert( ecs_has(world, existing + i, Velocity));
+        ecs_set(world, existing + i, Velocity, {i * 5, i * 6});        
+    }    
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+    test_assert(e != existing);
+
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    ecs_bulk_add(world, Velocity, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        test_assert( ecs_has(world, e + i, Velocity));
+
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i);
+        test_int(p->y, i * 2);
+
+        test_assert(ecs_get_ptr(world, e + i, Velocity) != NULL);
+    }
+
+    for (i = 0; i < 5; i ++) {
+        test_assert( ecs_has(world, existing + i, Position));
+        test_assert( ecs_has(world, existing + i, Velocity));
+
+        const Position *p = ecs_get_ptr(world, existing + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i * 3);
+        test_int(p->y, i * 4);
+
+        const Velocity *v = ecs_get_ptr(world, existing + i, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, i * 5);
+        test_int(v->y, i * 6);
+    }    
+
+    test_int( ecs_count(world, Position), 15);
+    test_int( ecs_count(world, Velocity), 15);
+}
+
+void AddVelocity(ecs_rows_t *rows) {
+    probe_system(rows);
+}
+
+void Add_bulk_on_add() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Velocity, NULL);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+
+    ecs_bulk_add(world, Velocity, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 10);
+    test_int(ctx.system, AddVelocity);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_int(ctx.e[i], e + i);
+    }
+    
+    test_int(ctx.c[0][0], ecs_entity(Velocity));
+}
+
+void Add_bulk_add_entity_comp() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    ecs_bulk_add_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        test_assert( ecs_has(world, e + i, Velocity));
+
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i);
+        test_int(p->y, i * 2);
+
+        test_assert(ecs_get_ptr(world, e + i, Velocity) != NULL);
+    }
+
+    test_int( ecs_count(world, Position), 10);
+    test_int( ecs_count(world, Velocity), 10);
+}
+
+void Add_bulk_add_entity_tag() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    ecs_bulk_add_entity(world, Tag, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        test_assert( ecs_has_entity(world, e + i, Tag));
+
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i);
+        test_int(p->y, i * 2);
+    }
+
+    test_int( ecs_count(world, Position), 10);
+    test_int( ecs_count_entity(world, Tag), 10);
+}
+
+void Add_bulk_add_entity_on_add() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Velocity, NULL);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+
+    ecs_bulk_add_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 10);
+    test_int(ctx.system, AddVelocity);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_int(ctx.e[i], e + i);
+    }
+    
+    test_int(ctx.c[0][0], ecs_entity(Velocity));
+}
+
+void Add_bulk_add_entity_existing() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    ecs_bulk_add_entity(world, ecs_entity(Position), &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    for (i = 0; i < 10; i ++) {
+        test_assert( ecs_has(world, e + i, Position));
+
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i);
+        test_int(p->y, i * 2);
+    }
+
+    test_int( ecs_count(world, Position), 10);
 }

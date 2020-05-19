@@ -164,6 +164,16 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_entity_t component,
     ecs_entity_t previous);
 
+void ecs_run_init_actions(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    uint32_t row,
+    uint32_t count,
+    ecs_entities_t components,
+    ecs_comp_mask_t set_mask);
+
 void ecs_run_deinit_actions(
     ecs_world_t *world,
     ecs_stage_t *stage,

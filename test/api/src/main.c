@@ -92,6 +92,13 @@ void Add_bulk_add_comp_from_tag_to_empty(void);
 void Add_bulk_add_comp_from_tag_to_existing(void);
 void Add_bulk_add_tag_from_tag_to_empty(void);
 void Add_bulk_add_tag_from_tag_to_existing(void);
+void Add_bulk_add_comp_to_more_existing(void);
+void Add_bulk_add_comp_to_fewer_existing(void);
+void Add_bulk_on_add(void);
+void Add_bulk_add_entity_comp(void);
+void Add_bulk_add_entity_tag(void);
+void Add_bulk_add_entity_on_add(void);
+void Add_bulk_add_entity_existing(void);
 
 // Testsuite 'Remove_bulk'
 void Remove_bulk_remove_comp_from_comp_to_empty(void);
@@ -102,6 +109,16 @@ void Remove_bulk_remove_tag_from_tag_to_empty(void);
 void Remove_bulk_remove_tag_from_tag_to_existing(void);
 void Remove_bulk_remove_all_comp(void);
 void Remove_bulk_remove_all_tag(void);
+void Remove_bulk_on_remove(void);
+void Remove_bulk_remove_entity_comp(void);
+void Remove_bulk_remove_entity_tag(void);
+void Remove_bulk_remove_entity_on_remove(void);
+
+// Testsuite 'Add_remove_bulk'
+void Add_remove_bulk_add_remove_add_only(void);
+void Add_remove_bulk_add_remove_remove_only(void);
+void Add_remove_bulk_add_remove_both(void);
+void Add_remove_bulk_add_remove_same(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -234,6 +251,11 @@ void ComponentLifecycle_copy_on_clone(void);
 void ComponentLifecycle_copy_on_stage(void);
 void ComponentLifecycle_no_copy_on_move(void);
 void ComponentLifecycle_move_on_merge(void);
+void ComponentLifecycle_ctor_on_bulk_add(void);
+void ComponentLifecycle_dtor_on_bulk_remove(void);
+void ComponentLifecycle_ctor_on_bulk_add_entity(void);
+void ComponentLifecycle_dtor_on_bulk_remove_entity(void);
+void ComponentLifecycle_ctor_dtor_on_bulk_add_remove(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -1169,7 +1191,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Add_bulk",
-        .testcase_count = 6,
+        .testcase_count = 13,
         .testcases = (bake_test_case[]){
             {
                 .id = "add_comp_from_comp_to_empty",
@@ -1194,12 +1216,40 @@ static bake_test_suite suites[] = {
             {
                 .id = "add_tag_from_tag_to_existing",
                 .function = Add_bulk_add_tag_from_tag_to_existing
+            },
+            {
+                .id = "add_comp_to_more_existing",
+                .function = Add_bulk_add_comp_to_more_existing
+            },
+            {
+                .id = "add_comp_to_fewer_existing",
+                .function = Add_bulk_add_comp_to_fewer_existing
+            },
+            {
+                .id = "on_add",
+                .function = Add_bulk_on_add
+            },
+            {
+                .id = "add_entity_comp",
+                .function = Add_bulk_add_entity_comp
+            },
+            {
+                .id = "add_entity_tag",
+                .function = Add_bulk_add_entity_tag
+            },
+            {
+                .id = "add_entity_on_add",
+                .function = Add_bulk_add_entity_on_add
+            },
+            {
+                .id = "add_entity_existing",
+                .function = Add_bulk_add_entity_existing
             }
         }
     },
     {
         .id = "Remove_bulk",
-        .testcase_count = 8,
+        .testcase_count = 12,
         .testcases = (bake_test_case[]){
             {
                 .id = "remove_comp_from_comp_to_empty",
@@ -1232,6 +1282,44 @@ static bake_test_suite suites[] = {
             {
                 .id = "remove_all_tag",
                 .function = Remove_bulk_remove_all_tag
+            },
+            {
+                .id = "on_remove",
+                .function = Remove_bulk_on_remove
+            },
+            {
+                .id = "remove_entity_comp",
+                .function = Remove_bulk_remove_entity_comp
+            },
+            {
+                .id = "remove_entity_tag",
+                .function = Remove_bulk_remove_entity_tag
+            },
+            {
+                .id = "remove_entity_on_remove",
+                .function = Remove_bulk_remove_entity_on_remove
+            }
+        }
+    },
+    {
+        .id = "Add_remove_bulk",
+        .testcase_count = 4,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "add_remove_add_only",
+                .function = Add_remove_bulk_add_remove_add_only
+            },
+            {
+                .id = "add_remove_remove_only",
+                .function = Add_remove_bulk_add_remove_remove_only
+            },
+            {
+                .id = "add_remove_both",
+                .function = Add_remove_bulk_add_remove_both
+            },
+            {
+                .id = "add_remove_same",
+                .function = Add_remove_bulk_add_remove_same
             }
         }
     },
@@ -1695,7 +1783,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "ComponentLifecycle",
-        .testcase_count = 11,
+        .testcase_count = 16,
         .testcases = (bake_test_case[]){
             {
                 .id = "ctor_on_add",
@@ -1740,6 +1828,26 @@ static bake_test_suite suites[] = {
             {
                 .id = "move_on_merge",
                 .function = ComponentLifecycle_move_on_merge
+            },
+            {
+                .id = "ctor_on_bulk_add",
+                .function = ComponentLifecycle_ctor_on_bulk_add
+            },
+            {
+                .id = "dtor_on_bulk_remove",
+                .function = ComponentLifecycle_dtor_on_bulk_remove
+            },
+            {
+                .id = "ctor_on_bulk_add_entity",
+                .function = ComponentLifecycle_ctor_on_bulk_add_entity
+            },
+            {
+                .id = "dtor_on_bulk_remove_entity",
+                .function = ComponentLifecycle_dtor_on_bulk_remove_entity
+            },
+            {
+                .id = "ctor_dtor_on_bulk_add_remove",
+                .function = ComponentLifecycle_ctor_dtor_on_bulk_add_remove
             }
         }
     },
@@ -4210,5 +4318,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 45);
+    return bake_test_run("api", argc, argv, suites, 46);
 }
