@@ -324,6 +324,18 @@ typedef struct EcsTickSource {
 /** Translate C type to type variable */
 #define ecs_type(type) FLECS__T##type
 
+/** Translate C type to entity variable */
+#define ecs_entity(type) FLECS__E##type
+
+/** Translate C type to module struct */
+#define ecs_module(type) FLECS__M##type
+
+/** Translate C type to module struct */
+#define ecs_module_ptr(type) FLECS__M##type##_ptr
+
+/** Translate C type to module struct */
+#define ecs_iter_action(type) FLECS__F##type
+
 /* Type flags are used to indicate the role of an entity in a type. No flag  
  * means a regular component / tag. */
 #define ECS_INSTANCEOF ((ecs_entity_t)1 << 63)/* Share components with entity */
@@ -411,8 +423,6 @@ extern ecs_type_t
 #define FLECS__TNULL 0
 #define FLECS__T0 0
 
-/** Translate C type to entity variable */
-#define ecs_entity(type) FLECS__E##type
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Declarative macro's
@@ -540,17 +550,17 @@ extern ecs_type_t
  */
 
 #define ECS_SYSTEM(world, name, kind, ...) \
-    ecs_entity_t F##name = ecs_new_system(world, #name, kind, #__VA_ARGS__, name);\
-    ecs_entity_t name = F##name;\
-    (void)F##name;\
+    ecs_iter_action_t ecs_iter_action(name) = name;\
+    ecs_entity_t name = ecs_new_system(world, #name, kind, #__VA_ARGS__, ecs_iter_action(name));\
+    (void)ecs_iter_action(name);\
     (void)name;
 
 #endif
 
 #define ECS_TRIGGER(world, name, kind, component, ctx) \
-    ecs_entity_t F##name = ecs_new_trigger(world, #name, kind, ecs_entity(component), name, ctx);\
-    ecs_entity_t name = F##name;\
-    (void)F##name;\
+    ecs_entity_t __F##name = ecs_new_trigger(world, #name, kind, ecs_entity(component), name, ctx);\
+    ecs_entity_t name = __F##name;\
+    (void)__F##name;\
     (void)name;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1418,11 +1428,11 @@ void* ecs_table_column(
 
 /** Utility macro for importing all handles for a module from a system column */
 #define ECS_IMPORT_COLUMN(rows, module, column) \
-    module *M##module##_ptr = ecs_column(rows, module, column);\
-    ecs_assert(M##module##_ptr != NULL, ECS_MODULE_UNDEFINED, #module);\
+    module *ecs_module_ptr(module) = ecs_column(rows, module, column);\
+    ecs_assert(ecs_module_ptr(module) != NULL, ECS_MODULE_UNDEFINED, #module);\
     ecs_assert(ecs_is_shared(rows, column), ECS_COLUMN_IS_NOT_SHARED, NULL);\
-    module M##module = *M##module##_ptr;\
-    module##ImportHandles(M##module)
+    module ecs_module(module) = *ecs_module_ptr(module);\
+    module##ImportHandles(ecs_module(module))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2155,11 +2165,11 @@ ecs_entity_t ecs_import_from_library(
  * typically contain handles to the content of the module.
  */
 #define ECS_IMPORT(world, id, flags) \
-    id M##id;\
+    id ecs_module(id);\
     ECS_ENTITY_VAR(id) = ecs_import(\
-        world, id##Import, #id, flags, &M##id, sizeof(id));\
+        world, id##Import, #id, flags, &ecs_module(id), sizeof(id));\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
-    id##ImportHandles(M##id);\
+    id##ImportHandles(ecs_module(id));\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
 
@@ -2347,9 +2357,6 @@ int ecs_enable_admin(
 FLECS_EXPORT
 int ecs_enable_console(
 	ecs_world_t* world);
-
-/** Translate module name into handles struct */
-#define ecs_module(type) M##type
 
 /* Include stats at the end so it gets all the declarations */
 #include "flecs/util/stats.h"
