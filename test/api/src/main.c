@@ -85,6 +85,9 @@ void Remove_1_from_empty(void);
 void Remove_type_from_empty(void);
 void Remove_not_added(void);
 
+// Testsuite 'Hierarchies'
+void Hierarchies_delete_children(void);
+
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
 void Add_bulk_add_comp_from_comp_to_existing(void);
@@ -1186,6 +1189,16 @@ static bake_test_suite suites[] = {
             {
                 .id = "not_added",
                 .function = Remove_not_added
+            }
+        }
+    },
+    {
+        .id = "Hierarchies",
+        .testcase_count = 1,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "delete_children",
+                .function = Hierarchies_delete_children
             }
         }
     },
@@ -4318,5 +4331,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 46);
+    return bake_test_run("api", argc, argv, suites, 47);
 }

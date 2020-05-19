@@ -741,6 +741,23 @@ void ecs_run_deinit_actions(
 }
 
 static
+void ecs_delete_children(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t parent)
+{
+    ecs_vector_t *child_tables = ecs_map_get_ptr(
+        world->child_tables, ecs_vector_t*, parent);
+
+    if (child_tables) {
+        ecs_vector_each(child_tables, ecs_table_t*, tptr, {
+            ecs_table_t *table = *tptr;
+            ecs_table_clear(world, table);
+        });
+    }
+}
+
+static
 void run_monitors(
     ecs_world_t *world, 
     ecs_stage_t *stage, 
@@ -1599,6 +1616,8 @@ void ecs_delete(
         }
     }
 
+    ecs_delete_children(world, stage, entity);
+
     /* If entity has components, remove them */
     ecs_table_t *table = info.table;
     if (table) {
@@ -1618,7 +1637,7 @@ void ecs_delete(
      * remove its components */
     if (stage != &world->stage) {
         ecs_eis_set(stage, entity, &(ecs_record_t){ NULL, 0 });
-    }
+    }   
 }
 
 void ecs_add_type(

@@ -97,6 +97,11 @@
                 "not_added"
             ]
         }, {
+            "id": "Hierarchies",
+            "testcases": [
+                "delete_children"
+            ]
+        }, {
             "id": "Add_bulk",
             "testcases": [
                 "add_comp_from_comp_to_empty",
