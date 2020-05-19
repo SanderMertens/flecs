@@ -2,26 +2,26 @@
 
 /* -- Global variables -- */
 
-ecs_type_t TEcsComponent;
-ecs_type_t TEcsComponentLifecycle;
-ecs_type_t TEcsTrigger;
-ecs_type_t TEcsType;
-ecs_type_t TEcsModule;
-ecs_type_t TEcsPrefab;
-ecs_type_t TEcsSystem;
-ecs_type_t TEcsColSystem;
-ecs_type_t TEcsName;
-ecs_type_t TEcsHidden;
-ecs_type_t TEcsDisabled;
-ecs_type_t TEcsDisabledIntern;
-ecs_type_t TEcsInactive;
-ecs_type_t TEcsOnDemand;
-ecs_type_t TEcsMonitor;
-ecs_type_t TEcsPipeline;
-ecs_type_t TEcsPipelineQuery;
-ecs_type_t TEcsTimer;
-ecs_type_t TEcsRateFilter;
-ecs_type_t TEcsTickSource;
+ecs_type_t ecs_type(EcsComponent);
+ecs_type_t ecs_type(EcsComponentLifecycle);
+ecs_type_t ecs_type(EcsTrigger);
+ecs_type_t ecs_type(EcsType);
+ecs_type_t ecs_type(EcsModule);
+ecs_type_t ecs_type(EcsPrefab);
+ecs_type_t ecs_type(EcsSystem);
+ecs_type_t ecs_type(EcsColSystem);
+ecs_type_t ecs_type(EcsName);
+ecs_type_t ecs_type(EcsHidden);
+ecs_type_t ecs_type(EcsDisabled);
+ecs_type_t ecs_type(EcsDisabledIntern);
+ecs_type_t ecs_type(EcsInactive);
+ecs_type_t ecs_type(EcsOnDemand);
+ecs_type_t ecs_type(EcsMonitor);
+ecs_type_t ecs_type(EcsPipeline);
+ecs_type_t ecs_type(EcsPipelineQuery);
+ecs_type_t ecs_type(EcsTimer);
+ecs_type_t ecs_type(EcsRateFilter);
+ecs_type_t ecs_type(EcsTickSource);
 
 static const char *ECS_COMPONENT_NAME =      "EcsComponent";
 static const char *ECS_COMPONENT_LIFECYCLE_NAME = "EcsComponentLifecycle";
@@ -68,25 +68,25 @@ static
 void bootstrap_types(
     ecs_world_t *world)
 {
-    TEcsComponent = bootstrap_type(world, EEcsComponent);
-    TEcsComponentLifecycle = bootstrap_type(world, EEcsComponentLifecycle);
-    TEcsTrigger = bootstrap_type(world, EEcsTrigger);
-    TEcsType = bootstrap_type(world, EEcsType);
-    TEcsModule = bootstrap_type(world, EEcsModule);
-    TEcsPrefab = bootstrap_type(world, EEcsPrefab);
-    TEcsColSystem = bootstrap_type(world, EEcsColSystem);
-    TEcsName = bootstrap_type(world, EEcsName);
-    TEcsHidden = bootstrap_type(world, EEcsHidden);
-    TEcsDisabled = bootstrap_type(world, EEcsDisabled);
-    TEcsDisabledIntern = bootstrap_type(world, EEcsDisabledIntern);
-    TEcsInactive = bootstrap_type(world, EEcsInactive);
-    TEcsOnDemand = bootstrap_type(world, EEcsOnDemand);
-    TEcsMonitor = bootstrap_type(world, EEcsMonitor);
-    TEcsPipeline = bootstrap_type(world, EEcsPipeline);
-    TEcsPipelineQuery = bootstrap_type(world, EEcsPipelineQuery);
-    TEcsTimer = bootstrap_type(world, EEcsTimer);
-    TEcsRateFilter = bootstrap_type(world, EEcsRateFilter);
-    TEcsTickSource = bootstrap_type(world, EEcsTickSource);
+    ecs_type(EcsComponent) = bootstrap_type(world, ecs_entity(EcsComponent));
+    ecs_type(EcsComponentLifecycle) = bootstrap_type(world, ecs_entity(EcsComponentLifecycle));
+    ecs_type(EcsTrigger) = bootstrap_type(world, ecs_entity(EcsTrigger));
+    ecs_type(EcsType) = bootstrap_type(world, ecs_entity(EcsType));
+    ecs_type(EcsModule) = bootstrap_type(world, ecs_entity(EcsModule));
+    ecs_type(EcsPrefab) = bootstrap_type(world, ecs_entity(EcsPrefab));
+    ecs_type(EcsColSystem) = bootstrap_type(world, ecs_entity(EcsColSystem));
+    ecs_type(EcsName) = bootstrap_type(world, ecs_entity(EcsName));
+    ecs_type(EcsHidden) = bootstrap_type(world, ecs_entity(EcsHidden));
+    ecs_type(EcsDisabled) = bootstrap_type(world, ecs_entity(EcsDisabled));
+    ecs_type(EcsDisabledIntern) = bootstrap_type(world, ecs_entity(EcsDisabledIntern));
+    ecs_type(EcsInactive) = bootstrap_type(world, ecs_entity(EcsInactive));
+    ecs_type(EcsOnDemand) = bootstrap_type(world, ecs_entity(EcsOnDemand));
+    ecs_type(EcsMonitor) = bootstrap_type(world, ecs_entity(EcsMonitor));
+    ecs_type(EcsPipeline) = bootstrap_type(world, ecs_entity(EcsPipeline));
+    ecs_type(EcsPipelineQuery) = bootstrap_type(world, ecs_entity(EcsPipelineQuery));
+    ecs_type(EcsTimer) = bootstrap_type(world, ecs_entity(EcsTimer));
+    ecs_type(EcsRateFilter) = bootstrap_type(world, ecs_entity(EcsRateFilter));
+    ecs_type(EcsTickSource) = bootstrap_type(world, ecs_entity(EcsTickSource));
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -96,7 +96,7 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t entities[] = {EEcsComponent, EEcsName};
+    ecs_entity_t entities[] = {ecs_entity(EcsComponent), ecs_entity(EcsName)};
     ecs_entities_t array = {
         .array = entities,
         .count = 2
@@ -390,26 +390,26 @@ ecs_world_t *ecs_init(void) {
     ecs_trace_push();
 
     /* Create records for internal components */
-    bootstrap_component(world, table, EEcsComponent, ECS_COMPONENT_NAME, sizeof(EcsComponent));
-    bootstrap_component(world, table, EEcsComponentLifecycle, ECS_COMPONENT_LIFECYCLE_NAME, sizeof(EcsComponentLifecycle));
-    bootstrap_component(world, table, EEcsTrigger, ECS_COMPONENT_TRIGGER_NAME, sizeof(EcsTrigger));
-    bootstrap_component(world, table, EEcsType, ECS_TYPE_NAME, sizeof(EcsType));
-    bootstrap_component(world, table, EEcsModule, ECS_MODULE_NAME, 0);
-    bootstrap_component(world, table, EEcsPrefab, ECS_PREFAB_NAME, 0);
-    bootstrap_component(world, table, EEcsSystem, ECS_SYSTEM_NAME, sizeof(EcsSystem));
-    bootstrap_component(world, table, EEcsColSystem, ECS_COL_SYSTEM_NAME, sizeof(EcsColSystem));
-    bootstrap_component(world, table, EEcsName, ECS_NAME_NAME, sizeof(EcsName));
-    bootstrap_component(world, table, EEcsHidden, ECS_HIDDEN_NAME, 0);
-    bootstrap_component(world, table, EEcsDisabled, ECS_DISABLED_NAME, 0);
-    bootstrap_component(world, table, EEcsDisabledIntern, ECS_DISABLED_INTERN_NAME, 0);
-    bootstrap_component(world, table, EEcsInactive, ECS_INACTIVE_NAME, 0);
-    bootstrap_component(world, table, EEcsOnDemand, ECS_ON_DEMAND_NAME, 0);
-    bootstrap_component(world, table, EEcsMonitor, ECS_MONITOR_NAME, 0);
-    bootstrap_component(world, table, EEcsPipeline, ECS_PIPELINE_NAME, 0);
-    bootstrap_component(world, table, EEcsPipelineQuery, ECS_PIPELINE_QUERY_NAME, sizeof(EcsPipelineQuery));
-    bootstrap_component(world, table, EEcsTimer, ECS_TIMER_NAME, sizeof(EcsTimer));
-    bootstrap_component(world, table, EEcsRateFilter, ECS_RATE_FILTER_NAME, sizeof(EcsRateFilter));
-    bootstrap_component(world, table, EEcsTickSource, ECS_TICK_SOURCE_NAME, sizeof(EcsTickSource));
+    bootstrap_component(world, table, ecs_entity(EcsComponent), ECS_COMPONENT_NAME, sizeof(EcsComponent));
+    bootstrap_component(world, table, ecs_entity(EcsComponentLifecycle), ECS_COMPONENT_LIFECYCLE_NAME, sizeof(EcsComponentLifecycle));
+    bootstrap_component(world, table, ecs_entity(EcsTrigger), ECS_COMPONENT_TRIGGER_NAME, sizeof(EcsTrigger));
+    bootstrap_component(world, table, ecs_entity(EcsType), ECS_TYPE_NAME, sizeof(EcsType));
+    bootstrap_component(world, table, ecs_entity(EcsModule), ECS_MODULE_NAME, 0);
+    bootstrap_component(world, table, ecs_entity(EcsPrefab), ECS_PREFAB_NAME, 0);
+    bootstrap_component(world, table, ecs_entity(EcsSystem), ECS_SYSTEM_NAME, sizeof(EcsSystem));
+    bootstrap_component(world, table, ecs_entity(EcsColSystem), ECS_COL_SYSTEM_NAME, sizeof(EcsColSystem));
+    bootstrap_component(world, table, ecs_entity(EcsName), ECS_NAME_NAME, sizeof(EcsName));
+    bootstrap_component(world, table, ecs_entity(EcsHidden), ECS_HIDDEN_NAME, 0);
+    bootstrap_component(world, table, ecs_entity(EcsDisabled), ECS_DISABLED_NAME, 0);
+    bootstrap_component(world, table, ecs_entity(EcsDisabledIntern), ECS_DISABLED_INTERN_NAME, 0);
+    bootstrap_component(world, table, ecs_entity(EcsInactive), ECS_INACTIVE_NAME, 0);
+    bootstrap_component(world, table, ecs_entity(EcsOnDemand), ECS_ON_DEMAND_NAME, 0);
+    bootstrap_component(world, table, ecs_entity(EcsMonitor), ECS_MONITOR_NAME, 0);
+    bootstrap_component(world, table, ecs_entity(EcsPipeline), ECS_PIPELINE_NAME, 0);
+    bootstrap_component(world, table, ecs_entity(EcsPipelineQuery), ECS_PIPELINE_QUERY_NAME, sizeof(EcsPipelineQuery));
+    bootstrap_component(world, table, ecs_entity(EcsTimer), ECS_TIMER_NAME, sizeof(EcsTimer));
+    bootstrap_component(world, table, ecs_entity(EcsRateFilter), ECS_RATE_FILTER_NAME, sizeof(EcsRateFilter));
+    bootstrap_component(world, table, ecs_entity(EcsTickSource), ECS_TICK_SOURCE_NAME, sizeof(EcsTickSource));
 
     /* Initialize types for builtin types */
     bootstrap_types(world);
@@ -662,7 +662,7 @@ ecs_entity_t lookup_child(
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
         ecs_type_t type = table->type;
 
-        if ((column_index = ecs_type_index_of(type, EEcsName)) == -1) {
+        if ((column_index = ecs_type_index_of(type, ecs_entity(EcsName))) == -1) {
             continue;
         }
 

@@ -467,7 +467,7 @@ bool match_table(
 
     /* Don't match disabled entities */
     if (!query->match_disabled && ecs_type_has_owned_entity(
-        world, table_type, EEcsDisabled, true))
+        world, table_type, ecs_entity(EcsDisabled), true))
     {
         failure_info->reason = EcsMatchEntityIsDisabled;
         return false;
@@ -475,7 +475,7 @@ bool match_table(
 
     /* Don't match prefab entities */
     if (!query->match_prefab && ecs_type_has_owned_entity(
-        world, table_type, EEcsPrefab, true))
+        world, table_type, ecs_entity(EcsPrefab), true))
     {
         failure_info->reason = EcsMatchEntityIsPrefab;
         return false;

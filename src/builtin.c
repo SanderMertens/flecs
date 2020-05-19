@@ -36,8 +36,8 @@ void ecs_colsystem_dtor(
         }
 
         /* Invoke Disabled action for enabled systems */
-        if (!ecs_has_entity(world, e, EEcsDisabled) && 
-            !ecs_has_entity(world, e, EEcsDisabledIntern)) 
+        if (!ecs_has_entity(world, e, ecs_entity(EcsDisabled)) && 
+            !ecs_has_entity(world, e, ecs_entity(EcsDisabledIntern))) 
         {
             ecs_invoke_status_action(world, e, ptr, EcsSystemDisabled);
         }           
@@ -188,7 +188,7 @@ void ecs_init_builtins(
     EcsTrigger tr = {
         .kind = EcsOnSet,
         .action = EcsOnSetTrigger,
-        .component = EEcsTrigger
+        .component = ecs_entity(EcsTrigger)
     };
 
     ecs_entity_t e = ecs_new(world, 0);

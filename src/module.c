@@ -24,7 +24,7 @@ int ecs_enable_admin(
     ecs_measure_system_time(world, true);
 
     /* Create admin instance */
-    ecs_entity_t EEcsAdmin = ecs_lookup(world, "EcsAdmin");
+    ecs_entity_t ecs_entity(EcsAdmin) = ecs_lookup(world, "EcsAdmin");
     ecs_set(world, 0, EcsAdmin, {port});
 
     ecs_os_log("admin is running on port %d", port);
@@ -41,7 +41,7 @@ int ecs_enable_console(
     }
 
     /* Create console instance */
-    ecs_entity_t EEcsConsole = ecs_lookup(world, "EcsConsole");
+    ecs_entity_t ecs_entity(EcsConsole) = ecs_lookup(world, "EcsConsole");
     ecs_set(world, 0, EcsConsole, {0});
 
     return 0;

@@ -34,7 +34,7 @@ void Tasks_one_tag() {
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 1);
-    test_int(ctx.c[0][0], EEcsHidden);
+    test_int(ctx.c[0][0], ecs_entity(EcsHidden));
 
     ecs_fini(world);
 }

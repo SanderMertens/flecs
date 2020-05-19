@@ -1760,7 +1760,7 @@ const void* ecs_get_ptr_w_entity(
 
         ptr = get_component(&info, component);
         if (!ptr) {
-            if (component != EEcsName && component != EEcsPrefab) {
+            if (component != ecs_entity(EcsName) && component != ecs_entity(EcsPrefab)) {
                 ptr = get_base_component(
                     world, stage, entity, &info, 0, component);
             }

@@ -15,7 +15,7 @@ void Add_remove_bulk_add_remove_add_only() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    ecs_bulk_add_remove(world, Velocity, NULL, &(ecs_filter_t){
+    ecs_bulk_add_remove(world, Velocity, 0, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
@@ -52,7 +52,7 @@ void Add_remove_bulk_add_remove_remove_only() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    ecs_bulk_add_remove(world, NULL, Velocity, &(ecs_filter_t){
+    ecs_bulk_add_remove(world, 0, Velocity, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
