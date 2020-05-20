@@ -40,7 +40,7 @@ void Iter(ecs_rows_t *rows) {
     }
 }
 
-void SystemOnFrame_1_type_1_component() {
+void SystemPeriodic_1_type_1_component() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -86,7 +86,7 @@ void SystemOnFrame_1_type_1_component() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_1_type_3_component() {
+void SystemPeriodic_1_type_3_component() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -167,7 +167,7 @@ void SystemOnFrame_1_type_3_component() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_3_type_1_component() {
+void SystemPeriodic_3_type_1_component() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -219,7 +219,7 @@ void SystemOnFrame_3_type_1_component() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_2_type_3_component() {
+void SystemPeriodic_2_type_3_component() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -307,7 +307,7 @@ void SystemOnFrame_2_type_3_component() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_1_type_1_component_1_tag() {
+void SystemPeriodic_1_type_1_component_1_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Tag, 0);
@@ -356,7 +356,7 @@ void SystemOnFrame_1_type_1_component_1_tag() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_2_type_1_component_1_tag() {
+void SystemPeriodic_2_type_1_component_1_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Tag, 0);
@@ -400,7 +400,7 @@ void SystemOnFrame_2_type_1_component_1_tag() {
 }
 
 
-void SystemOnFrame_2_type_1_and_1_not() {
+void SystemPeriodic_2_type_1_and_1_not() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -443,7 +443,7 @@ void SystemOnFrame_2_type_1_and_1_not() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_2_type_2_and_1_not() {
+void SystemPeriodic_2_type_2_and_1_not() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -499,7 +499,7 @@ void SystemOnFrame_2_type_2_and_1_not() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_2_type_2_and_2_not() {
+void SystemPeriodic_2_type_2_and_2_not() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -550,7 +550,7 @@ void SystemOnFrame_2_type_2_and_2_not() {
 typedef Position Position_1;
 typedef Position Position_2;
 
-void SystemOnFrame_4_type_1_and_1_or() {
+void SystemPeriodic_4_type_1_and_1_or() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -638,7 +638,7 @@ void SystemOnFrame_4_type_1_and_1_or() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_4_type_1_and_1_or_of_3() {
+void SystemPeriodic_4_type_1_and_1_or_of_3() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -727,7 +727,7 @@ void SystemOnFrame_4_type_1_and_1_or_of_3() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_1_type_1_and_1_or() {
+void SystemPeriodic_1_type_1_and_1_or() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -784,7 +784,7 @@ void SystemOnFrame_1_type_1_and_1_or() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_2_type_1_and_1_optional() {
+void SystemPeriodic_2_type_1_and_1_optional() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -847,7 +847,7 @@ void SystemOnFrame_2_type_1_and_1_optional() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_2_type_2_and_1_optional() {
+void SystemPeriodic_2_type_2_and_1_optional() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -925,7 +925,7 @@ void SystemOnFrame_2_type_2_and_1_optional() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_6_type_1_and_2_optional() {
+void SystemPeriodic_6_type_1_and_2_optional() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1034,7 +1034,7 @@ void Use_field(ecs_rows_t *rows) {
     }
 }
 
-void SystemOnFrame_use_fields_2_owned() {
+void SystemPeriodic_use_fields_2_owned() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1059,7 +1059,7 @@ void SystemOnFrame_use_fields_2_owned() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_use_fields_1_owned_1_shared() {
+void SystemPeriodic_use_fields_1_owned_1_shared() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1086,7 +1086,7 @@ void SystemOnFrame_use_fields_1_owned_1_shared() {
 static void Dummy_1(ecs_rows_t *rows) { probe_system(rows); }
 static void Dummy_2(ecs_rows_t *rows) { probe_system(rows); }
 
-void SystemOnFrame_match_2_systems_w_populated_table() {
+void SystemPeriodic_match_2_systems_w_populated_table() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1146,7 +1146,7 @@ void TestOptional_w_field(ecs_rows_t *rows) {
     }
 }
 
-void SystemOnFrame_ensure_optional_is_unset_column() {
+void SystemPeriodic_ensure_optional_is_unset_column() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1174,7 +1174,7 @@ void SystemOnFrame_ensure_optional_is_unset_column() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_ensure_optional_is_null_shared() {
+void SystemPeriodic_ensure_optional_is_null_shared() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1202,7 +1202,7 @@ void SystemOnFrame_ensure_optional_is_null_shared() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_ensure_optional_is_null_field_owned() {
+void SystemPeriodic_ensure_optional_is_null_field_owned() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1230,7 +1230,7 @@ void SystemOnFrame_ensure_optional_is_null_field_owned() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_ensure_optional_is_null_field_shared() {
+void SystemPeriodic_ensure_optional_is_null_field_shared() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1283,7 +1283,7 @@ void NormalSystem3(ecs_rows_t *rows) {
     normal_count_3 ++;
 }
 
-void SystemOnFrame_on_period() {
+void SystemPeriodic_on_period() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1318,7 +1318,7 @@ void SystemOnFrame_on_period() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_on_period_long_delta() {
+void SystemPeriodic_on_period_long_delta() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1349,7 +1349,7 @@ void SystemOnFrame_on_period_long_delta() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_disabled() {
+void SystemPeriodic_disabled() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1377,7 +1377,7 @@ void SystemOnFrame_disabled() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_disabled_feature() {
+void SystemPeriodic_disabled_feature() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1411,7 +1411,7 @@ void SystemOnFrame_disabled_feature() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_disabled_nested_feature() {
+void SystemPeriodic_disabled_nested_feature() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1463,7 +1463,7 @@ void TwoRefs(ecs_rows_t *rows) {
     probe_system(rows);
 }
 
-void SystemOnFrame_two_refs() {
+void SystemPeriodic_two_refs() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1497,7 +1497,7 @@ void SystemOnFrame_two_refs() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_filter_disabled() {
+void SystemPeriodic_filter_disabled() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1522,7 +1522,7 @@ void SystemOnFrame_filter_disabled() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_match_disabled() {
+void SystemPeriodic_match_disabled() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1549,7 +1549,7 @@ void SystemOnFrame_match_disabled() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_match_disabled_and_enabled() {
+void SystemPeriodic_match_disabled_and_enabled() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1577,7 +1577,7 @@ void SystemOnFrame_match_disabled_and_enabled() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_match_prefab() {
+void SystemPeriodic_match_prefab() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1604,7 +1604,7 @@ void SystemOnFrame_match_prefab() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_match_prefab_and_normal() {
+void SystemPeriodic_match_prefab_and_normal() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1637,7 +1637,7 @@ void TestIsSharedOnNotSet(ecs_rows_t *rows) {
     test_assert(ecs_is_shared(rows, 2) == false);
 }
 
-void SystemOnFrame_is_shared_on_column_not_set() {
+void SystemPeriodic_is_shared_on_column_not_set() {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -1655,7 +1655,7 @@ void SystemOnFrame_is_shared_on_column_not_set() {
 }
 
 
-void SystemOnFrame_owned_column() {
+void SystemPeriodic_owned_column() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1685,7 +1685,7 @@ void SystemOnFrame_owned_column() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_owned_not_column() {
+void SystemPeriodic_owned_not_column() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1714,7 +1714,7 @@ void SystemOnFrame_owned_not_column() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_shared_column() {
+void SystemPeriodic_shared_column() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1744,7 +1744,7 @@ void SystemOnFrame_shared_column() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_shared_not_column() {
+void SystemPeriodic_shared_not_column() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1773,7 +1773,7 @@ void SystemOnFrame_shared_not_column() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_container_dont_match_inheritance() {
+void SystemPeriodic_container_dont_match_inheritance() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1802,7 +1802,7 @@ void SystemOnFrame_container_dont_match_inheritance() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_cascade_dont_match_inheritance() {
+void SystemPeriodic_cascade_dont_match_inheritance() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1836,7 +1836,7 @@ void SystemOnFrame_cascade_dont_match_inheritance() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_not_from_singleton() {
+void SystemPeriodic_not_from_singleton() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1862,7 +1862,7 @@ void SystemOnFrame_not_from_singleton() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_not_from_entity() {
+void SystemPeriodic_not_from_entity() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1897,7 +1897,7 @@ void TestContext(ecs_rows_t *rows) {
     (*param) ++;
 }
 
-void SystemOnFrame_sys_context() {
+void SystemPeriodic_sys_context() {
     ecs_world_t *world = ecs_init();
     uint32_t param = 0;
 
@@ -1912,7 +1912,7 @@ void SystemOnFrame_sys_context() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_get_sys_context_from_param() {
+void SystemPeriodic_get_sys_context_from_param() {
     ecs_world_t *world = ecs_init();
     uint32_t param = 0;
 
@@ -1940,7 +1940,7 @@ void Test_feld_w_zero_size(ecs_rows_t *rows) {
     Test_feld_w_zero_size_invoked = true;
 }
 
-void SystemOnFrame_use_field_w_0_size() {
+void SystemPeriodic_use_field_w_0_size() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1963,7 +1963,7 @@ static void Dummy(ecs_rows_t *rows) {
     dummy_invoked = rows->entities[0];
 }
 
-void SystemOnFrame_owned_only() {
+void SystemPeriodic_owned_only() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1986,7 +1986,7 @@ static void AssertReadonly(ecs_rows_t *rows) {
     test_assert( ecs_is_readonly(rows, 1) == true);
 }
 
-void SystemOnFrame_shared_only() {
+void SystemPeriodic_shared_only() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2003,7 +2003,7 @@ void SystemOnFrame_shared_only() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_is_in_readonly() {
+void SystemPeriodic_is_in_readonly() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2019,7 +2019,7 @@ void SystemOnFrame_is_in_readonly() {
     ecs_fini(world);
 }
 
-void SystemOnFrame_get_period() {
+void SystemPeriodic_get_period() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

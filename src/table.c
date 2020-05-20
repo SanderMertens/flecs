@@ -87,13 +87,9 @@ void deinit_all_data(
 static
 void run_on_remove_handlers(
     ecs_world_t *world,
-    ecs_table_t *table)
+    ecs_table_t *table,
+    ecs_data_t *data)
 {
-    ecs_data_t *data = ecs_table_get_data(world, table);
-    if (!data) {
-        return;
-    }
-
     int32_t count = ecs_vector_count(data->entities);
     if (count) {
         ecs_entities_t components = {
@@ -381,10 +377,10 @@ void ecs_table_clear(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    run_on_remove_handlers(world, table);
-
     ecs_data_t *data = ecs_table_get_data(world, table);
     if (data) {
+        run_on_remove_handlers(world, table, data);
+
         ecs_entity_t *entities = ecs_vector_first(data->entities);
         int32_t i, count = ecs_vector_count(data->entities);
         for(i = 0; i < count; i ++) {
@@ -402,7 +398,11 @@ void ecs_table_free(
     ecs_table_t *table)
 {
     (void)world;
-    run_on_remove_handlers(world, table);
+    ecs_data_t *data = ecs_table_get_data(world, table);
+    if (data) {
+        run_on_remove_handlers(world, table, data);
+    }
+
     deinit_all_data(table);
     ecs_os_free(table->lo_edges);
     ecs_map_free(table->hi_edges);
@@ -437,6 +437,7 @@ void ecs_table_replace_data(
 
     if (table_data) {
         prev_count = ecs_vector_count(table_data->entities);
+        run_on_remove_handlers(world, table, table_data);
         deinit_data(table, table_data);
     }
 
@@ -446,8 +447,28 @@ void ecs_table_replace_data(
     }
 
     int32_t count = 0;
-    if (table_data) {
+    if (table_data && table_data->columns) {
         count = ecs_vector_count(table_data->entities);
+
+        int32_t i, column_count = ecs_vector_count(table->type);
+        ecs_entity_t *components = ecs_vector_first(table->type);
+
+        for (i = 0; i < column_count; i ++) {
+            ecs_entity_t component = components[i];
+            ecs_column_t *column = &table_data->columns[i];
+            
+            if (component > ECS_HI_COMPONENT_ID || !column->size) {
+                continue;
+            }
+
+            ecs_component_data_t *cdata = ecs_get_component_data(   
+                world, component);
+            
+            if (cdata->on_set) {
+                ecs_run_component_trigger(world, &world->stage, cdata->on_set, 
+                    component, table, table_data, 0, count);
+            }
+        }
     }
 
     if (!prev_count && count) {

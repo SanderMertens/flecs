@@ -26,10 +26,43 @@ void dup_table(
     /* Copy entities */
     snapshot_data->entities = ecs_vector_copy(main_data->entities, ecs_entity_t);
 
+    ecs_entity_t *components = ecs_vector_first(table->type);
+    ecs_entity_t *entities = ecs_vector_first(snapshot_data->entities);
+
     /* Copy each column */
     for (c = 0; c < column_count; c ++) {
         ecs_column_t *column = &snapshot_data->columns[c];
-        column->data = _ecs_vector_copy(column->data, column->size);
+        ecs_entity_t component = components[c];
+
+        if (component > ECS_HI_COMPONENT_ID) {
+            column->data = NULL;
+            continue;
+        }
+
+        ecs_component_data_t *cdata = ecs_get_component_data(world, component);
+        size_t size = column->size;
+        ecs_copy_t copy;
+
+        if ((copy = cdata->lifecycle.copy)) {
+            int32_t count = ecs_vector_count(column->data);
+            ecs_vector_t *dst_vec = _ecs_vector_new(size, count);
+            ecs_vector_set_count(&dst_vec, size, count);
+            void *dst_ptr = ecs_vector_first(dst_vec);
+            void *ctx = cdata->lifecycle.ctx;
+            
+            ecs_xtor_t ctor = cdata->lifecycle.ctor;
+            if (ctor) {
+                ctor(world, component, entities, dst_ptr, size, count, ctx);
+            }
+
+            void *src_ptr = ecs_vector_first(column->data);
+            copy(world, component, entities, entities, dst_ptr, src_ptr, 
+                size, count, ctx);
+
+            column->data = dst_vec;
+        } else {
+            column->data = _ecs_vector_copy(column->data, size);
+        }
     }
 }
 

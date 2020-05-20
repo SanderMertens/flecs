@@ -184,6 +184,16 @@ void ecs_run_deinit_actions(
     ecs_entities_t components,
     bool run_triggers);
 
+void ecs_run_component_trigger(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_vector_t *trigger_vec,
+    ecs_entity_t component,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Table API
 ////////////////////////////////////////////////////////////////////////////////

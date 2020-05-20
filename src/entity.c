@@ -263,8 +263,7 @@ void run_component_trigger_for_entities(
     }
 }
 
-static
-void run_component_trigger(
+void ecs_run_component_trigger(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_vector_t *trigger_vec,
@@ -393,7 +392,7 @@ void override(
                  * of the component changed, not its value. */
                 if (base_added && !(table->flags & EcsTableIsDisabled)) {
                     if (cdata->on_set) {
-                        run_component_trigger(world, stage, cdata->on_set, c, 
+                        ecs_run_component_trigger(world, stage, cdata->on_set, c, 
                             table, data, row, count);
                     }
                 }
@@ -627,7 +626,7 @@ void ecs_run_init_actions(
         }
 
         if (triggers) {
-            run_component_trigger(
+            ecs_run_component_trigger(
                 world, stage, triggers, component, table, data, 
                 row, count);
         }
@@ -728,7 +727,7 @@ void ecs_run_deinit_actions(
         void *ptr = ECS_OFFSET(array, size * row);
 
         if (triggers && run_triggers) {
-            run_component_trigger(
+            ecs_run_component_trigger(
                 world, stage, triggers, component, table, data, 
                 row, count);
         }
@@ -1232,12 +1231,12 @@ int32_t new_w_data(
                     for (j = 0; j < count; j ++) {
                         ecs_entity_info_t info;
                         ecs_get_info(world, stage, e + j, &info);
-                        run_component_trigger(
+                        ecs_run_component_trigger(
                             world, stage, cdata->on_set, component, info.table, 
                             info.data, info.row, 1);
                     }
                 } else {
-                    run_component_trigger(
+                    ecs_run_component_trigger(
                         world, stage, cdata->on_set, component, table, data, 
                         row, count);
                 }
@@ -1750,7 +1749,7 @@ ecs_entity_t ecs_clone(
         for (i = 0; i < to_add.count; i ++) {
             ecs_entity_t component = to_add.array[i];
             ecs_component_data_t *cdata = ecs_get_component_data(world, component);
-            run_component_trigger(
+            ecs_run_component_trigger(
                 world, stage, cdata->on_set, component, src_table, src_info.data, 
                 dst_info.row, 1);
         }
@@ -1869,7 +1868,7 @@ void ecs_modified_w_entity(
     ecs_get_info(world, stage, entity, &info);
 
     ecs_component_data_t *cdata = ecs_get_component_data(world, component);
-    run_component_trigger(world, stage, cdata->on_set, component, 
+    ecs_run_component_trigger(world, stage, cdata->on_set, component, 
         info.table, info.data, info.row, 1);
 }
 
@@ -1906,7 +1905,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
     }
 
     ecs_component_data_t *cdata = ecs_get_component_data(world, component);    
-    run_component_trigger(world, stage, cdata->on_set, component, 
+    ecs_run_component_trigger(world, stage, cdata->on_set, component, 
         info.table, info.data, info.row, 1);
 
     return entity;

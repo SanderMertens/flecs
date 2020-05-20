@@ -4,13 +4,29 @@ typedef struct xtor_ctx {
     ecs_world_t *world;
     ecs_entity_t component;
     ecs_entity_t entity;
-    ecs_entity_t src_entity;
     size_t size;
     int32_t count;
     int32_t invoked;
 } xtor_ctx;
 
-void comp_xtor(
+typedef struct copy_ctx {
+    ecs_world_t *world;
+    ecs_entity_t component;
+    ecs_entity_t entity;
+    ecs_entity_t src_entity;
+    size_t size;
+    int32_t count;
+    int32_t invoked;
+} copy_ctx;
+
+typedef struct cl_ctx {
+    xtor_ctx ctor;
+    xtor_ctx dtor;
+    copy_ctx copy;
+    copy_ctx move;
+} cl_ctx;
+
+void comp_ctor(
     ecs_world_t *world,
     ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
@@ -19,13 +35,13 @@ void comp_xtor(
     int32_t count,
     void *ctx)
 {
-    xtor_ctx *data = ctx;
-    data->world = world;
-    data->component = component;
-    data->entity = entity_ptr[0],
-    data->size = size;
-    data->count = count;
-    data->invoked ++;
+    cl_ctx *data = ctx;
+    data->ctor.world = world;
+    data->ctor.component = component;
+    data->ctor.entity = entity_ptr[0],
+    data->ctor.size = size;
+    data->ctor.count = count;
+    data->ctor.invoked ++;
     
     Position *p = ptr;
     int i;
@@ -44,13 +60,13 @@ void comp_dtor(
     int32_t count,
     void *ctx)
 {
-    xtor_ctx *data = ctx;
-    data->world = world;
-    data->component = component;
-    data->entity = entity_ptr[0],
-    data->size = size;
-    data->count = count;
-    data->invoked ++;
+    cl_ctx *data = ctx;
+    data->dtor.world = world;
+    data->dtor.component = component;
+    data->dtor.entity = entity_ptr[0],
+    data->dtor.size = size;
+    data->dtor.count = count;
+    data->dtor.invoked ++;
 }
 
 void comp_copy(
@@ -64,14 +80,16 @@ void comp_copy(
     int32_t count,
     void *ctx)
 {
-    xtor_ctx *data = ctx;
-    data->world = world;
-    data->component = component;
-    data->entity = dst_entity[0],
-    data->src_entity = src_entity[0],
-    data->size = size;
-    data->count = count;
-    data->invoked ++;
+    cl_ctx *data = ctx;
+    data->copy.world = world;
+    data->copy.component = component;
+    data->copy.entity = dst_entity[0],
+    data->copy.src_entity = src_entity[0],
+    data->copy.size = size;
+    data->copy.count = count;
+    data->copy.invoked ++;
+    
+    memcpy(dst_ptr, src_ptr, size * count);
 }
 
 void comp_move(
@@ -85,14 +103,16 @@ void comp_move(
     int32_t count,
     void *ctx)
 {
-    xtor_ctx *data = ctx;
-    data->world = world;
-    data->component = component;
-    data->entity = dst_entity[0],
-    data->src_entity = src_entity[0],
-    data->size = size;
-    data->count = count;
-    data->invoked ++;
+    cl_ctx *data = ctx;
+    data->move.world = world;
+    data->move.component = component;
+    data->move.entity = dst_entity[0],
+    data->move.src_entity = src_entity[0],
+    data->move.size = size;
+    data->move.count = count;
+    data->move.invoked ++;
+    
+    memcpy(dst_ptr, src_ptr, size * count);
 }
 
 void ComponentLifecycle_ctor_on_add() {
@@ -100,23 +120,23 @@ void ComponentLifecycle_ctor_on_add() {
 
     ECS_COMPONENT(world, Position);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
-        .ctor = comp_xtor,
+        .ctor = comp_ctor,
         .ctx = &ctx
     });
 
     ecs_entity_t e = ecs_new(world, 0);
-    test_int(ctx.invoked, 0);
+    test_int(ctx.ctor.invoked, 0);
 
     ecs_add(world, e, Position);
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Position));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Position));
-    test_int(ctx.count, 1);
+    test_int(ctx.ctor.invoked, 1);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Position));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Position));
+    test_int(ctx.ctor.count, 1);
 }
 
 void ComponentLifecycle_ctor_on_new() {
@@ -124,20 +144,20 @@ void ComponentLifecycle_ctor_on_new() {
 
     ECS_COMPONENT(world, Position);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
-        .ctor = comp_xtor,
+        .ctor = comp_ctor,
         .ctx = &ctx
     });
 
     ecs_entity_t e = ecs_new(world, Position);
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Position));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Position));
-    test_int(ctx.count, 1);
+    test_int(ctx.ctor.invoked, 1);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Position));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Position));
+    test_int(ctx.ctor.count, 1);
 }
 
 void ComponentLifecycle_dtor_on_remove() {
@@ -145,23 +165,23 @@ void ComponentLifecycle_dtor_on_remove() {
 
     ECS_COMPONENT(world, Position);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
-        .dtor = comp_xtor,
+        .dtor = comp_dtor,
         .ctx = &ctx
     });
 
     ecs_entity_t e = ecs_new(world, Position);
-    test_int(ctx.invoked, 0);
+    test_int(ctx.dtor.invoked, 0);
 
     ecs_remove(world, e, Position);
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Position));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Position));
-    test_int(ctx.count, 1);
+    test_int(ctx.dtor.invoked, 1);
+    test_assert(ctx.dtor.world == world);
+    test_int(ctx.dtor.component, ecs_entity(Position));
+    test_int(ctx.dtor.entity, e);
+    test_int(ctx.dtor.size, sizeof(Position));
+    test_int(ctx.dtor.count, 1);
 }
 
 void ComponentLifecycle_dtor_on_delete() {
@@ -169,23 +189,23 @@ void ComponentLifecycle_dtor_on_delete() {
 
     ECS_COMPONENT(world, Position);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
-        .dtor = comp_xtor,
+        .dtor = comp_dtor,
         .ctx = &ctx
     });
 
     ecs_entity_t e = ecs_new(world, Position);
-    test_int(ctx.invoked, 0);
+    test_int(ctx.dtor.invoked, 0);
 
     ecs_delete(world, e);
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Position));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Position));
-    test_int(ctx.count, 1);
+    test_int(ctx.dtor.invoked, 1);
+    test_assert(ctx.dtor.world == world);
+    test_int(ctx.dtor.component, ecs_entity(Position));
+    test_int(ctx.dtor.entity, e);
+    test_int(ctx.dtor.size, sizeof(Position));
+    test_int(ctx.dtor.count, 1);
 }
 
 void ComponentLifecycle_copy_on_set() {
@@ -193,7 +213,7 @@ void ComponentLifecycle_copy_on_set() {
 
     ECS_COMPONENT(world, Position);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -201,15 +221,15 @@ void ComponentLifecycle_copy_on_set() {
     });
 
     ecs_entity_t e = ecs_new(world, 0);
-    test_int(ctx.invoked, 0);
+    test_int(ctx.copy.invoked, 0);
     
     ecs_set(world, e, Position, {0, 0});
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Position));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Position));
-    test_int(ctx.count, 1);
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, e);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 1);
 }
 
 void ComponentLifecycle_copy_on_override() {
@@ -217,7 +237,7 @@ void ComponentLifecycle_copy_on_override() {
 
     ECS_COMPONENT(world, Position);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -225,18 +245,18 @@ void ComponentLifecycle_copy_on_override() {
     });
 
     ecs_entity_t e = ecs_new(world, Position);
-    test_int(ctx.invoked, 0);
+    test_int(ctx.copy.invoked, 0);
 
     ecs_entity_t base = ecs_new_w_entity(world, ECS_INSTANCEOF | e);
-    test_int(ctx.invoked, 0);
+    test_int(ctx.copy.invoked, 0);
 
     ecs_add(world, base, Position);
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Position));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Position));
-    test_int(ctx.count, 1);
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, e);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 1);
 }
 
 void ComponentLifecycle_copy_on_new_w_data() {
@@ -244,7 +264,7 @@ void ComponentLifecycle_copy_on_new_w_data() {
 
     ECS_COMPONENT(world, Position);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -258,12 +278,12 @@ void ComponentLifecycle_copy_on_new_w_data() {
         }
     });
 
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Position));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Position));
-    test_int(ctx.count, 2);
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, e);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 2);
 }
 
 void ComponentLifecycle_copy_on_clone() {
@@ -271,7 +291,7 @@ void ComponentLifecycle_copy_on_clone() {
 
     ECS_COMPONENT(world, Position);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -279,17 +299,17 @@ void ComponentLifecycle_copy_on_clone() {
     });
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
-    test_int(ctx.invoked, 1);
+    test_int(ctx.copy.invoked, 1);
     memset(&ctx, 0, sizeof(ctx));
 
     ecs_entity_t clone = ecs_clone(world, 0, e, true);
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Position));
-    test_int(ctx.entity, clone);
-    test_int(ctx.src_entity, e);
-    test_int(ctx.size, sizeof(Position));
-    test_int(ctx.count, 1);
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, clone);
+    test_int(ctx.copy.src_entity, e);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 1);
 }
 
 void ComponentLifecycle_no_copy_on_move() {
@@ -298,7 +318,7 @@ void ComponentLifecycle_no_copy_on_move() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -306,11 +326,11 @@ void ComponentLifecycle_no_copy_on_move() {
     });
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
-    test_int(ctx.invoked, 1);
+    test_int(ctx.copy.invoked, 1);
     memset(&ctx, 0, sizeof(ctx));
 
     ecs_add(world, e, Velocity);
-    test_int(ctx.invoked, 0);
+    test_int(ctx.copy.invoked, 0);
 
     ecs_fini(world);
 }
@@ -321,7 +341,7 @@ void ComponentLifecycle_copy_on_stage() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -329,19 +349,19 @@ void ComponentLifecycle_copy_on_stage() {
     });
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
-    test_int(ctx.invoked, 1);
+    test_int(ctx.copy.invoked, 1);
     memset(&ctx, 0, sizeof(ctx));
 
     ecs_staging_begin(world);
 
     ecs_add(world, e, Velocity);
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Position));
-    test_int(ctx.entity, e);
-    test_int(ctx.src_entity, e);
-    test_int(ctx.size, sizeof(Position));
-    test_int(ctx.count, 1);
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, e);
+    test_int(ctx.copy.src_entity, e);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 1);
 
     ecs_staging_end(world, false);
 
@@ -354,7 +374,7 @@ void ComponentLifecycle_move_on_merge() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .move = comp_move,
@@ -362,21 +382,21 @@ void ComponentLifecycle_move_on_merge() {
     });
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
-    test_int(ctx.invoked, 0);
+    test_int(ctx.move.invoked, 0);
 
     ecs_staging_begin(world);
 
     ecs_add(world, e, Velocity);
-    test_int(ctx.invoked, 0);
+    test_int(ctx.move.invoked, 0);
 
     ecs_staging_end(world, false);
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Position));
-    test_int(ctx.entity, e);
-    test_int(ctx.src_entity, e);
-    test_int(ctx.size, sizeof(Position));
-    test_int(ctx.count, 1);
+    test_int(ctx.move.invoked, 1);
+    test_assert(ctx.move.world == world);
+    test_int(ctx.move.component, ecs_entity(Position));
+    test_int(ctx.move.entity, e);
+    test_int(ctx.move.src_entity, e);
+    test_int(ctx.move.size, sizeof(Position));
+    test_int(ctx.move.count, 1);
 
     ecs_fini(world);
 }
@@ -390,10 +410,10 @@ void ComponentLifecycle_ctor_on_bulk_add() {
     ecs_entity_t e = ecs_bulk_new(world, Position, 10);
     test_assert(e != 0);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
-        .ctor = comp_xtor,
+        .ctor = comp_ctor,
         .ctx = &ctx
     });
 
@@ -403,18 +423,18 @@ void ComponentLifecycle_ctor_on_bulk_add() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    test_int(ctx.invoked, 0);
+    test_int(ctx.ctor.invoked, 0);
 
     ecs_bulk_add(world, Velocity, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Velocity));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Velocity));
-    test_int(ctx.count, 10);
+    test_int(ctx.ctor.invoked, 1);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Velocity));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Velocity));
+    test_int(ctx.ctor.count, 10);
 
     for (i = 0; i < 10; i ++) {
         test_assert( ecs_has(world, e + i, Position));
@@ -442,10 +462,10 @@ void ComponentLifecycle_dtor_on_bulk_remove() {
     ecs_entity_t e = ecs_bulk_new(world, Type, 10);
     test_assert(e != 0);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
-        .dtor = comp_xtor,
+        .dtor = comp_dtor,
         .ctx = &ctx
     });
 
@@ -456,18 +476,18 @@ void ComponentLifecycle_dtor_on_bulk_remove() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    test_int(ctx.invoked, 0);
+    test_int(ctx.dtor.invoked, 0);
 
     ecs_bulk_remove(world, Velocity, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Velocity));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Velocity));
-    test_int(ctx.count, 10);
+    test_int(ctx.dtor.invoked, 1);
+    test_assert(ctx.dtor.world == world);
+    test_int(ctx.dtor.component, ecs_entity(Velocity));
+    test_int(ctx.dtor.entity, e);
+    test_int(ctx.dtor.size, sizeof(Velocity));
+    test_int(ctx.dtor.count, 10);
 
     for (i = 0; i < 10; i ++) {
         test_assert( ecs_has(world, e + i, Position));
@@ -489,10 +509,10 @@ void ComponentLifecycle_ctor_on_bulk_add_entity() {
     ecs_entity_t e = ecs_bulk_new(world, Position, 10);
     test_assert(e != 0);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
-        .ctor = comp_xtor,
+        .ctor = comp_ctor,
         .ctx = &ctx
     });
 
@@ -502,18 +522,18 @@ void ComponentLifecycle_ctor_on_bulk_add_entity() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    test_int(ctx.invoked, 0);
+    test_int(ctx.ctor.invoked, 0);
 
     ecs_bulk_add_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Velocity));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Velocity));
-    test_int(ctx.count, 10);
+    test_int(ctx.ctor.invoked, 1);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Velocity));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Velocity));
+    test_int(ctx.ctor.count, 10);
 
     for (i = 0; i < 10; i ++) {
         test_assert( ecs_has(world, e + i, Position));
@@ -541,10 +561,10 @@ void ComponentLifecycle_dtor_on_bulk_remove_entity() {
     ecs_entity_t e = ecs_bulk_new(world, Type, 10);
     test_assert(e != 0);
 
-    xtor_ctx ctx = { 0 };
+    cl_ctx ctx = { 0 };
 
     ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
-        .dtor = comp_xtor,
+        .dtor = comp_dtor,
         .ctx = &ctx
     });
 
@@ -555,18 +575,18 @@ void ComponentLifecycle_dtor_on_bulk_remove_entity() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    test_int(ctx.invoked, 0);
+    test_int(ctx.dtor.invoked, 0);
 
     ecs_bulk_remove_entity(world, ecs_entity(Velocity), &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
-    test_int(ctx.invoked, 1);
-    test_assert(ctx.world == world);
-    test_int(ctx.component, ecs_entity(Velocity));
-    test_int(ctx.entity, e);
-    test_int(ctx.size, sizeof(Velocity));
-    test_int(ctx.count, 10);
+    test_int(ctx.dtor.invoked, 1);
+    test_assert(ctx.dtor.world == world);
+    test_int(ctx.dtor.component, ecs_entity(Velocity));
+    test_int(ctx.dtor.entity, e);
+    test_int(ctx.dtor.size, sizeof(Velocity));
+    test_int(ctx.dtor.count, 10);
 
     for (i = 0; i < 10; i ++) {
         test_assert( ecs_has(world, e + i, Position));
@@ -575,7 +595,7 @@ void ComponentLifecycle_dtor_on_bulk_remove_entity() {
         const Position *p = ecs_get_ptr(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
-        test_int(p->y, i * 2);      
+        test_int(p->y, i * 2);
     } 
 }
 
@@ -590,11 +610,11 @@ void ComponentLifecycle_ctor_dtor_on_bulk_add_remove() {
     ecs_entity_t e = ecs_bulk_new(world, Type, 10);
     test_assert(e != 0);
 
-    xtor_ctx ctx_ctor = { 0 };
-    xtor_ctx ctx_dtor = { 0 };
+    cl_ctx ctx_ctor = { 0 };
+    cl_ctx ctx_dtor = { 0 };
 
     ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
-        .ctor = comp_xtor,
+        .ctor = comp_ctor,
         .ctx = &ctx_ctor
     });
 
@@ -610,26 +630,26 @@ void ComponentLifecycle_ctor_dtor_on_bulk_add_remove() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    test_int(ctx_ctor.invoked, 0);
-    test_int(ctx_dtor.invoked, 0);
+    test_int(ctx_ctor.ctor.invoked, 0);
+    test_int(ctx_dtor.dtor.invoked, 0);
 
     ecs_bulk_add_remove(world, Velocity, Mass, &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
-    test_int(ctx_ctor.invoked, 1);
-    test_assert(ctx_ctor.world == world);
-    test_int(ctx_ctor.component, ecs_entity(Velocity));
-    test_int(ctx_ctor.entity, e);
-    test_int(ctx_ctor.size, sizeof(Velocity));
-    test_int(ctx_ctor.count, 10);
+    test_int(ctx_ctor.ctor.invoked, 1);
+    test_assert(ctx_ctor.ctor.world == world);
+    test_int(ctx_ctor.ctor.component, ecs_entity(Velocity));
+    test_int(ctx_ctor.ctor.entity, e);
+    test_int(ctx_ctor.ctor.size, sizeof(Velocity));
+    test_int(ctx_ctor.ctor.count, 10);
 
-    test_int(ctx_dtor.invoked, 1);
-    test_assert(ctx_dtor.world == world);
-    test_int(ctx_dtor.component, ecs_entity(Mass));
-    test_int(ctx_dtor.entity, e);
-    test_int(ctx_dtor.size, sizeof(Mass));
-    test_int(ctx_dtor.count, 10);    
+    test_int(ctx_dtor.dtor.invoked, 1);
+    test_assert(ctx_dtor.dtor.world == world);
+    test_int(ctx_dtor.dtor.component, ecs_entity(Mass));
+    test_int(ctx_dtor.dtor.entity, e);
+    test_int(ctx_dtor.dtor.size, sizeof(Mass));
+    test_int(ctx_dtor.dtor.count, 10);    
 
     for (i = 0; i < 10; i ++) {
         test_assert( ecs_has(world, e + i, Position));
@@ -646,4 +666,169 @@ void ComponentLifecycle_ctor_dtor_on_bulk_add_remove() {
         test_int(v->x, 10);
         test_int(v->y, 20);
     } 
+}
+
+void ComponentLifecycle_copy_on_snapshot() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    cl_ctx ctx = { 0 };
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .copy = comp_copy,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+
+    int32_t i;
+    for (i = 0; i < 10; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    test_int(ctx.copy.invoked, 10);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, e + i - 1);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 1);
+
+    ctx = (cl_ctx){ 0 };
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, e);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 10);
+
+    ecs_snapshot_restore(world, s);
+
+    for (i = 0; i < 10; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i);
+        test_int(p->y, i * 2);
+    }   
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_ctor_copy_on_snapshot() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    cl_ctx ctx = { 0 };
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
+        .copy = comp_copy,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+
+    int32_t i;
+    for (i = 0; i < 10; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    test_int(ctx.copy.invoked, 10);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, e + i - 1);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 1);
+
+    ctx = (cl_ctx){ 0 };
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+
+    test_int(ctx.ctor.invoked, 1);
+    test_assert(ctx.ctor.world == world);
+    test_int(ctx.ctor.component, ecs_entity(Position));
+    test_int(ctx.ctor.entity, e);
+    test_int(ctx.ctor.size, sizeof(Position));
+    test_int(ctx.ctor.count, 10);
+
+    test_int(ctx.copy.invoked, 1);
+    test_assert(ctx.copy.world == world);
+    test_int(ctx.copy.component, ecs_entity(Position));
+    test_int(ctx.copy.entity, e);
+    test_int(ctx.copy.size, sizeof(Position));
+    test_int(ctx.copy.count, 10);
+
+    ecs_snapshot_restore(world, s);
+
+    for (i = 0; i < 10; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i);
+        test_int(p->y, i * 2);
+    }   
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_dtor_on_restore() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    cl_ctx ctx = { 0 };
+    ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .dtor = comp_dtor,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+
+    int32_t i;
+    for (i = 0; i < 10; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    test_int(ctx.dtor.invoked, 0);
+
+    ctx = (cl_ctx){ 0 };
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+
+    test_int(ctx.dtor.invoked, 0);
+
+    /* Delete one entity, so we have more confidence we're destructing the right
+     * entities */
+    ecs_delete(world, e);
+    
+    test_int(ctx.dtor.invoked, 1);
+    ctx = (cl_ctx){ 0 };
+
+    ecs_snapshot_restore(world, s);
+
+    test_int(ctx.dtor.invoked, 1);
+    test_assert(ctx.dtor.world == world);
+    test_int(ctx.dtor.component, ecs_entity(Position));
+    test_int(ctx.dtor.entity, e + 9);
+    test_int(ctx.dtor.size, sizeof(Position));
+    test_int(ctx.dtor.count, 9);
+
+    for (i = 0; i < 10; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+        const Position *p = ecs_get_ptr(world, e + i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, i);
+        test_int(p->y, i * 2);
+    }   
+
+    ecs_fini(world);
 }

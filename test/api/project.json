@@ -297,7 +297,10 @@
                 "dtor_on_bulk_remove",
                 "ctor_on_bulk_add_entity",
                 "dtor_on_bulk_remove_entity",
-                "ctor_dtor_on_bulk_add_remove"
+                "ctor_dtor_on_bulk_add_remove",
+                "ctor_copy_on_snapshot",
+                "copy_on_snapshot",
+                "dtor_on_restore"
             ]
         }, {
             "id": "Pipeline",
@@ -367,7 +370,7 @@
                 "system_initial_state"
             ]
         }, {
-            "id": "SystemOnAdd",
+            "id": "TriggerOnAdd",
             "testcases": [
                 "new_match_1_of_1",
                 "new_match_1_of_2",
@@ -392,7 +395,7 @@
                 "get_sys_context_from_param"
             ]
         }, {
-            "id": "SystemOnRemove",
+            "id": "TriggerOnRemove",
             "testcases": [
                 "remove_match_1_of_1",
                 "remove_match_1_of_2",
@@ -404,7 +407,7 @@
                 "delete_watched"
             ]
         }, {
-            "id": "SystemOnSet",
+            "id": "TriggerOnSet",
             "testcases": [
                 "set",
                 "set_new",
@@ -415,10 +418,11 @@
                 "on_set_after_override",
                 "on_set_after_override_w_new",
                 "on_set_after_override_w_new_w_count",
-                "on_set_after_override_1_of_2_overridden"
+                "on_set_after_override_1_of_2_overridden",
+                "on_set_after_snapshot_restore"
             ]
         }, {
-            "id": "SystemOnFrame",
+            "id": "SystemPeriodic",
             "testcases": [
                 "1_type_1_component",
                 "1_type_3_component",
