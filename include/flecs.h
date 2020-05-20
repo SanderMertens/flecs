@@ -141,14 +141,14 @@ typedef struct ecs_filter_t {
     ecs_match_kind_t exclude_kind;
 } ecs_filter_t;
 
-typedef struct ecs_cached_ptr_t {
+typedef struct ecs_ref_t {
     void *table;            /* Last known table */
     int32_t row;            /* Last known location in table */
     int32_t size;           /* Last known size of table (data reallocd?) */
     ecs_stage_t *stage;     /* Last known stage */
     ecs_record_t *record;   /* Pointer to record, if in main stage */
     const void *ptr;        /* Cached ptr */
-} ecs_cached_ptr_t;
+} ecs_ref_t;
 
 /* Constructor/destructor. Used for initializing / deinitializing components */
 typedef void (*ecs_xtor_t)(
@@ -212,6 +212,27 @@ struct ecs_rows_t {
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
 };
 
+/* World info */
+typedef struct ecs_world_info_t {
+    /* Handles */
+    ecs_entity_t last_handle;   /* Last issued handle */
+    ecs_entity_t min_handle;    /* First allowed handle */
+    ecs_entity_t max_handle;    /* Last allowed handle */
+
+    /* Timing stats */
+    float delta_time;           /* Time passed to or computed by ecs_progress */
+    float target_fps;           /* Target fps */
+    double frame_time_total;    /* Total time spent processing a frame */
+    double system_time_total;   /* Total time spent in systems */
+    double merge_time_total;    /* Total time spent in merges */
+    double world_time_total;    /* Time elapsed since first frame */
+    
+    /* Counters */
+    int32_t frame_count_total;  /* Total number of frames */
+    int32_t merge_count_total;  /* Total number of merges */
+    int32_t pipeline_build_count_total; /* Total number of pipeline builds */
+    int32_t systems_ran_frame;  /* Total number of systems ran in last frame */
+} ecs_world_info_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Public builtin components
@@ -265,6 +286,7 @@ typedef struct EcsPipeline {
 /* Runtime properties of pipeline */
 typedef struct EcsPipelineQuery {
     ecs_query_t *query;
+    ecs_query_t *build_query;
     int32_t match_count;
     ecs_vector_t *ops;
 } EcsPipelineQuery;
@@ -299,6 +321,21 @@ typedef struct EcsTickSource {
 //// Public constants
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Translate C type to type variable */
+#define ecs_type(type) FLECS__T##type
+
+/** Translate C type to entity variable */
+#define ecs_entity(type) FLECS__E##type
+
+/** Translate C type to module struct */
+#define ecs_module(type) FLECS__M##type
+
+/** Translate C type to module struct */
+#define ecs_module_ptr(type) FLECS__M##type##_ptr
+
+/** Translate C type to module struct */
+#define ecs_iter_action(type) FLECS__F##type
+
 /* Type flags are used to indicate the role of an entity in a type. No flag  
  * means a regular component / tag. */
 #define ECS_INSTANCEOF ((ecs_entity_t)1 << 63)/* Share components with entity */
@@ -319,48 +356,48 @@ typedef struct EcsTickSource {
 /** Type handles to builtin components */
 FLECS_EXPORT
 extern ecs_type_t 
-    TEcsComponent,
-    TEcsComponentLifecycle,
-    TEcsTrigger,
-    TEcsType,
-    TEcsModule,
-    TEcsPrefab,
-    TEcsSystem,
-    TEcsColSystem,
-    TEcsName,
-    TEcsHidden,
-    TEcsDisabled,
-    TEcsDisabledIntern,
-    TEcsInactive,
-    TEcsOnDemand,
-    TEcsMonitor,
-    TEcsPipeline,
-    TEcsPipelineQuery,
-    TEcsTimer,
-    TEcsRateFilter,
-    TEcsTickSource;
+    ecs_type(EcsComponent),
+    ecs_type(EcsComponentLifecycle),
+    ecs_type(EcsTrigger),
+    ecs_type(EcsType),
+    ecs_type(EcsModule),
+    ecs_type(EcsPrefab),
+    ecs_type(EcsSystem),
+    ecs_type(EcsColSystem),
+    ecs_type(EcsName),
+    ecs_type(EcsHidden),
+    ecs_type(EcsDisabled),
+    ecs_type(EcsDisabledIntern),
+    ecs_type(EcsInactive),
+    ecs_type(EcsOnDemand),
+    ecs_type(EcsMonitor),
+    ecs_type(EcsPipeline),
+    ecs_type(EcsPipelineQuery),
+    ecs_type(EcsTimer),
+    ecs_type(EcsRateFilter),
+    ecs_type(EcsTickSource);
 
 /** Handles to builtin components */
-#define EEcsComponent (1)
-#define EEcsComponentLifecycle (2)
-#define EEcsTrigger (3)
-#define EEcsType (4)
-#define EEcsModule (5)
-#define EEcsPrefab (6)
-#define EEcsSystem (7)
-#define EEcsColSystem (8)
-#define EEcsName (9)
-#define EEcsHidden (10)
-#define EEcsDisabled (11)
-#define EEcsDisabledIntern (12)
-#define EEcsInactive (13)
-#define EEcsOnDemand (14)
-#define EEcsMonitor (15)
-#define EEcsPipeline (17)
-#define EEcsPipelineQuery (18)
-#define EEcsTimer (19)
-#define EEcsRateFilter (20)
-#define EEcsTickSource (21)
+#define FLECS__EEcsComponent (1)
+#define FLECS__EEcsComponentLifecycle (2)
+#define FLECS__EEcsTrigger (3)
+#define FLECS__EEcsType (4)
+#define FLECS__EEcsModule (5)
+#define EcsPrefab (6)
+#define FLECS__EEcsSystem (7)
+#define FLECS__EEcsColSystem (8)
+#define FLECS__EEcsName (9)
+#define EcsHidden (10)
+#define EcsDisabled (11)
+#define EcsDisabledIntern (12)
+#define EcsInactive (13)
+#define EcsOnDemand (14)
+#define EcsMonitor (15)
+#define FLECS__EEcsPipeline (17)
+#define FLECS__EEcsPipelineQuery (18)
+#define FLECS__EEcsTimer (19)
+#define FLECS__EEcsRateFilter (20)
+#define FLECS__EEcsTickSource (21)
 
 /* Builtin pipeline tags */
 #define EcsPreFrame (22)
@@ -379,11 +416,12 @@ extern ecs_type_t
 #define ECS_SINGLETON (EcsSingleton)
 
 /** Value used to quickly check if component is builtin */
-#define EcsLastInternal (EEcsColSystem)
-#define EcsLastBuiltin (EEcsTickSource)
+#define EcsLastInternal (ecs_entity(EcsColSystem))
+#define EcsLastBuiltin (ecs_entity(EcsTickSource))
 
 /** This allows passing 0 as type to functions that accept types */
-#define T0 (0)
+#define FLECS__TNULL 0
+#define FLECS__T0 0
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -440,6 +478,15 @@ extern ecs_type_t
     ECS_ENTITY_VAR(id) = ecs_new_component(world, #id, sizeof(id));\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
     (void)ecs_entity(id);\
+    (void)ecs_type(id);\
+
+/** Declare a tag.
+ * A tag is a regular entity. This macro is provided for convenience, as in
+ * addition to creating an entity, it also declares a type variable. This makes
+ * it easier to use the entity in function calls that expect a component. */
+#define ECS_TAG(world, id) \
+    ECS_ENTITY(world, id, 0);\
+    ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)ecs_type(id);\
 
 /** Declare a type.
@@ -503,17 +550,17 @@ extern ecs_type_t
  */
 
 #define ECS_SYSTEM(world, name, kind, ...) \
-    ecs_entity_t F##name = ecs_new_system(world, #name, kind, #__VA_ARGS__, name);\
-    ecs_entity_t name = F##name;\
-    (void)F##name;\
+    ecs_iter_action_t ecs_iter_action(name) = name;\
+    ecs_entity_t name = ecs_new_system(world, #name, kind, #__VA_ARGS__, ecs_iter_action(name));\
+    (void)ecs_iter_action(name);\
     (void)name;
 
 #endif
 
 #define ECS_TRIGGER(world, name, kind, component, ctx) \
-    ecs_entity_t F##name = ecs_new_trigger(world, #name, kind, ecs_entity(component), name, ctx);\
-    ecs_entity_t name = F##name;\
-    (void)F##name;\
+    ecs_entity_t __F##name = ecs_new_trigger(world, #name, kind, ecs_entity(component), name, ctx);\
+    ecs_entity_t name = __F##name;\
+    (void)__F##name;\
     (void)name;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -580,6 +627,15 @@ FLECS_EXPORT
 void ecs_quit(
     ecs_world_t *world);
 
+FLECS_EXPORT
+void ecs_set_pipeline(
+    ecs_world_t *world,
+    ecs_entity_t pipeline);       
+
+FLECS_EXPORT
+ecs_entity_t ecs_get_pipeline(
+    ecs_world_t *world);  
+
 /** Progress a world.
  * This operation progresses the world by running all systems that are both
  * enabled and periodic on their matching entities.
@@ -623,27 +679,6 @@ void ecs_set_target_fps(
     ecs_world_t *world,
     float fps);
 
-/** Get configured target frames per second.
- * This operation returns the FPS set with ecs_set_target_fps.
- * 
- * @param world The world.
- * @param return The current target FPS.
- */
-FLECS_EXPORT
-float ecs_get_target_fps(
-    ecs_world_t *world);   
-
-/** Get last delta time from world.
- * This operation returns the delta_time used in the last frame. If a non-zero
- * value was provided to ecs_progress then this value is returned, otherwise the
- * time measured by ecs_progress is returned.
- *
- * @param world The world.
- * @return The last used delta_time.
- */
-FLECS_EXPORT
-float ecs_get_delta_time(
-    ecs_world_t *world);
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
@@ -671,16 +706,11 @@ FLECS_EXPORT
 void* ecs_get_context(
     ecs_world_t *world);
 
-/** Get the world tick.
- * This operation retrieves the tick count (frame number). The tick count is 0
- * when ecs_process is called for the first time, and increases by one for every
- * subsequent call.
- *
+/** Get world statistics 
  * @param world The world.
- * @return The current tick.
  */
 FLECS_EXPORT
-int32_t ecs_get_tick(
+const ecs_world_info_t* ecs_get_world_info(
     ecs_world_t *world);
 
 /** Dimension the world for a specified number of entities.
@@ -822,9 +852,10 @@ void ecs_tracing_enable(
 #define ECS_VERBOSITY_2
 #endif
 
+#ifndef NDEBUG
 #define ecs_trace(lvl, ...)\
     _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
-
+    
 #if defined(ECS_VERBOSITY_3)
 #define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
 #define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
@@ -840,6 +871,13 @@ void ecs_tracing_enable(
 #define ecs_trace_2(...)
 #define ecs_trace_3(...)
 #endif
+
+#else
+
+#define ecs_trace_1(...)
+#define ecs_trace_2(...)
+#define ecs_trace_3(...)
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -860,7 +898,7 @@ ecs_entity_t ecs_new_w_type(
     ecs_type_t type);
 
 #define ecs_new(world, type)\
-    ecs_new_w_type(world, T##type)
+    ecs_new_w_type(world, ecs_type(type))
 
 
 /* -- Bulk create entities -- */
@@ -879,7 +917,7 @@ ecs_entity_t ecs_bulk_new_w_type(
     void** data);
 
 #define ecs_bulk_new(world, type, count)\
-    ecs_bulk_new_w_type(world, T##type, count, NULL)
+    ecs_bulk_new_w_type(world, ecs_type(type), count, NULL)
 
 
 /* -- Add components -- */
@@ -897,7 +935,7 @@ void ecs_add_type(
     ecs_type_t type);
 
 #define ecs_add(world, entity, type)\
-    ecs_add_type(world, entity, T##type)
+    ecs_add_type(world, entity, ecs_type(type))
 
 
 /* -- Remove components -- */
@@ -915,7 +953,7 @@ void ecs_remove_type(
     ecs_type_t type);
 
 #define ecs_remove(world, entity, type)\
-    ecs_remove_type(world, entity, T##type)
+    ecs_remove_type(world, entity, ecs_type(type))
 
 
 /* -- Bulk add -- */
@@ -923,19 +961,17 @@ void ecs_remove_type(
 FLECS_EXPORT
 void ecs_bulk_add_entity(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_entity_t component,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 FLECS_EXPORT
 void ecs_bulk_add_type(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_type_t type,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
-#define ecs_bulk_add(world, entity, type, filter)\
-    ecs_bulk_add_type(world, entity, T##type, filter)
+#define ecs_bulk_add(world, type, filter)\
+    ecs_bulk_add_type(world, ecs_type(type), filter)
 
 
 /* -- Bulk remove -- */
@@ -943,19 +979,17 @@ void ecs_bulk_add_type(
 FLECS_EXPORT
 void ecs_bulk_remove_entity(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_entity_t component,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 FLECS_EXPORT
 void ecs_bulk_remove_type(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_type_t type,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
-#define ecs_bulk_remove(world, entity, type, filter)\
-    ecs_bulk_remove_type(world, entity, T##type, filter)
+#define ecs_bulk_remove(world, type, filter)\
+    ecs_bulk_remove_type(world, ecs_type(type), filter)
 
 
 /* -- Add remove / Bulk add remove -- */
@@ -975,7 +1009,7 @@ void ecs_add_remove_type(
     ecs_type_t to_remove);
 
 #define ecs_add_remove(world, entity, to_add, to_remove)\
-    ecs_add_remove_type(world, entity, T##to_add, T##to_remove)
+    ecs_add_remove_type(world, entity, ecs_type(to_add), ecs_type(to_remove))
 
 FLECS_EXPORT
 void ecs_bulk_add_remove_type(
@@ -985,7 +1019,7 @@ void ecs_bulk_add_remove_type(
     const ecs_filter_t *filter);
 
 #define ecs_bulk_add_remove(world, to_add, to_remove, filter)\
-    ecs_bulk_add_remove_type(world, T##to_add, T##to_remove, filter)
+    ecs_bulk_add_remove_type(world, ecs_type(to_add), ecs_type(to_remove), filter)
 
 
 /* -- Delete & bulk delete -- */
@@ -1004,7 +1038,7 @@ void ecs_bulk_delete(
 /* -- Copy -- */
 
 FLECS_EXPORT
-ecs_entity_t ecs_copy(
+ecs_entity_t ecs_clone(
     ecs_world_t *world,
     ecs_entity_t dst,
     ecs_entity_t src,
@@ -1020,23 +1054,23 @@ const void* ecs_get_ptr_w_entity(
     ecs_entity_t component);
 
 #define ecs_get_ptr(world, entity, component)\
-    (const component*)ecs_get_ptr_w_entity(world, entity, E##component)
+    (const component*)ecs_get_ptr_w_entity(world, entity, ecs_entity(component))
 
 #define ecs_get(world, entity, component)\
-  (*(const component*)ecs_get_ptr_w_entity(world, entity, E##component))
+  (*(const component*)ecs_get_ptr_w_entity(world, entity, ecs_entity(component)))
 
 
 /* -- Get cached -- */
 
 FLECS_EXPORT
-const void* ecs_get_cached_ptr_w_entity(
+const void* ecs_get_ref_w_entity(
     ecs_world_t *world,
-    ecs_cached_ptr_t *cached_ptr,
+    ecs_ref_t *ref,
     ecs_entity_t entity,
     ecs_entity_t component);
 
-#define ecs_get_cached_ptr(world, cached_ptr, entity, component)\
-    (const component*)ecs_get_cached_ptr_w_entity(world, cached_ptr, entity, E##component)
+#define ecs_get_ref(world, ref, entity, component)\
+    (const component*)ecs_get_ref_w_entity(world, ref, entity, ecs_entity(component))
 
 
 /* -- Get mutable -- */
@@ -1099,10 +1133,10 @@ bool ecs_has_type(
     ecs_type_t type);
 
 #define ecs_has(world, entity, type)\
-    ecs_has_type(world, entity, T##type)
+    ecs_has_type(world, entity, ecs_type(type))
 
 #define ecs_has_owned(world, entity, type, owned)\
-    ecs_type_has_owned_type(world, ecs_get_type(world, entity), T##type, owned)
+    ecs_type_has_owned_type(world, ecs_get_type(world, entity), ecs_type(type), owned)
 
 #define ecs_has_owned_entity(world, entity, has, owned)\
     ecs_type_has_owned_entity(world, ecs_get_type(world, entity), has, owned)
@@ -1368,7 +1402,12 @@ void* ecs_table_column(
 
 /** Get a strongly typed pointer to a column (owned or shared). */
 #define ECS_COLUMN(rows, type, id, column)\
-    type *id = ecs_column(rows, type, column)
+    ECS_ENTITY_VAR(type) = ecs_column_entity(rows, column);\
+    ECS_TYPE_VAR(type) = ecs_column_type(rows, column);\
+    type *id = ecs_column(rows, type, column);\
+    (void)ecs_entity(type);\
+    (void)ecs_type(type);\
+    (void)id
 
 /** Get a strongly typed pointer to a column (owned or shared). */
 #define ECS_CONST_COLUMN(rows, type, id, column)\
@@ -1390,11 +1429,11 @@ void* ecs_table_column(
 
 /** Utility macro for importing all handles for a module from a system column */
 #define ECS_IMPORT_COLUMN(rows, module, column) \
-    module *M##module##_ptr = ecs_column(rows, module, column);\
-    ecs_assert(M##module##_ptr != NULL, ECS_MODULE_UNDEFINED, #module);\
+    module *ecs_module_ptr(module) = ecs_column(rows, module, column);\
+    ecs_assert(ecs_module_ptr(module) != NULL, ECS_MODULE_UNDEFINED, #module);\
     ecs_assert(ecs_is_shared(rows, column), ECS_COLUMN_IS_NOT_SHARED, NULL);\
-    module M##module = *M##module##_ptr;\
-    module##ImportHandles(M##module)
+    module ecs_module(module) = *ecs_module_ptr(module);\
+    module##ImportHandles(ecs_module(module))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2127,11 +2166,11 @@ ecs_entity_t ecs_import_from_library(
  * typically contain handles to the content of the module.
  */
 #define ECS_IMPORT(world, id, flags) \
-    id M##id;\
+    id ecs_module(id);\
     ECS_ENTITY_VAR(id) = ecs_import(\
-        world, id##Import, #id, flags, &M##id, sizeof(id));\
+        world, id##Import, #id, flags, &ecs_module(id), sizeof(id));\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
-    id##ImportHandles(M##id);\
+    id##ImportHandles(ecs_module(id));\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
 
@@ -2189,6 +2228,11 @@ FLECS_EXPORT
 char* ecs_type_str(
     ecs_world_t *world,
     ecs_type_t type);
+
+FLECS_EXPORT
+ecs_type_t ecs_type_from_str(
+    ecs_world_t *world,
+    const char *expr);    
 
 FLECS_EXPORT
 ecs_type_t ecs_type_find(
@@ -2314,15 +2358,6 @@ int ecs_enable_admin(
 FLECS_EXPORT
 int ecs_enable_console(
 	ecs_world_t* world);
-
-/** Translate C type to entity variable */
-#define ecs_entity(type) E##type
-
-/** Translate C type to type variable */
-#define ecs_type(type) T##type
-
-/** Translate module name into handles struct */
-#define ecs_module(type) M##type
 
 /* Include stats at the end so it gets all the declarations */
 #include "flecs/util/stats.h"

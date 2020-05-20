@@ -22,7 +22,7 @@ void OnSet(ecs_rows_t *rows) {
     }
 }
 
-void SystemOnSet_set() {
+void TriggerOnSet_set() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -53,7 +53,7 @@ void SystemOnSet_set() {
     test_int(p->y, 20);
 }
 
-void SystemOnSet_set_new() {
+void TriggerOnSet_set_new() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -81,7 +81,7 @@ void SystemOnSet_set_new() {
     test_int(p->y, 20);
 }
 
-void SystemOnSet_set_again() {
+void TriggerOnSet_set_again() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -119,7 +119,7 @@ void SystemOnSet_set_again() {
     test_int(p->y, 20);
 }
 
-void SystemOnSet_clone() {
+void TriggerOnSet_clone() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -148,14 +148,14 @@ void SystemOnSet_clone() {
 
     ctx = (Probe){0};
 
-   ecs_copy(world, 0, e_1, false);
+   ecs_clone(world, 0, e_1, false);
 
     /* OnSet function should not have been called, because value has not been 
      * copied */
     test_int(ctx.count, 0);
 }
 
-void SystemOnSet_clone_w_value() {
+void TriggerOnSet_clone_w_value() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -184,7 +184,7 @@ void SystemOnSet_clone_w_value() {
 
     ctx = (Probe){0};
 
-    ecs_entity_t e_2 = ecs_copy(world, 0, e_1, true);
+    ecs_entity_t e_2 = ecs_clone(world, 0, e_1, true);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -240,7 +240,7 @@ void OnSet_check_order(ecs_rows_t *rows) {
     set_called = true;
 }
 
-void SystemOnSet_set_and_add_system() {
+void TriggerOnSet_set_and_add_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -297,7 +297,7 @@ void OnSetShared(ecs_rows_t *rows) {
     }        
 }
 
-void SystemOnSet_on_set_after_override() {
+void TriggerOnSet_on_set_after_override() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -369,7 +369,7 @@ void SystemOnSet_on_set_after_override() {
     ecs_fini(world);
 }
 
-void SystemOnSet_on_set_after_override_w_new() {
+void TriggerOnSet_on_set_after_override_w_new() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -402,7 +402,7 @@ void SystemOnSet_on_set_after_override_w_new() {
     test_int(p->y, 3);
 }
 
-void SystemOnSet_on_set_after_override_w_new_w_count() {
+void TriggerOnSet_on_set_after_override_w_new_w_count() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -445,7 +445,7 @@ void SystemOnSet_on_set_after_override_w_new_w_count() {
     test_int(p->y, 3);
 }
 
-void SystemOnSet_on_set_after_override_1_of_2_overridden() {
+void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -476,4 +476,53 @@ void SystemOnSet_on_set_after_override_1_of_2_overridden() {
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
+}
+
+static
+void SetPosition(ecs_rows_t *rows) {
+    probe_system(rows);
+}
+
+void TriggerOnSet_on_set_after_snapshot_restore() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TRIGGER(world, SetPosition, EcsOnSet, Position, NULL);
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 10);
+    test_assert(e != 0);
+
+    int32_t i;
+    for (i = 0; i < 10; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+        ecs_set(world, e + i, Position, {i, i * 2});
+    }
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+
+    test_int(ctx.invoked, 0);
+
+    /* Delete one entity, so we have more confidence we're triggering on the 
+     * right entities */
+    ecs_delete(world, e);
+    
+    test_int(ctx.invoked, 0);
+
+    ecs_snapshot_restore(world, s);
+
+    test_int(ctx.count, 10);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.system, SetPosition);
+    test_int(ctx.column_count, 1);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_null(ctx.param);
+    
+    for (i = 0; i < 10; i ++) {
+        test_int(ctx.e[i], e + i);
+    }   
+
+    ecs_fini(world);
 }

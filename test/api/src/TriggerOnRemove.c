@@ -23,7 +23,7 @@ void Deinit(ecs_rows_t *rows) {
     }
 }
 
-void SystemOnRemove_remove_match_1_of_1() {
+void TriggerOnRemove_remove_match_1_of_1() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -50,7 +50,7 @@ void SystemOnRemove_remove_match_1_of_1() {
     ecs_fini(world);
 }
 
-void SystemOnRemove_remove_match_1_of_2() {
+void TriggerOnRemove_remove_match_1_of_2() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -79,7 +79,7 @@ void SystemOnRemove_remove_match_1_of_2() {
     ecs_fini(world);
 }
 
-void SystemOnRemove_remove_no_match_1() {
+void TriggerOnRemove_remove_no_match_1() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -101,7 +101,7 @@ void SystemOnRemove_remove_no_match_1() {
     ecs_fini(world);
 }
 
-void SystemOnRemove_delete_match_1_of_1() {
+void TriggerOnRemove_delete_match_1_of_1() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -128,7 +128,7 @@ void SystemOnRemove_delete_match_1_of_1() {
     ecs_fini(world);
 }
 
-void SystemOnRemove_delete_match_1_of_2() {
+void TriggerOnRemove_delete_match_1_of_2() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -157,7 +157,7 @@ void SystemOnRemove_delete_match_1_of_2() {
     ecs_fini(world);
 }
 
-void SystemOnRemove_delete_no_match_1() {
+void TriggerOnRemove_delete_no_match_1() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -190,7 +190,7 @@ void RemovePosition(ecs_rows_t *rows) {
     old_position = p[0];
 }
 
-void SystemOnRemove_remove_watched() {
+void TriggerOnRemove_remove_watched() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -212,7 +212,7 @@ void SystemOnRemove_remove_watched() {
 }
 
 
-void SystemOnRemove_delete_watched() {
+void TriggerOnRemove_delete_watched() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

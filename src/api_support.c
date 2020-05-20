@@ -135,6 +135,10 @@ ecs_entity_t lookup(
     const char *name,
     ecs_type_t type)
 {
+    if (!name) {
+        return 0;
+    }
+    
     ecs_entity_t result = ecs_lookup(world, name);
     if (result) {
         ecs_type_t entity_type = ecs_get_type(world, result);
@@ -147,6 +151,14 @@ ecs_entity_t lookup(
 
 
 /* -- Public functions -- */
+
+ecs_type_t ecs_type_from_str(
+    ecs_world_t *world,
+    const char *expr)
+{
+    EcsType type = type_from_expr(world, NULL, expr);
+    return type.normalized;
+}
 
 ecs_entity_t ecs_new_entity(
     ecs_world_t *world,
@@ -173,11 +185,11 @@ ecs_entity_t ecs_new_prefab(
 
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
-        result = ecs_new_w_entity(world, EEcsPrefab);
+        result = ecs_new_w_entity(world, EcsPrefab);
         ecs_add_type(world, result, type.normalized);
         ecs_set(world, result, EcsName, {name});
     } else {
-        if (!ecs_has(world, result, EcsPrefab)) {
+        if (!ecs_has_entity(world, result, EcsPrefab)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
     }
@@ -274,7 +286,7 @@ ecs_entity_t ecs_new_system(
         result = ecs_set(world, result, EcsName, {name});
         if (phase) {
             ecs_add_entity(world, result, phase);
-            ecs_add_entity(world, result, ECS_XOR | world->builtin_pipeline);
+            ecs_add_entity(world, result, ECS_XOR | world->pipeline);
         }
 
         ecs_set(world, result, EcsSystem, {
@@ -345,7 +357,7 @@ ecs_entity_t ecs_new_pipeline(
     const char *name,
     const char *expr)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);  
+    assert(world->magic == ECS_WORLD_MAGIC);
 
     ecs_entity_t result = ecs_new_type(world, name, expr);
     const EcsType *type_ptr = ecs_get_ptr(world, result, EcsType);

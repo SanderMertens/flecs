@@ -1174,7 +1174,7 @@ void System_w_FromContainer_new_child_after_match() {
 
 void IterSame(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p_parent, 1);
-    ECS_COLUMN(rows, Position, p, 2);
+    Position *p = ecs_column(rows, Position, 2);
 
     test_assert(ecs_is_shared(rows, 1));
 

@@ -25,8 +25,8 @@ bool is_enabled(
     ecs_world_t *world, 
     ecs_entity_t system) 
 {
-    return !ecs_has(world, system, EcsDisabled) && 
-        !ecs_has(world, system, EcsDisabledIntern);
+    return !ecs_has_entity(world, system, EcsDisabled) && 
+        !ecs_has_entity(world, system, EcsDisabledIntern);
 }
 
 void SystemOnDemand_enable_out_after_in() {

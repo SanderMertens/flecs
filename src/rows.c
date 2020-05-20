@@ -40,9 +40,9 @@ const void* get_shared_column(
 
     ecs_reference_t *ref = &rows->references[-table_column - 1];
 
-    return (void*)ecs_get_cached_ptr_w_entity(
+    return (void*)ecs_get_ref_w_entity(
         rows->world,
-        &ref->cached_ptr,
+        &ref->ref,
         ref->entity,
         ref->component);
 }

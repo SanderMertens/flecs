@@ -11,8 +11,8 @@ void EcsAddTickSource(ecs_rows_t *rows) {
 
 static
 void EcsProgressTimers(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, EcsTimer, timer, 1);
-    ECS_COLUMN(rows, EcsTickSource, tick_source, 2);
+    EcsTimer *timer = ecs_column(rows, EcsTimer, 1);
+    EcsTickSource *tick_source = ecs_column(rows, EcsTickSource, 2);
 
     ecs_assert(timer != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -48,8 +48,8 @@ void EcsProgressTimers(ecs_rows_t *rows) {
 
 static
 void EcsProgressRateFilters(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, EcsRateFilter, filter, 1);
-    ECS_COLUMN(rows, EcsTickSource, tick_dst, 2);
+    EcsRateFilter *filter = ecs_column(rows, EcsRateFilter, 1);
+    EcsTickSource *tick_dst = ecs_column(rows, EcsTickSource, 2);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -86,19 +86,16 @@ void ecs_init_timer_builtins(
     ecs_world_t *world)
 {
     /* Add EcsTickSource to timers and rate filters */
-    world->add_tick_source =
     ecs_new_system(world, "EcsAddTickSource", EcsPreFrame, 
         "[in] EcsTimer || EcsRateFilter, [out] !EcsTickSource", 
         EcsAddTickSource);
 
     /* Timer handling */
-    world->progress_timers = 
     ecs_new_system(world, "EcsProgressTimers", EcsPreFrame, 
         "EcsTimer, EcsTickSource", 
         EcsProgressTimers);
     
     /* Rate filter handling */
-    world->progress_rate_filters = 
     ecs_new_system(world, "EcsProgressRateFilters", EcsPreFrame, 
         "[in] EcsRateFilter, [out] EcsTickSource", 
         EcsProgressRateFilters);    

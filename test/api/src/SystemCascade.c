@@ -3,7 +3,7 @@
 static
 void Iter(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Position, p_parent, 2);
+    Position *p_parent = ecs_column(rows, Position, 2);
 
     test_assert(!p_parent || ecs_is_shared(rows, 2));
 
@@ -163,7 +163,7 @@ void SystemCascade_cascade_depth_2() {
 static
 void AddParent(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Position, p_parent, 2);
+    Position *p_parent = ecs_column(rows, Position, 2);
 
     test_assert(!p_parent || ecs_is_shared(rows, 2));
 

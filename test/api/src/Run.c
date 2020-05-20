@@ -1064,7 +1064,7 @@ void Run_run_w_container_filter() {
     ecs_add_entity(world, e_7, ECS_CHILDOF | parent);
 
     /* Get type from parent to use as filter */
-    ecs_type_t TParent = ecs_type_from_entity(world, ECS_CHILDOF | parent);
+    ecs_type_t ecs_type(Parent) = ecs_type_from_entity(world, ECS_CHILDOF | parent);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -1250,7 +1250,6 @@ void AddVelocity(ecs_rows_t *rows) {
     ecs_world_t *world = rows->world;
 
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
     ECS_COLUMN_COMPONENT(rows, Velocity, 2);
 
     int i;

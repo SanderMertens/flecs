@@ -73,16 +73,16 @@ void init_edges(
             table->flags |= EcsTableHasBuiltins;
         }
 
-        if (e == EEcsPrefab) {
+        if (e == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
             table->flags |= EcsTableIsDisabled;
         }
 
-        if (e == EEcsDisabled) {
+        if (e == EcsDisabled) {
             table->flags |= EcsTableIsDisabled;
         }
 
-        if (e == EEcsComponent) {
+        if (e == ecs_entity(EcsComponent)) {
             table->flags |= EcsTableHasComponentData;
         }
 
@@ -293,7 +293,7 @@ ecs_table_t *find_or_create_table_include(
     uint32_t count = ecs_vector_count(type);
 
     ecs_entities_t entities = {
-        .array = ecs_os_alloca(sizeof(ecs_entity_t), count + 1),
+        .array = ecs_os_alloca(ecs_entity_t, count + 1),
         .count = count + 1
     };
 
@@ -350,7 +350,7 @@ ecs_table_t *find_or_create_table_exclude(
     uint32_t count = ecs_vector_count(type);
 
     ecs_entities_t entities = {
-        .array = ecs_os_alloca(sizeof(ecs_entity_t), count - 1),
+        .array = ecs_os_alloca(ecs_entity_t, count - 1),
         .count = count - 1
     };
 

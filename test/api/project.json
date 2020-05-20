@@ -97,24 +97,50 @@
                 "not_added"
             ]
         }, {
-            "id": "Add_remove_w_filter",
+            "id": "Hierarchies",
             "testcases": [
-                "remove_1_no_filter",
-                "remove_2_no_filter",
-                "remove_1_to_empty_no_filter",
-                "remove_2_to_empty_no_filter",
-                "remove_1_all_no_filter",
-                "remove_2_all_no_filter",
-                "remove_1_exclude_1",
-                "remove_1_exclude_2",
-                "remove_1_include_1",
-                "remove_1_include_2",
-                "add_1",
-                "add_2",
-                "add_existing",
-                "remove_existing",
-                "remove_existing_no_filter",
-                "add_remove_nothing"
+                "delete_children"
+            ]
+        }, {
+            "id": "Add_bulk",
+            "testcases": [
+                "add_comp_from_comp_to_empty",
+                "add_comp_from_comp_to_existing",
+                "add_comp_from_tag_to_empty",
+                "add_comp_from_tag_to_existing",
+                "add_tag_from_tag_to_empty",
+                "add_tag_from_tag_to_existing",
+                "add_comp_to_more_existing",
+                "add_comp_to_fewer_existing",
+                "on_add",
+                "add_entity_comp",
+                "add_entity_tag",
+                "add_entity_on_add",
+                "add_entity_existing"
+            ]
+        }, {
+            "id": "Remove_bulk",
+            "testcases": [
+                "remove_comp_from_comp_to_empty",
+                "remove_comp_from_comp_to_existing",
+                "remove_comp_from_tag_to_empty",
+                "remove_comp_from_tag_to_existing",
+                "remove_tag_from_tag_to_empty",
+                "remove_tag_from_tag_to_existing",
+                "remove_all_comp",
+                "remove_all_tag",
+                "on_remove",
+                "remove_entity_comp",
+                "remove_entity_tag",
+                "remove_entity_on_remove"
+            ]
+        }, {
+            "id": "Add_remove_bulk",
+            "testcases": [
+                "add_remove_add_only",
+                "add_remove_remove_only",
+                "add_remove_both",
+                "add_remove_same"                
             ]
         }, {
             "id": "Has",
@@ -254,6 +280,46 @@
                 "1_tag_1_component_w_value"
             ]
         }, {
+            "id": "ComponentLifecycle",
+            "testcases": [
+                "ctor_on_add",
+                "ctor_on_new",
+                "dtor_on_remove",
+                "dtor_on_delete",
+                "copy_on_set",
+                "copy_on_override",
+                "copy_on_new_w_data",
+                "copy_on_clone",
+                "copy_on_stage",
+                "no_copy_on_move",
+                "move_on_merge",
+                "ctor_on_bulk_add",
+                "dtor_on_bulk_remove",
+                "ctor_on_bulk_add_entity",
+                "dtor_on_bulk_remove_entity",
+                "ctor_dtor_on_bulk_add_remove",
+                "ctor_copy_on_snapshot",
+                "copy_on_snapshot",
+                "dtor_on_restore"
+            ]
+        }, {
+            "id": "Pipeline",
+            "testcases": [
+                "system_order_same_phase",
+                "system_order_same_phase_after_disable",
+                "system_order_same_phase_after_activate",
+                "system_order_different_phase",
+                "system_order_different_phase_after_disable",
+                "system_order_different_phase_after_activate",
+                "system_order_after_new_system_lower_id",
+                "system_order_after_new_system_inbetween_id",
+                "system_order_after_new_system_higher_id",
+                "merge_after_staged_out",
+                "merge_after_not_out",
+                "no_merge_after_main_out",
+                "no_merge_after_staged_in_out"
+            ]
+        }, {
             "id": "SystemMisc",
             "testcases": [
                 "invalid_not_without_id",
@@ -300,10 +366,11 @@
                 "ensure_single_merge",
                 "table_count",
                 "match_system",
-                "match_system_w_filter"
+                "match_system_w_filter",
+                "system_initial_state"
             ]
         }, {
-            "id": "SystemOnAdd",
+            "id": "TriggerOnAdd",
             "testcases": [
                 "new_match_1_of_1",
                 "new_match_1_of_2",
@@ -328,7 +395,7 @@
                 "get_sys_context_from_param"
             ]
         }, {
-            "id": "SystemOnRemove",
+            "id": "TriggerOnRemove",
             "testcases": [
                 "remove_match_1_of_1",
                 "remove_match_1_of_2",
@@ -340,7 +407,7 @@
                 "delete_watched"
             ]
         }, {
-            "id": "SystemOnSet",
+            "id": "TriggerOnSet",
             "testcases": [
                 "set",
                 "set_new",
@@ -351,10 +418,11 @@
                 "on_set_after_override",
                 "on_set_after_override_w_new",
                 "on_set_after_override_w_new_w_count",
-                "on_set_after_override_1_of_2_overridden"
+                "on_set_after_override_1_of_2_overridden",
+                "on_set_after_snapshot_restore"
             ]
         }, {
-            "id": "SystemOnFrame",
+            "id": "SystemPeriodic",
             "testcases": [
                 "1_type_1_component",
                 "1_type_3_component",
@@ -515,8 +583,8 @@
                 "instantiate_in_progress",
                 "copy_from_prefab_in_progress",
                 "copy_from_prefab_first_instance_in_progress",
-                "cached_ptr_after_realloc",
-                "revalidate_cached_ptr_w_mixed_table_refs",
+                "ref_after_realloc",
+                "revalidate_ref_w_mixed_table_refs",
                 "no_overwrite_on_2nd_add",
                 "no_overwrite_on_2nd_add_in_progress",
                 "no_instantiate_on_2nd_add",

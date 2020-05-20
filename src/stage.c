@@ -66,25 +66,37 @@ void merge_columns(
 {
     /* Copy data column by column from the stage to the main stage */
     uint32_t c, column_count = ecs_vector_count(table->type);
+    ecs_entity_t *components = ecs_vector_first(table->type);
+    ecs_entity_t *dst_entities = ecs_vector_first(dst_data->entities);
+    ecs_entity_t *src_entities = ecs_vector_first(src_data->entities);
+
     for (c = 0; c < column_count; c ++) {
         ecs_column_t *main_column = &dst_data->columns[c];
         if (!main_column->size) {
             continue;
         }
         
-        void *dst = ecs_vector_first(main_column->data);
-        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
-
         ecs_column_t *column = &src_data->columns[c];
         uint16_t size = column->size;
+        ecs_assert(size == main_column->size, ECS_INTERNAL_ERROR, NULL);
 
         void *src = ecs_vector_first(column->data);
         ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_assert(size == main_column->size, ECS_INTERNAL_ERROR, NULL);
+        void *dst = ecs_vector_first(main_column->data);
+        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+        dst = ECS_OFFSET(dst, dst_entity_count * size);
 
-        memcpy( ECS_OFFSET(dst, dst_entity_count * size), 
-            src, size * src_entity_count);
+        ecs_entity_t component = components[c];
+        ecs_component_data_t *cdata = ecs_get_component_data(world, component);
+        ecs_move_t move = cdata->lifecycle.move;
+        if (move) {
+            void *ctx = cdata->lifecycle.ctx;
+            move(world, component, dst_entities, src_entities, dst, src, 
+                size, src_entity_count, ctx);
+        } else {
+            memcpy(dst, src, size * src_entity_count);
+        }
 
         ecs_vector_clear(column->data);
     } 
@@ -192,7 +204,7 @@ void merge_commits(
 
             record->table = table;
             record->row = ecs_row_to_record(main_entity_count + e, is_watched);
-        }        
+        }
 
         /* Clear staged table data */
         ecs_table_clear_data(table, data);

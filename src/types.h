@@ -142,7 +142,7 @@ struct ecs_table_t {
 struct ecs_reference_t {
     ecs_entity_t entity;
     ecs_entity_t component;
-    ecs_cached_ptr_t cached_ptr;
+    ecs_ref_t ref;
 };
 
 /** Type containing data for a table matched with a system */
@@ -172,7 +172,6 @@ struct ecs_query_t {
     /* Tables matched with query */
     ecs_vector_t *tables;
     ecs_vector_t *inactive_tables;
-    int32_t prev_table_count;    /* Used to check if sorting is needed */
 
     /* Handle to system (optional) */
     ecs_entity_t system;   
@@ -192,7 +191,9 @@ struct ecs_query_t {
     bool is_monitor;            /* Should query register as monitor? */
     int32_t cascade_by;         /* Identify CASCADE column */
     bool needs_matching;        /* Does sig need to be matched with tables */
-    int32_t match_count;        /* How often has table administration changed */
+
+    int32_t match_count;        /* How often have tables been (un)matched */
+    int32_t prev_match_count;   /* Used to track if sorting is needed */
 };
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -380,8 +381,7 @@ typedef struct ecs_component_monitor_t {
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
-    float delta_time;             /* Time passed to or computed by ecs_progress */
-    void *context;                /* Application context */
+    void *context;               /* Application context */
 
     ecs_vector_t *component_data;
 
@@ -413,7 +413,7 @@ struct ecs_world_t {
 
     /* -- Systems -- */
     
-    ecs_entity_t builtin_pipeline;     /* Pipeline with builtin phases */
+    ecs_entity_t pipeline;             /* Current pipeline */
     ecs_map_t *on_activate_components; /* Trigger on activate of [in] column */
     ecs_map_t *on_enable_components;   /* Trigger on enable of [in] column */
     ecs_vector_t *fini_tasks;          /* Tasks to execute on ecs_fini */
@@ -447,30 +447,17 @@ struct ecs_world_t {
     int32_t jobs_finished;          /* Number of jobs finished */
     int32_t threads_running;        /* Number of threads running */
 
-    ecs_entity_t last_handle;        /* Last issued handle */
-    ecs_entity_t min_handle;         /* First allowed handle */
-    ecs_entity_t max_handle;         /* Last allowed handle */
-
 
     /* -- Time management -- */
 
     ecs_time_t world_start_time;  /* Timestamp of simulation start */
     ecs_time_t frame_start_time;  /* Timestamp of frame start */
-    float target_fps;             /* Target fps */
     float fps_sleep;              /* Sleep time to prevent fps overshoot */
-
-    ecs_entity_t add_tick_source; /* System to add EcsTickSource */
-    ecs_entity_t progress_timers; /* System to progress timers */
-    ecs_entity_t progress_rate_filters; /* System to progress rate filters */
 
 
     /* -- Metrics -- */
 
-    double frame_time_total;      /* Total time spent in processing a frame */
-    double system_time_total;     /* Total time spent in periodic systems */
-    double merge_time_total;      /* Total time spent in merges */
-    double world_time_total;      /* Time elapsed since first frame */
-    int32_t frame_count_total;   /* Total number of frames */
+    ecs_world_info_t stats;
 
 
     /* -- Settings from command line arguments -- */

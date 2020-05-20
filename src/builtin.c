@@ -36,8 +36,8 @@ void ecs_colsystem_dtor(
         }
 
         /* Invoke Disabled action for enabled systems */
-        if (!ecs_has_entity(world, e, EEcsDisabled) && 
-            !ecs_has_entity(world, e, EEcsDisabledIntern)) 
+        if (!ecs_has_entity(world, e, EcsDisabled) && 
+            !ecs_has_entity(world, e, EcsDisabledIntern)) 
         {
             ecs_invoke_status_action(world, e, ptr, EcsSystemDisabled);
         }           
@@ -93,7 +93,8 @@ static
 void EcsOnSetTrigger(
     ecs_rows_t *rows)
 {
-    ECS_COLUMN(rows, EcsTrigger, ct, 1);
+    EcsTrigger *ct = ecs_column(rows, EcsTrigger, 1);
+    
     ecs_component_set_intern(rows->world, rows->entities, ct, rows->count);
 }
 
@@ -101,7 +102,7 @@ static
 void EcsOnSetComponentLifecycle(
     ecs_rows_t *rows)
 {
-    ECS_COLUMN(rows, EcsComponentLifecycle, cl, 1);
+    EcsComponentLifecycle *cl = ecs_column(rows, EcsComponentLifecycle, 1);
 
     ecs_world_t *world = rows->world;
     ecs_component_data_t *cdata_array = ecs_vector_first(world->component_data);
@@ -121,7 +122,7 @@ static
 void EcsOnSetSystem(
     ecs_rows_t *rows)
 {
-    ECS_COLUMN(rows, EcsSystem, sys, 1);
+    EcsSystem *sys = ecs_column(rows, EcsSystem, 1);
 
     ecs_world_t *world = rows->world;
     ecs_entity_t *entities = rows->entities;
@@ -138,7 +139,7 @@ static
 void EcsDisableSystem(
     ecs_rows_t *rows)
 {
-    ECS_COLUMN(rows, EcsColSystem, system_data, 1);
+    EcsColSystem *system_data = ecs_column(rows, EcsColSystem, 1);
 
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
@@ -151,7 +152,7 @@ static
 void EcsEnableSystem(
     ecs_rows_t *rows)
 {
-    ECS_COLUMN(rows, EcsColSystem, system_data, 1);
+    EcsColSystem *system_data = ecs_column(rows, EcsColSystem, 1);
 
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
@@ -187,7 +188,7 @@ void ecs_init_builtins(
     EcsTrigger tr = {
         .kind = EcsOnSet,
         .action = EcsOnSetTrigger,
-        .component = EEcsTrigger
+        .component = ecs_entity(EcsTrigger)
     };
 
     ecs_entity_t e = ecs_new(world, 0);

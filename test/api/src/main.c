@@ -85,23 +85,43 @@ void Remove_1_from_empty(void);
 void Remove_type_from_empty(void);
 void Remove_not_added(void);
 
-// Testsuite 'Add_remove_w_filter'
-void Add_remove_w_filter_remove_1_no_filter(void);
-void Add_remove_w_filter_remove_2_no_filter(void);
-void Add_remove_w_filter_remove_1_to_empty_no_filter(void);
-void Add_remove_w_filter_remove_2_to_empty_no_filter(void);
-void Add_remove_w_filter_remove_1_all_no_filter(void);
-void Add_remove_w_filter_remove_2_all_no_filter(void);
-void Add_remove_w_filter_remove_1_exclude_1(void);
-void Add_remove_w_filter_remove_1_exclude_2(void);
-void Add_remove_w_filter_remove_1_include_1(void);
-void Add_remove_w_filter_remove_1_include_2(void);
-void Add_remove_w_filter_add_1(void);
-void Add_remove_w_filter_add_2(void);
-void Add_remove_w_filter_add_existing(void);
-void Add_remove_w_filter_remove_existing(void);
-void Add_remove_w_filter_remove_existing_no_filter(void);
-void Add_remove_w_filter_add_remove_nothing(void);
+// Testsuite 'Hierarchies'
+void Hierarchies_delete_children(void);
+
+// Testsuite 'Add_bulk'
+void Add_bulk_add_comp_from_comp_to_empty(void);
+void Add_bulk_add_comp_from_comp_to_existing(void);
+void Add_bulk_add_comp_from_tag_to_empty(void);
+void Add_bulk_add_comp_from_tag_to_existing(void);
+void Add_bulk_add_tag_from_tag_to_empty(void);
+void Add_bulk_add_tag_from_tag_to_existing(void);
+void Add_bulk_add_comp_to_more_existing(void);
+void Add_bulk_add_comp_to_fewer_existing(void);
+void Add_bulk_on_add(void);
+void Add_bulk_add_entity_comp(void);
+void Add_bulk_add_entity_tag(void);
+void Add_bulk_add_entity_on_add(void);
+void Add_bulk_add_entity_existing(void);
+
+// Testsuite 'Remove_bulk'
+void Remove_bulk_remove_comp_from_comp_to_empty(void);
+void Remove_bulk_remove_comp_from_comp_to_existing(void);
+void Remove_bulk_remove_comp_from_tag_to_empty(void);
+void Remove_bulk_remove_comp_from_tag_to_existing(void);
+void Remove_bulk_remove_tag_from_tag_to_empty(void);
+void Remove_bulk_remove_tag_from_tag_to_existing(void);
+void Remove_bulk_remove_all_comp(void);
+void Remove_bulk_remove_all_tag(void);
+void Remove_bulk_on_remove(void);
+void Remove_bulk_remove_entity_comp(void);
+void Remove_bulk_remove_entity_tag(void);
+void Remove_bulk_remove_entity_on_remove(void);
+
+// Testsuite 'Add_remove_bulk'
+void Add_remove_bulk_add_remove_add_only(void);
+void Add_remove_bulk_add_remove_remove_only(void);
+void Add_remove_bulk_add_remove_both(void);
+void Add_remove_bulk_add_remove_same(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -222,6 +242,42 @@ void Clone_tag_w_value(void);
 void Clone_1_tag_1_component(void);
 void Clone_1_tag_1_component_w_value(void);
 
+// Testsuite 'ComponentLifecycle'
+void ComponentLifecycle_ctor_on_add(void);
+void ComponentLifecycle_ctor_on_new(void);
+void ComponentLifecycle_dtor_on_remove(void);
+void ComponentLifecycle_dtor_on_delete(void);
+void ComponentLifecycle_copy_on_set(void);
+void ComponentLifecycle_copy_on_override(void);
+void ComponentLifecycle_copy_on_new_w_data(void);
+void ComponentLifecycle_copy_on_clone(void);
+void ComponentLifecycle_copy_on_stage(void);
+void ComponentLifecycle_no_copy_on_move(void);
+void ComponentLifecycle_move_on_merge(void);
+void ComponentLifecycle_ctor_on_bulk_add(void);
+void ComponentLifecycle_dtor_on_bulk_remove(void);
+void ComponentLifecycle_ctor_on_bulk_add_entity(void);
+void ComponentLifecycle_dtor_on_bulk_remove_entity(void);
+void ComponentLifecycle_ctor_dtor_on_bulk_add_remove(void);
+void ComponentLifecycle_ctor_copy_on_snapshot(void);
+void ComponentLifecycle_copy_on_snapshot(void);
+void ComponentLifecycle_dtor_on_restore(void);
+
+// Testsuite 'Pipeline'
+void Pipeline_system_order_same_phase(void);
+void Pipeline_system_order_same_phase_after_disable(void);
+void Pipeline_system_order_same_phase_after_activate(void);
+void Pipeline_system_order_different_phase(void);
+void Pipeline_system_order_different_phase_after_disable(void);
+void Pipeline_system_order_different_phase_after_activate(void);
+void Pipeline_system_order_after_new_system_lower_id(void);
+void Pipeline_system_order_after_new_system_inbetween_id(void);
+void Pipeline_system_order_after_new_system_higher_id(void);
+void Pipeline_merge_after_staged_out(void);
+void Pipeline_merge_after_not_out(void);
+void Pipeline_no_merge_after_main_out(void);
+void Pipeline_no_merge_after_staged_in_out(void);
+
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
 void SystemMisc_invalid_optional_without_id(void);
@@ -268,102 +324,104 @@ void SystemMisc_ensure_single_merge(void);
 void SystemMisc_table_count(void);
 void SystemMisc_match_system(void);
 void SystemMisc_match_system_w_filter(void);
+void SystemMisc_system_initial_state(void);
 
-// Testsuite 'SystemOnAdd'
-void SystemOnAdd_new_match_1_of_1(void);
-void SystemOnAdd_new_match_1_of_2(void);
-void SystemOnAdd_new_no_match_1(void);
-void SystemOnAdd_new_w_count_match_1_of_1(void);
-void SystemOnAdd_add_match_1_of_1(void);
-void SystemOnAdd_add_match_1_of_2(void);
-void SystemOnAdd_add_no_match_1(void);
-void SystemOnAdd_set_match_1_of_1(void);
-void SystemOnAdd_set_no_match_1(void);
-void SystemOnAdd_clone_match_1_of_1(void);
-void SystemOnAdd_clone_match_1_of_2(void);
-void SystemOnAdd_add_again_1(void);
-void SystemOnAdd_set_again_1(void);
-void SystemOnAdd_add_again_2(void);
-void SystemOnAdd_override_after_add_in_on_add(void);
-void SystemOnAdd_add_again_in_progress(void);
-void SystemOnAdd_add_in_progress_before_system_def(void);
-void SystemOnAdd_2_systems_w_table_creation(void);
-void SystemOnAdd_2_systems_w_table_creation_in_progress(void);
-void SystemOnAdd_sys_context(void);
-void SystemOnAdd_get_sys_context_from_param(void);
+// Testsuite 'TriggerOnAdd'
+void TriggerOnAdd_new_match_1_of_1(void);
+void TriggerOnAdd_new_match_1_of_2(void);
+void TriggerOnAdd_new_no_match_1(void);
+void TriggerOnAdd_new_w_count_match_1_of_1(void);
+void TriggerOnAdd_add_match_1_of_1(void);
+void TriggerOnAdd_add_match_1_of_2(void);
+void TriggerOnAdd_add_no_match_1(void);
+void TriggerOnAdd_set_match_1_of_1(void);
+void TriggerOnAdd_set_no_match_1(void);
+void TriggerOnAdd_clone_match_1_of_1(void);
+void TriggerOnAdd_clone_match_1_of_2(void);
+void TriggerOnAdd_add_again_1(void);
+void TriggerOnAdd_set_again_1(void);
+void TriggerOnAdd_add_again_2(void);
+void TriggerOnAdd_override_after_add_in_on_add(void);
+void TriggerOnAdd_add_again_in_progress(void);
+void TriggerOnAdd_add_in_progress_before_system_def(void);
+void TriggerOnAdd_2_systems_w_table_creation(void);
+void TriggerOnAdd_2_systems_w_table_creation_in_progress(void);
+void TriggerOnAdd_sys_context(void);
+void TriggerOnAdd_get_sys_context_from_param(void);
 
-// Testsuite 'SystemOnRemove'
-void SystemOnRemove_remove_match_1_of_1(void);
-void SystemOnRemove_remove_match_1_of_2(void);
-void SystemOnRemove_remove_no_match_1(void);
-void SystemOnRemove_delete_match_1_of_1(void);
-void SystemOnRemove_delete_match_1_of_2(void);
-void SystemOnRemove_delete_no_match_1(void);
-void SystemOnRemove_remove_watched(void);
-void SystemOnRemove_delete_watched(void);
+// Testsuite 'TriggerOnRemove'
+void TriggerOnRemove_remove_match_1_of_1(void);
+void TriggerOnRemove_remove_match_1_of_2(void);
+void TriggerOnRemove_remove_no_match_1(void);
+void TriggerOnRemove_delete_match_1_of_1(void);
+void TriggerOnRemove_delete_match_1_of_2(void);
+void TriggerOnRemove_delete_no_match_1(void);
+void TriggerOnRemove_remove_watched(void);
+void TriggerOnRemove_delete_watched(void);
 
-// Testsuite 'SystemOnSet'
-void SystemOnSet_set(void);
-void SystemOnSet_set_new(void);
-void SystemOnSet_set_again(void);
-void SystemOnSet_clone(void);
-void SystemOnSet_clone_w_value(void);
-void SystemOnSet_set_and_add_system(void);
-void SystemOnSet_on_set_after_override(void);
-void SystemOnSet_on_set_after_override_w_new(void);
-void SystemOnSet_on_set_after_override_w_new_w_count(void);
-void SystemOnSet_on_set_after_override_1_of_2_overridden(void);
+// Testsuite 'TriggerOnSet'
+void TriggerOnSet_set(void);
+void TriggerOnSet_set_new(void);
+void TriggerOnSet_set_again(void);
+void TriggerOnSet_clone(void);
+void TriggerOnSet_clone_w_value(void);
+void TriggerOnSet_set_and_add_system(void);
+void TriggerOnSet_on_set_after_override(void);
+void TriggerOnSet_on_set_after_override_w_new(void);
+void TriggerOnSet_on_set_after_override_w_new_w_count(void);
+void TriggerOnSet_on_set_after_override_1_of_2_overridden(void);
+void TriggerOnSet_on_set_after_snapshot_restore(void);
 
-// Testsuite 'SystemOnFrame'
-void SystemOnFrame_1_type_1_component(void);
-void SystemOnFrame_1_type_3_component(void);
-void SystemOnFrame_3_type_1_component(void);
-void SystemOnFrame_2_type_3_component(void);
-void SystemOnFrame_1_type_1_component_1_tag(void);
-void SystemOnFrame_2_type_1_component_1_tag(void);
-void SystemOnFrame_2_type_1_and_1_not(void);
-void SystemOnFrame_2_type_2_and_1_not(void);
-void SystemOnFrame_2_type_2_and_2_not(void);
-void SystemOnFrame_4_type_1_and_1_or(void);
-void SystemOnFrame_4_type_1_and_1_or_of_3(void);
-void SystemOnFrame_1_type_1_and_1_or(void);
-void SystemOnFrame_2_type_1_and_1_optional(void);
-void SystemOnFrame_2_type_2_and_1_optional(void);
-void SystemOnFrame_6_type_1_and_2_optional(void);
-void SystemOnFrame_ensure_optional_is_unset_column(void);
-void SystemOnFrame_ensure_optional_is_null_shared(void);
-void SystemOnFrame_ensure_optional_is_null_field_owned(void);
-void SystemOnFrame_ensure_optional_is_null_field_shared(void);
-void SystemOnFrame_use_fields_2_owned(void);
-void SystemOnFrame_use_fields_1_owned_1_shared(void);
-void SystemOnFrame_match_2_systems_w_populated_table(void);
-void SystemOnFrame_on_period(void);
-void SystemOnFrame_on_period_long_delta(void);
-void SystemOnFrame_disabled(void);
-void SystemOnFrame_disabled_feature(void);
-void SystemOnFrame_disabled_nested_feature(void);
-void SystemOnFrame_two_refs(void);
-void SystemOnFrame_filter_disabled(void);
-void SystemOnFrame_match_disabled(void);
-void SystemOnFrame_match_disabled_and_enabled(void);
-void SystemOnFrame_match_prefab(void);
-void SystemOnFrame_match_prefab_and_normal(void);
-void SystemOnFrame_is_shared_on_column_not_set(void);
-void SystemOnFrame_owned_column(void);
-void SystemOnFrame_owned_not_column(void);
-void SystemOnFrame_shared_column(void);
-void SystemOnFrame_shared_not_column(void);
-void SystemOnFrame_container_dont_match_inheritance(void);
-void SystemOnFrame_cascade_dont_match_inheritance(void);
-void SystemOnFrame_not_from_singleton(void);
-void SystemOnFrame_not_from_entity(void);
-void SystemOnFrame_sys_context(void);
-void SystemOnFrame_get_sys_context_from_param(void);
-void SystemOnFrame_use_field_w_0_size(void);
-void SystemOnFrame_owned_only(void);
-void SystemOnFrame_shared_only(void);
-void SystemOnFrame_is_in_readonly(void);
-void SystemOnFrame_get_period(void);
+// Testsuite 'SystemPeriodic'
+void SystemPeriodic_1_type_1_component(void);
+void SystemPeriodic_1_type_3_component(void);
+void SystemPeriodic_3_type_1_component(void);
+void SystemPeriodic_2_type_3_component(void);
+void SystemPeriodic_1_type_1_component_1_tag(void);
+void SystemPeriodic_2_type_1_component_1_tag(void);
+void SystemPeriodic_2_type_1_and_1_not(void);
+void SystemPeriodic_2_type_2_and_1_not(void);
+void SystemPeriodic_2_type_2_and_2_not(void);
+void SystemPeriodic_4_type_1_and_1_or(void);
+void SystemPeriodic_4_type_1_and_1_or_of_3(void);
+void SystemPeriodic_1_type_1_and_1_or(void);
+void SystemPeriodic_2_type_1_and_1_optional(void);
+void SystemPeriodic_2_type_2_and_1_optional(void);
+void SystemPeriodic_6_type_1_and_2_optional(void);
+void SystemPeriodic_ensure_optional_is_unset_column(void);
+void SystemPeriodic_ensure_optional_is_null_shared(void);
+void SystemPeriodic_ensure_optional_is_null_field_owned(void);
+void SystemPeriodic_ensure_optional_is_null_field_shared(void);
+void SystemPeriodic_use_fields_2_owned(void);
+void SystemPeriodic_use_fields_1_owned_1_shared(void);
+void SystemPeriodic_match_2_systems_w_populated_table(void);
+void SystemPeriodic_on_period(void);
+void SystemPeriodic_on_period_long_delta(void);
+void SystemPeriodic_disabled(void);
+void SystemPeriodic_disabled_feature(void);
+void SystemPeriodic_disabled_nested_feature(void);
+void SystemPeriodic_two_refs(void);
+void SystemPeriodic_filter_disabled(void);
+void SystemPeriodic_match_disabled(void);
+void SystemPeriodic_match_disabled_and_enabled(void);
+void SystemPeriodic_match_prefab(void);
+void SystemPeriodic_match_prefab_and_normal(void);
+void SystemPeriodic_is_shared_on_column_not_set(void);
+void SystemPeriodic_owned_column(void);
+void SystemPeriodic_owned_not_column(void);
+void SystemPeriodic_shared_column(void);
+void SystemPeriodic_shared_not_column(void);
+void SystemPeriodic_container_dont_match_inheritance(void);
+void SystemPeriodic_cascade_dont_match_inheritance(void);
+void SystemPeriodic_not_from_singleton(void);
+void SystemPeriodic_not_from_entity(void);
+void SystemPeriodic_sys_context(void);
+void SystemPeriodic_get_sys_context_from_param(void);
+void SystemPeriodic_use_field_w_0_size(void);
+void SystemPeriodic_owned_only(void);
+void SystemPeriodic_shared_only(void);
+void SystemPeriodic_is_in_readonly(void);
+void SystemPeriodic_get_period(void);
 
 // Testsuite 'Timer'
 void Timer_timeout(void);
@@ -462,8 +520,8 @@ void Prefab_on_set_on_instance(void);
 void Prefab_instantiate_in_progress(void);
 void Prefab_copy_from_prefab_in_progress(void);
 void Prefab_copy_from_prefab_first_instance_in_progress(void);
-void Prefab_cached_ptr_after_realloc(void);
-void Prefab_revalidate_cached_ptr_w_mixed_table_refs(void);
+void Prefab_ref_after_realloc(void);
+void Prefab_revalidate_ref_w_mixed_table_refs(void);
 void Prefab_no_overwrite_on_2nd_add(void);
 void Prefab_no_overwrite_on_2nd_add_in_progress(void);
 void Prefab_no_instantiate_on_2nd_add(void);
@@ -1139,72 +1197,146 @@ static bake_test_suite suites[] = {
         }
     },
     {
-        .id = "Add_remove_w_filter",
-        .testcase_count = 16,
+        .id = "Hierarchies",
+        .testcase_count = 1,
         .testcases = (bake_test_case[]){
             {
-                .id = "remove_1_no_filter",
-                .function = Add_remove_w_filter_remove_1_no_filter
+                .id = "delete_children",
+                .function = Hierarchies_delete_children
+            }
+        }
+    },
+    {
+        .id = "Add_bulk",
+        .testcase_count = 13,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "add_comp_from_comp_to_empty",
+                .function = Add_bulk_add_comp_from_comp_to_empty
             },
             {
-                .id = "remove_2_no_filter",
-                .function = Add_remove_w_filter_remove_2_no_filter
+                .id = "add_comp_from_comp_to_existing",
+                .function = Add_bulk_add_comp_from_comp_to_existing
             },
             {
-                .id = "remove_1_to_empty_no_filter",
-                .function = Add_remove_w_filter_remove_1_to_empty_no_filter
+                .id = "add_comp_from_tag_to_empty",
+                .function = Add_bulk_add_comp_from_tag_to_empty
             },
             {
-                .id = "remove_2_to_empty_no_filter",
-                .function = Add_remove_w_filter_remove_2_to_empty_no_filter
+                .id = "add_comp_from_tag_to_existing",
+                .function = Add_bulk_add_comp_from_tag_to_existing
             },
             {
-                .id = "remove_1_all_no_filter",
-                .function = Add_remove_w_filter_remove_1_all_no_filter
+                .id = "add_tag_from_tag_to_empty",
+                .function = Add_bulk_add_tag_from_tag_to_empty
             },
             {
-                .id = "remove_2_all_no_filter",
-                .function = Add_remove_w_filter_remove_2_all_no_filter
+                .id = "add_tag_from_tag_to_existing",
+                .function = Add_bulk_add_tag_from_tag_to_existing
             },
             {
-                .id = "remove_1_exclude_1",
-                .function = Add_remove_w_filter_remove_1_exclude_1
+                .id = "add_comp_to_more_existing",
+                .function = Add_bulk_add_comp_to_more_existing
             },
             {
-                .id = "remove_1_exclude_2",
-                .function = Add_remove_w_filter_remove_1_exclude_2
+                .id = "add_comp_to_fewer_existing",
+                .function = Add_bulk_add_comp_to_fewer_existing
             },
             {
-                .id = "remove_1_include_1",
-                .function = Add_remove_w_filter_remove_1_include_1
+                .id = "on_add",
+                .function = Add_bulk_on_add
             },
             {
-                .id = "remove_1_include_2",
-                .function = Add_remove_w_filter_remove_1_include_2
+                .id = "add_entity_comp",
+                .function = Add_bulk_add_entity_comp
             },
             {
-                .id = "add_1",
-                .function = Add_remove_w_filter_add_1
+                .id = "add_entity_tag",
+                .function = Add_bulk_add_entity_tag
             },
             {
-                .id = "add_2",
-                .function = Add_remove_w_filter_add_2
+                .id = "add_entity_on_add",
+                .function = Add_bulk_add_entity_on_add
             },
             {
-                .id = "add_existing",
-                .function = Add_remove_w_filter_add_existing
+                .id = "add_entity_existing",
+                .function = Add_bulk_add_entity_existing
+            }
+        }
+    },
+    {
+        .id = "Remove_bulk",
+        .testcase_count = 12,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "remove_comp_from_comp_to_empty",
+                .function = Remove_bulk_remove_comp_from_comp_to_empty
             },
             {
-                .id = "remove_existing",
-                .function = Add_remove_w_filter_remove_existing
+                .id = "remove_comp_from_comp_to_existing",
+                .function = Remove_bulk_remove_comp_from_comp_to_existing
             },
             {
-                .id = "remove_existing_no_filter",
-                .function = Add_remove_w_filter_remove_existing_no_filter
+                .id = "remove_comp_from_tag_to_empty",
+                .function = Remove_bulk_remove_comp_from_tag_to_empty
             },
             {
-                .id = "add_remove_nothing",
-                .function = Add_remove_w_filter_add_remove_nothing
+                .id = "remove_comp_from_tag_to_existing",
+                .function = Remove_bulk_remove_comp_from_tag_to_existing
+            },
+            {
+                .id = "remove_tag_from_tag_to_empty",
+                .function = Remove_bulk_remove_tag_from_tag_to_empty
+            },
+            {
+                .id = "remove_tag_from_tag_to_existing",
+                .function = Remove_bulk_remove_tag_from_tag_to_existing
+            },
+            {
+                .id = "remove_all_comp",
+                .function = Remove_bulk_remove_all_comp
+            },
+            {
+                .id = "remove_all_tag",
+                .function = Remove_bulk_remove_all_tag
+            },
+            {
+                .id = "on_remove",
+                .function = Remove_bulk_on_remove
+            },
+            {
+                .id = "remove_entity_comp",
+                .function = Remove_bulk_remove_entity_comp
+            },
+            {
+                .id = "remove_entity_tag",
+                .function = Remove_bulk_remove_entity_tag
+            },
+            {
+                .id = "remove_entity_on_remove",
+                .function = Remove_bulk_remove_entity_on_remove
+            }
+        }
+    },
+    {
+        .id = "Add_remove_bulk",
+        .testcase_count = 4,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "add_remove_add_only",
+                .function = Add_remove_bulk_add_remove_add_only
+            },
+            {
+                .id = "add_remove_remove_only",
+                .function = Add_remove_bulk_add_remove_remove_only
+            },
+            {
+                .id = "add_remove_both",
+                .function = Add_remove_bulk_add_remove_both
+            },
+            {
+                .id = "add_remove_same",
+                .function = Add_remove_bulk_add_remove_same
             }
         }
     },
@@ -1667,8 +1799,148 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "ComponentLifecycle",
+        .testcase_count = 19,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "ctor_on_add",
+                .function = ComponentLifecycle_ctor_on_add
+            },
+            {
+                .id = "ctor_on_new",
+                .function = ComponentLifecycle_ctor_on_new
+            },
+            {
+                .id = "dtor_on_remove",
+                .function = ComponentLifecycle_dtor_on_remove
+            },
+            {
+                .id = "dtor_on_delete",
+                .function = ComponentLifecycle_dtor_on_delete
+            },
+            {
+                .id = "copy_on_set",
+                .function = ComponentLifecycle_copy_on_set
+            },
+            {
+                .id = "copy_on_override",
+                .function = ComponentLifecycle_copy_on_override
+            },
+            {
+                .id = "copy_on_new_w_data",
+                .function = ComponentLifecycle_copy_on_new_w_data
+            },
+            {
+                .id = "copy_on_clone",
+                .function = ComponentLifecycle_copy_on_clone
+            },
+            {
+                .id = "copy_on_stage",
+                .function = ComponentLifecycle_copy_on_stage
+            },
+            {
+                .id = "no_copy_on_move",
+                .function = ComponentLifecycle_no_copy_on_move
+            },
+            {
+                .id = "move_on_merge",
+                .function = ComponentLifecycle_move_on_merge
+            },
+            {
+                .id = "ctor_on_bulk_add",
+                .function = ComponentLifecycle_ctor_on_bulk_add
+            },
+            {
+                .id = "dtor_on_bulk_remove",
+                .function = ComponentLifecycle_dtor_on_bulk_remove
+            },
+            {
+                .id = "ctor_on_bulk_add_entity",
+                .function = ComponentLifecycle_ctor_on_bulk_add_entity
+            },
+            {
+                .id = "dtor_on_bulk_remove_entity",
+                .function = ComponentLifecycle_dtor_on_bulk_remove_entity
+            },
+            {
+                .id = "ctor_dtor_on_bulk_add_remove",
+                .function = ComponentLifecycle_ctor_dtor_on_bulk_add_remove
+            },
+            {
+                .id = "ctor_copy_on_snapshot",
+                .function = ComponentLifecycle_ctor_copy_on_snapshot
+            },
+            {
+                .id = "copy_on_snapshot",
+                .function = ComponentLifecycle_copy_on_snapshot
+            },
+            {
+                .id = "dtor_on_restore",
+                .function = ComponentLifecycle_dtor_on_restore
+            }
+        }
+    },
+    {
+        .id = "Pipeline",
+        .testcase_count = 13,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "system_order_same_phase",
+                .function = Pipeline_system_order_same_phase
+            },
+            {
+                .id = "system_order_same_phase_after_disable",
+                .function = Pipeline_system_order_same_phase_after_disable
+            },
+            {
+                .id = "system_order_same_phase_after_activate",
+                .function = Pipeline_system_order_same_phase_after_activate
+            },
+            {
+                .id = "system_order_different_phase",
+                .function = Pipeline_system_order_different_phase
+            },
+            {
+                .id = "system_order_different_phase_after_disable",
+                .function = Pipeline_system_order_different_phase_after_disable
+            },
+            {
+                .id = "system_order_different_phase_after_activate",
+                .function = Pipeline_system_order_different_phase_after_activate
+            },
+            {
+                .id = "system_order_after_new_system_lower_id",
+                .function = Pipeline_system_order_after_new_system_lower_id
+            },
+            {
+                .id = "system_order_after_new_system_inbetween_id",
+                .function = Pipeline_system_order_after_new_system_inbetween_id
+            },
+            {
+                .id = "system_order_after_new_system_higher_id",
+                .function = Pipeline_system_order_after_new_system_higher_id
+            },
+            {
+                .id = "merge_after_staged_out",
+                .function = Pipeline_merge_after_staged_out
+            },
+            {
+                .id = "merge_after_not_out",
+                .function = Pipeline_merge_after_not_out
+            },
+            {
+                .id = "no_merge_after_main_out",
+                .function = Pipeline_no_merge_after_main_out
+            },
+            {
+                .id = "no_merge_after_staged_in_out",
+                .function = Pipeline_no_merge_after_staged_in_out
+            }
+        }
+    },
+    {
         .id = "SystemMisc",
-        .testcase_count = 45,
+        .testcase_count = 46,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -1849,382 +2121,390 @@ static bake_test_suite suites[] = {
             {
                 .id = "match_system_w_filter",
                 .function = SystemMisc_match_system_w_filter
+            },
+            {
+                .id = "system_initial_state",
+                .function = SystemMisc_system_initial_state
             }
         }
     },
     {
-        .id = "SystemOnAdd",
+        .id = "TriggerOnAdd",
         .testcase_count = 21,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
-                .function = SystemOnAdd_new_match_1_of_1
+                .function = TriggerOnAdd_new_match_1_of_1
             },
             {
                 .id = "new_match_1_of_2",
-                .function = SystemOnAdd_new_match_1_of_2
+                .function = TriggerOnAdd_new_match_1_of_2
             },
             {
                 .id = "new_no_match_1",
-                .function = SystemOnAdd_new_no_match_1
+                .function = TriggerOnAdd_new_no_match_1
             },
             {
                 .id = "new_w_count_match_1_of_1",
-                .function = SystemOnAdd_new_w_count_match_1_of_1
+                .function = TriggerOnAdd_new_w_count_match_1_of_1
             },
             {
                 .id = "add_match_1_of_1",
-                .function = SystemOnAdd_add_match_1_of_1
+                .function = TriggerOnAdd_add_match_1_of_1
             },
             {
                 .id = "add_match_1_of_2",
-                .function = SystemOnAdd_add_match_1_of_2
+                .function = TriggerOnAdd_add_match_1_of_2
             },
             {
                 .id = "add_no_match_1",
-                .function = SystemOnAdd_add_no_match_1
+                .function = TriggerOnAdd_add_no_match_1
             },
             {
                 .id = "set_match_1_of_1",
-                .function = SystemOnAdd_set_match_1_of_1
+                .function = TriggerOnAdd_set_match_1_of_1
             },
             {
                 .id = "set_no_match_1",
-                .function = SystemOnAdd_set_no_match_1
+                .function = TriggerOnAdd_set_no_match_1
             },
             {
                 .id = "clone_match_1_of_1",
-                .function = SystemOnAdd_clone_match_1_of_1
+                .function = TriggerOnAdd_clone_match_1_of_1
             },
             {
                 .id = "clone_match_1_of_2",
-                .function = SystemOnAdd_clone_match_1_of_2
+                .function = TriggerOnAdd_clone_match_1_of_2
             },
             {
                 .id = "add_again_1",
-                .function = SystemOnAdd_add_again_1
+                .function = TriggerOnAdd_add_again_1
             },
             {
                 .id = "set_again_1",
-                .function = SystemOnAdd_set_again_1
+                .function = TriggerOnAdd_set_again_1
             },
             {
                 .id = "add_again_2",
-                .function = SystemOnAdd_add_again_2
+                .function = TriggerOnAdd_add_again_2
             },
             {
                 .id = "override_after_add_in_on_add",
-                .function = SystemOnAdd_override_after_add_in_on_add
+                .function = TriggerOnAdd_override_after_add_in_on_add
             },
             {
                 .id = "add_again_in_progress",
-                .function = SystemOnAdd_add_again_in_progress
+                .function = TriggerOnAdd_add_again_in_progress
             },
             {
                 .id = "add_in_progress_before_system_def",
-                .function = SystemOnAdd_add_in_progress_before_system_def
+                .function = TriggerOnAdd_add_in_progress_before_system_def
             },
             {
                 .id = "2_systems_w_table_creation",
-                .function = SystemOnAdd_2_systems_w_table_creation
+                .function = TriggerOnAdd_2_systems_w_table_creation
             },
             {
                 .id = "2_systems_w_table_creation_in_progress",
-                .function = SystemOnAdd_2_systems_w_table_creation_in_progress
+                .function = TriggerOnAdd_2_systems_w_table_creation_in_progress
             },
             {
                 .id = "sys_context",
-                .function = SystemOnAdd_sys_context
+                .function = TriggerOnAdd_sys_context
             },
             {
                 .id = "get_sys_context_from_param",
-                .function = SystemOnAdd_get_sys_context_from_param
+                .function = TriggerOnAdd_get_sys_context_from_param
             }
         }
     },
     {
-        .id = "SystemOnRemove",
+        .id = "TriggerOnRemove",
         .testcase_count = 8,
         .testcases = (bake_test_case[]){
             {
                 .id = "remove_match_1_of_1",
-                .function = SystemOnRemove_remove_match_1_of_1
+                .function = TriggerOnRemove_remove_match_1_of_1
             },
             {
                 .id = "remove_match_1_of_2",
-                .function = SystemOnRemove_remove_match_1_of_2
+                .function = TriggerOnRemove_remove_match_1_of_2
             },
             {
                 .id = "remove_no_match_1",
-                .function = SystemOnRemove_remove_no_match_1
+                .function = TriggerOnRemove_remove_no_match_1
             },
             {
                 .id = "delete_match_1_of_1",
-                .function = SystemOnRemove_delete_match_1_of_1
+                .function = TriggerOnRemove_delete_match_1_of_1
             },
             {
                 .id = "delete_match_1_of_2",
-                .function = SystemOnRemove_delete_match_1_of_2
+                .function = TriggerOnRemove_delete_match_1_of_2
             },
             {
                 .id = "delete_no_match_1",
-                .function = SystemOnRemove_delete_no_match_1
+                .function = TriggerOnRemove_delete_no_match_1
             },
             {
                 .id = "remove_watched",
-                .function = SystemOnRemove_remove_watched
+                .function = TriggerOnRemove_remove_watched
             },
             {
                 .id = "delete_watched",
-                .function = SystemOnRemove_delete_watched
+                .function = TriggerOnRemove_delete_watched
             }
         }
     },
     {
-        .id = "SystemOnSet",
-        .testcase_count = 10,
+        .id = "TriggerOnSet",
+        .testcase_count = 11,
         .testcases = (bake_test_case[]){
             {
                 .id = "set",
-                .function = SystemOnSet_set
+                .function = TriggerOnSet_set
             },
             {
                 .id = "set_new",
-                .function = SystemOnSet_set_new
+                .function = TriggerOnSet_set_new
             },
             {
                 .id = "set_again",
-                .function = SystemOnSet_set_again
+                .function = TriggerOnSet_set_again
             },
             {
                 .id = "clone",
-                .function = SystemOnSet_clone
+                .function = TriggerOnSet_clone
             },
             {
                 .id = "clone_w_value",
-                .function = SystemOnSet_clone_w_value
+                .function = TriggerOnSet_clone_w_value
             },
             {
                 .id = "set_and_add_system",
-                .function = SystemOnSet_set_and_add_system
+                .function = TriggerOnSet_set_and_add_system
             },
             {
                 .id = "on_set_after_override",
-                .function = SystemOnSet_on_set_after_override
+                .function = TriggerOnSet_on_set_after_override
             },
             {
                 .id = "on_set_after_override_w_new",
-                .function = SystemOnSet_on_set_after_override_w_new
+                .function = TriggerOnSet_on_set_after_override_w_new
             },
             {
                 .id = "on_set_after_override_w_new_w_count",
-                .function = SystemOnSet_on_set_after_override_w_new_w_count
+                .function = TriggerOnSet_on_set_after_override_w_new_w_count
             },
             {
                 .id = "on_set_after_override_1_of_2_overridden",
-                .function = SystemOnSet_on_set_after_override_1_of_2_overridden
+                .function = TriggerOnSet_on_set_after_override_1_of_2_overridden
+            },
+            {
+                .id = "on_set_after_snapshot_restore",
+                .function = TriggerOnSet_on_set_after_snapshot_restore
             }
         }
     },
     {
-        .id = "SystemOnFrame",
+        .id = "SystemPeriodic",
         .testcase_count = 49,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
-                .function = SystemOnFrame_1_type_1_component
+                .function = SystemPeriodic_1_type_1_component
             },
             {
                 .id = "1_type_3_component",
-                .function = SystemOnFrame_1_type_3_component
+                .function = SystemPeriodic_1_type_3_component
             },
             {
                 .id = "3_type_1_component",
-                .function = SystemOnFrame_3_type_1_component
+                .function = SystemPeriodic_3_type_1_component
             },
             {
                 .id = "2_type_3_component",
-                .function = SystemOnFrame_2_type_3_component
+                .function = SystemPeriodic_2_type_3_component
             },
             {
                 .id = "1_type_1_component_1_tag",
-                .function = SystemOnFrame_1_type_1_component_1_tag
+                .function = SystemPeriodic_1_type_1_component_1_tag
             },
             {
                 .id = "2_type_1_component_1_tag",
-                .function = SystemOnFrame_2_type_1_component_1_tag
+                .function = SystemPeriodic_2_type_1_component_1_tag
             },
             {
                 .id = "2_type_1_and_1_not",
-                .function = SystemOnFrame_2_type_1_and_1_not
+                .function = SystemPeriodic_2_type_1_and_1_not
             },
             {
                 .id = "2_type_2_and_1_not",
-                .function = SystemOnFrame_2_type_2_and_1_not
+                .function = SystemPeriodic_2_type_2_and_1_not
             },
             {
                 .id = "2_type_2_and_2_not",
-                .function = SystemOnFrame_2_type_2_and_2_not
+                .function = SystemPeriodic_2_type_2_and_2_not
             },
             {
                 .id = "4_type_1_and_1_or",
-                .function = SystemOnFrame_4_type_1_and_1_or
+                .function = SystemPeriodic_4_type_1_and_1_or
             },
             {
                 .id = "4_type_1_and_1_or_of_3",
-                .function = SystemOnFrame_4_type_1_and_1_or_of_3
+                .function = SystemPeriodic_4_type_1_and_1_or_of_3
             },
             {
                 .id = "1_type_1_and_1_or",
-                .function = SystemOnFrame_1_type_1_and_1_or
+                .function = SystemPeriodic_1_type_1_and_1_or
             },
             {
                 .id = "2_type_1_and_1_optional",
-                .function = SystemOnFrame_2_type_1_and_1_optional
+                .function = SystemPeriodic_2_type_1_and_1_optional
             },
             {
                 .id = "2_type_2_and_1_optional",
-                .function = SystemOnFrame_2_type_2_and_1_optional
+                .function = SystemPeriodic_2_type_2_and_1_optional
             },
             {
                 .id = "6_type_1_and_2_optional",
-                .function = SystemOnFrame_6_type_1_and_2_optional
+                .function = SystemPeriodic_6_type_1_and_2_optional
             },
             {
                 .id = "ensure_optional_is_unset_column",
-                .function = SystemOnFrame_ensure_optional_is_unset_column
+                .function = SystemPeriodic_ensure_optional_is_unset_column
             },
             {
                 .id = "ensure_optional_is_null_shared",
-                .function = SystemOnFrame_ensure_optional_is_null_shared
+                .function = SystemPeriodic_ensure_optional_is_null_shared
             },
             {
                 .id = "ensure_optional_is_null_field_owned",
-                .function = SystemOnFrame_ensure_optional_is_null_field_owned
+                .function = SystemPeriodic_ensure_optional_is_null_field_owned
             },
             {
                 .id = "ensure_optional_is_null_field_shared",
-                .function = SystemOnFrame_ensure_optional_is_null_field_shared
+                .function = SystemPeriodic_ensure_optional_is_null_field_shared
             },
             {
                 .id = "use_fields_2_owned",
-                .function = SystemOnFrame_use_fields_2_owned
+                .function = SystemPeriodic_use_fields_2_owned
             },
             {
                 .id = "use_fields_1_owned_1_shared",
-                .function = SystemOnFrame_use_fields_1_owned_1_shared
+                .function = SystemPeriodic_use_fields_1_owned_1_shared
             },
             {
                 .id = "match_2_systems_w_populated_table",
-                .function = SystemOnFrame_match_2_systems_w_populated_table
+                .function = SystemPeriodic_match_2_systems_w_populated_table
             },
             {
                 .id = "on_period",
-                .function = SystemOnFrame_on_period
+                .function = SystemPeriodic_on_period
             },
             {
                 .id = "on_period_long_delta",
-                .function = SystemOnFrame_on_period_long_delta
+                .function = SystemPeriodic_on_period_long_delta
             },
             {
                 .id = "disabled",
-                .function = SystemOnFrame_disabled
+                .function = SystemPeriodic_disabled
             },
             {
                 .id = "disabled_feature",
-                .function = SystemOnFrame_disabled_feature
+                .function = SystemPeriodic_disabled_feature
             },
             {
                 .id = "disabled_nested_feature",
-                .function = SystemOnFrame_disabled_nested_feature
+                .function = SystemPeriodic_disabled_nested_feature
             },
             {
                 .id = "two_refs",
-                .function = SystemOnFrame_two_refs
+                .function = SystemPeriodic_two_refs
             },
             {
                 .id = "filter_disabled",
-                .function = SystemOnFrame_filter_disabled
+                .function = SystemPeriodic_filter_disabled
             },
             {
                 .id = "match_disabled",
-                .function = SystemOnFrame_match_disabled
+                .function = SystemPeriodic_match_disabled
             },
             {
                 .id = "match_disabled_and_enabled",
-                .function = SystemOnFrame_match_disabled_and_enabled
+                .function = SystemPeriodic_match_disabled_and_enabled
             },
             {
                 .id = "match_prefab",
-                .function = SystemOnFrame_match_prefab
+                .function = SystemPeriodic_match_prefab
             },
             {
                 .id = "match_prefab_and_normal",
-                .function = SystemOnFrame_match_prefab_and_normal
+                .function = SystemPeriodic_match_prefab_and_normal
             },
             {
                 .id = "is_shared_on_column_not_set",
-                .function = SystemOnFrame_is_shared_on_column_not_set
+                .function = SystemPeriodic_is_shared_on_column_not_set
             },
             {
                 .id = "owned_column",
-                .function = SystemOnFrame_owned_column
+                .function = SystemPeriodic_owned_column
             },
             {
                 .id = "owned_not_column",
-                .function = SystemOnFrame_owned_not_column
+                .function = SystemPeriodic_owned_not_column
             },
             {
                 .id = "shared_column",
-                .function = SystemOnFrame_shared_column
+                .function = SystemPeriodic_shared_column
             },
             {
                 .id = "shared_not_column",
-                .function = SystemOnFrame_shared_not_column
+                .function = SystemPeriodic_shared_not_column
             },
             {
                 .id = "container_dont_match_inheritance",
-                .function = SystemOnFrame_container_dont_match_inheritance
+                .function = SystemPeriodic_container_dont_match_inheritance
             },
             {
                 .id = "cascade_dont_match_inheritance",
-                .function = SystemOnFrame_cascade_dont_match_inheritance
+                .function = SystemPeriodic_cascade_dont_match_inheritance
             },
             {
                 .id = "not_from_singleton",
-                .function = SystemOnFrame_not_from_singleton
+                .function = SystemPeriodic_not_from_singleton
             },
             {
                 .id = "not_from_entity",
-                .function = SystemOnFrame_not_from_entity
+                .function = SystemPeriodic_not_from_entity
             },
             {
                 .id = "sys_context",
-                .function = SystemOnFrame_sys_context
+                .function = SystemPeriodic_sys_context
             },
             {
                 .id = "get_sys_context_from_param",
-                .function = SystemOnFrame_get_sys_context_from_param
+                .function = SystemPeriodic_get_sys_context_from_param
             },
             {
                 .id = "use_field_w_0_size",
-                .function = SystemOnFrame_use_field_w_0_size
+                .function = SystemPeriodic_use_field_w_0_size
             },
             {
                 .id = "owned_only",
-                .function = SystemOnFrame_owned_only
+                .function = SystemPeriodic_owned_only
             },
             {
                 .id = "shared_only",
-                .function = SystemOnFrame_shared_only
+                .function = SystemPeriodic_shared_only
             },
             {
                 .id = "is_in_readonly",
-                .function = SystemOnFrame_is_in_readonly
+                .function = SystemPeriodic_is_in_readonly
             },
             {
                 .id = "get_period",
-                .function = SystemOnFrame_get_period
+                .function = SystemPeriodic_get_period
             }
         }
     },
@@ -2607,12 +2887,12 @@ static bake_test_suite suites[] = {
                 .function = Prefab_copy_from_prefab_first_instance_in_progress
             },
             {
-                .id = "cached_ptr_after_realloc",
-                .function = Prefab_cached_ptr_after_realloc
+                .id = "ref_after_realloc",
+                .function = Prefab_ref_after_realloc
             },
             {
-                .id = "revalidate_cached_ptr_w_mixed_table_refs",
-                .function = Prefab_revalidate_cached_ptr_w_mixed_table_refs
+                .id = "revalidate_ref_w_mixed_table_refs",
+                .function = Prefab_revalidate_ref_w_mixed_table_refs
             },
             {
                 .id = "no_overwrite_on_2nd_add",
@@ -4071,5 +4351,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 42);
+    return bake_test_run("api", argc, argv, suites, 47);
 }

@@ -86,6 +86,9 @@ void ecs_progress_pipeline(
     ecs_entity_t pipeline,
     float delta_time);
 
+void ecs_eval_component_monitors(
+    ecs_world_t *world);
+
 void ecs_component_monitor_mark(
     ecs_component_monitor_t *mon,
     int32_t component);
@@ -161,6 +164,16 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_entity_t component,
     ecs_entity_t previous);
 
+void ecs_run_init_actions(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    uint32_t row,
+    uint32_t count,
+    ecs_entities_t components,
+    ecs_comp_mask_t set_mask);
+
 void ecs_run_deinit_actions(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -170,6 +183,16 @@ void ecs_run_deinit_actions(
     uint32_t count,
     ecs_entities_t components,
     bool run_triggers);
+
+void ecs_run_component_trigger(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_vector_t *trigger_vec,
+    ecs_entity_t component,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table API

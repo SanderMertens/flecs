@@ -187,8 +187,8 @@ void System_w_FromSystem_auto_add_tag() {
     ECS_SYSTEM(world, Dummy_1, EcsOnUpdate, Position, SYSTEM.EcsHidden);
     ECS_SYSTEM(world, Dummy_2, 0, Position, SYSTEM.EcsHidden);
 
-    test_assert( ecs_has(world, Dummy_1, EcsHidden));
-    test_assert( ecs_has(world, Dummy_2, EcsHidden));
+    test_assert( ecs_has_entity(world, Dummy_1, EcsHidden));
+    test_assert( ecs_has_entity(world, Dummy_2, EcsHidden));
 
     ecs_fini(world);
 }

@@ -130,14 +130,14 @@ void order_ranked_tables(
     ecs_query_t *query)
 {
     if (query->rank_table) {
-        ecs_vector_sort(query->tables, ecs_matched_table_t, table_compare);
+        ecs_vector_sort(query->tables, ecs_matched_table_t, table_compare);       
     }
 
     if (query->is_monitor) {
         ecs_vector_each(query->tables, ecs_matched_table_t, table, {
             ecs_table_register_monitor(
                 world, table->table, query->system, table_i);
-        })
+        });
     }
 
     query->match_count ++; 
@@ -382,12 +382,12 @@ void add_table(
                 
                 ref->entity = e;
                 ref->component = component;
-                ref->cached_ptr = (ecs_cached_ptr_t){0};
+                ref->ref = (ecs_ref_t){0};
                 
                 if (component_data->size && from != EcsFromEmpty) {
                     if (e) {
-                        ecs_get_cached_ptr_w_entity(
-                            world, &ref->cached_ptr, e, component);
+                        ecs_get_ref_w_entity(
+                            world, &ref->ref, e, component);
                         ecs_set_watch(world, &world->stage, e);                     
                     }
 
@@ -467,7 +467,7 @@ bool match_table(
 
     /* Don't match disabled entities */
     if (!query->match_disabled && ecs_type_has_owned_entity(
-        world, table_type, EEcsDisabled, true))
+        world, table_type, EcsDisabled, true))
     {
         failure_info->reason = EcsMatchEntityIsDisabled;
         return false;
@@ -475,7 +475,7 @@ bool match_table(
 
     /* Don't match prefab entities */
     if (!query->match_prefab && ecs_type_has_owned_entity(
-        world, table_type, EEcsPrefab, true))
+        world, table_type, EcsPrefab, true))
     {
         failure_info->reason = EcsMatchEntityIsPrefab;
         return false;
@@ -628,8 +628,8 @@ void resolve_cascade_container(
     /* If container was found, update the reference */
     if (container) {
         references[ref_index].entity = container;
-        ecs_get_cached_ptr_w_entity(
-            world, &references[ref_index].cached_ptr, container, 
+        ecs_get_ref_w_entity(
+            world, &references[ref_index].ref, container, 
             ref->component);
     } else {
         references[ref_index].entity = 0;
@@ -850,9 +850,11 @@ void build_sorted_tables(
     int32_t start = 0, rank = 0;
     for (i = 0; i < count; i ++) {
         table = &tables[i];
-        if (rank != table->rank && start != i) {
-            build_sorted_table_range(world, query, start, i);
-            start = i;
+        if (rank != table->rank) {
+            if (start != i) {
+                build_sorted_table_range(world, query, start, i);
+                start = i;
+            }
             rank = table->rank;
         }
     }
@@ -860,9 +862,6 @@ void build_sorted_tables(
     if (start != i) {
         build_sorted_table_range(world, query, start, i);
     }
-
-    query->match_count ++;
-    query->prev_table_count = count;
 }
 
 static
@@ -870,11 +869,12 @@ void sort_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    ecs_entity_t sort_on_component = query->sort_on_component;
     ecs_compare_action_t compare = query->compare;
     if (!compare) {
         return;
     }
+    
+    ecs_entity_t sort_on_component = query->sort_on_component;
 
     /* Iterate over active tables. Don't bother with inactive tables, since
      * they're empty */
@@ -925,8 +925,9 @@ void sort_tables(
         }
     }
 
-    if (tables_sorted || !count || query->prev_table_count != count) {
+    if (tables_sorted || query->match_count != query->prev_match_count) {
         build_sorted_tables(world, query);
+        query->prev_match_count = query->match_count;
     }
 }
 
@@ -1026,12 +1027,12 @@ void process_signature(
                  * signal that disabled entities should be matched. By default,
                  * disabled entities are not matched. */
                 if (ecs_type_has_owned_entity(
-                    world, column->is.type, ecs_entity(EcsDisabled), true))
+                    world, column->is.type, EcsDisabled, true))
                 {
                     query->match_disabled = true;
                 }         
             } else if (op == EcsOperAnd || op == EcsOperOptional) {
-                if (column->is.component == ecs_entity(EcsDisabled)) {
+                if (column->is.component == EcsDisabled) {
                     query->match_disabled = true;
                 }
             }
@@ -1043,12 +1044,12 @@ void process_signature(
                 * signal that disabled entities should be matched. By default,
                 * prefab entities are not matched. */
                 if (ecs_type_has_owned_entity(
-                    world, column->is.type, ecs_entity(EcsPrefab), true))
+                    world, column->is.type, EcsPrefab, true))
                 {
                     query->match_prefab = true;
                 }            
             } else if (op == EcsOperAnd || op == EcsOperOptional) {
-                if (column->is.component == ecs_entity(EcsPrefab)) {
+                if (column->is.component == EcsPrefab) {
                     query->match_prefab = true;
                 }
             }
@@ -1192,9 +1193,9 @@ void ecs_query_rematch(
      * already dis/enabled this operation has no side effects. */
     if (query->system) {
         if (ecs_sig_check_constraints(world, &query->sig)) {
-            ecs_remove(world, query->system, EcsDisabledIntern);
+            ecs_remove_entity(world, query->system, EcsDisabledIntern);
         } else {
-            ecs_add(world, query->system, EcsDisabledIntern);
+            ecs_add_entity(world, query->system, EcsDisabledIntern);
         }
     }
 }
@@ -1204,6 +1205,7 @@ void ecs_query_set_monitor(
     ecs_query_t *query,
     bool is_monitor)
 {
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!is_monitor || query->system != 0, ECS_INTERNAL_ERROR, NULL);
 
     query->is_monitor = is_monitor;
@@ -1231,7 +1233,7 @@ ecs_query_t* ecs_query_new_w_sig(
     result->inactive_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = system;
     result->match_count = 0;
-    result->prev_table_count = 0;
+    result->prev_match_count = -1;
 
     process_signature(world, result);
 

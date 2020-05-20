@@ -245,15 +245,16 @@ void World_entity_range_add_out_of_range_in_progress() {
 void World_get_tick() {
     ecs_world_t *world = ecs_init();
 
-    test_int(ecs_get_tick(world), 0);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+    test_int(stats->frame_count_total, 0);
 
     ecs_progress(world, 1);
 
-    test_int(ecs_get_tick(world), 1);
+    test_int(stats->frame_count_total, 1);
 
     ecs_progress(world, 1);
 
-    test_int(ecs_get_tick(world), 2);
+    test_int(stats->frame_count_total, 2);
 
     ecs_fini(world);
 }
@@ -498,7 +499,6 @@ void World_phases_match_in_create() {
 static
 void TMergeOnLoad(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -510,7 +510,6 @@ void TMergeOnLoad(ecs_rows_t *rows) {
 static
 void TMergePostLoad(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -522,7 +521,6 @@ void TMergePostLoad(ecs_rows_t *rows) {
 static
 void TMergePreUpdate(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -534,7 +532,6 @@ void TMergePreUpdate(ecs_rows_t *rows) {
 static
 void TMergeOnUpdate(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -546,7 +543,6 @@ void TMergeOnUpdate(ecs_rows_t *rows) {
 static
 void TMergeOnValidate(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -558,7 +554,6 @@ void TMergeOnValidate(ecs_rows_t *rows) {
 static
 void TMergePostUpdate(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -570,7 +565,6 @@ void TMergePostUpdate(ecs_rows_t *rows) {
 static
 void TMergePreStore(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -582,7 +576,6 @@ void TMergePreStore(ecs_rows_t *rows) {
 static
 void TMergeOnStore(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -594,7 +587,6 @@ void TMergeOnStore(ecs_rows_t *rows) {
 static
 void TMergeManual(ecs_rows_t *rows) {
     ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
@@ -671,15 +663,17 @@ void World_control_fps() {
     double start, now = 0;
     ecs_set_target_fps(world, 60);
 
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
     /* Run for one second */
     int count = 0;
     do {    
         ecs_progress(world, 0);
         if (!count) {
-            start = ecs_get_delta_time(world);
+            start = stats->delta_time;
         }
 
-        now += ecs_get_delta_time(world);
+        now += stats->delta_time;
         count ++;
     } while ((now - start) < 1.0);
 
@@ -713,15 +707,17 @@ void World_control_fps_busy_system() {
     double start, now = 0;
     ecs_set_target_fps(world, 60);
 
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
     /* Run for one second */
     int count = 0;
     do {    
         ecs_progress(world, 0);
         if (!count) {
-            start = ecs_get_delta_time(world);
+            start = stats->delta_time;
         }
 
-        now += ecs_get_delta_time(world);
+        now += stats->delta_time;
         count ++;
     } while ((now - start) < 1.0);
 
@@ -739,15 +735,17 @@ void World_control_fps_busy_app() {
     double start, now = 0;
     ecs_set_target_fps(world, 60);
 
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
     /* Run for one second */
     int count = 0;
     do {    
         ecs_progress(world, 0);
         if (!count) {
-            start = ecs_get_delta_time(world);
+            start = stats->delta_time;
         }
 
-        now += ecs_get_delta_time(world);
+        now += stats->delta_time;
         count ++;
 
         busy_wait(0.014);
@@ -776,15 +774,17 @@ void World_control_fps_random_system() {
     double start, now = 0;
     ecs_set_target_fps(world, 60);
 
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
     /* Run for one second */
     int count = 0;
     do {    
         ecs_progress(world, 0);
         if (!count) {
-            start = ecs_get_delta_time(world);
+            start = stats->delta_time;
         }
 
-        now += ecs_get_delta_time(world);
+        now += stats->delta_time;
         count ++;
     } while ((now - start) < 1.0);
 
@@ -802,15 +802,17 @@ void World_control_fps_random_app() {
     double start, now = 0;
     ecs_set_target_fps(world, 60);
 
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
     /* Run for one second */
     int count = 0;
     do {    
         ecs_progress(world, 0);
         if (!count) {
-            start = ecs_get_delta_time(world);
+            start = stats->delta_time;
         }
 
-        now += ecs_get_delta_time(world);
+        now += stats->delta_time;
         count ++;
 
         float rnd_time = ((float)rand() / (float)RAND_MAX) * 0.016;
@@ -950,11 +952,13 @@ void World_quit() {
 void World_get_delta_time() {
     ecs_world_t *world = ecs_init();
 
-    test_int(ecs_get_delta_time(world), 0);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    test_int(stats->delta_time, 0);
 
     ecs_progress(world, 1.0);
 
-    test_flt(ecs_get_delta_time(world), 1.0);
+    test_flt(stats->delta_time, 1.0);
 
     ecs_fini(world);
 }
@@ -962,11 +966,13 @@ void World_get_delta_time() {
 void World_get_delta_time_auto() {
     ecs_world_t *world = ecs_init();
 
-    test_int(ecs_get_delta_time(world), 0);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    test_int(stats->delta_time, 0);
 
     ecs_progress(world, 0);
 
-    test_assert(ecs_get_delta_time(world) != 0);
+    test_assert(stats->delta_time != 0);
 
     ecs_fini(world);
 }
@@ -1004,7 +1010,9 @@ void World_init_w_args_set_fps() {
 
     test_assert(world != NULL);
 
-    test_int(ecs_get_target_fps(world), 60);
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    test_int(stats->target_fps, 60);
 
     ecs_fini(world);
 }
