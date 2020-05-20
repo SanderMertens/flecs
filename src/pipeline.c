@@ -111,7 +111,8 @@ void build_pipeline(
             }
 
             bool needs_merge = false;
-            bool is_active = !ecs_has(world, rows->entities[i], EcsInactive);
+            bool is_active = !ecs_has_entity(
+                world, rows->entities[i], EcsInactive);
 
             ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
                 needs_merge |= check_column(column, is_active, write_state);
@@ -301,8 +302,8 @@ void EcsOnAddPipeline(
          * the regular query matching */
         ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ecs_entity(EcsColSystem), 0);
         ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, ecs_entity(EcsInactive), 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, ecs_entity(EcsDisabledIntern), 0);
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsInactive, 0);
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
 
         /* Create the query. Sort the query by system id and phase */
         ecs_query_t *query = ecs_query_new_w_sig(world, 0, &sig);
@@ -315,7 +316,7 @@ void EcsOnAddPipeline(
          * operations need to be put in place. */
         ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ecs_entity(EcsColSystem), 0);
         ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, ecs_entity(EcsDisabledIntern), 0);
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
 
         /* Use the same sorting functions for the build query */
         ecs_query_t *build_query = ecs_query_new_w_sig(world, 0, &sig);

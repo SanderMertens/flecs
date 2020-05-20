@@ -54,9 +54,9 @@ void activate_in_columns(
                     /* If this is the first out column that is requested from
                      * the OnDemand system, enable it */
                     if (activate && out[s]->count == 1) {
-                        ecs_remove(world, out[s]->system, EcsDisabledIntern);
+                        ecs_remove_entity(world, out[s]->system, EcsDisabledIntern);
                     } else if (!activate && !out[s]->count) {
-                        ecs_add(world, out[s]->system, EcsDisabledIntern);             
+                        ecs_add_entity(world, out[s]->system, EcsDisabledIntern);             
                     }
                 }
             }
@@ -134,7 +134,7 @@ void ecs_system_activate(
     ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
 
     if (activate) {
-        ecs_remove(world, system, EcsInactive);
+        ecs_remove_entity(world, system, EcsInactive);
     }
 
     const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
@@ -209,7 +209,7 @@ void ecs_init_system(
     ecs_trace_push();
 
     /* All systems start out inactive */
-    ecs_add(world, system, EcsInactive);
+    ecs_add_entity(world, system, EcsInactive);
 
     /* Create the query for the system */
     ecs_query_t *query = ecs_query_new_w_sig(world, system, &sig);
@@ -243,7 +243,7 @@ void ecs_init_system(
     /* Check if all non-table column constraints are met. If not, disable
      * system (system will be enabled once constraints are met) */
     if (!ecs_sig_check_constraints(world, &query->sig)) {
-        ecs_add(world, system, EcsDisabledIntern);
+        ecs_add_entity(world, system, EcsDisabledIntern);
     }
 
     /* If system has FromSystem columns, add components to the system entity */
@@ -254,7 +254,7 @@ void ecs_init_system(
     });
 
     /* If the query has a OnDemand system tag, register its [out] columns */
-    if (ecs_has(world, system, EcsOnDemand)) {
+    if (ecs_has_entity(world, system, EcsOnDemand)) {
         sptr = ecs_get_mut(world, system, EcsColSystem, NULL);
 
         register_out_columns(world, system, sptr);
@@ -263,11 +263,11 @@ void ecs_init_system(
         /* If there are no systems currently interested in any of the [out]
          * columns of the on demand system, disable it */
         if (!sptr->on_demand->count) {
-            ecs_add(world, system, EcsDisabledIntern);
+            ecs_add_entity(world, system, EcsDisabledIntern);
         }        
     }
 
-    if (ecs_has(world, system, EcsMonitor)) {
+    if (ecs_has_entity(world, system, EcsMonitor)) {
         ecs_query_set_monitor(world, query, true);
     }
 
@@ -312,9 +312,9 @@ void ecs_enable(
         });
     } else {
         if (enabled) {
-            ecs_remove(world, entity, EcsDisabled);
+            ecs_remove_entity(world, entity, EcsDisabled);
         } else {
-            ecs_add(world, entity, EcsDisabled);
+            ecs_add_entity(world, entity, EcsDisabled);
         }
     }
 }
@@ -331,7 +331,7 @@ void ecs_set_system_status_action(
     system_data->status_action = action;
     system_data->status_ctx = (void*)ctx;
 
-    if (!ecs_has(world, system, EcsDisabled)) {
+    if (!ecs_has_entity(world, system, EcsDisabled)) {
         /* If system is already enabled, generate enable status. The API 
          * should guarantee that it exactly matches enable-disable 
          * notifications and activate-deactivate notifications. */
@@ -502,7 +502,7 @@ bool ecs_is_enabled(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    return !ecs_has(world, system, EcsDisabled);
+    return !ecs_has_entity(world, system, EcsDisabled);
 }
 
 void ecs_set_system_context(

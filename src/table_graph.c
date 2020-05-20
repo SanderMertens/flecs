@@ -73,12 +73,12 @@ void init_edges(
             table->flags |= EcsTableHasBuiltins;
         }
 
-        if (e == ecs_entity(EcsPrefab)) {
+        if (e == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
             table->flags |= EcsTableIsDisabled;
         }
 
-        if (e == ecs_entity(EcsDisabled)) {
+        if (e == EcsDisabled) {
             table->flags |= EcsTableIsDisabled;
         }
 

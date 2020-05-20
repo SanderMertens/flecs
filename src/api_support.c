@@ -185,11 +185,11 @@ ecs_entity_t ecs_new_prefab(
 
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
-        result = ecs_new_w_entity(world, ecs_entity(EcsPrefab));
+        result = ecs_new_w_entity(world, EcsPrefab);
         ecs_add_type(world, result, type.normalized);
         ecs_set(world, result, EcsName, {name});
     } else {
-        if (!ecs_has(world, result, EcsPrefab)) {
+        if (!ecs_has_entity(world, result, EcsPrefab)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
     }

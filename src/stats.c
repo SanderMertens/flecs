@@ -333,9 +333,9 @@ void StatsCollectSystemStats(ecs_rows_t *rows) {
         stats[i].period_seconds = ecs_get_interval(rows->world, system[i].tick_source);
         stats[i].seconds_total = system[i].time_spent;
         stats[i].invoke_count_total = system[i].invoke_count;
-        stats[i].is_enabled = !ecs_has(rows->world, entity, EcsDisabled);
+        stats[i].is_enabled = !ecs_has_entity(rows->world, entity, EcsDisabled);
         stats[i].is_active = ecs_vector_count(system[i].query->tables) != 0;
-        stats[i].is_hidden = ecs_has(rows->world, entity, EcsHidden);
+        stats[i].is_hidden = ecs_has_entity(rows->world, entity, EcsHidden);
     }
 }
 
@@ -549,7 +549,7 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
         stats[i].entity = rows->entities[i];
         stats[i].type = type_component[i].type;
         stats[i].normalized_type = type_component[i].normalized;
-        stats[i].is_hidden = ecs_has(world, rows->entities[i], EcsHidden);
+        stats[i].is_hidden = ecs_has_entity(world, rows->entities[i], EcsHidden);
         stats[i].entities_count = 0;
         stats[i].entities_childof_count = 0;
         stats[i].entities_instanceof_count = 0;

@@ -36,8 +36,8 @@ void ecs_colsystem_dtor(
         }
 
         /* Invoke Disabled action for enabled systems */
-        if (!ecs_has_entity(world, e, ecs_entity(EcsDisabled)) && 
-            !ecs_has_entity(world, e, ecs_entity(EcsDisabledIntern))) 
+        if (!ecs_has_entity(world, e, EcsDisabled) && 
+            !ecs_has_entity(world, e, EcsDisabledIntern)) 
         {
             ecs_invoke_status_action(world, e, ptr, EcsSystemDisabled);
         }           

@@ -900,9 +900,9 @@ void SystemMisc_system_initial_state() {
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, SysA, 0, Position);
 
-    test_assert( ecs_has(world, SysA, EcsInactive));
-    test_assert( !ecs_has(world, SysA, EcsDisabled));
-    test_assert( !ecs_has(world, SysA, EcsDisabledIntern));
+    test_assert( ecs_has_entity(world, SysA, EcsInactive));
+    test_assert( !ecs_has_entity(world, SysA, EcsDisabled));
+    test_assert( !ecs_has_entity(world, SysA, EcsDisabledIntern));
 
     ecs_fini(world);
 }

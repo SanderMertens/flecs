@@ -467,7 +467,7 @@ bool match_table(
 
     /* Don't match disabled entities */
     if (!query->match_disabled && ecs_type_has_owned_entity(
-        world, table_type, ecs_entity(EcsDisabled), true))
+        world, table_type, EcsDisabled, true))
     {
         failure_info->reason = EcsMatchEntityIsDisabled;
         return false;
@@ -475,7 +475,7 @@ bool match_table(
 
     /* Don't match prefab entities */
     if (!query->match_prefab && ecs_type_has_owned_entity(
-        world, table_type, ecs_entity(EcsPrefab), true))
+        world, table_type, EcsPrefab, true))
     {
         failure_info->reason = EcsMatchEntityIsPrefab;
         return false;
@@ -1027,12 +1027,12 @@ void process_signature(
                  * signal that disabled entities should be matched. By default,
                  * disabled entities are not matched. */
                 if (ecs_type_has_owned_entity(
-                    world, column->is.type, ecs_entity(EcsDisabled), true))
+                    world, column->is.type, EcsDisabled, true))
                 {
                     query->match_disabled = true;
                 }         
             } else if (op == EcsOperAnd || op == EcsOperOptional) {
-                if (column->is.component == ecs_entity(EcsDisabled)) {
+                if (column->is.component == EcsDisabled) {
                     query->match_disabled = true;
                 }
             }
@@ -1044,12 +1044,12 @@ void process_signature(
                 * signal that disabled entities should be matched. By default,
                 * prefab entities are not matched. */
                 if (ecs_type_has_owned_entity(
-                    world, column->is.type, ecs_entity(EcsPrefab), true))
+                    world, column->is.type, EcsPrefab, true))
                 {
                     query->match_prefab = true;
                 }            
             } else if (op == EcsOperAnd || op == EcsOperOptional) {
-                if (column->is.component == ecs_entity(EcsPrefab)) {
+                if (column->is.component == EcsPrefab) {
                     query->match_prefab = true;
                 }
             }
@@ -1193,9 +1193,9 @@ void ecs_query_rematch(
      * already dis/enabled this operation has no side effects. */
     if (query->system) {
         if (ecs_sig_check_constraints(world, &query->sig)) {
-            ecs_remove(world, query->system, EcsDisabledIntern);
+            ecs_remove_entity(world, query->system, EcsDisabledIntern);
         } else {
-            ecs_add(world, query->system, EcsDisabledIntern);
+            ecs_add_entity(world, query->system, EcsDisabledIntern);
         }
     }
 }

@@ -1543,7 +1543,7 @@ void SystemPeriodic_match_disabled() {
     test_int(ctx.column_count, 2);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(EcsDisabled));
+    test_int(ctx.c[0][1], EcsDisabled);
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -1571,7 +1571,7 @@ void SystemPeriodic_match_disabled_and_enabled() {
     test_int(ctx.column_count, 2);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(EcsDisabled));
+    test_int(ctx.c[0][1], EcsDisabled);
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -1598,7 +1598,7 @@ void SystemPeriodic_match_prefab() {
     test_int(ctx.column_count, 2);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(EcsPrefab));
+    test_int(ctx.c[0][1], EcsPrefab);
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -1626,7 +1626,7 @@ void SystemPeriodic_match_prefab_and_normal() {
     test_int(ctx.column_count, 2);
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_entity(EcsPrefab));
+    test_int(ctx.c[0][1], EcsPrefab);
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);

@@ -55,9 +55,9 @@ void Pipeline_system_order_same_phase_after_disable() {
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
     ecs_enable(world, SysB, false);
-    test_assert( ecs_has(world, SysB, EcsDisabled));
+    test_assert( ecs_has_entity(world, SysB, EcsDisabled));
     ecs_enable(world, SysB, true);
-    test_assert( !ecs_has(world, SysB, EcsDisabled));
+    test_assert( !ecs_has_entity(world, SysB, EcsDisabled));
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -118,9 +118,9 @@ void Pipeline_system_order_different_phase_after_disable() {
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_enable(world, SysB, false);
-    test_assert( ecs_has(world, SysB, EcsDisabled));
+    test_assert( ecs_has_entity(world, SysB, EcsDisabled));
     ecs_enable(world, SysB, true);
-    test_assert( !ecs_has(world, SysB, EcsDisabled));
+    test_assert( !ecs_has_entity(world, SysB, EcsDisabled));
 
     ecs_progress(world, 1);
 
@@ -152,9 +152,9 @@ void Pipeline_system_order_same_phase_after_activate() {
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
     
-    test_assert( ecs_has(world, SysB, EcsInactive));
+    test_assert( ecs_has_entity(world, SysB, EcsInactive));
     ecs_add(world, E, Velocity);
-    test_assert( !ecs_has(world, SysB, EcsInactive));
+    test_assert( !ecs_has_entity(world, SysB, EcsInactive));
 
     ecs_progress(world, 1);
 
@@ -186,9 +186,9 @@ void Pipeline_system_order_different_phase_after_activate() {
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
     
-    test_assert( ecs_has(world, SysB, EcsInactive));
+    test_assert( ecs_has_entity(world, SysB, EcsInactive));
     ecs_add(world, E, Velocity);
-    test_assert( !ecs_has(world, SysB, EcsInactive));
+    test_assert( !ecs_has_entity(world, SysB, EcsInactive));
 
     ecs_progress(world, 1);
 

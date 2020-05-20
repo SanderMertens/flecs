@@ -470,7 +470,7 @@ void instantiate_children(
         ecs_entity_t c = type_array[i];
         
         /* Make sure instances don't have EcsPrefab */
-        if (c == ecs_entity(EcsPrefab)) {
+        if (c == EcsPrefab) {
             continue;
         }
 
@@ -1778,7 +1778,7 @@ const void* ecs_get_ptr_w_entity(
 
         ptr = get_component(&info, component);
         if (!ptr) {
-            if (component != ecs_entity(EcsName) && component != ecs_entity(EcsPrefab)) {
+            if (component != ecs_entity(EcsName) && component != EcsPrefab) {
                 ptr = get_base_component(
                     world, stage, entity, &info, 0, component);
             }
