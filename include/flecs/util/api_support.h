@@ -244,6 +244,7 @@ typedef struct ecs_sig_t {
     ecs_vector_t *columns;      /* Columns that contain parsed data */
 } ecs_sig_t;
 
+FLECS_EXPORT
 int ecs_sig_add(
     ecs_sig_t *sig,
     ecs_sig_from_kind_t from_kind,
