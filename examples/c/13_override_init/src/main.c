@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
      * being matched with systems. This is a common approach to creating
      * entities that are only used as templates for other entities, or in this
      * case, for providing initial component values. */
-    ecs_entity_t base = ecs_new(world, EcsDisabled);
+    ecs_entity_t base = ecs_new_w_entity(world, EcsDisabled);
     ecs_set(world, base, Mass, {10});
 
     /* Create instances which share the Mass component from a base */

@@ -354,8 +354,7 @@ void _ecs_parser_error(
 
 /** Utility macro for setting a system in a module function */
 #define ECS_SET_ENTITY(entity)\
-    if (handles) handles->entity = entity;\
-    if (handles) handles->ecs_type(entity) = ecs_type(entity)
+    if (handles) handles->entity = entity;
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))

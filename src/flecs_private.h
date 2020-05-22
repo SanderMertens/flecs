@@ -149,11 +149,6 @@ ecs_type_t ecs_type_add_intern(
     ecs_type_t type,
     ecs_entity_t component);
 
-/* Get index for entity in type */
-int16_t ecs_type_index_of(
-    ecs_type_t type,
-    ecs_entity_t component);
-
 /* Get number of containers (parents) for a type */
 int32_t ecs_type_container_depth(
    ecs_world_t *world,

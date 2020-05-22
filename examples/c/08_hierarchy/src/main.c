@@ -35,9 +35,9 @@ void Move(ecs_rows_t *rows) {
  * just assign the Position to the WorldPosition. */
 void Transform(ecs_rows_t *rows) {
     /* Get the two columns from the system signature */
-    ECS_COLUMN(rows, WorldPosition, parent_wp, 1);
-    ECS_COLUMN(rows, WorldPosition, wp, 2);
-    ECS_COLUMN(rows, Position, p, 3);
+    WorldPosition *parent_wp = ecs_column(rows, WorldPosition, 1);
+    WorldPosition *wp = ecs_column(rows, WorldPosition, 2);
+    Position *p = ecs_column(rows, Position, 3);
 
     if (!parent_wp) {
         for (int i = 0; i < rows->count; i ++) {
