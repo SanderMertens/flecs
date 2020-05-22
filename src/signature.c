@@ -484,11 +484,7 @@ bool ecs_sig_check_constraints(
     ecs_world_t *world,
     ecs_sig_t *sig)
 {
-    int32_t i, column_count = ecs_vector_count(sig->columns);
-    ecs_sig_column_t *buffer = ecs_vector_first(sig->columns);
-
-    for (i = 0; i < column_count; i ++) {
-        ecs_sig_column_t *elem = &buffer[i];
+    ecs_vector_each(sig->columns, ecs_sig_column_t, elem, {
         ecs_sig_from_kind_t from_kind = elem->from_kind;
         ecs_sig_oper_kind_t oper_kind = elem->oper_kind;
 
@@ -504,7 +500,7 @@ bool ecs_sig_check_constraints(
                 }
             }
         }
-    }
+    });
 
     return true;
 }

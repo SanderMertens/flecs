@@ -23,8 +23,9 @@ void ecs_dbg_table(
     dbg_out->systems_matched = table->queries;
 
     /* Determine components from parent/base entities */
-    ecs_entity_t *entities = ecs_vector_first(table->type);
+    ecs_entity_t *entities = ecs_vector_first(table->type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(table->type);
+
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
@@ -81,7 +82,7 @@ void ecs_dbg_table(
 
     ecs_data_t *data = ecs_table_get_data(world, table);
     if (data) {
-        dbg_out->entities = ecs_vector_first(data->entities);
+        dbg_out->entities = ecs_vector_first(data->entities, ecs_entity_t);
         dbg_out->entities_count = ecs_vector_count(data->entities);
     }
 }
@@ -127,15 +128,12 @@ int ecs_dbg_col_system(
     dbg_out->inactive_table_count = ecs_vector_count(system_data->query->inactive_tables);
     dbg_out->enabled = !ecs_has_entity(world, system, EcsDisabled);
 
-    ecs_matched_table_t *mt = ecs_vector_first(system_data->query->tables);
-    int32_t i, count = ecs_vector_count(system_data->query->tables);
-
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = mt[i].table;
+    ecs_vector_each(system_data->query->tables, ecs_matched_table_t, mt, {
+        ecs_table_t *table = mt->table;
         if (table) {
             dbg_out->entities_matched_count += ecs_table_count(table);
-        }
-    }
+        }        
+    });
 
     /* Inactive tables are inactive because they are empty, so no need to 
      * iterate them */
@@ -187,7 +185,8 @@ ecs_type_t ecs_dbg_get_column_type(
         return NULL;
     }
     
-    ecs_sig_column_t *columns = ecs_vector_first(system_data->query->sig.columns);
+    ecs_sig_column_t *columns = ecs_vector_first(
+        system_data->query->sig.columns, ecs_sig_column_t);
     int32_t count = ecs_vector_count(system_data->query->sig.columns);
 
     if (count < column_index) {

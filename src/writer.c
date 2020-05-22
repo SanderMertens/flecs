@@ -58,12 +58,10 @@ void ecs_table_writer_register_table(
     ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, writer->table);
     if (data->entities) {
         /* Remove any existing entities from entity index */
-        ecs_vector_t *entity_vector = data->entities;
-        ecs_entity_t *entities = ecs_vector_first(entity_vector);
-        int32_t i, count = ecs_vector_count(entity_vector);
-        for (i = 0; i < count; i ++) {
-            ecs_eis_delete(&world->stage, entities[i]);
-        }        
+        ecs_vector_each(data->entities, ecs_entity_t, e_ptr, {
+            ecs_eis_delete(&world->stage, *e_ptr);
+        });
+      
         return;
     } else {
         /* Set size of table to 0. This will initialize columns */
@@ -83,7 +81,7 @@ void ecs_table_writer_finalize_table(
     /* Register entities in table in entity index */
     ecs_data_t *data = ecs_table_get_data(world, writer->table);
     ecs_vector_t *entity_vector = data->entities;
-    ecs_entity_t *entities = ecs_vector_first(entity_vector);
+    ecs_entity_t *entities = ecs_vector_first(entity_vector, ecs_entity_t);
     int32_t i, count = ecs_vector_count(entity_vector);
 
     for (i = 0; i < count; i ++) {
@@ -130,7 +128,8 @@ void ecs_table_writer_prepare_column(
         ecs_column_t *column = &data->columns[writer->column_index - 1];
 
         if (size) {
-            _ecs_vector_set_count(&column->data, size, writer->row_count);
+            /* TODO */
+            _ecs_vector_set_count(&column->data, ECS_VECTOR_U(size, 0), writer->row_count);
         }
 
         writer->column_vector = column->data;
@@ -143,7 +142,10 @@ void ecs_table_writer_prepare_column(
         writer->column_size = sizeof(ecs_entity_t);      
     }
 
-    writer->column_data = ecs_vector_first(writer->column_vector);
+    writer->column_data = ecs_vector_first_t(writer->column_vector,
+        writer->column_size, 
+        writer->column_alignment);
+        
     writer->column_written = 0;
 }
 

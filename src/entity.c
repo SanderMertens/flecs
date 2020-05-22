@@ -52,7 +52,7 @@ void* get_component_w_index(
     ecs_assert(!size || data_vec != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (size) {
-        void *data = ecs_vector_first(data_vec);
+        void *data = ecs_vector_first_t(data_vec, size, column->alignment);
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
         return ECS_OFFSET(data, info->row * size);
     }
@@ -78,14 +78,11 @@ void* get_component(
         ecs_vector_count(type) < ECS_MAX_ENTITIES_IN_TYPE, 
             ECS_TYPE_TOO_LARGE, NULL);
 
-    ecs_entity_t *array = ecs_vector_first(type);
-    int32_t i, count = ecs_vector_count(type);
-
-    for (i = 0; i < count; i ++) {
-        if (array[i] == component) {
-            return get_component_w_index(info, i);
+    ecs_vector_each(type, ecs_entity_t, c_ptr, {
+        if (*c_ptr == component) {
+            return get_component_w_index(info, c_ptr_i);
         }
-    }
+    });
     
     return NULL;
 }
@@ -193,7 +190,7 @@ bool get_staged_info(
     ecs_assert(data->record_ptrs != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_vector_count(data->entities) > row, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_vector_count(data->record_ptrs) > row, ECS_INTERNAL_ERROR, NULL);
-    ecs_record_t**record_ptrs = ecs_vector_first(data->record_ptrs);
+    ecs_record_t**record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
 
     info->record = record_ptrs[row];
 
@@ -233,7 +230,7 @@ void run_component_trigger_for_entities(
 {
     int32_t i, trigger_count = ecs_vector_count(trigger_vec);
     if (trigger_count) {
-        EcsTrigger *triggers = ecs_vector_first(trigger_vec);
+        EcsTrigger *triggers = ecs_vector_first(trigger_vec, EcsTrigger);
         int32_t index = ecs_type_index_of(table->type, component);
         ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
         index ++;
@@ -277,7 +274,7 @@ void ecs_run_component_trigger(
         return;
     }
 
-    ecs_entity_t *entities = ecs_vector_first(data->entities);        
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
     ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
     ecs_assert((row + count) <= ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
@@ -295,7 +292,7 @@ int32_t find_prefab(
     int32_t n)
 {
     int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *buffer = ecs_vector_first(type);
+    ecs_entity_t *buffer = ecs_vector_first(type, ecs_entity_t);
 
     for (i = n + 1; i < count; i ++) {
         ecs_entity_t e = buffer[i];
@@ -366,7 +363,7 @@ void override(
                 ecs_component_data_t *cdata = ecs_get_component_data(world, c);
 
                 uint32_t data_size = column->size;
-                void *data_array = ecs_vector_first(column->data);
+                void *data_array = ecs_vector_first_t(column->data, column->size, column->alignment);
                 void *data_ptr = ECS_OFFSET(data_array, data_size * row);
                 void *base_ptr = get_component_w_index(&base_info, c_ptr_i);
                 uint32_t index;
@@ -374,7 +371,7 @@ void override(
                 ecs_copy_t copy = cdata->lifecycle.copy;
                 if (copy) {
                     void *ctx = cdata->lifecycle.ctx;
-                    ecs_entity_t *entities = ecs_vector_first(data->entities);
+                    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
                     for (index = 0; index < count; index ++) {
                         copy(world, c, &base, &entities[row], 
                             data_ptr, base_ptr, data_size, 1, ctx);
@@ -404,7 +401,7 @@ void override(
         /* If component wasn't overridden we still need to run OnSet triggers,
          * but now using the base component ptr */
         if (base_added && i == components.count && !(table->flags & EcsTableIsDisabled)) {
-            ecs_entity_t *entities = ecs_vector_first(data->entities);
+            ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
             ecs_component_data_t *cdata = ecs_get_component_data(
                 world, c);
 
@@ -447,7 +444,7 @@ void instantiate_children(
     ecs_type_t type = child_table->type;
     ecs_data_t *child_data = ecs_table_get_data(world, child_table);
     int32_t type_count = ecs_vector_count(type);
-    ecs_entity_t *type_array = ecs_vector_first(type);
+    ecs_entity_t *type_array = ecs_vector_first(type, ecs_entity_t);
 
     /* Instantiate child table for each instance */
 
@@ -483,7 +480,8 @@ void instantiate_children(
 
         /* Store pointer to component array. We'll use this component array to
         * create our new entities in bulk with new_w_data */
-        component_data[pos] = ecs_vector_first(child_data->columns[i].data);
+        ecs_column_t *column = &child_data->columns[i];
+        component_data[pos] = ecs_vector_first_t(column->data, column->size, column->alignment);
 
         components.array[pos] = c;
         pos ++;
@@ -492,7 +490,7 @@ void instantiate_children(
     components.count = pos;
 
     /* Instantiate the prefab child table for each new instance */
-    ecs_entity_t *entities = ecs_vector_first(data->entities);
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
     int32_t child_count = ecs_vector_count(child_data->entities);
 
     for (i = row; i < count + row; i ++) {
@@ -512,7 +510,7 @@ void instantiate_children(
 
         /* If prefab child table has children itself, recursively instantiate */
         ecs_data_t *i_data = ecs_table_get_staged_data(world, stage, table);
-        ecs_entity_t *children = ecs_vector_first(child_data->entities);
+        ecs_entity_t *children = ecs_vector_first(child_data->entities, ecs_entity_t);
 
         int j;
         for (j = 0; j < child_count; j ++) {
@@ -562,7 +560,8 @@ void ecs_run_init_actions(
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Array that contains component callbacks & systems */
-    ecs_component_data_t* cdata_array = ecs_vector_first(world->component_data);
+    ecs_component_data_t* cdata_array = ecs_vector_first(
+            world->component_data, ecs_component_data_t);
     ecs_column_t *component_columns = data->columns;
     bool has_base = table->flags & EcsTableHasPrefab;
     ecs_type_t type;
@@ -577,7 +576,7 @@ void ecs_run_init_actions(
     if (components.count) {
         type = table->type;
         type_count = ecs_vector_count(type);
-        type_array = ecs_vector_first(type);
+        type_array = ecs_vector_first(type, ecs_entity_t);
     }
 
     int i, cur;
@@ -616,13 +615,13 @@ void ecs_run_init_actions(
         /* Get column and pointer to data */
         ecs_column_t *column = &component_columns[cur];
         int32_t size = column->size;
-        void *array = ecs_vector_first(column->data);
+        void *array = ecs_vector_first_t(column->data, size, column->alignment);
         void *ptr = ECS_OFFSET(array, size * row);
 
         if (ctor) {
             ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
-            ctor(world, component, ecs_vector_first(data->entities), ptr, size, 
-                count, ctx);
+            ecs_entity_t *ids = ecs_vector_first(data->entities, ecs_entity_t);
+            ctor(world, component, ids, ptr, size, count, ctx);
         }
 
         if (triggers) {
@@ -682,7 +681,7 @@ void ecs_run_deinit_actions(
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Array that contains component callbacks & systems */
-    ecs_component_data_t* cdata_array = ecs_vector_first(world->component_data);
+    ecs_component_data_t* cdata_array = ecs_vector_first(world->component_data, ecs_component_data_t);
     ecs_column_t *component_columns = data->columns;
     ecs_type_t type;
     uint32_t type_count;
@@ -691,7 +690,7 @@ void ecs_run_deinit_actions(
     if (components.count) {
         type = table->type;
         type_count = ecs_vector_count(type);
-        type_array = ecs_vector_first(type);
+        type_array = ecs_vector_first(type, ecs_entity_t);
     }
 
     int i, cur;
@@ -723,7 +722,7 @@ void ecs_run_deinit_actions(
         /* Get column and pointer to data */
         ecs_column_t *column = &component_columns[cur];
         int32_t size = column->size;
-        void *array = ecs_vector_first(column->data);
+        void *array = ecs_vector_first_t(column->data, size, column->alignment);
         void *ptr = ECS_OFFSET(array, size * row);
 
         if (triggers && run_triggers) {
@@ -733,8 +732,8 @@ void ecs_run_deinit_actions(
         }
 
         if (dtor) {
-            dtor(world, component, ecs_vector_first(data->entities), ptr, size, 
-                count, ctx);
+            ecs_entity_t *ids = ecs_vector_first(data->entities, ecs_entity_t);
+            dtor(world, component, ids, ptr, size, count, ctx);
         }
     }
 }
@@ -787,8 +786,8 @@ void run_monitors(
          * src_table doesn't have */
         int32_t i, count = ecs_vector_count(dst_table->monitors);
         int32_t j = 0, src_count = ecs_vector_count(src_table->monitors);
-        ecs_monitor_t *dst_monitors = ecs_vector_first(dst_table->monitors);
-        ecs_monitor_t *src_monitors = ecs_vector_first(src_table->monitors);
+        ecs_monitor_t *dst_monitors = ecs_vector_first(dst_table->monitors, ecs_monitor_t);
+        ecs_monitor_t *src_monitors = ecs_vector_first(src_table->monitors, ecs_monitor_t);
 
         for (i = 0; i < count; i ++) {
             ecs_monitor_t *dst = &dst_monitors[i];
@@ -1001,11 +1000,7 @@ void update_component_monitors(
         ecs_map_get(world->child_tables, ecs_vector_t*, entity)) 
     {
         ecs_type_t type = ecs_get_type(world, entity);
-        ecs_entities_t entities = {
-            .array = ecs_vector_first(type),
-            .count = ecs_vector_count(type)
-        };
-
+        ecs_entities_t entities = ecs_type_to_entities(type);
         update_component_monitor_w_array(&world->parent_monitors, &entities);
     }
 }
@@ -1077,7 +1072,7 @@ void* get_base_component(
     ecs_entity_t component)
 {
     ecs_type_t type = info->table->type;
-    ecs_entity_t *type_buffer = ecs_vector_first(type);
+    ecs_entity_t *type_buffer = ecs_vector_first(type, ecs_entity_t);
     int32_t p = -1;
     void *ptr = NULL;
 
@@ -1141,19 +1136,14 @@ int32_t new_w_data(
     }
 
     ecs_data_t *data = ecs_table_get_or_create_data(world, stage, table);
-
     int32_t row = ecs_table_grow(world, table, data, count, e);
-
-    ecs_entities_t added = {
-        .array = ecs_vector_first(type),
-        .count = ecs_vector_count(type)
-    };
+    ecs_entities_t added = ecs_type_to_entities(type);
     
     /* Update entity index. If entities are being created in the main stage,
      * set the record pointers in the table. */
     int i;
     if (stage == &world->stage) {
-        ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs);
+        ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
         for (i = 0; i < count; i ++) { 
             record_ptrs[row + i] = ecs_eis_set(stage, e + i, &(ecs_record_t){
                 .table = table,
@@ -1191,14 +1181,15 @@ int32_t new_w_data(
 
             /* Bulk copy column data into new table */
             ecs_column_t *column = &data->columns[c_ptr_i];
-            int32_t size = column->size;
-            void *ptr = ecs_vector_first(column->data);
+            size_t size = column->size;
+            size_t alignment = column->alignment;
+            void *ptr = ecs_vector_first_t(column->data, size, alignment);
             ptr = ECS_OFFSET(ptr, size * row);
 
             ecs_component_data_t *cdata = ecs_get_component_data(world, c);
             ecs_copy_t copy = cdata->lifecycle.copy;
             if (copy) {
-                ecs_entity_t *entities = ecs_vector_first(data->entities);
+                ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
                 copy(world, c, entities, entities, ptr, src_ptr, size, count, 
                     cdata->lifecycle.ctx);
             } else {
@@ -1469,6 +1460,15 @@ int32_t ecs_row_to_record(
     return (row + 1) * -(is_watched * 2 - 1);
 }
 
+ecs_entities_t ecs_type_to_entities(
+    ecs_type_t type)
+{
+    return (ecs_entities_t){
+        .array = ecs_vector_first(type, ecs_entity_t),
+        .count = ecs_vector_count(type)
+    };
+}
+
 void ecs_set_watch(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -1500,19 +1500,17 @@ bool ecs_components_contains_component(
     ecs_entity_t flags,
     ecs_entity_t *entity_out)
 {
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *type_buffer = ecs_vector_first(type);
+    ecs_vector_each(type, ecs_entity_t, c_ptr, {
+        ecs_entity_t c = *c_ptr;
 
-    for (i = 0; i < count; i ++) {
         if (flags) {
-            if ((type_buffer[i] & flags) != flags) {
+            if ((c & flags) != flags) {
                 continue;
             }
         }
 
-        ecs_entity_t e = type_buffer[i] & ECS_ENTITY_MASK;
+        ecs_entity_t e = c & ECS_ENTITY_MASK;
         ecs_type_t type = ecs_get_type(world, e);
-
 
         bool result = ecs_type_has_entity(
             world, type, component);
@@ -1520,7 +1518,7 @@ bool ecs_components_contains_component(
             if (entity_out) *entity_out = e;
             return true;
         }
-    }
+    });
 
     return false;
 }
@@ -1536,11 +1534,7 @@ ecs_entity_t ecs_new_w_type(
     ecs_entity_t entity = new_entity_handle(world);
 
     if (type) {
-        ecs_entities_t to_add = {
-            .array = ecs_vector_first(type),
-            .count = ecs_vector_count(type)
-        };
-
+        ecs_entities_t to_add = ecs_type_to_entities(type);
         new(world, stage, entity, &to_add);
     }
 
@@ -1623,11 +1617,7 @@ void ecs_delete(
         ecs_type_t type = table->type;
 
         /* Remove all components */
-        ecs_entities_t to_remove = {
-            .array = ecs_vector_first(type),
-            .count = ecs_vector_count(type)
-        };
-
+        ecs_entities_t to_remove = ecs_type_to_entities(type);
         remove_entities_w_info(world, stage, entity, &info, &to_remove);
     }
 
@@ -1644,10 +1634,7 @@ void ecs_add_type(
     ecs_entity_t entity,
     ecs_type_t type)
 {
-    ecs_entities_t components = {
-        .array = ecs_vector_first(type),
-        .count = ecs_vector_count(type)
-    };
+    ecs_entities_t components = ecs_type_to_entities(type);
     add_entities(world, entity, &components);
 }
 
@@ -1665,10 +1652,7 @@ void ecs_remove_type(
     ecs_entity_t entity,
     ecs_type_t type)
 {
-    ecs_entities_t components = {
-        .array = ecs_vector_first(type),
-        .count = ecs_vector_count(type)
-    };
+    ecs_entities_t components = ecs_type_to_entities(type);
     remove_entities(world, entity, &components);
 }
 
@@ -1698,14 +1682,8 @@ void ecs_add_remove_type(
     ecs_type_t to_add,
     ecs_type_t to_remove)
 {
-    ecs_entities_t components_add = {
-        .array = ecs_vector_first(to_add),
-        .count = ecs_vector_count(to_add)
-    };      
-    ecs_entities_t components_remove = {
-        .array = ecs_vector_first(to_remove),
-        .count = ecs_vector_count(to_remove)
-    };      
+    ecs_entities_t components_add = ecs_type_to_entities(to_add);
+    ecs_entities_t components_remove = ecs_type_to_entities(to_remove);
     add_remove(world, entity, &components_add, &components_remove, false);
 }
 
@@ -1732,10 +1710,7 @@ ecs_entity_t ecs_clone(
     }
 
     ecs_type_t src_type = src_table->type;
-    ecs_entities_t to_add = {
-        .array = ecs_vector_first(src_type),
-        .count = ecs_vector_count(src_type)
-    };
+    ecs_entities_t to_add = ecs_type_to_entities(src_type);
 
     ecs_entity_info_t dst_info = {0};
     dst_info.row = new_entity(
@@ -1992,7 +1967,7 @@ ecs_entity_t ecs_type_to_entity(
         ecs_abort(ECS_TYPE_NOT_AN_ENTITY, NULL);
     }
 
-    return ((ecs_entity_t*)ecs_vector_first(type))[0];
+    return *(ecs_vector_first(type, ecs_entity_t));
 }
 
 ecs_type_t ecs_get_type(

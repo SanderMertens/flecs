@@ -244,6 +244,7 @@ typedef const char *EcsName;
 /** Component that contains the size of a component */
 typedef struct EcsComponent {
     size_t size;
+    size_t alignment;
 } EcsComponent;
 
 /** Metadata of an explicitly created type (ECS_TYPE or ecs_new_type) */
@@ -475,7 +476,7 @@ extern ecs_type_t
  * ECS_ENTITY(world, MyEntity, Position);
  */
 #define ECS_COMPONENT(world, id) \
-    ECS_ENTITY_VAR(id) = ecs_new_component(world, #id, sizeof(id));\
+    ECS_ENTITY_VAR(id) = ecs_new_component(world, #id, sizeof(id), ECS_ALIGNOF(id));\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
@@ -2144,7 +2145,7 @@ ecs_entity_t ecs_import_from_library(
 /** Define module
  */
 #define ECS_MODULE(world, id)\
-    ECS_ENTITY_VAR(id) = ecs_new_module(world, #id, sizeof(id));\
+    ECS_ENTITY_VAR(id) = ecs_new_module(world, #id, sizeof(id), ECS_ALIGNOF(id));\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\

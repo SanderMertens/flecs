@@ -37,12 +37,9 @@ void bulk_delete(
             entities = data->entities;
         }
 
-        ecs_entity_t *array = ecs_vector_first(entities);
-        int32_t j, row_count = ecs_vector_count(entities);
-
-        for (j = 0; j < row_count; j ++) {
-            ecs_eis_delete(&world->stage, array[j]);
-        }
+        ecs_vector_each(entities, ecs_entity_t, e_ptr, {
+            ecs_eis_delete(&world->stage, *e_ptr);
+        })
 
         /* Both filters passed, clear table */
         if (is_delete) {
@@ -114,15 +111,8 @@ void ecs_bulk_add_remove_type(
 
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
 
-    ecs_entities_t to_add_array = {
-        .array = ecs_vector_first(to_add),
-        .count = ecs_vector_count(to_add)
-    };
-
-    ecs_entities_t to_remove_array = {
-        .array = ecs_vector_first(to_remove),
-        .count = ecs_vector_count(to_remove)
-    };
+    ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
+    ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
 
     ecs_entities_t added = {
         .array = ecs_os_alloca(ecs_entity_t, to_add_array.count),
@@ -174,11 +164,7 @@ void ecs_bulk_add_type(
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
 
-    ecs_entities_t to_add_array = {
-        .array = ecs_vector_first(to_add),
-        .count = ecs_vector_count(to_add)
-    };
-
+    ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
     ecs_entities_t added = {
         .array = ecs_os_alloca(ecs_entity_t, to_add_array.count),
         .count = 0
@@ -260,11 +246,7 @@ void ecs_bulk_remove_type(
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_assert(stage == &world->stage, ECS_UNSUPPORTED, NULL);
 
-    ecs_entities_t to_remove_array = {
-        .array = ecs_vector_first(to_remove),
-        .count = ecs_vector_count(to_remove)
-    };
-
+    ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
     ecs_entities_t removed = {
         .array = ecs_os_alloca(ecs_entity_t, to_remove_array.count),
         .count = 0

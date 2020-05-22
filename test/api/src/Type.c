@@ -208,7 +208,7 @@ void Type_type_merge() {
     test_assert(t != NULL);
     test_int( ecs_vector_count(t), 3);
 
-    ecs_entity_t *entities = ecs_vector_first(t);
+    ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
     test_int(entities[0], ecs_entity(Position));
     test_int(entities[1], ecs_entity(Velocity));
     test_int(entities[2], ecs_entity(Mass));
@@ -230,7 +230,7 @@ void Type_type_merge_overlap() {
     test_assert(t != NULL);
     test_int( ecs_vector_count(t), 3);
 
-    ecs_entity_t *entities = ecs_vector_first(t);
+    ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
     test_int(entities[0], ecs_entity(Position));
     test_int(entities[1], ecs_entity(Velocity));
     test_int(entities[2], ecs_entity(Mass));
@@ -252,7 +252,7 @@ void Type_type_merge_overlap_one() {
     test_assert(t != NULL);
     test_int( ecs_vector_count(t), 2);
 
-    ecs_entity_t *entities = ecs_vector_first(t);
+    ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
     test_int(entities[0], ecs_entity(Position));
     test_int(entities[1], ecs_entity(Velocity));
 
@@ -277,7 +277,7 @@ void Type_type_merge_overlap_w_flag() {
     test_assert(t != NULL);
     test_int( ecs_vector_count(t), 4);
 
-    ecs_entity_t *entities = ecs_vector_first(t);
+    ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
     test_int(entities[0], ecs_entity(Position));
     test_int(entities[1], ecs_entity(Velocity));
     test_int(entities[2], ecs_entity(Mass));
@@ -307,7 +307,7 @@ void Type_type_merge_overlap_w_flags_from_both() {
     test_assert(t != NULL);
     test_int( ecs_vector_count(t), 4);
 
-    ecs_entity_t *entities = ecs_vector_first(t);
+    ecs_entity_t *entities = ecs_vector_first(t, ecs_entity_t);
     test_int(entities[0], ecs_entity(Position));
     test_int(entities[1], ecs_entity(Mass));
     test_int(entities[2], ecs_entity(Velocity) | ECS_CHILDOF);
@@ -328,7 +328,7 @@ void Type_type_add() {
     test_assert(new_type != NULL);
     test_assert(new_type != ecs_type(Type));
 
-    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    ecs_entity_t *type_array = ecs_vector_first(new_type, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(ecs_vector_count(new_type), 2);
     test_int(type_array[0], ecs_entity(Position));
@@ -346,7 +346,7 @@ void Type_type_add_empty() {
     ecs_type_t new_type = ecs_type_add(world, NULL, ecs_entity(Velocity));
     test_assert(new_type != NULL);
 
-    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    ecs_entity_t *type_array = ecs_vector_first(new_type, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(ecs_vector_count(new_type), 1);
     test_int(type_array[0], ecs_entity(Velocity));
@@ -365,7 +365,7 @@ void Type_type_add_entity_again() {
     test_assert(new_type != NULL);
     test_assert(new_type == ecs_type(Type));
 
-    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    ecs_entity_t *type_array = ecs_vector_first(new_type, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(ecs_vector_count(new_type), 2);
     test_int(type_array[0], ecs_entity(Position));
@@ -385,7 +385,7 @@ void Type_type_add_out_of_order() {
     test_assert(new_type != NULL);
     test_assert(new_type != ecs_type(Type));
 
-    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    ecs_entity_t *type_array = ecs_vector_first(new_type, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(ecs_vector_count(new_type), 2);
     test_int(type_array[0], ecs_entity(Position));
@@ -407,7 +407,7 @@ void Type_type_add_existing() {
     test_assert(new_type != ecs_type(Type2));
     test_assert(new_type == ecs_type(Type1));
 
-    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    ecs_entity_t *type_array = ecs_vector_first(new_type, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(ecs_vector_count(new_type), 2);
     test_int(type_array[0], ecs_entity(Position));
@@ -426,7 +426,7 @@ void Type_type_add_empty_existing() {
     test_assert(new_type != NULL);
     test_assert(new_type == ecs_type(Type1));
 
-    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    ecs_entity_t *type_array = ecs_vector_first(new_type, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(ecs_vector_count(new_type), 1);
     test_int(type_array[0], ecs_entity(Velocity));
@@ -447,7 +447,7 @@ void Type_type_add_out_of_order_existing() {
     test_assert(new_type != ecs_type(Type1));
     test_assert(new_type == ecs_type(Type2));
 
-    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    ecs_entity_t *type_array = ecs_vector_first(new_type, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(ecs_vector_count(new_type), 2);
     test_int(type_array[0], ecs_entity(Position));
@@ -468,7 +468,7 @@ void Type_type_of_2_add() {
     test_assert(new_type != NULL);
     test_assert(new_type != ecs_type(Type));
 
-    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    ecs_entity_t *type_array = ecs_vector_first(new_type, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(ecs_vector_count(new_type), 3);
     test_int(type_array[0], ecs_entity(Velocity));
@@ -490,7 +490,7 @@ void Type_type_of_3_add_entity_again() {
     test_assert(new_type != NULL);
     test_assert(new_type == ecs_type(Type));
 
-    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    ecs_entity_t *type_array = ecs_vector_first(new_type, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(ecs_vector_count(new_type), 3);
     test_int(type_array[0], ecs_entity(Velocity));
@@ -573,7 +573,7 @@ void Type_type_from_empty_entity() {
 
     test_int(ecs_vector_count(t), 1);
 
-    ecs_entity_t *array = ecs_vector_first(t);
+    ecs_entity_t *array = ecs_vector_first(t, ecs_entity_t);
     test_int(array[0], e);
 
     ecs_fini(world);
@@ -589,7 +589,7 @@ void TypeFromEntity(ecs_rows_t *rows) {
 
     test_int(ecs_vector_count(t), 1);
 
-    ecs_entity_t *array = ecs_vector_first(t);
+    ecs_entity_t *array = ecs_vector_first(t, ecs_entity_t);
     test_int(array[0], e);
 }
 
@@ -614,7 +614,7 @@ void Type_get_type() {
     test_assert(t != NULL);
     test_int(ecs_vector_count(t), 1);
     
-    ecs_entity_t *type_array = ecs_vector_first(t);
+    ecs_entity_t *type_array = ecs_vector_first(t, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(type_array[0], ecs_entity(Position));
 
@@ -692,7 +692,7 @@ void Type_type_from_entity() {
     test_assert(t != NULL);
     test_int(ecs_vector_count(t), 1);
 
-    ecs_entity_t *type_array = ecs_vector_first(t);
+    ecs_entity_t *type_array = ecs_vector_first(t, ecs_entity_t);
     test_int(type_array[0], Entity);
 
     ecs_fini(world);
@@ -707,7 +707,7 @@ void Type_type_from_empty() {
     test_assert(t != NULL);
     test_int(ecs_vector_count(t), 1);
 
-    ecs_entity_t *type_array = ecs_vector_first(t);
+    ecs_entity_t *type_array = ecs_vector_first(t, ecs_entity_t);
     test_int(type_array[0], Entity);
 
     ecs_fini(world);
@@ -733,7 +733,7 @@ void Type_type_remove() {
     test_assert(new_type != NULL);
     test_assert(new_type != ecs_type(Type));
 
-    ecs_entity_t *type_array = ecs_vector_first(new_type);
+    ecs_entity_t *type_array = ecs_vector_first(new_type, ecs_entity_t);
     test_assert(type_array != NULL);
     test_int(ecs_vector_count(new_type), 1);
     test_int(type_array[0], ecs_entity(Position));

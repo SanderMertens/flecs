@@ -41,7 +41,7 @@ bool ecs_filter_next(
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        ecs_data_t *data = ecs_vector_first(table->stage_data);
+        ecs_data_t *data = ecs_vector_first(table->stage_data, ecs_data_t);
 
         if (!data) {
             continue;
@@ -55,7 +55,7 @@ bool ecs_filter_next(
         rows->table = table;
         rows->table_columns = data->columns;
         rows->count = ecs_table_count(table);
-        rows->entities = ecs_vector_first(data->entities);
+        rows->entities = ecs_vector_first(data->entities, ecs_entity_t);
         iter->index = ++i;
         return true;
     }

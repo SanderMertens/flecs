@@ -16,7 +16,6 @@ void* ecs_worker(void *arg) {
             break;
         }
 
-        ecs_job_t **jobs = thread->jobs;
         int32_t job_count = thread->job_count;
         ecs_os_mutex_unlock(world->thread_mutex);
 
@@ -91,12 +90,10 @@ void ecs_stop_threads(
     ecs_os_cond_broadcast(world->thread_cond);
     ecs_os_mutex_unlock(world->thread_mutex);
 
-    ecs_thread_t *buffer = ecs_vector_first(world->worker_threads);
-    int32_t i, count = ecs_vector_count(world->worker_threads);
-    for (i = 1; i < count; i ++) {
-        ecs_os_thread_join(buffer[i].thread);
-        ecs_stage_deinit(world, buffer[i].stage);
-    }
+    ecs_vector_each(world->worker_threads, ecs_thread_t, thr, {
+        ecs_os_thread_join(thr->thread);
+        ecs_stage_deinit(world, thr->stage);
+    });
 
     ecs_vector_free(world->worker_threads);
     ecs_vector_free(world->worker_stages);
@@ -169,11 +166,8 @@ void ecs_schedule_jobs(
     int32_t total_rows = 0;
     bool is_task = false;
 
-    ecs_matched_table_t *tables = ecs_vector_first(system_data->query->tables);
-    int32_t i, count = ecs_vector_count(system_data->query->tables);
-
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = tables[i].table;
+    ecs_vector_each(system_data->query->tables, ecs_matched_table_t, mt, {
+        ecs_table_t *table = mt->table;
         if (table) {
             total_rows += ecs_table_count(table);
         } else {
@@ -181,8 +175,8 @@ void ecs_schedule_jobs(
         }
 
         /* Task systems should only have one matched table which is empty */
-        ecs_assert(!is_task || !i, ECS_INTERNAL_ERROR, NULL);
-    }
+        ecs_assert(!is_task || !mt_i, ECS_INTERNAL_ERROR, NULL);
+    });
 
     if (is_task) {
         thread_count = 1; /* Tasks are always scheduled to the main thread */
@@ -200,7 +194,7 @@ void ecs_schedule_jobs(
     int32_t start_index = 0;
 
     ecs_job_t *job = NULL;
-
+    int32_t i;
     for (i = 0; i < thread_count; i ++) {
         job = ecs_vector_get(system_data->jobs, ecs_job_t, i);
         int32_t rows_per_job = rows_per_thread_i;
@@ -255,7 +249,7 @@ void ecs_run_jobs(
     ecs_os_mutex_unlock(world->thread_mutex);
 
     /* Run job for thread 0 in main thread */
-    ecs_thread_t *thread = ecs_vector_first(world->worker_threads);
+    ecs_thread_t *thread = ecs_vector_first(world->worker_threads, ecs_thread_t);
     ecs_job_t **jobs = thread->jobs;
     int32_t i, job_count = thread->job_count;
 

@@ -6,7 +6,7 @@ void dup_table(
     ecs_table_t *table)
 {
     /* Store pointer to data in main stage */
-    ecs_data_t *main_data = ecs_vector_first(table->stage_data);
+    ecs_data_t *main_data = ecs_vector_first(table->stage_data, ecs_data_t);
     ecs_assert(main_data != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!main_data->columns) {
         return;
@@ -18,21 +18,19 @@ void dup_table(
         world, &world->stage, table);
     ecs_assert(snapshot_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t c, column_count = ecs_vector_count(table->type);
+    int32_t column_count = ecs_vector_count(table->type);
 
     snapshot_data->columns = ecs_os_memdup(
         main_data->columns, sizeof(ecs_column_t) * column_count);
 
     /* Copy entities */
     snapshot_data->entities = ecs_vector_copy(main_data->entities, ecs_entity_t);
-
-    ecs_entity_t *components = ecs_vector_first(table->type);
-    ecs_entity_t *entities = ecs_vector_first(snapshot_data->entities);
+    ecs_entity_t *entities = ecs_vector_first(snapshot_data->entities, ecs_entity_t);
 
     /* Copy each column */
-    for (c = 0; c < column_count; c ++) {
-        ecs_column_t *column = &snapshot_data->columns[c];
-        ecs_entity_t component = components[c];
+    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
+        ecs_entity_t component = *c_ptr;
+        ecs_column_t *column = &snapshot_data->columns[c_ptr_i];
 
         if (component > ECS_HI_COMPONENT_ID) {
             column->data = NULL;
@@ -41,13 +39,14 @@ void dup_table(
 
         ecs_component_data_t *cdata = ecs_get_component_data(world, component);
         size_t size = column->size;
+        size_t alignment = column->alignment;
         ecs_copy_t copy;
 
         if ((copy = cdata->lifecycle.copy)) {
             int32_t count = ecs_vector_count(column->data);
-            ecs_vector_t *dst_vec = _ecs_vector_new(size, count);
-            ecs_vector_set_count(&dst_vec, size, count);
-            void *dst_ptr = ecs_vector_first(dst_vec);
+            ecs_vector_t *dst_vec = ecs_vector_new_t(size, alignment, count);
+            ecs_vector_set_count_t(&dst_vec, size, alignment, count);
+            void *dst_ptr = ecs_vector_first_t(dst_vec, size, alignment);
             void *ctx = cdata->lifecycle.ctx;
             
             ecs_xtor_t ctor = cdata->lifecycle.ctor;
@@ -55,15 +54,15 @@ void dup_table(
                 ctor(world, component, entities, dst_ptr, size, count, ctx);
             }
 
-            void *src_ptr = ecs_vector_first(column->data);
+            void *src_ptr = ecs_vector_first_t(column->data, size, alignment);
             copy(world, component, entities, entities, dst_ptr, src_ptr, 
                 size, count, ctx);
 
             column->data = dst_vec;
         } else {
-            column->data = _ecs_vector_copy(column->data, size);
+            column->data = ecs_vector_copy_t(column->data, size, alignment);
         }
-    }
+    });
 }
 
 static
@@ -189,7 +188,7 @@ void ecs_snapshot_restore(
 
         /* If table has no columns, it was filtered out and should not be
          * restored. */
-        ecs_data_t *data = ecs_vector_first(src->stage_data);
+        ecs_data_t *data = ecs_vector_first(src->stage_data, ecs_data_t);
         if (!data) {
             continue;
         }
@@ -201,18 +200,15 @@ void ecs_snapshot_restore(
 
         /* If a filter was used, we need to fix the entity index one by one */
         if (filter_used) {
-            ecs_vector_t *entities = dst_data->entities;
-            ecs_entity_t *array = ecs_vector_first(entities);
-            int32_t j, row_count = ecs_vector_count(entities);
             ecs_ei_t *entity_index = &world->stage.entity_index;
-            
-            for (j = 0; j < row_count; j ++) {
+
+            ecs_vector_each(dst_data->entities, ecs_entity_t, e_ptr, {
                 ecs_record_t record = {
                     .table = dst,
-                    .row = j + 1
+                    .row = e_ptr_i + 1
                 };
-                ecs_ei_set(entity_index, array[j], &record);
-            } 
+                ecs_ei_set(entity_index, *e_ptr, &record);
+            });
         }
     }
 
@@ -250,7 +246,7 @@ void ecs_snapshot_free(
 
         ecs_table_replace_data(world, src, NULL);
 
-        ecs_data_t *src_data = ecs_vector_first(src->stage_data);
+        ecs_data_t *src_data = ecs_vector_first(src->stage_data, ecs_data_t);
         if (src_data) {
             ecs_os_free(src_data->columns);
             src_data->columns = NULL;

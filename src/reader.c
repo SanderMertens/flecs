@@ -70,12 +70,14 @@ void ecs_table_reader_next(
                 &reader->data->columns[reader->column_index - 1];
             reader->column_vector = column->data;
             reader->column_size = column->size;
+            reader->column_alignment = column->alignment;
         }
         break;
 
     case EcsTableColumnSize:
         reader->state = EcsTableColumnData;
-        reader->column_data = ecs_vector_first(reader->column_vector);
+        reader->column_data = ecs_vector_first_t(reader->column_vector, 
+            reader->column_size, reader->column_alignment);
         reader->column_written = 0;
         break;
 
@@ -84,7 +86,7 @@ void ecs_table_reader_next(
         ecs_column_t *column = 
                 &reader->data->columns[reader->column_index - 1];
         reader->column_vector = column->data;                
-        reader->column_data = ecs_vector_first(reader->column_vector);
+        reader->column_data = ecs_vector_first(reader->column_vector, EcsName);
         reader->row_index = 0;
         break;
     }
@@ -110,7 +112,7 @@ void ecs_table_reader_next(
                 stream->state = EcsFooterSegment;
             }            
         } else {
-            ecs_entity_t *type_buffer = ecs_vector_first(reader->type);
+            ecs_entity_t *type_buffer = ecs_vector_first(reader->type, ecs_entity_t);
             if (reader->column_index >= 1) {
                 ecs_entity_t e = type_buffer[reader->column_index - 1];
                 
@@ -167,7 +169,7 @@ size_t ecs_table_reader(
         break;  
 
     case EcsTableType: {
-        ecs_entity_t *type_array = ecs_vector_first(reader->type);
+        ecs_entity_t *type_array = ecs_vector_first(reader->type, ecs_entity_t);
         *(int32_t*)buffer = *(int32_t*)ECS_OFFSET(type_array, reader->type_written);
         reader->type_written += sizeof(int32_t);
         read = sizeof(int32_t);

@@ -13,7 +13,7 @@ void* get_owned_column_ptr(
     ecs_column_t *column = &((ecs_column_t*)rows->table_columns)[table_column - 1];
     ecs_assert(column->size != 0, ECS_COLUMN_HAS_NO_DATA, NULL);
     ecs_assert(!size || column->size == size, ECS_COLUMN_TYPE_MISMATCH, NULL);
-    void *buffer = ecs_vector_first(column->data);
+    void *buffer = ecs_vector_first_t(column->data, column->size, column->alignment);
     return ECS_OFFSET(buffer, column->size * (rows->offset + row));
 }
 
@@ -208,10 +208,11 @@ ecs_type_t ecs_table_type(
 
 void* ecs_table_column(
     const ecs_rows_t *rows,
-    int32_t column)
+    int32_t column_index)
 {
     ecs_world_t *world = rows->world;
     ecs_table_t *table = rows->table;
     ecs_data_t *data = ecs_table_get_data(world, table);
-    return ecs_vector_first(data->columns[column].data);
+    ecs_column_t *column = &data->columns[column_index];
+    return ecs_vector_first_t(column->data, column->size, column->alignment);
 }

@@ -55,7 +55,7 @@ EcsType type_from_vec(
     ecs_vector_t *vec)
 {
     EcsType result = {0, 0};
-    ecs_entity_t *array = ecs_vector_first(vec);
+    ecs_entity_t *array = ecs_vector_first(vec, ecs_entity_t);
     int32_t i, count = ecs_vector_count(vec);
 
     ecs_entities_t entities = {
@@ -84,23 +84,16 @@ EcsType type_from_vec(
             ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
                 "flag must be applied to type");
 
-            int j, count = ecs_vector_count(type_ptr->normalized);
-            ecs_entity_t *type_array = ecs_vector_first(type_ptr->normalized);
-
-            for (j = 0; j < count; j++) {
+            ecs_vector_each(type_ptr->normalized, ecs_entity_t, c_ptr, {
                 ecs_entity_t *el = ecs_vector_add(&normalized, ecs_entity_t);
-                *el = type_array[j];
-            }
+                *el = *c_ptr;
+            })
         }       
     }
 
     /* Only get normalized type if it's different from the type */
     if (normalized) {
-        ecs_entities_t normalized_array = {
-            .array = ecs_vector_first(normalized),
-            .count = ecs_vector_count(normalized)
-        };
-
+        ecs_entities_t normalized_array = ecs_type_to_entities(normalized);
         ecs_table_t *norm_table = ecs_table_traverse_add(
             world, &world->stage, table, &normalized_array, NULL);
 
@@ -200,7 +193,8 @@ ecs_entity_t ecs_new_prefab(
 ecs_entity_t ecs_new_component(
     ecs_world_t *world,
     const char *name,
-    size_t size)
+    size_t size,
+    size_t alignment)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
@@ -208,13 +202,19 @@ ecs_entity_t ecs_new_component(
     ecs_entity_t result = lookup(world, name, ecs_type(EcsComponent));
     if (!result) {
         result = ecs_set(world, 0, EcsName, {name});
-        ecs_set(world, result, EcsComponent, {.size = size});
+        ecs_set(world, result, EcsComponent, {
+            .size = size,
+            .alignment = alignment
+        });
     } else {
         const EcsComponent *ptr = ecs_get_ptr(world, result, EcsComponent);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, name);
         if (ptr->size != size) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, name);
         }
+        if (ptr->alignment != alignment) {
+            ecs_abort(ECS_INVALID_COMPONENT_SIZE, name);
+        }        
     }
 
     return result;
@@ -223,12 +223,13 @@ ecs_entity_t ecs_new_component(
 ecs_entity_t ecs_new_module(
     ecs_world_t *world,
     const char *name,
-    size_t size)
+    size_t size,
+    size_t alignment)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    ecs_entity_t result = ecs_new_component(world, name, size);
+    ecs_entity_t result = ecs_new_component(world, name, size, alignment);
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Add module tag */

@@ -55,7 +55,8 @@ void ecs_component_set_intern(
     EcsTrigger *ct,
     int32_t count)
 {
-    ecs_component_data_t *cdata_array = ecs_vector_first(world->component_data);
+    ecs_component_data_t *cdata_array = ecs_vector_first(
+        world->component_data, ecs_component_data_t);
     ecs_assert(cdata_array != NULL, ECS_INTERNAL_ERROR, NULL);
     EcsTrigger *el = NULL;
 
@@ -105,7 +106,9 @@ void EcsOnSetComponentLifecycle(
     EcsComponentLifecycle *cl = ecs_column(rows, EcsComponentLifecycle, 1);
 
     ecs_world_t *world = rows->world;
-    ecs_component_data_t *cdata_array = ecs_vector_first(world->component_data);
+    ecs_component_data_t *cdata_array = ecs_vector_first(
+        world->component_data, ecs_component_data_t);
+        
     ecs_assert(cdata_array != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int i;

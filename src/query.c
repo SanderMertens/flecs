@@ -8,11 +8,8 @@ ecs_entity_t components_contains(
     ecs_entity_t *entity_out,
     bool match_all)
 {
-    int32_t i, count = ecs_vector_count(table_type);
-    ecs_entity_t *array = ecs_vector_first(table_type);
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t entity = array[i];
+    ecs_vector_each(table_type, ecs_entity_t, c_ptr, {
+        ecs_entity_t entity = *c_ptr;
 
         if (entity & ECS_CHILDOF) {
             entity &= ECS_ENTITY_MASK;
@@ -30,7 +27,7 @@ ecs_entity_t components_contains(
                 }
             }
         }
-    }
+    });
 
     return 0;
 }
@@ -53,27 +50,20 @@ ecs_entity_t get_entity_for_component(
         }
     }
 
-    ecs_entity_t *array = ecs_vector_first(type);
-    int32_t i, count = ecs_vector_count(type);
-
-    for (i = 0; i < count; i ++) {
-        if (array[i] == component) {
-            break;
+    ecs_vector_each(type, ecs_entity_t, c_ptr, {
+        if (*c_ptr == component) {
+            return entity;
         }
-    }
+    });
 
-    if (i == count) {
-        entity = ecs_find_entity_in_prefabs(world, entity, type, component, 0);
-    }
-
-    return entity;
+    return ecs_find_entity_in_prefabs(world, entity, type, component, 0);
 }
 
 static
 ecs_entity_t get_cascade_component(
     ecs_query_t *query)
 {
-    ecs_sig_column_t *column = ecs_vector_first(query->sig.columns);
+    ecs_sig_column_t *column = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
     return column[query->cascade_by - 1].is.component;
 }
 
@@ -85,13 +75,13 @@ int32_t rank_by_depth(
 {
     int32_t result = 0;
     int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type);
+    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     for (i = count - 1; i >= 0; i --) {
         if (array[i] & ECS_CHILDOF) {
             ecs_type_t c_type = ecs_get_type(world, array[i] & ECS_ENTITY_MASK);
             int32_t j, c_count = ecs_vector_count(c_type);
-            ecs_entity_t *c_array = ecs_vector_first(c_type);
+            ecs_entity_t *c_array = ecs_vector_first(c_type, ecs_entity_t);
 
             for (j = 0; j < c_count; j ++) {
                 if (c_array[j] == rank_by_component) {
@@ -237,7 +227,7 @@ void add_table(
     }
 
     /* Walk columns parsed from the system signature */
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns);
+    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
 
     for (c = 0; c < column_count; c ++) {
         ecs_sig_column_t *column = &columns[c];
@@ -482,7 +472,7 @@ bool match_table(
     }
 
     int32_t i, column_count = ecs_vector_count(query->sig.columns);
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns);
+    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
 
     for (i = 0; i < column_count; i ++) {
         ecs_sig_column_t *elem = &columns[i];
@@ -563,7 +553,7 @@ int32_t get_table_param_index(
     ecs_vector_t *tables)
 {
     int32_t i, count = ecs_vector_count(tables);
-    ecs_matched_table_t *table_data = ecs_vector_first(tables);
+    ecs_matched_table_t *table_data = ecs_vector_first(tables, ecs_matched_table_t);
 
     for (i = 0; i < count; i ++) {
         if (table_data[i].table == table) {
@@ -583,7 +573,7 @@ int32_t table_matched(
     ecs_table_t *table)
 {
     int32_t i, count = ecs_vector_count(tables);
-    ecs_matched_table_t *table_data = ecs_vector_first(tables);
+    ecs_matched_table_t *table_data = ecs_vector_first(tables, ecs_matched_table_t);
 
     for (i = 0; i < count; i ++) {
         if (table_data[i].table == table) {
@@ -612,7 +602,7 @@ void resolve_cascade_container(
     int32_t ref_index = -column_indices[column] - 1;
 
     /* Obtain pointer to the reference data */
-    ecs_reference_t *references = ecs_vector_first(table_data->references);
+    ecs_reference_t *references = ecs_vector_first(table_data->references, ecs_reference_t);
     ecs_assert(ref_index < ecs_vector_count(table_data->references), 
         ECS_INTERNAL_ERROR, NULL);
 
@@ -696,14 +686,14 @@ void sort_table(
         return;
     }
 
-    ecs_entity_t *entities = ecs_vector_first(data->entities);
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
 
     void *ptr = NULL;
     int32_t size = 0;
     if (column_index != -1) {
         ecs_column_t *column = &data->columns[column_index];
-        ptr = ecs_vector_first(column->data);
         size = column->size;
+        ptr = ecs_vector_first_t(column->data, size, column->alignment);
     }
 
     int32_t p = qsort_table(
@@ -756,7 +746,7 @@ void build_sorted_table_range(
     ecs_compare_action_t compare = query->compare;
 
     /* Fetch data from all matched tables */
-    ecs_matched_table_t *tables = ecs_vector_first(query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
     sort_helper_t *helper = ecs_os_malloc((end - start) * sizeof(sort_helper_t));
 
     int i, to_sort = 0;
@@ -770,12 +760,14 @@ void build_sorted_table_range(
         int32_t index = ecs_type_index_of(table->table->type, component);
         if (index != -1) {
             ecs_column_t *column = &data->columns[index];
-            helper[to_sort].ptr = ecs_vector_first(column->data);
-            helper[to_sort].elem_size = column->size;
+            uint16_t size = column->size;
+            uint16_t align = column->alignment;
+            helper[to_sort].ptr = ecs_vector_first_t(column->data, size, align);
+            helper[to_sort].elem_size = size;
         }
 
         helper[to_sort].table = table;
-        helper[to_sort].entities = ecs_vector_first(data->entities);
+        helper[to_sort].entities = ecs_vector_first(data->entities, ecs_entity_t);
         helper[to_sort].row = 0;
         helper[to_sort].count = ecs_table_count(table->table);
         to_sort ++;
@@ -844,7 +836,7 @@ void build_sorted_tables(
     query->table_ranges = NULL;
 
     int32_t i, count = ecs_vector_count(query->tables);
-    ecs_matched_table_t *tables = ecs_vector_first(query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
     ecs_matched_table_t *table = NULL;
 
     int32_t start = 0, rank = 0;
@@ -879,7 +871,7 @@ void sort_tables(
     /* Iterate over active tables. Don't bother with inactive tables, since
      * they're empty */
     int32_t i, count = ecs_vector_count(query->tables);
-    ecs_matched_table_t *tables = ecs_vector_first(query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
     bool tables_sorted = false;
 
     for (i = 0; i < count; i ++) {
@@ -936,7 +928,7 @@ bool has_refs(
     ecs_sig_t *sig)
 {
     int32_t i, count = ecs_vector_count(sig->columns);
-    ecs_sig_column_t *columns = ecs_vector_first(sig->columns);
+    ecs_sig_column_t *columns = ecs_vector_first(sig->columns, ecs_sig_column_t);
 
     for (i = 0; i < count; i ++) {
         ecs_sig_from_kind_t from_kind = columns[i].from_kind;
@@ -1014,7 +1006,7 @@ void process_signature(
     ecs_query_t *query)
 {
     int i, count = ecs_vector_count(query->sig.columns);
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns);
+    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
 
     for (i = 0; i < count; i ++) {
         ecs_sig_column_t *column = &columns[i];
@@ -1345,7 +1337,7 @@ void ecs_query_set_rows(
 
     ecs_table_t *world_table = table->table;
     ecs_data_t *table_data = ecs_table_get_staged_data(world, stage, world_table);
-    ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities);            
+    ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t);  
     rows->entities = &entity_buffer[row];
 
     rows->world = world;
@@ -1357,7 +1349,7 @@ void ecs_query_set_rows(
     rows->table_columns = table_data->columns;
     rows->columns = table->columns;
     rows->components = table->components;
-    rows->references = ecs_vector_first(table->references);
+    rows->references = ecs_vector_first(table->references, ecs_reference_t);
     rows->offset = row;
     rows->count = count;
 }
@@ -1372,8 +1364,8 @@ bool ecs_query_next(
     ecs_rows_t *rows = &iter->rows;
     ecs_world_t *world = rows->world;
 
-    ecs_matched_table_t *tables = ecs_vector_first(query->tables);
-    ecs_table_range_t *ranges = ecs_vector_first(query->table_ranges);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
+    ecs_table_range_t *ranges = ecs_vector_first(query->table_ranges, ecs_table_range_t);
 
     ecs_assert(!ranges || query->compare, ECS_INTERNAL_ERROR, NULL);
     
@@ -1452,7 +1444,7 @@ bool ecs_query_next(
                 continue;
             }
 
-            ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities);            
+            ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t); 
             rows->entities = &entity_buffer[first];
             rows->offset = first;
             rows->count = count;
@@ -1461,7 +1453,7 @@ bool ecs_query_next(
         rows->table = world_table;
         rows->columns = table->columns;
         rows->components = table->components;
-        rows->references = ecs_vector_first(table->references);
+        rows->references = ecs_vector_first(table->references, ecs_reference_t);
         rows->frame_offset += prev_count;
 
         /* Table is ready to be iterated, return rows struct */

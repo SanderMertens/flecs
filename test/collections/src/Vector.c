@@ -202,7 +202,7 @@ void Vector_sort_rnd() {
 
     ecs_vector_sort(array, int, compare_int);
 
-    int *buffer = ecs_vector_first(array);
+    int *buffer = ecs_vector_first(array, int);
     count = ecs_vector_count(array);
 
     for (i = 0; i < count; i ++) {
@@ -226,7 +226,7 @@ void Vector_sort_sorted() {
 
     ecs_vector_sort(array, int, compare_int);
 
-    int *buffer = ecs_vector_first(array);
+    int *buffer = ecs_vector_first(array, int);
     count = ecs_vector_count(array);
 
     for (i = 0; i < count; i ++) {
@@ -266,19 +266,19 @@ void Vector_pop_elements() {
     array = fill_array(array);
     int value;
 
-    test_assert( ecs_vector_pop(array, &value));
+    test_assert( ecs_vector_pop(array, int, &value));
     test_int(value, 3);
 
-    test_assert( ecs_vector_pop(array, &value));
+    test_assert( ecs_vector_pop(array, int, &value));
     test_int(value, 2);
 
-    test_assert( ecs_vector_pop(array, &value));
+    test_assert( ecs_vector_pop(array, int, &value));
     test_int(value, 1);
 
-    test_assert( ecs_vector_pop(array, &value));
+    test_assert( ecs_vector_pop(array, int, &value));
     test_int(value, 0);
 
-    test_assert( !ecs_vector_pop(array, &value));
+    test_assert( !ecs_vector_pop(array, int, &value));
 
     ecs_vector_free(array);
 }
