@@ -16,7 +16,7 @@ void GetChildren(ecs_rows_t *rows) {
 }
 
 void print_children(ecs_world_t *world, const char *parent_id, ecs_vector_t *children) {
-    ecs_entity_t *array = ecs_vector_first(children);
+    ecs_entity_t *array = ecs_vector_first(children, ecs_entity_t);
 
     for (int i = 0; i < ecs_vector_count(children); i ++) {
         printf("Child found: '%s.%s'\n", parent_id, ecs_get_name(world, array[i]));

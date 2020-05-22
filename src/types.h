@@ -88,6 +88,7 @@ typedef struct ecs_pipeline_op_t {
 struct ecs_column_t {
     ecs_vector_t *data;              /* Column data */
     uint16_t size;                   /* Column size (saves component lookups) */
+    uint16_t alignment;              /* Column alignment */
 };
 
 /** Table component data and entity ids */

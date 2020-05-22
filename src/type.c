@@ -17,7 +17,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_entity_t previous)
 {
     int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type);
+    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     /* Walk from back to front, as prefabs are always located
      * at the end of the type. */
@@ -133,13 +133,13 @@ ecs_entity_t ecs_type_contains(
     ecs_assert(type_2 != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (type_1 == type_2) {
-        return *(ecs_entity_t*)ecs_vector_first(type_1);
+        return *(ecs_vector_first(type_1, ecs_entity_t));
     }
 
     int32_t i_2, i_1 = 0;
     ecs_entity_t e1 = 0;
-    ecs_entity_t *t1_array = ecs_vector_first(type_1);
-    ecs_entity_t *t2_array = ecs_vector_first(type_2);
+    ecs_entity_t *t1_array = ecs_vector_first(type_1, ecs_entity_t);
+    ecs_entity_t *t2_array = ecs_vector_first(type_2, ecs_entity_t);
 
     ecs_assert(t1_array != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(t2_array != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -204,14 +204,11 @@ int16_t ecs_type_index_of(
     ecs_type_t type,
     ecs_entity_t entity)
 {
-    ecs_entity_t *buf = ecs_vector_first(type);
-    int i, count = ecs_vector_count(type);
-    
-    for (i = 0; i < count; i ++) {
-        if (buf[i] == entity) {
-            return i; 
+    ecs_vector_each(type, ecs_entity_t, c_ptr, {
+        if (*c_ptr == entity) {
+            return c_ptr_i; 
         }
-    }
+    });
 
     return -1;
 }
@@ -224,16 +221,8 @@ ecs_type_t ecs_type_merge_intern(
     ecs_type_t to_remove)
 {
     ecs_table_t *table = ecs_table_from_type(world, stage, type);
-
-    ecs_entities_t add_array = {
-        .array = ecs_vector_first(to_add),
-        .count = ecs_vector_count(to_add)
-    };
-
-    ecs_entities_t remove_array = {
-        .array = ecs_vector_first(to_remove),
-        .count = ecs_vector_count(to_remove)
-    };
+    ecs_entities_t add_array = ecs_type_to_entities(to_add);
+    ecs_entities_t remove_array = ecs_type_to_entities(to_remove);
     
     table = ecs_table_traverse_remove(
         world, stage, table, &remove_array, NULL); 
@@ -276,10 +265,8 @@ bool ecs_type_has_entity(
         return true;
     }
 
-    ecs_entity_t *array = ecs_vector_first(type);
-    int i, count = ecs_vector_count(type);
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = array[i];
+    ecs_vector_each(type, ecs_entity_t, c_ptr, {
+        ecs_entity_t e = *c_ptr;
         if (e == entity) {
             return true;
         }
@@ -290,7 +277,7 @@ bool ecs_type_has_entity(
                 return true;
             }
         }
-    }
+    });
 
     return false;
 }
@@ -305,7 +292,7 @@ bool ecs_type_has_owned_entity(
         return false;
     }
     
-    ecs_entity_t *array = ecs_vector_first(type);
+    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     int i, count = ecs_vector_count(type);
 
     if (owned) {
@@ -380,7 +367,7 @@ char* ecs_type_str(
     int32_t len;
     char buf[15];
 
-    ecs_entity_t *handles = ecs_vector_first(type);
+    ecs_entity_t *handles = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
@@ -449,7 +436,7 @@ char* ecs_type_str(
 
     *(char*)ecs_vector_add(&chbuf, char) = '\0';
 
-    char* result = ecs_os_strdup(ecs_vector_first(chbuf));
+    char* result = ecs_os_strdup(ecs_vector_first(chbuf, char));
     ecs_vector_free(chbuf);
     return result;
 }
@@ -470,7 +457,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_assert(xor_type != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type);
+    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     for (i = 0; i < count; i ++) {
         if (ecs_type_has_owned_entity(world, xor_type, array[i], true)) {
             return array[i];

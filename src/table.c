@@ -21,7 +21,7 @@ ecs_data_t* init_data(
 
     result->columns = ecs_os_calloc(sizeof(ecs_column_t), count);
     
-    ecs_entity_t *entities = ecs_vector_first(type);
+    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
 
     for (i = 0; i < count; i ++) {
         const EcsComponent *component = ecs_get_ptr(
@@ -33,6 +33,7 @@ ecs_data_t* init_data(
             if (component->size) {
                 /* This is a regular component column */
                 result->columns[i].size = component->size;
+                result->columns[i].alignment = component->alignment;
             } else {
                 /* This is a tag */
             }
@@ -72,7 +73,7 @@ static
 void deinit_all_data(
     ecs_table_t *table)
 {
-    ecs_data_t *stage_data = ecs_vector_first(table->stage_data);
+    ecs_data_t *stage_data = ecs_vector_first(table->stage_data, ecs_data_t);
     int32_t i, count = ecs_vector_count(table->stage_data);
     
     for (i = 0; i < count; i ++) {
@@ -92,10 +93,7 @@ void run_on_remove_handlers(
 {
     int32_t count = ecs_vector_count(data->entities);
     if (count) {
-        ecs_entities_t components = {
-            .array = ecs_vector_first(table->type),
-            .count = ecs_vector_count(table->type)
-        };
+        ecs_entities_t components = ecs_type_to_entities(table->type);
 
         /* Run deinit actions (dtors) for components. Don't run triggers */
         ecs_run_deinit_actions(
@@ -126,7 +124,7 @@ void ecs_table_activate(
         ecs_vector_t *queries = table->queries;
         
         if (queries) {
-            ecs_query_t **buffer = ecs_vector_first(queries);
+            ecs_query_t **buffer = ecs_vector_first(queries, ecs_query_t*);
             int32_t i, count = ecs_vector_count(queries);
             for (i = 0; i < count; i ++) {
                 ecs_query_activate_table(world, buffer[i], table, activate);
@@ -202,7 +200,7 @@ void ecs_table_register_monitor(
 
     /* Sort the vector so we can quickly compare monitors between tables */
     qsort(
-        ecs_vector_first(table->monitors), 
+        ecs_vector_first(table->monitors, ecs_monitor_t), 
         ecs_vector_count(table->monitors), 
         sizeof(ecs_monitor_t), 
         compare_entity);
@@ -235,7 +233,7 @@ void ecs_table_unregister_monitor(
     }
 
     qsort(
-        ecs_vector_first(table->monitors), 
+        ecs_vector_first(table->monitors, ecs_monitor_t), 
         ecs_vector_count(table->monitors), 
         sizeof(ecs_monitor_t), 
         compare_entity);    
@@ -259,7 +257,7 @@ ecs_data_t* ecs_table_get_data_intern(
         return NULL;
     }
 
-    ecs_data_t *data_array = ecs_vector_first(stage_data);
+    ecs_data_t *data_array = ecs_vector_first(stage_data, ecs_data_t);
     int32_t count = ecs_vector_count(stage_data);
     int32_t stage_count = world->stage_count;
     int32_t id = stage->id;
@@ -275,7 +273,7 @@ ecs_data_t* ecs_table_get_data_intern(
         if (stage_count > count) {
             /* Grow array, initialize table data to 0 */
             ecs_vector_set_count(&table->stage_data, ecs_data_t, stage_count);
-            data_array = ecs_vector_first(table->stage_data);
+            data_array = ecs_vector_first(table->stage_data, ecs_data_t);
             memset(&data_array[count], 
                 0, sizeof(ecs_data_t) * (stage_count - count));
         } else {
@@ -286,13 +284,13 @@ ecs_data_t* ecs_table_get_data_intern(
             }
 
             ecs_vector_set_count(&table->stage_data, ecs_data_t, stage_count);
-            data_array = ecs_vector_first(table->stage_data);           
+            data_array = ecs_vector_first(table->stage_data, ecs_data_t);           
         }
 
         int i;
         for (i = 0; i < stage_count; i ++) {
-            ecs_data_t *data_array = ecs_vector_first(table->stage_data);
-            ecs_stage_t *stage_array = ecs_vector_first(world->worker_stages);
+            ecs_data_t *data_array = ecs_vector_first(table->stage_data, ecs_data_t);
+            ecs_stage_t *stage_array = ecs_vector_first(world->worker_stages, ecs_stage_t);
 
             data_array[0].stage = &world->stage;
             data_array[1].stage = &world->temp_stage;
@@ -381,7 +379,7 @@ void ecs_table_clear(
     if (data) {
         run_on_remove_handlers(world, table, data);
 
-        ecs_entity_t *entities = ecs_vector_first(data->entities);
+        ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
         int32_t i, count = ecs_vector_count(data->entities);
         for(i = 0; i < count; i ++) {
             ecs_eis_delete(&world->stage, entities[i]);
@@ -432,7 +430,7 @@ void ecs_table_replace_data(
     ecs_data_t *data)
 {
     int32_t prev_count = 0;
-    ecs_data_t *table_data = ecs_vector_first(table->stage_data);
+    ecs_data_t *table_data = ecs_vector_first(table->stage_data, ecs_data_t);
     ecs_assert(!data || data != table_data, ECS_INTERNAL_ERROR, NULL);
 
     if (table_data) {
@@ -451,7 +449,7 @@ void ecs_table_replace_data(
         count = ecs_vector_count(table_data->entities);
 
         int32_t i, column_count = ecs_vector_count(table->type);
-        ecs_entity_t *components = ecs_vector_first(table->type);
+        ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
 
         for (i = 0; i < column_count; i ++) {
             ecs_entity_t component = components[i];
@@ -517,8 +515,9 @@ int32_t ecs_table_append(
         int32_t i;
         for (i = 0; i < column_count; i ++) {
             int32_t size = columns[i].size;
+            int32_t alignment = columns[i].alignment;
             if (size) {
-                _ecs_vector_add(&columns[i].data, size);
+                ecs_vector_add_t(&columns[i].data, size, alignment);
             }
         }
     }
@@ -571,14 +570,14 @@ void ecs_table_delete(
 
     if (index != count) {   
         /* Move last entity id to index */     
-        ecs_entity_t *entities = ecs_vector_first(entity_column);
+        ecs_entity_t *entities = ecs_vector_first(entity_column, ecs_entity_t);
         ecs_entity_t entity_to_move = entities[count];
         entities[index] = entity_to_move;
         ecs_vector_remove_last(entity_column);
 
         /* Move last record ptr to index */
         ecs_vector_t *record_column = data->record_ptrs;     
-        ecs_record_t **records = ecs_vector_first(record_column);
+        ecs_record_t **records = ecs_vector_first(record_column, ecs_record_t*);
         ecs_record_t *record_to_move = records[count];
 
         records[index] = record_to_move;
@@ -588,10 +587,11 @@ void ecs_table_delete(
         ecs_column_t *components = data->columns;
         for (i = 0; i < column_count; i ++) {
             ecs_column_t *component_column = &components[i];
-            uint32_t size = component_column->size;
+            size_t size = component_column->size;
+            size_t alignment = component_column->alignment;
             if (size) {
-                _ecs_vector_remove_index(
-                    component_column->data, size, index);
+                ecs_vector_remove_index_t(
+                    component_column->data, size, alignment, index);
             }
         }
 
@@ -670,12 +670,13 @@ int32_t ecs_table_grow(
 
     /* Add elements to each column array */
     for (i = 0; i < column_count; i ++) {
-        size_t column_size = columns[i].size;
-        if (!column_size) {
+        size_t size = columns[i].size;
+        if (!size) {
             continue;
         }
+        size_t alignment = columns[i].alignment;
 
-        _ecs_vector_addn(&columns[i].data, column_size, count);
+        ecs_vector_addn_t(&columns[i].data, size, alignment, count);
     }
 
     /* If the table is monitored indicate that there has been a change */
@@ -713,9 +714,10 @@ int16_t ecs_table_set_size(
 
     int32_t i, column_count = ecs_vector_count(table->type);
     for (i = 0; i < column_count; i ++) {
-        int32_t column_size = columns[i].size;
-        if (column_size) {
-            _ecs_vector_set_size(&columns[i].data, column_size, count);
+        int32_t size = columns[i].size;
+        size_t alignment = columns[i].alignment;
+        if (size) {
+            ecs_vector_set_size_t(&columns[i].data, size, alignment, count);
         }
     }
 
@@ -745,9 +747,10 @@ int16_t ecs_table_set_count(
 
     int32_t i, column_count = ecs_vector_count(table->type);
     for (i = 0; i < column_count; i ++) {
-        int32_t column_size = columns[i].size;
-        if (column_size) {
-            _ecs_vector_set_count(&columns[i].data, column_size, count);
+        size_t size = columns[i].size;
+        size_t alignment = columns[i].alignment;
+        if (size) {
+            ecs_vector_set_count_t(&columns[i].data, size, alignment, count);
         }
     }
 
@@ -764,7 +767,7 @@ uint64_t ecs_table_count(
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_data_t *data = ecs_vector_first(table->stage_data);
+    ecs_data_t *data = ecs_vector_first(table->stage_data, ecs_data_t);
     if (!data) {
         return 0;
     }
@@ -791,11 +794,11 @@ void ecs_table_swap(
         return;
     }
 
-    ecs_entity_t *entities = ecs_vector_first(data->entities);
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
     ecs_entity_t e1 = entities[row_1];
     ecs_entity_t e2 = entities[row_2];
 
-    ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs);
+    ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
     ecs_record_t *record_ptr_1 = record_ptrs[row_1];
     ecs_record_t *record_ptr_2 = record_ptrs[row_2];
     
@@ -820,8 +823,9 @@ void ecs_table_swap(
     int32_t i, column_count = ecs_vector_count(table->type);
     
     for (i = 0; i < column_count; i ++) {
-        void *data = ecs_vector_first(columns[i].data);
-        int32_t size = columns[i].size;
+        uint16_t size = columns[i].size;
+        uint16_t alignment = columns[i].alignment;
+        void *data = ecs_vector_first_t(columns[i].data, size, alignment);
 
         if (size) {
             void *tmp = _ecs_os_alloca(size, 1);
@@ -843,7 +847,8 @@ static
 void merge_vector(
     ecs_vector_t **dst_out,
     ecs_vector_t *src,
-    uint32_t size)
+    uint16_t size,
+    uint16_t alignment)
 {
     ecs_vector_t *dst = *dst_out;
     uint32_t dst_count = ecs_vector_count(dst);
@@ -859,10 +864,10 @@ void merge_vector(
      * src into the dst. */
     } else {
         uint32_t src_count = ecs_vector_count(src);
-        _ecs_vector_set_count(&dst, size, dst_count + src_count);
+        ecs_vector_set_count_t(&dst, size, alignment, dst_count + src_count);
         
-        void *dst_ptr = ecs_vector_first(dst);
-        void *src_ptr = ecs_vector_first(src);
+        void *dst_ptr = ecs_vector_first_t(dst, size, alignment);
+        void *src_ptr = ecs_vector_first_t(src, size, alignment);
 
         dst_ptr = ECS_OFFSET(dst_ptr, size * dst_count);
         memcpy(dst_ptr, src_ptr, size * src_count);
@@ -912,8 +917,8 @@ void ecs_table_merge(
     }
 
     /* First, update entity index so old entities point to new type */
-    ecs_entity_t *old_entities = ecs_vector_first(old_data->entities);
-    ecs_record_t **old_records = ecs_vector_first(old_data->record_ptrs);
+    ecs_entity_t *old_entities = ecs_vector_first(old_data->entities, ecs_entity_t);
+    ecs_record_t **old_records = ecs_vector_first(old_data->record_ptrs, ecs_record_t*);
 
     int32_t i;
     for(i = 0; i < old_count; i ++) {
@@ -934,8 +939,8 @@ void ecs_table_merge(
 
     uint16_t i_new, new_component_count = ecs_vector_count(new_type);
     uint16_t i_old = 0, old_component_count = ecs_vector_count(old_type);
-    ecs_entity_t *new_components = ecs_vector_first(new_type);
-    ecs_entity_t *old_components = ecs_vector_first(old_type);
+    ecs_entity_t *new_components = ecs_vector_first(new_type, ecs_entity_t);
+    ecs_entity_t *old_components = ecs_vector_first(old_type, ecs_entity_t);
 
     if (!old_count) {
         return;
@@ -949,6 +954,7 @@ void ecs_table_merge(
         ecs_entity_t new_component = new_components[i_new];
         ecs_entity_t old_component = old_components[i_old];
         size_t size = new_columns[i_new].size;
+        size_t alignment = new_columns[i_new].alignment;
 
         if ((new_component & ECS_TYPE_FLAG_MASK) || 
             (old_component & ECS_TYPE_FLAG_MASK)) 
@@ -958,7 +964,8 @@ void ecs_table_merge(
 
         if (new_component == old_component) {
             merge_vector(
-                &new_columns[i_new].data, old_columns[i_old].data, size);
+                &new_columns[i_new].data, old_columns[i_old].data, size, 
+                alignment);
 
             old_columns[i_old].data = NULL;
 
@@ -971,8 +978,8 @@ void ecs_table_merge(
             /* New column does not occur in old table, make sure vector is large
              * enough. */
             if (size) {
-                ecs_vector_set_count(&new_columns[i_new].data, size, 
-                old_count + new_count);
+                ecs_vector_set_count_t(&new_columns[i_new].data, size, alignment,
+                    old_count + new_count);
             }
             i_new ++;
         } else if (new_component > old_component) {
@@ -986,17 +993,18 @@ void ecs_table_merge(
     /* Initialize remaining columns */
     for (; i_new < new_component_count; i_new ++) {
         size_t size = new_columns[i_new].size;
+        size_t alignment = new_columns[i_new].alignment;
 
         if (size) {
-            ecs_vector_set_count(&new_columns[i_new].data, size, 
+            ecs_vector_set_count_t(&new_columns[i_new].data, size, alignment,
             old_count + new_count);
         }
     }
 
-    merge_vector(&new_data->entities, old_data->entities, sizeof(ecs_entity_t));
+    merge_vector(&new_data->entities, old_data->entities, sizeof(ecs_entity_t), ECS_ALIGNOF(ecs_entity_t));
     old_data->entities = NULL;
 
-    merge_vector(&new_data->record_ptrs, old_data->record_ptrs, sizeof(ecs_record_t*));
+    merge_vector(&new_data->record_ptrs, old_data->record_ptrs, sizeof(ecs_record_t*), ECS_ALIGNOF(ecs_record_t*));
     old_data->record_ptrs = NULL;    
 
     /* Mark entity column as dirty */
@@ -1023,8 +1031,8 @@ void ecs_table_move(
 
     uint32_t i_new = 0, new_column_count = ecs_vector_count(new_type);
     uint32_t i_old = 0, old_column_count = ecs_vector_count(old_type);
-    ecs_entity_t *new_components = ecs_vector_first(new_type);
-    ecs_entity_t *old_components = ecs_vector_first(old_type);
+    ecs_entity_t *new_components = ecs_vector_first(new_type, ecs_entity_t);
+    ecs_entity_t *old_components = ecs_vector_first(old_type, ecs_entity_t);
 
     ecs_assert(old_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new_index >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -1042,11 +1050,12 @@ void ecs_table_move(
         if (new_component == old_component) {
             ecs_column_t *new_column = &new_columns[i_new];
             ecs_column_t *old_column = &old_columns[i_old];
-            int32_t size = new_column->size;
+            size_t size = new_column->size;
+            size_t alignment = new_column->alignment;
 
             if (size) {
-                void *dst = _ecs_vector_get(new_column->data, size, new_index);
-                void *src = _ecs_vector_get(old_column->data, size, old_index);
+                void *dst = ecs_vector_get_t(new_column->data, size, alignment, new_index);
+                void *src = ecs_vector_get_t(old_column->data, size, alignment, old_index);
                     
                 ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);

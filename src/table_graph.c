@@ -22,7 +22,7 @@ ecs_type_t entities_to_type(
     if (entities->count) {
         ecs_vector_t *result = NULL;
         ecs_vector_set_count(&result, ecs_entity_t, entities->count);
-        ecs_entity_t *array = ecs_vector_first(result);
+        ecs_entity_t *array = ecs_vector_first(result, ecs_entity_t);
         memcpy(array, entities->array, sizeof(ecs_entity_t) * entities->count);
         return result;
     } else {
@@ -36,7 +36,7 @@ void init_edges(
     ecs_stage_t *stage,
     ecs_table_t *table)
 {
-    ecs_entity_t *entities = ecs_vector_first(table->type);
+    ecs_entity_t *entities = ecs_vector_first(table->type, ecs_entity_t);
     uint32_t count = ecs_vector_count(table->type);
 
     table->lo_edges = ecs_os_calloc(sizeof(ecs_edge_t), ECS_HI_COMPONENT_ID);
@@ -190,7 +190,7 @@ void add_entity_to_type(
     ecs_entities_t *out)
 {
     uint32_t count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type);    
+    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);    
     bool added = false;
 
     int i, el = 0;
@@ -224,7 +224,7 @@ void remove_entity_from_type(
     ecs_entities_t *out)
 {
     uint32_t count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type);
+    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     int i, el = 0;
     for (i = 0; i < count; i ++) {
@@ -303,7 +303,7 @@ ecs_table_t *find_or_create_table_include(
      * the new table, to ensure the XOR constraint isn't violated. */
     ecs_entity_t replace = 0;
     if (node->flags & EcsTableHasXor) {
-        ecs_entity_t *array = ecs_vector_first(type);
+        ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
         int32_t i, count = ecs_vector_count(type);
         ecs_type_t xor_type = NULL;
 
@@ -813,10 +813,8 @@ ecs_table_t* ecs_table_from_type(
     ecs_stage_t *stage,
     ecs_type_t type)
 {
-    ecs_entities_t components = {
-        .array = ecs_vector_first(type),
-        .count = ecs_vector_count(type)
-    };
+    ecs_entities_t components = ecs_type_to_entities(type);
+
 
     return ecs_table_find_or_create(
         world, stage, &components);

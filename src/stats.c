@@ -222,7 +222,7 @@ void compute_world_memory(
 
     /* Compute memory used in thread stages */
     int32_t i, count = ecs_vector_count(world->worker_stages);
-    ecs_stage_t *stages = ecs_vector_first(world->worker_stages);
+    ecs_stage_t *stages = ecs_vector_first(world->worker_stages, ecs_stage_t);
 
     for (i = 0; i < count; i ++) {
         compute_stage_memory(&stages[i], stats);
@@ -303,7 +303,7 @@ int32_t system_tables_matched(EcsColSystem *system) {
 
 static
 int32_t system_entities_matched(EcsColSystem *system) {
-    ecs_matched_table_t *tables = ecs_vector_first(system->query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(system->query->tables, ecs_matched_table_t);
     int32_t i, total = 0, count = ecs_vector_count(system->query->tables);
 
     for (i = 0; i < count; i ++) {
@@ -350,7 +350,7 @@ void collect_system_table_metrics(
     ecs_vector_memory(tables, ecs_matched_table_t, 
         &stat->allocd_bytes, &stat->used_bytes);
 
-    ecs_matched_table_t *tables_buffer = ecs_vector_first(tables);
+    ecs_matched_table_t *tables_buffer = ecs_vector_first(tables, ecs_matched_table_t);
     int32_t i, count = ecs_vector_count(tables);
 
     /* The 'column' member in ecs_matched_table_t */
@@ -427,7 +427,7 @@ void StatsCollectComponentStats(ecs_rows_t *rows) {
 
         for (t = 0; t < count; t ++) {
             ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
-            ecs_entity_t *components = ecs_vector_first(table->type);
+            ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
             int32_t c, c_count = ecs_vector_count(table->type);
 
             /* Iterate over table columns until component is found */
@@ -441,7 +441,7 @@ void StatsCollectComponentStats(ecs_rows_t *rows) {
                     ecs_vector_t *column = columns[c].data;
                     stats[i].tables_count ++;
                     stats[i].entities_count += ecs_vector_count(column);
-                    _ecs_vector_memory(column, columns[c].size, 
+                    ecs_vector_memory_t(column, columns[c].size, columns[c].alignment, 
                         &stats[i].memory.allocd_bytes, 
                         &stats[i].memory.used_bytes);
                     break;
@@ -487,7 +487,7 @@ void collect_table_data_memory(
     ecs_table_t *table,
     EcsTableStats *stats)
 {
-    int32_t i, count = ecs_vector_count(table->type);
+    int32_t c, count = ecs_vector_count(table->type);
     ecs_data_t *data = ecs_table_get_data(world, table);
 
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -502,8 +502,9 @@ void collect_table_data_memory(
 
     stats->component_memory = (ecs_memory_stat_t){0};
 
-    for (i = 0; i < count; i ++) {
-        _ecs_vector_memory(columns[i].data, columns[i].size, 
+    for (c = 0; c < count; c ++) {
+        ecs_column_t *column = &columns[c];
+        ecs_vector_memory_t(column->data, columns->size, columns->alignment,
             &stats->component_memory.allocd_bytes, 
             &stats->component_memory.used_bytes);
     }
@@ -561,7 +562,7 @@ void StatsCollectTypeStats(ecs_rows_t *rows) {
         stats[i].instance_count = ecs_count_type(world, type_component[i].normalized);
 
         int32_t j, count = ecs_vector_count(type_component[i].normalized);
-        ecs_entity_t *entities = ecs_vector_first(type_component[i].normalized);
+        ecs_entity_t *entities = ecs_vector_first(type_component[i].normalized, ecs_entity_t);
         for (j = 0; j < count; j ++) {
             ecs_entity_t e = entities[j];
             bool has_flags = false;

@@ -119,7 +119,7 @@ void FilterIter_iter_two_comps() {
         entity_count += it.rows.count;
 
         ecs_type_t table_type = ecs_table_type(&it.rows);
-        ecs_entity_t *array = ecs_vector_first(table_type);
+        ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         test_assert(array[1] == ecs_entity(Velocity));
         
@@ -178,7 +178,7 @@ void FilterIter_iter_snapshot_one_table() {
         entity_count += it.rows.count;
 
         ecs_type_t table_type = ecs_table_type(&it.rows);
-        ecs_entity_t *array = ecs_vector_first(table_type);
+        ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         
         Position *p_row = ecs_table_column(&it.rows, 0);
@@ -242,7 +242,7 @@ void FilterIter_iter_snapshot_two_tables() {
         entity_count += it.rows.count;
 
         ecs_type_t table_type = ecs_table_type(&it.rows);
-        ecs_entity_t *array = ecs_vector_first(table_type);
+        ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         
         Position *p_row = ecs_table_column(&it.rows, 0);
@@ -300,7 +300,7 @@ void FilterIter_iter_snapshot_two_comps() {
         entity_count += it.rows.count;
 
         ecs_type_t table_type = ecs_table_type(&it.rows);
-        ecs_entity_t *array = ecs_vector_first(table_type);
+        ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));      
         test_assert(array[1] == ecs_entity(Velocity));        
         
@@ -373,7 +373,7 @@ void FilterIter_iter_snapshot_filtered_table() {
         entity_count += it.rows.count;
 
         ecs_type_t table_type = ecs_table_type(&it.rows);
-        ecs_entity_t *array = ecs_vector_first(table_type);
+        ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));        
         
         Position *p_row = ecs_table_column(&it.rows, 0);

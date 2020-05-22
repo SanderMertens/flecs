@@ -32,7 +32,7 @@ void add_chunk(
     chunk_t recycled_chunk, *chunk = ecs_vector_add(&sparse->chunks, chunk_t);
 
     /* Check if we have chunks we can recycle */
-    if (ecs_vector_pop(sparse->unused_chunks, &recycled_chunk)) {
+    if (ecs_vector_pop(sparse->unused_chunks, chunk_t, &recycled_chunk)) {
         *chunk = recycled_chunk;
     } else {
         chunk->data = ecs_os_malloc(CHUNK_ALLOC_SIZE);
@@ -52,7 +52,7 @@ void add_chunk(
     ecs_assert(sparse->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Prepare cached pointers to chunk elements in sparse array */
-    sparse_elem_t *sparse_array = ecs_vector_first(sparse->sparse);
+    sparse_elem_t *sparse_array = ecs_vector_first(sparse->sparse, sparse_elem_t);
     ecs_assert(sparse_array != NULL, ECS_INTERNAL_ERROR, NULL);
 
     sparse_array = &sparse_array[prev_total];
@@ -76,7 +76,7 @@ void* add_sparse(
     ecs_sparse_t *sparse,
     int32_t index)
 {
-    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse);
+    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse, sparse_elem_t);
     
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -97,10 +97,10 @@ void* get_sparse(
         return NULL;
     }
 
-    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse);
+    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse, sparse_elem_t);
     int32_t dense = sparse_arr[index].dense;
 
-    int32_t *dense_array = ecs_vector_first(sparse->dense);
+    int32_t *dense_array = ecs_vector_first(sparse->dense, int32_t);
     int32_t dense_count = ecs_vector_count(sparse->dense);
 
     if (dense >= dense_count) {
@@ -132,10 +132,10 @@ void* get_or_set_sparse(
         ecs_assert(index < ecs_vector_count(sparse->sparse), ECS_INTERNAL_ERROR, NULL);
     }
 
-    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse);
+    sparse_elem_t *sparse_arr = ecs_vector_first(sparse->sparse, sparse_elem_t);
     int32_t dense = sparse_arr[index].dense;
 
-    int32_t *dense_array = ecs_vector_first(sparse->dense);
+    int32_t *dense_array = ecs_vector_first(sparse->dense, int32_t);
     int32_t dense_count = ecs_vector_count(sparse->dense);
 
     if (dense >= dense_count || dense_array[dense] != index) {
@@ -143,7 +143,7 @@ void* get_or_set_sparse(
 
         ecs_vector_add(&sparse->dense, int32_t);
 
-        dense_array = ecs_vector_first(sparse->dense);
+        dense_array = ecs_vector_first(sparse->dense, int32_t);
         sparse_arr[index].dense = dense_count;
         dense_array[dense_count] = index;
 
@@ -173,7 +173,7 @@ ecs_sparse_t* _ecs_sparse_new(
 static
 void free_chunks(ecs_vector_t *chunks) {
     int i, count = ecs_vector_count(chunks);
-    chunk_t *array = ecs_vector_first(chunks);
+    chunk_t *array = ecs_vector_first(chunks, chunk_t);
 
     for (i = 0; i < count; i ++) {
         ecs_os_free(array[i].data);
@@ -206,7 +206,7 @@ void ecs_sparse_clear(
         sparse->chunks = NULL;
     } else {
         chunk_t chunk;
-        while (ecs_vector_pop(sparse->chunks, &chunk)) {
+        while (ecs_vector_pop(sparse->chunks, chunk_t, &chunk)) {
             chunk_t *unused = ecs_vector_add(&sparse->unused_chunks, chunk_t);
             *unused = chunk;
         }
@@ -228,7 +228,7 @@ void* _ecs_sparse_recycle(
 
     int32_t index = 0;
     
-    if (ecs_vector_pop(sparse->unused_elements, &index)) {
+    if (ecs_vector_pop(sparse->unused_elements, int32_t, &index)) {
         if (sparse_index_out) {
             *sparse_index_out = index;
         }
@@ -303,7 +303,7 @@ void* _ecs_sparse_get(
     ecs_assert(!elem_size || elem_size == sparse->elem_size, 
         ECS_INVALID_PARAMETER, NULL);
 
-    const int32_t *it = ecs_vector_first(sparse->dense);
+    const int32_t *it = ecs_vector_first(sparse->dense, int32_t);
 
     void *result = get_sparse(sparse, it[index], false);
 
@@ -360,13 +360,13 @@ int32_t ecs_sparse_size(
 const int32_t* ecs_sparse_indices(
     const ecs_sparse_t *sparse)
 {
-    return ecs_vector_first(sparse->dense);
+    return ecs_vector_first(sparse->dense, int32_t);
 }
 
 const int32_t* ecs_sparse_unused_indices(
     const ecs_sparse_t *sparse)
 {
-    return ecs_vector_first(sparse->unused_elements);
+    return ecs_vector_first(sparse->unused_elements, int32_t);
 }
 
 const int32_t ecs_sparse_unused_count(
@@ -389,8 +389,8 @@ ecs_sparse_t* ecs_sparse_copy(
     dst->unused_elements = ecs_vector_copy(src->unused_elements, int32_t);
 
     /* Iterate chunks, copy data */
-    sparse_elem_t *sparse_array = ecs_vector_first(dst->sparse);
-    chunk_t *chunks = ecs_vector_first(dst->chunks);
+    sparse_elem_t *sparse_array = ecs_vector_first(dst->sparse, sparse_elem_t);
+    chunk_t *chunks = ecs_vector_first(dst->chunks, chunk_t);
     int32_t i, count = ecs_vector_count(dst->chunks);
 
     for (i = 0; i < count; i ++) {

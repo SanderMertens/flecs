@@ -480,7 +480,7 @@ void TableColumns(ecs_rows_t *rows) {
     ecs_type_t type = ecs_table_type(rows);
     test_int(2, ecs_vector_count(type));
 
-    ecs_entity_t *components = ecs_vector_first(type);
+    ecs_entity_t *components = ecs_vector_first(type, ecs_entity_t);
     test_int(components[0], ecs_entity(Position));
     test_int(components[1], ecs_entity(Velocity));
 

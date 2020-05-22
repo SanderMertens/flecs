@@ -11,8 +11,8 @@ void clear_columns(
     ecs_data_t *data)
 {
     uint32_t i, entity_count = ecs_vector_count(data->entities);
-    ecs_entity_t *entities = ecs_vector_first(data->entities);
-    ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs);
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
+    ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
 
     for (i = 0; i < entity_count; i ++) {
         ecs_entity_t e = entities[i];
@@ -66,9 +66,9 @@ void merge_columns(
 {
     /* Copy data column by column from the stage to the main stage */
     uint32_t c, column_count = ecs_vector_count(table->type);
-    ecs_entity_t *components = ecs_vector_first(table->type);
-    ecs_entity_t *dst_entities = ecs_vector_first(dst_data->entities);
-    ecs_entity_t *src_entities = ecs_vector_first(src_data->entities);
+    ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
+    ecs_entity_t *dst_entities = ecs_vector_first(dst_data->entities, ecs_entity_t);
+    ecs_entity_t *src_entities = ecs_vector_first(src_data->entities, ecs_entity_t);
 
     for (c = 0; c < column_count; c ++) {
         ecs_column_t *main_column = &dst_data->columns[c];
@@ -78,12 +78,13 @@ void merge_columns(
         
         ecs_column_t *column = &src_data->columns[c];
         uint16_t size = column->size;
+        uint16_t alignment = column->alignment;
         ecs_assert(size == main_column->size, ECS_INTERNAL_ERROR, NULL);
 
-        void *src = ecs_vector_first(column->data);
+        void *src = ecs_vector_first_t(column->data, size, alignment);
         ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        void *dst = ecs_vector_first(main_column->data);
+        void *dst = ecs_vector_first_t(main_column->data, size, alignment);
         ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
         dst = ECS_OFFSET(dst, dst_entity_count * size);
 
@@ -109,15 +110,15 @@ void merge_commits(
 {
     /* Loop the tables for which the stage has modified data */
     int32_t i, table_count = ecs_vector_count(stage->dirty_tables);
-    ecs_table_t **tables = ecs_vector_first(stage->dirty_tables);
+    ecs_table_t **tables = ecs_vector_first(stage->dirty_tables, ecs_table_t*);
 
     for (i = 0; i < table_count; i ++) {
         ecs_table_t *table = tables[i];
         ecs_data_t *main_data = ecs_table_get_data(world, table);
         ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
         int32_t e, entity_count = ecs_table_data_count(data);
-        ecs_entity_t *entities = ecs_vector_first(data->entities);
-        ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs);
+        ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
+        ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
         int32_t column_count = ecs_vector_count(table->type);
 
         ecs_assert(main_data != data, ECS_INTERNAL_ERROR, NULL);
@@ -178,12 +179,12 @@ void merge_commits(
             main_entity_count + entity_count);
 
         /* Copy entity ids */
-        ecs_entity_t *main_entities = ecs_vector_first(main_data->entities);
+        ecs_entity_t *main_entities = ecs_vector_first(main_data->entities, ecs_entity_t);
         memcpy(&main_entities[main_entity_count], entities, 
             entity_count * sizeof(ecs_entity_t));
 
         /* Copy record ptrs */
-        ecs_record_t **main_record_ptrs = ecs_vector_first(main_data->record_ptrs);
+        ecs_record_t **main_record_ptrs = ecs_vector_first(main_data->record_ptrs, ecs_record_t*);
         memcpy(&main_record_ptrs[main_entity_count], record_ptrs, 
             entity_count * sizeof(ecs_record_t*));
 

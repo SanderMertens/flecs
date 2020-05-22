@@ -5,6 +5,19 @@
 extern "C" {
 #endif
 
+/* Public, so we can do compile-time offset calculation */
+struct ecs_vector_t {
+    int32_t count;
+    uint32_t size;
+    
+#ifndef NDEBUG
+    size_t elem_size;
+#endif
+};
+
+#define ECS_VECTOR_U(size, alignment) size, ECS_MAX(sizeof(ecs_vector_t), alignment)
+#define ECS_VECTOR_T(T) ECS_VECTOR_U(sizeof(T), ECS_ALIGNOF(T))
+
 typedef struct ecs_vector_t ecs_vector_t;
 
 typedef int (*ecs_comparator_t)(
@@ -14,10 +27,14 @@ typedef int (*ecs_comparator_t)(
 FLECS_EXPORT
 ecs_vector_t* _ecs_vector_new(
     size_t elem_size,
+    int16_t offset,
     int32_t elem_count);
 
 #define ecs_vector_new(T, elem_count) \
-    _ecs_vector_new(sizeof(T), elem_count)
+    _ecs_vector_new(ECS_VECTOR_T(T), elem_count)
+
+#define ecs_vector_new_t(size, alignment, elem_count) \
+    _ecs_vector_new(ECS_VECTOR_U(size, alignment), elem_count)    
 
 FLECS_EXPORT
 void ecs_vector_free(
@@ -30,45 +47,59 @@ void ecs_vector_clear(
 FLECS_EXPORT
 void* _ecs_vector_add(
     ecs_vector_t **array_inout,
-    size_t elem_size);
+    size_t elem_size,
+    int16_t offset);
 
 #define ecs_vector_add(vector, T) \
-    (T*)_ecs_vector_add(vector, sizeof(T))
+    (T*)_ecs_vector_add(vector, ECS_VECTOR_T(T))
+
+#define ecs_vector_add_t(vector, size, alignment) \
+    _ecs_vector_add(vector, ECS_VECTOR_U(size, alignment))
 
 FLECS_EXPORT
 void* _ecs_vector_addn(
     ecs_vector_t **array_inout,
     size_t elem_size,
+    int16_t offset,
     int32_t elem_count);
 
 #define ecs_vector_addn(vector, T, elem_count) \
-    (T*)_ecs_vector_addn(vector, sizeof(T), elem_count)
+    (T*)_ecs_vector_addn(vector, ECS_VECTOR_T(T), elem_count)
+
+#define ecs_vector_addn_t(vector, size, alignment, elem_count) \
+    _ecs_vector_addn(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
 FLECS_EXPORT
 void* _ecs_vector_get(
     const ecs_vector_t *vector,
     size_t elem_size,
+    int16_t offset,
     int32_t index);
 
 #define ecs_vector_get(vector, T, index) \
-    (T*)_ecs_vector_get(vector, sizeof(T), index)
+    (T*)_ecs_vector_get(vector, ECS_VECTOR_T(T), index)
+
+#define ecs_vector_get_t(vector, size, alignment, index) \
+    _ecs_vector_get(vector, ECS_VECTOR_U(size, alignment), index)
 
 FLECS_EXPORT
 void* _ecs_vector_last(
     const ecs_vector_t *vector,
-    size_t elem_size);
+    size_t elem_size,
+    int16_t offset);
 
 #define ecs_vector_last(vector, T) \
-    _ecs_vector_last(vector, sizeof(T))
+    _ecs_vector_last(vector, ECS_VECTOR_T(T))
 
 FLECS_EXPORT
 int32_t _ecs_vector_remove(
     ecs_vector_t *vector,
     size_t elem_size,
+    int16_t offset,
     void *elem);
 
 #define ecs_vector_remove(vector, T, index) \
-    _ecs_vector_remove(vector, sizeof(T), index)
+    _ecs_vector_remove(vector, ECS_VECTOR_T(T), index)
 
 FLECS_EXPORT
 void ecs_vector_remove_last(
@@ -78,73 +109,90 @@ FLECS_EXPORT
 bool _ecs_vector_pop(
     ecs_vector_t *vector,
     size_t elem_size,
+    int16_t offset,
     void *value);
 
-#define ecs_vector_pop(vector, value) \
-    _ecs_vector_pop(vector, sizeof(*value), value)
+#define ecs_vector_pop(vector, T, value) \
+    _ecs_vector_pop(vector, ECS_VECTOR_T(T), value)
 
 FLECS_EXPORT
 int32_t _ecs_vector_move_index(
     ecs_vector_t **dst,
     ecs_vector_t *src,
     size_t elem_size,
+    int16_t offset,
     int32_t index);
 
 #define ecs_vector_move_index(dst, src, T, index) \
-    _ecs_vector_move_index(dst, src, sizeof(T), index)
+    _ecs_vector_move_index(dst, src, ECS_VECTOR_T(T), index)
 
 FLECS_EXPORT
 int32_t _ecs_vector_remove_index(
     ecs_vector_t *vector,
     size_t elem_size,
+    int16_t offset,
     int32_t index);
 
 #define ecs_vector_remove_index(vector, T, index) \
-    _ecs_vector_remove_index(vector, sizeof(T), index)
+    _ecs_vector_remove_index(vector, ECS_VECTOR_T(T), index)
+
+#define ecs_vector_remove_index_t(vector, size, alignment, index) \
+    _ecs_vector_remove_index(vector, ECS_VECTOR_U(size, alignment), index)
 
 FLECS_EXPORT
 void _ecs_vector_reclaim(
     ecs_vector_t **vector,
-    size_t elem_size);
+    size_t elem_size,
+    int16_t offset);
 
 #define ecs_vector_reclaim(vector, T)\
-    _ecs_vector_reclaim(vector, sizeof(T))
+    _ecs_vector_reclaim(vector, ECS_VECTOR_T(T))
 
 FLECS_EXPORT
 int32_t _ecs_vector_grow(
     ecs_vector_t **vector,
     size_t elem_size,
+    int16_t offset,
     int32_t elem_count);
 
 #define ecs_vector_grow(vector, T, size) \
-    _ecs_vector_grow(vector, sizeof(T), size)
+    _ecs_vector_grow(vector, ECS_VECTOR_T(T), size)
 
 FLECS_EXPORT
 int32_t _ecs_vector_set_size(
     ecs_vector_t **vector,
     size_t elem_size,
+    int16_t offset,
     int32_t elem_count);
 
-#define ecs_vector_set_size(vector, T, size) \
-    _ecs_vector_set_size(vector, sizeof(T), size)
+#define ecs_vector_set_size(vector, T, elem_count) \
+    _ecs_vector_set_size(vector, ECS_VECTOR_T(T), elem_count)
+
+#define ecs_vector_set_size_t(vector, size, alignment, elem_count) \
+    _ecs_vector_set_size(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
 FLECS_EXPORT
 int32_t _ecs_vector_set_count(
     ecs_vector_t **vector,
     size_t elem_size,
+    int16_t offset,
     int32_t elem_count);
 
-#define ecs_vector_set_count(vector, T, size) \
-    _ecs_vector_set_count(vector, sizeof(T), size)
+#define ecs_vector_set_count(vector, T, elem_count) \
+    _ecs_vector_set_count(vector, ECS_VECTOR_T(T), elem_count)
+
+#define ecs_vector_set_count_t(vector, size, alignment, elem_count) \
+    _ecs_vector_set_count(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
 FLECS_EXPORT
 int32_t _ecs_vector_set_min_size(
     ecs_vector_t **array_inout,
     size_t elem_size,
+    int16_t offset,
     int32_t elem_count);
 
 #define ecs_vector_set_min_size(vector, T, size) \
-    _ecs_vector_set_min_size(vector, sizeof(T), size)
+    _ecs_vector_set_min_size(vector, ECS_VECTOR_T(T), size)
 
 FLECS_EXPORT
 int32_t ecs_vector_count(
@@ -155,40 +203,57 @@ int32_t ecs_vector_size(
     const ecs_vector_t *vector);
 
 FLECS_EXPORT
-void* ecs_vector_first(
-    const ecs_vector_t *vector);
+void* _ecs_vector_first(
+    const ecs_vector_t *vector,
+    size_t elem_size,
+    int16_t offset);
+
+#define ecs_vector_first(vector, T) \
+    (T*)_ecs_vector_first(vector, ECS_VECTOR_T(T))
+
+#define ecs_vector_first_t(vector, size, alignment) \
+    _ecs_vector_first(vector, ECS_VECTOR_U(size, alignment))
 
 FLECS_EXPORT
 void _ecs_vector_sort(
     ecs_vector_t *vector,
     size_t elem_size,
+    int16_t offset,
     ecs_comparator_t compare_action);
 
 #define ecs_vector_sort(vector, T, compare_action) \
-    _ecs_vector_sort(vector, sizeof(T), compare_action)
+    _ecs_vector_sort(vector, ECS_VECTOR_T(T), compare_action)
 
 FLECS_EXPORT
 void _ecs_vector_memory(
     const ecs_vector_t *vector,
     size_t elem_size,
+    int16_t offset,
     int32_t *allocd,
     int32_t *used);
 
 #define ecs_vector_memory(vector, T, allocd, used) \
-    _ecs_vector_memory(vector, sizeof(T), allocd, used)
+    _ecs_vector_memory(vector, ECS_VECTOR_T(T), allocd, used)
+
+#define ecs_vector_memory_t(vector, size, alignment, allocd, used) \
+    _ecs_vector_memory(vector, ECS_VECTOR_U(size, alignment), allocd, used)
 
 ecs_vector_t* _ecs_vector_copy(
     const ecs_vector_t *src,
-    size_t elem_size);
+    size_t elem_size,
+    int16_t offset);
 
 #define ecs_vector_copy(src, T) \
-    _ecs_vector_copy(src, sizeof(T))    
+    _ecs_vector_copy(src, ECS_VECTOR_T(T))
+
+#define ecs_vector_copy_t(src, size, alignment) \
+    _ecs_vector_copy(src, ECS_VECTOR_U(size, alignment))
 
 #ifndef __BAKE_LEGACY__
 #define ecs_vector_each(vector, T, var, ...)\
     {\
         int var##_i, var##_count = ecs_vector_count(vector);\
-        T* array = ecs_vector_first(vector);\
+        T* array = ecs_vector_first(vector, T);\
         for (var##_i = 0; var##_i < var##_count; var##_i ++) {\
             T* var = &array[var##_i];\
             __VA_ARGS__\
@@ -245,7 +310,7 @@ public:
     }
 
     T& first() {
-        return static_cast<T*>(ecs_vector_first(m_vector));
+        return ecs_vector_first(m_vector, T);
     }
 
     T& last() {

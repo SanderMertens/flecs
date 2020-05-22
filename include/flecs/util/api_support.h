@@ -60,6 +60,7 @@ typedef struct ecs_table_reader_t {
     /* Keep track of how much of the component column has been written */
     void *column_data;
     size_t column_size;
+    size_t column_alignment;
     size_t column_written;
 
     /* Keep track of row when writing non-blittable data */
@@ -100,6 +101,7 @@ typedef struct ecs_table_writer_t {
     
     int32_t column_index;
     size_t column_size;
+    size_t column_alignment;
     size_t column_written;
     void *column_data;
 
@@ -147,13 +149,15 @@ FLECS_EXPORT
 ecs_entity_t ecs_new_component(
     ecs_world_t *world,
     const char *id,
-    size_t size);
+    size_t size,
+    size_t alignment);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_module(
     ecs_world_t *world,
     const char *name,
-    size_t size);
+    size_t size,
+    size_t alignment);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_type(
@@ -358,6 +362,14 @@ void _ecs_parser_error(
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
+
+#ifdef __cplusplus
+#define ECS_ALIGNOF(T) alignof(T)
+#else
+#define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
+#endif
+
+#define ECS_MAX(a, b) ((a > b) ? a : b)
 
 #ifdef __cplusplus
 }

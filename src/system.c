@@ -24,7 +24,7 @@ void activate_in_columns(
     ecs_map_t *component_map,
     bool activate)
 {
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns);
+    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
     uint32_t i, count = ecs_vector_count(query->sig.columns);
 
     for (i = 0; i < count; i ++) {
@@ -44,7 +44,7 @@ void activate_in_columns(
                ((activate && in->count == 1) || 
                 (!activate && !in->count))) 
             {
-                ecs_on_demand_out_t **out = ecs_vector_first(in->systems);
+                ecs_on_demand_out_t **out = ecs_vector_first(in->systems, ecs_on_demand_out_t*);
                 uint32_t s, count = ecs_vector_count(in->systems);
 
                 for (s = 0; s < count; s ++) {
@@ -85,7 +85,7 @@ void register_out_columns(
     EcsColSystem *system_data)
 {
     ecs_query_t *query = system_data->query;
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns);
+    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
     int32_t i, out_count = 0, count = ecs_vector_count(query->sig.columns);
 
     for (i = 0; i < count; i ++) {

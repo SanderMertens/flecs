@@ -167,7 +167,7 @@ int32_t iter_reset(
     /* If query has matched with new tables, we need to rebuild the pipeline */
     build_pipeline(world, pq);
 
-    ecs_pipeline_op_t *op = ecs_vector_first(pq->ops);
+    ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
     ecs_query_iter_t it = ecs_query_iter(pq->query, 0, 0);
@@ -221,7 +221,7 @@ void ecs_progress_pipeline(
     }
 
     ecs_vector_t *ops = pq->ops;
-    ecs_pipeline_op_t *op = ecs_vector_first(ops);
+    ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
