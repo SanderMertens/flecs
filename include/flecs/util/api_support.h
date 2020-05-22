@@ -281,6 +281,7 @@ void _ecs_assert(
     int32_t line);
 
 /** Parse error */
+FLECS_EXPORT
 void _ecs_parser_error(
     const char *name,
     const char *expr, 
