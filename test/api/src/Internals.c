@@ -138,7 +138,7 @@ static
 void CreateNewTable(ecs_rows_t *rows) {
     ECS_COLUMN_COMPONENT(rows, Velocity, 2);
 
-    uint32_t i;
+    int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_add(rows->world, rows->entities[i], Velocity);
     }

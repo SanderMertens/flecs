@@ -361,8 +361,8 @@ ecs_entity_t ecs_new_pipeline(
     assert(world->magic == ECS_WORLD_MAGIC);
 
     ecs_entity_t result = ecs_new_type(world, name, expr);
-    const EcsType *type_ptr = ecs_get_ptr(world, result, EcsType);
-    ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_get_ptr(world, result, EcsType) != NULL, 
+        ECS_INTERNAL_ERROR, NULL);
 
     ecs_add(world, result, EcsPipeline);
 

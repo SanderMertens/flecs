@@ -938,7 +938,7 @@ void World_world_stats() {
 void World_quit() {
     ecs_world_t *world = ecs_init();
 
-    uint32_t count = 0;
+    int32_t count = 0;
 
     while (ecs_progress(world, 0)) {
         test_int(count, 0);

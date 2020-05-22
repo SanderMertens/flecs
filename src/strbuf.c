@@ -44,7 +44,7 @@ void ecs_strbuf_grow_str(
     ecs_strbuf_t *b,
     char *str,
     char *alloc_str,
-    uint32_t size)
+    int32_t size)
 {
     /* Allocate new element */
     ecs_strbuf_element_str *e = malloc(sizeof(ecs_strbuf_element_str));
@@ -53,7 +53,7 @@ void ecs_strbuf_grow_str(
     b->current = (ecs_strbuf_element*)e;
     b->elementCount ++;
     e->super.buffer_embedded = false;
-    e->super.pos = size ? size : strlen(str);
+    e->super.pos = size ? size : (int32_t)strlen(str);
     e->super.next = NULL;
     e->super.buf = str;
     e->alloc_str = alloc_str;
@@ -275,7 +275,7 @@ bool ecs_strbuf_append(
 bool ecs_strbuf_appendstrn(
     ecs_strbuf_t *b,
     const char* str,
-    uint32_t len)
+    int32_t len)
 {
     va_list args;
     return ecs_strbuf_append_intern(
@@ -346,7 +346,7 @@ char* ecs_strbuf_get(ecs_strbuf_t *b) {
             result = strdup(b->buf);
         } else {
             void *next = NULL;
-            uint32_t len = b->size + b->current->pos + 1;
+            int32_t len = b->size + b->current->pos + 1;
 
             ecs_strbuf_element *e = (ecs_strbuf_element*)&b->firstElement;
 
@@ -419,7 +419,7 @@ void ecs_strbuf_list_pop(
 void ecs_strbuf_list_next(
     ecs_strbuf_t *buffer)
 {
-    uint32_t list_sp = buffer->list_sp;
+    int32_t list_sp = buffer->list_sp;
     if (buffer->list_stack[list_sp].count != 0) {
         ecs_strbuf_appendstr(buffer, buffer->list_stack[list_sp].separator);
     }

@@ -173,24 +173,22 @@ void ecs_run_init_actions(
     ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
-    uint32_t row,
-    uint32_t count,
+    int32_t row,
+    int32_t count,
     ecs_entities_t components,
     ecs_comp_mask_t set_mask);
 
 void ecs_run_deinit_actions(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_table_t *table,
     ecs_data_t *data,
-    uint32_t row,
-    uint32_t count,
+    int32_t row,
+    int32_t count,
     ecs_entities_t components,
     bool run_triggers);
 
 void ecs_run_component_trigger(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_vector_t *trigger_vec,
     ecs_entity_t component,
     ecs_table_t *table,
@@ -319,7 +317,6 @@ void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
     const char *name,
-    ecs_entity_t phase,
     ecs_iter_action_t action,
     char *signature);
 
@@ -362,8 +359,8 @@ ecs_entity_t ecs_run_intern(
     ecs_entity_t system,
     EcsColSystem *system_data,
     float delta_time,
-    uint32_t offset,
-    uint32_t limit,
+    int32_t offset,
+    int32_t limit,
     const ecs_filter_t *filter,
     void *param);
 

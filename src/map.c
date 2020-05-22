@@ -136,11 +136,13 @@ int32_t add_to_bucket(
 static
 void remove_from_bucket(
     ecs_bucket_t *bucket,
+    ecs_map_key_t key,
     size_t elem_size,
     uint16_t offset,
-    ecs_map_key_t key,
     int32_t index)
 {
+    (void)key;
+
     ecs_assert(bucket->count != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(index < bucket->count, ECS_INTERNAL_ERROR, NULL);
 
@@ -152,7 +154,6 @@ void remove_from_bucket(
         ecs_map_key_t *last_elem = GET_ELEM(array, elem_size, bucket->count);
 
         ecs_assert(key == *elem, ECS_INTERNAL_ERROR, NULL);
-
         memcpy(elem, last_elem, ELEM_SIZE(elem_size));
     }
 }
@@ -212,7 +213,7 @@ void rehash(
                         rehash_again = true;
                     }
 
-                    remove_from_bucket(bucket, elem_size, map->offset, key, i);
+                    remove_from_bucket(bucket, key, elem_size, map->offset, i);
 
                     count --;
                     i --;

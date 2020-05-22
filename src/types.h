@@ -430,7 +430,7 @@ struct ecs_world_t {
     ecs_stage_t stage;               /* Main storage */
     ecs_stage_t temp_stage;          /* Stage for when processing systems */
     ecs_vector_t *worker_stages;     /* Stages for worker threads */
-    uint32_t stage_count;            /* Number of stages in world */
+    int32_t stage_count;            /* Number of stages in world */
 
 
     /* -- Child administration -- */

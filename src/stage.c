@@ -7,10 +7,9 @@ static
 void clear_columns(
     ecs_world_t *world,
     ecs_stage_t *stage, 
-    ecs_table_t *table,
     ecs_data_t *data)
 {
-    uint32_t i, entity_count = ecs_vector_count(data->entities);
+    int32_t i, entity_count = ecs_vector_count(data->entities);
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
     ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
 
@@ -57,15 +56,14 @@ void clear_columns(
 static
 void merge_columns(
     ecs_world_t *world,
-    ecs_stage_t *stage, 
     ecs_table_t *table,
     ecs_data_t *dst_data,
     ecs_data_t *src_data,
-    uint32_t dst_entity_count,
+    int32_t dst_entity_count,
     int32_t src_entity_count)
 {
     /* Copy data column by column from the stage to the main stage */
-    uint32_t c, column_count = ecs_vector_count(table->type);
+    int32_t c, column_count = ecs_vector_count(table->type);
     ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
     ecs_entity_t *dst_entities = ecs_vector_first(dst_data->entities, ecs_entity_t);
     ecs_entity_t *src_entities = ecs_vector_first(src_data->entities, ecs_entity_t);
@@ -77,8 +75,8 @@ void merge_columns(
         }
         
         ecs_column_t *column = &src_data->columns[c];
-        uint16_t size = column->size;
-        uint16_t alignment = column->alignment;
+        size_t size = column->size;
+        size_t alignment = column->alignment;
         ecs_assert(size == main_column->size, ECS_INTERNAL_ERROR, NULL);
 
         void *src = ecs_vector_first_t(column->data, size, alignment);
@@ -135,7 +133,7 @@ void merge_commits(
         /* If the table has no columns, this is the root table. Entities that
          * are in a root table need to be either deleted or emptied */
         if (!column_count) {
-            clear_columns(world, stage, table, data);
+            clear_columns(world, stage, data);
             ecs_table_clear_data(table, data);
             continue;
         }
@@ -190,7 +188,7 @@ void merge_commits(
 
         /* Copy component data */
         merge_columns(
-            world, stage, table, main_data, data, main_entity_count, 
+            world, table, main_data, data, main_entity_count, 
             entity_count);
 
         /* Update entity index */
@@ -295,7 +293,7 @@ void merge_tables(
              * be merged in the next step. Reset the data pointer to NULL in the
              * staged table so it won't be cleaned up */
             *main_staged_data = *data;
-            *data = (ecs_data_t){ NULL };
+            *data = (ecs_data_t){ 0 };
 
             /* Add main stage table to dirty_tables. This will cause both the
              * staged table as well as the main stage table to be added to

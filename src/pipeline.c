@@ -7,6 +7,8 @@ int compare_entity(
     ecs_entity_t e2, 
     void *ptr2) 
 {
+    (void)ptr1;
+    (void)ptr2;
     return e1 - e2;
 }
 
