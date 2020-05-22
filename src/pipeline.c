@@ -244,24 +244,23 @@ void ecs_progress_pipeline(
             ran_since_merge ++;
             world->stats.systems_ran_frame ++;
 
-            if (ran_since_merge == op->count) {
+            if (op != op_last && ran_since_merge == op->count) {
                 ran_since_merge = 0;
+                op++;
 
-                if (op++ != op_last) {
-                    ecs_staging_end(world, false);
-                    ecs_staging_begin(world);
+                ecs_staging_end(world, false);
+                ecs_staging_begin(world);
 
-                    /* If the set of matched systems changed as a result of the
-                     * merge, we have to reset the iterator and move it to our
-                     * current position (system). If there are a lot of systems
-                     * in the pipeline this can be an expensive operation, but
-                     * should happen infrequently. */
-                    if (pq->match_count != pq->query->match_count) {
-                        i = iter_reset(world, pq, &it, &op, e);
-                        op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
-                        sys = ecs_column(rows, EcsColSystem, 1);
-                    }
-                }                
+                /* If the set of matched systems changed as a result of the
+                 * merge, we have to reset the iterator and move it to our
+                 * current position (system). If there are a lot of systems
+                 * in the pipeline this can be an expensive operation, but
+                 * should happen infrequently. */
+                if (pq->match_count != pq->query->match_count) {
+                    i = iter_reset(world, pq, &it, &op, e);
+                    op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
+                    sys = ecs_column(rows, EcsColSystem, 1);
+                }
             }
         }
     }

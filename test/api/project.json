@@ -10,6 +10,9 @@
             "flecs"
         ]
     },
+    "lang.c": {
+        "cflags": ["-fsanitize=undefined"]
+    },
     "test": {
         "testsuites": [{
             "id": "New",

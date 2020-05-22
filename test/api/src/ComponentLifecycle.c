@@ -120,7 +120,7 @@ void ComponentLifecycle_ctor_on_add() {
 
     ECS_COMPONENT(world, Position);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .ctor = comp_ctor,
@@ -144,7 +144,7 @@ void ComponentLifecycle_ctor_on_new() {
 
     ECS_COMPONENT(world, Position);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .ctor = comp_ctor,
@@ -165,7 +165,7 @@ void ComponentLifecycle_dtor_on_remove() {
 
     ECS_COMPONENT(world, Position);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .dtor = comp_dtor,
@@ -189,7 +189,7 @@ void ComponentLifecycle_dtor_on_delete() {
 
     ECS_COMPONENT(world, Position);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .dtor = comp_dtor,
@@ -213,7 +213,7 @@ void ComponentLifecycle_copy_on_set() {
 
     ECS_COMPONENT(world, Position);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -237,7 +237,7 @@ void ComponentLifecycle_copy_on_override() {
 
     ECS_COMPONENT(world, Position);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -264,7 +264,7 @@ void ComponentLifecycle_copy_on_new_w_data() {
 
     ECS_COMPONENT(world, Position);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -291,7 +291,7 @@ void ComponentLifecycle_copy_on_clone() {
 
     ECS_COMPONENT(world, Position);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -318,7 +318,7 @@ void ComponentLifecycle_no_copy_on_move() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -341,7 +341,7 @@ void ComponentLifecycle_copy_on_stage() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
@@ -374,7 +374,7 @@ void ComponentLifecycle_move_on_merge() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .move = comp_move,
@@ -410,7 +410,7 @@ void ComponentLifecycle_ctor_on_bulk_add() {
     ecs_entity_t e = ecs_bulk_new(world, Position, 10);
     test_assert(e != 0);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
         .ctor = comp_ctor,
@@ -462,7 +462,7 @@ void ComponentLifecycle_dtor_on_bulk_remove() {
     ecs_entity_t e = ecs_bulk_new(world, Type, 10);
     test_assert(e != 0);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
         .dtor = comp_dtor,
@@ -509,7 +509,7 @@ void ComponentLifecycle_ctor_on_bulk_add_entity() {
     ecs_entity_t e = ecs_bulk_new(world, Position, 10);
     test_assert(e != 0);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
         .ctor = comp_ctor,
@@ -561,7 +561,7 @@ void ComponentLifecycle_dtor_on_bulk_remove_entity() {
     ecs_entity_t e = ecs_bulk_new(world, Type, 10);
     test_assert(e != 0);
 
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
         .dtor = comp_dtor,
@@ -673,7 +673,7 @@ void ComponentLifecycle_copy_on_snapshot() {
 
     ECS_COMPONENT(world, Position);
     
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .copy = comp_copy,
         .ctx = &ctx
@@ -695,7 +695,7 @@ void ComponentLifecycle_copy_on_snapshot() {
     test_int(ctx.copy.size, sizeof(Position));
     test_int(ctx.copy.count, 1);
 
-    ctx = (cl_ctx){ 0 };
+    ctx = (cl_ctx){ { 0 } };
 
     ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
 
@@ -724,7 +724,7 @@ void ComponentLifecycle_ctor_copy_on_snapshot() {
 
     ECS_COMPONENT(world, Position);
     
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .ctor = comp_ctor,
         .copy = comp_copy,
@@ -747,7 +747,7 @@ void ComponentLifecycle_ctor_copy_on_snapshot() {
     test_int(ctx.copy.size, sizeof(Position));
     test_int(ctx.copy.count, 1);
 
-    ctx = (cl_ctx){ 0 };
+    ctx = (cl_ctx){ { 0 } };
 
     ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
 
@@ -783,7 +783,7 @@ void ComponentLifecycle_dtor_on_restore() {
 
     ECS_COMPONENT(world, Position);
     
-    cl_ctx ctx = { 0 };
+    cl_ctx ctx = { { 0 } };
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
         .dtor = comp_dtor,
         .ctx = &ctx
@@ -800,7 +800,7 @@ void ComponentLifecycle_dtor_on_restore() {
 
     test_int(ctx.dtor.invoked, 0);
 
-    ctx = (cl_ctx){ 0 };
+    ctx = (cl_ctx){ { 0 } };
 
     ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
 
@@ -811,7 +811,7 @@ void ComponentLifecycle_dtor_on_restore() {
     ecs_delete(world, e);
     
     test_int(ctx.dtor.invoked, 1);
-    ctx = (cl_ctx){ 0 };
+    ctx = (cl_ctx){ { 0 } };
 
     ecs_snapshot_restore(world, s);
 
