@@ -610,8 +610,8 @@ void ComponentLifecycle_ctor_dtor_on_bulk_add_remove() {
     ecs_entity_t e = ecs_bulk_new(world, Type, 10);
     test_assert(e != 0);
 
-    cl_ctx ctx_ctor = { 0 };
-    cl_ctx ctx_dtor = { 0 };
+    cl_ctx ctx_ctor = { { 0 } };
+    cl_ctx ctx_dtor = { { 0 } };
 
     ecs_set(world, ecs_entity(Velocity), EcsComponentLifecycle, {
         .ctor = comp_ctor,

@@ -58,7 +58,7 @@
  * Increasing this value will increase consumption of stack space. */
 #define ECS_MAX_ADD_REMOVE (32)
 
-typedef int64_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
+typedef uint64_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
 
 /** Callback used by the system signature expression parser */
 typedef int (*ecs_parse_action_t)(

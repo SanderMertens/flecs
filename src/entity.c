@@ -14,16 +14,16 @@ void comp_mask_set(
     int32_t value)
 {
     int32_t index = comp_mask_index(value);
-    mask[index] |= 1 << (value & 0x3F);
+    mask[index] |= (int64_t)1 << (value & 0x3F);
 }
 
 static
-int32_t comp_mask_is_set(
+int64_t comp_mask_is_set(
     ecs_comp_mask_t mask,
     int32_t value)
 {
     int32_t index = comp_mask_index(value);
-    return mask[index] & 1 << (value & 0x3F);
+    return mask[index] & (int64_t)1 << (value & 0x3F);
 }
 
 static
