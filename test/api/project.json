@@ -10,9 +10,6 @@
             "flecs"
         ]
     },
-    "lang.c": {
-        "cflags": ["-fsanitize=undefined"]
-    },
     "test": {
         "testsuites": [{
             "id": "New",
@@ -423,6 +420,15 @@
                 "on_set_after_override_w_new_w_count",
                 "on_set_after_override_1_of_2_overridden",
                 "on_set_after_snapshot_restore"
+            ]
+        }, {
+            "id": "Monitor",
+            "testcases": [
+                "1_comp",
+                "2_comps",
+                "1_comp_1_not",
+                "1_parent",
+                "1_comp_1_parent"
             ]
         }, {
             "id": "SystemPeriodic",
