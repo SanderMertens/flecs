@@ -57,9 +57,17 @@ int main(int argc, char *argv[]) {
     /* Create vector to store child entities */
     ecs_vector_t *children = ecs_vector_new(ecs_entity_t, 0);
 
+    ecs_filter_t parent_1_filter = {
+        .include = ecs_type(parent_1)
+    };
+
+    ecs_filter_t parent_2_filter = {
+        .include = ecs_type(parent_2)
+    };    
+
     /* Collect children for parent_1 */
     ecs_run_w_filter(world, GetChildren, 0, 0, 0, 
-        parent_1,
+        &parent_1_filter,
         &children);
 
     print_children(world, "parent_1", children);
@@ -69,7 +77,7 @@ int main(int argc, char *argv[]) {
 
     /* Collect children for parent_2 */
     ecs_run_w_filter(world, GetChildren, 0, 0, 0, 
-        parent_2,
+        &parent_2_filter,
         &children);
 
     print_children(world, "parent_2", children);

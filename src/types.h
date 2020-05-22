@@ -58,7 +58,7 @@
  * Increasing this value will increase consumption of stack space. */
 #define ECS_MAX_ADD_REMOVE (32)
 
-typedef int64_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
+typedef uint64_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
 
 /** Callback used by the system signature expression parser */
 typedef int (*ecs_parse_action_t)(
@@ -430,7 +430,7 @@ struct ecs_world_t {
     ecs_stage_t stage;               /* Main storage */
     ecs_stage_t temp_stage;          /* Stage for when processing systems */
     ecs_vector_t *worker_stages;     /* Stages for worker threads */
-    uint32_t stage_count;            /* Number of stages in world */
+    int32_t stage_count;            /* Number of stages in world */
 
 
     /* -- Child administration -- */

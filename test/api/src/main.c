@@ -372,6 +372,13 @@ void TriggerOnSet_on_set_after_override_w_new_w_count(void);
 void TriggerOnSet_on_set_after_override_1_of_2_overridden(void);
 void TriggerOnSet_on_set_after_snapshot_restore(void);
 
+// Testsuite 'Monitor'
+void Monitor_1_comp(void);
+void Monitor_2_comps(void);
+void Monitor_1_comp_1_not(void);
+void Monitor_1_parent(void);
+void Monitor_1_comp_1_parent(void);
+
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
 void SystemPeriodic_1_type_3_component(void);
@@ -2303,6 +2310,32 @@ static bake_test_suite suites[] = {
             {
                 .id = "on_set_after_snapshot_restore",
                 .function = TriggerOnSet_on_set_after_snapshot_restore
+            }
+        }
+    },
+    {
+        .id = "Monitor",
+        .testcase_count = 5,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "1_comp",
+                .function = Monitor_1_comp
+            },
+            {
+                .id = "2_comps",
+                .function = Monitor_2_comps
+            },
+            {
+                .id = "1_comp_1_not",
+                .function = Monitor_1_comp_1_not
+            },
+            {
+                .id = "1_parent",
+                .function = Monitor_1_parent
+            },
+            {
+                .id = "1_comp_1_parent",
+                .function = Monitor_1_comp_1_parent
             }
         }
     },
@@ -4351,5 +4384,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 47);
+    return bake_test_run("api", argc, argv, suites, 48);
 }

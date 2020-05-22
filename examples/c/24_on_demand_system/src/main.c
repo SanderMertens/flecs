@@ -36,12 +36,12 @@ int main(int argc, char *argv[]) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_ENTITY(world, Printable, 0);
+    ECS_TAG(world, Printable);
 
     /* The 'Move' system has the 'EcsOnDemand' tag which means Flecs will only
      * run this system if there is interest in any of its [out] columns. In this
      * case the system will only be ran if there is interest in Position. */
-    ECS_SYSTEM(world, Move,          EcsOnUpdate, [out] Position, Velocity, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, [out] Position, Velocity, SYSTEM.EcsOnDemand);
 
     /* The 'PrintPosition' is a regular system with an [in] column. This signals
      * that the system will not write Position, and relies on another system to

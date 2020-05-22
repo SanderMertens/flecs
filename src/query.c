@@ -59,6 +59,7 @@ ecs_entity_t get_entity_for_component(
     return ecs_find_entity_in_prefabs(world, entity, type, component, 0);
 }
 
+#ifndef NDEBUG
 static
 ecs_entity_t get_cascade_component(
     ecs_query_t *query)
@@ -66,6 +67,7 @@ ecs_entity_t get_cascade_component(
     ecs_sig_column_t *column = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
     return column[query->cascade_by - 1].is.component;
 }
+#endif
 
 static
 int32_t rank_by_depth(
@@ -217,7 +219,7 @@ void add_table(
 
     if (column_count) {
         /* Array that contains the system column to table column mapping */
-        table_data->columns = ecs_os_malloc(sizeof(uint32_t) * column_count);
+        table_data->columns = ecs_os_malloc(sizeof(int32_t) * column_count);
         ecs_assert(table_data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Store the components of the matched table. In the case of OR expressions,
@@ -399,7 +401,6 @@ bool match_column(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
     ecs_entity_t component,
     ecs_entity_t source,
     ecs_dbg_match_failure_t *failure_info)
@@ -483,7 +484,7 @@ bool match_table(
 
         if (oper_kind == EcsOperAnd) {
             if (!match_column(
-                world, table_type, from_kind, oper_kind, elem->is.component, 
+                world, table_type, from_kind, elem->is.component, 
                 elem->source, failure_info)) 
             {
                 return false;
@@ -491,7 +492,7 @@ bool match_table(
 
         } else if (oper_kind == EcsOperNot) {
             if (match_column(
-                world, table_type, from_kind, oper_kind, elem->is.component, 
+                world, table_type, from_kind, elem->is.component, 
                 elem->source, failure_info)) 
             {
                 return false;
@@ -671,7 +672,6 @@ static
 void sort_table(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entity_t sort_on_component,
     int32_t column_index,
     ecs_compare_action_t compare)
 {
@@ -760,8 +760,8 @@ void build_sorted_table_range(
         int32_t index = ecs_type_index_of(table->table->type, component);
         if (index != -1) {
             ecs_column_t *column = &data->columns[index];
-            uint16_t size = column->size;
-            uint16_t align = column->alignment;
+            size_t size = column->size;
+            size_t align = column->alignment;
             helper[to_sort].ptr = ecs_vector_first_t(column->data, size, align);
             helper[to_sort].elem_size = size;
         }
@@ -895,11 +895,9 @@ void sort_tables(
         if (sort_on_component) {
             /* Get index of sorted component. We only care if the component we're
             * sorting on has changed or if entities have been added / re(moved) */
-            int32_t column_count = ecs_vector_count(table->type);
             index = ecs_type_index_of(table->type, sort_on_component);
             ecs_assert(index != -1, ECS_INVALID_PARAMETER, NULL);
-            ecs_assert(index < column_count, ECS_INTERNAL_ERROR, NULL);
-
+            ecs_assert(index < ecs_vector_count(table->type), ECS_INTERNAL_ERROR, NULL); 
             is_dirty |= dirty_state[index + 1] != m_table->monitor[index + 1];
         }      
         
@@ -907,7 +905,7 @@ void sort_tables(
          * we're sorting on has changed (index + 1) */
         if (is_dirty) {
             /* Sort the tables */
-            sort_table(world, table, sort_on_component, index, compare);
+            sort_table(world, table, index, compare);
 
             /* Sorting the table will make it dirty again, so update our monitor
              * after the sort */

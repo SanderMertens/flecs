@@ -23,7 +23,7 @@ extern "C" {
 
 typedef struct ecs_strbuf_element {
     bool buffer_embedded;
-    uint32_t pos;
+    int32_t pos;
     char *buf;
     struct ecs_strbuf_element *next;
 } ecs_strbuf_element;
@@ -39,7 +39,7 @@ typedef struct ecs_strbuf_element_str {
 } ecs_strbuf_element_str;
 
 typedef struct ecs_strbuf_list_elem {
-    uint32_t count;
+    int32_t count;
     const char *separator;
 } ecs_strbuf_list_elem;
 
@@ -48,13 +48,13 @@ typedef struct ecs_strbuf_t {
     char *buf;
 
     /* The maximum number of characters that may be printed */
-    uint32_t max;
+    int32_t max;
 
     /* Size of elements minus current element */
-    uint32_t size;
+    int32_t size;
 
     /* The number of elements in use */
-    uint32_t elementCount;
+    int32_t elementCount;
 
     /* Always allocate at least one element */
     ecs_strbuf_element_embedded firstElement;
@@ -65,7 +65,7 @@ typedef struct ecs_strbuf_t {
     /* Stack that keeps track of number of list elements, used for conditionally
      * inserting a separator */
     ecs_strbuf_list_elem list_stack[ECS_STRBUF_MAX_LIST_DEPTH];
-    uint32_t list_sp;
+    int32_t list_sp;
 } ecs_strbuf_t;
 
 /* Append format string to a buffer.
@@ -118,7 +118,7 @@ FLECS_EXPORT
 bool ecs_strbuf_appendstrn(
     ecs_strbuf_t *buffer,
     const char *str,
-    uint32_t n);
+    int32_t n);
 
 /* Return result string (also resets buffer) */
 FLECS_EXPORT

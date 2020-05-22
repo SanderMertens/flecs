@@ -327,6 +327,8 @@ void* _ecs_vector_first(
     size_t elem_size,
     int16_t offset)
 {
+    (void)elem_size;
+
     ecs_assert(!vector || vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
     if (vector && vector->size) {
         return ECS_OFFSET(vector, offset);

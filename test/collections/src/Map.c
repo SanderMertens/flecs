@@ -260,7 +260,7 @@ void Map_remove_from_empty_bucket() {
 }
 
 void Map_grow() {
-    ecs_map_t *map = ecs_map_new(sizeof(char*), 1);
+    ecs_map_t *map = ecs_map_new(char*, 1);
     
     ecs_map_grow(map, 10);
 
@@ -276,7 +276,7 @@ void Map_grow() {
 }
 
 void Map_set_size_0() {
-    ecs_map_t *map = ecs_map_new(sizeof(char*), 1);
+    ecs_map_t *map = ecs_map_new(char*, 1);
     
     ecs_map_set_size(map, 0);
 

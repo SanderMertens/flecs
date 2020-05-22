@@ -19,11 +19,12 @@ typedef struct ecs_map_iter_t {
 
 FLECS_EXPORT
 ecs_map_t * _ecs_map_new(
-    size_t elem_size, 
+    size_t elem_size,
+    size_t alignment, 
     int32_t elem_count);
 
 #define ecs_map_new(T, elem_count)\
-    _ecs_map_new(sizeof(T), elem_count)
+    _ecs_map_new(sizeof(T), ECS_ALIGNOF(T), elem_count)
 
 FLECS_EXPORT
 void * _ecs_map_get(

@@ -620,9 +620,7 @@ void ecs_dim_type(
 
 static
 ecs_entity_t ecs_lookup_child_in_columns(
-    ecs_type_t type,
     ecs_data_t *data,
-    ecs_entity_t parent,
     int32_t column_index,
     const char *name_arg)
 {
@@ -678,8 +676,7 @@ ecs_entity_t lookup_child(
 
         ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
         if (data && data->columns) {
-            result = ecs_lookup_child_in_columns(
-                type, data, parent, column_index, id);
+            result = ecs_lookup_child_in_columns(data, column_index, id);
         }
 
         if (!result && stage != &world->stage) {
@@ -688,8 +685,7 @@ ecs_entity_t lookup_child(
                 continue;
             }
             
-            result = ecs_lookup_child_in_columns(
-                type, data, parent, column_index, id);
+            result = ecs_lookup_child_in_columns(data, column_index, id);
         }
 
         if (result) {

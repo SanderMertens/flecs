@@ -97,7 +97,7 @@ void run_on_remove_handlers(
 
         /* Run deinit actions (dtors) for components. Don't run triggers */
         ecs_run_deinit_actions(
-            world, &world->stage, table, data, 0, count, components, false);
+            world, table, data, 0, count, components, false);
     }
 }
 
@@ -179,6 +179,7 @@ void ecs_table_register_monitor(
     ecs_entity_t system,
     int32_t matched_table_index)
 {
+    (void)world;
     ecs_assert(system != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* First check if system is already registered as monitor. It is possible
@@ -218,6 +219,8 @@ void ecs_table_unregister_monitor(
     ecs_table_t *table,
     ecs_entity_t system)
 {
+    (void)world;
+
     bool removed = false;
 
     ecs_vector_each(table->monitors, ecs_monitor_t, m, {
@@ -417,6 +420,8 @@ void ecs_table_reset(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    (void)world;
+
     if (table->lo_edges) {
         memset(table->lo_edges, 0, sizeof(ecs_edge_t) * ECS_HI_COMPONENT_ID);
         ecs_map_clear(table->hi_edges);
@@ -463,7 +468,7 @@ void ecs_table_replace_data(
                 world, component);
             
             if (cdata->on_set) {
-                ecs_run_component_trigger(world, &world->stage, cdata->on_set, 
+                ecs_run_component_trigger(world, cdata->on_set, 
                     component, table, table_data, 0, count);
             }
         }
@@ -514,8 +519,8 @@ int32_t ecs_table_append(
         /* Add elements to each column array */
         int32_t i;
         for (i = 0; i < column_count; i ++) {
-            int32_t size = columns[i].size;
-            int32_t alignment = columns[i].alignment;
+            size_t size = columns[i].size;
+            size_t alignment = columns[i].alignment;
             if (size) {
                 ecs_vector_add_t(&columns[i].data, size, alignment);
             }
@@ -565,8 +570,8 @@ void ecs_table_delete(
     
     ecs_assert(index <= count, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t column_count = ecs_vector_count(table->type);
-    uint32_t i;
+    int32_t column_count = ecs_vector_count(table->type);
+    int32_t i;
 
     if (index != count) {   
         /* Move last entity id to index */     
@@ -783,6 +788,8 @@ void ecs_table_swap(
     int32_t row_1,
     int32_t row_2)
 {    
+    (void)world;
+
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_column_t *columns = data->columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -823,8 +830,8 @@ void ecs_table_swap(
     int32_t i, column_count = ecs_vector_count(table->type);
     
     for (i = 0; i < column_count; i ++) {
-        uint16_t size = columns[i].size;
-        uint16_t alignment = columns[i].alignment;
+        size_t size = columns[i].size;
+        size_t alignment = columns[i].alignment;
         void *data = ecs_vector_first_t(columns[i].data, size, alignment);
 
         if (size) {
@@ -847,11 +854,11 @@ static
 void merge_vector(
     ecs_vector_t **dst_out,
     ecs_vector_t *src,
-    uint16_t size,
-    uint16_t alignment)
+    size_t size,
+    size_t alignment)
 {
     ecs_vector_t *dst = *dst_out;
-    uint32_t dst_count = ecs_vector_count(dst);
+    int32_t dst_count = ecs_vector_count(dst);
 
     if (!dst_count) {
         if (dst) {
@@ -863,7 +870,7 @@ void merge_vector(
     /* If the new table is not empty, copy the contents from the
      * src into the dst. */
     } else {
-        uint32_t src_count = ecs_vector_count(src);
+        int32_t src_count = ecs_vector_count(src);
         ecs_vector_set_count_t(&dst, size, alignment, dst_count + src_count);
         
         void *dst_ptr = ecs_vector_first_t(dst, size, alignment);
@@ -1029,8 +1036,8 @@ void ecs_table_move(
     ecs_type_t new_type = new_table->type;
     ecs_type_t old_type = old_table->type;
 
-    uint32_t i_new = 0, new_column_count = ecs_vector_count(new_type);
-    uint32_t i_old = 0, old_column_count = ecs_vector_count(old_type);
+    int32_t i_new = 0, new_column_count = ecs_vector_count(new_type);
+    int32_t i_old = 0, old_column_count = ecs_vector_count(old_type);
     ecs_entity_t *new_components = ecs_vector_first(new_type, ecs_entity_t);
     ecs_entity_t *old_components = ecs_vector_first(old_type, ecs_entity_t);
 

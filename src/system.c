@@ -25,7 +25,7 @@ void activate_in_columns(
     bool activate)
 {
     ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
-    uint32_t i, count = ecs_vector_count(query->sig.columns);
+    int32_t i, count = ecs_vector_count(query->sig.columns);
 
     for (i = 0; i < count; i ++) {
         if (columns[i].inout_kind == EcsIn) {
@@ -45,7 +45,7 @@ void activate_in_columns(
                 (!activate && !in->count))) 
             {
                 ecs_on_demand_out_t **out = ecs_vector_first(in->systems, ecs_on_demand_out_t*);
-                uint32_t s, count = ecs_vector_count(in->systems);
+                int32_t s, count = ecs_vector_count(in->systems);
 
                 for (s = 0; s < count; s ++) {
                     /* Increase the count of the system with the out params */
@@ -194,7 +194,6 @@ void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
     const char *name,
-    ecs_entity_t phase,
     ecs_iter_action_t action,
     char *signature)
 {
@@ -352,8 +351,8 @@ ecs_entity_t ecs_run_intern(
     ecs_entity_t system,
     EcsColSystem *system_data,
     float delta_time,
-    uint32_t offset,
-    uint32_t limit,
+    int32_t offset,
+    int32_t limit,
     const ecs_filter_t *filter,
     void *param) 
 {

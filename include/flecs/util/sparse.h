@@ -94,7 +94,7 @@ const int32_t* ecs_sparse_unused_indices(
     const ecs_sparse_t *sparse);
 
 FLECS_EXPORT
-const int32_t ecs_sparse_unused_count(
+int32_t ecs_sparse_unused_count(
     const ecs_sparse_t *sparse);
 
 FLECS_EXPORT

@@ -641,13 +641,13 @@ static
 void TestContext(ecs_rows_t *rows) {
     void *world_ctx = ecs_get_context(rows->world);
     test_assert(world_ctx == rows->param);
-    uint32_t *param = rows->param;
+    int32_t *param = rows->param;
     (*param) ++;
 }
 
 void TriggerOnAdd_sys_context() {
     ecs_world_t *world = ecs_init();
-    uint32_t param = 0;
+    int32_t param = 0;
 
     ECS_COMPONENT(world, Position);
 
@@ -662,7 +662,7 @@ void TriggerOnAdd_sys_context() {
 
 void TriggerOnAdd_get_sys_context_from_param() {
     ecs_world_t *world = ecs_init();
-    uint32_t param = 0;
+    int32_t param = 0;
 
     ECS_COMPONENT(world, Position);
 

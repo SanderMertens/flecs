@@ -369,7 +369,7 @@ const int32_t* ecs_sparse_unused_indices(
     return ecs_vector_first(sparse->unused_elements, int32_t);
 }
 
-const int32_t ecs_sparse_unused_count(
+int32_t ecs_sparse_unused_count(
     const ecs_sparse_t *sparse)
 {
     return ecs_vector_count(sparse->unused_elements);

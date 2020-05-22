@@ -422,6 +422,15 @@
                 "on_set_after_snapshot_restore"
             ]
         }, {
+            "id": "Monitor",
+            "testcases": [
+                "1_comp",
+                "2_comps",
+                "1_comp_1_not",
+                "1_parent",
+                "1_comp_1_parent"
+            ]
+        }, {
             "id": "SystemPeriodic",
             "testcases": [
                 "1_type_1_component",

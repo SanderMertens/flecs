@@ -125,12 +125,12 @@ ecs_entity_t ecs_ei_recycle(
 /* Grow entity idex */
 void ecs_ei_grow(
     ecs_ei_t *entity_index,
-    uint32_t count)
+    int32_t count)
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t sparse_size = ecs_sparse_size(entity_index->lo);
-    uint32_t to_grow = count;
+    int32_t sparse_size = ecs_sparse_size(entity_index->lo);
+    int32_t to_grow = count;
 
     if (sparse_size < ECS_HI_ENTITY_ID) {
         if (to_grow + sparse_size > ECS_HI_ENTITY_ID) {
@@ -150,7 +150,7 @@ void ecs_ei_grow(
 /* Set size of entity index */
 void ecs_ei_set_size(
     ecs_ei_t *entity_index,
-    uint32_t size)
+    int32_t size)
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -164,7 +164,7 @@ void ecs_ei_set_size(
 }
 
 /* Count number of entities in index */
-uint32_t ecs_ei_count(
+int32_t ecs_ei_count(
     ecs_ei_t *entity_index)
 {
     ecs_assert(entity_index != NULL, ECS_INTERNAL_ERROR, NULL);

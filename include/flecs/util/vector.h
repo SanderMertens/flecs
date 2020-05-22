@@ -8,7 +8,7 @@ extern "C" {
 /* Public, so we can do compile-time offset calculation */
 struct ecs_vector_t {
     int32_t count;
-    uint32_t size;
+    int32_t size;
     
 #ifndef NDEBUG
     size_t elem_size;

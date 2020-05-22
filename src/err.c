@@ -65,7 +65,7 @@ char *ecs_vasprintf(
 
     va_end(tmpa);
 
-    if (size < 0) { 
+    if ((int32_t)size < 0) { 
         return NULL; 
     }
 
@@ -236,6 +236,9 @@ void _ecs_trace(
     const char *fmt,
     ...)
 {
+    (void)level;
+    (void)line;
+
     va_list valist;
     va_start(valist, fmt);
 

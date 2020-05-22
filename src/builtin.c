@@ -10,6 +10,10 @@ void ctor_init_zero(
     int32_t count,
     void *ctx)
 {
+    (void)world;
+    (void)component;
+    (void)entities;
+    (void)ctx;
     memset(ptr, 0, size * count);
 }
 
@@ -23,6 +27,10 @@ void ecs_colsystem_dtor(
     int32_t count,
     void *ctx)
 {
+    (void)component;
+    (void)ctx;
+    (void)size;
+
     EcsColSystem *system_data = ptr;
 
     int i;
@@ -133,7 +141,7 @@ void EcsOnSetSystem(
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_entity_t e = entities[i];
-        ecs_init_system(world, entities[i], ecs_get_name(world, e), sys[i].phase, 
+        ecs_init_system(world, entities[i], ecs_get_name(world, e), 
             sys[i].action, sys[i].signature);
     }
 }

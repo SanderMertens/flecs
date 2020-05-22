@@ -20,15 +20,17 @@ int main(int argc, char *argv[]) {
     ECS_PREFAB(world, RootPrefab, Position);
         ecs_set(world, RootPrefab, Position, {10, 20});
 
-        /* Create child prefab. Instead of adding the child directly to
-         * RootPrefab, create a type that overrides the components from the
-         * ChildPrefab. This ensures that when the prefab is instantiated, the
-         * components from the child prefab are owned by the instance. */
+        /* Create a standalone ChildPrefab that is not a child of RootPrefab.
+         * This will cause it to not be instantiated when RootPrefab is
+         * is instantiated. */
         ECS_PREFAB(world, ChildPrefab, Position);
-        ECS_TYPE(world, Child, INSTANCEOF | ChildPrefab, Position);
-            /* Instead of the ChildPrefab, add the Child type to RootPrefab */
-            ecs_set(world, Child, EcsPrefab, {.parent = RootPrefab});
             ecs_set(world, ChildPrefab, Position, {30, 40});
+
+        /* Create a prefab that is an instance of ChildPrefab that overrides the
+         * Position component. When RootPrefab is instantiated, it will have a
+         * child with the exact same type as Child, meaning that it will
+         * automatically override Position. */
+        ECS_PREFAB(world, Child, CHILDOF | RootPrefab, INSTANCEOF | ChildPrefab, Position);
 
     /* Create type that automatically overrides Position from RootPrefab */
     ECS_TYPE(world, Root, INSTANCEOF | RootPrefab, Position);
@@ -46,7 +48,7 @@ int main(int argc, char *argv[]) {
     /* Print position of e and of the child. Note that since types were used to
      * automatically override the components, the components are owned by both
      * e and child. */
-    Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get_ptr(world, e, Position);
     printf("Position of e = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, e, Position, true));
 
     p = ecs_get_ptr(world, child, Position);

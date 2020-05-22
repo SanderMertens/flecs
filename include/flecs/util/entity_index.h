@@ -54,15 +54,15 @@ ecs_entity_t ecs_ei_recycle(
 /* Grow entity index */
 void ecs_ei_grow(
     ecs_ei_t *entity_index,
-    uint32_t count);
+    int32_t count);
 
 /* Grow entity index to specific size */
 void ecs_ei_set_size(
     ecs_ei_t *entity_index,
-    uint32_t size);    
+    int32_t size);    
 
 /* Count entities in stage */
-uint32_t ecs_ei_count(
+int32_t ecs_ei_count(
     ecs_ei_t *entity_index);      
 
 /* Initialize entity index for stage */

@@ -7,7 +7,7 @@ void ecs_notify_queries_of_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    uint32_t i, count = ecs_sparse_count(world->queries);
+    int32_t i, count = ecs_sparse_count(world->queries);
 
     for (i = 0; i < count; i ++) {
         ecs_query_t *query = ecs_sparse_get(world->queries, ecs_query_t, i);
@@ -37,13 +37,13 @@ void init_edges(
     ecs_table_t *table)
 {
     ecs_entity_t *entities = ecs_vector_first(table->type, ecs_entity_t);
-    uint32_t count = ecs_vector_count(table->type);
+    int32_t count = ecs_vector_count(table->type);
 
     table->lo_edges = ecs_os_calloc(sizeof(ecs_edge_t), ECS_HI_COMPONENT_ID);
     table->hi_edges = ecs_map_new(ecs_edge_t, 0);
     
     /* Make add edges to own components point to self */
-    int i;
+    int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
@@ -189,11 +189,11 @@ void add_entity_to_type(
     ecs_entity_t replace,
     ecs_entities_t *out)
 {
-    uint32_t count = ecs_vector_count(type);
+    int32_t count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);    
     bool added = false;
 
-    int i, el = 0;
+    int32_t i, el = 0;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
         if (e == replace) {
@@ -223,10 +223,10 @@ void remove_entity_from_type(
     ecs_entity_t remove,
     ecs_entities_t *out)
 {
-    uint32_t count = ecs_vector_count(type);
+    int32_t count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
-    int i, el = 0;
+    int32_t i, el = 0;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
         if (e != remove) {
@@ -290,7 +290,7 @@ ecs_table_t *find_or_create_table_include(
     ecs_entity_t add)
 {
     ecs_type_t type = node->type;
-    uint32_t count = ecs_vector_count(type);
+    int32_t count = ecs_vector_count(type);
 
     ecs_entities_t entities = {
         .array = ecs_os_alloca(ecs_entity_t, count + 1),
@@ -347,7 +347,7 @@ ecs_table_t *find_or_create_table_exclude(
     ecs_entity_t remove)
 {
     ecs_type_t type = node->type;
-    uint32_t count = ecs_vector_count(type);
+    int32_t count = ecs_vector_count(type);
 
     ecs_entities_t entities = {
         .array = ecs_os_alloca(ecs_entity_t, count - 1),
@@ -371,12 +371,11 @@ ecs_table_t* traverse_remove_hi_edges(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *node,
-    ecs_entity_t e,
-    uint32_t i,
+    int32_t i,
     ecs_entities_t *to_remove,
     ecs_entities_t *removed)
 {
-    uint32_t count = to_remove->count;
+    int32_t count = to_remove->count;
     ecs_entity_t *entities = to_remove->array;
 
     for (; i < count; i ++) {
@@ -403,13 +402,7 @@ ecs_table_t* traverse_remove_hi_edges(
             }
         }
 
-        /* Hi edges should are not removed to the removed array. This array is used
-         * to determine if component actions need to be executed, and entities
-         * that are not a component (>ECS_HI_COMPONENT_ID) there is never any
-         * component action.
-         *
-         if (removed && node != next) removed->array[removed->count ++] = e;
-         */
+        if (removed && node != next) removed->array[removed->count ++] = e;
 
         node = next;        
     }
@@ -424,7 +417,7 @@ ecs_table_t* ecs_table_traverse_remove(
     ecs_entities_t *to_remove,
     ecs_entities_t *removed)
 {
-    uint32_t i, count = to_remove->count;
+    int32_t i, count = to_remove->count;
     ecs_entity_t *entities = to_remove->array;
     node = node ? node : &world->stage.root;
 
@@ -434,7 +427,8 @@ ecs_table_t* ecs_table_traverse_remove(
         /* If the array is not a simple component array, use a function that
          * handles all cases, but is slower */
         if (e >= ECS_HI_COMPONENT_ID) {
-            return traverse_remove_hi_edges(world, stage, node, e, i, to_remove, removed);
+            return traverse_remove_hi_edges(world, stage, node, i, to_remove, 
+                removed);
         }
 
         ecs_edge_t *edge = &node->lo_edges[e];
@@ -473,12 +467,11 @@ ecs_table_t* traverse_add_hi_edges(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *node,
-    ecs_entity_t e,
-    uint32_t i,
+    int32_t i,
     ecs_entities_t *to_add,
     ecs_entities_t *added)
 {
-    uint32_t count = to_add->count;
+    int32_t count = to_add->count;
     ecs_entity_t *entities = to_add->array;
 
     for (; i < count; i ++) {
@@ -519,7 +512,7 @@ ecs_table_t* ecs_table_traverse_add(
     ecs_entities_t *to_add,
     ecs_entities_t *added)    
 {
-    uint32_t i, count = to_add->count;
+    int32_t i, count = to_add->count;
     ecs_entity_t *entities = to_add->array;
     node = node ? node : &world->stage.root;
 
@@ -530,7 +523,7 @@ ecs_table_t* ecs_table_traverse_add(
         /* If the array is not a simple component array, use a function that
          * handles all cases, but is slower */
         if (e >= ECS_HI_COMPONENT_ID) {
-            return traverse_add_hi_edges(world, stage, node, e, i, to_add, added);
+            return traverse_add_hi_edges(world, stage, node, i, to_add, added);
         }
 
         /* There should always be an edge for adding */
@@ -578,7 +571,7 @@ bool ecs_entity_array_is_ordered(
 {
     ecs_entity_t prev = 0;
     ecs_entity_t *array = entities->array;
-    uint32_t i, count = entities->count;
+    int32_t i, count = entities->count;
 
     for (i = 0; i < count; i ++) {
         if (array[i] <= prev) {
@@ -595,7 +588,7 @@ void ecs_entity_array_dedup(
     ecs_entities_t *entities)
 {
     ecs_entity_t *array = entities->array;
-    uint32_t j, k, count = entities->count;
+    int32_t j, k, count = entities->count;
     ecs_entity_t prev = array[0];
 
     for (k = j = 1; k < count; j ++, k++) {
@@ -610,6 +603,8 @@ void ecs_entity_array_dedup(
 
     entities->count -= (k - j);
 }
+
+#ifndef NDEBUG
 
 static
 int32_t count_occurrences(
@@ -655,7 +650,6 @@ void verify_constraints(
 
         ecs_entity_t entity = e & ECS_ENTITY_MASK;
         int32_t matches = count_occurrences(world, entities, entity, i);
-
         switch(mask) {
         case ECS_OR:
             ecs_assert(matches >= 1, ECS_TYPE_CONSTRAINT_VIOLATION, NULL);
@@ -670,6 +664,8 @@ void verify_constraints(
     }
 }
 
+#endif
+
 static
 ecs_table_t *find_or_create(
     ecs_world_t *world,
@@ -680,13 +676,13 @@ ecs_table_t *find_or_create(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uint32_t count = entities->count;
+    int32_t count = entities->count;
     bool is_ordered = true, order_checked = false;
     ecs_entity_t *ordered_entities = NULL;
 
     ecs_table_t *table = root;
     ecs_entity_t *array = entities->array;
-    uint32_t i;
+    int32_t i;
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
@@ -730,7 +726,9 @@ ecs_table_t *find_or_create(
                 };
 
                 /* Check for constraint violations */
+#ifndef NDEBUG
                 verify_constraints(world, &table_entities);
+#endif
 
                 /* If the original array is ordered and the edge was empty, 
                     * the table does not exist, so create it */
