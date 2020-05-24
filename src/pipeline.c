@@ -239,7 +239,7 @@ void ecs_progress_pipeline(
         int32_t i;
         for(i = 0; i < rows->count; i ++) {
             ecs_entity_t e = rows->entities[i];
-
+            
             ecs_run_intern(world, world, e, &sys[i], delta_time, 0, 0, 
                 NULL, NULL);
 

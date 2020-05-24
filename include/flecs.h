@@ -62,13 +62,6 @@ typedef uint64_t ecs_entity_t;
 /* A vector containing component identifiers used to describe an entity type. */
 typedef const ecs_vector_t* ecs_type_t;
 
-/* Trigger kinds enable specifying when a trigger is executed */
-typedef enum ecs_trigger_kind_t {
-    EcsOnAdd,
-    EcsOnRemove,
-    EcsOnSet    
-} ecs_trigger_kind_t;
-
 /** Action callback for systems and triggers */
 typedef void (*ecs_iter_action_t)(
     ecs_rows_t *data);
@@ -264,7 +257,7 @@ typedef struct EcsComponentLifecycle {
 
 /* Component used for registering component triggers */
 typedef struct EcsTrigger {
-    ecs_trigger_kind_t kind;
+    ecs_entity_t kind;
     ecs_iter_action_t action;
     ecs_entity_t component;
     ecs_entity_t self;
@@ -278,11 +271,6 @@ typedef struct EcsSystem {
     ecs_entity_t pipeline;
     ecs_entity_t phase;
 } EcsSystem;
-
-/* Pipeline for runing systems */
-typedef struct EcsPipeline {
-    ecs_type_t phases;
-} EcsPipeline;
 
 /* Runtime properties of pipeline */
 typedef struct EcsPipelineQuery {
@@ -378,12 +366,12 @@ extern ecs_type_t
     ecs_type(EcsRateFilter),
     ecs_type(EcsTickSource);
 
-/** Handles to builtin components */
+/** Handles to builtin components / tags */
 #define FLECS__EEcsComponent (1)
 #define FLECS__EEcsComponentLifecycle (2)
 #define FLECS__EEcsTrigger (3)
 #define FLECS__EEcsType (4)
-#define FLECS__EEcsModule (5)
+#define EcsModule (5)
 #define EcsPrefab (6)
 #define FLECS__EEcsSystem (7)
 #define FLECS__EEcsColSystem (8)
@@ -394,26 +382,31 @@ extern ecs_type_t
 #define EcsInactive (13)
 #define EcsOnDemand (14)
 #define EcsMonitor (15)
-#define FLECS__EEcsPipeline (17)
+#define EcsPipeline (17)
 #define FLECS__EEcsPipelineQuery (18)
 #define FLECS__EEcsTimer (19)
 #define FLECS__EEcsRateFilter (20)
 #define FLECS__EEcsTickSource (21)
 
+/* Trigger tags */
+#define EcsOnAdd (22)
+#define EcsOnRemove (23)
+#define EcsOnSet (24)
+
 /* Builtin pipeline tags */
-#define EcsPreFrame (22)
-#define EcsOnLoad (23)
-#define EcsPostLoad (24)
-#define EcsPreUpdate (25)
-#define EcsOnUpdate (26)
-#define EcsOnValidate (27)
-#define EcsPostUpdate (28)
-#define EcsPreStore (29)
-#define EcsOnStore (30)
-#define EcsPostFrame (31)
+#define EcsPreFrame (25)
+#define EcsOnLoad (26)
+#define EcsPostLoad (27)
+#define EcsPreUpdate (28)
+#define EcsOnUpdate (29)
+#define EcsOnValidate (30)
+#define EcsPostUpdate (31)
+#define EcsPreStore (32)
+#define EcsOnStore (33)
+#define EcsPostFrame (34)
 
 /** Builtin entity ids */
-#define EcsWorld (32)
+#define EcsWorld (35)
 #define ECS_SINGLETON (EcsSingleton)
 
 /** Value used to quickly check if component is builtin */
@@ -559,7 +552,7 @@ extern ecs_type_t
 #endif
 
 #define ECS_TRIGGER(world, name, kind, component, ctx) \
-    ecs_entity_t __F##name = ecs_new_trigger(world, #name, kind, ecs_entity(component), name, ctx);\
+    ecs_entity_t __F##name = ecs_new_trigger(world, #name, kind, #component, name, ctx);\
     ecs_entity_t name = __F##name;\
     (void)__F##name;\
     (void)name;

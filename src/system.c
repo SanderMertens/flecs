@@ -138,9 +138,9 @@ void ecs_system_activate(
     }
 
     const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
-    
-    /* If the system is being created, the component hasn't been set yet */
-    if (!system_data) {
+    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!system_data->query) {
         return;
     }
 
@@ -189,7 +189,7 @@ void ecs_enable_system(
         world, system, system_data,
         enabled ? EcsSystemEnabled : EcsSystemDisabled);
 }
- 
+
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -207,22 +207,29 @@ void ecs_init_system(
         name, system, signature);
     ecs_trace_push();
 
-    /* All systems start out inactive */
-    ecs_add_entity(world, system, EcsInactive);
-
-    /* Create the query for the system */
-    ecs_query_t *query = ecs_query_new_w_sig(world, system, &sig);
-    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+    /* If system has FromSystem columns, add components to the system entity */
+    ecs_vector_each(sig.columns, ecs_sig_column_t, column, {
+        if (column->from_kind == EcsFromSystem) {
+            ecs_add_entity(world, system, column->is.component);
+        }
+    });    
 
     /* Add & initialize the EcsColSystem component */
     bool is_added = false;
     EcsColSystem *sptr = ecs_get_mut(
         world, system, EcsColSystem, &is_added);
 
+    memset(sptr, 0, sizeof(EcsColSystem));
     ecs_assert(sptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(is_added == true, ECS_UNSUPPORTED, NULL);
 
-    memset(sptr, 0, sizeof(EcsColSystem));
+    /* Create the query for the system */
+    ecs_query_t *query = ecs_query_new_w_sig(world, system, &sig);
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Sanity check to make sure creating the query didn't add any additional
+     * tags or components to the system */
+    ecs_assert(sptr == ecs_get_ptr(world, system, EcsColSystem), ECS_INTERNAL_ERROR, NULL);
     sptr->query = query;
     sptr->action = action;
     sptr->entity = system;
@@ -234,6 +241,11 @@ void ecs_init_system(
      * OnDemand systems get enabled. */
     if (ecs_vector_count(query->tables)) {
         ecs_system_activate(world, system, true);
+    } else {
+        /* If system isn't matched with any tables, mark it as inactive. This
+         * causes it to be ignored by the main loop. When the system matches
+         * with a table it will be activated. */
+        ecs_add_entity(world, system, EcsInactive);
     }
 
     /* If system is enabled, trigger enable components */
@@ -244,13 +256,6 @@ void ecs_init_system(
     if (!ecs_sig_check_constraints(world, &query->sig)) {
         ecs_add_entity(world, system, EcsDisabledIntern);
     }
-
-    /* If system has FromSystem columns, add components to the system entity */
-    ecs_vector_each(query->sig.columns, ecs_sig_column_t, column, {
-        if (column->from_kind == EcsFromSystem) {
-            ecs_add_entity(world, system, column->is.component);
-        }
-    });
 
     /* If the query has a OnDemand system tag, register its [out] columns */
     if (ecs_has_entity(world, system, EcsOnDemand)) {
@@ -264,10 +269,6 @@ void ecs_init_system(
         if (!sptr->on_demand->count) {
             ecs_add_entity(world, system, EcsDisabledIntern);
         }        
-    }
-
-    if (ecs_has_entity(world, system, EcsMonitor)) {
-        ecs_query_set_monitor(world, query, true);
     }
 
     ecs_trace_pop();
@@ -481,16 +482,19 @@ ecs_entity_t ecs_run(
 void ecs_run_monitor(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_monitor_t *monitor,
+    ecs_matched_query_t *monitor,
     int32_t row,
     int32_t count)
 {
-    ecs_entity_t system = monitor->system;
+    ecs_query_t *query = monitor->query;
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t system = query->system;
     const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_rows_t rows = {0};
-    ecs_query_set_rows( world, stage, system_data->query, &rows, 
+    ecs_query_set_rows( world, stage, query, &rows, 
         monitor->matched_table_index, row, count);
 
     rows.system = system;

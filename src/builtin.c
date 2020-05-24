@@ -194,6 +194,11 @@ void ecs_init_system_builtins(
 void ecs_init_builtins(
     ecs_world_t *world)
 {
+    /* Bootstrap trigger tags */
+    ecs_set(world, EcsOnAdd, EcsName, {"EcsOnAdd"});
+    ecs_set(world, EcsOnRemove, EcsName, {"EcsOnRemove"});
+    ecs_set(world, EcsOnSet, EcsName, {"EcsOnSet"});
+
     /* Bootstrap the on_set trigger for EcsTrigger. After this we'll be
      * able to set triggers for components */
     EcsTrigger tr = {

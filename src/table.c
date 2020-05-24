@@ -101,6 +101,71 @@ void run_on_remove_handlers(
     }
 }
 
+static
+int compare_matched_query(
+    const void *ptr1,
+    const void *ptr2)
+{
+    const ecs_matched_query_t *m1 = ptr1;
+    const ecs_matched_query_t *m2 = ptr2;
+    ecs_query_t *q1 = m1->query;
+    ecs_query_t *q2 = m2->query;
+    ecs_assert(q1 != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(q2 != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t s1 = q1->system;
+    ecs_entity_t s2 = q2->system;
+    ecs_assert(s1 != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(s2 != 0, ECS_INTERNAL_ERROR, NULL);
+
+    return s1 - s2;
+}
+
+/* This function is called when a query is matched with a table. A table keeps
+ * a list of tables that match so that they can be notified when the table
+ * becomes empty / non-empty. */
+static
+void register_monitor(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_query_t *query,
+    int32_t matched_table_index)
+{
+    (void)world;
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* First check if system is already registered as monitor. It is possible
+     * the query just wants to update the matched_table_index (for example, if
+     * query tables got reordered) */
+    ecs_vector_each(table->monitors, ecs_matched_query_t, m, {
+        if (m->query == query) {
+            m->matched_table_index = matched_table_index;
+            return;
+        }
+    });
+
+    /* Monitor hasn't been registered with table, register it now */
+    ecs_matched_query_t *m = ecs_vector_add(&table->monitors, ecs_matched_query_t);
+    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    m->query = query;
+    m->matched_table_index = matched_table_index;
+
+    /* Sort the vector so we can quickly compare monitors between tables */
+    qsort(
+        ecs_vector_first(table->monitors, ecs_matched_query_t), 
+        ecs_vector_count(table->monitors), 
+        sizeof(ecs_matched_query_t), 
+        compare_matched_query);
+
+#ifndef NDEBUG
+    char *str = ecs_type_str(world, table->type);
+    ecs_trace_1("monitor #[green]%s#[reset] registered with table #[red]%s",
+        ecs_get_name(world, query->system), str);
+    ecs_os_free(str);
+#endif
+}
+
 /* -- Private functions -- */
 
 /* If table goes from 0 to >0 entities or from >0 entities to 0 entities notify
@@ -149,97 +214,23 @@ void ecs_table_activate(
 void ecs_table_register_query(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_query_t *query)
-{
-    /* Register system with the table */
-    ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
-    if (q) *q = query;
-
-    ecs_data_t *data = ecs_table_get_data(world, table);
-    if (data && ecs_vector_count(data->entities)) {
-        ecs_table_activate(world, table, query, true);
-    }
-}
-
-int compare_entity(
-    const void *ptr1,
-    const void *ptr2)
-{
-    const ecs_monitor_t *m1 = ptr1;
-    const ecs_monitor_t *m2 = ptr2;
-    return m1->system - m2->system;
-}
-
-/* This function is called when a query is matched with a table. A table keeps
- * a list of tables that match so that they can be notified when the table
- * becomes empty / non-empty. */
-void ecs_table_register_monitor(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t system,
+    ecs_query_t *query,
     int32_t matched_table_index)
 {
-    (void)world;
-    ecs_assert(system != 0, ECS_INTERNAL_ERROR, NULL);
+    /* Register system with the table */
+    if (query->kind == EcsQueryDefault) {
+        ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
+        if (q) *q = query;
 
-    /* First check if system is already registered as monitor. It is possible
-     * the query just wants to update the matched_table_index (for example, if
-     * query tables got reordered) */
-    ecs_vector_each(table->monitors, ecs_monitor_t, m, {
-        if (m->system == system) {
-            m->matched_table_index = matched_table_index;
-            return;
+        ecs_data_t *data = ecs_table_get_data(world, table);
+        if (data && ecs_vector_count(data->entities)) {
+            ecs_table_activate(world, table, query, true);
         }
-    });
 
-    /* Monitor hasn't been registered with table, register it now */
-    ecs_monitor_t *m = ecs_vector_add(&table->monitors, ecs_monitor_t);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    m->system = system;
-    m->matched_table_index = matched_table_index;
-
-    /* Sort the vector so we can quickly compare monitors between tables */
-    qsort(
-        ecs_vector_first(table->monitors, ecs_monitor_t), 
-        ecs_vector_count(table->monitors), 
-        sizeof(ecs_monitor_t), 
-        compare_entity);
-
-#ifndef NDEBUG
-    char *str = ecs_type_str(world, table->type);
-    ecs_trace_1("monitor #[green]%s#[reset] registered with table #[red]%s",
-        ecs_get_name(world, system), str);
-    ecs_os_free(str);
-#endif
-}
-
-void ecs_table_unregister_monitor(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t system)
-{
-    (void)world;
-
-    bool removed = false;
-
-    ecs_vector_each(table->monitors, ecs_monitor_t, m, {
-        if (m->system == system) {
-            ecs_vector_remove_index(table->monitors, ecs_monitor_t, m_i);
-            removed = true;
-            break;
-        }
-    });
-
-    if (!removed) {
-        return;
+    /* Register the system as a monitor */
+    } else if (query->kind == EcsQueryMonitor) {
+        register_monitor(world, table, query, matched_table_index);
     }
-
-    qsort(
-        ecs_vector_first(table->monitors, ecs_monitor_t), 
-        ecs_vector_count(table->monitors), 
-        sizeof(ecs_monitor_t), 
-        compare_entity);    
 }
 
 static
@@ -570,8 +561,8 @@ void ecs_table_delete(
     
     ecs_assert(index <= count, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t column_count = ecs_vector_count(table->type);
-    int32_t i;
+    uint32_t column_count = ecs_vector_count(table->type);
+    uint32_t i;
 
     if (index != count) {   
         /* Move last entity id to index */     
@@ -858,7 +849,7 @@ void merge_vector(
     size_t alignment)
 {
     ecs_vector_t *dst = *dst_out;
-    int32_t dst_count = ecs_vector_count(dst);
+    uint32_t dst_count = ecs_vector_count(dst);
 
     if (!dst_count) {
         if (dst) {
@@ -870,7 +861,7 @@ void merge_vector(
     /* If the new table is not empty, copy the contents from the
      * src into the dst. */
     } else {
-        int32_t src_count = ecs_vector_count(src);
+        uint32_t src_count = ecs_vector_count(src);
         ecs_vector_set_count_t(&dst, size, alignment, dst_count + src_count);
         
         void *dst_ptr = ecs_vector_first_t(dst, size, alignment);
@@ -1036,8 +1027,8 @@ void ecs_table_move(
     ecs_type_t new_type = new_table->type;
     ecs_type_t old_type = old_table->type;
 
-    int32_t i_new = 0, new_column_count = ecs_vector_count(new_type);
-    int32_t i_old = 0, old_column_count = ecs_vector_count(old_type);
+    uint32_t i_new = 0, new_column_count = ecs_vector_count(new_type);
+    uint32_t i_old = 0, old_column_count = ecs_vector_count(old_type);
     ecs_entity_t *new_components = ecs_vector_first(new_type, ecs_entity_t);
     ecs_entity_t *old_components = ecs_vector_first(old_type, ecs_entity_t);
 

@@ -203,12 +203,7 @@ void ecs_init_root_table(
 void ecs_table_register_query(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_query_t *query);
-
-void ecs_table_register_monitor(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t system,
+    ecs_query_t *query,
     int32_t matched_table_index);
 
 void ecs_table_unregister_monitor(
@@ -274,11 +269,6 @@ void ecs_query_match_table(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_table_t *table);
-
-void ecs_query_set_monitor(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    bool is_monitor);
 
 void ecs_query_set_rows(
     ecs_world_t *world,
@@ -389,7 +379,7 @@ void ecs_measure_system_time(
 void ecs_run_monitor(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_monitor_t *monitor,
+    ecs_matched_query_t *monitor,
     int32_t row,
     int32_t count);
 

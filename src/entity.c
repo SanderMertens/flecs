@@ -769,7 +769,7 @@ void run_monitors(
     }
 
     if (!src_table || !src_table->monitors) {
-        ecs_vector_each(dst_table->monitors, ecs_monitor_t, monitor, {
+        ecs_vector_each(dst_table->monitors, ecs_matched_query_t, monitor, {
             ecs_run_monitor(world, stage, monitor, dst_row, count);
         });
     } else {
@@ -777,23 +777,26 @@ void run_monitors(
          * src_table doesn't have */
         int32_t i, count = ecs_vector_count(dst_table->monitors);
         int32_t j = 0, src_count = ecs_vector_count(src_table->monitors);
-        ecs_monitor_t *dst_monitors = ecs_vector_first(dst_table->monitors, ecs_monitor_t);
-        ecs_monitor_t *src_monitors = ecs_vector_first(src_table->monitors, ecs_monitor_t);
+        ecs_matched_query_t *dst_monitors = ecs_vector_first(dst_table->monitors, ecs_matched_query_t);
+        ecs_matched_query_t *src_monitors = ecs_vector_first(src_table->monitors, ecs_matched_query_t);
 
         for (i = 0; i < count; i ++) {
-            ecs_monitor_t *dst = &dst_monitors[i];
+            ecs_matched_query_t *dst = &dst_monitors[i];
 
-            ecs_monitor_t *src = 0;
+            ecs_entity_t system = dst->query->system;
+            ecs_assert(system != 0, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_matched_query_t *src = 0;
             while (j < src_count) {
                 src = &src_monitors[j];
-                if (src->system < dst->system) {
+                if (src->query->system < system) {
                     j ++;
                 } else {
                     break;
                 }
             }
 
-            if (src->system == dst->system) {
+            if (src->query->system == system) {
                 continue;
             }
 

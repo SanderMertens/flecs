@@ -183,8 +183,8 @@ FLECS_EXPORT
 ecs_entity_t ecs_new_trigger(
     ecs_world_t *world,
     const char *name,
-    ecs_trigger_kind_t kind,
-    ecs_entity_t component,
+    ecs_entity_t kind,
+    const char *component,
     ecs_iter_action_t action,
     const void *ctx);
 
@@ -244,6 +244,8 @@ typedef struct ecs_sig_t {
     ecs_vector_t *columns;      /* Columns that contain parsed data */
 } ecs_sig_t;
 
+/** Add column to signature. */
+FLECS_EXPORT
 int ecs_sig_add(
     ecs_sig_t *sig,
     ecs_sig_from_kind_t from_kind,
@@ -251,6 +253,14 @@ int ecs_sig_add(
     ecs_sig_inout_kind_t access_kind,
     ecs_entity_t component,
     ecs_entity_t source);
+
+/** Create query based on signature object. */
+FLECS_EXPORT
+ecs_query_t* ecs_query_new_w_sig(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_sig_t *sig);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Error API

@@ -125,10 +125,13 @@ void order_ranked_tables(
         ecs_vector_sort(query->tables, ecs_matched_table_t, table_compare);       
     }
 
-    if (query->is_monitor) {
+    /* Re-register monitors after tables have been reordered. This will update
+     * the table administration with the new matched_table ids, so that when a
+     * monitor is executed we can quickly find the right matched_table. */
+    if (query->kind == EcsQueryMonitor) {
         ecs_vector_each(query->tables, ecs_matched_table_t, table, {
-            ecs_table_register_monitor(
-                world, table->table, query->system, table_i);
+            ecs_table_register_query(
+                world, table->table, query, table_i);
         });
     }
 
@@ -167,6 +170,25 @@ void rank_tables(
     }
 }
 
+static
+bool has_auto_activation(
+    ecs_query_t *q)
+{
+    return q->kind == EcsQueryDefault;
+}
+
+static
+const char* query_name(
+    ecs_world_t *world,
+    ecs_query_t *q)
+{
+    if (q->system) {
+        return ecs_get_name(world, q->system);
+    } else {
+        return q->sig.expr;
+    }
+}
+
 /** Add table to system, compute offsets for system components in table rows */
 static
 void add_table(
@@ -178,25 +200,21 @@ void add_table(
     ecs_type_t table_type = NULL;
     int32_t c, column_count = ecs_vector_count(query->sig.columns);
 
+    if (table) {
+        table_type = table->type;
+    }
+
     /* Initially always add table to inactive group. If the system is registered
      * with the table and the table is not empty, the table will send an
      * activate signal to the system. */
-    if (table) {
+    if (table && has_auto_activation(query)) {
         table_type = table->type;
-        table_data = ecs_vector_add(
-            &query->inactive_tables, ecs_matched_table_t);
+        table_data = ecs_vector_add(&query->inactive_tables, ecs_matched_table_t);
 
-        table_data->table = table;
-        
 #ifndef NDEBUG
         char *type_expr = ecs_type_str(world, table->type);
-        if (query->system) {
-            ecs_trace_1("query #[green]%s#[reset] matched with table #[green][%s]",
-                ecs_get_name(world, query->system), type_expr);
-        } else {
-            ecs_trace_1("query %p matched with table #[green][%s]",
-                query, type_expr);            
-        }
+        ecs_trace_1("query #[green]%s#[reset] matched with table #[green][%s]",
+            query_name(world, query), type_expr);
         ecs_os_free(type_expr);
 #endif
     } else {
@@ -207,10 +225,9 @@ void add_table(
          * would never get activated otherwise. */
         table_data = ecs_vector_add(
             &query->tables, ecs_matched_table_t);
-
-        table_data->table = NULL;
     }
 
+    table_data->table = table;
     table_data->references = NULL;
     table_data->columns = NULL;
     table_data->components = NULL;
@@ -240,7 +257,7 @@ void add_table(
         if (op == EcsOperNot) {
             from = EcsFromEmpty;
             entity = column->source;
-        }        
+        }
 
         /* Column that retrieves data from self or a fixed entity */
         if (from == EcsFromSelf || from == EcsFromEntity || 
@@ -392,7 +409,16 @@ void add_table(
     }
 
     if (table) {
-        ecs_table_register_query(world, table, query);
+        int32_t matched_table_index = 0;
+        if (!has_auto_activation(query)) {
+            /* If query doesn't automatically activates/inactivates tables, the
+             * table has been added to query->tables, and we can get the count
+             * to determine the current table index. */
+            matched_table_index = ecs_vector_count(query->tables) - 1;
+            ecs_assert(matched_table_index >= 0, ECS_INTERNAL_ERROR, NULL);
+        }
+        
+        ecs_table_register_query(world, table, query, matched_table_index);
     }
 }
 
@@ -449,7 +475,7 @@ bool match_table(
     failure_info->reason = EcsMatchOk;
     failure_info->column = 0;
 
-    if (!query->needs_matching) {
+    if (query->kind == EcsQueryNoMatching) {
         failure_info->reason = EcsMatchSystemIsATask;
         return false;
     }
@@ -1050,7 +1076,7 @@ void process_signature(
             from == EcsFromShared ||
             from == EcsFromParent) 
         {
-            query->needs_matching = true;
+            query->kind = EcsQueryDefault;
         }
 
         if (from == EcsCascade) {
@@ -1190,23 +1216,6 @@ void ecs_query_rematch(
     }
 }
 
-void ecs_query_set_monitor(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    bool is_monitor)
-{
-    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!is_monitor || query->system != 0, ECS_INTERNAL_ERROR, NULL);
-
-    query->is_monitor = is_monitor;
-
-    if (is_monitor) {
-        ecs_vector_each(query->tables, ecs_matched_table_t, table, {
-            ecs_table_register_monitor(
-                world, table->table, query->system, table_i);
-        });
-    }
-}
 
 /* -- Public API -- */
 
@@ -1224,20 +1233,24 @@ ecs_query_t* ecs_query_new_w_sig(
     result->system = system;
     result->match_count = 0;
     result->prev_match_count = -1;
+    result->kind = EcsQueryNoMatching;
 
     process_signature(world, result);
 
-    if (system) {
-        ecs_trace_1("query #[green]%s#[reset] created with expression #[red]%s", 
-            ecs_get_name(world, system), result->sig.expr);
-    } else {
-        ecs_trace_1("query %p created with expression #[red]%s", 
-            result, result->sig.expr);
+    if (result->kind == EcsQueryDefault) {
+        if (ecs_has_entity(world, system, EcsMonitor)) {
+            result->kind = EcsQueryMonitor;
+        } else if (ecs_has_entity(world, system, EcsOnSet)) {
+            result->kind = EcsQueryOnSet;
+        }
     }
+
+    ecs_trace_1("query #[green]%s#[reset] created with expression #[red]%s", 
+        query_name(world, result), result->sig.expr);
 
     ecs_trace_push();
 
-    if (!result->needs_matching) {
+    if (result->kind == EcsQueryNoMatching) {
         add_table(world, result, NULL);
     } else {
         match_tables(world, result);
@@ -1469,7 +1482,7 @@ void ecs_query_sort(
     ecs_entity_t sort_component,
     ecs_compare_action_t compare)
 {
-    ecs_assert(query->needs_matching, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(query->kind != EcsQueryNoMatching, ECS_INVALID_PARAMETER, NULL);
 
     query->sort_on_component = sort_component;
     query->compare = compare;
@@ -1490,7 +1503,7 @@ void ecs_query_sort_types(
     ecs_entity_t sort_component,
     ecs_rank_type_action_t rank_table)
 {
-    ecs_assert(query->needs_matching, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(query->kind != EcsQueryNoMatching, ECS_INVALID_PARAMETER, NULL);
 
     query->rank_on_component = sort_component;
     query->rank_table = rank_table;

@@ -72,7 +72,7 @@ void bootstrap_types(
     ecs_type(EcsComponentLifecycle) = bootstrap_type(world, ecs_entity(EcsComponentLifecycle));
     ecs_type(EcsTrigger) = bootstrap_type(world, ecs_entity(EcsTrigger));
     ecs_type(EcsType) = bootstrap_type(world, ecs_entity(EcsType));
-    ecs_type(EcsModule) = bootstrap_type(world, ecs_entity(EcsModule));
+    ecs_type(EcsModule) = bootstrap_type(world, EcsModule);
     ecs_type(EcsPrefab) = bootstrap_type(world, EcsPrefab);
     ecs_type(EcsColSystem) = bootstrap_type(world, ecs_entity(EcsColSystem));
     ecs_type(EcsName) = bootstrap_type(world, ecs_entity(EcsName));
@@ -82,7 +82,7 @@ void bootstrap_types(
     ecs_type(EcsInactive) = bootstrap_type(world, EcsInactive);
     ecs_type(EcsOnDemand) = bootstrap_type(world, EcsOnDemand);
     ecs_type(EcsMonitor) = bootstrap_type(world, EcsMonitor);
-    ecs_type(EcsPipeline) = bootstrap_type(world, ecs_entity(EcsPipeline));
+    ecs_type(EcsPipeline) = bootstrap_type(world, EcsPipeline);
     ecs_type(EcsPipelineQuery) = bootstrap_type(world, ecs_entity(EcsPipelineQuery));
     ecs_type(EcsTimer) = bootstrap_type(world, ecs_entity(EcsTimer));
     ecs_type(EcsRateFilter) = bootstrap_type(world, ecs_entity(EcsRateFilter));
@@ -407,9 +407,8 @@ ecs_world_t *ecs_init(void) {
     bootstrap_component(world, table, ecs_entity(EcsRateFilter), ECS_RATE_FILTER_NAME, sizeof(EcsRateFilter), ECS_ALIGNOF(EcsRateFilter));
     bootstrap_component(world, table, ecs_entity(EcsTickSource), ECS_TICK_SOURCE_NAME, sizeof(EcsTickSource), ECS_ALIGNOF(EcsTickSource));
     
-    bootstrap_component(world, table, ecs_entity(EcsModule), ECS_MODULE_NAME, 0, 0);
-    bootstrap_component(world, table, ecs_entity(EcsPipeline), ECS_PIPELINE_NAME, 0, 0);
-
+    bootstrap_component(world, table, EcsModule, ECS_MODULE_NAME, 0, 0);
+    bootstrap_component(world, table, EcsPipeline, ECS_PIPELINE_NAME, 0, 0);
     bootstrap_component(world, table, EcsPrefab, ECS_PREFAB_NAME, 0, 0);
     bootstrap_component(world, table, EcsHidden, ECS_HIDDEN_NAME, 0, 0);
     bootstrap_component(world, table, EcsDisabled, ECS_DISABLED_NAME, 0, 0);

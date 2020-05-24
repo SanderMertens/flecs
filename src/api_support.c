@@ -233,7 +233,7 @@ ecs_entity_t ecs_new_module(
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Add module tag */
-    ecs_add(world, result, EcsModule);
+    ecs_add_entity(world, result, EcsModule);
 
     /* Add module to itself. This way we have all the module information stored
      * in a single contained entity that we can use for namespacing */
@@ -317,12 +317,15 @@ ecs_entity_t ecs_new_system(
 ecs_entity_t ecs_new_trigger(
     ecs_world_t *world,
     const char *name,
-    ecs_trigger_kind_t kind,
-    ecs_entity_t component,
+    ecs_entity_t kind,
+    const char *component_name,
     ecs_iter_action_t action,
     const void *ctx)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
+
+    ecs_entity_t component = ecs_lookup(world, component_name);
+    ecs_assert(component != 0, ECS_INVALID_COMPONENT_ID, component_name);
     
     ecs_entity_t result = lookup(world, name, ecs_type(EcsTrigger));
     if (!result) {
@@ -364,7 +367,7 @@ ecs_entity_t ecs_new_pipeline(
     ecs_assert(ecs_get_ptr(world, result, EcsType) != NULL, 
         ECS_INTERNAL_ERROR, NULL);
 
-    ecs_add(world, result, EcsPipeline);
+    ecs_add_entity(world, result, EcsPipeline);
 
     return result;
 }

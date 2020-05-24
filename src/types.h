@@ -74,13 +74,7 @@ typedef int (*ecs_parse_action_t)(
     const char *source,
     void *ctx);
 
-typedef enum EcsPipelineOp {
-    EcsPipelineRun,
-    EcsPipelineMerge
-} EcsPipelineOp;
-
 typedef struct ecs_pipeline_op_t {
-    EcsPipelineOp kind;
     int32_t count;
 } ecs_pipeline_op_t;
 
@@ -116,10 +110,10 @@ typedef struct ecs_edge_t {
 } ecs_edge_t;
 
 /* Table monitor */
-typedef struct ecs_monitor_t {
-    ecs_entity_t system;
+typedef struct ecs_matched_query_t {
+    ecs_query_t *query;
     int32_t matched_table_index;
-} ecs_monitor_t;
+} ecs_matched_query_t;
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
@@ -162,6 +156,13 @@ typedef struct ecs_table_range_t {
     int32_t count;
 } ecs_table_range_t;
 
+typedef enum ecs_query_kind_t {
+    EcsQueryDefault,        /* Default: query is matched with tables */
+    EcsQueryNoMatching,     /* Query has no columns that need table matching */ 
+    EcsQueryMonitor,        /* Query needs to be registered as a monitor */
+    EcsQueryOnSet           /* Query needs to be registered as on_set system */
+} ecs_query_kind_t;
+
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
     /* Signature of query */
@@ -186,12 +187,13 @@ struct ecs_query_t {
     ecs_entity_t rank_on_component;
     ecs_rank_type_action_t rank_table;
 
+    /* The query kind determines how it is registered with tables */
+    ecs_query_kind_t kind;
+
     bool match_prefab;          /* Does query match prefabs */
     bool match_disabled;        /* Does query match disabled */
     bool has_refs;              /* Does query have references */
-    bool is_monitor;            /* Should query register as monitor? */
     int32_t cascade_by;         /* Identify CASCADE column */
-    bool needs_matching;        /* Does sig need to be matched with tables */
 
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
