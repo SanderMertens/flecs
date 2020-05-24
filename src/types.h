@@ -34,20 +34,6 @@
  * (significantly) higher memory usage. */
 #define ECS_HI_ENTITY_ID (1000000)
 
-/** This reserves entity ids for components. Regular entity ids will start after
- * this constant. This affects performance of table traversal, as edges with ids 
- * lower than this constant are looked up in an array, whereas constants higher
- * than this id are looked up in a map. Increasing this value can improve
- * performance at the cost of (significantly) higher memory usage. */
-#define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
-
-/* This is _not_ the max number of entities that can be of a given type. This 
- * constant defines the maximum number of components, prefabs and parents can be
- * in one type. This limit serves two purposes: detect errors earlier (assert on
- * very large types) and allow for more efficient allocation strategies (like
- * using alloca for temporary buffers). */
-#define ECS_MAX_ENTITIES_IN_TYPE (256)
-
 /** These values are used to verify validity of the pointers passed into the API
  * and to allow for passing a thread as a world to some API calls (this allows
  * for transparently passing thread context to API functions) */
@@ -156,12 +142,14 @@ typedef struct ecs_table_range_t {
     int32_t count;
 } ecs_table_range_t;
 
-typedef enum ecs_query_kind_t {
-    EcsQueryDefault,        /* Default: query is matched with tables */
-    EcsQueryNoMatching,     /* Query has no columns that need table matching */ 
-    EcsQueryMonitor,        /* Query needs to be registered as a monitor */
-    EcsQueryOnSet           /* Query needs to be registered as on_set system */
-} ecs_query_kind_t;
+#define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
+#define EcsQueryMonitor (2)          /* Query needs to be registered as a monitor */
+#define EcsQueryOnSet (4)            /* Query needs to be registered as on_set system */
+#define EcsQueryMatchDisabled (8)    /* Does query match disabled */
+#define EcsQueryMatchPrefab (16)     /* Does query match prefabs */
+#define EcsQueryHasRefs (32)         /* Does query have references */
+
+#define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet)
 
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
@@ -173,7 +161,7 @@ struct ecs_query_t {
 
     /* Tables matched with query */
     ecs_vector_t *tables;
-    ecs_vector_t *inactive_tables;
+    ecs_vector_t *empty_tables;
 
     /* Handle to system (optional) */
     ecs_entity_t system;   
@@ -188,13 +176,9 @@ struct ecs_query_t {
     ecs_rank_type_action_t rank_table;
 
     /* The query kind determines how it is registered with tables */
-    ecs_query_kind_t kind;
+    int8_t flags;
 
-    bool match_prefab;          /* Does query match prefabs */
-    bool match_disabled;        /* Does query match disabled */
-    bool has_refs;              /* Does query have references */
     int32_t cascade_by;         /* Identify CASCADE column */
-
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
 };
@@ -223,7 +207,7 @@ typedef struct ecs_on_demand_in_t {
  * when OR expressions or optional expressions are used.
  * 
  * A column system keeps track of tables that are empty. These tables are stored
- * in the 'inactive_tables' array. This prevents the system from iterating over
+ * in the 'empty_tables' array. This prevents the system from iterating over
  * tables in the main loop that have no data.
  * 
  * For each table, a column system stores an index that translates between the
@@ -360,18 +344,18 @@ typedef struct ecs_thread_t {
 struct ecs_snapshot_t {
     ecs_ei_t entity_index;
     ecs_sparse_t *tables;
-    ecs_entity_t last_handle;
+    ecs_entity_t last_id;
     ecs_filter_t filter;
 };
 
 /** Component-specific data */
-typedef struct ecs_component_data_t {
+typedef struct ecs_c_info_t {
     ecs_vector_t *on_add;       /* Systems ran after adding this component */
     ecs_vector_t *on_remove;    /* Systems ran after removing this component */
     ecs_vector_t *on_set;       /* Systems ran after setting this component */
 
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
-} ecs_component_data_t;
+} ecs_c_info_t;
 
 /* Component monitors */
 typedef struct ecs_component_monitor_t {
@@ -386,7 +370,8 @@ struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
     void *context;               /* Application context */
 
-    ecs_vector_t *component_data;
+    ecs_c_info_t c_info[ECS_HI_COMPONENT_ID]; /* Component callbacks & triggers */
+    ecs_map_t *t_info;                        /* Tag triggers */
 
 
     /* --  Queries -- */

@@ -99,10 +99,10 @@ void World_progress_w_t() {
 void World_entity_range_offset() {
     ecs_world_t *world = ecs_init();
 
-    ecs_set_entity_range(world, 50, 0);
+    ecs_set_entity_range(world, 5000, 0);
 
     ecs_entity_t e = ecs_new(world, 0);
-    test_int(e, 50);
+    test_int(e, 5000);
 
     ecs_fini(world);
 }
@@ -145,15 +145,15 @@ void World_entity_range_out_of_range_check_disabled() {
     ECS_COMPONENT(world, Position);
 
     ecs_enable_range_check(world, false);
-    ecs_set_entity_range(world, 50, 100);
+    ecs_set_entity_range(world, 5000, 10000);
 
     /* Validate that range is being used when issuing new ids */
     ecs_entity_t e = ecs_new(world, 0);
-    test_int(e, 50);
+    test_int(e, 5000);
 
     /* Validate that application does not abort when changing out of range */
-    ecs_entity_t e2 = ecs_set(world, 49, Position, {10, 20});
-    test_int(e2, 49);
+    ecs_entity_t e2 = ecs_set(world, 4999, Position, {10, 20});
+    test_int(e2, 4999);
     test_assert( ecs_has(world, e2, Position));
     
     const Position *p = ecs_get_ptr(world, e2, Position);

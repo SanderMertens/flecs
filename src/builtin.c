@@ -63,15 +63,13 @@ void ecs_component_set_intern(
     EcsTrigger *ct,
     int32_t count)
 {
-    ecs_component_data_t *cdata_array = ecs_vector_first(
-        world->component_data, ecs_component_data_t);
-    ecs_assert(cdata_array != NULL, ECS_INTERNAL_ERROR, NULL);
     EcsTrigger *el = NULL;
 
     int i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = ct[i].component;
-        ecs_component_data_t *cdata = &cdata_array[e];
+
+        ecs_c_info_t *cdata = ecs_get_or_create_c_info(world, e);
         switch(ct[i].kind) {
         case EcsOnAdd:
             el = ecs_vector_add(&cdata->on_add, EcsTrigger);
@@ -112,17 +110,14 @@ void EcsOnSetComponentLifecycle(
     ecs_rows_t *rows)
 {
     EcsComponentLifecycle *cl = ecs_column(rows, EcsComponentLifecycle, 1);
-
     ecs_world_t *world = rows->world;
-    ecs_component_data_t *cdata_array = ecs_vector_first(
-        world->component_data, ecs_component_data_t);
-        
-    ecs_assert(cdata_array != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int i;
     for (i = 0; i < rows->count; i ++) {
         ecs_entity_t e = rows->entities[i];
-        cdata_array[e].lifecycle = cl[i];
+        ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, e);
+
+        c_info->lifecycle = cl[i];
 
         ecs_trace_1("component #[green]%s#[normal] lifecycle callbacks set",
             ecs_get_name(world, e));        

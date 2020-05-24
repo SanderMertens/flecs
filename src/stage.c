@@ -87,7 +87,7 @@ void merge_columns(
         dst = ECS_OFFSET(dst, dst_entity_count * size);
 
         ecs_entity_t component = components[c];
-        ecs_component_data_t *cdata = ecs_get_component_data(world, component);
+        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         ecs_move_t move = cdata->lifecycle.move;
         if (move) {
             void *ctx = cdata->lifecycle.ctx;

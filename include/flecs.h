@@ -207,10 +207,11 @@ struct ecs_rows_t {
 
 /* World info */
 typedef struct ecs_world_info_t {
-    /* Handles */
-    ecs_entity_t last_handle;   /* Last issued handle */
-    ecs_entity_t min_handle;    /* First allowed handle */
-    ecs_entity_t max_handle;    /* Last allowed handle */
+    /* Ids */
+    ecs_entity_t last_component_id;   /* Last issued component entity id */
+    ecs_entity_t last_id;             /* Last issued entity id */
+    ecs_entity_t min_id;              /* First allowed entity id */
+    ecs_entity_t max_id;              /* Last allowed entity id */
 
     /* Timing stats */
     float delta_time;           /* Time passed to or computed by ecs_progress */
@@ -366,48 +367,50 @@ extern ecs_type_t
     ecs_type(EcsRateFilter),
     ecs_type(EcsTickSource);
 
-/** Handles to builtin components / tags */
+/** Builtin component ids */
 #define FLECS__EEcsComponent (1)
 #define FLECS__EEcsComponentLifecycle (2)
 #define FLECS__EEcsTrigger (3)
 #define FLECS__EEcsType (4)
-#define EcsModule (5)
-#define EcsPrefab (6)
-#define FLECS__EEcsSystem (7)
-#define FLECS__EEcsColSystem (8)
-#define FLECS__EEcsName (9)
-#define EcsHidden (10)
-#define EcsDisabled (11)
-#define EcsDisabledIntern (12)
-#define EcsInactive (13)
-#define EcsOnDemand (14)
-#define EcsMonitor (15)
-#define EcsPipeline (17)
-#define FLECS__EEcsPipelineQuery (18)
-#define FLECS__EEcsTimer (19)
-#define FLECS__EEcsRateFilter (20)
-#define FLECS__EEcsTickSource (21)
+#define FLECS__EEcsSystem (5)
+#define FLECS__EEcsColSystem (6)
+#define FLECS__EEcsName (7)
+#define FLECS__EEcsPipelineQuery (8)
+#define FLECS__EEcsTimer (9)
+#define FLECS__EEcsRateFilter (10)
+#define FLECS__EEcsTickSource (11)
+
+/* Builtin tag ids */
+#define EcsModule (ECS_HI_COMPONENT_ID + 0)
+#define EcsPrefab (ECS_HI_COMPONENT_ID + 1)
+#define EcsHidden (ECS_HI_COMPONENT_ID + 2)
+#define EcsDisabled (ECS_HI_COMPONENT_ID + 3)
+#define EcsDisabledIntern (ECS_HI_COMPONENT_ID + 4)
+#define EcsInactive (ECS_HI_COMPONENT_ID + 5)
+#define EcsOnDemand (ECS_HI_COMPONENT_ID + 6)
+#define EcsMonitor (ECS_HI_COMPONENT_ID + 7)
+#define EcsPipeline (ECS_HI_COMPONENT_ID + 8)
 
 /* Trigger tags */
-#define EcsOnAdd (22)
-#define EcsOnRemove (23)
-#define EcsOnSet (24)
+#define EcsOnAdd (ECS_HI_COMPONENT_ID + 9)
+#define EcsOnRemove (ECS_HI_COMPONENT_ID + 10)
+#define EcsOnSet (ECS_HI_COMPONENT_ID + 11)
 
 /* Builtin pipeline tags */
-#define EcsPreFrame (25)
-#define EcsOnLoad (26)
-#define EcsPostLoad (27)
-#define EcsPreUpdate (28)
-#define EcsOnUpdate (29)
-#define EcsOnValidate (30)
-#define EcsPostUpdate (31)
-#define EcsPreStore (32)
-#define EcsOnStore (33)
-#define EcsPostFrame (34)
+#define EcsPreFrame (ECS_HI_COMPONENT_ID + 12)
+#define EcsOnLoad (ECS_HI_COMPONENT_ID + 13)
+#define EcsPostLoad (ECS_HI_COMPONENT_ID + 14)
+#define EcsPreUpdate (ECS_HI_COMPONENT_ID + 15)
+#define EcsOnUpdate (ECS_HI_COMPONENT_ID + 16)
+#define EcsOnValidate (ECS_HI_COMPONENT_ID + 17)
+#define EcsPostUpdate (ECS_HI_COMPONENT_ID + 18)
+#define EcsPreStore (ECS_HI_COMPONENT_ID + 19)
+#define EcsOnStore (ECS_HI_COMPONENT_ID + 20)
+#define EcsPostFrame (ECS_HI_COMPONENT_ID + 21)
 
 /** Builtin entity ids */
-#define EcsWorld (35)
-#define ECS_SINGLETON (EcsSingleton)
+#define EcsWorld (ECS_HI_COMPONENT_ID + 22)
+#define EcsSingleton ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
 
 /** Value used to quickly check if component is builtin */
 #define EcsLastInternal (ecs_entity(EcsColSystem))

@@ -32,7 +32,7 @@ int32_t new_w_data(
     ecs_stage_t *stage,
     ecs_table_t *table,
     int32_t count,
-    void **component_data);
+    void **c_info);
 
 static 
 void* get_component_w_index(
@@ -74,9 +74,6 @@ void* get_component(
     ecs_assert(info->row >= 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_type_t type = table->type;
-    ecs_assert(
-        ecs_vector_count(type) < ECS_MAX_ENTITIES_IN_TYPE, 
-            ECS_TYPE_TOO_LARGE, NULL);
 
     ecs_vector_each(type, ecs_entity_t, c_ptr, {
         if (*c_ptr == component) {
@@ -92,8 +89,8 @@ static
 ecs_entity_t new_entity_handle(
     ecs_world_t *world)
 {
-    ecs_entity_t entity = ++ world->stats.last_handle;
-    ecs_assert(!world->stats.max_handle || entity <= world->stats.max_handle, 
+    ecs_entity_t entity = ++ world->stats.last_id;
+    ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, 
         ECS_OUT_OF_RANGE, NULL);
     return entity;
 }
@@ -325,10 +322,15 @@ void override(
     ecs_type_t base_type = base_table->type;
     ecs_type_t type = table->type;
 
-    ecs_vector_each(base_type, ecs_entity_t, c_ptr, {
-        ecs_entity_t c = *c_ptr;
+    ecs_assert(base_type == ecs_get_type(world, base), ECS_INTERNAL_ERROR, NULL);
 
-        if (c & ECS_TYPE_FLAG_MASK) {
+    int32_t c_i, c_count = ecs_vector_count(base_type);
+    ecs_entity_t *c_array = ecs_vector_first(base_type, ecs_entity_t);
+    
+    for (c_i = 0; c_i < c_count; c_i ++) {
+        ecs_entity_t c = c_array[c_i];
+
+        if (c > ECS_HI_COMPONENT_ID) {
             /* If the base has a base, check if it has components to override */
             if (c & ECS_INSTANCEOF) {
                 ecs_entity_t base_of_base = c & ECS_ENTITY_MASK;
@@ -357,15 +359,15 @@ void override(
                 int32_t column_index = ecs_type_index_of(type, c);
                 ecs_assert(column_index != -1, ECS_INTERNAL_ERROR, NULL);
                 ecs_column_t *column = &data->columns[column_index];
-                ecs_component_data_t *cdata = ecs_get_component_data(world, c);
+                ecs_c_info_t *cdata = ecs_get_c_info(world, c);
 
                 size_t data_size = column->size;
                 void *data_array = ecs_vector_first_t(column->data, column->size, column->alignment);
                 void *data_ptr = ECS_OFFSET(data_array, data_size * row);
-                void *base_ptr = get_component_w_index(&base_info, c_ptr_i);
+                void *base_ptr = get_component_w_index(&base_info, c_i);
                 int32_t index;
 
-                ecs_copy_t copy = cdata->lifecycle.copy;
+                ecs_copy_t copy = cdata ? cdata->lifecycle.copy : NULL;
                 if (copy) {
                     void *ctx = cdata->lifecycle.ctx;
                     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
@@ -385,7 +387,7 @@ void override(
                  * executed on an override because conceptually only the storage
                  * of the component changed, not its value. */
                 if (base_added && !(table->flags & EcsTableIsDisabled)) {
-                    if (cdata->on_set) {
+                    if (cdata && cdata->on_set) {
                         ecs_run_component_trigger(world, cdata->on_set, c, 
                             table, data, row, count);
                     }
@@ -399,10 +401,9 @@ void override(
          * but now using the base component ptr */
         if (base_added && i == components.count && !(table->flags & EcsTableIsDisabled)) {
             ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-            ecs_component_data_t *cdata = ecs_get_component_data(
-                world, c);
+            ecs_c_info_t *cdata = ecs_get_c_info(world, c);
 
-            if (cdata->on_set) {
+            if (cdata && cdata->on_set) {
                 /* We have to run the triggers for each entity separately, as the
                 * base has the component, not the entity (there is no array to
                 * iterate over) */
@@ -414,7 +415,7 @@ void override(
                 }
             }
         }
-    });
+    }
 }
 
 static
@@ -448,10 +449,10 @@ void instantiate_children(
         .array = ecs_os_alloca(ecs_entity_t, type_count),
     };
 
-    void **component_data = NULL;
+    void **c_info = NULL;
 
     if (child_data) {
-        component_data = ecs_os_alloca(void*, type_count);
+        c_info = ecs_os_alloca(void*, type_count);
     }
 
     /* Copy in component identifiers. Find the base index in the component
@@ -476,7 +477,7 @@ void instantiate_children(
         /* Store pointer to component array. We'll use this component array to
         * create our new entities in bulk with new_w_data */
         ecs_column_t *column = &child_data->columns[i];
-        component_data[pos] = ecs_vector_first_t(column->data, column->size, column->alignment);
+        c_info[pos] = ecs_vector_first_t(column->data, column->size, column->alignment);
 
         components.array[pos] = c;
         pos ++;
@@ -501,7 +502,7 @@ void instantiate_children(
 
         /* Create children */
         int32_t child_row = new_w_data(
-            world, stage, table, child_count, component_data);
+            world, stage, table, child_count, c_info);
 
         /* If prefab child table has children itself, recursively instantiate */
         ecs_data_t *i_data = ecs_table_get_staged_data(world, stage, table);
@@ -554,13 +555,12 @@ void ecs_run_init_actions(
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Array that contains component callbacks & systems */
-    ecs_component_data_t* cdata_array = ecs_vector_first(
-            world->component_data, ecs_component_data_t);
     ecs_column_t *component_columns = data->columns;
     bool has_base = table->flags & EcsTableHasPrefab;
     ecs_type_t type;
     int32_t type_count;
     ecs_entity_t *type_array;
+    ecs_c_info_t *c_info_array = world->c_info;
 
     ecs_entities_t base_entities = {
         .array = ecs_os_alloca(ecs_entity_t, components.count),
@@ -577,6 +577,7 @@ void ecs_run_init_actions(
     for (i = 0; i < components.count; i ++) {
         /* Retrieve component callbacks & triggers for component */
         ecs_entity_t component = components.array[i];
+        ecs_c_info_t *c_info;
 
         if (component >= ECS_HI_COMPONENT_ID) {
             if (component & ECS_INSTANCEOF) {
@@ -585,14 +586,16 @@ void ecs_run_init_actions(
                 base_entities.array[base_entities.count] = base;
                 base_entities.count ++;
             }
-            continue;
+            c_info = ecs_get_c_info(world, component);
+            if (!c_info) {
+                continue;
+            }
+        } else {
+            c_info = &c_info_array[component];
         }
-    
-        ecs_component_data_t *cdata = &cdata_array[component];
-        void *ctx = cdata->lifecycle.ctx;
-        
-        ecs_xtor_t ctor = cdata->lifecycle.ctor;
-        ecs_vector_t *triggers = cdata->on_add;
+            
+        ecs_xtor_t ctor = c_info->lifecycle.ctor;
+        ecs_vector_t *triggers = c_info->on_add;
         if (!ctor && !triggers && !has_base) {
             continue;
         }
@@ -615,6 +618,7 @@ void ecs_run_init_actions(
         if (ctor) {
             ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_entity_t *ids = ecs_vector_first(data->entities, ecs_entity_t);
+            void *ctx = c_info->lifecycle.ctx;
             ctor(world, component, ids, ptr, size, count, ctx);
         }
 
@@ -673,7 +677,6 @@ void ecs_run_deinit_actions(
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Array that contains component callbacks & systems */
-    ecs_component_data_t* cdata_array = ecs_vector_first(world->component_data, ecs_component_data_t);
     ecs_column_t *component_columns = data->columns;
     ecs_type_t type;
     int32_t type_count;
@@ -689,16 +692,14 @@ void ecs_run_deinit_actions(
 
     int i, cur;
     for (i = 0; i < components.count; i ++) {
-        /* Retrieve component callbacks & triggers for component */
         ecs_entity_t component = components.array[i];
-        if (component >= ECS_HI_COMPONENT_ID) {
+        ecs_c_info_t *c_info = ecs_get_c_info(world, component);
+        if (!c_info) {
             continue;
-        }
+        }        
 
-        ecs_component_data_t *cdata = &cdata_array[component];
-        void *ctx = cdata->lifecycle.ctx;
-        ecs_xtor_t dtor = cdata->lifecycle.dtor;
-        ecs_vector_t *triggers = cdata->on_remove;
+        ecs_xtor_t dtor = c_info->lifecycle.dtor;
+        ecs_vector_t *triggers = c_info->on_remove;
         
         if (!dtor && !triggers) {
             continue;
@@ -725,6 +726,7 @@ void ecs_run_deinit_actions(
         }
 
         if (dtor) {
+            void *ctx = c_info->lifecycle.ctx;
             ecs_entity_t *ids = ecs_vector_first(data->entities, ecs_entity_t);
             dtor(world, component, ids, ptr, size, count, ctx);
         }
@@ -1050,8 +1052,8 @@ void commit(
     }
 
     if ((!src_table || !src_table->type) && stage->range_check_enabled) {
-        ecs_assert(!world->stats.max_handle || entity <= world->stats.max_handle, ECS_OUT_OF_RANGE, 0);
-        ecs_assert(entity >= world->stats.min_handle, ECS_OUT_OF_RANGE, 0);
+        ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, ECS_OUT_OF_RANGE, 0);
+        ecs_assert(entity >= world->stats.min_id, ECS_OUT_OF_RANGE, 0);
     }
 }
 
@@ -1112,7 +1114,7 @@ int32_t new_w_data(
     ecs_stage_t *stage,
     ecs_table_t *table,
     int32_t count,
-    void **component_data)
+    void **c_info)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1121,8 +1123,8 @@ int32_t new_w_data(
     
     bool changed = false;
     ecs_type_t type = table->type;
-    ecs_entity_t e = world->stats.last_handle + 1;
-    world->stats.last_handle += count;
+    ecs_entity_t e = world->stats.last_id + 1;
+    world->stats.last_id += count;
 
     if (!type) {
         return e;
@@ -1154,7 +1156,7 @@ int32_t new_w_data(
     
     ecs_comp_mask_t set_mask = { 0 };
 
-    if (component_data) {
+    if (c_info) {
         /* Set components that we're setting in the component mask so the init
          * actions won't call OnSet triggers for them. This ensures we won't
          * call OnSet triggers multiple times for the same component */
@@ -1167,7 +1169,7 @@ int32_t new_w_data(
             comp_mask_set(set_mask, c);
 
             /* Copy component data */
-            void *src_ptr = component_data[c_ptr_i];
+            void *src_ptr = c_info[c_ptr_i];
             if (!src_ptr) {
                 continue;
             }
@@ -1179,7 +1181,7 @@ int32_t new_w_data(
             void *ptr = ecs_vector_first_t(column->data, size, alignment);
             ptr = ECS_OFFSET(ptr, size * row);
 
-            ecs_component_data_t *cdata = ecs_get_component_data(world, c);
+            ecs_c_info_t *cdata = ecs_get_c_info(world, c);
             ecs_copy_t copy = cdata->lifecycle.copy;
             if (copy) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
@@ -1196,7 +1198,7 @@ int32_t new_w_data(
     changed = change_count != data->change_count;
 
     /* Run OnSet triggers */
-    if (component_data) {
+    if (c_info) {
         int column_count = ecs_vector_count(type);
         for (i = 0; i < column_count; i ++) {
             /* If this is not a component, skip */
@@ -1206,7 +1208,7 @@ int32_t new_w_data(
             }
 
             /* Invoke OnSet systems */
-            ecs_component_data_t *cdata = ecs_get_component_data(
+            ecs_c_info_t *cdata = ecs_get_c_info(
                 world, component);
 
             if (cdata->on_set) {
@@ -1283,6 +1285,7 @@ void add_remove(
     ecs_entities_t removed = { .array = remove_buffer };
 
     ecs_table_t *src_table = info.table;
+
     ecs_table_t *dst_table = ecs_table_traverse_remove(
         world, stage, src_table, to_remove, &removed);
 
@@ -1561,7 +1564,7 @@ ecs_entity_t ecs_bulk_new_w_type(
 {
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_table_t *table = ecs_table_from_type(world, stage, type);
-    ecs_entity_t result = world->stats.last_handle + 1;
+    ecs_entity_t result = world->stats.last_id + 1;
     new_w_data(world, stage, table, count, data);
     return result;
 }
@@ -1577,7 +1580,7 @@ ecs_entity_t ecs_bulk_new_w_entity(
         .count = 1
     };
     ecs_table_t *table = ecs_table_find_or_create(world, stage, &type);
-    ecs_entity_t result = world->stats.last_handle + 1;
+    ecs_entity_t result = world->stats.last_id + 1;
     new_w_data(world, stage, table, count, NULL);
     return result;
 }
@@ -1690,7 +1693,7 @@ ecs_entity_t ecs_clone(
     ecs_assert(!world->is_merging, ECS_INVALID_WHILE_MERGING, NULL);
     
     if (!dst) {
-        dst = ++ world->stats.last_handle;
+        dst = ++ world->stats.last_id;
     }
 
     ecs_entity_info_t src_info;
@@ -1715,7 +1718,11 @@ ecs_entity_t ecs_clone(
         int i;
         for (i = 0; i < to_add.count; i ++) {
             ecs_entity_t component = to_add.array[i];
-            ecs_component_data_t *cdata = ecs_get_component_data(world, component);
+            ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+            if (!cdata) {
+                continue;
+            }
+
             ecs_run_component_trigger(
                 world, cdata->on_set, component, src_table, src_info.data, 
                 dst_info.row, 1);
@@ -1834,7 +1841,7 @@ void ecs_modified_w_entity(
 
     ecs_get_info(world, stage, entity, &info);
 
-    ecs_component_data_t *cdata = ecs_get_component_data(world, component);
+    ecs_c_info_t *cdata = ecs_get_c_info(world, component);
     ecs_run_component_trigger(world, cdata->on_set, component, 
         info.table, info.data, info.row, 1);
 }
@@ -1857,7 +1864,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
     }
 
     if (ptr) {
-        ecs_component_data_t *cdata = ecs_get_component_data(world, component);
+        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         ecs_copy_t copy = cdata->lifecycle.copy;
         if (copy) {
             copy(world, component, &entity, &entity, dst, ptr, size, 1, 
@@ -1869,7 +1876,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
         memset(dst, 0, size);
     }
 
-    ecs_component_data_t *cdata = ecs_get_component_data(world, component);    
+    ecs_c_info_t *cdata = ecs_get_c_info(world, component);    
     ecs_run_component_trigger(world, cdata->on_set, component, 
         info.table, info.data, info.row, 1);
 

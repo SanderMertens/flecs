@@ -37,7 +37,7 @@ void dup_table(
             continue;
         }
 
-        ecs_component_data_t *cdata = ecs_get_component_data(world, component);
+        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         size_t size = column->size;
         size_t alignment = column->alignment;
         ecs_copy_t copy;
@@ -132,7 +132,7 @@ ecs_snapshot_t* ecs_snapshot_take(
             world->stage.tables,
             filter);
 
-    result->last_handle = world->stats.last_handle;
+    result->last_id = world->stats.last_id;
 
     return result;
 }
@@ -153,7 +153,7 @@ ecs_snapshot_t* ecs_snapshot_copy(
         result->filter = snapshot->filter;
     }
 
-    result->last_handle = snapshot->last_handle;
+    result->last_id = snapshot->last_id;
 
     return result;
 }
@@ -224,7 +224,7 @@ void ecs_snapshot_restore(
     world->rematch = true;
 
     if (!filter_used) {
-        world->stats.last_handle = snapshot->last_handle;
+        world->stats.last_id = snapshot->last_id;
     }
 
     ecs_os_free(snapshot);    

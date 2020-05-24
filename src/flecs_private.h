@@ -81,7 +81,12 @@ ecs_stage_t *ecs_get_stage(
     ecs_world_t **world_ptr);
 
 /* Get component callbacks */
-ecs_component_data_t *ecs_get_component_data(
+ecs_c_info_t *ecs_get_c_info(
+    ecs_world_t *world,
+    ecs_entity_t component);
+
+/* Get or create component callbacks */
+ecs_c_info_t * ecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component);
 

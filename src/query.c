@@ -128,7 +128,7 @@ void order_ranked_tables(
     /* Re-register monitors after tables have been reordered. This will update
      * the table administration with the new matched_table ids, so that when a
      * monitor is executed we can quickly find the right matched_table. */
-    if (query->kind == EcsQueryMonitor) {
+    if (query->flags & EcsQueryMonitor) {
         ecs_vector_each(query->tables, ecs_matched_table_t, table, {
             ecs_table_register_query(
                 world, table->table, query, table_i);
@@ -164,7 +164,7 @@ void rank_tables(
             rank_table(world, query, table);
         });
 
-        ecs_vector_each(query->inactive_tables, ecs_matched_table_t, table, {
+        ecs_vector_each(query->empty_tables, ecs_matched_table_t, table, {
             rank_table(world, query, table);
         });              
     }
@@ -174,7 +174,8 @@ static
 bool has_auto_activation(
     ecs_query_t *q)
 {
-    return q->kind == EcsQueryDefault;
+    /* Only a basic query with no additional features does table activation */
+    return !(q->flags & EcsQueryNoActivation);
 }
 
 static
@@ -209,7 +210,7 @@ void add_table(
      * activate signal to the system. */
     if (table && has_auto_activation(query)) {
         table_type = table->type;
-        table_data = ecs_vector_add(&query->inactive_tables, ecs_matched_table_t);
+        table_data = ecs_vector_add(&query->empty_tables, ecs_matched_table_t);
 
 #ifndef NDEBUG
         char *type_expr = ecs_type_str(world, table->type);
@@ -363,44 +364,44 @@ void add_table(
          * makes changing this administation easier when the change happens.
          * */
         if ((entity || table_data->columns[c] == -1 || from == EcsCascade)) {
+            const EcsComponent *c_info = ecs_get_ptr(
+                    world, component, EcsComponent);
+            
+            ecs_entity_t e;
+            ecs_reference_t *ref = ecs_vector_add(
+                    &table_data->references, ecs_reference_t);
+            
+            table_data->columns[c] = -ecs_vector_count(table_data->references);
+
+            /* Find the entity for the component */
+            if (from == EcsFromEntity || from == EcsFromEmpty) {
+                e = entity;
+            } else if (from == EcsCascade) {
+                e = entity;
+            } else if (from == EcsFromSystem) {
+                e = entity;
+            } else {
+                e = get_entity_for_component(
+                    world, entity, table_type, component);
+            }
+
+            if (from != EcsCascade) {
+                ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+            }
+            
+            ref->entity = e;
+            ref->component = component;
+            ref->ref = (ecs_ref_t){0};
+                
             if (ecs_has(world, component, EcsComponent)) {
-                const EcsComponent *component_data = ecs_get_ptr(
-                        world, component, EcsComponent);
-                
-                ecs_entity_t e;
-                ecs_reference_t *ref = ecs_vector_add(
-                        &table_data->references, ecs_reference_t);
-                
-                table_data->columns[c] = -ecs_vector_count(table_data->references);
-
-                /* Find the entity for the component */
-                if (from == EcsFromEntity || from == EcsFromEmpty) {
-                    e = entity;
-                } else if (from == EcsCascade) {
-                    e = entity;
-                } else if (from == EcsFromSystem) {
-                    e = entity;
-                } else {
-                    e = get_entity_for_component(
-                        world, entity, table_type, component);
-                }
-
-                if (from != EcsCascade) {
-                    ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
-                }
-                
-                ref->entity = e;
-                ref->component = component;
-                ref->ref = (ecs_ref_t){0};
-                
-                if (component_data->size && from != EcsFromEmpty) {
+                if (c_info->size && from != EcsFromEmpty) {
                     if (e) {
                         ecs_get_ref_w_entity(
                             world, &ref->ref, e, component);
                         ecs_set_watch(world, &world->stage, e);                     
                     }
 
-                    query->has_refs = true;
+                    query->flags |= EcsQueryHasRefs;
                 }
             }
         }
@@ -475,7 +476,7 @@ bool match_table(
     failure_info->reason = EcsMatchOk;
     failure_info->column = 0;
 
-    if (query->kind == EcsQueryNoMatching) {
+    if (!(query->flags & EcsQueryNeedsTables)) {
         failure_info->reason = EcsMatchSystemIsATask;
         return false;
     }
@@ -483,7 +484,7 @@ bool match_table(
     ecs_type_t type, table_type = table->type;
 
     /* Don't match disabled entities */
-    if (!query->match_disabled && ecs_type_has_owned_entity(
+    if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_has_owned_entity(
         world, table_type, EcsDisabled, true))
     {
         failure_info->reason = EcsMatchEntityIsDisabled;
@@ -491,7 +492,7 @@ bool match_table(
     }
 
     /* Don't match prefab entities */
-    if (!query->match_prefab && ecs_type_has_owned_entity(
+    if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_has_owned_entity(
         world, table_type, EcsPrefab, true))
     {
         failure_info->reason = EcsMatchEntityIsPrefab;
@@ -1037,7 +1038,7 @@ void process_signature(
         ecs_sig_oper_kind_t op = column->oper_kind; 
         ecs_sig_from_kind_t from = column->from_kind; 
 
-        if (!query->match_disabled) {
+        if (!(query->flags & EcsQueryMatchDisabled)) {
             if (op == EcsOperOr) {
                 /* If the signature explicitly indicates interest in EcsDisabled,
                  * signal that disabled entities should be matched. By default,
@@ -1045,16 +1046,16 @@ void process_signature(
                 if (ecs_type_has_owned_entity(
                     world, column->is.type, EcsDisabled, true))
                 {
-                    query->match_disabled = true;
+                    query->flags |= EcsQueryMatchDisabled;
                 }         
             } else if (op == EcsOperAnd || op == EcsOperOptional) {
                 if (column->is.component == EcsDisabled) {
-                    query->match_disabled = true;
+                    query->flags |= EcsQueryMatchDisabled;
                 }
             }
         }
 
-        if (!query->match_prefab) {
+        if (!(query->flags & EcsQueryMatchPrefab)) {
             if (op == EcsOperOr) {
                 /* If the signature explicitly indicates interest in EcsPrefab,
                 * signal that disabled entities should be matched. By default,
@@ -1062,11 +1063,11 @@ void process_signature(
                 if (ecs_type_has_owned_entity(
                     world, column->is.type, EcsPrefab, true))
                 {
-                    query->match_prefab = true;
+                    query->flags |= EcsQueryMatchPrefab;
                 }            
             } else if (op == EcsOperAnd || op == EcsOperOptional) {
                 if (column->is.component == EcsPrefab) {
-                    query->match_prefab = true;
+                    query->flags |= EcsQueryMatchPrefab;
                 }
             }
         }
@@ -1076,7 +1077,7 @@ void process_signature(
             from == EcsFromShared ||
             from == EcsFromParent) 
         {
-            query->kind = EcsQueryDefault;
+            query->flags |= EcsQueryNeedsTables;
         }
 
         if (from == EcsCascade) {
@@ -1090,7 +1091,7 @@ void process_signature(
         }
     }
 
-    query->has_refs = has_refs(&query->sig);
+    query->flags |= has_refs(&query->sig) * EcsQueryHasRefs;
 
     register_monitors(world, query);
 }
@@ -1119,11 +1120,11 @@ void ecs_query_activate_table(
     ecs_vector_t *src_array, *dst_array;
 
     if (active) {
-        src_array = query->inactive_tables;
+        src_array = query->empty_tables;
         dst_array = query->tables;
     } else {
         src_array = query->tables;
-        dst_array = query->inactive_tables;
+        dst_array = query->empty_tables;
     }
 
     int32_t i = get_table_param_index(table, src_array);
@@ -1133,7 +1134,7 @@ void ecs_query_activate_table(
     if (active) {
         query->tables = dst_array;
     } else {
-        query->inactive_tables = dst_array;
+        query->empty_tables = dst_array;
     }
 
     if (query->system) {
@@ -1175,7 +1176,7 @@ void ecs_query_rematch(
         if (match_table(world, table, query, NULL)) {
             /* If the table matches, and it is not currently matched, add */
             if (match == -1) {
-                if (table_matched(query->inactive_tables, table) == -1) {
+                if (table_matched(query->empty_tables, table) == -1) {
                     add_table(world, query, table);
                 }
 
@@ -1193,9 +1194,9 @@ void ecs_query_rematch(
             } else {
                 /* Make sure the table is removed if it was inactive */
                 match = table_matched(
-                    query->inactive_tables, table);
+                    query->empty_tables, table);
                 if (match != -1) {
-                    remove_table(query->inactive_tables, match);
+                    remove_table(query->empty_tables, match);
                 }
             }
         }
@@ -1229,31 +1230,33 @@ ecs_query_t* ecs_query_new_w_sig(
     result->world = world;
     result->sig = *sig;
     result->tables = ecs_vector_new(ecs_matched_table_t, 0);
-    result->inactive_tables = ecs_vector_new(ecs_matched_table_t, 0);
+    result->empty_tables = ecs_vector_new(ecs_matched_table_t, 0);
     result->system = system;
     result->match_count = 0;
     result->prev_match_count = -1;
-    result->kind = EcsQueryNoMatching;
+    result->flags = 0;
 
     process_signature(world, result);
-
-    if (result->kind == EcsQueryDefault) {
-        if (ecs_has_entity(world, system, EcsMonitor)) {
-            result->kind = EcsQueryMonitor;
-        } else if (ecs_has_entity(world, system, EcsOnSet)) {
-            result->kind = EcsQueryOnSet;
-        }
-    }
 
     ecs_trace_1("query #[green]%s#[reset] created with expression #[red]%s", 
         query_name(world, result), result->sig.expr);
 
     ecs_trace_push();
 
-    if (result->kind == EcsQueryNoMatching) {
-        add_table(world, result, NULL);
-    } else {
+    if (result->flags & EcsQueryNeedsTables) {
+        if (ecs_has_entity(world, system, EcsMonitor)) {
+            result->flags |= EcsQueryMonitor;
+        }
+        
+        if (ecs_has_entity(world, system, EcsOnSet)) {
+            result->flags |= EcsQueryOnSet;
+        }
+
         match_tables(world, result);
+    } else {
+        /* Add stub table that resolves references (if any) so everything is
+         * preprocessed when the query is evaluated. */
+        add_table(world, result, NULL);
     }
 
     if (result->cascade_by) {
@@ -1280,7 +1283,7 @@ ecs_query_t* ecs_query_new(
 void ecs_query_free(
     ecs_query_t *query)
 {
-    ecs_vector_each(query->inactive_tables, ecs_matched_table_t, table, {
+    ecs_vector_each(query->empty_tables, ecs_matched_table_t, table, {
         ecs_os_free(table->columns);
         ecs_os_free(table->components);
         ecs_vector_free(table->references);
@@ -1295,7 +1298,7 @@ void ecs_query_free(
     });
 
     ecs_vector_free(query->tables);
-    ecs_vector_free(query->inactive_tables);
+    ecs_vector_free(query->empty_tables);
     ecs_vector_free(query->table_ranges);
     ecs_sig_deinit(&query->sig);
 }
@@ -1328,7 +1331,7 @@ ecs_query_iter_t ecs_query_iter(
             .query = query,
             .column_count = ecs_vector_count(query->sig.columns),
             .table_count = table_count,
-            .inactive_table_count = ecs_vector_count(query->inactive_tables)
+            .inactive_table_count = ecs_vector_count(query->empty_tables)
         }
     };
 }
@@ -1482,7 +1485,7 @@ void ecs_query_sort(
     ecs_entity_t sort_component,
     ecs_compare_action_t compare)
 {
-    ecs_assert(query->kind != EcsQueryNoMatching, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
     query->sort_on_component = sort_component;
     query->compare = compare;
@@ -1503,7 +1506,7 @@ void ecs_query_sort_types(
     ecs_entity_t sort_component,
     ecs_rank_type_action_t rank_table)
 {
-    ecs_assert(query->kind != EcsQueryNoMatching, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
     query->rank_on_component = sort_component;
     query->rank_table = rank_table;

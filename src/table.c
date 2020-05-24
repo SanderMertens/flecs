@@ -166,6 +166,16 @@ void register_monitor(
 #endif
 }
 
+static
+void register_on_set(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_query_t *query,
+    int32_t matched_table_index)
+{
+
+}
+
 /* -- Private functions -- */
 
 /* If table goes from 0 to >0 entities or from >0 entities to 0 entities notify
@@ -218,7 +228,7 @@ void ecs_table_register_query(
     int32_t matched_table_index)
 {
     /* Register system with the table */
-    if (query->kind == EcsQueryDefault) {
+    if (!(query->flags & EcsQueryNoActivation)) {
         ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
         if (q) *q = query;
 
@@ -226,10 +236,16 @@ void ecs_table_register_query(
         if (data && ecs_vector_count(data->entities)) {
             ecs_table_activate(world, table, query, true);
         }
+    }
 
-    /* Register the system as a monitor */
-    } else if (query->kind == EcsQueryMonitor) {
+    /* Register the query as a monitor */
+    if (query->flags & EcsQueryMonitor) {
         register_monitor(world, table, query, matched_table_index);
+    }
+
+    /* Register the query as an on_set system */
+    if (query->flags & EcsQueryOnSet) {
+        register_on_set(world, table, query, matched_table_index);
     }
 }
 
@@ -455,7 +471,7 @@ void ecs_table_replace_data(
                 continue;
             }
 
-            ecs_component_data_t *cdata = ecs_get_component_data(   
+            ecs_c_info_t *cdata = ecs_get_c_info(   
                 world, component);
             
             if (cdata->on_set) {
@@ -1059,7 +1075,7 @@ void ecs_table_move(
                 ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 if (is_copy) {
-                    ecs_component_data_t *cdata = ecs_get_component_data(
+                    ecs_c_info_t *cdata = ecs_get_c_info(
                         world, new_component);
 
                     ecs_copy_t copy = cdata->lifecycle.copy;

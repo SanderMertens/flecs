@@ -298,7 +298,7 @@ void StatsCollectSystemStats_StatusAction(
 static
 int32_t system_tables_matched(EcsColSystem *system) {
     return ecs_vector_count(system->query->tables) +
-           ecs_vector_count(system->query->inactive_tables);
+           ecs_vector_count(system->query->empty_tables);
 }
 
 static
@@ -390,7 +390,7 @@ void StatsCollectColSystemMemoryStats(ecs_rows_t *rows) {
         collect_system_table_metrics(system, system->query->tables, 
             &stats[i].active_tables_memory);
 
-        collect_system_table_metrics(system, system->query->inactive_tables, 
+        collect_system_table_metrics(system, system->query->empty_tables, 
             &stats[i].inactive_tables_memory);
 
         ecs_vector_memory(system->jobs, ecs_job_t, 
