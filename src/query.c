@@ -703,7 +703,7 @@ void sort_table(
     ecs_compare_action_t compare)
 {
     ecs_data_t *data = ecs_table_get_data(world, table);
-    if (!data || !data->columns) {
+    if (!data || !data->entities) {
         /* Nothing to sort */
         return;
     }
@@ -780,7 +780,7 @@ void build_sorted_table_range(
     for (i = start; i < end; i ++) {
         ecs_matched_table_t *table = &tables[i];
         ecs_data_t *data = ecs_table_get_data(world, table->table);
-        if (!data || !data->columns || !ecs_table_count(table->table)) {
+        if (!data || !data->entities || !ecs_table_count(table->table)) {
             continue;
         }
 

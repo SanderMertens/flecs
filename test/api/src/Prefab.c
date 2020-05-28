@@ -1819,7 +1819,7 @@ void AddPrefab(ecs_rows_t *rows) {
 
     int i;
     for (i = 0; i < rows->count; i ++) {
-        ecs_add_entity(rows->world, ECS_INSTANCEOF | rows->entities[i], Prefab);
+        ecs_add_entity(rows->world, rows->entities[i], ECS_INSTANCEOF | Prefab);
     }
 }
 

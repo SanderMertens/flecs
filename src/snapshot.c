@@ -18,7 +18,8 @@ void dup_table(
         world, &world->stage, table);
     ecs_assert(snapshot_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t column_count = ecs_vector_count(table->type);
+    int32_t i, column_count = table->column_count;
+    ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
 
     snapshot_data->columns = ecs_os_memdup(
         main_data->columns, sizeof(ecs_column_t) * column_count);
@@ -28,9 +29,9 @@ void dup_table(
     ecs_entity_t *entities = ecs_vector_first(snapshot_data->entities, ecs_entity_t);
 
     /* Copy each column */
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
-        ecs_column_t *column = &snapshot_data->columns[c_ptr_i];
+    for (i = 0; i < column_count; i ++) {
+        ecs_entity_t component = components[i];
+        ecs_column_t *column = &snapshot_data->columns[i];
 
         if (component > ECS_HI_COMPONENT_ID) {
             column->data = NULL;
@@ -62,7 +63,7 @@ void dup_table(
         } else {
             column->data = ecs_vector_copy_t(column->data, size, alignment);
         }
-    });
+    };
 }
 
 static

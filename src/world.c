@@ -120,6 +120,8 @@ ecs_table_t* bootstrap_component_table(
     data->columns[1].data = ecs_vector_new(EcsName, EcsLastBuiltin);
     data->columns[1].size = sizeof(EcsName);
     data->columns[1].alignment = ECS_ALIGNOF(EcsName);
+
+    result->column_count = 2;
     
     return result;
 }
@@ -408,6 +410,8 @@ ecs_world_t *ecs_init(void) {
     world->stats.min_id = 0;
     world->stats.max_id = 0;
 
+    bootstrap_types(world);
+
     ecs_set(world, EcsModule, EcsName, {ECS_MODULE_NAME});
     ecs_set(world, EcsPipeline, EcsName, {ECS_PIPELINE_NAME});
     ecs_set(world, EcsPrefab, EcsName, {ECS_PREFAB_NAME});
@@ -417,8 +421,6 @@ ecs_world_t *ecs_init(void) {
     ecs_set(world, EcsInactive, EcsName, {ECS_INACTIVE_NAME});
     ecs_set(world, EcsOnDemand, EcsName, {ECS_ON_DEMAND_NAME});
     ecs_set(world, EcsMonitor, EcsName, {ECS_MONITOR_NAME});
-
-    bootstrap_types(world);
 
     ecs_trace_pop();
 
@@ -663,6 +665,8 @@ ecs_entity_t lookup_child(
         if ((column_index = ecs_type_index_of(type, ecs_entity(EcsName))) == -1) {
             continue;
         }
+
+        ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
 
         if (parent && ecs_type_index_of(type, ECS_CHILDOF | parent) == -1) {
             continue;

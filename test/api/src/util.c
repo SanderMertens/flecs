@@ -26,7 +26,7 @@ void probe_system_w_ctx(
         test_assert(e != 0);
     }
 
-    if (rows->table_columns) {
+    if (rows->entities) {
         ecs_entity_t *e = ecs_column(rows, ecs_entity_t, 0);
         if (e) {
             test_assert(e != NULL);

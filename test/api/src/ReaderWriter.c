@@ -530,7 +530,7 @@ int tag_test(int buffer_size) {
         Probe ctx = {0};
         ecs_set_context(world, &ctx);      
         ecs_progress(world, 0);
-        test_int(ctx.count, 3);        
+        test_int(ctx.count, 3);
 
         ecs_fini(world);
 

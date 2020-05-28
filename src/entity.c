@@ -357,6 +357,10 @@ void override(
             if (components.array[i] == c) {
                 /* Component is overridden, find column in entity type */
                 int32_t column_index = ecs_type_index_of(type, c);
+                if (column_index >= table->column_count) {
+                    continue;
+                }
+                
                 ecs_assert(column_index != -1, ECS_INTERNAL_ERROR, NULL);
                 ecs_column_t *column = &data->columns[column_index];
                 ecs_c_info_t *cdata = ecs_get_c_info(world, c);
@@ -439,20 +443,21 @@ void instantiate_children(
 {
     ecs_type_t type = child_table->type;
     ecs_data_t *child_data = ecs_table_get_data(world, child_table);
-    int32_t type_count = ecs_vector_count(type);
+    int32_t column_count = child_table->column_count;
     ecs_entity_t *type_array = ecs_vector_first(type, ecs_entity_t);
+    int32_t type_count = ecs_vector_count(type);
 
     /* Instantiate child table for each instance */
 
     /* Create component array for creating the table */
     ecs_entities_t components = {
-        .array = ecs_os_alloca(ecs_entity_t, type_count),
+        .array = ecs_os_alloca(ecs_entity_t, type_count)
     };
 
     void **c_info = NULL;
 
     if (child_data) {
-        c_info = ecs_os_alloca(void*, type_count);
+        c_info = ecs_os_alloca(void*, column_count);
     }
 
     /* Copy in component identifiers. Find the base index in the component
@@ -476,8 +481,10 @@ void instantiate_children(
 
         /* Store pointer to component array. We'll use this component array to
         * create our new entities in bulk with new_w_data */
-        ecs_column_t *column = &child_data->columns[i];
-        c_info[pos] = ecs_vector_first_t(column->data, column->size, column->alignment);
+        if (i < column_count) {
+            ecs_column_t *column = &child_data->columns[i];
+            c_info[pos] = ecs_vector_first_t(column->data, column->size, column->alignment);
+        }
 
         components.array[pos] = c;
         pos ++;
@@ -558,7 +565,7 @@ void ecs_run_init_actions(
     ecs_column_t *component_columns = data->columns;
     bool has_base = table->flags & EcsTableHasPrefab;
     ecs_type_t type;
-    int32_t type_count;
+    int32_t type_count, column_count = table->column_count;
     ecs_entity_t *type_array;
     ecs_c_info_t *c_info_array = world->c_info;
 
@@ -606,20 +613,22 @@ void ecs_run_init_actions(
             cur ++;
         }
 
-        /* Removed components should always be in the old type */
-        ecs_assert(cur <= type_count, ECS_INTERNAL_ERROR, NULL);
+        if (cur < column_count) {
+            /* Removed components should always be in the old type */
+            ecs_assert(cur <= type_count, ECS_INTERNAL_ERROR, NULL);
 
-        /* Get column and pointer to data */
-        ecs_column_t *column = &component_columns[cur];
-        int32_t size = column->size;
-        void *array = ecs_vector_first_t(column->data, size, column->alignment);
-        void *ptr = ECS_OFFSET(array, size * row);
+            /* Get column and pointer to data */
+            ecs_column_t *column = &component_columns[cur];
+            int32_t size = column->size;
+            void *array = ecs_vector_first_t(column->data, size, column->alignment);
+            void *ptr = ECS_OFFSET(array, size * row);
 
-        if (ctor) {
-            ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_entity_t *ids = ecs_vector_first(data->entities, ecs_entity_t);
-            void *ctx = c_info->lifecycle.ctx;
-            ctor(world, component, ids, ptr, size, count, ctx);
+            if (ctor) {
+                ecs_assert(array != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_entity_t *ids = ecs_vector_first(data->entities, ecs_entity_t);
+                void *ctx = c_info->lifecycle.ctx;
+                ctor(world, component, ids, ptr, size, count, ctx);
+            }
         }
 
         if (triggers) {
@@ -634,7 +643,7 @@ void ecs_run_init_actions(
      * private component of the entity. However, if an entity adds a base
      * without overriding any of its components, the OnSet handler still needs
      * to be invoked on the base component. */
-    if (has_base) {
+    if (has_base && components.count) {
         int32_t i;
         for (i = type_count - 1; i >= 0; i --) {
             ecs_entity_t base = type_array[i];
@@ -679,7 +688,7 @@ void ecs_run_deinit_actions(
     /* Array that contains component callbacks & systems */
     ecs_column_t *component_columns = data->columns;
     ecs_type_t type;
-    int32_t type_count;
+    int32_t type_count, column_count = table->column_count;
     ecs_entity_t *type_array; 
 
     (void)type_count;
@@ -714,21 +723,23 @@ void ecs_run_deinit_actions(
         /* Removed components should always be in the old type */
         ecs_assert(cur <= type_count, ECS_INTERNAL_ERROR, NULL);
 
-        /* Get column and pointer to data */
-        ecs_column_t *column = &component_columns[cur];
-        int32_t size = column->size;
-        void *array = ecs_vector_first_t(column->data, size, column->alignment);
-        void *ptr = ECS_OFFSET(array, size * row);
-
         if (triggers && run_triggers) {
             ecs_run_component_trigger(
                 world, triggers, component, table, data, row, count);
         }
 
-        if (dtor) {
-            void *ctx = c_info->lifecycle.ctx;
-            ecs_entity_t *ids = ecs_vector_first(data->entities, ecs_entity_t);
-            dtor(world, component, ids, ptr, size, count, ctx);
+        if (cur < column_count) {
+            /* Get column and pointer to data */
+            ecs_column_t *column = &component_columns[cur];
+            int32_t size = column->size;
+            void *array = ecs_vector_first_t(column->data, size, column->alignment);
+            void *ptr = ECS_OFFSET(array, size * row);
+
+            if (dtor) {
+                void *ctx = c_info->lifecycle.ctx;
+                ecs_entity_t *ids = ecs_vector_first(data->entities, ecs_entity_t);
+                dtor(world, component, ids, ptr, size, count, ctx);
+            }
         }
     }
 }

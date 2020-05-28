@@ -15,6 +15,27 @@ void ecs_notify_queries_of_table(
     }
 }
 
+/* Count number of columns with data (excluding tags) */
+static
+int32_t data_column_count(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    int32_t count = 0;
+    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
+        ecs_entity_t component = *c_ptr;
+
+        /* Typically all components will be clustered together at the start of
+         * the type as components are created from a separate id pool, and type
+         * vectors are sorted. */
+        if (ecs_has(world, component, EcsComponent)) {
+            count = c_ptr_i + 1;
+        }
+    });
+
+    return count;
+}
+
 static
 ecs_type_t entities_to_type(
     ecs_entities_t *entities)
@@ -140,6 +161,7 @@ void init_table(
     init_edges(world, stage, table);
 
     table->queries = NULL;
+    table->column_count = data_column_count(world, table);
 }
 
 static

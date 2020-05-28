@@ -428,7 +428,7 @@ void StatsCollectComponentStats(ecs_rows_t *rows) {
         for (t = 0; t < count; t ++) {
             ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
             ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
-            int32_t c, c_count = ecs_vector_count(table->type);
+            int32_t c, c_count = table->column_count;
 
             /* Iterate over table columns until component is found */
             ecs_data_t *data = ecs_table_get_data(rows->world, table);
@@ -487,7 +487,7 @@ void collect_table_data_memory(
     ecs_table_t *table,
     EcsTableStats *stats)
 {
-    int32_t c, count = ecs_vector_count(table->type);
+    int32_t c, count = table->column_count;
     ecs_data_t *data = ecs_table_get_data(world, table);
 
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);

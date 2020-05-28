@@ -202,6 +202,7 @@ ecs_entity_t ecs_new_component(
     ecs_entity_t result = lookup(world, name, ecs_type(EcsComponent));
     if (!result) {
         result = ++ world->stats.last_component_id;
+                
         ecs_set(world, result, EcsName, {name});
         ecs_set(world, result, EcsComponent, {
             .size = size,

@@ -71,14 +71,14 @@ struct ecs_column_t {
     uint16_t alignment;              /* Column alignment */
 };
 
-/** Table component data and entity ids */
+/** Stage-specific component data */
 struct ecs_data_t {
     ecs_vector_t *entities;
     ecs_vector_t *record_ptrs;
     ecs_column_t *columns;
     ecs_stage_t *stage;
     int32_t change_count;        /* Low-cost counter to keep track of changes */
-    bool marked_dirty;           /* Was table already added to dirty array? */  
+    bool marked_dirty;           /* Was table marked dirty for current stage? */  
 };
 
 #define EcsTableHasBuiltins (1)
@@ -107,16 +107,24 @@ typedef struct ecs_matched_query_t {
  * table is created, it is automatically matched with existing column systems */
 struct ecs_table_t {
     ecs_type_t type;                  /* Identifies table type in type_index */
+
+    /* Graph traversal */
     ecs_edge_t *lo_edges;             /* Edges to low entity ids */
     ecs_map_t *hi_edges;              /* Edges to high entity ids */
 
-    /* Only set when table has data */
+    /* Component storage */
     ecs_vector_t *stage_data;         /* Data per stage */
+
+    /* Different kinds of matched queries */
     ecs_vector_t *queries;            /* Queries matched with table */
     ecs_vector_t *monitors;           /* Monitor systems */
 
+    /* Change tracking */
     int32_t *dirty_state;             /* Keep track of changes in columns */
+
+    /* Table information */
     int32_t flags;                    /* Flags for testing table properties */
+    int32_t column_count;             /* Number of data columns in table */
 };
 
 /** Cached reference to a component in an entity */

@@ -1029,7 +1029,6 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
     ECS_ENTITY(world, Tag, 0);
-    ecs_entity_t ecs_entity(Tag) = Tag;
 
     ECS_ENTITY(world, e_1, Position);
     ECS_ENTITY(world, e_2, Position);

@@ -39,7 +39,7 @@ void ecs_table_reader_next(
             break;
         } else {
             reader->type = reader->table->type;
-            reader->total_columns = ecs_vector_count(reader->type) + 1;
+            reader->total_columns = reader->table->column_count + 1;
             reader->column_index = 0;
             reader->row_count = ecs_table_count(reader->table);
         }
