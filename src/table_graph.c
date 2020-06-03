@@ -157,6 +157,8 @@ void init_table(
     table->flags = 0;
     table->dirty_state = NULL;
     table->monitors = NULL;
+    table->on_set = NULL;
+    table->on_set_all = NULL;
     
     init_edges(world, stage, table);
 

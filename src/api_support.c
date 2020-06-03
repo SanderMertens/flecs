@@ -278,7 +278,7 @@ ecs_entity_t ecs_new_type(
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
     const char *name,
-    ecs_entity_t phase,
+    ecs_entity_t tag,
     char *signature,
     ecs_iter_action_t action)
 {
@@ -287,9 +287,15 @@ ecs_entity_t ecs_new_system(
     ecs_entity_t result = lookup(world, name, ecs_type(EcsSystem));
     if (!result) {
         result = ecs_set(world, result, EcsName, {name});
-        if (phase) {
-            ecs_add_entity(world, result, phase);
-            ecs_add_entity(world, result, ECS_XOR | world->pipeline);
+        if (tag) {
+            ecs_add_entity(world, result, tag);
+
+            const EcsType *t = ecs_get_ptr(world, world->pipeline, EcsType);
+            if (t) {
+                if (ecs_type_has_entity(world, t->normalized, tag)) {
+                    ecs_add_entity(world, result, ECS_XOR | world->pipeline);
+                }
+            }
         }
 
         ecs_set(world, result, EcsSystem, {
@@ -299,10 +305,6 @@ ecs_entity_t ecs_new_system(
     } else {
         EcsSystem *ptr = ecs_get_mut(world, result, EcsSystem, NULL);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (ptr->phase != phase) {
-            ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
 
         if (strcmp(ptr->signature, signature)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);

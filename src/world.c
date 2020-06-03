@@ -357,6 +357,7 @@ ecs_world_t *ecs_init(void) {
     world->should_quit = false;
     world->rematch = false;
     world->locking_enabled = false;
+    world->pipeline = 0;
 
     world->frame_start_time = (ecs_time_t){0, 0};
     if (time_ok) {
@@ -555,7 +556,6 @@ int ecs_fini(
     for (i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
         ecs_vector_free(world->c_info[i].on_add);
         ecs_vector_free(world->c_info[i].on_remove);
-        ecs_vector_free(world->c_info[i].on_set);
     }
 
     ecs_map_free(world->t_info);

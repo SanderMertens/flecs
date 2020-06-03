@@ -481,7 +481,7 @@ void TriggerOnAdd_set_after_add_in_on_add() {
     ECS_COMPONENT(world, Velocity);
 
     ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Position, &ecs_entity(Velocity));
-    ECS_TRIGGER(world, OnSetPosition, EcsOnSet, Position, NULL);
+    ECS_SYSTEM(world, OnSetPosition, EcsOnSet, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);

@@ -281,6 +281,61 @@ void ecs_run_component_trigger(
 }
 
 static
+void run_set_systems_for_entities(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entities_t *components,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    ecs_entity_t *entities,
+    bool set_all)
+{
+    /* Run OnSet systems */
+    if (set_all) {
+        ecs_vector_t *queries = table->on_set_all;
+        ecs_vector_each(queries, ecs_matched_query_t, m, {
+            ecs_run_monitor(world, stage, m, components, row, count, entities);
+        });
+    } else {
+        ecs_vector_t **on_set_systems = table->on_set;
+        if (on_set_systems) {
+            int32_t index = ecs_type_index_of(table->type, components->array[0]);
+            ecs_vector_t *queries = on_set_systems[index];
+            ecs_vector_each(queries, ecs_matched_query_t, m, {
+                ecs_run_monitor(world, stage, m, components, row, count, entities);
+            });
+        }
+    }
+}
+
+void ecs_run_set_systems(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entities_t *components,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    bool set_all)
+{
+    if (!count) {
+        return;
+    }
+    
+    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
+    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert((row + count) <= ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
+
+    entities = ECS_OFFSET(entities, sizeof(ecs_entity_t) * row);
+
+    run_set_systems_for_entities(world, stage, components, table, data, row, 
+        count, entities, set_all);
+}
+
+static
 int32_t find_prefab(
     ecs_type_t type,
     int32_t n)
@@ -299,125 +354,60 @@ int32_t find_prefab(
 }
 
 static
-void override(
+void run_monitors(
     ecs_world_t *world, 
-    ecs_stage_t *stage,
-    ecs_table_t *table, 
-    ecs_data_t *data, 
-    int32_t row, 
-    int32_t count,
-    ecs_entity_t base,
-    ecs_entities_t components,
-    bool base_added,
-    ecs_comp_mask_t set_mask)
+    ecs_stage_t *stage, 
+    ecs_table_t *dst_table,
+    ecs_vector_t *v_dst_monitors, 
+    int32_t dst_row, 
+    int32_t count, 
+    ecs_vector_t *v_src_monitors)
 {
-    ecs_assert(set_mask != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_entity_info_t base_info;
-    if (!get_info(world, base, &base_info) || !base_info.table) {
+    if (v_dst_monitors == v_src_monitors) {
         return;
     }
 
-    ecs_table_t *base_table = base_info.table;
-    ecs_type_t base_type = base_table->type;
-    ecs_type_t type = table->type;
+    if (!v_dst_monitors) {
+        return;
+    }
 
-    ecs_assert(base_type == ecs_get_type(world, base), ECS_INTERNAL_ERROR, NULL);
+    if (dst_table->flags & EcsTableIsPrefab) {
+        return;
+    }
 
-    int32_t c_i, c_count = ecs_vector_count(base_type);
-    ecs_entity_t *c_array = ecs_vector_first(base_type, ecs_entity_t);
-    
-    for (c_i = 0; c_i < c_count; c_i ++) {
-        ecs_entity_t c = c_array[c_i];
+    if (!v_src_monitors) {
+        ecs_vector_each(v_dst_monitors, ecs_matched_query_t, monitor, {
+            ecs_run_monitor(world, stage, monitor, NULL, dst_row, count, NULL);
+        });
+    } else {
+        /* If both tables have monitors, run the ones that dst_table has and
+         * src_table doesn't have */
+        int32_t i, count = ecs_vector_count(v_dst_monitors);
+        int32_t j = 0, src_count = ecs_vector_count(v_src_monitors);
+        ecs_matched_query_t *dst_monitors = ecs_vector_first(v_dst_monitors, ecs_matched_query_t);
+        ecs_matched_query_t *src_monitors = ecs_vector_first(v_src_monitors, ecs_matched_query_t);
 
-        if (c > ECS_HI_COMPONENT_ID) {
-            /* If the base has a base, check if it has components to override */
-            if (c & ECS_INSTANCEOF) {
-                ecs_entity_t base_of_base = c & ECS_ENTITY_MASK;
-                override(world, stage, table, data, row, count, base_of_base, 
-                    components, base_added, set_mask);
-            }
-            continue;
-        }
+        for (i = 0; i < count; i ++) {
+            ecs_matched_query_t *dst = &dst_monitors[i];
 
-        /* If component already has been overridden by a base higher up in the
-         * hierarchy, ignore. This mask will also be set by operations that
-         * provide a value for a component (like new_w_data). */
-        if (comp_mask_is_set(set_mask, c)) {
-            continue;
-        }
+            ecs_entity_t system = dst->query->system;
+            ecs_assert(system != 0, ECS_INTERNAL_ERROR, NULL);
 
-        comp_mask_set(set_mask, c);
-
-        /* This is a quadratic search, but since it only happens when a base is
-        * added to an entity and the loop only iterates over the components
-        * that have just been added (typically just one) this isn't a big issue */
-        int32_t i;
-        for (i = 0; i < components.count; i ++) {
-            if (components.array[i] == c) {
-                /* Component is overridden, find column in entity type */
-                int32_t column_index = ecs_type_index_of(type, c);
-                if (column_index >= table->column_count) {
-                    continue;
-                }
-                
-                ecs_assert(column_index != -1, ECS_INTERNAL_ERROR, NULL);
-                ecs_column_t *column = &data->columns[column_index];
-                ecs_c_info_t *cdata = ecs_get_c_info(world, c);
-
-                size_t data_size = column->size;
-                void *data_array = ecs_vector_first_t(column->data, column->size, column->alignment);
-                void *data_ptr = ECS_OFFSET(data_array, data_size * row);
-                void *base_ptr = get_component_w_index(&base_info, c_i);
-                int32_t index;
-
-                ecs_copy_t copy = cdata ? cdata->lifecycle.copy : NULL;
-                if (copy) {
-                    void *ctx = cdata->lifecycle.ctx;
-                    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-                    for (index = 0; index < count; index ++) {
-                        copy(world, c, &base, &entities[row], 
-                            data_ptr, base_ptr, data_size, 1, ctx);
-                        data_ptr = ECS_OFFSET(data_ptr, data_size);
-                    }
+            ecs_matched_query_t *src = 0;
+            while (j < src_count) {
+                src = &src_monitors[j];
+                if (src->query->system < system) {
+                    j ++;
                 } else {
-                    for (index = 0; index < count; index ++) {
-                        memcpy(data_ptr, base_ptr, data_size);
-                        data_ptr = ECS_OFFSET(data_ptr, data_size);
-                    }                    
-                }
-
-                /* Only run OnSet if base was added. OnSet triggers are not
-                 * executed on an override because conceptually only the storage
-                 * of the component changed, not its value. */
-                if (base_added && !(table->flags & EcsTableIsDisabled)) {
-                    if (cdata && cdata->on_set) {
-                        ecs_run_component_trigger(world, cdata->on_set, c, 
-                            table, data, row, count);
-                    }
-                }
-
-                break;
-            }
-        }
-
-        /* If component wasn't overridden we still need to run OnSet triggers,
-         * but now using the base component ptr */
-        if (base_added && i == components.count && !(table->flags & EcsTableIsDisabled)) {
-            ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-            ecs_c_info_t *cdata = ecs_get_c_info(world, c);
-
-            if (cdata && cdata->on_set) {
-                /* We have to run the triggers for each entity separately, as the
-                * base has the component, not the entity (there is no array to
-                * iterate over) */
-                int32_t i;
-                for (i = row; i < row + count; i ++) {
-                    run_component_trigger_for_entities(world, cdata->on_set, 
-                        c, base_table, base_info.data, base_info.row, 1, 
-                        &entities[i]);
+                    break;
                 }
             }
+
+            if (src->query->system == system) {
+                continue;
+            }
+
+            ecs_run_monitor(world, stage, dst, NULL, dst_row, count, NULL);
         }
     }
 }
@@ -549,6 +539,97 @@ void instantiate(
     }
 }
 
+static
+bool override_component(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_type_t type,
+    ecs_data_t *data,
+    ecs_column_t *column,
+    uint32_t row,
+    uint32_t count);
+
+static
+bool override_from_base(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_entity_t component,
+    ecs_data_t *data,
+    ecs_column_t *column,
+    uint32_t row,
+    uint32_t count)
+{
+    ecs_entity_info_t base_info;
+    if (!get_info(world, base, &base_info)) {
+        return false;
+    }
+
+    void *base_ptr = get_component(&base_info, component);
+    if (base_ptr) {
+        uint32_t data_size = column->size;
+        void *data_array = ecs_vector_first_t(column->data, column->size, column->alignment);
+        void *data_ptr = ECS_OFFSET(data_array, data_size * row);
+        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
+        int32_t index;
+
+        ecs_copy_t copy = cdata ? cdata->lifecycle.copy : NULL;
+        if (copy) {
+            ecs_entity_t *entities = ecs_vector_first(
+                data->entities, ecs_entity_t);
+
+            void *ctx = cdata->lifecycle.ctx;
+            for (index = 0; index < count; index ++) {
+                copy(world, component, &base, &entities[row], 
+                    data_ptr, base_ptr, data_size, 1, ctx);
+                data_ptr = ECS_OFFSET(data_ptr, data_size);
+            }
+        } else {
+            for (index = 0; index < count; index ++) {
+                memcpy(data_ptr, base_ptr, data_size);
+                data_ptr = ECS_OFFSET(data_ptr, data_size);
+            }                    
+        }
+
+        return true;
+    } else {
+        /* If component not found on base, check if base itself inherits */
+        ecs_type_t base_type = base_info.table->type;
+        return override_component(world, component, base_type, data, column, row, 
+            count);
+    }
+}
+
+static
+bool override_component(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_type_t type,
+    ecs_data_t *data,
+    ecs_column_t *column,
+    uint32_t row,
+    uint32_t count)
+{
+    ecs_entity_t *type_array = ecs_vector_first(type, ecs_entity_t);
+    int32_t i, type_count = ecs_vector_count(type);
+
+    /* Walk prefabs */
+    i = type_count - 1;
+    do {
+        ecs_entity_t e = type_array[i];
+
+        if (e < ECS_TYPE_FLAG_START) {
+            break;
+        }
+
+        if (e & ECS_INSTANCEOF) {
+            return override_from_base(world, e & ECS_ENTITY_MASK, component, 
+                data, column, row, count);
+        }
+    } while (--i >= 0);
+
+    return false;
+}
+
 void ecs_run_init_actions(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -557,22 +638,20 @@ void ecs_run_init_actions(
     int32_t row,
     int32_t count,
     ecs_entities_t components,
-    ecs_comp_mask_t set_mask)
+    ecs_comp_mask_t set_mask,
+    bool run_on_set)
 {
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Array that contains component callbacks & systems */
     ecs_column_t *component_columns = data->columns;
-    bool has_base = table->flags & EcsTableHasPrefab;
     ecs_type_t type;
     int32_t type_count, column_count = table->column_count;
     ecs_entity_t *type_array;
     ecs_c_info_t *c_info_array = world->c_info;
-
-    ecs_entities_t base_entities = {
-        .array = ecs_os_alloca(ecs_entity_t, components.count),
-        .count = 0
-    };
+    
+    bool has_base = table->flags & EcsTableHasPrefab;
+    ecs_table_t *table_without_base = table;
 
     if (components.count) {
         type = table->type;
@@ -590,8 +669,18 @@ void ecs_run_init_actions(
             if (component & ECS_INSTANCEOF) {
                 ecs_entity_t base = component & ECS_ENTITY_MASK;
                 instantiate(world, stage, base, data, row, count);
-                base_entities.array[base_entities.count] = base;
-                base_entities.count ++;
+
+                /* If table has on_set systems, get table without the base
+                 * entity that was just added. This is needed to determine the
+                 * diff between the on_set systems of the current table and the
+                 * table without the base, as these are the systems that need to
+                 * be invoked */
+                ecs_entities_t to_remove = {
+                    .array = &component,
+                    .count = 1
+                };
+                table_without_base = ecs_table_traverse_remove(world, stage, 
+                    table_without_base, &to_remove, NULL);
             }
             c_info = ecs_get_c_info(world, component);
             if (!c_info) {
@@ -600,7 +689,7 @@ void ecs_run_init_actions(
         } else {
             c_info = &c_info_array[component];
         }
-            
+
         ecs_xtor_t ctor = c_info->lifecycle.ctor;
         ecs_vector_t *triggers = c_info->on_add;
         if (!ctor && !triggers && !has_base) {
@@ -629,6 +718,19 @@ void ecs_run_init_actions(
                 void *ctx = c_info->lifecycle.ctx;
                 ctor(world, component, ids, ptr, size, count, ctx);
             }
+
+            if (has_base && !comp_mask_is_set(set_mask, component)) {
+                if (override_component(world, component, type, data, column, 
+                    row, count)) 
+                {
+                    ecs_entities_t to_remove = {
+                        .array = &component,
+                        .count = 1
+                    };
+                    table_without_base = ecs_table_traverse_remove(world, stage, 
+                        table_without_base, &to_remove, NULL);
+                }
+            }
         }
 
         if (triggers) {
@@ -637,40 +739,9 @@ void ecs_run_init_actions(
         }
     }
 
-    /** Override components after all other actions have completed. This allows
-     * us to run OnSet handlers on the appropriate pointers. If a component is
-     * overridden by the entity, the OnSet handler should be invoked on the
-     * private component of the entity. However, if an entity adds a base
-     * without overriding any of its components, the OnSet handler still needs
-     * to be invoked on the base component. */
-    if (has_base && components.count) {
-        int32_t i;
-        for (i = type_count - 1; i >= 0; i --) {
-            ecs_entity_t base = type_array[i];
-            if (!(base & ECS_INSTANCEOF)) {
-                /* If this component is not a base, no more base entities will
-                 * follow */
-                break;
-            }
-
-            base &= ECS_ENTITY_MASK;
-
-            /* Keep track of which base entities were added. This will make sure
-             * that OnSet triggers are invoked for new base components. This is
-             * a quadratic search but N is constrained by the number of base
-             * entities added, which is usually not more than one. */
-            bool base_added = false;
-            int32_t j;
-            for (j = 0; j < base_entities.count; j ++) {
-                if (base == base_entities.array[j]) {
-                    base_added = true;
-                    break;
-                }
-            }
-
-            override(world, stage, table, data, row, count, base, 
-                components, base_added, set_mask);
-        }
+    if (run_on_set && table_without_base != table) {
+        run_monitors(world, stage, table, table->on_set_all, row, count, 
+            table_without_base->on_set_all);
     }
 }
 
@@ -761,64 +832,6 @@ void ecs_delete_children(
 }
 
 static
-void run_monitors(
-    ecs_world_t *world, 
-    ecs_stage_t *stage, 
-    ecs_table_t *dst_table, 
-    int32_t dst_row, 
-    int32_t count, 
-    ecs_table_t *src_table)
-{
-    if (dst_table == src_table) {
-        return;
-    }
-
-    if (!dst_table->monitors) {
-        return;
-    }
-
-    if (dst_table->flags & EcsTableIsPrefab) {
-        return;
-    }
-
-    if (!src_table || !src_table->monitors) {
-        ecs_vector_each(dst_table->monitors, ecs_matched_query_t, monitor, {
-            ecs_run_monitor(world, stage, monitor, dst_row, count);
-        });
-    } else {
-        /* If both tables have monitors, run the ones that dst_table has and
-         * src_table doesn't have */
-        int32_t i, count = ecs_vector_count(dst_table->monitors);
-        int32_t j = 0, src_count = ecs_vector_count(src_table->monitors);
-        ecs_matched_query_t *dst_monitors = ecs_vector_first(dst_table->monitors, ecs_matched_query_t);
-        ecs_matched_query_t *src_monitors = ecs_vector_first(src_table->monitors, ecs_matched_query_t);
-
-        for (i = 0; i < count; i ++) {
-            ecs_matched_query_t *dst = &dst_monitors[i];
-
-            ecs_entity_t system = dst->query->system;
-            ecs_assert(system != 0, ECS_INTERNAL_ERROR, NULL);
-
-            ecs_matched_query_t *src = 0;
-            while (j < src_count) {
-                src = &src_monitors[j];
-                if (src->query->system < system) {
-                    j ++;
-                } else {
-                    break;
-                }
-            }
-
-            if (src->query->system == system) {
-                continue;
-            }
-
-            ecs_run_monitor(world, stage, dst, dst_row, count);
-        }
-    }
-}
-
-static
 int32_t new_entity(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -859,9 +872,9 @@ int32_t new_entity(
 
     ecs_comp_mask_t set_mask = { 0 };
     ecs_run_init_actions(world, stage, new_table, dst_data, new_row, 1, *added, 
-        set_mask);
+        set_mask, true);
 
-    run_monitors(world, stage, new_table, new_row, 1, NULL);
+    run_monitors(world, stage, new_table, new_table->monitors, new_row, 1, NULL);
 
     info->data = dst_data;
     
@@ -929,10 +942,10 @@ int32_t move_entity(
         ecs_comp_mask_t set_mask = { 0 };
         ecs_run_init_actions(
             world, stage, dst_table, dst_data, dst_row, 1, *added, 
-            set_mask);
+            set_mask, true);
     }
 
-    run_monitors(world, stage, dst_table, dst_row, 1, src_table);
+    run_monitors(world, stage, dst_table, dst_table->monitors, dst_row, 1, src_table->monitors);
 
     info->data = dst_data;
 
@@ -1125,7 +1138,7 @@ int32_t new_w_data(
     ecs_stage_t *stage,
     ecs_table_t *table,
     int32_t count,
-    void **c_info)
+    void **component_data)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1167,7 +1180,7 @@ int32_t new_w_data(
     
     ecs_comp_mask_t set_mask = { 0 };
 
-    if (c_info) {
+    if (component_data) {
         /* Set components that we're setting in the component mask so the init
          * actions won't call OnSet triggers for them. This ensures we won't
          * call OnSet triggers multiple times for the same component */
@@ -1180,7 +1193,7 @@ int32_t new_w_data(
             comp_mask_set(set_mask, c);
 
             /* Copy component data */
-            void *src_ptr = c_info[c_ptr_i];
+            void *src_ptr = component_data[c_ptr_i];
             if (!src_ptr) {
                 continue;
             }
@@ -1205,47 +1218,30 @@ int32_t new_w_data(
     }
 
     int32_t change_count = data->change_count;
-    ecs_run_init_actions(world, stage, table, data, row, count, added, set_mask);
+    ecs_run_init_actions(world, stage, table, data, row, count, added, set_mask, component_data == NULL);
     changed = change_count != data->change_count;
 
-    /* Run OnSet triggers */
-    if (c_info) {
-        int column_count = ecs_vector_count(type);
-        for (i = 0; i < column_count; i ++) {
-            /* If this is not a component, skip */
-            ecs_entity_t component = added.array[i];
-            if (component >= ECS_HI_COMPONENT_ID) {
-                continue;
+    /* Run triggers and monitors */
+    if (component_data) {
+        if (changed) {
+            int32_t j;
+            for (j = 0; j < count; j ++) {
+                ecs_entity_info_t info;
+                ecs_get_info(world, stage, e + j, &info);
+                ecs_run_set_systems(world, stage, &added, 
+                    info.table, info.data, info.row, 1, true);
             }
-
-            /* Invoke OnSet systems */
-            ecs_c_info_t *cdata = ecs_get_c_info(
-                world, component);
-
-            if (cdata->on_set) {
-                if (changed) {
-                    int32_t j;
-                    for (j = 0; j < count; j ++) {
-                        ecs_entity_info_t info;
-                        ecs_get_info(world, stage, e + j, &info);
-                        ecs_run_component_trigger(
-                            world, cdata->on_set, component, info.table, 
-                            info.data, info.row, 1);
-                    }
-                } else {
-                    ecs_run_component_trigger(
-                        world, cdata->on_set, component, table, data, 
-                        row, count);
-                }
-            }
-        }
+        } else {
+            ecs_run_set_systems(world, stage, &added, 
+                table, data, row, count, true);
+        }    
     }
-
+    
     /* Only invoke monitors if entity hasn't changed. If components did change,
      * the monitor will already have been invoked. */
     if (!changed) {
-        run_monitors(world, stage, table, row, count, NULL);
-    }
+        run_monitors(world, stage, table, table->monitors, row, count, NULL);
+    } 
 
     return row;
 }
@@ -1734,9 +1730,8 @@ ecs_entity_t ecs_clone(
                 continue;
             }
 
-            ecs_run_component_trigger(
-                world, cdata->on_set, component, src_table, src_info.data, 
-                dst_info.row, 1);
+            ecs_run_set_systems(world, stage, &to_add, 
+                src_table, src_info.data, dst_info.row, 1, true);
         }
     }    
 
@@ -1852,9 +1847,12 @@ void ecs_modified_w_entity(
 
     ecs_get_info(world, stage, entity, &info);
 
-    ecs_c_info_t *cdata = ecs_get_c_info(world, component);
-    ecs_run_component_trigger(world, cdata->on_set, component, 
-        info.table, info.data, info.row, 1);
+    ecs_entities_t added = {
+        .array = &component,
+        .count = 1
+    };
+    ecs_run_set_systems(world, stage, &added, 
+        info.table, info.data, info.row, 1, false);
 }
 
 ecs_entity_t ecs_set_ptr_w_entity(
@@ -1887,9 +1885,14 @@ ecs_entity_t ecs_set_ptr_w_entity(
         memset(dst, 0, size);
     }
 
-    ecs_c_info_t *cdata = ecs_get_c_info(world, component);    
-    ecs_run_component_trigger(world, cdata->on_set, component, 
-        info.table, info.data, info.row, 1);
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    ecs_entities_t added = {
+        .array = &component,
+        .count = 1
+    };
+
+    ecs_run_set_systems(world, stage, &added, 
+        info.table, info.data, info.row, 1, false);
 
     return entity;
 }

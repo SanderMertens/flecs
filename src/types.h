@@ -118,6 +118,8 @@ struct ecs_table_t {
     /* Different kinds of matched queries */
     ecs_vector_t *queries;            /* Queries matched with table */
     ecs_vector_t *monitors;           /* Monitor systems */
+    ecs_vector_t** on_set;            /* OnSet systems, broken up by column */
+    ecs_vector_t* on_set_all;         /* All OnSet systems (for new_w_data) */
 
     /* Change tracking */
     int32_t *dirty_state;             /* Keep track of changes in columns */
@@ -360,7 +362,6 @@ struct ecs_snapshot_t {
 typedef struct ecs_c_info_t {
     ecs_vector_t *on_add;       /* Systems ran after adding this component */
     ecs_vector_t *on_remove;    /* Systems ran after removing this component */
-    ecs_vector_t *on_set;       /* Systems ran after setting this component */
 
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
 } ecs_c_info_t;

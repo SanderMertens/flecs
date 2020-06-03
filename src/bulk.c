@@ -78,7 +78,7 @@ void merge_table(
 
             if (to_add && to_add->count && dst_data) {
                 ecs_run_init_actions(world, &world->stage, dst_table, dst_data, 
-                    dst_count, src_count, *to_add, (ecs_comp_mask_t){ 0 });
+                    dst_count, src_count, *to_add, (ecs_comp_mask_t){ 0 }, true);
             }
         }
     }

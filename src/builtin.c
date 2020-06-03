@@ -77,8 +77,8 @@ void ecs_component_set_intern(
         case EcsOnRemove:
             el = ecs_vector_add(&cdata->on_remove, EcsTrigger);
             break;
-        case EcsOnSet:
-            el = ecs_vector_add(&cdata->on_set, EcsTrigger);
+        default:
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
             break;
         }
         
@@ -167,25 +167,6 @@ void EcsEnableSystem(
     }
 }
 
-void ecs_init_system_builtins(
-    ecs_world_t *world)
-{
-    /* -- System creation / enabling / disabling infrastructure -- */
-
-    /* When EcsSystem is set, a new system will be created */
-    ECS_TRIGGER(world, EcsOnSetSystem, EcsOnSet, EcsSystem, 0);
-
-    /* Initialize EcsColSystem to zero when created */
-    ecs_set(world, ecs_entity(EcsColSystem), EcsComponentLifecycle, {
-        .ctor = ctor_init_zero,
-        .dtor = ecs_colsystem_dtor
-    });
-
-    /* Monitors that trigger when a system is enabled or disabled */
-    ECS_SYSTEM(world, EcsDisableSystem, 0, EcsColSystem, EcsDisabled || EcsDisabledIntern, SYSTEM.EcsMonitor);
-    ECS_SYSTEM(world, EcsEnableSystem, 0, EcsColSystem, !EcsDisabled, !EcsDisabledIntern, SYSTEM.EcsMonitor);
-}
-
 void ecs_init_builtins(
     ecs_world_t *world)
 {
@@ -194,31 +175,31 @@ void ecs_init_builtins(
     ecs_set(world, EcsOnRemove, EcsName, {"EcsOnRemove"});
     ecs_set(world, EcsOnSet, EcsName, {"EcsOnSet"});
 
-    /* Bootstrap the on_set trigger for EcsTrigger. After this we'll be
-     * able to set triggers for components */
-    EcsTrigger tr = {
-        .kind = EcsOnSet,
-        .action = EcsOnSetTrigger,
-        .component = ecs_entity(EcsTrigger)
-    };
+    /* Bootstrap ctor and dtor for EcsColSystem */
+    ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, ecs_entity(EcsColSystem));
+    ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    c_info->lifecycle.ctor = ctor_init_zero;
+    c_info->lifecycle.dtor = ecs_colsystem_dtor;
 
-    ecs_entity_t e = ecs_new(world, 0);
-    ecs_set(world, e, EcsName, {"EcsSetTrigger"});
-    ecs_add(world, e, EcsTrigger);
-    ecs_component_set_intern(world, &e, &tr, 1);
+    /* Bootstrap OnSet system for EcsSystem */
+    ecs_entity_t set_system = ecs_set(world, 0, EcsName, {"EcsOnSetSystem"});
+    ecs_add_entity(world, set_system, EcsOnSet);
+    ecs_init_system(world, set_system, "EcsOnSetSystem", EcsOnSetSystem, "EcsSystem");
 
-    /* From here on we can use ecs_set to register component triggers */
+    /* From here we can create systems */
 
-    /* Register the OnSet trigger for EcsComponentLifecycle */
-    ECS_TRIGGER(world, EcsOnSetComponentLifecycle, EcsOnSet, EcsComponentLifecycle, NULL);
+    /* Register OnSet system for EcsComponentLifecycle */
+    ECS_SYSTEM(world, EcsOnSetComponentLifecycle, EcsOnSet, EcsComponentLifecycle);
 
-    /* From here on we can use ecs_set to register component lifecycle */
+    /* Register OnSet system for triggers */
+    ECS_SYSTEM(world, EcsOnSetTrigger, EcsOnSet, EcsTrigger);
+
+    /* Monitors that trigger when a system is enabled or disabled */
+    ECS_SYSTEM(world, EcsDisableSystem, EcsMonitor, EcsColSystem, EcsDisabled || EcsDisabledIntern);
+    ECS_SYSTEM(world, EcsEnableSystem, EcsMonitor, EcsColSystem, !EcsDisabled, !EcsDisabledIntern);
 
     /* Initialize pipeline builtins */
     ecs_init_pipeline_builtins(world);
-
-    /* Initialize system builtins */
-    ecs_init_system_builtins(world);     
 
     /* Initialize timer feature */
     ecs_init_timer_builtins(world);

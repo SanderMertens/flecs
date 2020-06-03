@@ -431,6 +431,27 @@
                 "1_comp_1_parent"
             ]
         }, {
+            "id": "SystemOnSet",
+            "testcases": [
+                "set_1_of_1",
+                "set_1_of_2",
+                "set_1_of_3",
+                "bulk_new_1",
+                "bulk_new_2",
+                "bulk_new_2_of_1",
+                "bulk_new_3",
+                "bulk_new_3_of_2",
+                "bulk_new_1_from_base",
+                "set_1_of_2_1_from_base",
+                "set_1_of_3_1_from_base",
+                "add_base",
+                "add_base_to_1_overridden",
+                "add_base_to_2_overridden",
+                "add_base_to_1_of_2_overridden",
+                "on_set_after_remove_override",
+                "no_set_after_remove_base"
+            ]
+        }, {
             "id": "SystemPeriodic",
             "testcases": [
                 "1_type_1_component",

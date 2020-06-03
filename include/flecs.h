@@ -62,6 +62,12 @@ typedef uint64_t ecs_entity_t;
 /* A vector containing component identifiers used to describe an entity type. */
 typedef const ecs_vector_t* ecs_type_t;
 
+/* Array of entity ids that, other than a type, can live on the stack */
+typedef struct ecs_entities_t {
+    ecs_entity_t *array;
+    int32_t count;
+} ecs_entities_t;
+
 /** Action callback for systems and triggers */
 typedef void (*ecs_iter_action_t)(
     ecs_rows_t *data);
@@ -202,6 +208,7 @@ struct ecs_rows_t {
     int32_t offset;             /* Offset relative to current table */
     int32_t count;              /* Number of rows to process by system */
 
+    ecs_entities_t *triggered_by; /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
 };
 

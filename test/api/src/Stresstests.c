@@ -140,7 +140,7 @@ void set_entity_random_components(
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, Set_random, EcsOnUpdate, Position);
-    ECS_TRIGGER(world, Set_velocity_callback, EcsOnSet, Velocity, NULL);
+    ECS_SYSTEM(world, Set_velocity_callback, EcsOnSet, Velocity);
     ECS_SYSTEM(world, Delete_above_1000, EcsPostUpdate, Position);
 
     IterData ctx = {.component = ecs_entity(Position), .component_2 = ecs_entity(Velocity), .component_3 = ecs_entity(Rotation)};

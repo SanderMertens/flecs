@@ -2153,7 +2153,7 @@ void SingleThreadStaging_add_to_current_in_on_set() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TRIGGER(world, Add_to_current, EcsOnSet, Position, NULL);
+    ECS_SYSTEM(world, Add_to_current, EcsOnSet, Position);
 
     IterData ctx = {.component = ecs_entity(Velocity)};
     ecs_set_context(world, &ctx);
@@ -2192,7 +2192,7 @@ void SingleThreadStaging_remove_from_current_in_on_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_TRIGGER(world, Remove_from_current, EcsOnSet, Position, NULL);
+    ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
 
     IterData ctx = {.component = ecs_entity(Velocity)};
     ecs_set_context(world, &ctx);
@@ -2235,7 +2235,7 @@ void SingleThreadStaging_remove_set_component_in_on_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_TRIGGER(world, Remove_from_current, EcsOnSet, Position, NULL);
+    ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2409,7 +2409,7 @@ void SingleThreadStaging_on_set_in_on_add() {
     ECS_COMPONENT(world, Mass);
 
     ECS_TRIGGER(world, Set_current, EcsOnAdd, Position, NULL);
-    ECS_TRIGGER(world, Add_3_to_current, EcsOnSet, Rotation, NULL);
+    ECS_SYSTEM(world, Add_3_to_current, EcsOnSet, Rotation);
 
     IterData ctx = {.component = ecs_entity(Rotation), .component_3 = ecs_entity(Mass)};
     ecs_set_context(world, &ctx);
@@ -2570,7 +2570,7 @@ void SingleThreadStaging_match_table_created_w_add_in_on_set() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_TRIGGER(world, Add_to_current, EcsOnSet, Position, NULL);
+    ECS_SYSTEM(world, Add_to_current, EcsOnSet, Position);
     ECS_SYSTEM(world, On_PV, EcsOnUpdate, Position, Velocity);
 
     IterData add_ctx = {.component = ecs_entity(Velocity)};
@@ -2617,7 +2617,7 @@ void SingleThreadStaging_match_table_created_w_set_in_on_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, Set_velocity, EcsOnSet, Position, NULL);
+    ECS_SYSTEM(world, Set_velocity, EcsOnSet, Position);
     ECS_SYSTEM(world, On_PV, EcsOnUpdate, Position, Velocity);
 
     IterData add_ctx = {.component = ecs_entity(Velocity)};
@@ -2711,7 +2711,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, Set_velocity_on_new, EcsOnSet, Position, NULL);
+    ECS_SYSTEM(world, Set_velocity_on_new, EcsOnSet, Position);
     ECS_SYSTEM(world, On_V, EcsOnUpdate, Velocity);
 
     IterData add_ctx = {.component = ecs_entity(Velocity)};
@@ -2778,7 +2778,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, Create_container, EcsOnSet, Position, NULL);
+    ECS_SYSTEM(world, Create_container, EcsOnSet, Position);
 
     /* Entity is not yet a container. Adding this entity to another entity would
      * cause an error */
@@ -2832,7 +2832,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, Create_container_reverse, EcsOnSet, Position, NULL);
+    ECS_SYSTEM(world, Create_container_reverse, EcsOnSet, Position);
 
     /* Entity is not yet a container. Adding this entity to another entity would
      * cause an error */

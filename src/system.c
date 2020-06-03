@@ -483,8 +483,10 @@ void ecs_run_monitor(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_matched_query_t *monitor,
+    ecs_entities_t *components,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    ecs_entity_t *entities)
 {
     ecs_query_t *query = monitor->query;
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -496,6 +498,13 @@ void ecs_run_monitor(
     ecs_rows_t rows = {0};
     ecs_query_set_rows( world, stage, query, &rows, 
         monitor->matched_table_index, row, count);
+
+    rows.triggered_by = components;
+    rows.param = system_data->ctx;
+
+    if (entities) {
+        rows.entities = entities;
+    }
 
     rows.system = system;
     system_data->action(&rows);

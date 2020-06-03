@@ -175,7 +175,50 @@ void register_on_set(
     ecs_query_t *query,
     int32_t matched_table_index)
 {
+    if (table->column_count) {
+        if (!table->on_set) {
+            table->on_set = ecs_os_calloc(sizeof(ecs_vector_t),
+                table->column_count);
+        }
 
+        /* Add system to each matched column. This makes it easy to get the list of
+        * systems when setting a single component. */
+        ecs_vector_each(query->sig.columns, ecs_sig_column_t, column, {
+            if (column->oper_kind == EcsOperAnd) {
+                ecs_entity_t comp = column->is.component;
+                int32_t index = ecs_type_index_of(table->type, comp);
+                if (index == -1) {
+                    continue;
+                }
+
+                if (index >= table->column_count) {
+                    continue;
+                }
+                
+                ecs_vector_t *set_c = table->on_set[index];
+                ecs_matched_query_t * m = ecs_vector_add(&set_c, ecs_matched_query_t);
+                
+                m->query = query;
+                m->matched_table_index = matched_table_index;
+
+                table->on_set[index] = set_c;
+            }
+        });
+    }
+
+    /* Add the system to a list that contains all OnSet systems matched with
+     * this table. This makes it easy to get the list of systems that need to be
+     * executed when all components are set, like when new_w_data is used */
+    ecs_matched_query_t * m = ecs_vector_add(&table->on_set_all, 
+        ecs_matched_query_t);
+    m->query = query;
+    m->matched_table_index = matched_table_index;
+
+    qsort(
+        ecs_vector_first(table->on_set_all, ecs_matched_query_t), 
+        ecs_vector_count(table->on_set_all), 
+        sizeof(ecs_matched_query_t), 
+        compare_matched_query);    
 }
 
 /* -- Private functions -- */
@@ -458,30 +501,11 @@ void ecs_table_replace_data(
         *table_data = *data;
     }
 
-    int32_t count = 0;
-    if (table_data && table_data->columns) {
-        count = ecs_vector_count(table_data->entities);
+    ecs_entities_t components = ecs_type_to_entities(table->type);
+    int32_t count = ecs_table_count(table);
 
-        int32_t i, column_count = table->column_count;
-        ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
-
-        for (i = 0; i < column_count; i ++) {
-            ecs_entity_t component = components[i];
-            ecs_column_t *column = &table_data->columns[i];
-            
-            if (component > ECS_HI_COMPONENT_ID || !column->size) {
-                continue;
-            }
-
-            ecs_c_info_t *cdata = ecs_get_c_info(   
-                world, component);
-            
-            if (cdata->on_set) {
-                ecs_run_component_trigger(world, cdata->on_set, 
-                    component, table, table_data, 0, count);
-            }
-        }
-    }
+    ecs_run_set_systems(world, &world->stage, &components, table, data, 0, 
+        count, true);
 
     if (!prev_count && count) {
         ecs_table_activate(world, table, 0, true);

@@ -379,6 +379,25 @@ void Monitor_1_comp_1_not(void);
 void Monitor_1_parent(void);
 void Monitor_1_comp_1_parent(void);
 
+// Testsuite 'SystemOnSet'
+void SystemOnSet_set_1_of_1(void);
+void SystemOnSet_set_1_of_2(void);
+void SystemOnSet_set_1_of_3(void);
+void SystemOnSet_bulk_new_1(void);
+void SystemOnSet_bulk_new_2(void);
+void SystemOnSet_bulk_new_2_of_1(void);
+void SystemOnSet_bulk_new_3(void);
+void SystemOnSet_bulk_new_3_of_2(void);
+void SystemOnSet_bulk_new_1_from_base(void);
+void SystemOnSet_set_1_of_2_1_from_base(void);
+void SystemOnSet_set_1_of_3_1_from_base(void);
+void SystemOnSet_add_base(void);
+void SystemOnSet_add_base_to_1_overridden(void);
+void SystemOnSet_add_base_to_2_overridden(void);
+void SystemOnSet_add_base_to_1_of_2_overridden(void);
+void SystemOnSet_on_set_after_remove_override(void);
+void SystemOnSet_no_set_after_remove_base(void);
+
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
 void SystemPeriodic_1_type_3_component(void);
@@ -2336,6 +2355,80 @@ static bake_test_suite suites[] = {
             {
                 .id = "1_comp_1_parent",
                 .function = Monitor_1_comp_1_parent
+            }
+        }
+    },
+    {
+        .id = "SystemOnSet",
+        .testcase_count = 17,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "set_1_of_1",
+                .function = SystemOnSet_set_1_of_1
+            },
+            {
+                .id = "set_1_of_2",
+                .function = SystemOnSet_set_1_of_2
+            },
+            {
+                .id = "set_1_of_3",
+                .function = SystemOnSet_set_1_of_3
+            },
+            {
+                .id = "bulk_new_1",
+                .function = SystemOnSet_bulk_new_1
+            },
+            {
+                .id = "bulk_new_2",
+                .function = SystemOnSet_bulk_new_2
+            },
+            {
+                .id = "bulk_new_2_of_1",
+                .function = SystemOnSet_bulk_new_2_of_1
+            },
+            {
+                .id = "bulk_new_3",
+                .function = SystemOnSet_bulk_new_3
+            },
+            {
+                .id = "bulk_new_3_of_2",
+                .function = SystemOnSet_bulk_new_3_of_2
+            },
+            {
+                .id = "bulk_new_1_from_base",
+                .function = SystemOnSet_bulk_new_1_from_base
+            },
+            {
+                .id = "set_1_of_2_1_from_base",
+                .function = SystemOnSet_set_1_of_2_1_from_base
+            },
+            {
+                .id = "set_1_of_3_1_from_base",
+                .function = SystemOnSet_set_1_of_3_1_from_base
+            },
+            {
+                .id = "add_base",
+                .function = SystemOnSet_add_base
+            },
+            {
+                .id = "add_base_to_1_overridden",
+                .function = SystemOnSet_add_base_to_1_overridden
+            },
+            {
+                .id = "add_base_to_2_overridden",
+                .function = SystemOnSet_add_base_to_2_overridden
+            },
+            {
+                .id = "add_base_to_1_of_2_overridden",
+                .function = SystemOnSet_add_base_to_1_of_2_overridden
+            },
+            {
+                .id = "on_set_after_remove_override",
+                .function = SystemOnSet_on_set_after_remove_override
+            },
+            {
+                .id = "no_set_after_remove_base",
+                .function = SystemOnSet_no_set_after_remove_base
             }
         }
     },
@@ -4384,5 +4477,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 48);
+    return bake_test_run("api", argc, argv, suites, 49);
 }

@@ -176,7 +176,8 @@ void ecs_run_init_actions(
     int32_t row,
     int32_t count,
     ecs_entities_t components,
-    ecs_comp_mask_t set_mask);
+    ecs_comp_mask_t set_mask,
+    bool run_on_set);
 
 void ecs_run_deinit_actions(
     ecs_world_t *world,
@@ -195,6 +196,26 @@ void ecs_run_component_trigger(
     ecs_data_t *data,
     int32_t row,
     int32_t count);
+
+void ecs_run_set_actions(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_c_info_t *c_info,
+    ecs_entity_t component,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count);
+
+void ecs_run_set_systems(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entities_t *components,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    bool set_all);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table API
@@ -385,8 +406,10 @@ void ecs_run_monitor(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_matched_query_t *monitor,
+    ecs_entities_t *components,
     int32_t row,
-    int32_t count);
+    int32_t count,
+    ecs_entity_t *entities);
 
 void ecs_enable_system(
     ecs_world_t *world,
