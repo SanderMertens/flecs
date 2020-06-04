@@ -9,7 +9,7 @@ ecs_filter_iter_t ecs_filter_iter(
         .filter = filter ? *filter : (ecs_filter_t){0},
         .tables = world->stage.tables,
         .index = 0,
-        .rows = {
+        .view = {
             .world = world
         }
     };
@@ -24,7 +24,7 @@ ecs_filter_iter_t ecs_snapshot_filter_iter(
         .filter = filter ? *filter : (ecs_filter_t){0},
         .tables = snapshot->tables,
         .index = 0,
-        .rows = {
+        .view = {
             .world = world
         }
     };
@@ -47,15 +47,15 @@ bool ecs_filter_next(
             continue;
         }
 
-        if (!ecs_table_match_filter(iter->rows.world, table, &iter->filter)) {
+        if (!ecs_table_match_filter(iter->view.world, table, &iter->filter)) {
             continue;
         }
 
-        ecs_rows_t *rows = &iter->rows;
-        rows->table = table;
-        rows->table_columns = data->columns;
-        rows->count = ecs_table_count(table);
-        rows->entities = ecs_vector_first(data->entities, ecs_entity_t);
+        ecs_view_t *view = &iter->view;
+        view->table = table;
+        view->table_columns = data->columns;
+        view->count = ecs_table_count(table);
+        view->entities = ecs_vector_first(data->entities, ecs_entity_t);
         iter->index = ++i;
         return true;
     }

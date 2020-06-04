@@ -47,17 +47,17 @@ int main(int argc, char *argv[]) {
     /* Delete matching entities from world to prove we're using snapshot data */
     world.delete_entities(f);
 
-    for (auto rows : s.filter(f)) {
+    for (auto view : s.filter(f)) {
         /* Get the Position and Velocity columns from the current table */
-        auto p = rows.table_column<Position>();
-        auto v = rows.table_column<Velocity>();
+        auto p = view.table_column<Position>();
+        auto v = view.table_column<Velocity>();
 
         /* We can't use the name() method anymore to fetch the entity name as
          * we have removed the entities from the world. Instead, we must get the
          * name directly from the table in the snapshot */
-        auto name = rows.table_column<flecs::Name>();
+        auto name = view.table_column<flecs::Name>();
 
-        for (auto row : rows) {
+        for (auto row : view) {
             p[row].x += v[row].x;
             p[row].y += v[row].y;
 

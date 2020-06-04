@@ -427,7 +427,7 @@ void Snapshot_snapshot_free_filtered() {
 static bool invoked = false;
 
 static
-void Dummy(ecs_rows_t *rows) {
+void Dummy(ecs_view_t *view) {
     invoked = true;
 }
 

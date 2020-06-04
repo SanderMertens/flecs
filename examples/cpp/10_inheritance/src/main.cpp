@@ -17,9 +17,9 @@ struct Mass {
 };
 
 /* Implement a move system with support for shared columns */
-void Move(flecs::rows& rows, flecs::column<Position> p, flecs::column<Force> f, flecs::column<Mass> m) {
+void Move(flecs::view& view, flecs::column<Position> p, flecs::column<Force> f, flecs::column<Mass> m) {
 
-    for (auto row : rows) {
+    for (auto row : view) {
         /* Explicitly check if the Mass column is shared or not. If the column
          * is shared, each entity that is currently iterated over shared the
          * same base, and thus the same Mass value. This means that rather than
@@ -36,7 +36,7 @@ void Move(flecs::rows& rows, flecs::column<Position> p, flecs::column<Force> f, 
 
         /* Print something to the console so we can see the system is being
          * invoked */
-        std::cout << rows.entity(row).name() << " moved to {.x = "
+        std::cout << view.entity(row).name() << " moved to {.x = "
             << p[row].x << ", .y = "
             << p[row].y << "}" << std::endl;
     }

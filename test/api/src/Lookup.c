@@ -71,32 +71,32 @@ void Lookup_lookup_child() {
     ecs_fini(world);
 }
 
-void LookupSystem(ecs_rows_t *rows) {
-    ecs_entity_t e = ecs_new(rows->world, 0);
+void LookupSystem(ecs_view_t *view) {
+    ecs_entity_t e = ecs_new(view->world, 0);
     test_assert(e != 0);
 
-    ecs_set(rows->world, e, EcsName, {"Foo"});
-    test_assert( ecs_has(rows->world, e, EcsName));
+    ecs_set(view->world, e, EcsName, {"Foo"});
+    test_assert( ecs_has(view->world, e, EcsName));
 
-    ecs_entity_t found = ecs_lookup(rows->world, "Foo");
+    ecs_entity_t found = ecs_lookup(view->world, "Foo");
     test_assert(found != 0);
     test_assert(found == e);
 }
 
-void LookupChildSystem(ecs_rows_t *rows) {
-    ecs_entity_t parent = ecs_new(rows->world, 0);
+void LookupChildSystem(ecs_view_t *view) {
+    ecs_entity_t parent = ecs_new(view->world, 0);
     test_assert(parent != 0);
 
-    ecs_entity_t e = ecs_new(rows->world, 0);
+    ecs_entity_t e = ecs_new(view->world, 0);
     test_assert(e != 0);
 
-    ecs_add_entity(rows->world, e, ECS_CHILDOF | parent);
-    test_assert( ecs_has_entity(rows->world, e, ECS_CHILDOF | parent));
+    ecs_add_entity(view->world, e, ECS_CHILDOF | parent);
+    test_assert( ecs_has_entity(view->world, e, ECS_CHILDOF | parent));
 
-    ecs_set(rows->world, e, EcsName, {"Foo"});
-    test_assert( ecs_has(rows->world, e, EcsName));
+    ecs_set(view->world, e, EcsName, {"Foo"});
+    test_assert( ecs_has(view->world, e, EcsName));
 
-    ecs_entity_t found = ecs_lookup_child(rows->world, parent, "Foo");
+    ecs_entity_t found = ecs_lookup_child(view->world, parent, "Foo");
     test_assert(found != 0);
     test_assert(found == e);
 }

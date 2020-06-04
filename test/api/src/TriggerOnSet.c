@@ -1,18 +1,18 @@
 #include <api.h>
 
 static
-void OnSet(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void OnSet(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
 
     Velocity *v = NULL;
-    if (rows->column_count >= 2) {
-        v = ecs_column(rows, Velocity, 2);
+    if (view->column_count >= 2) {
+        v = ecs_column(view, Velocity, 2);
     }
 
-    probe_system(rows);
+    probe_system(view);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         p[i].x ++;
 
         if (v) {
@@ -206,16 +206,16 @@ static bool add_called;
 static bool set_called;
 
 static
-void OnAdd_check_order(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void OnAdd_check_order(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
 
     test_assert(!add_called);
     test_assert(!set_called);
 
-    probe_system(rows);
+    probe_system(view);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         p[i].x = 1;
         p[i].y = 2;    
     }
@@ -224,16 +224,16 @@ void OnAdd_check_order(ecs_rows_t *rows) {
 }
 
 static
-void OnSet_check_order(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void OnSet_check_order(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
 
-    probe_system(rows);
+    probe_system(view);
 
     test_assert(add_called);
     test_assert(!set_called);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         p[i].x ++;
     }
 
@@ -278,18 +278,18 @@ void TriggerOnSet_set_and_add_system() {
 }
 
 static
-void OnSetShared(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void OnSetShared(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
 
     Velocity *v = NULL;
-    if (rows->column_count >= 2) {
-        v = ecs_column(rows, Velocity, 2);
+    if (view->column_count >= 2) {
+        v = ecs_column(view, Velocity, 2);
     }
 
-    probe_system(rows);
+    probe_system(view);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         if (v) {
             v[i].x = p->x;
             v[i].y = p->y;
@@ -479,8 +479,8 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
 }
 
 static
-void SetPosition(ecs_rows_t *rows) {
-    probe_system(rows);
+void SetPosition(ecs_view_t *view) {
+    probe_system(view);
 }
 
 void TriggerOnSet_on_set_after_snapshot_restore() {

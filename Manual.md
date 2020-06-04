@@ -146,12 +146,12 @@ typedef struct Velocity {
 } Velocity;
 
 // System names ('Move') use CamelCase. Supporting API types use snake_case_t
-void Move(ecs_rows_t *rows) {
+void Move(ecs_view_t *view) {
     // Declarative macro's use SCREAMING_SNAKE_CASE
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+    ECS_COLUMN(view, Position, p, 1);
+    ECS_COLUMN(view, Velocity, v, 2);
     
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < view->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
@@ -272,18 +272,18 @@ typedef ecs_vector_t *DynamicBuffer;
 
 ecs_vector_params_t params = {.element_size = sizeof(int)};
 
-void InitDynamicBuffer(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, DynamicBuffer, data, 1);
+void InitDynamicBuffer(ecs_view_t *view) {
+    ECS_COLUMN(view, DynamicBuffer, data, 1);
     
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = view->begin; i < view->end; i ++) {
         data[i] = ecs_vector_new(&params, 0);
     }
 }
 
-void DeinitDynamicBuffer(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, DynamicBuffer, data, 1);
+void DeinitDynamicBuffer(ecs_view_t *view) {
+    ECS_COLUMN(view, DynamicBuffer, data, 1);
     
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = view->begin; i < view->end; i ++) {
         ecs_vector_free(data[i]);
     }
 }
@@ -363,7 +363,7 @@ This will lookup the entity in advance, instead of every time the system is invo
 You can use `ecs_progress` to control the flow of your application, by running it in a while loop, and making the result of the function the condition of the while loop. This will keep your application running until you call `ecs_quit`. Using this pattern provides a common approach to signalling your application needs to exit across modules.
 
 ### Update components proportionally to delta_time
-The Flecs API provides your systems with a `delta_time` variable in the `ecs_rows_t` type wich contains the time passed since the previous frame. This lets you update your entity values proportional to the time that has passed, and is a good idea when you want to decouple the speed at which your logic is running from the FPS of your appplication. You can let Flecs determine `delta_time` automatically, by specifying `0` to `ecs_progress`, or manually by providing a non-zero value to `ecs_progress`.
+The Flecs API provides your systems with a `delta_time` variable in the `ecs_view_t` type wich contains the time passed since the previous frame. This lets you update your entity values proportional to the time that has passed, and is a good idea when you want to decouple the speed at which your logic is running from the FPS of your appplication. You can let Flecs determine `delta_time` automatically, by specifying `0` to `ecs_progress`, or manually by providing a non-zero value to `ecs_progress`.
 
 ### Set a target FPS for applications
 When you run `ecs_progress` in your main loop, you rarely want to run your application as fast as possible. It is good practice to set a target FPS (a good default is 60) so that your application does not consume all of your CPU bandwidth. When you set a target FPS with the `ecs_set_target_fps` function, the `ecs_progress` function will automatically insert sleeps to make sure your application runs at the specified FPS. It may run slower if not enough CPU bandwidth is available, but it will never run faster than that.
@@ -873,12 +873,12 @@ ECS_SYSTEM(world, Foo, EcsOnUpdate, Position, MyTag);
 This introduces an additional column to the system which has no data associated with it, but systems can still access the tag handle with the `ECS_COLUMN_COMPONENT` marco:
 
 ```c
-void Foo(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, 1);
-    ECS_COLUMN_COMPONENT(rows, MyTag, 2);
+void Foo(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, 1);
+    ECS_COLUMN_COMPONENT(view, MyTag, 2);
     
-    for (int i = 0; i < rows->count; i ++) {
-        ecs_remove(rows->world, rows->entities[i], MyTag);
+    for (int i = 0; i < view->count; i ++) {
+        ecs_remove(view->world, view->entities[i], MyTag);
     }
 }
 ```
@@ -958,16 +958,16 @@ This system will match with any entities that have the `Position, Velocity` comp
 The `SELF` source gives no guarantees about whether the component is owned or shared. Therefore the component data passed into the system may be either an array or a pointer to a single value. If a system does not know in advance whether a for example `Velocity` is owned or shared, it can use the following code to safely access the component data:
 
 ```c
-ECS_COLUMN(rows, Position, p, 1);
-ECS_COLUMN(rows, Velocity, v, 2);
+ECS_COLUMN(view, Position, p, 1);
+ECS_COLUMN(view, Velocity, v, 2);
 
-if (ecs_is_shared(rows, 2)) {
-    for (int i = 0; i < rows->count; i ++) {
+if (ecs_is_shared(view, 2)) {
+    for (int i = 0; i < view->count; i ++) {
         p[i].x += v->x;
         p[i].y += v->x;
     }
 } else {
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < view->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].x;
     }
@@ -977,10 +977,10 @@ if (ecs_is_shared(rows, 2)) {
 Alternatively a system can use the `ecs_field` function, which abstracts away the difference between owned and shared columns:
 
 ```c
-ECS_COLUMN(rows, Position, p, 1);
+ECS_COLUMN(view, Position, p, 1);
 
-for (int i = 0; i < rows->count; i ++) {
-    Velocity *v = ecs_field(rows, Velocity, 2, i);
+for (int i = 0; i < view->count; i ++) {
+    Velocity *v = ecs_field(view, Velocity, 2, i);
     p[i].x += v->x;
     p[i].y += v->x;
 }
@@ -998,10 +998,10 @@ This system will match with any entities that have the `Position, Velocity` comp
 An owned column is passed as an array into a system, and can always be safely accessed like this:
 
 ```c
-ECS_COLUMN(rows, Position, p, 1);
-ECS_COLUMN(rows, Velocity, v, 2);
+ECS_COLUMN(view, Position, p, 1);
+ECS_COLUMN(view, Velocity, v, 2);
 
-for (int i = 0; i < rows->count; i ++) {
+for (int i = 0; i < view->count; i ++) {
     p[i].x += v[i].x;
     p[i].y += v[i].x;
 }
@@ -1019,10 +1019,10 @@ This system will match with any entities that have the `Position, Velocity` comp
 A shared column is passed in as a pointer into the system, and can always be safely accessed like this:
 
 ```c
-ECS_COLUMN(rows, Position, p, 1);
-ECS_COLUMN(rows, Velocity, v, 2);
+ECS_COLUMN(view, Position, p, 1);
+ECS_COLUMN(view, Velocity, v, 2);
 
-for (int i = 0; i < rows->count; i ++) {
+for (int i = 0; i < view->count; i ++) {
     p[i].x += v->x;
     p[i].y += v->y;
 }
@@ -1038,11 +1038,11 @@ Position, .Velocity
 A component passed in with a `NOTHING` source can be accessed like this:
 
 ```c 
-ECS_COLUMN(rows, Position, p, 1);
-ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+ECS_COLUMN(view, Position, p, 1);
+ECS_COLUMN_COMPONENT(view, Velocity, 2);
 
-for (int i = 0; i < rows->count; i ++) {
-    ecs_add(rows->world, rows->entities[i], Velocity);
+for (int i = 0; i < view->count; i ++) {
+    ecs_add(view->world, view->entities[i], Velocity);
 }
 ```
 
@@ -1055,11 +1055,11 @@ Position, .MyManualSystem
 `MyManualSystem` can be accessed like this:
 
 ```c
-ECS_COLUMN(rows, Position, p, 1);
-ECS_COLUMN_ENTITY(rows, MyManualSystem, 2);
+ECS_COLUMN(view, Position, p, 1);
+ECS_COLUMN_ENTITY(view, MyManualSystem, 2);
 
-for (int i = 0; i < rows->count; i ++) {
-    ecs_run(rows->world, MyManualSystem, rows->delta_time, &rows->entities[i]);
+for (int i = 0; i < view->count; i ++) {
+    ecs_run(view->world, MyManualSystem, view->delta_time, &view->entities[i]);
 }
 ```
 
@@ -1154,37 +1154,37 @@ ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 How would this system actually be implemented? First of all, the application needs to define the function itself. The name of the function should exactly match the name in the definition, and should have the following signature:
 
 ```c
-void Move(ecs_rows_t *rows) {
-    for (int i = 0; i < rows->count; i ++) {
+void Move(ecs_view_t *view) {
+    for (int i = 0; i < view->count; i ++) {
     }
 }
 ```
 
-The `rows` parameter provides access to the entities that matched with the system, and a lot of other useful information. This example already has the typical `for` loop that defines many system implementations, and the application can get the number of entities to iterate over from the `rows->count` member.
+The `view` parameter provides access to the entities that matched with the system, and a lot of other useful information. This example already has the typical `for` loop that defines many system implementations, and the application can get the number of entities to iterate over from the `view->count` member.
 
 #### The ECS_COLUMN macro
 To access the data of matched entities, the system function needs to obtain pointers to the component arrays. In order to do this, the code needs to look at the system signature, which in this case is `Position, Velocity`. This signature has two columns, and the components can be accessed from the system by using the corresponding column index:
 
 ```c
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, position, 1);
-    ECS_COLUMN(rows, Velocity, velocity, 2);
+void Move(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, position, 1);
+    ECS_COLUMN(view, Velocity, velocity, 2);
     
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < view->count; i ++) {
     }
 }
 ```
 
-This macro requires the `rows` parameter, to get access to the matched entities, the type of the component (`Position`) a name for the variable which will point to the component array (`position`) and the column index (`1`). Note how the column index starts counting from `1`. This is because column index `0` is reserved for the column that stores the _entity identifiers_.
+This macro requires the `view` parameter, to get access to the matched entities, the type of the component (`Position`) a name for the variable which will point to the component array (`position`) and the column index (`1`). Note how the column index starts counting from `1`. This is because column index `0` is reserved for the column that stores the _entity identifiers_.
 
 Now the system logic can be written, by using the `position` and `velocity` variables. Because they point to arrays of the component types (`Position`, `Velocity`) the application can simply use them as C arrays, like so:
 
 ```c
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, position, 1);
-    ECS_COLUMN(rows, Velocity, velocity, 2);
+void Move(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, position, 1);
+    ECS_COLUMN(view, Velocity, velocity, 2);
     
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < view->count; i ++) {
         position[i].x += velocity[i].x;
         position[i].y += velocity[i].y;
     }
@@ -1194,11 +1194,11 @@ void Move(ecs_rows_t *rows) {
 When a column contains shared data, a system should not access the data as an array. Colummns that are guaranteed to be shared are columns with the `PARENT` modifier, `SYSTEM` modifier or `ENTITIY` modifier. In this case, a system should treat the column pointer as an ordinary pointer instead of an array:
 
 ```c
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, position, 1);
-    ECS_COLUMN(rows, Velocity, velocity, 2); // Assuming column 2 is shared
+void Move(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, position, 1);
+    ECS_COLUMN(view, Velocity, velocity, 2); // Assuming column 2 is shared
     
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < view->count; i ++) {
         // Don't access velocity as array
         position[i].x += velocity->x;
         position[i].y += velocity->y;
@@ -1209,13 +1209,13 @@ void Move(ecs_rows_t *rows) {
 In some cases a normal system signature can still cause shared components to be matched with systems, which can happen if entities inherit from base entities. If an application uses inheritance, a system needs to be made robust against this. Consider the following example:
 
 ```c
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, position, 1);
-    ECS_COLUMN(rows, Velocity, velocity, 2);
+void Move(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, position, 1);
+    ECS_COLUMN(view, Velocity, velocity, 2);
     
-    bool velocity_is_shared = ecs_is_shared(rows, 2);
+    bool velocity_is_shared = ecs_is_shared(view, 2);
     
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < view->count; i ++) {
         if (velocity_is_shared) {
             position[i].x += velocity->x;
             position[i].y += velocity->y;        
@@ -1230,10 +1230,10 @@ void Move(ecs_rows_t *rows) {
 For systems with large numbers of components for which it is unknown whether a column is shared or not, it can be unwieldy to have to check all columns and create if statements that switch between access methods. In this case a system can choose to use the `ecs_field` function, which has a larger overhead than accessing the data directly, but abstracts away from the difference between an owned and a shared column. This is the same code with `ecs_field`:
 
 ```c
-void Move(ecs_rows_t *rows) {    
-    for (int i = 0; i < rows->count; i ++) {
-        Position *p = ecs_field(rows, Position, 1, i);
-        Velocity *v = ecs_field(rows, Velocity, 2, i);
+void Move(ecs_view_t *view) {    
+    for (int i = 0; i < view->count; i ++) {
+        Position *p = ecs_field(view, Position, 1, i);
+        Velocity *v = ecs_field(view, Velocity, 2, i);
         position->x += velocity->x;
         position->y += velocity->y;        
     }
@@ -1246,13 +1246,13 @@ When a system needs a component handle to one of its components, the `ECS_COLUMN
 To import a component handle in a system, an application can use the  `ECS_COLUMN_COMPONENT` macro, like so:
 
 ```c
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, position, 1);
-    ECS_COLUMN(rows, Velocity, velocity, 2);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
+void Move(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, position, 1);
+    ECS_COLUMN(view, Velocity, velocity, 2);
+    ECS_COLUMN_COMPONENT(view, Position, 1);
     
-    for (int i = 0; i < rows->count; i ++) {
-      ecs_set(rows->world, rows->entities[i], Position, {
+    for (int i = 0; i < view->count; i ++) {
+      ecs_set(view->world, view->entities[i], Position, {
           .x = position[i].x + velocity[i].x,
           .y = position[i].y + velocity[i].y
       });
@@ -1260,7 +1260,7 @@ void Move(ecs_rows_t *rows) {
 }
 ```
 
-This code may look a bit weird as it introduces a few things that haven't been covered yet. First of all, note how the `world` object is passed into the system through the `rows` parameter. This lets a system call Flecs API functions, as all functions at least require a reference to an `ecs_world_t` instance. Secondly, note how the system obtains the entity id of the currently iterated over entity with `rows->entities`. Finally, note how the `ecs_set` function is able to use the `Position` component. The function requires a handle to the `Position` component to be defined, or it will result in a compiler error (try removing the `ECS_COLUMN_COMPONENT` macro).
+This code may look a bit weird as it introduces a few things that haven't been covered yet. First of all, note how the `world` object is passed into the system through the `view` parameter. This lets a system call Flecs API functions, as all functions at least require a reference to an `ecs_world_t` instance. Secondly, note how the system obtains the entity id of the currently iterated over entity with `view->entities`. Finally, note how the `ecs_set` function is able to use the `Position` component. The function requires a handle to the `Position` component to be defined, or it will result in a compiler error (try removing the `ECS_COLUMN_COMPONENT` macro).
 
 This macro can also be used when a column uses the `NOTHING` modifier. For example, if a system has the following signature:
 
@@ -1271,21 +1271,21 @@ Position, .Velocity
 Then the system can obtain the handle to the `Velocity` component with the following statement:
 
 ```c
-ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+ECS_COLUMN_COMPONENT(view, Velocity, 2);
 ```
 
 #### The ECS_COLUMN_ENTITY macro
 Where the `ECS_COLUMN_COMPONENT` macro obtains a _type_ handle (of `ecs_type_t`), the `ECS_COLUMN_ENTITY` macro obtains an _entity_ handle (of type `ecs_entity_t`). This macro is useful when a system needs access to a specific entity, as is shown in this example:
 
 ```c
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, position, 1);
-    ECS_COLUMN(rows, Velocity, velocity, 2);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
-    ECS_COLUMN_ENTITY(rows, e, 3);
+void Move(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, position, 1);
+    ECS_COLUMN(view, Velocity, velocity, 2);
+    ECS_COLUMN_COMPONENT(view, Position, 1);
+    ECS_COLUMN_ENTITY(view, e, 3);
     
-    for (int i = 0; i < rows->count; i ++) {
-      if (ecs_has(rows->world, e, Position) {
+    for (int i = 0; i < view->count; i ++) {
+      if (ecs_has(view->world, e, Position) {
           position[i].x += velocity[i].x;
           position[i].y += velocity[i].y;
       }
@@ -1409,18 +1409,18 @@ Flecs uses an alternative solution called "staging". Staging uses a data structu
 The following code shows an example of a system that relies on staging:
 
 ```c
-void System(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+void System(ecs_view_t *view) {
+    ECS_COLUMN_COMPONENT(view, Velocity, 2);
 
-    for(int i = 0; i < rows->count; i ++) {
+    for(int i = 0; i < view->count; i ++) {
         // Add component Velocity to stage, set its value to {1, 1}
-        ecs_set(rows->world, rows->entities[i], Velocity, {1, 1});
+        ecs_set(view->world, view->entities[i], Velocity, {1, 1});
         
         // Operation returns true
-        ecs_has(rows->world, rows->entities[i], Velocity);
+        ecs_has(view->world, view->entities[i], Velocity);
         
         // Operation returns pointer to the initialized Velocity
-        ecs_get_ptr(rows->world, rows->entities[i], Velocity);
+        ecs_get_ptr(view->world, view->entities[i], Velocity);
     }
 }
 
@@ -1443,18 +1443,18 @@ Note how you cannot tell from the API calls that staging is used. Flecs "knows" 
 When a system is iterating, it receives contiguous arrays with component data. These arrays are not staged, as they provide direct access to the components in the main data store. Applications can change the contents of these arrays, which is referred to as "inline modifications". An important decision system implementors have to make is whether to modify data inline, or whether to use staging. The following code example shows the difference between the two:
 
 ```c
-void System(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+void System(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
+    ECS_COLUMN_COMPONENT(view, Position, 1);
+    ECS_COLUMN(view, Velocity, v, 2);
 
-    for(int i = 0; i < rows->count; i ++) {
+    for(int i = 0; i < view->count; i ++) {
         // Inline modification
         v[i].x *= 0.9;
         v[i].y *= 0.9;
         
         // Staged modification
-        ecs_set(rows->world,  rows->entities[i], Position, {p[i].x + v[i].x, p[i].y + v[i].y});
+        ecs_set(view->world,  view->entities[i], Position, {p[i].x + v[i].x, p[i].y + v[i].y});
     }
 }
 ```
@@ -1469,19 +1469,19 @@ Using `ecs_get` and `ecs_set` has a performance penalty however as nothing beats
 When an application uses `ecs_get` while iterating, the operation may return data from to the main data store or to the stage, depending on whether the component has been added to the stage. Consider the following example:
 
 ```c
-void System(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+void System(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
+    ECS_COLUMN_COMPONENT(view, Velocity, 2);
 
-    for(int i = 0; i < rows->count; i ++) {
+    for(int i = 0; i < view->count; i ++) {
         // Get data from main Flecs store
-        Velocity *v = ecs_get_ptr(rows->world, rows->entities[i]);
+        Velocity *v = ecs_get_ptr(view->world, view->entities[i]);
         
         // Explicitly set component in the stage
-        ecs_set(rows->world, rows->entities[i], Velocity, {1, 1});
+        ecs_set(view->world, view->entities[i], Velocity, {1, 1});
         
         // ecs_get_ptr now returns component from the stage
-        v = ecs_get_ptr(rows->world, rows->entities[i], Velocity);
+        v = ecs_get_ptr(view->world, view->entities[i], Velocity);
         
         // Change value in the stage
         v[i].x ++;
@@ -1495,16 +1495,16 @@ The `ecs_get_ptr` operation returns a pointer from the main data store _unless_ 
 A single iteration may contain multiple operations on the same component. Consider the following example:
 
 ```c
-void System(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+void System(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
+    ECS_COLUMN_COMPONENT(view, Velocity, 2);
 
-    for(int i = 0; i < rows->count; i ++) {
+    for(int i = 0; i < view->count; i ++) {
         // Set component Velocity in the stage
-        ecs_set(rows->world, rows->entities[i], Velocity, {1, 1});
+        ecs_set(view->world, view->entities[i], Velocity, {1, 1});
         
         // Overwrite component Velocity in stage
-        ecs_set(rows->world, rows->entities[i], Velocity, {2, 2});
+        ecs_set(view->world, view->entities[i], Velocity, {2, 2});
     }
 }
 ```
@@ -1521,31 +1521,31 @@ The `EcsOnAdd` and `EcsOnSet` systems are executed by the `ecs_add`/`ecs_set` op
 The folllowing code shows an example of an `EcsOnAdd` and `EcsOnRemove` system, and when they are executed:
 
 ```c
-void AddVelocity(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, 1);
+void AddVelocity(ecs_view_t *view) {
+    ECS_COLUMN(view, Velocity, 1);
 
-    for(int i = 0; i < rows->count; i ++) {
+    for(int i = 0; i < view->count; i ++) {
         // ...
     }
 }
 
-void RemoveVelocity(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, 1);
+void RemoveVelocity(ecs_view_t *view) {
+    ECS_COLUMN(view, Velocity, 1);
 
-    for(int i = 0; i < rows->count; i ++) {
+    for(int i = 0; i < view->count; i ++) {
         // ...
     }
 }
 
-void System(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 1);
+void System(ecs_view_t *view) {
+    ECS_COLUMN_COMPONENT(view, Velocity, 1);
 
-    for(int i = 0; i < rows->count; i ++) {
+    for(int i = 0; i < view->count; i ++) {
         // AddVelocity will be invoked before ecs_add returns
-        ecs_add(rows->world, rows->entities[i], Velocity);
+        ecs_add(view->world, view->entities[i], Velocity);
         
         // RemoveVelocity will not be invoked until iteration finishes
-        ecs_remove(rows->world, rows->entities[i], Velocity);
+        ecs_remove(view->world, view->entities[i], Velocity);
     }
 }
 
@@ -1884,7 +1884,7 @@ Flecs has a mechanism whereby it can monitor specific entities for changes. This
 Systems will occasionally need access to the entity identifier. Because systems access the entities directly from the archetypes and not from the entity index, they need to obtain the entity identifier in another way. Flecs accomplishes this by storing the entity identifiers as an additional column columns in an archetype. Applications can access the entity identifiers using `row->entities`, or by requesting the column at index 0:
 
 ```c
-ECS_COLUMN(rows, ecs_entity_t, entities, 0);
+ECS_COLUMN(view, ecs_entity_t, entities, 0);
 ```
 
 ### Operating system abstraction API

@@ -1,7 +1,7 @@
 #include <api.h>
 
-void Dummy(ecs_rows_t *rows) {
-    probe_system(rows);
+void Dummy(ecs_view_t *view) {
+    probe_system(view);
 }
 
 static

@@ -44,17 +44,17 @@ int main(int argc, char *argv[]) {
     ecs_query_iter_t it = ecs_query_iter(q, 0, 0);
 
     while (ecs_query_next(&it)) {
-        ecs_rows_t *rows = &it.rows;
+        ecs_view_t *view = &it.view;
         
-        ECS_COLUMN(rows, Position, p, 1);
-        ECS_COLUMN(rows, Velocity, v, 2);
+        ECS_COLUMN(view, Position, p, 1);
+        ECS_COLUMN(view, Velocity, v, 2);
 
-        for (int i = 0; i < rows->count; i ++) {
+        for (int i = 0; i < view->count; i ++) {
             p[i].x += v[i].x;
             p[i].y += v[i].y;
 
             printf("%s moved to {.x = %f, .y = %f}\n",
-                ecs_get_name(world, rows->entities[i]), p[i].x, p[i].y);
+                ecs_get_name(world, view->entities[i]), p[i].x, p[i].y);
         }
     }
 

@@ -190,7 +190,7 @@ const char* query_name(
     }
 }
 
-/** Add table to system, compute offsets for system components in table rows */
+/** Add table to system, compute offsets for system components in table view */
 static
 void add_table(
     ecs_world_t *world,
@@ -1326,7 +1326,7 @@ ecs_query_iter_t ecs_query_iter(
         .limit = limit,
         .remaining = limit,
         .index = 0,
-        .rows = {
+        .view = {
             .world = query->world,
             .query = query,
             .column_count = ecs_vector_count(query->sig.columns),
@@ -1336,11 +1336,11 @@ ecs_query_iter_t ecs_query_iter(
     };
 }
 
-void ecs_query_set_rows(
+void ecs_query_set_view(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_query_t *query,
-    ecs_rows_t *rows,
+    ecs_view_t *view,
     int32_t table_index,
     int32_t row,
     int32_t count)
@@ -1352,20 +1352,20 @@ void ecs_query_set_rows(
     ecs_table_t *world_table = table->table;
     ecs_data_t *table_data = ecs_table_get_staged_data(world, stage, world_table);
     ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t);  
-    rows->entities = &entity_buffer[row];
+    view->entities = &entity_buffer[row];
 
-    rows->world = world;
-    rows->query = query;
-    rows->column_count = ecs_vector_count(query->sig.columns);
-    rows->table_count = 1;
-    rows->inactive_table_count = 0;
-    rows->table = world_table;
-    rows->table_columns = table_data->columns;
-    rows->columns = table->columns;
-    rows->components = table->components;
-    rows->references = ecs_vector_first(table->references, ecs_reference_t);
-    rows->offset = row;
-    rows->count = count;
+    view->world = world;
+    view->query = query;
+    view->column_count = ecs_vector_count(query->sig.columns);
+    view->table_count = 1;
+    view->inactive_table_count = 0;
+    view->table = world_table;
+    view->table_columns = table_data->columns;
+    view->columns = table->columns;
+    view->components = table->components;
+    view->references = ecs_vector_first(table->references, ecs_reference_t);
+    view->offset = row;
+    view->count = count;
 }
 
 /* Return next table */
@@ -1375,15 +1375,15 @@ bool ecs_query_next(
     ecs_assert(iter != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_t *query = iter->query;
-    ecs_rows_t *rows = &iter->rows;
-    ecs_world_t *world = rows->world;
+    ecs_view_t *view = &iter->view;
+    ecs_world_t *world = view->world;
 
     ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
     ecs_table_range_t *ranges = ecs_vector_first(query->table_ranges, ecs_table_range_t);
 
     ecs_assert(!ranges || query->compare, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t table_count = iter->rows.table_count;
+    int32_t table_count = iter->view.table_count;
     if (ranges) {
         table_count = ecs_vector_count(query->table_ranges);
     } else {
@@ -1396,7 +1396,7 @@ bool ecs_query_next(
     int32_t offset = iter->offset;
     int32_t limit = iter->limit;
     int32_t remaining = iter->remaining;
-    int32_t prev_count = rows->count;
+    int32_t prev_count = view->count;
     bool offset_limit = (offset | limit) != 0;
 
     int i;
@@ -1416,7 +1416,7 @@ bool ecs_query_next(
         if (world_table) {
             table_data = ecs_table_get_data(real_world, world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
-            rows->table_columns = table_data->columns;
+            view->table_columns = table_data->columns;
             
             if (ranges) {
                 first = ranges[i].start_row;
@@ -1459,18 +1459,18 @@ bool ecs_query_next(
             }
 
             ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t); 
-            rows->entities = &entity_buffer[first];
-            rows->offset = first;
-            rows->count = count;
+            view->entities = &entity_buffer[first];
+            view->offset = first;
+            view->count = count;
         }
 
-        rows->table = world_table;
-        rows->columns = table->columns;
-        rows->components = table->components;
-        rows->references = ecs_vector_first(table->references, ecs_reference_t);
-        rows->frame_offset += prev_count;
+        view->table = world_table;
+        view->columns = table->columns;
+        view->components = table->components;
+        view->references = ecs_vector_first(table->references, ecs_reference_t);
+        view->frame_offset += prev_count;
 
-        /* Table is ready to be iterated, return rows struct */
+        /* Table is ready to be iterated, return view struct */
         iter->index = ++ i;
 
         return true;

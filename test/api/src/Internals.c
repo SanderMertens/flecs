@@ -1,15 +1,15 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
-    ECS_COLUMN(rows, Mass, m, 3);
+void Iter(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
+    ECS_COLUMN(view, Velocity, v, 2);
+    ECS_COLUMN(view, Mass, m, 3);
 
-    probe_system(rows);
+    probe_system(view);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -135,17 +135,17 @@ void Internals_activate_deactivate_activate_other() {
 static int invoked = 0;
 
 static
-void CreateNewTable(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+void CreateNewTable(ecs_view_t *view) {
+    ECS_COLUMN_COMPONENT(view, Velocity, 2);
 
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_add(rows->world, rows->entities[i], Velocity);
+    for (i = 0; i < view->count; i ++) {
+        ecs_add(view->world, view->entities[i], Velocity);
     }
 }
 
 static
-void ManualSystem(ecs_rows_t *rows) {
+void ManualSystem(ecs_view_t *view) {
     invoked ++;
 }
 

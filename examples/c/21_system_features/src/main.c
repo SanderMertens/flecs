@@ -1,22 +1,22 @@
 #include <system_features.h>
 
-void SystemA(ecs_rows_t *rows) {
+void SystemA(ecs_view_t *view) {
     printf("System A called!\n");
 }
 
-void SystemB(ecs_rows_t *rows) {
+void SystemB(ecs_view_t *view) {
     printf("System B called!\n");
 }
 
-void SystemC(ecs_rows_t *rows) {
+void SystemC(ecs_view_t *view) {
     printf("System C called!\n");
 }
 
-void SystemD(ecs_rows_t *rows) {
+void SystemD(ecs_view_t *view) {
     printf("System D called!\n");
 }
 
-void SystemE(ecs_rows_t *rows) {
+void SystemE(ecs_view_t *view) {
     printf("System E called!\n");
 }
 

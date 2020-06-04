@@ -130,11 +130,11 @@ void build_pipeline(
     /* Iterate systems in pipeline, add ops for running / merging */
     ecs_query_iter_t it = ecs_query_iter(query, 0, 0);
     while (ecs_query_next(&it)) {
-        ecs_rows_t *rows = &it.rows;
-        EcsSystem *sys = ecs_column(rows, EcsSystem, 1);
+        ecs_view_t *view = &it.view;
+        EcsSystem *sys = ecs_column(view, EcsSystem, 1);
 
         int i;
-        for (i = 0; i < rows->count; i ++) {
+        for (i = 0; i < view->count; i ++) {
 
             ecs_query_t *q = sys[i].query;
             if (!q) {
@@ -143,7 +143,7 @@ void build_pipeline(
 
             bool needs_merge = false;
             bool is_active = !ecs_has_entity(
-                world, rows->entities[i], EcsInactive);
+                world, view->entities[i], EcsInactive);
 
             ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
                 needs_merge |= check_column(column, is_active, write_state);
@@ -203,11 +203,11 @@ int32_t iter_reset(
 
     ecs_query_iter_t it = ecs_query_iter(pq->query, 0, 0);
     while (ecs_query_next(&it)) {
-        ecs_rows_t *rows = &it.rows;
+        ecs_view_t *view = &it.view;
 
         int32_t i;
-        for(i = 0; i < rows->count; i ++) {
-            ecs_entity_t e = rows->entities[i];
+        for(i = 0; i < view->count; i ++) {
+            ecs_entity_t e = view->entities[i];
 
             ran_since_merge ++;
             if (ran_since_merge == op->count) {
@@ -262,12 +262,12 @@ void ecs_progress_pipeline(
     
     ecs_query_iter_t it = ecs_query_iter(pq->query, 0, 0);
     while (ecs_query_next(&it)) {
-        ecs_rows_t *rows = &it.rows;
-        EcsSystem *sys = ecs_column(rows, EcsSystem, 1);
+        ecs_view_t *view = &it.view;
+        EcsSystem *sys = ecs_column(view, EcsSystem, 1);
 
         int32_t i;
-        for(i = 0; i < rows->count; i ++) {
-            ecs_entity_t e = rows->entities[i];
+        for(i = 0; i < view->count; i ++) {
+            ecs_entity_t e = view->entities[i];
             
             ecs_run_intern(world, world, e, &sys[i], delta_time, 0, 0, 
                 NULL, NULL);
@@ -290,7 +290,7 @@ void ecs_progress_pipeline(
                 if (pq->match_count != pq->query->match_count) {
                     i = iter_reset(world, pq, &it, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
-                    sys = ecs_column(rows, EcsSystem, 1);
+                    sys = ecs_column(view, EcsSystem, 1);
                 }
             }
         }
@@ -305,13 +305,13 @@ void ecs_progress_pipeline(
 
 static 
 void EcsOnAddPipeline(
-    ecs_rows_t *rows)
+    ecs_view_t *view)
 {
-    ecs_world_t *world = rows->world;
-    ecs_entity_t *entities = rows->entities;
+    ecs_world_t *world = view->world;
+    ecs_entity_t *entities = view->entities;
 
     int32_t i;
-    for (i = rows->count - 1; i >= 0; i --) {
+    for (i = view->count - 1; i >= 0; i --) {
         ecs_entity_t pipeline = entities[i];
         ecs_sig_t sig = { 0 };
 

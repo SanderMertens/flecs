@@ -12,9 +12,9 @@ static
 bool dummy_invoked = false;
 
 static
-void Dummy(ecs_rows_t *rows) {
+void Dummy(ecs_view_t *view) {
     dummy_invoked = true;
-    probe_system(rows);
+    probe_system(view);
 }
 
 void SystemMisc_invalid_not_without_id() {
@@ -415,7 +415,7 @@ void SystemMisc_redefine_row_system() {
 static int is_invoked;
 
 static
-void IsInvoked(ecs_rows_t *rows) {
+void IsInvoked(ecs_view_t *view) {
     is_invoked ++;
 }
 
@@ -473,21 +473,21 @@ void SystemMisc_system_w_or_disabled_and_prefab() {
 }
 
 static
-void TableColumns(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+void TableColumns(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
+    ECS_COLUMN(view, Velocity, v, 2);
 
-    ecs_type_t type = ecs_table_type(rows);
+    ecs_type_t type = ecs_table_type(view);
     test_int(2, ecs_vector_count(type));
 
     ecs_entity_t *components = ecs_vector_first(type, ecs_entity_t);
     test_int(components[0], ecs_entity(Position));
     test_int(components[1], ecs_entity(Velocity));
 
-    void *column_0 = ecs_table_column(rows, 0);
+    void *column_0 = ecs_table_column(view, 0);
     test_assert(column_0 == p);
 
-    void *column_1 = ecs_table_column(rows, 1);
+    void *column_1 = ecs_table_column(view, 1);
     test_assert(column_1 == v);
 
     is_invoked ++;
@@ -790,19 +790,19 @@ void SystemMisc_dont_enable_after_rematch() {
     ecs_fini(world);
 }
 
-static void SysA(ecs_rows_t *rows)
+static void SysA(ecs_view_t *view)
 {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
-    ecs_add(rows->world, rows->entities[0], Velocity);
+    ECS_COLUMN_COMPONENT(view, Velocity, 2);
+    ecs_add(view->world, view->entities[0], Velocity);
 }
 
 static int b_invoked;
 static ecs_entity_t b_entity;
 
-static void SysB(ecs_rows_t *rows)
+static void SysB(ecs_view_t *view)
 {
     b_invoked ++;
-    b_entity = rows->entities[0];
+    b_entity = view->entities[0];
 }
 
 void SystemMisc_ensure_single_merge() {
@@ -825,9 +825,9 @@ void SystemMisc_ensure_single_merge() {
 
 static int test_table_count_invoked;
 
-static void TestTableCount(ecs_rows_t *rows) {
-    test_int(rows->table_count, 2);
-    test_int(rows->inactive_table_count, 1);
+static void TestTableCount(ecs_view_t *view) {
+    test_int(view->table_count, 2);
+    test_int(view->inactive_table_count, 1);
     test_table_count_invoked ++;
 }
 
@@ -908,10 +908,10 @@ void SystemMisc_system_initial_state() {
 }
 
 static
-void FooSystem(ecs_rows_t *rows) { }
+void FooSystem(ecs_view_t *view) { }
 
 static
-void BarSystem(ecs_rows_t *rows) { }
+void BarSystem(ecs_view_t *view) { }
 
 void SystemMisc_add_own_component() {
     ecs_world_t * world = ecs_init();
@@ -932,12 +932,12 @@ static bool action_a_invoked;
 static bool action_b_invoked;
 
 static
-void ActionA(ecs_rows_t *rows) {
+void ActionA(ecs_view_t *view) {
     action_a_invoked = true;
 }
 
 static
-void ActionB(ecs_rows_t *rows) {
+void ActionB(ecs_view_t *view) {
     action_b_invoked = true;
 }
 
@@ -961,7 +961,7 @@ void SystemMisc_change_system_action() {
 
     action_a_invoked = false;
 
-    ecs_set(world, sys, EcsIterAction, {ActionB});
+    ecs_set(world, sys, EcsViewAction, {ActionB});
 
     ecs_progress(world, 0);
 

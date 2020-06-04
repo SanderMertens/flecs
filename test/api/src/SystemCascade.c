@@ -1,16 +1,16 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    Position *p_parent = ecs_column(rows, Position, 2);
+void Iter(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
+    Position *p_parent = ecs_column(view, Position, 2);
 
-    test_assert(!p_parent || ecs_is_shared(rows, 2));
+    test_assert(!p_parent || ecs_is_shared(view, 2));
 
-    probe_system(rows);
+    probe_system(view);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         p[i].x ++;
         p[i].y ++;
 
@@ -161,16 +161,16 @@ void SystemCascade_cascade_depth_2() {
 }
 
 static
-void AddParent(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    Position *p_parent = ecs_column(rows, Position, 2);
+void AddParent(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
+    Position *p_parent = ecs_column(view, Position, 2);
 
-    test_assert(!p_parent || ecs_is_shared(rows, 2));
+    test_assert(!p_parent || ecs_is_shared(view, 2));
 
-    probe_system(rows);
+    probe_system(view);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         if (p_parent) {
             p[i].x += p_parent->x;
             p[i].y += p_parent->y;

@@ -4,14 +4,14 @@ static int sys_a_invoked;
 static int sys_b_invoked;
 static int sys_c_invoked;
 
-void SysA(ecs_rows_t *rows) { 
+void SysA(ecs_view_t *view) { 
     sys_a_invoked ++; 
 }
-void SysB(ecs_rows_t *rows) { 
+void SysB(ecs_view_t *view) { 
     test_assert(sys_a_invoked != 0);
     sys_b_invoked ++; 
 }
-void SysC(ecs_rows_t *rows) { 
+void SysC(ecs_view_t *view) { 
     test_assert(sys_b_invoked != 0);
     sys_c_invoked ++; 
 }
@@ -308,56 +308,56 @@ void Pipeline_system_order_after_new_system_higher_id() {
 static int sys_out_invoked;
 static int sys_in_invoked;
 
-static void SysOut(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 2);
+static void SysOut(ecs_view_t *view) {
+    ECS_COLUMN(view, Velocity, v, 2);
 
     sys_out_invoked ++;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(rows->world, rows->entities[i], Velocity, {10, 20});
+    for (i = 0; i < view->count; i ++) {
+        ecs_set(view->world, view->entities[i], Velocity, {10, 20});
     }
 }
 
-static void SysOutMain(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 2);
+static void SysOutMain(ecs_view_t *view) {
+    ECS_COLUMN(view, Velocity, v, 2);
 
     sys_out_invoked ++;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         v[i].x = 10;
         v[i].y = 20;
     }
 }
 
-static void SysIn(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 1);
+static void SysIn(ecs_view_t *view) {
+    ECS_COLUMN(view, Velocity, v, 1);
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
     
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
-        test_assert( ecs_has(rows->world, e, Velocity));
+    for (i = 0; i < view->count; i ++) {
+        ecs_entity_t e = view->entities[i];
+        test_assert( ecs_has(view->world, e, Velocity));
 
-        const Velocity *v_ptr = ecs_get_ptr(rows->world, e, Velocity);
+        const Velocity *v_ptr = ecs_get_ptr(view->world, e, Velocity);
         test_int(v_ptr->x, 10);
         test_int(v_ptr->y, 20);
     }
 }
 
-static void SysInMain(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 1);
+static void SysInMain(ecs_view_t *view) {
+    ECS_COLUMN(view, Velocity, v, 1);
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
     
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
-        test_assert( ecs_has(rows->world, e, Velocity));
+    for (i = 0; i < view->count; i ++) {
+        ecs_entity_t e = view->entities[i];
+        test_assert( ecs_has(view->world, e, Velocity));
 
         test_int(v[i].x, 10);
         test_int(v[i].y, 20);

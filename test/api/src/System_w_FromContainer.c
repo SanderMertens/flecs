@@ -1,29 +1,29 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Mass, m_ptr, 1);
+void Iter(ecs_view_t *view) {
+    ECS_COLUMN(view, Mass, m_ptr, 1);
     bool shared = false;
     
     if (m_ptr) {
-        shared = ecs_is_shared(rows, 1);
+        shared = ecs_is_shared(view, 1);
     }
 
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (rows->column_count >= 2) {
-        p = ecs_column(rows, Position, 2);
+    if (view->column_count >= 2) {
+        p = ecs_column(view, Position, 2);
     }
 
-    if (rows->column_count >= 3) {
-        v = ecs_column(rows, Velocity, 3);
+    if (view->column_count >= 3) {
+        v = ecs_column(view, Velocity, 3);
     }
 
-    probe_system(rows);
+    probe_system(view);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         Mass m = 1;
         if (m_ptr) {
             if (shared) {
@@ -172,26 +172,26 @@ void System_w_FromContainer_2_column_1_from_container() {
 }
 
 static
-void Iter_2_shared(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Mass, m_ptr, 1);
+void Iter_2_shared(ecs_view_t *view) {
+    ECS_COLUMN(view, Mass, m_ptr, 1);
 
     Rotation *r_ptr = NULL;
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (rows->column_count >= 2) {
-        r_ptr = ecs_column(rows, Rotation, 2);
+    if (view->column_count >= 2) {
+        r_ptr = ecs_column(view, Rotation, 2);
     }
 
-    if (rows->column_count >= 3) {
-        p = ecs_column(rows, Position, 3);
+    if (view->column_count >= 3) {
+        p = ecs_column(view, Position, 3);
     }
 
-    if (rows->column_count >= 4) {
-        v = ecs_column(rows, Velocity, 4);
+    if (view->column_count >= 4) {
+        v = ecs_column(view, Velocity, 4);
     }    
 
-    probe_system(rows);
+    probe_system(view);
 
     Mass m = 1;
     if (m_ptr) {
@@ -204,7 +204,7 @@ void Iter_2_shared(ecs_rows_t *rows) {
     }
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         if (p) {
             p[i].x = 10 * m + r;
             p[i].y = 20 * m + r;
@@ -622,13 +622,13 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
 }
 
 static
-void Dummy(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Mass, m_ptr, 1);
-    ECS_COLUMN(rows, Position, p, 2);
+void Dummy(ecs_view_t *view) {
+    ECS_COLUMN(view, Mass, m_ptr, 1);
+    ECS_COLUMN(view, Position, p, 2);
 
-    test_assert(!m_ptr || ecs_is_shared(rows, 1));
+    test_assert(!m_ptr || ecs_is_shared(view, 1));
 
-    probe_system(rows);
+    probe_system(view);
 
     Mass m = 1;
     if (m_ptr) {
@@ -636,7 +636,7 @@ void Dummy(ecs_rows_t *rows) {
     }
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         p[i].x += m;
         p[i].y += m;
     }
@@ -805,12 +805,12 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
 }
 
 static
-void SetMass(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Mass, 2);
+void SetMass(ecs_view_t *view) {
+    ECS_COLUMN_COMPONENT(view, Mass, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(rows->world, rows->entities[i], Mass, {2});
+    for (i = 0; i < view->count; i ++) {
+        ecs_set(view->world, view->entities[i], Mass, {2});
     }
 }
 
@@ -1014,12 +1014,12 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
 }
 
 static
-void AddMass(ecs_rows_t *rows) {
-    ecs_entity_t ecs_entity(Mass) = *(ecs_entity_t*)rows->param;
+void AddMass(ecs_view_t *view) {
+    ecs_entity_t ecs_entity(Mass) = *(ecs_entity_t*)view->param;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(rows->world, rows->entities[i], Mass, {2});
+    for (i = 0; i < view->count; i ++) {
+        ecs_set(view->world, view->entities[i], Mass, {2});
     }
 }
 
@@ -1171,16 +1171,16 @@ void System_w_FromContainer_new_child_after_match() {
     ecs_fini(world);
 }
 
-void IterSame(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p_parent, 1);
-    Position *p = ecs_column(rows, Position, 2);
+void IterSame(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p_parent, 1);
+    Position *p = ecs_column(view, Position, 2);
 
-    test_assert(ecs_is_shared(rows, 1));
+    test_assert(ecs_is_shared(view, 1));
 
-    probe_system(rows);
+    probe_system(view);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         p[i].x += p_parent->x;
         p[i].y += p_parent->y;
     }

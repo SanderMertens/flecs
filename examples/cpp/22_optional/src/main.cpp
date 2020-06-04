@@ -13,25 +13,25 @@ struct Mana {
     float value;
 };
 
-void Regenerate(flecs::rows& rows) {
-    flecs::column<Health> health(rows, 1);
-    flecs::column<Stamina> stamina(rows, 2);
-    flecs::column<Mana> mana(rows, 3);
+void Regenerate(flecs::view& view) {
+    flecs::column<Health> health(view, 1);
+    flecs::column<Stamina> stamina(view, 2);
+    flecs::column<Mana> mana(view, 3);
 
-    for (auto row : rows) {
+    for (auto row : view) {
         if (health.is_set()) {
             health[row].value ++;
-            std::cout << rows.entity(row).name() << " process health" << std::endl;
+            std::cout << view.entity(row).name() << " process health" << std::endl;
         }
 
         if (stamina.is_set()) {
             stamina[row].value ++;
-            std::cout << rows.entity(row).name() << " process stamina" << std::endl;
+            std::cout << view.entity(row).name() << " process stamina" << std::endl;
         }
 
         if (mana.is_set()) {
             mana[row].value ++;
-            std::cout << rows.entity(row).name() << " process mana" << std::endl;
+            std::cout << view.entity(row).name() << " process mana" << std::endl;
         }
     }
 }

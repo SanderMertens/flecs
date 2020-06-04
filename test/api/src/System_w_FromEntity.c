@@ -1,23 +1,23 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Mass, m_ptr, 1);
+void Iter(ecs_view_t *view) {
+    ECS_COLUMN(view, Mass, m_ptr, 1);
 
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (rows->column_count >= 2) {
-        p = ecs_column(rows, Position, 2);
+    if (view->column_count >= 2) {
+        p = ecs_column(view, Position, 2);
     }
 
-    if (rows->column_count >= 3) {
-        v = ecs_column(rows, Velocity, 3);
+    if (view->column_count >= 3) {
+        v = ecs_column(view, Velocity, 3);
     }
 
-    test_assert(!m_ptr || ecs_is_shared(rows, 1));
+    test_assert(!m_ptr || ecs_is_shared(view, 1));
 
-    probe_system(rows);
+    probe_system(view);
 
     Mass m = 1;
     if (m_ptr) {
@@ -25,7 +25,7 @@ void Iter(ecs_rows_t *rows) {
     }
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         p[i].x = 10 * m;
         p[i].y = 20 * m;
 
@@ -86,10 +86,10 @@ void dummy_reset() {
 }
 
 static
-void Dummy(ecs_rows_t *rows) {
+void Dummy(ecs_view_t *view) {
     dummy_invoked = 1;
-    dummy_component = ecs_column_entity(rows, 1);
-    dummy_source = ecs_column_source(rows, 1);
+    dummy_component = ecs_column_entity(view, 1);
+    dummy_source = ecs_column_source(view, 1);
 }
 
 void System_w_FromEntity_task_from_entity() {

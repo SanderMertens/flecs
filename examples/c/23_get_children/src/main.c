@@ -3,15 +3,15 @@
 typedef int Foo;
 typedef int Bar;
 
-void GetChildren(ecs_rows_t *rows) {
-    ecs_vector_t **children = rows->param;
+void GetChildren(ecs_view_t *view) {
+    ecs_vector_t **children = view->param;
 
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < view->count; i ++) {
         ecs_entity_t *elem = ecs_vector_add(
             children, 
             ecs_entity_t);
         
-        *elem = rows->entities[i];
+        *elem = view->entities[i];
     }
 }
 

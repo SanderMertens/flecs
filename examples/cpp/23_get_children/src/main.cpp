@@ -24,9 +24,9 @@ int main(int argc, char *argv[]) {
 
     /* Match all non-disabled entities, add entities to children vector */
     auto GetChildren = flecs::system<>(world).kind(flecs::Manual).signature("!EcsDisabled").action(
-        [&children](flecs::rows& rows) {
-            for (auto row : rows) {
-                children.push_back(rows.entity(row));
+        [&children](flecs::view& view) {
+            for (auto row : view) {
+                children.push_back(view.entity(row));
             }
         });
 

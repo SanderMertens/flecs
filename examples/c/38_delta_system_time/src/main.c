@@ -1,15 +1,15 @@
 #include <delta_system_time.h>
 
-void Period05(ecs_rows_t *rows) {
-    printf("t = 0.5, elapsed time = %f\n", rows->delta_system_time);
+void Period05(ecs_view_t *view) {
+    printf("t = 0.5, elapsed time = %f\n", view->delta_system_time);
 }
 
-void Period10(ecs_rows_t *rows) {
-    printf("t = 1.0, elapsed time = %f\n", rows->delta_system_time);
+void Period10(ecs_view_t *view) {
+    printf("t = 1.0, elapsed time = %f\n", view->delta_system_time);
 }
 
-void Period20(ecs_rows_t *rows) {
-    printf("t = 2.0, elapsed time = %f\n", rows->delta_system_time);
+void Period20(ecs_view_t *view) {
+    printf("t = 2.0, elapsed time = %f\n", view->delta_system_time);
 }
 
 int main(int argc, char *argv[]) {

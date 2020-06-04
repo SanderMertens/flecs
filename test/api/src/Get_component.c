@@ -71,12 +71,12 @@ void Get_component_get_2_from_3() {
 }
 
 static
-void Test_main_stage(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
+void Test_main_stage(ecs_view_t *view) {
+    ECS_COLUMN_COMPONENT(view, Position, 1);
 
-    for (int i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
-        test_assert(*ecs_vector_get(ecs_get_type(rows->world, e), ecs_entity_t, 0) == ecs_entity(Position));
+    for (int i = 0; i < view->count; i ++) {
+        ecs_entity_t e = view->entities[i];
+        test_assert(*ecs_vector_get(ecs_get_type(view->world, e), ecs_entity_t, 0) == ecs_entity(Position));
     }
 }
 
@@ -96,23 +96,23 @@ void Get_component_get_1_from_2_in_progress_from_main_stage() {
 }
 
 static
-void Add_in_progress(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
+void Add_in_progress(ecs_view_t *view) {
+    ECS_COLUMN_COMPONENT(view, Position, 1);
 
     ecs_entity_t ecs_entity(Velocity) = 0;
     ecs_type_t ecs_type(Velocity) = NULL;
 
-    if (rows->column_count >= 2) {
-        ecs_entity(Velocity) = ecs_column_entity(rows, 2);
-        ecs_type(Velocity) = ecs_column_type(rows, 2);
+    if (view->column_count >= 2) {
+        ecs_entity(Velocity) = ecs_column_entity(view, 2);
+        ecs_type(Velocity) = ecs_column_type(view, 2);
     }
 
-    for (int i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
+    for (int i = 0; i < view->count; i ++) {
+        ecs_entity_t e = view->entities[i];
 
-        ecs_add(rows->world, e, Velocity);
-        test_assert( ecs_has(rows->world, e, Velocity));
-        test_assert(*ecs_vector_get(ecs_get_type(rows->world, e), ecs_entity_t, 1) == ecs_entity(Velocity));
+        ecs_add(view->world, e, Velocity);
+        test_assert( ecs_has(view->world, e, Velocity));
+        test_assert(*ecs_vector_get(ecs_get_type(view->world, e), ecs_entity_t, 1) == ecs_entity(Velocity));
     }
 }
 
@@ -133,19 +133,19 @@ void Get_component_get_1_from_2_add_in_progress() {
 }
 
 static
-void Add_in_progress_test_main(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+void Add_in_progress_test_main(ecs_view_t *view) {
+    ECS_COLUMN_COMPONENT(view, Position, 1);
+    ECS_COLUMN_COMPONENT(view, Velocity, 2);
 
-    for (int i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
-        test_assert(*ecs_vector_get(ecs_get_type(rows->world, e), ecs_entity_t, 0) == ecs_entity(Position));
+    for (int i = 0; i < view->count; i ++) {
+        ecs_entity_t e = view->entities[i];
+        test_assert(*ecs_vector_get(ecs_get_type(view->world, e), ecs_entity_t, 0) == ecs_entity(Position));
         
-        ecs_add(rows->world, e, Velocity);
-        test_assert( ecs_has(rows->world, e, Velocity));
+        ecs_add(view->world, e, Velocity);
+        test_assert( ecs_has(view->world, e, Velocity));
 
-        test_assert(*ecs_vector_get(ecs_get_type(rows->world, e), ecs_entity_t, 0) == ecs_entity(Position));
-        test_assert(*ecs_vector_get(ecs_get_type(rows->world, e), ecs_entity_t, 1) == ecs_entity(Velocity));
+        test_assert(*ecs_vector_get(ecs_get_type(view->world, e), ecs_entity_t, 0) == ecs_entity(Position));
+        test_assert(*ecs_vector_get(ecs_get_type(view->world, e), ecs_entity_t, 1) == ecs_entity(Velocity));
     }
 }
 
@@ -166,27 +166,27 @@ void Get_component_get_both_from_2_add_in_progress() {
 }
 
 static
-void Add_remove_in_progress_test_main(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+void Add_remove_in_progress_test_main(ecs_view_t *view) {
+    ECS_COLUMN_COMPONENT(view, Position, 1);
+    ECS_COLUMN_COMPONENT(view, Velocity, 2);
 
-    for (int i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
-        test_assert(*ecs_vector_get(ecs_get_type(rows->world, e), ecs_entity_t, 0) == ecs_entity(Position));
+    for (int i = 0; i < view->count; i ++) {
+        ecs_entity_t e = view->entities[i];
+        test_assert(*ecs_vector_get(ecs_get_type(view->world, e), ecs_entity_t, 0) == ecs_entity(Position));
         
-        ecs_add(rows->world, e, Velocity);
-        test_assert( ecs_has(rows->world, e, Position));
-        test_assert( ecs_has(rows->world, e, Velocity));
+        ecs_add(view->world, e, Velocity);
+        test_assert( ecs_has(view->world, e, Position));
+        test_assert( ecs_has(view->world, e, Velocity));
 
-        test_assert(*ecs_vector_get(ecs_get_type(rows->world, e), ecs_entity_t, 0) == ecs_entity(Position));
-        test_assert(*ecs_vector_get(ecs_get_type(rows->world, e), ecs_entity_t, 1) == ecs_entity(Velocity));
+        test_assert(*ecs_vector_get(ecs_get_type(view->world, e), ecs_entity_t, 0) == ecs_entity(Position));
+        test_assert(*ecs_vector_get(ecs_get_type(view->world, e), ecs_entity_t, 1) == ecs_entity(Velocity));
 
-        ecs_remove(rows->world, e, Position);
-        test_assert( !ecs_has(rows->world, e, Position));
-        test_assert( ecs_has(rows->world, e, Velocity));
+        ecs_remove(view->world, e, Position);
+        test_assert( !ecs_has(view->world, e, Position));
+        test_assert( ecs_has(view->world, e, Velocity));
 
-        test_assert(*ecs_vector_get(ecs_get_type(rows->world, e), ecs_entity_t, 0) == ecs_entity(Velocity));
-        test_assert(ecs_vector_get(ecs_get_type(rows->world, e), ecs_entity_t, 1) == 0);
+        test_assert(*ecs_vector_get(ecs_get_type(view->world, e), ecs_entity_t, 0) == ecs_entity(Velocity));
+        test_assert(ecs_vector_get(ecs_get_type(view->world, e), ecs_entity_t, 1) == 0);
     }
 }
 

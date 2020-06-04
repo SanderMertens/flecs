@@ -363,8 +363,8 @@ void Add_bulk_add_comp_to_fewer_existing() {
     test_int( ecs_count(world, Velocity), 15);
 }
 
-void AddVelocity(ecs_rows_t *rows) {
-    probe_system(rows);
+void AddVelocity(ecs_view_t *view) {
+    probe_system(view);
 }
 
 void Add_bulk_on_add() {

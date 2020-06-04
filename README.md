@@ -41,13 +41,13 @@ typedef struct Position {
 
 typedef float Speed;
 
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Speed, s, 2);
+void Move(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
+    ECS_COLUMN(view, Speed, s, 2);
     
-    for (int i = 0; i < rows->count; i ++) {
-        p[i].x += s[i] * rows->delta_time;
-        p[i].y += s[i] * rows->delta_time;
+    for (int i = 0; i < view->count; i ++) {
+        p[i].x += s[i] * view->delta_time;
+        p[i].y += s[i] * view->delta_time;
     }
 }
 
@@ -322,9 +322,9 @@ ECS_SYSTEM(world, LogPoints, EcsOnUpdate, Point);
 In this statement, `LogPoints` refers to a C function that will be associated with the system. `EcsOnUpdate` identifies the stage in which the system is executed. The `Point` identifies the component interest expression. The system is implemented as a regular C function, like this:
 
 ```c
-void LogPoints(ecs_rows_t *rows) {
-    Point *p = ecs_column(rows, Point, 1);
-    for (int i = 0; i < rows->count; i ++) {
+void LogPoints(ecs_view_t *view) {
+    Point *p = ecs_column(view, Point, 1);
+    for (int i = 0; i < view->count; i ++) {
         printf("Log point (%d, %d)\n", p[i].x, p[i].y);
     }
 }

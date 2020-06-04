@@ -24,7 +24,7 @@ class world;
 class snapshot;
 class entity;
 class type;
-class rows;
+class view;
 class filter;
 class filter_iterator;
 class world_filter;
@@ -92,7 +92,7 @@ public:
         , m_count(count) 
         , m_is_shared(is_shared) {}
 
-    column(rows &rows, int column);
+    column(view &view, int column);
 
     T& operator[](size_t index) {
         ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
@@ -177,12 +177,12 @@ private:
 //// Type that enables iterating over table columns
 ////////////////////////////////////////////////////////////////////////////////
 
-class rows final {
+class view final {
     using row_iterator = range_iterator<int>;
 public:    
-    rows(const ecs_rows_t *rows) : m_rows(rows) { 
+    view(const ecs_view_t *view) : m_view(view) { 
         m_begin = 0;
-        m_end = rows->count;
+        m_end = view->count;
     }
 
     row_iterator begin() const {
@@ -200,32 +200,32 @@ public:
 
     /* Number of entities to iterate over */
     int32_t count() const {
-        return m_rows->count;
+        return m_view->count;
     }
 
     /* Return delta_time of current frame */
     float delta_time() const {
-        return m_rows->delta_time;
+        return m_view->delta_time;
     }
 
     /* Return time elapsed since last time system was invoked */
     float delta_system_time() const {
-        return m_rows->delta_system_time;
+        return m_view->delta_system_time;
     }
 
     /* Is column shared */
     bool is_shared(int32_t column) const {
-        return ecs_is_shared(m_rows, column);
+        return ecs_is_shared(m_view, column);
     }
     
     /* Access param field */
     void *param() {
-        return m_rows->param;
+        return m_view->param;
     }
 
     /* Is column readonly */
     bool is_readonly(int32_t column) const {
-        return ecs_is_readonly(m_rows, column);
+        return ecs_is_readonly(m_view, column);
     }
 
     /* Obtain entity being iterated over for row */
@@ -244,25 +244,25 @@ public:
     type table_type() const;
 
     int32_t table_count() const {
-        return m_rows->table_count;
+        return m_view->table_count;
     }
 
     int32_t inactive_table_count() const {
-        return m_rows->inactive_table_count;
+        return m_view->inactive_table_count;
     }
 
     /* Obtain untyped pointer to table column */
     void* table_column(int32_t table_column) const {
-        return ecs_table_column(m_rows, table_column);
+        return ecs_table_column(m_view, table_column);
     }
 
     /* Obtain typed pointer to table column */
     template <typename T>
     flecs::column<T> table_column() const {
-        auto type = ecs_table_type(m_rows);
+        auto type = ecs_table_type(m_view);
         auto column = ecs_type_index_of(type, component_base<T>::s_entity);
         ecs_assert(column != -1, ECS_INVALID_PARAMETER, NULL);
-        return flecs::column<T>(static_cast<T*>(ecs_table_column(m_rows, column)), m_rows->count, false);
+        return flecs::column<T>(static_cast<T*>(ecs_table_column(m_view, column)), m_view->count, false);
     }
 
     /* Obtain column with a const type */
@@ -276,23 +276,23 @@ public:
     template <typename T,
         typename std::enable_if<std::is_const<T>::value == false, void>::type* = nullptr>
     flecs::column<T> column(int32_t column) const {
-        ecs_assert(!ecs_is_readonly(m_rows, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
+        ecs_assert(!ecs_is_readonly(m_view, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
         return get_column<T>(column);
     }
 
     /* Get owned */
     template <typename T>
     flecs::column<T> owned(int32_t column) const {
-        ecs_assert(!ecs_is_shared(m_rows, column), ECS_COLUMN_IS_SHARED, NULL);
+        ecs_assert(!ecs_is_shared(m_view, column), ECS_COLUMN_IS_SHARED, NULL);
         return this->column<T>(column);
     }
 
     /* Get shared */
     template <typename T>
     const T& shared(int32_t column) const {
-        ecs_assert(ecs_column_entity(m_rows, column) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
-        ecs_assert(ecs_is_shared(m_rows, column), ECS_COLUMN_IS_NOT_SHARED, NULL);
-        return *static_cast<T*>(_ecs_column(m_rows, sizeof(T), column));
+        ecs_assert(ecs_column_entity(m_view, column) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(ecs_is_shared(m_view, column), ECS_COLUMN_IS_NOT_SHARED, NULL);
+        return *static_cast<T*>(_ecs_column(m_view, sizeof(T), column));
     }
 
     /* Get single field of a const type */
@@ -306,7 +306,7 @@ public:
     template <typename T,
         typename std::enable_if<std::is_const<T>::value == false, void>::type* = nullptr>
     T& field(int32_t column, int32_t row) const {
-        ecs_assert(!ecs_is_readonly(m_rows, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
+        ecs_assert(!ecs_is_readonly(m_view, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
         return get_field<T>(column, row);
     }
 
@@ -314,9 +314,9 @@ private:
     /* Get column, check if correct type is used */
     template <typename T>
     flecs::column<T> get_column(int32_t column_id) const {
-        ecs_assert(ecs_column_entity(m_rows, column_id) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(ecs_column_entity(m_view, column_id) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
         int32_t count;
-        bool is_shared = ecs_is_shared(m_rows, column_id);
+        bool is_shared = ecs_is_shared(m_view, column_id);
 
         /* If a shared column is retrieved with 'column', there will only be a
          * single value. Ensure that the application does not accidentally read
@@ -326,27 +326,27 @@ private:
         } else {
             /* If column is owned, there will be as many values as there are
              * entities. */
-            count = m_rows->count;
+            count = m_view->count;
         }
 
-        return flecs::column<T>(static_cast<T*>(_ecs_column(m_rows, sizeof(T), column_id)), count, is_shared);
+        return flecs::column<T>(static_cast<T*>(_ecs_column(m_view, sizeof(T), column_id)), count, is_shared);
     }   
 
     /* Get single field, check if correct type is used */
     template <typename T>
     T& get_field(int32_t column, int32_t row) const {
-        ecs_assert(ecs_column_entity(m_rows, column) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
-        return *static_cast<T*>(_ecs_field(m_rows, sizeof(T), column, row));
+        ecs_assert(ecs_column_entity(m_view, column) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
+        return *static_cast<T*>(_ecs_field(m_view, sizeof(T), column, row));
     }       
 
-    const ecs_rows_t *m_rows;
+    const ecs_view_t *m_view;
     int32_t m_begin;
     int32_t m_end;
 };
 
 template <typename T>
-inline column<T>::column(rows &rows, int column) {
-    *this = rows.column<T>(column);
+inline column<T>::column(view &view, int column) {
+    *this = view.column<T>(column);
 }
 
 
@@ -1213,22 +1213,22 @@ public:
 
     using Columns = std::array<Column, sizeof...(Components)>;
 
-    column_args(ecs_rows_t* rows) {
-        populate_columns(rows, 0, (typename std::remove_reference<Components>::type*)nullptr...);
+    column_args(ecs_view_t* view) {
+        populate_columns(view, 0, (typename std::remove_reference<Components>::type*)nullptr...);
     }
 
     Columns m_columns;
 
 private:
     /* Dummy function when last component has been added */
-    void populate_columns(ecs_rows_t *rows, int index) { }
+    void populate_columns(ecs_view_t *view, int index) { }
 
     /* Populate columns array recursively */
     template <typename T, typename... Targs>
-    void populate_columns(ecs_rows_t *rows, int index, T comp, Targs... comps) {
-        m_columns[index].ptr = _ecs_column(rows, sizeof(*comp), index + 1);
-        m_columns[index].is_shared = ecs_is_shared(rows, index + 1);
-        populate_columns(rows, index + 1, comps ...);
+    void populate_columns(ecs_view_t *view, int index, T comp, Targs... comps) {
+        m_columns[index].ptr = _ecs_column(view, sizeof(*comp), index + 1);
+        m_columns[index].is_shared = ecs_is_shared(view, index + 1);
+        populate_columns(view, index + 1, comps ...);
     }
 };
 
@@ -1246,30 +1246,30 @@ public:
     // Invoke system
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_rows_t *rows, Func func, int index, Columns& columns, Targs... comps) {
-        flecs::rows rows_wrapper(rows);
+    static void call_system(ecs_view_t *view, Func func, int index, Columns& columns, Targs... comps) {
+        flecs::view view_wrapper(view);
 
         // Use auto_column so we can transparently use shared components
-        for (auto row : rows_wrapper) {
-            func(rows_wrapper.entity(row), (auto_column<typename std::remove_reference<Components>::type>(
-                 (typename std::remove_reference<Components>::type*)comps.ptr, rows->count, comps.is_shared))[row]...);
+        for (auto row : view_wrapper) {
+            func(view_wrapper.entity(row), (auto_column<typename std::remove_reference<Components>::type>(
+                 (typename std::remove_reference<Components>::type*)comps.ptr, view->count, comps.is_shared))[row]...);
         }
     }
 
     // Add components one by one to parameter pack
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_rows_t *rows, Func func, int index, Columns& columns, Targs... comps) {
-        call_system(rows, func, index + 1, columns, comps..., columns[index]);
+    static void call_system(ecs_view_t *view, Func func, int index, Columns& columns, Targs... comps) {
+        call_system(view, func, index + 1, columns, comps..., columns[index]);
     }
 
     // Callback provided to flecs system
-    static void run(ecs_rows_t *rows) {
+    static void run(ecs_view_t *view) {
         each_invoker *self = (each_invoker*)
-            ecs_get_system_context(rows->world, rows->system);
+            ecs_get_system_context(view->world, view->system);
         Func func = self->m_func;        
-        column_args<Components...> columns(rows);
-        call_system(rows, func, 0, columns.m_columns);
+        column_args<Components...> columns(view);
+        call_system(view, func, 0, columns.m_columns);
     }   
 
 private:
@@ -1315,10 +1315,10 @@ public:
         ecs_query_iter_t it = ecs_query_iter(m_query, 0, 0);
 
         while (ecs_query_next(&it)) {
-            ecs_rows_t *rows = &it.rows;
-            column_args<Components...> columns(rows);
+            ecs_view_t *view = &it.view;
+            column_args<Components...> columns(view);
             each_invoker<Func, Components...> ctx(func);
-            ctx.call_system(rows, func, 0, columns.m_columns);
+            ctx.call_system(view, func, 0, columns.m_columns);
         }
     }
 
@@ -1442,29 +1442,29 @@ public:
     /* Invoke system */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_rows_t *rows, int index, Columns& columns, Targs... comps) {
+    static void call_system(ecs_view_t *view, int index, Columns& columns, Targs... comps) {
         action_invoker *self = (action_invoker*)
-            ecs_get_system_context(rows->world, rows->system);
+            ecs_get_system_context(view->world, view->system);
 
         Func func = self->m_func;
 
-        flecs::rows rows_wrapper(rows);
+        flecs::view view_wrapper(view);
         
-        func(rows_wrapper, (column<typename std::remove_reference<Components>::type>(
-            (typename std::remove_reference<Components>::type*)comps.ptr, rows->count, comps.is_shared))...);
+        func(view_wrapper, (column<typename std::remove_reference<Components>::type>(
+            (typename std::remove_reference<Components>::type*)comps.ptr, view->count, comps.is_shared))...);
     }
 
     /** Add components one by one to parameter pack */
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) != sizeof...(Components), void>::type* = nullptr>
-    static void call_system(ecs_rows_t *rows, int index, Columns& columns, Targs... comps) {
-        call_system(rows, index + 1, columns, comps..., columns[index]);
+    static void call_system(ecs_view_t *view, int index, Columns& columns, Targs... comps) {
+        call_system(view, index + 1, columns, comps..., columns[index]);
     }
 
     /** Callback provided to flecs */
-    static void run(ecs_rows_t *rows) {
-        column_args<Components...> columns(rows);
-        call_system(rows, 0, columns.m_columns);
+    static void run(ecs_view_t *view) {
+        column_args<Components...> columns(view);
+        call_system(view, 0, columns.m_columns);
     }   
 
 private:
@@ -1762,8 +1762,8 @@ public:
         return m_has_next != other.m_has_next;
     }
 
-    flecs::rows const operator*() const {
-        return flecs::rows(&m_iter.rows);
+    flecs::view const operator*() const {
+        return flecs::view(&m_iter.view);
     }
 
     query_iterator& operator++() {
@@ -1807,8 +1807,8 @@ public:
         return m_has_next != other.m_has_next;
     }
 
-    flecs::rows const operator*() const {
-        return flecs::rows(&m_iter.rows);
+    flecs::view const operator*() const {
+        return flecs::view(&m_iter.view);
     }
 
     filter_iterator& operator++() {
@@ -2025,37 +2025,37 @@ inline entity world::lookup(const char *name) const {
 //// Rows fwd declared functions
 ////////////////////////////////////////////////////////////////////////////////
 
-inline flecs::entity rows::system() const {
-    return flecs::entity(m_rows->world, m_rows->system);
+inline flecs::entity view::system() const {
+    return flecs::entity(m_view->world, m_view->system);
 }
 
-inline flecs::world rows::world() const {
-    return flecs::world(m_rows->world);
+inline flecs::world view::world() const {
+    return flecs::world(m_view->world);
 }
 
-inline flecs::entity rows::entity(int32_t row) const {
-    ecs_assert(row < m_rows->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-    return flecs::entity(m_rows->world, m_rows->entities[row]);
+inline flecs::entity view::entity(int32_t row) const {
+    ecs_assert(row < m_view->count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+    return flecs::entity(m_view->world, m_view->entities[row]);
 }
 
 /* Obtain column source (0 if self) */
-inline flecs::entity rows::column_source(int32_t column) const {
-    return flecs::entity(m_rows->world, ecs_column_source(m_rows, column));
+inline flecs::entity view::column_source(int32_t column) const {
+    return flecs::entity(m_view->world, ecs_column_source(m_view, column));
 }
 
 /* Obtain component/tag entity of column */
-inline flecs::entity rows::column_entity(int32_t column) const {
-    return flecs::entity(m_rows->world, ecs_column_entity(m_rows, column));
+inline flecs::entity view::column_entity(int32_t column) const {
+    return flecs::entity(m_view->world, ecs_column_entity(m_view, column));
 }
 
 /* Obtain type of column */
-inline type rows::column_type(int32_t column) const {
-    return flecs::type(m_rows->world, ecs_column_type(m_rows, column));
+inline type view::column_type(int32_t column) const {
+    return flecs::type(m_view->world, ecs_column_type(m_view, column));
 }
 
 /* Obtain type of table being iterated over */
-inline type rows::table_type() const {
-    return flecs::type(m_rows->world, ecs_table_type(m_rows));
+inline type view::table_type() const {
+    return flecs::type(m_view->world, ecs_table_type(m_view));
 }
 
 

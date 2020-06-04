@@ -11,19 +11,19 @@ typedef Vector2D WorldPosition;
 typedef Vector2D Velocity;
 
 /* Implement a simple move system */
-void Move(ecs_rows_t *rows) {
+void Move(ecs_view_t *view) {
     /* Get the two columns from the system signature */
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+    ECS_COLUMN(view, Position, p, 1);
+    ECS_COLUMN(view, Velocity, v, 2);
 
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < view->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
 
         /* Print something to the console so we can see the system is being
          * invoked */
         printf("%s moved to {.x = %f, .y = %f}\n",
-            ecs_get_name(rows->world, rows->entities[i]),
+            ecs_get_name(view->world, view->entities[i]),
             p[i].x, p[i].y);
     }
 }
@@ -33,32 +33,32 @@ void Move(ecs_rows_t *rows) {
  * will be used to then transform Position to WorldPosition of the child.
  * If the CASCADE column is not set, the system matched a root. In that case,
  * just assign the Position to the WorldPosition. */
-void Transform(ecs_rows_t *rows) {
+void Transform(ecs_view_t *view) {
     /* Get the two columns from the system signature */
-    WorldPosition *parent_wp = ecs_column(rows, WorldPosition, 1);
-    WorldPosition *wp = ecs_column(rows, WorldPosition, 2);
-    Position *p = ecs_column(rows, Position, 3);
+    WorldPosition *parent_wp = ecs_column(view, WorldPosition, 1);
+    WorldPosition *wp = ecs_column(view, WorldPosition, 2);
+    Position *p = ecs_column(view, Position, 3);
 
     if (!parent_wp) {
-        for (int i = 0; i < rows->count; i ++) {
+        for (int i = 0; i < view->count; i ++) {
             wp[i].x = p[i].x;
             wp[i].y = p[i].y;
 
             /* Print something to the console so we can see the system is being
             * invoked */
             printf("%s transformed to {.x = %f, .y = %f} <<root>>\n",
-                ecs_get_name(rows->world, rows->entities[i]),
+                ecs_get_name(view->world, view->entities[i]),
                 wp[i].x, wp[i].y);
         }
     } else {
-        for (int i = 0; i < rows->count; i ++) {
+        for (int i = 0; i < view->count; i ++) {
             wp[i].x = parent_wp->x + p[i].x;
             wp[i].y = parent_wp->y + p[i].y;
 
             /* Print something to the console so we can see the system is being
             * invoked */
             printf("%s transformed to {.x = %f, .y = %f} <<child>>\n",
-                ecs_get_name(rows->world, rows->entities[i]),
+                ecs_get_name(view->world, view->entities[i]),
                 wp[i].x, wp[i].y);
         }
     }

@@ -42,12 +42,12 @@ void Modules_simple_module() {
 }
 
 static
-void AddVtoP(ecs_rows_t *rows) {
-    ECS_IMPORT_COLUMN(rows, SimpleModule, 2);
+void AddVtoP(ecs_view_t *view) {
+    ECS_IMPORT_COLUMN(view, SimpleModule, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_add(rows->world, rows->entities[i], Velocity);
+    for (i = 0; i < view->count; i ++) {
+        ecs_add(view->world, view->entities[i], Velocity);
     }
 }
 

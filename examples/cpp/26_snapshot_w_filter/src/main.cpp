@@ -26,15 +26,15 @@ int main(int argc, char *argv[]) {
     flecs::component<Mass>(world, "Mass");
 
     flecs::system<Position, Velocity>(world)
-        .action([](const flecs::rows& rows, 
+        .action([](const flecs::view& view, 
             flecs::column<Position> p, 
             flecs::column<Velocity> v) 
         {    
-            for (auto row : rows) {
+            for (auto row : view) {
                 p[row].x += v[row].x;
                 p[row].y += v[row].y;
 
-                std::cout << "Moved " << rows.entity(row).name() << " to {" <<
+                std::cout << "Moved " << view.entity(row).name() << " to {" <<
                     p[row].x << ", " << p[row].y << "}" << std::endl;
             }
         });

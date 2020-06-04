@@ -1,25 +1,25 @@
 #include <api.h>
 
 static
-void Add_to_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_to_current(ecs_view_t *view) {
+    IterData *ctx = ecs_get_context(view->world);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component);
+            ecs_add_entity(view->world, view->entities[i], ctx->component);
             
-            test_assert( !!ecs_get_type(rows->world, rows->entities[i]));
-            test_assert( ecs_has_entity(rows->world,  rows->entities[i], ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component) != NULL);
+            test_assert( !!ecs_get_type(view->world, view->entities[i]));
+            test_assert( ecs_has_entity(view->world,  view->entities[i], ctx->component));
+            test_assert( ecs_get_ptr_w_entity(view->world, view->entities[i], ctx->component) != NULL);
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component_2);
+            ecs_add_entity(view->world, view->entities[i], ctx->component_2);
 
-            test_assert( !!ecs_get_type(rows->world, rows->entities[i]));
-            test_assert( ecs_has_entity(rows->world,  rows->entities[i], ctx->component_2)); 
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_2) != NULL);
+            test_assert( !!ecs_get_type(view->world, view->entities[i]));
+            test_assert( ecs_has_entity(view->world,  view->entities[i], ctx->component_2)); 
+            test_assert( ecs_get_ptr_w_entity(view->world, view->entities[i], ctx->component_2) != NULL);
         }
 
         ctx->entity_count ++;
@@ -207,23 +207,23 @@ void MultiThreadStaging_6_threads_add_to_current() {
 }
 
 static
-void InitVelocity(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 1);
+void InitVelocity(ecs_view_t *view) {
+    ECS_COLUMN(view, Velocity, v, 1);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         v[i].x = 10;
         v[i].y = 20;
     }
 }
 
 static
-void AddVelocity(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+void AddVelocity(ecs_view_t *view) {
+    ECS_COLUMN_COMPONENT(view, Velocity, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_add(rows->world, rows->entities[i], Velocity);
+    for (i = 0; i < view->count; i ++) {
+        ecs_add(view->world, view->entities[i], Velocity);
     }
 }
 
@@ -259,10 +259,10 @@ void MultiThreadStaging_2_threads_on_add() {
 }
 
 static
-void New_w_count(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
+void New_w_count(ecs_view_t *view) {
+    ECS_COLUMN_COMPONENT(view, Position, 1);
 
-    ecs_bulk_new(rows->world, Position, 10);
+    ecs_bulk_new(view->world, Position, 10);
 }
 
 

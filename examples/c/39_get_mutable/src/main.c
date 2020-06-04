@@ -4,18 +4,18 @@ typedef struct Counter {
     int value;
 } Counter;
 
-void PrintCounterAdd(ecs_rows_t *rows) {
-    for (int i = 0; i < rows->count; i ++) {
-        printf("%s: Counter added\n", ecs_get_name(rows->world, rows->entities[i]));
+void PrintCounterAdd(ecs_view_t *view) {
+    for (int i = 0; i < view->count; i ++) {
+        printf("%s: Counter added\n", ecs_get_name(view->world, view->entities[i]));
     }
 }
 
-void PrintCounterSet(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Counter, counter, 1);
+void PrintCounterSet(ecs_view_t *view) {
+    ECS_COLUMN(view, Counter, counter, 1);
 
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < view->count; i ++) {
         printf("%s: Counter set to %d\n", 
-            ecs_get_name(rows->world, rows->entities[i]),
+            ecs_get_name(view->world, view->entities[i]),
             counter[i].value);
     }
 }

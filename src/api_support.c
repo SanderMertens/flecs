@@ -289,7 +289,7 @@ ecs_entity_t ecs_new_system(
     const char *name,
     ecs_entity_t tag,
     char *signature,
-    ecs_iter_action_t action)
+    ecs_view_action_t action)
 {
     assert(world->magic == ECS_WORLD_MAGIC);  
     
@@ -309,7 +309,7 @@ ecs_entity_t ecs_new_system(
         }
 
         ecs_set(world, result, EcsSignatureExpr, {signature});
-        ecs_set(world, result, EcsIterAction, {action});
+        ecs_set(world, result, EcsViewAction, {action});
     } else {
         EcsSignatureExpr *ptr = ecs_get_mut(world, result, EcsSignatureExpr, NULL);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -328,7 +328,7 @@ ecs_entity_t ecs_new_trigger(
     const char *name,
     ecs_entity_t kind,
     const char *component_name,
-    ecs_iter_action_t action,
+    ecs_view_action_t action,
     const void *ctx)
 {
     assert(world->magic == ECS_WORLD_MAGIC);

@@ -464,7 +464,7 @@ void Delete_w_filter_exclude_exact() {
 static bool invoked = false;
 
 static
-void Dummy(ecs_rows_t *rows) {
+void Dummy(ecs_view_t *view) {
     invoked = true;
 }
 

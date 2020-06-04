@@ -40,56 +40,56 @@ void set_random(
 }
 
 static
-void Delete_above_1000(ecs_rows_t *rows) {
+void Delete_above_1000(ecs_view_t *view) {
     int i;
 
-    for (i = 0; i < rows->count; i ++) {
-        if ((i + rows->frame_offset) > 1000) {
-            ecs_delete(rows->world, rows->entities[i]);
+    for (i = 0; i < view->count; i ++) {
+        if ((i + view->frame_offset) > 1000) {
+            ecs_delete(view->world, view->entities[i]);
         }
     }
 }
 
 static
-void Add_random(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_random(ecs_view_t *view) {
+    IterData *ctx = ecs_get_context(view->world);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        add_random(rows->world, 0, ctx->component);
-        add_random(rows->world, rows->entities[i], ctx->component_2);
-        add_random(rows->world, rows->entities[i], ctx->component_3);
+    for (i = 0; i < view->count; i ++) {
+        add_random(view->world, 0, ctx->component);
+        add_random(view->world, view->entities[i], ctx->component_2);
+        add_random(view->world, view->entities[i], ctx->component_3);
         ctx->entity_count ++;
     }
 }
 
 static
-void Set_velocity_callback(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 1);
+void Set_velocity_callback(ecs_view_t *view) {
+    ECS_COLUMN(view, Velocity, v, 1);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         v->x ++;
         v->y ++;
     }
 }
 
 static
-void Set_random(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);             
+void Set_random(ecs_view_t *view) {
+    IterData *ctx = ecs_get_context(view->world);             
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         Position pos = {10, 20};
-        set_random(rows->world, 0, ctx->component, &pos, &pos, sizeof(Position));
+        set_random(view->world, 0, ctx->component, &pos, &pos, sizeof(Position));
 
         Velocity vel = {30, 40};
         Velocity vel_expect = {31, 41};
-        set_random(rows->world, rows->entities[i], ctx->component_2, &vel, &vel_expect,
+        set_random(view->world, view->entities[i], ctx->component_2, &vel, &vel_expect,
             sizeof(Velocity));
 
         Rotation rot = {50};
-        set_random(rows->world, rows->entities[i], ctx->component_3, &rot, &rot,
+        set_random(view->world, view->entities[i], ctx->component_3, &rot, &rot,
             sizeof(Rotation));
 
         ctx->entity_count ++;

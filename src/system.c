@@ -191,7 +191,7 @@ void ecs_enable_system(
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_iter_action_t action,
+    ecs_view_action_t action,
     ecs_query_t *query,
     void *ctx)
 {
@@ -382,38 +382,38 @@ ecs_entity_t ecs_run_intern(
 
     /* Prepare the query iterator */
     ecs_query_iter_t qiter = ecs_query_iter(system_data->query, offset, limit);
-    qiter.rows.world = world;
-    qiter.rows.system = system;
-    qiter.rows.delta_time = delta_time;
-    qiter.rows.delta_system_time = time_elapsed;
-    qiter.rows.world_time = real_world->stats.world_time_total;
-    qiter.rows.frame_offset = offset;
+    qiter.view.world = world;
+    qiter.view.system = system;
+    qiter.view.delta_time = delta_time;
+    qiter.view.delta_system_time = time_elapsed;
+    qiter.view.world_time = real_world->stats.world_time_total;
+    qiter.view.frame_offset = offset;
     
     /* Set param if provided, otherwise use system context */
     if (param) {
-        qiter.rows.param = param;
+        qiter.view.param = param;
     } else {
-        qiter.rows.param = system_data->ctx;
+        qiter.view.param = system_data->ctx;
     }
 
-    ecs_iter_action_t action = system_data->action;
+    ecs_view_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
     if (!filter) {
         while (ecs_query_next(&qiter)) {
-            action(&qiter.rows);
+            action(&qiter.view);
         }
 
     /* If filter is provided, match each table with the provided filter */
     } else {
         while (ecs_query_next(&qiter)) {
-            ecs_table_t *table = qiter.rows.table;
+            ecs_table_t *table = qiter.view.table;
             if (!ecs_table_match_filter(real_world, table, filter))
             {
                 continue;
             }
 
-            action(&qiter.rows);
+            action(&qiter.view);
         }        
     }
 
@@ -423,7 +423,7 @@ ecs_entity_t ecs_run_intern(
     
     system_data->invoke_count ++;
 
-    return qiter.rows.interrupted_by;
+    return qiter.view.interrupted_by;
 }
 
 /* -- Public API -- */
@@ -489,19 +489,19 @@ void ecs_run_monitor(
         return;
     }
 
-    ecs_rows_t rows = {0};
-    ecs_query_set_rows( world, stage, query, &rows, 
+    ecs_view_t view = {0};
+    ecs_query_set_view( world, stage, query, &view, 
         monitor->matched_table_index, row, count);
 
-    rows.triggered_by = components;
-    rows.param = system_data->ctx;
+    view.triggered_by = components;
+    view.param = system_data->ctx;
 
     if (entities) {
-        rows.entities = entities;
+        view.entities = entities;
     }
 
-    rows.system = system;
-    system_data->action(&rows);
+    view.system = system;
+    system_data->action(&view);
 }
 
 bool ecs_is_enabled(

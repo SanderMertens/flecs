@@ -36,16 +36,16 @@ void Singleton_set_ptr() {
     ecs_fini(world);
 }
 
-void Iter_w_singleton(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
-    test_assert(!v || ecs_is_shared(rows, 2));
+void Iter_w_singleton(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
+    ECS_COLUMN(view, Velocity, v, 2);
+    test_assert(!v || ecs_is_shared(view, 2));
 
-    probe_system(rows);
+    probe_system(view);
 
     if (v) {
         int i;
-        for (i = 0; i < rows->count; i ++) {
+        for (i = 0; i < view->count; i ++) {
             p[i].x += v->x;
             p[i].y += v->y;
         }

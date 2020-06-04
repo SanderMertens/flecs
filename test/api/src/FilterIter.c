@@ -23,13 +23,13 @@ void FilterIter_iter_one_table() {
 
     while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += it.rows.count;
+        entity_count += it.view.count;
         
-        test_assert(ecs_table_type(&it.rows) == ecs_type(Position));
-        Position *row = ecs_table_column(&it.rows, 0);
+        test_assert(ecs_table_type(&it.view) == ecs_type(Position));
+        Position *row = ecs_table_column(&it.view, 0);
         test_assert(row != NULL);
 
-        for (i = 0; i < it.rows.count; i ++) {
+        for (i = 0; i < it.view.count; i ++) {
             test_int(row[i].x, i);
             test_int(row[i].y, i * 2);
         }
@@ -73,12 +73,12 @@ void FilterIter_iter_two_tables() {
 
     while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += it.rows.count;
+        entity_count += it.view.count;
         
-        Position *row = ecs_table_column(&it.rows, 0);
+        Position *row = ecs_table_column(&it.view, 0);
         test_assert(row != NULL);
 
-        for (i = 0; i < it.rows.count; i ++) {
+        for (i = 0; i < it.view.count; i ++) {
             test_int(row[i].x, i);
             test_int(row[i].y, i * 2);
         }
@@ -116,20 +116,20 @@ void FilterIter_iter_two_comps() {
 
     while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += it.rows.count;
+        entity_count += it.view.count;
 
-        ecs_type_t table_type = ecs_table_type(&it.rows);
+        ecs_type_t table_type = ecs_table_type(&it.view);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         test_assert(array[1] == ecs_entity(Velocity));
         
-        Position *p_row = ecs_table_column(&it.rows, 0);
+        Position *p_row = ecs_table_column(&it.view, 0);
         test_assert(p_row != NULL);
 
-        Velocity *v_row = ecs_table_column(&it.rows, 1);
+        Velocity *v_row = ecs_table_column(&it.view, 1);
         test_assert(v_row != NULL);        
 
-        for (i = 0; i < it.rows.count; i ++) {
+        for (i = 0; i < it.view.count; i ++) {
             test_int(p_row[i].x, i);
             test_int(p_row[i].y, i * 2);
 
@@ -175,16 +175,16 @@ void FilterIter_iter_snapshot_one_table() {
 
     while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += it.rows.count;
+        entity_count += it.view.count;
 
-        ecs_type_t table_type = ecs_table_type(&it.rows);
+        ecs_type_t table_type = ecs_table_type(&it.view);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         
-        Position *p_row = ecs_table_column(&it.rows, 0);
+        Position *p_row = ecs_table_column(&it.view, 0);
         test_assert(p_row != NULL);    
 
-        for (i = 0; i < it.rows.count; i ++) {
+        for (i = 0; i < it.view.count; i ++) {
             test_int(p_row[i].x, i);
             test_int(p_row[i].y, i * 2);
         }
@@ -239,16 +239,16 @@ void FilterIter_iter_snapshot_two_tables() {
 
     while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += it.rows.count;
+        entity_count += it.view.count;
 
-        ecs_type_t table_type = ecs_table_type(&it.rows);
+        ecs_type_t table_type = ecs_table_type(&it.view);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         
-        Position *p_row = ecs_table_column(&it.rows, 0);
+        Position *p_row = ecs_table_column(&it.view, 0);
         test_assert(p_row != NULL);     
 
-        for (i = 0; i < it.rows.count; i ++) {
+        for (i = 0; i < it.view.count; i ++) {
             test_int(p_row[i].x, i);
             test_int(p_row[i].y, i * 2);
         }
@@ -297,20 +297,20 @@ void FilterIter_iter_snapshot_two_comps() {
 
     while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += it.rows.count;
+        entity_count += it.view.count;
 
-        ecs_type_t table_type = ecs_table_type(&it.rows);
+        ecs_type_t table_type = ecs_table_type(&it.view);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));      
         test_assert(array[1] == ecs_entity(Velocity));        
         
-        Position *p_row = ecs_table_column(&it.rows, 0);
+        Position *p_row = ecs_table_column(&it.view, 0);
         test_assert(p_row != NULL);
 
-        Velocity *v_row = ecs_table_column(&it.rows, 1);
+        Velocity *v_row = ecs_table_column(&it.view, 1);
         test_assert(v_row != NULL);        
 
-        for (i = 0; i < it.rows.count; i ++) {
+        for (i = 0; i < it.view.count; i ++) {
             test_int(p_row[i].x, i);
             test_int(p_row[i].y, i * 2);
 
@@ -370,16 +370,16 @@ void FilterIter_iter_snapshot_filtered_table() {
 
     while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += it.rows.count;
+        entity_count += it.view.count;
 
-        ecs_type_t table_type = ecs_table_type(&it.rows);
+        ecs_type_t table_type = ecs_table_type(&it.view);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));        
         
-        Position *p_row = ecs_table_column(&it.rows, 0);
+        Position *p_row = ecs_table_column(&it.view, 0);
         test_assert(p_row != NULL);
 
-        for (i = 0; i < it.rows.count; i ++) {
+        for (i = 0; i < it.view.count; i ++) {
             test_int(p_row[i].x, i);
             test_int(p_row[i].y, i * 2);
         }

@@ -11,19 +11,19 @@ typedef Vector2D Position;
 typedef Vector2D Velocity;
 
 /* Implement a simple move system */
-void Move(ecs_rows_t *rows) {
+void Move(ecs_view_t *view) {
     /* Get the two columns from the system signature */
-    Position *p = _ecs_column(rows, sizeof(Position), 1);
-    Velocity *v = _ecs_column(rows, sizeof(Velocity), 2);
+    Position *p = _ecs_column(view, sizeof(Position), 1);
+    Velocity *v = _ecs_column(view, sizeof(Velocity), 2);
 
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < view->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
 
         /* Print something to the console so we can see the system is being
          * invoked */
         printf("%s moved to {.x = %f, .y = %f}\n",
-            ecs_get_name(rows->world, rows->entities[i]),
+            ecs_get_name(view->world, view->entities[i]),
             p[i].x, p[i].y);
     }
 }

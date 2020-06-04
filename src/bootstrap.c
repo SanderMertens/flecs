@@ -23,7 +23,7 @@ ecs_type_t ecs_type(EcsTickSource);
 ecs_type_t ecs_type(EcsSignatureExpr);
 ecs_type_t ecs_type(EcsSignature);
 ecs_type_t ecs_type(EcsQuery);
-ecs_type_t ecs_type(EcsIterAction);
+ecs_type_t ecs_type(EcsViewAction);
 ecs_type_t ecs_type(EcsContext);
 
 /* Generic constructor to initialize a component to 0 */
@@ -126,23 +126,23 @@ void ecs_trigger_set_intern(
 
 static
 void EcsOnSetTrigger(
-    ecs_rows_t *rows)
+    ecs_view_t *view)
 {
-    EcsTrigger *ct = ecs_column(rows, EcsTrigger, 1);
-    ecs_trigger_set_intern(rows->world, rows->entities, ct, rows->count);
+    EcsTrigger *ct = ecs_column(view, EcsTrigger, 1);
+    ecs_trigger_set_intern(view->world, view->entities, ct, view->count);
 }
 
 /* System that registers component lifecycle callbacks */
 static
 void EcsOnSetComponentLifecycle(
-    ecs_rows_t *rows)
+    ecs_view_t *view)
 {
-    EcsComponentLifecycle *cl = ecs_column(rows, EcsComponentLifecycle, 1);
-    ecs_world_t *world = rows->world;
+    EcsComponentLifecycle *cl = ecs_column(view, EcsComponentLifecycle, 1);
+    ecs_world_t *world = view->world;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
+    for (i = 0; i < view->count; i ++) {
+        ecs_entity_t e = view->entities[i];
         ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, e);
 
         c_info->lifecycle = cl[i];
@@ -155,43 +155,43 @@ void EcsOnSetComponentLifecycle(
 /* Disable system when EcsDisabled is added */
 static 
 void EcsDisableSystem(
-    ecs_rows_t *rows)
+    ecs_view_t *view)
 {
-    EcsSystem *system_data = ecs_column(rows, EcsSystem, 1);
+    EcsSystem *system_data = ecs_column(view, EcsSystem, 1);
 
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         ecs_enable_system(
-            rows->world, rows->entities[i], &system_data[i], false);
+            view->world, view->entities[i], &system_data[i], false);
     }
 }
 
 /* Enable system when EcsDisabled is removed */
 static
 void EcsEnableSystem(
-    ecs_rows_t *rows)
+    ecs_view_t *view)
 {
-    EcsSystem *system_data = ecs_column(rows, EcsSystem, 1);
+    EcsSystem *system_data = ecs_column(view, EcsSystem, 1);
 
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         ecs_enable_system(
-            rows->world, rows->entities[i], &system_data[i], true);
+            view->world, view->entities[i], &system_data[i], true);
     }
 }
 
 /* Parse a signature expression into the ecs_sig_t data structure */
 static
 void EcsCreateSignature(
-    ecs_rows_t *rows) 
+    ecs_view_t *view) 
 {
-    ecs_world_t *world = rows->world;
-    ecs_entity_t *entities = rows->entities;
+    ecs_world_t *world = view->world;
+    ecs_entity_t *entities = view->entities;
 
-    EcsSignatureExpr *signature = ecs_column(rows, EcsSignatureExpr, 1);
+    EcsSignatureExpr *signature = ecs_column(view, EcsSignatureExpr, 1);
     
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         ecs_entity_t e = entities[i];
         const char *name = ecs_get_name(world, e);
 
@@ -212,15 +212,15 @@ void EcsCreateSignature(
 /* Create a query from a signature */
 static
 void EcsCreateQuery(
-    ecs_rows_t *rows) 
+    ecs_view_t *view) 
 {
-    ecs_world_t *world = rows->world;
-    ecs_entity_t *entities = rows->entities;
+    ecs_world_t *world = view->world;
+    ecs_entity_t *entities = view->entities;
 
-    EcsSignature *signature = ecs_column(rows, EcsSignature, 1);
+    EcsSignature *signature = ecs_column(view, EcsSignature, 1);
     
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         ecs_entity_t e = entities[i];
 
         if (!ecs_has(world, e, EcsQuery)) {
@@ -234,17 +234,17 @@ void EcsCreateQuery(
 /* Create a system from a query and an action */
 static
 void EcsCreateSystem(
-    ecs_rows_t *rows)
+    ecs_view_t *view)
 {
-    ecs_world_t *world = rows->world;
-    ecs_entity_t *entities = rows->entities;
+    ecs_world_t *world = view->world;
+    ecs_entity_t *entities = view->entities;
 
-    EcsQuery *query = ecs_column(rows, EcsQuery, 1);
-    EcsIterAction *action = ecs_column(rows, EcsIterAction, 2);
-    EcsContext *ctx = ecs_column(rows, EcsContext, 3);
+    EcsQuery *query = ecs_column(view, EcsQuery, 1);
+    EcsViewAction *action = ecs_column(view, EcsViewAction, 2);
+    EcsContext *ctx = ecs_column(view, EcsContext, 3);
     
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         ecs_entity_t e = entities[i];
         void *ctx_ptr = NULL;
         if (ctx) {
@@ -260,7 +260,7 @@ void bootstrap_set_system(
     ecs_world_t *world,
     const char *name,
     const char *expr,
-    ecs_iter_action_t action)
+    ecs_view_action_t action)
 {
     ecs_sig_t sig = {0};
     ecs_entity_t sys = ecs_set(world, 0, EcsName, {name});
@@ -287,8 +287,8 @@ void ecs_init_builtins(
 
     /* Create systems necessary to create systems */
     bootstrap_set_system(world, "EcsCreateSignature", "EcsSignatureExpr", EcsCreateSignature);
-    bootstrap_set_system(world, "EcsCreateQuery", "EcsSignature, EcsIterAction", EcsCreateQuery);
-    bootstrap_set_system(world, "EcsCreateSystem", "EcsQuery, EcsIterAction, ?EcsContext", EcsCreateSystem);
+    bootstrap_set_system(world, "EcsCreateQuery", "EcsSignature, EcsViewAction", EcsCreateQuery);
+    bootstrap_set_system(world, "EcsCreateSystem", "EcsQuery, EcsViewAction, ?EcsContext", EcsCreateSystem);
 
     /* From here we can create systems */
 
@@ -358,7 +358,7 @@ void bootstrap_types(
     ecs_type(EcsSignatureExpr) = bootstrap_type(world, ecs_entity(EcsSignatureExpr));
     ecs_type(EcsSignature) = bootstrap_type(world, ecs_entity(EcsSignature));
     ecs_type(EcsQuery) = bootstrap_type(world, ecs_entity(EcsQuery));
-    ecs_type(EcsIterAction) = bootstrap_type(world, ecs_entity(EcsIterAction));
+    ecs_type(EcsViewAction) = bootstrap_type(world, ecs_entity(EcsViewAction));
     ecs_type(EcsContext) = bootstrap_type(world, ecs_entity(EcsContext));   
 }
 
@@ -467,7 +467,7 @@ void ecs_bootstrap(
     bootstrap_component(world, table, EcsSignatureExpr);
     bootstrap_component(world, table, EcsSignature);
     bootstrap_component(world, table, EcsQuery);
-    bootstrap_component(world, table, EcsIterAction);
+    bootstrap_component(world, table, EcsViewAction);
     bootstrap_component(world, table, EcsContext);
 
     world->stats.last_component_id = EcsLastBuiltin;

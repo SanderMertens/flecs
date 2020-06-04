@@ -1,43 +1,43 @@
 #include <api.h>
 
-void InitVelocity(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 1);
+void InitVelocity(ecs_view_t *view) {
+    ECS_COLUMN(view, Velocity, v, 1);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         v[i].x = 10;
         v[i].y = 20;
     }
 }
 
-void InitMass(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Mass, m, 1);    
+void InitMass(ecs_view_t *view) {
+    ECS_COLUMN(view, Mass, m, 1);    
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         m[i] = 3;
     }
 }
 
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void Iter(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
 
     Velocity *v = NULL;
     Mass *m = NULL;
 
-    if (rows->column_count >= 2) {
-        v = ecs_column(rows, Velocity, 2);
-        test_assert(ecs_is_shared(rows, 2));
+    if (view->column_count >= 2) {
+        v = ecs_column(view, Velocity, 2);
+        test_assert(ecs_is_shared(view, 2));
     }
 
-    if (rows->column_count >= 3) {
-        m = ecs_column(rows, Mass, 3);
-        test_assert(!m || ecs_is_shared(rows, 3));
+    if (view->column_count >= 3) {
+        m = ecs_column(view, Mass, 3);
+        test_assert(!m || ecs_is_shared(view, 3));
     }
 
-    probe_system(rows);
+    probe_system(view);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         p[i].x += v->x;
         p[i].y += v->y;
 
@@ -151,21 +151,21 @@ void System_w_FromSystem_3_column_2_from_system() {
     ecs_fini(world);
 }
 
-void Iter_reactive(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void Iter_reactive(ecs_view_t *view) {
+    ECS_COLUMN(view, Position, p, 1);
 
-    Velocity *v = rows->param;
+    Velocity *v = view->param;
     Mass *m = NULL;
 
-    if (rows->column_count >= 2) {
-        v = ecs_column(rows, Velocity, 2);
-        test_assert(ecs_is_shared(rows, 2));
+    if (view->column_count >= 2) {
+        v = ecs_column(view, Velocity, 2);
+        test_assert(ecs_is_shared(view, 2));
     }
 
-    probe_system(rows);
+    probe_system(view);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < view->count; i ++) {
         p[i].x = v->x;
         p[i].y = v->y;
 
@@ -176,8 +176,8 @@ void Iter_reactive(ecs_rows_t *rows) {
     }
 }
 
-void Dummy_1(ecs_rows_t *rows) { }
-void Dummy_2(ecs_rows_t *rows) { }
+void Dummy_1(ecs_view_t *view) { }
+void Dummy_2(ecs_view_t *view) { }
 
 void System_w_FromSystem_auto_add_tag() {
     ecs_world_t *world = ecs_init();
