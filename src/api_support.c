@@ -288,7 +288,7 @@ ecs_entity_t ecs_new_system(
     ecs_entity_t e,
     const char *name,
     ecs_entity_t tag,
-    char *signature,
+    const char *signature,
     ecs_view_action_t action)
 {
     assert(world->magic == ECS_WORLD_MAGIC);  

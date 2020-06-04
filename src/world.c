@@ -422,7 +422,7 @@ ecs_entity_t ecs_lookup_child_in_columns(
 
     ecs_vector_each(column->data, EcsName, name_ptr, {
         const char *name = *name_ptr;
-        if (!name_ptr) {
+        if (!name) {
             continue;
         }
         
@@ -503,6 +503,10 @@ ecs_entity_t ecs_lookup(
     ecs_world_t *world,
     const char *id)
 {   
+    if (!id) {
+        return 0;
+    }
+
     if (isdigit(id[0])) {
         return atoi(id);
     }

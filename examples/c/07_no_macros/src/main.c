@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     /* Register components */
-    ecs_entity_t FLECS__EPosition = ecs_new_component(world, "Position", sizeof(Position), ECS_ALIGNOF(Position));
-    ecs_entity_t FLECS__EVelocity = ecs_new_component(world, "Velocity", sizeof(Velocity), ECS_ALIGNOF(Velocity));
+    ecs_entity_t FLECS__EPosition = ecs_new_component(world, 0, "Position", sizeof(Position), ECS_ALIGNOF(Position));
+    ecs_entity_t FLECS__EVelocity = ecs_new_component(world, 0, "Velocity", sizeof(Velocity), ECS_ALIGNOF(Velocity));
 
     /* Register system */
     ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position, Velocity", Move);

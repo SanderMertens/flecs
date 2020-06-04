@@ -22,13 +22,15 @@ int main(int argc, char *argv[]) {
          * RootPrefab, create a type that overrides the components from the
          * ChildPrefab. This ensures that when the prefab is instantiated, the
          * components from the child prefab are owned by the instance. */
-        flecs::prefab(world, "ChildPrefab")
+        auto ChildPrefab = flecs::prefab(world, "ChildPrefab")
             .set<Position>({30, 40});
 
         /* Instead of the ChildPrefab, add the Child type to RootPrefab. Use a
          * string-based type expression to create the type, as the type needs to
          * be fully constructed before registering it with the prefab parent. */
-        flecs::type(world, "Child", RootPrefab, "INSTANCEOF | ChildPrefab, Position");
+        flecs::prefab(world, "Child")
+            .add_childof(RootPrefab)
+            .add_instanceof(ChildPrefab);
 
     /* Create type that automatically overrides Position from RootPrefab */
     auto Root = flecs::type(world, "Root")

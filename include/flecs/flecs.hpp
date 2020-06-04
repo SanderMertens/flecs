@@ -39,21 +39,6 @@ class query;
 template <typename T>
 class component_base;
 
-enum system_kind {
-    OnLoad = EcsOnLoad,
-    PostLoad = EcsPostLoad,
-    PreUpdate = EcsPreUpdate,
-    OnUpdate = EcsOnUpdate,
-    OnValidate = EcsOnValidate,
-    PostUpdate = EcsPostUpdate,
-    PreStore = EcsPreStore,
-    OnStore = EcsOnStore,
-    Manual = 0,
-    OnAdd = EcsOnAdd,
-    OnRemove = EcsOnRemove,
-    OnSet = EcsOnSet
-};
-
 enum match_kind {
     MatchDefault = EcsMatchDefault,
     MatchAll = EcsMatchAll,
@@ -66,18 +51,54 @@ enum match_kind {
 //// Builtin components and tags 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Builtin components */
 using Component = EcsComponent;
-using TypeComponent = EcsType;
-static const entity_t Prefab = EEcsPrefab;
-static const entity_t RowSystem = EEcsRowSystem;
-static const entity_t ColSystem = EEcsSystem;
+using ComponentLifecycle = EcsComponentLifecycle;
+using Trigger = EcsTrigger;
+using Type = EcsType;
+// using System = EcsSystem;
 using Name = EcsName;
-static const entity_t Hidden = EEcsHidden;
-static const entity_t Disabled = EEcsDisabled;
-static const entity_t OnDemand = EEcsOnDemand;
+using PipelineQuery = EcsPipelineQuery;
+using Timer = EcsTimer;
+using RateFilter = EcsRateFilter;
+using TickSource = EcsTickSource;
+using SignatureExpr = EcsSignatureExpr;
+using Signature = EcsSignature;
+using Query = EcsQuery;
+using ViewAction = EcsViewAction;
+using Context = EcsContext;
 
-static const entity_t World = EcsWorld;
-static const entity_t Singleton = EcsSingleton;
+/* Builtin tag ids */
+static const ecs_entity_t Module = EcsModule;
+static const ecs_entity_t Prefab = EcsPrefab;
+static const ecs_entity_t Hidden = EcsHidden;
+static const ecs_entity_t Disabled = EcsDisabled;
+static const ecs_entity_t DisabledIntern = EcsDisabledIntern;
+static const ecs_entity_t Inactive = EcsInactive;
+static const ecs_entity_t OnDemand = EcsOnDemand;
+static const ecs_entity_t Monitor = EcsMonitor;
+static const ecs_entity_t Pipeline = EcsPipeline;
+
+/* Trigger tags */
+static const ecs_entity_t OnAdd = EcsOnAdd;
+static const ecs_entity_t OnRemove = EcsOnRemove;
+static const ecs_entity_t OnSet = EcsOnSet;
+
+/* Builtin pipeline tags */
+static const ecs_entity_t PreFrame = EcsPreFrame;
+static const ecs_entity_t OnLoad = EcsOnLoad;
+static const ecs_entity_t PostLoad = EcsPostLoad;
+static const ecs_entity_t PreUpdate = EcsPreUpdate;
+static const ecs_entity_t OnUpdate = EcsOnUpdate;
+static const ecs_entity_t OnValidate = EcsOnValidate;
+static const ecs_entity_t PostUpdate = EcsPostUpdate;
+static const ecs_entity_t PreStore = EcsPreStore;
+static const ecs_entity_t OnStore = EcsOnStore;
+static const ecs_entity_t PostFrame = EcsPostFrame;
+
+/** Builtin entity ids */
+static const ecs_entity_t World = EcsWorld;
+static const ecs_entity_t Singleton = EcsSingleton;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -416,12 +437,14 @@ public:
     }
 
     float get_target_fps() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(world);
+        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->target_fps;
     }
 
     std::int32_t get_tick() const {
-        return ecs_get_tick(m_world);
+        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
+        return stats->frame_count_total;
+
     }
 
     /* Get/set user-context */
@@ -652,12 +675,12 @@ public:
         [&func](world_t *world, entity_t id) {
             bool is_added;
 
-            T *ptr = static_cast<T*>(_ecs_get_mut(
-                world, id, component_base<T>::s_entity, sizeof(T), &is_added));
+            T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
+                world, id, component_base<T>::s_entity, &is_added));
 
             if (ptr) {
                 func(*ptr, !is_added);
-                _ecs_modified(world, id, component_base<T>::s_entity);
+                ecs_modified_w_entity(world, id, component_base<T>::s_entity);
             }
         });
         return *static_cast<base_type*>(this);
@@ -669,8 +692,8 @@ public:
         [&func](world_t *world, entity_t id) {
             bool is_added;
 
-            T *ptr = static_cast<T*>(_ecs_get_mut(
-                world, id, component_base<T>::s_entity, sizeof(T), &is_added));
+            T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
+                world, id, component_base<T>::s_entity, &is_added));
 
             if (ptr) {
                 if (is_added) {
@@ -680,7 +703,7 @@ public:
                 }
 
                 func(*ptr);
-                _ecs_modified(world, id, component_base<T>::s_entity);
+                ecs_modified_w_entity(world, id, component_base<T>::s_entity);
             }
         });
         return *static_cast<base_type*>(this);
@@ -790,7 +813,8 @@ public:
     }
 
     std::string name() const {
-        EcsName *name = (EcsName*)ecs_get_ptr_w_entity(m_world, m_id, EEcsName);
+        const EcsName *name = static_cast<const EcsName*>(
+            ecs_get_ptr_w_entity(m_world, m_id, ecs_entity(EcsName)));
         if (name) {
             return std::string(*name);
         } else {
@@ -804,14 +828,15 @@ public:
 
     template<typename T>
     const T& get() const {
-        T* component_ptr = static_cast<T*>(ecs_get_ptr_w_entity(m_world, m_id, component_base<T>::s_entity));
+        const T* component_ptr = static_cast<const T*>(ecs_get_ptr_w_entity(
+            m_world, m_id, component_base<T>::s_entity));
         ecs_assert(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
         return *component_ptr;
     }
 
     template <typename T>
     T* get_ptr() const {
-        return static_cast<T*>(
+        return static_cast<const T*>(
             ecs_get_ptr_w_entity(m_world, m_id, component_base<T>::s_entity));
     }
 
@@ -871,7 +896,7 @@ public:
     }
 
     float delta_time() {
-        const ecs_world_info_t *stats = ecs_get_world_info(world);
+        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->delta_time;
     }
 
@@ -936,7 +961,7 @@ private:
 class type final : entity {
 public:
     type(const world& world, const char *name, const char *expr = nullptr)
-        : entity(world, ecs_new_type(world.c_ptr(), name, expr))
+        : entity(world, ecs_new_type(world.c_ptr(), 0, name, expr))
     { 
         sync_from_flecs();
     }
@@ -1012,7 +1037,7 @@ public:
 
 private:
     void sync_from_me() {
-        const EcsType *tc = ecs_get_ptr(m_world, m_id, EcsType);
+        EcsType *tc = ecs_get_mut(m_world, m_id, EcsType, NULL);
         if (tc) {
             tc->type = m_type;
             tc->normalized = m_normalized;
@@ -1020,7 +1045,7 @@ private:
     }
 
     void sync_from_flecs() {
-        constEcsType *tc = ecs_get_ptr(m_world, m_id, EcsType);
+        EcsType *tc = ecs_get_mut(m_world, m_id, EcsType, NULL);
         if (tc) {
             m_type = tc->type;
             m_normalized = tc->normalized;
@@ -1043,7 +1068,7 @@ public:
         entity_t cur_entity = s_entity;
         type_t cur_type = s_type;
 
-        s_entity = ecs_new_component(world.c_ptr(), name, sizeof(T));
+        s_entity = ecs_new_component(world.c_ptr(), 0, name, sizeof(T), alignof(T));
         s_type = ecs_type_from_entity(world.c_ptr(), s_entity);
         s_name = name;
 
@@ -1265,8 +1290,8 @@ public:
 
     // Callback provided to flecs system
     static void run(ecs_view_t *view) {
-        each_invoker *self = (each_invoker*)
-            ecs_get_system_context(view->world, view->system);
+        const Context *ctx = ecs_get_ptr(view->world, view->system, EcsContext);
+        each_invoker *self = (each_invoker*)ctx->ctx;
         Func func = self->m_func;        
         column_args<Components...> columns(view);
         call_system(view, func, 0, columns.m_columns);
@@ -1443,8 +1468,8 @@ public:
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
     static void call_system(ecs_view_t *view, int index, Columns& columns, Targs... comps) {
-        action_invoker *self = (action_invoker*)
-            ecs_get_system_context(view->world, view->system);
+        const Context *ctx = ecs_get_ptr(view->world, view->system, EcsContext);
+        action_invoker *self = (action_invoker*)ctx->ctx;
 
         Func func = self->m_func;
 
@@ -1540,7 +1565,7 @@ public:
         return *this;
     }
 
-    system& kind(system_kind kind) {
+    system& kind(entity_t kind) {
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         m_kind = static_cast<ecs_entity_t>(kind);
         return *this;
@@ -1581,11 +1606,17 @@ public:
     }
 
     void set_context(void *ctx) const {
-        ecs_set_system_context(m_world, m_id, ctx);
+        EcsContext ctx_value = { ctx };
+        ecs_set_ptr(m_world, m_id, EcsContext, &ctx_value);
     }
 
     void* get_context() const {
-        return ecs_get_system_context(m_world, m_id);
+        const EcsContext *ctx = ecs_get(m_world, m_id, EcsContext);
+        if (ctx) {
+            return ctx->ctx;
+        } else {
+            return NULL;
+        }
     }
 
     system_runner_fluent run(float delta_time = 0.0f, void *param = nullptr) const {
@@ -1610,7 +1641,8 @@ public:
             signature.c_str(), 
             action_invoker<Func, Components...>::run);
 
-        ecs_set_system_context(m_world, e, ctx);
+        EcsContext ctx_value = {ctx};
+        ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
 
         if (m_period) {
             ecs_set_interval(m_world, e, m_period);
@@ -1641,7 +1673,8 @@ public:
             signature.c_str(), 
             each_invoker<Func, Components...>::run);
 
-        ecs_set_system_context(m_world, e, ctx);
+        EcsContext ctx_value = {ctx};
+        ecs_set_ptr(m_world, e, EcsContext, &ctx_value);
 
         if (m_period) {
             ecs_set_interval(m_world, e, m_period);
@@ -1730,7 +1763,7 @@ private:
         return "";
     }
 
-    ecs_entity_t m_phase;
+    ecs_entity_t m_kind;
     const char *m_name;
     const char *m_signature = nullptr;
     float m_period;
@@ -2137,7 +2170,7 @@ inline int world::count(flecs::filter filter) const {
 
 inline void world::init_builtin_components() {
     component<Component>(*this, "EcsComponent");
-    component<TypeComponent>(*this, "EcsType");
+    component<Type>(*this, "EcsType");
     component<Name>(*this, "EcsName");
 }
 

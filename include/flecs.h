@@ -25,6 +25,14 @@ typedef char bool;
 #define true !false
 #endif
 
+#ifdef __cplusplus
+#define ECS_ALIGNOF(T) alignof(T)
+#else
+#define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
+#endif
+#define ECS_MAX(a, b) ((a > b) ? a : b)
+
+
 #include "flecs/util/os_api.h"
 #include "flecs/util/vector.h"
 #include "flecs/util/ringbuf.h"
@@ -1112,7 +1120,7 @@ void* ecs_get_mut_w_entity(
     bool *is_added);
 
 #define ecs_get_mut(world, entity, component, is_added)\
-    ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added)
+    (component*)ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added)
 
 
 /* -- Modified -- */
@@ -2281,7 +2289,7 @@ FLECS_EXPORT
 ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_world_t *world,
     ecs_type_t type,
-    ecs_entity_t xor);
+    ecs_entity_t xor_tag);
 
 FLECS_EXPORT
 int16_t ecs_type_index_of(

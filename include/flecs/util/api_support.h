@@ -187,7 +187,7 @@ ecs_entity_t ecs_new_system(
     ecs_entity_t e,
     const char *name,
     ecs_entity_t phase,
-    char *signature,
+    const char *signature,
     ecs_view_action_t action);
 
 FLECS_EXPORT
@@ -382,14 +382,6 @@ void _ecs_parser_error(
 
 /** Calculate offset from address */
 #define ECS_OFFSET(o, offset) (void*)(((uintptr_t)(o)) + ((uintptr_t)(offset)))
-
-#ifdef __cplusplus
-#define ECS_ALIGNOF(T) alignof(T)
-#else
-#define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
-#endif
-
-#define ECS_MAX(a, b) ((a > b) ? a : b)
 
 #ifdef __cplusplus
 }

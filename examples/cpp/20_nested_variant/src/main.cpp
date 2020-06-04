@@ -29,11 +29,13 @@ int main(int argc, char *argv[]) {
         .set<Position>({10, 20});
         
         /* Create two child prefabs that inherit from ChildBase */
-        flecs::prefab(world, "Child1", Root)
+        flecs::prefab(world, "Child1")
+            .add_childof(Root)
             .add_instanceof(ChildBase)
             .set<Velocity>({30, 40});
 
-        flecs::prefab(world, "Child2", Root)
+        flecs::prefab(world, "Child2")
+            .add_childof(Root)
             .add_instanceof(ChildBase)
             .set<Velocity>({50, 60});            
 
