@@ -244,7 +244,7 @@ typedef struct ecs_on_demand_in_t {
  * time_passed member, until it exceeds 'period'. In that case, the system is
  * ran, and 'time_passed' is decreased by 'period'. 
  */
-typedef struct EcsColSystem {
+typedef struct EcsSystem {
     ecs_iter_action_t action;    /* Callback to be invoked for matching rows */
     void *ctx;                     /* Userdata for system */
     float time_spent;              /* Time spent on running system */
@@ -258,7 +258,7 @@ typedef struct EcsColSystem {
     void *status_ctx;                     /* User data for status action */    
     ecs_entity_t tick_source;             /* Tick source associated with system */
     float time_passed;                    /* Time passed since last invocation */
-} EcsColSystem;
+} EcsSystem;
 
 #define ECS_TYPE_DB_MAX_CHILD_NODES (256)
 #define ECS_TYPE_DB_BUCKET_COUNT (256)
@@ -347,7 +347,7 @@ typedef struct ecs_entity_info_t {
 /** A type describing a unit of work to be executed by a worker thread. */ 
 typedef struct ecs_job_t {
     ecs_entity_t system;          /* System handle */
-    EcsColSystem *system_data;    /* System to run */
+    EcsSystem *system_data;    /* System to run */
     int32_t offset;              /* Start index in row chunk */
     int32_t limit;               /* Total number of rows to process */
 } ecs_job_t;

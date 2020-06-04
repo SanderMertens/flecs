@@ -212,10 +212,11 @@ void Lookup_lookup_not_found(void);
 void Lookup_lookup_child(void);
 void Lookup_lookup_in_progress(void);
 void Lookup_lookup_child_in_progress(void);
-void Lookup_lookup_w_null_id(void);
-void Lookup_get_id(void);
-void Lookup_get_id_no_id(void);
-void Lookup_get_id_from_empty(void);
+void Lookup_lookup_w_null_name(void);
+void Lookup_get_name(void);
+void Lookup_get_name_no_name(void);
+void Lookup_get_name_from_empty(void);
+void Lookup_lookup_by_id(void);
 
 // Testsuite 'Singleton'
 void Singleton_set(void);
@@ -842,6 +843,9 @@ void Stresstests_create_delete_entity_random_components_6_threads(void);
 void Stresstests_set_entity_random_components_6_threads(void);
 void Stresstests_create_delete_entity_random_components_12_threads(void);
 void Stresstests_set_entity_random_components_12_threads(void);
+void Stresstests_create_2m_entities_1_comp(void);
+void Stresstests_create_2m_entities_bulk_1_comp(void);
+void Stresstests_add_1k_tags(void);
 
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
@@ -1683,7 +1687,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Lookup",
-        .testcase_count = 10,
+        .testcase_count = 11,
         .testcases = (bake_test_case[]){
             {
                 .id = "lookup",
@@ -1710,20 +1714,24 @@ static bake_test_suite suites[] = {
                 .function = Lookup_lookup_child_in_progress
             },
             {
-                .id = "lookup_w_null_id",
-                .function = Lookup_lookup_w_null_id
+                .id = "lookup_w_null_name",
+                .function = Lookup_lookup_w_null_name
             },
             {
-                .id = "get_id",
-                .function = Lookup_get_id
+                .id = "get_name",
+                .function = Lookup_get_name
             },
             {
-                .id = "get_id_no_id",
-                .function = Lookup_get_id_no_id
+                .id = "get_name_no_name",
+                .function = Lookup_get_name_no_name
             },
             {
-                .id = "get_id_from_empty",
-                .function = Lookup_get_id_from_empty
+                .id = "get_name_from_empty",
+                .function = Lookup_get_name_from_empty
+            },
+            {
+                .id = "lookup_by_id",
+                .function = Lookup_lookup_by_id
             }
         }
     },
@@ -4131,7 +4139,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Stresstests",
-        .testcase_count = 10,
+        .testcase_count = 13,
         .testcases = (bake_test_case[]){
             {
                 .id = "create_delete_entity_random_components",
@@ -4172,6 +4180,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_entity_random_components_12_threads",
                 .function = Stresstests_set_entity_random_components_12_threads
+            },
+            {
+                .id = "create_2m_entities_1_comp",
+                .function = Stresstests_create_2m_entities_1_comp
+            },
+            {
+                .id = "create_2m_entities_bulk_1_comp",
+                .function = Stresstests_create_2m_entities_bulk_1_comp
+            },
+            {
+                .id = "add_1k_tags",
+                .function = Stresstests_add_1k_tags
             }
         }
     },

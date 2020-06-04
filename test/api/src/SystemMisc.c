@@ -360,7 +360,7 @@ void SystemMisc_invalid_or_from_system() {
 void SystemMisc_invalid_null_string() {
     ecs_world_t *world = ecs_init();
 
-    ecs_new_system(world, "Dummy", EcsOnUpdate, NULL, Dummy);
+    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, NULL, Dummy);
 
     ecs_progress(world, 0);
 
@@ -372,7 +372,7 @@ void SystemMisc_invalid_null_string() {
 void SystemMisc_invalid_empty_string() {
     ecs_world_t *world = ecs_init();
 
-    ecs_new_system(world, "Dummy", EcsOnUpdate, "", Dummy);
+    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, "", Dummy);
 
     ecs_progress(world, 0);
 
@@ -388,7 +388,7 @@ void SystemMisc_invalid_empty_string_w_space() {
 
     test_expect_abort();
 
-    ecs_new_system(world, "Dummy", EcsOnUpdate, "  ", Dummy);
+    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, "  ", Dummy);
 
     ecs_fini(world);
 }

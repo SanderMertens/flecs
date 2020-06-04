@@ -146,8 +146,8 @@ void set_entity_random_components(
     IterData ctx = {.component = ecs_entity(Position), .component_2 = ecs_entity(Velocity), .component_3 = ecs_entity(Rotation)};
     ecs_set_context(world, &ctx);
 
-    ecs_bulk_new(world, Position, 3);
-    //ecs_bulk_new(world, Type, 500);
+    ecs_bulk_new(world, Position, 500);
+    ecs_bulk_new(world, Type, 500);
 
     if (threads) {
         ecs_set_threads(world, threads);
@@ -162,11 +162,49 @@ void set_entity_random_components(
 }
 
 void Stresstests_create_delete_entity_random_components() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Rotation);
+
+    ecs_entity_t e = ecs_bulk_new(world, 0, 1000);
+
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        add_random(world, e, ecs_entity(Position));
+        add_random(world, e, ecs_entity(Velocity));
+        add_random(world, e, ecs_entity(Rotation));
+    }
+
+    ecs_fini(world);
 }
 
 void Stresstests_set_entity_random_components() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_SYSTEM(world, Set_velocity_callback, EcsOnSet, Velocity);
+
+    ecs_entity_t e = ecs_bulk_new(world, 0, 1000);
+
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        Position pos = {10, 20};
+        set_random(world, e, ecs_entity(Position), &pos, &pos, sizeof(Position));
+
+        Velocity vel = {30, 40};
+        Velocity vel_expect = {31, 41};
+        set_random(world, e, ecs_entity(Velocity), &vel, &vel_expect, sizeof(Velocity));
+
+        Rotation rot = {50};
+        set_random(world, e, ecs_entity(Rotation), &rot, &rot, sizeof(Rotation));
+    }
+
+    ecs_fini(world);
 }
 
 void Stresstests_create_delete_entity_random_components_staged() {
@@ -199,4 +237,53 @@ void Stresstests_create_delete_entity_random_components_12_threads() {
 
 void Stresstests_set_entity_random_components_12_threads() {
     set_entity_random_components(12);
+}
+
+void Stresstests_create_2m_entities_1_comp() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+
+    int32_t i;
+    for (i = 0; i < 2000 * 1000; i ++) {
+        ecs_entity_t e = ecs_new(world, Position);
+        test_assert(e != 0);
+        test_assert(ecs_has(world, e, Position));
+    }
+
+    ecs_fini(world);
+}
+
+void Stresstests_create_2m_entities_bulk_1_comp() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_bulk_new(world, Position, 2000 * 1000);
+    test_assert(e != 0);
+
+    int32_t i;
+    for (i = 0; i < 2000 * 1000; i ++) {
+        test_assert(ecs_has(world, e + i, Position));
+    }
+
+    ecs_fini(world);
+}
+
+void Stresstests_add_1k_tags() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        ecs_add_entity(world, e, i + 1000);
+        test_assert(ecs_has_entity(world, e, i + 1000));
+    }
+
+    ecs_type_t type = ecs_get_type(world, e);
+    test_assert(type != NULL);
+    test_int(ecs_vector_count(type), 1000);
+
+    ecs_fini(world);
 }

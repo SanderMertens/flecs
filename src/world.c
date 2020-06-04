@@ -2,165 +2,6 @@
 
 /* -- Global variables -- */
 
-ecs_type_t ecs_type(EcsComponent);
-ecs_type_t ecs_type(EcsComponentLifecycle);
-ecs_type_t ecs_type(EcsTrigger);
-ecs_type_t ecs_type(EcsType);
-ecs_type_t ecs_type(EcsModule);
-ecs_type_t ecs_type(EcsPrefab);
-ecs_type_t ecs_type(EcsSystem);
-ecs_type_t ecs_type(EcsColSystem);
-ecs_type_t ecs_type(EcsName);
-ecs_type_t ecs_type(EcsHidden);
-ecs_type_t ecs_type(EcsDisabled);
-ecs_type_t ecs_type(EcsDisabledIntern);
-ecs_type_t ecs_type(EcsInactive);
-ecs_type_t ecs_type(EcsOnDemand);
-ecs_type_t ecs_type(EcsMonitor);
-ecs_type_t ecs_type(EcsPipeline);
-ecs_type_t ecs_type(EcsPipelineQuery);
-ecs_type_t ecs_type(EcsTimer);
-ecs_type_t ecs_type(EcsRateFilter);
-ecs_type_t ecs_type(EcsTickSource);
-
-static const char *ECS_COMPONENT_NAME =      "EcsComponent";
-static const char *ECS_COMPONENT_LIFECYCLE_NAME = "EcsComponentLifecycle";
-static const char *ECS_COMPONENT_TRIGGER_NAME = "EcsTrigger";
-static const char *ECS_TYPE_NAME =           "EcsType";
-static const char *ECS_MODULE_NAME =         "EcsModule";
-static const char *ECS_PREFAB_NAME =         "EcsPrefab";
-static const char *ECS_SYSTEM_NAME =         "EcsSystem";
-static const char *ECS_COL_SYSTEM_NAME =     "EcsColSystem";
-static const char *ECS_NAME_NAME =           "EcsName";
-static const char *ECS_HIDDEN_NAME =         "EcsHidden";
-static const char *ECS_DISABLED_NAME =       "EcsDisabled";
-static const char *ECS_DISABLED_INTERN_NAME ="EcsDisabledIntern";
-static const char *ECS_INACTIVE_NAME =       "EcsInactive";
-static const char *ECS_ON_DEMAND_NAME =      "EcsOnDemand";
-static const char *ECS_MONITOR_NAME =        "EcsMonitor";
-static const char *ECS_PIPELINE_NAME =       "EcsPipeline";
-static const char *ECS_PIPELINE_QUERY_NAME = "EcsPipelineQuery";
-static const char *ECS_TIMER_NAME =          "EcsTimer";
-static const char *ECS_RATE_FILTER_NAME =    "EcsRateFilter";
-static const char *ECS_TICK_SOURCE_NAME =    "EcsTickSource";
-
-/** Get type for component */
-static
-ecs_type_t bootstrap_type(
-    ecs_world_t *world,
-    ecs_entity_t entity)
-{
-    ecs_table_t *table = ecs_table_find_or_create(world, &world->stage, 
-        &(ecs_entities_t){
-            .array = (ecs_entity_t[]){entity},
-            .count = 1
-        }
-    );
-
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->type != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return table->type;
-}
-
-/** Bootstrap builtin component types and commonly used types */
-static
-void bootstrap_types(
-    ecs_world_t *world)
-{
-    ecs_type(EcsComponent) = bootstrap_type(world, ecs_entity(EcsComponent));
-    ecs_type(EcsComponentLifecycle) = bootstrap_type(world, ecs_entity(EcsComponentLifecycle));
-    ecs_type(EcsTrigger) = bootstrap_type(world, ecs_entity(EcsTrigger));
-    ecs_type(EcsType) = bootstrap_type(world, ecs_entity(EcsType));
-    ecs_type(EcsModule) = bootstrap_type(world, EcsModule);
-    ecs_type(EcsPrefab) = bootstrap_type(world, EcsPrefab);
-    ecs_type(EcsColSystem) = bootstrap_type(world, ecs_entity(EcsColSystem));
-    ecs_type(EcsName) = bootstrap_type(world, ecs_entity(EcsName));
-    ecs_type(EcsHidden) = bootstrap_type(world, EcsHidden);
-    ecs_type(EcsDisabled) = bootstrap_type(world, EcsDisabled);
-    ecs_type(EcsDisabledIntern) = bootstrap_type(world, EcsDisabledIntern);
-    ecs_type(EcsInactive) = bootstrap_type(world, EcsInactive);
-    ecs_type(EcsOnDemand) = bootstrap_type(world, EcsOnDemand);
-    ecs_type(EcsMonitor) = bootstrap_type(world, EcsMonitor);
-    ecs_type(EcsPipeline) = bootstrap_type(world, EcsPipeline);
-    ecs_type(EcsPipelineQuery) = bootstrap_type(world, ecs_entity(EcsPipelineQuery));
-    ecs_type(EcsTimer) = bootstrap_type(world, ecs_entity(EcsTimer));
-    ecs_type(EcsRateFilter) = bootstrap_type(world, ecs_entity(EcsRateFilter));
-    ecs_type(EcsTickSource) = bootstrap_type(world, ecs_entity(EcsTickSource));
-}
-
-/** Initialize component table. This table is manually constructed to bootstrap
- * flecs. After this function has been called, the builtin components can be
- * created. */
-static
-ecs_table_t* bootstrap_component_table(
-    ecs_world_t *world)
-{
-    ecs_entity_t entities[] = {ecs_entity(EcsComponent), ecs_entity(EcsName)};
-    ecs_entities_t array = {
-        .array = entities,
-        .count = 2
-    };
-
-    ecs_table_t *result = ecs_table_find_or_create(
-        world, &world->stage, &array);
-
-    ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, result);
-
-    /* Preallocate enough memory for initial components */
-    data->entities = ecs_vector_new(ecs_entity_t, EcsLastBuiltin);
-    data->record_ptrs = ecs_vector_new(ecs_record_t*, EcsLastBuiltin);
-
-    data->columns = ecs_os_malloc(sizeof(ecs_column_t) * 2);
-    ecs_assert(data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
-
-    data->columns[0].data = ecs_vector_new(EcsComponent, EcsLastBuiltin);
-    data->columns[0].size = sizeof(EcsComponent);
-    data->columns[0].alignment = ECS_ALIGNOF(EcsComponent);
-    data->columns[1].data = ecs_vector_new(EcsName, EcsLastBuiltin);
-    data->columns[1].size = sizeof(EcsName);
-    data->columns[1].alignment = ECS_ALIGNOF(EcsName);
-
-    result->column_count = 2;
-    
-    return result;
-}
-
-/** Bootstrap the EcsComponent component */
-static
-void bootstrap_component(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t entity,
-    const char *id,
-    size_t size,
-    size_t alignment)
-{
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, table);
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_column_t *columns = data->columns;
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Create record in entity index */
-    ecs_record_t *record = ecs_eis_get_or_create(&world->stage, entity);
-    record->table = table;
-
-    /* Insert row into table to store EcsComponent itself */
-    int32_t index = ecs_table_append(world, table, data, entity, record);
-    record->row = index + 1;
-
-    /* Set size and id */
-    EcsComponent *c_info = ecs_vector_first(columns[0].data, EcsComponent);
-    EcsName *id_data = ecs_vector_first(columns[1].data, EcsName);
-    
-    c_info[index].size = size;
-    c_info[index].alignment = alignment;
-    id_data[index] = id;
-}
-
 #ifndef NDEBUG
 static
 void no_threading(
@@ -386,61 +227,7 @@ ecs_world_t *ecs_init(void) {
     ecs_stage_init(world, &world->stage);
     ecs_stage_init(world, &world->temp_stage);
 
-    /* Create table that will hold components (EcsComponent, EcsName) */
-    ecs_table_t *table = bootstrap_component_table(world);
-    assert(table != NULL);
-
-    ecs_trace_1("initialize builtin components");
-    ecs_trace_push();
-
-    /* Create records for internal components */
-    bootstrap_component(world, table, ecs_entity(EcsComponent), ECS_COMPONENT_NAME, sizeof(EcsComponent), ECS_ALIGNOF(EcsComponent));
-    bootstrap_component(world, table, ecs_entity(EcsComponentLifecycle), ECS_COMPONENT_LIFECYCLE_NAME, sizeof(EcsComponentLifecycle), ECS_ALIGNOF(EcsComponentLifecycle));
-    bootstrap_component(world, table, ecs_entity(EcsTrigger), ECS_COMPONENT_TRIGGER_NAME, sizeof(EcsTrigger), ECS_ALIGNOF(EcsTrigger));
-    bootstrap_component(world, table, ecs_entity(EcsType), ECS_TYPE_NAME, sizeof(EcsType), ECS_ALIGNOF(EcsType));
-    bootstrap_component(world, table, ecs_entity(EcsSystem), ECS_SYSTEM_NAME, sizeof(EcsSystem), ECS_ALIGNOF(EcsSystem));
-    bootstrap_component(world, table, ecs_entity(EcsColSystem), ECS_COL_SYSTEM_NAME, sizeof(EcsColSystem), ECS_ALIGNOF(EcsColSystem));
-    bootstrap_component(world, table, ecs_entity(EcsName), ECS_NAME_NAME, sizeof(EcsName), ECS_ALIGNOF(EcsName));
-    bootstrap_component(world, table, ecs_entity(EcsPipelineQuery), ECS_PIPELINE_QUERY_NAME, sizeof(EcsPipelineQuery), ECS_ALIGNOF(EcsPipelineQuery));
-    bootstrap_component(world, table, ecs_entity(EcsTimer), ECS_TIMER_NAME, sizeof(EcsTimer), ECS_ALIGNOF(EcsTimer));
-    bootstrap_component(world, table, ecs_entity(EcsRateFilter), ECS_RATE_FILTER_NAME, sizeof(EcsRateFilter), ECS_ALIGNOF(EcsRateFilter));
-    bootstrap_component(world, table, ecs_entity(EcsTickSource), ECS_TICK_SOURCE_NAME, sizeof(EcsTickSource), ECS_ALIGNOF(EcsTickSource));
-
-    world->stats.last_component_id = EcsLastBuiltin;
-    world->stats.last_id = EcsWorld;
-    world->stats.min_id = 0;
-    world->stats.max_id = 0;
-
-    bootstrap_types(world);
-
-    ecs_set(world, EcsModule, EcsName, {ECS_MODULE_NAME});
-    ecs_set(world, EcsPipeline, EcsName, {ECS_PIPELINE_NAME});
-    ecs_set(world, EcsPrefab, EcsName, {ECS_PREFAB_NAME});
-    ecs_set(world, EcsHidden, EcsName, {ECS_HIDDEN_NAME});
-    ecs_set(world, EcsDisabled, EcsName, {ECS_DISABLED_NAME});
-    ecs_set(world, EcsDisabledIntern, EcsName, {ECS_DISABLED_INTERN_NAME});
-    ecs_set(world, EcsInactive, EcsName, {ECS_INACTIVE_NAME});
-    ecs_set(world, EcsOnDemand, EcsName, {ECS_ON_DEMAND_NAME});
-    ecs_set(world, EcsMonitor, EcsName, {ECS_MONITOR_NAME});
-
-    ecs_trace_pop();
-
-    /* Initialize EcsWorld */
-    ecs_set(world, EcsWorld, EcsName, {"EcsWorld"});
-    ecs_assert(ecs_get_name(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, "EcsWorld") == EcsWorld, ECS_INTERNAL_ERROR, NULL);
-
-    /* Initialize EcsSingleton */
-    ecs_set(world, EcsSingleton, EcsName, {"$"});
-    ecs_assert(ecs_get_name(world, EcsSingleton) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, "$") == EcsSingleton, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_trace_1("initialize builtin triggers");
-    ecs_trace_push();
-    ecs_init_builtins(world);
-    ecs_trace_pop();
-
-    ecs_trace_pop();
+    ecs_bootstrap(world);
 
     return world;
 }
@@ -716,6 +503,10 @@ ecs_entity_t ecs_lookup(
     ecs_world_t *world,
     const char *id)
 {   
+    if (isdigit(id[0])) {
+        return atoi(id);
+    }
+    
     return ecs_lookup_child(world, 0, id);
 }
 

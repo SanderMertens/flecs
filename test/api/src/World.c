@@ -838,7 +838,7 @@ void World_world_stats() {
     ECS_COMPONENT(world, Velocity);
 
     /* Make sure that stats are collected by requiring EcsWorldStats */
-    ecs_new_system(world, "CollectWorldStats", 0, "[in] EcsWorldStats", NULL);
+    ecs_new_system(world, 0, "CollectWorldStats", 0, "[in] EcsWorldStats", NULL);
 
     EcsWorldStats stats = {0};
 

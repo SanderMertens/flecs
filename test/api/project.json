@@ -245,10 +245,11 @@
                 "lookup_child",
                 "lookup_in_progress",
                 "lookup_child_in_progress",
-                "lookup_w_null_id",
-                "get_id",
-                "get_id_no_id",
-                "get_id_from_empty"
+                "lookup_w_null_name",
+                "get_name",
+                "get_name_no_name",
+                "get_name_from_empty",
+                "lookup_by_id"
             ]
         }, {
             "id": "Singleton",
@@ -930,7 +931,10 @@
                 "create_delete_entity_random_components_6_threads",
                 "set_entity_random_components_6_threads",
                 "create_delete_entity_random_components_12_threads",
-                "set_entity_random_components_12_threads"
+                "set_entity_random_components_12_threads",
+                "create_2m_entities_1_comp",
+                "create_2m_entities_bulk_1_comp",
+                "add_1k_tags"
             ]
         }, {
             "id": "Snapshot",

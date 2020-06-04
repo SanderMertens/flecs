@@ -64,9 +64,9 @@ void Type_type_redefine() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t type = ecs_new_type(world, "Type", "Position");
+    ecs_entity_t type = ecs_new_type(world, 0, "Type", "Position");
 
-    test_assert(type == ecs_new_type(world, "Type", "Position"));
+    test_assert(type == ecs_new_type(world, 0, "Type", "Position"));
 
     ecs_fini(world);
 }

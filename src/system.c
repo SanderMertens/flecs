@@ -82,7 +82,7 @@ static
 void register_out_columns(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsColSystem *system_data)
+    EcsSystem *system_data)
 {
     ecs_query_t *query = system_data->query;
     ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
@@ -137,10 +137,8 @@ void ecs_system_activate(
         ecs_remove_entity(world, system, EcsInactive);
     }
 
-    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
-    ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (!system_data->query) {
+    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
+    if (!system_data || !system_data->query) {
         return;
     }
 
@@ -161,7 +159,7 @@ void ecs_system_activate(
 void ecs_enable_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsColSystem *system_data,
+    EcsSystem *system_data,
     bool enabled)
 {
     ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
@@ -174,7 +172,7 @@ void ecs_enable_system(
     if (ecs_vector_count(query->tables)) {
         /* Only (de)activate system if it has non-empty tables. */
         ecs_system_activate(world, system, enabled);
-        system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
+        system_data = ecs_get_mut(world, system, EcsSystem, NULL);
     }
 
     /* Enable/disable systems that trigger on [in] enablement */
@@ -193,43 +191,29 @@ void ecs_enable_system(
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    const char *name,
     ecs_iter_action_t action,
-    char *signature)
+    ecs_query_t *query)
 {
     ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
 
-    /* Parse signature */
-    ecs_sig_t sig = {0};
-    ecs_sig_init(world, name, signature, &sig);
+    const char *name = ecs_get_name(world, system);
 
     ecs_trace_1("system #[green]%s#[reset] (%d) created with #[red]%s#[normal]", 
-        name, system, signature);
+        name, system, query->sig.expr);
     ecs_trace_push();
 
-    /* If system has FromSystem columns, add components to the system entity */
-    ecs_vector_each(sig.columns, ecs_sig_column_t, column, {
-        if (column->from_kind == EcsFromSystem) {
-            ecs_add_entity(world, system, column->is.component);
-        }
-    });    
-
-    /* Add & initialize the EcsColSystem component */
+    /* Add & initialize the EcsSystem component */
     bool is_added = false;
-    EcsColSystem *sptr = ecs_get_mut(
-        world, system, EcsColSystem, &is_added);
+    EcsSystem *sptr = ecs_get_mut(
+        world, system, EcsSystem, &is_added);
 
-    memset(sptr, 0, sizeof(EcsColSystem));
+    memset(sptr, 0, sizeof(EcsSystem));
     ecs_assert(sptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(is_added == true, ECS_UNSUPPORTED, NULL);
 
-    /* Create the query for the system */
-    ecs_query_t *query = ecs_query_new_w_sig(world, system, &sig);
-    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-
     /* Sanity check to make sure creating the query didn't add any additional
      * tags or components to the system */
-    ecs_assert(sptr == ecs_get_ptr(world, system, EcsColSystem), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(sptr == ecs_get_ptr(world, system, EcsSystem), ECS_INTERNAL_ERROR, NULL);
     sptr->query = query;
     sptr->action = action;
     sptr->entity = system;
@@ -259,7 +243,7 @@ void ecs_init_system(
 
     /* If the query has a OnDemand system tag, register its [out] columns */
     if (ecs_has_entity(world, system, EcsOnDemand)) {
-        sptr = ecs_get_mut(world, system, EcsColSystem, NULL);
+        sptr = ecs_get_mut(world, system, EcsSystem, NULL);
 
         register_out_columns(world, system, sptr);
         ecs_assert(sptr->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -274,12 +258,17 @@ void ecs_init_system(
     ecs_trace_pop();
 }
 
+
+
+
+
+
 /* -- Private API -- */
 
 void ecs_invoke_status_action(
     ecs_world_t *world,
     ecs_entity_t system,
-    const EcsColSystem *system_data,
+    const EcsSystem *system_data,
     ecs_system_status_t status)
 {
     ecs_system_status_action_t action = system_data->status_action;
@@ -289,7 +278,7 @@ void ecs_invoke_status_action(
 }
 
 void ecs_col_system_free(
-    EcsColSystem *system_data)
+    EcsSystem *system_data)
 {
     ecs_query_free(system_data->query);
     ecs_vector_free(system_data->jobs);
@@ -325,7 +314,7 @@ void ecs_set_system_status_action(
     ecs_system_status_action_t action,
     const void *ctx)
 {
-    EcsColSystem *system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
+    EcsSystem *system_data = ecs_get_mut(world, system, EcsSystem, NULL);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     system_data->status_action = action;
@@ -350,7 +339,7 @@ ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
     ecs_world_t *real_world,
     ecs_entity_t system,
-    EcsColSystem *system_data,
+    EcsSystem *system_data,
     float delta_time,
     int32_t offset,
     int32_t limit,
@@ -455,8 +444,8 @@ ecs_entity_t ecs_run_w_filter(
     ecs_get_stage(&real_world);
     bool in_progress = ecs_staging_begin(real_world);
 
-    EcsColSystem *system_data = (EcsColSystem*)ecs_get_ptr(
-        real_world, system, EcsColSystem);
+    EcsSystem *system_data = (EcsSystem*)ecs_get_ptr(
+        real_world, system, EcsSystem);
     assert(system_data != NULL);
 
     ecs_entity_t interrupted_by = ecs_run_intern(
@@ -492,8 +481,12 @@ void ecs_run_monitor(
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t system = query->system;
-    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!system_data->action) {
+        return;
+    }
 
     ecs_rows_t rows = {0};
     ecs_query_set_rows( world, stage, query, &rows, 
@@ -522,7 +515,7 @@ void ecs_set_system_context(
     ecs_entity_t system,
     const void *ctx)
 {
-    EcsColSystem *system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
+    EcsSystem *system_data = ecs_get_mut(world, system, EcsSystem, NULL);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
     system_data->ctx = (void*)ctx;
 }
@@ -531,7 +524,7 @@ void* ecs_get_system_context(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
     return system_data->ctx;
 }

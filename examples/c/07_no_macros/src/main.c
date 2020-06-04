@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     ecs_entity_t FLECS__EVelocity = ecs_new_component(world, "Velocity", sizeof(Velocity), ECS_ALIGNOF(Velocity));
 
     /* Register system */
-    ecs_new_system(world, "Move", EcsOnUpdate, "Position, Velocity", Move);
+    ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position, Velocity", Move);
 
     /* Create entity */
     ecs_entity_t MyEntity = ecs_new_w_type(world, 0);

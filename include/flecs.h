@@ -235,6 +235,7 @@ typedef struct ecs_world_info_t {
     int32_t systems_ran_frame;  /* Total number of systems ran in last frame */
 } ecs_world_info_t;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Public builtin components
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,14 +273,6 @@ typedef struct EcsTrigger {
     void *ctx;
 } EcsTrigger;
 
-/* Component used for registering systems */
-typedef struct EcsSystem {
-    ecs_iter_action_t action;
-    char *signature;
-    ecs_entity_t pipeline;
-    ecs_entity_t phase;
-} EcsSystem;
-
 /* Runtime properties of pipeline */
 typedef struct EcsPipelineQuery {
     ecs_query_t *query;
@@ -312,6 +305,31 @@ typedef struct EcsTickSource {
 } EcsTickSource;
 
 #include "flecs/util/api_support.h"
+
+/* Signature expression */
+typedef struct EcsSignatureExpr {
+    const char *expr;
+} EcsSignatureExpr;
+
+/* Parsed signature */
+typedef struct EcsSignature {
+    ecs_sig_t signature;
+} EcsSignature;
+
+/* Query component */
+typedef struct EcsQuery {
+    ecs_query_t *query;
+} EcsQuery;
+
+/* System action */
+typedef struct EcsSystemAction {
+    ecs_iter_action_t action;
+} EcsSystemAction;
+
+/* System context */
+typedef struct EcsSystemCtx {
+    void *ctx;
+} EcsSystemCtx;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -360,7 +378,6 @@ extern ecs_type_t
     ecs_type(EcsModule),
     ecs_type(EcsPrefab),
     ecs_type(EcsSystem),
-    ecs_type(EcsColSystem),
     ecs_type(EcsName),
     ecs_type(EcsHidden),
     ecs_type(EcsDisabled),
@@ -372,20 +389,29 @@ extern ecs_type_t
     ecs_type(EcsPipelineQuery),
     ecs_type(EcsTimer),
     ecs_type(EcsRateFilter),
-    ecs_type(EcsTickSource);
+    ecs_type(EcsTickSource),
+    ecs_type(EcsSignatureExpr),
+    ecs_type(EcsSignature),
+    ecs_type(EcsQuery),
+    ecs_type(EcsSystemAction),
+    ecs_type(EcsSystemCtx);
 
 /** Builtin component ids */
 #define FLECS__EEcsComponent (1)
 #define FLECS__EEcsComponentLifecycle (2)
 #define FLECS__EEcsTrigger (3)
 #define FLECS__EEcsType (4)
-#define FLECS__EEcsSystem (5)
-#define FLECS__EEcsColSystem (6)
+#define FLECS__EEcsSystem (6)
 #define FLECS__EEcsName (7)
 #define FLECS__EEcsPipelineQuery (8)
 #define FLECS__EEcsTimer (9)
 #define FLECS__EEcsRateFilter (10)
 #define FLECS__EEcsTickSource (11)
+#define FLECS__EEcsSignatureExpr (12)
+#define FLECS__EEcsSignature (13)
+#define FLECS__EEcsQuery (14)
+#define FLECS__EEcsSystemAction (15)
+#define FLECS__EEcsSystemCtx (16)
 
 /* Builtin tag ids */
 #define EcsModule (ECS_HI_COMPONENT_ID + 0)
@@ -420,8 +446,8 @@ extern ecs_type_t
 #define EcsSingleton ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
 
 /** Value used to quickly check if component is builtin */
-#define EcsLastInternal (ecs_entity(EcsColSystem))
-#define EcsLastBuiltin (ecs_entity(EcsTickSource))
+#define EcsLastInternal (ecs_entity(EcsSystem))
+#define EcsLastBuiltin (ecs_entity(EcsSystemCtx))
 
 /** This allows passing 0 as type to functions that accept types */
 #define FLECS__TNULL 0
@@ -445,7 +471,7 @@ extern ecs_type_t
  * ECS_ENTITY(world, MyEntity, Position, Velocity, CHILDOF | MyParentEntity);
  */ 
 #define ECS_ENTITY(world, id, ...)\
-    ecs_entity_t id = ecs_new_entity(world, #id, #__VA_ARGS__);\
+    ecs_entity_t id = ecs_new_entity(world, 0, #id, #__VA_ARGS__);\
     (void)id;
 
 /** Declare a prefab.
@@ -464,7 +490,7 @@ extern ecs_type_t
  * ECS_ENTITY(world, MyEntity, Position, Velocity, INSTANCEOF | MyPrefab);
  */
 #define ECS_PREFAB(world, id, ...) \
-    ecs_entity_t id = ecs_new_prefab(world, #id, #__VA_ARGS__);\
+    ecs_entity_t id = ecs_new_prefab(world, 0, #id, #__VA_ARGS__);\
     (void)id;
 
 /** Declare a component.
@@ -479,7 +505,7 @@ extern ecs_type_t
  * ECS_ENTITY(world, MyEntity, Position);
  */
 #define ECS_COMPONENT(world, id) \
-    ECS_ENTITY_VAR(id) = ecs_new_component(world, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ECS_ENTITY_VAR(id) = ecs_new_component(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
@@ -511,7 +537,7 @@ extern ecs_type_t
  * ECS_ENTITY(world, MyEntity, Position, MyType);
  */
 #define ECS_TYPE(world, id, ...) \
-    ecs_entity_t id = ecs_new_type(world, #id, #__VA_ARGS__);\
+    ecs_entity_t id = ecs_new_type(world, 0, #id, #__VA_ARGS__);\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, id);\
     (void)id;\
     (void)ecs_type(id);\
@@ -555,14 +581,14 @@ extern ecs_type_t
 
 #define ECS_SYSTEM(world, name, kind, ...) \
     ecs_iter_action_t ecs_iter_action(name) = name;\
-    ecs_entity_t name = ecs_new_system(world, #name, kind, #__VA_ARGS__, ecs_iter_action(name));\
+    ecs_entity_t name = ecs_new_system(world, 0, #name, kind, #__VA_ARGS__, ecs_iter_action(name));\
     (void)ecs_iter_action(name);\
     (void)name;
 
 #endif
 
 #define ECS_TRIGGER(world, name, kind, component, ctx) \
-    ecs_entity_t __F##name = ecs_new_trigger(world, #name, kind, #component, name, ctx);\
+    ecs_entity_t __F##name = ecs_new_trigger(world, 0, #name, kind, #component, name, ctx);\
     ecs_entity_t name = __F##name;\
     (void)__F##name;\
     (void)name;
@@ -1500,13 +1526,8 @@ bool ecs_filter_next(
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Enable or disable a system.
- * This operation enables or disables a system. A disabled system will not be
- * ran during ecs_progress or when components must be initialized or
- * deinitialized. Systems are enabled by default.
- *
- * This operation expects a valid system handle, or in other words, an entity
- * with the EcsSystem component. If a handle to an entity is provided that does
- * not have this component, the operation will fail.
+ * This operation enables or disables an entity by adding or removing the
+ * EcsDisabled tag.
  *
  * @param world The world.
  * @param system The system to enable or disable.
@@ -1519,11 +1540,8 @@ void ecs_enable(
     ecs_entity_t system,
     bool enabled);
 
-/** Returns the enabled status for a system / entity.
- * This operation will return whether a system is enabled or disabled. Currently
- * only systems can be enabled or disabled, but this operation does not fail
- * when a handle to an entity is provided that is not a system. If this
- * operation is called on a non-system entity, the operation will return true.
+/** Returns the enabled status for an entity.
+ * Returns true if entity is Disabled (has the EcsDisabled) tag.
  *
  * @param world The world.
  * @param system The system to check.
@@ -2148,7 +2166,7 @@ ecs_entity_t ecs_import_from_library(
 /** Define module
  */
 #define ECS_MODULE(world, id)\
-    ECS_ENTITY_VAR(id) = ecs_new_module(world, #id, sizeof(id), ECS_ALIGNOF(id));\
+    ECS_ENTITY_VAR(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\

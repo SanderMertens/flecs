@@ -7,6 +7,10 @@
 #include "flecs/util/entity_index.h"
 #include "flecs/util/table.h"
 
+/* Bootstrap world */
+void ecs_bootstrap(
+    ecs_world_t *world);
+
 /* Initialize builtins */
 void ecs_init_builtins(
     ecs_world_t *world);
@@ -327,9 +331,8 @@ void ecs_sig_deinit(
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    const char *name,
     ecs_iter_action_t action,
-    char *signature);
+    ecs_query_t *query);
 
 /* Invoked when system becomes active / inactive */
 void ecs_system_activate(
@@ -341,7 +344,7 @@ void ecs_system_activate(
 void ecs_invoke_status_action(
     ecs_world_t *world,
     ecs_entity_t system,
-    const EcsColSystem *system_data,
+    const EcsSystem *system_data,
     ecs_system_status_t status);
 
 /* Check if all non-table column constraints are met */
@@ -368,7 +371,7 @@ ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
     ecs_world_t *real_world,
     ecs_entity_t system,
-    EcsColSystem *system_data,
+    EcsSystem *system_data,
     float delta_time,
     int32_t offset,
     int32_t limit,
@@ -414,7 +417,7 @@ void ecs_run_monitor(
 void ecs_enable_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsColSystem *system_data,
+    EcsSystem *system_data,
     bool enabled);
 
 ////////////////////////////////////////////////////////////////////////////////

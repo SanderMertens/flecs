@@ -1529,7 +1529,7 @@ bool ecs_dbg_match_entity(
     ecs_dbg_entity_t dbg;
     ecs_dbg_entity(world, entity, &dbg);
 
-    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
     if (!system_data) {
         failure_info_out->reason = EcsMatchNotASystem;
         failure_info_out->column = -1;

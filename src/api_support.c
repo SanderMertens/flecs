@@ -139,6 +139,7 @@ ecs_entity_t lookup(
             ecs_abort(ECS_ALREADY_DEFINED, name);
         }
     }
+    
     return result;
 }
 
@@ -155,6 +156,7 @@ ecs_type_t ecs_type_from_str(
 
 ecs_entity_t ecs_new_entity(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     const char *expr)
 {
@@ -162,7 +164,8 @@ ecs_entity_t ecs_new_entity(
 
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
-        result = ecs_new_w_type(world, type.normalized);
+        result = e ? e : ecs_new(world, 0);
+        ecs_add_type(world, result, type.normalized);
         ecs_set(world, result, EcsName, {name});
     }
 
@@ -171,6 +174,7 @@ ecs_entity_t ecs_new_entity(
 
 ecs_entity_t ecs_new_prefab(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     const char *expr)
 {
@@ -178,7 +182,8 @@ ecs_entity_t ecs_new_prefab(
 
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
-        result = ecs_new_w_entity(world, EcsPrefab);
+        result = e ? e : ecs_new(world, 0);
+        ecs_add_entity(world, result, EcsPrefab);
         ecs_add_type(world, result, type.normalized);
         ecs_set(world, result, EcsName, {name});
     } else {
@@ -192,6 +197,7 @@ ecs_entity_t ecs_new_prefab(
 
 ecs_entity_t ecs_new_component(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     size_t size,
     size_t alignment)
@@ -201,8 +207,7 @@ ecs_entity_t ecs_new_component(
 
     ecs_entity_t result = lookup(world, name, ecs_type(EcsComponent));
     if (!result) {
-        result = ++ world->stats.last_component_id;
-                
+        result = e ? e : ++ world->stats.last_component_id;                
         ecs_set(world, result, EcsName, {name});
         ecs_set(world, result, EcsComponent, {
             .size = size,
@@ -224,6 +229,7 @@ ecs_entity_t ecs_new_component(
 
 ecs_entity_t ecs_new_module(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     size_t size,
     size_t alignment)
@@ -231,7 +237,7 @@ ecs_entity_t ecs_new_module(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    ecs_entity_t result = ecs_new_component(world, name, size, alignment);
+    ecs_entity_t result = ecs_new_component(world, e, name, size, alignment);
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Add module tag */
@@ -246,6 +252,7 @@ ecs_entity_t ecs_new_module(
 
 ecs_entity_t ecs_new_type(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     const char *expr)
 {
@@ -254,7 +261,8 @@ ecs_entity_t ecs_new_type(
     
     ecs_entity_t result = lookup(world, name, ecs_type(EcsType));
     if (!result) {
-        result = ecs_set(world, result, EcsName, {name});
+        result = e ? e : ecs_new(world, 0);
+        ecs_set(world, result, EcsName, {name});
         ecs_set(world, result, EcsType, {
             .type = type.type, .normalized = type.normalized
         });        
@@ -277,6 +285,7 @@ ecs_entity_t ecs_new_type(
 
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     ecs_entity_t tag,
     char *signature,
@@ -284,9 +293,10 @@ ecs_entity_t ecs_new_system(
 {
     assert(world->magic == ECS_WORLD_MAGIC);  
     
-    ecs_entity_t result = lookup(world, name, ecs_type(EcsSystem));
+    ecs_entity_t result = lookup(world, name, ecs_type(EcsSignatureExpr));
     if (!result) {
-        result = ecs_set(world, result, EcsName, {name});
+        result = e ? e : ecs_new(world, 0);
+        ecs_set(world, result, EcsName, {name});
         if (tag) {
             ecs_add_entity(world, result, tag);
 
@@ -298,20 +308,14 @@ ecs_entity_t ecs_new_system(
             }
         }
 
-        ecs_set(world, result, EcsSystem, {
-            .action = action,
-            .signature = signature
-        });
+        ecs_set(world, result, EcsSignatureExpr, {signature});
+        ecs_set(world, result, EcsSystemAction, {action});
     } else {
-        EcsSystem *ptr = ecs_get_mut(world, result, EcsSystem, NULL);
+        EcsSignatureExpr *ptr = ecs_get_mut(world, result, EcsSignatureExpr, NULL);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (strcmp(ptr->signature, signature)) {
+        if (strcmp(ptr->expr, signature)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
-        }
-
-        if (ptr->action != action) {
-            ptr->action = action;
         }
     }
 
@@ -320,6 +324,7 @@ ecs_entity_t ecs_new_system(
 
 ecs_entity_t ecs_new_trigger(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     ecs_entity_t kind,
     const char *component_name,
@@ -333,7 +338,8 @@ ecs_entity_t ecs_new_trigger(
     
     ecs_entity_t result = lookup(world, name, ecs_type(EcsTrigger));
     if (!result) {
-        result = ecs_set(world, result, EcsName, {name});
+        result = e ? e : ecs_new(world, 0);
+        ecs_set(world, result, EcsName, {name});
         ecs_set(world, result, EcsTrigger, {
             .kind = kind,
             .action = action,
@@ -362,12 +368,13 @@ ecs_entity_t ecs_new_trigger(
 
 ecs_entity_t ecs_new_pipeline(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     const char *expr)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    ecs_entity_t result = ecs_new_type(world, name, expr);
+    ecs_entity_t result = ecs_new_type(world, e, name, expr);
     ecs_assert(ecs_get_ptr(world, result, EcsType) != NULL, 
         ECS_INTERNAL_ERROR, NULL);
 

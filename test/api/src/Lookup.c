@@ -12,7 +12,7 @@ void Lookup_lookup() {
     ecs_fini(world);
 }
 
-void Lookup_lookup_w_null_id() {
+void Lookup_lookup_w_null_name() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, MyEntity, 0);
@@ -121,7 +121,7 @@ void Lookup_lookup_child_in_progress() {
     ecs_fini(world);
 }
 
-void Lookup_get_id() {
+void Lookup_get_name() {
     ecs_world_t *world = ecs_init();
 
     /* Ensure this doesn't crash the lookup function */
@@ -133,7 +133,7 @@ void Lookup_get_id() {
     ecs_fini(world);
 }
 
-void Lookup_get_id_no_id() {
+void Lookup_get_name_no_name() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -146,13 +146,22 @@ void Lookup_get_id_no_id() {
     ecs_fini(world);
 }
 
-void Lookup_get_id_from_empty() {
+void Lookup_get_name_from_empty() {
     ecs_world_t *world = ecs_init();
 
     /* Ensure this doesn't crash the lookup function */
     ecs_entity_t e = ecs_new(world, 0);
     const char *id = ecs_get_name(world, e);
     test_assert(id == NULL);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_by_id() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_lookup(world, "1000");
+    test_int(e, 1000);
 
     ecs_fini(world);
 }

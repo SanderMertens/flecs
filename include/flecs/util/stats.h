@@ -37,14 +37,14 @@ typedef struct EcsRowSystemMemoryStats {
 } EcsRowSystemMemoryStats;
 
 /* Memory statistics on column (periodic) systems */
-typedef struct EcsColSystemMemoryStats {
+typedef struct EcsSystemMemoryStats {
     int32_t base_memory_bytes;              /* Size of the component datatype */
     ecs_memory_stat_t columns_memory;       /* Memory in use for columns */
     ecs_memory_stat_t active_tables_memory; /* Memory in use for active tables */
     ecs_memory_stat_t inactive_tables_memory; /* Memory in use for inactive tables */
     ecs_memory_stat_t jobs_memory;          /* Memory in use for jobs */
     int32_t other_memory_bytes;             /* Remaining memory in use */
-} EcsColSystemMemoryStats;
+} EcsSystemMemoryStats;
 
 /* Memory statistics for a world */
 typedef struct EcsMemoryStats {
@@ -138,7 +138,7 @@ typedef struct FlecsStats {
     ECS_DECLARE_COMPONENT(EcsWorldStats);
     ECS_DECLARE_COMPONENT(EcsMemoryStats);
     ECS_DECLARE_COMPONENT(EcsSystemStats);
-    ECS_DECLARE_COMPONENT(EcsColSystemMemoryStats);
+    ECS_DECLARE_COMPONENT(EcsSystemMemoryStats);
     ECS_DECLARE_COMPONENT(EcsRowSystemMemoryStats);
     ECS_DECLARE_COMPONENT(EcsComponentStats);
     ECS_DECLARE_COMPONENT(EcsTableStats);
@@ -156,7 +156,7 @@ void FlecsStatsImport(
     ECS_IMPORT_COMPONENT(handles, EcsWorldStats);\
     ECS_IMPORT_COMPONENT(handles, EcsMemoryStats);\
     ECS_IMPORT_COMPONENT(handles, EcsSystemStats);\
-    ECS_IMPORT_COMPONENT(handles, EcsColSystemMemoryStats);\
+    ECS_IMPORT_COMPONENT(handles, EcsSystemMemoryStats);\
     ECS_IMPORT_COMPONENT(handles, EcsRowSystemMemoryStats);\
     ECS_IMPORT_COMPONENT(handles, EcsComponentStats);\
     ECS_IMPORT_COMPONENT(handles, EcsTableStats);\

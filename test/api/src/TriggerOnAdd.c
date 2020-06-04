@@ -67,8 +67,6 @@ void Set_current(ecs_rows_t *rows) {
     IterData *ctx = ecs_get_context(rows->world);
     
     ecs_entity_t ecs_entity(Rotation) = ctx->component;
-    ecs_type_t ecs_type(Rotation) = ecs_type_from_entity(
-            rows->world, ecs_entity(Rotation));
 
     int i;
     for (i = 0; i < rows->count; i ++) {

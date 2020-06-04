@@ -220,14 +220,8 @@ void Pipeline_system_order_after_new_system_lower_id() {
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
-    /* Create new system with SysA id */
-    ecs_set(world, Sys, EcsSystem, {
-        .action = SysA,
-        .signature = "Position"
-    });
-
-    ecs_add_entity(world, Sys, EcsOnUpdate);
-    ecs_add_entity(world, Sys, ECS_XOR | ecs_get_pipeline(world));
+    /* Create new system with Sys id */
+    ecs_new_system(world, Sys, "SysA", EcsOnUpdate, "Position", SysA);
 
     ecs_progress(world, 1);
 
@@ -259,14 +253,8 @@ void Pipeline_system_order_after_new_system_inbetween_id() {
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
-    /* Create new system with SysA id */
-    ecs_set(world, Sys, EcsSystem, {
-        .action = SysB,
-        .signature = "Position"
-    });
-
-    ecs_add_entity(world, Sys, EcsOnUpdate);
-    ecs_add_entity(world, Sys, ECS_XOR | ecs_get_pipeline(world));
+    /* Create new system with Sys id */
+    ecs_new_system(world, Sys, "SysB", EcsOnUpdate, "Position", SysB);
 
     ecs_progress(world, 1);
 
@@ -298,14 +286,8 @@ void Pipeline_system_order_after_new_system_higher_id() {
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
-    /* Create new system with SysA id */
-    ecs_set(world, Sys, EcsSystem, {
-        .action = SysC,
-        .signature = "Position"
-    });
-
-    ecs_add_entity(world, Sys, EcsOnUpdate);
-    ecs_add_entity(world, Sys, ECS_XOR | ecs_get_pipeline(world));
+    /* Create new system with Sys id */
+    ecs_new_system(world, Sys, "SysC", EcsOnUpdate, "Position", SysC);
 
     ecs_progress(world, 1);
 

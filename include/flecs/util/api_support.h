@@ -147,12 +147,14 @@ typedef struct ecs_filter_t ecs_type_filter_t;
 FLECS_EXPORT
 ecs_entity_t ecs_new_entity(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *id,
     const char *components);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_component(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *id,
     size_t size,
     size_t alignment);
@@ -160,6 +162,7 @@ ecs_entity_t ecs_new_component(
 FLECS_EXPORT
 ecs_entity_t ecs_new_module(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     size_t size,
     size_t alignment);
@@ -167,18 +170,21 @@ ecs_entity_t ecs_new_module(
 FLECS_EXPORT
 ecs_entity_t ecs_new_type(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *id,
     const char *components);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_prefab(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *id,
     const char *sig);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     ecs_entity_t phase,
     char *signature,
@@ -187,6 +193,7 @@ ecs_entity_t ecs_new_system(
 FLECS_EXPORT
 ecs_entity_t ecs_new_trigger(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     ecs_entity_t kind,
     const char *component,
@@ -196,6 +203,7 @@ ecs_entity_t ecs_new_trigger(
 FLECS_EXPORT
 ecs_entity_t ecs_new_pipeline(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     const char *expr);
 
