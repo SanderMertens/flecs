@@ -369,7 +369,7 @@ void Set_modified_w_on_set() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TRIGGER(world, OnSetPosition, EcsOnSet, Position, NULL);
+    ECS_SYSTEM(world, OnSetPosition, EcsOnSet, Position);
 
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);

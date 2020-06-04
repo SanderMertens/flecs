@@ -15,6 +15,27 @@ void ecs_notify_queries_of_table(
     }
 }
 
+/* Count number of columns with data (excluding tags) */
+static
+int32_t data_column_count(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    int32_t count = 0;
+    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
+        ecs_entity_t component = *c_ptr;
+
+        /* Typically all components will be clustered together at the start of
+         * the type as components are created from a separate id pool, and type
+         * vectors are sorted. */
+        if (ecs_has(world, component, EcsComponent)) {
+            count = c_ptr_i + 1;
+        }
+    });
+
+    return count;
+}
+
 static
 ecs_type_t entities_to_type(
     ecs_entities_t *entities)
@@ -136,10 +157,13 @@ void init_table(
     table->flags = 0;
     table->dirty_state = NULL;
     table->monitors = NULL;
+    table->on_set = NULL;
+    table->on_set_all = NULL;
     
     init_edges(world, stage, table);
 
     table->queries = NULL;
+    table->column_count = data_column_count(world, table);
 }
 
 static
@@ -215,6 +239,8 @@ void add_entity_to_type(
     }
 
     out->count = el;
+
+    ecs_assert(out->count != 0, ECS_INTERNAL_ERROR, NULL);
 }
 
 static
@@ -231,9 +257,11 @@ void remove_entity_from_type(
         ecs_entity_t e = array[i];
         if (e != remove) {
             out->array[el ++] = e;
-            ecs_assert(el < count, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(el <= count, ECS_INTERNAL_ERROR, NULL);
         }
     }
+
+    out->count = el;
 }
 
 static
@@ -334,7 +362,9 @@ ecs_table_t *find_or_create_table_include(
 
     ecs_table_t *result = ecs_table_find_or_create(world, stage, &entities);
     
-    create_backlink_after_add(result, node, add);
+    if (result != node) {
+        create_backlink_after_add(result, node, add);
+    }
 
     return result;
 }
@@ -350,8 +380,8 @@ ecs_table_t *find_or_create_table_exclude(
     int32_t count = ecs_vector_count(type);
 
     ecs_entities_t entities = {
-        .array = ecs_os_alloca(ecs_entity_t, count - 1),
-        .count = count - 1
+        .array = ecs_os_alloca(ecs_entity_t, count),
+        .count = count
     };
 
     remove_entity_from_type(type, remove, &entities);
@@ -361,7 +391,9 @@ ecs_table_t *find_or_create_table_exclude(
         return NULL;
     }
 
-    create_backlink_after_remove(result, node, remove);
+    if (result != node) {
+        create_backlink_after_remove(result, node, remove);
+    }
 
     return result;    
 }
@@ -674,7 +706,7 @@ ecs_table_t *find_or_create(
     ecs_entities_t *entities)
 {    
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);    
 
     int32_t count = entities->count;
     bool is_ordered = true, order_checked = false;
@@ -692,6 +724,9 @@ ecs_table_t *find_or_create(
             edge = ecs_map_get(table->hi_edges, ecs_edge_t, e);
             if (edge) {
                 table = edge->add;
+
+                ecs_assert(!table || ((i + 1) == ecs_vector_count(table->type)), 
+                    ECS_INTERNAL_ERROR, NULL);
             } else {
                 edge = get_edge(table, e);
                 table = NULL;
@@ -712,7 +747,7 @@ ecs_table_t *find_or_create(
                 * progressively.*/
 
             /* First, determine if the entities array is ordered. Do this
-                * only once per lookup */
+             * only once per lookup */
             if (!order_checked) {
                 is_ordered = ecs_entity_array_is_ordered(entities);
                 order_checked = true;
@@ -725,13 +760,13 @@ ecs_table_t *find_or_create(
                     .count = i + 1
                 };
 
-                /* Check for constraint violations */
 #ifndef NDEBUG
+                /* Check for constraint violations */
                 verify_constraints(world, &table_entities);
 #endif
 
                 /* If the original array is ordered and the edge was empty, 
-                    * the table does not exist, so create it */
+                 * the table does not exist, so create it */
                 if (stage != &world->stage) {
                     /* If we're in staged mode and we have been searching
                      * the main stage tables, find or create the table in 

@@ -7,6 +7,10 @@
 #include "flecs/util/entity_index.h"
 #include "flecs/util/table.h"
 
+/* Bootstrap world */
+void ecs_bootstrap(
+    ecs_world_t *world);
+
 /* Initialize builtins */
 void ecs_init_builtins(
     ecs_world_t *world);
@@ -81,7 +85,12 @@ ecs_stage_t *ecs_get_stage(
     ecs_world_t **world_ptr);
 
 /* Get component callbacks */
-ecs_component_data_t *ecs_get_component_data(
+ecs_c_info_t *ecs_get_c_info(
+    ecs_world_t *world,
+    ecs_entity_t component);
+
+/* Get or create component callbacks */
+ecs_c_info_t * ecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component);
 
@@ -171,7 +180,8 @@ void ecs_run_init_actions(
     int32_t row,
     int32_t count,
     ecs_entities_t components,
-    ecs_comp_mask_t set_mask);
+    ecs_comp_mask_t set_mask,
+    bool run_on_set);
 
 void ecs_run_deinit_actions(
     ecs_world_t *world,
@@ -191,6 +201,26 @@ void ecs_run_component_trigger(
     int32_t row,
     int32_t count);
 
+void ecs_run_set_actions(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_c_info_t *c_info,
+    ecs_entity_t component,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count);
+
+void ecs_run_set_systems(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entities_t *components,
+    ecs_table_t *table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    bool set_all);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Table API
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,12 +233,7 @@ void ecs_init_root_table(
 void ecs_table_register_query(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_query_t *query);
-
-void ecs_table_register_monitor(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t system,
+    ecs_query_t *query,
     int32_t matched_table_index);
 
 void ecs_table_unregister_monitor(
@@ -275,11 +300,6 @@ void ecs_query_match_table(
     ecs_query_t *query,
     ecs_table_t *table);
 
-void ecs_query_set_monitor(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    bool is_monitor);
-
 void ecs_query_set_rows(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -311,9 +331,9 @@ void ecs_sig_deinit(
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    const char *name,
     ecs_iter_action_t action,
-    char *signature);
+    ecs_query_t *query,
+    void *ctx);
 
 /* Invoked when system becomes active / inactive */
 void ecs_system_activate(
@@ -325,7 +345,7 @@ void ecs_system_activate(
 void ecs_invoke_status_action(
     ecs_world_t *world,
     ecs_entity_t system,
-    const EcsColSystem *system_data,
+    const EcsSystem *system_data,
     ecs_system_status_t status);
 
 /* Check if all non-table column constraints are met */
@@ -352,7 +372,7 @@ ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
     ecs_world_t *real_world,
     ecs_entity_t system,
-    EcsColSystem *system_data,
+    EcsSystem *system_data,
     float delta_time,
     int32_t offset,
     int32_t limit,
@@ -389,14 +409,16 @@ void ecs_measure_system_time(
 void ecs_run_monitor(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_monitor_t *monitor,
+    ecs_matched_query_t *monitor,
+    ecs_entities_t *components,
     int32_t row,
-    int32_t count);
+    int32_t count,
+    ecs_entity_t *entities);
 
 void ecs_enable_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    EcsColSystem *system_data,
+    EcsSystem *system_data,
     bool enabled);
 
 ////////////////////////////////////////////////////////////////////////////////

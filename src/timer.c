@@ -86,17 +86,17 @@ void ecs_init_timer_builtins(
     ecs_world_t *world)
 {
     /* Add EcsTickSource to timers and rate filters */
-    ecs_new_system(world, "EcsAddTickSource", EcsPreFrame, 
+    ecs_new_system(world, 0, "EcsAddTickSource", EcsPreFrame, 
         "[in] EcsTimer || EcsRateFilter, [out] !EcsTickSource", 
         EcsAddTickSource);
 
     /* Timer handling */
-    ecs_new_system(world, "EcsProgressTimers", EcsPreFrame, 
+    ecs_new_system(world, 0, "EcsProgressTimers", EcsPreFrame, 
         "EcsTimer, EcsTickSource", 
         EcsProgressTimers);
     
     /* Rate filter handling */
-    ecs_new_system(world, "EcsProgressRateFilters", EcsPreFrame, 
+    ecs_new_system(world, 0, "EcsProgressRateFilters", EcsPreFrame, 
         "[in] EcsRateFilter, [out] EcsTickSource", 
         EcsProgressRateFilters);    
 }
@@ -114,7 +114,7 @@ ecs_entity_t ecs_set_timeout(
         .active = true
     });
 
-    EcsColSystem *system_data = ecs_get_mut(world, timer, EcsColSystem, NULL);
+    EcsSystem *system_data = ecs_get_mut(world, timer, EcsSystem, NULL);
     if (system_data) {
         system_data->tick_source = timer;
     }
@@ -149,7 +149,7 @@ ecs_entity_t ecs_set_interval(
         .active = true
     });
 
-    EcsColSystem *system_data = ecs_get_mut(world, timer, EcsColSystem, NULL);
+    EcsSystem *system_data = ecs_get_mut(world, timer, EcsSystem, NULL);
     if (system_data) {
         system_data->tick_source = timer;
     }  
@@ -209,7 +209,7 @@ ecs_entity_t ecs_set_rate_filter(
         .src = source
     });
 
-    EcsColSystem *system_data = ecs_get_mut(world, filter, EcsColSystem, NULL);
+    EcsSystem *system_data = ecs_get_mut(world, filter, EcsSystem, NULL);
     if (system_data) {
         system_data->tick_source = filter;
     }  
@@ -226,7 +226,7 @@ void ecs_set_tick_source(
     ecs_assert(system != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(tick_source != 0, ECS_INVALID_PARAMETER, NULL);
 
-    EcsColSystem *system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
+    EcsSystem *system_data = ecs_get_mut(world, system, EcsSystem, NULL);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     system_data->tick_source = tick_source;

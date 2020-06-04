@@ -34,20 +34,6 @@
  * (significantly) higher memory usage. */
 #define ECS_HI_ENTITY_ID (1000000)
 
-/** This reserves entity ids for components. Regular entity ids will start after
- * this constant. This affects performance of table traversal, as edges with ids 
- * lower than this constant are looked up in an array, whereas constants higher
- * than this id are looked up in a map. Increasing this value can improve
- * performance at the cost of (significantly) higher memory usage. */
-#define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
-
-/* This is _not_ the max number of entities that can be of a given type. This 
- * constant defines the maximum number of components, prefabs and parents can be
- * in one type. This limit serves two purposes: detect errors earlier (assert on
- * very large types) and allow for more efficient allocation strategies (like
- * using alloca for temporary buffers). */
-#define ECS_MAX_ENTITIES_IN_TYPE (256)
-
 /** These values are used to verify validity of the pointers passed into the API
  * and to allow for passing a thread as a world to some API calls (this allows
  * for transparently passing thread context to API functions) */
@@ -74,13 +60,7 @@ typedef int (*ecs_parse_action_t)(
     const char *source,
     void *ctx);
 
-typedef enum EcsPipelineOp {
-    EcsPipelineRun,
-    EcsPipelineMerge
-} EcsPipelineOp;
-
 typedef struct ecs_pipeline_op_t {
-    EcsPipelineOp kind;
     int32_t count;
 } ecs_pipeline_op_t;
 
@@ -91,14 +71,14 @@ struct ecs_column_t {
     uint16_t alignment;              /* Column alignment */
 };
 
-/** Table component data and entity ids */
+/** Stage-specific component data */
 struct ecs_data_t {
     ecs_vector_t *entities;
     ecs_vector_t *record_ptrs;
     ecs_column_t *columns;
     ecs_stage_t *stage;
     int32_t change_count;        /* Low-cost counter to keep track of changes */
-    bool marked_dirty;           /* Was table already added to dirty array? */  
+    bool marked_dirty;           /* Was table marked dirty for current stage? */  
 };
 
 #define EcsTableHasBuiltins (1)
@@ -116,10 +96,10 @@ typedef struct ecs_edge_t {
 } ecs_edge_t;
 
 /* Table monitor */
-typedef struct ecs_monitor_t {
-    ecs_entity_t system;
+typedef struct ecs_matched_query_t {
+    ecs_query_t *query;
     int32_t matched_table_index;
-} ecs_monitor_t;
+} ecs_matched_query_t;
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
@@ -127,16 +107,26 @@ typedef struct ecs_monitor_t {
  * table is created, it is automatically matched with existing column systems */
 struct ecs_table_t {
     ecs_type_t type;                  /* Identifies table type in type_index */
+
+    /* Graph traversal */
     ecs_edge_t *lo_edges;             /* Edges to low entity ids */
     ecs_map_t *hi_edges;              /* Edges to high entity ids */
 
-    /* Only set when table has data */
+    /* Component storage */
     ecs_vector_t *stage_data;         /* Data per stage */
+
+    /* Different kinds of matched queries */
     ecs_vector_t *queries;            /* Queries matched with table */
     ecs_vector_t *monitors;           /* Monitor systems */
+    ecs_vector_t** on_set;            /* OnSet systems, broken up by column */
+    ecs_vector_t* on_set_all;         /* All OnSet systems (for new_w_data) */
 
+    /* Change tracking */
     int32_t *dirty_state;             /* Keep track of changes in columns */
+
+    /* Table information */
     int32_t flags;                    /* Flags for testing table properties */
+    int32_t column_count;             /* Number of data columns in table */
 };
 
 /** Cached reference to a component in an entity */
@@ -162,6 +152,15 @@ typedef struct ecs_table_range_t {
     int32_t count;
 } ecs_table_range_t;
 
+#define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
+#define EcsQueryMonitor (2)          /* Query needs to be registered as a monitor */
+#define EcsQueryOnSet (4)            /* Query needs to be registered as on_set system */
+#define EcsQueryMatchDisabled (8)    /* Does query match disabled */
+#define EcsQueryMatchPrefab (16)     /* Does query match prefabs */
+#define EcsQueryHasRefs (32)         /* Does query have references */
+
+#define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet)
+
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
     /* Signature of query */
@@ -172,7 +171,7 @@ struct ecs_query_t {
 
     /* Tables matched with query */
     ecs_vector_t *tables;
-    ecs_vector_t *inactive_tables;
+    ecs_vector_t *empty_tables;
 
     /* Handle to system (optional) */
     ecs_entity_t system;   
@@ -186,13 +185,10 @@ struct ecs_query_t {
     ecs_entity_t rank_on_component;
     ecs_rank_type_action_t rank_table;
 
-    bool match_prefab;          /* Does query match prefabs */
-    bool match_disabled;        /* Does query match disabled */
-    bool has_refs;              /* Does query have references */
-    bool is_monitor;            /* Should query register as monitor? */
-    int32_t cascade_by;         /* Identify CASCADE column */
-    bool needs_matching;        /* Does sig need to be matched with tables */
+    /* The query kind determines how it is registered with tables */
+    int8_t flags;
 
+    int32_t cascade_by;         /* Identify CASCADE column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
 };
@@ -221,7 +217,7 @@ typedef struct ecs_on_demand_in_t {
  * when OR expressions or optional expressions are used.
  * 
  * A column system keeps track of tables that are empty. These tables are stored
- * in the 'inactive_tables' array. This prevents the system from iterating over
+ * in the 'empty_tables' array. This prevents the system from iterating over
  * tables in the main loop that have no data.
  * 
  * For each table, a column system stores an index that translates between the
@@ -248,7 +244,7 @@ typedef struct ecs_on_demand_in_t {
  * time_passed member, until it exceeds 'period'. In that case, the system is
  * ran, and 'time_passed' is decreased by 'period'. 
  */
-typedef struct EcsColSystem {
+typedef struct EcsSystem {
     ecs_iter_action_t action;    /* Callback to be invoked for matching rows */
     void *ctx;                     /* Userdata for system */
     float time_spent;              /* Time spent on running system */
@@ -262,7 +258,7 @@ typedef struct EcsColSystem {
     void *status_ctx;                     /* User data for status action */    
     ecs_entity_t tick_source;             /* Tick source associated with system */
     float time_passed;                    /* Time passed since last invocation */
-} EcsColSystem;
+} EcsSystem;
 
 #define ECS_TYPE_DB_MAX_CHILD_NODES (256)
 #define ECS_TYPE_DB_BUCKET_COUNT (256)
@@ -296,6 +292,21 @@ struct ecs_ei_t {
     ecs_map_t *hi;          /* To save memory high ids are stored in a map */
 };
 
+typedef enum ecs_op_kind_t {
+    EcsOpAdd,
+    EcsOpRemove,   
+    EcsOpSet,
+} ecs_op_kind_t;
+
+typedef struct ecs_op_t {
+    ecs_op_kind_t kind;
+    ecs_entity_t entity;
+    ecs_entities_t components;
+    ecs_entity_t component;
+    void *value;
+    size_t size;
+} ecs_op_t;
+
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
  * to arbitrarily add/remove/set components and create/delete entities while
@@ -315,7 +326,11 @@ struct ecs_stage_t {
     ecs_vector_t *dirty_tables;    /* Tables that need merging */
 
     int32_t id;                    /* Unique id that identifies the stage */
-    
+
+    /* Are operations deferred? */
+    int32_t defer;
+    ecs_vector_t *defer_queue;
+
     /* Is entity range checking enabled? */
     bool range_check_enabled;
 };
@@ -332,7 +347,7 @@ typedef struct ecs_entity_info_t {
 /** A type describing a unit of work to be executed by a worker thread. */ 
 typedef struct ecs_job_t {
     ecs_entity_t system;          /* System handle */
-    EcsColSystem *system_data;    /* System to run */
+    EcsSystem *system_data;    /* System to run */
     int32_t offset;              /* Start index in row chunk */
     int32_t limit;               /* Total number of rows to process */
 } ecs_job_t;
@@ -358,18 +373,17 @@ typedef struct ecs_thread_t {
 struct ecs_snapshot_t {
     ecs_ei_t entity_index;
     ecs_sparse_t *tables;
-    ecs_entity_t last_handle;
+    ecs_entity_t last_id;
     ecs_filter_t filter;
 };
 
 /** Component-specific data */
-typedef struct ecs_component_data_t {
+typedef struct ecs_c_info_t {
     ecs_vector_t *on_add;       /* Systems ran after adding this component */
     ecs_vector_t *on_remove;    /* Systems ran after removing this component */
-    ecs_vector_t *on_set;       /* Systems ran after setting this component */
 
     EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
-} ecs_component_data_t;
+} ecs_c_info_t;
 
 /* Component monitors */
 typedef struct ecs_component_monitor_t {
@@ -384,7 +398,8 @@ struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
     void *context;               /* Application context */
 
-    ecs_vector_t *component_data;
+    ecs_c_info_t c_info[ECS_HI_COMPONENT_ID]; /* Component callbacks & triggers */
+    ecs_map_t *t_info;                        /* Tag triggers */
 
 
     /* --  Queries -- */

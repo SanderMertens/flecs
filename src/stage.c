@@ -63,7 +63,7 @@ void merge_columns(
     int32_t src_entity_count)
 {
     /* Copy data column by column from the stage to the main stage */
-    int32_t c, column_count = ecs_vector_count(table->type);
+    int32_t c, column_count = table->column_count;
     ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
     ecs_entity_t *dst_entities = ecs_vector_first(dst_data->entities, ecs_entity_t);
     ecs_entity_t *src_entities = ecs_vector_first(src_data->entities, ecs_entity_t);
@@ -87,7 +87,7 @@ void merge_columns(
         dst = ECS_OFFSET(dst, dst_entity_count * size);
 
         ecs_entity_t component = components[c];
-        ecs_component_data_t *cdata = ecs_get_component_data(world, component);
+        ecs_c_info_t *cdata = ecs_get_c_info(world, component);
         ecs_move_t move = cdata->lifecycle.move;
         if (move) {
             void *ctx = cdata->lifecycle.ctx;
@@ -117,8 +117,8 @@ void merge_commits(
         int32_t e, entity_count = ecs_table_data_count(data);
         ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
         ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
-        int32_t column_count = ecs_vector_count(table->type);
-
+        int32_t component_count = ecs_vector_count(table->type);
+        
         ecs_assert(main_data != data, ECS_INTERNAL_ERROR, NULL);
 
         data->marked_dirty = false;
@@ -132,7 +132,7 @@ void merge_commits(
 
         /* If the table has no columns, this is the root table. Entities that
          * are in a root table need to be either deleted or emptied */
-        if (!column_count) {
+        if (!component_count) {
             clear_columns(world, stage, data);
             ecs_table_clear_data(table, data);
             continue;

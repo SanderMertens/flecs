@@ -245,10 +245,11 @@
                 "lookup_child",
                 "lookup_in_progress",
                 "lookup_child_in_progress",
-                "lookup_w_null_id",
-                "get_id",
-                "get_id_no_id",
-                "get_id_from_empty"
+                "lookup_w_null_name",
+                "get_name",
+                "get_name_no_name",
+                "get_name_from_empty",
+                "lookup_by_id"
             ]
         }, {
             "id": "Singleton",
@@ -367,7 +368,9 @@
                 "table_count",
                 "match_system",
                 "match_system_w_filter",
-                "system_initial_state"
+                "system_initial_state",
+                "add_own_component",
+                "change_system_action"
             ]
         }, {
             "id": "TriggerOnAdd",
@@ -392,7 +395,12 @@
                 "2_systems_w_table_creation",
                 "2_systems_w_table_creation_in_progress",
                 "sys_context",
-                "get_sys_context_from_param"
+                "get_sys_context_from_param",
+                "remove_added_component_in_on_add_w_set",
+                "on_add_in_on_add",
+                "on_remove_in_on_add",
+                "on_set_in_on_add",
+                "on_add_in_on_update"
             ]
         }, {
             "id": "TriggerOnRemove",
@@ -429,6 +437,32 @@
                 "1_comp_1_not",
                 "1_parent",
                 "1_comp_1_parent"
+            ]
+        }, {
+            "id": "SystemOnSet",
+            "testcases": [
+                "set_1_of_1",
+                "set_1_of_2",
+                "set_1_of_3",
+                "bulk_new_1",
+                "bulk_new_2",
+                "bulk_new_2_of_1",
+                "bulk_new_3",
+                "bulk_new_3_of_2",
+                "bulk_new_1_from_base",
+                "set_1_of_2_1_from_base",
+                "set_1_of_3_1_from_base",
+                "add_base",
+                "add_base_to_1_overridden",
+                "add_base_to_2_overridden",
+                "add_base_to_1_of_2_overridden",
+                "on_set_after_remove_override",
+                "no_set_after_remove_base",
+                "add_to_current_in_on_set",
+                "remove_from_current_in_on_set",
+                "remove_set_component_in_on_set",
+                "match_table_created_w_add_in_on_set",
+                "set_optional"
             ]
         }, {
             "id": "SystemPeriodic",
@@ -860,19 +894,8 @@
                 "delete_after_set",
                 "add_to_current_in_on_add",
                 "remove_from_current_in_on_add",
-                "add_to_current_in_on_set",
-                "remove_from_current_in_on_set",
-                "remove_set_component_in_on_set",
                 "remove_added_component_in_on_add",
-                "remove_added_component_in_on_add_w_set",
-                "on_add_in_on_add",
-                "on_remove_in_on_add",
-                "on_set_in_on_add",
-                "on_add_in_on_update",
-                "on_remove_in_on_update",
                 "match_table_created_in_progress",
-                "match_table_created_w_add_in_on_set",
-                "match_table_created_w_set_in_on_set",
                 "match_table_created_w_new_in_progress",
                 "match_table_created_w_new_in_on_set",
                 "merge_table_w_container_added_in_progress",
@@ -910,7 +933,10 @@
                 "create_delete_entity_random_components_6_threads",
                 "set_entity_random_components_6_threads",
                 "create_delete_entity_random_components_12_threads",
-                "set_entity_random_components_12_threads"
+                "set_entity_random_components_12_threads",
+                "create_2m_entities_1_comp",
+                "create_2m_entities_bulk_1_comp",
+                "add_1k_tags"
             ]
         }, {
             "id": "Snapshot",

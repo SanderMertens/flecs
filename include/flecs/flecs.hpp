@@ -70,7 +70,7 @@ using Component = EcsComponent;
 using TypeComponent = EcsType;
 static const entity_t Prefab = EEcsPrefab;
 static const entity_t RowSystem = EEcsRowSystem;
-static const entity_t ColSystem = EEcsColSystem;
+static const entity_t ColSystem = EEcsSystem;
 using Name = EcsName;
 static const entity_t Hidden = EEcsHidden;
 static const entity_t Disabled = EEcsDisabled;
@@ -1604,6 +1604,7 @@ public:
 
         entity_t e = ecs_new_system(
             m_world, 
+            0,
             m_name, 
             m_kind, 
             signature.c_str(), 
@@ -1634,6 +1635,7 @@ public:
 
         entity_t e = ecs_new_system(
             m_world, 
+            0,
             m_name, 
             m_kind, 
             signature.c_str(), 

@@ -138,7 +138,7 @@ void start_threads(
 /** Create jobs for system */
 static
 void create_jobs(
-    EcsColSystem *system_data,
+    EcsSystem *system_data,
     int32_t thread_count)
 {
     if (system_data->jobs) {
@@ -161,7 +161,7 @@ void ecs_schedule_jobs(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    EcsColSystem *system_data = ecs_get_mut(world, system, EcsColSystem, NULL);
+    EcsSystem *system_data = ecs_get_mut(world, system, EcsSystem, NULL);
     int32_t thread_count = ecs_vector_count(world->worker_threads);
     int32_t total_rows = 0;
     bool is_task = false;
@@ -222,7 +222,7 @@ void ecs_prepare_jobs(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    const EcsColSystem *system_data = ecs_get_ptr(world, system, EcsColSystem);
+    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
     ecs_vector_t *threads = world->worker_threads;
     ecs_vector_t *jobs = system_data->jobs;
     int32_t i;

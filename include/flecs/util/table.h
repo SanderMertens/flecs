@@ -6,12 +6,6 @@
 extern "C" {
 #endif
 
-/* Array of entity ids that, other than a type, can live on the stack */
-typedef struct ecs_entities_t {
-    ecs_entity_t *array;
-    int32_t count;
-} ecs_entities_t;
-
 /** Find or create table for a set of components */
 ecs_table_t* ecs_table_find_or_create(
     ecs_world_t *world,

@@ -106,10 +106,10 @@ void ecs_table_writer_finalize_table(
 
         ecs_eis_set(&world->stage, entities[i], &record);
 
-        if (entities[i] >= world->stats.last_handle) {
-            world->stats.last_handle = entities[i] + 1;
+        if (entities[i] >= world->stats.last_id) {
+            world->stats.last_id = entities[i] + 1;
         }
-    }   
+    }
 }
 
 static
@@ -196,7 +196,7 @@ void ecs_table_writer_next(
     case EcsTableColumnData:
         writer->column_index ++;
 
-        if (writer->column_index > writer->type_count) {
+        if (writer->column_index > writer->table->column_count) {
             ecs_table_writer_finalize_table(stream);
             stream->state = EcsStreamHeader;
             writer->column_written = 0;

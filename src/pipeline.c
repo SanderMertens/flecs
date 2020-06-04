@@ -28,13 +28,42 @@ typedef enum ComponentWriteState {
 } ComponentWriteState;
 
 static
+int32_t get_write_state(
+    ecs_map_t *write_state,
+    ecs_entity_t component)
+{
+    int32_t *ptr = ecs_map_get(write_state, int32_t, component);
+    if (ptr) {
+        return *ptr;
+    } else {
+        return 0;
+    }
+}
+
+static
+void set_write_state(
+    ecs_map_t *write_state,
+    ecs_entity_t component,
+    int32_t value)
+{
+    ecs_map_set(write_state, component, &value);
+}
+
+static
+void reset_write_state(
+    ecs_map_t *write_state)
+{
+    ecs_map_clear(write_state);
+}
+
+static
 bool check_column_component(
     ecs_sig_column_t *column,
     bool is_active,
     int32_t component,
-    int8_t *write_state)    
+    ecs_map_t *write_state)    
 {
-    int8_t state = write_state[component];
+    int8_t state = get_write_state(write_state, component);
 
     if (column->from_kind == EcsFromSelf && column->oper_kind != EcsOperNot) {
         switch(column->inout_kind) {
@@ -45,7 +74,7 @@ bool check_column_component(
             }
         case EcsOut:
             if (is_active && column->inout_kind != EcsIn) {
-                write_state[component] = WriteToMain;
+                set_write_state(write_state, component, WriteToMain);
             }
         };
     } else if (column->from_kind == EcsFromEmpty || column->oper_kind == EcsOperNot) {
@@ -53,7 +82,7 @@ bool check_column_component(
         case EcsInOut:
         case EcsOut:
             if (is_active) {
-                write_state[component] = WriteToStage;
+                set_write_state(write_state, component, WriteToStage);
             }
         default:
             break;
@@ -67,7 +96,7 @@ static
 bool check_column(
     ecs_sig_column_t *column,
     bool is_active,
-    int8_t *write_state)
+    ecs_map_t *write_state)
 {
     if (column->oper_kind != EcsOperOr) {
         return check_column_component(
@@ -89,7 +118,7 @@ void build_pipeline(
 
     world->stats.pipeline_build_count_total ++;
 
-    int8_t *write_state = ecs_os_calloc(ECS_HI_COMPONENT_ID, sizeof(int8_t));
+    ecs_map_t *write_state = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID);
     ecs_pipeline_op_t *op = NULL;
     ecs_vector_t *ops = NULL;
     ecs_query_t *query = pq->build_query;
@@ -102,7 +131,7 @@ void build_pipeline(
     ecs_query_iter_t it = ecs_query_iter(query, 0, 0);
     while (ecs_query_next(&it)) {
         ecs_rows_t *rows = &it.rows;
-        EcsColSystem *sys = ecs_column(rows, EcsColSystem, 1);
+        EcsSystem *sys = ecs_column(rows, EcsSystem, 1);
 
         int i;
         for (i = 0; i < rows->count; i ++) {
@@ -122,7 +151,7 @@ void build_pipeline(
 
             if (needs_merge) {
                 /* After merge all components will be merged, so reset state */
-                memset(write_state, 0, ECS_HI_COMPONENT_ID * sizeof(int8_t));
+                reset_write_state(write_state);
                 op = NULL;
 
                 /* Re-evaluate columns to set write flags if system is active.
@@ -153,7 +182,7 @@ void build_pipeline(
         }
     }
 
-    ecs_os_free(write_state);
+    ecs_map_free(write_state);
 
     pq->ops = ops;
 }
@@ -234,12 +263,12 @@ void ecs_progress_pipeline(
     ecs_query_iter_t it = ecs_query_iter(pq->query, 0, 0);
     while (ecs_query_next(&it)) {
         ecs_rows_t *rows = &it.rows;
-        EcsColSystem *sys = ecs_column(rows, EcsColSystem, 1);
+        EcsSystem *sys = ecs_column(rows, EcsSystem, 1);
 
         int32_t i;
         for(i = 0; i < rows->count; i ++) {
             ecs_entity_t e = rows->entities[i];
-
+            
             ecs_run_intern(world, world, e, &sys[i], delta_time, 0, 0, 
                 NULL, NULL);
 
@@ -261,7 +290,7 @@ void ecs_progress_pipeline(
                 if (pq->match_count != pq->query->match_count) {
                     i = iter_reset(world, pq, &it, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
-                    sys = ecs_column(rows, EcsColSystem, 1);
+                    sys = ecs_column(rows, EcsSystem, 1);
                 }
             }
         }
@@ -297,11 +326,11 @@ void EcsOnAddPipeline(
 #endif
         ecs_trace_push();
 
-        /* Build signature for pipeline quey that matches EcsColSystems, has the
+        /* Build signature for pipeline quey that matches EcsSystems, has the
          * pipeline as a XOR column, and ignores systems with EcsInactive and
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ecs_entity(EcsColSystem), 0);
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
         ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
         ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsInactive, 0);
         ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
@@ -315,7 +344,7 @@ void EcsOnAddPipeline(
          * systems that are inactive, as an inactive system may become active as
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ecs_entity(EcsColSystem), 0);
+        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
         ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
         ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
 
@@ -359,7 +388,7 @@ void ecs_init_pipeline_builtins(
     ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline, 0);
 
     /* Create the builtin pipeline */
-    world->pipeline = ecs_new_pipeline(world, "EcsBuiltinPipeline",
+    world->pipeline = ecs_new_pipeline(world, 0, "EcsBuiltinPipeline",
         "EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,"
         " EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame");
 }

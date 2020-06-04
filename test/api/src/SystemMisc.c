@@ -360,7 +360,7 @@ void SystemMisc_invalid_or_from_system() {
 void SystemMisc_invalid_null_string() {
     ecs_world_t *world = ecs_init();
 
-    ecs_new_system(world, "Dummy", EcsOnUpdate, NULL, Dummy);
+    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, NULL, Dummy);
 
     ecs_progress(world, 0);
 
@@ -372,7 +372,7 @@ void SystemMisc_invalid_null_string() {
 void SystemMisc_invalid_empty_string() {
     ecs_world_t *world = ecs_init();
 
-    ecs_new_system(world, "Dummy", EcsOnUpdate, "", Dummy);
+    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, "", Dummy);
 
     ecs_progress(world, 0);
 
@@ -388,7 +388,7 @@ void SystemMisc_invalid_empty_string_w_space() {
 
     test_expect_abort();
 
-    ecs_new_system(world, "Dummy", EcsOnUpdate, "  ", Dummy);
+    ecs_new_system(world, 0, "Dummy", EcsOnUpdate, "  ", Dummy);
 
     ecs_fini(world);
 }
@@ -903,6 +903,70 @@ void SystemMisc_system_initial_state() {
     test_assert( ecs_has_entity(world, SysA, EcsInactive));
     test_assert( !ecs_has_entity(world, SysA, EcsDisabled));
     test_assert( !ecs_has_entity(world, SysA, EcsDisabledIntern));
+
+    ecs_fini(world);
+}
+
+static
+void FooSystem(ecs_rows_t *rows) { }
+
+static
+void BarSystem(ecs_rows_t *rows) { }
+
+void SystemMisc_add_own_component() {
+    ecs_world_t * world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, FooSystem, 0, Position);
+    ECS_SYSTEM(world, BarSystem, 0, Position);
+
+    ecs_set_ptr(world, BarSystem, Position, NULL );
+
+    /* Make sure code didn't assert */
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
+static bool action_a_invoked;
+static bool action_b_invoked;
+
+static
+void ActionA(ecs_rows_t *rows) {
+    action_a_invoked = true;
+}
+
+static
+void ActionB(ecs_rows_t *rows) {
+    action_b_invoked = true;
+}
+
+void SystemMisc_change_system_action() {
+    ecs_world_t * world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t sys = ecs_new_system(
+        world, 0, "Sys", EcsOnUpdate, "Position", ActionA);
+
+    ecs_new(world, Position);
+
+    test_bool(action_a_invoked, false);
+    test_bool(action_b_invoked, false);
+
+    ecs_progress(world, 0);
+
+    test_bool(action_a_invoked, true);
+    test_bool(action_b_invoked, false);
+
+    action_a_invoked = false;
+
+    ecs_set(world, sys, EcsIterAction, {ActionB});
+
+    ecs_progress(world, 0);
+
+    test_bool(action_a_invoked, false);
+    test_bool(action_b_invoked, true);
 
     ecs_fini(world);
 }

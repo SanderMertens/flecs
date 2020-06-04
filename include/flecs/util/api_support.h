@@ -12,6 +12,13 @@ extern "C" {
 typedef struct ecs_column_t ecs_column_t;
 typedef struct ecs_data_t ecs_data_t;
 
+/** This reserves entity ids for components. Regular entity ids will start after
+ * this constant. This affects performance of table traversal, as edges with ids 
+ * lower than this constant are looked up in an array, whereas constants higher
+ * than this id are looked up in a map. Increasing this value can improve
+ * performance at the cost of (significantly) higher memory usage. */
+#define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Private datatypes
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,8 +137,6 @@ typedef struct ecs_writer_t {
 //// Deprecated names
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsSingleton ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
-
 struct ecs_filter_t;
 typedef struct ecs_filter_t ecs_type_filter_t;
 
@@ -142,12 +147,14 @@ typedef struct ecs_filter_t ecs_type_filter_t;
 FLECS_EXPORT
 ecs_entity_t ecs_new_entity(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *id,
     const char *components);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_component(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *id,
     size_t size,
     size_t alignment);
@@ -155,6 +162,7 @@ ecs_entity_t ecs_new_component(
 FLECS_EXPORT
 ecs_entity_t ecs_new_module(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     size_t size,
     size_t alignment);
@@ -162,18 +170,21 @@ ecs_entity_t ecs_new_module(
 FLECS_EXPORT
 ecs_entity_t ecs_new_type(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *id,
     const char *components);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_prefab(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *id,
     const char *sig);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_system(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     ecs_entity_t phase,
     char *signature,
@@ -182,15 +193,17 @@ ecs_entity_t ecs_new_system(
 FLECS_EXPORT
 ecs_entity_t ecs_new_trigger(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
-    ecs_trigger_kind_t kind,
-    ecs_entity_t component,
+    ecs_entity_t kind,
+    const char *component,
     ecs_iter_action_t action,
     const void *ctx);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_pipeline(
     ecs_world_t *world,
+    ecs_entity_t e,
     const char *name,
     const char *expr);
 
@@ -244,6 +257,7 @@ typedef struct ecs_sig_t {
     ecs_vector_t *columns;      /* Columns that contain parsed data */
 } ecs_sig_t;
 
+/** Add column to signature. */
 FLECS_EXPORT
 int ecs_sig_add(
     ecs_sig_t *sig,
@@ -252,6 +266,14 @@ int ecs_sig_add(
     ecs_sig_inout_kind_t access_kind,
     ecs_entity_t component,
     ecs_entity_t source);
+
+/** Create query based on signature object. */
+FLECS_EXPORT
+ecs_query_t* ecs_query_new_w_sig(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_sig_t *sig);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Error API
@@ -316,33 +338,34 @@ void _ecs_parser_error(
 #define ECS_MORE_THAN_ONE_PREFAB (13)
 #define ECS_ALREADY_DEFINED (14)
 #define ECS_INVALID_COMPONENT_SIZE (15)
-#define ECS_OUT_OF_MEMORY (16)
-#define ECS_MODULE_UNDEFINED (17)
-#define ECS_COLUMN_INDEX_OUT_OF_RANGE (18)
-#define ECS_COLUMN_IS_NOT_SHARED (19)
-#define ECS_COLUMN_IS_SHARED (20)
-#define ECS_COLUMN_HAS_NO_DATA (21)
-#define ECS_COLUMN_TYPE_MISMATCH (22)
-#define ECS_INVALID_WHILE_MERGING (23)
-#define ECS_INVALID_WHILE_ITERATING (24)
-#define ECS_INVALID_FROM_WORKER (25)
-#define ECS_UNRESOLVED_IDENTIFIER (26)
-#define ECS_OUT_OF_RANGE (27)
-#define ECS_COLUMN_IS_NOT_SET (28)
-#define ECS_UNRESOLVED_REFERENCE (29)
-#define ECS_THREAD_ERROR (30)
-#define ECS_MISSING_OS_API (31)
-#define ECS_TYPE_TOO_LARGE (32)
-#define ECS_INVALID_PREFAB_CHILD_TYPE (33)
-#define ECS_UNSUPPORTED (34)
-#define ECS_NO_OUT_COLUMNS (35)
-#define ECS_COLUMN_ACCESS_VIOLATION (36)
-#define ECS_DESERIALIZE_COMPONENT_ID_CONFLICT (37)
-#define ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT (38)
-#define ECS_DESERIALIZE_FORMAT_ERROR (39)
-#define ECS_INVALID_REACTIVE_SIGNATURE (40)
-#define ECS_INCONSISTENT_COMPONENT_NAME (41)
-#define ECS_TYPE_CONSTRAINT_VIOLATION (42)
+#define ECS_INVALID_COMPONENT_ALIGNMENT (16)
+#define ECS_OUT_OF_MEMORY (17)
+#define ECS_MODULE_UNDEFINED (18)
+#define ECS_COLUMN_INDEX_OUT_OF_RANGE (19)
+#define ECS_COLUMN_IS_NOT_SHARED (20)
+#define ECS_COLUMN_IS_SHARED (21)
+#define ECS_COLUMN_HAS_NO_DATA (22)
+#define ECS_COLUMN_TYPE_MISMATCH (23)
+#define ECS_INVALID_WHILE_MERGING (24)
+#define ECS_INVALID_WHILE_ITERATING (25)
+#define ECS_INVALID_FROM_WORKER (26)
+#define ECS_UNRESOLVED_IDENTIFIER (27)
+#define ECS_OUT_OF_RANGE (28)
+#define ECS_COLUMN_IS_NOT_SET (29)
+#define ECS_UNRESOLVED_REFERENCE (30)
+#define ECS_THREAD_ERROR (31)
+#define ECS_MISSING_OS_API (32)
+#define ECS_TYPE_TOO_LARGE (33)
+#define ECS_INVALID_PREFAB_CHILD_TYPE (34)
+#define ECS_UNSUPPORTED (35)
+#define ECS_NO_OUT_COLUMNS (36)
+#define ECS_COLUMN_ACCESS_VIOLATION (37)
+#define ECS_DESERIALIZE_COMPONENT_ID_CONFLICT (38)
+#define ECS_DESERIALIZE_COMPONENT_SIZE_CONFLICT (39)
+#define ECS_DESERIALIZE_FORMAT_ERROR (40)
+#define ECS_INVALID_REACTIVE_SIGNATURE (41)
+#define ECS_INCONSISTENT_COMPONENT_NAME (42)
+#define ECS_TYPE_CONSTRAINT_VIOLATION (43)
 
 /** Declare type variable */
 #define ECS_TYPE_VAR(type)\

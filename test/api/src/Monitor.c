@@ -10,7 +10,7 @@ void Monitor_1_comp() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, 0, Position, SYSTEM.EcsMonitor);
+    ECS_SYSTEM(world, OnPosition, EcsMonitor, Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -19,7 +19,7 @@ void Monitor_1_comp() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -42,7 +42,7 @@ void Monitor_2_comps() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, 0, Position, Velocity, SYSTEM.EcsMonitor);
+    ECS_SYSTEM(world, OnPosition, EcsMonitor, Position, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -54,7 +54,7 @@ void Monitor_2_comps() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -72,7 +72,7 @@ void Monitor_2_comps() {
     test_int(ctx.invoked, 1);    
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -89,7 +89,7 @@ void Monitor_1_comp_1_not() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, 0, Position, !Velocity, SYSTEM.EcsMonitor);
+    ECS_SYSTEM(world, OnPosition, EcsMonitor, Position, !Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -98,7 +98,7 @@ void Monitor_1_comp_1_not() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -116,7 +116,7 @@ void Monitor_1_comp_1_not() {
     test_int(ctx.invoked, 1);    
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -133,7 +133,7 @@ void Monitor_1_parent() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, 0, PARENT.Position, SYSTEM.EcsMonitor);
+    ECS_SYSTEM(world, OnPosition, EcsMonitor, PARENT.Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -148,7 +148,7 @@ void Monitor_1_parent() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -163,7 +163,7 @@ void Monitor_1_comp_1_parent() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, 0, Position, PARENT.Position, SYSTEM.EcsMonitor);
+    ECS_SYSTEM(world, OnPosition, EcsMonitor, Position, PARENT.Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -178,7 +178,7 @@ void Monitor_1_comp_1_parent() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -202,7 +202,7 @@ void Monitor_1_comp_1_parent() {
     test_int(ctx.invoked, 1);    
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.column_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
