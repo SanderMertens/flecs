@@ -927,3 +927,46 @@ void SystemMisc_add_own_component() {
 
     ecs_fini(world);
 }
+
+static bool action_a_invoked;
+static bool action_b_invoked;
+
+static
+void ActionA(ecs_rows_t *rows) {
+    action_a_invoked = true;
+}
+
+static
+void ActionB(ecs_rows_t *rows) {
+    action_b_invoked = true;
+}
+
+void SystemMisc_change_system_action() {
+    ecs_world_t * world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t sys = ecs_new_system(
+        world, 0, "Sys", EcsOnUpdate, "Position", ActionA);
+
+    ecs_new(world, Position);
+
+    test_bool(action_a_invoked, false);
+    test_bool(action_b_invoked, false);
+
+    ecs_progress(world, 0);
+
+    test_bool(action_a_invoked, true);
+    test_bool(action_b_invoked, false);
+
+    action_a_invoked = false;
+
+    ecs_set(world, sys, EcsIterAction, {ActionB});
+
+    ecs_progress(world, 0);
+
+    test_bool(action_a_invoked, false);
+    test_bool(action_b_invoked, true);
+
+    ecs_fini(world);
+}

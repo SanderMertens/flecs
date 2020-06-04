@@ -369,7 +369,8 @@
                 "match_system",
                 "match_system_w_filter",
                 "system_initial_state",
-                "add_own_component"
+                "add_own_component",
+                "change_system_action"
             ]
         }, {
             "id": "TriggerOnAdd",
@@ -460,7 +461,8 @@
                 "add_to_current_in_on_set",
                 "remove_from_current_in_on_set",
                 "remove_set_component_in_on_set",
-                "match_table_created_w_add_in_on_set"
+                "match_table_created_w_add_in_on_set",
+                "set_optional"
             ]
         }, {
             "id": "SystemPeriodic",

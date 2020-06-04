@@ -903,3 +903,45 @@ void SystemOnSet_match_table_created_w_add_in_on_set() {
 
     ecs_fini(world);
 }
+
+void SystemOnSet_set_optional() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position, ?Velocity);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPosition);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+
+    ctx = (Probe){ 0 };
+
+    ecs_set(world, e, Velocity, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPosition);
+    test_int(ctx.column_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);    
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.s[0][1], 0);
+
+    ecs_fini(world);
+}

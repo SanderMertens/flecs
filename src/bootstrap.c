@@ -23,8 +23,8 @@ ecs_type_t ecs_type(EcsTickSource);
 ecs_type_t ecs_type(EcsSignatureExpr);
 ecs_type_t ecs_type(EcsSignature);
 ecs_type_t ecs_type(EcsQuery);
-ecs_type_t ecs_type(EcsSystemAction);
-ecs_type_t ecs_type(EcsSystemCtx);
+ecs_type_t ecs_type(EcsIterAction);
+ecs_type_t ecs_type(EcsContext);
 
 /* Generic constructor to initialize a component to 0 */
 static
@@ -223,9 +223,11 @@ void EcsCreateQuery(
     for (i = 0; i < rows->count; i ++) {
         ecs_entity_t e = entities[i];
 
-        EcsQuery query = {0};
-        query.query = ecs_query_new_w_sig(world, e, &signature[i].signature);
-        ecs_set_ptr(world, e, EcsQuery, &query);
+        if (!ecs_has(world, e, EcsQuery)) {
+            EcsQuery query = {0};
+            query.query = ecs_query_new_w_sig(world, e, &signature[i].signature);
+            ecs_set_ptr(world, e, EcsQuery, &query);
+        }
     }
 }
 
@@ -238,12 +240,18 @@ void EcsCreateSystem(
     ecs_entity_t *entities = rows->entities;
 
     EcsQuery *query = ecs_column(rows, EcsQuery, 1);
-    EcsSystemAction *action = ecs_column(rows, EcsSystemAction, 2);
+    EcsIterAction *action = ecs_column(rows, EcsIterAction, 2);
+    EcsContext *ctx = ecs_column(rows, EcsContext, 3);
     
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
         ecs_entity_t e = entities[i];
-        ecs_init_system(world, e, action[i].action, query[i].query);
+        void *ctx_ptr = NULL;
+        if (ctx) {
+            ctx_ptr = ctx[i].ctx;
+        }
+
+        ecs_init_system(world, e, action[i].action, query[i].query, ctx_ptr);
     }
 }
 
@@ -259,7 +267,7 @@ void bootstrap_set_system(
     ecs_add_entity(world, sys, EcsOnSet);
     ecs_sig_init(world, name, expr, &sig);
     ecs_query_t *query = ecs_query_new_w_sig(world, sys, &sig);
-    ecs_init_system(world, sys, action, query);
+    ecs_init_system(world, sys, action, query, NULL);
 }
 
 /* Initialize builtin systems */
@@ -279,8 +287,8 @@ void ecs_init_builtins(
 
     /* Create systems necessary to create systems */
     bootstrap_set_system(world, "EcsCreateSignature", "EcsSignatureExpr", EcsCreateSignature);
-    bootstrap_set_system(world, "EcsCreateQuery", "EcsSignature, EcsSystemAction", EcsCreateQuery);
-    bootstrap_set_system(world, "EcsCreateSystem", "EcsQuery, EcsSystemAction", EcsCreateSystem);
+    bootstrap_set_system(world, "EcsCreateQuery", "EcsSignature, EcsIterAction", EcsCreateQuery);
+    bootstrap_set_system(world, "EcsCreateSystem", "EcsQuery, EcsIterAction, ?EcsContext", EcsCreateSystem);
 
     /* From here we can create systems */
 
@@ -350,8 +358,8 @@ void bootstrap_types(
     ecs_type(EcsSignatureExpr) = bootstrap_type(world, ecs_entity(EcsSignatureExpr));
     ecs_type(EcsSignature) = bootstrap_type(world, ecs_entity(EcsSignature));
     ecs_type(EcsQuery) = bootstrap_type(world, ecs_entity(EcsQuery));
-    ecs_type(EcsSystemAction) = bootstrap_type(world, ecs_entity(EcsSystemAction));
-    ecs_type(EcsSystemCtx) = bootstrap_type(world, ecs_entity(EcsSystemCtx));   
+    ecs_type(EcsIterAction) = bootstrap_type(world, ecs_entity(EcsIterAction));
+    ecs_type(EcsContext) = bootstrap_type(world, ecs_entity(EcsContext));   
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -459,8 +467,8 @@ void ecs_bootstrap(
     bootstrap_component(world, table, EcsSignatureExpr);
     bootstrap_component(world, table, EcsSignature);
     bootstrap_component(world, table, EcsQuery);
-    bootstrap_component(world, table, EcsSystemAction);
-    bootstrap_component(world, table, EcsSystemCtx);
+    bootstrap_component(world, table, EcsIterAction);
+    bootstrap_component(world, table, EcsContext);
 
     world->stats.last_component_id = EcsLastBuiltin;
     world->stats.last_id = EcsWorld;

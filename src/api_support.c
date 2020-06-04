@@ -309,7 +309,7 @@ ecs_entity_t ecs_new_system(
         }
 
         ecs_set(world, result, EcsSignatureExpr, {signature});
-        ecs_set(world, result, EcsSystemAction, {action});
+        ecs_set(world, result, EcsIterAction, {action});
     } else {
         EcsSignatureExpr *ptr = ecs_get_mut(world, result, EcsSignatureExpr, NULL);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);

@@ -184,7 +184,9 @@ void register_on_set(
         /* Add system to each matched column. This makes it easy to get the list of
         * systems when setting a single component. */
         ecs_vector_each(query->sig.columns, ecs_sig_column_t, column, {
-            if (column->oper_kind == EcsOperAnd) {
+            ecs_sig_oper_kind_t oper_kind = column->oper_kind;
+
+            if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
                 ecs_entity_t comp = column->is.component;
                 int32_t index = ecs_type_index_of(table->type, comp);
                 if (index == -1) {

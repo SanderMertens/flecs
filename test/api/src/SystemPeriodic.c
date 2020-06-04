@@ -1905,9 +1905,11 @@ void SystemPeriodic_sys_context() {
 
     ECS_SYSTEM(world, TestContext, EcsOnUpdate, Position);
 
-    ecs_set_system_context(world, TestContext, &param);
+    ecs_set(world, TestContext, EcsContext, {&param});
 
-    test_assert(ecs_get_system_context(world, TestContext) == &param);
+    const EcsContext *ctx = ecs_get_ptr(world, TestContext, EcsContext);
+    test_assert(ctx != NULL);
+    test_assert(ctx->ctx == &param);
 
     ecs_fini(world);
 }
@@ -1923,7 +1925,7 @@ void SystemPeriodic_get_sys_context_from_param() {
 
     /* Set world context so system can compare if pointer is correct */
     ecs_set_context(world, &param);
-    ecs_set_system_context(world, TestContext, &param);
+    ecs_set(world, TestContext, EcsContext, {&param});
 
     ecs_progress(world, 1);
 

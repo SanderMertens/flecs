@@ -322,14 +322,14 @@ typedef struct EcsQuery {
 } EcsQuery;
 
 /* System action */
-typedef struct EcsSystemAction {
+typedef struct EcsIterAction {
     ecs_iter_action_t action;
-} EcsSystemAction;
+} EcsIterAction;
 
 /* System context */
-typedef struct EcsSystemCtx {
+typedef struct EcsContext {
     void *ctx;
-} EcsSystemCtx;
+} EcsContext;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -393,8 +393,8 @@ extern ecs_type_t
     ecs_type(EcsSignatureExpr),
     ecs_type(EcsSignature),
     ecs_type(EcsQuery),
-    ecs_type(EcsSystemAction),
-    ecs_type(EcsSystemCtx);
+    ecs_type(EcsIterAction),
+    ecs_type(EcsContext);
 
 /** Builtin component ids */
 #define FLECS__EEcsComponent (1)
@@ -410,8 +410,8 @@ extern ecs_type_t
 #define FLECS__EEcsSignatureExpr (12)
 #define FLECS__EEcsSignature (13)
 #define FLECS__EEcsQuery (14)
-#define FLECS__EEcsSystemAction (15)
-#define FLECS__EEcsSystemCtx (16)
+#define FLECS__EEcsIterAction (15)
+#define FLECS__EEcsContext (16)
 
 /* Builtin tag ids */
 #define EcsModule (ECS_HI_COMPONENT_ID + 0)
@@ -447,7 +447,7 @@ extern ecs_type_t
 
 /** Value used to quickly check if component is builtin */
 #define EcsLastInternal (ecs_entity(EcsSystem))
-#define EcsLastBuiltin (ecs_entity(EcsSystemCtx))
+#define EcsLastBuiltin (ecs_entity(EcsContext))
 
 /** This allows passing 0 as type to functions that accept types */
 #define FLECS__TNULL 0
@@ -1616,35 +1616,6 @@ ecs_entity_t ecs_run_w_filter(
     int32_t limit,
     const ecs_filter_t *filter,
     void *param);
-
-
-/** Set system context.
- * This operation allows an application to register custom data with a system.
- * This data can be accessed using the ecs_get_system_context operation, or
- * through the 'param' field in the ecs_rows_t parameter passed into the system
- * callback.
- *
- * @param world The world.
- * @param system The system on which to set the context.
- * @param ctx A pointer to a user defined structure.
- */
-FLECS_EXPORT
-void ecs_set_system_context(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    const void *ctx);
-
-/** Get system context.
- * Get custom data from a system previously set with ecs_set_system_context.
- *
- * @param world The world.
- * @param system The system of which to obtain the context.
- * @return The system context.
- */
-FLECS_EXPORT
-void* ecs_get_system_context(
-    ecs_world_t *world,
-    ecs_entity_t system);
 
 /** System status change callback */
 typedef enum ecs_system_status_t {

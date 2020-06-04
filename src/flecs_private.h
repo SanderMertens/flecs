@@ -332,7 +332,8 @@ void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
     ecs_iter_action_t action,
-    ecs_query_t *query);
+    ecs_query_t *query,
+    void *ctx);
 
 /* Invoked when system becomes active / inactive */
 void ecs_system_activate(
