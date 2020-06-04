@@ -906,3 +906,24 @@ void SystemMisc_system_initial_state() {
 
     ecs_fini(world);
 }
+
+static
+void FooSystem(ecs_rows_t *rows) { }
+
+static
+void BarSystem(ecs_rows_t *rows) { }
+
+void SystemMisc_add_own_component() {
+    ecs_world_t * world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, FooSystem, 0, Position);
+    ECS_SYSTEM(world, BarSystem, 0, Position);
+
+    ecs_set_ptr(world, BarSystem, Position, NULL );
+
+    /* Make sure code didn't assert */
+    test_assert(true);
+
+    ecs_fini(world);
+}

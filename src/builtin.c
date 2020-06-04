@@ -132,6 +132,9 @@ void EcsOnSetSystem(
 
     ecs_world_t *world = rows->world;
     ecs_entity_t *entities = rows->entities;
+    ecs_stage_t *stage = ecs_get_stage(&world);
+
+    stage->defer = 0; /* Do not try this at home */
 
     int32_t i;
     for (i = 0; i < rows->count; i ++) {
@@ -139,6 +142,8 @@ void EcsOnSetSystem(
         ecs_init_system(world, entities[i], ecs_get_name(world, e), 
             sys[i].action, sys[i].signature);
     }
+
+    stage->defer = 1;
 }
 
 static 

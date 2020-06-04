@@ -218,7 +218,7 @@ void register_on_set(
         ecs_vector_first(table->on_set_all, ecs_matched_query_t), 
         ecs_vector_count(table->on_set_all), 
         sizeof(ecs_matched_query_t), 
-        compare_matched_query);    
+        compare_matched_query);
 }
 
 /* -- Private functions -- */

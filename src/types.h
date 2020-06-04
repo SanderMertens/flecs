@@ -292,6 +292,21 @@ struct ecs_ei_t {
     ecs_map_t *hi;          /* To save memory high ids are stored in a map */
 };
 
+typedef enum ecs_op_kind_t {
+    EcsOpAdd,
+    EcsOpRemove,   
+    EcsOpSet,
+} ecs_op_kind_t;
+
+typedef struct ecs_op_t {
+    ecs_op_kind_t kind;
+    ecs_entity_t entity;
+    ecs_entities_t components;
+    ecs_entity_t component;
+    void *value;
+    size_t size;
+} ecs_op_t;
+
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
  * to arbitrarily add/remove/set components and create/delete entities while
@@ -311,7 +326,11 @@ struct ecs_stage_t {
     ecs_vector_t *dirty_tables;    /* Tables that need merging */
 
     int32_t id;                    /* Unique id that identifies the stage */
-    
+
+    /* Are operations deferred? */
+    int32_t defer;
+    ecs_vector_t *defer_queue;
+
     /* Is entity range checking enabled? */
     bool range_check_enabled;
 };

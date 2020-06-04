@@ -325,6 +325,7 @@ void SystemMisc_table_count(void);
 void SystemMisc_match_system(void);
 void SystemMisc_match_system_w_filter(void);
 void SystemMisc_system_initial_state(void);
+void SystemMisc_add_own_component(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -348,6 +349,11 @@ void TriggerOnAdd_2_systems_w_table_creation(void);
 void TriggerOnAdd_2_systems_w_table_creation_in_progress(void);
 void TriggerOnAdd_sys_context(void);
 void TriggerOnAdd_get_sys_context_from_param(void);
+void TriggerOnAdd_remove_added_component_in_on_add_w_set(void);
+void TriggerOnAdd_on_add_in_on_add(void);
+void TriggerOnAdd_on_remove_in_on_add(void);
+void TriggerOnAdd_on_set_in_on_add(void);
+void TriggerOnAdd_on_add_in_on_update(void);
 
 // Testsuite 'TriggerOnRemove'
 void TriggerOnRemove_remove_match_1_of_1(void);
@@ -397,6 +403,10 @@ void SystemOnSet_add_base_to_2_overridden(void);
 void SystemOnSet_add_base_to_1_of_2_overridden(void);
 void SystemOnSet_on_set_after_remove_override(void);
 void SystemOnSet_no_set_after_remove_base(void);
+void SystemOnSet_add_to_current_in_on_set(void);
+void SystemOnSet_remove_from_current_in_on_set(void);
+void SystemOnSet_remove_set_component_in_on_set(void);
+void SystemOnSet_match_table_created_w_add_in_on_set(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -796,19 +806,8 @@ void SingleThreadStaging_remove_after_set(void);
 void SingleThreadStaging_delete_after_set(void);
 void SingleThreadStaging_add_to_current_in_on_add(void);
 void SingleThreadStaging_remove_from_current_in_on_add(void);
-void SingleThreadStaging_add_to_current_in_on_set(void);
-void SingleThreadStaging_remove_from_current_in_on_set(void);
-void SingleThreadStaging_remove_set_component_in_on_set(void);
 void SingleThreadStaging_remove_added_component_in_on_add(void);
-void SingleThreadStaging_remove_added_component_in_on_add_w_set(void);
-void SingleThreadStaging_on_add_in_on_add(void);
-void SingleThreadStaging_on_remove_in_on_add(void);
-void SingleThreadStaging_on_set_in_on_add(void);
-void SingleThreadStaging_on_add_in_on_update(void);
-void SingleThreadStaging_on_remove_in_on_update(void);
 void SingleThreadStaging_match_table_created_in_progress(void);
-void SingleThreadStaging_match_table_created_w_add_in_on_set(void);
-void SingleThreadStaging_match_table_created_w_set_in_on_set(void);
 void SingleThreadStaging_match_table_created_w_new_in_progress(void);
 void SingleThreadStaging_match_table_created_w_new_in_on_set(void);
 void SingleThreadStaging_merge_table_w_container_added_in_progress(void);
@@ -1966,7 +1965,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 46,
+        .testcase_count = 47,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -2151,12 +2150,16 @@ static bake_test_suite suites[] = {
             {
                 .id = "system_initial_state",
                 .function = SystemMisc_system_initial_state
+            },
+            {
+                .id = "add_own_component",
+                .function = SystemMisc_add_own_component
             }
         }
     },
     {
         .id = "TriggerOnAdd",
-        .testcase_count = 21,
+        .testcase_count = 26,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_match_1_of_1",
@@ -2241,6 +2244,26 @@ static bake_test_suite suites[] = {
             {
                 .id = "get_sys_context_from_param",
                 .function = TriggerOnAdd_get_sys_context_from_param
+            },
+            {
+                .id = "remove_added_component_in_on_add_w_set",
+                .function = TriggerOnAdd_remove_added_component_in_on_add_w_set
+            },
+            {
+                .id = "on_add_in_on_add",
+                .function = TriggerOnAdd_on_add_in_on_add
+            },
+            {
+                .id = "on_remove_in_on_add",
+                .function = TriggerOnAdd_on_remove_in_on_add
+            },
+            {
+                .id = "on_set_in_on_add",
+                .function = TriggerOnAdd_on_set_in_on_add
+            },
+            {
+                .id = "on_add_in_on_update",
+                .function = TriggerOnAdd_on_add_in_on_update
             }
         }
     },
@@ -2360,7 +2383,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 17,
+        .testcase_count = 21,
         .testcases = (bake_test_case[]){
             {
                 .id = "set_1_of_1",
@@ -2429,6 +2452,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "no_set_after_remove_base",
                 .function = SystemOnSet_no_set_after_remove_base
+            },
+            {
+                .id = "add_to_current_in_on_set",
+                .function = SystemOnSet_add_to_current_in_on_set
+            },
+            {
+                .id = "remove_from_current_in_on_set",
+                .function = SystemOnSet_remove_from_current_in_on_set
+            },
+            {
+                .id = "remove_set_component_in_on_set",
+                .function = SystemOnSet_remove_set_component_in_on_set
+            },
+            {
+                .id = "match_table_created_w_add_in_on_set",
+                .function = SystemOnSet_match_table_created_w_add_in_on_set
             }
         }
     },
@@ -3816,7 +3855,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SingleThreadStaging",
-        .testcase_count = 70,
+        .testcase_count = 59,
         .testcases = (bake_test_case[]){
             {
                 .id = "new_empty",
@@ -3995,56 +4034,12 @@ static bake_test_suite suites[] = {
                 .function = SingleThreadStaging_remove_from_current_in_on_add
             },
             {
-                .id = "add_to_current_in_on_set",
-                .function = SingleThreadStaging_add_to_current_in_on_set
-            },
-            {
-                .id = "remove_from_current_in_on_set",
-                .function = SingleThreadStaging_remove_from_current_in_on_set
-            },
-            {
-                .id = "remove_set_component_in_on_set",
-                .function = SingleThreadStaging_remove_set_component_in_on_set
-            },
-            {
                 .id = "remove_added_component_in_on_add",
                 .function = SingleThreadStaging_remove_added_component_in_on_add
             },
             {
-                .id = "remove_added_component_in_on_add_w_set",
-                .function = SingleThreadStaging_remove_added_component_in_on_add_w_set
-            },
-            {
-                .id = "on_add_in_on_add",
-                .function = SingleThreadStaging_on_add_in_on_add
-            },
-            {
-                .id = "on_remove_in_on_add",
-                .function = SingleThreadStaging_on_remove_in_on_add
-            },
-            {
-                .id = "on_set_in_on_add",
-                .function = SingleThreadStaging_on_set_in_on_add
-            },
-            {
-                .id = "on_add_in_on_update",
-                .function = SingleThreadStaging_on_add_in_on_update
-            },
-            {
-                .id = "on_remove_in_on_update",
-                .function = SingleThreadStaging_on_remove_in_on_update
-            },
-            {
                 .id = "match_table_created_in_progress",
                 .function = SingleThreadStaging_match_table_created_in_progress
-            },
-            {
-                .id = "match_table_created_w_add_in_on_set",
-                .function = SingleThreadStaging_match_table_created_w_add_in_on_set
-            },
-            {
-                .id = "match_table_created_w_set_in_on_set",
-                .function = SingleThreadStaging_match_table_created_w_set_in_on_set
             },
             {
                 .id = "match_table_created_w_new_in_progress",

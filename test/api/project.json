@@ -367,7 +367,8 @@
                 "table_count",
                 "match_system",
                 "match_system_w_filter",
-                "system_initial_state"
+                "system_initial_state",
+                "add_own_component"
             ]
         }, {
             "id": "TriggerOnAdd",
@@ -392,7 +393,12 @@
                 "2_systems_w_table_creation",
                 "2_systems_w_table_creation_in_progress",
                 "sys_context",
-                "get_sys_context_from_param"
+                "get_sys_context_from_param",
+                "remove_added_component_in_on_add_w_set",
+                "on_add_in_on_add",
+                "on_remove_in_on_add",
+                "on_set_in_on_add",
+                "on_add_in_on_update"
             ]
         }, {
             "id": "TriggerOnRemove",
@@ -449,7 +455,11 @@
                 "add_base_to_2_overridden",
                 "add_base_to_1_of_2_overridden",
                 "on_set_after_remove_override",
-                "no_set_after_remove_base"
+                "no_set_after_remove_base",
+                "add_to_current_in_on_set",
+                "remove_from_current_in_on_set",
+                "remove_set_component_in_on_set",
+                "match_table_created_w_add_in_on_set"
             ]
         }, {
             "id": "SystemPeriodic",
@@ -881,19 +891,8 @@
                 "delete_after_set",
                 "add_to_current_in_on_add",
                 "remove_from_current_in_on_add",
-                "add_to_current_in_on_set",
-                "remove_from_current_in_on_set",
-                "remove_set_component_in_on_set",
                 "remove_added_component_in_on_add",
-                "remove_added_component_in_on_add_w_set",
-                "on_add_in_on_add",
-                "on_remove_in_on_add",
-                "on_set_in_on_add",
-                "on_add_in_on_update",
-                "on_remove_in_on_update",
                 "match_table_created_in_progress",
-                "match_table_created_w_add_in_on_set",
-                "match_table_created_w_set_in_on_set",
                 "match_table_created_w_new_in_progress",
                 "match_table_created_w_new_in_on_set",
                 "merge_table_w_container_added_in_progress",

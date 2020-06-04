@@ -247,7 +247,7 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
 
     ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position, &ecs_entity(Velocity));
     ECS_SYSTEM(world, SetPosition, EcsOnSet, Position);
-    ECS_SYSTEM(world, OnMovable, 0, Position, Velocity, SYSTEM.EcsMonitor);
+    ECS_SYSTEM(world, OnMovable, EcsMonitor, Position, Velocity);
 
     ecs_set_system_context(world, SetPosition, &ecs_entity(Rotation));
 
