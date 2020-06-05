@@ -593,6 +593,9 @@ extern ecs_type_t
     (void)ecs_iter_action(name);\
     (void)name;
 
+#define ECS_PIPELINE(world, name, ...) \
+    ecs_entity_t name = ecs_new_pipeline(world, 0, #name, #__VA_ARGS__);
+
 #endif
 
 #define ECS_TRIGGER(world, name, kind, component, ctx) \
