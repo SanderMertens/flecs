@@ -285,6 +285,32 @@ void Transform(ecs_view_t *view) {
 }
 ```
 
+## Prefabs
+Hierachies and instancing, when combined, let applications create templates for entity hierarchies. Consider the following example of a hierarchy template:
+
+```c
+// Create top-level template entity. The ECS_PREFAB macro creates a
+// regular entity with the EcsPrefab tag, which hides it from systems.
+ECS_PREFAB(world, Destroyer);
+
+    // Create a child prefab. Children are instantiated for an instance
+    // whenever their parent is instantiated
+    ECS_PREFAB(world, FrontTurret, CHILDOF | Destroyer, Position);
+        ecs_set(world, FrontTurret, Position, {-10, 0});
+
+    // Create another child prefab
+    ECS_PREFAB(world, BackTurret, CHILDOF | Destroyer, Position);
+        ecs_set(world, BackTurret, Position, {10, 0});        
+```
+
+Because these entities are defined as prefabs, they will not be matched with systems. The following code instantiates the template hierarchy by using regular instancing:
+
+```c
+// Instantiates the Destroyer base and its children. After this operation the instance will have two children, one for each turret.
+ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Destroyer);
+```
+
+
 ## Queries
 Queries are like systems in that they let applications iterate over entities, but without having to create a separate function. Systems use queries internally however, so their APIs are similar:
 
