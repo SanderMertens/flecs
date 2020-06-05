@@ -1597,10 +1597,6 @@ public:
         ecs_enable(m_world, m_id, false);
     }
 
-    bool is_enabled() const {
-        return ecs_is_enabled(m_world, m_id);
-    }
-
     void set_period(float period) const {
         ecs_set_interval(m_world, m_id, period);
     }

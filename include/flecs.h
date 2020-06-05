@@ -1243,10 +1243,23 @@ ecs_entity_t ecs_get_parent_w_entity(
 #define ecs_get_parent(world, entity, component)\
     ecs_get_parent_w_entity(world, entity, ecs_entity(component))
 
-
+/** Enable or disable an entity.
+ * This operation enables or disables an entity by adding or removing the
+ * EcsDisabled tag.
+ *
+ * @param world The world.
+ * @param system The system to enable or disable.
+ * @param enabled true to enable the system, false to disable the system.
+ * @return 0 if succeeded, -1 if the operation failed.
+ */
+FLECS_EXPORT
+void ecs_enable(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    bool enabled);
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Rows API
+//// View API
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Obtain column data. 
@@ -1532,32 +1545,19 @@ bool ecs_filter_next(
 //// System API
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Enable or disable a system.
- * This operation enables or disables an entity by adding or removing the
- * EcsDisabled tag.
+/** Deactivate systems that are not matched with tables.
+ * By default Flecs deactivates systems that are not matched with any tables.
+ * However, once a system has been matched with a table it remains activated, to
+ * prevent systems from continuously becoming active and inactive.
+ *
+ * To re-deactivate systems, an application can invoke this function, which will
+ * deactivate all systems that are not matched with any tables.
  *
  * @param world The world.
- * @param system The system to enable or disable.
- * @param enabled true to enable the system, false to disable the system.
- * @return 0 if succeeded, -1 if the operation failed.
  */
 FLECS_EXPORT
-void ecs_enable(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    bool enabled);
-
-/** Returns the enabled status for an entity.
- * Returns true if entity is Disabled (has the EcsDisabled) tag.
- *
- * @param world The world.
- * @param system The system to check.
- * @return True if the system is enabled, false if the system is disabled.
- */
-FLECS_EXPORT
-bool ecs_is_enabled(
-    ecs_world_t *world,
-    ecs_entity_t system);
+void ecs_deactivate_systems(
+    ecs_world_t *world);
 
 /** Run a specific system manually.
  * This operation runs a single system manually. It is an efficient way to

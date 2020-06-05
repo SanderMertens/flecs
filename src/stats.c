@@ -581,7 +581,7 @@ void StatsCollectTypeStats(ecs_view_t *view) {
                 } else
                 if (ecs_has(world, e, EcsSystem)) {
                     stats[i].col_systems_count ++;
-                    if (ecs_is_enabled(world, e)) {
+                    if (!ecs_has_entity(world, e, EcsDisabled)) {
                         stats[i].enabled_systems_count ++;
                     }
 

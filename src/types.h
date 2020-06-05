@@ -293,6 +293,7 @@ struct ecs_ei_t {
 };
 
 typedef enum ecs_op_kind_t {
+    EcsOpNone,
     EcsOpAdd,
     EcsOpRemove,   
     EcsOpSet,

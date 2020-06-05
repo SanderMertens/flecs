@@ -503,10 +503,3 @@ void ecs_run_monitor(
     view.system = system;
     system_data->action(&view);
 }
-
-bool ecs_is_enabled(
-    ecs_world_t *world,
-    ecs_entity_t system)
-{
-    return !ecs_has_entity(world, system, EcsDisabled);
-}

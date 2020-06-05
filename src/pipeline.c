@@ -392,3 +392,39 @@ void ecs_init_pipeline_builtins(
         "EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,"
         " EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame");
 }
+
+void ecs_deactivate_systems(
+    ecs_world_t *world)
+{
+    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+
+    ecs_entity_t pipeline = world->pipeline;
+    const EcsPipelineQuery *pq = ecs_get( world, pipeline, EcsPipelineQuery);
+    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Iterate over all systems, add EcsInvalid tag if queries aren't matched
+     * with any tables */
+    ecs_query_iter_t it = ecs_query_iter(pq->build_query, 0, 0);
+
+    /* Make sure that we defer adding the inactive tags until after iterating
+     * the query */
+    ecs_defer_begin(world, &world->stage, EcsOpNone, 0, NULL, NULL, 0);
+
+    while( ecs_query_next(&it)) {
+        ecs_view_t *view = &it.view;
+
+        EcsSystem *sys = ecs_column(view, EcsSystem, 1);
+
+        int32_t i;
+        for (i = 0; i < view->count; i ++) {
+            ecs_query_t *query = sys->query;
+            if (query) {
+                if (!ecs_vector_count(query->tables)) {
+                    ecs_add_entity(world, view->entities[i], EcsInactive);
+                }
+            }
+        }
+    }
+
+    ecs_defer_end(world, &world->stage);
+}

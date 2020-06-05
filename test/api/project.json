@@ -370,7 +370,8 @@
                 "match_system_w_filter",
                 "system_initial_state",
                 "add_own_component",
-                "change_system_action"
+                "change_system_action",
+                "system_readeactivate"
             ]
         }, {
             "id": "TriggerOnAdd",

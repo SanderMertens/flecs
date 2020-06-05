@@ -1059,7 +1059,7 @@ void World_is_entity_enabled() {
 
     ecs_entity_t e = ecs_new(world, 0);
 
-    test_assert( ecs_is_enabled(world, e) == true);
+    test_assert( ecs_has_entity(world, e, EcsDisabled) == false);
 
     ecs_fini(world);
 }

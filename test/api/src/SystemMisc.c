@@ -765,24 +765,25 @@ void SystemMisc_dont_enable_after_rematch() {
     ecs_set_context(world, &ctx);
 
     /* System is enabled but doesn't match with any entities */
-    test_bool(ecs_is_enabled(world, Dummy), true);
+    
+    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), false);
     ecs_progress(world, 1);
     test_int(ctx.count, 0);
 
     /* Explicitly disable system before triggering a rematch */
     ecs_enable(world, Dummy, false);
-    test_bool(ecs_is_enabled(world, Dummy), false);
+    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), true);
 
     /* Trigger a rematch. System should still be disabled after this */
     ecs_add(world, Prefab, Velocity);
-    test_bool(ecs_is_enabled(world, Dummy), false);
+    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), true);
 
     ecs_progress(world, 1);
     test_int(ctx.count, 0);
 
     /* Enable system. It is matched, so should now be invoked */
     ecs_enable(world, Dummy, true);
-    test_bool(ecs_is_enabled(world, Dummy), true);
+    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), false);
 
     ecs_progress(world, 1);
     test_int(ctx.count, 1);
@@ -967,6 +968,35 @@ void SystemMisc_change_system_action() {
 
     test_bool(action_a_invoked, false);
     test_bool(action_b_invoked, true);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_system_readeactivate() {
+    ecs_world_t * world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    /* No entities, system should be deactivated */
+    test_assert( ecs_has_entity(world, Dummy, EcsInactive));
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    /* System should be active, one entity is matched */
+    test_assert( !ecs_has_entity(world, Dummy, EcsInactive));
+
+    ecs_delete(world, e);
+
+    /* System is not automatically deactivated */
+    test_assert( !ecs_has_entity(world, Dummy, EcsInactive));
+
+    /* Manually deactivate system that aren't matched with entities */
+    ecs_deactivate_systems(world);
+
+    /* System should be deactivated */
+    test_assert( ecs_has_entity(world, Dummy, EcsInactive));
 
     ecs_fini(world);
 }

@@ -111,6 +111,19 @@ void ecs_component_monitor_register(
     ecs_entity_t component,
     ecs_query_t *query);
 
+bool ecs_defer_begin(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_op_kind_t op_kind,
+    ecs_entity_t entity,
+    ecs_entities_t *components,
+    const void *value,
+    size_t size);
+
+void ecs_defer_end(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
 ////////////////////////////////////////////////////////////////////////////////

@@ -864,10 +864,14 @@ void ecs_set_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline)
 {
-    world->pipeline = pipeline;
-}      
+    ecs_assert( ecs_has_entity(world, pipeline, EcsPipeline), 
+        ECS_INVALID_PARAMETER, NULL);
+    ecs_assert( ecs_get(world, pipeline, EcsPipelineQuery) != NULL, 
+        ECS_INVALID_PARAMETER, NULL);
 
-FLECS_EXPORT
+    world->pipeline = pipeline;
+}
+
 ecs_entity_t ecs_get_pipeline(
     ecs_world_t *world)
 {

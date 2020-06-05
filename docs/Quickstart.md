@@ -310,7 +310,6 @@ Because these entities are defined as prefabs, they will not be matched with sys
 ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Destroyer);
 ```
 
-
 ## Queries
 Queries are like systems in that they let applications iterate over entities, but without having to create a separate function. Systems use queries internally however, so their APIs are similar:
 
