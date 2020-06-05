@@ -2100,7 +2100,7 @@ void SingleThreadStaging_add_to_current_in_on_add() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TRIGGER(world, Add_to_current, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, Add_to_current, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_entity(Velocity)};
     ecs_set_context(world, &ctx);
@@ -2127,7 +2127,7 @@ void SingleThreadStaging_remove_from_current_in_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2154,7 +2154,7 @@ void SingleThreadStaging_remove_added_component_in_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2840,7 +2840,7 @@ void SingleThreadStaging_on_add_after_new_type_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, AddInProgress2, EcsOnUpdate, Position, .Velocity);
-    ECS_TRIGGER(world, OnAdd, EcsOnAdd, Velocity, NULL);
+    ECS_TRIGGER(world, OnAdd, EcsOnAdd, Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
 

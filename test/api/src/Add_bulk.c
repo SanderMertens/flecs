@@ -373,7 +373,7 @@ void Add_bulk_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Velocity, NULL);
+    ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -473,7 +473,7 @@ void Add_bulk_add_entity_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Velocity, NULL);
+    ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);

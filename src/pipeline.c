@@ -385,7 +385,7 @@ void ecs_init_pipeline_builtins(
     ecs_set(world, EcsPostFrame, EcsName, {"EcsPostFrame"});
 
     /* When the Pipeline tag is added a pipeline will be created */
-    ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline, 0);
+    ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline);
 
     /* Create the builtin pipeline */
     world->pipeline = ecs_new_pipeline(world, 0, "EcsBuiltinPipeline",

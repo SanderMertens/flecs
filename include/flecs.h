@@ -336,7 +336,7 @@ typedef struct EcsViewAction {
 
 /* System context */
 typedef struct EcsContext {
-    void *ctx;
+    const void *ctx;
 } EcsContext;
 
 
@@ -598,8 +598,8 @@ extern ecs_type_t
 
 #endif
 
-#define ECS_TRIGGER(world, name, kind, component, ctx) \
-    ecs_entity_t __F##name = ecs_new_trigger(world, 0, #name, kind, #component, name, ctx);\
+#define ECS_TRIGGER(world, name, kind, component) \
+    ecs_entity_t __F##name = ecs_new_trigger(world, 0, #name, kind, #component, name);\
     ecs_entity_t name = __F##name;\
     (void)__F##name;\
     (void)name;

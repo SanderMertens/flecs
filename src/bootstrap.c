@@ -85,7 +85,22 @@ void ecs_colsystem_dtor(
 
 /* Register a trigger for a component */
 static
-void ecs_trigger_set_intern(
+EcsTrigger* trigger_find_or_create(
+    ecs_vector_t **triggers,
+    ecs_entity_t entity)
+{
+    ecs_vector_each(*triggers, EcsTrigger, trigger, {
+        if (trigger->self == entity) {
+            return trigger;
+        }
+    });
+
+    EcsTrigger *result = ecs_vector_add(triggers, EcsTrigger);
+    return result;
+}
+
+static
+void trigger_set(
     ecs_world_t *world,
     const ecs_entity_t *entities,
     EcsTrigger *ct,
@@ -100,10 +115,10 @@ void ecs_trigger_set_intern(
         ecs_c_info_t *cdata = ecs_get_or_create_c_info(world, e);
         switch(ct[i].kind) {
         case EcsOnAdd:
-            el = ecs_vector_add(&cdata->on_add, EcsTrigger);
+            el = trigger_find_or_create(&cdata->on_add, entities[i]);
             break;
         case EcsOnRemove:
-            el = ecs_vector_add(&cdata->on_remove, EcsTrigger);
+            el = trigger_find_or_create(&cdata->on_remove, entities[i]);
             break;
         default:
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
@@ -118,9 +133,7 @@ void ecs_trigger_set_intern(
         ecs_trace_1("trigger #[green]%s#[normal] created for component #[red]%s",
             ct[i].kind == EcsOnAdd
                 ? "OnAdd"
-                : ct[i].kind == EcsOnRemove
-                    ? "OnRemove"
-                    : "OnSet", ecs_get_name(world, e));
+                : "OnRemove", ecs_get_name(world, e));
     }
 }
 
@@ -129,7 +142,23 @@ void EcsOnSetTrigger(
     ecs_view_t *view)
 {
     EcsTrigger *ct = ecs_column(view, EcsTrigger, 1);
-    ecs_trigger_set_intern(view->world, view->entities, ct, view->count);
+    
+    trigger_set(view->world, view->entities, ct, view->count);
+}
+
+static
+void EcsOnSetTriggerCtx(
+    ecs_view_t *view)
+{
+    EcsTrigger *ct = ecs_column(view, EcsTrigger, 1);
+    EcsContext *ctx = ecs_column(view, EcsContext, 2);
+
+    int32_t i;
+    for (i = 0; i < view->count; i ++) {
+        ct[i].ctx = (void*)ctx[i].ctx;
+    }
+
+    trigger_set(view->world, view->entities, ct, view->count);    
 }
 
 /* System that registers component lifecycle callbacks */
@@ -248,7 +277,7 @@ void EcsCreateSystem(
         ecs_entity_t e = entities[i];
         void *ctx_ptr = NULL;
         if (ctx) {
-            ctx_ptr = ctx[i].ctx;
+            ctx_ptr = (void*)ctx[i].ctx;
         }
 
         ecs_init_system(world, e, action[i].action, query[i].query, ctx_ptr);
@@ -297,6 +326,9 @@ void ecs_init_builtins(
 
     /* Register OnSet system for triggers */
     ECS_SYSTEM(world, EcsOnSetTrigger, EcsOnSet, EcsTrigger);
+
+    /* System that sets ctx for a trigger */
+    ECS_SYSTEM(world, EcsOnSetTriggerCtx, EcsOnSet, EcsTrigger, EcsContext);
 
     /* Monitors that trigger when a system is enabled or disabled */
     ECS_SYSTEM(world, EcsDisableSystem, EcsMonitor, EcsSystem, EcsDisabled || EcsDisabledIntern);

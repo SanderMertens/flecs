@@ -259,7 +259,7 @@ void Remove_bulk_on_remove() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_TRIGGER(world, RemoveVelocity, EcsOnRemove, Velocity, NULL);
+    ECS_TRIGGER(world, RemoveVelocity, EcsOnRemove, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -362,7 +362,7 @@ void Remove_bulk_remove_entity_on_remove() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_TRIGGER(world, RemoveVelocity, EcsOnRemove, Velocity, NULL);
+    ECS_TRIGGER(world, RemoveVelocity, EcsOnRemove, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);

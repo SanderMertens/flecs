@@ -197,8 +197,7 @@ ecs_entity_t ecs_new_trigger(
     const char *name,
     ecs_entity_t kind,
     const char *component,
-    ecs_view_action_t action,
-    const void *ctx);
+    ecs_view_action_t action);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_pipeline(

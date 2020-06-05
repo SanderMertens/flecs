@@ -328,8 +328,7 @@ ecs_entity_t ecs_new_trigger(
     const char *name,
     ecs_entity_t kind,
     const char *component_name,
-    ecs_view_action_t action,
-    const void *ctx)
+    ecs_view_action_t action)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
 
@@ -344,7 +343,7 @@ ecs_entity_t ecs_new_trigger(
             .kind = kind,
             .action = action,
             .component = component,
-            .ctx = (void*)ctx
+            .ctx = NULL
         });
     } else {
         EcsTrigger *ptr = ecs_get_mut(world, result, EcsTrigger, NULL);

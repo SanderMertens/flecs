@@ -233,7 +233,7 @@ void MultiThreadStaging_2_threads_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity, NULL);
+    ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, .Velocity);
 
     Probe ctx = {0};

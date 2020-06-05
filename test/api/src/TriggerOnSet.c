@@ -246,7 +246,7 @@ void TriggerOnSet_set_and_add_system() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, OnSet_check_order, EcsOnSet, Position);
-    ECS_TRIGGER(world, OnAdd_check_order, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, OnAdd_check_order, EcsOnAdd, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);

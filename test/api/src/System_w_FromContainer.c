@@ -1036,7 +1036,9 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ECS_ENTITY(world, e_4, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT.Mass, Position);
-    ECS_TRIGGER(world, AddMass, EcsOnAdd, Tag, &ecs_entity(Mass));
+    ECS_TRIGGER(world, AddMass, EcsOnAdd, Tag);
+
+    ecs_set(world, AddMass, EcsContext, {&ecs_entity(Mass)});
 
     ecs_entity_t parent = ecs_new(world, 0);
     ecs_add_entity(world, e_1, ECS_CHILDOF | parent);

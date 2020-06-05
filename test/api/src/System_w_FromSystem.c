@@ -54,7 +54,7 @@ void System_w_FromSystem_2_column_1_from_system() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity, NULL);
+    ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SYSTEM.Velocity);
 
     test_assert( ecs_has(world, Iter, Velocity));
@@ -102,8 +102,8 @@ void System_w_FromSystem_3_column_2_from_system() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity, NULL);
-    ECS_TRIGGER(world, InitMass, EcsOnAdd, Mass, NULL);
+    ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity);
+    ECS_TRIGGER(world, InitMass, EcsOnAdd, Mass);
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SYSTEM.Velocity, SYSTEM.Mass);
 
     test_assert( ecs_has(world, Iter, Velocity));

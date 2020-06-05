@@ -1515,7 +1515,7 @@ void Prefab_ignore_on_add() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnAdd, Position);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -1529,7 +1529,7 @@ void Prefab_ignore_on_remove() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnRemove, Position, NULL);
+    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnRemove, Position);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -2361,7 +2361,7 @@ void Prefab_clone_after_inherit_in_on_add() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TRIGGER(world, CloneInOnAdd, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, CloneInOnAdd, EcsOnAdd, Position);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);

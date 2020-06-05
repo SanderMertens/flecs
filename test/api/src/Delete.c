@@ -190,7 +190,7 @@ void Delete_delete_w_on_remove() {
 
     ECS_SYSTEM(world, CreateEntity, EcsOnUpdate, .Position);
     ECS_SYSTEM(world, DeleteEntity, EcsOnStore, Position);
-    ECS_TRIGGER(world, OnRemoveSystem, EcsOnRemove, Position, NULL);
+    ECS_TRIGGER(world, OnRemoveSystem, EcsOnRemove, Position);
 
     ecs_progress(world, 0);
 
