@@ -191,6 +191,20 @@ typedef void (*ecs_move_t)(
     int32_t count,
     void *ctx);
 
+typedef struct ecs_filter_iter_t {
+    ecs_filter_t filter;
+    ecs_sparse_t *tables;
+    int32_t index;
+} ecs_filter_iter_t;
+
+typedef struct ecs_query_iter_t {
+    ecs_query_t *query;
+    int32_t offset;
+    int32_t limit;
+    int32_t remaining;
+    int32_t index;
+} ecs_query_iter_t;    
+
 /** The ecs_view_t struct passes data from a system to a system callback.  */
 struct ecs_view_t {
     ecs_world_t *world;          /* Current world */
@@ -218,6 +232,11 @@ struct ecs_view_t {
 
     ecs_entities_t *triggered_by; /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
+
+    union {
+        ecs_query_iter_t query;
+        ecs_filter_iter_t filter;
+    } iter;
 };
 
 /* World info */
@@ -1489,13 +1508,6 @@ void* ecs_table_column(
 //// Filter iterator API
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct ecs_filter_iter_t {
-    ecs_filter_t filter;
-    ecs_sparse_t *tables;
-    int32_t index;
-    ecs_view_t view;
-} ecs_filter_iter_t;
-
 /** Create iterator that matches world tables with specified filter.
  * This operation allows applications to query entities ad hoc with a filter. 
  * Combined with the ecs_filter_next function an application can iterate over a
@@ -1508,13 +1520,13 @@ typedef struct ecs_filter_iter_t {
  * @return An iterator that can be used with ecs_filter_next.
  */
 FLECS_EXPORT
-ecs_filter_iter_t ecs_filter_iter(
+ecs_view_t ecs_filter_iter(
     ecs_world_t *world,
     const ecs_filter_t *filter);
 
 /** Same as ecs_filter_iter, but for iterating snapshots tables. */
 FLECS_EXPORT
-ecs_filter_iter_t ecs_snapshot_filter_iter(
+ecs_view_t ecs_snapshot_filter_iter(
     ecs_world_t *world,
     const ecs_snapshot_t *snapshot,
     const ecs_filter_t *filter);    
@@ -1538,7 +1550,7 @@ ecs_filter_iter_t ecs_snapshot_filter_iter(
  */
 FLECS_EXPORT
 bool ecs_filter_next(
-    ecs_filter_iter_t *iter);
+    ecs_view_t *iter);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1821,20 +1833,6 @@ void ecs_set_tick_source(
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct ecs_query_iter_t {
-    ecs_query_t *query;
-    int32_t offset;
-    int32_t limit;
-    int32_t remaining;
-    int32_t index;
-
-    /* This member can be read by the application to obtain component columns.
-     * Columns can be obtained the same way as with normal systems, with the
-     * ECS_COLUMN macro and by providing the correct index of the column in the
-     * query signature expression. */
-    ecs_view_t view;
-} ecs_query_iter_t;
-
 /** Create a query.
  * This operation creates a query. Queries are used to iterate over entities
  * that match a signature expression.
@@ -1897,12 +1895,27 @@ void ecs_query_free(
  * application to obtain the component data, just like with systems.
  *
  * @param query The query to iterate.
+ * @return The query iterator.
+ */
+FLECS_EXPORT
+ecs_view_t ecs_query_iter(
+    ecs_query_t *query);  
+
+/** Iterate over a query.
+ * This operation returns an iterator to a query. Multiple iterators can be
+ * created per query. It is safe to iterate over a query from multiple threads,
+ * as long as each thread uses its own iterator.
+ *
+ * The iterator contains an ecs_view_t struct which can be read by the 
+ * application to obtain the component data, just like with systems.
+ *
+ * @param query The query to iterate.
  * @param offset The number of entities to skip.
  * @param limit The maximum number of entities to iterate.
  * @return The query iterator.
  */
 FLECS_EXPORT
-ecs_query_iter_t ecs_query_iter(
+ecs_view_t ecs_query_iter_page(
     ecs_query_t *query,
     int32_t offset,
     int32_t limit);  
@@ -1916,7 +1929,7 @@ ecs_query_iter_t ecs_query_iter(
  */
 FLECS_EXPORT
 bool ecs_query_next(
-    ecs_query_iter_t *iter);      
+    ecs_view_t *iter);      
 
 
 ////////////////////////////////////////////////////////////////////////////////

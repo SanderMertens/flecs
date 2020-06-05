@@ -128,14 +128,12 @@ void build_pipeline(
     }
 
     /* Iterate systems in pipeline, add ops for running / merging */
-    ecs_query_iter_t it = ecs_query_iter(query, 0, 0);
-    while (ecs_query_next(&it)) {
-        ecs_view_t *view = &it.view;
-        EcsSystem *sys = ecs_column(view, EcsSystem, 1);
+    ecs_view_t view = ecs_query_iter(query);
+    while (ecs_query_next(&view)) {
+        EcsSystem *sys = ecs_column(&view, EcsSystem, 1);
 
         int i;
-        for (i = 0; i < view->count; i ++) {
-
+        for (i = 0; i < view.count; i ++) {
             ecs_query_t *q = sys[i].query;
             if (!q) {
                 continue;
@@ -143,7 +141,7 @@ void build_pipeline(
 
             bool needs_merge = false;
             bool is_active = !ecs_has_entity(
-                world, view->entities[i], EcsInactive);
+                world, view.entities[i], EcsInactive);
 
             ecs_vector_each(q->sig.columns, ecs_sig_column_t, column, {
                 needs_merge |= check_column(column, is_active, write_state);
@@ -191,7 +189,7 @@ static
 int32_t iter_reset(
     ecs_world_t *world,
     EcsPipelineQuery *pq,
-    ecs_query_iter_t *it_out,
+    ecs_view_t *view_out,
     ecs_pipeline_op_t **op_out,
     ecs_entity_t move_to)
 {
@@ -201,13 +199,11 @@ int32_t iter_reset(
     ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
-    ecs_query_iter_t it = ecs_query_iter(pq->query, 0, 0);
-    while (ecs_query_next(&it)) {
-        ecs_view_t *view = &it.view;
-
+    ecs_view_t view = ecs_query_iter(pq->query);
+    while (ecs_query_next(&view)) {
         int32_t i;
-        for(i = 0; i < view->count; i ++) {
-            ecs_entity_t e = view->entities[i];
+        for(i = 0; i < view.count; i ++) {
+            ecs_entity_t e = view.entities[i];
 
             ran_since_merge ++;
             if (ran_since_merge == op->count) {
@@ -216,7 +212,7 @@ int32_t iter_reset(
             }
 
             if (e == move_to) {
-                *it_out = it;
+                *view_out = view;
                 *op_out = op;
                 return i;
             }
@@ -260,14 +256,13 @@ void ecs_progress_pipeline(
 
     ecs_staging_begin(world);
     
-    ecs_query_iter_t it = ecs_query_iter(pq->query, 0, 0);
-    while (ecs_query_next(&it)) {
-        ecs_view_t *view = &it.view;
-        EcsSystem *sys = ecs_column(view, EcsSystem, 1);
+    ecs_view_t view = ecs_query_iter(pq->query);
+    while (ecs_query_next(&view)) {
+        EcsSystem *sys = ecs_column(&view, EcsSystem, 1);
 
         int32_t i;
-        for(i = 0; i < view->count; i ++) {
-            ecs_entity_t e = view->entities[i];
+        for(i = 0; i < view.count; i ++) {
+            ecs_entity_t e = view.entities[i];
             
             ecs_run_intern(world, world, e, &sys[i], delta_time, 0, 0, 
                 NULL, NULL);
@@ -288,9 +283,9 @@ void ecs_progress_pipeline(
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
                 if (pq->match_count != pq->query->match_count) {
-                    i = iter_reset(world, pq, &it, &op, e);
+                    i = iter_reset(world, pq, &view, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
-                    sys = ecs_column(view, EcsSystem, 1);
+                    sys = ecs_column(&view, EcsSystem, 1);
                 }
             }
         }
@@ -404,23 +399,21 @@ void ecs_deactivate_systems(
 
     /* Iterate over all systems, add EcsInvalid tag if queries aren't matched
      * with any tables */
-    ecs_query_iter_t it = ecs_query_iter(pq->build_query, 0, 0);
+    ecs_view_t view = ecs_query_iter(pq->build_query);
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
     ecs_defer_begin(world, &world->stage, EcsOpNone, 0, NULL, NULL, 0);
 
-    while( ecs_query_next(&it)) {
-        ecs_view_t *view = &it.view;
-
-        EcsSystem *sys = ecs_column(view, EcsSystem, 1);
+    while( ecs_query_next(&view)) {
+        EcsSystem *sys = ecs_column(&view, EcsSystem, 1);
 
         int32_t i;
-        for (i = 0; i < view->count; i ++) {
+        for (i = 0; i < view.count; i ++) {
             ecs_query_t *query = sys->query;
             if (query) {
                 if (!ecs_vector_count(query->tables)) {
-                    ecs_add_entity(world, view->entities[i], EcsInactive);
+                    ecs_add_entity(world, view.entities[i], EcsInactive);
                 }
             }
         }

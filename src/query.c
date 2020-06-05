@@ -1304,7 +1304,7 @@ void ecs_query_free(
 }
 
 /* Create query iterator */
-ecs_query_iter_t ecs_query_iter(
+ecs_view_t ecs_query_iter_page(
     ecs_query_t *query,
     int32_t offset,
     int32_t limit)
@@ -1320,20 +1320,28 @@ ecs_query_iter_t ecs_query_iter(
         table_count = ecs_vector_count(query->tables);
     }
 
-    return (ecs_query_iter_t){
+    ecs_query_iter_t it = {
         .query = query,
         .offset = offset,
         .limit = limit,
         .remaining = limit,
         .index = 0,
-        .view = {
-            .world = query->world,
-            .query = query,
-            .column_count = ecs_vector_count(query->sig.columns),
-            .table_count = table_count,
-            .inactive_table_count = ecs_vector_count(query->empty_tables)
-        }
     };
+
+    return (ecs_view_t){
+        .world = query->world,
+        .query = query,
+        .column_count = ecs_vector_count(query->sig.columns),
+        .table_count = table_count,
+        .inactive_table_count = ecs_vector_count(query->empty_tables),
+        .iter.query = it
+    };
+}
+
+ecs_view_t ecs_query_iter(
+    ecs_query_t *query)
+{
+    return ecs_query_iter_page(query, 0, 0);
 }
 
 void ecs_query_set_view(
@@ -1370,12 +1378,11 @@ void ecs_query_set_view(
 
 /* Return next table */
 bool ecs_query_next(
-    ecs_query_iter_t *iter)
+    ecs_view_t *view)
 {
-    ecs_assert(iter != NULL, ECS_INVALID_PARAMETER, NULL);
-
+    ecs_assert(view != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_query_iter_t *iter = &view->iter.query;
     ecs_query_t *query = iter->query;
-    ecs_view_t *view = &iter->view;
     ecs_world_t *world = view->world;
 
     ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
@@ -1383,7 +1390,7 @@ bool ecs_query_next(
 
     ecs_assert(!ranges || query->compare, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t table_count = iter->view.table_count;
+    int32_t table_count = view->table_count;
     if (ranges) {
         table_count = ecs_vector_count(query->table_ranges);
     } else {

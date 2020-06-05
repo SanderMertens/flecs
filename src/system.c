@@ -381,39 +381,39 @@ ecs_entity_t ecs_run_intern(
     }
 
     /* Prepare the query iterator */
-    ecs_query_iter_t qiter = ecs_query_iter(system_data->query, offset, limit);
-    qiter.view.world = world;
-    qiter.view.system = system;
-    qiter.view.delta_time = delta_time;
-    qiter.view.delta_system_time = time_elapsed;
-    qiter.view.world_time = real_world->stats.world_time_total;
-    qiter.view.frame_offset = offset;
+    ecs_view_t view = ecs_query_iter_page(system_data->query, offset, limit);
+    view.world = world;
+    view.system = system;
+    view.delta_time = delta_time;
+    view.delta_system_time = time_elapsed;
+    view.world_time = real_world->stats.world_time_total;
+    view.frame_offset = offset;
     
     /* Set param if provided, otherwise use system context */
     if (param) {
-        qiter.view.param = param;
+        view.param = param;
     } else {
-        qiter.view.param = system_data->ctx;
+        view.param = system_data->ctx;
     }
 
     ecs_view_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
     if (!filter) {
-        while (ecs_query_next(&qiter)) {
-            action(&qiter.view);
+        while (ecs_query_next(&view)) {
+            action(&view);
         }
 
     /* If filter is provided, match each table with the provided filter */
     } else {
-        while (ecs_query_next(&qiter)) {
-            ecs_table_t *table = qiter.view.table;
+        while (ecs_query_next(&view)) {
+            ecs_table_t *table = view.table;
             if (!ecs_table_match_filter(real_world, table, filter))
             {
                 continue;
             }
 
-            action(&qiter.view);
+            action(&view);
         }        
     }
 
@@ -423,7 +423,7 @@ ecs_entity_t ecs_run_intern(
     
     system_data->invoke_count ++;
 
-    return qiter.view.interrupted_by;
+    return view.interrupted_by;
 }
 
 /* -- Public API -- */
