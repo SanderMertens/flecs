@@ -69,7 +69,7 @@ void Snapshot_snapshot_after_delete() {
     ecs_snapshot_restore(world, s);    
 
     test_assert(ecs_has(world, e, Position));
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 

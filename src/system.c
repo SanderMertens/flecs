@@ -137,7 +137,7 @@ void ecs_system_activate(
         ecs_remove_entity(world, system, EcsInactive);
     }
 
-    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
+    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
     if (!system_data || !system_data->query) {
         return;
     }
@@ -294,7 +294,7 @@ void ecs_enable(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    const EcsType *type_ptr = ecs_get_ptr( world, entity, EcsType);
+    const EcsType *type_ptr = ecs_get( world, entity, EcsType);
     if (type_ptr) {
         /* If entity is a type, disable all entities in the type */
         ecs_vector_each(type_ptr->normalized, ecs_entity_t, e, {
@@ -355,7 +355,7 @@ ecs_entity_t ecs_run_intern(
     ecs_entity_t tick_source = system_data->tick_source;
 
     if (tick_source) {
-        const EcsTickSource *tick = ecs_get_ptr(real_world, tick_source, EcsTickSource);
+        const EcsTickSource *tick = ecs_get(real_world, tick_source, EcsTickSource);
 
         if (tick) {
             time_elapsed = tick->time_elapsed;
@@ -445,7 +445,7 @@ ecs_entity_t ecs_run_w_filter(
     ecs_get_stage(&real_world);
     bool in_progress = ecs_staging_begin(real_world);
 
-    EcsSystem *system_data = (EcsSystem*)ecs_get_ptr(
+    EcsSystem *system_data = (EcsSystem*)ecs_get(
         real_world, system, EcsSystem);
     assert(system_data != NULL);
 
@@ -482,7 +482,7 @@ void ecs_run_monitor(
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t system = query->system;
-    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
+    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!system_data->action) {

@@ -59,7 +59,7 @@ void EcsProgressRateFilters(ecs_view_t *view) {
         filter[i].time_elapsed += view->delta_time;
 
         if (src) {
-            const EcsTickSource *tick_src = ecs_get_ptr(view->world, src, EcsTickSource);
+            const EcsTickSource *tick_src = ecs_get(view->world, src, EcsTickSource);
             if (tick_src) {
                 inc = tick_src->tick;
             }

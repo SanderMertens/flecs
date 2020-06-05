@@ -9,7 +9,7 @@ void Singleton_set() {
 
     test_assert( ecs_has(world, EcsSingleton, Position));
 
-    const Position *p = ecs_get_ptr(world, EcsSingleton, Position);
+    const Position *p = ecs_get(world, EcsSingleton, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -28,7 +28,7 @@ void Singleton_set_ptr() {
 
     test_assert( ecs_has(world, EcsSingleton, Position));
 
-    const Position *p = ecs_get_ptr(world, EcsSingleton, Position);
+    const Position *p = ecs_get(world, EcsSingleton, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -72,7 +72,7 @@ void Singleton_system_w_singleton() {
 
     test_int(ctx.count, 1);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 22);

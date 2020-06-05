@@ -48,10 +48,10 @@ int main(int argc, char *argv[]) {
     /* Print position of e and of the child. Note that since types were used to
      * automatically override the components, the components are owned by both
      * e and child. */
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     printf("Position of e = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, e, Position, true));
 
-    p = ecs_get_ptr(world, child, Position);
+    p = ecs_get(world, child, Position);
     printf("Position of Child = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, child, Position, true));
 
     /* Cleanup */

@@ -222,7 +222,7 @@ void ecs_prepare_jobs(
     ecs_world_t *world,
     ecs_entity_t system)
 {
-    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
+    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
     ecs_vector_t *threads = world->worker_threads;
     ecs_vector_t *jobs = system_data->jobs;
     int32_t i;

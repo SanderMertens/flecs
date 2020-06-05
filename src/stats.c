@@ -585,7 +585,7 @@ void StatsCollectTypeStats(ecs_view_t *view) {
                         stats[i].enabled_systems_count ++;
                     }
 
-                    const EcsSystem *ptr = ecs_get_ptr(world, e, EcsSystem);
+                    const EcsSystem *ptr = ecs_get(world, e, EcsSystem);
                     if (ecs_vector_count(ptr->query->tables)) {
                         stats[i].active_systems_count ++;
                     }

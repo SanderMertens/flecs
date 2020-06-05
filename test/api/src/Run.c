@@ -88,10 +88,10 @@ void Run_run() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -128,7 +128,7 @@ void Run_run_w_param() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_int(p->x, 15);
     test_int(p->y, 25);
 
@@ -182,10 +182,10 @@ void Run_run_w_offset() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -239,10 +239,10 @@ void Run_run_w_offset_skip_1_archetype() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -295,10 +295,10 @@ void Run_run_w_offset_skip_1_archetype_plus_one() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -346,10 +346,10 @@ void Run_run_w_offset_skip_2_archetypes() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_6, Position);
+    const Position *p = ecs_get(world, e_6, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    const Velocity *v = ecs_get_ptr(world, e_6, Velocity);
+    const Velocity *v = ecs_get(world, e_6, Velocity);
     test_int(v->x, 30);
     test_int(v->y, 40);        
 
@@ -404,10 +404,10 @@ void Run_run_w_limit_skip_1_archetype() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -462,10 +462,10 @@ void Run_run_w_limit_skip_1_archetype_minus_one() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -519,10 +519,10 @@ void Run_run_w_limit_skip_2_archetypes() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -578,10 +578,10 @@ void Run_run_w_offset_1_limit_max() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -636,10 +636,10 @@ void Run_run_w_offset_1_limit_minus_1() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -693,10 +693,10 @@ void Run_run_w_offset_2_type_limit_max() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -749,10 +749,10 @@ void Run_run_w_offset_2_type_limit_minus_1() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -815,10 +815,10 @@ void Run_run_w_limit_1_all_offsets() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -903,10 +903,10 @@ void Run_run_w_limit_out_of_bounds() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -961,10 +961,10 @@ void Run_run_w_component_filter() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -1020,10 +1020,10 @@ void Run_run_w_type_filter_of_2() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        const Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -1092,7 +1092,7 @@ void Run_run_w_container_filter() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);       
     }
@@ -1174,7 +1174,7 @@ void Run_run_comb_10_entities_1_type() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, start + i, Position);
+        const Position *p = ecs_get(world, start + i, Position);
         test_int(p->x, ENTITIES - i);
     }
 
@@ -1203,7 +1203,7 @@ void Run_run_comb_10_entities_2_types() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, start + i, Position);
+        const Position *p = ecs_get(world, start + i, Position);
         test_int(p->x, ENTITIES - i);
     }
 
@@ -1260,7 +1260,7 @@ void AddVelocity(ecs_view_t *view) {
         float y = p[i].y;
         
         ecs_set(world, e, Position, {x + 1, y + 2});
-        const Position *p_stage = ecs_get_ptr(world, e, Position);
+        const Position *p_stage = ecs_get(world, e, Position);
         test_int(p_stage->x, x + 1);
         test_int(p_stage->y, y + 2);
 
@@ -1269,7 +1269,7 @@ void AddVelocity(ecs_view_t *view) {
         test_int(p[i].y, y);
 
         ecs_set(world, e, Velocity, {1, 2});
-        const Velocity *v = ecs_get_ptr(world, e, Velocity);
+        const Velocity *v = ecs_get(world, e, Velocity);
         test_int(v->x, 1);
         test_int(v->y, 2);
     }
@@ -1291,19 +1291,19 @@ void Run_run_staging() {
     test_assert( ecs_has(world, e1, Position));
     test_assert( ecs_has(world, e1, Velocity));
 
-    const Position *p = ecs_get_ptr(world, e1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_int(p->x, 11);
     test_int(p->y, 22);
 
-    const Velocity *v = ecs_get_ptr(world, e1, Velocity);
+    const Velocity *v = ecs_get(world, e1, Velocity);
     test_int(v->x, 1);
     test_int(v->y, 2);
 
-    p = ecs_get_ptr(world, e2, Position);
+    p = ecs_get(world, e2, Position);
     test_int(p->x, 31);
     test_int(p->y, 42);
 
-    v = ecs_get_ptr(world, e2, Velocity);
+    v = ecs_get(world, e2, Velocity);
     test_int(v->x, 1);
     test_int(v->y, 2);
  

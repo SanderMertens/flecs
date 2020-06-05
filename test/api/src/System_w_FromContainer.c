@@ -80,17 +80,17 @@ void System_w_FromContainer_1_column_from_container() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -138,32 +138,32 @@ void System_w_FromContainer_2_column_1_from_container() {
     test_int(ctx.c[0][2], ecs_entity(Velocity));
     test_int(ctx.s[0][2], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 60);
     test_int(v->y, 80);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 60);
     test_int(v->y, 80);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 60);
     test_int(v->y, 80);
@@ -259,17 +259,17 @@ void System_w_FromContainer_3_column_2_from_container() {
     test_int(ctx.c[0][2], ecs_entity(Position));
     test_int(ctx.s[0][2], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get_ptr(world, e_4, Position);
+    p = ecs_get(world, e_4, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
@@ -330,17 +330,17 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     test_int(ctx.c[0][2], ecs_entity(Position));
     test_int(ctx.s[0][2], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
@@ -395,22 +395,22 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     test_int(ctx.c[1][1], ecs_entity(Position));
     test_int(ctx.s[1][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_5, Position);
+    p = ecs_get(world, e_5, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -466,17 +466,17 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     test_int(ctx.c[0][2], ecs_entity(Position));
     test_int(ctx.s[0][2], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
@@ -522,12 +522,12 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -598,22 +598,22 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     test_int(ctx.c[3][1], ecs_entity(Position));
     test_int(ctx.s[3][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 40);
     test_int(p->y, 80);
 
-    p = ecs_get_ptr(world, e_5, Position);
+    p = ecs_get(world, e_5, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);
@@ -679,12 +679,12 @@ void System_w_FromContainer_add_component_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -736,12 +736,12 @@ void System_w_FromContainer_add_component_after_match_and_rematch() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -791,12 +791,12 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -856,12 +856,12 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -904,7 +904,7 @@ void System_w_FromContainer_add_component_after_match_unmatch() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_3, Position);
+    const Position *p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -948,12 +948,12 @@ void System_w_FromContainer_add_component_after_match_unmatch_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1000,12 +1000,12 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 22);
     test_int(p->y, 42);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 22);
     test_int(p->y, 42);
@@ -1062,12 +1062,12 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1111,12 +1111,12 @@ void System_w_FromContainer_adopt_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1158,12 +1158,12 @@ void System_w_FromContainer_new_child_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1227,17 +1227,17 @@ void System_w_FromContainer_select_same_from_container() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 22);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 21);
     test_int(p->y, 42);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 31);
     test_int(p->y, 62);
@@ -1275,7 +1275,7 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1307,7 +1307,7 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    p = ecs_get_ptr(world, e_1, Position);
+    p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);

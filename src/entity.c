@@ -1853,7 +1853,7 @@ ecs_entity_t ecs_clone(
     return dst;
 }
 
-const void* ecs_get_ptr_w_entity(
+const void* ecs_get_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
@@ -2059,7 +2059,7 @@ const char* ecs_get_name(
         return "$";
     }
 
-    const EcsName *id = ecs_get_ptr(world, entity, EcsName);
+    const EcsName *id = ecs_get(world, entity, EcsName);
 
     if (id) {
         return *id;
@@ -2078,7 +2078,7 @@ ecs_type_t ecs_type_from_entity(
         return NULL;
     }
 
-    const EcsType *type = ecs_get_ptr(world, entity, EcsType);
+    const EcsType *type = ecs_get(world, entity, EcsType);
     if (type) {
         return type->normalized;
     }

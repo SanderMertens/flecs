@@ -97,7 +97,7 @@ void TriggerOnAdd_new_match_1_of_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -128,7 +128,7 @@ void TriggerOnAdd_new_match_1_of_2() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -179,7 +179,7 @@ void TriggerOnAdd_add_match_1_of_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -214,7 +214,7 @@ void TriggerOnAdd_add_match_1_of_2() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -269,7 +269,7 @@ void TriggerOnAdd_set_match_1_of_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
@@ -322,7 +322,7 @@ void TriggerOnAdd_clone_match_1_of_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_2, Position);
+    const Position *p = ecs_get(world, e_2, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -355,7 +355,7 @@ void TriggerOnAdd_clone_match_1_of_2() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_2, Position);
+    const Position *p = ecs_get(world, e_2, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -451,7 +451,7 @@ void TriggerOnAdd_new_w_count_match_1_of_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -509,7 +509,7 @@ void TriggerOnAdd_override_after_add_in_on_add() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
@@ -557,7 +557,7 @@ void TriggerOnAdd_set_after_add_in_on_add() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 2);
     test_int(p->y, 3);
 
@@ -629,7 +629,7 @@ void TriggerOnAdd_add_in_progress_before_system_def() {
     ecs_add(world, e, Mass);
     test_assert( ecs_has(world, e, Mass));
     
-    const Mass *m = ecs_get_ptr(world, e, Mass);
+    const Mass *m = ecs_get(world, e, Mass);
     test_assert(m != NULL);
     test_int(*m, 10);
 
@@ -708,7 +708,7 @@ void TriggerOnAdd_sys_context() {
 
     ecs_set(world, TestContext, EcsContext, {&param});
 
-    const EcsContext *ctx = ecs_get_ptr(world, TestContext, EcsContext);
+    const EcsContext *ctx = ecs_get(world, TestContext, EcsContext);
     test_assert(ctx != NULL);
     test_assert(ctx->ctx == &param);
 
@@ -874,15 +874,15 @@ void TriggerOnAdd_on_set_in_on_add() {
     test_assert( ecs_has(world, e_2, Mass));
     test_assert( ecs_has(world, e_3, Mass));
 
-    const Rotation *r = ecs_get_ptr(world, e_1, Rotation);
+    const Rotation *r = ecs_get(world, e_1, Rotation);
     test_assert(r != NULL);
     test_int(*r, 10 + e_1);
 
-    r = ecs_get_ptr(world, e_2, Rotation);
+    r = ecs_get(world, e_2, Rotation);
     test_assert(r != NULL);
     test_int(*r, 10 + e_2);
 
-    r = ecs_get_ptr(world, e_3, Rotation);
+    r = ecs_get(world, e_3, Rotation);
     test_assert(r != NULL);
     test_int(*r, 10 + e_3);
 

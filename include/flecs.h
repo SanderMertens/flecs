@@ -1088,19 +1088,15 @@ ecs_entity_t ecs_clone(
 /* -- Get -- */
 
 FLECS_EXPORT
-const void* ecs_get_ptr_w_entity(
+const void* ecs_get_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
-#define ecs_get_ptr(world, entity, component)\
-    (const component*)ecs_get_ptr_w_entity(world, entity, ecs_entity(component))
-
 #define ecs_get(world, entity, component)\
-  (*(const component*)ecs_get_ptr_w_entity(world, entity, ecs_entity(component)))
+    ((const component*)ecs_get_w_entity(world, entity, ecs_entity(component)))
 
-
-/* -- Get cached -- */
+/* -- Get cached pointer -- */
 
 FLECS_EXPORT
 const void* ecs_get_ref_w_entity(
@@ -1110,7 +1106,7 @@ const void* ecs_get_ref_w_entity(
     ecs_entity_t component);
 
 #define ecs_get_ref(world, ref, entity, component)\
-    (const component*)ecs_get_ref_w_entity(world, ref, entity, ecs_entity(component))
+    ((const component*)ecs_get_ref_w_entity(world, ref, entity, ecs_entity(component)))
 
 
 /* -- Get mutable -- */
@@ -1123,7 +1119,7 @@ void* ecs_get_mut_w_entity(
     bool *is_added);
 
 #define ecs_get_mut(world, entity, component, is_added)\
-    (component*)ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added)
+    ((component*)ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added))
 
 
 /* -- Modified -- */

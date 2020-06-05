@@ -11,7 +11,7 @@ void Add_to_current(ecs_view_t *view) {
             
             test_assert( !!ecs_get_type(view->world, view->entities[i]));
             test_assert( ecs_has_entity(view->world,  view->entities[i], ctx->component));
-            test_assert( ecs_get_ptr_w_entity(view->world, view->entities[i], ctx->component) != NULL);
+            test_assert( ecs_get_w_entity(view->world, view->entities[i], ctx->component) != NULL);
         }
 
         if (ctx->component_2) {
@@ -19,7 +19,7 @@ void Add_to_current(ecs_view_t *view) {
 
             test_assert( !!ecs_get_type(view->world, view->entities[i]));
             test_assert( ecs_has_entity(view->world,  view->entities[i], ctx->component_2)); 
-            test_assert( ecs_get_ptr_w_entity(view->world, view->entities[i], ctx->component_2) != NULL);
+            test_assert( ecs_get_w_entity(view->world, view->entities[i], ctx->component_2) != NULL);
         }
 
         ctx->entity_count ++;
@@ -249,7 +249,7 @@ void MultiThreadStaging_2_threads_on_add() {
     ecs_entity_t i;
     for (i = e; i < e + 10; i ++) {
         test_assert( ecs_has(world, i, Velocity));
-        const Velocity *v = ecs_get_ptr(world, i, Velocity);
+        const Velocity *v = ecs_get(world, i, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 10);
         test_int(v->y, 20);

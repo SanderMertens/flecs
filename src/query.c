@@ -325,7 +325,7 @@ void add_table(
 
                     /* Check if component is a tag. If it is, set table_data to
                      * zero, so that a system won't try to access the data */
-                    const EcsComponent *data = ecs_get_ptr(
+                    const EcsComponent *data = ecs_get(
                         world, component, EcsComponent);
 
                     if (!data || !data->size) {
@@ -364,7 +364,7 @@ void add_table(
          * makes changing this administation easier when the change happens.
          * */
         if ((entity || table_data->columns[c] == -1 || from == EcsCascade)) {
-            const EcsComponent *c_info = ecs_get_ptr(
+            const EcsComponent *c_info = ecs_get(
                     world, component, EcsComponent);
             
             ecs_entity_t e;
@@ -1529,7 +1529,7 @@ bool ecs_dbg_match_entity(
     ecs_dbg_entity_t dbg;
     ecs_dbg_entity(world, entity, &dbg);
 
-    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
+    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
     if (!system_data) {
         failure_info_out->reason = EcsMatchNotASystem;
         failure_info_out->column = -1;

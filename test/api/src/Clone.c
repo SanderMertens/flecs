@@ -68,8 +68,8 @@ void Clone_1_component() {
 
     test_assert(ecs_has(world, e_1, Position));
     test_assert(ecs_has(world, e_2, Position));
-    test_assert(ecs_get_ptr(world, e_1, Position) !=  
-                ecs_get_ptr(world, e_2, Position));
+    test_assert(ecs_get(world, e_1, Position) !=  
+                ecs_get(world, e_2, Position));
 
     ecs_fini(world);
 }
@@ -90,13 +90,13 @@ void Clone_2_component() {
 
     test_assert(ecs_has(world, e_1, Position));
     test_assert(ecs_has(world, e_2, Position));
-    test_assert(ecs_get_ptr(world, e_1, Position) !=  
-                ecs_get_ptr(world, e_2, Position));
+    test_assert(ecs_get(world, e_1, Position) !=  
+                ecs_get(world, e_2, Position));
 
     test_assert(ecs_has(world, e_1, Velocity));
     test_assert(ecs_has(world, e_2, Velocity));
-    test_assert(ecs_get_ptr(world, e_1, Velocity) !=  
-                ecs_get_ptr(world, e_2, Velocity));
+    test_assert(ecs_get(world, e_1, Velocity) !=  
+                ecs_get(world, e_2, Velocity));
 
     ecs_fini(world);
 }
@@ -119,18 +119,18 @@ void Clone_3_component() {
 
     test_assert(ecs_has(world, e_1, Position));
     test_assert(ecs_has(world, e_2, Position));
-    test_assert(ecs_get_ptr(world, e_1, Position) !=  
-                ecs_get_ptr(world, e_2, Position));
+    test_assert(ecs_get(world, e_1, Position) !=  
+                ecs_get(world, e_2, Position));
 
     test_assert(ecs_has(world, e_1, Velocity));
     test_assert(ecs_has(world, e_2, Velocity));
-    test_assert(ecs_get_ptr(world, e_1, Velocity) !=  
-                ecs_get_ptr(world, e_2, Velocity));
+    test_assert(ecs_get(world, e_1, Velocity) !=  
+                ecs_get(world, e_2, Velocity));
 
     test_assert(ecs_has(world, e_1, Mass));
     test_assert(ecs_has(world, e_2, Mass));
-    test_assert(ecs_get_ptr(world, e_1, Mass) !=  
-                ecs_get_ptr(world, e_2, Mass));
+    test_assert(ecs_get(world, e_1, Mass) !=  
+                ecs_get(world, e_2, Mass));
 
     ecs_fini(world);
 }
@@ -152,12 +152,12 @@ void Clone_1_component_w_value() {
     test_assert(ecs_has(world, e_1, Position));
     test_assert(ecs_has(world, e_2, Position));
 
-    const Position *p_1 = ecs_get_ptr(world, e_1, Position);
+    const Position *p_1 = ecs_get(world, e_1, Position);
     test_assert(p_1 != NULL);
     test_int(p_1->x, 10);
     test_int(p_1->y, 20);
 
-    const Position *p_2 = ecs_get_ptr(world, e_2, Position);
+    const Position *p_2 = ecs_get(world, e_2, Position);
     test_assert(p_2 != NULL);
     test_assert(p_1 != p_2);
     test_int(p_2->x, 10);
@@ -187,23 +187,23 @@ void Clone_2_component_w_value() {
     test_assert(ecs_has(world, e_1, Velocity));
     test_assert(ecs_has(world, e_2, Velocity));
 
-    const Position *p_1 = ecs_get_ptr(world, e_1, Position);
+    const Position *p_1 = ecs_get(world, e_1, Position);
     test_assert(p_1 != NULL);
     test_int(p_1->x, 10);
     test_int(p_1->y, 20);
 
-    const Position *p_2 = ecs_get_ptr(world, e_2, Position);
+    const Position *p_2 = ecs_get(world, e_2, Position);
     test_assert(p_2 != NULL);
     test_assert(p_1 != p_2);
     test_int(p_2->x, 10);
     test_int(p_2->y, 20);
 
-    const Velocity *v_1 = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v_1 = ecs_get(world, e_1, Velocity);
     test_assert(v_1 != NULL);
     test_int(v_1->x, 30);
     test_int(v_1->y, 40);
 
-    const Velocity *v_2 = ecs_get_ptr(world, e_2, Velocity);
+    const Velocity *v_2 = ecs_get(world, e_2, Velocity);
     test_assert(v_2 != NULL);
     test_assert(v_1 != v_2);
     test_int(v_2->x, 30);
@@ -237,33 +237,33 @@ void Clone_3_component_w_value() {
     test_assert(ecs_has(world, e_1, Mass));
     test_assert(ecs_has(world, e_2, Mass));
 
-    const Position *p_1 = ecs_get_ptr(world, e_1, Position);
+    const Position *p_1 = ecs_get(world, e_1, Position);
     test_assert(p_1 != NULL);
     test_int(p_1->x, 10);
     test_int(p_1->y, 20);
 
-    const Position *p_2 = ecs_get_ptr(world, e_2, Position);
+    const Position *p_2 = ecs_get(world, e_2, Position);
     test_assert(p_2 != NULL);
     test_assert(p_1 != p_2);
     test_int(p_2->x, 10);
     test_int(p_2->y, 20);
 
-    const Velocity *v_1 = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v_1 = ecs_get(world, e_1, Velocity);
     test_assert(v_1 != NULL);
     test_int(v_1->x, 30);
     test_int(v_1->y, 40);
 
-    const Velocity *v_2 = ecs_get_ptr(world, e_2, Velocity);
+    const Velocity *v_2 = ecs_get(world, e_2, Velocity);
     test_assert(v_2 != NULL);
     test_assert(v_1 != v_2);
     test_int(v_2->x, 30);
     test_int(v_2->y, 40);
 
-    const Mass *m_1 = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m_1 = ecs_get(world, e_1, Mass);
     test_assert(m_1 != NULL);
     test_int(*m_1, 50);
 
-    const Mass *m_2 = ecs_get_ptr(world, e_2, Mass);
+    const Mass *m_2 = ecs_get(world, e_2, Mass);
     test_assert(m_2 != NULL);
     test_assert(m_1 != m_2);
     test_int(*m_2, 50);
@@ -348,7 +348,7 @@ void Clone_1_tag_1_component_w_value() {
     test_assert(ecs_has(world, e_1, Position));
     test_assert(ecs_has(world, e_2, Position));
 
-    const Position *p = ecs_get_ptr(world, e_2, Position);
+    const Position *p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);

@@ -814,7 +814,7 @@ public:
 
     std::string name() const {
         const EcsName *name = static_cast<const EcsName*>(
-            ecs_get_ptr_w_entity(m_world, m_id, ecs_entity(EcsName)));
+            ecs_get_w_entity(m_world, m_id, ecs_entity(EcsName)));
         if (name) {
             return std::string(*name);
         } else {
@@ -828,7 +828,7 @@ public:
 
     template<typename T>
     const T& get() const {
-        const T* component_ptr = static_cast<const T*>(ecs_get_ptr_w_entity(
+        const T* component_ptr = static_cast<const T*>(ecs_get_w_entity(
             m_world, m_id, component_base<T>::s_entity));
         ecs_assert(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
         return *component_ptr;
@@ -837,7 +837,7 @@ public:
     template <typename T>
     T* get_ptr() const {
         return static_cast<const T*>(
-            ecs_get_ptr_w_entity(m_world, m_id, component_base<T>::s_entity));
+            ecs_get_w_entity(m_world, m_id, component_base<T>::s_entity));
     }
 
     template <typename T>
@@ -1290,7 +1290,7 @@ public:
 
     // Callback provided to flecs system
     static void run(ecs_view_t *view) {
-        const Context *ctx = ecs_get_ptr(view->world, view->system, EcsContext);
+        const Context *ctx = ecs_get(view->world, view->system, EcsContext);
         each_invoker *self = (each_invoker*)ctx->ctx;
         Func func = self->m_func;        
         column_args<Components...> columns(view);
@@ -1468,7 +1468,7 @@ public:
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
     static void call_system(ecs_view_t *view, int index, Columns& columns, Targs... comps) {
-        const Context *ctx = ecs_get_ptr(view->world, view->system, EcsContext);
+        const Context *ctx = ecs_get(view->world, view->system, EcsContext);
         action_invoker *self = (action_invoker*)ctx->ctx;
 
         Func func = self->m_func;

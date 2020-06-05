@@ -25,13 +25,13 @@ void MultiThread_2_thread_10_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -55,13 +55,13 @@ void MultiThread_2_thread_1_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -85,13 +85,13 @@ void MultiThread_2_thread_2_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -115,13 +115,13 @@ void MultiThread_2_thread_5_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -145,13 +145,13 @@ void MultiThread_3_thread_10_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -175,13 +175,13 @@ void MultiThread_3_thread_1_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -205,13 +205,13 @@ void MultiThread_3_thread_2_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -235,13 +235,13 @@ void MultiThread_3_thread_5_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -265,13 +265,13 @@ void MultiThread_4_thread_10_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -295,13 +295,13 @@ void MultiThread_4_thread_1_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -325,13 +325,13 @@ void MultiThread_4_thread_2_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -355,13 +355,13 @@ void MultiThread_4_thread_5_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -385,13 +385,13 @@ void MultiThread_5_thread_10_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -415,13 +415,13 @@ void MultiThread_5_thread_1_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -445,13 +445,13 @@ void MultiThread_5_thread_2_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -475,13 +475,13 @@ void MultiThread_5_thread_5_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -505,13 +505,13 @@ void MultiThread_6_thread_10_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -535,13 +535,13 @@ void MultiThread_6_thread_1_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -565,13 +565,13 @@ void MultiThread_6_thread_2_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -595,13 +595,13 @@ void MultiThread_6_thread_5_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 1);
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
     }
 
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        test_int(ecs_get(world, handles[i], Position).x, 2);
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
     }
 
     ecs_fini(world);
@@ -658,7 +658,7 @@ void MultiThread_2_thread_test_combs_100_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, 100 - i);
     }
 
@@ -686,7 +686,7 @@ void MultiThread_3_thread_test_combs_100_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, 100 - i);
     }
 
@@ -714,7 +714,7 @@ void MultiThread_4_thread_test_combs_100_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, 100 - i);
     }
 
@@ -742,7 +742,7 @@ void MultiThread_5_thread_test_combs_100_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, 100 - i);
     }
 
@@ -770,7 +770,7 @@ void MultiThread_6_thread_test_combs_100_entity() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, 100 - i);
     }
 
@@ -801,7 +801,7 @@ void MultiThread_2_thread_test_combs_100_entity_2_types() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, ENTITIES - i);
     }
 
@@ -832,7 +832,7 @@ void MultiThread_3_thread_test_combs_100_entity_2_types() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, ENTITIES - i);
     }
 
@@ -863,7 +863,7 @@ void MultiThread_4_thread_test_combs_100_entity_2_types() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, ENTITIES - i);
     }
 
@@ -894,7 +894,7 @@ void MultiThread_5_thread_test_combs_100_entity_2_types() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, ENTITIES - i);
     }
 
@@ -925,7 +925,7 @@ void MultiThread_6_thread_test_combs_100_entity_2_types() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, ENTITIES - i);
     }
 
@@ -966,7 +966,7 @@ void MultiThread_change_thread_count() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_int(p->x, ENTITIES - i);
     }    
 

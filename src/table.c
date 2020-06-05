@@ -24,7 +24,7 @@ ecs_data_t* init_data(
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
 
     for (i = 0; i < count; i ++) {
-        const EcsComponent *component = ecs_get_ptr(
+        const EcsComponent *component = ecs_get(
                 world, entities[i], EcsComponent);
 
         /* Is the column a component? */

@@ -342,7 +342,7 @@ static void SysIn(ecs_view_t *view) {
         ecs_entity_t e = view->entities[i];
         test_assert( ecs_has(view->world, e, Velocity));
 
-        const Velocity *v_ptr = ecs_get_ptr(view->world, e, Velocity);
+        const Velocity *v_ptr = ecs_get(view->world, e, Velocity);
         test_int(v_ptr->x, 10);
         test_int(v_ptr->y, 20);
     }

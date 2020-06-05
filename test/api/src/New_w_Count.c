@@ -270,12 +270,12 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
         test_assert( ecs_has(world, e + i, Velocity) );
         test_assert( ecs_has(world, e + i, Rotation) );
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, 10 + i * 20 + 1);
         test_int(p->y, 20 + i * 20 + 1);
 
-        const Velocity *v = ecs_get_ptr(world, e + i, Velocity);
+        const Velocity *v = ecs_get(world, e + i, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 2);
         test_int(v->y, 3);        

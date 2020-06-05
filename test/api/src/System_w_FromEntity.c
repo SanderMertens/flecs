@@ -66,7 +66,7 @@ void System_w_FromEntity_2_column_1_from_entity() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_2, Position);
+    const Position *p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 50);
     test_int(p->y, 100);

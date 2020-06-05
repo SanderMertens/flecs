@@ -14,7 +14,7 @@ void add_random(
         }
         test_assert( ecs_get_type(world, entity) != NULL);
         test_assert( ecs_has_entity(world, entity, component));
-        test_assert( ecs_get_ptr_w_entity(world, entity, component) != NULL);
+        test_assert( ecs_get_w_entity(world, entity, component) != NULL);
     }    
 }
 
@@ -32,7 +32,7 @@ void set_random(
         test_assert( ecs_get_type(world, e) != NULL);
         test_assert( ecs_has_entity(world, e, component));
 
-        const void *comp_ptr = ecs_get_ptr_w_entity(world, e, component);
+        const void *comp_ptr = ecs_get_w_entity(world, e, component);
         test_assert(comp_ptr != NULL);
 
         test_assert( !memcmp(expect, comp_ptr, size) );

@@ -779,15 +779,15 @@ void SystemOnSet_add_to_current_in_on_set() {
     test_assert( ecs_has(world, e_2, Velocity));
     test_assert( ecs_has(world, e_3, Velocity));
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_int(p->x, 11);
     test_int(p->y, 21);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_int(p->x, 12);
     test_int(p->y, 22);
 
@@ -822,15 +822,15 @@ void SystemOnSet_remove_from_current_in_on_set() {
     test_assert( !ecs_has(world, e_2, Velocity));
     test_assert( !ecs_has(world, e_3, Velocity));
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_int(p->x, 11);
     test_int(p->y, 21);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_int(p->x, 12);
     test_int(p->y, 22);
 

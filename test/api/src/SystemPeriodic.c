@@ -68,17 +68,17 @@ void SystemPeriodic_1_type_1_component() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -120,47 +120,47 @@ void SystemPeriodic_1_type_3_component() {
     test_int(ctx.c[0][2], ecs_entity(Mass));
     test_int(ctx.s[0][2], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
 
-    const Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    m = ecs_get_ptr(world, e_2, Mass);
+    m = ecs_get(world, e_2, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    m = ecs_get_ptr(world, e_3, Mass);
+    m = ecs_get(world, e_3, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -201,17 +201,17 @@ void SystemPeriodic_3_type_1_component() {
     test_int(ctx.c[2][0], ecs_entity(Position));
     test_int(ctx.s[2][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -260,47 +260,47 @@ void SystemPeriodic_2_type_3_component() {
     test_int(ctx.c[1][2], ecs_entity(Mass));
     test_int(ctx.s[1][2], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
 
-    const Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    m = ecs_get_ptr(world, e_2, Mass);
+    m = ecs_get(world, e_2, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    m = ecs_get_ptr(world, e_3, Mass);
+    m = ecs_get(world, e_3, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -338,17 +338,17 @@ void SystemPeriodic_1_type_1_component_1_tag() {
     test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -386,12 +386,12 @@ void SystemPeriodic_2_type_1_component_1_tag() {
     test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -430,12 +430,12 @@ void SystemPeriodic_2_type_1_and_1_not() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -476,22 +476,22 @@ void SystemPeriodic_2_type_2_and_1_not() {
     test_int(ctx.c[0][2], ecs_entity(Mass));
     test_int(ctx.s[0][2], 0);
     
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -534,12 +534,12 @@ void SystemPeriodic_2_type_2_and_2_not() {
     test_int(ctx.c[0][3], ecs_entity(Rotation));
     test_int(ctx.s[0][3], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -595,42 +595,42 @@ void SystemPeriodic_4_type_1_and_1_or() {
     test_int(ctx.c[2][1], ecs_entity(Velocity));
     test_int(ctx.s[2][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position_1);
+    p = ecs_get(world, e_2, Position_1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position_1);
+    p = ecs_get(world, e_3, Position_1);
     test_assert(p != NULL);
     test_int(p->x, 0);
     test_int(p->y, 0);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_4, Velocity);
+    v = ecs_get(world, e_4, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 0);
     test_int(v->y, 0);
@@ -684,42 +684,42 @@ void SystemPeriodic_4_type_1_and_1_or_of_3() {
     test_int(ctx.c[2][1], ecs_entity(Velocity));
     test_int(ctx.s[2][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position_2);
+    p = ecs_get(world, e_2, Position_2);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position_1);
+    p = ecs_get(world, e_3, Position_1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position_2);
+    p = ecs_get(world, e_3, Position_2);
     test_assert(p != NULL);
     test_int(p->x, 0);
     test_int(p->y, 0);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_4, Velocity);
+    v = ecs_get(world, e_4, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 0);
     test_int(v->y, 0);
@@ -819,27 +819,27 @@ void SystemPeriodic_2_type_1_and_1_optional() {
     test_int(ctx.c[1][1], ecs_entity(Velocity));
     test_int(ctx.s[1][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -888,37 +888,37 @@ void SystemPeriodic_2_type_2_and_1_optional() {
     test_int(ctx.c[1][2], ecs_entity(Mass));
     test_int(ctx.s[1][2], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    const Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -982,41 +982,41 @@ void SystemPeriodic_6_type_1_and_2_optional() {
     test_int(ctx.c[3][2], ecs_entity(Mass));
     test_int(ctx.s[3][2], 0);   
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_4, Position);
+    p = ecs_get(world, e_4, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    const Mass *m = ecs_get_ptr(world, e_2, Mass);
+    const Mass *m = ecs_get(world, e_2, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    m = ecs_get_ptr(world, e_3, Mass);
+    m = ecs_get(world, e_3, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -1049,8 +1049,8 @@ void SystemPeriodic_use_fields_2_owned() {
 
     ecs_progress(world, 1);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Position *p = ecs_get(world, e_1, Position);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_int(p->x, 11);
     test_int(p->y, 22);
     test_int(v->x, 10);
@@ -1073,8 +1073,8 @@ void SystemPeriodic_use_fields_1_owned_1_shared() {
 
     ecs_progress(world, 1);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
-    const Velocity *v = ecs_get_ptr(world, parent, Velocity);
+    const Position *p = ecs_get(world, e_1, Position);
+    const Velocity *v = ecs_get(world, parent, Velocity);
     test_int(p->x, 11);
     test_int(p->y, 22);
     test_int(v->x, 10);
@@ -1907,7 +1907,7 @@ void SystemPeriodic_sys_context() {
 
     ecs_set(world, TestContext, EcsContext, {&param});
 
-    const EcsContext *ctx = ecs_get_ptr(world, TestContext, EcsContext);
+    const EcsContext *ctx = ecs_get(world, TestContext, EcsContext);
     test_assert(ctx != NULL);
     test_assert(ctx->ctx == &param);
 

@@ -316,7 +316,7 @@ void EcsOnAddPipeline(
         ecs_sig_t sig = { 0 };
 
 #ifndef NDEBUG
-        const EcsType *type_ptr = ecs_get_ptr(world, pipeline, EcsType);
+        const EcsType *type_ptr = ecs_get(world, pipeline, EcsType);
         ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         char *str = ecs_type_str(world, type_ptr->normalized);

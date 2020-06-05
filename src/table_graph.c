@@ -339,7 +339,7 @@ ecs_table_t *find_or_create_table_include(
             ecs_entity_t e = array[i];
             if (e & ECS_XOR) {
                 ecs_entity_t type = e & ECS_ENTITY_MASK;
-                const EcsType *type_ptr = ecs_get_ptr(world, type, EcsType);
+                const EcsType *type_ptr = ecs_get(world, type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 if (ecs_type_has_owned_entity(
@@ -645,7 +645,7 @@ int32_t count_occurrences(
     ecs_entity_t entity,
     int32_t constraint_index)    
 {
-    const EcsType *type_ptr = ecs_get_ptr(world, entity, EcsType);
+    const EcsType *type_ptr = ecs_get(world, entity, EcsType);
     ecs_assert(type_ptr != NULL, 
         ECS_INVALID_PARAMETER, "flag must be applied to type");
 

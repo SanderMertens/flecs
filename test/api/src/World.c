@@ -50,7 +50,7 @@ void World_progress_w_0() {
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_assert(p->x != 0);
     test_assert(p->y != 0);
@@ -88,7 +88,7 @@ void World_progress_w_t() {
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 4);
@@ -156,7 +156,7 @@ void World_entity_range_out_of_range_check_disabled() {
     test_int(e2, 4999);
     test_assert( ecs_has(world, e2, Position));
     
-    const Position *p = ecs_get_ptr(world, e2, Position);
+    const Position *p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -454,7 +454,7 @@ void World_phases() {
 
     ecs_progress(world, 1);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 8);
 
     ecs_run(world, TManual, 0, NULL);
@@ -486,7 +486,7 @@ void World_phases_match_in_create() {
 
     ecs_progress(world, 1);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 8);
 
     ecs_run(world, TManual, 0, NULL);
@@ -617,7 +617,7 @@ void World_phases_w_merging() {
 
     ecs_progress(world, 1);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 8);
 
     ecs_run(world, TMergeManual, 0, NULL);
@@ -848,7 +848,7 @@ void World_world_stats() {
 
     test_assert(ecs_has(world, EcsWorld, EcsWorldStats));
 
-    stats = ecs_get(world, EcsWorld, EcsWorldStats);
+    stats = *ecs_get(world, EcsWorld, EcsWorldStats);
 
     int init_system_count = stats.col_systems_count;
     int init_table_count = stats.tables_count;
@@ -861,7 +861,7 @@ void World_world_stats() {
 
     ecs_progress(world, 1);
 
-    stats = ecs_get(world, EcsWorld, EcsWorldStats);
+    stats = *ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 0);
     test_int(stats.tables_count - init_table_count, 0);
@@ -871,7 +871,7 @@ void World_world_stats() {
     ECS_COMPONENT(world, Position);
 
     ecs_progress(world, 1);
-    stats = ecs_get(world, EcsWorld, EcsWorldStats);
+    stats = *ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 0);
     test_int(stats.tables_count - init_table_count, 1);
@@ -882,7 +882,7 @@ void World_world_stats() {
     test_assert(e != 0);
 
     ecs_progress(world, 1);
-    stats = ecs_get(world, EcsWorld, EcsWorldStats);
+    stats = *ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 0);
     test_int(stats.tables_count - init_table_count, 1);
@@ -892,7 +892,7 @@ void World_world_stats() {
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     ecs_progress(world, 1);
-    stats = ecs_get(world, EcsWorld, EcsWorldStats);
+    stats = *ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 1);
     test_int(stats.components_count - init_component_count, 1);
@@ -901,7 +901,7 @@ void World_world_stats() {
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
     ecs_progress(world, 1);
-    stats = ecs_get(world, EcsWorld, EcsWorldStats);
+    stats = *ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 2);
     test_int(stats.components_count - init_component_count, 1);
@@ -910,7 +910,7 @@ void World_world_stats() {
     ECS_TYPE(world, Type, Position);
 
     ecs_progress(world, 1);
-    stats = ecs_get(world, EcsWorld, EcsWorldStats);
+    stats = *ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 2);
     test_int(stats.components_count - init_component_count, 1);
@@ -919,14 +919,14 @@ void World_world_stats() {
     ECS_TYPE(world, Feature, Move, Dummy);
 
     ecs_progress(world, 1);
-    stats = ecs_get(world, EcsWorld, EcsWorldStats);
+    stats = *ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_int(stats.col_systems_count - init_system_count, 2);
     test_int(stats.components_count - init_component_count, 1);
     test_int(stats.entities_count - init_entity_count, 6);
 
     ecs_progress(world, 0);
-    stats = ecs_get(world, EcsWorld, EcsWorldStats);
+    stats = *ecs_get(world, EcsWorld, EcsWorldStats);
 
     test_assert(stats.system_seconds_total != 0);
     test_assert(stats.frame_seconds_total != 0);
