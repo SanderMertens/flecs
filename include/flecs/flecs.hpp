@@ -1707,7 +1707,7 @@ private:
             if (set) {
                 str << ",";
             }            
-            str << "SYSTEM.EcsHidden";
+            str << "SYSTEM:EcsHidden";
             set = true;
         }    
 
@@ -1715,7 +1715,7 @@ private:
             if (set) {
                 str << ",";
             }            
-            str << "SYSTEM.EcsOnDemand";
+            str << "SYSTEM:EcsOnDemand";
             set = true;
         } 
 

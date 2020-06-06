@@ -191,6 +191,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
     for (bptr = buff, ptr = path; (ch = *ptr); ptr ++) {
         if (ch == '.') {
             *bptr = '\0';
+            bptr = buff;
             cur = ecs_lookup_child(world, cur, buff);
             if (!cur) {
                 return 0;

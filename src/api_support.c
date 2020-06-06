@@ -28,7 +28,7 @@ int parse_type_action(
             return -1;
         }
 
-        entity = ecs_lookup(world, entity_id);
+        entity = ecs_lookup_fullpath(world, entity_id);
         if (!entity) {
             ecs_parser_error(system_id, sig, column, 
                 "unresolved identifier '%s'", entity_id);
@@ -332,7 +332,7 @@ ecs_entity_t ecs_new_trigger(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    ecs_entity_t component = ecs_lookup(world, component_name);
+    ecs_entity_t component = ecs_lookup_fullpath(world, component_name);
     ecs_assert(component != 0, ECS_INVALID_COMPONENT_ID, component_name);
     
     ecs_entity_t result = lookup(world, name, ecs_type(EcsTrigger));

@@ -133,7 +133,7 @@ void Monitor_1_parent() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsMonitor, PARENT.Position);
+    ECS_SYSTEM(world, OnPosition, EcsMonitor, PARENT:Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -163,7 +163,7 @@ void Monitor_1_comp_1_parent() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsMonitor, Position, PARENT.Position);
+    ECS_SYSTEM(world, OnPosition, EcsMonitor, Position, PARENT:Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);

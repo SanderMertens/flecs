@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 
     // It is possible to add components to a task, just like regular systems
     auto system = flecs::system<>(world)
-        .signature("SYSTEM.TaskContext")
+        .signature("SYSTEM:TaskContext")
         .action([](flecs::view& view) {
             flecs::column<const TaskContext> ctx(view, 1);
             std::cout << "Task with context: " << ctx->value << std::endl;

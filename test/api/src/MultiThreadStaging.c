@@ -234,7 +234,7 @@ void MultiThreadStaging_2_threads_on_add() {
     ECS_COMPONENT(world, Velocity);
 
     ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity);
-    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, :Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -271,7 +271,7 @@ void MultiThreadStaging_new_w_count() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, New_w_count, EcsOnUpdate, .Position);
+    ECS_SYSTEM(world, New_w_count, EcsOnUpdate, :Position);
 
     ecs_set_threads(world, 2);
 

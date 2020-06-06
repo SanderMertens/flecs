@@ -1223,7 +1223,7 @@ void Prefab_prefab_w_grandchild() {
         ECS_ENTITY(world, Child, EcsPrefab, CHILDOF | Parent, Position);
             ecs_set(world, Child, Position, {2, 3});
 
-            ECS_ENTITY(world, GrandChild, EcsPrefab, CHILDOF | Child, Position, Rotation);
+            ECS_ENTITY(world, GrandChild, EcsPrefab, CHILDOF | Parent.Child, Position, Rotation);
                 ecs_set(world, GrandChild, Position, {3, 4});
 
     ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Parent);
@@ -1608,7 +1608,7 @@ void Prefab_instantiate_in_progress() {
     ECS_PREFAB(world, Prefab, Velocity);
     ecs_set(world, Prefab, Velocity, {1, 2});
 
-    ECS_SYSTEM(world, InstantiateInProgress, EcsOnUpdate, Position, .Prefab);
+    ECS_SYSTEM(world, InstantiateInProgress, EcsOnUpdate, Position, :Prefab);
 
     ecs_entity_t e = ecs_bulk_new(world, Position, 10);
     test_assert(e != 0);
@@ -1653,7 +1653,7 @@ void Prefab_copy_from_prefab_in_progress() {
 
     ECS_TYPE(world, Type, INSTANCEOF | Prefab, Velocity);
 
-    ECS_SYSTEM(world, NewInProgress, EcsOnUpdate, Position, .Type);
+    ECS_SYSTEM(world, NewInProgress, EcsOnUpdate, Position, :Type);
 
     ecs_entity_t ids[10];
     ecs_set_context(world, ids);
@@ -1691,7 +1691,7 @@ void Prefab_copy_from_prefab_first_instance_in_progress() {
 
     ECS_TYPE(world, Type, INSTANCEOF | Prefab, Velocity);
 
-    ECS_SYSTEM(world, NewInProgress, EcsOnUpdate, Position, .Type);
+    ECS_SYSTEM(world, NewInProgress, EcsOnUpdate, Position, :Type);
 
     ecs_entity_t ids[10];
     ecs_set_context(world, ids);
@@ -1833,7 +1833,7 @@ void Prefab_no_overwrite_on_2nd_add_in_progress() {
     ECS_PREFAB(world, Prefab, Mass);
     ecs_set(world, Prefab, Mass, {1});
 
-    ECS_SYSTEM(world, AddPrefab, EcsOnUpdate, Position, .Prefab);
+    ECS_SYSTEM(world, AddPrefab, EcsOnUpdate, Position, :Prefab);
 
     ECS_ENTITY(world, e_1, Position, INSTANCEOF | Prefab);
     ecs_add(world, e_1, Mass);
@@ -1862,7 +1862,7 @@ void Prefab_no_instantiate_on_2nd_add() {
         ECS_PREFAB(world, ChildPrefab, CHILDOF | Prefab, Velocity);
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
 
-    ECS_SYSTEM(world, AddPrefab, EcsOnUpdate, Position, .Prefab);
+    ECS_SYSTEM(world, AddPrefab, EcsOnUpdate, Position, :Prefab);
 
     ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | Prefab));
@@ -1909,7 +1909,7 @@ void Prefab_no_instantiate_on_2nd_add_in_progress() {
         ECS_PREFAB(world, ChildPrefab, CHILDOF | Prefab, Velocity);
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
 
-    ECS_SYSTEM(world, AddPrefab, EcsOnUpdate, Position, .Prefab);
+    ECS_SYSTEM(world, AddPrefab, EcsOnUpdate, Position, :Prefab);
 
     ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
     test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | Prefab));
@@ -1962,7 +1962,7 @@ void Prefab_nested_prefab_in_progress_w_count() {
         ECS_PREFAB(world, ChildPrefab, CHILDOF | Prefab, Velocity);
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
 
-    ECS_SYSTEM(world, NewPrefab_w_count, EcsOnUpdate, .Prefab);
+    ECS_SYSTEM(world, NewPrefab_w_count, EcsOnUpdate, :Prefab);
 
     ecs_entity_t result = 0;
     ecs_set_context(world, &result);
@@ -2025,7 +2025,7 @@ void Prefab_nested_prefab_in_progress_w_count_set_after_override() {
         ECS_PREFAB(world, ChildPrefab, CHILDOF | Prefab, Velocity);
             ecs_set(world, ChildPrefab, Velocity, {3, 4});
 
-    ECS_SYSTEM(world, NewPrefab_w_count, EcsOnUpdate, .Prefab);
+    ECS_SYSTEM(world, NewPrefab_w_count, EcsOnUpdate, :Prefab);
     ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
 
     ecs_entity_t result = 0;
@@ -2086,7 +2086,7 @@ void Prefab_get_ptr_from_prefab_from_new_table_in_progress() {
     ECS_PREFAB(world, Prefab, Velocity);
         ecs_set(world, Prefab, Velocity, {1, 2});
 
-    ECS_SYSTEM(world, AddPrefabInProgress, EcsOnUpdate, Position, .Prefab, .Velocity);
+    ECS_SYSTEM(world, AddPrefabInProgress, EcsOnUpdate, Position, :Prefab, :Velocity);
 
     ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Prefab);
 
@@ -2292,7 +2292,7 @@ void Prefab_add_to_empty_base_in_system() {
     ecs_entity_t e1 = ecs_new(world, Position);
     ecs_add_entity(world, e1, ECS_INSTANCEOF | base);
 
-    ECS_SYSTEM(world, AddPosition, EcsOnUpdate, .Position);
+    ECS_SYSTEM(world, AddPosition, EcsOnUpdate, :Position);
 
     ecs_set_context(world, &base);
 
@@ -2512,7 +2512,7 @@ void Prefab_create_multiple_nested_w_on_set_in_progress() {
             
         ECS_PREFAB(world, Child, CHILDOF | Prefab, INSTANCEOF | ChildPrefab, ecs_entity_t);
 
-    ECS_SYSTEM(world, CreateInstances, EcsOnUpdate, .Prefab);
+    ECS_SYSTEM(world, CreateInstances, EcsOnUpdate, :Prefab);
     ECS_SYSTEM(world, OnAddEntity, EcsOnSet, ecs_entity_t);
     ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
 

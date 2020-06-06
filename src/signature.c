@@ -2,7 +2,7 @@
 
 #define ECS_ANNOTATION_LENGTH_MAX (16)
 
-#define TOK_SOURCE '.'
+#define TOK_SOURCE ':'
 #define TOK_AND ','
 #define TOK_OR "||"
 #define TOK_NOT '!'
@@ -41,7 +41,7 @@ const char *skip_space(
     return ptr;
 }
 
-/** Parse element with a dot-separated qualifier ('PARENT.Foo') */
+/** Parse element with a dot-separated qualifier ('PARENT:Foo') */
 static
 char* parse_complex_elem(
     const char *system_id,
@@ -396,7 +396,7 @@ int ecs_parse_signature_action(
     ecs_assert(sig != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Lookup component handly by string identifier */
-    ecs_entity_t component = ecs_lookup(world, component_id);
+    ecs_entity_t component = ecs_lookup_fullpath(world, component_id);
     if (!component) {
         /* "0" is a valid expression used to indicate that a system matches no
          * components */
@@ -414,7 +414,7 @@ int ecs_parse_signature_action(
     ecs_entity_t source = 0;
     if (from_kind == EcsFromEntity) {
         if (from_kind == EcsFromEntity) {
-            source = ecs_lookup(world, source_id);
+            source = ecs_lookup_fullpath(world, source_id);
             if (!source) {
                 ecs_parser_error(system_id, expr, column, 
                     "unresolved source identifier '%s'", source_id);

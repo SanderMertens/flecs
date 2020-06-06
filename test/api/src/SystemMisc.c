@@ -48,7 +48,7 @@ void SystemMisc_invalid_system_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM.);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM:);
 
     ecs_fini(world);
 }
@@ -60,7 +60,7 @@ void SystemMisc_invalid_container_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT:);
 
     ecs_fini(world);
 }
@@ -72,7 +72,7 @@ void SystemMisc_invalid_cascade_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CASCADE.);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CASCADE:);
 
     ecs_fini(world);
 }
@@ -110,7 +110,7 @@ void SystemMisc_invalid_singleton_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, $.);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, $:);
 
     ecs_fini(world);
 }
@@ -222,7 +222,7 @@ void SystemMisc_invalid_0_w_from_system() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM.0);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM:0);
 
     ecs_fini(world);
 }
@@ -234,7 +234,7 @@ void SystemMisc_invalid_0_w_from_container() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.0);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT:0);
 
     ecs_fini(world);
 }
@@ -299,7 +299,7 @@ void SystemMisc_invalid_or_w_empty() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, .Position || .Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, :Position || :Velocity);
 
     ecs_fini(world);
 }
@@ -337,7 +337,7 @@ void SystemMisc_invalid_entity_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Foo.Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Foo:Position);
 
     ecs_fini(world);
 }
@@ -352,7 +352,7 @@ void SystemMisc_invalid_or_from_system() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM.Position || SYSTEM.Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM:Position || SYSTEM:Velocity);
 
     ecs_fini(world);
 }
@@ -865,7 +865,7 @@ void SystemMisc_match_system() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, SysA, 0, SYSTEM.Position);
+    ECS_SYSTEM(world, SysA, 0, SYSTEM:Position);
     ECS_SYSTEM(world, SysB, 0, Position);
 
     ecs_run(world, SysB, 0, NULL);
@@ -882,7 +882,7 @@ void SystemMisc_match_system_w_filter() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, SysA, 0, SYSTEM.Position);
+    ECS_SYSTEM(world, SysA, 0, SYSTEM:Position);
     ECS_SYSTEM(world, SysB, 0, Position);
 
     ecs_run_w_filter(world, SysB, 0, 0, 0, &(ecs_filter_t){

@@ -259,7 +259,7 @@ ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
 One useful application of hierarchies is CASCADE systems. CASCADE systems iterate entities ordered by depth, which can be used for (for example) transform systems:
 
 ```c
-ECS_SYSTEM(world, Transform, CASCADE.Position, Position);
+ECS_SYSTEM(world, Transform, CASCADE:Position, Position);
 ```
 
 Which could be implemented like this:
@@ -283,6 +283,31 @@ void Transform(ecs_view_t *view) {
         p[i].y += p_parent->y;
     }
 }
+```
+
+Applications can iterate a hierarchy depth-first, using a tree iterator:
+
+```c
+ECS_ENTITY(world, Parent, 0);
+ECS_ENTITY(world, Child, CHILDOF | Parent);
+
+ecs_view_t it = ecs_tree_iter(world, Parent);
+
+while (ecs_tree_next(&it)) {
+    for (int i = 0; i < it.count; i ++) {
+        printf("%s\n", it.entities[i]);
+    }
+}
+```
+
+It is possible to lookup entities by their full path, and to get the full path from an entity:
+
+```c
+// Returns Child
+ecs_entity_t e = ecs_lookup_fullpath(world, "Parent.Child");
+
+// Returns "Parent.Child"
+char *path = ecs_get_fullpath(world, e);
 ```
 
 ## Prefabs

@@ -55,7 +55,7 @@ void System_w_FromSystem_2_column_1_from_system() {
     ECS_COMPONENT(world, Velocity);
 
     ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity);
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SYSTEM.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SYSTEM:Velocity);
 
     test_assert( ecs_has(world, Iter, Velocity));
     const Velocity *v = ecs_get(world, Iter, Velocity);
@@ -104,7 +104,7 @@ void System_w_FromSystem_3_column_2_from_system() {
 
     ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_TRIGGER(world, InitMass, EcsOnAdd, Mass);
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SYSTEM.Velocity, SYSTEM.Mass);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SYSTEM:Velocity, SYSTEM:Mass);
 
     test_assert( ecs_has(world, Iter, Velocity));
     const Velocity *v = ecs_get(world, Iter, Velocity);
@@ -184,8 +184,8 @@ void System_w_FromSystem_auto_add_tag() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Dummy_1, EcsOnUpdate, Position, SYSTEM.EcsHidden);
-    ECS_SYSTEM(world, Dummy_2, 0, Position, SYSTEM.EcsHidden);
+    ECS_SYSTEM(world, Dummy_1, EcsOnUpdate, Position, SYSTEM:EcsHidden);
+    ECS_SYSTEM(world, Dummy_2, 0, Position, SYSTEM:EcsHidden);
 
     test_assert( ecs_has_entity(world, Dummy_1, EcsHidden));
     test_assert( ecs_has_entity(world, Dummy_2, EcsHidden));

@@ -372,7 +372,7 @@ void Pipeline_merge_after_staged_out() {
 
     ECS_ENTITY(world, E, Position);
 
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, :Velocity);
     ECS_SYSTEM(world, SysInMain, EcsOnUpdate, Velocity);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -456,8 +456,8 @@ void Pipeline_no_merge_after_staged_in_out() {
 
     ECS_ENTITY(world, E, Position, Velocity);
 
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, .Velocity);
-    ECS_SYSTEM(world, SysIn, EcsOnUpdate, .Velocity);
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, SysIn, EcsOnUpdate, :Velocity);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 

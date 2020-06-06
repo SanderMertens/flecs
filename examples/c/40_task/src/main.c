@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     ecs_set_interval(world, My2ndTask, 2.0);
 
     // It is possible to add components to a task, just like regular systems
-    ECS_SYSTEM(world, My3rdTask, EcsOnUpdate, SYSTEM.TaskContext);
+    ECS_SYSTEM(world, My3rdTask, EcsOnUpdate, SYSTEM:TaskContext);
     ecs_set(world, My3rdTask, TaskContext, {10});
 
     /* Set target FPS for main loop */

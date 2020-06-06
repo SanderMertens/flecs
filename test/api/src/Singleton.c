@@ -57,7 +57,7 @@ void Singleton_system_w_singleton() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, $.Velocity);
+    ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, $:Velocity);
 
     ecs_set(world, EcsSingleton, Velocity, {1, 2});
     test_assert( ecs_has(world, EcsSingleton, Velocity));
@@ -85,7 +85,7 @@ void Singleton_system_w_singleton_no_match() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, $.Velocity);
+    ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, $:Velocity);
 
     ecs_set(world, 0, Position, {10, 20});
     test_assert( !ecs_has(world, EcsSingleton, Position));
@@ -105,7 +105,7 @@ void Singleton_system_w_not_singleton() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, !$.Velocity);
+    ECS_SYSTEM(world, Iter_w_singleton, EcsOnUpdate, Position, !$:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);

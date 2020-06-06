@@ -510,7 +510,7 @@ void Type_invalid_container_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, PARENT.Position, Velocity);
+    ECS_TYPE(world, Type, PARENT:Position, Velocity);
 
     ecs_fini(world);
 }
@@ -527,7 +527,7 @@ void Type_invalid_entity_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, Entity.Position, Velocity);
+    ECS_TYPE(world, Type, Entity:Position, Velocity);
 
     ecs_fini(world);
 }
@@ -542,7 +542,7 @@ void Type_invalid_singleton_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, $.Position, Velocity);
+    ECS_TYPE(world, Type, $:Position, Velocity);
 
     ecs_fini(world);
 }
@@ -557,7 +557,7 @@ void Type_invalid_system_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, SYSTEM.Position, Velocity);
+    ECS_TYPE(world, Type, SYSTEM:Position, Velocity);
 
     ecs_fini(world);
 }

@@ -180,7 +180,7 @@ void World_entity_range_add_existing_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddToExisting, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, AddToExisting, EcsOnUpdate, Position, :Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -199,7 +199,7 @@ void World_entity_range_add_in_range_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddToExisting, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, AddToExisting, EcsOnUpdate, Position, :Velocity);
 
     ecs_set_entity_range(world, 500, 1000);
 
@@ -229,7 +229,7 @@ void World_entity_range_add_out_of_range_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddOutOfRange, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, AddOutOfRange, EcsOnUpdate, Position, :Velocity);
 
     ecs_set_entity_range(world, 500, 1000);
 
@@ -600,14 +600,14 @@ void World_phases_w_merging() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, TMergeOnLoad, EcsOnLoad, Position, [out] .Position);
-    ECS_SYSTEM(world, TMergePostLoad, EcsPostLoad, Position, [out] .Position);
-    ECS_SYSTEM(world, TMergePreUpdate, EcsPreUpdate, Position, [out] .Position);
-    ECS_SYSTEM(world, TMergeOnUpdate, EcsOnUpdate, Position, [out] .Position);
-    ECS_SYSTEM(world, TMergeOnValidate, EcsOnValidate, Position, [out] .Position);
-    ECS_SYSTEM(world, TMergePostUpdate, EcsPostUpdate, Position, [out] .Position);
-    ECS_SYSTEM(world, TMergePreStore, EcsPreStore, Position, [out] .Position);
-    ECS_SYSTEM(world, TMergeOnStore, EcsOnStore, Position, [out] .Position);
+    ECS_SYSTEM(world, TMergeOnLoad, EcsOnLoad, Position, [out] :Position);
+    ECS_SYSTEM(world, TMergePostLoad, EcsPostLoad, Position, [out] :Position);
+    ECS_SYSTEM(world, TMergePreUpdate, EcsPreUpdate, Position, [out] :Position);
+    ECS_SYSTEM(world, TMergeOnUpdate, EcsOnUpdate, Position, [out] :Position);
+    ECS_SYSTEM(world, TMergeOnValidate, EcsOnValidate, Position, [out] :Position);
+    ECS_SYSTEM(world, TMergePostUpdate, EcsPostUpdate, Position, [out] :Position);
+    ECS_SYSTEM(world, TMergePreStore, EcsPreStore, Position, [out] :Position);
+    ECS_SYSTEM(world, TMergeOnStore, EcsOnStore, Position, [out] :Position);
     ECS_SYSTEM(world, TMergeManual, 0, Position);
 
     ecs_entity_t e = ecs_new(world, Position);

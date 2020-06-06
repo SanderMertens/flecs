@@ -585,18 +585,18 @@ extern ecs_type_t
  * - An OR expression ('Position | Velocity')
  * - An optional expression ('?Position')
  * - A NOT expression ('!Position')
- * - An OWNED expression ('OWNED.Position')
- * - A SHARED expression ('SHARED.Position')
- * - A PARENT expression ('PARENT.Position')
- * - A CASCADE expression ('CASCADE.Position')
- * - An entity expression ('MyEntity.Position')
- * - An empty expression ('.Position')
+ * - An OWNED expression ('OWNED:Position')
+ * - A SHARED expression ('SHARED:Position')
+ * - A PARENT expression ('PARENT:Position')
+ * - A CASCADE expression ('CASCADE:Position')
+ * - An entity expression ('MyEntity:Position')
+ * - An empty expression (':Position')
  * 
  * The systen kind specifies the phase in which the system is ran.
  *
  * Examples:
  * ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity, !AngularVelocity);
- * ECS_SYSTEM(world, Transform, EcsPostUpdate, PARENT.Transform, Transform);
+ * ECS_SYSTEM(world, Transform, EcsPostUpdate, PARENT:Transform, Transform);
  *
  * In these examples, 'Move' and 'Transform' must be valid identifiers to a C
  * function of the following signature:
@@ -1375,7 +1375,7 @@ const void* _ecs_const_column(
  * The following signature shows an example of owned components and shared
  * components:
  * 
- * Position, PARENT.Velocity, MyEntity.Mass
+ * Position, PARENT:Velocity, MyEntity:Mass
  * 
  * Position is an owned component, while Velocity and Mass are shared 
  * components. While these kinds of relationships are expressed explicity in a

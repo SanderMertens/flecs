@@ -624,52 +624,52 @@ void FlecsStatsImport(
 
     ECS_SYSTEM(world, StatsCollectColSystemMemoryTotals, 0, 
         [in] EcsSystemMemoryStats,
-        [out] EcsWorld.EcsMemoryStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        [out] EcsWorld:EcsMemoryStats,
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     ECS_SYSTEM(world, StatsCollectTableMemoryTotals, 0, 
         [in] EcsTableStats,
-        [out] EcsWorld.EcsMemoryStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        [out] EcsWorld:EcsMemoryStats,
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     /* -- Component creation systems -- */
 
-    ECS_SYSTEM(world, StatsAddWorldStats, EcsOnStore, [out] !EcsWorld.EcsWorldStats, 
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+    ECS_SYSTEM(world, StatsAddWorldStats, EcsOnStore, [out] !EcsWorld:EcsWorldStats, 
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
-    ECS_SYSTEM(world, StatsAddAllocStats, EcsOnStore, [out] !EcsWorld.EcsAllocStats, 
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+    ECS_SYSTEM(world, StatsAddAllocStats, EcsOnStore, [out] !EcsWorld:EcsAllocStats, 
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
-    ECS_SYSTEM(world, StatsAddMemoryStats, EcsPostLoad, [out] !EcsWorld.EcsMemoryStats, 
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+    ECS_SYSTEM(world, StatsAddMemoryStats, EcsPostLoad, [out] !EcsWorld:EcsMemoryStats, 
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     ECS_SYSTEM(world, StatsAddSystemStats, EcsOnStore,
         EcsSystem, [out] !EcsSystemStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden, 
-        SYSTEM.EcsStatsSkipCollect, !EcsStatsSkipCollect);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden, 
+        SYSTEM:EcsStatsSkipCollect, !EcsStatsSkipCollect);
 
     ECS_SYSTEM(world, StatsAddColSystemMemoryStats, EcsOnStore,
         EcsSystem, [out] !EcsSystemMemoryStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden, 
-        SYSTEM.EcsStatsSkipCollect, !EcsStatsSkipCollect);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden, 
+        SYSTEM:EcsStatsSkipCollect, !EcsStatsSkipCollect);
 
     ECS_SYSTEM(world, StatsAddComponentStats, EcsOnStore,
         EcsComponent, [out] !EcsComponentStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     ECS_SYSTEM(world, StatsAddTableStats, EcsOnStore,
         EcsTablePtr, [out] !EcsTableStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     ECS_SYSTEM(world, StatsAddTypeStats, EcsOnStore,
         EcsType, [out] !EcsTypeStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     /* -- Metrics collection systems -- */
 
     ECS_SYSTEM(world, StatsCollectWorldStats, EcsPostLoad,
         [out] EcsWorldStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     /* This handler enables frame time monitoring when system is activated */
     ecs_set_system_status_action(
@@ -677,17 +677,17 @@ void FlecsStatsImport(
 
     ECS_SYSTEM(world, StatsCollectAllocStats, EcsPostLoad,
         [out] EcsAllocStats, 
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     ECS_SYSTEM(world, StatsCollectMemoryStats, EcsPostLoad,
         [out] EcsMemoryStats,
-        .StatsCollectColSystemMemoryTotals,
-        .StatsCollectTableMemoryTotals,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);      
+        :StatsCollectColSystemMemoryTotals,
+        :StatsCollectTableMemoryTotals,
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);      
 
     ECS_SYSTEM(world, StatsCollectSystemStats, EcsPostLoad,
         EcsSystem, [out] EcsSystemStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     /* This handler enables system time monitoring when system is activated */
     ecs_set_system_status_action(
@@ -695,15 +695,15 @@ void FlecsStatsImport(
 
     ECS_SYSTEM(world, StatsCollectColSystemMemoryStats, EcsPostLoad,
         EcsSystem, [out] EcsSystemMemoryStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     ECS_SYSTEM(world, StatsCollectComponentStats, EcsPostLoad,
         EcsComponent, [out] EcsComponentStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     ECS_SYSTEM(world, StatsCollectTableStats, EcsPostLoad,
         EcsTablePtr, [out] EcsTableStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     /* This handler creates entities for tables when system is enabled */
     ecs_set_system_status_action(
@@ -712,7 +712,7 @@ void FlecsStatsImport(
 
     ECS_SYSTEM(world, StatsCollectTypeStats, EcsPostLoad,
         EcsType, [out] EcsTypeStats,
-        SYSTEM.EcsOnDemand, SYSTEM.EcsHidden);
+        SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     /* Export components to module */
     ECS_EXPORT_COMPONENT(EcsAllocStats);

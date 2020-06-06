@@ -35,7 +35,7 @@ void SystemOnDemand_enable_out_after_in() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, InSystem, EcsOnUpdate, [in] Position);
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     /* Create dummy entity so system won't be disabled all the time */
     ecs_new(world, Position);
@@ -51,7 +51,7 @@ void SystemOnDemand_enable_in_after_out() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     /* Create dummy entity so system won't be disabled all the time */
     ecs_new(world, Position);
@@ -77,7 +77,7 @@ void SystemOnDemand_enable_out_after_in_2_out_1_in() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, InSystem, EcsOnUpdate, [in] Position);
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, SYSTEM:EcsOnDemand);
 
     /* Create dummy entity so system won't be disabled all the time */
     ecs_new(world, Type);
@@ -97,7 +97,7 @@ void SystemOnDemand_enable_out_after_in_1_out_2_in() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, InSystem, EcsOnUpdate, [in] Position, [in] Velocity);
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     /* Create dummy entity so system won't be disabled all the time. Make sure
      * entity matches InSystem as well as otherwise the system won't be active
@@ -118,7 +118,7 @@ void SystemOnDemand_enable_in_after_out_2_out_1_in() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, SYSTEM:EcsOnDemand);
 
     /* Create dummy entity so system won't be disabled all the time */
     ecs_new(world, Type);
@@ -143,7 +143,7 @@ void SystemOnDemand_enable_in_after_out_1_out_2_in() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     /* Create dummy entity so system won't be disabled all the time. Make sure
      * entity matches InSystem as well as otherwise the system won't be active
@@ -169,7 +169,7 @@ void SystemOnDemand_disable_after_disable_in() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, InSystem, EcsOnUpdate, [in] Position);
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     /* Create dummy entity so system won't be disabled all the time */
     ecs_new(world, Position);
@@ -197,7 +197,7 @@ void SystemOnDemand_disable_after_disable_in_2_out_1_in() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, InSystem, EcsOnUpdate, [in] Position);
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, SYSTEM:EcsOnDemand);
 
     /* Create dummy entity so system won't be disabled all the time */
     ecs_new(world, Type);
@@ -225,7 +225,7 @@ void SystemOnDemand_disable_after_disable_in_1_out_2_in() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, InSystem, EcsOnUpdate, [in] Position, [in] Velocity);
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     /* Create dummy entity so system won't be disabled all the time. Make sure
      * entity matches InSystem as well as otherwise the system won't be active
@@ -252,7 +252,7 @@ void SystemOnDemand_table_after_out() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     ecs_new(world, Position);
 
@@ -268,7 +268,7 @@ void SystemOnDemand_table_after_out_and_in() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -300,7 +300,7 @@ void SystemOnDemand_table_after_out_and_in_overlapping_columns() {
     ECS_TYPE(world, OutType, Position, Velocity);
     ECS_TYPE(world, InType, Position, Mass);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, Velocity, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, Velocity, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -341,7 +341,7 @@ void SystemOnDemand_1_out_system_2_in_systems() {
     /* Create entity that will activate InSystems and OutSystem */
     ecs_new(world, Position);    
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -387,7 +387,7 @@ void SystemOnDemand_1_out_system_2_in_systems_different_columns() {
     /* Create entity that will activate InSystems and OutSystem */
     ecs_new(world, Type);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -434,7 +434,7 @@ void SystemOnDemand_1_out_system_2_in_systems_overlapping_columns() {
     /* Create entity that will activate InSystems and OutSystem */
     ecs_new(world, Type);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, [out] Mass, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, [out] Mass, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -482,7 +482,7 @@ void SystemOnDemand_disable_after_inactive_in_system() {
     /* Create an entity that when deleted disables the InSystem */
     ecs_entity_t in_entity = ecs_new(world, Type);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
     ECS_SYSTEM(world, InSystem, EcsOnUpdate, [in] Position, Velocity);
 
     test_assert(is_enabled(world, OutSystem) == true);
@@ -512,7 +512,7 @@ void SystemOnDemand_disable_after_2_inactive_in_systems() {
     /* Create an entity that when deleted disables the InSystem */
     ecs_entity_t in_entity = ecs_new(world, Type);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
     ECS_SYSTEM(world, InSystem, EcsOnUpdate, [in] Position, Velocity);
     ECS_SYSTEM(world, InSystem2, EcsOnUpdate, [in] Position, Velocity);
 
@@ -546,7 +546,7 @@ void SystemOnDemand_disable_after_2_inactive_in_systems_different_columns() {
     ecs_entity_t in_entity = ecs_new(world, Type1);
     ecs_entity_t in2_entity = ecs_new(world, Type2);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
     ECS_SYSTEM(world, InSystem, EcsOnUpdate, [in] Position, Velocity);
     ECS_SYSTEM(world, InSystem2, EcsOnUpdate, [in] Position, Mass);
 
@@ -580,8 +580,8 @@ void SystemOnDemand_enable_2_output_1_input_system() {
 
     ecs_new(world, Position);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
-    ECS_SYSTEM(world, OutSystem2, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem2, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -613,8 +613,8 @@ void SystemOnDemand_enable_2_output_1_input_system_different_columns() {
 
     ecs_new(world, Type);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
-    ECS_SYSTEM(world, OutSystem2, EcsOnUpdate, [out] Velocity, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem2, EcsOnUpdate, [out] Velocity, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -647,8 +647,8 @@ void SystemOnDemand_enable_2_output_1_input_system_overlapping_columns() {
 
     ecs_new(world, Type);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, SYSTEM.EcsOnDemand);
-    ECS_SYSTEM(world, OutSystem2, EcsOnUpdate, [out] Position, [out] Mass, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, [out] Velocity, SYSTEM:EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem2, EcsOnUpdate, [out] Position, [out] Mass, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -684,7 +684,7 @@ void SystemOnDemand_out_not_column() {
      * will always be enabled if there are enabled input systems, even if those
      * input systems are not active (no matched entities). This way, OutSystem
      * can become enabled even though there are no entities with Velocity yet */
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, Position, [out] !Velocity, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, Position, [out] !Velocity, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -709,7 +709,7 @@ void SystemOnDemand_trigger_on_manual() {
     
     ecs_new(world, Position);
 
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -737,7 +737,7 @@ void SystemOnDemand_trigger_on_manual_not_column() {
      * will always be enabled if there are enabled input systems, even if those
      * input systems are not active (no matched entities). This way, OutSystem
      * can become enabled even though there are no entities with Velocity yet */
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, Position, [out] !Velocity, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, Position, [out] !Velocity, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -765,7 +765,7 @@ void SystemOnDemand_on_demand_task_w_from_entity() {
     /* If a system has an out column that matches an entity, it should still
      * behave like an OnDemand system, only enabling when there is interest for
      * the component in the [out] column. */
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] MyEntity.Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] MyEntity:Position, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -800,7 +800,7 @@ void SystemOnDemand_on_demand_task_w_not_from_entity() {
     /* If a system has an out column that matches an entity, it should still
      * behave like an OnDemand system, only enabling when there is interest for
      * the component in the [out] column, even if that column has a NOT operator */
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] !MyEntity.Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] !MyEntity:Position, SYSTEM:EcsOnDemand);
 
     test_assert(is_enabled(world, OutSystem) == false);
     ecs_progress(world, 0);
@@ -829,7 +829,7 @@ void SystemOnDemand_enable_after_user_disable() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM.EcsOnDemand);
+    ECS_SYSTEM(world, OutSystem, EcsOnUpdate, [out] Position, SYSTEM:EcsOnDemand);
 
     /* Explicitly disable system. System should not automatically enable once
      * demand is created */

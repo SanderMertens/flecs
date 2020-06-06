@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
      * guarantees that entities are evaluated breadth-first, according to the
      * hierarchy. This system will depth-sort based on parents that have the
      * WorldPosition component. */
-    ECS_SYSTEM(world, Transform, EcsOnUpdate, CASCADE.WorldPosition, WorldPosition, Position);
+    ECS_SYSTEM(world, Transform, EcsOnUpdate, CASCADE:WorldPosition, WorldPosition, Position);
 
     /* Create root of the hierachy which moves around */
     ECS_ENTITY(world, Root, WorldPosition, Position, Velocity);

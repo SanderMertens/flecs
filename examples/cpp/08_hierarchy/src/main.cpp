@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
      * as a template parameter, and have to be specified using hte 'signature'
      * method. This string will be appended to the signature, so that the full
      * signature for this system will be:
-     *     WorldPosition, Position. CASCADE.WorldPosition.
+     *     WorldPosition, Position. CASCADE:WorldPosition.
      *
      * Additionally, note that we're using 'action' instead of 'each'. Actions
      * provide more flexibility and performance, but also are slightly more
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
      * the WorldPosition component from the parent.
      */
     flecs::system<WorldPosition, Position>(world)
-        .signature("CASCADE.WorldPosition")
+        .signature("CASCADE:WorldPosition")
         .action(Transform);
 
     /* Create root of the hierachy which moves around */

@@ -31,7 +31,7 @@ void SystemCascade_cascade_depth_1() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE.Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE:Position);
 
     ecs_set(world, e_1, Position, {1, 2});
     ecs_set(world, e_2, Position, {1, 2});
@@ -95,7 +95,7 @@ void SystemCascade_cascade_depth_2() {
     ECS_ENTITY(world, e_5, Position);
     ECS_ENTITY(world, e_6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE.Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE:Position);
 
     ecs_set(world, e_1, Position, {1, 2});
     ecs_set(world, e_2, Position, {1, 2});
@@ -188,7 +188,7 @@ void SystemCascade_add_after_match() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE.Position);
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE:Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
     ecs_set(world, e_1, Position, {1, 2});
@@ -261,7 +261,7 @@ void SystemCascade_adopt_after_match() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE.Position);
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE:Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
     ecs_set(world, e_1, Position, {1, 2});
