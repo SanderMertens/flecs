@@ -191,6 +191,11 @@ typedef void (*ecs_move_t)(
     int32_t count,
     void *ctx);
 
+typedef struct ecs_tree_iter_t {
+    ecs_vector_t *tables;
+    int32_t index;
+} ecs_tree_iter_t;
+
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
     ecs_sparse_t *tables;
@@ -234,8 +239,9 @@ struct ecs_view_t {
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
 
     union {
-        ecs_query_iter_t query;
+        ecs_tree_iter_t parent;
         ecs_filter_iter_t filter;
+        ecs_query_iter_t query;
     } iter;
 };
 
@@ -1552,6 +1558,17 @@ FLECS_EXPORT
 bool ecs_filter_next(
     ecs_view_t *iter);
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Hierarchy iterator API
+////////////////////////////////////////////////////////////////////////////////
+
+ecs_view_t ecs_tree_iter(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
+bool ecs_tree_next(
+    ecs_view_t *view);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// System API

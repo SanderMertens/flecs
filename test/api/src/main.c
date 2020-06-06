@@ -86,6 +86,9 @@ void Remove_type_from_empty(void);
 void Remove_not_added(void);
 
 // Testsuite 'Hierarchies'
+void Hierarchies_tree_iter_empty(void);
+void Hierarchies_tree_iter_1_table(void);
+void Hierarchies_tree_iter_2_tables(void);
 void Hierarchies_delete_children(void);
 
 // Testsuite 'Add_bulk'
@@ -1230,8 +1233,20 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 1,
+        .testcase_count = 4,
         .testcases = (bake_test_case[]){
+            {
+                .id = "tree_iter_empty",
+                .function = Hierarchies_tree_iter_empty
+            },
+            {
+                .id = "tree_iter_1_table",
+                .function = Hierarchies_tree_iter_1_table
+            },
+            {
+                .id = "tree_iter_2_tables",
+                .function = Hierarchies_tree_iter_2_tables
+            },
             {
                 .id = "delete_children",
                 .function = Hierarchies_delete_children

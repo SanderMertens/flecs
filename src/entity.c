@@ -1508,7 +1508,7 @@ void ecs_set_watch(
     }
 }
 
-bool ecs_components_contains_component(
+bool ecs_find_in_type(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t component,
@@ -1525,14 +1525,16 @@ bool ecs_components_contains_component(
         }
 
         ecs_entity_t e = c & ECS_ENTITY_MASK;
-        ecs_type_t type = ecs_get_type(world, e);
 
-        bool result = ecs_type_has_entity(
-            world, type, component);
-        if (result) {
-            if (entity_out) *entity_out = e;
-            return true;
+        if (component) {
+            ecs_type_t type = ecs_get_type(world, e);
+           if (!ecs_type_has_entity(world, type, component)) {
+               continue;
+           }
         }
+
+        if (entity_out) *entity_out = e;
+        return true;
     });
 
     return false;
@@ -1943,7 +1945,7 @@ ecs_entity_t ecs_get_parent_w_entity(
     ecs_entity_t parent = 0;
     ecs_type_t type = ecs_get_type(world, entity);
     
-    ecs_components_contains_component(
+    ecs_find_in_type(
         world, type, component, 0, &parent);
 
     return parent;

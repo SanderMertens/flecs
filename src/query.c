@@ -290,7 +290,7 @@ void add_table(
             {
                 component = column->is.component;
 
-                ecs_components_contains_component(
+                ecs_find_in_type(
                     world, table_type, component, ECS_CHILDOF, &entity);
 
             } else if (op == EcsOperOr) {
@@ -447,7 +447,7 @@ bool match_column(
 
     } else if (from_kind == EcsFromParent) {
         failure_info->reason = EcsMatchFromContainer;
-        return ecs_components_contains_component(
+        return ecs_find_in_type(
             world, type, component, ECS_CHILDOF, NULL);
 
     } else if (from_kind == EcsFromEntity) {
@@ -640,7 +640,7 @@ void resolve_cascade_container(
 
     /* Resolve container entity */
     ecs_entity_t container = 0;
-    ecs_components_contains_component(
+    ecs_find_in_type(
         world, table_type, ref->component, ECS_CHILDOF, &container);    
 
     /* If container was found, update the reference */

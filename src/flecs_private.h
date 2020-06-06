@@ -46,7 +46,7 @@ void ecs_set_watch(
     ecs_entity_t entity);
 
 /* Does one of the entity containers has specified component */
-bool ecs_components_contains_component(
+bool ecs_find_in_type(
     ecs_world_t *world,
     ecs_type_t table_type,
     ecs_entity_t component,
