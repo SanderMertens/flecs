@@ -1,6 +1,52 @@
 #include "flecs_private.h"
 #include "flecs/util/strbuf.h"
 
+static
+bool path_append(
+    ecs_world_t *world, 
+    ecs_entity_t parent, 
+    ecs_entity_t child, 
+    ecs_entity_t component,
+    char *sep,
+    char *prefix,
+    ecs_strbuf_t *buf)
+{
+    ecs_type_t type = ecs_get_type(world, child);
+    ecs_entity_t cur = ecs_find_in_type(world, type, component, ECS_CHILDOF);
+    
+    if (cur) {
+        if (cur != parent) {
+            path_append(world, parent, cur, component, sep, prefix, buf);
+            ecs_strbuf_appendstr(buf, sep);
+        }
+    } else if (prefix) {
+        ecs_strbuf_appendstr(buf, prefix);
+    }
+
+    ecs_strbuf_appendstr(buf, ecs_get_name(world, child));
+
+    return cur != 0;
+}
+
+char* ecs_get_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    ecs_entity_t component,
+    char *sep,
+    char *prefix)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    if (parent != child) {
+        path_append(world, parent, child, component, sep, prefix, &buf);
+    } else {
+        ecs_strbuf_appendstr(&buf, "");
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
 ecs_view_t ecs_tree_iter(
     ecs_world_t *world,
     ecs_entity_t parent)
@@ -32,7 +78,7 @@ bool ecs_tree_next(
         if (!data) {
             continue;
         }
-        
+
         view->count = ecs_table_count(table);
         if (!view->count) {
             continue;
@@ -40,6 +86,7 @@ bool ecs_tree_next(
 
         view->table = table;
         view->table_columns = data->columns;
+        view->count = ecs_table_count(table);
         view->entities = ecs_vector_first(data->entities, ecs_entity_t);
         iter->index = ++i;
 

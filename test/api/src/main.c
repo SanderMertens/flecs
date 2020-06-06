@@ -89,6 +89,21 @@ void Remove_not_added(void);
 void Hierarchies_tree_iter_empty(void);
 void Hierarchies_tree_iter_1_table(void);
 void Hierarchies_tree_iter_2_tables(void);
+void Hierarchies_path_depth_0(void);
+void Hierarchies_path_depth_1(void);
+void Hierarchies_path_depth_2(void);
+void Hierarchies_rel_path_from_root(void);
+void Hierarchies_rel_path_from_self(void);
+void Hierarchies_rel_path_depth_1(void);
+void Hierarchies_rel_path_depth_2(void);
+void Hierarchies_rel_path_no_match(void);
+void Hierarchies_path_for_component_0(void);
+void Hierarchies_path_for_component_1(void);
+void Hierarchies_path_for_component_2(void);
+void Hierarchies_path_custom_sep(void);
+void Hierarchies_path_custom_prefix(void);
+void Hierarchies_path_prefix_rel_match(void);
+void Hierarchies_path_prefix_rel_no_match(void);
 void Hierarchies_delete_children(void);
 
 // Testsuite 'Add_bulk'
@@ -1233,7 +1248,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 4,
+        .testcase_count = 19,
         .testcases = (bake_test_case[]){
             {
                 .id = "tree_iter_empty",
@@ -1246,6 +1261,66 @@ static bake_test_suite suites[] = {
             {
                 .id = "tree_iter_2_tables",
                 .function = Hierarchies_tree_iter_2_tables
+            },
+            {
+                .id = "path_depth_0",
+                .function = Hierarchies_path_depth_0
+            },
+            {
+                .id = "path_depth_1",
+                .function = Hierarchies_path_depth_1
+            },
+            {
+                .id = "path_depth_2",
+                .function = Hierarchies_path_depth_2
+            },
+            {
+                .id = "rel_path_from_root",
+                .function = Hierarchies_rel_path_from_root
+            },
+            {
+                .id = "rel_path_from_self",
+                .function = Hierarchies_rel_path_from_self
+            },
+            {
+                .id = "rel_path_depth_1",
+                .function = Hierarchies_rel_path_depth_1
+            },
+            {
+                .id = "rel_path_depth_2",
+                .function = Hierarchies_rel_path_depth_2
+            },
+            {
+                .id = "rel_path_no_match",
+                .function = Hierarchies_rel_path_no_match
+            },
+            {
+                .id = "path_for_component_0",
+                .function = Hierarchies_path_for_component_0
+            },
+            {
+                .id = "path_for_component_1",
+                .function = Hierarchies_path_for_component_1
+            },
+            {
+                .id = "path_for_component_2",
+                .function = Hierarchies_path_for_component_2
+            },
+            {
+                .id = "path_custom_sep",
+                .function = Hierarchies_path_custom_sep
+            },
+            {
+                .id = "path_custom_prefix",
+                .function = Hierarchies_path_custom_prefix
+            },
+            {
+                .id = "path_prefix_rel_match",
+                .function = Hierarchies_path_prefix_rel_match
+            },
+            {
+                .id = "path_prefix_rel_no_match",
+                .function = Hierarchies_path_prefix_rel_no_match
             },
             {
                 .id = "delete_children",

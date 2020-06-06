@@ -46,12 +46,11 @@ void ecs_set_watch(
     ecs_entity_t entity);
 
 /* Does one of the entity containers has specified component */
-bool ecs_find_in_type(
+ecs_entity_t ecs_find_in_type(
     ecs_world_t *world,
     ecs_type_t table_type,
     ecs_entity_t component,
-    ecs_entity_t flags,
-    ecs_entity_t *entity_out);
+    ecs_entity_t flags);
 
 void ecs_clear_w_filter(
     ecs_world_t *world,

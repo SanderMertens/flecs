@@ -1508,12 +1508,11 @@ void ecs_set_watch(
     }
 }
 
-bool ecs_find_in_type(
+ecs_entity_t ecs_find_in_type(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t component,
-    ecs_entity_t flags,
-    ecs_entity_t *entity_out)
+    ecs_entity_t flags)
 {
     ecs_vector_each(type, ecs_entity_t, c_ptr, {
         ecs_entity_t c = *c_ptr;
@@ -1533,11 +1532,10 @@ bool ecs_find_in_type(
            }
         }
 
-        if (entity_out) *entity_out = e;
-        return true;
+        return e;
     });
 
-    return false;
+    return 0;
 }
 
 /* -- Public functions -- */
@@ -1942,12 +1940,8 @@ ecs_entity_t ecs_get_parent_w_entity(
     ecs_entity_t entity,
     ecs_entity_t component)
 {
-    ecs_entity_t parent = 0;
-    ecs_type_t type = ecs_get_type(world, entity);
-    
-    ecs_find_in_type(
-        world, type, component, 0, &parent);
-
+    ecs_type_t type = ecs_get_type(world, entity);    
+    ecs_entity_t parent = ecs_find_in_type(world, type, component, 0);
     return parent;
 }
 

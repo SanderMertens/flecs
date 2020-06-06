@@ -1283,6 +1283,35 @@ void ecs_enable(
     ecs_entity_t system,
     bool enabled);
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Hierarchies
+////////////////////////////////////////////////////////////////////////////////
+
+FLECS_EXPORT
+char* ecs_get_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    ecs_entity_t component,
+    char *sep,
+    char *prefix);
+
+#define ecs_get_path(world, parent, child)\
+    ecs_get_path_w_sep(world, parent, child, 0, ".", NULL)
+
+#define ecs_get_fullpath(world, child)\
+    ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
+
+FLECS_EXPORT
+ecs_view_t ecs_tree_iter(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
+FLECS_EXPORT
+bool ecs_tree_next(
+    ecs_view_t *view);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// View API
 ////////////////////////////////////////////////////////////////////////////////
@@ -1558,19 +1587,6 @@ FLECS_EXPORT
 bool ecs_filter_next(
     ecs_view_t *iter);
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Hierarchy iterator API
-////////////////////////////////////////////////////////////////////////////////
-
-FLECS_EXPORT
-ecs_view_t ecs_tree_iter(
-    ecs_world_t *world,
-    ecs_entity_t parent);
-
-FLECS_EXPORT
-bool ecs_tree_next(
-    ecs_view_t *view);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// System API
