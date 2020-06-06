@@ -117,6 +117,16 @@
                 "path_custom_prefix",
                 "path_prefix_rel_match",
                 "path_prefix_rel_no_match",
+                "lookup_depth_0",
+                "lookup_depth_1",
+                "lookup_depth_2",
+                "lookup_rel_0",
+                "lookup_rel_1",
+                "lookup_rel_2",
+                "lookup_custom_sep",
+                "lookup_custom_prefix",
+                "lookup_custom_prefix_from_root",
+                "lookup_self",
                 "delete_children"
             ]
         }, {

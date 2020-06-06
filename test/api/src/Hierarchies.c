@@ -283,3 +283,125 @@ void Hierarchies_path_prefix_rel_no_match() {
 
     ecs_fini(world);
 }
+
+void Hierarchies_lookup_depth_0() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "Parent");
+    test_assert(e == Parent);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_depth_1() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "Parent.Child");
+    test_assert(e == Child);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_depth_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+    ECS_ENTITY(world, GrandChild, CHILDOF | Parent.Child);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "Parent.Child.GrandChild");
+    test_assert(e == GrandChild);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_rel_0() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+
+    ecs_entity_t e = ecs_lookup_path(world, Parent, "Child");
+    test_assert(e == Child);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_rel_1() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+    ECS_ENTITY(world, GrandChild, CHILDOF | Parent.Child);
+
+    ecs_entity_t e = ecs_lookup_path(world, Parent, "Child.GrandChild");
+    test_assert(e == GrandChild);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_rel_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+    ECS_ENTITY(world, GrandChild, CHILDOF | Parent.Child);
+    ECS_ENTITY(world, GrandGrandChild, CHILDOF | Parent.Child.GrandChild);
+
+    ecs_entity_t e = ecs_lookup_path(world, Parent, "Child.GrandChild.GrandGrandChild");
+    test_assert(e == GrandGrandChild);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_custom_sep() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+
+    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, "Parent::Child", "::", NULL);
+    test_assert(e == Child);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_custom_prefix() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+
+    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, "::Parent::Child", "::", "::");
+    test_assert(e == Child);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_custom_prefix_from_root() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+
+    ecs_entity_t e = ecs_lookup_path_w_sep(world, Parent, "::Parent::Child", "::", "::");
+    test_assert(e == Child);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+
+    ecs_entity_t e = ecs_lookup_path(world, Parent, "");
+    test_assert(e == Parent);
+
+    ecs_fini(world);
+}

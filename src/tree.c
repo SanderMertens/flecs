@@ -168,6 +168,21 @@ ecs_entity_t ecs_lookup(
     return ecs_lookup_child(world, 0, name);
 }
 
+static
+bool is_sep(
+    const char **ptr,
+    const char *sep)
+{
+    size_t len = strlen(sep);
+
+    if (!strncmp(*ptr, sep, len)) {
+        *ptr += len - 1;
+        return true;
+    } else {
+        return false;
+    }
+}
+
 ecs_entity_t ecs_lookup_path_w_sep(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -178,18 +193,18 @@ ecs_entity_t ecs_lookup_path_w_sep(
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr;
     char ch, *bptr;
-    ecs_entity_t cur = 0;
+    ecs_entity_t cur = parent;
 
     if (prefix) {
         size_t len = strlen(prefix);
         if (!strncmp(path, prefix, len)) {
             path += len;
-            parent = 0;
+            cur = 0;
         }
     }
 
     for (bptr = buff, ptr = path; (ch = *ptr); ptr ++) {
-        if (ch == '.') {
+        if (is_sep(&ptr, sep)) {
             *bptr = '\0';
             bptr = buff;
             cur = ecs_lookup_child(world, cur, buff);

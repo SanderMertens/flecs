@@ -104,6 +104,16 @@ void Hierarchies_path_custom_sep(void);
 void Hierarchies_path_custom_prefix(void);
 void Hierarchies_path_prefix_rel_match(void);
 void Hierarchies_path_prefix_rel_no_match(void);
+void Hierarchies_lookup_depth_0(void);
+void Hierarchies_lookup_depth_1(void);
+void Hierarchies_lookup_depth_2(void);
+void Hierarchies_lookup_rel_0(void);
+void Hierarchies_lookup_rel_1(void);
+void Hierarchies_lookup_rel_2(void);
+void Hierarchies_lookup_custom_sep(void);
+void Hierarchies_lookup_custom_prefix(void);
+void Hierarchies_lookup_custom_prefix_from_root(void);
+void Hierarchies_lookup_self(void);
 void Hierarchies_delete_children(void);
 
 // Testsuite 'Add_bulk'
@@ -1248,7 +1258,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 19,
+        .testcase_count = 29,
         .testcases = (bake_test_case[]){
             {
                 .id = "tree_iter_empty",
@@ -1321,6 +1331,46 @@ static bake_test_suite suites[] = {
             {
                 .id = "path_prefix_rel_no_match",
                 .function = Hierarchies_path_prefix_rel_no_match
+            },
+            {
+                .id = "lookup_depth_0",
+                .function = Hierarchies_lookup_depth_0
+            },
+            {
+                .id = "lookup_depth_1",
+                .function = Hierarchies_lookup_depth_1
+            },
+            {
+                .id = "lookup_depth_2",
+                .function = Hierarchies_lookup_depth_2
+            },
+            {
+                .id = "lookup_rel_0",
+                .function = Hierarchies_lookup_rel_0
+            },
+            {
+                .id = "lookup_rel_1",
+                .function = Hierarchies_lookup_rel_1
+            },
+            {
+                .id = "lookup_rel_2",
+                .function = Hierarchies_lookup_rel_2
+            },
+            {
+                .id = "lookup_custom_sep",
+                .function = Hierarchies_lookup_custom_sep
+            },
+            {
+                .id = "lookup_custom_prefix",
+                .function = Hierarchies_lookup_custom_prefix
+            },
+            {
+                .id = "lookup_custom_prefix_from_root",
+                .function = Hierarchies_lookup_custom_prefix_from_root
+            },
+            {
+                .id = "lookup_self",
+                .function = Hierarchies_lookup_self
             },
             {
                 .id = "delete_children",

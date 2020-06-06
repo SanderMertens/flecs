@@ -1,8 +1,7 @@
 #include <get_children.h>
 #include <iostream>
 
-void print_tree(
-    flecs::entity entity) 
+void print_tree(flecs::entity entity) 
 {
     static int indent = 0;
 
