@@ -1304,6 +1304,20 @@ char* ecs_get_path_w_sep(
     ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
 
 FLECS_EXPORT
+ecs_entity_t ecs_lookup_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+#define ecs_lookup_path(world, parent, path)\
+    ecs_lookup_path_w_sep(world, parent, path, ".", NULL)
+
+#define ecs_lookup_fullpath(world, path)\
+    ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
+
+FLECS_EXPORT
 ecs_view_t ecs_tree_iter(
     ecs_world_t *world,
     ecs_entity_t parent);

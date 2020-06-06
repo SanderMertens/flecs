@@ -107,7 +107,7 @@ void Hierarchies_path_depth_2() {
 
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, CHILDOF | Parent);
-    ECS_ENTITY(world, GrandChild, CHILDOF | Child);
+    ECS_ENTITY(world, GrandChild, CHILDOF | Parent.Child);
 
     char *path = ecs_get_fullpath(world, GrandChild);
     test_str(path, "Parent.Child.GrandChild");

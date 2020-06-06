@@ -44,6 +44,9 @@
  * Increasing this value will increase consumption of stack space. */
 #define ECS_MAX_ADD_REMOVE (32)
 
+/* Maximum length of an entity name, including 0 terminator */
+#define ECS_MAX_NAME_LENGTH (64)
+
 typedef uint64_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
 
 /** Callback used by the system signature expression parser */

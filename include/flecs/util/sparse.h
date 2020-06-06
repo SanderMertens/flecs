@@ -117,6 +117,15 @@ void ecs_sparse_memory(
     int32_t *allocd,
     int32_t *used);
 
+#define ecs_sparse_each(sparse, T, var, ...)\
+    {\
+        int var##_i, var##_count = ecs_sparse_count(sparse);\
+        for (var##_i = 0; var##_i < var##_count; var##_i ++) {\
+            T* var = ecs_sparse_get(sparse, T, var##_i);\
+            __VA_ARGS__\
+        }\
+    }
+
 #ifdef __cplusplus
 }
 #endif

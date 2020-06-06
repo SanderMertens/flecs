@@ -2,6 +2,34 @@
 
 #define ECS_ANNOTATION_LENGTH_MAX (16)
 
+#define TOK_SOURCE '.'
+#define TOK_AND ','
+#define TOK_OR "||"
+#define TOK_NOT '!'
+#define TOK_OPTIONAL '?'
+#define TOK_ROLE '|'
+#define TOK_NAME_SEP '.'
+#define TOK_ANNOTATE_OPEN '['
+#define TOK_ANNOTATE_CLOSE ']'
+
+#define TOK_SELF "SELF"
+#define TOK_OWNED "OWNED"
+#define TOK_SHARED "SHARED"
+#define TOK_SYSTEM "SYSTEM"
+#define TOK_PARENT "PARENT"
+#define TOK_CASCADE "CASCADE"
+
+#define TOK_ROLE_CHILDOF "CHILDOF"
+#define TOK_ROLE_INSTANCEOF "INSTANCEOF"
+#define TOK_ROLE_AND "AND"
+#define TOK_ROLE_OR "OR"
+#define TOK_ROLE_XOR "XOR"
+#define TOK_ROLE_NOT "NOT"
+
+#define TOK_IN "in"
+#define TOK_OUT "out"
+#define TOK_INOUT "inout"
+
 /** Skip spaces when parsing signature */
 static
 const char *skip_space(
@@ -26,66 +54,69 @@ char* parse_complex_elem(
     const char * *source)
 {
     char *bptr = ptr;
-    if (bptr[0] == '!') {
+    if (bptr[0] == TOK_NOT) {
         *oper_kind = EcsOperNot;
         if (!bptr[1]) {
-            ecs_parser_error(system_id, sig, column, "! must be followed by an identifier");
+            ecs_parser_error(system_id, sig, column, 
+                "not must be followed by an identifier");
         }
         bptr ++;
-    } else if (bptr[0] == '?') {
+
+    } else if (bptr[0] == TOK_OPTIONAL) {
         *oper_kind = EcsOperOptional;
         if (!bptr[1]) {
-            ecs_parser_error(system_id, sig, column, "? must be followed by an identifier");
+            ecs_parser_error(system_id, sig, column, 
+                "optional must be followed by an identifier");
         }
         bptr ++;
     }
 
     *source = NULL;
 
-    char *dot = strchr(bptr, '.');
-    if (dot) {
-        if (bptr == dot) {
+    char *src = strchr(bptr, TOK_SOURCE);
+    if (src) {
+        if (bptr == src) {
             *from_kind = EcsFromEmpty;
-        } else if (!strncmp(bptr, "PARENT", dot - bptr)) {
+        } else if (!strncmp(bptr, TOK_PARENT, src - bptr)) {
             *from_kind = EcsFromParent;
-        } else if (!strncmp(bptr, "SYSTEM", dot - bptr)) {
+        } else if (!strncmp(bptr, TOK_SYSTEM, src - bptr)) {
             *from_kind = EcsFromSystem;
-        } else if (!strncmp(bptr, "SELF", dot - bptr)) {
+        } else if (!strncmp(bptr, TOK_SELF, src - bptr)) {
             /* default */
-        } else if (!strncmp(bptr, "OWNED", dot - bptr)) {
+        } else if (!strncmp(bptr, TOK_OWNED, src - bptr)) {
             *from_kind = EcsFromOwned;
-        } else if (!strncmp(bptr, "SHARED", dot - bptr)) {
+        } else if (!strncmp(bptr, TOK_SHARED, src - bptr)) {
             *from_kind = EcsFromShared;
-        } else if (!strncmp(bptr, "CASCADE", dot - bptr)) {
+        } else if (!strncmp(bptr, TOK_CASCADE, src - bptr)) {
             *from_kind = EcsCascade;   
         } else {
             *from_kind = EcsFromEntity;
             *source = bptr;
         }
         
-        bptr = dot + 1;
+        bptr = src + 1;
 
         if (!bptr[0]) {
             ecs_parser_error(
-                system_id, sig, column + dot - bptr,
+                system_id, sig, column + src - bptr,
                  "%s must be followed by an identifier", 
                  ptr);
         }
     }
 
-    char *or = strchr(bptr, '|');
+    char *or = strchr(bptr, TOK_ROLE);
     if (or) {
-        if (!strncmp(bptr, "CHILDOF", or - bptr)) {
+        if (!strncmp(bptr, TOK_ROLE_CHILDOF, or - bptr)) {
             *flags = ECS_CHILDOF;
-        } else if (!strncmp(bptr, "INSTANCEOF", or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_INSTANCEOF, or - bptr)) {
             *flags = ECS_INSTANCEOF;
-        } else if (!strncmp(bptr, "AND", or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_AND, or - bptr)) {
             *flags = ECS_AND;
-        } else if (!strncmp(bptr, "OR", or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_OR, or - bptr)) {
             *flags = ECS_OR;
-        } else if (!strncmp(bptr, "XOR", or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_XOR, or - bptr)) {
             *flags = ECS_XOR;
-        } else if (!strncmp(bptr, "NOT", or - bptr)) {
+        } else if (!strncmp(bptr, TOK_ROLE_NOT, or - bptr)) {
             *flags = ECS_NOT;
         } else {
             ecs_parser_error(
@@ -150,23 +181,23 @@ const char* parse_annotation(
     ptr = skip_space(ptr);
 
     for (bptr = buffer; (ch = ptr[0]); ptr ++) {        
-        if (ch == ',' || ch == ']') {
+        if (ch == TOK_AND || ch == TOK_ANNOTATE_CLOSE) {
             /* Even though currently only one simultaneous annotation is 
              * useful, more annotations may be added in the future. */
             bptr[0] = '\0';
 
-            if (!strcmp(buffer, "in")) {
+            if (!strcmp(buffer, TOK_IN)) {
                 *inout_kind_out = EcsIn;
-            } else if (!strcmp(buffer, "out")) {
+            } else if (!strcmp(buffer, TOK_OUT)) {
                 *inout_kind_out = EcsOut;
-            } else if (!strcmp(buffer, "inout")) {
+            } else if (!strcmp(buffer, TOK_INOUT)) {
                 *inout_kind_out = EcsInOut;
             } else {
                 ecs_parser_error(
                     system_id, sig, column, "unknown annotation '%s'", buffer);
             }
 
-            if (ch == ']') {
+            if (ch == TOK_ANNOTATE_CLOSE) {
                 break;
             } else {
                 ptr = skip_space(ptr + 1);
@@ -224,7 +255,7 @@ int ecs_parse_expr(
             ecs_parser_error(system_id, sig, ptr - sig, "0 can only appear by itself");
         }
 
-        if (ch == '[') {
+        if (ch == TOK_ANNOTATE_OPEN) {
             /* Annotations should appear at the beginning of a column */
             if (bptr != buffer) {
                 ecs_parser_error(system_id, sig, ptr - sig, "[...] should appear at start of column");
@@ -233,7 +264,7 @@ int ecs_parse_expr(
             ptr = parse_annotation(system_id, sig, ptr - sig, ptr + 1, &inout_kind);
             ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        } else if (ch == ',' || (ch == '|' && ptr[1] == '|') || ch == '\0') {
+        } else if (ch == TOK_AND || (ch == TOK_OR[0] && ptr[1] == TOK_OR[1]) || ch == '\0') {
             /* Separators should not appear after an empty column */
             if (bptr == buffer) {
                 if (ch) {
@@ -294,12 +325,12 @@ int ecs_parse_expr(
 
             char *source_id = NULL;
             if (source) {
-                char *dot = strchr(source, '.');
-                source_id = ecs_os_malloc(dot - source + 1);
+                char *src = strchr(source, TOK_SOURCE);
+                source_id = ecs_os_malloc(src - source + 1);
                 ecs_assert(source_id != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-                strncpy(source_id, source, dot - source);
-                source_id[dot - source] = '\0';
+                strncpy(source_id, source, src - source);
+                source_id[src - source] = '\0';
             }
 
             if (action(world, system_id, sig, ptr - sig, 
@@ -318,8 +349,8 @@ int ecs_parse_expr(
             oper_kind = EcsOperAnd;
             flags = 0;
 
-            if (ch == '|') {
-                if (ptr[1] == '|') {
+            if (ch == TOK_ROLE) {
+                if (ptr[1] == TOK_OR[1]) {
                     ptr ++;
                     if (oper_kind == EcsOperNot) {
                         ecs_parser_error(system_id, sig, ptr - sig, 
@@ -336,7 +367,7 @@ int ecs_parse_expr(
             *bptr = ch;
             bptr ++;
 
-            if (ch == '.' || ch == '!' || ch == '?' || ch == '|') {
+            if (ch == TOK_SOURCE || ch == TOK_NOT || ch == TOK_OPTIONAL || ch == TOK_ROLE) {
                 complex_expr = true;
             }
         }

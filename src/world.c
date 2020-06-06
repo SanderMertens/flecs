@@ -345,6 +345,13 @@ int ecs_fini(
         ecs_vector_free(world->c_info[i].on_remove);
     }
 
+    ecs_map_iter_t it = ecs_map_iter(world->t_info);
+    ecs_c_info_t *c_info;
+    while ((c_info = ecs_map_next(&it, ecs_c_info_t, NULL))) {
+        ecs_vector_free(c_info->on_add);
+        ecs_vector_free(c_info->on_remove);
+    }    
+
     ecs_map_free(world->t_info);
 
     /* Cleanup queries */
@@ -354,6 +361,15 @@ int ecs_fini(
         ecs_query_free(q);
     }
     ecs_sparse_free(world->queries);
+
+    /* Cleanup child tables */
+    it = ecs_map_iter(world->child_tables);
+    ecs_vector_t *tables;
+    while ((tables = ecs_map_next_ptr(&it, ecs_vector_t*, NULL))) {
+        ecs_vector_free(tables);
+    }
+
+    ecs_map_free(world->child_tables);
 
     /* Cleanup misc data structures */
     on_demand_in_map_deinit(world->on_activate_components);
@@ -399,119 +415,6 @@ void ecs_dim_type(
         ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, table);
         ecs_table_set_size(world, table, data, entity_count);
     }
-}
-
-static
-ecs_entity_t ecs_lookup_child_in_columns(
-    ecs_data_t *data,
-    int32_t column_index,
-    const char *name_arg)
-{
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_column_t *columns = data->columns;
-    if (!columns) {
-        return 0;
-    }
-
-    ecs_column_t *column = &columns[column_index];
-
-    ecs_assert(
-        ecs_vector_count(column->data) == ecs_vector_count(data->entities), 
-        ECS_INTERNAL_ERROR, NULL);
-
-    ecs_vector_each(column->data, EcsName, name_ptr, {
-        const char *name = *name_ptr;
-        if (!name) {
-            continue;
-        }
-        
-        if (!strcmp(name, name_arg)) {
-            return *(ecs_vector_get(data->entities, ecs_entity_t, name_ptr_i));
-        }
-    });
-
-    return 0;
-}
-
-ecs_entity_t lookup_child(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_sparse_t *tables,
-    ecs_entity_t parent,
-    const char *id)
-{
-    ecs_entity_t result = 0;
-    int32_t t, count = ecs_sparse_count(tables);
-    int32_t column_index;
-
-    for (t = 0; t < count; t ++) {
-        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, t);
-        ecs_type_t type = table->type;
-
-        if ((column_index = ecs_type_index_of(type, ecs_entity(EcsName))) == -1) {
-            continue;
-        }
-
-        ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
-
-        if (parent && ecs_type_index_of(type, ECS_CHILDOF | parent) == -1) {
-            continue;
-        }
-
-        ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
-        if (data && data->columns) {
-            result = ecs_lookup_child_in_columns(data, column_index, id);
-        }
-
-        if (!result && stage != &world->stage) {
-            data = ecs_table_get_data(world, table);
-            if (!data || !data->columns) {
-                continue;
-            }
-            
-            result = ecs_lookup_child_in_columns(data, column_index, id);
-        }
-
-        if (result) {
-            break;
-        }        
-    }
-
-    return result;
-}
-
-ecs_entity_t ecs_lookup_child(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    const char *id)
-{
-    ecs_entity_t result = 0;
-    ecs_stage_t *stage = ecs_get_stage(&world);
-
-    if (stage != &world->stage) {
-        result = lookup_child(world, stage, stage->tables, parent, id);
-        if (result) {
-            return result;
-        }
-    }
-
-    return lookup_child(world, stage, world->stage.tables, parent, id);
-}
-
-ecs_entity_t ecs_lookup(
-    ecs_world_t *world,
-    const char *id)
-{   
-    if (!id) {
-        return 0;
-    }
-
-    if (isdigit(id[0])) {
-        return atoi(id);
-    }
-    
-    return ecs_lookup_child(world, 0, id);
 }
 
 static

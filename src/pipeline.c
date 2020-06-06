@@ -361,6 +361,41 @@ void EcsOnAddPipeline(
     }
 }
 
+static
+void ctor_pipeline_query(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entities,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    (void)world;
+    (void)component;
+    (void)entities;
+    (void)ctx;
+    memset(ptr, 0, size * count);
+}
+
+static
+void dtor_pipeline_query(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entities,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    EcsPipelineQuery *q = ptr;
+    
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_vector_free(q[i].ops);
+    }
+}
+
 void ecs_init_pipeline_builtins(
     ecs_world_t *world)
 {
@@ -378,6 +413,12 @@ void ecs_init_pipeline_builtins(
     ecs_set(world, EcsPreStore, EcsName, {"EcsPreStore"});
     ecs_set(world, EcsOnStore, EcsName, {"EcsOnStore"});
     ecs_set(world, EcsPostFrame, EcsName, {"EcsPostFrame"});
+
+    /* Set ctor and dtor for PipelineQuery */
+    ecs_set(world, ecs_entity(EcsPipelineQuery), EcsComponentLifecycle, {
+        .ctor = ctor_pipeline_query,
+        .dtor = dtor_pipeline_query
+    });
 
     /* When the Pipeline tag is added a pipeline will be created */
     ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline);
