@@ -1563,10 +1563,12 @@ bool ecs_filter_next(
 //// Hierarchy iterator API
 ////////////////////////////////////////////////////////////////////////////////
 
+FLECS_EXPORT
 ecs_view_t ecs_tree_iter(
     ecs_world_t *world,
     ecs_entity_t parent);
 
+FLECS_EXPORT
 bool ecs_tree_next(
     ecs_view_t *view);
 

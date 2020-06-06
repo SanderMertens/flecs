@@ -20,10 +20,10 @@ int main(int argc, char *argv[]) {
     ecs_set(world, MyEntity, Position, {10, 20});
 
     /* Get the Position component */
-    Position p = ecs_get(world, MyEntity, Position);
+    const Position *p = ecs_get(world, MyEntity, Position);
 
     printf("Position of %s is {%f, %f}\n", 
-        ecs_get_name(world, MyEntity), p.x, p.y);
+        ecs_get_name(world, MyEntity), p->x, p->y);
 
     /* Cleanup */
     return ecs_fini(world);

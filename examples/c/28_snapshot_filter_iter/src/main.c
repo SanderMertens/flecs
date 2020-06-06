@@ -43,12 +43,10 @@ int main(int argc, char *argv[]) {
     ecs_bulk_delete(world, &f);
 
     /* Create iterator for snapshot */
-    ecs_filter_iter_t it = ecs_snapshot_filter_iter(world, s, &f);
+    ecs_view_t view = ecs_snapshot_filter_iter(world, s, &f);
 
     /* Iterate it, progress entities in snapshot */
-    while (ecs_filter_next(&it)) {
-        ecs_view_t *view = &it.view;
-
+    while (ecs_filter_next(&view)) {
         /* Even though we have a view ptr, we can't use it as we normally would
          * in a system with ecs_column. This is because a filter has no well
          * defined indices for the components being matched with. To obtain the
@@ -58,7 +56,7 @@ int main(int argc, char *argv[]) {
         /* Get type of table we're currently iterating over. The order in which
          * components appear in the type is the same as the order in which the
          * components are stored on the table. */
-        ecs_type_t table_type = ecs_table_type(view);
+        ecs_type_t table_type = ecs_table_type(&view);
 
         /* Retrieve the column indices for both the Position and Velocity
          * columns by finding their position in the table type */
@@ -73,12 +71,12 @@ int main(int argc, char *argv[]) {
 
         /* Get pointers to the Position and Velocity columns with the obtained
          * column indices */
-        Position *p = ecs_table_column(view, p_index);
-        Velocity *v = ecs_table_column(view, v_index);
-        EcsName *id = ecs_table_column(view, id_index);
+        Position *p = ecs_table_column(&view, p_index);
+        Velocity *v = ecs_table_column(&view, v_index);
+        EcsName *id = ecs_table_column(&view, id_index);
 
         /* Now we can iterate the component data as usual */
-        for (int i = 0; i < view->count; i ++) {
+        for (int i = 0; i < view.count; i ++) {
             p[i].x += v[i].x;
             p[i].y += v[i].y;
             printf("moved %s to {%f, %f}\n", id[i], p[i].x, p[i].y);

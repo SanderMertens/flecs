@@ -16,9 +16,7 @@ using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using snapshot_t = ecs_snapshot_t;
 using filter_t = ecs_filter_t;
-using filter_iter_t = ecs_filter_iter_t;
 using query_t = ecs_query_t;
-using query_iter_t = ecs_query_iter_t;
 
 class world;
 class snapshot;
@@ -27,6 +25,7 @@ class type;
 class view;
 class filter;
 class filter_iterator;
+class child_iterator;
 class world_filter;
 class snapshot_filter;
 
@@ -822,6 +821,10 @@ public:
         }
     }
 
+    flecs::world world() const {
+        return flecs::world(m_world);
+    }
+
     flecs::type type() const;
 
     flecs::type to_type() const;
@@ -900,6 +903,8 @@ public:
         return stats->delta_time;
     }
 
+    child_iterator children() const;
+
     operator bool() {
         return m_id != 0;
     }
@@ -912,7 +917,7 @@ protected:
 /** Prefab class */
 class prefab final : public entity {
 public:
-    prefab(const world& world, const char *name) 
+    prefab(const flecs::world& world, const char *name) 
         : entity(world, name)
     {
         this->add(flecs::Prefab);
@@ -960,13 +965,13 @@ private:
 
 class type final : entity {
 public:
-    type(const world& world, const char *name, const char *expr = nullptr)
+    type(const flecs::world& world, const char *name, const char *expr = nullptr)
         : entity(world, ecs_new_type(world.c_ptr(), 0, name, expr))
     { 
         sync_from_flecs();
     }
 
-    type(const world& world, type_t type)
+    type(const flecs::world& world, type_t type)
         : entity( world )
         , m_type( type )
         , m_normalized( type ) { }
@@ -1099,7 +1104,7 @@ template <typename T> const char* component_base<T>::s_name( nullptr );
 template <typename T>
 class component : public entity {
 public:
-    component(const world& world, const char *name) { 
+    component(const flecs::world& world, const char *name) { 
         component_base<T>::init(world, name);
 
         /* Register as well for both const and reference versions of type */
@@ -1126,7 +1131,7 @@ public:
 template <typename T>
 class module final : public component<T> {
 public:
-    module(world& world, const char *name) : component<T>(world, name) { }
+    module(flecs::world& world, const char *name) : component<T>(world, name) { }
 };
 
 
@@ -1337,13 +1342,12 @@ public:
 
     template <typename Func>
     void each(Func func) const {
-        ecs_query_iter_t it = ecs_query_iter(m_query, 0, 0);
+        ecs_view_t view = ecs_query_iter(m_query);
 
-        while (ecs_query_next(&it)) {
-            ecs_view_t *view = &it.view;
-            column_args<Components...> columns(view);
+        while (ecs_query_next(&view)) {
+            column_args<Components...> columns(&view);
             each_invoker<Func, Components...> ctx(func);
-            ctx.call_system(view, func, 0, columns.m_columns);
+            ctx.call_system(&view, func, 0, columns.m_columns);
         }
     }
 
@@ -1549,7 +1553,7 @@ private:
 template<typename ... Components>
 class system final : public entity {
 public:
-    system(const world& world, const char *name = nullptr)
+    system(const flecs::world& world, const char *name = nullptr)
         : m_kind(static_cast<ecs_entity_t>(OnUpdate))
         , m_name(name) 
         , m_period(0.0)
@@ -1779,12 +1783,12 @@ class query_iterator
 public:
     query_iterator()
         : m_has_next(false)
-        , m_iter{ } { }
+        , m_view{ } { }
 
     query_iterator(const query<Components...>& query) 
-        : m_iter( ecs_query_iter(query.c_ptr(), 0, 0) )
+        : m_view( ecs_query_iter(query.c_ptr()) )
     {
-        m_has_next = ecs_query_next(&m_iter);
+        m_has_next = ecs_query_next(&m_view);
     }
 
     bool operator!=(query_iterator const& other) const {
@@ -1792,17 +1796,17 @@ public:
     }
 
     flecs::view const operator*() const {
-        return flecs::view(&m_iter.view);
+        return flecs::view(&m_view);
     }
 
     query_iterator& operator++() {
-        m_has_next = ecs_query_next(&m_iter);
+        m_has_next = ecs_query_next(&m_view);
         return *this;
     }
 
 private:
     bool m_has_next;
-    query_iter_t m_iter;
+    ecs_view_t m_view;
 };
 
 
@@ -1816,20 +1820,20 @@ public:
     filter_iterator()
         : m_world(nullptr)
         , m_has_next(false)
-        , m_iter{ } { }
+        , m_view{ } { }
 
     filter_iterator(const world& world, const filter& filter)
         : m_world( world.c_ptr() )
-        , m_iter( ecs_filter_iter(m_world, filter.c_ptr()) ) 
+        , m_view( ecs_filter_iter(m_world, filter.c_ptr()) ) 
     { 
-        m_has_next = ecs_filter_next(&m_iter);
+        m_has_next = ecs_filter_next(&m_view);
     }
 
     filter_iterator(const world& world, const snapshot& snapshot, const filter& filter) 
         : m_world( world.c_ptr() )
-        , m_iter( ecs_snapshot_filter_iter(m_world, snapshot.c_ptr(), filter.c_ptr()) )
+        , m_view( ecs_snapshot_filter_iter(m_world, snapshot.c_ptr(), filter.c_ptr()) )
     {
-        m_has_next = ecs_filter_next(&m_iter);
+        m_has_next = ecs_filter_next(&m_view);
     }
 
     bool operator!=(filter_iterator const& other) const {
@@ -1837,20 +1841,55 @@ public:
     }
 
     flecs::view const operator*() const {
-        return flecs::view(&m_iter.view);
+        return flecs::view(&m_view);
     }
 
     filter_iterator& operator++() {
-        m_has_next = ecs_filter_next(&m_iter);
+        m_has_next = ecs_filter_next(&m_view);
         return *this;
     }
 
 private:
     world_t *m_world;
     bool m_has_next;
-    filter_iter_t m_iter;
+    ecs_view_t m_view;
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Tree iterator
+////////////////////////////////////////////////////////////////////////////////
+
+class tree_iterator
+{
+public:
+    tree_iterator()
+        : m_has_next(false)
+        , m_view{ } { }
+
+    tree_iterator(flecs::entity entity) 
+        : m_view( ecs_tree_iter(entity.world().c_ptr(), entity.id()) )
+    {
+        m_has_next = ecs_tree_next(&m_view);
+    }
+
+    bool operator!=(tree_iterator const& other) const {
+        return m_has_next != other.m_has_next;
+    }
+
+    flecs::view const operator*() const {
+        return flecs::view(&m_view);
+    }
+
+    tree_iterator& operator++() {
+        m_has_next = ecs_tree_next(&m_view);
+        return *this;
+    }
+
+private:
+    bool m_has_next;
+    ecs_view_t m_view;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility for creating a world-based filter iterator
@@ -1899,6 +1938,27 @@ private:
     const world& m_world;
     const snapshot& m_snapshot;
     const filter& m_filter;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//// Utility for creating a child table iterator
+////////////////////////////////////////////////////////////////////////////////
+
+class child_iterator {
+public:
+    child_iterator(const entity& entity) 
+        : m_parent( entity ) { }
+
+    inline tree_iterator begin() const {
+        return tree_iterator(m_parent);
+    }
+
+    inline tree_iterator end() const {
+        return tree_iterator();
+    }
+
+private:
+    const entity& m_parent;
 };
 
 
@@ -1999,6 +2059,9 @@ inline flecs::type entity::to_type() const {
     return flecs::type(m_world, type);
 }
 
+inline child_iterator entity::children() const {
+    return flecs::child_iterator(*this);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity fluent fwd declared functions

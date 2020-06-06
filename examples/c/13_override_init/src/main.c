@@ -35,7 +35,9 @@ int main(int argc, char *argv[]) {
 
     /* Print value of mass. The value will be equal to base, and the instance
      * will own the component. */
-    printf("instance: %f (owned = %u)\n", ecs_get(world, instance, Mass), ecs_has_owned(world, instance, Mass, true));
+    printf("instance: %f (owned = %u)\n", 
+        *ecs_get(world, instance, Mass), 
+        ecs_has_owned(world, instance, Mass, true));
 
     /* Cleanup */
     return ecs_fini(world);
