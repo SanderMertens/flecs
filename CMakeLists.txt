@@ -4,12 +4,15 @@ project (flecs C)
 
 file(GLOB flecs_SRC "src/*.c")
 
+add_library(flecs SHARED ${flecs_SRC})
+add_library(flecs_static STATIC ${flecs_SRC})
+
+target_include_directories(flecs PUBLIC "include")
+target_include_directories(flecs_static PUBLIC "include")
+
 include_directories("include")
 
 add_definitions(-DFLECS_IMPL)
-
-add_library(flecs_static STATIC ${flecs_SRC})
-add_library(flecs_shared SHARED ${flecs_SRC})
 
 if (TARGET flecs_static)
 	add_definitions(-DPRIVATE -DFLECS_STATIC)
@@ -22,5 +25,5 @@ install(
 	TARGETS flecs_static DESTINATION lib
 )
 install(
-	TARGETS flecs_shared DESTINATION lib
+	TARGETS flecs DESTINATION lib
 )
