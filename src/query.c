@@ -178,6 +178,8 @@ bool has_auto_activation(
     return !(q->flags & EcsQueryNoActivation);
 }
 
+#ifndef NDEBUG
+
 static
 const char* query_name(
     ecs_world_t *world,
@@ -189,6 +191,8 @@ const char* query_name(
         return q->sig.expr;
     }
 }
+
+#endif
 
 /** Add table to system, compute offsets for system components in table it */
 static
@@ -1393,7 +1397,7 @@ bool ecs_query_next(
 
     ecs_assert(!ranges || query->compare, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t table_count = it->table_count;
+    int32_t table_count;
     if (ranges) {
         table_count = ecs_vector_count(query->table_ranges);
     } else {

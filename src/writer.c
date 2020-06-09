@@ -22,6 +22,8 @@ bool ecs_name_writer_write(
     size_t written = writer->len - writer->written;
     char *name_ptr = ECS_OFFSET(writer->name, writer->written);
 
+    ecs_assert(buffer != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (written >= sizeof(int32_t)) {
         *(int32_t*)name_ptr = *(int32_t*)buffer;
         writer->written += sizeof(int32_t);

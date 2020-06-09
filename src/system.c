@@ -197,10 +197,9 @@ void ecs_init_system(
 {
     ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
 
-    const char *name = ecs_get_name(world, system);
-
     ecs_trace_1("system #[green]%s#[reset] (%d) created with #[red]%s#[normal]", 
-        name, system, query->sig.expr);
+        ecs_get_name(world, system), system, query->sig.expr);
+
     ecs_trace_push();
 
     /* Add & initialize the EcsSystem component */
