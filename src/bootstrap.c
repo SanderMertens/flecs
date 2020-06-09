@@ -85,7 +85,22 @@ void ecs_colsystem_dtor(
 
 /* Register a trigger for a component */
 static
-void ecs_trigger_set_intern(
+EcsTrigger* trigger_find_or_create(
+    ecs_vector_t **triggers,
+    ecs_entity_t entity)
+{
+    ecs_vector_each(*triggers, EcsTrigger, trigger, {
+        if (trigger->self == entity) {
+            return trigger;
+        }
+    });
+
+    EcsTrigger *result = ecs_vector_add(triggers, EcsTrigger);
+    return result;
+}
+
+static
+void trigger_set(
     ecs_world_t *world,
     const ecs_entity_t *entities,
     EcsTrigger *ct,
@@ -100,10 +115,10 @@ void ecs_trigger_set_intern(
         ecs_c_info_t *cdata = ecs_get_or_create_c_info(world, e);
         switch(ct[i].kind) {
         case EcsOnAdd:
-            el = ecs_vector_add(&cdata->on_add, EcsTrigger);
+            el = trigger_find_or_create(&cdata->on_add, entities[i]);
             break;
         case EcsOnRemove:
-            el = ecs_vector_add(&cdata->on_remove, EcsTrigger);
+            el = trigger_find_or_create(&cdata->on_remove, entities[i]);
             break;
         default:
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
@@ -118,31 +133,45 @@ void ecs_trigger_set_intern(
         ecs_trace_1("trigger #[green]%s#[normal] created for component #[red]%s",
             ct[i].kind == EcsOnAdd
                 ? "OnAdd"
-                : ct[i].kind == EcsOnRemove
-                    ? "OnRemove"
-                    : "OnSet", ecs_get_name(world, e));
+                : "OnRemove", ecs_get_name(world, e));
     }
 }
 
 static
 void EcsOnSetTrigger(
-    ecs_rows_t *rows)
+    ecs_iter_t *it)
 {
-    EcsTrigger *ct = ecs_column(rows, EcsTrigger, 1);
-    ecs_trigger_set_intern(rows->world, rows->entities, ct, rows->count);
+    EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
+    
+    trigger_set(it->world, it->entities, ct, it->count);
+}
+
+static
+void EcsOnSetTriggerCtx(
+    ecs_iter_t *it)
+{
+    EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
+    EcsContext *ctx = ecs_column(it, EcsContext, 2);
+
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ct[i].ctx = (void*)ctx[i].ctx;
+    }
+
+    trigger_set(it->world, it->entities, ct, it->count);    
 }
 
 /* System that registers component lifecycle callbacks */
 static
 void EcsOnSetComponentLifecycle(
-    ecs_rows_t *rows)
+    ecs_iter_t *it)
 {
-    EcsComponentLifecycle *cl = ecs_column(rows, EcsComponentLifecycle, 1);
-    ecs_world_t *world = rows->world;
+    EcsComponentLifecycle *cl = ecs_column(it, EcsComponentLifecycle, 1);
+    ecs_world_t *world = it->world;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
         ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, e);
 
         c_info->lifecycle = cl[i];
@@ -155,43 +184,43 @@ void EcsOnSetComponentLifecycle(
 /* Disable system when EcsDisabled is added */
 static 
 void EcsDisableSystem(
-    ecs_rows_t *rows)
+    ecs_iter_t *it)
 {
-    EcsSystem *system_data = ecs_column(rows, EcsSystem, 1);
+    EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
 
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_enable_system(
-            rows->world, rows->entities[i], &system_data[i], false);
+            it->world, it->entities[i], &system_data[i], false);
     }
 }
 
 /* Enable system when EcsDisabled is removed */
 static
 void EcsEnableSystem(
-    ecs_rows_t *rows)
+    ecs_iter_t *it)
 {
-    EcsSystem *system_data = ecs_column(rows, EcsSystem, 1);
+    EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
 
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_enable_system(
-            rows->world, rows->entities[i], &system_data[i], true);
+            it->world, it->entities[i], &system_data[i], true);
     }
 }
 
 /* Parse a signature expression into the ecs_sig_t data structure */
 static
 void EcsCreateSignature(
-    ecs_rows_t *rows) 
+    ecs_iter_t *it) 
 {
-    ecs_world_t *world = rows->world;
-    ecs_entity_t *entities = rows->entities;
+    ecs_world_t *world = it->world;
+    ecs_entity_t *entities = it->entities;
 
-    EcsSignatureExpr *signature = ecs_column(rows, EcsSignatureExpr, 1);
+    EcsSignatureExpr *signature = ecs_column(it, EcsSignatureExpr, 1);
     
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = entities[i];
         const char *name = ecs_get_name(world, e);
 
@@ -212,15 +241,15 @@ void EcsCreateSignature(
 /* Create a query from a signature */
 static
 void EcsCreateQuery(
-    ecs_rows_t *rows) 
+    ecs_iter_t *it) 
 {
-    ecs_world_t *world = rows->world;
-    ecs_entity_t *entities = rows->entities;
+    ecs_world_t *world = it->world;
+    ecs_entity_t *entities = it->entities;
 
-    EcsSignature *signature = ecs_column(rows, EcsSignature, 1);
+    EcsSignature *signature = ecs_column(it, EcsSignature, 1);
     
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = entities[i];
 
         if (!ecs_has(world, e, EcsQuery)) {
@@ -234,21 +263,21 @@ void EcsCreateQuery(
 /* Create a system from a query and an action */
 static
 void EcsCreateSystem(
-    ecs_rows_t *rows)
+    ecs_iter_t *it)
 {
-    ecs_world_t *world = rows->world;
-    ecs_entity_t *entities = rows->entities;
+    ecs_world_t *world = it->world;
+    ecs_entity_t *entities = it->entities;
 
-    EcsQuery *query = ecs_column(rows, EcsQuery, 1);
-    EcsIterAction *action = ecs_column(rows, EcsIterAction, 2);
-    EcsContext *ctx = ecs_column(rows, EcsContext, 3);
+    EcsQuery *query = ecs_column(it, EcsQuery, 1);
+    EcsIterAction *action = ecs_column(it, EcsIterAction, 2);
+    EcsContext *ctx = ecs_column(it, EcsContext, 3);
     
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = entities[i];
         void *ctx_ptr = NULL;
         if (ctx) {
-            ctx_ptr = ctx[i].ctx;
+            ctx_ptr = (void*)ctx[i].ctx;
         }
 
         ecs_init_system(world, e, action[i].action, query[i].query, ctx_ptr);
@@ -260,7 +289,7 @@ void bootstrap_set_system(
     ecs_world_t *world,
     const char *name,
     const char *expr,
-    ecs_iter_action_t action)
+    ecs_view_action_t action)
 {
     ecs_sig_t sig = {0};
     ecs_entity_t sys = ecs_set(world, 0, EcsName, {name});
@@ -297,6 +326,9 @@ void ecs_init_builtins(
 
     /* Register OnSet system for triggers */
     ECS_SYSTEM(world, EcsOnSetTrigger, EcsOnSet, EcsTrigger);
+
+    /* System that sets ctx for a trigger */
+    ECS_SYSTEM(world, EcsOnSetTriggerCtx, EcsOnSet, EcsTrigger, EcsContext);
 
     /* Monitors that trigger when a system is enabled or disabled */
     ECS_SYSTEM(world, EcsDisableSystem, EcsMonitor, EcsSystem, EcsDisabled || EcsDisabledIntern);

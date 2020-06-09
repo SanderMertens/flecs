@@ -178,6 +178,8 @@ bool has_auto_activation(
     return !(q->flags & EcsQueryNoActivation);
 }
 
+#ifndef NDEBUG
+
 static
 const char* query_name(
     ecs_world_t *world,
@@ -190,7 +192,9 @@ const char* query_name(
     }
 }
 
-/** Add table to system, compute offsets for system components in table rows */
+#endif
+
+/** Add table to system, compute offsets for system components in table it */
 static
 void add_table(
     ecs_world_t *world,
@@ -289,9 +293,8 @@ void add_table(
                 op == EcsOperOptional)
             {
                 component = column->is.component;
-
-                ecs_components_contains_component(
-                    world, table_type, component, ECS_CHILDOF, &entity);
+                entity = ecs_find_in_type(
+                    world, table_type, component, ECS_CHILDOF);
 
             } else if (op == EcsOperOr) {
                 component = components_contains(
@@ -325,7 +328,7 @@ void add_table(
 
                     /* Check if component is a tag. If it is, set table_data to
                      * zero, so that a system won't try to access the data */
-                    const EcsComponent *data = ecs_get_ptr(
+                    const EcsComponent *data = ecs_get(
                         world, component, EcsComponent);
 
                     if (!data || !data->size) {
@@ -364,7 +367,7 @@ void add_table(
          * makes changing this administation easier when the change happens.
          * */
         if ((entity || table_data->columns[c] == -1 || from == EcsCascade)) {
-            const EcsComponent *c_info = ecs_get_ptr(
+            const EcsComponent *c_info = ecs_get(
                     world, component, EcsComponent);
             
             ecs_entity_t e;
@@ -447,8 +450,7 @@ bool match_column(
 
     } else if (from_kind == EcsFromParent) {
         failure_info->reason = EcsMatchFromContainer;
-        return ecs_components_contains_component(
-            world, type, component, ECS_CHILDOF, NULL);
+        return ecs_find_in_type(world, type, component, ECS_CHILDOF) != 0;
 
     } else if (from_kind == EcsFromEntity) {
         failure_info->reason = EcsMatchFromEntity;
@@ -639,9 +641,8 @@ void resolve_cascade_container(
         ECS_INTERNAL_ERROR, NULL);
 
     /* Resolve container entity */
-    ecs_entity_t container = 0;
-    ecs_components_contains_component(
-        world, table_type, ref->component, ECS_CHILDOF, &container);    
+    ecs_entity_t container = ecs_find_in_type(
+        world, table_type, ref->component, ECS_CHILDOF);    
 
     /* If container was found, update the reference */
     if (container) {
@@ -931,19 +932,24 @@ void sort_tables(
         /* Check both if entities have moved (element 0) or if the component
          * we're sorting on has changed (index + 1) */
         if (is_dirty) {
-            /* Sort the tables */
+            /* Sort the table */
             sort_table(world, table, index, compare);
 
             /* Sorting the table will make it dirty again, so update our monitor
              * after the sort */
             m_table->monitor[0] = dirty_state[0];
-            m_table->monitor[index + 1] = dirty_state[index + 1];
+
+            if (index != -1) {
+                m_table->monitor[index + 1] = dirty_state[index + 1];
+            }
+
             tables_sorted = true;
         }
     }
 
     if (tables_sorted || query->match_count != query->prev_match_count) {
         build_sorted_tables(world, query);
+        query->match_count ++; /* Increase version if tables changed */
         query->prev_match_count = query->match_count;
     }
 }
@@ -1304,7 +1310,7 @@ void ecs_query_free(
 }
 
 /* Create query iterator */
-ecs_query_iter_t ecs_query_iter(
+ecs_iter_t ecs_query_iter_page(
     ecs_query_t *query,
     int32_t offset,
     int32_t limit)
@@ -1320,27 +1326,35 @@ ecs_query_iter_t ecs_query_iter(
         table_count = ecs_vector_count(query->tables);
     }
 
-    return (ecs_query_iter_t){
+    ecs_query_iter_t it = {
         .query = query,
         .offset = offset,
         .limit = limit,
         .remaining = limit,
         .index = 0,
-        .rows = {
-            .world = query->world,
-            .query = query,
-            .column_count = ecs_vector_count(query->sig.columns),
-            .table_count = table_count,
-            .inactive_table_count = ecs_vector_count(query->empty_tables)
-        }
+    };
+
+    return (ecs_iter_t){
+        .world = query->world,
+        .query = query,
+        .column_count = ecs_vector_count(query->sig.columns),
+        .table_count = table_count,
+        .inactive_table_count = ecs_vector_count(query->empty_tables),
+        .iter.query = it
     };
 }
 
-void ecs_query_set_rows(
+ecs_iter_t ecs_query_iter(
+    ecs_query_t *query)
+{
+    return ecs_query_iter_page(query, 0, 0);
+}
+
+void ecs_query_set_view(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_query_t *query,
-    ecs_rows_t *rows,
+    ecs_iter_t *it,
     int32_t table_index,
     int32_t row,
     int32_t count)
@@ -1352,38 +1366,38 @@ void ecs_query_set_rows(
     ecs_table_t *world_table = table->table;
     ecs_data_t *table_data = ecs_table_get_staged_data(world, stage, world_table);
     ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t);  
-    rows->entities = &entity_buffer[row];
+    it->entities = &entity_buffer[row];
 
-    rows->world = world;
-    rows->query = query;
-    rows->column_count = ecs_vector_count(query->sig.columns);
-    rows->table_count = 1;
-    rows->inactive_table_count = 0;
-    rows->table = world_table;
-    rows->table_columns = table_data->columns;
-    rows->columns = table->columns;
-    rows->components = table->components;
-    rows->references = ecs_vector_first(table->references, ecs_reference_t);
-    rows->offset = row;
-    rows->count = count;
+    it->world = world;
+    it->query = query;
+    it->column_count = ecs_vector_count(query->sig.columns);
+    it->table_count = 1;
+    it->inactive_table_count = 0;
+    it->table = world_table;
+    it->table_columns = table_data->columns;
+    it->columns = table->columns;
+    it->components = table->components;
+    it->references = ecs_vector_first(table->references, ecs_reference_t);
+    it->offset = row;
+    it->count = count;
+    it->total_count = count;
 }
 
 /* Return next table */
 bool ecs_query_next(
-    ecs_query_iter_t *iter)
+    ecs_iter_t *it)
 {
-    ecs_assert(iter != NULL, ECS_INVALID_PARAMETER, NULL);
-
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_query_iter_t *iter = &it->iter.query;
     ecs_query_t *query = iter->query;
-    ecs_rows_t *rows = &iter->rows;
-    ecs_world_t *world = rows->world;
+    ecs_world_t *world = it->world;
 
     ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
     ecs_table_range_t *ranges = ecs_vector_first(query->table_ranges, ecs_table_range_t);
 
     ecs_assert(!ranges || query->compare, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t table_count = iter->rows.table_count;
+    int32_t table_count;
     if (ranges) {
         table_count = ecs_vector_count(query->table_ranges);
     } else {
@@ -1396,7 +1410,7 @@ bool ecs_query_next(
     int32_t offset = iter->offset;
     int32_t limit = iter->limit;
     int32_t remaining = iter->remaining;
-    int32_t prev_count = rows->count;
+    int32_t prev_count = it->total_count;
     bool offset_limit = (offset | limit) != 0;
 
     int i;
@@ -1416,7 +1430,7 @@ bool ecs_query_next(
         if (world_table) {
             table_data = ecs_table_get_data(real_world, world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
-            rows->table_columns = table_data->columns;
+            it->table_columns = table_data->columns;
             
             if (ranges) {
                 first = ranges[i].start_row;
@@ -1459,24 +1473,70 @@ bool ecs_query_next(
             }
 
             ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t); 
-            rows->entities = &entity_buffer[first];
-            rows->offset = first;
-            rows->count = count;
+            it->entities = &entity_buffer[first];
+            it->offset = first;
+            it->count = count;
+            it->total_count = count;
         }
 
-        rows->table = world_table;
-        rows->columns = table->columns;
-        rows->components = table->components;
-        rows->references = ecs_vector_first(table->references, ecs_reference_t);
-        rows->frame_offset += prev_count;
+        it->table = world_table;
+        it->columns = table->columns;
+        it->components = table->components;
+        it->references = ecs_vector_first(table->references, ecs_reference_t);
+        it->frame_offset += prev_count;
 
-        /* Table is ready to be iterated, return rows struct */
+        /* Table is ready to be iterated, return it struct */
         iter->index = ++ i;
 
         return true;
     }
 
     return false;
+}
+
+bool ecs_query_next_worker(
+    ecs_iter_t *it,
+    int32_t current,
+    int32_t total)
+{
+    int32_t per_worker, first, prev_offset = it->offset;
+
+    do {
+        if (!ecs_query_next(it)) {
+            return false;
+        }
+
+        int32_t count = it->count;
+        per_worker = count / total;
+        first = per_worker * current;
+
+        count -= per_worker * total;
+
+        if (count) {
+            if (current < count) {
+                per_worker ++;
+                first += current;
+            } else {
+                first += count;
+            }
+        }
+
+        if (!per_worker && !(it->query->flags & EcsQueryNeedsTables)) {
+            if (current == 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    } while (!per_worker);
+
+    it->frame_offset -= prev_offset;
+    it->count = per_worker;
+    it->offset += first;
+    it->entities = &it->entities[first];
+    it->frame_offset += first;
+
+    return true;
 }
 
 void ecs_query_sort(
@@ -1529,7 +1589,7 @@ bool ecs_dbg_match_entity(
     ecs_dbg_entity_t dbg;
     ecs_dbg_entity(world, entity, &dbg);
 
-    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
+    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
     if (!system_data) {
         failure_info_out->reason = EcsMatchNotASystem;
         failure_info_out->column = -1;

@@ -4,14 +4,14 @@ static int sys_a_invoked;
 static int sys_b_invoked;
 static int sys_c_invoked;
 
-void SysA(ecs_rows_t *rows) { 
+void SysA(ecs_iter_t *it) { 
     sys_a_invoked ++; 
 }
-void SysB(ecs_rows_t *rows) { 
+void SysB(ecs_iter_t *it) { 
     test_assert(sys_a_invoked != 0);
     sys_b_invoked ++; 
 }
-void SysC(ecs_rows_t *rows) { 
+void SysC(ecs_iter_t *it) { 
     test_assert(sys_b_invoked != 0);
     sys_c_invoked ++; 
 }
@@ -308,56 +308,56 @@ void Pipeline_system_order_after_new_system_higher_id() {
 static int sys_out_invoked;
 static int sys_in_invoked;
 
-static void SysOut(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 2);
+static void SysOut(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 2);
 
     sys_out_invoked ++;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(rows->world, rows->entities[i], Velocity, {10, 20});
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Velocity, {10, 20});
     }
 }
 
-static void SysOutMain(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 2);
+static void SysOutMain(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 2);
 
     sys_out_invoked ++;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         v[i].x = 10;
         v[i].y = 20;
     }
 }
 
-static void SysIn(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 1);
+static void SysIn(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 1);
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
     
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
-        test_assert( ecs_has(rows->world, e, Velocity));
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        test_assert( ecs_has(it->world, e, Velocity));
 
-        const Velocity *v_ptr = ecs_get_ptr(rows->world, e, Velocity);
+        const Velocity *v_ptr = ecs_get(it->world, e, Velocity);
         test_int(v_ptr->x, 10);
         test_int(v_ptr->y, 20);
     }
 }
 
-static void SysInMain(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 1);
+static void SysInMain(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 1);
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
     
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
-        test_assert( ecs_has(rows->world, e, Velocity));
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        test_assert( ecs_has(it->world, e, Velocity));
 
         test_int(v[i].x, 10);
         test_int(v[i].y, 20);
@@ -372,7 +372,7 @@ void Pipeline_merge_after_staged_out() {
 
     ECS_ENTITY(world, E, Position);
 
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, :Velocity);
     ECS_SYSTEM(world, SysInMain, EcsOnUpdate, Velocity);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -381,13 +381,13 @@ void Pipeline_merge_after_staged_out() {
 
     test_int(stats->systems_ran_frame, 2);
     test_int(stats->merge_count_total, 2);
-    test_int(stats->pipeline_build_count_total, 1);
+    test_int(stats->pipeline_build_count_total, 2);
 
     test_int(sys_out_invoked, 1);
     test_int(sys_in_invoked, 1);
 
     ecs_progress(world, 1);
-    test_int(stats->pipeline_build_count_total, 1);
+    test_int(stats->pipeline_build_count_total, 2);
 
     ecs_fini(world);
 }
@@ -409,13 +409,13 @@ void Pipeline_merge_after_not_out() {
 
     test_int(stats->systems_ran_frame, 2);
     test_int(stats->merge_count_total, 2);
-    test_int(stats->pipeline_build_count_total, 1);
+    test_int(stats->pipeline_build_count_total, 2);
 
     test_int(sys_out_invoked, 1);
     test_int(sys_in_invoked, 1);
 
     ecs_progress(world, 1);
-    test_int(stats->pipeline_build_count_total, 1);
+    test_int(stats->pipeline_build_count_total, 2);
 
     ecs_fini(world);
 }
@@ -456,8 +456,8 @@ void Pipeline_no_merge_after_staged_in_out() {
 
     ECS_ENTITY(world, E, Position, Velocity);
 
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, .Velocity);
-    ECS_SYSTEM(world, SysIn, EcsOnUpdate, .Velocity);
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, SysIn, EcsOnUpdate, :Velocity);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 

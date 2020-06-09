@@ -2,29 +2,29 @@
 
 /* Auto-add EcsTickSource to each entity with EcsTimer or EcsRateFilter */
 static
-void EcsAddTickSource(ecs_rows_t *rows) {
+void EcsAddTickSource(ecs_iter_t *it) {
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(rows->world, rows->entities[i], EcsTickSource, {0});
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], EcsTickSource, {0});
     }
 }
 
 static
-void EcsProgressTimers(ecs_rows_t *rows) {
-    EcsTimer *timer = ecs_column(rows, EcsTimer, 1);
-    EcsTickSource *tick_source = ecs_column(rows, EcsTickSource, 2);
+void EcsProgressTimers(ecs_iter_t *it) {
+    EcsTimer *timer = ecs_column(it, EcsTimer, 1);
+    EcsTickSource *tick_source = ecs_column(it, EcsTickSource, 2);
 
     ecs_assert(timer != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         tick_source[i].tick = false;
 
         if (!timer[i].active) {
             continue;
         }
 
-        float time_elapsed = timer[i].time + rows->delta_time;
+        float time_elapsed = timer[i].time + it->delta_time;
         float timeout = timer[i].timeout;
         
         if (time_elapsed >= timeout) {
@@ -47,19 +47,19 @@ void EcsProgressTimers(ecs_rows_t *rows) {
 }
 
 static
-void EcsProgressRateFilters(ecs_rows_t *rows) {
-    EcsRateFilter *filter = ecs_column(rows, EcsRateFilter, 1);
-    EcsTickSource *tick_dst = ecs_column(rows, EcsTickSource, 2);
+void EcsProgressRateFilters(ecs_iter_t *it) {
+    EcsRateFilter *filter = ecs_column(it, EcsRateFilter, 1);
+    EcsTickSource *tick_dst = ecs_column(it, EcsTickSource, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_entity_t src = filter[i].src;
         bool inc = false;
 
-        filter[i].time_elapsed += rows->delta_time;
+        filter[i].time_elapsed += it->delta_time;
 
         if (src) {
-            const EcsTickSource *tick_src = ecs_get_ptr(rows->world, src, EcsTickSource);
+            const EcsTickSource *tick_src = ecs_get(it->world, src, EcsTickSource);
             if (tick_src) {
                 inc = tick_src->tick;
             }

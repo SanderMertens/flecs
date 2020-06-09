@@ -137,7 +137,7 @@ void ecs_system_activate(
         ecs_remove_entity(world, system, EcsInactive);
     }
 
-    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
+    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
     if (!system_data || !system_data->query) {
         return;
     }
@@ -191,16 +191,15 @@ void ecs_enable_system(
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_iter_action_t action,
+    ecs_view_action_t action,
     ecs_query_t *query,
     void *ctx)
 {
     ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
 
-    const char *name = ecs_get_name(world, system);
-
     ecs_trace_1("system #[green]%s#[reset] (%d) created with #[red]%s#[normal]", 
-        name, system, query->sig.expr);
+        ecs_get_name(world, system), system, query->sig.expr);
+
     ecs_trace_push();
 
     /* Add & initialize the EcsSystem component */
@@ -294,7 +293,7 @@ void ecs_enable(
 {
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    const EcsType *type_ptr = ecs_get_ptr( world, entity, EcsType);
+    const EcsType *type_ptr = ecs_get( world, entity, EcsType);
     if (type_ptr) {
         /* If entity is a type, disable all entities in the type */
         ecs_vector_each(type_ptr->normalized, ecs_entity_t, e, {
@@ -345,7 +344,8 @@ ecs_entity_t ecs_run_intern(
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
-    void *param) 
+    void *param,
+    bool ran_by_app) 
 {
     if (!param) {
         param = system_data->ctx;
@@ -355,7 +355,8 @@ ecs_entity_t ecs_run_intern(
     ecs_entity_t tick_source = system_data->tick_source;
 
     if (tick_source) {
-        const EcsTickSource *tick = ecs_get_ptr(real_world, tick_source, EcsTickSource);
+        const EcsTickSource *tick = ecs_get(
+            real_world, tick_source, EcsTickSource);
 
         if (tick) {
             time_elapsed = tick->time_elapsed;
@@ -381,39 +382,49 @@ ecs_entity_t ecs_run_intern(
     }
 
     /* Prepare the query iterator */
-    ecs_query_iter_t qiter = ecs_query_iter(system_data->query, offset, limit);
-    qiter.rows.world = world;
-    qiter.rows.system = system;
-    qiter.rows.delta_time = delta_time;
-    qiter.rows.delta_system_time = time_elapsed;
-    qiter.rows.world_time = real_world->stats.world_time_total;
-    qiter.rows.frame_offset = offset;
+    ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
+    it.world = world;
+    it.system = system;
+    it.delta_time = delta_time;
+    it.delta_system_time = time_elapsed;
+    it.world_time = real_world->stats.world_time_total;
+    it.frame_offset = offset;
     
     /* Set param if provided, otherwise use system context */
     if (param) {
-        qiter.rows.param = param;
+        it.param = param;
     } else {
-        qiter.rows.param = system_data->ctx;
+        it.param = system_data->ctx;
     }
 
-    ecs_iter_action_t action = system_data->action;
+    ecs_view_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
     if (!filter) {
-        while (ecs_query_next(&qiter)) {
-            action(&qiter.rows);
+        if (ran_by_app || world == real_world) {
+            while (ecs_query_next(&it)) {
+                action(&it);
+            }
+        } else {
+            ecs_thread_t *thread = (ecs_thread_t*)world;
+            int32_t total = ecs_vector_count(real_world->workers);
+            int32_t current = thread->index;
+
+            while (ecs_query_next_worker(&it, current, total)) {
+                action(&it);
+            }
         }
 
     /* If filter is provided, match each table with the provided filter */
     } else {
-        while (ecs_query_next(&qiter)) {
-            ecs_table_t *table = qiter.rows.table;
+        while (ecs_query_next(&it)) {
+            ecs_table_t *table = it.table;
             if (!ecs_table_match_filter(real_world, table, filter))
             {
                 continue;
             }
 
-            action(&qiter.rows);
+            action(&it);
         }        
     }
 
@@ -423,7 +434,7 @@ ecs_entity_t ecs_run_intern(
     
     system_data->invoke_count ++;
 
-    return qiter.rows.interrupted_by;
+    return it.interrupted_by;
 }
 
 /* -- Public API -- */
@@ -445,13 +456,13 @@ ecs_entity_t ecs_run_w_filter(
     ecs_get_stage(&real_world);
     bool in_progress = ecs_staging_begin(real_world);
 
-    EcsSystem *system_data = (EcsSystem*)ecs_get_ptr(
+    EcsSystem *system_data = (EcsSystem*)ecs_get(
         real_world, system, EcsSystem);
     assert(system_data != NULL);
 
     ecs_entity_t interrupted_by = ecs_run_intern(
         world, real_world, system, system_data, delta_time, offset, limit, 
-        filter, param);
+        filter, param, true);
 
     /* If world wasn't in progress when we entered this function, we need to
      * merge and reset the in_progress value */
@@ -482,31 +493,24 @@ void ecs_run_monitor(
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t system = query->system;
-    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
+    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
     ecs_assert(system_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!system_data->action) {
         return;
     }
 
-    ecs_rows_t rows = {0};
-    ecs_query_set_rows( world, stage, query, &rows, 
+    ecs_iter_t it = {0};
+    ecs_query_set_view( world, stage, query, &it, 
         monitor->matched_table_index, row, count);
 
-    rows.triggered_by = components;
-    rows.param = system_data->ctx;
+    it.triggered_by = components;
+    it.param = system_data->ctx;
 
     if (entities) {
-        rows.entities = entities;
+        it.entities = entities;
     }
 
-    rows.system = system;
-    system_data->action(&rows);
-}
-
-bool ecs_is_enabled(
-    ecs_world_t *world,
-    ecs_entity_t system)
-{
-    return !ecs_has_entity(world, system, EcsDisabled);
+    it.system = system;
+    system_data->action(&it);
 }

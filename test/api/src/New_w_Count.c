@@ -200,42 +200,42 @@ void New_w_Count_type_w_tag_mixed() {
 }
 
 static
-void AddPosition(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void AddPosition(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t velocity = *(ecs_entity_t*)rows->param;
+    ecs_entity_t velocity = *(ecs_entity_t*)it->param;
 
     int i;
-    for (i = rows->count - 1; i >= 0; i --) {
+    for (i = it->count - 1; i >= 0; i --) {
         test_int(p[i].x, 10 + 20 * i);
         test_int(p[i].y, 20 + 20 * i);
 
         p[i].x ++;
 
         ecs_set_ptr_w_entity(
-            rows->world, rows->entities[i], velocity, 
+            it->world, it->entities[i], velocity, 
             sizeof(Velocity), &(Velocity){2, 3});
     }
 }
 
 static
-void SetPosition(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void SetPosition(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t rotation = *(ecs_entity_t*)rows->param;
+    ecs_entity_t rotation = *(ecs_entity_t*)it->param;
 
     int i;
-    for (i = rows->count - 1; i >= 0; i --) {
+    for (i = it->count - 1; i >= 0; i --) {
         p[i].y ++;
-        ecs_add_entity(rows->world, rows->entities[i], rotation);
+        ecs_add_entity(it->world, it->entities[i], rotation);
     }
 }
 
 static int32_t on_movable_count = 0;
 
 static
-void OnMovable(ecs_rows_t *rows) {
-    on_movable_count += rows->count;
+void OnMovable(ecs_iter_t *it) {
+    on_movable_count += it->count;
 }
 
 void New_w_Count_new_w_on_add_on_set_monitor() {
@@ -245,10 +245,11 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position, &ecs_entity(Velocity));
+    ECS_TRIGGER(world, AddPosition, EcsOnAdd, Position);
     ECS_SYSTEM(world, SetPosition, EcsOnSet, Position);
     ECS_SYSTEM(world, OnMovable, EcsMonitor, Position, Velocity);
 
+    ecs_set(world, AddPosition, EcsContext, {&ecs_entity(Velocity)});
     ecs_set(world, SetPosition, EcsContext, {&ecs_entity(Rotation)});
 
     ecs_entity_t e = ecs_bulk_new_w_type(world, ecs_type(Position), 3, 
@@ -270,12 +271,12 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
         test_assert( ecs_has(world, e + i, Velocity) );
         test_assert( ecs_has(world, e + i, Rotation) );
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, 10 + i * 20 + 1);
         test_int(p->y, 20 + i * 20 + 1);
 
-        const Velocity *v = ecs_get_ptr(world, e + i, Velocity);
+        const Velocity *v = ecs_get(world, e + i, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 2);
         test_int(v->y, 3);        

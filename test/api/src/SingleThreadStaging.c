@@ -1,12 +1,12 @@
 #include <api.h>
 
 static
-void NewEmpty(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void NewEmpty(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ctx->new_entities[ctx->entity_count] = ecs_new(rows->world, 0);
+    for (i = 0; i < it->count; i ++) {
+        ctx->new_entities[ctx->entity_count] = ecs_new(it->world, 0);
         ctx->entity_count ++;
     }
 }
@@ -39,15 +39,15 @@ void SingleThreadStaging_new_empty() {
 }
 
 static
-void New_w_component(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void New_w_component(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_type_t type = ecs_type_from_entity(rows->world, ctx->component);
-        ecs_entity_t e = ecs_new_w_type(rows->world, type);
+    for (i = 0; i < it->count; i ++) {
+        ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
+        ecs_entity_t e = ecs_new_w_type(it->world, type);
         ctx->new_entities[ctx->entity_count] = e;
-        test_assert( !!ecs_get_type(rows->world, e));
-        test_assert( ecs_has_type(rows->world, e, type));
+        test_assert( !!ecs_get_type(it->world, e));
+        test_assert( ecs_has_type(it->world, e, type));
 
         ctx->entity_count ++;
     }
@@ -112,10 +112,10 @@ void SingleThreadStaging_new_w_type_of_2() {
 }
 
 static
-void NewEmpty_w_count(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void NewEmpty_w_count(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
-    ctx->new_entities[ctx->entity_count] = ecs_bulk_new(rows->world, 0, 1000);
+    ctx->new_entities[ctx->entity_count] = ecs_bulk_new(it->world, 0, 1000);
     ctx->entity_count ++;
 }
 
@@ -143,16 +143,16 @@ void SingleThreadStaging_new_empty_w_count() {
 }
 
 static
-void New_w_component_w_count(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void New_w_component_w_count(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     
-    ecs_type_t type = ecs_type_from_entity(rows->world, ctx->component);
-    ctx->new_entities[ctx->entity_count] = ecs_bulk_new_w_type(rows->world, type, 1000, NULL);
+    ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
+    ctx->new_entities[ctx->entity_count] = ecs_bulk_new_w_type(it->world, type, 1000, NULL);
 
     int i;
     for (i = 0; i < 1000; i ++) {
         test_assert( 
-            ecs_has_type(rows->world, ctx->new_entities[ctx->entity_count] + i, 
+            ecs_has_type(it->world, ctx->new_entities[ctx->entity_count] + i, 
                 type));
     }
 
@@ -210,24 +210,24 @@ void SingleThreadStaging_new_type_w_count() {
 }
 
 static
-void Add_to_new_empty(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_to_new_empty(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = ecs_new(rows->world, 0);
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = ecs_new(it->world, 0);
         if (ctx->component) {
-            ecs_add_entity(rows->world, e, ctx->component);
+            ecs_add_entity(it->world, e, ctx->component);
             
-            test_assert( !!ecs_get_type(rows->world, e));
-            test_assert( ecs_has_entity(rows->world, e, ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component) != NULL);
+            test_assert( !!ecs_get_type(it->world, e));
+            test_assert( ecs_has_entity(it->world, e, ctx->component));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component) != NULL);
         }
         if (ctx->component_2) {
-            ecs_add_entity(rows->world, e, ctx->component_2);
+            ecs_add_entity(it->world, e, ctx->component_2);
 
-            test_assert( !!ecs_get_type(rows->world, e));
-            test_assert( ecs_has_entity(rows->world, e, ctx->component_2)); 
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component_2) != NULL);           
+            test_assert( !!ecs_get_type(it->world, e));
+            test_assert( ecs_has_entity(it->world, e, ctx->component_2)); 
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component_2) != NULL);           
         }
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -293,32 +293,32 @@ void SingleThreadStaging_2_add_to_new_empty() {
 }
 
 static
-void Add_remove_same_from_new(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_remove_same_from_new(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = ecs_new(rows->world, 0);
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = ecs_new(it->world, 0);
 
-        test_assert( !ecs_get_type(rows->world, e));
+        test_assert( !ecs_get_type(it->world, e));
 
         if (ctx->component) {
-            ecs_add_entity(rows->world, e, ctx->component);
-            test_assert( ecs_has_entity(rows->world, e, ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component) != NULL);
+            ecs_add_entity(it->world, e, ctx->component);
+            test_assert( ecs_has_entity(it->world, e, ctx->component));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component) != NULL);
 
-            ecs_remove_entity(rows->world, e, ctx->component);
-            test_assert( !ecs_has_entity(rows->world, e, ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component) == NULL);
+            ecs_remove_entity(it->world, e, ctx->component);
+            test_assert( !ecs_has_entity(it->world, e, ctx->component));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component) == NULL);
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(rows->world, e, ctx->component_2);
-            test_assert( ecs_has_entity(rows->world, e, ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component_2) != NULL);
+            ecs_add_entity(it->world, e, ctx->component_2);
+            test_assert( ecs_has_entity(it->world, e, ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component_2) != NULL);
 
-            ecs_remove_entity(rows->world, e, ctx->component_2);
-            test_assert( !ecs_has_entity(rows->world, e, ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component_2) == NULL);
+            ecs_remove_entity(it->world, e, ctx->component_2);
+            test_assert( !ecs_has_entity(it->world, e, ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component_2) == NULL);
         }
 
         ctx->new_entities[ctx->entity_count] = e;
@@ -381,24 +381,24 @@ void SingleThreadStaging_add_remove_2_same_to_new_empty() {
 }
 
 static
-void Add_remove_same_from_new_w_component(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_remove_same_from_new_w_component(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_type_t type = ecs_type_from_entity(rows->world, ctx->component);
-        ecs_entity_t e = ecs_new_w_type(rows->world, type);
-        test_assert( ecs_has_entity(rows->world, e, ctx->component));
-        test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component) != NULL);
+    for (i = 0; i < it->count; i ++) {
+        ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
+        ecs_entity_t e = ecs_new_w_type(it->world, type);
+        test_assert( ecs_has_entity(it->world, e, ctx->component));
+        test_assert( ecs_get_w_entity(it->world, e, ctx->component) != NULL);
 
         if (ctx->component_2) {
-            ecs_add_entity(rows->world, e, ctx->component_2);
-            test_assert( ecs_has_entity(rows->world, e, ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component_2) != NULL);
+            ecs_add_entity(it->world, e, ctx->component_2);
+            test_assert( ecs_has_entity(it->world, e, ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component_2) != NULL);
 
-            ecs_remove_entity(rows->world, e, ctx->component_2);
-            test_assert( !ecs_has_entity(rows->world, e, ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component_2) == NULL);
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component) != NULL);
+            ecs_remove_entity(it->world, e, ctx->component_2);
+            test_assert( !ecs_has_entity(it->world, e, ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component_2) == NULL);
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component) != NULL);
         }
 
         ctx->new_entities[ctx->entity_count] = e;
@@ -436,28 +436,28 @@ void SingleThreadStaging_add_remove_same_to_new_w_component() {
 }
 
 static
-void Add_remove_different_from_new_empty(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_remove_different_from_new_empty(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = ecs_new(rows->world, 0);
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = ecs_new(it->world, 0);
 
         if (ctx->component_3) {
-            ecs_add_entity(rows->world, e, ctx->component_3);
-            test_assert( ecs_has_entity(rows->world, e, ctx->component_3));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component_3) != NULL);
+            ecs_add_entity(it->world, e, ctx->component_3);
+            test_assert( ecs_has_entity(it->world, e, ctx->component_3));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component_3) != NULL);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(rows->world, e, ctx->component_2);
-            test_assert( !ecs_has_entity(rows->world, e, ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component_2) == NULL);
+            ecs_remove_entity(it->world, e, ctx->component_2);
+            test_assert( !ecs_has_entity(it->world, e, ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component_2) == NULL);
         }
 
         if (ctx->component) {
-            ecs_add_entity(rows->world, e, ctx->component);
-            test_assert( ecs_has_entity(rows->world, e, ctx->component));  
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component) != NULL);      
+            ecs_add_entity(it->world, e, ctx->component);
+            test_assert( ecs_has_entity(it->world, e, ctx->component));  
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component) != NULL);      
         }
 
         ctx->new_entities[ctx->entity_count] = e;
@@ -527,11 +527,11 @@ void SingleThreadStaging_2_add_1_remove_same_to_new_empty() {
 }
 
 static
-void Clone_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Clone_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ctx->new_entities[ctx->entity_count] = ecs_clone(rows->world, 0, rows->entities[i], false);
+    for (i = 0; i < it->count; i ++) {
+        ctx->new_entities[ctx->entity_count] = ecs_clone(it->world, 0, it->entities[i], false);
         ctx->entity_count ++;
     }
 }
@@ -572,11 +572,11 @@ void SingleThreadStaging_clone() {
 }
 
 static
-void Clone_current_w_value(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Clone_current_w_value(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ctx->new_entities[ctx->entity_count] = ecs_clone(rows->world, 0, rows->entities[i], true);
+    for (i = 0; i < it->count; i ++) {
+        ctx->new_entities[ctx->entity_count] = ecs_clone(it->world, 0, it->entities[i], true);
         ctx->entity_count ++;
     }
 }
@@ -611,49 +611,49 @@ void SingleThreadStaging_clone_w_value() {
     test_assert(ctx.new_entities[0] != 0);
     test_assert( !!ecs_get_type(world, ctx.new_entities[0]));
     test_assert( ecs_has(world, ctx.new_entities[0], Position));
-    test_int( ecs_get(world, ctx.new_entities[0], Position).x, 10);
-    test_int( ecs_get(world, ctx.new_entities[0], Position).y, 20);
+    test_int( ecs_get(world, ctx.new_entities[0], Position)->x, 10);
+    test_int( ecs_get(world, ctx.new_entities[0], Position)->y, 20);
 
     test_assert(ctx.new_entities[1] != 0);
     test_assert( !!ecs_get_type(world, ctx.new_entities[1]));
     test_assert( ecs_has(world, ctx.new_entities[1], Position));
     test_assert( ecs_has(world, ctx.new_entities[1], Velocity));
-    test_int( ecs_get(world, ctx.new_entities[1], Position).x, 11);
-    test_int( ecs_get(world, ctx.new_entities[1], Position).y, 21);
-    test_int( ecs_get(world, ctx.new_entities[1], Velocity).x, 30);
-    test_int( ecs_get(world, ctx.new_entities[1], Velocity).y, 40);
+    test_int( ecs_get(world, ctx.new_entities[1], Position)->x, 11);
+    test_int( ecs_get(world, ctx.new_entities[1], Position)->y, 21);
+    test_int( ecs_get(world, ctx.new_entities[1], Velocity)->x, 30);
+    test_int( ecs_get(world, ctx.new_entities[1], Velocity)->y, 40);
 
     test_assert(ctx.new_entities[2] != 0);
     test_assert( !!ecs_get_type(world, ctx.new_entities[2]));
     test_assert( ecs_has(world, ctx.new_entities[2], Position));
     test_assert( ecs_has(world, ctx.new_entities[2], Mass));
-    test_int( ecs_get(world, ctx.new_entities[2], Position).x, 12);
-    test_int( ecs_get(world, ctx.new_entities[2], Position).y, 22);
-    test_int( ecs_get(world, ctx.new_entities[2], Mass), 50);
+    test_int( ecs_get(world, ctx.new_entities[2], Position)->x, 12);
+    test_int( ecs_get(world, ctx.new_entities[2], Position)->y, 22);
+    test_int( *ecs_get(world, ctx.new_entities[2], Mass), 50);
 
     ecs_fini(world);
 }
 
 static
-void Add_to_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_to_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component);
+            ecs_add_entity(it->world, it->entities[i], ctx->component);
 
-            test_assert( !!ecs_get_type(rows->world, rows->entities[i]));
-            test_assert( ecs_has_entity(rows->world,  rows->entities[i], ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component) != NULL);
+            test_assert( !!ecs_get_type(it->world, it->entities[i]));
+            test_assert( ecs_has_entity(it->world,  it->entities[i], ctx->component));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component) != NULL);
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component_2);
+            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
 
-            test_assert( !!ecs_get_type(rows->world, rows->entities[i]));
-            test_assert( ecs_has_entity(rows->world, rows->entities[i], ctx->component_2)); 
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_2) != NULL);           
+            test_assert( !!ecs_get_type(it->world, it->entities[i]));
+            test_assert( ecs_has_entity(it->world, it->entities[i], ctx->component_2)); 
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_2) != NULL);           
         }
 
         
@@ -731,23 +731,23 @@ void SingleThreadStaging_2_add_to_current() {
 }
 
 static
-void Remove_from_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Remove_from_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = rows->count - 1; i >= 0; i --) {
-        ecs_entity_t e = rows->entities[i];
+    for (i = it->count - 1; i >= 0; i --) {
+        ecs_entity_t e = it->entities[i];
 
         if (ctx->component) {
-            ecs_remove_entity(rows->world, e, ctx->component);
-            test_assert( !ecs_has_entity(rows->world,  e, ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component) == NULL);
+            ecs_remove_entity(it->world, e, ctx->component);
+            test_assert( !ecs_has_entity(it->world,  e, ctx->component));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component) == NULL);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(rows->world, e, ctx->component_2);
-            test_assert( !ecs_has_entity(rows->world, e, ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, e, ctx->component_2) == NULL);
+            ecs_remove_entity(it->world, e, ctx->component_2);
+            test_assert( !ecs_has_entity(it->world, e, ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, e, ctx->component_2) == NULL);
         }
 
         ctx->entity_count ++;
@@ -838,28 +838,28 @@ void SingleThreadStaging_remove_2_from_current() {
 }
 
 static
-void Add_remove_same_from_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_remove_same_from_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component);
-            test_assert( ecs_has_entity(rows->world,  rows->entities[i], ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component) != NULL);
+            ecs_add_entity(it->world, it->entities[i], ctx->component);
+            test_assert( ecs_has_entity(it->world,  it->entities[i], ctx->component));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component) != NULL);
 
-            ecs_remove_entity(rows->world, rows->entities[i], ctx->component);
-            test_assert( !ecs_has_entity(rows->world,  rows->entities[i], ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component) == NULL);
+            ecs_remove_entity(it->world, it->entities[i], ctx->component);
+            test_assert( !ecs_has_entity(it->world,  it->entities[i], ctx->component));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component) == NULL);
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component_2);
-            test_assert( ecs_has_entity(rows->world,  rows->entities[i], ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_2) != NULL);
+            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
+            test_assert( ecs_has_entity(it->world,  it->entities[i], ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_2) != NULL);
 
-            ecs_remove_entity(rows->world, rows->entities[i], ctx->component_2);
-            test_assert( !ecs_has_entity(rows->world,  rows->entities[i], ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_2) == NULL);
+            ecs_remove_entity(it->world, it->entities[i], ctx->component_2);
+            test_assert( !ecs_has_entity(it->world,  it->entities[i], ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_2) == NULL);
         }
 
         ctx->entity_count ++;
@@ -947,28 +947,28 @@ void SingleThreadStaging_add_remove_same_existing_to_current() {
 }
 
 static
-void Remove_add_same_from_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Remove_add_same_from_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_remove_entity(rows->world, rows->entities[i], ctx->component);
-            test_assert( !ecs_has_entity(rows->world,  rows->entities[i], ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component) == NULL);
+            ecs_remove_entity(it->world, it->entities[i], ctx->component);
+            test_assert( !ecs_has_entity(it->world,  it->entities[i], ctx->component));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component) == NULL);
 
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component);
-            test_assert( ecs_has_entity(rows->world,  rows->entities[i], ctx->component));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component) != NULL);
+            ecs_add_entity(it->world, it->entities[i], ctx->component);
+            test_assert( ecs_has_entity(it->world,  it->entities[i], ctx->component));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component) != NULL);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(rows->world, rows->entities[i], ctx->component_2);
-            test_assert( !ecs_has_entity(rows->world,  rows->entities[i], ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_2) == NULL);
+            ecs_remove_entity(it->world, it->entities[i], ctx->component_2);
+            test_assert( !ecs_has_entity(it->world,  it->entities[i], ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_2) == NULL);
 
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component_2);
-            test_assert( ecs_has_entity(rows->world,  rows->entities[i], ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_2) != NULL);
+            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
+            test_assert( ecs_has_entity(it->world,  it->entities[i], ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_2) != NULL);
         }
 
         ctx->entity_count ++;
@@ -1185,14 +1185,14 @@ void SingleThreadStaging_remove_add_2_same_to_current() {
 }
 
 static
-void AddRemoveAdd(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 2);
+void AddRemoveAdd(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_add(rows->world, rows->entities[i], Velocity);
-        ecs_remove(rows->world, rows->entities[i], Velocity);
-        ecs_add(rows->world, rows->entities[i], Velocity);
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
+        ecs_remove(it->world, it->entities[i], Velocity);
+        ecs_add(it->world, it->entities[i], Velocity);
     }
 }
 
@@ -1202,7 +1202,7 @@ void SingleThreadStaging_add_remove_add_same_to_current() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddRemoveAdd, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, AddRemoveAdd, EcsOnUpdate, Position, :Velocity);
 
     /* Create entities from scratch so they don't have the EcsName component */
     ecs_entity_t e_1 = ecs_new(world, Position);
@@ -1258,26 +1258,26 @@ void SingleThreadStaging_remove_add_2_same_existing_to_current() {
 }
 
 static
-void Add_remove_different_from_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_remove_different_from_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (ctx->component_3) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component_3);
-            test_assert( ecs_has_entity(rows->world, rows->entities[i], ctx->component_3));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_3) != NULL);
+            ecs_add_entity(it->world, it->entities[i], ctx->component_3);
+            test_assert( ecs_has_entity(it->world, it->entities[i], ctx->component_3));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_3) != NULL);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(rows->world, rows->entities[i], ctx->component_2);
-            test_assert( !ecs_has_entity(rows->world,  rows->entities[i], ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_2) == NULL);
+            ecs_remove_entity(it->world, it->entities[i], ctx->component_2);
+            test_assert( !ecs_has_entity(it->world,  it->entities[i], ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_2) == NULL);
         }
 
         if (ctx->component) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component);
-            test_assert( ecs_has_entity(rows->world,  rows->entities[i], ctx->component));     
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component) != NULL);   
+            ecs_add_entity(it->world, it->entities[i], ctx->component);
+            test_assert( ecs_has_entity(it->world,  it->entities[i], ctx->component));     
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component) != NULL);   
         }
 
         ctx->entity_count ++;
@@ -1373,26 +1373,26 @@ void SingleThreadStaging_2_add_1_remove_to_current() {
 }
 
 static
-void Add_1_remove_2_different_from_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_1_remove_2_different_from_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component);
-            test_assert( ecs_has_entity(rows->world,  rows->entities[i], ctx->component)); 
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component) != NULL);       
+            ecs_add_entity(it->world, it->entities[i], ctx->component);
+            test_assert( ecs_has_entity(it->world,  it->entities[i], ctx->component)); 
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component) != NULL);       
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(rows->world, rows->entities[i], ctx->component_2);
-            test_assert( !ecs_has_entity(rows->world,  rows->entities[i], ctx->component_2));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_2) == NULL);
+            ecs_remove_entity(it->world, it->entities[i], ctx->component_2);
+            test_assert( !ecs_has_entity(it->world,  it->entities[i], ctx->component_2));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_2) == NULL);
         }
 
         if (ctx->component_3) {
-            ecs_remove_entity(rows->world, rows->entities[i], ctx->component_3);
-            test_assert( !ecs_has_entity(rows->world, rows->entities[i], ctx->component_3));
-            test_assert( ecs_get_ptr_w_entity(rows->world, rows->entities[i], ctx->component_3) == NULL);
+            ecs_remove_entity(it->world, it->entities[i], ctx->component_3);
+            test_assert( !ecs_has_entity(it->world, it->entities[i], ctx->component_3));
+            test_assert( ecs_get_w_entity(it->world, it->entities[i], ctx->component_3) == NULL);
         }
 
         ctx->entity_count ++;
@@ -1443,12 +1443,12 @@ void SingleThreadStaging_1_add_2_remove_to_current() {
 }
 
 static
-void Delete_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Delete_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_delete(rows->world, rows->entities[i]);
-        test_assert( !ecs_get_type(rows->world, rows->entities[i]));
+    for (i = 0; i < it->count; i ++) {
+        ecs_delete(it->world, it->entities[i]);
+        test_assert( !ecs_get_type(it->world, it->entities[i]));
         ctx->entity_count ++;
     }
 }
@@ -1479,13 +1479,13 @@ void SingleThreadStaging_delete_current() {
 }
 
 static
-void Delete_even(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Delete_even(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        if (!(rows->entities[i] % 2)) {
-            ecs_delete(rows->world, rows->entities[i]);
-            test_assert( !ecs_get_type(rows->world, rows->entities[i]));
+    for (i = 0; i < it->count; i ++) {
+        if (!(it->entities[i] % 2)) {
+            ecs_delete(it->world, it->entities[i]);
+            test_assert( !ecs_get_type(it->world, it->entities[i]));
         }
         ctx->entity_count ++;
     }
@@ -1559,13 +1559,13 @@ void SingleThreadStaging_delete_even() {
 }
 
 static
-void Delete_new_empty(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Delete_new_empty(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = ecs_new(rows->world, 0);
-        ecs_delete(rows->world, e);
-        test_assert( !ecs_get_type(rows->world, e));
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = ecs_new(it->world, 0);
+        ecs_delete(it->world, e);
+        test_assert( !ecs_get_type(it->world, e));
 
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1600,16 +1600,16 @@ void SingleThreadStaging_delete_new_empty() {
 }
 
 static
-void Delete_new_w_component(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Delete_new_w_component(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_type_t type = ecs_type_from_entity(rows->world, ctx->component);
-        ecs_entity_t e = ecs_new_w_type(rows->world, type);
-        test_assert( !!ecs_get_type(rows->world, e));
+    for (i = 0; i < it->count; i ++) {
+        ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
+        ecs_entity_t e = ecs_new_w_type(it->world, type);
+        test_assert( !!ecs_get_type(it->world, e));
 
-        ecs_delete(rows->world, e);
-        test_assert( !ecs_get_type(rows->world, e));
+        ecs_delete(it->world, e);
+        test_assert( !ecs_get_type(it->world, e));
 
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1644,19 +1644,19 @@ void SingleThreadStaging_delete_new_w_component() {
 }
 
 static
-void Set_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Set_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Rotation) = ctx->component;
     ecs_type_t ecs_type(Rotation) = ecs_type_from_entity(
-            rows->world, ecs_entity(Rotation));
+            it->world, ecs_entity(Rotation));
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(rows->world, rows->entities[i], Rotation, {10 + rows->entities[i]});
-        test_assert( ecs_has(rows->world, rows->entities[i], Rotation));
-        test_assert( ecs_get_ptr(rows->world, rows->entities[i], Rotation) != NULL);
-        test_int( ecs_get(rows->world, rows->entities[i], Rotation), 10 + rows->entities[i]);
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Rotation, {10 + it->entities[i]});
+        test_assert( ecs_has(it->world, it->entities[i], Rotation));
+        test_assert( ecs_get(it->world, it->entities[i], Rotation) != NULL);
+        test_int( *ecs_get(it->world, it->entities[i], Rotation), 10 + it->entities[i]);
 
         ctx->entity_count ++;
     }
@@ -1692,38 +1692,38 @@ void SingleThreadStaging_set_current() {
 
     test_assert( ecs_has(world, e_1, Position));
     test_assert( ecs_has(world, e_1, Rotation));
-    test_int( ecs_get(world, e_1, Rotation), e_1 + 10);
+    test_int( *ecs_get(world, e_1, Rotation), e_1 + 10);
 
     test_assert( ecs_has(world, e_2, Position));
     test_assert( ecs_has(world, e_2, Velocity));
     test_assert( ecs_has(world, e_2, Rotation));
-    test_int( ecs_get(world, e_2, Rotation), e_2 + 10);
+    test_int( *ecs_get(world, e_2, Rotation), e_2 + 10);
 
     test_assert( ecs_has(world, e_3, Position));
     test_assert( ecs_has(world, e_3, Velocity));
     test_assert( ecs_has(world, e_3, Mass));
     test_assert( ecs_has(world, e_3, Rotation));
-    test_int( ecs_get(world, e_3, Rotation), e_3 + 10);
+    test_int( *ecs_get(world, e_3, Rotation), e_3 + 10);
 
     ecs_fini(world);
 }
 
 static
-void Set_new_empty(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Set_new_empty(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Rotation) = ctx->component;
     ecs_type_t ecs_type(Rotation) = ecs_type_from_entity(
-            rows->world, ecs_entity(Rotation));
+            it->world, ecs_entity(Rotation));
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = ecs_new(rows->world, 0);
-        test_assert( !ecs_get_type(rows->world, e));
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = ecs_new(it->world, 0);
+        test_assert( !ecs_get_type(it->world, e));
 
-        ecs_set(rows->world, e, Rotation, {10 + e});
-        test_assert( ecs_has(rows->world, e, Rotation));
-        test_assert( ecs_get_ptr(rows->world, e, Rotation) != NULL);
-        test_int( ecs_get(rows->world, e, Rotation), 10 + e);
+        ecs_set(it->world, e, Rotation, {10 + e});
+        test_assert( ecs_has(it->world, e, Rotation));
+        test_assert( ecs_get(it->world, e, Rotation) != NULL);
+        test_int( *ecs_get(it->world, e, Rotation), 10 + e);
 
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1763,34 +1763,34 @@ void SingleThreadStaging_set_new_empty() {
         test_assert(ctx.new_entities[i] != 0);
         test_assert( !!ecs_get_type(world, ctx.new_entities[i]));
         test_assert( ecs_has(world, ctx.new_entities[i], Rotation));
-        test_int( ecs_get(world, ctx.new_entities[i], Rotation), ctx.new_entities[i] + 10);
+        test_int( *ecs_get(world, ctx.new_entities[i], Rotation), ctx.new_entities[i] + 10);
     }
 
     ecs_fini(world);
 }
 
 static
-void Set_new_w_component(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Set_new_w_component(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Position) = ctx->component;
     ecs_type_t ecs_type(Position) = ecs_type_from_entity(
-            rows->world, ecs_entity(Position));
+            it->world, ecs_entity(Position));
 
     ecs_entity_t ecs_entity(Rotation) = ctx->component_2;
     ecs_type_t ecs_type(Rotation) = ecs_type_from_entity(
-            rows->world, ecs_entity(Rotation));
+            it->world, ecs_entity(Rotation));
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = ecs_new(rows->world, Position);
-        test_assert( ecs_has(rows->world, e, Position));
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = ecs_new(it->world, Position);
+        test_assert( ecs_has(it->world, e, Position));
 
-        ecs_set(rows->world, e, Rotation, {10 + e});
-        test_assert( ecs_has(rows->world, e, Position));
-        test_assert( ecs_has(rows->world, e, Rotation));
-        test_assert( ecs_get_ptr(rows->world, e, Rotation) != NULL);
-        test_int( ecs_get(rows->world, e, Rotation), 10 + e);
+        ecs_set(it->world, e, Rotation, {10 + e});
+        test_assert( ecs_has(it->world, e, Position));
+        test_assert( ecs_has(it->world, e, Rotation));
+        test_assert( ecs_get(it->world, e, Rotation) != NULL);
+        test_int( *ecs_get(it->world, e, Rotation), 10 + e);
 
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1831,27 +1831,27 @@ void SingleThreadStaging_set_new_w_component() {
         test_assert( !!ecs_get_type(world, ctx.new_entities[i]));
         test_assert( ecs_has(world, ctx.new_entities[i], Position));
         test_assert( ecs_has(world, ctx.new_entities[i], Rotation));
-        test_int( ecs_get(world, ctx.new_entities[i], Rotation), ctx.new_entities[i] + 10);
+        test_int( *ecs_get(world, ctx.new_entities[i], Rotation), ctx.new_entities[i] + 10);
     }
 
     ecs_fini(world);
 }
 
 static
-void Set_existing_new_w_component(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Set_existing_new_w_component(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Position) = ctx->component;
     ecs_type_t ecs_type(Position) = 
-        ecs_type_from_entity(rows->world, ecs_entity(Position));
+        ecs_type_from_entity(it->world, ecs_entity(Position));
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = ecs_new(rows->world, Position);
-        test_assert( ecs_has(rows->world, e, Position));
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = ecs_new(it->world, Position);
+        test_assert( ecs_has(it->world, e, Position));
 
-        ecs_set(rows->world, e, Position, {10 + e, 20 + e});
-        test_assert( ecs_has(rows->world, e, Position));
+        ecs_set(it->world, e, Position, {10 + e, 20 + e});
+        test_assert( ecs_has(it->world, e, Position));
 
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1891,31 +1891,31 @@ void SingleThreadStaging_set_existing_new_w_component() {
         test_assert(ctx.new_entities[i] != 0);
         test_assert( !!ecs_get_type(world, ctx.new_entities[i]));
         test_assert( ecs_has(world, ctx.new_entities[i], Position));
-        test_int( ecs_get(world, ctx.new_entities[i], Position).x, ctx.new_entities[i] + 10);
-        test_int( ecs_get(world, ctx.new_entities[i], Position).y, ctx.new_entities[i] + 20);
+        test_int( ecs_get(world, ctx.new_entities[i], Position)->x, ctx.new_entities[i] + 10);
+        test_int( ecs_get(world, ctx.new_entities[i], Position)->y, ctx.new_entities[i] + 20);
     }
 
     ecs_fini(world);
 }
 
 static
-void Set_new_after_add(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Set_new_after_add(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Position) = ctx->component;
     ecs_type_t ecs_type(Position) = 
-        ecs_type_from_entity(rows->world, ecs_entity(Position));
+        ecs_type_from_entity(it->world, ecs_entity(Position));
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = ecs_new(rows->world, 0);
-        test_assert( !ecs_get_type(rows->world, e));
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = ecs_new(it->world, 0);
+        test_assert( !ecs_get_type(it->world, e));
 
-        ecs_add(rows->world, e, Position);
-        test_assert( ecs_has(rows->world, e, Position));
+        ecs_add(it->world, e, Position);
+        test_assert( ecs_has(it->world, e, Position));
 
-        ecs_set(rows->world, e, Position, {10 + e, 20 + e});
-        test_assert( ecs_has(rows->world, e, Position));
+        ecs_set(it->world, e, Position, {10 + e, 20 + e});
+        test_assert( ecs_has(it->world, e, Position));
 
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1955,35 +1955,35 @@ void SingleThreadStaging_set_new_after_add() {
         test_assert(ctx.new_entities[i] != 0);
         test_assert( !!ecs_get_type(world, ctx.new_entities[i]));
         test_assert( ecs_has(world, ctx.new_entities[i], Position));
-        test_int( ecs_get(world, ctx.new_entities[i], Position).x, ctx.new_entities[i] + 10);
-        test_int( ecs_get(world, ctx.new_entities[i], Position).y, ctx.new_entities[i] + 20);
+        test_int( ecs_get(world, ctx.new_entities[i], Position)->x, ctx.new_entities[i] + 10);
+        test_int( ecs_get(world, ctx.new_entities[i], Position)->y, ctx.new_entities[i] + 20);
     }
 
     ecs_fini(world);
 }
 
 static
-void Remove_after_set(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Remove_after_set(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Position) = ctx->component;
     ecs_type_t ecs_type(Position) = 
-        ecs_type_from_entity(rows->world, ecs_entity(Position));
+        ecs_type_from_entity(it->world, ecs_entity(Position));
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = ecs_new(rows->world, 0);
-        test_assert( !ecs_get_type(rows->world, e));
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = ecs_new(it->world, 0);
+        test_assert( !ecs_get_type(it->world, e));
 
-        ecs_set(rows->world, e, Position, {10 + e, 20 + e});
-        test_assert( ecs_has(rows->world, e, Position));
-        test_assert( ecs_get_ptr(rows->world, e, Position) != NULL);
-        test_int( ecs_get(rows->world, e, Position).x, 10 + e);
-        test_int( ecs_get(rows->world, e, Position).y, 20 + e);
+        ecs_set(it->world, e, Position, {10 + e, 20 + e});
+        test_assert( ecs_has(it->world, e, Position));
+        test_assert( ecs_get(it->world, e, Position) != NULL);
+        test_int( ecs_get(it->world, e, Position)->x, 10 + e);
+        test_int( ecs_get(it->world, e, Position)->y, 20 + e);
 
-        ecs_remove(rows->world, e, Position);
-        test_assert( !ecs_get_type(rows->world, e));
-        test_assert( ecs_get_ptr(rows->world, e, Position) == NULL);
+        ecs_remove(it->world, e, Position);
+        test_assert( !ecs_get_type(it->world, e));
+        test_assert( ecs_get(it->world, e, Position) == NULL);
         
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -2029,27 +2029,27 @@ void SingleThreadStaging_remove_after_set() {
 }
 
 static
-void Delete_after_set(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Delete_after_set(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Position) = ctx->component;
     ecs_type_t ecs_type(Position) = 
-        ecs_type_from_entity(rows->world, ecs_entity(Position));
+        ecs_type_from_entity(it->world, ecs_entity(Position));
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = ecs_new(rows->world, 0);
-        test_assert( !ecs_get_type(rows->world, e));
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = ecs_new(it->world, 0);
+        test_assert( !ecs_get_type(it->world, e));
 
-        ecs_set(rows->world, e, Position, {10 + e, 20 + e});
-        test_assert( ecs_has(rows->world, e, Position));
-        test_assert( ecs_get_ptr(rows->world, e, Position) != NULL);
-        test_int( ecs_get(rows->world, e, Position).x, 10 + e);
-        test_int( ecs_get(rows->world, e, Position).y, 20 + e);
+        ecs_set(it->world, e, Position, {10 + e, 20 + e});
+        test_assert( ecs_has(it->world, e, Position));
+        test_assert( ecs_get(it->world, e, Position) != NULL);
+        test_int( ecs_get(it->world, e, Position)->x, 10 + e);
+        test_int( ecs_get(it->world, e, Position)->y, 20 + e);
 
-        ecs_delete(rows->world, e);
-        test_assert( !ecs_get_type(rows->world, e));
-        test_assert( ecs_get_ptr(rows->world, e, Position) == NULL);
+        ecs_delete(it->world, e);
+        test_assert( !ecs_get_type(it->world, e));
+        test_assert( ecs_get(it->world, e, Position) == NULL);
 
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -2100,7 +2100,7 @@ void SingleThreadStaging_add_to_current_in_on_add() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TRIGGER(world, Add_to_current, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, Add_to_current, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_entity(Velocity)};
     ecs_set_context(world, &ctx);
@@ -2127,7 +2127,7 @@ void SingleThreadStaging_remove_from_current_in_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2154,7 +2154,7 @@ void SingleThreadStaging_remove_added_component_in_on_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
-    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_entity(Position)};
     ecs_set_context(world, &ctx);
@@ -2178,14 +2178,14 @@ void SingleThreadStaging_remove_added_component_in_on_add() {
 static Probe pv_probe;
 
 static
-void On_PV(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+void On_PV(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    probe_system_w_ctx(rows, &pv_probe);
+    probe_system_w_ctx(it, &pv_probe);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
@@ -2228,25 +2228,25 @@ void SingleThreadStaging_match_table_created_in_progress() {
 }
 
 static
-void Set_velocity_on_new(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Set_velocity_on_new(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     ecs_entity_t ecs_entity(Velocity) = ctx->component;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(rows->world, 0, Velocity, {10, 20});
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, 0, Velocity, {10, 20});
     }
 }
 
 static
-void On_V(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 1);
+void On_V(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 1);
 
-    probe_system(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         v[i].x = v[i].y;
     }
 }
@@ -2319,12 +2319,12 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set() {
 }
 
 static
-void Create_container(ecs_rows_t *rows) {
-    probe_system(rows);
+void Create_container(ecs_iter_t *it) {
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_new_w_entity(rows->world, ECS_CHILDOF | rows->entities[i]);
+    for (i = 0; i < it->count; i ++) {
+        ecs_new_w_entity(it->world, ECS_CHILDOF | it->entities[i]);
     }
 }
 
@@ -2387,14 +2387,14 @@ static ecs_entity_t g_child = 0;
 static ecs_entity_t g_parent = 0;
 
 static
-void Create_container_reverse(ecs_rows_t *rows) {
+void Create_container_reverse(ecs_iter_t *it) {
 
-    probe_system(rows);
+    probe_system(it);
 
-    ecs_world_t *world = rows->world;
+    ecs_world_t *world = it->world;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_entity_t child = ecs_new(world, 0);
         ecs_entity_t parent = ecs_new(world, 0);
         test_assert(child != 0);
@@ -2441,12 +2441,12 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
 }
 
 static
-void Task(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void Task(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t *e = ecs_get_context(rows->world);
+    ecs_entity_t *e = ecs_get_context(it->world);
 
-    ecs_add(rows->world, *e, Position);
+    ecs_add(it->world, *e, Position);
 }
 
 void SingleThreadStaging_merge_after_tasks() {
@@ -2456,7 +2456,7 @@ void SingleThreadStaging_merge_after_tasks() {
 
     ecs_entity_t e = ecs_new(world, 0);
 
-    ECS_SYSTEM(world, Task, EcsOnUpdate, .Position);
+    ECS_SYSTEM(world, Task, EcsOnUpdate, :Position);
 
     ecs_set_context(world, &e);
 
@@ -2468,26 +2468,26 @@ void SingleThreadStaging_merge_after_tasks() {
 }
 
 static
-void OverrideAfterRemove(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void OverrideAfterRemove(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 30);
         test_int(p[i].y, 40);
 
-        ecs_remove(rows->world, rows->entities[i], Position);
+        ecs_remove(it->world, it->entities[i], Position);
 
         /* The entity still has Position, because it inherits it from base */
-        test_assert(ecs_has(rows->world, rows->entities[i], Position));
+        test_assert(ecs_has(it->world, it->entities[i], Position));
 
         /* The entity does not own Position */
-        test_assert(!ecs_has_owned(rows->world, rows->entities[i], Position, true));
+        test_assert(!ecs_has_owned(it->world, it->entities[i], Position, true));
 
-        ecs_add(rows->world, rows->entities[i], Position);
-        test_assert(ecs_has(rows->world, rows->entities[i], Position));
+        ecs_add(it->world, it->entities[i], Position);
+        test_assert(ecs_has(it->world, it->entities[i], Position));
 
-        const Position *p_ptr = ecs_get_ptr(rows->world, rows->entities[i], Position);
+        const Position *p_ptr = ecs_get(it->world, it->entities[i], Position);
         test_assert(p_ptr != NULL);
         test_int(p_ptr->x, 10);
         test_int(p_ptr->y, 20);
@@ -2517,7 +2517,7 @@ void SingleThreadStaging_override_after_remove_in_progress() {
     ecs_progress(world, 1);
 
     test_assert( ecs_has(world, e, Position));
-    const Position *p_ptr = ecs_get_ptr(world, e, Position);
+    const Position *p_ptr = ecs_get(world, e, Position);
     test_assert(p_ptr != NULL);
     test_int(p_ptr->x, 10);
     test_int(p_ptr->y, 20);    
@@ -2526,17 +2526,17 @@ void SingleThreadStaging_override_after_remove_in_progress() {
 }
 
 static
-void GetParentInProgress(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 2);
+void GetParentInProgress(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 2);
     
-    ecs_world_t *world = rows->world;
+    ecs_world_t *world = it->world;
 
     /* Create parent */
     ecs_entity_t parent = ecs_new(world, Velocity);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
 
         ecs_add_entity(world, e, ECS_CHILDOF | parent);
         test_assert( ecs_has_entity(world, e, ECS_CHILDOF | parent));
@@ -2552,7 +2552,7 @@ void SingleThreadStaging_get_parent_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, GetParentInProgress, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, GetParentInProgress, EcsOnUpdate, Position, :Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
 
@@ -2565,20 +2565,20 @@ void SingleThreadStaging_get_parent_in_progress() {
 }
 
 static
-void AddInProgress(ecs_rows_t *rows) {
-    ecs_world_t *world = rows->world;
+void AddInProgress(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
 
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(world, rows->entities[i], Position, {1, 1});
-        ecs_set(world, rows->entities[i], Velocity, {2, 2});
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(world, it->entities[i], Position, {1, 1});
+        ecs_set(world, it->entities[i], Velocity, {2, 2});
 
         /* Make sure we can now access velocity from stage */
-        test_assert( ecs_has(world, rows->entities[i], Velocity));
-        const Velocity *v_ptr = ecs_get_ptr(world, rows->entities[i], Velocity);
+        test_assert( ecs_has(world, it->entities[i], Velocity));
+        const Velocity *v_ptr = ecs_get(world, it->entities[i], Velocity);
         test_assert(v_ptr != NULL);
         test_int(v_ptr->x, 2);
         test_int(v_ptr->y, 2);
@@ -2591,12 +2591,12 @@ void AddInProgress(ecs_rows_t *rows) {
 }
 
 static
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+void Move(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }    
@@ -2614,38 +2614,38 @@ void SingleThreadStaging_merge_once() {
     ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
     ecs_progress(world, 1);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 3);
     test_int(p->y, 3);
 
-    const Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get(world, e, Velocity);
     test_int(v->x, 2);
     test_int(v->y, 2);
 
     ecs_progress(world, 1);
     ecs_progress(world, 1);
 
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get(world, e, Position);
     test_int(p->x, 7);
     test_int(p->y, 7);
 
-    v = ecs_get_ptr(world, e, Velocity);
+    v = ecs_get(world, e, Velocity);
     test_int(v->x, 2);
     test_int(v->y, 2);
 
     ecs_fini(world);
 }
 
-void MutableTest(ecs_rows_t *rows) {
-    ecs_world_t *world = rows->world;
+void MutableTest(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
 
-    ECS_COLUMN(rows, Velocity, v, 2);
+    ECS_COLUMN(it, Velocity, v, 2);
 
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         bool is_added;
         Velocity *v_mut = ecs_get_mut(
-            world, rows->entities[i], Velocity, &is_added);
+            world, it->entities[i], Velocity, &is_added);
 
         test_assert(v_mut != NULL);
         test_assert(v_mut != v);
@@ -2688,7 +2688,7 @@ void SingleThreadStaging_get_mutable() {
     ecs_progress(world, 0);
     test_assert( ecs_has(world, e, Velocity));
     
-    const Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 1);
     test_int(v->y, 1);
@@ -2696,7 +2696,7 @@ void SingleThreadStaging_get_mutable() {
     ecs_progress(world, 0);
     test_assert( ecs_has(world, e, Velocity));
 
-    v = ecs_get_ptr(world, e, Velocity);
+    v = ecs_get(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 2);
     test_int(v->y, 2);
@@ -2720,7 +2720,7 @@ void SingleThreadStaging_get_mutable_from_main() {
     ecs_progress(world, 0);
     test_assert( ecs_has(world, e, Velocity));
     
-    const Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 2);
     test_int(v->y, 2);
@@ -2728,7 +2728,7 @@ void SingleThreadStaging_get_mutable_from_main() {
     ecs_progress(world, 0);
     test_assert( ecs_has(world, e, Velocity));
 
-    v = ecs_get_ptr(world, e, Velocity);
+    v = ecs_get(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 3);
     test_int(v->y, 3);
@@ -2736,19 +2736,19 @@ void SingleThreadStaging_get_mutable_from_main() {
     ecs_fini(world);
 }
 
-void MutableTest_w_Add(ecs_rows_t *rows) {
-    ecs_world_t *world = rows->world;
+void MutableTest_w_Add(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
 
-    ECS_COLUMN(rows, Velocity, v, 2);
-    ECS_COLUMN_COMPONENT(rows, MyTag, 3);
+    ECS_COLUMN(it, Velocity, v, 2);
+    ECS_COLUMN_COMPONENT(it, MyTag, 3);
 
     int32_t i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_add(world, rows->entities[i], MyTag);
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(world, it->entities[i], MyTag);
 
         bool is_added;
         Velocity *v_mut = ecs_get_mut(
-            world, rows->entities[i], Velocity, &is_added);
+            world, it->entities[i], Velocity, &is_added);
 
         // Even though component is added to stage, is_added should only be true
         // if the component is added for the first time, which requires the app
@@ -2783,7 +2783,7 @@ void SingleThreadStaging_get_mutable_w_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, MyBool);
-    ECS_SYSTEM(world, MutableTest_w_Add, EcsOnUpdate, Position, ?Velocity, .MyBool);
+    ECS_SYSTEM(world, MutableTest_w_Add, EcsOnUpdate, Position, ?Velocity, :MyBool);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -2791,7 +2791,7 @@ void SingleThreadStaging_get_mutable_w_add() {
     ecs_progress(world, 0);
     test_assert( ecs_has(world, e, Velocity));
     
-    const Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 1);
     test_int(v->y, 1);
@@ -2799,7 +2799,7 @@ void SingleThreadStaging_get_mutable_w_add() {
     ecs_progress(world, 0);
     test_assert( ecs_has(world, e, Velocity));
 
-    v = ecs_get_ptr(world, e, Velocity);
+    v = ecs_get(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 2);
     test_int(v->y, 2);
@@ -2807,7 +2807,7 @@ void SingleThreadStaging_get_mutable_w_add() {
     ecs_progress(world, 0);
     test_assert( ecs_has(world, e, Velocity));
 
-    v = ecs_get_ptr(world, e, Velocity);
+    v = ecs_get(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 3);
     test_int(v->y, 3);
@@ -2815,22 +2815,22 @@ void SingleThreadStaging_get_mutable_w_add() {
     ecs_fini(world);
 }
 
-void OnAdd(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 1);
+void OnAdd(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 1);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         v->x = 1;
         v->y = 2;
     }
 }
 
-void AddInProgress2(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 2);
+void AddInProgress2(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_add(rows->world, rows->entities[i], Velocity);
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
     }
 }
 
@@ -2839,15 +2839,15 @@ void SingleThreadStaging_on_add_after_new_type_in_progress() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, AddInProgress2, EcsOnUpdate, Position, .Velocity);
-    ECS_TRIGGER(world, OnAdd, EcsOnAdd, Velocity, NULL);
+    ECS_SYSTEM(world, AddInProgress2, EcsOnUpdate, Position, :Velocity);
+    ECS_TRIGGER(world, OnAdd, EcsOnAdd, Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
 
     ecs_progress(world, 1);
 
     test_assert( ecs_has(world, e, Velocity));
-    const Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 1);
     test_int(v->y, 2);

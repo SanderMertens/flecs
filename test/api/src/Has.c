@@ -142,12 +142,12 @@ void Has_1_of_empty() {
     ecs_fini(world);
 }
 
-void TestHas(ecs_rows_t *rows) {
-    ecs_type_t ecs_type(Position) = ecs_column_type(rows, 1);
+void TestHas(ecs_iter_t *it) {
+    ecs_type_t ecs_type(Position) = ecs_column_type(it, 1);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        test_assert( ecs_has(rows->world, rows->entities[i], Position));
+    for (i = 0; i < it->count; i ++) {
+        test_assert( ecs_has(it->world, it->entities[i], Position));
     }
 }
 

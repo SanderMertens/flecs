@@ -25,6 +25,14 @@ typedef char bool;
 #define true !false
 #endif
 
+#ifdef __cplusplus
+#define ECS_ALIGNOF(T) alignof(T)
+#else
+#define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
+#endif
+#define ECS_MAX(a, b) ((a > b) ? a : b)
+
+
 #include "flecs/util/os_api.h"
 #include "flecs/util/vector.h"
 #include "flecs/util/ringbuf.h"
@@ -47,7 +55,7 @@ typedef struct ecs_query_t ecs_query_t;
 typedef struct ecs_stage_t ecs_stage_t;
 typedef struct ecs_record_t ecs_record_t;
 typedef struct ecs_table_t ecs_table_t;
-typedef struct ecs_rows_t ecs_rows_t;
+typedef struct ecs_iter_t ecs_iter_t;
 typedef struct ecs_reference_t ecs_reference_t;
 typedef struct ecs_snapshot_t ecs_snapshot_t;
 
@@ -69,8 +77,8 @@ typedef struct ecs_entities_t {
 } ecs_entities_t;
 
 /** Action callback for systems and triggers */
-typedef void (*ecs_iter_action_t)(
-    ecs_rows_t *data);
+typedef void (*ecs_view_action_t)(
+    ecs_iter_t *data);
 
 /** Compare callback used for sorting */
 typedef int (*ecs_compare_action_t)(
@@ -183,8 +191,27 @@ typedef void (*ecs_move_t)(
     int32_t count,
     void *ctx);
 
-/** The ecs_rows_t struct passes data from a system to a system callback.  */
-struct ecs_rows_t {
+typedef struct ecs_tree_iter_t {
+    ecs_vector_t *tables;
+    int32_t index;
+} ecs_tree_iter_t;
+
+typedef struct ecs_filter_iter_t {
+    ecs_filter_t filter;
+    ecs_sparse_t *tables;
+    int32_t index;
+} ecs_filter_iter_t;
+
+typedef struct ecs_query_iter_t {
+    ecs_query_t *query;
+    int32_t offset;
+    int32_t limit;
+    int32_t remaining;
+    int32_t index;
+} ecs_query_iter_t;    
+
+/** The ecs_iter_t struct passes data from a system to a system callback.  */
+struct ecs_iter_t {
     ecs_world_t *world;          /* Current world */
     ecs_entity_t system;         /* Handle to current system */
 
@@ -206,10 +233,17 @@ struct ecs_rows_t {
     int32_t frame_offset;       /* Offset relative to frame */
     int32_t table_offset;       /* Current active table being processed */
     int32_t offset;             /* Offset relative to current table */
-    int32_t count;              /* Number of rows to process by system */
+    int32_t count;              /* Number of entities to process by system */
+    int32_t total_count;        /* Total number of entities in table */
 
     ecs_entities_t *triggered_by; /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
+
+    union {
+        ecs_tree_iter_t parent;
+        ecs_filter_iter_t filter;
+        ecs_query_iter_t query;
+    } iter;
 };
 
 /* World info */
@@ -267,7 +301,7 @@ typedef struct EcsComponentLifecycle {
 /* Component used for registering component triggers */
 typedef struct EcsTrigger {
     ecs_entity_t kind;
-    ecs_iter_action_t action;
+    ecs_view_action_t action;
     ecs_entity_t component;
     ecs_entity_t self;
     void *ctx;
@@ -323,12 +357,12 @@ typedef struct EcsQuery {
 
 /* System action */
 typedef struct EcsIterAction {
-    ecs_iter_action_t action;
+    ecs_view_action_t action;
 } EcsIterAction;
 
 /* System context */
 typedef struct EcsContext {
-    void *ctx;
+    const void *ctx;
 } EcsContext;
 
 
@@ -552,43 +586,46 @@ extern ecs_type_t
  * - An OR expression ('Position | Velocity')
  * - An optional expression ('?Position')
  * - A NOT expression ('!Position')
- * - An OWNED expression ('OWNED.Position')
- * - A SHARED expression ('SHARED.Position')
- * - A PARENT expression ('PARENT.Position')
- * - A CASCADE expression ('CASCADE.Position')
- * - An entity expression ('MyEntity.Position')
- * - An empty expression ('.Position')
+ * - An OWNED expression ('OWNED:Position')
+ * - A SHARED expression ('SHARED:Position')
+ * - A PARENT expression ('PARENT:Position')
+ * - A CASCADE expression ('CASCADE:Position')
+ * - An entity expression ('MyEntity:Position')
+ * - An empty expression (':Position')
  * 
  * The systen kind specifies the phase in which the system is ran.
  *
  * Examples:
  * ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity, !AngularVelocity);
- * ECS_SYSTEM(world, Transform, EcsPostUpdate, PARENT.Transform, Transform);
+ * ECS_SYSTEM(world, Transform, EcsPostUpdate, PARENT:Transform, Transform);
  *
  * In these examples, 'Move' and 'Transform' must be valid identifiers to a C
  * function of the following signature:
  *
- * void Move(ecs_rows_t *rows) { ... }
+ * void Move(ecs_iter_t *it) { ... }
  *
  * Inside this function the system can access the data from the signature with
  * the ECS_COLUMN macro:
  *
- * ECS_COLUMN(rows, Position, p, 1);
- * ECS_COLUMN(rows, Velocity, v, 2);
+ * ECS_COLUMN(it, Position, p, 1);
+ * ECS_COLUMN(it, Velocity, v, 2);
  *
  * For more details on system signatures and phases see the Flecs manual.
  */
 
 #define ECS_SYSTEM(world, name, kind, ...) \
-    ecs_iter_action_t ecs_iter_action(name) = name;\
+    ecs_view_action_t ecs_iter_action(name) = name;\
     ecs_entity_t name = ecs_new_system(world, 0, #name, kind, #__VA_ARGS__, ecs_iter_action(name));\
     (void)ecs_iter_action(name);\
     (void)name;
 
+#define ECS_PIPELINE(world, name, ...) \
+    ecs_entity_t name = ecs_new_pipeline(world, 0, #name, #__VA_ARGS__);
+
 #endif
 
-#define ECS_TRIGGER(world, name, kind, component, ctx) \
-    ecs_entity_t __F##name = ecs_new_trigger(world, 0, #name, kind, #component, name, ctx);\
+#define ECS_TRIGGER(world, name, kind, component) \
+    ecs_entity_t __F##name = ecs_new_trigger(world, 0, #name, kind, #component, name);\
     ecs_entity_t name = __F##name;\
     (void)__F##name;\
     (void)name;
@@ -1079,19 +1116,15 @@ ecs_entity_t ecs_clone(
 /* -- Get -- */
 
 FLECS_EXPORT
-const void* ecs_get_ptr_w_entity(
+const void* ecs_get_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component);
 
-#define ecs_get_ptr(world, entity, component)\
-    (const component*)ecs_get_ptr_w_entity(world, entity, ecs_entity(component))
-
 #define ecs_get(world, entity, component)\
-  (*(const component*)ecs_get_ptr_w_entity(world, entity, ecs_entity(component)))
+    ((const component*)ecs_get_w_entity(world, entity, ecs_entity(component)))
 
-
-/* -- Get cached -- */
+/* -- Get cached pointer -- */
 
 FLECS_EXPORT
 const void* ecs_get_ref_w_entity(
@@ -1101,7 +1134,7 @@ const void* ecs_get_ref_w_entity(
     ecs_entity_t component);
 
 #define ecs_get_ref(world, ref, entity, component)\
-    (const component*)ecs_get_ref_w_entity(world, ref, entity, ecs_entity(component))
+    ((const component*)ecs_get_ref_w_entity(world, ref, entity, ecs_entity(component)))
 
 
 /* -- Get mutable -- */
@@ -1114,7 +1147,7 @@ void* ecs_get_mut_w_entity(
     bool *is_added);
 
 #define ecs_get_mut(world, entity, component, is_added)\
-    ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added)
+    ((component*)ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added))
 
 
 /* -- Modified -- */
@@ -1238,10 +1271,66 @@ ecs_entity_t ecs_get_parent_w_entity(
 #define ecs_get_parent(world, entity, component)\
     ecs_get_parent_w_entity(world, entity, ecs_entity(component))
 
+/** Enable or disable an entity.
+ * This operation enables or disables an entity by adding or removing the
+ * EcsDisabled tag.
+ *
+ * @param world The world.
+ * @param system The system to enable or disable.
+ * @param enabled true to enable the system, false to disable the system.
+ * @return 0 if succeeded, -1 if the operation failed.
+ */
+FLECS_EXPORT
+void ecs_enable(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    bool enabled);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Rows API
+//// Hierarchies
+////////////////////////////////////////////////////////////////////////////////
+
+FLECS_EXPORT
+char* ecs_get_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    ecs_entity_t component,
+    char *sep,
+    char *prefix);
+
+#define ecs_get_path(world, parent, child)\
+    ecs_get_path_w_sep(world, parent, child, 0, ".", NULL)
+
+#define ecs_get_fullpath(world, child)\
+    ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
+
+FLECS_EXPORT
+ecs_entity_t ecs_lookup_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+#define ecs_lookup_path(world, parent, path)\
+    ecs_lookup_path_w_sep(world, parent, path, ".", NULL)
+
+#define ecs_lookup_fullpath(world, path)\
+    ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
+
+FLECS_EXPORT
+ecs_iter_t ecs_tree_iter(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
+FLECS_EXPORT
+bool ecs_tree_next(
+    ecs_iter_t *it);
+
+////////////////////////////////////////////////////////////////////////////////
+//// View API
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Obtain column data. 
@@ -1258,38 +1347,38 @@ ecs_entity_t ecs_get_parent_w_entity(
  * automates declaring a variable of the correct type in the scope of the system
  * function.
  * 
- * When a valid pointer is obtained, it can be used as an array with rows->count
+ * When a valid pointer is obtained, it can be used as an array with it->count
  * elements if the column is owned by the entity being iterated over, or as a
  * pointer if the column is shared (see ecs_is_shared).
  * 
- * @param rows The rows parameter passed into the system.
+ * @param it The it parameter passed into the system.
  * @param index The index identifying the column in a system signature.
  * @return A pointer to the column data if index is valid, otherwise NULL.
  */
 FLECS_EXPORT
 void* _ecs_column(
-    const ecs_rows_t *rows,
+    const ecs_iter_t *it,
     size_t size,
     int32_t column);
 
-#define ecs_column(rows, type, column)\
-    ((type*)_ecs_column(rows, sizeof(type), column))
+#define ecs_column(it, type, column)\
+    ((type*)_ecs_column(it, sizeof(type), column))
 
 /** Same as ecs_column, but for const ([in]) columns */
 FLECS_EXPORT
 const void* _ecs_const_column(
-    const ecs_rows_t *rows,
+    const ecs_iter_t *it,
     size_t size,
     int32_t column);
 
-#define ecs_const_column(rows, type, column)\
-    ((const type*)_ecs_const_column(rows, sizeof(type), column))
+#define ecs_const_column(it, type, column)\
+    ((const type*)_ecs_const_column(it, sizeof(type), column))
 
 /** Test if column is shared or not. 
  * The following signature shows an example of owned components and shared
  * components:
  * 
- * Position, PARENT.Velocity, MyEntity.Mass
+ * Position, PARENT:Velocity, MyEntity:Mass
  * 
  * Position is an owned component, while Velocity and Mass are shared 
  * components. While these kinds of relationships are expressed explicity in a
@@ -1302,13 +1391,13 @@ const void* _ecs_const_column(
  * callback invocation, as all the entities being iterated over will either own
  * or not own the component.
  * 
- * @param rows The rows parameter passed into the system.
+ * @param it The it parameter passed into the system.
  * @param index The index identifying the column in a system signature.
  * @return true if the column is shared, false if it is owned.
  */
 FLECS_EXPORT
 bool ecs_is_shared(
-    const ecs_rows_t *rows,
+    const ecs_iter_t *it,
     int32_t column);
 
 /** Obtain a single field. 
@@ -1328,13 +1417,13 @@ bool ecs_is_shared(
  */
 FLECS_EXPORT
 void *_ecs_field(
-    const ecs_rows_t *rows,
+    const ecs_iter_t *it,
     size_t size,
     int32_t column,
     int32_t row);
 
-#define ecs_field(rows, type, column, row)\
-    ((type*)_ecs_field(rows, sizeof(type), column, row))
+#define ecs_field(it, type, column, row)\
+    ((type*)_ecs_field(it, sizeof(type), column, row))
 
 /** Obtain the source of a column from inside a system.
  * This operation lets you obtain the entity from which the column data was
@@ -1348,20 +1437,20 @@ void *_ecs_field(
  * case depends on the row, not on the column. To obtain the entity ids for a
  * row, a system should access the entity column (column zero) like this:
  * 
- * ecs_entity_t *entities = ecs_column(rows, ecs_entity_t, 0);
+ * ecs_entity_t *entities = ecs_column(it, ecs_entity_t, 0);
  * 
- * @param rows Pointer to the rows object passed into the system callback.
+ * @param it Pointer to the it object passed into the system callback.
  * @param index An index identifying the column for which to obtain the component.
  * @return The source entity for the column. 
  */
 FLECS_EXPORT
 ecs_entity_t ecs_column_source(
-    const ecs_rows_t *rows,
+    const ecs_iter_t *it,
     int32_t column);
 
 /** Obtain the component for a column inside a system.
  * This operation obtains the component handle for a column in the system. This
- * function wraps around the 'components' array in the ecs_rows_t type.
+ * function wraps around the 'components' array in the ecs_iter_t type.
  * 
  * Note that since component identifiers are obtained from the same pool as
  * regular entities, the return type of this function is ecs_entity_t.
@@ -1373,13 +1462,13 @@ ecs_entity_t ecs_column_source(
  * column that contains entity identifiers. Passing 0 to this function for the
  * column index will return 0.
  * 
- * @param rows Pointer to the rows object passed into the system callback.
+ * @param it Pointer to the it object passed into the system callback.
  * @param index An index identifying the column for which to obtain the component.
  * @return The component for the specified column, or 0 if failed.
  */
 FLECS_EXPORT
 ecs_entity_t ecs_column_entity(
-    const ecs_rows_t *rows,
+    const ecs_iter_t *it,
     int32_t column);
 
 /** Obtain the type of a column from inside a system. 
@@ -1387,82 +1476,82 @@ ecs_entity_t ecs_column_entity(
  * a type, instead of an entity handle. Invoking this function is the same as
  * doing:
  * 
- * ecs_type_from_entity( ecs_column_entity(rows, index));
+ * ecs_type_from_entity( ecs_column_entity(it, index));
  * 
  * This function is wrapped in the following convenience macro which ensures
  * that the type variable is named so it can be used with functions like ecs_add
  * and ecs_set:
  * 
- * ECS_COLUMN_COMPONENT(rows, Position, 1);
+ * ECS_COLUMN_COMPONENT(it, Position, 1);
  * 
  * After this macro you can invoke functions like ecs_set as you normally would:
  * 
  * ecs_set(world, e, Position, {10, 20});
  * 
- * @param rows Pointer to the rows object passed into the system callback.
+ * @param it Pointer to the it object passed into the system callback.
  * @param index An index identifying the column for which to obtain the component.
  * @return The type for the specified column, or 0 if failed.
  */ 
 FLECS_EXPORT
 ecs_type_t ecs_column_type(
-    const ecs_rows_t *rows,
+    const ecs_iter_t *it,
     int32_t column);
 
 /** Is the column readonly.
  * This operation returns if the column is a readonly column. Readonly columns
  * are marked in the system signature with the [in] modifier. 
  * 
- * @param rows Pointer to the rows object passed into the system callback.
+ * @param it Pointer to the it object passed into the system callback.
  * @param column An index identifying the column.
  * @return true if the column is readonly, false otherwise. */
 FLECS_EXPORT
 bool ecs_is_readonly(
-    const ecs_rows_t *rows,
+    const ecs_iter_t *it,
     int32_t column);
 
 /** Get type of table that system is currently iterating over. */
 FLECS_EXPORT
 ecs_type_t ecs_table_type(
-    const ecs_rows_t *rows);
+    const ecs_iter_t *it);
 
 /** Get column using the table index. */
 FLECS_EXPORT
 void* ecs_table_column(
-    const ecs_rows_t *rows,
+    const ecs_iter_t *it,
     int32_t column);
 
 /** Get a strongly typed pointer to a column (owned or shared). */
-#define ECS_COLUMN(rows, type, id, column)\
-    ECS_ENTITY_VAR(type) = ecs_column_entity(rows, column);\
-    ECS_TYPE_VAR(type) = ecs_column_type(rows, column);\
-    type *id = ecs_column(rows, type, column);\
+#define ECS_COLUMN(it, type, id, column)\
+    ECS_ENTITY_VAR(type) = ecs_column_entity(it, column);\
+    ECS_TYPE_VAR(type) = ecs_column_type(it, column);\
+    type *id = ecs_column(it, type, column);\
     (void)ecs_entity(type);\
     (void)ecs_type(type);\
     (void)id
 
 /** Get a strongly typed pointer to a column (owned or shared). */
-#define ECS_CONST_COLUMN(rows, type, id, column)\
-    const type *id = ecs_const_column(rows, type, column)
+#define ECS_CONST_COLUMN(it, type, id, column)\
+    const type *id = ecs_const_column(it, type, column)
 
 /** Obtain a handle to the component of a column */
-#define ECS_COLUMN_COMPONENT(rows, id, column)\
-    ECS_ENTITY_VAR(id) = ecs_column_entity(rows, column);\
-    ECS_TYPE_VAR(id) = ecs_column_type(rows, column);\
+#define ECS_COLUMN_COMPONENT(it, id, column)\
+    ECS_ENTITY_VAR(id) = ecs_column_entity(it, column);\
+    ECS_TYPE_VAR(id) = ecs_column_type(it, column);\
     (void)ecs_entity(id);\
     (void)ecs_type(id)
 
 /** Obtain a handle to the entity of a column */
-#define ECS_COLUMN_ENTITY(rows, id, column)\
-    ecs_entity_t id = ecs_column_entity(rows, column);\
-    ECS_TYPE_VAR(id) = ecs_column_type(rows, column);\
+#define ECS_COLUMN_ENTITY(it, id, column)\
+    ecs_entity_t id = ecs_column_entity(it, column);\
+    ECS_TYPE_VAR(id) = ecs_column_type(it, column);\
     (void)id;\
     (void)ecs_type(id)
 
 /** Utility macro for importing all handles for a module from a system column */
-#define ECS_IMPORT_COLUMN(rows, module, column) \
-    module *ecs_module_ptr(module) = ecs_column(rows, module, column);\
+#define ECS_IMPORT_COLUMN(it, module, column) \
+    module *ecs_module_ptr(module) = ecs_column(it, module, column);\
     ecs_assert(ecs_module_ptr(module) != NULL, ECS_MODULE_UNDEFINED, #module);\
-    ecs_assert(ecs_is_shared(rows, column), ECS_COLUMN_IS_NOT_SHARED, NULL);\
+    ecs_assert(ecs_is_shared(it, column), ECS_COLUMN_IS_NOT_SHARED, NULL);\
     module ecs_module(module) = *ecs_module_ptr(module);\
     module##ImportHandles(ecs_module(module))
 
@@ -1471,18 +1560,11 @@ void* ecs_table_column(
 //// Filter iterator API
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct ecs_filter_iter_t {
-    ecs_filter_t filter;
-    ecs_sparse_t *tables;
-    int32_t index;
-    ecs_rows_t rows;
-} ecs_filter_iter_t;
-
 /** Create iterator that matches world tables with specified filter.
  * This operation allows applications to query entities ad hoc with a filter. 
  * Combined with the ecs_filter_next function an application can iterate over a
  * set of tables that matches the provided filter, for which the ecs_filter_next
- * function will populate an ecs_rows_t object, which can be used to iterate the
+ * function will populate an ecs_iter_t object, which can be used to iterate the
  * entities in the table.
  * 
  * @param world The world.
@@ -1490,13 +1572,13 @@ typedef struct ecs_filter_iter_t {
  * @return An iterator that can be used with ecs_filter_next.
  */
 FLECS_EXPORT
-ecs_filter_iter_t ecs_filter_iter(
+ecs_iter_t ecs_filter_iter(
     ecs_world_t *world,
     const ecs_filter_t *filter);
 
 /** Same as ecs_filter_iter, but for iterating snapshots tables. */
 FLECS_EXPORT
-ecs_filter_iter_t ecs_snapshot_filter_iter(
+ecs_iter_t ecs_snapshot_filter_iter(
     ecs_world_t *world,
     const ecs_snapshot_t *snapshot,
     const ecs_filter_t *filter);    
@@ -1506,53 +1588,40 @@ ecs_filter_iter_t ecs_snapshot_filter_iter(
  * false, in which case there are no more tables that matched the filter.
  *
  * When the operation returns true, the contents of the table can be accessed
- * through the "rows" member of the iterator, which is of type ecs_rows_t. To
+ * through the "it" member of the iterator, which is of type ecs_iter_t. To
  * get the component data, an application has to first obtain the table type
- * with ecs_table_type(iter.rows). This type contains the ordered list of
+ * with ecs_table_type(iter.it). This type contains the ordered list of
  * components stored in the table.
  *
  * An application can then obtain a specific component by first retrieving the
  * index of the component in the table type with column = 
  * ecs_type_index_of(table_type, Component), followed by 
- * ecs_table_column(rows, column) to obtain a pointer to the component array.
+ * ecs_table_column(it, column) to obtain a pointer to the component array.
  * 
  * @param iter The iterator.
  */
 FLECS_EXPORT
 bool ecs_filter_next(
-    ecs_filter_iter_t *iter);
+    ecs_iter_t *iter);
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// System API
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Enable or disable a system.
- * This operation enables or disables an entity by adding or removing the
- * EcsDisabled tag.
+/** Deactivate systems that are not matched with tables.
+ * By default Flecs deactivates systems that are not matched with any tables.
+ * However, once a system has been matched with a table it remains activated, to
+ * prevent systems from continuously becoming active and inactive.
+ *
+ * To re-deactivate systems, an application can invoke this function, which will
+ * deactivate all systems that are not matched with any tables.
  *
  * @param world The world.
- * @param system The system to enable or disable.
- * @param enabled true to enable the system, false to disable the system.
- * @return 0 if succeeded, -1 if the operation failed.
  */
 FLECS_EXPORT
-void ecs_enable(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    bool enabled);
-
-/** Returns the enabled status for an entity.
- * Returns true if entity is Disabled (has the EcsDisabled) tag.
- *
- * @param world The world.
- * @param system The system to check.
- * @return True if the system is enabled, false if the system is disabled.
- */
-FLECS_EXPORT
-bool ecs_is_enabled(
-    ecs_world_t *world,
-    ecs_entity_t system);
+void ecs_deactivate_systems(
+    ecs_world_t *world);
 
 /** Run a specific system manually.
  * This operation runs a single system manually. It is an efficient way to
@@ -1566,10 +1635,10 @@ bool ecs_is_enabled(
  *
  * An application may pass custom data to a system through the param parameter.
  * This data can be accessed by the system through the param member in the
- * ecs_rows_t value that is passed to the system callback.
+ * ecs_iter_t value that is passed to the system callback.
  *
  * Any system may interrupt execution by setting the interrupted_by member in
- * the ecs_rows_t value. This is particularly useful for manual systems, where
+ * the ecs_iter_t value. This is particularly useful for manual systems, where
  * the value of interrupted_by is returned by this operation. This, in
  * cominbation with the param argument lets applications use manual systems
  * to lookup entities: once the entity has been found its handle is passed to
@@ -1816,20 +1885,6 @@ void ecs_set_tick_source(
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct ecs_query_iter_t {
-    ecs_query_t *query;
-    int32_t offset;
-    int32_t limit;
-    int32_t remaining;
-    int32_t index;
-
-    /* This member can be read by the application to obtain component columns.
-     * Columns can be obtained the same way as with normal systems, with the
-     * ECS_COLUMN macro and by providing the correct index of the column in the
-     * query signature expression. */
-    ecs_rows_t rows;
-} ecs_query_iter_t;
-
 /** Create a query.
  * This operation creates a query. Queries are used to iterate over entities
  * that match a signature expression.
@@ -1888,7 +1943,22 @@ void ecs_query_free(
  * created per query. It is safe to iterate over a query from multiple threads,
  * as long as each thread uses its own iterator.
  *
- * The iterator contains an ecs_rows_t struct which can be read by the 
+ * The iterator contains an ecs_iter_t struct which can be read by the 
+ * application to obtain the component data, just like with systems.
+ *
+ * @param query The query to iterate.
+ * @return The query iterator.
+ */
+FLECS_EXPORT
+ecs_iter_t ecs_query_iter(
+    ecs_query_t *query);  
+
+/** Iterate over a query.
+ * This operation returns an iterator to a query. Multiple iterators can be
+ * created per query. It is safe to iterate over a query from multiple threads,
+ * as long as each thread uses its own iterator.
+ *
+ * The iterator contains an ecs_iter_t struct which can be read by the 
  * application to obtain the component data, just like with systems.
  *
  * @param query The query to iterate.
@@ -1897,7 +1967,7 @@ void ecs_query_free(
  * @return The query iterator.
  */
 FLECS_EXPORT
-ecs_query_iter_t ecs_query_iter(
+ecs_iter_t ecs_query_iter_page(
     ecs_query_t *query,
     int32_t offset,
     int32_t limit);  
@@ -1911,8 +1981,12 @@ ecs_query_iter_t ecs_query_iter(
  */
 FLECS_EXPORT
 bool ecs_query_next(
-    ecs_query_iter_t *iter);      
+    ecs_iter_t *iter);      
 
+bool ecs_query_next_worker(
+    ecs_iter_t *it,
+    int32_t current,
+    int32_t total);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Snapshot API
@@ -2283,7 +2357,7 @@ FLECS_EXPORT
 ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_world_t *world,
     ecs_type_t type,
-    ecs_entity_t xor);
+    ecs_entity_t xor_tag);
 
 FLECS_EXPORT
 int16_t ecs_type_index_of(

@@ -4,25 +4,25 @@ typedef float Health;
 typedef float Stamina;
 typedef float Mana;
 
-void Regenerate(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Health, health, 1);
-    ECS_COLUMN(rows, Stamina, stamina, 2);
-    ECS_COLUMN(rows, Mana, mana, 3);
+void Regenerate(ecs_iter_t *it) {
+    ECS_COLUMN(it, Health, health, 1);
+    ECS_COLUMN(it, Stamina, stamina, 2);
+    ECS_COLUMN(it, Mana, mana, 3);
 
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         if (health) {
             health[i] ++;
-            printf("%d: process health\n", (int)rows->entities[i]);
+            printf("%d: process health\n", (int)it->entities[i]);
         }
 
         if (stamina) {
             stamina[i] ++;
-            printf("%d: process stamina\n", (int)rows->entities[i]);
+            printf("%d: process stamina\n", (int)it->entities[i]);
         }
 
         if (mana) {
             mana[i] ++;
-            printf("%d: process mana\n", (int)rows->entities[i]);
+            printf("%d: process mana\n", (int)it->entities[i]);
         }
     }
 }

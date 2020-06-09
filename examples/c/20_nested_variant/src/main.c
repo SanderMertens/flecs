@@ -44,17 +44,17 @@ int main(int argc, char *argv[]) {
     printf("Child2 type = [%s]\n", ecs_type_str(world, ecs_get_type(world, child2)));
 
     /* e shares Position from RootPrefab */
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     printf("Position of e = {%f, %f}\n", p->x, p->y);
 
     /* Children will share Position from ChildBase and Velocity from the Child1
      * and Child2 prefabs respectively */
-    p = ecs_get_ptr(world, child1, Position);
-    const Velocity *v = ecs_get_ptr(world, child1, Velocity);
+    p = ecs_get(world, child1, Position);
+    const Velocity *v = ecs_get(world, child1, Velocity);
     printf("Child1 Position = {%f, %f}, Velocity = {%f, %f}\n", p->x, p->y, v->x, v->y);
 
-    p = ecs_get_ptr(world, child2, Position);
-    v = ecs_get_ptr(world, child2, Velocity);
+    p = ecs_get(world, child2, Position);
+    v = ecs_get(world, child2, Velocity);
     printf("Child2 Position = {%f, %f}, Velocity = {%f, %f}\n", p->x, p->y, v->x, v->y);
 
     /* Cleanup */

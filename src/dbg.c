@@ -118,7 +118,7 @@ int ecs_dbg_col_system(
     ecs_entity_t system,
     ecs_dbg_col_system_t *dbg_out)
 {
-    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
+    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
     if (!system_data) {
         return -1;
     }
@@ -180,7 +180,7 @@ ecs_type_t ecs_dbg_get_column_type(
     ecs_entity_t system,
     int32_t column_index)
 {
-    const EcsSystem *system_data = ecs_get_ptr(world, system, EcsSystem);
+    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
     if (!system_data) {
         return NULL;
     }

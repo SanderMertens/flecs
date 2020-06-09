@@ -2,21 +2,6 @@
 #include "flecs_private.h"
 
 static
-bool safe_enter(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_op_kind_t op_kind,
-    ecs_entity_t entity,
-    ecs_entities_t *components,
-    const void *value,
-    size_t size);
-
-static
-void safe_leave(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
-static
 int32_t comp_mask_index(
     int32_t value)
 {
@@ -249,7 +234,7 @@ void run_component_trigger_for_entities(
         ecs_entity_t components[1] = { component };
         int32_t columns[1] = { index };
 
-        ecs_rows_t rows = {
+        ecs_iter_t it = {
             .world = world,
             .columns = columns,
             .table_count = 1,
@@ -264,9 +249,9 @@ void run_component_trigger_for_entities(
         };
 
         for (i = 0; i < trigger_count; i ++) {
-            rows.system = triggers[i].self;
-            rows.param = triggers[i].ctx;
-            triggers[i].action(&rows);
+            it.system = triggers[i].self;
+            it.param = triggers[i].ctx;
+            triggers[i].action(&it);
         }
     }
 }
@@ -335,7 +320,7 @@ void ecs_run_set_systems(
     int32_t count,
     bool set_all)
 {
-    if (!count) {
+    if (!count || !data) {
         return;
     }
     
@@ -463,11 +448,13 @@ void instantiate_children(
 
     if (child_data) {
         c_info = ecs_os_alloca(void*, column_count);
+    } else {
+        return;
     }
 
     /* Copy in component identifiers. Find the base index in the component
      * array, since we'll need this to replace the base with the instance id */
-    int i, base_index, pos = 0;
+    int i, base_index = -1, pos = 0;
 
     for (i = 0; i < type_count; i ++) {
         ecs_entity_t c = type_array[i];
@@ -494,6 +481,8 @@ void instantiate_children(
         components.array[pos] = c;
         pos ++;
     }
+
+    ecs_assert(base_index != -1, ECS_INTERNAL_ERROR, NULL);
 
     components.count = pos;
 
@@ -661,7 +650,7 @@ void ecs_run_init_actions(
     /* Array that contains component callbacks & systems */
     ecs_column_t *component_columns = data->columns;
     ecs_type_t type;
-    int32_t type_count, column_count = table->column_count;
+    int32_t column_count = table->column_count;
     ecs_entity_t *type_array;
     ecs_c_info_t *c_info_array = world->c_info;
     
@@ -670,7 +659,6 @@ void ecs_run_init_actions(
 
     if (components.count) {
         type = table->type;
-        type_count = ecs_vector_count(type);
         type_array = ecs_vector_first(type, ecs_entity_t);
     }
 
@@ -719,7 +707,7 @@ void ecs_run_init_actions(
 
         if (cur < column_count) {
             /* Removed components should always be in the old type */
-            ecs_assert(cur <= type_count, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(cur <= ecs_vector_count(type), ECS_INTERNAL_ERROR, NULL);
 
             /* Get column and pointer to data */
             ecs_column_t *column = &component_columns[cur];
@@ -859,7 +847,7 @@ int32_t new_entity(
     ecs_data_t *dst_data = ecs_table_get_or_create_data(world, stage, new_table);
     int32_t new_row;
 
-    ecs_assert(added->count != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(added && added->count != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (stage == &world->stage) {
         if (!record) {
@@ -926,7 +914,7 @@ int32_t move_entity(
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record);
     bool same_stage = src_data->stage == stage;
 
-    if (main_stage) {
+    if (main_stage && record) {
         record->table = dst_table;
         record->row = ecs_row_to_record(dst_row, info->is_watched);
     } else {
@@ -1242,10 +1230,11 @@ int32_t new_w_data(
         if (changed) {
             int32_t j;
             for (j = 0; j < count; j ++) {
-                ecs_entity_info_t info;
-                get_any_info(world, stage, e + j, &info);
-                ecs_run_set_systems(world, stage, &added, 
-                    info.table, info.data, info.row, 1, true);
+                ecs_entity_info_t info = {0};
+                if (get_any_info(world, stage, e + j, &info)) {
+                    ecs_run_set_systems(world, stage, &added, 
+                        info.table, info.data, info.row, 1, true);
+                }
             }
         } else {
             ecs_run_set_systems(world, stage, &added, 
@@ -1366,7 +1355,7 @@ void add_entities(
     ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = ecs_get_stage(&world);
 
-    if (safe_enter(world, stage, EcsOpAdd, entity, components, NULL, 0)) {
+    if (ecs_defer_begin(world, stage, EcsOpAdd, entity, components, NULL, 0)) {
         return;
     }
 
@@ -1382,7 +1371,7 @@ void add_entities(
 
     commit(world, stage, entity, &info, dst_table, &added, NULL);
 
-    safe_leave(world, stage);
+    ecs_defer_end(world, stage);
 }
 
 static
@@ -1395,7 +1384,7 @@ void remove_entities(
     ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);    
     ecs_stage_t *stage = ecs_get_stage(&world);
 
-    if (safe_enter(world, stage, EcsOpRemove, entity, components, NULL, 0)) {
+    if (ecs_defer_begin(world, stage, EcsOpRemove, entity, components, NULL, 0)) {
         return;
     }
 
@@ -1411,7 +1400,7 @@ void remove_entities(
 
     commit(world, stage, entity, &info, dst_table, NULL, &removed);
 
-    safe_leave(world, stage);
+    ecs_defer_end(world, stage);
 }
 
 static
@@ -1471,93 +1460,6 @@ void *get_mutable(
     }
 }
 
-/* Enter safe section. Record all operations so they can be executed after
- * leaving the safe section. */
-static
-bool safe_enter(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_op_kind_t op_kind,
-    ecs_entity_t entity,
-    ecs_entities_t *components,
-    const void *value,
-    size_t size)
-{
-    if (stage->defer) {
-        ecs_op_t *op = ecs_vector_add(&stage->defer_queue, ecs_op_t);
-        op->kind = op_kind;
-        op->entity = entity;
-        if (components->count == 1) {
-            op->component = components->array[0];
-            op->components = (ecs_entities_t) {
-                .array = NULL,
-                .count = 1
-            };
-        } else {
-            size_t size = components->count * sizeof(ecs_entity_t);
-            op->components.array = ecs_os_malloc(size);
-            memcpy(op->components.array, components->array, size);
-            op->components.count = components->count;
-        }
-
-        if (size) {
-            ecs_assert(value != NULL, ECS_INTERNAL_ERROR, NULL);
-            op->value = ecs_os_memdup(value, size);
-        } else {
-            op->value = NULL;
-        }
-
-        op->size = size;
-        return true;
-    } else {
-        stage->defer ++;
-    }
-    
-    return false;
-}
-
-/* Leave safe section. Run all deferred commands. */
-static
-void safe_leave(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{
-    if (!--stage->defer) {
-        ecs_vector_t *defer_queue = stage->defer_queue;
-        stage->defer_queue = NULL;
-        if (defer_queue) {
-            ecs_vector_each(defer_queue, ecs_op_t, op, {
-                if (op->components.count == 1) {
-                    op->components.array = &op->component;
-                }
-
-                switch(op->kind) {
-                case EcsOpAdd:
-                    add_entities(world, op->entity, &op->components);
-                    break;
-                case EcsOpRemove:
-                    remove_entities(world, op->entity, &op->components);
-                    break;
-                case EcsOpSet:
-                    ecs_set_ptr_w_entity(world, op->entity, 
-                        op->components.array[0], op->size, op->value);
-                    break;
-                }
-
-                if (op->components.count > 1) {
-                    ecs_os_free(op->components.array);
-                }
-
-                if (op->value) {
-                    ecs_os_free(op->value);
-                }
-            });
-
-            ecs_vector_free(defer_queue);
-        }
-    }
-}
-
 /* -- Private functions -- */
 
 int32_t ecs_record_to_row(
@@ -1610,12 +1512,11 @@ void ecs_set_watch(
     }
 }
 
-bool ecs_components_contains_component(
+ecs_entity_t ecs_find_in_type(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t component,
-    ecs_entity_t flags,
-    ecs_entity_t *entity_out)
+    ecs_entity_t flags)
 {
     ecs_vector_each(type, ecs_entity_t, c_ptr, {
         ecs_entity_t c = *c_ptr;
@@ -1627,17 +1528,18 @@ bool ecs_components_contains_component(
         }
 
         ecs_entity_t e = c & ECS_ENTITY_MASK;
-        ecs_type_t type = ecs_get_type(world, e);
 
-        bool result = ecs_type_has_entity(
-            world, type, component);
-        if (result) {
-            if (entity_out) *entity_out = e;
-            return true;
+        if (component) {
+            ecs_type_t type = ecs_get_type(world, e);
+           if (!ecs_type_has_entity(world, type, component)) {
+               continue;
+           }
         }
+
+        return e;
     });
 
-    return false;
+    return 0;
 }
 
 /* -- Public functions -- */
@@ -1853,7 +1755,7 @@ ecs_entity_t ecs_clone(
     return dst;
 }
 
-const void* ecs_get_ptr_w_entity(
+const void* ecs_get_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
@@ -1959,16 +1861,16 @@ void ecs_modified_w_entity(
     ecs_assert((component & ECS_ENTITY_MASK) == component, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = ecs_get_stage(&world);
-    ecs_entity_info_t info;
+    ecs_entity_info_t info = {0};
 
-    get_any_info(world, stage, entity, &info);
-
-    ecs_entities_t added = {
-        .array = &component,
-        .count = 1
-    };
-    ecs_run_set_systems(world, stage, &added, 
-        info.table, info.data, info.row, 1, false);
+    if (get_any_info(world, stage, entity, &info)) {
+        ecs_entities_t added = {
+            .array = &component,
+            .count = 1
+        };
+        ecs_run_set_systems(world, stage, &added, 
+            info.table, info.data, info.row, 1, false);
+    }
 }
 
 ecs_entity_t ecs_set_ptr_w_entity(
@@ -1989,7 +1891,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
         entity = new_entity_handle(world);
     }
 
-    if (safe_enter(world, stage, EcsOpSet, entity, &added, ptr, size)) {
+    if (ecs_defer_begin(world, stage, EcsOpSet, entity, &added, ptr, size)) {
         return entity;
     }
 
@@ -2015,7 +1917,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
     ecs_run_set_systems(world, stage, &added, 
         info.table, info.data, info.row, 1, false);
 
-    safe_leave(world, stage);
+    ecs_defer_end(world, stage);
 
     return entity;
 }
@@ -2042,12 +1944,8 @@ ecs_entity_t ecs_get_parent_w_entity(
     ecs_entity_t entity,
     ecs_entity_t component)
 {
-    ecs_entity_t parent = 0;
-    ecs_type_t type = ecs_get_type(world, entity);
-    
-    ecs_components_contains_component(
-        world, type, component, 0, &parent);
-
+    ecs_type_t type = ecs_get_type(world, entity);    
+    ecs_entity_t parent = ecs_find_in_type(world, type, component, 0);
     return parent;
 }
 
@@ -2059,7 +1957,7 @@ const char* ecs_get_name(
         return "$";
     }
 
-    const EcsName *id = ecs_get_ptr(world, entity, EcsName);
+    const EcsName *id = ecs_get(world, entity, EcsName);
 
     if (id) {
         return *id;
@@ -2078,7 +1976,7 @@ ecs_type_t ecs_type_from_entity(
         return NULL;
     }
 
-    const EcsType *type = ecs_get_ptr(world, entity, EcsType);
+    const EcsType *type = ecs_get(world, entity, EcsType);
     if (type) {
         return type->normalized;
     }
@@ -2185,6 +2083,95 @@ bool ecs_get_watched(
         return info.is_watched;
     } else {
         return false;
+    }
+}
+
+/* Enter safe section. Record all operations so they can be executed after
+ * leaving the safe section. */
+bool ecs_defer_begin(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_op_kind_t op_kind,
+    ecs_entity_t entity,
+    ecs_entities_t *components,
+    const void *value,
+    size_t size)
+{
+    if (stage->defer) {
+        ecs_assert(op_kind != EcsOpNone, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_op_t *op = ecs_vector_add(&stage->defer_queue, ecs_op_t);
+        op->kind = op_kind;
+        op->entity = entity;
+        if (components->count == 1) {
+            op->component = components->array[0];
+            op->components = (ecs_entities_t) {
+                .array = NULL,
+                .count = 1
+            };
+        } else {
+            size_t size = components->count * sizeof(ecs_entity_t);
+            op->components.array = ecs_os_malloc(size);
+            memcpy(op->components.array, components->array, size);
+            op->components.count = components->count;
+        }
+
+        if (size) {
+            ecs_assert(value != NULL, ECS_INTERNAL_ERROR, NULL);
+            op->value = ecs_os_memdup(value, size);
+        } else {
+            op->value = NULL;
+        }
+
+        op->size = size;
+        return true;
+    } else {
+        stage->defer ++;
+    }
+    
+    return false;
+}
+
+/* Leave safe section. Run all deferred commands. */
+void ecs_defer_end(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    if (!--stage->defer) {
+        ecs_vector_t *defer_queue = stage->defer_queue;
+        stage->defer_queue = NULL;
+        if (defer_queue) {
+            ecs_vector_each(defer_queue, ecs_op_t, op, {
+                if (op->components.count == 1) {
+                    op->components.array = &op->component;
+                }
+
+                switch(op->kind) {
+                case EcsOpNone:
+                    break;
+                case EcsOpAdd:
+                    add_entities(world, op->entity, &op->components);
+                    break;
+                case EcsOpRemove:
+                    remove_entities(world, op->entity, &op->components);
+                    break;
+                case EcsOpSet:
+                    ecs_set_ptr_w_entity(world, op->entity, 
+                        op->components.array[0], op->size, op->value);
+                    break;
+                }
+
+                if (op->components.count > 1) {
+                    ecs_os_free(op->components.array);
+                }
+
+                if (op->value) {
+                    ecs_os_free(op->value);
+                }
+            });
+
+            ecs_vector_free(defer_queue);
+        }
     }
 }
 

@@ -510,7 +510,7 @@ void Type_invalid_container_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, PARENT.Position, Velocity);
+    ECS_TYPE(world, Type, PARENT:Position, Velocity);
 
     ecs_fini(world);
 }
@@ -527,7 +527,7 @@ void Type_invalid_entity_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, Entity.Position, Velocity);
+    ECS_TYPE(world, Type, Entity:Position, Velocity);
 
     ecs_fini(world);
 }
@@ -542,7 +542,7 @@ void Type_invalid_singleton_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, $.Position, Velocity);
+    ECS_TYPE(world, Type, $:Position, Velocity);
 
     ecs_fini(world);
 }
@@ -557,7 +557,7 @@ void Type_invalid_system_type_expression() {
 
     test_expect_abort();
 
-    ECS_TYPE(world, Type, SYSTEM.Position, Velocity);
+    ECS_TYPE(world, Type, SYSTEM:Position, Velocity);
 
     ecs_fini(world);
 }
@@ -580,11 +580,11 @@ void Type_type_from_empty_entity() {
 }
 
 static
-void TypeFromEntity(ecs_rows_t *rows) {
-    ecs_entity_t e = ecs_new(rows->world, 0);
+void TypeFromEntity(ecs_iter_t *it) {
+    ecs_entity_t e = ecs_new(it->world, 0);
     test_assert(e != 0);
 
-    ecs_type_t t = ecs_type_from_entity(rows->world, e);
+    ecs_type_t t = ecs_type_from_entity(it->world, e);
     test_assert(t != NULL);
 
     test_int(ecs_vector_count(t), 1);

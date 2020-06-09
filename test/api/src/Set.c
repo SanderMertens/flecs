@@ -11,7 +11,7 @@ void Set_set_empty() {
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has(world, e, Position));
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -32,7 +32,7 @@ void Set_set_nonempty() {
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
-    const Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 10);
     test_int(v->y, 20);
@@ -51,7 +51,7 @@ void Set_set_non_empty_override() {
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has(world, e, Position));
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -70,7 +70,7 @@ void Set_set_again() {
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has(world, e, Position));
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -78,7 +78,7 @@ void Set_set_again() {
     ecs_set(world, e, Position, {30, 40});
     test_assert(ecs_has(world, e, Position));
 
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 40);
@@ -98,7 +98,7 @@ void Set_set_2() {
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has(world, e, Position));
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -107,12 +107,12 @@ void Set_set_2() {
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Velocity *v = ecs_get(world, e, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -134,7 +134,7 @@ void Set_add_set() {
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has(world, e, Position));
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -153,7 +153,7 @@ void Set_set_add() {
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has(world, e, Position));
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -161,7 +161,7 @@ void Set_set_add() {
     ecs_add(world, e, Position);
     test_assert(ecs_has(world, e, Position));
 
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -181,7 +181,7 @@ void Set_set_add_other() {
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has(world, e, Position));
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -190,7 +190,7 @@ void Set_set_add_other() {
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -209,7 +209,7 @@ void Set_set_remove() {
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has(world, e, Position));
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -217,7 +217,7 @@ void Set_set_remove() {
     ecs_remove(world, e, Position);
     test_assert(!ecs_has(world, e, Position));
 
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get(world, e, Position);
     test_assert(p == NULL);
     
     ecs_fini(world);
@@ -236,7 +236,7 @@ void Set_set_remove_other() {
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -245,7 +245,7 @@ void Set_set_remove_other() {
     test_assert(ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
 
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -264,7 +264,7 @@ void Set_set_remove_twice() {
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has(world, e, Position));
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -272,13 +272,13 @@ void Set_set_remove_twice() {
     ecs_remove(world, e, Position);
     test_assert(!ecs_has(world, e, Position));
 
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get(world, e, Position);
     test_assert(p == NULL);
 
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has(world, e, Position));
 
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -295,7 +295,7 @@ void Set_set_and_new() {
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Position));
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -313,7 +313,7 @@ void Set_set_null() {
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Position));
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 0);
     test_int(p->y, 0);
@@ -334,7 +334,7 @@ void Set_get_mutable_new() {
     test_assert(p != NULL);
     test_bool(is_added, true);
     test_assert( ecs_has(world, e, Position));
-    test_assert(p == ecs_get_ptr(world, e, Position));
+    test_assert(p == ecs_get(world, e, Position));
     
     ecs_fini(world);
 }
@@ -347,7 +347,7 @@ void Set_get_mutable_existing() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
-    const Position *p_prev = ecs_get_ptr(world, e, Position);
+    const Position *p_prev = ecs_get(world, e, Position);
 
     bool is_added = false;
     Position *p = ecs_get_mut(world, e, Position, &is_added);
@@ -361,7 +361,7 @@ void Set_get_mutable_existing() {
 
 static bool is_invoked = false;
 
-void OnSetPosition(ecs_rows_t *rows) {
+void OnSetPosition(ecs_iter_t *it) {
     is_invoked = true;
 }
 
@@ -379,7 +379,7 @@ void Set_modified_w_on_set() {
     test_assert(p != NULL);
     test_bool(is_added, true);
     test_assert( ecs_has(world, e, Position));
-    test_assert(p == ecs_get_ptr(world, e, Position));
+    test_assert(p == ecs_get(world, e, Position));
 
     test_assert(is_invoked == false);
     ecs_modified(world, e, Position);

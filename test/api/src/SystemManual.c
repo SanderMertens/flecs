@@ -1,23 +1,23 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
         
-    if (rows->column_count >= 2) {
-        v = ecs_column(rows, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
     }
 
-    if (rows->column_count >= 3) {
-        m = ecs_column(rows, Mass, 3);
+    if (it->column_count >= 3) {
+        m = ecs_column(it, Mass, 3);
     }
 
-    probe_system(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -60,17 +60,17 @@ void SystemManual_1_type_1_component() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -81,7 +81,7 @@ void SystemManual_1_type_1_component() {
 static int normal_count;
 
 static
-void NormalSystem(ecs_rows_t *rows) {
+void NormalSystem(ecs_iter_t *it) {
     normal_count ++;
 }
 
@@ -147,12 +147,12 @@ void SystemManual_activate_status() {
 }
 
 static
-void AddVelocity(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+void AddVelocity(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Velocity, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_add(rows->world, rows->entities[i], Velocity);
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
     }
 }
 
@@ -162,7 +162,7 @@ void SystemManual_no_automerge() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddVelocity, 0, Position, .Velocity);
+    ECS_SYSTEM(world, AddVelocity, 0, Position, :Velocity);
 
     ECS_ENTITY(world, e_1, Position);
 

@@ -24,7 +24,7 @@ ecs_data_t* init_data(
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
 
     for (i = 0; i < count; i ++) {
-        const EcsComponent *component = ecs_get_ptr(
+        const EcsComponent *component = ecs_get(
                 world, entities[i], EcsComponent);
 
         /* Is the column a component? */
@@ -465,6 +465,15 @@ void ecs_table_free(
     ecs_vector_free((ecs_vector_t*)table->type);
     ecs_os_free(table->dirty_state);
     ecs_vector_free(table->monitors);
+    ecs_vector_free(table->on_set_all);
+    
+    if (table->on_set) {
+        int32_t i;
+        for (i = 0; i < table->column_count; i ++) {
+            ecs_vector_free(table->on_set[i]);
+        }
+        ecs_os_free(table->on_set);
+    }
 }
 
 /* Reset a table to its initial state. This is used to reset the root table of a

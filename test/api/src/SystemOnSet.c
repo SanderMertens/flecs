@@ -1,24 +1,24 @@
 #include <api.h>
 
 static
-void OnPosition(ecs_rows_t *rows) {
-    probe_system(rows);
+void OnPosition(ecs_iter_t *it) {
+    probe_system(it);
 }
 
 static
-void Add_to_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_to_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component);
+            ecs_add_entity(it->world, it->entities[i], ctx->component);
 
-            test_assert( !!ecs_get_type(rows->world, rows->entities[i]));
+            test_assert( !!ecs_get_type(it->world, it->entities[i]));
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(rows->world, rows->entities[i], ctx->component_2);
+            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -26,19 +26,19 @@ void Add_to_current(ecs_rows_t *rows) {
 }
 
 static
-void Remove_from_current(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Remove_from_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
 
         if (ctx->component) {
-            ecs_remove_entity(rows->world, e, ctx->component);
+            ecs_remove_entity(it->world, e, ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(rows->world, e, ctx->component_2);
+            ecs_remove_entity(it->world, e, ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -48,14 +48,14 @@ void Remove_from_current(ecs_rows_t *rows) {
 static Probe pv_probe;
 
 static
-void On_PV(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+void On_PV(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    probe_system_w_ctx(rows, &pv_probe);
+    probe_system_w_ctx(it, &pv_probe);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
@@ -779,15 +779,15 @@ void SystemOnSet_add_to_current_in_on_set() {
     test_assert( ecs_has(world, e_2, Velocity));
     test_assert( ecs_has(world, e_3, Velocity));
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_int(p->x, 11);
     test_int(p->y, 21);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_int(p->x, 12);
     test_int(p->y, 22);
 
@@ -822,15 +822,15 @@ void SystemOnSet_remove_from_current_in_on_set() {
     test_assert( !ecs_has(world, e_2, Velocity));
     test_assert( !ecs_has(world, e_3, Velocity));
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_int(p->x, 11);
     test_int(p->y, 21);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_int(p->x, 12);
     test_int(p->y, 22);
 

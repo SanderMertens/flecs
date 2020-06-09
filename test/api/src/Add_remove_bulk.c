@@ -23,12 +23,12 @@ void Add_remove_bulk_add_remove_add_only() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( ecs_has(world, e + i, Velocity));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
 
-        test_assert(ecs_get_ptr(world, e + i, Velocity) != NULL);
+        test_assert(ecs_get(world, e + i, Velocity) != NULL);
     }
 
     test_int( ecs_count(world, Position), 10);
@@ -60,7 +60,7 @@ void Add_remove_bulk_add_remove_remove_only() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( !ecs_has(world, e + i, Velocity));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -97,12 +97,12 @@ void Add_remove_bulk_add_remove_both() {
         test_assert( !ecs_has(world, e + i, Velocity));
         test_assert( ecs_has(world, e + i, Mass));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
 
-        test_assert(ecs_get_ptr(world, e + i, Mass) != NULL);
+        test_assert(ecs_get(world, e + i, Mass) != NULL);
     }
 
     test_int( ecs_count(world, Position), 10);
@@ -136,12 +136,12 @@ void Add_remove_bulk_add_remove_same() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( ecs_has(world, e + i, Velocity));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
 
-        const Velocity *v = ecs_get_ptr(world, e + i, Velocity);
+        const Velocity *v = ecs_get(world, e + i, Velocity);
         test_assert(v != NULL);
         test_int(v->x, i * 3);
         test_int(v->y, i * 4);

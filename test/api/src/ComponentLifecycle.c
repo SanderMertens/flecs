@@ -440,12 +440,12 @@ void ComponentLifecycle_ctor_on_bulk_add() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( ecs_has(world, e + i, Velocity));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
 
-        const Velocity *v = ecs_get_ptr(world, e + i, Velocity);
+        const Velocity *v = ecs_get(world, e + i, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 10);
         test_int(v->y, 20);        
@@ -493,7 +493,7 @@ void ComponentLifecycle_dtor_on_bulk_remove() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( !ecs_has(world, e + i, Velocity));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);      
@@ -539,12 +539,12 @@ void ComponentLifecycle_ctor_on_bulk_add_entity() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( ecs_has(world, e + i, Velocity));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
 
-        const Velocity *v = ecs_get_ptr(world, e + i, Velocity);
+        const Velocity *v = ecs_get(world, e + i, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 10);
         test_int(v->y, 20);        
@@ -592,7 +592,7 @@ void ComponentLifecycle_dtor_on_bulk_remove_entity() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( !ecs_has(world, e + i, Velocity));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -656,12 +656,12 @@ void ComponentLifecycle_ctor_dtor_on_bulk_add_remove() {
         test_assert( ecs_has(world, e + i, Velocity));
         test_assert( !ecs_has(world, e + i, Mass));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2); 
 
-        const Velocity *v = ecs_get_ptr(world, e + i, Velocity);
+        const Velocity *v = ecs_get(world, e + i, Velocity);
         test_assert(v != NULL);
         test_int(v->x, 10);
         test_int(v->y, 20);
@@ -710,7 +710,7 @@ void ComponentLifecycle_copy_on_snapshot() {
 
     for (i = 0; i < 10; i ++) {
         test_assert(ecs_has(world, e + i, Position));
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -769,7 +769,7 @@ void ComponentLifecycle_ctor_copy_on_snapshot() {
 
     for (i = 0; i < 10; i ++) {
         test_assert(ecs_has(world, e + i, Position));
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -824,7 +824,7 @@ void ComponentLifecycle_dtor_on_restore() {
 
     for (i = 0; i < 10; i ++) {
         test_assert(ecs_has(world, e + i, Position));
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);

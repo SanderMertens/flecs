@@ -1,13 +1,13 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    probe_system(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
     }
@@ -19,7 +19,7 @@ void System_w_FromId_2_column_1_from_id() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, .Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, :Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -48,7 +48,7 @@ void System_w_FromId_3_column_2_from_id() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, .Velocity, .Rotation);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, :Velocity, :Rotation);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -73,12 +73,12 @@ void System_w_FromId_3_column_2_from_id() {
 }
 
 static
-void CheckColumnType(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Position, 2);
+void CheckColumnType(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Position, 2);
 
-    test_assert(ecs_type(Position) == ecs_column_type(rows, 1));
+    test_assert(ecs_type(Position) == ecs_column_type(it, 1));
 
-    probe_system(rows);
+    probe_system(it);
 }
 
 void System_w_FromId_column_type() {
@@ -88,7 +88,7 @@ void System_w_FromId_column_type() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_SYSTEM(world, CheckColumnType, EcsOnUpdate, Position, .Position);
+    ECS_SYSTEM(world, CheckColumnType, EcsOnUpdate, Position, :Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);

@@ -42,12 +42,12 @@ void Modules_simple_module() {
 }
 
 static
-void AddVtoP(ecs_rows_t *rows) {
-    ECS_IMPORT_COLUMN(rows, SimpleModule, 2);
+void AddVtoP(ecs_iter_t *it) {
+    ECS_IMPORT_COLUMN(it, SimpleModule, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_add(rows->world, rows->entities[i], Velocity);
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
     }
 }
 
@@ -55,9 +55,9 @@ void Modules_import_module_from_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule, 0);
-    ECS_SYSTEM(world, AddVtoP, EcsOnUpdate, Position, SimpleModule.SimpleModule);
+    ECS_SYSTEM(world, AddVtoP, EcsOnUpdate, Position, SimpleModule:SimpleModule);
 
-    const void *module_ptr = ecs_get_ptr(world, ecs_entity(SimpleModule), SimpleModule);
+    const void *module_ptr = ecs_get(world, ecs_entity(SimpleModule), SimpleModule);
     test_assert(module_ptr != NULL);
 
     ecs_entity_t e = ecs_new(world, Position);

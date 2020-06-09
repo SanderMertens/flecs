@@ -41,20 +41,18 @@ int main(int argc, char *argv[]) {
     ecs_set(world, E3, Position, {1, 2});
 
     /* Iterate over entities matching the query */
-    ecs_query_iter_t it = ecs_query_iter(q, 0, 0);
+    ecs_iter_t it = ecs_query_iter(q);
 
-    while (ecs_query_next(&it)) {
-        ecs_rows_t *rows = &it.rows;
-        
-        ECS_COLUMN(rows, Position, p, 1);
-        ECS_COLUMN(rows, Velocity, v, 2);
+    while (ecs_query_next(&it)) {        
+        ECS_COLUMN(&it, Position, p, 1);
+        ECS_COLUMN(&it, Velocity, v, 2);
 
-        for (int i = 0; i < rows->count; i ++) {
+        for (int i = 0; i < it.count; i ++) {
             p[i].x += v[i].x;
             p[i].y += v[i].y;
 
             printf("%s moved to {.x = %f, .y = %f}\n",
-                ecs_get_name(world, rows->entities[i]), p[i].x, p[i].y);
+                ecs_get_name(world, it.entities[i]), p[i].x, p[i].y);
         }
     }
 

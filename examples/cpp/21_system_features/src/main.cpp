@@ -1,8 +1,8 @@
 #include <system_features.h>
 #include <iostream>
 
-void Action(flecs::rows& rows) {
-    std::cout << rows.system().name() << " called!" << std::endl;
+void Action(flecs::iter& it) {
+    std::cout << it.system().name() << " called!" << std::endl;
 }
 
 int main(int argc, char *argv[]) {

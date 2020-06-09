@@ -46,12 +46,11 @@ void ecs_set_watch(
     ecs_entity_t entity);
 
 /* Does one of the entity containers has specified component */
-bool ecs_components_contains_component(
+ecs_entity_t ecs_find_in_type(
     ecs_world_t *world,
     ecs_type_t table_type,
     ecs_entity_t component,
-    ecs_entity_t flags,
-    ecs_entity_t *entity_out);
+    ecs_entity_t flags);
 
 void ecs_clear_w_filter(
     ecs_world_t *world,
@@ -94,11 +93,6 @@ ecs_c_info_t * ecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component);
 
-void ecs_progress_pipeline(
-    ecs_world_t *world,
-    ecs_entity_t pipeline,
-    float delta_time);
-
 void ecs_eval_component_monitors(
     ecs_world_t *world);
 
@@ -110,6 +104,58 @@ void ecs_component_monitor_register(
     ecs_component_monitor_t *mon,
     ecs_entity_t component,
     ecs_query_t *query);
+
+bool ecs_defer_begin(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_op_kind_t op_kind,
+    ecs_entity_t entity,
+    ecs_entities_t *components,
+    const void *value,
+    size_t size);
+
+void ecs_defer_end(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Pipeline API
+////////////////////////////////////////////////////////////////////////////////
+
+int32_t ecs_pipeline_update(
+    ecs_world_t *world,
+    ecs_entity_t pipeline);
+
+int32_t ecs_pipeline_begin(
+    ecs_world_t *world,
+    ecs_entity_t pipeline);
+
+void ecs_pipeline_end(
+    ecs_world_t *world);
+
+void ecs_pipeline_progress(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    float delta_time);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Worker API
+////////////////////////////////////////////////////////////////////////////////
+
+void ecs_worker_begin(
+    ecs_world_t *world);
+
+bool ecs_worker_sync(
+    ecs_world_t *world);
+
+void ecs_worker_end(
+    ecs_world_t *world);
+
+void ecs_workers_progress(
+    ecs_world_t *world);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
@@ -300,11 +346,11 @@ void ecs_query_match_table(
     ecs_query_t *query,
     ecs_table_t *table);
 
-void ecs_query_set_rows(
+void ecs_query_set_view(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_query_t *query,
-    ecs_rows_t *rows,
+    ecs_iter_t *it,
     int32_t table_index,
     int32_t row,
     int32_t count);
@@ -331,7 +377,7 @@ void ecs_sig_deinit(
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_iter_action_t action,
+    ecs_view_action_t action,
     ecs_query_t *query,
     void *ctx);
 
@@ -377,7 +423,8 @@ ecs_entity_t ecs_run_intern(
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
-    void *param);
+    void *param,
+    bool ran_by_app);
 
 /* Callback for parse_component_expr that stores result as ecs_sig_column_t's */
 int ecs_parse_signature_action(

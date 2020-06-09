@@ -12,9 +12,9 @@ static
 bool dummy_invoked = false;
 
 static
-void Dummy(ecs_rows_t *rows) {
+void Dummy(ecs_iter_t *it) {
     dummy_invoked = true;
-    probe_system(rows);
+    probe_system(it);
 }
 
 void SystemMisc_invalid_not_without_id() {
@@ -48,7 +48,7 @@ void SystemMisc_invalid_system_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM.);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM:);
 
     ecs_fini(world);
 }
@@ -60,7 +60,7 @@ void SystemMisc_invalid_container_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT:);
 
     ecs_fini(world);
 }
@@ -72,7 +72,7 @@ void SystemMisc_invalid_cascade_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CASCADE.);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CASCADE:);
 
     ecs_fini(world);
 }
@@ -110,7 +110,7 @@ void SystemMisc_invalid_singleton_without_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, $.);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, $:);
 
     ecs_fini(world);
 }
@@ -222,7 +222,7 @@ void SystemMisc_invalid_0_w_from_system() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM.0);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM:0);
 
     ecs_fini(world);
 }
@@ -234,7 +234,7 @@ void SystemMisc_invalid_0_w_from_container() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT.0);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT:0);
 
     ecs_fini(world);
 }
@@ -299,7 +299,7 @@ void SystemMisc_invalid_or_w_empty() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, .Position || .Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, :Position || :Velocity);
 
     ecs_fini(world);
 }
@@ -337,7 +337,7 @@ void SystemMisc_invalid_entity_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Foo.Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Foo:Position);
 
     ecs_fini(world);
 }
@@ -352,7 +352,7 @@ void SystemMisc_invalid_or_from_system() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM.Position || SYSTEM.Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM:Position || SYSTEM:Velocity);
 
     ecs_fini(world);
 }
@@ -401,11 +401,11 @@ void SystemMisc_redefine_row_system() {
 
     ecs_entity_t s;
     {
-        ECS_TRIGGER(world, Dummy, EcsOnAdd, Position, NULL);
+        ECS_TRIGGER(world, Dummy, EcsOnAdd, Position);
         s = Dummy;
     }
 
-    ECS_TRIGGER(world, Dummy, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, Dummy, EcsOnAdd, Position);
 
     test_assert(s == Dummy);
 
@@ -415,7 +415,7 @@ void SystemMisc_redefine_row_system() {
 static int is_invoked;
 
 static
-void IsInvoked(ecs_rows_t *rows) {
+void IsInvoked(ecs_iter_t *it) {
     is_invoked ++;
 }
 
@@ -473,21 +473,21 @@ void SystemMisc_system_w_or_disabled_and_prefab() {
 }
 
 static
-void TableColumns(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+void TableColumns(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    ecs_type_t type = ecs_table_type(rows);
+    ecs_type_t type = ecs_table_type(it);
     test_int(2, ecs_vector_count(type));
 
     ecs_entity_t *components = ecs_vector_first(type, ecs_entity_t);
     test_int(components[0], ecs_entity(Position));
     test_int(components[1], ecs_entity(Velocity));
 
-    void *column_0 = ecs_table_column(rows, 0);
+    void *column_0 = ecs_table_column(it, 0);
     test_assert(column_0 == p);
 
-    void *column_1 = ecs_table_column(rows, 1);
+    void *column_1 = ecs_table_column(it, 1);
     test_assert(column_1 == v);
 
     is_invoked ++;
@@ -765,24 +765,25 @@ void SystemMisc_dont_enable_after_rematch() {
     ecs_set_context(world, &ctx);
 
     /* System is enabled but doesn't match with any entities */
-    test_bool(ecs_is_enabled(world, Dummy), true);
+    
+    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), false);
     ecs_progress(world, 1);
     test_int(ctx.count, 0);
 
     /* Explicitly disable system before triggering a rematch */
     ecs_enable(world, Dummy, false);
-    test_bool(ecs_is_enabled(world, Dummy), false);
+    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), true);
 
     /* Trigger a rematch. System should still be disabled after this */
     ecs_add(world, Prefab, Velocity);
-    test_bool(ecs_is_enabled(world, Dummy), false);
+    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), true);
 
     ecs_progress(world, 1);
     test_int(ctx.count, 0);
 
     /* Enable system. It is matched, so should now be invoked */
     ecs_enable(world, Dummy, true);
-    test_bool(ecs_is_enabled(world, Dummy), true);
+    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), false);
 
     ecs_progress(world, 1);
     test_int(ctx.count, 1);
@@ -790,19 +791,19 @@ void SystemMisc_dont_enable_after_rematch() {
     ecs_fini(world);
 }
 
-static void SysA(ecs_rows_t *rows)
+static void SysA(ecs_iter_t *it)
 {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
-    ecs_add(rows->world, rows->entities[0], Velocity);
+    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    ecs_add(it->world, it->entities[0], Velocity);
 }
 
 static int b_invoked;
 static ecs_entity_t b_entity;
 
-static void SysB(ecs_rows_t *rows)
+static void SysB(ecs_iter_t *it)
 {
     b_invoked ++;
-    b_entity = rows->entities[0];
+    b_entity = it->entities[0];
 }
 
 void SystemMisc_ensure_single_merge() {
@@ -825,9 +826,9 @@ void SystemMisc_ensure_single_merge() {
 
 static int test_table_count_invoked;
 
-static void TestTableCount(ecs_rows_t *rows) {
-    test_int(rows->table_count, 2);
-    test_int(rows->inactive_table_count, 1);
+static void TestTableCount(ecs_iter_t *it) {
+    test_int(it->table_count, 2);
+    test_int(it->inactive_table_count, 1);
     test_table_count_invoked ++;
 }
 
@@ -864,7 +865,7 @@ void SystemMisc_match_system() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, SysA, 0, SYSTEM.Position);
+    ECS_SYSTEM(world, SysA, 0, SYSTEM:Position);
     ECS_SYSTEM(world, SysB, 0, Position);
 
     ecs_run(world, SysB, 0, NULL);
@@ -881,7 +882,7 @@ void SystemMisc_match_system_w_filter() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, SysA, 0, SYSTEM.Position);
+    ECS_SYSTEM(world, SysA, 0, SYSTEM:Position);
     ECS_SYSTEM(world, SysB, 0, Position);
 
     ecs_run_w_filter(world, SysB, 0, 0, 0, &(ecs_filter_t){
@@ -908,10 +909,10 @@ void SystemMisc_system_initial_state() {
 }
 
 static
-void FooSystem(ecs_rows_t *rows) { }
+void FooSystem(ecs_iter_t *it) { }
 
 static
-void BarSystem(ecs_rows_t *rows) { }
+void BarSystem(ecs_iter_t *it) { }
 
 void SystemMisc_add_own_component() {
     ecs_world_t * world = ecs_init();
@@ -932,12 +933,12 @@ static bool action_a_invoked;
 static bool action_b_invoked;
 
 static
-void ActionA(ecs_rows_t *rows) {
+void ActionA(ecs_iter_t *it) {
     action_a_invoked = true;
 }
 
 static
-void ActionB(ecs_rows_t *rows) {
+void ActionB(ecs_iter_t *it) {
     action_b_invoked = true;
 }
 
@@ -967,6 +968,35 @@ void SystemMisc_change_system_action() {
 
     test_bool(action_a_invoked, false);
     test_bool(action_b_invoked, true);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_system_readeactivate() {
+    ecs_world_t * world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+
+    /* No entities, system should be deactivated */
+    test_assert( ecs_has_entity(world, Dummy, EcsInactive));
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    /* System should be active, one entity is matched */
+    test_assert( !ecs_has_entity(world, Dummy, EcsInactive));
+
+    ecs_delete(world, e);
+
+    /* System is not automatically deactivated */
+    test_assert( !ecs_has_entity(world, Dummy, EcsInactive));
+
+    /* Manually deactivate system that aren't matched with entities */
+    ecs_deactivate_systems(world);
+
+    /* System should be deactivated */
+    test_assert( ecs_has_entity(world, Dummy, EcsInactive));
 
     ecs_fini(world);
 }

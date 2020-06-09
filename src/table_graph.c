@@ -52,6 +52,32 @@ ecs_type_t entities_to_type(
 }
 
 static
+void register_child_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_entity_t parent)
+{
+    if (stage == &world->stage) {
+        /* Register child table with parent */
+        ecs_vector_t *child_tables = ecs_map_get_ptr(
+                world->child_tables, ecs_vector_t*, parent);
+        if (!child_tables) {
+            child_tables = ecs_vector_new(ecs_table_t*, 1);
+        }
+        
+        ecs_table_t **el = ecs_vector_add(&child_tables, ecs_table_t*);
+        *el = table;
+
+        if (!world->child_tables) {
+            world->child_tables = ecs_map_new(ecs_table_t*, 1);
+        }
+
+        ecs_map_set(world->child_tables, parent, &child_tables);
+    }
+}
+
+static
 void init_edges(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -117,24 +143,9 @@ void init_edges(
 
         if (e & ECS_CHILDOF) {
             table->flags |= EcsTableHasParent;
-            if (stage == &world->stage) {
-                /* Register child table with parent */
-                ecs_entity_t parent = e & ECS_ENTITY_MASK;
-                ecs_vector_t *child_tables = ecs_map_get_ptr(
-                        world->child_tables, ecs_vector_t*, parent);
-                if (!child_tables) {
-                    child_tables = ecs_vector_new(ecs_table_t*, 1);
-                }
-                
-                ecs_table_t **el = ecs_vector_add(&child_tables, ecs_table_t*);
-                *el = table;
 
-                if (!world->child_tables) {
-                    world->child_tables = ecs_map_new(ecs_table_t*, 1);
-                }
-
-                ecs_map_set(world->child_tables, parent, &child_tables);
-            }
+            ecs_entity_t parent = e & ECS_ENTITY_MASK;
+            register_child_table(world, stage, table, parent);
         }
 
         if (e & (ECS_CHILDOF | ECS_INSTANCEOF)) {
@@ -142,6 +153,11 @@ void init_edges(
                 ecs_set_watch(world, stage, e & ECS_ENTITY_MASK);
             }
         }
+    }
+    
+    /* Register as root table */
+    if (!(table->flags & EcsTableHasParent)) {
+        register_child_table(world, stage, table, 0);
     }
 }
 
@@ -339,7 +355,7 @@ ecs_table_t *find_or_create_table_include(
             ecs_entity_t e = array[i];
             if (e & ECS_XOR) {
                 ecs_entity_t type = e & ECS_ENTITY_MASK;
-                const EcsType *type_ptr = ecs_get_ptr(world, type, EcsType);
+                const EcsType *type_ptr = ecs_get(world, type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 if (ecs_type_has_owned_entity(
@@ -645,7 +661,7 @@ int32_t count_occurrences(
     ecs_entity_t entity,
     int32_t constraint_index)    
 {
-    const EcsType *type_ptr = ecs_get_ptr(world, entity, EcsType);
+    const EcsType *type_ptr = ecs_get(world, entity, EcsType);
     ecs_assert(type_ptr != NULL, 
         ECS_INVALID_PARAMETER, "flag must be applied to type");
 

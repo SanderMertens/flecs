@@ -6,10 +6,10 @@ typedef struct Position {
 } Position;
 
 /* This system will be called when Position is added */
-void AddPosition(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void AddPosition(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
         printf("Position added\n");
@@ -17,10 +17,10 @@ void AddPosition(ecs_rows_t *rows) {
 }
 
 /* This system will be called when Position is set */
-void SetPosition(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void SetPosition(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         printf("Position set -> {%f, %f}\n",
             p[i].x, p[i].y);
     }

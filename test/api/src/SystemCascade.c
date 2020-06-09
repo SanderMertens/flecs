@@ -1,16 +1,16 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    Position *p_parent = ecs_column(rows, Position, 2);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    Position *p_parent = ecs_column(it, Position, 2);
 
-    test_assert(!p_parent || ecs_is_shared(rows, 2));
+    test_assert(!p_parent || ecs_is_shared(it, 2));
 
-    probe_system(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x ++;
         p[i].y ++;
 
@@ -31,7 +31,7 @@ void SystemCascade_cascade_depth_1() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE.Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE:Position);
 
     ecs_set(world, e_1, Position, {1, 2});
     ecs_set(world, e_2, Position, {1, 2});
@@ -60,22 +60,22 @@ void SystemCascade_cascade_depth_1() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 4);
     test_int(p->y, 6);
 
-    p = ecs_get_ptr(world, e_4, Position);
+    p = ecs_get(world, e_4, Position);
     test_assert(p != NULL);
     test_int(p->x, 4);
     test_int(p->y, 6);
@@ -95,7 +95,7 @@ void SystemCascade_cascade_depth_2() {
     ECS_ENTITY(world, e_5, Position);
     ECS_ENTITY(world, e_6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE.Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE:Position);
 
     ecs_set(world, e_1, Position, {1, 2});
     ecs_set(world, e_2, Position, {1, 2});
@@ -127,32 +127,32 @@ void SystemCascade_cascade_depth_2() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 4);
     test_int(p->y, 6);
 
-    p = ecs_get_ptr(world, e_4, Position);
+    p = ecs_get(world, e_4, Position);
     test_assert(p != NULL);
     test_int(p->x, 4);
     test_int(p->y, 6);
 
-    p = ecs_get_ptr(world, e_5, Position);
+    p = ecs_get(world, e_5, Position);
     test_assert(p != NULL);
     test_int(p->x, 6);
     test_int(p->y, 9);
 
-    p = ecs_get_ptr(world, e_6, Position);
+    p = ecs_get(world, e_6, Position);
     test_assert(p != NULL);
     test_int(p->x, 6);
     test_int(p->y, 9);
@@ -161,16 +161,16 @@ void SystemCascade_cascade_depth_2() {
 }
 
 static
-void AddParent(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    Position *p_parent = ecs_column(rows, Position, 2);
+void AddParent(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    Position *p_parent = ecs_column(it, Position, 2);
 
-    test_assert(!p_parent || ecs_is_shared(rows, 2));
+    test_assert(!p_parent || ecs_is_shared(it, 2));
 
-    probe_system(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (p_parent) {
             p[i].x += p_parent->x;
             p[i].y += p_parent->y;
@@ -188,7 +188,7 @@ void SystemCascade_add_after_match() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE.Position);
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE:Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
     ecs_set(world, e_1, Position, {1, 2});
@@ -228,22 +228,22 @@ void SystemCascade_add_after_match() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 4);
 
-    p = ecs_get_ptr(world, e_4, Position);
+    p = ecs_get(world, e_4, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 4);
@@ -261,7 +261,7 @@ void SystemCascade_adopt_after_match() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE.Position);
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE:Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
     ecs_set(world, e_1, Position, {1, 2});
@@ -295,22 +295,22 @@ void SystemCascade_adopt_after_match() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 4);
 
-    p = ecs_get_ptr(world, e_4, Position);
+    p = ecs_get(world, e_4, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 4);

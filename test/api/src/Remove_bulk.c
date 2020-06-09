@@ -25,7 +25,7 @@ void Remove_bulk_remove_comp_from_comp_to_empty() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( !ecs_has(world, e + i, Velocity));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -68,7 +68,7 @@ void Remove_bulk_remove_comp_from_comp_to_existing() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( !ecs_has(world, e + i, Velocity));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -248,8 +248,8 @@ void Remove_bulk_remove_all_tag() {
     test_int( ecs_count(world, Tag), 0);
 }
 
-void RemoveVelocity(ecs_rows_t *rows) {
-    probe_system(rows);
+void RemoveVelocity(ecs_iter_t *it) {
+    probe_system(it);
 }
 
 void Remove_bulk_on_remove() {
@@ -259,7 +259,7 @@ void Remove_bulk_on_remove() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_TRIGGER(world, RemoveVelocity, EcsOnRemove, Velocity, NULL);
+    ECS_TRIGGER(world, RemoveVelocity, EcsOnRemove, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -310,7 +310,7 @@ void Remove_bulk_remove_entity_comp() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( !ecs_has(world, e + i, Velocity));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -345,7 +345,7 @@ void Remove_bulk_remove_entity_tag() {
         test_assert( ecs_has(world, e + i, Position));
         test_assert( !ecs_has_entity(world, e + i, Tag));
 
-        const Position *p = ecs_get_ptr(world, e + i, Position);
+        const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
         test_int(p->x, i);
         test_int(p->y, i * 2);
@@ -362,7 +362,7 @@ void Remove_bulk_remove_entity_on_remove() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_TRIGGER(world, RemoveVelocity, EcsOnRemove, Velocity, NULL);
+    ECS_TRIGGER(world, RemoveVelocity, EcsOnRemove, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);

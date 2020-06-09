@@ -86,6 +86,34 @@ void Remove_type_from_empty(void);
 void Remove_not_added(void);
 
 // Testsuite 'Hierarchies'
+void Hierarchies_tree_iter_empty(void);
+void Hierarchies_tree_iter_1_table(void);
+void Hierarchies_tree_iter_2_tables(void);
+void Hierarchies_path_depth_0(void);
+void Hierarchies_path_depth_1(void);
+void Hierarchies_path_depth_2(void);
+void Hierarchies_rel_path_from_root(void);
+void Hierarchies_rel_path_from_self(void);
+void Hierarchies_rel_path_depth_1(void);
+void Hierarchies_rel_path_depth_2(void);
+void Hierarchies_rel_path_no_match(void);
+void Hierarchies_path_for_component_0(void);
+void Hierarchies_path_for_component_1(void);
+void Hierarchies_path_for_component_2(void);
+void Hierarchies_path_custom_sep(void);
+void Hierarchies_path_custom_prefix(void);
+void Hierarchies_path_prefix_rel_match(void);
+void Hierarchies_path_prefix_rel_no_match(void);
+void Hierarchies_lookup_depth_0(void);
+void Hierarchies_lookup_depth_1(void);
+void Hierarchies_lookup_depth_2(void);
+void Hierarchies_lookup_rel_0(void);
+void Hierarchies_lookup_rel_1(void);
+void Hierarchies_lookup_rel_2(void);
+void Hierarchies_lookup_custom_sep(void);
+void Hierarchies_lookup_custom_prefix(void);
+void Hierarchies_lookup_custom_prefix_from_root(void);
+void Hierarchies_lookup_self(void);
 void Hierarchies_delete_children(void);
 
 // Testsuite 'Add_bulk'
@@ -328,6 +356,7 @@ void SystemMisc_match_system_w_filter(void);
 void SystemMisc_system_initial_state(void);
 void SystemMisc_add_own_component(void);
 void SystemMisc_change_system_action(void);
+void SystemMisc_system_readeactivate(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -1229,8 +1258,120 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 1,
+        .testcase_count = 29,
         .testcases = (bake_test_case[]){
+            {
+                .id = "tree_iter_empty",
+                .function = Hierarchies_tree_iter_empty
+            },
+            {
+                .id = "tree_iter_1_table",
+                .function = Hierarchies_tree_iter_1_table
+            },
+            {
+                .id = "tree_iter_2_tables",
+                .function = Hierarchies_tree_iter_2_tables
+            },
+            {
+                .id = "path_depth_0",
+                .function = Hierarchies_path_depth_0
+            },
+            {
+                .id = "path_depth_1",
+                .function = Hierarchies_path_depth_1
+            },
+            {
+                .id = "path_depth_2",
+                .function = Hierarchies_path_depth_2
+            },
+            {
+                .id = "rel_path_from_root",
+                .function = Hierarchies_rel_path_from_root
+            },
+            {
+                .id = "rel_path_from_self",
+                .function = Hierarchies_rel_path_from_self
+            },
+            {
+                .id = "rel_path_depth_1",
+                .function = Hierarchies_rel_path_depth_1
+            },
+            {
+                .id = "rel_path_depth_2",
+                .function = Hierarchies_rel_path_depth_2
+            },
+            {
+                .id = "rel_path_no_match",
+                .function = Hierarchies_rel_path_no_match
+            },
+            {
+                .id = "path_for_component_0",
+                .function = Hierarchies_path_for_component_0
+            },
+            {
+                .id = "path_for_component_1",
+                .function = Hierarchies_path_for_component_1
+            },
+            {
+                .id = "path_for_component_2",
+                .function = Hierarchies_path_for_component_2
+            },
+            {
+                .id = "path_custom_sep",
+                .function = Hierarchies_path_custom_sep
+            },
+            {
+                .id = "path_custom_prefix",
+                .function = Hierarchies_path_custom_prefix
+            },
+            {
+                .id = "path_prefix_rel_match",
+                .function = Hierarchies_path_prefix_rel_match
+            },
+            {
+                .id = "path_prefix_rel_no_match",
+                .function = Hierarchies_path_prefix_rel_no_match
+            },
+            {
+                .id = "lookup_depth_0",
+                .function = Hierarchies_lookup_depth_0
+            },
+            {
+                .id = "lookup_depth_1",
+                .function = Hierarchies_lookup_depth_1
+            },
+            {
+                .id = "lookup_depth_2",
+                .function = Hierarchies_lookup_depth_2
+            },
+            {
+                .id = "lookup_rel_0",
+                .function = Hierarchies_lookup_rel_0
+            },
+            {
+                .id = "lookup_rel_1",
+                .function = Hierarchies_lookup_rel_1
+            },
+            {
+                .id = "lookup_rel_2",
+                .function = Hierarchies_lookup_rel_2
+            },
+            {
+                .id = "lookup_custom_sep",
+                .function = Hierarchies_lookup_custom_sep
+            },
+            {
+                .id = "lookup_custom_prefix",
+                .function = Hierarchies_lookup_custom_prefix
+            },
+            {
+                .id = "lookup_custom_prefix_from_root",
+                .function = Hierarchies_lookup_custom_prefix_from_root
+            },
+            {
+                .id = "lookup_self",
+                .function = Hierarchies_lookup_self
+            },
             {
                 .id = "delete_children",
                 .function = Hierarchies_delete_children
@@ -1975,7 +2116,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 48,
+        .testcase_count = 49,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -2168,6 +2309,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "change_system_action",
                 .function = SystemMisc_change_system_action
+            },
+            {
+                .id = "system_readeactivate",
+                .function = SystemMisc_system_readeactivate
             }
         }
     },

@@ -11,19 +11,19 @@ typedef Vector2D Position;
 typedef Vector2D Velocity;
 
 /* Implement a simple move system */
-void Move(ecs_rows_t *rows) {
+void Move(ecs_iter_t *it) {
     /* Get the two columns from the system signature */
-    Position *p = _ecs_column(rows, sizeof(Position), 1);
-    Velocity *v = _ecs_column(rows, sizeof(Velocity), 2);
+    Position *p = _ecs_column(it, sizeof(Position), 1);
+    Velocity *v = _ecs_column(it, sizeof(Velocity), 2);
 
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
 
         /* Print something to the console so we can see the system is being
          * invoked */
         printf("%s moved to {.x = %f, .y = %f}\n",
-            ecs_get_name(rows->world, rows->entities[i]),
+            ecs_get_name(it->world, it->entities[i]),
             p[i].x, p[i].y);
     }
 }
@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     /* Register components */
-    ecs_entity_t FLECS__EPosition = ecs_new_component(world, "Position", sizeof(Position), ECS_ALIGNOF(Position));
-    ecs_entity_t FLECS__EVelocity = ecs_new_component(world, "Velocity", sizeof(Velocity), ECS_ALIGNOF(Velocity));
+    ecs_entity_t FLECS__EPosition = ecs_new_component(world, 0, "Position", sizeof(Position), ECS_ALIGNOF(Position));
+    ecs_entity_t FLECS__EVelocity = ecs_new_component(world, 0, "Velocity", sizeof(Velocity), ECS_ALIGNOF(Velocity));
 
     /* Register system */
     ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position, Velocity", Move);

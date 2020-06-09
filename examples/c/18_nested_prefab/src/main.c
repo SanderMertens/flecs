@@ -39,10 +39,10 @@ int main(int argc, char *argv[]) {
     /* Print position of e and of the child. Note that since we did not override
      * any components, both position components are owned by the prefabs, not by
      * the instances. */
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     printf("Position of e = {%f, %f}\n", p->x, p->y);
 
-    p = ecs_get_ptr(world, child, Position);
+    p = ecs_get(world, child, Position);
     printf("Position of Child = {%f, %f}\n", p->x, p->y);
 
     /* Cleanup */

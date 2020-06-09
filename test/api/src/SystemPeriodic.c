@@ -9,23 +9,23 @@ void install_test_abort() {
 }
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
 
-    if (rows->column_count >= 2) {
-        v = ecs_column(rows, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
     }
 
-    if (rows->column_count >= 3) {
-        m = ecs_column(rows, Mass, 3);
+    if (it->column_count >= 3) {
+        m = ecs_column(it, Mass, 3);
     }
 
-    probe_system(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -68,17 +68,17 @@ void SystemPeriodic_1_type_1_component() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -120,47 +120,47 @@ void SystemPeriodic_1_type_3_component() {
     test_int(ctx.c[0][2], ecs_entity(Mass));
     test_int(ctx.s[0][2], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
 
-    const Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    m = ecs_get_ptr(world, e_2, Mass);
+    m = ecs_get(world, e_2, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    m = ecs_get_ptr(world, e_3, Mass);
+    m = ecs_get(world, e_3, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -201,17 +201,17 @@ void SystemPeriodic_3_type_1_component() {
     test_int(ctx.c[2][0], ecs_entity(Position));
     test_int(ctx.s[2][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -260,47 +260,47 @@ void SystemPeriodic_2_type_3_component() {
     test_int(ctx.c[1][2], ecs_entity(Mass));
     test_int(ctx.s[1][2], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
 
-    const Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    m = ecs_get_ptr(world, e_2, Mass);
+    m = ecs_get(world, e_2, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    m = ecs_get_ptr(world, e_3, Mass);
+    m = ecs_get(world, e_3, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -338,17 +338,17 @@ void SystemPeriodic_1_type_1_component_1_tag() {
     test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -386,12 +386,12 @@ void SystemPeriodic_2_type_1_component_1_tag() {
     test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -430,12 +430,12 @@ void SystemPeriodic_2_type_1_and_1_not() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -476,22 +476,22 @@ void SystemPeriodic_2_type_2_and_1_not() {
     test_int(ctx.c[0][2], ecs_entity(Mass));
     test_int(ctx.s[0][2], 0);
     
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -534,12 +534,12 @@ void SystemPeriodic_2_type_2_and_2_not() {
     test_int(ctx.c[0][3], ecs_entity(Rotation));
     test_int(ctx.s[0][3], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -595,42 +595,42 @@ void SystemPeriodic_4_type_1_and_1_or() {
     test_int(ctx.c[2][1], ecs_entity(Velocity));
     test_int(ctx.s[2][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position_1);
+    p = ecs_get(world, e_2, Position_1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position_1);
+    p = ecs_get(world, e_3, Position_1);
     test_assert(p != NULL);
     test_int(p->x, 0);
     test_int(p->y, 0);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_4, Velocity);
+    v = ecs_get(world, e_4, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 0);
     test_int(v->y, 0);
@@ -684,42 +684,42 @@ void SystemPeriodic_4_type_1_and_1_or_of_3() {
     test_int(ctx.c[2][1], ecs_entity(Velocity));
     test_int(ctx.s[2][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position_2);
+    p = ecs_get(world, e_2, Position_2);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position_1);
+    p = ecs_get(world, e_3, Position_1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position_2);
+    p = ecs_get(world, e_3, Position_2);
     test_assert(p != NULL);
     test_int(p->x, 0);
     test_int(p->y, 0);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_4, Velocity);
+    v = ecs_get(world, e_4, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 0);
     test_int(v->y, 0);
@@ -819,27 +819,27 @@ void SystemPeriodic_2_type_1_and_1_optional() {
     test_int(ctx.c[1][1], ecs_entity(Velocity));
     test_int(ctx.s[1][1], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -888,37 +888,37 @@ void SystemPeriodic_2_type_2_and_1_optional() {
     test_int(ctx.c[1][2], ecs_entity(Mass));
     test_int(ctx.s[1][2], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    const Mass *m = ecs_get_ptr(world, e_1, Mass);
+    const Mass *m = ecs_get(world, e_1, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
@@ -982,52 +982,52 @@ void SystemPeriodic_6_type_1_and_2_optional() {
     test_int(ctx.c[3][2], ecs_entity(Mass));
     test_int(ctx.s[3][2], 0);   
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_4, Position);
+    p = ecs_get(world, e_4, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
 
-    const Mass *m = ecs_get_ptr(world, e_2, Mass);
+    const Mass *m = ecs_get(world, e_2, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
-    m = ecs_get_ptr(world, e_3, Mass);
+    m = ecs_get(world, e_3, Mass);
     test_assert(m != NULL);
     test_int(*m, 50);
 
     ecs_fini(world);
 }
 
-void Use_field(ecs_rows_t *rows) {
+void Use_field(ecs_iter_t *it) {
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        Position *p = ecs_field(rows, Position, 1, i);
-        Velocity *v = ecs_field(rows, Velocity, 2, i);
+    for (i = 0; i < it->count; i ++) {
+        Position *p = ecs_field(it, Position, 1, i);
+        Velocity *v = ecs_field(it, Velocity, 2, i);
 
         p->x += v->x;
         p->y += v->y;
@@ -1049,8 +1049,8 @@ void SystemPeriodic_use_fields_2_owned() {
 
     ecs_progress(world, 1);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
-    const Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Position *p = ecs_get(world, e_1, Position);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_int(p->x, 11);
     test_int(p->y, 22);
     test_int(v->x, 10);
@@ -1065,7 +1065,7 @@ void SystemPeriodic_use_fields_1_owned_1_shared() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Use_field, EcsOnUpdate, Position, PARENT.Velocity);
+    ECS_SYSTEM(world, Use_field, EcsOnUpdate, Position, PARENT:Velocity);
 
     ecs_entity_t e_1 = ecs_set(world, 0, Position, {1, 2});
     ecs_entity_t parent = ecs_set(world, 0, Velocity, {10, 20});
@@ -1073,8 +1073,8 @@ void SystemPeriodic_use_fields_1_owned_1_shared() {
 
     ecs_progress(world, 1);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
-    const Velocity *v = ecs_get_ptr(world, parent, Velocity);
+    const Position *p = ecs_get(world, e_1, Position);
+    const Velocity *v = ecs_get(world, parent, Velocity);
     test_int(p->x, 11);
     test_int(p->y, 22);
     test_int(v->x, 10);
@@ -1083,8 +1083,8 @@ void SystemPeriodic_use_fields_1_owned_1_shared() {
     ecs_fini(world);
 }
 
-static void Dummy_1(ecs_rows_t *rows) { probe_system(rows); }
-static void Dummy_2(ecs_rows_t *rows) { probe_system(rows); }
+static void Dummy_1(ecs_iter_t *it) { probe_system(it); }
+static void Dummy_2(ecs_iter_t *it) { probe_system(it); }
 
 void SystemPeriodic_match_2_systems_w_populated_table() {
     ecs_world_t *world = ecs_init();
@@ -1113,35 +1113,35 @@ void SystemPeriodic_match_2_systems_w_populated_table() {
     ecs_fini(world);
 }
 
-void TestOptional_w_column(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+void TestOptional_w_column(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
     test_assert(p != NULL);
     test_assert(v == NULL);
 
-    probe_system(rows);
+    probe_system(it);
 }
 
-void TestOptional_w_shared(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+void TestOptional_w_shared(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
     test_assert(p != NULL);
     test_assert(v == NULL);
 
-    probe_system(rows);
+    probe_system(it);
 }
 
-void TestOptional_w_field(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void TestOptional_w_field(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     test_assert(p != NULL);
 
-    probe_system(rows);
+    probe_system(it);
 
-    for (int i = 0; i < rows->count; i ++) {
-        Velocity *v = ecs_field(rows, Velocity, 2, i);
+    for (int i = 0; i < it->count; i ++) {
+        Velocity *v = ecs_field(it, Velocity, 2, i);
         test_assert(v == NULL);
     }
 }
@@ -1182,7 +1182,7 @@ void SystemPeriodic_ensure_optional_is_null_shared() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?PARENT.Velocity);
+    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?PARENT:Velocity);
     
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1238,7 +1238,7 @@ void SystemPeriodic_ensure_optional_is_null_field_shared() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?PARENT.Velocity);
+    ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?PARENT:Velocity);
     
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1264,22 +1264,22 @@ static int normal_count_2;
 static int normal_count_3;
 
 static
-void OnPeriodSystem(ecs_rows_t *rows) {
+void OnPeriodSystem(ecs_iter_t *it) {
     on_period_count ++;
 }
 
 static
-void NormalSystem(ecs_rows_t *rows) {
+void NormalSystem(ecs_iter_t *it) {
     normal_count ++;
 }
 
 static
-void NormalSystem2(ecs_rows_t *rows) {
+void NormalSystem2(ecs_iter_t *it) {
     normal_count_2 ++;
 }
 
 static
-void NormalSystem3(ecs_rows_t *rows) {
+void NormalSystem3(ecs_iter_t *it) {
     normal_count_3 ++;
 }
 
@@ -1450,17 +1450,17 @@ void SystemPeriodic_disabled_nested_feature() {
     ecs_fini(world);
 }
 
-void TwoRefs(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+void TwoRefs(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    test_assert(ecs_is_shared(rows, 1));
-    test_assert(ecs_is_shared(rows, 2));
+    test_assert(ecs_is_shared(it, 1));
+    test_assert(ecs_is_shared(it, 2));
 
     (void)p;
     (void)v;
 
-    probe_system(rows);
+    probe_system(it);
 }
 
 void SystemPeriodic_two_refs() {
@@ -1473,7 +1473,7 @@ void SystemPeriodic_two_refs() {
     ECS_ENTITY(world, E, Position, Velocity);
     ECS_ENTITY(world, E2, Mass);
 
-    ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, E.Position, E.Velocity, .E, Mass);
+    ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, E:Position, E:Velocity, :E, Mass);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1633,8 +1633,8 @@ void SystemPeriodic_match_prefab_and_normal() {
 }
 
 static
-void TestIsSharedOnNotSet(ecs_rows_t *rows) {
-    test_assert(ecs_is_shared(rows, 2) == false);
+void TestIsSharedOnNotSet(ecs_iter_t *it) {
+    test_assert(ecs_is_shared(it, 2) == false);
 }
 
 void SystemPeriodic_is_shared_on_column_not_set() {
@@ -1666,7 +1666,7 @@ void SystemPeriodic_owned_column() {
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, OWNED.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, OWNED:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1695,7 +1695,7 @@ void SystemPeriodic_owned_not_column() {
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !OWNED.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !OWNED:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1725,7 +1725,7 @@ void SystemPeriodic_shared_column() {
     ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
     ECS_ENTITY(world, e3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SHARED.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SHARED:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1754,7 +1754,7 @@ void SystemPeriodic_shared_not_column() {
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !SHARED.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !SHARED:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1783,7 +1783,7 @@ void SystemPeriodic_container_dont_match_inheritance() {
     ECS_ENTITY(world, e1, Position, INSTANCEOF | base);
     ECS_ENTITY(world, e2, Position, CHILDOF | base);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, PARENT.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, PARENT:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1812,7 +1812,7 @@ void SystemPeriodic_cascade_dont_match_inheritance() {
     ECS_ENTITY(world, e1, Position, INSTANCEOF | base);
     ECS_ENTITY(world, e2, Position, CHILDOF | base);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1844,7 +1844,7 @@ void SystemPeriodic_not_from_singleton() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !$.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !$:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1871,7 +1871,7 @@ void SystemPeriodic_not_from_entity() {
     ECS_ENTITY(world, e, Position);
     ECS_ENTITY(world, e2, 0);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !e2.Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !e2:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1890,10 +1890,10 @@ void SystemPeriodic_not_from_entity() {
 }
 
 static
-void TestContext(ecs_rows_t *rows) {
-    void *world_ctx = ecs_get_context(rows->world);
-    test_assert(world_ctx == rows->param);
-    int32_t *param = rows->param;
+void TestContext(ecs_iter_t *it) {
+    void *world_ctx = ecs_get_context(it->world);
+    test_assert(world_ctx == it->param);
+    int32_t *param = it->param;
     (*param) ++;
 }
 
@@ -1907,7 +1907,7 @@ void SystemPeriodic_sys_context() {
 
     ecs_set(world, TestContext, EcsContext, {&param});
 
-    const EcsContext *ctx = ecs_get_ptr(world, TestContext, EcsContext);
+    const EcsContext *ctx = ecs_get(world, TestContext, EcsContext);
     test_assert(ctx != NULL);
     test_assert(ctx->ctx == &param);
 
@@ -1937,8 +1937,8 @@ void SystemPeriodic_get_sys_context_from_param() {
 static bool Test_feld_w_zero_size_invoked = false;
 
 static
-void Test_feld_w_zero_size(ecs_rows_t *rows) {
-    test_assert(_ecs_field(rows, 0, 1, 0) != _ecs_field(rows, 0, 1, 1));
+void Test_feld_w_zero_size(ecs_iter_t *it) {
+    test_assert(_ecs_field(it, 0, 1, 0) != _ecs_field(it, 0, 1, 1));
     Test_feld_w_zero_size_invoked = true;
 }
 
@@ -1960,9 +1960,9 @@ void SystemPeriodic_use_field_w_0_size() {
 
 static ecs_entity_t dummy_invoked = 0;
 
-static void Dummy(ecs_rows_t *rows) {
+static void Dummy(ecs_iter_t *it) {
     test_assert(dummy_invoked == 0);
-    dummy_invoked = rows->entities[0];
+    dummy_invoked = it->entities[0];
 }
 
 void SystemPeriodic_owned_only() {
@@ -1970,7 +1970,7 @@ void SystemPeriodic_owned_only() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, OWNED.Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, OWNED:Position);
 
     ecs_entity_t e = ecs_new(world, Position);
 
@@ -1981,11 +1981,11 @@ void SystemPeriodic_owned_only() {
     ecs_fini(world);
 }
 
-static void AssertReadonly(ecs_rows_t *rows) {
+static void AssertReadonly(ecs_iter_t *it) {
     test_assert(dummy_invoked == 0);
-    dummy_invoked = rows->entities[0];
+    dummy_invoked = it->entities[0];
 
-    test_assert( ecs_is_readonly(rows, 1) == true);
+    test_assert( ecs_is_readonly(it, 1) == true);
 }
 
 void SystemPeriodic_shared_only() {
@@ -1993,7 +1993,7 @@ void SystemPeriodic_shared_only() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, SHARED.Position);
+    ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, SHARED:Position);
 
     ecs_entity_t base = ecs_new(world, Position);
     ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);

@@ -44,6 +44,9 @@
  * Increasing this value will increase consumption of stack space. */
 #define ECS_MAX_ADD_REMOVE (32)
 
+/* Maximum length of an entity name, including 0 terminator */
+#define ECS_MAX_NAME_LENGTH (64)
+
 typedef uint64_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
 
 /** Callback used by the system signature expression parser */
@@ -245,7 +248,7 @@ typedef struct ecs_on_demand_in_t {
  * ran, and 'time_passed' is decreased by 'period'. 
  */
 typedef struct EcsSystem {
-    ecs_iter_action_t action;    /* Callback to be invoked for matching rows */
+    ecs_view_action_t action;    /* Callback to be invoked for matching it */
     void *ctx;                     /* Userdata for system */
     float time_spent;              /* Time spent on running system */
     int32_t invoke_count;          /* Number of times system is invoked */
@@ -293,6 +296,7 @@ struct ecs_ei_t {
 };
 
 typedef enum ecs_op_kind_t {
+    EcsOpNone,
     EcsOpAdd,
     EcsOpRemove,   
     EcsOpSet,
@@ -347,21 +351,20 @@ typedef struct ecs_entity_info_t {
 /** A type describing a unit of work to be executed by a worker thread. */ 
 typedef struct ecs_job_t {
     ecs_entity_t system;          /* System handle */
-    EcsSystem *system_data;    /* System to run */
-    int32_t offset;              /* Start index in row chunk */
-    int32_t limit;               /* Total number of rows to process */
+    EcsSystem *system_data;       /* System to run */
+    int32_t offset;               /* Start index in row chunk */
+    int32_t limit;                /* Total number of rows to process */
 } ecs_job_t;
 
 /** A type desribing a worker thread. When a system is invoked by a worker
  * thread, it receives a pointer to an ecs_thread_t instead of a pointer to an 
- * ecs_world_t (provided by the ecs_rows_t type). When this ecs_thread_t is passed down
+ * ecs_world_t (provided by the ecs_iter_t type). When this ecs_thread_t is passed down
  * into the flecs API, the API functions are able to tell whether this is an
  * ecs_thread_t or an ecs_world_t by looking at the 'magic' number. This allows the
  * API to transparently resolve the stage to which updates should be written,
  * without requiring different API calls when working in multi threaded mode. */
 typedef struct ecs_thread_t {
     int32_t magic;                           /* Magic number to verify thread pointer */
-    int32_t job_count;                       /* Number of jobs scheduled for thread */
     ecs_world_t *world;                       /* Reference to world */
     ecs_job_t *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
     ecs_stage_t *stage;                       /* Stage for thread */
@@ -455,13 +458,13 @@ struct ecs_world_t {
 
     /* -- Multithreading -- */
 
-    ecs_vector_t *worker_threads;    /* Worker threads */
-    ecs_os_cond_t thread_cond;       /* Signal that worker threads can start */
-    ecs_os_mutex_t thread_mutex;     /* Mutex for thread condition */
-    ecs_os_cond_t job_cond;          /* Signal that worker thread job is done */
-    ecs_os_mutex_t job_mutex;        /* Mutex for protecting job counter */
-    int32_t jobs_finished;          /* Number of jobs finished */
-    int32_t threads_running;        /* Number of threads running */
+    ecs_vector_t *workers;           /* Worker threads */
+    
+    ecs_os_cond_t worker_cond;       /* Signal that worker threads can start */
+    ecs_os_cond_t sync_cond;         /* Signal that worker thread job is done */
+    ecs_os_mutex_t sync_mutex;       /* Mutex for job_cond */
+    int32_t workers_running;         /* Number of threads running */
+    int32_t workers_waiting;         /* Number of workers waiting on sync */
 
 
     /* -- Time management -- */

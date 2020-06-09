@@ -2,9 +2,9 @@
 
 #define MOVE_SPEED (5)
 
-void MoveSquare(ecs_rows_t *rows) {
-    EcsInput *input = ecs_column(rows, EcsInput, 1);
-    EcsPosition2D *position = ecs_column(rows, EcsPosition2D, 2);
+void MoveSquare(ecs_iter_t *it) {
+    EcsInput *input = ecs_column(it, EcsInput, 1);
+    EcsPosition2D *position = ecs_column(it, EcsPosition2D, 2);
 
     int x_v = input->keys[ECS_KEY_D].state || input->keys[ECS_KEY_RIGHT].state;
         x_v -= input->keys[ECS_KEY_A].state || input->keys[ECS_KEY_LEFT].state;

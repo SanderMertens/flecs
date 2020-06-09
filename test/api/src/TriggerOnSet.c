@@ -1,18 +1,18 @@
 #include <api.h>
 
 static
-void OnSet(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void OnSet(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     Velocity *v = NULL;
-    if (rows->column_count >= 2) {
-        v = ecs_column(rows, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
     }
 
-    probe_system(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x ++;
 
         if (v) {
@@ -47,7 +47,7 @@ void TriggerOnSet_set() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 20);
@@ -75,7 +75,7 @@ void TriggerOnSet_set_new() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 20);
@@ -106,14 +106,14 @@ void TriggerOnSet_set_again() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 20);
 
     ecs_set_ptr(world, e, Position, p);
 
-    p = ecs_get_ptr(world, e, Position);
+    p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 12);
     test_int(p->y, 20);
@@ -141,7 +141,7 @@ void TriggerOnSet_clone() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 20);
@@ -177,7 +177,7 @@ void TriggerOnSet_clone_w_value() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 20);
@@ -196,7 +196,7 @@ void TriggerOnSet_clone_w_value() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 12);
     test_int(p->y, 20);
@@ -206,16 +206,16 @@ static bool add_called;
 static bool set_called;
 
 static
-void OnAdd_check_order(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void OnAdd_check_order(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     test_assert(!add_called);
     test_assert(!set_called);
 
-    probe_system(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 1;
         p[i].y = 2;    
     }
@@ -224,16 +224,16 @@ void OnAdd_check_order(ecs_rows_t *rows) {
 }
 
 static
-void OnSet_check_order(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void OnSet_check_order(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    probe_system(rows);
+    probe_system(it);
 
     test_assert(add_called);
     test_assert(!set_called);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x ++;
     }
 
@@ -246,7 +246,7 @@ void TriggerOnSet_set_and_add_system() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, OnSet_check_order, EcsOnSet, Position);
-    ECS_TRIGGER(world, OnAdd_check_order, EcsOnAdd, Position, NULL);
+    ECS_TRIGGER(world, OnAdd_check_order, EcsOnAdd, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -269,7 +269,7 @@ void TriggerOnSet_set_and_add_system() {
     test_int(ctx.c[1][0], ecs_entity(Position));
     test_int(ctx.s[1][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 20);
@@ -278,18 +278,18 @@ void TriggerOnSet_set_and_add_system() {
 }
 
 static
-void OnSetShared(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void OnSetShared(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     Velocity *v = NULL;
-    if (rows->column_count >= 2) {
-        v = ecs_column(rows, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
     }
 
-    probe_system(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (v) {
             v[i].x = p->x;
             v[i].y = p->y;
@@ -324,9 +324,9 @@ void TriggerOnSet_on_set_after_override() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], Prefab);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
-    test_assert(p == ecs_get_ptr(world, Prefab, Position));
+    test_assert(p == ecs_get(world, Prefab, Position));
     test_int(p->x, 1);
     test_int(p->y, 3);
 
@@ -339,7 +339,7 @@ void TriggerOnSet_on_set_after_override() {
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 0);
 
-    const Position *p_after = ecs_get_ptr(world, e, Position);
+    const Position *p_after = ecs_get(world, e, Position);
     test_assert(p_after != NULL);
     test_assert(p != p_after);
     test_int(p_after->x, 1);
@@ -360,7 +360,7 @@ void TriggerOnSet_on_set_after_override() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);    
 
-    p_after = ecs_get_ptr(world, e, Position);
+    p_after = ecs_get(world, e, Position);
     test_assert(p_after != NULL);
     test_assert(p != p_after);
     test_int(p_after->x, 2);
@@ -396,7 +396,7 @@ void TriggerOnSet_on_set_after_override_w_new() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
@@ -429,17 +429,17 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0); 
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
 
-    p = ecs_get_ptr(world, e + 1, Position);
+    p = ecs_get(world, e + 1, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
 
-    p = ecs_get_ptr(world, e + 2, Position);
+    p = ecs_get(world, e + 2, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
@@ -472,15 +472,15 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    const Position *p = ecs_get_ptr(world, e, Position);
+    const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
 }
 
 static
-void SetPosition(ecs_rows_t *rows) {
-    probe_system(rows);
+void SetPosition(ecs_iter_t *it) {
+    probe_system(it);
 }
 
 void TriggerOnSet_on_set_after_snapshot_restore() {

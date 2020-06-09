@@ -28,7 +28,8 @@ int main(int argc, char *argv[]) {
         /* Specify the RootPrefab as the parent for the nested prefab. This will
          * cause the child prefab to be instantiated whenever an instanceof
          * RootPrefab is created. */
-        flecs::prefab(world, "Child", Root)
+        flecs::prefab(world, "Child")
+            .add_childof(Root)
             .set<Position>({30, 40});
 
     auto e = flecs::entity(world)

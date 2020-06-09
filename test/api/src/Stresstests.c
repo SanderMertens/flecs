@@ -14,7 +14,7 @@ void add_random(
         }
         test_assert( ecs_get_type(world, entity) != NULL);
         test_assert( ecs_has_entity(world, entity, component));
-        test_assert( ecs_get_ptr_w_entity(world, entity, component) != NULL);
+        test_assert( ecs_get_w_entity(world, entity, component) != NULL);
     }    
 }
 
@@ -32,7 +32,7 @@ void set_random(
         test_assert( ecs_get_type(world, e) != NULL);
         test_assert( ecs_has_entity(world, e, component));
 
-        const void *comp_ptr = ecs_get_ptr_w_entity(world, e, component);
+        const void *comp_ptr = ecs_get_w_entity(world, e, component);
         test_assert(comp_ptr != NULL);
 
         test_assert( !memcmp(expect, comp_ptr, size) );
@@ -40,56 +40,56 @@ void set_random(
 }
 
 static
-void Delete_above_1000(ecs_rows_t *rows) {
+void Delete_above_1000(ecs_iter_t *it) {
     int i;
 
-    for (i = 0; i < rows->count; i ++) {
-        if ((i + rows->frame_offset) > 1000) {
-            ecs_delete(rows->world, rows->entities[i]);
+    for (i = 0; i < it->count; i ++) {
+        if ((i + it->frame_offset) > 1000) {
+            ecs_delete(it->world, it->entities[i]);
         }
     }
 }
 
 static
-void Add_random(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);
+void Add_random(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        add_random(rows->world, 0, ctx->component);
-        add_random(rows->world, rows->entities[i], ctx->component_2);
-        add_random(rows->world, rows->entities[i], ctx->component_3);
+    for (i = 0; i < it->count; i ++) {
+        add_random(it->world, 0, ctx->component);
+        add_random(it->world, it->entities[i], ctx->component_2);
+        add_random(it->world, it->entities[i], ctx->component_3);
         ctx->entity_count ++;
     }
 }
 
 static
-void Set_velocity_callback(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Velocity, v, 1);
+void Set_velocity_callback(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 1);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         v->x ++;
         v->y ++;
     }
 }
 
 static
-void Set_random(ecs_rows_t *rows) {
-    IterData *ctx = ecs_get_context(rows->world);             
+void Set_random(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);             
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         Position pos = {10, 20};
-        set_random(rows->world, 0, ctx->component, &pos, &pos, sizeof(Position));
+        set_random(it->world, 0, ctx->component, &pos, &pos, sizeof(Position));
 
         Velocity vel = {30, 40};
         Velocity vel_expect = {31, 41};
-        set_random(rows->world, rows->entities[i], ctx->component_2, &vel, &vel_expect,
+        set_random(it->world, it->entities[i], ctx->component_2, &vel, &vel_expect,
             sizeof(Velocity));
 
         Rotation rot = {50};
-        set_random(rows->world, rows->entities[i], ctx->component_3, &rot, &rot,
+        set_random(it->world, it->entities[i], ctx->component_3, &rot, &rot,
             sizeof(Rotation));
 
         ctx->entity_count ++;

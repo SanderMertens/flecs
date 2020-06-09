@@ -172,7 +172,7 @@ public:
 
 private:
     void init(int32_t count) {
-        m_map = ecs_map_new(sizeof(T), count);
+        m_map = ecs_map_new(T, count);
     }
 
     ecs_map_t *m_map;

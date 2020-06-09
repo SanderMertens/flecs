@@ -99,6 +99,34 @@
         }, {
             "id": "Hierarchies",
             "testcases": [
+                "tree_iter_empty",
+                "tree_iter_1_table",
+                "tree_iter_2_tables",
+                "path_depth_0",
+                "path_depth_1",
+                "path_depth_2",
+                "rel_path_from_root",
+                "rel_path_from_self",
+                "rel_path_depth_1",
+                "rel_path_depth_2",
+                "rel_path_no_match",
+                "path_for_component_0",
+                "path_for_component_1",
+                "path_for_component_2",
+                "path_custom_sep",
+                "path_custom_prefix",
+                "path_prefix_rel_match",
+                "path_prefix_rel_no_match",
+                "lookup_depth_0",
+                "lookup_depth_1",
+                "lookup_depth_2",
+                "lookup_rel_0",
+                "lookup_rel_1",
+                "lookup_rel_2",
+                "lookup_custom_sep",
+                "lookup_custom_prefix",
+                "lookup_custom_prefix_from_root",
+                "lookup_self",
                 "delete_children"
             ]
         }, {
@@ -370,7 +398,8 @@
                 "match_system_w_filter",
                 "system_initial_state",
                 "add_own_component",
-                "change_system_action"
+                "change_system_action",
+                "system_readeactivate"
             ]
         }, {
             "id": "TriggerOnAdd",

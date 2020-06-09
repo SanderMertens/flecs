@@ -52,15 +52,15 @@ int main(int argc, char *argv[]) {
     });
 
     /* Iterate over entities matching the query in a nested for loop */
-    for (auto rows : q) {
-        flecs::column<Position> p(rows, 1); 
-        flecs::column<Velocity> v(rows, 2);
+    for (auto it : q) {
+        flecs::column<Position> p(it, 1); 
+        flecs::column<Velocity> v(it, 2);
    
-        for (auto row : rows) {
+        for (auto row : it) {
             p[row].x += v[row].x;
             p[row].y += v[row].y;
 
-            std::cout << "Moved " << rows.entity(row).name() << " to {" <<
+            std::cout << "Moved " << it.entity(row).name() << " to {" <<
                 p[row].x << ", " << p[row].y << "}" << std::endl;
         }
     }
