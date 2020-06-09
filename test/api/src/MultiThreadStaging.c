@@ -265,7 +265,6 @@ void New_w_count(ecs_view_t *view) {
     ecs_bulk_new(view->world, Position, 10);
 }
 
-
 void MultiThreadStaging_new_w_count() {
     ecs_world_t *world = ecs_init();
 

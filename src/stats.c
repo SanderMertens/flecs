@@ -106,7 +106,7 @@ void StatsCollectWorldStats(ecs_view_t *view) {
     stats->components_count = ecs_count(world, EcsComponent);
     stats->col_systems_count = ecs_count(world, EcsSystem);
     stats->tables_count = ecs_sparse_count(world->stage.tables);
-    stats->threads_count = ecs_vector_count(world->worker_threads);
+    stats->threads_count = ecs_vector_count(world->workers);
     
     stats->frame_seconds_total = world->stats.frame_time_total;
     stats->system_seconds_total = world->stats.system_time_total;
@@ -193,7 +193,7 @@ void compute_world_memory(
     stats->world_memory.allocd_bytes = sizeof(ecs_world_t);
 
     /* Add memory spent on worker threads to world memory */
-    ecs_vector_memory(world->worker_threads, ecs_thread_t,
+    ecs_vector_memory(world->workers, ecs_thread_t,
         &stats->world_memory.allocd_bytes, &stats->world_memory.used_bytes);
 
     /* Add memory spent on on demand lookup structures to system memory */

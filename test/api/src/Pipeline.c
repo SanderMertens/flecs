@@ -381,13 +381,13 @@ void Pipeline_merge_after_staged_out() {
 
     test_int(stats->systems_ran_frame, 2);
     test_int(stats->merge_count_total, 2);
-    test_int(stats->pipeline_build_count_total, 1);
+    test_int(stats->pipeline_build_count_total, 2);
 
     test_int(sys_out_invoked, 1);
     test_int(sys_in_invoked, 1);
 
     ecs_progress(world, 1);
-    test_int(stats->pipeline_build_count_total, 1);
+    test_int(stats->pipeline_build_count_total, 2);
 
     ecs_fini(world);
 }
@@ -409,13 +409,13 @@ void Pipeline_merge_after_not_out() {
 
     test_int(stats->systems_ran_frame, 2);
     test_int(stats->merge_count_total, 2);
-    test_int(stats->pipeline_build_count_total, 1);
+    test_int(stats->pipeline_build_count_total, 2);
 
     test_int(sys_out_invoked, 1);
     test_int(sys_in_invoked, 1);
 
     ecs_progress(world, 1);
-    test_int(stats->pipeline_build_count_total, 1);
+    test_int(stats->pipeline_build_count_total, 2);
 
     ecs_fini(world);
 }

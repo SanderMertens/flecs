@@ -365,7 +365,6 @@ typedef struct ecs_job_t {
  * without requiring different API calls when working in multi threaded mode. */
 typedef struct ecs_thread_t {
     int32_t magic;                           /* Magic number to verify thread pointer */
-    int32_t job_count;                       /* Number of jobs scheduled for thread */
     ecs_world_t *world;                       /* Reference to world */
     ecs_job_t *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
     ecs_stage_t *stage;                       /* Stage for thread */
@@ -459,13 +458,13 @@ struct ecs_world_t {
 
     /* -- Multithreading -- */
 
-    ecs_vector_t *worker_threads;    /* Worker threads */
-    ecs_os_cond_t thread_cond;       /* Signal that worker threads can start */
-    ecs_os_mutex_t thread_mutex;     /* Mutex for thread condition */
-    ecs_os_cond_t job_cond;          /* Signal that worker thread job is done */
-    ecs_os_mutex_t job_mutex;        /* Mutex for protecting job counter */
-    int32_t jobs_finished;          /* Number of jobs finished */
-    int32_t threads_running;        /* Number of threads running */
+    ecs_vector_t *workers;           /* Worker threads */
+    
+    ecs_os_cond_t worker_cond;       /* Signal that worker threads can start */
+    ecs_os_cond_t sync_cond;         /* Signal that worker thread job is done */
+    ecs_os_mutex_t sync_mutex;       /* Mutex for job_cond */
+    int32_t workers_running;         /* Number of threads running */
+    int32_t workers_waiting;         /* Number of workers waiting on sync */
 
 
     /* -- Time management -- */

@@ -345,7 +345,8 @@ ecs_entity_t ecs_run_intern(
     int32_t offset,
     int32_t limit,
     const ecs_filter_t *filter,
-    void *param) 
+    void *param,
+    bool ran_by_app) 
 {
     if (!param) {
         param = system_data->ctx;
@@ -355,7 +356,8 @@ ecs_entity_t ecs_run_intern(
     ecs_entity_t tick_source = system_data->tick_source;
 
     if (tick_source) {
-        const EcsTickSource *tick = ecs_get(real_world, tick_source, EcsTickSource);
+        const EcsTickSource *tick = ecs_get(
+            real_world, tick_source, EcsTickSource);
 
         if (tick) {
             time_elapsed = tick->time_elapsed;
@@ -400,8 +402,18 @@ ecs_entity_t ecs_run_intern(
 
     /* If no filter is provided, just iterate tables & invoke action */
     if (!filter) {
-        while (ecs_query_next(&view)) {
-            action(&view);
+        if (ran_by_app || world == real_world) {
+            while (ecs_query_next(&view)) {
+                action(&view);
+            }
+        } else {
+            ecs_thread_t *thread = (ecs_thread_t*)world;
+            int32_t total = ecs_vector_count(real_world->workers);
+            int32_t current = thread->index;
+
+            while (ecs_query_next_worker(&view, current, total)) {
+                action(&view);
+            }
         }
 
     /* If filter is provided, match each table with the provided filter */
@@ -451,7 +463,7 @@ ecs_entity_t ecs_run_w_filter(
 
     ecs_entity_t interrupted_by = ecs_run_intern(
         world, real_world, system, system_data, delta_time, offset, limit, 
-        filter, param);
+        filter, param, true);
 
     /* If world wasn't in progress when we entered this function, we need to
      * merge and reset the in_progress value */

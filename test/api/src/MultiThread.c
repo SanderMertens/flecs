@@ -818,7 +818,7 @@ void MultiThread_3_thread_test_combs_100_entity_2_types() {
     ECS_SYSTEM(world, TestSubset, 0, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, :TestSubset);
 
-    int i, ENTITIES = 20, THREADS = 3;
+    int i, ENTITIES = 100, THREADS = 3;
 
     ecs_entity_t e = ecs_bulk_new(world, Position, ENTITIES / 2);
     ecs_bulk_new(world, Type, ENTITIES / 2);

@@ -107,13 +107,15 @@ bool check_column(
 }
 
 static
-void build_pipeline(
+bool build_pipeline(
     ecs_world_t *world,
     EcsPipelineQuery *pq)
 {
-    if (pq->query->prev_match_count == pq->query->match_count) {
+    ecs_query_iter(pq->query);
+
+    if (pq->match_count == pq->query->match_count) {
         /* No need to rebuild the pipeline */
-        return;
+        return false;
     }
 
     world->stats.pipeline_build_count_total ++;
@@ -182,20 +184,20 @@ void build_pipeline(
 
     ecs_map_free(write_state);
 
+    /* Force sort of query as this could increase the match_count */
+    pq->match_count = pq->query->match_count;
     pq->ops = ops;
+
+    return true;
 }
 
 static
 int32_t iter_reset(
-    ecs_world_t *world,
-    EcsPipelineQuery *pq,
+    const EcsPipelineQuery *pq,
     ecs_view_t *view_out,
     ecs_pipeline_op_t **op_out,
     ecs_entity_t move_to)
 {
-    /* If query has matched with new tables, we need to rebuild the pipeline */
-    build_pipeline(world, pq);
-
     ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
@@ -224,37 +226,59 @@ int32_t iter_reset(
     return -1;
 }
 
-void ecs_progress_pipeline(
+int32_t ecs_pipeline_update(
     ecs_world_t *world,
-    ecs_entity_t pipeline,
-    float delta_time)
+    ecs_entity_t pipeline)
+{
+    EcsPipelineQuery *pq = ecs_get_mut(world, pipeline, EcsPipelineQuery, NULL);
+    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (build_pipeline(world, pq)) {
+        return ecs_vector_count(pq->ops);
+    } else {
+        return 0;
+    }
+}
+
+int32_t ecs_pipeline_begin(
+    ecs_world_t *world,
+    ecs_entity_t pipeline)
 {
     ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
 
-    /* Evaluate monitors and rebuild pipeline if rematching occurred */
     ecs_eval_component_monitors(world);
 
     EcsPipelineQuery *pq = ecs_get_mut(
         world, pipeline, EcsPipelineQuery, NULL);
-
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
     build_pipeline(world, pq);
 
-    ecs_time_t start = {0};
-    if (world->measure_frame_time) {
-        ecs_time_measure(&start);
-    }
+    return ecs_vector_count(pq->ops);
+}
+
+void ecs_pipeline_end(
+    ecs_world_t *world)
+{
+}
+
+void ecs_pipeline_progress(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    float delta_time)
+{
+    const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
+    ecs_world_t *real_world = world;
+    ecs_get_stage(&real_world);
 
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
-    world->stats.systems_ran_frame = 0;
-
-    ecs_staging_begin(world);
+    ecs_worker_begin(real_world);
     
     ecs_view_t view = ecs_query_iter(pq->query);
     while (ecs_query_next(&view)) {
@@ -264,26 +288,23 @@ void ecs_progress_pipeline(
         for(i = 0; i < view.count; i ++) {
             ecs_entity_t e = view.entities[i];
             
-            ecs_run_intern(world, world, e, &sys[i], delta_time, 0, 0, 
-                NULL, NULL);
+            ecs_run_intern(world, real_world, e, &sys[i], delta_time, 0, 0, 
+                NULL, NULL, false);
 
             ran_since_merge ++;
-            world->stats.systems_ran_frame ++;
+            real_world->stats.systems_ran_frame ++;
 
             if (op != op_last && ran_since_merge == op->count) {
                 ran_since_merge = 0;
                 op++;
-
-                ecs_staging_end(world, false);
-                ecs_staging_begin(world);
 
                 /* If the set of matched systems changed as a result of the
                  * merge, we have to reset the iterator and move it to our
                  * current position (system). If there are a lot of systems
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
-                if (pq->match_count != pq->query->match_count) {
-                    i = iter_reset(world, pq, &view, &op, e);
+                if (ecs_worker_sync(real_world)) {
+                    i = iter_reset(pq, &view, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
                     sys = ecs_column(&view, EcsSystem, 1);
                 }
@@ -291,11 +312,7 @@ void ecs_progress_pipeline(
         }
     }
 
-    ecs_staging_end(world, false);
-
-    if (world->measure_frame_time) {
-        world->stats.system_time_total += ecs_time_measure(&start);
-    }
+    ecs_worker_end(real_world);
 }
 
 static 

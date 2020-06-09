@@ -185,9 +185,9 @@ ecs_world_t *ecs_init(void) {
 
     world->stage_count = 2;
     world->worker_stages = NULL;
-    world->worker_threads = NULL;
-    world->jobs_finished = 0;
-    world->threads_running = 0;
+    world->workers = NULL;
+    world->workers_waiting = 0;
+    world->workers_running = 0;
     world->valid_schedule = false;
     world->quit_workers = false;
     world->in_progress = false;
@@ -326,7 +326,7 @@ int ecs_fini(
     assert(!world->is_merging);
 
     /* Cleanup threading administration */
-    if (world->worker_threads) {
+    if (world->workers) {
         ecs_set_threads(world, 0);
     }
 
@@ -517,7 +517,7 @@ bool ecs_progress(
 {
     float delta_time = ecs_frame_begin(world, user_delta_time);
 
-    ecs_progress_pipeline(world, world->pipeline, delta_time);
+    ecs_workers_progress(world);
 
     ecs_frame_end(world, delta_time);
 
@@ -670,7 +670,7 @@ uint16_t ecs_get_thread_index(
 int32_t ecs_get_threads(
     ecs_world_t *world)
 {
-    return ecs_vector_count(world->worker_threads);
+    return ecs_vector_count(world->workers);
 }
 
 bool ecs_enable_locking(

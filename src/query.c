@@ -928,19 +928,24 @@ void sort_tables(
         /* Check both if entities have moved (element 0) or if the component
          * we're sorting on has changed (index + 1) */
         if (is_dirty) {
-            /* Sort the tables */
+            /* Sort the table */
             sort_table(world, table, index, compare);
 
             /* Sorting the table will make it dirty again, so update our monitor
              * after the sort */
             m_table->monitor[0] = dirty_state[0];
-            m_table->monitor[index + 1] = dirty_state[index + 1];
+
+            if (index != -1) {
+                m_table->monitor[index + 1] = dirty_state[index + 1];
+            }
+
             tables_sorted = true;
         }
     }
 
     if (tables_sorted || query->match_count != query->prev_match_count) {
         build_sorted_tables(world, query);
+        query->match_count ++; /* Increase version if tables changed */
         query->prev_match_count = query->match_count;
     }
 }
@@ -1371,6 +1376,7 @@ void ecs_query_set_view(
     view->references = ecs_vector_first(table->references, ecs_reference_t);
     view->offset = row;
     view->count = count;
+    view->total_count = count;
 }
 
 /* Return next table */
@@ -1400,7 +1406,7 @@ bool ecs_query_next(
     int32_t offset = iter->offset;
     int32_t limit = iter->limit;
     int32_t remaining = iter->remaining;
-    int32_t prev_count = view->count;
+    int32_t prev_count = view->total_count;
     bool offset_limit = (offset | limit) != 0;
 
     int i;
@@ -1466,6 +1472,7 @@ bool ecs_query_next(
             view->entities = &entity_buffer[first];
             view->offset = first;
             view->count = count;
+            view->total_count = count;
         }
 
         view->table = world_table;
@@ -1481,6 +1488,54 @@ bool ecs_query_next(
     }
 
     return false;
+}
+
+bool ecs_query_next_worker(
+    ecs_view_t *view,
+    int32_t current,
+    int32_t total)
+{
+    int32_t per_worker, first, prev_offset = view->offset;
+
+    do {
+        if (!ecs_query_next(view)) {
+            return false;
+        }
+
+        int32_t count = view->count;
+        per_worker = count / total;
+        first = per_worker * current;
+
+        count -= per_worker * total;
+
+        if (count) {
+            if (current < count) {
+                per_worker ++;
+                first += current;
+            } else {
+                first += count;
+            }
+        }
+
+        if (!per_worker && !(view->query->flags & EcsQueryNeedsTables)) {
+            if (current == 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    } while (!per_worker);
+
+    view->frame_offset -= prev_offset;
+    view->count = per_worker;
+    view->offset += first;
+    view->entities = &view->entities[first];
+    view->frame_offset += first;
+    
+    // printf("%d: frame_offset: %d, offset = %d, count = %d\n", 
+    //     current, view->frame_offset, view->offset, view->count);
+
+    return true;
 }
 
 void ecs_query_sort(

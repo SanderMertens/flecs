@@ -233,7 +233,8 @@ struct ecs_view_t {
     int32_t frame_offset;       /* Offset relative to frame */
     int32_t table_offset;       /* Current active table being processed */
     int32_t offset;             /* Offset relative to current table */
-    int32_t count;              /* Number of rows to process by system */
+    int32_t count;              /* Number of entities to process by system */
+    int32_t total_count;        /* Total number of entities in table */
 
     ecs_entities_t *triggered_by; /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
@@ -1980,6 +1981,10 @@ FLECS_EXPORT
 bool ecs_query_next(
     ecs_view_t *iter);      
 
+bool ecs_query_next_worker(
+    ecs_view_t *view,
+    int32_t current,
+    int32_t total);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Snapshot API
