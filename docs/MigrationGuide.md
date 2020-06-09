@@ -18,9 +18,37 @@ Here are the highlights of v2:
 
 ### New features
 - A new pipeline architecture that enables fully customizable phases
-- Queries provide an interface to iterate over entities with the same benefits as systems (prematched) but without requiring a callback
+- Queries provide an interface to iterate over entities with the same benefits as systems (prematched) but without requiring a callback:
+
+```c
+ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
+ecs_iter_t it = ecs_query_iter(q);
+
+while (ecs_query_next(&it)) {
+    Position *p = ecs_column(&it, Position, 1);
+    Velocity *v = ecs_column(&it, Velocity, 2);
+
+    for (int i = 0; i < it.count; i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
+}
+```
+
 - Component lifecycle callbacks allow an application to specify behavior when a component is constructed, destucted, copied or moved
-- Many new functions to support working with hierarchies, including a new API to iterate over a hierarchy depth-first
+- Many new functions to support working with hierarchies, including a new API to iterate over a hierarchy depth-first:
+
+```c
+    ecs_iter_t it = ecs_tree_iter(world, parent);
+
+    while (ecs_tree_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            ecs_entity_t child = it.entities[i];
+            printf("%s\n", ecs_get_name(world, child));
+        }
+    }
+```
+
 - Sorting
 - Monitors are a new kind of system that is executed once when the system condition becomes true
 - OnSet systems are now faster and more capable than in v1, and make it much easier to create declarative, component-based APIs
