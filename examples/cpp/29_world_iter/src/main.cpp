@@ -28,9 +28,9 @@ int main(int argc, char *argv[]) {
         .set<Position>({30, 40})
         .set<Velocity>({1, 1});    
 
-    for (auto view : world) {
-        flecs::type table_type = view.table_type();
+    for (auto it : world) {
+        flecs::type table_type = it.table_type();
         std::cout << "Iterating table [" << table_type.str() << "]" 
-                  << " (" << view.count() << " entities)" << std::endl;
+                  << " (" << it.count() << " entities)" << std::endl;
     }
 }

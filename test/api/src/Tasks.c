@@ -1,7 +1,7 @@
 #include <api.h>
 
-void Task(ecs_view_t *view) {
-    probe_system(view);
+void Task(ecs_iter_t *it) {
+    probe_system(it);
 }
 
 void Tasks_no_components() {
@@ -62,65 +62,65 @@ void Tasks_from_system() {
 static int phase_counter = 0;
 
 static 
-void OnLoadTask(ecs_view_t *view) {
-    test_assert(view->entities == NULL);
-    test_int(view->count, 0);
+void OnLoadTask(ecs_iter_t *it) {
+    test_assert(it->entities == NULL);
+    test_int(it->count, 0);
     test_int(phase_counter, 0);
     phase_counter ++;
 }
 
 static 
-void PostLoadTask(ecs_view_t *view) {
-    test_assert(view->entities == NULL);
-    test_int(view->count, 0);
+void PostLoadTask(ecs_iter_t *it) {
+    test_assert(it->entities == NULL);
+    test_int(it->count, 0);
     test_int(phase_counter, 1);
     phase_counter ++;
 }
 
 static 
-void PreUpdateTask(ecs_view_t *view) {
-    test_assert(view->entities == NULL);
-    test_int(view->count, 0);
+void PreUpdateTask(ecs_iter_t *it) {
+    test_assert(it->entities == NULL);
+    test_int(it->count, 0);
     test_int(phase_counter, 2);
     phase_counter ++;
 }
 
 static 
-void OnUpdateTask(ecs_view_t *view) {
-    test_assert(view->entities == NULL);
-    test_int(view->count, 0);
+void OnUpdateTask(ecs_iter_t *it) {
+    test_assert(it->entities == NULL);
+    test_int(it->count, 0);
     test_int(phase_counter, 3);
     phase_counter ++;
 }
 
 static 
-void OnValidateTask(ecs_view_t *view) {
-    test_assert(view->entities == NULL);
-    test_int(view->count, 0);
+void OnValidateTask(ecs_iter_t *it) {
+    test_assert(it->entities == NULL);
+    test_int(it->count, 0);
     test_int(phase_counter, 4);
     phase_counter ++;
 }
 
 static 
-void PostUpdateTask(ecs_view_t *view) {
-    test_assert(view->entities == NULL);
-    test_int(view->count, 0);
+void PostUpdateTask(ecs_iter_t *it) {
+    test_assert(it->entities == NULL);
+    test_int(it->count, 0);
     test_int(phase_counter, 5);
     phase_counter ++;
 }
 
 static 
-void PreStoreTask(ecs_view_t *view) {
-    test_assert(view->entities == NULL);
-    test_int(view->count, 0);
+void PreStoreTask(ecs_iter_t *it) {
+    test_assert(it->entities == NULL);
+    test_int(it->count, 0);
     test_int(phase_counter, 6);
     phase_counter ++;
 }
 
 static 
-void OnStoreTask(ecs_view_t *view) {
-    test_assert(view->entities == NULL);
-    test_int(view->count, 0);
+void OnStoreTask(ecs_iter_t *it) {
+    test_assert(it->entities == NULL);
+    test_int(it->count, 0);
     test_int(phase_counter, 7);
     phase_counter ++;
 }

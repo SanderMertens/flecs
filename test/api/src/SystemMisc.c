@@ -12,9 +12,9 @@ static
 bool dummy_invoked = false;
 
 static
-void Dummy(ecs_view_t *view) {
+void Dummy(ecs_iter_t *it) {
     dummy_invoked = true;
-    probe_system(view);
+    probe_system(it);
 }
 
 void SystemMisc_invalid_not_without_id() {
@@ -415,7 +415,7 @@ void SystemMisc_redefine_row_system() {
 static int is_invoked;
 
 static
-void IsInvoked(ecs_view_t *view) {
+void IsInvoked(ecs_iter_t *it) {
     is_invoked ++;
 }
 
@@ -473,21 +473,21 @@ void SystemMisc_system_w_or_disabled_and_prefab() {
 }
 
 static
-void TableColumns(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Velocity, v, 2);
+void TableColumns(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    ecs_type_t type = ecs_table_type(view);
+    ecs_type_t type = ecs_table_type(it);
     test_int(2, ecs_vector_count(type));
 
     ecs_entity_t *components = ecs_vector_first(type, ecs_entity_t);
     test_int(components[0], ecs_entity(Position));
     test_int(components[1], ecs_entity(Velocity));
 
-    void *column_0 = ecs_table_column(view, 0);
+    void *column_0 = ecs_table_column(it, 0);
     test_assert(column_0 == p);
 
-    void *column_1 = ecs_table_column(view, 1);
+    void *column_1 = ecs_table_column(it, 1);
     test_assert(column_1 == v);
 
     is_invoked ++;
@@ -791,19 +791,19 @@ void SystemMisc_dont_enable_after_rematch() {
     ecs_fini(world);
 }
 
-static void SysA(ecs_view_t *view)
+static void SysA(ecs_iter_t *it)
 {
-    ECS_COLUMN_COMPONENT(view, Velocity, 2);
-    ecs_add(view->world, view->entities[0], Velocity);
+    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    ecs_add(it->world, it->entities[0], Velocity);
 }
 
 static int b_invoked;
 static ecs_entity_t b_entity;
 
-static void SysB(ecs_view_t *view)
+static void SysB(ecs_iter_t *it)
 {
     b_invoked ++;
-    b_entity = view->entities[0];
+    b_entity = it->entities[0];
 }
 
 void SystemMisc_ensure_single_merge() {
@@ -826,9 +826,9 @@ void SystemMisc_ensure_single_merge() {
 
 static int test_table_count_invoked;
 
-static void TestTableCount(ecs_view_t *view) {
-    test_int(view->table_count, 2);
-    test_int(view->inactive_table_count, 1);
+static void TestTableCount(ecs_iter_t *it) {
+    test_int(it->table_count, 2);
+    test_int(it->inactive_table_count, 1);
     test_table_count_invoked ++;
 }
 
@@ -909,10 +909,10 @@ void SystemMisc_system_initial_state() {
 }
 
 static
-void FooSystem(ecs_view_t *view) { }
+void FooSystem(ecs_iter_t *it) { }
 
 static
-void BarSystem(ecs_view_t *view) { }
+void BarSystem(ecs_iter_t *it) { }
 
 void SystemMisc_add_own_component() {
     ecs_world_t * world = ecs_init();
@@ -933,12 +933,12 @@ static bool action_a_invoked;
 static bool action_b_invoked;
 
 static
-void ActionA(ecs_view_t *view) {
+void ActionA(ecs_iter_t *it) {
     action_a_invoked = true;
 }
 
 static
-void ActionB(ecs_view_t *view) {
+void ActionB(ecs_iter_t *it) {
     action_b_invoked = true;
 }
 

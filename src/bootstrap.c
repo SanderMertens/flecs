@@ -139,39 +139,39 @@ void trigger_set(
 
 static
 void EcsOnSetTrigger(
-    ecs_view_t *view)
+    ecs_iter_t *it)
 {
-    EcsTrigger *ct = ecs_column(view, EcsTrigger, 1);
+    EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
     
-    trigger_set(view->world, view->entities, ct, view->count);
+    trigger_set(it->world, it->entities, ct, it->count);
 }
 
 static
 void EcsOnSetTriggerCtx(
-    ecs_view_t *view)
+    ecs_iter_t *it)
 {
-    EcsTrigger *ct = ecs_column(view, EcsTrigger, 1);
-    EcsContext *ctx = ecs_column(view, EcsContext, 2);
+    EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
+    EcsContext *ctx = ecs_column(it, EcsContext, 2);
 
     int32_t i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ct[i].ctx = (void*)ctx[i].ctx;
     }
 
-    trigger_set(view->world, view->entities, ct, view->count);    
+    trigger_set(it->world, it->entities, ct, it->count);    
 }
 
 /* System that registers component lifecycle callbacks */
 static
 void EcsOnSetComponentLifecycle(
-    ecs_view_t *view)
+    ecs_iter_t *it)
 {
-    EcsComponentLifecycle *cl = ecs_column(view, EcsComponentLifecycle, 1);
-    ecs_world_t *world = view->world;
+    EcsComponentLifecycle *cl = ecs_column(it, EcsComponentLifecycle, 1);
+    ecs_world_t *world = it->world;
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_entity_t e = view->entities[i];
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
         ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, e);
 
         c_info->lifecycle = cl[i];
@@ -184,43 +184,43 @@ void EcsOnSetComponentLifecycle(
 /* Disable system when EcsDisabled is added */
 static 
 void EcsDisableSystem(
-    ecs_view_t *view)
+    ecs_iter_t *it)
 {
-    EcsSystem *system_data = ecs_column(view, EcsSystem, 1);
+    EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
 
     int32_t i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_enable_system(
-            view->world, view->entities[i], &system_data[i], false);
+            it->world, it->entities[i], &system_data[i], false);
     }
 }
 
 /* Enable system when EcsDisabled is removed */
 static
 void EcsEnableSystem(
-    ecs_view_t *view)
+    ecs_iter_t *it)
 {
-    EcsSystem *system_data = ecs_column(view, EcsSystem, 1);
+    EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
 
     int32_t i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_enable_system(
-            view->world, view->entities[i], &system_data[i], true);
+            it->world, it->entities[i], &system_data[i], true);
     }
 }
 
 /* Parse a signature expression into the ecs_sig_t data structure */
 static
 void EcsCreateSignature(
-    ecs_view_t *view) 
+    ecs_iter_t *it) 
 {
-    ecs_world_t *world = view->world;
-    ecs_entity_t *entities = view->entities;
+    ecs_world_t *world = it->world;
+    ecs_entity_t *entities = it->entities;
 
-    EcsSignatureExpr *signature = ecs_column(view, EcsSignatureExpr, 1);
+    EcsSignatureExpr *signature = ecs_column(it, EcsSignatureExpr, 1);
     
     int32_t i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = entities[i];
         const char *name = ecs_get_name(world, e);
 
@@ -241,15 +241,15 @@ void EcsCreateSignature(
 /* Create a query from a signature */
 static
 void EcsCreateQuery(
-    ecs_view_t *view) 
+    ecs_iter_t *it) 
 {
-    ecs_world_t *world = view->world;
-    ecs_entity_t *entities = view->entities;
+    ecs_world_t *world = it->world;
+    ecs_entity_t *entities = it->entities;
 
-    EcsSignature *signature = ecs_column(view, EcsSignature, 1);
+    EcsSignature *signature = ecs_column(it, EcsSignature, 1);
     
     int32_t i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = entities[i];
 
         if (!ecs_has(world, e, EcsQuery)) {
@@ -263,17 +263,17 @@ void EcsCreateQuery(
 /* Create a system from a query and an action */
 static
 void EcsCreateSystem(
-    ecs_view_t *view)
+    ecs_iter_t *it)
 {
-    ecs_world_t *world = view->world;
-    ecs_entity_t *entities = view->entities;
+    ecs_world_t *world = it->world;
+    ecs_entity_t *entities = it->entities;
 
-    EcsQuery *query = ecs_column(view, EcsQuery, 1);
-    EcsViewAction *action = ecs_column(view, EcsViewAction, 2);
-    EcsContext *ctx = ecs_column(view, EcsContext, 3);
+    EcsQuery *query = ecs_column(it, EcsQuery, 1);
+    EcsViewAction *action = ecs_column(it, EcsViewAction, 2);
+    EcsContext *ctx = ecs_column(it, EcsContext, 3);
     
     int32_t i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = entities[i];
         void *ctx_ptr = NULL;
         if (ctx) {

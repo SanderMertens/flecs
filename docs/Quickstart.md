@@ -171,18 +171,18 @@ ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 The implementation of this system could look like this:
 
 ```c
-void Move(ecs_view_t *view) {
-    Position *p = ecs_column(view, Position, 1);
-    Velocity *v = ecs_column(view, Velocity, 2);
+void Move(ecs_iter_t *it) {
+    Position *p = ecs_column(it, Position, 1);
+    Velocity *v = ecs_column(it, Velocity, 2);
 
-    for (int i = 0; i < view->count, i ++) {
+    for (int i = 0; i < it->count, i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
 }
 ```
 
-The `view` argument contains all the information the system needs to iterate the components. The `ecs_column` function returns a C array for the subscribed for component. The numbers `1` and `2` indicate where in the system signature the components can be found.
+The `it` argument contains all the information the system needs to iterate the components. The `ecs_column` function returns a C array for the subscribed for component. The numbers `1` and `2` indicate where in the system signature the components can be found.
 
 The system will be invoked by `ecs_progress`, which runs the main loop:
 
@@ -265,12 +265,12 @@ ECS_SYSTEM(world, Transform, CASCADE:Position, Position);
 Which could be implemented like this:
 
 ```c
-void Transform(ecs_view_t *view) {
+void Transform(ecs_iter_t *it) {
     // Get the parent component array
-    Position *p_parent = ecs_column(view, Position, 1);
+    Position *p_parent = ecs_column(it, Position, 1);
     
     // Get the entity component array
-    Position *p = ecs_column(view, Position, 2);
+    Position *p = ecs_column(it, Position, 2);
 
     // The root doesn't have a parent, so check if it's NULL
     if (!p_parent)
@@ -278,7 +278,7 @@ void Transform(ecs_view_t *view) {
 
     // Add parent position to entity position. Note that the parent
     // Position is not passed an array
-    for (int i = 0; i < view->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         p[i].x += p_parent->x;
         p[i].y += p_parent->y;
     }
@@ -291,7 +291,7 @@ Applications can iterate a hierarchy depth-first, using a tree iterator:
 ECS_ENTITY(world, Parent, 0);
 ECS_ENTITY(world, Child, CHILDOF | Parent);
 
-ecs_view_t it = ecs_tree_iter(world, Parent);
+ecs_iter_t it = ecs_tree_iter(world, Parent);
 
 while (ecs_tree_next(&it)) {
     for (int i = 0; i < it.count; i ++) {
@@ -349,14 +349,14 @@ ecs_query_iter_t it = ecs_query_iter(query);
 
 // Iterate all the matching archetypes
 while (ecs_query_next(&it)) {
-    ecs_view_t *view = &it.view;
+    ecs_iter_t *it = &it.it;
 
     // Get the component arrays
-    Position *p = ecs_column(view, Position, 1);
-    Velocity *v = ecs_column(view, Velocity, 2);
+    Position *p = ecs_column(it, Position, 1);
+    Velocity *v = ecs_column(it, Velocity, 2);
 
     // Iterate the entities in the archetype
-    for (int i = 0; i < view->count, i ++) {
+    for (int i = 0; i < it->count, i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
@@ -396,11 +396,11 @@ Note that monitors are never invoked by `ecs_progress`.
 An monitor is implemented the same way as a regular system:
 
 ```c
-void OnPV(ecs_view_t *view) {
-    Position *p = ecs_column(view, Position, 1);
-    Velocity *v = ecs_column(view, Velocity, 2);
+void OnPV(ecs_iter_t *it) {
+    Position *p = ecs_column(it, Position, 1);
+    Velocity *v = ecs_column(it, Velocity, 2);
 
-    for (int i = 0; i < view->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         /* Monitor code. Note that components may not have
          * been initialized when the monitor is invoked */
     }
@@ -435,11 +435,11 @@ ecs_set(world, e, Position, {11, 22});
 An OnSet system is implemented the same way as a regular system:
 
 ```c
-void OnSetPV(ecs_view_t *view) {
-    Position *p = ecs_column(view, Position, 1);
-    Velocity *v = ecs_column(view, Velocity, 2);
+void OnSetPV(ecs_iter_t *it) {
+    Position *p = ecs_column(it, Position, 1);
+    Velocity *v = ecs_column(it, Velocity, 2);
 
-    for (int i = 0; i < view->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         /* Trigger code */
     }
 }
@@ -465,10 +465,10 @@ ecs_add(world, e, Position);
 A trigger is implemented the same way as a system:
 
 ```c
-void OnAddP(ecs_view_t *view) {
-    Position *p = ecs_column(view, Position, 1);
+void OnAddP(ecs_iter_t *it) {
+    Position *p = ecs_column(it, Position, 1);
 
-    for (int i = 0; i < view->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         /* Trigger code. Note that components may not have
          * been initialized when the trigger is invoked */
     }

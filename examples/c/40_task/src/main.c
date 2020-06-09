@@ -4,16 +4,16 @@ typedef struct TaskContext {
     int value;
 } TaskContext;
 
-void MyTask(ecs_view_t *view) {
+void MyTask(ecs_iter_t *it) {
     printf("Task executed every second\n");
 }
 
-void My2ndTask(ecs_view_t *view) {
+void My2ndTask(ecs_iter_t *it) {
     printf("Task executed every 2 seconds\n");
 }
 
-void My3rdTask(ecs_view_t *view) {
-    ECS_COLUMN(view, TaskContext, ctx, 1);
+void My3rdTask(ecs_iter_t *it) {
+    ECS_COLUMN(it, TaskContext, ctx, 1);
 
     printf("Task with context: %d\n", ctx->value);
 }

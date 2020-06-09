@@ -1,18 +1,18 @@
 #include <api.h>
 
-void Deinit(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void Deinit(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     Velocity *v = NULL;
-    if (view->column_count >= 2) {
-        v = ecs_column(view, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
     }
 
-    probe_system(view);
+    probe_system(it);
 
     /* Write to validate columns point to valid memory */
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 0;
         p[i].y = 0;
 
@@ -24,19 +24,19 @@ void Deinit(ecs_view_t *view) {
 }
 
 static
-void Remove_from_current(ecs_view_t *view) {
-    IterData *ctx = ecs_get_context(view->world);
+void Remove_from_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_entity_t e = view->entities[i];
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
 
         if (ctx->component) {
-            ecs_remove_entity(view->world, e, ctx->component);
+            ecs_remove_entity(it->world, e, ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(view->world, e, ctx->component_2);
+            ecs_remove_entity(it->world, e, ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -202,10 +202,10 @@ void TriggerOnRemove_delete_no_match_1() {
 static Position old_position = {0};
 
 static
-void RemovePosition(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void RemovePosition(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    test_assert(view->count == 1);
+    test_assert(it->count == 1);
 
     old_position = p[0];
 }
@@ -256,7 +256,7 @@ void TriggerOnRemove_delete_watched() {
 static bool dummy_called = false;
 
 static
-void Dummy(ecs_view_t *view) {
+void Dummy(ecs_iter_t *it) {
     dummy_called = true;
 }
 

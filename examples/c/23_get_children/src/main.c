@@ -11,7 +11,7 @@ void print_tree(
     indent ++;
 
     // Get an iterator to the children of the current entity
-    ecs_view_t it = ecs_tree_iter(world, entity);
+    ecs_iter_t it = ecs_tree_iter(world, entity);
 
     // Iterate all the tables that contain children for the parent
     while (ecs_tree_next(&it)) {

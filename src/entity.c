@@ -234,7 +234,7 @@ void run_component_trigger_for_entities(
         ecs_entity_t components[1] = { component };
         int32_t columns[1] = { index };
 
-        ecs_view_t view = {
+        ecs_iter_t it = {
             .world = world,
             .columns = columns,
             .table_count = 1,
@@ -249,9 +249,9 @@ void run_component_trigger_for_entities(
         };
 
         for (i = 0; i < trigger_count; i ++) {
-            view.system = triggers[i].self;
-            view.param = triggers[i].ctx;
-            triggers[i].action(&view);
+            it.system = triggers[i].self;
+            it.param = triggers[i].ctx;
+            triggers[i].action(&it);
         }
     }
 }

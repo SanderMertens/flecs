@@ -4,21 +4,21 @@ static bool invoked = false;
 static bool invoked2 = false;
 
 static
-void OutSystem(ecs_view_t *view) {
+void OutSystem(ecs_iter_t *it) {
     invoked = true;
 }
 
 static
-void OutSystem2(ecs_view_t *view) {
+void OutSystem2(ecs_iter_t *it) {
     invoked2 = true;
 }
 
 static
-void InSystem(ecs_view_t *view) {
+void InSystem(ecs_iter_t *it) {
 }
 
 static
-void InSystem2(ecs_view_t *view) {
+void InSystem2(ecs_iter_t *it) {
 }
 
 bool is_enabled(

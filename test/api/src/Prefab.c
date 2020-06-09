@@ -1,21 +1,21 @@
 #include <api.h>
 
 static
-void Iter(ecs_view_t *view) {
-    ECS_COLUMN(view, Mass, m_ptr, 1);
-    bool shared = ecs_is_shared(view, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Mass, m_ptr, 1);
+    bool shared = ecs_is_shared(it, 1);
 
-    ECS_COLUMN(view, Position, p, 2);
+    ECS_COLUMN(it, Position, p, 2);
 
     Velocity *v = NULL;
-    if (view->column_count >= 3) {
-        v = ecs_column(view, Velocity, 3);
+    if (it->column_count >= 3) {
+        v = ecs_column(it, Velocity, 3);
     }
 
-    probe_system(view);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         Mass m = 1;
         if (m_ptr) {
             if (shared) {
@@ -688,12 +688,12 @@ void Prefab_get_ptr_prefab() {
 }
 
 static
-void Prefab_w_field(ecs_view_t *view) {
-    probe_system(view);
+void Prefab_w_field(ecs_iter_t *it) {
+    probe_system(it);
 
-    for (int i = 0; i < view->count; i ++) {
-        Position *p = ecs_field(view, Position, 1, i);
-        Velocity *v = ecs_field(view, Velocity, 2, i);
+    for (int i = 0; i < it->count; i ++) {
+        Position *p = ecs_field(it, Position, 1, i);
+        Velocity *v = ecs_field(it, Velocity, 2, i);
         p->x += v->x;
         p->y += v->y;
     }
@@ -740,24 +740,24 @@ void Prefab_iterate_w_prefab_field() {
 }
 
 static
-void Prefab_w_shared(ecs_view_t *view) {
+void Prefab_w_shared(ecs_iter_t *it) {
     Velocity *v = NULL;
-    if (view->column_count >= 2) {
-        v = ecs_column(view, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
         if (v) {
-            test_assert(ecs_is_shared(view, 2));
+            test_assert(ecs_is_shared(it, 2));
         }
     }
     
     Mass *m = NULL;
-    if (view->column_count >= 3) {
-        m = ecs_column(view, Mass, 3);
+    if (it->column_count >= 3) {
+        m = ecs_column(it, Mass, 3);
     }
 
-    probe_system(view);
+    probe_system(it);
 
-    for (int i = 0; i < view->count; i ++) {
-        Position *p = ecs_field(view, Position, 1, i);
+    for (int i = 0; i < it->count; i ++) {
+        Position *p = ecs_field(it, Position, 1, i);
         p->x += v->x;
         p->y += v->y;
 
@@ -919,8 +919,8 @@ void Prefab_prefab_in_system_expr() {
 }
 
 static
-void Dummy(ecs_view_t *view) {
-    probe_system(view);
+void Dummy(ecs_iter_t *it) {
+    probe_system(it);
 }
 
 void Prefab_dont_match_prefab() {
@@ -1054,24 +1054,24 @@ void Prefab_ignore_prefab_parent_component() {
 }
 
 static
-void Move(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Velocity, v, 2);
+void Move(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x += v[i].y;
         p[i].y += v[i].y;
     }
 }
 
 static
-void AddVelocity(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Velocity, 2);
+void AddVelocity(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Velocity, 2);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_set(view->world, view->entities[i], Velocity, {1, 1});
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Velocity, {1, 1});
     }
 }
 
@@ -1506,7 +1506,7 @@ void Prefab_prefab_auto_override_child_component() {
 
 static int invoked;
 
-void PrefabReactiveTest(ecs_view_t *view) {
+void PrefabReactiveTest(ecs_iter_t *it) {
     invoked ++;
 }
 
@@ -1588,14 +1588,14 @@ void Prefab_on_set_on_instance() {
     ecs_fini(world);
 }
 
-void InstantiateInProgress(ecs_view_t *view) {
-    ECS_COLUMN_ENTITY(view, Prefab, 2);
+void InstantiateInProgress(ecs_iter_t *it) {
+    ECS_COLUMN_ENTITY(it, Prefab, 2);
 
-    ecs_entity_t *ids = ecs_get_context(view->world);
+    ecs_entity_t *ids = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ids[i] = ecs_new_w_entity(view->world, ECS_INSTANCEOF | Prefab);
+    for (i = 0; i < it->count; i ++) {
+        ids[i] = ecs_new_w_entity(it->world, ECS_INSTANCEOF | Prefab);
     }
 }
 
@@ -1631,14 +1631,14 @@ void Prefab_instantiate_in_progress() {
     ecs_fini(world);
 }
 
-void NewInProgress(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Type, 2);
+void NewInProgress(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Type, 2);
 
-    ecs_entity_t *ids = ecs_get_context(view->world);
+    ecs_entity_t *ids = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ids[i] = ecs_new(view->world, Type);
+    for (i = 0; i < it->count; i ++) {
+        ids[i] = ecs_new(it->world, Type);
     }
 }
 
@@ -1814,12 +1814,12 @@ void Prefab_no_overwrite_on_2nd_add() {
     ecs_fini(world);
 }
 
-void AddPrefab(ecs_view_t *view) {
-    ECS_COLUMN_ENTITY(view, Prefab, 2);
+void AddPrefab(ecs_iter_t *it) {
+    ECS_COLUMN_ENTITY(it, Prefab, 2);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_add_entity(view->world, view->entities[i], ECS_INSTANCEOF | Prefab);
+    for (i = 0; i < it->count; i ++) {
+        ecs_add_entity(it->world, it->entities[i], ECS_INSTANCEOF | Prefab);
     }
 }
 
@@ -1943,10 +1943,10 @@ void Prefab_no_instantiate_on_2nd_add_in_progress() {
     ecs_fini(world);
 }
 
-void NewPrefab_w_count(ecs_view_t *view) {
-    ecs_entity_t *result = ecs_get_context(view->world);
-    ECS_COLUMN_ENTITY(view, Prefab, 1);
-    *result = ecs_bulk_new_w_entity(view->world, ECS_INSTANCEOF | Prefab, 3);
+void NewPrefab_w_count(ecs_iter_t *it) {
+    ecs_entity_t *result = ecs_get_context(it->world);
+    ECS_COLUMN_ENTITY(it, Prefab, 1);
+    *result = ecs_bulk_new_w_entity(it->world, ECS_INSTANCEOF | Prefab, 3);
 }
 
 void Prefab_nested_prefab_in_progress_w_count() {
@@ -1995,17 +1995,17 @@ void Prefab_nested_prefab_in_progress_w_count() {
 static int on_set_velocity_invoked;
 
 static
-void OnSetVelocity(ecs_view_t *view) {
-    ECS_COLUMN(view, Velocity, v, 1);
+void OnSetVelocity(ecs_iter_t *it) {
+    ECS_COLUMN(it, Velocity, v, 1);
 
     on_set_velocity_invoked ++;
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_add(view->world, view->entities[i], Velocity);
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
 
-        Velocity *staged_v = ecs_get_mut(view->world, view->entities[i], Velocity, NULL);
-        test_assert(ecs_get(view->world, view->entities[i], Velocity) == staged_v);
+        Velocity *staged_v = ecs_get_mut(it->world, it->entities[i], Velocity, NULL);
+        test_assert(ecs_get(it->world, it->entities[i], Velocity) == staged_v);
 
         staged_v->x = v->x + 1;
         staged_v->y = v->y + 1;
@@ -2057,24 +2057,24 @@ void Prefab_nested_prefab_in_progress_w_count_set_after_override() {
     ecs_fini(world);
 }
 
-void AddPrefabInProgress(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Prefab, 2);
-    ECS_COLUMN_COMPONENT(view, Velocity, 3);
+void AddPrefabInProgress(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Prefab, 2);
+    ECS_COLUMN_COMPONENT(it, Velocity, 3);
 
-    ecs_entity_t Prefab = ecs_type_to_entity(view->world, ecs_type(Prefab));
+    ecs_entity_t Prefab = ecs_type_to_entity(it->world, ecs_type(Prefab));
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_add_entity(view->world, ECS_INSTANCEOF | view->entities[i], Prefab);
-        test_assert( ecs_has(view->world, view->entities[i], Prefab));
-        test_assert( ecs_has(view->world, view->entities[i], Velocity));
+    for (i = 0; i < it->count; i ++) {
+        ecs_add_entity(it->world, ECS_INSTANCEOF | it->entities[i], Prefab);
+        test_assert( ecs_has(it->world, it->entities[i], Prefab));
+        test_assert( ecs_has(it->world, it->entities[i], Velocity));
         
-        const Velocity *v = ecs_get(view->world, view->entities[i], Velocity);
+        const Velocity *v = ecs_get(it->world, it->entities[i], Velocity);
         test_assert(v != NULL);
         test_int(v->x, 1);
         test_int(v->y, 2);
 
-        test_assert( ecs_get(view->world, Prefab, Velocity) == v);
+        test_assert( ecs_get(it->world, Prefab, Velocity) == v);
     }
 }
 
@@ -2105,15 +2105,15 @@ void Prefab_get_ptr_from_prefab_from_new_table_in_progress() {
     ecs_fini(world);
 }
 
-void TestBase(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Velocity, v, 2);
+void TestBase(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    test_assert(ecs_is_shared(view, 2));
+    test_assert(ecs_is_shared(it, 2));
 
     test_assert(p != NULL);
     test_assert(v != NULL);
-    test_int(view->count, 1);
+    test_int(it->count, 1);
 }
 
 void Prefab_match_base() {
@@ -2137,12 +2137,12 @@ void Prefab_match_base() {
 }
 
 static
-void AddMass(ecs_view_t *view) {
-    ECS_COLUMN_ENTITY(view, Mass, 2);
+void AddMass(ecs_iter_t *it) {
+    ECS_COLUMN_ENTITY(it, Mass, 2);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_add(view->world, view->entities[i], Mass);
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Mass);
     }
 }
 
@@ -2232,20 +2232,20 @@ void Prefab_rematch_twice() {
 }
 
 static
-void Inherit(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Position, 1);
+void Inherit(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Position, 1);
 
-    ecs_entity_t *param = ecs_get_context(view->world);
+    ecs_entity_t *param = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_entity_t e = view->entities[i];
-        ecs_entity_t e_backup = ecs_new(view->world, Position);
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t e_backup = ecs_new(it->world, Position);
         test_assert(e_backup != 0);
-        test_assert( ecs_has(view->world, e_backup, Position));
+        test_assert( ecs_has(it->world, e_backup, Position));
 
-        ecs_add_entity(view->world, e, ECS_INSTANCEOF | e_backup);
-        test_assert( ecs_has_entity(view->world, e, e_backup | ECS_INSTANCEOF));
+        ecs_add_entity(it->world, e, ECS_INSTANCEOF | e_backup);
+        test_assert( ecs_has_entity(it->world, e, e_backup | ECS_INSTANCEOF));
 
         *param = e_backup;
     }
@@ -2275,12 +2275,12 @@ void Prefab_inherit_in_system() {
 }
 
 static
-void AddPosition(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Position, 1);
+void AddPosition(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Position, 1);
     
-    ecs_entity_t *base = ecs_get_context(view->world);
+    ecs_entity_t *base = ecs_get_context(it->world);
 
-    ecs_add(view->world, *base, Position);
+    ecs_add(it->world, *base, Position);
 }
 
 void Prefab_add_to_empty_base_in_system() {
@@ -2329,12 +2329,12 @@ void Prefab_dont_inherit_disabled() {
 static bool has_cloned = false;
 
 static
-void CloneInOnAdd(ecs_view_t *view)
+void CloneInOnAdd(ecs_iter_t *it)
 {
-    ECS_COLUMN(view, Position, p, 1);
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         bool has_cloned_test = has_cloned;
 
         /* Prevent recursive OnAdd calls */
@@ -2344,15 +2344,15 @@ void CloneInOnAdd(ecs_view_t *view)
         p[i].y = 20;
 
         if (!has_cloned_test) {
-            ecs_entity_t e = view->entities[i];
-            ecs_entity_t clone = ecs_clone(view->world, 0, e, true);
-            test_assert( ecs_has(view->world, clone, Position));
+            ecs_entity_t e = it->entities[i];
+            ecs_entity_t clone = ecs_clone(it->world, 0, e, true);
+            test_assert( ecs_has(it->world, clone, Position));
 
-            const Position *p_clone = ecs_get(view->world, clone, Position);
+            const Position *p_clone = ecs_get(it->world, clone, Position);
             test_int(p_clone->x, 10);
             test_int(p_clone->y, 20);
 
-            ecs_add_entity(view->world, ECS_INSTANCEOF | clone, e);
+            ecs_add_entity(it->world, ECS_INSTANCEOF | clone, e);
         }
     }
 }
@@ -2412,12 +2412,12 @@ void Prefab_override_from_nested() {
 }
 
 static
-void OnAddEntity(ecs_view_t *view) {
-    ECS_COLUMN(view, ecs_entity_t, e, 1);
+void OnAddEntity(ecs_iter_t *it) {
+    ECS_COLUMN(it, ecs_entity_t, e, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        e[i] = view->entities[i];
+    for (i = 0; i < it->count; i ++) {
+        e[i] = it->entities[i];
     }
 }
 
@@ -2489,11 +2489,11 @@ void Prefab_create_multiple_nested_w_on_set() {
 static ecs_entity_t new_instance_1, new_instance_2;
 
 static
-void CreateInstances(ecs_view_t *view) {
-    ECS_COLUMN_ENTITY(view, Prefab, 1);
+void CreateInstances(ecs_iter_t *it) {
+    ECS_COLUMN_ENTITY(it, Prefab, 1);
 
-    new_instance_1 = ecs_new_w_entity(view->world, ECS_INSTANCEOF | Prefab);
-    new_instance_2 = ecs_new_w_entity(view->world, ECS_INSTANCEOF | Prefab);
+    new_instance_1 = ecs_new_w_entity(it->world, ECS_INSTANCEOF | Prefab);
+    new_instance_2 = ecs_new_w_entity(it->world, ECS_INSTANCEOF | Prefab);
 }
 
 void Prefab_create_multiple_nested_w_on_set_in_progress() {

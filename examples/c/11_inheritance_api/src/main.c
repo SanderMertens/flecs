@@ -11,14 +11,14 @@ typedef Vector2D Force;
 typedef float Mass;
 
 /* Implement a simple move system */
-void Move(ecs_view_t *view) {
+void Move(ecs_iter_t *it) {
     /* Get the two columns from the system signature */
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Force, v, 2);
-    ECS_COLUMN(view, Mass, m, 3);
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Force, v, 2);
+    ECS_COLUMN(it, Mass, m, 3);
 
-    for (int i = 0; i < view->count; i ++) {
-        if (ecs_is_shared(view, 3)) {
+    for (int i = 0; i < it->count; i ++) {
+        if (ecs_is_shared(it, 3)) {
             p[i].x += v[i].x / m[0];
             p[i].y += v[i].y / m[0];
         } else {
@@ -29,7 +29,7 @@ void Move(ecs_view_t *view) {
         /* Print something to the console so we can see the system is being
          * invoked */
         printf("%s moved to {.x = %f, .y = %f}\n",
-            ecs_get_name(view->world, view->entities[i]),
+            ecs_get_name(it->world, it->entities[i]),
             p[i].x, p[i].y);
     }
 }

@@ -1,25 +1,25 @@
 #include <api.h>
 
 static
-void Iter(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
 
-    if (view->column_count >= 2) {
-        v = ecs_column(view, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
     }
 
-    if (view->column_count >= 3) {
-        m = ecs_column(view, Mass, 3);
+    if (it->column_count >= 3) {
+        m = ecs_column(it, Mass, 3);
     }
 
-    int *param = view->param;
+    int *param = it->param;
 
-    probe_system(view);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -1131,26 +1131,26 @@ typedef struct Param {
 } Param;
 
 static
-void TestSubset(ecs_view_t *view) {
-    Param *param = view->param;
+void TestSubset(ecs_iter_t *it) {
+    Param *param = it->param;
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        test_assert(param->entity != view->entities[i]);
+    for (i = 0; i < it->count; i ++) {
+        test_assert(param->entity != it->entities[i]);
         param->count ++;
     }    
 }
 
 static
-void TestAll(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TestAll(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t TestSubset = ecs_column_entity(view, 2);
+    ecs_entity_t TestSubset = ecs_column_entity(it, 2);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        Param param = {.entity = view->entities[i], 0};
-        ecs_run_w_filter(view->world, TestSubset, 1, view->frame_offset + i + 1, 0, 0, &param);
+    for (i = 0; i < it->count; i ++) {
+        Param param = {.entity = it->entities[i], 0};
+        ecs_run_w_filter(it->world, TestSubset, 1, it->frame_offset + i + 1, 0, 0, &param);
         p[i].x += param.count;
     }
 }
@@ -1211,11 +1211,11 @@ void Run_run_comb_10_entities_2_types() {
 }
 
 static
-void Interrupt(ecs_view_t *view) {
+void Interrupt(ecs_iter_t *it) {
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (i == 2) {
-            view->interrupted_by = view->entities[i];
+            it->interrupted_by = it->entities[i];
             break;
         }
     }
@@ -1246,15 +1246,15 @@ void Run_run_w_interrupt() {
 }
 
 static
-void AddVelocity(ecs_view_t *view) {
-    ecs_world_t *world = view->world;
+void AddVelocity(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
 
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN_COMPONENT(view, Velocity, 2);
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN_COMPONENT(it, Velocity, 2);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_entity_t e = view->entities[i];
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
 
         float x = p[i].x;
         float y = p[i].y;

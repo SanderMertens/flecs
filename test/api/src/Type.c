@@ -580,11 +580,11 @@ void Type_type_from_empty_entity() {
 }
 
 static
-void TypeFromEntity(ecs_view_t *view) {
-    ecs_entity_t e = ecs_new(view->world, 0);
+void TypeFromEntity(ecs_iter_t *it) {
+    ecs_entity_t e = ecs_new(it->world, 0);
     test_assert(e != 0);
 
-    ecs_type_t t = ecs_type_from_entity(view->world, e);
+    ecs_type_t t = ecs_type_from_entity(it->world, e);
     test_assert(t != NULL);
 
     test_int(ecs_vector_count(t), 1);

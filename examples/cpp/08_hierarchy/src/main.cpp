@@ -31,20 +31,20 @@ void Move(flecs::entity e, Position& p, Velocity& v) {
  * will be used to then transform Position to WorldPosition of the child.
  * If the CASCADE column is not set, the system matched a root. In that case,
  * just assign the Position to the WorldPosition. */
-void Transform(flecs::view& view, flecs::column<WorldPosition> wp, flecs::column<Position> p) {
-    flecs::column<const WorldPosition> parent_wp(view, 3);
+void Transform(flecs::it& it, flecs::column<WorldPosition> wp, flecs::column<Position> p) {
+    flecs::column<const WorldPosition> parent_wp(it, 3);
 
     if (!parent_wp.is_set()) {
-        for (auto row : view) {
+        for (auto row : it) {
             wp[row].x = p[row].x;
             wp[row].y = p[row].y;
 
-            std::cout << view.entity(row).name() << " transformed to {.x = "
+            std::cout << it.entity(row).name() << " transformed to {.x = "
                 << wp[row].x << ", .y = "
                 << wp[row].y << "} <<root>>" << std::endl;
         }
     } else {
-        for (auto row : view) {
+        for (auto row : it) {
             /* Note that we're not using row to access parent_wp. This function
              * ('Transform') is invoked for every matching archetype, and the 
              * parent is part of the archetype. That means that all entities 
@@ -52,7 +52,7 @@ void Transform(flecs::view& view, flecs::column<WorldPosition> wp, flecs::column
             wp[row].x = parent_wp->x + p[row].x;
             wp[row].y = parent_wp->y + p[row].y;
 
-            std::cout << view.entity(row).name() << " transformed to {.x = "
+            std::cout << it.entity(row).name() << " transformed to {.x = "
                 << wp[row].x << ", .y = "
                 << wp[row].y << "} <<child>>" << std::endl;
         }

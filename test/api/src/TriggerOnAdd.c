@@ -1,17 +1,17 @@
 #include <api.h>
 
-void Init(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void Init(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     
     Velocity *v = NULL;
-    if (view->column_count >= 2) {
-        v = ecs_column(view, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
     }
 
-    probe_system(view);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -23,19 +23,19 @@ void Init(ecs_view_t *view) {
 }
 
 static
-void Add_to_current(ecs_view_t *view) {
-    IterData *ctx = ecs_get_context(view->world);
+void Add_to_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(view->world, view->entities[i], ctx->component);
+            ecs_add_entity(it->world, it->entities[i], ctx->component);
 
-            test_assert( !!ecs_get_type(view->world, view->entities[i]));
+            test_assert( !!ecs_get_type(it->world, it->entities[i]));
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(view->world, view->entities[i], ctx->component_2);
+            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -43,19 +43,19 @@ void Add_to_current(ecs_view_t *view) {
 }
 
 static
-void Remove_from_current(ecs_view_t *view) {
-    IterData *ctx = ecs_get_context(view->world);
+void Remove_from_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_entity_t e = view->entities[i];
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
 
         if (ctx->component) {
-            ecs_remove_entity(view->world, e, ctx->component);
+            ecs_remove_entity(it->world, e, ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(view->world, e, ctx->component_2);
+            ecs_remove_entity(it->world, e, ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -63,14 +63,14 @@ void Remove_from_current(ecs_view_t *view) {
 }
 
 static
-void Set_current(ecs_view_t *view) {
-    IterData *ctx = ecs_get_context(view->world);
+void Set_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     
     ecs_entity_t ecs_entity(Rotation) = ctx->component;
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_set(view->world, view->entities[i], Rotation, {10 + view->entities[i]});
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Rotation, {10 + it->entities[i]});
         ctx->entity_count ++;
     }
 }
@@ -459,21 +459,21 @@ void TriggerOnAdd_new_w_count_match_1_of_1() {
 }
 
 static
-void AddVelocity(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ecs_type_t v = view->param;
+void AddVelocity(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ecs_type_t v = it->param;
     if (!v) {
-        ecs_entity_t e = ecs_column_entity(view, 2);
-        v = ecs_type_from_entity(view->world, e);
+        ecs_entity_t e = ecs_column_entity(it, 2);
+        v = ecs_type_from_entity(it->world, e);
     }
 
-    probe_system(view);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 1;
         p[i].y = 2;
-        ecs_add_type(view->world, view->entities[i], v);
+        ecs_add_type(it->world, it->entities[i], v);
     }
 }
 
@@ -519,11 +519,11 @@ void TriggerOnAdd_override_after_add_in_on_add() {
 }
 
 static
-void OnSetPosition(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void OnSetPosition(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x ++;
         p[i].y ++;
     }
@@ -569,12 +569,12 @@ void TriggerOnAdd_set_after_add_in_on_add() {
 }
 
 static
-void AddAgain(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Position, 1);
+void AddAgain(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Position, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_add(view->world, view->entities[i], Position);
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Position);
     }
 }
 
@@ -601,11 +601,11 @@ void TriggerOnAdd_add_again_in_progress() {
 }
 
 static
-void AddMass(ecs_view_t *view) {
-    ECS_COLUMN(view, Mass, m, 1);
+void AddMass(ecs_iter_t *it) {
+    ECS_COLUMN(it, Mass, m, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         m[i] = 10;
     }
 }
@@ -640,24 +640,24 @@ void TriggerOnAdd_add_in_progress_before_system_def() {
     ecs_fini(world);
 }
 
-void SystemA(ecs_view_t *view) {
+void SystemA(ecs_iter_t *it) {
     int i, tag;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         for (tag = 1000; tag < 1100; tag ++) {
             ecs_add_type(
-                view->world, 
-                view->entities[i], 
-                ecs_type_from_entity(view->world, tag));
+                it->world, 
+                it->entities[i], 
+                ecs_type_from_entity(it->world, tag));
         }
     }
 }
 
-void SystemB(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Position, 1);
+void SystemB(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Position, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_has(view->world, view->entities[i], Position);
+    for (i = 0; i < it->count; i ++) {
+        ecs_has(it->world, it->entities[i], Position);
     }
 }
 
@@ -674,10 +674,10 @@ void TriggerOnAdd_2_systems_w_table_creation() {
     ecs_fini(world);
 }
 
-void NewWithPosition(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Position, 1);
+void NewWithPosition(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Position, 1);
 
-    ecs_entity_t e = ecs_new(view->world, Position);
+    ecs_entity_t e = ecs_new(it->world, Position);
     test_assert(e != 0); 
 }
 
@@ -695,10 +695,10 @@ void TriggerOnAdd_2_systems_w_table_creation_in_progress() {
 }
 
 static
-void TestContext(ecs_view_t *view) {
-    void *world_ctx = ecs_get_context(view->world);
-    test_assert(world_ctx == view->param);
-    int32_t *param = view->param;
+void TestContext(ecs_iter_t *it) {
+    void *world_ctx = ecs_get_context(it->world);
+    test_assert(world_ctx == it->param);
+    int32_t *param = it->param;
     (*param) ++;
 }
 
@@ -771,12 +771,12 @@ void TriggerOnAdd_remove_added_component_in_on_add_w_set() {
     ecs_fini(world);
 }
 
-void Add_3_to_current(ecs_view_t *view) {
-    IterData *ctx = ecs_get_context(view->world);
+void Add_3_to_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (ctx->component_3) {
-            ecs_add_entity(view->world, view->entities[i], ctx->component_3);
+            ecs_add_entity(it->world, it->entities[i], ctx->component_3);
         }
         ctx->entity_count ++;
     }
@@ -817,7 +817,7 @@ void TriggerOnAdd_on_add_in_on_add() {
 static bool dummy_called = false;
 
 static
-void Dummy(ecs_view_t *view) {
+void Dummy(ecs_iter_t *it) {
     dummy_called = true;
 }
 

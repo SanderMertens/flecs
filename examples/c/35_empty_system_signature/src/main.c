@@ -1,6 +1,6 @@
 #include <empty_system_signature.h>
 
-void MyTask(ecs_view_t *view) {
+void MyTask(ecs_iter_t *it) {
     printf("MyTask invoked!\n");
 }
 

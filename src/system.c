@@ -383,19 +383,19 @@ ecs_entity_t ecs_run_intern(
     }
 
     /* Prepare the query iterator */
-    ecs_view_t view = ecs_query_iter_page(system_data->query, offset, limit);
-    view.world = world;
-    view.system = system;
-    view.delta_time = delta_time;
-    view.delta_system_time = time_elapsed;
-    view.world_time = real_world->stats.world_time_total;
-    view.frame_offset = offset;
+    ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
+    it.world = world;
+    it.system = system;
+    it.delta_time = delta_time;
+    it.delta_system_time = time_elapsed;
+    it.world_time = real_world->stats.world_time_total;
+    it.frame_offset = offset;
     
     /* Set param if provided, otherwise use system context */
     if (param) {
-        view.param = param;
+        it.param = param;
     } else {
-        view.param = system_data->ctx;
+        it.param = system_data->ctx;
     }
 
     ecs_view_action_t action = system_data->action;
@@ -403,29 +403,29 @@ ecs_entity_t ecs_run_intern(
     /* If no filter is provided, just iterate tables & invoke action */
     if (!filter) {
         if (ran_by_app || world == real_world) {
-            while (ecs_query_next(&view)) {
-                action(&view);
+            while (ecs_query_next(&it)) {
+                action(&it);
             }
         } else {
             ecs_thread_t *thread = (ecs_thread_t*)world;
             int32_t total = ecs_vector_count(real_world->workers);
             int32_t current = thread->index;
 
-            while (ecs_query_next_worker(&view, current, total)) {
-                action(&view);
+            while (ecs_query_next_worker(&it, current, total)) {
+                action(&it);
             }
         }
 
     /* If filter is provided, match each table with the provided filter */
     } else {
-        while (ecs_query_next(&view)) {
-            ecs_table_t *table = view.table;
+        while (ecs_query_next(&it)) {
+            ecs_table_t *table = it.table;
             if (!ecs_table_match_filter(real_world, table, filter))
             {
                 continue;
             }
 
-            action(&view);
+            action(&it);
         }        
     }
 
@@ -435,7 +435,7 @@ ecs_entity_t ecs_run_intern(
     
     system_data->invoke_count ++;
 
-    return view.interrupted_by;
+    return it.interrupted_by;
 }
 
 /* -- Public API -- */
@@ -501,17 +501,17 @@ void ecs_run_monitor(
         return;
     }
 
-    ecs_view_t view = {0};
-    ecs_query_set_view( world, stage, query, &view, 
+    ecs_iter_t it = {0};
+    ecs_query_set_view( world, stage, query, &it, 
         monitor->matched_table_index, row, count);
 
-    view.triggered_by = components;
-    view.param = system_data->ctx;
+    it.triggered_by = components;
+    it.param = system_data->ctx;
 
     if (entities) {
-        view.entities = entities;
+        it.entities = entities;
     }
 
-    view.system = system;
-    system_data->action(&view);
+    it.system = system;
+    system_data->action(&it);
 }

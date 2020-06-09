@@ -350,7 +350,7 @@ void ecs_query_set_view(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_query_t *query,
-    ecs_view_t *view,
+    ecs_iter_t *it,
     int32_t table_index,
     int32_t row,
     int32_t count);

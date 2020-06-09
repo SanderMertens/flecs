@@ -9,18 +9,18 @@ typedef struct Vector2D {
 typedef Vector2D Position;
 typedef Vector2D Velocity;
 
-void Move(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Velocity, v, 2);
+void Move(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    for (int i = 0; i < view->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         /* Use delta_time to update the entity proportionally to the amount of
          * time that has passed inbetween frames. */
-        p[i].x += v[i].x * view->delta_time;
-        p[i].y += v[i].y * view->delta_time;
+        p[i].x += v[i].x * it->delta_time;
+        p[i].y += v[i].y * it->delta_time;
 
         printf("%s moved to {.x = %f, .y = %f}\n",
-            ecs_get_name(view->world, view->entities[i]),
+            ecs_get_name(it->world, it->entities[i]),
             p[i].x, p[i].y);
     }
 }

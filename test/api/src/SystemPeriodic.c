@@ -9,23 +9,23 @@ void install_test_abort() {
 }
 
 static
-void Iter(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
 
-    if (view->column_count >= 2) {
-        v = ecs_column(view, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
     }
 
-    if (view->column_count >= 3) {
-        m = ecs_column(view, Mass, 3);
+    if (it->column_count >= 3) {
+        m = ecs_column(it, Mass, 3);
     }
 
-    probe_system(view);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -1023,11 +1023,11 @@ void SystemPeriodic_6_type_1_and_2_optional() {
     ecs_fini(world);
 }
 
-void Use_field(ecs_view_t *view) {
+void Use_field(ecs_iter_t *it) {
     int i;
-    for (i = 0; i < view->count; i ++) {
-        Position *p = ecs_field(view, Position, 1, i);
-        Velocity *v = ecs_field(view, Velocity, 2, i);
+    for (i = 0; i < it->count; i ++) {
+        Position *p = ecs_field(it, Position, 1, i);
+        Velocity *v = ecs_field(it, Velocity, 2, i);
 
         p->x += v->x;
         p->y += v->y;
@@ -1083,8 +1083,8 @@ void SystemPeriodic_use_fields_1_owned_1_shared() {
     ecs_fini(world);
 }
 
-static void Dummy_1(ecs_view_t *view) { probe_system(view); }
-static void Dummy_2(ecs_view_t *view) { probe_system(view); }
+static void Dummy_1(ecs_iter_t *it) { probe_system(it); }
+static void Dummy_2(ecs_iter_t *it) { probe_system(it); }
 
 void SystemPeriodic_match_2_systems_w_populated_table() {
     ecs_world_t *world = ecs_init();
@@ -1113,35 +1113,35 @@ void SystemPeriodic_match_2_systems_w_populated_table() {
     ecs_fini(world);
 }
 
-void TestOptional_w_column(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Velocity, v, 2);
+void TestOptional_w_column(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
     test_assert(p != NULL);
     test_assert(v == NULL);
 
-    probe_system(view);
+    probe_system(it);
 }
 
-void TestOptional_w_shared(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Velocity, v, 2);
+void TestOptional_w_shared(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
     test_assert(p != NULL);
     test_assert(v == NULL);
 
-    probe_system(view);
+    probe_system(it);
 }
 
-void TestOptional_w_field(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TestOptional_w_field(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     test_assert(p != NULL);
 
-    probe_system(view);
+    probe_system(it);
 
-    for (int i = 0; i < view->count; i ++) {
-        Velocity *v = ecs_field(view, Velocity, 2, i);
+    for (int i = 0; i < it->count; i ++) {
+        Velocity *v = ecs_field(it, Velocity, 2, i);
         test_assert(v == NULL);
     }
 }
@@ -1264,22 +1264,22 @@ static int normal_count_2;
 static int normal_count_3;
 
 static
-void OnPeriodSystem(ecs_view_t *view) {
+void OnPeriodSystem(ecs_iter_t *it) {
     on_period_count ++;
 }
 
 static
-void NormalSystem(ecs_view_t *view) {
+void NormalSystem(ecs_iter_t *it) {
     normal_count ++;
 }
 
 static
-void NormalSystem2(ecs_view_t *view) {
+void NormalSystem2(ecs_iter_t *it) {
     normal_count_2 ++;
 }
 
 static
-void NormalSystem3(ecs_view_t *view) {
+void NormalSystem3(ecs_iter_t *it) {
     normal_count_3 ++;
 }
 
@@ -1450,17 +1450,17 @@ void SystemPeriodic_disabled_nested_feature() {
     ecs_fini(world);
 }
 
-void TwoRefs(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Velocity, v, 2);
+void TwoRefs(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    test_assert(ecs_is_shared(view, 1));
-    test_assert(ecs_is_shared(view, 2));
+    test_assert(ecs_is_shared(it, 1));
+    test_assert(ecs_is_shared(it, 2));
 
     (void)p;
     (void)v;
 
-    probe_system(view);
+    probe_system(it);
 }
 
 void SystemPeriodic_two_refs() {
@@ -1633,8 +1633,8 @@ void SystemPeriodic_match_prefab_and_normal() {
 }
 
 static
-void TestIsSharedOnNotSet(ecs_view_t *view) {
-    test_assert(ecs_is_shared(view, 2) == false);
+void TestIsSharedOnNotSet(ecs_iter_t *it) {
+    test_assert(ecs_is_shared(it, 2) == false);
 }
 
 void SystemPeriodic_is_shared_on_column_not_set() {
@@ -1890,10 +1890,10 @@ void SystemPeriodic_not_from_entity() {
 }
 
 static
-void TestContext(ecs_view_t *view) {
-    void *world_ctx = ecs_get_context(view->world);
-    test_assert(world_ctx == view->param);
-    int32_t *param = view->param;
+void TestContext(ecs_iter_t *it) {
+    void *world_ctx = ecs_get_context(it->world);
+    test_assert(world_ctx == it->param);
+    int32_t *param = it->param;
     (*param) ++;
 }
 
@@ -1937,8 +1937,8 @@ void SystemPeriodic_get_sys_context_from_param() {
 static bool Test_feld_w_zero_size_invoked = false;
 
 static
-void Test_feld_w_zero_size(ecs_view_t *view) {
-    test_assert(_ecs_field(view, 0, 1, 0) != _ecs_field(view, 0, 1, 1));
+void Test_feld_w_zero_size(ecs_iter_t *it) {
+    test_assert(_ecs_field(it, 0, 1, 0) != _ecs_field(it, 0, 1, 1));
     Test_feld_w_zero_size_invoked = true;
 }
 
@@ -1960,9 +1960,9 @@ void SystemPeriodic_use_field_w_0_size() {
 
 static ecs_entity_t dummy_invoked = 0;
 
-static void Dummy(ecs_view_t *view) {
+static void Dummy(ecs_iter_t *it) {
     test_assert(dummy_invoked == 0);
-    dummy_invoked = view->entities[0];
+    dummy_invoked = it->entities[0];
 }
 
 void SystemPeriodic_owned_only() {
@@ -1981,11 +1981,11 @@ void SystemPeriodic_owned_only() {
     ecs_fini(world);
 }
 
-static void AssertReadonly(ecs_view_t *view) {
+static void AssertReadonly(ecs_iter_t *it) {
     test_assert(dummy_invoked == 0);
-    dummy_invoked = view->entities[0];
+    dummy_invoked = it->entities[0];
 
-    test_assert( ecs_is_readonly(view, 1) == true);
+    test_assert( ecs_is_readonly(it, 1) == true);
 }
 
 void SystemPeriodic_shared_only() {

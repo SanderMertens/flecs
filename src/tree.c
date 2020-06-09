@@ -225,7 +225,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
     return cur;
 }
 
-ecs_view_t ecs_tree_iter(
+ecs_iter_t ecs_tree_iter(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
@@ -234,16 +234,16 @@ ecs_view_t ecs_tree_iter(
         .index = 0
     };
 
-    return (ecs_view_t) {
+    return (ecs_iter_t) {
         .world = world,
         .iter.parent = iter
     };
 }
 
 bool ecs_tree_next(
-    ecs_view_t *view)
+    ecs_iter_t *it)
 {
-    ecs_tree_iter_t *iter = &view->iter.parent;
+    ecs_tree_iter_t *iter = &it->iter.parent;
     ecs_vector_t *tables = iter->tables;
     int32_t count = ecs_vector_count(tables);
     int32_t i;
@@ -257,15 +257,15 @@ bool ecs_tree_next(
             continue;
         }
 
-        view->count = ecs_table_count(table);
-        if (!view->count) {
+        it->count = ecs_table_count(table);
+        if (!it->count) {
             continue;
         }
 
-        view->table = table;
-        view->table_columns = data->columns;
-        view->count = ecs_table_count(table);
-        view->entities = ecs_vector_first(data->entities, ecs_entity_t);
+        it->table = table;
+        it->table_columns = data->columns;
+        it->count = ecs_table_count(table);
+        it->entities = ecs_vector_first(data->entities, ecs_entity_t);
         iter->index = ++i;
 
         return true;

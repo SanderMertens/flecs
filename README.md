@@ -41,13 +41,13 @@ typedef struct Position {
 
 typedef float Speed;
 
-void Move(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Speed, s, 2);
+void Move(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Speed, s, 2);
     
-    for (int i = 0; i < view->count; i ++) {
-        p[i].x += s[i] * view->delta_time;
-        p[i].y += s[i] * view->delta_time;
+    for (int i = 0; i < it->count; i ++) {
+        p[i].x += s[i] * it->delta_time;
+        p[i].y += s[i] * it->delta_time;
     }
 }
 

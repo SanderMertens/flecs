@@ -248,8 +248,8 @@ void Remove_bulk_remove_all_tag() {
     test_int( ecs_count(world, Tag), 0);
 }
 
-void RemoveVelocity(ecs_view_t *view) {
-    probe_system(view);
+void RemoveVelocity(ecs_iter_t *it) {
+    probe_system(it);
 }
 
 void Remove_bulk_on_remove() {

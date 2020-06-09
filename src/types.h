@@ -248,7 +248,7 @@ typedef struct ecs_on_demand_in_t {
  * ran, and 'time_passed' is decreased by 'period'. 
  */
 typedef struct EcsSystem {
-    ecs_view_action_t action;    /* Callback to be invoked for matching view */
+    ecs_view_action_t action;    /* Callback to be invoked for matching it */
     void *ctx;                     /* Userdata for system */
     float time_spent;              /* Time spent on running system */
     int32_t invoke_count;          /* Number of times system is invoked */
@@ -358,7 +358,7 @@ typedef struct ecs_job_t {
 
 /** A type desribing a worker thread. When a system is invoked by a worker
  * thread, it receives a pointer to an ecs_thread_t instead of a pointer to an 
- * ecs_world_t (provided by the ecs_view_t type). When this ecs_thread_t is passed down
+ * ecs_world_t (provided by the ecs_iter_t type). When this ecs_thread_t is passed down
  * into the flecs API, the API functions are able to tell whether this is an
  * ecs_thread_t or an ecs_world_t by looking at the 'magic' number. This allows the
  * API to transparently resolve the stage to which updates should be written,

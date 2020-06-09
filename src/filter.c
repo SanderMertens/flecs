@@ -1,7 +1,7 @@
 
 #include "flecs_private.h"
 
-ecs_view_t ecs_filter_iter(
+ecs_iter_t ecs_filter_iter(
     ecs_world_t *world,
     const ecs_filter_t *filter)
 {
@@ -11,13 +11,13 @@ ecs_view_t ecs_filter_iter(
         .index = 0
     };
 
-    return (ecs_view_t){
+    return (ecs_iter_t){
         .world = world,
         .iter.filter = iter
     };
 }
 
-ecs_view_t ecs_snapshot_filter_iter(
+ecs_iter_t ecs_snapshot_filter_iter(
     ecs_world_t *world,
     const ecs_snapshot_t *snapshot,
     const ecs_filter_t *filter)
@@ -28,16 +28,16 @@ ecs_view_t ecs_snapshot_filter_iter(
         .index = 0
     };
 
-    return (ecs_view_t){
+    return (ecs_iter_t){
         .world = world,
         .iter.filter = iter
     };
 }
 
 bool ecs_filter_next(
-    ecs_view_t *view)
+    ecs_iter_t *it)
 {
-    ecs_filter_iter_t *iter = &view->iter.filter;
+    ecs_filter_iter_t *iter = &it->iter.filter;
     ecs_sparse_t *tables = iter->tables;
     int32_t count = ecs_sparse_count(tables);
     int32_t i;
@@ -52,14 +52,14 @@ bool ecs_filter_next(
             continue;
         }
 
-        if (!ecs_table_match_filter(view->world, table, &iter->filter)) {
+        if (!ecs_table_match_filter(it->world, table, &iter->filter)) {
             continue;
         }
 
-        view->table = table;
-        view->table_columns = data->columns;
-        view->count = ecs_table_count(table);
-        view->entities = ecs_vector_first(data->entities, ecs_entity_t);
+        it->table = table;
+        it->table_columns = data->columns;
+        it->count = ecs_table_count(table);
+        it->entities = ecs_vector_first(data->entities, ecs_entity_t);
         iter->index = ++i;
 
         return true;

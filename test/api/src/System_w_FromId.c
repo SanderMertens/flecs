@@ -1,13 +1,13 @@
 #include <api.h>
 
 static
-void Iter(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    probe_system(view);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
     }
@@ -73,12 +73,12 @@ void System_w_FromId_3_column_2_from_id() {
 }
 
 static
-void CheckColumnType(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Position, 2);
+void CheckColumnType(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Position, 2);
 
-    test_assert(ecs_type(Position) == ecs_column_type(view, 1));
+    test_assert(ecs_type(Position) == ecs_column_type(it, 1));
 
-    probe_system(view);
+    probe_system(it);
 }
 
 void System_w_FromId_column_type() {

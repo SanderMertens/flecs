@@ -1,24 +1,24 @@
 #include <api.h>
 
 static
-void OnPosition(ecs_view_t *view) {
-    probe_system(view);
+void OnPosition(ecs_iter_t *it) {
+    probe_system(it);
 }
 
 static
-void Add_to_current(ecs_view_t *view) {
-    IterData *ctx = ecs_get_context(view->world);
+void Add_to_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (ctx->component) {
-            ecs_add_entity(view->world, view->entities[i], ctx->component);
+            ecs_add_entity(it->world, it->entities[i], ctx->component);
 
-            test_assert( !!ecs_get_type(view->world, view->entities[i]));
+            test_assert( !!ecs_get_type(it->world, it->entities[i]));
         }
 
         if (ctx->component_2) {
-            ecs_add_entity(view->world, view->entities[i], ctx->component_2);
+            ecs_add_entity(it->world, it->entities[i], ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -26,19 +26,19 @@ void Add_to_current(ecs_view_t *view) {
 }
 
 static
-void Remove_from_current(ecs_view_t *view) {
-    IterData *ctx = ecs_get_context(view->world);
+void Remove_from_current(ecs_iter_t *it) {
+    IterData *ctx = ecs_get_context(it->world);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_entity_t e = view->entities[i];
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
 
         if (ctx->component) {
-            ecs_remove_entity(view->world, e, ctx->component);
+            ecs_remove_entity(it->world, e, ctx->component);
         }
 
         if (ctx->component_2) {
-            ecs_remove_entity(view->world, e, ctx->component_2);
+            ecs_remove_entity(it->world, e, ctx->component_2);
         }
 
         ctx->entity_count ++;
@@ -48,14 +48,14 @@ void Remove_from_current(ecs_view_t *view) {
 static Probe pv_probe;
 
 static
-void On_PV(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Velocity, v, 2);
+void On_PV(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    probe_system_w_ctx(view, &pv_probe);
+    probe_system_w_ctx(it, &pv_probe);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }

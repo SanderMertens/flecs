@@ -54,10 +54,10 @@ typedef struct Color {
 } Color;
 
 void probe_system_w_ctx(
-    ecs_view_t *view,
+    ecs_iter_t *it,
     Probe *ctx);
 
-void probe_system(ecs_view_t *view);
+void probe_system(ecs_iter_t *it);
 
 void probe_has_entity(Probe *probe, ecs_entity_t e);
 

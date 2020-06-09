@@ -200,42 +200,42 @@ void New_w_Count_type_w_tag_mixed() {
 }
 
 static
-void AddPosition(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void AddPosition(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t velocity = *(ecs_entity_t*)view->param;
+    ecs_entity_t velocity = *(ecs_entity_t*)it->param;
 
     int i;
-    for (i = view->count - 1; i >= 0; i --) {
+    for (i = it->count - 1; i >= 0; i --) {
         test_int(p[i].x, 10 + 20 * i);
         test_int(p[i].y, 20 + 20 * i);
 
         p[i].x ++;
 
         ecs_set_ptr_w_entity(
-            view->world, view->entities[i], velocity, 
+            it->world, it->entities[i], velocity, 
             sizeof(Velocity), &(Velocity){2, 3});
     }
 }
 
 static
-void SetPosition(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void SetPosition(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t rotation = *(ecs_entity_t*)view->param;
+    ecs_entity_t rotation = *(ecs_entity_t*)it->param;
 
     int i;
-    for (i = view->count - 1; i >= 0; i --) {
+    for (i = it->count - 1; i >= 0; i --) {
         p[i].y ++;
-        ecs_add_entity(view->world, view->entities[i], rotation);
+        ecs_add_entity(it->world, it->entities[i], rotation);
     }
 }
 
 static int32_t on_movable_count = 0;
 
 static
-void OnMovable(ecs_view_t *view) {
-    on_movable_count += view->count;
+void OnMovable(ecs_iter_t *it) {
+    on_movable_count += it->count;
 }
 
 void New_w_Count_new_w_on_add_on_set_monitor() {

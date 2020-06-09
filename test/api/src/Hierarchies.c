@@ -21,8 +21,8 @@ void Hierarchies_tree_iter_empty() {
 
     ECS_ENTITY(world, Parent, 0);
 
-    ecs_view_t view = ecs_tree_iter(world, Parent);
-    test_assert( !ecs_tree_next(&view));
+    ecs_iter_t it = ecs_tree_iter(world, Parent);
+    test_assert( !ecs_tree_next(&it));
 
     ecs_fini(world);
 }
@@ -36,15 +36,15 @@ void Hierarchies_tree_iter_1_table() {
     ECS_ENTITY(world, Child2, CHILDOF | Parent);
     ECS_ENTITY(world, Child3, CHILDOF | Parent);
 
-    ecs_view_t view = ecs_tree_iter(world, Parent);
-    test_assert( ecs_tree_next(&view) == true);
-    test_int( view.count, 3);
+    ecs_iter_t it = ecs_tree_iter(world, Parent);
+    test_assert( ecs_tree_next(&it) == true);
+    test_int( it.count, 3);
 
-    test_assert(view.entities[0] == Child1);
-    test_assert(view.entities[1] == Child2);
-    test_assert(view.entities[2] == Child3);
+    test_assert(it.entities[0] == Child1);
+    test_assert(it.entities[1] == Child2);
+    test_assert(it.entities[2] == Child3);
 
-    test_assert( !ecs_tree_next(&view));
+    test_assert( !ecs_tree_next(&it));
 
     ecs_fini(world);
 }
@@ -61,18 +61,18 @@ void Hierarchies_tree_iter_2_tables() {
     ECS_ENTITY(world, Child3, CHILDOF | Parent, Position);
     ECS_ENTITY(world, Child4, CHILDOF | Parent, Position);
 
-    ecs_view_t view = ecs_tree_iter(world, Parent);
-    test_assert( ecs_tree_next(&view) == true);
-    test_int( view.count, 2);
-    test_assert(view.entities[0] == Child1);
-    test_assert(view.entities[1] == Child2);
+    ecs_iter_t it = ecs_tree_iter(world, Parent);
+    test_assert( ecs_tree_next(&it) == true);
+    test_int( it.count, 2);
+    test_assert(it.entities[0] == Child1);
+    test_assert(it.entities[1] == Child2);
 
-    test_assert( ecs_tree_next(&view) == true);
-    test_int( view.count, 2);
-    test_assert(view.entities[0] == Child3);
-    test_assert(view.entities[1] == Child4);
+    test_assert( ecs_tree_next(&it) == true);
+    test_int( it.count, 2);
+    test_assert(it.entities[0] == Child3);
+    test_assert(it.entities[1] == Child4);
 
-    test_assert( !ecs_tree_next(&view));
+    test_assert( !ecs_tree_next(&it));
 
     ecs_fini(world);
 }

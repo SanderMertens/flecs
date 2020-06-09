@@ -1,16 +1,16 @@
 #include <api.h>
 
 static
-void Iter(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    Position *p_parent = ecs_column(view, Position, 2);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    Position *p_parent = ecs_column(it, Position, 2);
 
-    test_assert(!p_parent || ecs_is_shared(view, 2));
+    test_assert(!p_parent || ecs_is_shared(it, 2));
 
-    probe_system(view);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x ++;
         p[i].y ++;
 
@@ -161,16 +161,16 @@ void SystemCascade_cascade_depth_2() {
 }
 
 static
-void AddParent(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    Position *p_parent = ecs_column(view, Position, 2);
+void AddParent(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    Position *p_parent = ecs_column(it, Position, 2);
 
-    test_assert(!p_parent || ecs_is_shared(view, 2));
+    test_assert(!p_parent || ecs_is_shared(it, 2));
 
-    probe_system(view);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (p_parent) {
             p[i].x += p_parent->x;
             p[i].y += p_parent->y;

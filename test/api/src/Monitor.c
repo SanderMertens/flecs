@@ -1,8 +1,8 @@
 #include <api.h>
 
 static
-void OnPosition(ecs_view_t *view) {
-    probe_system(view);
+void OnPosition(ecs_iter_t *it) {
+    probe_system(it);
 }
 
 void Monitor_1_comp() {

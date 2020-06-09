@@ -361,7 +361,7 @@ void Set_get_mutable_existing() {
 
 static bool is_invoked = false;
 
-void OnSetPosition(ecs_view_t *view) {
+void OnSetPosition(ecs_iter_t *it) {
     is_invoked = true;
 }
 

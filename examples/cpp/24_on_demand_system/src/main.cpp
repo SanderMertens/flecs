@@ -27,15 +27,15 @@ int main(int argc, char *argv[]) {
      * run this system if there is interest in any of its [out] columns. In this
      * case the system will only be ran if there is interest in Position. */
     flecs::system<>(world).signature("[out] Position, Velocity").on_demand()
-        .action([](flecs::view& view){
-            flecs::column<Position> p(view, 1);
-            flecs::column<Velocity> v(view, 2);
+        .action([](flecs::it& it){
+            flecs::column<Position> p(it, 1);
+            flecs::column<Velocity> v(it, 2);
 
-            for (auto row: view) {
+            for (auto row: it) {
                 p[row].x += v[row].x;
                 p[row].y += v[row].y;
 
-                std::cout << "Moved " << view.entity(row).name() << " to {" <<
+                std::cout << "Moved " << it.entity(row).name() << " to {" <<
                     p[row].x << ", " << p[row].y << "}" << std::endl;                
             }
         });

@@ -38,9 +38,9 @@ int main(int argc, char *argv[]) {
     flecs::snapshot s(world);
     s.take(f);
 
-    for (auto view : s) {
-        flecs::type table_type = view.table_type();
+    for (auto it : s) {
+        flecs::type table_type = it.table_type();
         std::cout << "Iterating table [" << table_type.str() << "]" 
-                  << " (" << view.count() << " entities)" << std::endl;
+                  << " (" << it.count() << " entities)" << std::endl;
     }
 }

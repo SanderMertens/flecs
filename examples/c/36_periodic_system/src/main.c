@@ -9,22 +9,22 @@ typedef struct Vector2D {
 typedef Vector2D Position;
 typedef Vector2D Velocity;
 
-void Move(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
-    ECS_COLUMN(view, Velocity, v, 2);
+void Move(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    for (int i = 0; i < view->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
 }
 
-void PrintPosition(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void PrintPosition(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    for (int i = 0; i < view->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         printf("%s position = {.x = %f, .y = %f}\n",
-            ecs_get_name(view->world, view->entities[i]),
+            ecs_get_name(it->world, it->entities[i]),
             p[i].x, p[i].y);
     }
 }

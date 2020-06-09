@@ -1,9 +1,9 @@
 #include <api.h>
 
-void Progress(ecs_view_t *view) {
+void Progress(ecs_iter_t *it) {
     int row;
-    for (row = 0; row < view->count; row ++) {
-        Position *foo = ecs_field(view, Position, 1, row);
+    for (row = 0; row < it->count; row ++) {
+        Position *foo = ecs_field(it, Position, 1, row);
         foo->x ++;
     }
 }
@@ -613,26 +613,26 @@ typedef struct Param {
 } Param;
 
 static
-void TestSubset(ecs_view_t *view) {
-    Param *param = view->param;
+void TestSubset(ecs_iter_t *it) {
+    Param *param = it->param;
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        test_assert(param->entity != view->entities[i]);
+    for (i = 0; i < it->count; i ++) {
+        test_assert(param->entity != it->entities[i]);
         param->count ++;
     }    
 }
 
 static
-void TestAll(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TestAll(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t TestSubset = ecs_column_entity(view, 2);
+    ecs_entity_t TestSubset = ecs_column_entity(it, 2);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        Param param = {.entity = view->entities[i], 0};
-        ecs_run_w_filter(view->world, TestSubset, 1, view->frame_offset + i + 1, 0, 0, &param);
+    for (i = 0; i < it->count; i ++) {
+        Param param = {.entity = it->entities[i], 0};
+        ecs_run_w_filter(it->world, TestSubset, 1, it->frame_offset + i + 1, 0, 0, &param);
         p[i].x += param.count;
     }
 }
@@ -974,8 +974,8 @@ void MultiThread_change_thread_count() {
 }
 
 static
-void QuitSystem(ecs_view_t *view) {
-    ecs_quit(view->world);
+void QuitSystem(ecs_iter_t *it) {
+    ecs_quit(it->world);
 }
 
 void MultiThread_multithread_quit() {
@@ -997,7 +997,7 @@ void MultiThread_multithread_quit() {
 static bool has_ran = false;
 
 static
-void MtTask(ecs_view_t *view) {
+void MtTask(ecs_iter_t *it) {
     has_ran = true;
 }
 
@@ -1016,17 +1016,17 @@ void MultiThread_schedule_w_tasks() {
 }
 
 static
-void ReactiveDummySystem(ecs_view_t * view) {
+void ReactiveDummySystem(ecs_iter_t * it) {
     has_ran = true;
 }
 
 static
-void PeriodicDummySystem(ecs_view_t * view) {
-    ECS_COLUMN_COMPONENT(view, Position, 1);
+void PeriodicDummySystem(ecs_iter_t * it) {
+    ECS_COLUMN_COMPONENT(it, Position, 1);
     
     int i;
-    for (i = 0; i < view->count; i++ ) {
-        ecs_set(view->world, view->entities[i], Position, {0});
+    for (i = 0; i < it->count; i++ ) {
+        ecs_set(it->world, it->entities[i], Position, {0});
         test_assert(has_ran == true);
     }
 }

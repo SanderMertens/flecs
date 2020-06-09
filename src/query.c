@@ -190,7 +190,7 @@ const char* query_name(
     }
 }
 
-/** Add table to system, compute offsets for system components in table view */
+/** Add table to system, compute offsets for system components in table it */
 static
 void add_table(
     ecs_world_t *world,
@@ -1306,7 +1306,7 @@ void ecs_query_free(
 }
 
 /* Create query iterator */
-ecs_view_t ecs_query_iter_page(
+ecs_iter_t ecs_query_iter_page(
     ecs_query_t *query,
     int32_t offset,
     int32_t limit)
@@ -1330,7 +1330,7 @@ ecs_view_t ecs_query_iter_page(
         .index = 0,
     };
 
-    return (ecs_view_t){
+    return (ecs_iter_t){
         .world = query->world,
         .query = query,
         .column_count = ecs_vector_count(query->sig.columns),
@@ -1340,7 +1340,7 @@ ecs_view_t ecs_query_iter_page(
     };
 }
 
-ecs_view_t ecs_query_iter(
+ecs_iter_t ecs_query_iter(
     ecs_query_t *query)
 {
     return ecs_query_iter_page(query, 0, 0);
@@ -1350,7 +1350,7 @@ void ecs_query_set_view(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_query_t *query,
-    ecs_view_t *view,
+    ecs_iter_t *it,
     int32_t table_index,
     int32_t row,
     int32_t count)
@@ -1362,38 +1362,38 @@ void ecs_query_set_view(
     ecs_table_t *world_table = table->table;
     ecs_data_t *table_data = ecs_table_get_staged_data(world, stage, world_table);
     ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t);  
-    view->entities = &entity_buffer[row];
+    it->entities = &entity_buffer[row];
 
-    view->world = world;
-    view->query = query;
-    view->column_count = ecs_vector_count(query->sig.columns);
-    view->table_count = 1;
-    view->inactive_table_count = 0;
-    view->table = world_table;
-    view->table_columns = table_data->columns;
-    view->columns = table->columns;
-    view->components = table->components;
-    view->references = ecs_vector_first(table->references, ecs_reference_t);
-    view->offset = row;
-    view->count = count;
-    view->total_count = count;
+    it->world = world;
+    it->query = query;
+    it->column_count = ecs_vector_count(query->sig.columns);
+    it->table_count = 1;
+    it->inactive_table_count = 0;
+    it->table = world_table;
+    it->table_columns = table_data->columns;
+    it->columns = table->columns;
+    it->components = table->components;
+    it->references = ecs_vector_first(table->references, ecs_reference_t);
+    it->offset = row;
+    it->count = count;
+    it->total_count = count;
 }
 
 /* Return next table */
 bool ecs_query_next(
-    ecs_view_t *view)
+    ecs_iter_t *it)
 {
-    ecs_assert(view != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_query_iter_t *iter = &view->iter.query;
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_query_iter_t *iter = &it->iter.query;
     ecs_query_t *query = iter->query;
-    ecs_world_t *world = view->world;
+    ecs_world_t *world = it->world;
 
     ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
     ecs_table_range_t *ranges = ecs_vector_first(query->table_ranges, ecs_table_range_t);
 
     ecs_assert(!ranges || query->compare, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t table_count = view->table_count;
+    int32_t table_count = it->table_count;
     if (ranges) {
         table_count = ecs_vector_count(query->table_ranges);
     } else {
@@ -1406,7 +1406,7 @@ bool ecs_query_next(
     int32_t offset = iter->offset;
     int32_t limit = iter->limit;
     int32_t remaining = iter->remaining;
-    int32_t prev_count = view->total_count;
+    int32_t prev_count = it->total_count;
     bool offset_limit = (offset | limit) != 0;
 
     int i;
@@ -1426,7 +1426,7 @@ bool ecs_query_next(
         if (world_table) {
             table_data = ecs_table_get_data(real_world, world_table);
             ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
-            view->table_columns = table_data->columns;
+            it->table_columns = table_data->columns;
             
             if (ranges) {
                 first = ranges[i].start_row;
@@ -1469,19 +1469,19 @@ bool ecs_query_next(
             }
 
             ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t); 
-            view->entities = &entity_buffer[first];
-            view->offset = first;
-            view->count = count;
-            view->total_count = count;
+            it->entities = &entity_buffer[first];
+            it->offset = first;
+            it->count = count;
+            it->total_count = count;
         }
 
-        view->table = world_table;
-        view->columns = table->columns;
-        view->components = table->components;
-        view->references = ecs_vector_first(table->references, ecs_reference_t);
-        view->frame_offset += prev_count;
+        it->table = world_table;
+        it->columns = table->columns;
+        it->components = table->components;
+        it->references = ecs_vector_first(table->references, ecs_reference_t);
+        it->frame_offset += prev_count;
 
-        /* Table is ready to be iterated, return view struct */
+        /* Table is ready to be iterated, return it struct */
         iter->index = ++ i;
 
         return true;
@@ -1491,18 +1491,18 @@ bool ecs_query_next(
 }
 
 bool ecs_query_next_worker(
-    ecs_view_t *view,
+    ecs_iter_t *it,
     int32_t current,
     int32_t total)
 {
-    int32_t per_worker, first, prev_offset = view->offset;
+    int32_t per_worker, first, prev_offset = it->offset;
 
     do {
-        if (!ecs_query_next(view)) {
+        if (!ecs_query_next(it)) {
             return false;
         }
 
-        int32_t count = view->count;
+        int32_t count = it->count;
         per_worker = count / total;
         first = per_worker * current;
 
@@ -1517,7 +1517,7 @@ bool ecs_query_next_worker(
             }
         }
 
-        if (!per_worker && !(view->query->flags & EcsQueryNeedsTables)) {
+        if (!per_worker && !(it->query->flags & EcsQueryNeedsTables)) {
             if (current == 0) {
                 return true;
             } else {
@@ -1526,14 +1526,11 @@ bool ecs_query_next_worker(
         }
     } while (!per_worker);
 
-    view->frame_offset -= prev_offset;
-    view->count = per_worker;
-    view->offset += first;
-    view->entities = &view->entities[first];
-    view->frame_offset += first;
-    
-    // printf("%d: frame_offset: %d, offset = %d, count = %d\n", 
-    //     current, view->frame_offset, view->offset, view->count);
+    it->frame_offset -= prev_offset;
+    it->count = per_worker;
+    it->offset += first;
+    it->entities = &it->entities[first];
+    it->frame_offset += first;
 
     return true;
 }

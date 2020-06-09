@@ -14,22 +14,22 @@ int main(int argc, char *argv[]) {
 
     // Basic task
     flecs::system<>(world)
-        .action([](flecs::view& view) {
+        .action([](flecs::it& it) {
             std::cout << "Task executed every second" << std::endl;
         });
 
     // Task that is executed every 2 seconds
     flecs::system<>(world)
         .period(2.0)
-        .action([](flecs::view& view) {
+        .action([](flecs::it& it) {
             std::cout << "Task executed every 2 seconds" << std::endl;
         });
 
     // It is possible to add components to a task, just like regular systems
     auto system = flecs::system<>(world)
         .signature("SYSTEM:TaskContext")
-        .action([](flecs::view& view) {
-            flecs::column<const TaskContext> ctx(view, 1);
+        .action([](flecs::it& it) {
+            flecs::column<const TaskContext> ctx(it, 1);
             std::cout << "Task with context: " << ctx->value << std::endl;
         });
 

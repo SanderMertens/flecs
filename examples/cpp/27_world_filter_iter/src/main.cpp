@@ -39,16 +39,16 @@ int main(int argc, char *argv[]) {
         .include<Velocity>()
         .include_kind(flecs::MatchAll);
 
-    for (auto view : world.filter(f)) {
+    for (auto it : world.filter(f)) {
         /* Get the Position and Velocity columns from the current table */
-        auto p = view.table_column<Position>();
-        auto v = view.table_column<Velocity>();
+        auto p = it.table_column<Position>();
+        auto v = it.table_column<Velocity>();
 
-        for (auto row : view) {
+        for (auto row : it) {
             p[row].x += v[row].x;
             p[row].y += v[row].y;
 
-            std::cout << "Moved " << view.entity(row).name() << " to {" <<
+            std::cout << "Moved " << it.entity(row).name() << " to {" <<
                 p[row].x << ", " << p[row].y << "}" << std::endl;
         }
     }

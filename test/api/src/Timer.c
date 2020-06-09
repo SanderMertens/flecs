@@ -5,16 +5,16 @@ static bool system_b_invoked;
 static bool system_c_invoked;
 
 static
-void SystemA(ecs_view_t *view) {
-    test_int(view->delta_time, 1.0);
-    test_int(view->delta_system_time, 3.0);
+void SystemA(ecs_iter_t *it) {
+    test_int(it->delta_time, 1.0);
+    test_int(it->delta_system_time, 3.0);
     system_a_invoked = true;
 }
 
 static 
-void SystemB(ecs_view_t *view) {
-    test_int(view->delta_time, 1.0);
-    test_int(view->delta_system_time, 3.0);
+void SystemB(ecs_iter_t *it) {
+    test_int(it->delta_time, 1.0);
+    test_int(it->delta_system_time, 3.0);
     system_b_invoked = true;
 }
 
@@ -308,9 +308,9 @@ void Timer_rate_filter() {
 }
 
 static
-void SystemC(ecs_view_t *view) {
-    test_int(view->delta_time, 1.0);
-    test_int(view->delta_system_time, 6.0);
+void SystemC(ecs_iter_t *it) {
+    test_int(it->delta_time, 1.0);
+    test_int(it->delta_system_time, 6.0);
     system_c_invoked = true;
 }
 

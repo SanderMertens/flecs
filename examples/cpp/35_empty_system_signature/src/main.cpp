@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
     /* Define a system with an empty signature. Systems that do not match with
      * any entites are invoked once per frame */
     flecs::system<>(world)
-        .action([](const flecs::view& view) {
+        .action([](const flecs::it& it) {
             std::cout << "System invoked!" << std::endl;
         });
 

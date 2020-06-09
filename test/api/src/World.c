@@ -8,15 +8,15 @@ void install_test_abort() {
     ecs_os_set_api(&os_api);
 }
 
-void Move(ecs_view_t *view) {
-    probe_system(view);
+void Move(ecs_iter_t *it) {
+    probe_system(it);
 
     int row;
-    for (row = 0; row < view->count; row ++) {
-        Position *p = ecs_field(view, Position, 1, row);
-        Velocity *v = ecs_field(view, Velocity, 2, row);
-        p->x += v->x * view->delta_time;
-        p->y += v->y * view->delta_time;
+    for (row = 0; row < it->count; row ++) {
+        Position *p = ecs_field(it, Position, 1, row);
+        Velocity *v = ecs_field(it, Velocity, 2, row);
+        p->x += v->x * it->delta_time;
+        p->y += v->y * it->delta_time;
     }
 }
 
@@ -164,13 +164,13 @@ void World_entity_range_out_of_range_check_disabled() {
     ecs_fini(world);
 }
 
-void AddToExisting(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Velocity, 2);
+void AddToExisting(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Velocity, 2);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_add(view->world, view->entities[i], Velocity);
-        test_assert( ecs_has(view->world, view->entities[i], Velocity));
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
+        test_assert( ecs_has(it->world, it->entities[i], Velocity));
     }
 }
 
@@ -211,13 +211,13 @@ void World_entity_range_add_in_range_in_progress() {
     ecs_fini(world);
 }
 
-void AddOutOfRange(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Velocity, 2);
+void AddOutOfRange(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Velocity, 2);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_expect_abort();
-        ecs_add(view->world, 1001, Velocity);
+        ecs_add(it->world, 1001, Velocity);
     }
 }
 
@@ -343,90 +343,90 @@ void World_dim_dim_type() {
 }
 
 static
-void TOnLoad(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TOnLoad(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 0);
         p[i].x ++;
     }
 }
 
 static
-void TPostLoad(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TPostLoad(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 1);
         p[i].x ++;
     }
 }
 
 static
-void TPreUpdate(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TPreUpdate(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 2);
         p[i].x ++;
     }
 }
 
 static
-void TOnUpdate(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TOnUpdate(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 3);
         p[i].x ++;
     }
 }
 
 static
-void TOnValidate(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TOnValidate(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 4);
         p[i].x ++;
     }
 }
 
 static
-void TPostUpdate(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TPostUpdate(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 5);
         p[i].x ++;
     }
 }
 
 static
-void TPreStore(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TPreStore(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 6);
         p[i].x ++;
     }
 }
 
 static
-void TOnStore(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TOnStore(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 7);
         p[i].x ++;
     }
 }
 
 static
-void TManual(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TManual(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 8);
         p[i].x ++;
     }
@@ -497,101 +497,101 @@ void World_phases_match_in_create() {
 }
 
 static
-void TMergeOnLoad(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TMergeOnLoad(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 0);
-        ecs_set(view->world, view->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
 static
-void TMergePostLoad(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TMergePostLoad(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 1);
-        ecs_set(view->world, view->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
 static
-void TMergePreUpdate(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TMergePreUpdate(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 2);
-        ecs_set(view->world, view->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
 static
-void TMergeOnUpdate(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TMergeOnUpdate(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 3);
-        ecs_set(view->world, view->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
 static
-void TMergeOnValidate(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TMergeOnValidate(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 4);
-        ecs_set(view->world, view->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
 static
-void TMergePostUpdate(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TMergePostUpdate(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 5);
-        ecs_set(view->world, view->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
 static
-void TMergePreStore(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TMergePreStore(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 6);
-        ecs_set(view->world, view->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
 static
-void TMergeOnStore(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TMergeOnStore(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 7);
-        ecs_set(view->world, view->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
 static
-void TMergeManual(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void TMergeManual(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 8);
-        ecs_set(view->world, view->entities[i], Position, {p[i].x + 1, 0});
+        ecs_set(it->world, it->entities[i], Position, {p[i].x + 1, 0});
     }
 }
 
@@ -628,8 +628,8 @@ void World_phases_w_merging() {
 }
 
 static
-void TimeCheck(ecs_view_t *view) {
-    test_assert(view->delta_time > 0);
+void TimeCheck(ecs_iter_t *it) {
+    test_assert(it->delta_time > 0);
 }
 
 void World_measure_time() {
@@ -694,7 +694,7 @@ void busy_wait(float wait_time) {
 }
 
 static
-void BusySystem(ecs_view_t *view) {
+void BusySystem(ecs_iter_t *it) {
     /* Spend 14msec doing something */
     busy_wait(0.014);
 }
@@ -760,7 +760,7 @@ void World_control_fps_busy_app() {
 }
 
 static
-void RandomSystem(ecs_view_t *view) {
+void RandomSystem(ecs_iter_t *it) {
     /* wait at most 16msec */
     float rnd_time = ((float)rand() / (float)RAND_MAX) * 0.016;
     busy_wait(rnd_time);
@@ -828,7 +828,7 @@ void World_control_fps_random_app() {
 }
 
 static
-void Dummy(ecs_view_t *view) { }
+void Dummy(ecs_iter_t *it) { }
 
 void World_world_stats() {
     ecs_world_t *world = ecs_init();

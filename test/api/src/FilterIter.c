@@ -14,22 +14,22 @@ void FilterIter_iter_one_table() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-   ecs_view_t view = ecs_filter_iter(world, &(ecs_filter_t){
+   ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
         .include = ecs_type(Position),
     });
 
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&view)) {
+    while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += view.count;
+        entity_count += it.count;
         
-        test_assert(ecs_table_type(&view) == ecs_type(Position));
-        Position *row = ecs_table_column(&view, 0);
+        test_assert(ecs_table_type(&it) == ecs_type(Position));
+        Position *row = ecs_table_column(&it, 0);
         test_assert(row != NULL);
 
-        for (i = 0; i < view.count; i ++) {
+        for (i = 0; i < it.count; i ++) {
             test_int(row[i].x, i);
             test_int(row[i].y, i * 2);
         }
@@ -64,21 +64,21 @@ void FilterIter_iter_two_tables() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }    
 
-   ecs_view_t view = ecs_filter_iter(world, &(ecs_filter_t){
+   ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
         .include = ecs_type(Position),
     });
 
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&view)) {
+    while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += view.count;
+        entity_count += it.count;
         
-        Position *row = ecs_table_column(&view, 0);
+        Position *row = ecs_table_column(&it, 0);
         test_assert(row != NULL);
 
-        for (i = 0; i < view.count; i ++) {
+        for (i = 0; i < it.count; i ++) {
             test_int(row[i].x, i);
             test_int(row[i].y, i * 2);
         }
@@ -107,29 +107,29 @@ void FilterIter_iter_two_comps() {
         ecs_set(world, e + i, Velocity, {i + 1, i * 2 + 1});
     }
 
-   ecs_view_t view = ecs_filter_iter(world, &(ecs_filter_t){
+   ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
         .include = ecs_type(Movable),
     });
 
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&view)) {
+    while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += view.count;
+        entity_count += it.count;
 
-        ecs_type_t table_type = ecs_table_type(&view);
+        ecs_type_t table_type = ecs_table_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         test_assert(array[1] == ecs_entity(Velocity));
         
-        Position *p_row = ecs_table_column(&view, 0);
+        Position *p_row = ecs_table_column(&it, 0);
         test_assert(p_row != NULL);
 
-        Velocity *v_row = ecs_table_column(&view, 1);
+        Velocity *v_row = ecs_table_column(&it, 1);
         test_assert(v_row != NULL);        
 
-        for (i = 0; i < view.count; i ++) {
+        for (i = 0; i < it.count; i ++) {
             test_int(p_row[i].x, i);
             test_int(p_row[i].y, i * 2);
 
@@ -169,22 +169,22 @@ void FilterIter_iter_snapshot_one_table() {
     /* Ensure world is empty */
     test_int( ecs_count(world, Position), 0);
 
-   ecs_view_t view = ecs_snapshot_filter_iter(world, s, &filter);
+   ecs_iter_t it = ecs_snapshot_filter_iter(world, s, &filter);
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&view)) {
+    while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += view.count;
+        entity_count += it.count;
 
-        ecs_type_t table_type = ecs_table_type(&view);
+        ecs_type_t table_type = ecs_table_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         
-        Position *p_row = ecs_table_column(&view, 0);
+        Position *p_row = ecs_table_column(&it, 0);
         test_assert(p_row != NULL);    
 
-        for (i = 0; i < view.count; i ++) {
+        for (i = 0; i < it.count; i ++) {
             test_int(p_row[i].x, i);
             test_int(p_row[i].y, i * 2);
         }
@@ -233,22 +233,22 @@ void FilterIter_iter_snapshot_two_tables() {
     /* Ensure world is empty */
     test_int( ecs_count(world, Position), 0);
 
-   ecs_view_t view = ecs_snapshot_filter_iter(world, s, &filter);
+   ecs_iter_t it = ecs_snapshot_filter_iter(world, s, &filter);
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&view)) {
+    while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += view.count;
+        entity_count += it.count;
 
-        ecs_type_t table_type = ecs_table_type(&view);
+        ecs_type_t table_type = ecs_table_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         
-        Position *p_row = ecs_table_column(&view, 0);
+        Position *p_row = ecs_table_column(&it, 0);
         test_assert(p_row != NULL);     
 
-        for (i = 0; i < view.count; i ++) {
+        for (i = 0; i < it.count; i ++) {
             test_int(p_row[i].x, i);
             test_int(p_row[i].y, i * 2);
         }
@@ -291,26 +291,26 @@ void FilterIter_iter_snapshot_two_comps() {
     /* Ensure world is empty */
     test_int( ecs_count(world, Movable), 0);
 
-   ecs_view_t view = ecs_snapshot_filter_iter(world, s, &filter);
+   ecs_iter_t it = ecs_snapshot_filter_iter(world, s, &filter);
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&view)) {
+    while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += view.count;
+        entity_count += it.count;
 
-        ecs_type_t table_type = ecs_table_type(&view);
+        ecs_type_t table_type = ecs_table_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));      
         test_assert(array[1] == ecs_entity(Velocity));        
         
-        Position *p_row = ecs_table_column(&view, 0);
+        Position *p_row = ecs_table_column(&it, 0);
         test_assert(p_row != NULL);
 
-        Velocity *v_row = ecs_table_column(&view, 1);
+        Velocity *v_row = ecs_table_column(&it, 1);
         test_assert(v_row != NULL);        
 
-        for (i = 0; i < view.count; i ++) {
+        for (i = 0; i < it.count; i ++) {
             test_int(p_row[i].x, i);
             test_int(p_row[i].y, i * 2);
 
@@ -364,22 +364,22 @@ void FilterIter_iter_snapshot_filtered_table() {
     /* Ensure world is empty */
     test_int( ecs_count(world, Position), 0);
 
-   ecs_view_t view = ecs_snapshot_filter_iter(world, s, &filter);
+   ecs_iter_t it = ecs_snapshot_filter_iter(world, s, &filter);
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&view)) {
+    while (ecs_filter_next(&it)) {
         table_count ++;
-        entity_count += view.count;
+        entity_count += it.count;
 
-        ecs_type_t table_type = ecs_table_type(&view);
+        ecs_type_t table_type = ecs_table_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));        
         
-        Position *p_row = ecs_table_column(&view, 0);
+        Position *p_row = ecs_table_column(&it, 0);
         test_assert(p_row != NULL);
 
-        for (i = 0; i < view.count; i ++) {
+        for (i = 0; i < it.count; i ++) {
             test_int(p_row[i].x, i);
             test_int(p_row[i].y, i * 2);
         }

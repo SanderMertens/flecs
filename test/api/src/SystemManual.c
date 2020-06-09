@@ -1,23 +1,23 @@
 #include <api.h>
 
 static
-void Iter(ecs_view_t *view) {
-    ECS_COLUMN(view, Position, p, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
         
-    if (view->column_count >= 2) {
-        v = ecs_column(view, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
     }
 
-    if (view->column_count >= 3) {
-        m = ecs_column(view, Mass, 3);
+    if (it->column_count >= 3) {
+        m = ecs_column(it, Mass, 3);
     }
 
-    probe_system(view);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -81,7 +81,7 @@ void SystemManual_1_type_1_component() {
 static int normal_count;
 
 static
-void NormalSystem(ecs_view_t *view) {
+void NormalSystem(ecs_iter_t *it) {
     normal_count ++;
 }
 
@@ -147,12 +147,12 @@ void SystemManual_activate_status() {
 }
 
 static
-void AddVelocity(ecs_view_t *view) {
-    ECS_COLUMN_COMPONENT(view, Velocity, 2);
+void AddVelocity(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Velocity, 2);
 
     int i;
-    for (i = 0; i < view->count; i ++) {
-        ecs_add(view->world, view->entities[i], Velocity);
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
     }
 }
 
