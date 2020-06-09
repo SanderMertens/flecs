@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     flecs::component<Velocity>(world, "Velocity");
 
     flecs::system<Position, Velocity>(world)
-        .action([](const flecs::it& it, 
+        .action([](const flecs::iter& it, 
             flecs::column<Position> p, 
             flecs::column<Velocity> v) 
         {    

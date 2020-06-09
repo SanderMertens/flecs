@@ -23,7 +23,7 @@ ecs_type_t ecs_type(EcsTickSource);
 ecs_type_t ecs_type(EcsSignatureExpr);
 ecs_type_t ecs_type(EcsSignature);
 ecs_type_t ecs_type(EcsQuery);
-ecs_type_t ecs_type(EcsViewAction);
+ecs_type_t ecs_type(EcsIterAction);
 ecs_type_t ecs_type(EcsContext);
 
 /* Generic constructor to initialize a component to 0 */
@@ -269,7 +269,7 @@ void EcsCreateSystem(
     ecs_entity_t *entities = it->entities;
 
     EcsQuery *query = ecs_column(it, EcsQuery, 1);
-    EcsViewAction *action = ecs_column(it, EcsViewAction, 2);
+    EcsIterAction *action = ecs_column(it, EcsIterAction, 2);
     EcsContext *ctx = ecs_column(it, EcsContext, 3);
     
     int32_t i;
@@ -316,8 +316,8 @@ void ecs_init_builtins(
 
     /* Create systems necessary to create systems */
     bootstrap_set_system(world, "EcsCreateSignature", "EcsSignatureExpr", EcsCreateSignature);
-    bootstrap_set_system(world, "EcsCreateQuery", "EcsSignature, EcsViewAction", EcsCreateQuery);
-    bootstrap_set_system(world, "EcsCreateSystem", "EcsQuery, EcsViewAction, ?EcsContext", EcsCreateSystem);
+    bootstrap_set_system(world, "EcsCreateQuery", "EcsSignature, EcsIterAction", EcsCreateQuery);
+    bootstrap_set_system(world, "EcsCreateSystem", "EcsQuery, EcsIterAction, ?EcsContext", EcsCreateSystem);
 
     /* From here we can create systems */
 
@@ -390,7 +390,7 @@ void bootstrap_types(
     ecs_type(EcsSignatureExpr) = bootstrap_type(world, ecs_entity(EcsSignatureExpr));
     ecs_type(EcsSignature) = bootstrap_type(world, ecs_entity(EcsSignature));
     ecs_type(EcsQuery) = bootstrap_type(world, ecs_entity(EcsQuery));
-    ecs_type(EcsViewAction) = bootstrap_type(world, ecs_entity(EcsViewAction));
+    ecs_type(EcsIterAction) = bootstrap_type(world, ecs_entity(EcsIterAction));
     ecs_type(EcsContext) = bootstrap_type(world, ecs_entity(EcsContext));   
 }
 
@@ -499,7 +499,7 @@ void ecs_bootstrap(
     bootstrap_component(world, table, EcsSignatureExpr);
     bootstrap_component(world, table, EcsSignature);
     bootstrap_component(world, table, EcsQuery);
-    bootstrap_component(world, table, EcsViewAction);
+    bootstrap_component(world, table, EcsIterAction);
     bootstrap_component(world, table, EcsContext);
 
     world->stats.last_component_id = EcsLastBuiltin;

@@ -17,7 +17,7 @@ struct Mass {
 };
 
 /* Implement a move system with support for shared columns */
-void Move(flecs::it& it, flecs::column<Position> p, flecs::column<Force> f, flecs::column<Mass> m) {
+void Move(flecs::iter& it, flecs::column<Position> p, flecs::column<Force> f, flecs::column<Mass> m) {
 
     for (auto row : it) {
         /* Explicitly check if the Mass column is shared or not. If the column

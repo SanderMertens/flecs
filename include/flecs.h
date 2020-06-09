@@ -356,9 +356,9 @@ typedef struct EcsQuery {
 } EcsQuery;
 
 /* System action */
-typedef struct EcsViewAction {
+typedef struct EcsIterAction {
     ecs_view_action_t action;
-} EcsViewAction;
+} EcsIterAction;
 
 /* System context */
 typedef struct EcsContext {
@@ -427,7 +427,7 @@ extern ecs_type_t
     ecs_type(EcsSignatureExpr),
     ecs_type(EcsSignature),
     ecs_type(EcsQuery),
-    ecs_type(EcsViewAction),
+    ecs_type(EcsIterAction),
     ecs_type(EcsContext);
 
 /** Builtin component ids */
@@ -444,7 +444,7 @@ extern ecs_type_t
 #define FLECS__EEcsSignatureExpr (12)
 #define FLECS__EEcsSignature (13)
 #define FLECS__EEcsQuery (14)
-#define FLECS__EEcsViewAction (15)
+#define FLECS__EEcsIterAction (15)
 #define FLECS__EEcsContext (16)
 
 /* Builtin tag ids */

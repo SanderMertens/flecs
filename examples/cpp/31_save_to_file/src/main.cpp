@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 
         // Define a system to do something with the restored entities
         flecs::system<Position, Velocity>(world)
-            .action([](const flecs::it& it, 
+            .action([](const flecs::iter& it, 
                 flecs::column<Position> p, 
                 flecs::column<Velocity> v) 
             {    

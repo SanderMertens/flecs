@@ -13,7 +13,7 @@ struct Mana {
     float value;
 };
 
-void Regenerate(flecs::it& it) {
+void Regenerate(flecs::iter& it) {
     flecs::column<Health> health(it, 1);
     flecs::column<Stamina> stamina(it, 2);
     flecs::column<Mana> mana(it, 3);

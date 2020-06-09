@@ -962,7 +962,7 @@ void SystemMisc_change_system_action() {
 
     action_a_invoked = false;
 
-    ecs_set(world, sys, EcsViewAction, {ActionB});
+    ecs_set(world, sys, EcsIterAction, {ActionB});
 
     ecs_progress(world, 0);
 

@@ -1,7 +1,7 @@
 #include <system_features.h>
 #include <iostream>
 
-void Action(flecs::it& it) {
+void Action(flecs::iter& it) {
     std::cout << it.system().name() << " called!" << std::endl;
 }
 

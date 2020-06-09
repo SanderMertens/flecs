@@ -18,21 +18,21 @@ int main(int argc, char *argv[]) {
 
     flecs::system<>(world)
         .period(0.5)
-        .action([](flecs::it& it) {
+        .action([](flecs::iter& it) {
             std::cout << "t = 0.5, time elampsed = " << it.delta_system_time() 
                       << std::endl;
         });
 
     flecs::system<>(world)
         .period(1.0)
-        .action([](flecs::it& it) {
+        .action([](flecs::iter& it) {
             std::cout << "t = 1.0, time elampsed = " << it.delta_system_time() 
                       << std::endl;
         });
 
     flecs::system<>(world)
         .period(2.0)
-        .action([](flecs::it& it) {
+        .action([](flecs::iter& it) {
             std::cout << "t = 2.0, time elampsed = " << it.delta_system_time() 
                       << std::endl;
         });

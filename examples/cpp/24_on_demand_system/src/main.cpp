@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
      * run this system if there is interest in any of its [out] columns. In this
      * case the system will only be ran if there is interest in Position. */
     flecs::system<>(world).signature("[out] Position, Velocity").on_demand()
-        .action([](flecs::it& it){
+        .action([](flecs::iter& it){
             flecs::column<Position> p(it, 1);
             flecs::column<Velocity> v(it, 2);
 

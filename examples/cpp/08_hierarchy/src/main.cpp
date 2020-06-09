@@ -31,7 +31,7 @@ void Move(flecs::entity e, Position& p, Velocity& v) {
  * will be used to then transform Position to WorldPosition of the child.
  * If the CASCADE column is not set, the system matched a root. In that case,
  * just assign the Position to the WorldPosition. */
-void Transform(flecs::it& it, flecs::column<WorldPosition> wp, flecs::column<Position> p) {
+void Transform(flecs::iter& it, flecs::column<WorldPosition> wp, flecs::column<Position> p) {
     flecs::column<const WorldPosition> parent_wp(it, 3);
 
     if (!parent_wp.is_set()) {
