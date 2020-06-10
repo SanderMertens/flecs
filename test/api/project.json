@@ -99,6 +99,10 @@
         }, {
             "id": "Hierarchies",
             "testcases": [
+                "get_parent",
+                "get_parent_from_nested",
+                "get_parent_from_nested_2",
+                "get_parent_from_root",
                 "tree_iter_empty",
                 "tree_iter_1_table",
                 "tree_iter_2_tables",
@@ -127,7 +131,14 @@
                 "lookup_custom_prefix",
                 "lookup_custom_prefix_from_root",
                 "lookup_self",
-                "delete_children"
+                "lookup_in_parent_from_scope",
+                "lookup_in_root_from_scope",
+                "delete_children",
+                "scope_set",
+                "scope_set_again",
+                "scope_set_w_new",
+                "scope_set_w_new_staged",
+                "scope_set_w_lookup"
             ]
         }, {
             "id": "Add_bulk",

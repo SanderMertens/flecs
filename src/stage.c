@@ -355,6 +355,9 @@ void ecs_stage_init(
     /* Initialize one root table per stage */
     ecs_init_root_table(world, stage);
 
+    stage->scope_table = &world->stage.root;
+    stage->scope = 0;
+
     stage->range_check_enabled = true;
 }
 

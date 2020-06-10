@@ -1327,6 +1327,15 @@ FLECS_EXPORT
 bool ecs_tree_next(
     ecs_iter_t *it);
 
+FLECS_EXPORT
+ecs_entity_t ecs_set_scope(
+    ecs_world_t *world,
+    ecs_entity_t scope);
+
+FLECS_EXPORT
+ecs_entity_t ecs_get_scope(
+    ecs_world_t *world);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// View API
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,53 @@
 #include <api.h>
 
+void Hierarchies_get_parent() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Child, 0);
+
+    ecs_entity_t e = ecs_get_parent_w_entity(world, Child, 0);
+    test_assert(e == 0);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_get_parent_from_nested() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Scope);
+
+    ecs_entity_t e = ecs_get_parent_w_entity(world, Child, 0);
+    test_assert(e == Scope);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_get_parent_from_nested_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+    ECS_ENTITY(world, ChildScope, CHILDOF | Scope);
+    ECS_ENTITY(world, Child, CHILDOF | Scope.ChildScope);
+
+    ecs_entity_t e = ecs_get_parent_w_entity(world, Child, 0);
+    test_assert(e == ChildScope);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_get_parent_from_root() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Scope);
+
+    ecs_entity_t e = ecs_get_parent_w_entity(world, 0, 0);
+    test_assert(e == 0);
+
+    ecs_fini(world);
+}
+
 void Hierarchies_delete_children() {
     ecs_world_t *world = ecs_init();
 
@@ -405,3 +453,149 @@ void Hierarchies_lookup_self() {
 
     ecs_fini(world);
 }
+
+void Hierarchies_scope_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, Scope);
+    test_assert(old_scope == 0);
+
+    ecs_entity_t scope = ecs_get_scope(world);
+    test_assert(scope == Scope);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_scope_set_w_new() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, Scope);
+    test_assert(old_scope == 0);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+    test_assert(ecs_has_entity(world, e, ECS_CHILDOF | Scope));
+
+    old_scope = ecs_set_scope(world, 0);
+    test_assert(old_scope == Scope);
+
+    e = ecs_new(world, 0);
+    test_assert(e != 0);
+    test_assert(ecs_get_type(world, e) == NULL);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_scope_set_w_new_staged() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+
+    bool is_staged = ecs_staging_begin(world);
+    test_assert(is_staged == false);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, Scope);
+    test_assert(old_scope == 0);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+    test_assert(ecs_has_entity(world, e, ECS_CHILDOF | Scope));
+
+    old_scope = ecs_set_scope(world, 0);
+    test_assert(old_scope == Scope);
+
+    e = ecs_new(world, 0);
+    test_assert(e != 0);
+    test_assert(ecs_get_type(world, e) == NULL);
+
+    ecs_staging_end(world, false);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_scope_set_again() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+    ECS_ENTITY(world, ChildScope, 0);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, Scope);
+    test_assert(old_scope == 0);
+
+    old_scope = ecs_set_scope(world, ChildScope);
+    test_assert(old_scope == Scope);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_scope_set_w_lookup() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Scope);
+
+    test_assert( ecs_lookup_fullpath(world, "Child") == 0);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, Scope);
+    test_assert(old_scope == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "Child");
+    test_assert(e != 0);
+    test_assert(e == Child);
+
+    old_scope = ecs_set_scope(world, 0);
+    test_assert(old_scope == Scope);
+
+    test_assert( ecs_lookup_fullpath(world, "Child") == 0);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_in_parent_from_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+    ECS_ENTITY(world, ChildScope, CHILDOF | Scope);
+    ECS_ENTITY(world, Child, CHILDOF | Scope);
+
+    test_assert( ecs_lookup_fullpath(world, "Child") == 0);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, ChildScope);
+    test_assert(old_scope == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "Child");
+    test_assert(e != 0);
+    test_assert(e == Child);
+
+    old_scope = ecs_set_scope(world, 0);
+    test_assert(old_scope == ChildScope);
+
+    test_assert( ecs_lookup_fullpath(world, "Child") == 0);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_in_root_from_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+    ECS_ENTITY(world, ChildScope, CHILDOF | Scope);
+    ECS_ENTITY(world, Child, 0);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, ChildScope);
+    test_assert(old_scope == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "Child");
+    test_assert(e != 0);
+    test_assert(e == Child);
+
+    old_scope = ecs_set_scope(world, 0);
+    test_assert(old_scope == ChildScope);
+
+    ecs_fini(world);
+}
+

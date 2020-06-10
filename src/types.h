@@ -329,6 +329,10 @@ struct ecs_stage_t {
     ecs_table_t root;              /* Root table */
     ecs_vector_t *dirty_tables;    /* Tables that need merging */
 
+    /* Namespacing */
+    ecs_table_t *scope_table;      /* Table for current scope */
+    ecs_entity_t scope;            /* Entity of current scope */
+
     int32_t id;                    /* Unique id that identifies the stage */
 
     /* Are operations deferred? */

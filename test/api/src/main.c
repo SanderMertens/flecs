@@ -86,6 +86,10 @@ void Remove_type_from_empty(void);
 void Remove_not_added(void);
 
 // Testsuite 'Hierarchies'
+void Hierarchies_get_parent(void);
+void Hierarchies_get_parent_from_nested(void);
+void Hierarchies_get_parent_from_nested_2(void);
+void Hierarchies_get_parent_from_root(void);
 void Hierarchies_tree_iter_empty(void);
 void Hierarchies_tree_iter_1_table(void);
 void Hierarchies_tree_iter_2_tables(void);
@@ -114,7 +118,14 @@ void Hierarchies_lookup_custom_sep(void);
 void Hierarchies_lookup_custom_prefix(void);
 void Hierarchies_lookup_custom_prefix_from_root(void);
 void Hierarchies_lookup_self(void);
+void Hierarchies_lookup_in_parent_from_scope(void);
+void Hierarchies_lookup_in_root_from_scope(void);
 void Hierarchies_delete_children(void);
+void Hierarchies_scope_set(void);
+void Hierarchies_scope_set_again(void);
+void Hierarchies_scope_set_w_new(void);
+void Hierarchies_scope_set_w_new_staged(void);
+void Hierarchies_scope_set_w_lookup(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -1258,8 +1269,24 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 29,
+        .testcase_count = 40,
         .testcases = (bake_test_case[]){
+            {
+                .id = "get_parent",
+                .function = Hierarchies_get_parent
+            },
+            {
+                .id = "get_parent_from_nested",
+                .function = Hierarchies_get_parent_from_nested
+            },
+            {
+                .id = "get_parent_from_nested_2",
+                .function = Hierarchies_get_parent_from_nested_2
+            },
+            {
+                .id = "get_parent_from_root",
+                .function = Hierarchies_get_parent_from_root
+            },
             {
                 .id = "tree_iter_empty",
                 .function = Hierarchies_tree_iter_empty
@@ -1373,8 +1400,36 @@ static bake_test_suite suites[] = {
                 .function = Hierarchies_lookup_self
             },
             {
+                .id = "lookup_in_parent_from_scope",
+                .function = Hierarchies_lookup_in_parent_from_scope
+            },
+            {
+                .id = "lookup_in_root_from_scope",
+                .function = Hierarchies_lookup_in_root_from_scope
+            },
+            {
                 .id = "delete_children",
                 .function = Hierarchies_delete_children
+            },
+            {
+                .id = "scope_set",
+                .function = Hierarchies_scope_set
+            },
+            {
+                .id = "scope_set_again",
+                .function = Hierarchies_scope_set_again
+            },
+            {
+                .id = "scope_set_w_new",
+                .function = Hierarchies_scope_set_w_new
+            },
+            {
+                .id = "scope_set_w_new_staged",
+                .function = Hierarchies_scope_set_w_new_staged
+            },
+            {
+                .id = "scope_set_w_lookup",
+                .function = Hierarchies_scope_set_w_lookup
             }
         }
     },
