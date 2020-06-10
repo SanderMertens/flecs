@@ -269,11 +269,11 @@ ecs_entity_t ecs_get_scope(
     return stage->scope;
 }
 
-ecs_iter_t ecs_tree_iter(
+ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
-    ecs_tree_iter_t iter = {
+    ecs_scope_iter_t iter = {
         .tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, parent),
         .index = 0
     };
@@ -284,10 +284,10 @@ ecs_iter_t ecs_tree_iter(
     };
 }
 
-bool ecs_tree_next(
+bool ecs_scope_next(
     ecs_iter_t *it)
 {
-    ecs_tree_iter_t *iter = &it->iter.parent;
+    ecs_scope_iter_t *iter = &it->iter.parent;
     ecs_vector_t *tables = iter->tables;
     int32_t count = ecs_vector_count(tables);
     int32_t i;

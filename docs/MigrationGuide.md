@@ -39,9 +39,9 @@ while (ecs_query_next(&it)) {
 - Many new functions to support working with hierarchies, including a new API to iterate over a hierarchy depth-first:
 
 ```c
-    ecs_iter_t it = ecs_tree_iter(world, parent);
+    ecs_iter_t it = ecs_scope_iter(world, parent);
 
-    while (ecs_tree_next(&it)) {
+    while (ecs_scope_next(&it)) {
         for (int i = 0; i < it.count; i ++) {
             ecs_entity_t child = it.entities[i];
             printf("%s\n", ecs_get_name(world, child));

@@ -191,10 +191,10 @@ typedef void (*ecs_move_t)(
     int32_t count,
     void *ctx);
 
-typedef struct ecs_tree_iter_t {
+typedef struct ecs_scope_iter_t {
     ecs_vector_t *tables;
     int32_t index;
-} ecs_tree_iter_t;
+} ecs_scope_iter_t;
 
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
@@ -240,7 +240,7 @@ struct ecs_iter_t {
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
 
     union {
-        ecs_tree_iter_t parent;
+        ecs_scope_iter_t parent;
         ecs_filter_iter_t filter;
         ecs_query_iter_t query;
     } iter;
@@ -1319,12 +1319,12 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
 
 FLECS_EXPORT
-ecs_iter_t ecs_tree_iter(
+ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent);
 
 FLECS_EXPORT
-bool ecs_tree_next(
+bool ecs_scope_next(
     ecs_iter_t *it);
 
 FLECS_EXPORT

@@ -1868,9 +1868,9 @@ public:
         , m_iter{ } { }
 
     tree_iterator(flecs::entity entity) 
-        : m_iter( ecs_tree_iter(entity.world().c_ptr(), entity.id()) )
+        : m_iter( ecs_scope_iter(entity.world().c_ptr(), entity.id()) )
     {
-        m_has_next = ecs_tree_next(&m_iter);
+        m_has_next = ecs_scope_next(&m_iter);
     }
 
     bool operator!=(tree_iterator const& other) const {
@@ -1882,7 +1882,7 @@ public:
     }
 
     tree_iterator& operator++() {
-        m_has_next = ecs_tree_next(&m_iter);
+        m_has_next = ecs_scope_next(&m_iter);
         return *this;
     }
 

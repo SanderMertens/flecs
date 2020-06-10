@@ -291,9 +291,9 @@ Applications can iterate a hierarchy depth-first, using a tree iterator:
 ECS_ENTITY(world, Parent, 0);
 ECS_ENTITY(world, Child, CHILDOF | Parent);
 
-ecs_iter_t it = ecs_tree_iter(world, Parent);
+ecs_iter_t it = ecs_scope_iter(world, Parent);
 
-while (ecs_tree_next(&it)) {
+while (ecs_scope_next(&it)) {
     for (int i = 0; i < it.count; i ++) {
         printf("%s\n", it.entities[i]);
     }
