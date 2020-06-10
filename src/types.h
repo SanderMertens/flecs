@@ -248,7 +248,7 @@ typedef struct ecs_on_demand_in_t {
  * ran, and 'time_passed' is decreased by 'period'. 
  */
 typedef struct EcsSystem {
-    ecs_view_action_t action;    /* Callback to be invoked for matching it */
+    ecs_iter_action_t action;    /* Callback to be invoked for matching it */
     void *ctx;                     /* Userdata for system */
     float time_spent;              /* Time spent on running system */
     int32_t invoke_count;          /* Number of times system is invoked */

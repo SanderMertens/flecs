@@ -346,7 +346,7 @@ void ecs_query_match_table(
     ecs_query_t *query,
     ecs_table_t *table);
 
-void ecs_query_set_view(
+void ecs_query_set_iter(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_query_t *query,
@@ -377,7 +377,7 @@ void ecs_sig_deinit(
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_view_action_t action,
+    ecs_iter_action_t action,
     ecs_query_t *query,
     void *ctx);
 

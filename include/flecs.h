@@ -77,7 +77,7 @@ typedef struct ecs_entities_t {
 } ecs_entities_t;
 
 /** Action callback for systems and triggers */
-typedef void (*ecs_view_action_t)(
+typedef void (*ecs_iter_action_t)(
     ecs_iter_t *data);
 
 /** Compare callback used for sorting */
@@ -301,7 +301,7 @@ typedef struct EcsComponentLifecycle {
 /* Component used for registering component triggers */
 typedef struct EcsTrigger {
     ecs_entity_t kind;
-    ecs_view_action_t action;
+    ecs_iter_action_t action;
     ecs_entity_t component;
     ecs_entity_t self;
     void *ctx;
@@ -357,7 +357,7 @@ typedef struct EcsQuery {
 
 /* System action */
 typedef struct EcsIterAction {
-    ecs_view_action_t action;
+    ecs_iter_action_t action;
 } EcsIterAction;
 
 /* System context */
@@ -614,7 +614,7 @@ extern ecs_type_t
  */
 
 #define ECS_SYSTEM(world, name, kind, ...) \
-    ecs_view_action_t ecs_iter_action(name) = name;\
+    ecs_iter_action_t ecs_iter_action(name) = name;\
     ecs_entity_t name = ecs_new_system(world, 0, #name, kind, #__VA_ARGS__, ecs_iter_action(name));\
     (void)ecs_iter_action(name);\
     (void)name;

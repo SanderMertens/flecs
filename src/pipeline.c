@@ -194,7 +194,7 @@ bool build_pipeline(
 static
 int32_t iter_reset(
     const EcsPipelineQuery *pq,
-    ecs_iter_t *view_out,
+    ecs_iter_t *iter_out,
     ecs_pipeline_op_t **op_out,
     ecs_entity_t move_to)
 {
@@ -214,7 +214,7 @@ int32_t iter_reset(
             }
 
             if (e == move_to) {
-                *view_out = it;
+                *iter_out = it;
                 *op_out = op;
                 return i;
             }

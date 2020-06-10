@@ -14,7 +14,7 @@ Here are the highlights of v2:
 - A new threading design that is easier to use
 - A much faster implementation for reactive systems (now called triggers)
 - A new and improved prefab hierarchy design that allows for faster instancing of hierarchies
-- A unified design for disabling systems and entities that now both use ecs_enable
+- A unified design for disabling systems and entities that now both use `ecs_enable`
 
 ### New features
 - A new pipeline architecture that enables fully customizable phases
@@ -51,11 +51,11 @@ while (ecs_query_next(&it)) {
 
 - Sorting
 - Monitors are a new kind of system that is executed once when the system condition becomes true
-- OnSet systems are now faster and more capable than in v1, and make it much easier to create declarative, component-based APIs
+- `OnSet` systems are now faster and more capable than in v1, and make it much easier to create declarative, component-based APIs
 - More ways to introspect internals, including a new, component-based API for creation and introspection of systems
 - Time-based and rate-based filters that can be shared across systems
 - Type constraints enable adding restrictions on what components can (not) be added to an entity
-- Switch (XOR) components allow for easy implementation of state machines
+- Switch (`XOR`) components allow for easy implementation of state machines
 
 ### Bugfixes
 - A number of issues in multithreading have been addressed that could cause crashes
@@ -91,7 +91,7 @@ ecs_add(world, e, Position);
 Velocity *v = ecs_get(world, e, Velocity);
 ```
 
-This can cause problems if an application used the pointer returned from `ecs_get_ptr` to set a component. In v2 this function (renamed to `ecs_get`) returns a `const` pointer. If an application wants to obtain a modifiable pointer, it needs to use the `ecs_get_mut` function.
+This can cause problems if a v1 application used the pointer returned from `ecs_get_ptr` to set a component. In v2 this function (renamed to `ecs_get`) returns a `const` pointer. If an application wants to obtain a modifiable pointer, it needs to use the `ecs_get_mut` function. This function will guarantees that the returned pointer is staged.
 
 ### Merging
 In v1 merging would happen after each phase. This caused merging, and in multithreaded applications, synchronizing, even when this was not required. In v2, flecs automatically determines when merging is needed.
@@ -220,6 +220,7 @@ ECS_PREFAB(world, Parent);
 - `ecs_set_w_data` is removed, as it caused more trouble than what it was worth. Instead use `ecs_bulk_new_w_type` (where possible).
 - `ecs_get_ptr` is now `ecs_get` and returns a const pointer. If a mutable pointer is required, the application should use `ecs_get_mut`.
 - The OR operator in system signatures has changed from `|` to `||`
+- The source operator in system signatures has changed from `.` to `:`
 - The `CONTAINER` keyword has changed to `PARENT`
 - Cyclic `INSTANCEOF` relationships are no longer supported
 - Task OnRemove systems (systems that are not matched with any entities) are no longer supported.
