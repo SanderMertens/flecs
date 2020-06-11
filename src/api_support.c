@@ -289,7 +289,7 @@ ecs_entity_t ecs_new_system(
     const char *name,
     ecs_entity_t tag,
     const char *signature,
-    ecs_view_action_t action)
+    ecs_iter_action_t action)
 {
     assert(world->magic == ECS_WORLD_MAGIC);  
     
@@ -328,7 +328,7 @@ ecs_entity_t ecs_new_trigger(
     const char *name,
     ecs_entity_t kind,
     const char *component_name,
-    ecs_view_action_t action)
+    ecs_iter_action_t action)
 {
     assert(world->magic == ECS_WORLD_MAGIC);
 

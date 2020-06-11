@@ -77,7 +77,7 @@ typedef struct ecs_entities_t {
 } ecs_entities_t;
 
 /** Action callback for systems and triggers */
-typedef void (*ecs_view_action_t)(
+typedef void (*ecs_iter_action_t)(
     ecs_iter_t *data);
 
 /** Compare callback used for sorting */
@@ -191,10 +191,10 @@ typedef void (*ecs_move_t)(
     int32_t count,
     void *ctx);
 
-typedef struct ecs_tree_iter_t {
+typedef struct ecs_scope_iter_t {
     ecs_vector_t *tables;
     int32_t index;
-} ecs_tree_iter_t;
+} ecs_scope_iter_t;
 
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
@@ -240,7 +240,7 @@ struct ecs_iter_t {
     ecs_entity_t interrupted_by; /* When set, system execution is interrupted */
 
     union {
-        ecs_tree_iter_t parent;
+        ecs_scope_iter_t parent;
         ecs_filter_iter_t filter;
         ecs_query_iter_t query;
     } iter;
@@ -301,7 +301,7 @@ typedef struct EcsComponentLifecycle {
 /* Component used for registering component triggers */
 typedef struct EcsTrigger {
     ecs_entity_t kind;
-    ecs_view_action_t action;
+    ecs_iter_action_t action;
     ecs_entity_t component;
     ecs_entity_t self;
     void *ctx;
@@ -357,7 +357,7 @@ typedef struct EcsQuery {
 
 /* System action */
 typedef struct EcsIterAction {
-    ecs_view_action_t action;
+    ecs_iter_action_t action;
 } EcsIterAction;
 
 /* System context */
@@ -614,7 +614,7 @@ extern ecs_type_t
  */
 
 #define ECS_SYSTEM(world, name, kind, ...) \
-    ecs_view_action_t ecs_iter_action(name) = name;\
+    ecs_iter_action_t ecs_iter_action(name) = name;\
     ecs_entity_t name = ecs_new_system(world, 0, #name, kind, #__VA_ARGS__, ecs_iter_action(name));\
     (void)ecs_iter_action(name);\
     (void)name;
@@ -1321,13 +1321,22 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
 
 FLECS_EXPORT
-ecs_iter_t ecs_tree_iter(
+ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent);
 
 FLECS_EXPORT
-bool ecs_tree_next(
+bool ecs_scope_next(
     ecs_iter_t *it);
+
+FLECS_EXPORT
+ecs_entity_t ecs_set_scope(
+    ecs_world_t *world,
+    ecs_entity_t scope);
+
+FLECS_EXPORT
+ecs_entity_t ecs_get_scope(
+    ecs_world_t *world);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// View API

@@ -191,7 +191,7 @@ void ecs_enable_system(
 void ecs_init_system(
     ecs_world_t *world,
     ecs_entity_t system,
-    ecs_view_action_t action,
+    ecs_iter_action_t action,
     ecs_query_t *query,
     void *ctx)
 {
@@ -397,7 +397,7 @@ ecs_entity_t ecs_run_intern(
         it.param = system_data->ctx;
     }
 
-    ecs_view_action_t action = system_data->action;
+    ecs_iter_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
     if (!filter) {
@@ -501,7 +501,7 @@ void ecs_run_monitor(
     }
 
     ecs_iter_t it = {0};
-    ecs_query_set_view( world, stage, query, &it, 
+    ecs_query_set_iter( world, stage, query, &it, 
         monitor->matched_table_index, row, count);
 
     it.triggered_by = components;

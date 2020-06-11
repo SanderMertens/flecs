@@ -188,7 +188,7 @@ ecs_entity_t ecs_new_system(
     const char *name,
     ecs_entity_t phase,
     const char *signature,
-    ecs_view_action_t action);
+    ecs_iter_action_t action);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_trigger(
@@ -197,7 +197,7 @@ ecs_entity_t ecs_new_trigger(
     const char *name,
     ecs_entity_t kind,
     const char *component,
-    ecs_view_action_t action);
+    ecs_iter_action_t action);
 
 FLECS_EXPORT
 ecs_entity_t ecs_new_pipeline(

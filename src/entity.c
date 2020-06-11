@@ -847,7 +847,7 @@ int32_t new_entity(
     ecs_data_t *dst_data = ecs_table_get_or_create_data(world, stage, new_table);
     int32_t new_row;
 
-    ecs_assert(added && added->count != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (stage == &world->stage) {
         if (!record) {
@@ -1132,7 +1132,8 @@ void new(
     };
     ecs_entity_info_t info = {0};
     ecs_table_t *table = ecs_table_traverse_add(
-        world, stage, &world->stage.root, to_add, &added);
+        world, stage, stage->scope_table, to_add, &added);
+
     new_entity(world, stage, entity, &info, table, &added);
 }
 
@@ -1552,7 +1553,7 @@ ecs_entity_t ecs_new_w_type(
     ecs_stage_t *stage = ecs_get_stage(&world);    
     ecs_entity_t entity = new_entity_handle(world);
 
-    if (type) {
+    if (type || stage->scope) {
         ecs_entities_t to_add = ecs_type_to_entities(type);
         new(world, stage, entity, &to_add);
     }
@@ -1568,7 +1569,7 @@ ecs_entity_t ecs_new_w_entity(
     ecs_stage_t *stage = ecs_get_stage(&world);    
     ecs_entity_t entity = new_entity_handle(world);
 
-    if (component) {
+    if (component || stage->scope) {
         ecs_entities_t to_add = {
             .array = &component,
             .count = 1
@@ -1945,7 +1946,7 @@ ecs_entity_t ecs_get_parent_w_entity(
     ecs_entity_t component)
 {
     ecs_type_t type = ecs_get_type(world, entity);    
-    ecs_entity_t parent = ecs_find_in_type(world, type, component, 0);
+    ecs_entity_t parent = ecs_find_in_type(world, type, component, ECS_CHILDOF);
     return parent;
 }
 

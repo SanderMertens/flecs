@@ -289,7 +289,7 @@ void bootstrap_set_system(
     ecs_world_t *world,
     const char *name,
     const char *expr,
-    ecs_view_action_t action)
+    ecs_iter_action_t action)
 {
     ecs_sig_t sig = {0};
     ecs_entity_t sys = ecs_set(world, 0, EcsName, {name});

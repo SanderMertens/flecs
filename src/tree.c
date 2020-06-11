@@ -193,15 +193,26 @@ ecs_entity_t ecs_lookup_path_w_sep(
     char buff[ECS_MAX_NAME_LENGTH];
     const char *ptr;
     char ch, *bptr;
-    ecs_entity_t cur = parent;
+    bool start_from_root = false;
 
     if (prefix) {
         size_t len = strlen(prefix);
         if (!strncmp(path, prefix, len)) {
             path += len;
-            cur = 0;
+            parent = 0;
+            start_from_root = true;
         }
     }
+
+    if (!start_from_root && !parent) {
+        ecs_stage_t *stage = ecs_get_stage(&world);
+        parent = stage->scope;
+    }
+
+    ecs_entity_t cur;
+
+retry:
+    cur = parent;
 
     for (bptr = buff, ptr = path; (ch = *ptr); ptr ++) {
         if (is_sep(&ptr, sep)) {
@@ -209,7 +220,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
             bptr = buff;
             cur = ecs_lookup_child(world, cur, buff);
             if (!cur) {
-                return 0;
+                goto tail;
             }
         } else {
             *bptr = ch;
@@ -222,14 +233,47 @@ ecs_entity_t ecs_lookup_path_w_sep(
         cur = ecs_lookup_child(world, cur, buff);
     }
 
+tail:
+    if (!cur && parent) {
+        parent = ecs_get_parent_w_entity(world, parent, 0);
+        goto retry;
+    }
+
     return cur;
 }
 
-ecs_iter_t ecs_tree_iter(
+ecs_entity_t ecs_set_scope(
+    ecs_world_t *world,
+    ecs_entity_t scope)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+
+    ecs_entity_t e = ECS_CHILDOF | scope;
+    ecs_entities_t to_add = {
+        .array = &e,
+        .count = 1
+    };
+
+    ecs_entity_t cur = stage->scope;
+    stage->scope = scope;
+    stage->scope_table = ecs_table_traverse_add(
+        world, stage, &world->stage.root, &to_add, NULL);
+
+    return cur;
+}
+
+ecs_entity_t ecs_get_scope(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage = ecs_get_stage(&world);
+    return stage->scope;
+}
+
+ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
-    ecs_tree_iter_t iter = {
+    ecs_scope_iter_t iter = {
         .tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, parent),
         .index = 0
     };
@@ -240,10 +284,10 @@ ecs_iter_t ecs_tree_iter(
     };
 }
 
-bool ecs_tree_next(
+bool ecs_scope_next(
     ecs_iter_t *it)
 {
-    ecs_tree_iter_t *iter = &it->iter.parent;
+    ecs_scope_iter_t *iter = &it->iter.parent;
     ecs_vector_t *tables = iter->tables;
     int32_t count = ecs_vector_count(tables);
     int32_t i;

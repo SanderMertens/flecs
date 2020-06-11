@@ -248,7 +248,7 @@ typedef struct ecs_on_demand_in_t {
  * ran, and 'time_passed' is decreased by 'period'. 
  */
 typedef struct EcsSystem {
-    ecs_view_action_t action;    /* Callback to be invoked for matching it */
+    ecs_iter_action_t action;    /* Callback to be invoked for matching it */
     void *ctx;                     /* Userdata for system */
     float time_spent;              /* Time spent on running system */
     int32_t invoke_count;          /* Number of times system is invoked */
@@ -328,6 +328,10 @@ struct ecs_stage_t {
     ecs_sparse_t *tables;          /* Tables created while >1 threads running */
     ecs_table_t root;              /* Root table */
     ecs_vector_t *dirty_tables;    /* Tables that need merging */
+
+    /* Namespacing */
+    ecs_table_t *scope_table;      /* Table for current scope */
+    ecs_entity_t scope;            /* Entity of current scope */
 
     int32_t id;                    /* Unique id that identifies the stage */
 

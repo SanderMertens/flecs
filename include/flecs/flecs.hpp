@@ -1277,11 +1277,11 @@ public:
     template <typename... Targs,
         typename std::enable_if<sizeof...(Targs) == sizeof...(Components), void>::type* = nullptr>
     static void call_system(ecs_iter_t *iter, Func func, int index, Columns& columns, Targs... comps) {
-        flecs::iter view_wrapper(iter);
+        flecs::iter iter_wrapper(iter);
 
         // Use auto_column so we can transparently use shared components
-        for (auto row : view_wrapper) {
-            func(view_wrapper.entity(row), (auto_column<typename std::remove_reference<Components>::type>(
+        for (auto row : iter_wrapper) {
+            func(iter_wrapper.entity(row), (auto_column<typename std::remove_reference<Components>::type>(
                  (typename std::remove_reference<Components>::type*)comps.ptr, iter->count, comps.is_shared))[row]...);
         }
     }
@@ -1477,9 +1477,9 @@ public:
 
         Func func = self->m_func;
 
-        flecs::iter view_wrapper(iter);
+        flecs::iter iter_wrapper(iter);
         
-        func(view_wrapper, (column<typename std::remove_reference<Components>::type>(
+        func(iter_wrapper, (column<typename std::remove_reference<Components>::type>(
             (typename std::remove_reference<Components>::type*)comps.ptr, iter->count, comps.is_shared))...);
     }
 
@@ -1868,9 +1868,9 @@ public:
         , m_iter{ } { }
 
     tree_iterator(flecs::entity entity) 
-        : m_iter( ecs_tree_iter(entity.world().c_ptr(), entity.id()) )
+        : m_iter( ecs_scope_iter(entity.world().c_ptr(), entity.id()) )
     {
-        m_has_next = ecs_tree_next(&m_iter);
+        m_has_next = ecs_scope_next(&m_iter);
     }
 
     bool operator!=(tree_iterator const& other) const {
@@ -1882,7 +1882,7 @@ public:
     }
 
     tree_iterator& operator++() {
-        m_has_next = ecs_tree_next(&m_iter);
+        m_has_next = ecs_scope_next(&m_iter);
         return *this;
     }
 

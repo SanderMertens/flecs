@@ -1350,7 +1350,7 @@ ecs_iter_t ecs_query_iter(
     return ecs_query_iter_page(query, 0, 0);
 }
 
-void ecs_query_set_view(
+void ecs_query_set_iter(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_query_t *query,
