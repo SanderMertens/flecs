@@ -27,8 +27,13 @@ int32_t data_column_count(
 
         /* Typically all components will be clustered together at the start of
          * the type as components are created from a separate id pool, and type
-         * vectors are sorted. */
-        if (ecs_has(world, component, EcsComponent)) {
+         * vectors are sorted. 
+         * Explicitly check for EcsComponent and EcsName since the ecs_has check
+         * doesn't work during bootstrap. */
+        if ((component == ecs_entity(EcsComponent)) || 
+            (component == ecs_entity(EcsName)) || 
+            ecs_has_entity(world, component, ecs_entity(EcsComponent))) 
+        {
             count = c_ptr_i + 1;
         }
     });
@@ -589,7 +594,9 @@ ecs_table_t* ecs_table_traverse_add(
             }
         }
 
-        if (added && node != next) added->array[added->count ++] = e;
+        if (added && node != next) {
+            added->array[added->count ++] = e;
+        }
 
         node = next;
     }

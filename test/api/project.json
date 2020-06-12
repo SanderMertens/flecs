@@ -138,7 +138,8 @@
                 "scope_set_again",
                 "scope_set_w_new",
                 "scope_set_w_new_staged",
-                "scope_set_w_lookup"
+                "scope_set_w_lookup",
+                "scope_component"
             ]
         }, {
             "id": "Add_bulk",
@@ -762,6 +763,7 @@
                 "get_delta_time",
                 "get_delta_time_auto",
                 "recreate_world",
+                "recreate_world_w_component",
                 "init_w_args_set_threads",
                 "init_w_args_set_fps",
                 "init_w_args_enable_dbg",

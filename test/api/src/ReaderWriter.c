@@ -127,6 +127,8 @@ int simple_test(int buffer_size) {
     ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 4});
     ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 6});
 
+    test_int( ecs_count(world, Position), 3);
+
     ecs_vector_t *v = serialize_to_vector(world, buffer_size);
 
     ecs_fini(world);

@@ -138,7 +138,7 @@ void trigger_set(
 }
 
 static
-void EcsOnSetTrigger(
+void OnSetTrigger(
     ecs_iter_t *it)
 {
     EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
@@ -147,7 +147,7 @@ void EcsOnSetTrigger(
 }
 
 static
-void EcsOnSetTriggerCtx(
+void OnSetTriggerCtx(
     ecs_iter_t *it)
 {
     EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
@@ -163,7 +163,7 @@ void EcsOnSetTriggerCtx(
 
 /* System that registers component lifecycle callbacks */
 static
-void EcsOnSetComponentLifecycle(
+void OnSetComponentLifecycle(
     ecs_iter_t *it)
 {
     EcsComponentLifecycle *cl = ecs_column(it, EcsComponentLifecycle, 1);
@@ -183,7 +183,7 @@ void EcsOnSetComponentLifecycle(
 
 /* Disable system when EcsDisabled is added */
 static 
-void EcsDisableSystem(
+void DisableSystem(
     ecs_iter_t *it)
 {
     EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
@@ -197,7 +197,7 @@ void EcsDisableSystem(
 
 /* Enable system when EcsDisabled is removed */
 static
-void EcsEnableSystem(
+void EnableSystem(
     ecs_iter_t *it)
 {
     EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
@@ -211,7 +211,7 @@ void EcsEnableSystem(
 
 /* Parse a signature expression into the ecs_sig_t data structure */
 static
-void EcsCreateSignature(
+void CreateSignature(
     ecs_iter_t *it) 
 {
     ecs_world_t *world = it->world;
@@ -240,7 +240,7 @@ void EcsCreateSignature(
 
 /* Create a query from a signature */
 static
-void EcsCreateQuery(
+void CreateQuery(
     ecs_iter_t *it) 
 {
     ecs_world_t *world = it->world;
@@ -262,7 +262,7 @@ void EcsCreateQuery(
 
 /* Create a system from a query and an action */
 static
-void EcsCreateSystem(
+void CreateSystem(
     ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
@@ -284,6 +284,16 @@ void EcsCreateSystem(
     }
 }
 
+/** Bootstrap builtin components and tags */
+#define bootstrap_component(world, table, name)\
+    _bootstrap_component(world, table, ecs_entity(name), #name, sizeof(name),\
+        ECS_ALIGNOF(name))
+
+#define bootstrap_tag(world, name)\
+    ecs_set(world, name, EcsName, {.value = &#name[strlen("Ecs")], .symbol = #name});\
+    ecs_add_entity(world, name, ECS_CHILDOF | EcsFlecsCore)
+
+
 static
 void bootstrap_set_system(
     ecs_world_t *world,
@@ -304,9 +314,9 @@ void ecs_init_builtins(
     ecs_world_t *world)
 {
     /* Bootstrap trigger tags */
-    ecs_set(world, EcsOnAdd, EcsName, {"EcsOnAdd"});
-    ecs_set(world, EcsOnRemove, EcsName, {"EcsOnRemove"});
-    ecs_set(world, EcsOnSet, EcsName, {"EcsOnSet"});
+    bootstrap_tag(world, EcsOnAdd);
+    bootstrap_tag(world, EcsOnRemove);
+    bootstrap_tag(world, EcsOnSet);
 
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, ecs_entity(EcsSystem));
@@ -315,24 +325,24 @@ void ecs_init_builtins(
     c_info->lifecycle.dtor = ecs_colsystem_dtor;
 
     /* Create systems necessary to create systems */
-    bootstrap_set_system(world, "EcsCreateSignature", "EcsSignatureExpr", EcsCreateSignature);
-    bootstrap_set_system(world, "EcsCreateQuery", "EcsSignature, EcsIterAction", EcsCreateQuery);
-    bootstrap_set_system(world, "EcsCreateSystem", "EcsQuery, EcsIterAction, ?EcsContext", EcsCreateSystem);
+    bootstrap_set_system(world, "CreateSignature", "SignatureExpr", CreateSignature);
+    bootstrap_set_system(world, "CreateQuery", "Signature, IterAction", CreateQuery);
+    bootstrap_set_system(world, "CreateSystem", "Query, IterAction, ?Context", CreateSystem);
 
     /* From here we can create systems */
 
     /* Register OnSet system for EcsComponentLifecycle */
-    ECS_SYSTEM(world, EcsOnSetComponentLifecycle, EcsOnSet, EcsComponentLifecycle);
+    ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, ComponentLifecycle);
 
     /* Register OnSet system for triggers */
-    ECS_SYSTEM(world, EcsOnSetTrigger, EcsOnSet, EcsTrigger);
+    ECS_SYSTEM(world, OnSetTrigger, EcsOnSet, Trigger);
 
     /* System that sets ctx for a trigger */
-    ECS_SYSTEM(world, EcsOnSetTriggerCtx, EcsOnSet, EcsTrigger, EcsContext);
+    ECS_SYSTEM(world, OnSetTriggerCtx, EcsOnSet, Trigger, Context);
 
     /* Monitors that trigger when a system is enabled or disabled */
-    ECS_SYSTEM(world, EcsDisableSystem, EcsMonitor, EcsSystem, EcsDisabled || EcsDisabledIntern);
-    ECS_SYSTEM(world, EcsEnableSystem, EcsMonitor, EcsSystem, !EcsDisabled, !EcsDisabledIntern);
+    ECS_SYSTEM(world, DisableSystem, EcsMonitor, System, Disabled || DisabledIntern);
+    ECS_SYSTEM(world, EnableSystem, EcsMonitor, System, !Disabled, !DisabledIntern);
 
     /* Initialize pipeline builtins */
     ecs_init_pipeline_builtins(world);
@@ -404,10 +414,10 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t entities[] = {ecs_entity(EcsComponent), ecs_entity(EcsName)};
+    ecs_entity_t entities[] = {ecs_entity(EcsComponent), ecs_entity(EcsName), ECS_CHILDOF | EcsFlecsCore};
     ecs_entities_t array = {
         .array = entities,
-        .count = 2
+        .count = 3
     };
 
     ecs_table_t *result = ecs_table_find_or_create(
@@ -433,14 +443,6 @@ ecs_table_t* bootstrap_component_table(
     
     return result;
 }
-
-/** Bootstrap builtin components and tags */
-#define bootstrap_component(world, table, name)\
-    _bootstrap_component(world, table, ecs_entity(name), #name, sizeof(name),\
-        ECS_ALIGNOF(name))
-
-#define bootstrap_tag(world, name)\
-    ecs_set(world, name, EcsName, {#name})
 
 static
 void _bootstrap_component(
@@ -473,12 +475,16 @@ void _bootstrap_component(
     
     c_info[index].size = size;
     c_info[index].alignment = alignment;
-    id_data[index] = id;
+    id_data[index].value = &id[strlen("Ecs")]; /* Skip prefix */
+    id_data[index].symbol = id; /* Skip prefix */
+    id_data[index].alloc_value = NULL;
 }
 
 void ecs_bootstrap(
     ecs_world_t *world)
 {
+    ecs_type(EcsComponent) = NULL;
+
     /* Create table that will hold components (EcsComponent, EcsName) */
     ecs_table_t *table = bootstrap_component_table(world);
     assert(table != NULL);
@@ -521,18 +527,30 @@ void ecs_bootstrap(
 
     ecs_trace_pop();
 
+    /* Initialize scopes */
+    ecs_set(world, EcsFlecs, EcsName, {"flecs"});
+    ecs_set(world, EcsFlecsCore, EcsName, {"core"});
+    ecs_add_entity(world, EcsFlecsCore, ECS_CHILDOF | EcsFlecs);
+
+    /* Initialize flecs.core scope */
+
     /* Initialize EcsWorld */
-    ecs_set(world, EcsWorld, EcsName, {"EcsWorld"});
+    ecs_set(world, EcsWorld, EcsName, {"World"});
     ecs_assert(ecs_get_name(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_lookup(world, "EcsWorld") == EcsWorld, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_lookup(world, "World") == EcsWorld, ECS_INTERNAL_ERROR, NULL);
+    ecs_add_entity(world, EcsWorld, ECS_CHILDOF | EcsFlecs);
 
     /* Initialize EcsSingleton */
     ecs_set(world, EcsSingleton, EcsName, {"$"});
     ecs_assert(ecs_get_name(world, EcsSingleton) != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_lookup(world, "$") == EcsSingleton, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_set_scope(world, EcsFlecsCore);
+
     ecs_trace_1("initialize builtins");
     ecs_trace_push();
     ecs_init_builtins(world);
     ecs_trace_pop();
+
+    ecs_set_scope(world, 0);
 }

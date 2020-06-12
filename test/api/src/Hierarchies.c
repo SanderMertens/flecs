@@ -599,3 +599,26 @@ void Hierarchies_lookup_in_root_from_scope() {
     ecs_fini(world);
 }
 
+
+void Hierarchies_scope_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, Scope);
+    test_assert(old_scope == 0);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "Position");
+    test_assert(e != 0);
+    test_assert(e == ecs_entity(Position));
+
+    old_scope = ecs_set_scope(world, 0);
+    test_assert(old_scope == Scope);
+
+    e = ecs_lookup_fullpath(world, "Position");
+    test_assert(e == 0);
+
+    ecs_fini(world);
+}

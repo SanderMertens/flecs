@@ -1,4 +1,5 @@
 #include "flecs_private.h"
+#include "flecs/util/strbuf.h"
 
 /* Mock types so we don't have to depend on them. 
  * TODO: Need a better workaround */
@@ -47,6 +48,27 @@ int ecs_enable_console(
     return 0;
 }
 
+char* ecs_module_path_from_c(
+    const char *c_name)
+{
+    ecs_strbuf_t str = ECS_STRBUF_INIT;
+    const char *ptr;
+    char ch;
+
+    for (ptr = c_name; (ch = *ptr); ptr++) {
+        if (isupper(ch)) {
+            ch = tolower(ch);
+            if (ptr != c_name) {
+                ecs_strbuf_appendstrn(&str, ".", 1);
+            }
+        }
+
+        ecs_strbuf_appendstrn(&str, &ch, 1);
+    }
+
+    return ecs_strbuf_get(&str);
+}
+
 ecs_entity_t ecs_import(
     ecs_world_t *world,
     ecs_module_action_t init_action,
@@ -55,13 +77,16 @@ ecs_entity_t ecs_import(
     void *handles_out,
     size_t handles_size)
 {
-    ecs_entity_t e = ecs_lookup(world, module_name);
+    ecs_entity_t old_scope = ecs_set_scope(world, 0);
+    const char *old_name_prefix = world->name_prefix;
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, module_name);
     if (!e) {
         /* Load module */
         init_action(world, flags);
 
         /* Lookup module entity (must be registered by module) */
-        e = ecs_lookup(world, module_name);
+        e = ecs_lookup_fullpath(world, module_name);
         ecs_assert(e != 0, ECS_MODULE_UNDEFINED, module_name);
     }
 
@@ -69,7 +94,11 @@ ecs_entity_t ecs_import(
     if (handles_size && handles_out) {
         void *handles_ptr = ecs_get_mut_w_entity(world, e, e, NULL);
         memcpy(handles_out, handles_ptr, handles_size);        
-    }    
+    }
+
+    /* Restore to previous state */
+    ecs_set_scope(world, old_scope);
+    world->name_prefix = old_name_prefix;
 
     return e;
 }

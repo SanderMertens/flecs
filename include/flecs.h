@@ -274,8 +274,11 @@ typedef struct ecs_world_info_t {
 //// Public builtin components
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Component that contains an entity name */
-typedef const char *EcsName;
+typedef struct EcsName {
+    const char *value;      /* Entity name */
+    const char *symbol;     /* Optional symbol name, if it differs from name */
+    char *alloc_value;      /* If set, value will be freed on destruction */
+} EcsName;
 
 /** Component that contains the size of a component */
 typedef struct EcsComponent {
@@ -476,7 +479,9 @@ extern ecs_type_t
 #define EcsPostFrame (ECS_HI_COMPONENT_ID + 21)
 
 /** Builtin entity ids */
-#define EcsWorld (ECS_HI_COMPONENT_ID + 22)
+#define EcsFlecs (ECS_HI_COMPONENT_ID + 22)
+#define EcsFlecsCore (ECS_HI_COMPONENT_ID + 23)
+#define EcsWorld (ECS_HI_COMPONENT_ID + 24)
 #define EcsSingleton ((ecs_entity_t)(ECS_ENTITY_MASK) - 1)
 
 /** Value used to quickly check if component is builtin */
@@ -1319,6 +1324,20 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
 
 FLECS_EXPORT
+ecs_entity_t ecs_new_from_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix);
+
+#define ecs_new_from_path(world, parent, path)\
+    ecs_new_from_path_w_sep(world, parent, path, ".", NULL)
+
+#define ecs_new_from_fullpath(world, path)\
+    ecs_new_from_path_w_sep(world, 0, path, ".", NULL)
+
+FLECS_EXPORT
 ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent);
@@ -1335,6 +1354,11 @@ ecs_entity_t ecs_set_scope(
 FLECS_EXPORT
 ecs_entity_t ecs_get_scope(
     ecs_world_t *world);
+
+FLECS_EXPORT
+const char* ecs_set_name_prefix(
+    ecs_world_t *world,
+    const char *prefix);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// View API
@@ -2222,9 +2246,11 @@ ecs_entity_t ecs_import_from_library(
 #define ECS_MODULE(world, id)\
     ECS_ENTITY_VAR(id) = ecs_new_module(world, 0, #id, sizeof(id), ECS_ALIGNOF(id));\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
+    id *handles = (id*)ecs_get_mut(world, ecs_entity(id), id, NULL);\
     (void)ecs_entity(id);\
     (void)ecs_type(id);\
-    id *handles = (id*)ecs_get_mut(world, ecs_entity(id), id, NULL);\
+    (void)handles;
+
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
@@ -2242,8 +2268,10 @@ ecs_entity_t ecs_import_from_library(
  */
 #define ECS_IMPORT(world, id, flags) \
     id ecs_module(id);\
+    char *id##__name = ecs_module_path_from_c(#id);\
     ECS_ENTITY_VAR(id) = ecs_import(\
-        world, id##Import, #id, flags, &ecs_module(id), sizeof(id));\
+        world, id##Import, id##__name, flags, &ecs_module(id), sizeof(id));\
+    ecs_os_free(id##__name);\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
     id##ImportHandles(ecs_module(id));\
     (void)ecs_entity(id);\

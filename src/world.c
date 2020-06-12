@@ -175,6 +175,7 @@ ecs_world_t *ecs_init(void) {
     world->queries = ecs_sparse_new(ecs_query_t, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->child_tables = NULL;
+    world->name_prefix = NULL;
 
     memset(&world->component_monitors, 0, sizeof(world->component_monitors));
     memset(&world->parent_monitors, 0, sizeof(world->parent_monitors));

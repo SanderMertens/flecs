@@ -9,6 +9,7 @@ void dup_table(
     ecs_data_t *main_data = ecs_vector_first(table->stage_data, ecs_data_t);
     ecs_assert(main_data != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!main_data->columns) {
+        table->stage_data = NULL;
         return;
     }
 

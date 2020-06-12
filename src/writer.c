@@ -130,8 +130,13 @@ void ecs_table_writer_prepare_column(
         ecs_column_t *column = &data->columns[writer->column_index - 1];
 
         if (size) {
-            /* TODO */
+            int32_t old_count = ecs_vector_count(column->data);
             _ecs_vector_set_count(&column->data, ECS_VECTOR_U(size, 0), writer->row_count);
+
+            /* Initialize new elements to 0 */
+            void *buffer = ecs_vector_first_t(column->data, size, 0);
+            memset(ECS_OFFSET(buffer, old_count * size), 0, 
+                (writer->row_count - old_count) * size);
         }
 
         writer->column_vector = column->data;
@@ -286,7 +291,6 @@ size_t ecs_table_writer(
         if (!writer->column_size) {
             ecs_table_writer_next(stream);
         }
-
         break;
 
     case EcsTableColumnData: {
@@ -318,7 +322,14 @@ size_t ecs_table_writer(
     case EcsTableColumnName: {
         written = sizeof(int32_t);
         if (!ecs_name_writer_write(&writer->name, buffer)) {
-            ((EcsName*)writer->column_data)[writer->row_index] = writer->name.name;
+            EcsName *name_ptr = &((EcsName*)writer->column_data)[writer->row_index];
+            name_ptr->value = writer->name.name;
+
+            if (name_ptr->alloc_value) {
+                ecs_os_free(name_ptr->alloc_value);
+            }
+
+            name_ptr->alloc_value = writer->name.name;
 
             /* Don't overwrite entity name */
             ecs_name_writer_reset(&writer->name);   

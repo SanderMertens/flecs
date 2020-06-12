@@ -838,7 +838,7 @@ void World_world_stats() {
     ECS_COMPONENT(world, Velocity);
 
     /* Make sure that stats are collected by requiring EcsWorldStats */
-    ecs_new_system(world, 0, "CollectWorldStats", 0, "[in] EcsWorldStats", NULL);
+    ecs_new_system(world, 0, "CollectWorldStats", 0, "[in] flecs.stats.EcsWorldStats", NULL);
 
     EcsWorldStats stats = {0};
 
@@ -985,6 +985,26 @@ void World_recreate_world() {
     world = ecs_init();
 
     test_assert(ecs_fini(world) == 0);
+}
+
+void World_recreate_world_w_component() {
+    ecs_world_t *world = ecs_init();
+    test_assert(world != NULL);
+
+    ECS_COMPONENT(world, Position);
+    test_assert(ecs_entity(Position) != 0);
+
+    test_assert(ecs_fini(world) == 0);
+
+    {
+        world = ecs_init();
+        test_assert(world != NULL);
+
+        ECS_COMPONENT(world, Position);
+        test_assert(ecs_entity(Position) != 0);
+
+        test_assert(ecs_fini(world) == 0);
+    }
 }
 
 void World_init_w_args_set_threads() {

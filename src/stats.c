@@ -607,6 +607,8 @@ void FlecsStatsImport(
     
     ECS_MODULE(world, FlecsStats);
 
+    ecs_set_name_prefix(world, "Ecs");
+
     ECS_COMPONENT(world, EcsAllocStats);
     ECS_COMPONENT(world, EcsWorldStats);
     ECS_COMPONENT(world, EcsMemoryStats);
@@ -624,23 +626,23 @@ void FlecsStatsImport(
 
     ECS_SYSTEM(world, StatsCollectColSystemMemoryTotals, 0, 
         [in] EcsSystemMemoryStats,
-        [out] EcsWorld:EcsMemoryStats,
+        [out] World:EcsMemoryStats,
         SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     ECS_SYSTEM(world, StatsCollectTableMemoryTotals, 0, 
         [in] EcsTableStats,
-        [out] EcsWorld:EcsMemoryStats,
+        [out] World:EcsMemoryStats,
         SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     /* -- Component creation systems -- */
 
-    ECS_SYSTEM(world, StatsAddWorldStats, EcsOnStore, [out] !EcsWorld:EcsWorldStats, 
+    ECS_SYSTEM(world, StatsAddWorldStats, EcsOnStore, [out] !World:EcsWorldStats, 
         SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
-    ECS_SYSTEM(world, StatsAddAllocStats, EcsOnStore, [out] !EcsWorld:EcsAllocStats, 
+    ECS_SYSTEM(world, StatsAddAllocStats, EcsOnStore, [out] !World:EcsAllocStats, 
         SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
-    ECS_SYSTEM(world, StatsAddMemoryStats, EcsPostLoad, [out] !EcsWorld:EcsMemoryStats, 
+    ECS_SYSTEM(world, StatsAddMemoryStats, EcsPostLoad, [out] !World:EcsMemoryStats, 
         SYSTEM:EcsOnDemand, SYSTEM:EcsHidden);
 
     ECS_SYSTEM(world, StatsAddSystemStats, EcsOnStore,

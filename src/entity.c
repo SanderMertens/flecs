@@ -1890,6 +1890,10 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
     if (!entity) {
         entity = new_entity_handle(world);
+        ecs_entity_t scope = stage->scope;
+        if (scope) {
+            ecs_add_entity(world, entity, ECS_CHILDOF | scope);
+        }
     }
 
     if (ecs_defer_begin(world, stage, EcsOpSet, entity, &added, ptr, size)) {
@@ -1898,9 +1902,9 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
     ecs_entity_info_t info;
     void *dst = get_mutable(world, stage, entity, component, &info, NULL);
-    if (!dst) {
-        return entity;
-    }
+
+    /* This can no longer happen since we defer operations */
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ptr) {
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
@@ -1961,7 +1965,7 @@ const char* ecs_get_name(
     const EcsName *id = ecs_get(world, entity, EcsName);
 
     if (id) {
-        return *id;
+        return id->value;
     } else {
         return NULL;
     }

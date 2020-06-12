@@ -455,9 +455,10 @@ struct ecs_world_t {
     int32_t stage_count;            /* Number of stages in world */
 
 
-    /* -- Child administration -- */
+    /* -- Hierarchy administration -- */
 
     ecs_map_t *child_tables;        /* Child tables per parent entity */
+    const char *name_prefix;        /* Remove prefix from C names in modules */
 
 
     /* -- Multithreading -- */

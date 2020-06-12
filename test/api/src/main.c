@@ -126,6 +126,7 @@ void Hierarchies_scope_set_again(void);
 void Hierarchies_scope_set_w_new(void);
 void Hierarchies_scope_set_w_new_staged(void);
 void Hierarchies_scope_set_w_lookup(void);
+void Hierarchies_scope_component(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -685,6 +686,7 @@ void World_quit(void);
 void World_get_delta_time(void);
 void World_get_delta_time_auto(void);
 void World_recreate_world(void);
+void World_recreate_world_w_component(void);
 void World_init_w_args_set_threads(void);
 void World_init_w_args_set_fps(void);
 void World_init_w_args_enable_dbg(void);
@@ -1269,7 +1271,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 40,
+        .testcase_count = 41,
         .testcases = (bake_test_case[]){
             {
                 .id = "get_parent",
@@ -1430,6 +1432,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "scope_set_w_lookup",
                 .function = Hierarchies_scope_set_w_lookup
+            },
+            {
+                .id = "scope_component",
+                .function = Hierarchies_scope_component
             }
         }
     },
@@ -3497,7 +3503,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 32,
+        .testcase_count = 33,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -3602,6 +3608,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "recreate_world",
                 .function = World_recreate_world
+            },
+            {
+                .id = "recreate_world_w_component",
+                .function = World_recreate_world_w_component
             },
             {
                 .id = "init_w_args_set_threads",

@@ -86,19 +86,16 @@ void ecs_init_timer_builtins(
     ecs_world_t *world)
 {
     /* Add EcsTickSource to timers and rate filters */
-    ecs_new_system(world, 0, "EcsAddTickSource", EcsPreFrame, 
-        "[in] EcsTimer || EcsRateFilter, [out] !EcsTickSource", 
-        EcsAddTickSource);
+    ecs_new_system(world, 0, "AddTickSource", EcsPreFrame, 
+        "[in] Timer || RateFilter, [out] !TickSource", EcsAddTickSource);
 
     /* Timer handling */
-    ecs_new_system(world, 0, "EcsProgressTimers", EcsPreFrame, 
-        "EcsTimer, EcsTickSource", 
-        EcsProgressTimers);
+    ecs_new_system(world, 0, "ProgressTimers", EcsPreFrame, 
+        "Timer, TickSource", EcsProgressTimers);
     
     /* Rate filter handling */
-    ecs_new_system(world, 0, "EcsProgressRateFilters", EcsPreFrame, 
-        "[in] EcsRateFilter, [out] EcsTickSource", 
-        EcsProgressRateFilters);    
+    ecs_new_system(world, 0, "ProgressRateFilters", EcsPreFrame, 
+        "[in] RateFilter, [out] TickSource", EcsProgressRateFilters);    
 }
 
 ecs_entity_t ecs_set_timeout(

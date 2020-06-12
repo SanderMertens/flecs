@@ -421,7 +421,7 @@ char* ecs_type_str(
         } else {
             const EcsName *id = ecs_get(world, h, EcsName);
             if (id) {
-                str = *id;
+                str = id->value;
                 ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);
             } else {
                 int h_int = h;

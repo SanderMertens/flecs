@@ -413,6 +413,10 @@ void dtor_pipeline_query(
     }
 }
 
+#define bootstrap_phase(name)\
+    ecs_set(world, name, EcsName, {&#name[strlen("Ecs")]});\
+    ecs_add_entity(world, name, ECS_CHILDOF | EcsFlecsCore)
+
 void ecs_init_pipeline_builtins(
     ecs_world_t *world)
 {
@@ -420,16 +424,16 @@ void ecs_init_pipeline_builtins(
 
     /* Phases of the builtin pipeline are regular entities. Names are set so
      * they can be resolved by type expressions. */
-    ecs_set(world, EcsPreFrame, EcsName, {"EcsPreFrame"});
-    ecs_set(world, EcsOnLoad, EcsName, {"EcsOnLoad"});
-    ecs_set(world, EcsPostLoad, EcsName, {"EcsPostLoad"});
-    ecs_set(world, EcsPreUpdate, EcsName, {"EcsPreUpdate"});
-    ecs_set(world, EcsOnUpdate, EcsName, {"EcsOnUpdate"});
-    ecs_set(world, EcsOnValidate, EcsName, {"EcsOnValidate"});
-    ecs_set(world, EcsPostUpdate, EcsName, {"EcsPostUpdate"});
-    ecs_set(world, EcsPreStore, EcsName, {"EcsPreStore"});
-    ecs_set(world, EcsOnStore, EcsName, {"EcsOnStore"});
-    ecs_set(world, EcsPostFrame, EcsName, {"EcsPostFrame"});
+    bootstrap_phase(EcsPreFrame);
+    bootstrap_phase(EcsOnLoad);
+    bootstrap_phase(EcsPostLoad);
+    bootstrap_phase(EcsPreUpdate);
+    bootstrap_phase(EcsOnUpdate);
+    bootstrap_phase(EcsOnValidate);
+    bootstrap_phase(EcsPostUpdate);
+    bootstrap_phase(EcsPreStore);
+    bootstrap_phase(EcsOnStore);
+    bootstrap_phase(EcsPostFrame);
 
     /* Set ctor and dtor for PipelineQuery */
     ecs_set(world, ecs_entity(EcsPipelineQuery), EcsComponentLifecycle, {
@@ -438,12 +442,12 @@ void ecs_init_pipeline_builtins(
     });
 
     /* When the Pipeline tag is added a pipeline will be created */
-    ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline);
+    ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, Pipeline);
 
     /* Create the builtin pipeline */
-    world->pipeline = ecs_new_pipeline(world, 0, "EcsBuiltinPipeline",
-        "EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,"
-        " EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame");
+    world->pipeline = ecs_new_pipeline(world, 0, "BuiltinPipeline",
+        "PreFrame, OnLoad, PostLoad, PreUpdate, OnUpdate,"
+        " OnValidate, PostUpdate, PreStore, OnStore, PostFrame");
 }
 
 void ecs_deactivate_systems(

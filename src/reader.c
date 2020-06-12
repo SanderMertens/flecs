@@ -240,7 +240,7 @@ size_t ecs_table_reader(
         break;
 
     case EcsTableColumnNameLength:
-        reader->name = ((EcsName*)reader->column_data)[reader->row_index];
+        reader->name = ((EcsName*)reader->column_data)[reader->row_index].value;
         reader->name_len = strlen(reader->name) + 1;
         reader->name_written = 0;
         *(int32_t*)buffer = reader->name_len;
