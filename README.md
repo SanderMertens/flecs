@@ -9,9 +9,11 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 
 - Blazing fast iteration speeds with direct access to raw C arrays across multiple components
 - Built-in support for entity hierarchies, prefabs, nested prefabs and prefab variants
-- Safely modify entities across multiple threads with an efficient lock-free staging architecture
+- An efficient lock-free staging architecture allows for modifying entities across multiple threads
 - Expressive entity queries with support for and, or, not and optional operators
-- A system for organizing systems in reusable plug & play modules
+- Systems that are time triggered, rate triggered, run every frame or run only when needed
+- Modules allow for creation of large scale applications by organizing systems & components in reusable plug & play units
+- A fully customizable core that makes it easy to integrate Flecs into other frameworks / game engines
 
 Make sure to check the flecs [dashboard](https://github.com/SanderMertens/flecs-systems-admin):
 
@@ -24,12 +26,11 @@ ECS (Entity Component System) is a way to organize code that is mostly used in g
 - Has _components_ that are plain data types which can be added to entities
 - Has _systems_ that are functions which are matched against entities with a set of components
 
-For more information, check [the Entity Component System FAQ](https://github.com/SanderMertens/ecs-faq).
-
 ## Documentation
 - [Quickstart](docs/Quickstart.md)
 - [Manual](docs/Manual.md)
 - [Migration guide](docs/MigrationGuide.md)
+- [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
 - [C examples](examples/c)
 - [C++ examples](examples/cpp)
 
