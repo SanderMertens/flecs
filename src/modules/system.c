@@ -1,5 +1,6 @@
 #include "../flecs_private.h"
 
+ecs_type_t ecs_type(EcsComponentLifecycle);
 ecs_type_t ecs_type(EcsTrigger);
 ecs_type_t ecs_type(EcsModule);
 ecs_type_t ecs_type(EcsSystem);
@@ -808,6 +809,7 @@ void FlecsSystemsImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
+    ecs_bootstrap_component(world, EcsComponentLifecycle);
     ecs_bootstrap_component(world, EcsTrigger);
     ecs_bootstrap_component(world, EcsSystem);
     ecs_bootstrap_component(world, EcsTickSource);
@@ -831,6 +833,7 @@ void FlecsSystemsImport(
     ecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
 
+    ecs_type(EcsComponentLifecycle) = ecs_bootstrap_type(world, ecs_entity(EcsComponentLifecycle));
     ecs_type(EcsTrigger) = ecs_bootstrap_type(world, ecs_entity(EcsTrigger));
     ecs_type(EcsSystem) = ecs_bootstrap_type(world, ecs_entity(EcsSystem));
     ecs_type(EcsTickSource) = ecs_bootstrap_type(world, ecs_entity(EcsTickSource));

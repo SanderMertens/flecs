@@ -677,6 +677,13 @@ extern ecs_type_t
 FLECS_EXPORT
 ecs_world_t* ecs_init(void);
 
+/** Same as ecs_init, but with minimal set of modules loaded.
+ *
+ * @return A new world object
+ */
+FLECS_EXPORT
+ecs_world_t* ecs_mini(void);
+
 /** Create a new world with arguments.
  * Same as ecs_init, but allows passing in command line arguments. These can be
  * used to dynamically enable flecs features to an application, like performance

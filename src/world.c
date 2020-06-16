@@ -118,7 +118,7 @@ void ecs_component_monitor_free(
 
 /* -- Public functions -- */
 
-ecs_world_t *ecs_init(void) {
+ecs_world_t *ecs_mini(void) {
     ecs_os_set_api_defaults();
 
     ecs_trace_1("bootstrap");
@@ -231,7 +231,12 @@ ecs_world_t *ecs_init(void) {
 
     ecs_bootstrap(world);
 
-    /* Import builtin modules*/
+    return world;
+}
+
+ecs_world_t *ecs_init(void) {
+    ecs_world_t *world = ecs_mini();
+
     ECS_IMPORT(world, FlecsSystems, 0);
     ECS_IMPORT(world, FlecsPipeline, 0);
     ECS_IMPORT(world, FlecsTimers, 0);

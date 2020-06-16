@@ -2,7 +2,6 @@
 
 /* Global type variables */
 ecs_type_t ecs_type(EcsComponent);
-ecs_type_t ecs_type(EcsComponentLifecycle);
 ecs_type_t ecs_type(EcsType);
 ecs_type_t ecs_type(EcsName);
 ecs_type_t ecs_type(EcsPrefab);
@@ -108,7 +107,6 @@ void bootstrap_types(
     ecs_world_t *world)
 {
     ecs_type(EcsComponent) = ecs_bootstrap_type(world, ecs_entity(EcsComponent));
-    ecs_type(EcsComponentLifecycle) = ecs_bootstrap_type(world, ecs_entity(EcsComponentLifecycle));
     ecs_type(EcsType) = ecs_bootstrap_type(world, ecs_entity(EcsType));
     ecs_type(EcsName) = ecs_bootstrap_type(world, ecs_entity(EcsName));
 }
@@ -166,7 +164,6 @@ void ecs_bootstrap(
     ecs_trace_push();
 
     bootstrap_component(world, table, EcsComponent);
-    bootstrap_component(world, table, EcsComponentLifecycle);
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsName);
 
