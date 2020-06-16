@@ -205,6 +205,7 @@ typedef void (*ecs_move_t)(
 #define ecs_copy(type) type##_copy
 #define ecs_move(type) type##_move
 
+#ifndef __BAKE_LEGACY__
 /* Constructor / destructor */
 #define ECS_XTOR(type, postfix, var, ...)\
     void type##_##postfix(\
@@ -279,6 +280,8 @@ typedef void (*ecs_move_t)(
             __VA_ARGS__\
         }\
     }
+#endif
+
 
 typedef struct ecs_scope_iter_t {
     ecs_vector_t *tables;
