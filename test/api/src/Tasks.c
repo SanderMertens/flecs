@@ -24,7 +24,7 @@ void Tasks_no_components() {
 void Tasks_one_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_SYSTEM(world, Task, EcsOnUpdate, SYSTEM:EcsHidden);
+    ECS_SYSTEM(world, Task, EcsOnUpdate, SYSTEM:Hidden);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);

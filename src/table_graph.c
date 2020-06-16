@@ -121,7 +121,7 @@ void init_edges(
          * flags. These allow us to quickly determine if the table contains
          * data that needs to be handled in a special way, like prefabs or 
          * containers */
-        if (e <= EcsLastInternal) {
+        if (e <= EcsLastInternalComponentId) {
             table->flags |= EcsTableHasBuiltins;
         }
 

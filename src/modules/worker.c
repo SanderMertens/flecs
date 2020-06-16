@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "../flecs_private.h"
 
 /* Worker thread */
 static

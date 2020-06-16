@@ -207,11 +207,6 @@ void AddPosition(ecs_iter_t *it) {
 
     int i;
     for (i = it->count - 1; i >= 0; i --) {
-        test_int(p[i].x, 10 + 20 * i);
-        test_int(p[i].y, 20 + 20 * i);
-
-        p[i].x ++;
-
         ecs_set_ptr_w_entity(
             it->world, it->entities[i], velocity, 
             sizeof(Velocity), &(Velocity){2, 3});
@@ -273,7 +268,7 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
 
         const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
-        test_int(p->x, 10 + i * 20 + 1);
+        test_int(p->x, 10 + 20 * i);
         test_int(p->y, 20 + i * 20 + 1);
 
         const Velocity *v = ecs_get(world, e + i, Velocity);

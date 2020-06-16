@@ -170,7 +170,8 @@ ecs_world_t *ecs_init(void) {
 
     world->magic = ECS_WORLD_MAGIC;
     memset(&world->c_info, 0, sizeof(ecs_c_info_t) * ECS_HI_COMPONENT_ID); 
-    world->t_info = ecs_map_new(ecs_c_info_t, 0);   
+    world->t_info = ecs_map_new(ecs_c_info_t, 0);  
+    world->fini_actions = NULL; 
 
     world->queries = ecs_sparse_new(ecs_query_t, 0);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
@@ -230,6 +231,11 @@ ecs_world_t *ecs_init(void) {
 
     ecs_bootstrap(world);
 
+    /* Import builtin modules*/
+    ECS_IMPORT(world, FlecsSystems, 0);
+    ECS_IMPORT(world, FlecsPipeline, 0);
+    ECS_IMPORT(world, FlecsTimers, 0);
+
     return world;
 }
 
@@ -276,18 +282,6 @@ ecs_world_t* ecs_init_w_args(
     for (i = 1; i < argc; i ++) {
         if (argv[i][0] == '-') {
             bool parsed = false;
-            int threads;
-            
-            ARG(0, "threads", 
-                threads = atoi(argv[i + 1]); 
-                ecs_set_threads(world, threads);
-                i ++;
-            );
-
-            ARG(0, "fps", 
-                ecs_set_target_fps(world, atoi(argv[i + 1]));
-                world->arg_fps = world->stats.target_fps; 
-                i ++);
 
             ARG(0, "admin", 
 				ecs_enable_admin(world, atoi(argv[i + 1]));
@@ -319,6 +313,30 @@ void on_demand_in_map_deinit(
     ecs_map_free(map);
 }
 
+void ecs_set_component_actions(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    EcsComponentLifecycle *lifecycle)
+{
+    ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, component);
+    c_info->lifecycle = *lifecycle;
+}
+
+void ecs_atfini(
+    ecs_world_t *world,
+    ecs_fini_action_t action,
+    void *ctx)
+{
+    ecs_assert(action != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_fini_action_elem_t *elem = ecs_vector_add(&world->fini_actions, 
+        ecs_fini_action_elem_t);
+    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    elem->action = action;
+    elem->ctx = ctx;
+}
+
 int ecs_fini(
     ecs_world_t *world)
 {
@@ -326,10 +344,12 @@ int ecs_fini(
     assert(!world->in_progress);
     assert(!world->is_merging);
 
-    /* Cleanup threading administration */
-    if (world->workers) {
-        ecs_set_threads(world, 0);
-    }
+    /* Execute fini actions */
+    ecs_vector_each(world->fini_actions, ecs_fini_action_elem_t, elem, {
+        elem->action(world, elem->ctx);
+    });
+
+    ecs_vector_free(world->fini_actions);
 
     if (world->locking_enabled) {
         ecs_os_mutex_free(world->mutex);
@@ -416,120 +436,6 @@ void ecs_dim_type(
         ecs_data_t *data = ecs_table_get_or_create_data(world, &world->stage, table);
         ecs_table_set_size(world, table, data, entity_count);
     }
-}
-
-static
-float start_measure_frame(
-    ecs_world_t *world,
-    float user_delta_time)
-{
-    float delta_time = 0;
-
-    if (world->measure_frame_time || !user_delta_time) {
-        ecs_time_t t = world->frame_start_time;
-        do {
-            if (world->frame_start_time.sec) {
-                delta_time = ecs_time_measure(&t);
-            } else {
-                ecs_time_measure(&t);
-                if (world->stats.target_fps) {
-                    delta_time = 1.0 / world->stats.target_fps;
-                } else {
-                    delta_time = 1.0 / 60.0; /* Best guess */
-                }
-            }
-        
-        /* Keep trying while delta_time is zero */
-        } while (delta_time == 0);
-
-        world->frame_start_time = t;  
-
-        /* Compute total time passed since start of simulation */
-        ecs_time_t diff = ecs_time_sub(t, world->world_start_time);
-        world->stats.world_time_total = ecs_time_to_double(diff);
-    }
-
-    return delta_time;
-}
-
-static
-void stop_measure_frame(
-    ecs_world_t *world,
-    float delta_time)
-{
-    if (world->measure_frame_time) {
-        ecs_time_t t = world->frame_start_time;
-        double frame_time = ecs_time_measure(&t);
-        world->stats.frame_time_total += frame_time;
-
-        /* Sleep if processing faster than target FPS */
-        float target_fps = world->stats.target_fps;
-        if (target_fps) {
-            float sleep = (1.0 / target_fps) - delta_time + world->fps_sleep;
-
-            if (sleep > 0.01) {
-                ecs_sleepf(sleep);
-            }
-
-            world->fps_sleep = sleep;
-        }        
-    }
-}
-
-float ecs_frame_begin(
-    ecs_world_t *world,
-    float user_delta_time)
-{
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
-    ecs_assert(user_delta_time || ecs_os_api.get_time, ECS_MISSING_OS_API, "get_time");
-
-    if (world->locking_enabled) {
-        ecs_lock(world);
-    }
-
-    /* Start measuring total frame time */
-    float delta_time = start_measure_frame(world, user_delta_time);
-
-    if (!user_delta_time) {
-        user_delta_time = delta_time;
-    }
-
-    world->stats.delta_time = user_delta_time;
-    
-    return user_delta_time;
-}
-
-void ecs_frame_end(
-    ecs_world_t *world,
-    float delta_time)
-{
-    world->stats.frame_count_total ++;
-
-    if (world->locking_enabled) {
-        ecs_unlock(world);
-    }
-
-    stop_measure_frame(world, delta_time);   
-}
-
-bool ecs_progress(
-    ecs_world_t *world,
-    float user_delta_time)
-{
-    float delta_time = ecs_frame_begin(world, user_delta_time);
-
-    ecs_workers_progress(world);
-
-    ecs_frame_end(world, delta_time);
-
-    return !world->should_quit;
-}
-
-void ecs_quit(
-    ecs_world_t *world)
-{
-    ecs_get_stage(&world);
-    world->should_quit = true;
 }
 
 void ecs_eval_component_monitors(
@@ -762,22 +668,4 @@ const ecs_world_info_t* ecs_get_world_info(
     ecs_world_t *world)
 {
     return &world->stats;
-}
-
-void ecs_set_pipeline(
-    ecs_world_t *world,
-    ecs_entity_t pipeline)
-{
-    ecs_assert( ecs_has_entity(world, pipeline, EcsPipeline), 
-        ECS_INVALID_PARAMETER, NULL);
-    ecs_assert( ecs_get(world, pipeline, EcsPipelineQuery) != NULL, 
-        ECS_INVALID_PARAMETER, NULL);
-
-    world->pipeline = pipeline;
-}
-
-ecs_entity_t ecs_get_pipeline(
-    ecs_world_t *world)
-{
-    return world->pipeline;
 }

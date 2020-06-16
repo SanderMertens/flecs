@@ -1,5 +1,7 @@
 #include <api.h>
 
+#include "flecs/modules/stats.h"
+
 static
 void install_test_abort() {
     ecs_os_set_api_defaults();
@@ -1005,36 +1007,6 @@ void World_recreate_world_w_component() {
 
         test_assert(ecs_fini(world) == 0);
     }
-}
-
-void World_init_w_args_set_threads() {
-    ecs_world_t *world = ecs_init_w_args(3, ((char*[]){
-        "test",
-        "--threads", "4",
-        NULL
-    }));
-
-    test_assert(world != NULL);
-
-    test_int(ecs_get_threads(world), 4);
-
-    ecs_fini(world);
-}
-
-void World_init_w_args_set_fps() {
-    ecs_world_t *world = ecs_init_w_args(3, ((char*[]){
-        "test",
-        "--fps", "60",
-        NULL
-    }));
-
-    test_assert(world != NULL);
-
-    const ecs_world_info_t *stats = ecs_get_world_info(world);
-
-    test_int(stats->target_fps, 60);
-
-    ecs_fini(world);
 }
 
 void World_init_w_args_enable_dbg() {

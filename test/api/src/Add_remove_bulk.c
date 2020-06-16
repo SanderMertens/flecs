@@ -33,6 +33,8 @@ void Add_remove_bulk_add_remove_add_only() {
 
     test_int( ecs_count(world, Position), 10);
     test_int( ecs_count(world, Velocity), 10);
+
+    ecs_fini(world);
 }
 
 void Add_remove_bulk_add_remove_remove_only() {
@@ -68,6 +70,8 @@ void Add_remove_bulk_add_remove_remove_only() {
 
     test_int( ecs_count(world, Position), 10);
     test_int( ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);
 }
 
 void Add_remove_bulk_add_remove_both() {
@@ -107,6 +111,8 @@ void Add_remove_bulk_add_remove_both() {
 
     test_int( ecs_count(world, Position), 10);
     test_int( ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);
 }
 
 void Add_remove_bulk_add_remove_same() {
@@ -149,4 +155,6 @@ void Add_remove_bulk_add_remove_same() {
 
     test_int( ecs_count(world, Position), 10);
     test_int( ecs_count(world, Velocity), 10);
+
+    ecs_fini(world);
 }

@@ -7,6 +7,11 @@
 #include "flecs/util/entity_index.h"
 #include "flecs/util/table.h"
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Core bootstrap functions
+////////////////////////////////////////////////////////////////////////////////
+
 /* Bootstrap world */
 void ecs_bootstrap(
     ecs_world_t *world);
@@ -15,16 +20,28 @@ void ecs_bootstrap(
 void ecs_init_builtins(
     ecs_world_t *world);
 
-/* Initialize timer builtins */
-void ecs_init_timer_builtins(
-    ecs_world_t *world);
-
 /* Initialize system builtins */
 void ecs_init_system_builtins(
     ecs_world_t *world);    
 
-void ecs_init_pipeline_builtins(
-    ecs_world_t *world);
+void _ecs_bootstrap_component(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t entity,
+    const char *id,
+    size_t size,
+    size_t alignment);
+
+ecs_type_t ecs_bootstrap_type(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+#define ecs_bootstrap_component(world, name)\
+    ecs_new_component(world, ecs_entity(name), #name, sizeof(name), ECS_ALIGNOF(name));
+
+#define ecs_bootstrap_tag(world, name)\
+    ecs_set(world, name, EcsName, {.value = &#name[strlen("Ecs")], .symbol = #name});\
+    ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API

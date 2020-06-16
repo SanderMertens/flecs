@@ -98,6 +98,8 @@ EcsType type_from_vec(
             world, &world->stage, table, &normalized_array, NULL);
 
         result.normalized = norm_table->type;
+
+        ecs_vector_free(normalized);
     } else {
         result.normalized = result.type;
     }
@@ -275,6 +277,8 @@ ecs_entity_t ecs_new_module(
 
         EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
         name_ptr->symbol = name;
+
+        ecs_os_free(module_path);
     }
 
     ecs_entity_t result = ecs_new_component(world, e, NULL, size, alignment);

@@ -72,6 +72,7 @@ ecs_os_cond_t bake_cond_new(void) {
 static 
 void bake_cond_free(ecs_os_cond_t cond) {
     ut_cond_free((struct ut_cond_s *)cond);
+    ecs_os_api.free((struct ut_cond_s *)cond);
 }
 
 static 

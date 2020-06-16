@@ -764,8 +764,6 @@
                 "get_delta_time_auto",
                 "recreate_world",
                 "recreate_world_w_component",
-                "init_w_args_set_threads",
-                "init_w_args_set_fps",
                 "init_w_args_enable_dbg",
                 "no_threading",
                 "no_time",

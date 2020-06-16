@@ -33,6 +33,8 @@ void Add_bulk_add_comp_from_comp_to_empty() {
 
     test_int( ecs_count(world, Position), 10);
     test_int( ecs_count(world, Velocity), 10);
+
+    ecs_fini(world);
 }
 
 void Add_bulk_add_comp_from_tag_to_empty() {
@@ -61,6 +63,8 @@ void Add_bulk_add_comp_from_tag_to_empty() {
 
     test_int( ecs_count_entity(world, Tag), 10);
     test_int( ecs_count(world, Velocity), 10);
+
+    ecs_fini(world);
 }
 
 void Add_bulk_add_comp_from_comp_to_existing() {
@@ -123,6 +127,8 @@ void Add_bulk_add_comp_from_comp_to_existing() {
 
     test_int( ecs_count(world, Position), 20);
     test_int( ecs_count(world, Velocity), 20);
+
+    ecs_fini(world);
 }
 
 void Add_bulk_add_comp_from_tag_to_existing() {
@@ -171,6 +177,8 @@ void Add_bulk_add_comp_from_tag_to_existing() {
 
     test_int( ecs_count_entity(world, Tag), 20);
     test_int( ecs_count(world, Velocity), 20);
+
+    ecs_fini(world);
 }
 
 void Add_bulk_add_tag_from_tag_to_empty() {
@@ -198,6 +206,8 @@ void Add_bulk_add_tag_from_tag_to_empty() {
 
     test_int( ecs_count_entity(world, Tag), 10);
     test_int( ecs_count_entity(world, Tag2), 10);
+
+    ecs_fini(world);
 }
 
 void Add_bulk_add_tag_from_tag_to_existing() {
@@ -239,6 +249,8 @@ void Add_bulk_add_tag_from_tag_to_existing() {
 
     test_int( ecs_count_entity(world, Tag), 20);
     test_int( ecs_count_entity(world, Tag2), 20);
+
+    ecs_fini(world);
 }
 
 void Add_bulk_add_comp_to_more_existing() {
@@ -299,6 +311,8 @@ void Add_bulk_add_comp_to_more_existing() {
 
     test_int( ecs_count(world, Position), 30);
     test_int( ecs_count(world, Velocity), 30);
+
+    ecs_fini(world);
 }
 
 void Add_bulk_add_comp_to_fewer_existing() {
@@ -361,6 +375,8 @@ void Add_bulk_add_comp_to_fewer_existing() {
 
     test_int( ecs_count(world, Position), 15);
     test_int( ecs_count(world, Velocity), 15);
+
+    ecs_fini(world);
 }
 
 void AddVelocity(ecs_iter_t *it) {
@@ -397,6 +413,8 @@ void Add_bulk_on_add() {
     }
     
     test_int(ctx.c[0][0], ecs_entity(Velocity));
+
+    ecs_fini(world);
 }
 
 void Add_bulk_add_entity_comp() {
@@ -432,6 +450,8 @@ void Add_bulk_add_entity_comp() {
 
     test_int( ecs_count(world, Position), 10);
     test_int( ecs_count(world, Velocity), 10);
+
+    ecs_fini(world);
 }
 
 void Add_bulk_add_entity_tag() {
@@ -465,6 +485,8 @@ void Add_bulk_add_entity_tag() {
 
     test_int( ecs_count(world, Position), 10);
     test_int( ecs_count_entity(world, Tag), 10);
+    
+    ecs_fini(world);
 }
 
 void Add_bulk_add_entity_on_add() {
@@ -497,6 +519,8 @@ void Add_bulk_add_entity_on_add() {
     }
     
     test_int(ctx.c[0][0], ecs_entity(Velocity));
+
+    ecs_fini(world);
 }
 
 void Add_bulk_add_entity_existing() {
@@ -527,4 +551,6 @@ void Add_bulk_add_entity_existing() {
     }
 
     test_int( ecs_count(world, Position), 10);
+
+    ecs_fini(world);
 }

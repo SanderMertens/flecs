@@ -507,15 +507,17 @@ void ecs_table_replace_data(
         deinit_data(table, table_data);
     }
 
-    table_data = ecs_table_get_or_create_data(world, &world->stage, table);
     if (data) {
+        table_data = ecs_table_get_or_create_data(world, &world->stage, table);
         *table_data = *data;
+    } else {
+        return;
     }
 
     ecs_entities_t components = ecs_type_to_entities(table->type);
     int32_t count = ecs_table_count(table);
 
-    ecs_run_set_systems(world, &world->stage, &components, table, data, 0, 
+    ecs_run_set_systems(world, &world->stage, &components, table, table_data, 0, 
         count, true);
 
     if (!prev_count && count) {

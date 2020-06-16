@@ -33,6 +33,8 @@ void Remove_bulk_remove_comp_from_comp_to_empty() {
 
     test_int( ecs_count(world, Position), 10);
     test_int( ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);
 }
 
 void Remove_bulk_remove_comp_from_comp_to_existing() {
@@ -76,6 +78,8 @@ void Remove_bulk_remove_comp_from_comp_to_existing() {
 
     test_int( ecs_count(world, Position), 20);
     test_int( ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);
 }
 
 void Remove_bulk_remove_comp_from_tag_to_empty() {
@@ -105,6 +109,8 @@ void Remove_bulk_remove_comp_from_tag_to_empty() {
 
     test_int( ecs_count(world, Tag), 10);
     test_int( ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);
 }
 
 void Remove_bulk_remove_comp_from_tag_to_existing() {
@@ -137,6 +143,8 @@ void Remove_bulk_remove_comp_from_tag_to_existing() {
 
     test_int( ecs_count(world, Tag), 20);
     test_int( ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);
 }
 
 void Remove_bulk_remove_tag_from_tag_to_empty() {
@@ -166,6 +174,8 @@ void Remove_bulk_remove_tag_from_tag_to_empty() {
 
     test_int( ecs_count(world, Tag), 10);
     test_int( ecs_count(world, Tag2), 0);
+
+    ecs_fini(world);
 }
 
 void Remove_bulk_remove_tag_from_tag_to_existing() {
@@ -198,6 +208,8 @@ void Remove_bulk_remove_tag_from_tag_to_existing() {
 
     test_int( ecs_count(world, Tag), 20);
     test_int( ecs_count(world, Tag2), 0);
+
+    ecs_fini(world);
 }
 
 void Remove_bulk_remove_all_comp() {
@@ -222,6 +234,8 @@ void Remove_bulk_remove_all_comp() {
     }
 
     test_int( ecs_count(world, Position), 0);
+
+    ecs_fini(world);
 }
 
 void Remove_bulk_remove_all_tag() {
@@ -246,6 +260,8 @@ void Remove_bulk_remove_all_tag() {
     }
 
     test_int( ecs_count(world, Tag), 0);
+
+    ecs_fini(world);
 }
 
 void RemoveVelocity(ecs_iter_t *it) {
@@ -283,6 +299,8 @@ void Remove_bulk_on_remove() {
     }
 
     test_int(ctx.c[0][0], ecs_entity(Velocity));
+
+    ecs_fini(world);
 }
 
 void Remove_bulk_remove_entity_comp() {
@@ -318,6 +336,8 @@ void Remove_bulk_remove_entity_comp() {
 
     test_int( ecs_count(world, Position), 10);
     test_int( ecs_count(world, Velocity), 0);
+
+    ecs_fini(world);
 }
 
 void Remove_bulk_remove_entity_tag() {
@@ -353,6 +373,8 @@ void Remove_bulk_remove_entity_tag() {
 
     test_int( ecs_count(world, Position), 10);
     test_int( ecs_count_entity(world, Tag), 0);
+
+    ecs_fini(world);
 }
 
 void Remove_bulk_remove_entity_on_remove() {
@@ -386,4 +408,6 @@ void Remove_bulk_remove_entity_on_remove() {
     }
 
     test_int(ctx.c[0][0], ecs_entity(Velocity));
+
+    ecs_fini(world);
 }

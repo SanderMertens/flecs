@@ -1,5 +1,7 @@
 #include <api.h>
 
+#include "flecs/modules/timers.h"
+
 static bool system_a_invoked;
 static bool system_b_invoked;
 static bool system_c_invoked;

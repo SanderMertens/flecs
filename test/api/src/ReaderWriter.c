@@ -184,7 +184,7 @@ void ReaderWriter_simple() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         simple_test(i);
     }
 }
@@ -264,7 +264,7 @@ void ReaderWriter_id() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         id_test(i);
     }
 }
@@ -417,7 +417,7 @@ void ReaderWriter_id_w_simple() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         id_w_simple_test(i);
     }
 }
@@ -477,7 +477,7 @@ void ReaderWriter_unaligned() {
     for (count = 0; count < 64; count ++) {
         int total = unaligned_test(4, count);
 
-        for (size = 8; size < total * 2; size += 8) {
+        for (size = 8; size < total; size *= 2) {
             unaligned_test(size, count);
         }
     }
@@ -548,7 +548,7 @@ void ReaderWriter_tag() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         tag_test(i);
     }
 }
@@ -631,7 +631,7 @@ void ReaderWriter_simple_w_tag() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         simple_w_tag_test(i);
     }
 }
@@ -714,7 +714,7 @@ void ReaderWriter_tag_w_simple() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         tag_w_simple_test(i);
     }
 }
@@ -765,7 +765,7 @@ void ReaderWriter_empty_parent() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         empty_parent_test(i);
     }
 }
@@ -829,7 +829,7 @@ void ReaderWriter_parent() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         parent_test(i);
     }
 }
@@ -915,7 +915,7 @@ void ReaderWriter_simple_w_parent() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         simple_w_parent_test(i);
     }
 }
@@ -982,7 +982,7 @@ void ReaderWriter_inheritance() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         inheritance_test(i);
     }
 }
@@ -1075,7 +1075,7 @@ void ReaderWriter_simple_w_inheritance() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         simple_w_inheritance_test(i);
     }
 }
@@ -1146,7 +1146,7 @@ void ReaderWriter_deserialize_twice() {
     test_assert(total > 4);
     test_assert(total % 4 == 0);
 
-    for (i = 8; i < total * 2; i += 4) {
+    for (i = 8; i < total; i *= 2) {
         deserialize_twice_test(i);
     }
 }

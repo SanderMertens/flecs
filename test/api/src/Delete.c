@@ -154,6 +154,8 @@ void Delete_delete_3_of_3() {
     test_assert(!ecs_get_type(world, e1));
     test_assert(!ecs_get_type(world, e2));
     test_assert(!ecs_get_type(world, e3));
+
+    ecs_fini(world);
 }
 
 static

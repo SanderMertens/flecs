@@ -1,4 +1,14 @@
-#include "flecs_private.h"
+#include "../flecs_private.h"
+
+ecs_type_t ecs_type(EcsTrigger);
+ecs_type_t ecs_type(EcsModule);
+ecs_type_t ecs_type(EcsSystem);
+ecs_type_t ecs_type(EcsTickSource);
+ecs_type_t ecs_type(EcsSignatureExpr);
+ecs_type_t ecs_type(EcsSignature);
+ecs_type_t ecs_type(EcsQuery);
+ecs_type_t ecs_type(EcsIterAction);
+ecs_type_t ecs_type(EcsContext);
 
 static
 ecs_on_demand_in_t* get_in_component(
@@ -513,4 +523,346 @@ void ecs_run_monitor(
 
     it.system = system;
     system_data->action(&it);
+}
+
+
+
+
+/* Generic constructor to initialize a component to 0 */
+static
+void ctor_init_zero(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entities,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    (void)world;
+    (void)component;
+    (void)entities;
+    (void)ctx;
+    memset(ptr, 0, size * count);
+}
+
+/* System destructor */
+static
+void ecs_colsystem_dtor(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entities,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    (void)component;
+    (void)ctx;
+    (void)size;
+
+    EcsSystem *system_data = ptr;
+
+    int i;
+    for (i = 0; i < count; i ++) {
+        EcsSystem *cur = &system_data[i];
+        ecs_entity_t e = entities[i];
+
+        /* Invoke Deactivated action for active systems */
+        if (cur->query && ecs_vector_count(cur->query->tables)) {
+            ecs_invoke_status_action(world, e, ptr, EcsSystemDeactivated);
+        }
+
+        /* Invoke Disabled action for enabled systems */
+        if (!ecs_has_entity(world, e, EcsDisabled) && 
+            !ecs_has_entity(world, e, EcsDisabledIntern)) 
+        {
+            ecs_invoke_status_action(world, e, ptr, EcsSystemDisabled);
+        }           
+
+        ecs_os_free(cur->on_demand);
+        ecs_vector_free(cur->jobs);
+    }
+}
+
+/* Register a trigger for a component */
+static
+EcsTrigger* trigger_find_or_create(
+    ecs_vector_t **triggers,
+    ecs_entity_t entity)
+{
+    ecs_vector_each(*triggers, EcsTrigger, trigger, {
+        if (trigger->self == entity) {
+            return trigger;
+        }
+    });
+
+    EcsTrigger *result = ecs_vector_add(triggers, EcsTrigger);
+    return result;
+}
+
+static
+void trigger_set(
+    ecs_world_t *world,
+    const ecs_entity_t *entities,
+    EcsTrigger *ct,
+    int32_t count)
+{
+    EcsTrigger *el = NULL;
+
+    int i;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = ct[i].component;
+
+        ecs_c_info_t *cdata = ecs_get_or_create_c_info(world, e);
+        switch(ct[i].kind) {
+        case EcsOnAdd:
+            el = trigger_find_or_create(&cdata->on_add, entities[i]);
+            break;
+        case EcsOnRemove:
+            el = trigger_find_or_create(&cdata->on_remove, entities[i]);
+            break;
+        default:
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+            break;
+        }
+        
+        ecs_assert(el != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        *el = ct[i];
+        el->self = entities[i];
+
+        ecs_trace_1("trigger #[green]%s#[normal] created for component #[red]%s",
+            ct[i].kind == EcsOnAdd
+                ? "OnAdd"
+                : "OnRemove", ecs_get_name(world, e));
+    }
+}
+
+static
+void OnSetTrigger(
+    ecs_iter_t *it)
+{
+    EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
+    
+    trigger_set(it->world, it->entities, ct, it->count);
+}
+
+static
+void OnSetTriggerCtx(
+    ecs_iter_t *it)
+{
+    EcsTrigger *ct = ecs_column(it, EcsTrigger, 1);
+    EcsContext *ctx = ecs_column(it, EcsContext, 2);
+
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ct[i].ctx = (void*)ctx[i].ctx;
+    }
+
+    trigger_set(it->world, it->entities, ct, it->count);    
+}
+
+/* System that registers component lifecycle callbacks */
+static
+void OnSetComponentLifecycle(
+    ecs_iter_t *it)
+{
+    EcsComponentLifecycle *cl = ecs_column(it, EcsComponentLifecycle, 1);
+    ecs_world_t *world = it->world;
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+
+        ecs_set_component_actions(world, e, &cl[i]);
+
+        ecs_trace_1("component #[green]%s#[normal] lifecycle callbacks set",
+            ecs_get_name(world, e));        
+    }
+}
+
+/* Disable system when EcsDisabled is added */
+static 
+void DisableSystem(
+    ecs_iter_t *it)
+{
+    EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
+
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_enable_system(
+            it->world, it->entities[i], &system_data[i], false);
+    }
+}
+
+/* Enable system when EcsDisabled is removed */
+static
+void EnableSystem(
+    ecs_iter_t *it)
+{
+    EcsSystem *system_data = ecs_column(it, EcsSystem, 1);
+
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_enable_system(
+            it->world, it->entities[i], &system_data[i], true);
+    }
+}
+
+/* Parse a signature expression into the ecs_sig_t data structure */
+static
+void CreateSignature(
+    ecs_iter_t *it) 
+{
+    ecs_world_t *world = it->world;
+    ecs_entity_t *entities = it->entities;
+
+    EcsSignatureExpr *signature = ecs_column(it, EcsSignatureExpr, 1);
+    
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = entities[i];
+        const char *name = ecs_get_name(world, e);
+
+        /* Parse the signature and add the result to the entity */
+        EcsSignature sig = {0};
+        ecs_sig_init(world, name, signature[0].expr, &sig.signature);
+        ecs_set_ptr(world, e, EcsSignature, &sig);
+
+        /* If sig has FromSystem columns, add components to the entity */
+        ecs_vector_each(sig.signature.columns, ecs_sig_column_t, column, {
+            if (column->from_kind == EcsFromSystem) {
+                ecs_add_entity(world, e, column->is.component);
+            }
+        });    
+    }
+}
+
+/* Create a query from a signature */
+static
+void CreateQuery(
+    ecs_iter_t *it) 
+{
+    ecs_world_t *world = it->world;
+    ecs_entity_t *entities = it->entities;
+
+    EcsSignature *signature = ecs_column(it, EcsSignature, 1);
+    
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = entities[i];
+
+        if (!ecs_has(world, e, EcsQuery)) {
+            EcsQuery query = {0};
+            query.query = ecs_query_new_w_sig(world, e, &signature[i].signature);
+            ecs_set_ptr(world, e, EcsQuery, &query);
+        }
+    }
+}
+
+/* Create a system from a query and an action */
+static
+void CreateSystem(
+    ecs_iter_t *it)
+{
+    ecs_world_t *world = it->world;
+    ecs_entity_t *entities = it->entities;
+
+    EcsQuery *query = ecs_column(it, EcsQuery, 1);
+    EcsIterAction *action = ecs_column(it, EcsIterAction, 2);
+    EcsContext *ctx = ecs_column(it, EcsContext, 3);
+    
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = entities[i];
+        void *ctx_ptr = NULL;
+        if (ctx) {
+            ctx_ptr = (void*)ctx[i].ctx;
+        }
+
+        ecs_init_system(world, e, action[i].action, query[i].query, ctx_ptr);
+    }
+}
+
+static
+void bootstrap_set_system(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_iter_action_t action)
+{
+    ecs_sig_t sig = {0};
+    ecs_entity_t sys = ecs_set(world, 0, EcsName, {name});
+    ecs_add_entity(world, sys, EcsOnSet);
+    ecs_sig_init(world, name, expr, &sig);
+    ecs_query_t *query = ecs_query_new_w_sig(world, sys, &sig);
+    ecs_init_system(world, sys, action, query, NULL);
+}
+
+void FlecsSystemsImport(
+    ecs_world_t *world,
+    int flags)
+{
+    ECS_MODULE(world, FlecsSystems);
+
+    ecs_set_name_prefix(world, "Ecs");
+
+    ecs_bootstrap_component(world, EcsTrigger);
+    ecs_bootstrap_component(world, EcsSystem);
+    ecs_bootstrap_component(world, EcsTickSource);
+    ecs_bootstrap_component(world, EcsSignatureExpr);
+    ecs_bootstrap_component(world, EcsSignature);
+    ecs_bootstrap_component(world, EcsQuery);
+    ecs_bootstrap_component(world, EcsIterAction);
+    ecs_bootstrap_component(world, EcsContext);
+
+    ecs_bootstrap_tag(world, EcsOnAdd);
+    ecs_bootstrap_tag(world, EcsOnRemove);
+    ecs_bootstrap_tag(world, EcsOnSet);
+
+    ecs_bootstrap_tag(world, EcsDisabledIntern);
+    ecs_bootstrap_tag(world, EcsInactive);
+
+    /* Put EcsOnDemand and EcsMonitor in flecs.core so they can be looked up
+     * without using the flecs.systems prefix */
+    ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
+    ecs_bootstrap_tag(world, EcsOnDemand);
+    ecs_bootstrap_tag(world, EcsMonitor);
+    ecs_set_scope(world, old_scope);
+
+    ecs_type(EcsTrigger) = ecs_bootstrap_type(world, ecs_entity(EcsTrigger));
+    ecs_type(EcsSystem) = ecs_bootstrap_type(world, ecs_entity(EcsSystem));
+    ecs_type(EcsTickSource) = ecs_bootstrap_type(world, ecs_entity(EcsTickSource));
+    ecs_type(EcsSignatureExpr) = ecs_bootstrap_type(world, ecs_entity(EcsSignatureExpr));
+    ecs_type(EcsSignature) = ecs_bootstrap_type(world, ecs_entity(EcsSignature));
+    ecs_type(EcsQuery) = ecs_bootstrap_type(world, ecs_entity(EcsQuery));
+    ecs_type(EcsIterAction) = ecs_bootstrap_type(world, ecs_entity(EcsIterAction));
+    ecs_type(EcsContext) = ecs_bootstrap_type(world, ecs_entity(EcsContext));   
+
+    /* Bootstrap ctor and dtor for EcsSystem */
+    ecs_c_info_t *c_info = ecs_get_or_create_c_info(world, ecs_entity(EcsSystem));
+    ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    c_info->lifecycle.ctor = ctor_init_zero;
+    c_info->lifecycle.dtor = ecs_colsystem_dtor;
+
+    /* Create systems necessary to create systems */
+    bootstrap_set_system(world, "CreateSignature", "SignatureExpr", CreateSignature);
+    bootstrap_set_system(world, "CreateQuery", "Signature, IterAction", CreateQuery);
+    bootstrap_set_system(world, "CreateSystem", "Query, IterAction, ?Context", CreateSystem);
+
+    /* From here we can create systems */
+
+    /* Register OnSet system for EcsComponentLifecycle */
+    ECS_SYSTEM(world, OnSetComponentLifecycle, EcsOnSet, ComponentLifecycle, SYSTEM:Hidden);
+
+    /* Register OnSet system for triggers */
+    ECS_SYSTEM(world, OnSetTrigger, EcsOnSet, Trigger, SYSTEM:Hidden);
+
+    /* System that sets ctx for a trigger */
+    ECS_SYSTEM(world, OnSetTriggerCtx, EcsOnSet, Trigger, Context, SYSTEM:Hidden);
+
+    /* Monitors that trigger when a system is enabled or disabled */
+    ECS_SYSTEM(world, DisableSystem, EcsMonitor, System, Disabled || DisabledIntern, SYSTEM:Hidden);
+    ECS_SYSTEM(world, EnableSystem, EcsMonitor, System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
 }

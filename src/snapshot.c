@@ -197,6 +197,7 @@ void ecs_snapshot_restore(
 
         ecs_table_t *dst = ecs_sparse_get(world->stage.tables, ecs_table_t, i);
         ecs_table_replace_data(world, dst, data);
+        ecs_vector_free(src->stage_data);
 
         ecs_data_t *dst_data = ecs_table_get_data(world, dst);
 
@@ -253,6 +254,7 @@ void ecs_snapshot_free(
             ecs_os_free(src_data->columns);
             src_data->columns = NULL;
         }
+        ecs_vector_free(src->stage_data);
     }    
 
     ecs_sparse_free(snapshot->tables);

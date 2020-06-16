@@ -390,10 +390,13 @@ ecs_entity_t ecs_new_from_path_w_sep(
         ecs_entity_t e = ecs_lookup_child(world, cur, buff);
         if (!e) {
             char *name = ecs_os_strdup(buff);
+            
             e = ecs_set(world, e, EcsName, {
                 .value = name,
                 .alloc_value = name
             });
+
+            ecs_os_free(name);
 
             ecs_add_entity(world, e, ECS_CHILDOF | cur);
         }

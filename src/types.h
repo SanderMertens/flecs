@@ -399,11 +399,18 @@ typedef struct ecs_component_monitor_t {
     bool rematch;
 } ecs_component_monitor_t;
 
+/* fini actions */
+typedef struct ecs_fini_action_elem_t {
+    ecs_fini_action_t action;
+    void *ctx;
+} ecs_fini_action_elem_t;
+
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
     void *context;               /* Application context */
+    ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
 
     ecs_c_info_t c_info[ECS_HI_COMPONENT_ID]; /* Component callbacks & triggers */
     ecs_map_t *t_info;                        /* Tag triggers */
