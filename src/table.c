@@ -343,19 +343,6 @@ ecs_data_t* ecs_table_get_data_intern(
             ecs_vector_set_count(&table->stage_data, ecs_data_t, stage_count);
             data_array = ecs_vector_first(table->stage_data, ecs_data_t);           
         }
-
-        int i;
-        for (i = 0; i < stage_count; i ++) {
-            ecs_data_t *data_array = ecs_vector_first(table->stage_data, ecs_data_t);
-            ecs_stage_t *stage_array = ecs_vector_first(world->worker_stages, ecs_stage_t);
-
-            data_array[0].stage = &world->stage;
-            data_array[1].stage = &world->temp_stage;
-
-            for (i = 2; i < stage_count; i ++) {
-                data_array[i].stage = &stage_array[i - 2];
-            }
-        }
     }
     
     return &data_array[id];
@@ -533,7 +520,6 @@ void mark_dirty(
     ecs_data_t *data,
     int32_t index)
 {
-    data->change_count ++;
     if (table->dirty_state) {
         table->dirty_state[index] ++;
     }

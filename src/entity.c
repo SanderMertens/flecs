@@ -887,6 +887,19 @@ int32_t new_entity(
 }
 
 static
+bool compare_stage_w_data(
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_data_t *data)
+{
+    ecs_data_t *data_array = ecs_vector_first(table->stage_data, ecs_data_t);
+    if (&data_array[stage->id] == data) {
+        return true;
+    }
+    return false;
+}
+
+static
 int32_t move_entity(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -914,7 +927,7 @@ int32_t move_entity(
     ecs_assert(!record || record == ecs_eis_get(&world->stage, entity), ECS_INTERNAL_ERROR, NULL);
 
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record);
-    bool same_stage = src_data->stage == stage;
+    bool same_stage = compare_stage_w_data(stage, src_table, src_data);
 
     if (main_stage && record) {
         record->table = dst_table;

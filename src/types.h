@@ -79,8 +79,6 @@ struct ecs_data_t {
     ecs_vector_t *entities;
     ecs_vector_t *record_ptrs;
     ecs_column_t *columns;
-    ecs_stage_t *stage;
-    int32_t change_count;        /* Low-cost counter to keep track of changes */
     bool marked_dirty;           /* Was table marked dirty for current stage? */  
 };
 
