@@ -75,16 +75,16 @@ static
 void deinit_all_data(
     ecs_table_t *table)
 {
-    ecs_data_t *stage_data = ecs_vector_first(table->stage_data, ecs_data_t);
-    int32_t i, count = ecs_vector_count(table->stage_data);
+    ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
+    int32_t i, count = ecs_vector_count(table->data);
     
     for (i = 0; i < count; i ++) {
-        deinit_data(table, &stage_data[i]);
+        deinit_data(table, &data[i]);
     }
 
-    ecs_vector_free(table->stage_data);
+    ecs_vector_free(table->data);
 
-    table->stage_data = NULL; 
+    table->data = NULL; 
 }
 
 static
@@ -305,17 +305,17 @@ ecs_data_t* ecs_table_get_data_intern(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_vector_t *stage_data = table->stage_data;
+    ecs_vector_t *data = table->data;
 
     /* If the table doesn't contain any staged data and we're not asked to
      * create data, don't allocate the array. This will reduce memory footprint
      * for tables that don't contain data but are used for graph traversal. */
-    if (!stage_data && !create) {
+    if (!data && !create) {
         return NULL;
     }
 
-    ecs_data_t *data_array = ecs_vector_first(stage_data, ecs_data_t);
-    int32_t count = ecs_vector_count(stage_data);
+    ecs_data_t *data_array = ecs_vector_first(data, ecs_data_t);
+    int32_t count = ecs_vector_count(data);
     int32_t stage_count = world->stage_count;
     int32_t id = stage->id;
 
@@ -329,8 +329,8 @@ ecs_data_t* ecs_table_get_data_intern(
     if (count != stage_count) {
         if (stage_count > count) {
             /* Grow array, initialize table data to 0 */
-            ecs_vector_set_count(&table->stage_data, ecs_data_t, stage_count);
-            data_array = ecs_vector_first(table->stage_data, ecs_data_t);
+            ecs_vector_set_count(&table->data, ecs_data_t, stage_count);
+            data_array = ecs_vector_first(table->data, ecs_data_t);
             memset(&data_array[count], 
                 0, sizeof(ecs_data_t) * (stage_count - count));
         } else {
@@ -340,8 +340,8 @@ ecs_data_t* ecs_table_get_data_intern(
                 deinit_data(table, &data_array[i]);
             }
 
-            ecs_vector_set_count(&table->stage_data, ecs_data_t, stage_count);
-            data_array = ecs_vector_first(table->stage_data, ecs_data_t);           
+            ecs_vector_set_count(&table->data, ecs_data_t, stage_count);
+            data_array = ecs_vector_first(table->data, ecs_data_t);           
         }
     }
     
@@ -485,7 +485,7 @@ void ecs_table_replace_data(
     ecs_data_t *data)
 {
     int32_t prev_count = 0;
-    ecs_data_t *table_data = ecs_vector_first(table->stage_data, ecs_data_t);
+    ecs_data_t *table_data = ecs_vector_first(table->data, ecs_data_t);
     ecs_assert(!data || data != table_data, ECS_INTERNAL_ERROR, NULL);
 
     if (table_data) {
@@ -800,7 +800,7 @@ uint64_t ecs_table_count(
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_data_t *data = ecs_vector_first(table->stage_data, ecs_data_t);
+    ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
     if (!data) {
         return 0;
     }

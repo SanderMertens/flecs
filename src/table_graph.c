@@ -174,7 +174,7 @@ void init_table(
     ecs_entities_t *entities)
 {
     table->type = entities_to_type(entities);
-    table->stage_data = NULL;
+    table->data = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
     table->monitors = NULL;

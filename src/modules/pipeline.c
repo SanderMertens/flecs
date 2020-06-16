@@ -609,6 +609,8 @@ void FlecsPipelineImport(
 {
     ECS_MODULE(world, FlecsPipeline);
 
+    ECS_IMPORT(world, FlecsSystems, 0);
+
     ecs_set_name_prefix(world, "Ecs");
 
     ecs_bootstrap_tag(world, EcsPipeline);

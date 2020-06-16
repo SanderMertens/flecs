@@ -892,7 +892,7 @@ bool compare_stage_w_data(
     ecs_table_t *table,
     ecs_data_t *data)
 {
-    ecs_data_t *data_array = ecs_vector_first(table->stage_data, ecs_data_t);
+    ecs_data_t *data_array = ecs_vector_first(table->data, ecs_data_t);
     if (&data_array[stage->id] == data) {
         return true;
     }

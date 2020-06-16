@@ -46,7 +46,7 @@ bool ecs_filter_next(
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        ecs_data_t *data = ecs_vector_first(table->stage_data, ecs_data_t);
+        ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
 
         if (!data) {
             continue;

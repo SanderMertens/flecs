@@ -610,6 +610,8 @@ void FlecsStatsImport(
     
     ECS_MODULE(world, FlecsStats);
 
+    ECS_IMPORT(world, FlecsPipeline, 0);
+
     ecs_set_name_prefix(world, "Ecs");
 
     ECS_COMPONENT(world, EcsAllocStats);

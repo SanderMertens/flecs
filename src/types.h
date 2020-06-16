@@ -114,7 +114,7 @@ struct ecs_table_t {
     ecs_map_t *hi_edges;              /* Edges to high entity ids */
 
     /* Component storage */
-    ecs_vector_t *stage_data;         /* Data per stage */
+    ecs_vector_t *data;         /* Data per stage */
 
     /* Different kinds of matched queries */
     ecs_vector_t *queries;            /* Queries matched with table */

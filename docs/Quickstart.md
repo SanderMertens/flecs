@@ -11,7 +11,6 @@ ecs_world_t *world = ecs_init();
 
 ecs_fini(world);
 ```
-
 ```cpp
 flecs::world world();
 

@@ -222,6 +222,8 @@ void FlecsTimersImport(
 {
     ECS_MODULE(world, FlecsTimers);
 
+    ECS_IMPORT(world, FlecsPipeline, 0);
+
     ecs_set_name_prefix(world, "Ecs");
 
     ecs_bootstrap_component(world, EcsTimer);
