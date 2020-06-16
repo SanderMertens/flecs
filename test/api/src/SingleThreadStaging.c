@@ -1214,6 +1214,8 @@ void SingleThreadStaging_add_remove_add_same_to_current() {
     test_assert( ecs_has(world, e_1, Velocity));
     test_assert( ecs_has(world, e_2, Velocity));
     test_assert( ecs_has(world, e_3, Velocity));
+
+    ecs_fini(world);
 }
 
 void SingleThreadStaging_remove_add_2_same_existing_to_current() {

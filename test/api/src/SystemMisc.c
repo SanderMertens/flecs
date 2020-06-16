@@ -1000,3 +1000,45 @@ void SystemMisc_system_readeactivate() {
 
     ecs_fini(world);
 }
+
+static
+void Dummy1(ecs_iter_t *it) { }
+
+static
+void Dummy2(ecs_iter_t *it) { }
+
+void SystemMisc_system_readeactivate_w_2_systems() {
+    ecs_world_t * world = ecs_init();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+    
+    ECS_SYSTEM(world, Dummy1, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, Dummy2, EcsOnUpdate, Mass);
+
+    /* No entities, system should be deactivated */
+    test_assert( ecs_has_entity(world, Dummy1, EcsInactive));
+    test_assert( ecs_has_entity(world, Dummy2, EcsInactive));
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_new(world, Mass);
+
+    /* Systems should be active, one entity is matched */
+    test_assert( !ecs_has_entity(world, Dummy1, EcsInactive));
+    test_assert( !ecs_has_entity(world, Dummy2, EcsInactive));
+
+    ecs_delete(world, e1);
+
+    /* System is not automatically deactivated */
+    test_assert( !ecs_has_entity(world, Dummy1, EcsInactive));
+    test_assert( !ecs_has_entity(world, Dummy2, EcsInactive));
+
+    /* Manually deactivate system that aren't matched with entities */
+    ecs_deactivate_systems(world);
+
+    /* System should be deactivated */
+    test_assert( ecs_has_entity(world, Dummy1, EcsInactive));
+    test_assert( !ecs_has_entity(world, Dummy2, EcsInactive));
+
+    ecs_fini(world);
+}

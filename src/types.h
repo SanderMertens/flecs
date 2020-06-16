@@ -79,8 +79,6 @@ struct ecs_data_t {
     ecs_vector_t *entities;
     ecs_vector_t *record_ptrs;
     ecs_column_t *columns;
-    ecs_stage_t *stage;
-    int32_t change_count;        /* Low-cost counter to keep track of changes */
     bool marked_dirty;           /* Was table marked dirty for current stage? */  
 };
 
@@ -116,7 +114,7 @@ struct ecs_table_t {
     ecs_map_t *hi_edges;              /* Edges to high entity ids */
 
     /* Component storage */
-    ecs_vector_t *stage_data;         /* Data per stage */
+    ecs_vector_t *data;         /* Data per stage */
 
     /* Different kinds of matched queries */
     ecs_vector_t *queries;            /* Queries matched with table */
@@ -399,11 +397,18 @@ typedef struct ecs_component_monitor_t {
     bool rematch;
 } ecs_component_monitor_t;
 
+/* fini actions */
+typedef struct ecs_fini_action_elem_t {
+    ecs_fini_action_t action;
+    void *ctx;
+} ecs_fini_action_elem_t;
+
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
     void *context;               /* Application context */
+    ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
 
     ecs_c_info_t c_info[ECS_HI_COMPONENT_ID]; /* Component callbacks & triggers */
     ecs_map_t *t_info;                        /* Tag triggers */
@@ -455,9 +460,10 @@ struct ecs_world_t {
     int32_t stage_count;            /* Number of stages in world */
 
 
-    /* -- Child administration -- */
+    /* -- Hierarchy administration -- */
 
     ecs_map_t *child_tables;        /* Child tables per parent entity */
+    const char *name_prefix;        /* Remove prefix from C names in modules */
 
 
     /* -- Multithreading -- */

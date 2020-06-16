@@ -1,4 +1,49 @@
-#include "flecs_private.h"
+#include "../flecs_private.h"
+#include "flecs/modules/pipeline.h"
+
+ecs_type_t ecs_type(EcsPipelineQuery);
+
+typedef struct EcsPipelineQuery {
+    ecs_query_t *query;
+    ecs_query_t *build_query;
+    int32_t match_count;
+    ecs_vector_t *ops;
+} EcsPipelineQuery;
+
+static
+void ctor_pipeline_query(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entities,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    (void)world;
+    (void)component;
+    (void)entities;
+    (void)ctx;
+    memset(ptr, 0, size * count);
+}
+
+static
+void dtor_pipeline_query(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entities,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    EcsPipelineQuery *q = ptr;
+    
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_vector_free(q[i].ops);
+    }
+}
 
 static
 int compare_entity(
@@ -379,71 +424,120 @@ void EcsOnAddPipeline(
 }
 
 static
-void ctor_pipeline_query(
+float start_measure_frame(
     ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entities,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
+    float user_delta_time)
 {
-    (void)world;
-    (void)component;
-    (void)entities;
-    (void)ctx;
-    memset(ptr, 0, size * count);
+    float delta_time = 0;
+
+    if (world->measure_frame_time || !user_delta_time) {
+        ecs_time_t t = world->frame_start_time;
+        do {
+            if (world->frame_start_time.sec) {
+                delta_time = ecs_time_measure(&t);
+            } else {
+                ecs_time_measure(&t);
+                if (world->stats.target_fps) {
+                    delta_time = 1.0 / world->stats.target_fps;
+                } else {
+                    delta_time = 1.0 / 60.0; /* Best guess */
+                }
+            }
+        
+        /* Keep trying while delta_time is zero */
+        } while (delta_time == 0);
+
+        world->frame_start_time = t;  
+
+        /* Compute total time passed since start of simulation */
+        ecs_time_t diff = ecs_time_sub(t, world->world_start_time);
+        world->stats.world_time_total = ecs_time_to_double(diff);
+    }
+
+    return delta_time;
 }
 
 static
-void dtor_pipeline_query(
+void stop_measure_frame(
     ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entities,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
+    float delta_time)
 {
-    EcsPipelineQuery *q = ptr;
-    
-    int32_t i;
-    for (i = 0; i < count; i ++) {
-        ecs_vector_free(q[i].ops);
+    if (world->measure_frame_time) {
+        ecs_time_t t = world->frame_start_time;
+        double frame_time = ecs_time_measure(&t);
+        world->stats.frame_time_total += frame_time;
+
+        /* Sleep if processing faster than target FPS */
+        float target_fps = world->stats.target_fps;
+        if (target_fps) {
+            float sleep = (1.0 / target_fps) - delta_time + world->fps_sleep;
+
+            if (sleep > 0.01) {
+                ecs_sleepf(sleep);
+            }
+
+            world->fps_sleep = sleep;
+        }        
     }
 }
 
-void ecs_init_pipeline_builtins(
+
+/* -- Public API -- */
+
+float ecs_frame_begin(
+    ecs_world_t *world,
+    float user_delta_time)
+{
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(user_delta_time || ecs_os_api.get_time, ECS_MISSING_OS_API, "get_time");
+
+    if (world->locking_enabled) {
+        ecs_lock(world);
+    }
+
+    /* Start measuring total frame time */
+    float delta_time = start_measure_frame(world, user_delta_time);
+
+    if (!user_delta_time) {
+        user_delta_time = delta_time;
+    }
+
+    world->stats.delta_time = user_delta_time;
+    
+    return user_delta_time;
+}
+
+void ecs_frame_end(
+    ecs_world_t *world,
+    float delta_time)
+{
+    world->stats.frame_count_total ++;
+
+    if (world->locking_enabled) {
+        ecs_unlock(world);
+    }
+
+    stop_measure_frame(world, delta_time);   
+}
+
+bool ecs_progress(
+    ecs_world_t *world,
+    float user_delta_time)
+{
+    float delta_time = ecs_frame_begin(world, user_delta_time);
+
+    ecs_workers_progress(world);
+
+    ecs_frame_end(world, delta_time);
+
+    return !world->should_quit;
+}
+
+void ecs_quit(
     ecs_world_t *world)
 {
-    /* -- Pipeline creation infrastructure & create builtin pipeline -- */
-
-    /* Phases of the builtin pipeline are regular entities. Names are set so
-     * they can be resolved by type expressions. */
-    ecs_set(world, EcsPreFrame, EcsName, {"EcsPreFrame"});
-    ecs_set(world, EcsOnLoad, EcsName, {"EcsOnLoad"});
-    ecs_set(world, EcsPostLoad, EcsName, {"EcsPostLoad"});
-    ecs_set(world, EcsPreUpdate, EcsName, {"EcsPreUpdate"});
-    ecs_set(world, EcsOnUpdate, EcsName, {"EcsOnUpdate"});
-    ecs_set(world, EcsOnValidate, EcsName, {"EcsOnValidate"});
-    ecs_set(world, EcsPostUpdate, EcsName, {"EcsPostUpdate"});
-    ecs_set(world, EcsPreStore, EcsName, {"EcsPreStore"});
-    ecs_set(world, EcsOnStore, EcsName, {"EcsOnStore"});
-    ecs_set(world, EcsPostFrame, EcsName, {"EcsPostFrame"});
-
-    /* Set ctor and dtor for PipelineQuery */
-    ecs_set(world, ecs_entity(EcsPipelineQuery), EcsComponentLifecycle, {
-        .ctor = ctor_pipeline_query,
-        .dtor = dtor_pipeline_query
-    });
-
-    /* When the Pipeline tag is added a pipeline will be created */
-    ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, EcsPipeline);
-
-    /* Create the builtin pipeline */
-    world->pipeline = ecs_new_pipeline(world, 0, "EcsBuiltinPipeline",
-        "EcsPreFrame, EcsOnLoad, EcsPostLoad, EcsPreUpdate, EcsOnUpdate,"
-        " EcsOnValidate, EcsPostUpdate, EcsPreStore, EcsOnStore, EcsPostFrame");
+    ecs_get_stage(&world);
+    world->should_quit = true;
 }
 
 void ecs_deactivate_systems(
@@ -468,7 +562,7 @@ void ecs_deactivate_systems(
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {
-            ecs_query_t *query = sys->query;
+            ecs_query_t *query = sys[i].query;
             if (query) {
                 if (!ecs_vector_count(query->tables)) {
                     ecs_add_entity(world, it.entities[i], EcsInactive);
@@ -478,4 +572,79 @@ void ecs_deactivate_systems(
     }
 
     ecs_defer_end(world, &world->stage);
+}
+
+void ecs_set_pipeline(
+    ecs_world_t *world,
+    ecs_entity_t pipeline)
+{
+    ecs_assert( ecs_get(world, pipeline, EcsPipelineQuery) != NULL, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    world->pipeline = pipeline;
+}
+
+ecs_entity_t ecs_get_pipeline(
+    ecs_world_t *world)
+{
+    return world->pipeline;
+}
+
+
+/* -- Module implementation -- */
+
+static
+void FlecsPipelineFini(
+    ecs_world_t *world,
+    void *ctx)
+{
+    if (world->workers) {
+        ecs_set_threads(world, 0);
+    }
+}
+
+void FlecsPipelineImport(
+    ecs_world_t *world,
+    int flags)
+{
+    ECS_MODULE(world, FlecsPipeline);
+
+    ECS_IMPORT(world, FlecsSystems, 0);
+
+    ecs_set_name_prefix(world, "Ecs");
+
+    ecs_bootstrap_tag(world, EcsPipeline);
+    ecs_bootstrap_component(world, EcsPipelineQuery);
+
+    /* Phases of the builtin pipeline are regular entities. Names are set so
+     * they can be resolved by type expressions. */
+    ecs_bootstrap_tag(world, EcsPreFrame);
+    ecs_bootstrap_tag(world, EcsOnLoad);
+    ecs_bootstrap_tag(world, EcsPostLoad);
+    ecs_bootstrap_tag(world, EcsPreUpdate);
+    ecs_bootstrap_tag(world, EcsOnUpdate);
+    ecs_bootstrap_tag(world, EcsOnValidate);
+    ecs_bootstrap_tag(world, EcsPostUpdate);
+    ecs_bootstrap_tag(world, EcsPreStore);
+    ecs_bootstrap_tag(world, EcsOnStore);
+    ecs_bootstrap_tag(world, EcsPostFrame);
+
+    ecs_type(EcsPipelineQuery) = ecs_bootstrap_type(world, ecs_entity(EcsPipelineQuery));
+
+    /* Set ctor and dtor for PipelineQuery */
+    ecs_set(world, ecs_entity(EcsPipelineQuery), EcsComponentLifecycle, {
+        .ctor = ctor_pipeline_query,
+        .dtor = dtor_pipeline_query
+    });
+
+    /* When the Pipeline tag is added a pipeline will be created */
+    ECS_TRIGGER(world, EcsOnAddPipeline, EcsOnAdd, Pipeline);
+
+    /* Create the builtin pipeline */
+    world->pipeline = ecs_new_pipeline(world, 0, "BuiltinPipeline",
+        "PreFrame, OnLoad, PostLoad, PreUpdate, OnUpdate,"
+        " OnValidate, PostUpdate, PreStore, OnStore, PostFrame");
+
+    /* Cleanup thread administration when world is destroyed */
+    ecs_atfini(world, FlecsPipelineFini, NULL);
 }

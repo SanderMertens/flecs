@@ -180,7 +180,7 @@ void Has_has_owned() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new(world, Position);    
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
     test_assert( ecs_has_owned(world, e, Position, true));

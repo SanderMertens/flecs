@@ -6,14 +6,15 @@ void dup_table(
     ecs_table_t *table)
 {
     /* Store pointer to data in main stage */
-    ecs_data_t *main_data = ecs_vector_first(table->stage_data, ecs_data_t);
+    ecs_data_t *main_data = ecs_vector_first(table->data, ecs_data_t);
     ecs_assert(main_data != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!main_data->columns) {
+        table->data = NULL;
         return;
     }
 
     /* Obtain new data for the snapshot table  */
-    table->stage_data = NULL;
+    table->data = NULL;
     ecs_data_t *snapshot_data = ecs_table_get_or_create_data(
         world, &world->stage, table);
     ecs_assert(snapshot_data != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -115,7 +116,7 @@ ecs_snapshot_t* snapshot_create(
              * table. 
              * Note that this does not cause a memory leak, as at this point the
              * columns member still points to the live data. */
-            table->stage_data = NULL;
+            table->data = NULL;
         }
     }
 
@@ -189,13 +190,14 @@ void ecs_snapshot_restore(
 
         /* If table has no columns, it was filtered out and should not be
          * restored. */
-        ecs_data_t *data = ecs_vector_first(src->stage_data, ecs_data_t);
+        ecs_data_t *data = ecs_vector_first(src->data, ecs_data_t);
         if (!data) {
             continue;
         }
 
         ecs_table_t *dst = ecs_sparse_get(world->stage.tables, ecs_table_t, i);
         ecs_table_replace_data(world, dst, data);
+        ecs_vector_free(src->data);
 
         ecs_data_t *dst_data = ecs_table_get_data(world, dst);
 
@@ -247,11 +249,12 @@ void ecs_snapshot_free(
 
         ecs_table_replace_data(world, src, NULL);
 
-        ecs_data_t *src_data = ecs_vector_first(src->stage_data, ecs_data_t);
+        ecs_data_t *src_data = ecs_vector_first(src->data, ecs_data_t);
         if (src_data) {
             ecs_os_free(src_data->columns);
             src_data->columns = NULL;
         }
+        ecs_vector_free(src->data);
     }    
 
     ecs_sparse_free(snapshot->tables);

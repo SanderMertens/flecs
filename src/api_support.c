@@ -98,6 +98,8 @@ EcsType type_from_vec(
             world, &world->stage, table, &normalized_array, NULL);
 
         result.normalized = norm_table->type;
+
+        ecs_vector_free(normalized);
     } else {
         result.normalized = result.type;
     }
@@ -120,6 +122,26 @@ EcsType type_from_expr(
     } else {
         return (EcsType){0, 0};
     }
+}
+
+/* If a name prefix is set with ecs_set_name_prefix, check if the entity name
+ * has the prefix, and if so remove it. This enables using prefixed names in C
+ * for components / systems while storing a canonical / language independent 
+ * identifier. */
+static
+const char* get_entity_name(
+    ecs_world_t *world,
+    const char *type_name)
+{
+    const char *prefix = world->name_prefix;
+    if (type_name && prefix) {
+        size_t len = strlen(prefix);
+        if (!strncmp(type_name, prefix, len) && isupper(type_name[len])) {
+            return type_name + len;
+        }
+    }
+
+    return type_name;
 }
 
 static
@@ -205,14 +227,26 @@ ecs_entity_t ecs_new_component(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    ecs_entity_t result = lookup(world, name, ecs_type(EcsComponent));
-    if (!result) {
-        result = e ? e : ++ world->stats.last_component_id;                
-        ecs_set(world, result, EcsName, {name});
+    const char *e_name = get_entity_name(world, name);
+
+    ecs_entity_t result = e ? e : lookup(world, e_name, ecs_type(EcsComponent));
+    if (!result || e) {
+        ecs_stage_t *stage = ecs_get_stage(&world);
+        result = e ? e : ++ world->stats.last_component_id;
+
         ecs_set(world, result, EcsComponent, {
             .size = size,
             .alignment = alignment
         });
+
+        if (name) {
+            ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
+        }
+
+        ecs_entity_t scope = stage->scope;
+        if (scope) {
+            ecs_add_entity(world, result, ECS_CHILDOF | scope);
+        }
     } else {
         const EcsComponent *ptr = ecs_get(world, result, EcsComponent);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, name);
@@ -237,7 +271,17 @@ ecs_entity_t ecs_new_module(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     assert(world->magic == ECS_WORLD_MAGIC);
 
-    ecs_entity_t result = ecs_new_component(world, e, name, size, alignment);
+    if (!e) {
+        char *module_path = ecs_module_path_from_c(name);
+        e = ecs_new_from_fullpath(world, module_path);
+
+        EcsName *name_ptr = ecs_get_mut(world, e, EcsName, NULL);
+        name_ptr->symbol = name;
+
+        ecs_os_free(module_path);
+    }
+
+    ecs_entity_t result = ecs_new_component(world, e, NULL, size, alignment);
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Add module tag */
@@ -246,6 +290,9 @@ ecs_entity_t ecs_new_module(
     /* Add module to itself. This way we have all the module information stored
      * in a single contained entity that we can use for namespacing */
     ecs_set_ptr_w_entity(world, result, result, size, NULL);
+
+    /* Set the current scope to the module */
+    ecs_set_scope(world, result);
 
     return result;
 }

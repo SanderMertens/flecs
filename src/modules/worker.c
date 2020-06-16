@@ -1,4 +1,4 @@
-#include "flecs_private.h"
+#include "../flecs_private.h"
 
 /* Worker thread */
 static
@@ -18,10 +18,12 @@ void* worker(void *arg) {
     ecs_os_mutex_unlock(world->sync_mutex);
 
     while (!world->quit_workers) {
+        ecs_entity_t old_scope = ecs_set_scope(world, 0);
         ecs_pipeline_progress(
             (ecs_world_t*)thread, 
             world->pipeline, 
             world->stats.delta_time);
+        ecs_set_scope(world, old_scope);
     }
 
     ecs_os_mutex_lock(world->sync_mutex);
@@ -206,7 +208,9 @@ void ecs_workers_progress(
 
     if (thread_count <= 1) {
         ecs_pipeline_begin(world, pipeline);
+        ecs_entity_t old_scope = ecs_set_scope(world, 0);
         ecs_pipeline_progress(world, pipeline, world->stats.delta_time);
+        ecs_set_scope(world, old_scope);
         ecs_pipeline_end(world);
     } else {
         ecs_entity_t pipeline = world->pipeline;

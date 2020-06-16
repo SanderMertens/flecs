@@ -51,6 +51,8 @@ void TriggerOnSet_set() {
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 20);
+
+    ecs_fini(world);
 }
 
 void TriggerOnSet_set_new() {
@@ -79,6 +81,8 @@ void TriggerOnSet_set_new() {
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 20);
+
+    ecs_fini(world);
 }
 
 void TriggerOnSet_set_again() {
@@ -117,6 +121,8 @@ void TriggerOnSet_set_again() {
     test_assert(p != NULL);
     test_int(p->x, 12);
     test_int(p->y, 20);
+
+    ecs_fini(world);
 }
 
 void TriggerOnSet_clone() {
@@ -153,6 +159,8 @@ void TriggerOnSet_clone() {
     /* OnSet function should not have been called, because value has not been 
      * copied */
     test_int(ctx.count, 0);
+
+    ecs_fini(world);
 }
 
 void TriggerOnSet_clone_w_value() {
@@ -200,6 +208,8 @@ void TriggerOnSet_clone_w_value() {
     test_assert(p != NULL);
     test_int(p->x, 12);
     test_int(p->y, 20);
+
+    ecs_fini(world);
 }
 
 static bool add_called;
@@ -275,6 +285,8 @@ void TriggerOnSet_set_and_add_system() {
     test_int(p->y, 20);
 
     test_assert(set_called);
+
+    ecs_fini(world);
 }
 
 static
@@ -400,6 +412,8 @@ void TriggerOnSet_on_set_after_override_w_new() {
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
+
+    ecs_fini(world);
 }
 
 void TriggerOnSet_on_set_after_override_w_new_w_count() {
@@ -443,6 +457,8 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
+
+    ecs_fini(world);
 }
 
 void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
@@ -476,6 +492,8 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 3);
+    
+    ecs_fini(world);
 }
 
 static

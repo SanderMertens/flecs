@@ -137,6 +137,8 @@ void ComponentLifecycle_ctor_on_add() {
     test_int(ctx.ctor.entity, e);
     test_int(ctx.ctor.size, sizeof(Position));
     test_int(ctx.ctor.count, 1);
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_ctor_on_new() {
@@ -158,6 +160,8 @@ void ComponentLifecycle_ctor_on_new() {
     test_int(ctx.ctor.entity, e);
     test_int(ctx.ctor.size, sizeof(Position));
     test_int(ctx.ctor.count, 1);
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_dtor_on_remove() {
@@ -182,6 +186,8 @@ void ComponentLifecycle_dtor_on_remove() {
     test_int(ctx.dtor.entity, e);
     test_int(ctx.dtor.size, sizeof(Position));
     test_int(ctx.dtor.count, 1);
+    
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_dtor_on_delete() {
@@ -206,6 +212,8 @@ void ComponentLifecycle_dtor_on_delete() {
     test_int(ctx.dtor.entity, e);
     test_int(ctx.dtor.size, sizeof(Position));
     test_int(ctx.dtor.count, 1);
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_copy_on_set() {
@@ -230,6 +238,8 @@ void ComponentLifecycle_copy_on_set() {
     test_int(ctx.copy.entity, e);
     test_int(ctx.copy.size, sizeof(Position));
     test_int(ctx.copy.count, 1);
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_copy_on_override() {
@@ -257,6 +267,8 @@ void ComponentLifecycle_copy_on_override() {
     test_int(ctx.copy.entity, e);
     test_int(ctx.copy.size, sizeof(Position));
     test_int(ctx.copy.count, 1);
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_copy_on_new_w_data() {
@@ -284,6 +296,8 @@ void ComponentLifecycle_copy_on_new_w_data() {
     test_int(ctx.copy.entity, e);
     test_int(ctx.copy.size, sizeof(Position));
     test_int(ctx.copy.count, 2);
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_copy_on_clone() {
@@ -310,6 +324,8 @@ void ComponentLifecycle_copy_on_clone() {
     test_int(ctx.copy.src_entity, e);
     test_int(ctx.copy.size, sizeof(Position));
     test_int(ctx.copy.count, 1);
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_no_copy_on_move() {
@@ -450,6 +466,8 @@ void ComponentLifecycle_ctor_on_bulk_add() {
         test_int(v->x, 10);
         test_int(v->y, 20);        
     }    
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_dtor_on_bulk_remove() {
@@ -498,6 +516,8 @@ void ComponentLifecycle_dtor_on_bulk_remove() {
         test_int(p->x, i);
         test_int(p->y, i * 2);      
     } 
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_ctor_on_bulk_add_entity() {
@@ -549,6 +569,8 @@ void ComponentLifecycle_ctor_on_bulk_add_entity() {
         test_int(v->x, 10);
         test_int(v->y, 20);        
     }  
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_dtor_on_bulk_remove_entity() {
@@ -597,6 +619,8 @@ void ComponentLifecycle_dtor_on_bulk_remove_entity() {
         test_int(p->x, i);
         test_int(p->y, i * 2);
     } 
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_ctor_dtor_on_bulk_add_remove() {
@@ -666,6 +690,8 @@ void ComponentLifecycle_ctor_dtor_on_bulk_add_remove() {
         test_int(v->x, 10);
         test_int(v->y, 20);
     } 
+
+    ecs_fini(world);
 }
 
 void ComponentLifecycle_copy_on_snapshot() {

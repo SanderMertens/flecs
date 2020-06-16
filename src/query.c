@@ -1157,12 +1157,25 @@ void ecs_query_activate_table(
     order_ranked_tables(world, query);
 }
 
+static
+void free_matched_table(
+    ecs_matched_table_t *table)
+{
+    ecs_os_free(table->columns);
+    ecs_os_free(table->components);
+    ecs_vector_free(table->references);
+    ecs_os_free(table->monitor);
+}
+
 /* Remove table */
 static
 void remove_table(
     ecs_vector_t *tables,
     int32_t index)
 {
+    ecs_matched_table_t *table = ecs_vector_get(
+        tables, ecs_matched_table_t, index);
+    free_matched_table(table);
     ecs_vector_remove_index(tables, ecs_matched_table_t, index);
 }
 
@@ -1290,17 +1303,11 @@ void ecs_query_free(
     ecs_query_t *query)
 {
     ecs_vector_each(query->empty_tables, ecs_matched_table_t, table, {
-        ecs_os_free(table->columns);
-        ecs_os_free(table->components);
-        ecs_vector_free(table->references);
-        ecs_os_free(table->monitor);
+        free_matched_table(table);
     });
 
     ecs_vector_each(query->tables, ecs_matched_table_t, table, {
-        ecs_os_free(table->columns);
-        ecs_os_free(table->components);
-        ecs_vector_free(table->references);
-        ecs_os_free(table->monitor);
+        free_matched_table(table);
     });
 
     ecs_vector_free(query->tables);

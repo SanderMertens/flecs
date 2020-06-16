@@ -11,6 +11,11 @@ ecs_world_t *world = ecs_init();
 
 ecs_fini(world);
 ```
+```cpp
+flecs::world world();
+
+/* Application */
+```
 
 ## Entities
 An entity (`ecs_entity_t`) is a 64-bit integer that uniquely identifies something in your application. Entities are created with the `ecs_new` function:

@@ -1,8 +1,11 @@
-#include "flecs_private.h"
+#include "../flecs_private.h"
+#include "flecs/modules/timers.h"
 
-/* Auto-add EcsTickSource to each entity with EcsTimer or EcsRateFilter */
+ecs_type_t ecs_type(EcsTimer);
+ecs_type_t ecs_type(EcsRateFilter);
+
 static
-void EcsAddTickSource(ecs_iter_t *it) {
+void AddTickSource(ecs_iter_t *it) {
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         ecs_set(it->world, it->entities[i], EcsTickSource, {0});
@@ -10,7 +13,7 @@ void EcsAddTickSource(ecs_iter_t *it) {
 }
 
 static
-void EcsProgressTimers(ecs_iter_t *it) {
+void ProgressTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_column(it, EcsTimer, 1);
     EcsTickSource *tick_source = ecs_column(it, EcsTickSource, 2);
 
@@ -47,7 +50,7 @@ void EcsProgressTimers(ecs_iter_t *it) {
 }
 
 static
-void EcsProgressRateFilters(ecs_iter_t *it) {
+void ProgressRateFilters(ecs_iter_t *it) {
     EcsRateFilter *filter = ecs_column(it, EcsRateFilter, 1);
     EcsTickSource *tick_dst = ecs_column(it, EcsTickSource, 2);
 
@@ -80,25 +83,6 @@ void EcsProgressRateFilters(ecs_iter_t *it) {
             tick_dst[i].tick = false;
         }
     }
-}
-
-void ecs_init_timer_builtins(
-    ecs_world_t *world)
-{
-    /* Add EcsTickSource to timers and rate filters */
-    ecs_new_system(world, 0, "EcsAddTickSource", EcsPreFrame, 
-        "[in] EcsTimer || EcsRateFilter, [out] !EcsTickSource", 
-        EcsAddTickSource);
-
-    /* Timer handling */
-    ecs_new_system(world, 0, "EcsProgressTimers", EcsPreFrame, 
-        "EcsTimer, EcsTickSource", 
-        EcsProgressTimers);
-    
-    /* Rate filter handling */
-    ecs_new_system(world, 0, "EcsProgressRateFilters", EcsPreFrame, 
-        "[in] EcsRateFilter, [out] EcsTickSource", 
-        EcsProgressRateFilters);    
 }
 
 ecs_entity_t ecs_set_timeout(
@@ -230,4 +214,27 @@ void ecs_set_tick_source(
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     system_data->tick_source = tick_source;
+}
+
+void FlecsTimersImport(
+    ecs_world_t *world,
+    int flags)
+{
+    ECS_MODULE(world, FlecsTimers);
+
+    ECS_IMPORT(world, FlecsPipeline, 0);
+
+    ecs_set_name_prefix(world, "Ecs");
+
+    ecs_bootstrap_component(world, EcsTimer);
+    ecs_bootstrap_component(world, EcsRateFilter);
+
+    /* Add EcsTickSource to timers and rate filters */
+    ECS_SYSTEM(world, AddTickSource, EcsPreFrame, [in] Timer || RateFilter, [out] !flecs.systems.TickSource);
+
+    /* Timer handling */
+    ECS_SYSTEM(world, ProgressTimers, EcsPreFrame, Timer, flecs.systems.TickSource);
+
+    /* Rate filter handling */
+    ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, [in] RateFilter, [out] flecs.systems.TickSource);
 }

@@ -1,5 +1,7 @@
 #include <api.h>
 
+#include "flecs/modules/stats.h"
+
 static
 void install_test_abort() {
     ecs_os_set_api_defaults();
@@ -838,7 +840,7 @@ void World_world_stats() {
     ECS_COMPONENT(world, Velocity);
 
     /* Make sure that stats are collected by requiring EcsWorldStats */
-    ecs_new_system(world, 0, "CollectWorldStats", 0, "[in] EcsWorldStats", NULL);
+    ecs_new_system(world, 0, "CollectWorldStats", 0, "[in] flecs.stats.EcsWorldStats", NULL);
 
     EcsWorldStats stats = {0};
 
@@ -987,34 +989,24 @@ void World_recreate_world() {
     test_assert(ecs_fini(world) == 0);
 }
 
-void World_init_w_args_set_threads() {
-    ecs_world_t *world = ecs_init_w_args(3, ((char*[]){
-        "test",
-        "--threads", "4",
-        NULL
-    }));
-
+void World_recreate_world_w_component() {
+    ecs_world_t *world = ecs_init();
     test_assert(world != NULL);
 
-    test_int(ecs_get_threads(world), 4);
+    ECS_COMPONENT(world, Position);
+    test_assert(ecs_entity(Position) != 0);
 
-    ecs_fini(world);
-}
+    test_assert(ecs_fini(world) == 0);
 
-void World_init_w_args_set_fps() {
-    ecs_world_t *world = ecs_init_w_args(3, ((char*[]){
-        "test",
-        "--fps", "60",
-        NULL
-    }));
+    {
+        world = ecs_init();
+        test_assert(world != NULL);
 
-    test_assert(world != NULL);
+        ECS_COMPONENT(world, Position);
+        test_assert(ecs_entity(Position) != 0);
 
-    const ecs_world_info_t *stats = ecs_get_world_info(world);
-
-    test_int(stats->target_fps, 60);
-
-    ecs_fini(world);
+        test_assert(ecs_fini(world) == 0);
+    }
 }
 
 void World_init_w_args_enable_dbg() {

@@ -1707,7 +1707,7 @@ private:
             if (set) {
                 str << ",";
             }            
-            str << "SYSTEM:EcsHidden";
+            str << "SYSTEM:Hidden";
             set = true;
         }    
 

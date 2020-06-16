@@ -108,6 +108,8 @@ void Hierarchies_path_custom_sep(void);
 void Hierarchies_path_custom_prefix(void);
 void Hierarchies_path_prefix_rel_match(void);
 void Hierarchies_path_prefix_rel_no_match(void);
+void Hierarchies_fullpath_for_core(void);
+void Hierarchies_path_w_number(void);
 void Hierarchies_lookup_depth_0(void);
 void Hierarchies_lookup_depth_1(void);
 void Hierarchies_lookup_depth_2(void);
@@ -120,12 +122,14 @@ void Hierarchies_lookup_custom_prefix_from_root(void);
 void Hierarchies_lookup_self(void);
 void Hierarchies_lookup_in_parent_from_scope(void);
 void Hierarchies_lookup_in_root_from_scope(void);
+void Hierarchies_lookup_number(void);
 void Hierarchies_delete_children(void);
 void Hierarchies_scope_set(void);
 void Hierarchies_scope_set_again(void);
 void Hierarchies_scope_set_w_new(void);
 void Hierarchies_scope_set_w_new_staged(void);
 void Hierarchies_scope_set_w_lookup(void);
+void Hierarchies_scope_component(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -368,6 +372,7 @@ void SystemMisc_system_initial_state(void);
 void SystemMisc_add_own_component(void);
 void SystemMisc_change_system_action(void);
 void SystemMisc_system_readeactivate(void);
+void SystemMisc_system_readeactivate_w_2_systems(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -685,8 +690,7 @@ void World_quit(void);
 void World_get_delta_time(void);
 void World_get_delta_time_auto(void);
 void World_recreate_world(void);
-void World_init_w_args_set_threads(void);
-void World_init_w_args_set_fps(void);
+void World_recreate_world_w_component(void);
 void World_init_w_args_enable_dbg(void);
 void World_no_threading(void);
 void World_no_time(void);
@@ -1269,7 +1273,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 40,
+        .testcase_count = 44,
         .testcases = (bake_test_case[]){
             {
                 .id = "get_parent",
@@ -1360,6 +1364,14 @@ static bake_test_suite suites[] = {
                 .function = Hierarchies_path_prefix_rel_no_match
             },
             {
+                .id = "fullpath_for_core",
+                .function = Hierarchies_fullpath_for_core
+            },
+            {
+                .id = "path_w_number",
+                .function = Hierarchies_path_w_number
+            },
+            {
                 .id = "lookup_depth_0",
                 .function = Hierarchies_lookup_depth_0
             },
@@ -1408,6 +1420,10 @@ static bake_test_suite suites[] = {
                 .function = Hierarchies_lookup_in_root_from_scope
             },
             {
+                .id = "lookup_number",
+                .function = Hierarchies_lookup_number
+            },
+            {
                 .id = "delete_children",
                 .function = Hierarchies_delete_children
             },
@@ -1430,6 +1446,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "scope_set_w_lookup",
                 .function = Hierarchies_scope_set_w_lookup
+            },
+            {
+                .id = "scope_component",
+                .function = Hierarchies_scope_component
             }
         }
     },
@@ -2171,7 +2191,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 49,
+        .testcase_count = 50,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -2368,6 +2388,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "system_readeactivate",
                 .function = SystemMisc_system_readeactivate
+            },
+            {
+                .id = "system_readeactivate_w_2_systems",
+                .function = SystemMisc_system_readeactivate_w_2_systems
             }
         }
     },
@@ -3497,7 +3521,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 32,
+        .testcase_count = 31,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -3604,12 +3628,8 @@ static bake_test_suite suites[] = {
                 .function = World_recreate_world
             },
             {
-                .id = "init_w_args_set_threads",
-                .function = World_init_w_args_set_threads
-            },
-            {
-                .id = "init_w_args_set_fps",
-                .function = World_init_w_args_set_fps
+                .id = "recreate_world_w_component",
+                .function = World_recreate_world_w_component
             },
             {
                 .id = "init_w_args_enable_dbg",

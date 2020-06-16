@@ -45,6 +45,8 @@ void* get_component_w_index(
         return NULL;
     }
 
+    ecs_assert(index < info->table->column_count, ECS_INVALID_COMPONENT_ID, NULL);
+
     ecs_column_t *column = &columns[index];
     size_t size = column->size; 
     ecs_vector_t *data_vec = column->data;
@@ -885,6 +887,19 @@ int32_t new_entity(
 }
 
 static
+bool compare_stage_w_data(
+    ecs_stage_t *stage,
+    ecs_table_t *table,
+    ecs_data_t *data)
+{
+    ecs_data_t *data_array = ecs_vector_first(table->data, ecs_data_t);
+    if (&data_array[stage->id] == data) {
+        return true;
+    }
+    return false;
+}
+
+static
 int32_t move_entity(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -912,7 +927,7 @@ int32_t move_entity(
     ecs_assert(!record || record == ecs_eis_get(&world->stage, entity), ECS_INTERNAL_ERROR, NULL);
 
     int32_t dst_row = ecs_table_append(world, dst_table, dst_data, entity, record);
-    bool same_stage = src_data->stage == stage;
+    bool same_stage = compare_stage_w_data(stage, src_table, src_data);
 
     if (main_stage && record) {
         record->table = dst_table;
@@ -1150,7 +1165,6 @@ int32_t new_w_data(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
     
-    bool changed = false;
     ecs_type_t type = table->type;
     ecs_entity_t e = world->stats.last_id + 1;
     world->stats.last_id += count;
@@ -1184,6 +1198,10 @@ int32_t new_w_data(
     }
     
     ecs_comp_mask_t set_mask = { 0 };
+
+    ecs_defer_begin(world, stage, EcsOpNone, 0, 0, NULL, 0);
+
+    ecs_run_init_actions(world, stage, table, data, row, count, added, set_mask, component_data == NULL);
 
     if (component_data) {
         /* Set components that we're setting in the component mask so the init
@@ -1220,34 +1238,16 @@ int32_t new_w_data(
                 memcpy(ptr, src_ptr, size * count);
             }
         });
-    }
 
-    int32_t change_count = data->change_count;
-    ecs_run_init_actions(world, stage, table, data, row, count, added, set_mask, component_data == NULL);
-    changed = change_count != data->change_count;
-
-    /* Run triggers and monitors */
-    if (component_data) {
-        if (changed) {
-            int32_t j;
-            for (j = 0; j < count; j ++) {
-                ecs_entity_info_t info = {0};
-                if (get_any_info(world, stage, e + j, &info)) {
-                    ecs_run_set_systems(world, stage, &added, 
-                        info.table, info.data, info.row, 1, true);
-                }
-            }
-        } else {
-            ecs_run_set_systems(world, stage, &added, 
-                table, data, row, count, true);
-        }    
+        ecs_run_set_systems(world, stage, &added, 
+            table, data, row, count, true);        
     }
     
     /* Only invoke monitors if entity hasn't changed. If components did change,
      * the monitor will already have been invoked. */
-    if (!changed) {
-        run_monitors(world, stage, table, table->monitors, row, count, NULL);
-    } 
+    run_monitors(world, stage, table, table->monitors, row, count, NULL);
+
+    ecs_defer_end(world, stage);
 
     return row;
 }
@@ -1890,6 +1890,10 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
     if (!entity) {
         entity = new_entity_handle(world);
+        ecs_entity_t scope = stage->scope;
+        if (scope) {
+            ecs_add_entity(world, entity, ECS_CHILDOF | scope);
+        }
     }
 
     if (ecs_defer_begin(world, stage, EcsOpSet, entity, &added, ptr, size)) {
@@ -1898,9 +1902,9 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
     ecs_entity_info_t info;
     void *dst = get_mutable(world, stage, entity, component, &info, NULL);
-    if (!dst) {
-        return entity;
-    }
+
+    /* This can no longer happen since we defer operations */
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ptr) {
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
@@ -1961,7 +1965,7 @@ const char* ecs_get_name(
     const EcsName *id = ecs_get(world, entity, EcsName);
 
     if (id) {
-        return *id;
+        return id->value;
     } else {
         return NULL;
     }
@@ -2098,9 +2102,7 @@ bool ecs_defer_begin(
     const void *value,
     size_t size)
 {
-    if (stage->defer) {
-        ecs_assert(op_kind != EcsOpNone, ECS_INTERNAL_ERROR, NULL);
-
+    if (stage->defer && op_kind != EcsOpNone) {
         ecs_op_t *op = ecs_vector_add(&stage->defer_queue, ecs_op_t);
         op->kind = op_kind;
         op->entity = entity;

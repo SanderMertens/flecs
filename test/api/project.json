@@ -121,6 +121,8 @@
                 "path_custom_prefix",
                 "path_prefix_rel_match",
                 "path_prefix_rel_no_match",
+                "fullpath_for_core",
+                "path_w_number",
                 "lookup_depth_0",
                 "lookup_depth_1",
                 "lookup_depth_2",
@@ -133,12 +135,14 @@
                 "lookup_self",
                 "lookup_in_parent_from_scope",
                 "lookup_in_root_from_scope",
+                "lookup_number",
                 "delete_children",
                 "scope_set",
                 "scope_set_again",
                 "scope_set_w_new",
                 "scope_set_w_new_staged",
-                "scope_set_w_lookup"
+                "scope_set_w_lookup",
+                "scope_component"
             ]
         }, {
             "id": "Add_bulk",
@@ -410,7 +414,8 @@
                 "system_initial_state",
                 "add_own_component",
                 "change_system_action",
-                "system_readeactivate"
+                "system_readeactivate",
+                "system_readeactivate_w_2_systems"
             ]
         }, {
             "id": "TriggerOnAdd",
@@ -762,8 +767,7 @@
                 "get_delta_time",
                 "get_delta_time_auto",
                 "recreate_world",
-                "init_w_args_set_threads",
-                "init_w_args_set_fps",
+                "recreate_world_w_component",
                 "init_w_args_enable_dbg",
                 "no_threading",
                 "no_time",

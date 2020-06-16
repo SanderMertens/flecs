@@ -27,8 +27,13 @@ int32_t data_column_count(
 
         /* Typically all components will be clustered together at the start of
          * the type as components are created from a separate id pool, and type
-         * vectors are sorted. */
-        if (ecs_has(world, component, EcsComponent)) {
+         * vectors are sorted. 
+         * Explicitly check for EcsComponent and EcsName since the ecs_has check
+         * doesn't work during bootstrap. */
+        if ((component == ecs_entity(EcsComponent)) || 
+            (component == ecs_entity(EcsName)) || 
+            ecs_has_entity(world, component, ecs_entity(EcsComponent))) 
+        {
             count = c_ptr_i + 1;
         }
     });
@@ -116,7 +121,7 @@ void init_edges(
          * flags. These allow us to quickly determine if the table contains
          * data that needs to be handled in a special way, like prefabs or 
          * containers */
-        if (e <= EcsLastInternal) {
+        if (e <= EcsLastInternalComponentId) {
             table->flags |= EcsTableHasBuiltins;
         }
 
@@ -169,7 +174,7 @@ void init_table(
     ecs_entities_t *entities)
 {
     table->type = entities_to_type(entities);
-    table->stage_data = NULL;
+    table->data = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
     table->monitors = NULL;
@@ -589,7 +594,9 @@ ecs_table_t* ecs_table_traverse_add(
             }
         }
 
-        if (added && node != next) added->array[added->count ++] = e;
+        if (added && node != next) {
+            added->array[added->count ++] = e;
+        }
 
         node = next;
     }

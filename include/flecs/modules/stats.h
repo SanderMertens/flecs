@@ -1,6 +1,8 @@
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
+#include "flecs.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -332,6 +332,20 @@ void Hierarchies_path_prefix_rel_no_match() {
     ecs_fini(world);
 }
 
+void Hierarchies_path_w_number() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_CHILDOF | 1000);
+    ecs_set(world, e, EcsName, {"Foo"});
+
+    char *path = ecs_get_fullpath(world, e);
+    test_str(path, "1000.Foo");
+    free(path);
+
+    ecs_fini(world);
+}
+
+
 void Hierarchies_lookup_depth_0() {
     ecs_world_t *world = ecs_init();
 
@@ -450,6 +464,23 @@ void Hierarchies_lookup_self() {
 
     ecs_entity_t e = ecs_lookup_path(world, Parent, "");
     test_assert(e == Parent);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_number() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Parent2, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+    ECS_ENTITY(world, GrandChild, CHILDOF | Parent.Child);
+
+    ecs_entity_t e = ecs_new_w_entity(world, ECS_CHILDOF | 1000);
+    ecs_set(world, e, EcsName, {"Foo"});
+
+    ecs_entity_t c = ecs_lookup_path(world, 0, "1000.Foo");
+    test_assert(e == c);
 
     ecs_fini(world);
 }
@@ -595,6 +626,43 @@ void Hierarchies_lookup_in_root_from_scope() {
 
     old_scope = ecs_set_scope(world, 0);
     test_assert(old_scope == ChildScope);
+
+    ecs_fini(world);
+}
+
+
+void Hierarchies_scope_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Scope, 0);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, Scope);
+    test_assert(old_scope == 0);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "Position");
+    test_assert(e != 0);
+    test_assert(e == ecs_entity(Position));
+
+    old_scope = ecs_set_scope(world, 0);
+    test_assert(old_scope == Scope);
+
+    e = ecs_lookup_fullpath(world, "Position");
+    test_assert(e == 0);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_fullpath_for_core() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+
+    char *path = ecs_get_fullpath(world, ecs_entity(EcsComponent));
+    test_str(path, "Component");
+    free(path);
 
     ecs_fini(world);
 }

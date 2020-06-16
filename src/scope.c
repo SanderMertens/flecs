@@ -15,7 +15,7 @@ bool path_append(
     ecs_entity_t cur = ecs_find_in_type(world, type, component, ECS_CHILDOF);
     
     if (cur) {
-        if (cur != parent) {
+        if (cur != parent && cur != EcsFlecsCore) {
             path_append(world, parent, cur, component, sep, prefix, buf);
             ecs_strbuf_appendstr(buf, sep);
         }
@@ -23,7 +23,14 @@ bool path_append(
         ecs_strbuf_appendstr(buf, prefix);
     }
 
-    ecs_strbuf_appendstr(buf, ecs_get_name(world, child));
+    char buff[22];
+    const char *name = ecs_get_name(world, child);
+    if (!name) {
+        sprintf(buff, "%u", (uint32_t)child);
+        name = buff;
+    }
+
+    ecs_strbuf_appendstr(buf, name);
 
     return cur != 0;
 }
@@ -65,11 +72,18 @@ ecs_entity_t find_child_in_table(
         return 0;
     }
 
+    int is_number = isdigit(name[0]);
+    if (is_number) {
+        return atol(name);
+    }
+
     ecs_column_t *column = &data->columns[name_index];
     EcsName *names = ecs_vector_first(column->data, EcsName);
 
     for (i = 0; i < count; i ++) {
-        if (!strcmp(names[i], name)) {
+        const char *cur_name = names[i].value;
+        const char *cur_sym = names[i].symbol;
+        if ((cur_name && !strcmp(cur_name, name)) || (cur_sym && !strcmp(cur_sym, name))) {
             return *ecs_vector_get(data->entities, ecs_entity_t, i);
         }
     }
@@ -183,17 +197,42 @@ bool is_sep(
     }
 }
 
-ecs_entity_t ecs_lookup_path_w_sep(
+static
+const char *path_elem(
+    const char *path,
+    char *buff,
+    const char *sep)
+{
+    const char *ptr;
+    char *bptr, ch;
+
+    for (bptr = buff, ptr = path; (ch = *ptr); ptr ++) {
+        if (is_sep(&ptr, sep)) {
+            *bptr = '\0';
+            return ptr + 1;
+        } else {
+            *bptr = ch;
+            bptr ++;
+        }
+    }
+
+    if (bptr != buff) {
+        *bptr = '\0';
+        return ptr;
+    } else {
+        return NULL;
+    }
+}
+
+static
+ecs_entity_t get_parent_from_path(
     ecs_world_t *world,
     ecs_entity_t parent,
-    const char *path,
-    const char *sep,
+    const char **path_ptr,
     const char *prefix)
 {
-    char buff[ECS_MAX_NAME_LENGTH];
-    const char *ptr;
-    char ch, *bptr;
     bool start_from_root = false;
+    const char *path = *path_ptr;
 
     if (prefix) {
         size_t len = strlen(prefix);
@@ -209,34 +248,47 @@ ecs_entity_t ecs_lookup_path_w_sep(
         parent = stage->scope;
     }
 
+    *path_ptr = path;
+
+    return parent;
+}
+
+ecs_entity_t ecs_lookup_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix)
+{
+    char buff[ECS_MAX_NAME_LENGTH];
+    const char *ptr;
     ecs_entity_t cur;
+    bool core_searched = false;
+
+    parent = get_parent_from_path(world, parent, &path, prefix);
 
 retry:
     cur = parent;
+    ptr = path;
 
-    for (bptr = buff, ptr = path; (ch = *ptr); ptr ++) {
-        if (is_sep(&ptr, sep)) {
-            *bptr = '\0';
-            bptr = buff;
-            cur = ecs_lookup_child(world, cur, buff);
-            if (!cur) {
-                goto tail;
-            }
-        } else {
-            *bptr = ch;
-            bptr ++;
+    while ((ptr = path_elem(ptr, buff, sep))) {
+        cur = ecs_lookup_child(world, cur, buff);
+        if (!cur) {
+            goto tail;
         }
     }
 
-    if (bptr != buff) {
-        *bptr = '\0';
-        cur = ecs_lookup_child(world, cur, buff);
-    }
-
 tail:
-    if (!cur && parent) {
-        parent = ecs_get_parent_w_entity(world, parent, 0);
-        goto retry;
+    if (!cur) {
+        if (!core_searched) {
+            if (parent) {
+                parent = ecs_get_parent_w_entity(world, parent, 0);
+            } else {
+                parent = EcsFlecsCore;
+                core_searched = true;
+            }
+            goto retry;
+        }
     }
 
     return cur;
@@ -256,8 +308,13 @@ ecs_entity_t ecs_set_scope(
 
     ecs_entity_t cur = stage->scope;
     stage->scope = scope;
-    stage->scope_table = ecs_table_traverse_add(
-        world, stage, &world->stage.root, &to_add, NULL);
+
+    if (scope) {
+        stage->scope_table = ecs_table_traverse_add(
+            world, stage, &world->stage.root, &to_add, NULL);
+    } else {
+        stage->scope_table = &world->stage.root;
+    }
 
     return cur;
 }
@@ -296,7 +353,7 @@ bool ecs_scope_next(
         ecs_table_t *table = *ecs_vector_get(tables, ecs_table_t*, i);
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         
-        ecs_data_t *data = ecs_vector_first(table->stage_data, ecs_data_t);
+        ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
         if (!data) {
             continue;
         }
@@ -316,4 +373,48 @@ bool ecs_scope_next(
     }
 
     return false;    
+}
+
+const char* ecs_set_name_prefix(
+    ecs_world_t *world,
+    const char *prefix)
+{
+    const char *old_prefix = world->name_prefix;
+    world->name_prefix = prefix;
+    return old_prefix;
+}
+
+ecs_entity_t ecs_new_from_path_w_sep(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *path,
+    const char *sep,
+    const char *prefix)
+{
+    char buff[ECS_MAX_NAME_LENGTH];
+    const char *ptr = path;
+
+    parent = get_parent_from_path(world, parent, &path, prefix);
+
+    ecs_entity_t cur = parent;
+
+    while ((ptr = path_elem(ptr, buff, sep))) {
+        ecs_entity_t e = ecs_lookup_child(world, cur, buff);
+        if (!e) {
+            char *name = ecs_os_strdup(buff);
+            
+            e = ecs_set(world, e, EcsName, {
+                .value = name,
+                .alloc_value = name
+            });
+
+            ecs_os_free(name);
+
+            ecs_add_entity(world, e, ECS_CHILDOF | cur);
+        }
+
+        cur = e;
+    }
+
+    return cur;
 }

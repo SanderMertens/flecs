@@ -39,6 +39,8 @@ void System_w_FromId_2_column_1_from_id() {
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
+
+    ecs_fini(world);
 }
 
 void System_w_FromId_3_column_2_from_id() {
@@ -69,7 +71,9 @@ void System_w_FromId_3_column_2_from_id() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
     test_int(ctx.c[0][2], ecs_entity(Rotation));
-    test_int(ctx.s[0][2], 0);    
+    test_int(ctx.s[0][2], 0);   
+
+    ecs_fini(world); 
 }
 
 static
@@ -98,4 +102,6 @@ void System_w_FromId_column_type() {
     ecs_progress(world, 1);
 
     test_int(ctx.count, 1);
+
+    ecs_fini(world);
 }

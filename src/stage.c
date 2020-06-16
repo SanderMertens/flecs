@@ -357,6 +357,8 @@ void ecs_stage_init(
 
     stage->scope_table = &world->stage.root;
     stage->scope = 0;
+    stage->defer = 0;
+    stage->defer_queue = NULL;
 
     stage->range_check_enabled = true;
 }
