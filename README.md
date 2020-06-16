@@ -1,21 +1,19 @@
+![flecs](https://user-images.githubusercontent.com/9919222/84740976-2ecc8580-af63-11ea-963e-c5da3be54101.png)
+
 [![Join the chat at https://gitter.im/flecsdev/community](https://badges.gitter.im/flecsdev/community.svg)](https://gitter.im/flecsdev/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Discord Chat](https://img.shields.io/discord/633826290415435777.svg)](https://discord.gg/MRSAZqb) [![Build Status](https://travis-ci.org/SanderMertens/flecs.svg?branch=master)](https://travis-ci.org/SanderMertens/flecs)
 [![Build status](https://ci.appveyor.com/api/projects/status/t99p1per439ctg1a/branch/master?svg=true)](https://ci.appveyor.com/project/SanderMertens/flecs/branch/master)
 [![codecov](https://codecov.io/gh/SanderMertens/flecs/branch/master/graph/badge.svg)](https://codecov.io/gh/SanderMertens/flecs)
 
-![flecs](https://user-images.githubusercontent.com/9919222/54175082-b107f900-4446-11e9-9cbc-91c096f7c0b1.png)
+Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-component-system) for C89 / C99 / C++11 that packs a lot of punch for its small footprint:
 
-Flecs is a [Fast](https://github.com/SanderMertens/ecs_benchmark) and Lightweight ECS ([Entity Component System](#what-is-an-entity-component-system)). Flecs packs as much punch as possible into a small library with a tiny C99 API and zero dependencies. Here are some of the things it can do:
-
-- Process entities on multiple threads with a lock-free, zero-overhead staging architecture [[learn more](Manual.md#staging)]
-- Organize components & systems in reusable, library-friendly modules [[learn more](Manual.md#modules)]
-- Run systems every frame, periodically, on demand or on change events [[learn more](Manual.md#reactive-systems)]
-
-Additionally, flecs has a flexible engine that lets you do many things, like:
-
-- A prefab system with variants, overrides and prefab nesting [[learn more](Manual.md#prefabs)]
-- Create system expressions with AND, OR, NOT and optional operators [[learn more](Manual.md#system-signatures)]
-- Create hierarchies, indexes and [DAGs](https://en.wikipedia.org/wiki/Directed_acyclic_graph) with container entities [[learn more](Manual.md#containers)]
+- Blazing fast iteration speeds with direct access to raw C arrays across multiple components
+- Built-in support for entity hierarchies, prefabs, nested prefabs and prefab variants
+- An efficient lock-free staging architecture allows for modifying entities across multiple threads
+- Expressive entity queries with support for and, or, not and optional operators
+- Systems that are time triggered, rate triggered, run every frame or run only when needed
+- Modules allow for creation of large scale applications by organizing systems & components in reusable plug & play units
+- A fully customizable core that makes it easy to integrate Flecs into other frameworks / game engines
 
 Make sure to check the flecs [dashboard](https://github.com/SanderMertens/flecs-systems-admin):
 
@@ -28,7 +26,13 @@ ECS (Entity Component System) is a way to organize code that is mostly used in g
 - Has _components_ that are plain data types which can be added to entities
 - Has _systems_ that are functions which are matched against entities with a set of components
 
-For more information, check [the Entity Component System FAQ](https://github.com/SanderMertens/ecs-faq)!
+## Documentation
+- [Quickstart](docs/Quickstart.md)
+- [Manual](docs/Manual.md)
+- [Migration guide](docs/MigrationGuide.md)
+- [ECS FAQ](https://github.com/SanderMertens/ecs-faq)
+- [C examples](examples/c)
+- [C++ examples](examples/cpp)
 
 ## Example
 This is a simple flecs example using the C99 API:
@@ -99,11 +103,6 @@ int main(int argc, char *argv[]) {
     while (world.progress()) { }
 }
 ```
-
-## Documentation
-- [Quickstart](docs/Quickstart.md) - A quick introduction to Flecs
-- [Examples](https://github.com/SanderMertens/flecs/tree/master/examples) - C and C++ code examples
-- [Manual](docs/Manual.md) - Everything you want to know about Flecs and more
 
 ## Building
 You can build flecs with either CMake, Meson, [Bake](https://github.com/SanderMertens/bake) or embed the sources into your own project.
