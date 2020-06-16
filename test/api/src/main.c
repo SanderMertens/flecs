@@ -369,6 +369,7 @@ void SystemMisc_system_initial_state(void);
 void SystemMisc_add_own_component(void);
 void SystemMisc_change_system_action(void);
 void SystemMisc_system_readeactivate(void);
+void SystemMisc_system_readeactivate_w_2_systems(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -2175,7 +2176,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemMisc",
-        .testcase_count = 49,
+        .testcase_count = 50,
         .testcases = (bake_test_case[]){
             {
                 .id = "invalid_not_without_id",
@@ -2372,6 +2373,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "system_readeactivate",
                 .function = SystemMisc_system_readeactivate
+            },
+            {
+                .id = "system_readeactivate_w_2_systems",
+                .function = SystemMisc_system_readeactivate_w_2_systems
             }
         }
     },

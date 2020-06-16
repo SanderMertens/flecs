@@ -411,7 +411,8 @@
                 "system_initial_state",
                 "add_own_component",
                 "change_system_action",
-                "system_readeactivate"
+                "system_readeactivate",
+                "system_readeactivate_w_2_systems"
             ]
         }, {
             "id": "TriggerOnAdd",

@@ -562,7 +562,7 @@ void ecs_deactivate_systems(
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {
-            ecs_query_t *query = sys->query;
+            ecs_query_t *query = sys[i].query;
             if (query) {
                 if (!ecs_vector_count(query->tables)) {
                     ecs_add_entity(world, it.entities[i], EcsInactive);
