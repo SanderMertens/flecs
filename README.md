@@ -103,11 +103,6 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-## Documentation
-- [Quickstart](docs/Quickstart.md) - A quick introduction to Flecs
-- [Examples](https://github.com/SanderMertens/flecs/tree/master/examples) - C and C++ code examples
-- [Manual](docs/Manual.md) - Everything you want to know about Flecs and more
-
 ## Building
 You can build flecs with either CMake, Meson, [Bake](https://github.com/SanderMertens/bake) or embed the sources into your own project.
 
