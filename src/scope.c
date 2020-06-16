@@ -15,7 +15,7 @@ bool path_append(
     ecs_entity_t cur = ecs_find_in_type(world, type, component, ECS_CHILDOF);
     
     if (cur) {
-        if (cur != parent) {
+        if (cur != parent && cur != EcsFlecsCore) {
             path_append(world, parent, cur, component, sep, prefix, buf);
             ecs_strbuf_appendstr(buf, sep);
         }
@@ -23,7 +23,14 @@ bool path_append(
         ecs_strbuf_appendstr(buf, prefix);
     }
 
-    ecs_strbuf_appendstr(buf, ecs_get_name(world, child));
+    char buff[22];
+    const char *name = ecs_get_name(world, child);
+    if (!name) {
+        sprintf(buff, "%u", (uint32_t)child);
+        name = buff;
+    }
+
+    ecs_strbuf_appendstr(buf, name);
 
     return cur != 0;
 }
@@ -63,6 +70,11 @@ ecs_entity_t find_child_in_table(
     int32_t i, count = ecs_vector_count(data->entities);
     if (!count) {
         return 0;
+    }
+
+    int is_number = isdigit(name[0]);
+    if (is_number) {
+        return atol(name);
     }
 
     ecs_column_t *column = &data->columns[name_index];

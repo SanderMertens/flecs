@@ -108,6 +108,8 @@ void Hierarchies_path_custom_sep(void);
 void Hierarchies_path_custom_prefix(void);
 void Hierarchies_path_prefix_rel_match(void);
 void Hierarchies_path_prefix_rel_no_match(void);
+void Hierarchies_fullpath_for_core(void);
+void Hierarchies_path_w_number(void);
 void Hierarchies_lookup_depth_0(void);
 void Hierarchies_lookup_depth_1(void);
 void Hierarchies_lookup_depth_2(void);
@@ -120,6 +122,7 @@ void Hierarchies_lookup_custom_prefix_from_root(void);
 void Hierarchies_lookup_self(void);
 void Hierarchies_lookup_in_parent_from_scope(void);
 void Hierarchies_lookup_in_root_from_scope(void);
+void Hierarchies_lookup_number(void);
 void Hierarchies_delete_children(void);
 void Hierarchies_scope_set(void);
 void Hierarchies_scope_set_again(void);
@@ -1270,7 +1273,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 41,
+        .testcase_count = 44,
         .testcases = (bake_test_case[]){
             {
                 .id = "get_parent",
@@ -1361,6 +1364,14 @@ static bake_test_suite suites[] = {
                 .function = Hierarchies_path_prefix_rel_no_match
             },
             {
+                .id = "fullpath_for_core",
+                .function = Hierarchies_fullpath_for_core
+            },
+            {
+                .id = "path_w_number",
+                .function = Hierarchies_path_w_number
+            },
+            {
                 .id = "lookup_depth_0",
                 .function = Hierarchies_lookup_depth_0
             },
@@ -1407,6 +1418,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "lookup_in_root_from_scope",
                 .function = Hierarchies_lookup_in_root_from_scope
+            },
+            {
+                .id = "lookup_number",
+                .function = Hierarchies_lookup_number
             },
             {
                 .id = "delete_children",

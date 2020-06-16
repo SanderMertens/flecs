@@ -365,7 +365,6 @@ char* ecs_type_str(
     ecs_vector_t *chbuf = ecs_vector_new(char, 32);
     char *dst;
     int32_t len;
-    char buf[15];
 
     ecs_entity_t *handles = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
@@ -419,19 +418,17 @@ char* ecs_type_str(
             /* Prevent issues during bootstrap */
             str = "EcsComponent";
         } else {
-            const EcsName *id = ecs_get(world, h, EcsName);
-            if (id) {
-                str = id->value;
-                ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);
-            } else {
-                int h_int = h;
-                sprintf(buf, "%u", h_int);
-                str = buf;
-            }
+            str = ecs_get_fullpath(world, h);
         }
+
+        ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);
+
         len = strlen(str);
         dst = ecs_vector_addn(&chbuf, char, len);
         memcpy(dst, str, len);
+        if (h != 1) {
+            ecs_os_free((char*)str);
+        }
     }
 
     *(char*)ecs_vector_add(&chbuf, char) = '\0';
