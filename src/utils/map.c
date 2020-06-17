@@ -213,7 +213,7 @@ void rehash(
                         rehash_again = true;
                     }
 
-                    remove_from_bucket(bucket, key, elem_size, map->offset, i);
+                    remove_from_bucket(bucket, key, elem_size, offset, i);
 
                     count --;
                     i --;
@@ -290,7 +290,7 @@ void* _ecs_map_get(
             return PAYLOAD(elem);
         }
 
-        elem = NEXT_ELEM(elem, elem_size);
+        elem = NEXT_ELEM(elem, map->elem_size);
     }
 
     return NULL;
@@ -347,7 +347,7 @@ void _ecs_map_set(
             break;
         }
 
-        elem = NEXT_ELEM(elem, elem_size);
+        elem = NEXT_ELEM(elem, map->elem_size);
     }
 
     if (!found) {

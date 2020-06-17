@@ -180,7 +180,7 @@ typedef struct EcsComponentLifecycle {
  * Type flags can also be used in type expressions, without the ECS prefix:
  *
  * ECS_ENTITY(world, Base, Position);
- * ECS_TYPE(world, InstanceOfBase, INSTANCEOF | base);
+ * ECS_TYPE(world, InstanceOfBase, INSTANCEOF | Base);
  */
 
 /** The INSTANCEOF role indicates that the components from the entity should be

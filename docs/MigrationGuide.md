@@ -145,7 +145,7 @@ While there have been many changes to the API in v2, in general the operations r
 
 - `ecs_rows_t` is now `ecs_iter_t`
 - `ecs_has_owned` is now `ecs_owns`
-- `ecs_is_shared` is now `ecs_is_owned`
+- `ecs_is_shared` is now `!ecs_is_owned`
 - Function names with underscores (`_ecs_new`) have been replaced with normal names (`ecs_new_w_type`).
 - `ecs_adopt`, `ecs_orphan`, `ecs_inherit` and `ecs_disinherit` are gone. An application should now use the following:
 

@@ -33,7 +33,7 @@ void * _ecs_map_get(
     ecs_map_key_t key);
 
 #define ecs_map_get(map, T, key)\
-    (T*)_ecs_map_get(map, sizeof(T), key)
+    (T*)_ecs_map_get(map, sizeof(T), (ecs_map_key_t)key)
 
 FLECS_EXPORT
 bool _ecs_map_has(
@@ -43,7 +43,7 @@ bool _ecs_map_has(
     void *payload);
 
 #define ecs_map_has(map, key, payload)\
-    _ecs_map_has(map, sizeof(*payload), key, payload)
+    _ecs_map_has(map, sizeof(*payload), (ecs_map_key_t)key, payload)
 
 FLECS_EXPORT
 void * _ecs_map_get_ptr(
@@ -61,7 +61,7 @@ void _ecs_map_set(
     const void *payload);
 
 #define ecs_map_set(map, key, payload)\
-    _ecs_map_set(map, sizeof(*payload), key, payload);
+    _ecs_map_set(map, sizeof(*payload), (ecs_map_key_t)key, payload);
 
 FLECS_EXPORT
 void ecs_map_free(
@@ -124,6 +124,18 @@ void ecs_map_memory(
 FLECS_EXPORT
 ecs_map_t* ecs_map_copy(
     const ecs_map_t *map);
+
+#define ecs_map_each(map, T, key, var, ...)\
+    {\
+        ecs_map_iter_t it = ecs_map_iter(map);\
+        ecs_map_key_t key;\
+        T* var;\
+        (void)key;\
+        (void)var;\
+        while ((var = ecs_map_next(&it, T, &key))) {\
+            __VA_ARGS__\
+        }\
+    }
 
 #ifdef __cplusplus
 }
