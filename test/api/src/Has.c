@@ -174,7 +174,7 @@ void Has_has_of_zero() {
     ecs_fini(world);
 }
 
-void Has_has_owned() {
+void Has_owns() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -183,15 +183,15 @@ void Has_has_owned() {
     ecs_entity_t e = ecs_new(world, Position);    
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
-    test_assert( ecs_has_owned(world, e, Position, true));
+    test_assert( ecs_owns(world, e, Position, true));
 
     ecs_entity_t base = ecs_new(world, Velocity);
     test_assert( ecs_has(world, base, Velocity));
-    test_assert( ecs_has_owned(world, base, Velocity, true));
+    test_assert( ecs_owns(world, base, Velocity, true));
 
     ecs_add_entity(world, e, ECS_INSTANCEOF | base);
     test_assert( ecs_has(world, e, Velocity));
-    test_assert( !ecs_has_owned(world, e, Velocity, true));
+    test_assert( !ecs_owns(world, e, Velocity, true));
  
     ecs_fini(world);
 }
@@ -257,11 +257,11 @@ void Has_has_entity_owned() {
     test_assert( ecs_has_entity(world, e, g));
     test_assert( !ecs_has_entity(world, e, base));
     test_assert( ecs_has_entity(world, e, ECS_INSTANCEOF | base));
-    test_assert( ecs_has_owned_entity(world, e, f, true));
-    test_assert( !ecs_has_owned_entity(world, e, g, true));
-    test_assert( !ecs_has_owned_entity(world, e, base, true));
+    test_assert( ecs_owns_entity(world, e, f, true));
+    test_assert( !ecs_owns_entity(world, e, g, true));
+    test_assert( !ecs_owns_entity(world, e, base, true));
 
-    test_assert( ecs_has_owned_entity(world, e, ECS_INSTANCEOF | base, true));
+    test_assert( ecs_owns_entity(world, e, ECS_INSTANCEOF | base, true));
  
     ecs_fini(world);
 }
@@ -272,7 +272,7 @@ void Has_has_entity_owned_0() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    test_assert( ecs_has_owned_entity(world, 0, e, true) == false);
+    test_assert( ecs_owns_entity(world, 0, e, true) == false);
 
     ecs_fini(world);
 }
@@ -283,7 +283,7 @@ void Has_has_entity_owned_0_component() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    test_assert( ecs_has_owned_entity(world, e, 0, true) == false);
+    test_assert( ecs_owns_entity(world, e, 0, true) == false);
 
     ecs_fini(world);
 }

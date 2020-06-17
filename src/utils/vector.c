@@ -1,4 +1,4 @@
-#include "types.h"
+#include "../types.h"
 
 /** Resize the vector buffer */
 static
@@ -31,6 +31,28 @@ ecs_vector_t* _ecs_vector_new(
     result->elem_size = elem_size;
 #endif
     return result;
+}
+
+ecs_vector_t* _ecs_vector_from_array(
+    size_t elem_size,
+    int16_t offset,
+    int32_t elem_count,
+    void *array)
+{
+    ecs_assert(elem_size != 0, ECS_INTERNAL_ERROR, NULL);
+    
+    ecs_vector_t *result =
+        ecs_os_malloc(offset + elem_size * elem_count);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
+    memcpy(ECS_OFFSET(result, offset), array, elem_size * elem_count);
+
+    result->count = elem_count;
+    result->size = elem_count;
+#ifndef NDEBUG
+    result->elem_size = elem_size;
+#endif
+    return result;   
 }
 
 void ecs_vector_free(
@@ -320,6 +342,22 @@ int32_t _ecs_vector_set_min_size(
     } else {
         return (*vector_inout)->size;
     }
+}
+
+int32_t _ecs_vector_set_min_count(
+    ecs_vector_t **vector_inout,
+    size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    _ecs_vector_set_min_size(vector_inout, elem_size, offset, elem_count);
+
+    ecs_vector_t *v = *vector_inout;
+    if (v && v->count < elem_count) {
+        v->count = elem_count;
+    }
+
+    return v->count;
 }
 
 void* _ecs_vector_first(

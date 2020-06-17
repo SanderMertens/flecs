@@ -958,9 +958,9 @@ int inheritance_test(int buffer_size) {
         test_assert( ecs_has(world, e2, Position));
         test_assert( ecs_has(world, e3, Position));
 
-        test_assert( !ecs_has_owned(world, e1, Position, true));
-        test_assert( !ecs_has_owned(world, e2, Position, true));
-        test_assert( !ecs_has_owned(world, e3, Position, true));
+        test_assert( !ecs_owns(world, e1, Position, true));
+        test_assert( !ecs_owns(world, e2, Position, true));
+        test_assert( !ecs_owns(world, e3, Position, true));
 
         ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
         Probe ctx = {0};
@@ -1035,9 +1035,9 @@ int simple_w_inheritance_test(int buffer_size) {
         test_assert( ecs_has(world, e2, Velocity));
         test_assert( ecs_has(world, e3, Velocity));
 
-        test_assert( !ecs_has_owned(world, e1, Position, true));
-        test_assert( !ecs_has_owned(world, e2, Position, true));
-        test_assert( !ecs_has_owned(world, e3, Position, true));
+        test_assert( !ecs_owns(world, e1, Position, true));
+        test_assert( !ecs_owns(world, e2, Position, true));
+        test_assert( !ecs_owns(world, e3, Position, true));
 
         const Velocity *
         p = ecs_get(world, e1, Velocity);

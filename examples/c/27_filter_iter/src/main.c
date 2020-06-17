@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
         /* Get type of table we're currently iterating over. The order in which
          * components appear in the type is the same as the order in which the
          * components are stored on the table. */
-        ecs_type_t table_type = ecs_table_type(&it);
+        ecs_type_t table_type = ecs_iter_type(&it);
 
         /* Retrieve the column indices for both the Position and Velocity
          * columns by finding their position in the table type */

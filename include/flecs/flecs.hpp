@@ -39,7 +39,6 @@ template <typename T>
 class component_base;
 
 enum match_kind {
-    MatchDefault = EcsMatchDefault,
     MatchAll = EcsMatchAll,
     MatchAny = EcsMatchAny,
     MatchExact = EcsMatchExact
@@ -55,9 +54,7 @@ using Component = EcsComponent;
 using ComponentLifecycle = EcsComponentLifecycle;
 using Trigger = EcsTrigger;
 using Type = EcsType;
-// using System = EcsSystem;
 using Name = EcsName;
-using PipelineQuery = EcsPipelineQuery;
 using Timer = EcsTimer;
 using RateFilter = EcsRateFilter;
 using TickSource = EcsTickSource;
@@ -235,7 +232,7 @@ public:
 
     /* Is column shared */
     bool is_shared(int32_t column) const {
-        return ecs_is_shared(m_iter, column);
+        return !ecs_is_owned(m_iter, column);
     }
     
     /* Access param field */
@@ -279,7 +276,7 @@ public:
     /* Obtain typed pointer to table column */
     template <typename T>
     flecs::column<T> table_column() const {
-        auto type = ecs_table_type(m_iter);
+        auto type = ecs_iter_type(m_iter);
         auto column = ecs_type_index_of(type, component_base<T>::s_entity);
         ecs_assert(column != -1, ECS_INVALID_PARAMETER, NULL);
         return flecs::column<T>(static_cast<T*>(ecs_table_column(m_iter, column)), m_iter->count, false);
@@ -303,7 +300,7 @@ public:
     /* Get owned */
     template <typename T>
     flecs::column<T> owned(int32_t column) const {
-        ecs_assert(!ecs_is_shared(m_iter, column), ECS_COLUMN_IS_SHARED, NULL);
+        ecs_assert(!!ecs_is_owned(m_iter, column), ECS_COLUMN_IS_SHARED, NULL);
         return this->column<T>(column);
     }
 
@@ -311,8 +308,8 @@ public:
     template <typename T>
     const T& shared(int32_t column) const {
         ecs_assert(ecs_column_entity(m_iter, column) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
-        ecs_assert(ecs_is_shared(m_iter, column), ECS_COLUMN_IS_NOT_SHARED, NULL);
-        return *static_cast<T*>(_ecs_column(m_iter, sizeof(T), column));
+        ecs_assert(!ecs_is_owned(m_iter, column), ECS_COLUMN_IS_NOT_SHARED, NULL);
+        return *static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), column));
     }
 
     /* Get single field of a const type */
@@ -336,7 +333,7 @@ private:
     flecs::column<T> get_column(int32_t column_id) const {
         ecs_assert(ecs_column_entity(m_iter, column_id) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
         int32_t count;
-        bool is_shared = ecs_is_shared(m_iter, column_id);
+        bool is_shared = !ecs_is_owned(m_iter, column_id);
 
         /* If a shared column is retrieved with 'column', there will only be a
          * single value. Ensure that the application does not accidentally read
@@ -349,14 +346,14 @@ private:
             count = m_iter->count;
         }
 
-        return flecs::column<T>(static_cast<T*>(_ecs_column(m_iter, sizeof(T), column_id)), count, is_shared);
+        return flecs::column<T>(static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), column_id)), count, is_shared);
     }   
 
     /* Get single field, check if correct type is used */
     template <typename T>
     T& get_field(int32_t column, int32_t row) const {
         ecs_assert(ecs_column_entity(m_iter, column) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
-        return *static_cast<T*>(_ecs_field(m_iter, sizeof(T), column, row));
+        return *static_cast<T*>(ecs_element_w_size(m_iter, sizeof(T), column, row));
     }       
 
     const ecs_iter_t *m_iter;
@@ -776,6 +773,9 @@ public:
         { 
             if (!m_id) {
                 EcsName id{ ecs_os_strdup(name) };
+                id.alloc_value = ecs_os_strdup(name);
+                id.value = id.alloc_value;
+                id.symbol = NULL;            
                 m_id = ecs_set_ptr(m_world, 0, EcsName, &id);
             }
         }
@@ -785,7 +785,10 @@ public:
         , m_id( ecs_lookup(m_world, name.c_str()) ) 
         { 
             if (!m_id) {
-                EcsName id{ ecs_os_strdup(name.c_str()) };
+                EcsName id;
+                id.alloc_value = ecs_os_strdup(name.c_str());
+                id.value = id.alloc_value;
+                id.symbol = NULL;
                 m_id = ecs_set_ptr(m_world, 0, EcsName, &id);
             }
         }         
@@ -815,7 +818,7 @@ public:
         const EcsName *name = static_cast<const EcsName*>(
             ecs_get_w_entity(m_world, m_id, ecs_entity(EcsName)));
         if (name) {
-            return std::string(*name);
+            return std::string(name->value);
         } else {
             return std::string();
         }
@@ -881,21 +884,21 @@ public:
         return has(component_base<T>::s_entity);
     }
 
-    bool has_owned(entity_t id) const {
-        return ecs_has_owned_entity(m_world, m_id, id, true);
+    bool owns(entity_t id) const {
+        return ecs_owns_entity(m_world, m_id, id, true);
     }
 
-    bool has_owned(type_t type) const {
-        return ecs_type_has_owned_type(m_world, ecs_get_type(m_world, m_id), type, true);
+    bool owns(type_t type) const {
+        return ecs_type_owns_type(m_world, ecs_get_type(m_world, m_id), type, true);
     }
 
-    bool has_owned(const entity& entity) const {
-        return has_owned(entity.id());
+    bool owns(const entity& entity) const {
+        return owns(entity.id());
     }
 
     template <typename T>
-    bool has_owned() const {
-        return has_owned(component_base<T>::s_entity);
+    bool owns() const {
+        return owns(component_base<T>::s_entity);
     }
 
     float delta_time() {
@@ -1256,8 +1259,8 @@ private:
     /* Populate columns array recursively */
     template <typename T, typename... Targs>
     void populate_columns(ecs_iter_t *iter, int index, T comp, Targs... comps) {
-        m_columns[index].ptr = _ecs_column(iter, sizeof(*comp), index + 1);
-        m_columns[index].is_shared = ecs_is_shared(iter, index + 1);
+        m_columns[index].ptr = ecs_column_w_size(iter, sizeof(*comp), index + 1);
+        m_columns[index].is_shared = !ecs_is_owned(iter, index + 1);
         populate_columns(iter, index + 1, comps ...);
     }
 };
@@ -2147,7 +2150,7 @@ inline type iter::column_type(int32_t column) const {
 
 /* Obtain type of table being iterated over */
 inline type iter::table_type() const {
-    return flecs::type(m_iter->world, ecs_table_type(m_iter));
+    return flecs::type(m_iter->world, ecs_iter_type(m_iter));
 }
 
 

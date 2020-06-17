@@ -36,10 +36,10 @@ void probe_system_w_ctx(
             for (i = 0; i < it->count; i ++) {
                 ctx->e[i + ctx->count] = e[i];
 
-                /* Make sure ecs_field works for all columns */
+                /* Make sure ecs_element works for all columns */
                 int c;
                 for (c = 0; c < ctx->column_count; c ++) {
-                    _ecs_field(it, 0, c, i);
+                    ecs_element_w_size(it, 0, c, i);
                 }
             }
             ctx->count += it->count;

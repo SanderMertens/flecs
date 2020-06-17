@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Before overriding:" << std::endl;
     std::cout << "instance: " 
         << instance.get<Mass>().value << " (owned = " 
-        << instance.has_owned<Mass>() << ")" << std::endl;
+        << instance.owns<Mass>() << ")" << std::endl;
 
     /* Override Mass of instance, which will give instance a private copy of the
      * Mass component. */
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     std::cout << "After overriding:" << std::endl;
     std::cout << "instance: " 
         << instance.get<Mass>().value << " (owned = " 
-        << instance.has_owned<Mass>() << ")" << std::endl;
+        << instance.owns<Mass>() << ")" << std::endl;
 
     /* Remove override of Mass. This will remove the private copy of the Mass
      * component from instance. */
@@ -48,5 +48,5 @@ int main(int argc, char *argv[]) {
     std::cout << "After removing override:" << std::endl;
     std::cout << "instance: " 
         << instance.get<Mass>().value << " (owned = " 
-        << instance.has_owned<Mass>() << ")" << std::endl;
+        << instance.owns<Mass>() << ")" << std::endl;
 }

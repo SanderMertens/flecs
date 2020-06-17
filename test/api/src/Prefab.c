@@ -3,7 +3,7 @@
 static
 void Iter(ecs_iter_t *it) {
     ECS_COLUMN(it, Mass, m_ptr, 1);
-    bool shared = ecs_is_shared(it, 1);
+    bool shared = !ecs_is_owned(it, 1);
 
     ECS_COLUMN(it, Position, p, 2);
 
@@ -692,8 +692,8 @@ void Prefab_w_field(ecs_iter_t *it) {
     probe_system(it);
 
     for (int i = 0; i < it->count; i ++) {
-        Position *p = ecs_field(it, Position, 1, i);
-        Velocity *v = ecs_field(it, Velocity, 2, i);
+        Position *p = ecs_element(it, Position, 1, i);
+        Velocity *v = ecs_element(it, Velocity, 2, i);
         p->x += v->x;
         p->y += v->y;
     }
@@ -745,7 +745,7 @@ void Prefab_w_shared(ecs_iter_t *it) {
     if (it->column_count >= 2) {
         v = ecs_column(it, Velocity, 2);
         if (v) {
-            test_assert(ecs_is_shared(it, 2));
+            test_assert(!ecs_is_owned(it, 2));
         }
     }
     
@@ -757,7 +757,7 @@ void Prefab_w_shared(ecs_iter_t *it) {
     probe_system(it);
 
     for (int i = 0; i < it->count; i ++) {
-        Position *p = ecs_field(it, Position, 1, i);
+        Position *p = ecs_element(it, Position, 1, i);
         p->x += v->x;
         p->y += v->y;
 
@@ -2109,7 +2109,7 @@ void TestBase(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
     ECS_COLUMN(it, Velocity, v, 2);
 
-    test_assert(ecs_is_shared(it, 2));
+    test_assert(!ecs_is_owned(it, 2));
 
     test_assert(p != NULL);
     test_assert(v != NULL);
@@ -2391,10 +2391,10 @@ void Prefab_override_from_nested() {
 
     ecs_entity_t e_1 = ecs_new(world, Sub);
     test_assert(e_1 != 0);
-    test_assert( ecs_has_owned(world, e_1, Position, true));
-    test_assert( ecs_has_owned(world, e_1, Velocity, true));
-    test_assert( ecs_has_owned(world, e_1, Position, true));
-    test_assert( ecs_has_owned(world, e_1, Velocity, true));
+    test_assert( ecs_owns(world, e_1, Position, true));
+    test_assert( ecs_owns(world, e_1, Velocity, true));
+    test_assert( ecs_owns(world, e_1, Position, true));
+    test_assert( ecs_owns(world, e_1, Velocity, true));
     test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | SubPrefab));
     test_assert( ecs_has_entity(world, e_1, ECS_INSTANCEOF | BasePrefab));
 
@@ -2469,8 +2469,8 @@ void Prefab_create_multiple_nested_w_on_set() {
 
     test_assert( ecs_has(world, child1, Velocity));
     test_assert( ecs_has(world, child2, Velocity));
-    test_assert( ecs_has_owned(world, child1, Velocity, true));
-    test_assert( ecs_has_owned(world, child2, Velocity, true));
+    test_assert( ecs_owns(world, child1, Velocity, true));
+    test_assert( ecs_owns(world, child2, Velocity, true));
 
     const Velocity *v1 = ecs_get(world, child1, Velocity);
     test_assert(v1 != NULL);
@@ -2544,8 +2544,8 @@ void Prefab_create_multiple_nested_w_on_set_in_progress() {
 
     test_assert( ecs_has(world, child1, Velocity));
     test_assert( ecs_has(world, child2, Velocity));
-    test_assert( ecs_has_owned(world, child1, Velocity, true));
-    test_assert( ecs_has_owned(world, child2, Velocity, true));
+    test_assert( ecs_owns(world, child1, Velocity, true));
+    test_assert( ecs_owns(world, child2, Velocity, true));
 
     const Velocity *v1 = ecs_get(world, child1, Velocity);
     test_assert(v1 != NULL);
@@ -2595,7 +2595,7 @@ void Prefab_single_on_set_on_child_w_override() {
     test_assert(child != 0);
 
     test_assert( ecs_has(world, child, Velocity));
-    test_assert( ecs_has_owned(world, child, Velocity, true));
+    test_assert( ecs_owns(world, child, Velocity, true));
 
     const Velocity *v = ecs_get(world, child, Velocity);
     test_assert(v != NULL);

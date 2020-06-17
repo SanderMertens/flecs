@@ -179,7 +179,7 @@ void Has_2_of_1(void);
 void Has_1_of_empty(void);
 void Has_has_in_progress(void);
 void Has_has_of_zero(void);
-void Has_has_owned(void);
+void Has_owns(void);
 void Has_has_entity(void);
 void Has_has_entity_0(void);
 void Has_has_entity_0_component(void);
@@ -455,6 +455,7 @@ void SystemOnSet_remove_from_current_in_on_set(void);
 void SystemOnSet_remove_set_component_in_on_set(void);
 void SystemOnSet_match_table_created_w_add_in_on_set(void);
 void SystemOnSet_set_optional(void);
+void SystemOnSet_set_from_nothing(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -1640,8 +1641,8 @@ static bake_test_suite suites[] = {
                 .function = Has_has_of_zero
             },
             {
-                .id = "has_owned",
-                .function = Has_has_owned
+                .id = "owns",
+                .function = Has_owns
             },
             {
                 .id = "has_entity",
@@ -2621,7 +2622,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 22,
+        .testcase_count = 23,
         .testcases = (bake_test_case[]){
             {
                 .id = "set_1_of_1",
@@ -2710,6 +2711,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_optional",
                 .function = SystemOnSet_set_optional
+            },
+            {
+                .id = "set_from_nothing",
+                .function = SystemOnSet_set_from_nothing
             }
         }
     },

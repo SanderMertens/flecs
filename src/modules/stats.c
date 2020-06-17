@@ -394,11 +394,7 @@ void StatsCollectColSystemMemoryStats(ecs_iter_t *it) {
             &stats[i].active_tables_memory);
 
         collect_system_table_metrics(system, system->query->empty_tables, 
-            &stats[i].inactive_tables_memory);
-
-        ecs_vector_memory(system->jobs, ecs_job_t, 
-            &stats[i].jobs_memory.allocd_bytes, 
-            &stats[i].jobs_memory.used_bytes);            
+            &stats[i].inactive_tables_memory);            
 
         if (system->on_demand) {
             stats[i].other_memory_bytes += sizeof(ecs_on_demand_out_t);

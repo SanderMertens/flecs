@@ -30,5 +30,5 @@ int main(int argc, char *argv[]) {
      * will own the component. */
     std::cout << "instance: " 
         << instance.get<Mass>().value << " (owned = " 
-        << instance.has_owned<Mass>() << ")" << std::endl;
+        << instance.owns<Mass>() << ")" << std::endl;
 }

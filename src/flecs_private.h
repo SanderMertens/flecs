@@ -4,8 +4,8 @@
 /* This file contains declarations to private flecs functions */
 
 #include "types.h"
-#include "flecs/util/entity_index.h"
-#include "flecs/util/table.h"
+#include "flecs/support/entity_index.h"
+#include "flecs/support/table.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

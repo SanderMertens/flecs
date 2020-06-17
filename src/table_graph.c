@@ -75,7 +75,7 @@ void register_child_table(
         *el = table;
 
         if (!world->child_tables) {
-            world->child_tables = ecs_map_new(ecs_table_t*, 1);
+            world->child_tables = ecs_map_new(ecs_vector_t*, 1);
         }
 
         ecs_map_set(world->child_tables, parent, &child_tables);
@@ -363,13 +363,13 @@ ecs_table_t *find_or_create_table_include(
                 const EcsType *type_ptr = ecs_get(world, type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                if (ecs_type_has_owned_entity(
+                if (ecs_type_owns_entity(
                     world, type_ptr->normalized, add, true)) 
                 {
                     xor_type = type_ptr->normalized;
                 }
             } else if (xor_type) {
-                if (ecs_type_has_owned_entity(world, xor_type, e, true)) {
+                if (ecs_type_owns_entity(world, xor_type, e, true)) {
                     replace = e;
                     break;
                 }
@@ -383,7 +383,7 @@ ecs_table_t *find_or_create_table_include(
 
     ecs_table_t *result = ecs_table_find_or_create(world, stage, &entities);
     
-    if (result != node) {
+    if (result != node && stage == &world->stage) {
         create_backlink_after_add(result, node, add);
     }
 
@@ -412,7 +412,7 @@ ecs_table_t *find_or_create_table_exclude(
         return NULL;
     }
 
-    if (result != node) {
+    if (result != node && stage == &world->stage) {
         create_backlink_after_remove(result, node, remove);
     }
 

@@ -42,8 +42,6 @@ ecs_data_t* init_data(
         }
     }
 
-    table->column_count = count;
-
     return result;
 }
 
@@ -185,6 +183,11 @@ void register_on_set(
         * systems when setting a single component. */
         ecs_vector_each(query->sig.columns, ecs_sig_column_t, column, {
             ecs_sig_oper_kind_t oper_kind = column->oper_kind;
+            ecs_sig_from_kind_t from_kind = column->from_kind;
+
+            if (from_kind != EcsFromSelf && from_kind != EcsFromOwned) {
+                continue;
+            }
 
             if (oper_kind == EcsOperAnd || oper_kind == EcsOperOptional) {
                 ecs_entity_t comp = column->is.component;

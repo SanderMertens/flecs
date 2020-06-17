@@ -14,6 +14,9 @@ extern "C" {
 //// Pipeline API
 ////////////////////////////////////////////////////////////////////////////////
 
+#define ECS_PIPELINE(world, name, ...) \
+    ecs_entity_t name = ecs_new_pipeline(world, 0, #name, #__VA_ARGS__);
+
 FLECS_EXPORT
 void ecs_set_pipeline(
     ecs_world_t *world,

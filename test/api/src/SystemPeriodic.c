@@ -1028,8 +1028,8 @@ void SystemPeriodic_6_type_1_and_2_optional() {
 void Use_field(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        Position *p = ecs_field(it, Position, 1, i);
-        Velocity *v = ecs_field(it, Velocity, 2, i);
+        Position *p = ecs_element(it, Position, 1, i);
+        Velocity *v = ecs_element(it, Velocity, 2, i);
 
         p->x += v->x;
         p->y += v->y;
@@ -1143,7 +1143,7 @@ void TestOptional_w_field(ecs_iter_t *it) {
     probe_system(it);
 
     for (int i = 0; i < it->count; i ++) {
-        Velocity *v = ecs_field(it, Velocity, 2, i);
+        Velocity *v = ecs_element(it, Velocity, 2, i);
         test_assert(v == NULL);
     }
 }
@@ -1456,8 +1456,8 @@ void TwoRefs(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
     ECS_COLUMN(it, Velocity, v, 2);
 
-    test_assert(ecs_is_shared(it, 1));
-    test_assert(ecs_is_shared(it, 2));
+    test_assert(!ecs_is_owned(it, 1));
+    test_assert(!ecs_is_owned(it, 2));
 
     (void)p;
     (void)v;
@@ -1636,7 +1636,7 @@ void SystemPeriodic_match_prefab_and_normal() {
 
 static
 void TestIsSharedOnNotSet(ecs_iter_t *it) {
-    test_assert(ecs_is_shared(it, 2) == false);
+    test_assert(ecs_is_owned(it, 2) != false);
 }
 
 void SystemPeriodic_is_shared_on_column_not_set() {
@@ -1940,7 +1940,7 @@ static bool Test_feld_w_zero_size_invoked = false;
 
 static
 void Test_feld_w_zero_size(ecs_iter_t *it) {
-    test_assert(_ecs_field(it, 0, 1, 0) != _ecs_field(it, 0, 1, 1));
+    test_assert(ecs_element_w_size(it, 0, 1, 0) != ecs_element_w_size(it, 0, 1, 1));
     Test_feld_w_zero_size_invoked = true;
 }
 

@@ -91,9 +91,22 @@ static
 ecs_entity_t new_entity_handle(
     ecs_world_t *world)
 {
-    ecs_entity_t entity = ++ world->stats.last_id;
+    ecs_entity_t entity;
+
+    if (!world->in_progress) {
+        entity = ++ world->stats.last_id;
+    } else {
+        int32_t thread_count = ecs_vector_count(world->workers);
+        if (thread_count >= 1) { 
+            entity = ecs_os_ainc((int32_t*)&world->stats.last_id);
+        } else {
+            entity = ++ world->stats.last_id;
+        } 
+    }
+
     ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, 
         ECS_OUT_OF_RANGE, NULL);
+
     return entity;
 }
 
@@ -2077,18 +2090,6 @@ int32_t ecs_count_w_filter(
     }
     
     return result;
-}
-
-bool ecs_get_watched(
-    ecs_world_t *world,
-    ecs_entity_t entity)
-{
-    ecs_entity_info_t info = { 0 };
-    if (get_info(world, entity, &info)) {
-        return info.is_watched;
-    } else {
-        return false;
-    }
 }
 
 /* Enter safe section. Record all operations so they can be executed after

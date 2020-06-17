@@ -200,7 +200,7 @@
                 "1_of_empty",
                 "has_in_progress",
                 "has_of_zero",
-                "has_owned",
+                "owns",
                 "has_entity",
                 "has_entity_0",
                 "has_entity_0_component",
@@ -507,7 +507,8 @@
                 "remove_from_current_in_on_set",
                 "remove_set_component_in_on_set",
                 "match_table_created_w_add_in_on_set",
-                "set_optional"
+                "set_optional",
+                "set_from_nothing"
             ]
         }, {
             "id": "SystemPeriodic",

@@ -25,7 +25,7 @@ void FilterIter_iter_one_table() {
         table_count ++;
         entity_count += it.count;
         
-        test_assert(ecs_table_type(&it) == ecs_type(Position));
+        test_assert(ecs_iter_type(&it) == ecs_type(Position));
         Position *row = ecs_table_column(&it, 0);
         test_assert(row != NULL);
 
@@ -118,7 +118,7 @@ void FilterIter_iter_two_comps() {
         table_count ++;
         entity_count += it.count;
 
-        ecs_type_t table_type = ecs_table_type(&it);
+        ecs_type_t table_type = ecs_iter_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         test_assert(array[1] == ecs_entity(Velocity));
@@ -160,7 +160,7 @@ void FilterIter_iter_snapshot_one_table() {
     ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
     test_assert(s != NULL);
 
-    ecs_type_filter_t filter = { ecs_type(Position) };
+    ecs_filter_t filter = { ecs_type(Position) };
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
@@ -177,7 +177,7 @@ void FilterIter_iter_snapshot_one_table() {
         table_count ++;
         entity_count += it.count;
 
-        ecs_type_t table_type = ecs_table_type(&it);
+        ecs_type_t table_type = ecs_iter_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         
@@ -224,7 +224,7 @@ void FilterIter_iter_snapshot_two_tables() {
     ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
     test_assert(s != NULL);
 
-    ecs_type_filter_t filter = { ecs_type(Position) };
+    ecs_filter_t filter = { ecs_type(Position) };
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
@@ -241,7 +241,7 @@ void FilterIter_iter_snapshot_two_tables() {
         table_count ++;
         entity_count += it.count;
 
-        ecs_type_t table_type = ecs_table_type(&it);
+        ecs_type_t table_type = ecs_iter_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));
         
@@ -282,7 +282,7 @@ void FilterIter_iter_snapshot_two_comps() {
     ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
     test_assert(s != NULL);
 
-    ecs_type_filter_t filter = { ecs_type(Movable) };
+    ecs_filter_t filter = { ecs_type(Movable) };
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
@@ -299,7 +299,7 @@ void FilterIter_iter_snapshot_two_comps() {
         table_count ++;
         entity_count += it.count;
 
-        ecs_type_t table_type = ecs_table_type(&it);
+        ecs_type_t table_type = ecs_iter_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));      
         test_assert(array[1] == ecs_entity(Velocity));        
@@ -355,7 +355,7 @@ void FilterIter_iter_snapshot_filtered_table() {
     });
     test_assert(s != NULL);
 
-    ecs_type_filter_t filter = { ecs_type(Position) };
+    ecs_filter_t filter = { ecs_type(Position) };
 
     /* First clear data from the world to ensure that we're not accidentally
      * iterating from the world */
@@ -372,7 +372,7 @@ void FilterIter_iter_snapshot_filtered_table() {
         table_count ++;
         entity_count += it.count;
 
-        ecs_type_t table_type = ecs_table_type(&it);
+        ecs_type_t table_type = ecs_iter_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
         test_assert(array[0] == ecs_entity(Position));        
         

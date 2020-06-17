@@ -71,6 +71,12 @@ void* (*ecs_os_api_thread_join_t)(
     ecs_os_thread_t thread);
 
 
+/* Atomic increment / decrement */
+typedef
+int (*ecs_os_api_ainc_t)(
+    int32_t *value);
+
+
 /* Mutex */
 typedef
 ecs_os_mutex_t (*ecs_os_api_mutex_new_t)(
@@ -161,6 +167,10 @@ typedef struct ecs_os_api_t {
     ecs_os_api_thread_new_t thread_new;
     ecs_os_api_thread_join_t thread_join;
 
+    /* Atomic incremenet / decrement */
+    ecs_os_api_ainc_t ainc;
+    ecs_os_api_ainc_t adec;
+
     /* Mutex */
     ecs_os_api_mutex_new_t mutex_new;
     ecs_os_api_mutex_free_t mutex_free;
@@ -225,6 +235,10 @@ void ecs_os_set_api_defaults(void);
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new(callback, param)
 #define ecs_os_thread_join(thread) ecs_os_api.thread_join(thread)
+
+/* Atomic increment / decrement */
+#define ecs_os_ainc(value) ecs_os_api.ainc(value)
+#define ecs_os_adec(value) ecs_os_api.adec(value)
 
 /* Mutex */
 #define ecs_os_mutex_new() ecs_os_api.mutex_new()

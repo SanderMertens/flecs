@@ -18,7 +18,7 @@ void Move(ecs_iter_t *it) {
     ECS_COLUMN(it, Mass, m, 3);
 
     for (int i = 0; i < it->count; i ++) {
-        if (ecs_is_shared(it, 3)) {
+        if (!ecs_is_owned(it, 3)) {
             p[i].x += v[i].x / m[0];
             p[i].y += v[i].y / m[0];
         } else {

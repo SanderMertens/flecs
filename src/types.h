@@ -24,8 +24,8 @@
 #endif
 
 #include "flecs.h"
-#include "flecs/util/dbg.h"
-#include "flecs/util/entity_index.h"
+#include "flecs/utils/dbg.h"
+#include "flecs/support/entity_index.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
@@ -47,11 +47,13 @@
 /* Maximum length of an entity name, including 0 terminator */
 #define ECS_MAX_NAME_LENGTH (64)
 
+/* Simple bitmask structure to store a set of components. This is used amongst
+ * others to keep track of which components have been overridden from a base. */
 typedef uint64_t ecs_comp_mask_t[ECS_HI_COMPONENT_ID / 64];
 
-/** Callback used by the system signature expression parser */
+/** Callback used by the system signature expression parser. */
 typedef int (*ecs_parse_action_t)(
-    ecs_world_t *world,
+    ecs_world_t *world,                 
     const char *id,
     const char *expr,
     int column,
@@ -63,43 +65,59 @@ typedef int (*ecs_parse_action_t)(
     const char *source,
     void *ctx);
 
+/** Instruction data for pipeline.
+ * This type is the element type in the "ops" vector of a pipeline and contains
+ * information about the set of systems that need to be ran before a merge. */
 typedef struct ecs_pipeline_op_t {
-    int32_t count;
+    int32_t count;              /**< Number of systems to run before merge */
 } ecs_pipeline_op_t;
 
-/** A component array in a table */
+/** A component array in a table. */
 struct ecs_column_t {
-    ecs_vector_t *data;              /* Column data */
-    uint16_t size;                   /* Column size (saves component lookups) */
-    uint16_t alignment;              /* Column alignment */
+    ecs_vector_t *data;         /**< Column data */
+    uint16_t size;              /**< Column element size */
+    uint16_t alignment;         /**< Column element alignment */
 };
 
 /** Stage-specific component data */
 struct ecs_data_t {
-    ecs_vector_t *entities;
-    ecs_vector_t *record_ptrs;
-    ecs_column_t *columns;
-    bool marked_dirty;           /* Was table marked dirty for current stage? */  
+    ecs_vector_t *entities;     /**< Entity identifiers */
+    ecs_vector_t *record_ptrs;  /**< Pointers to records in main entity index */
+    ecs_column_t *columns;      /**< Component data */
+    bool marked_dirty;          /**< Was table marked dirty by stage? */  
 };
 
-#define EcsTableHasBuiltins (1)
-#define EcsTableIsPrefab (2)
-#define EcsTableHasPrefab (4)
-#define EcsTableHasParent (8)
-#define EcsTableHasComponentData (16)
-#define EcsTableHasXor (32)
-#define EcsTableIsDisabled (64)
+typedef struct ecs_table_content_t {
+    ecs_type_t type;
+    ecs_data_t *data;
+} ecs_table_content_t;
 
-/** Edge used for traversing the table graph */
+/** Flags for quickly checking for special properties of a table. */
+typedef enum ecs_table_flags_t {
+    EcsTableHasBuiltins = 1,        /**< Does table have builtin components */
+    EcsTableIsPrefab = 2,           /**< Does the table store prefabs */
+    EcsTableHasPrefab = 4,          /**< Does the table type has INSTANCEOF */
+    EcsTableHasParent = 8,          /**< Does the table type has CHILDOF */
+    EcsTableHasComponentData = 16,  /**< Does the table have component data */
+    EcsTableHasXor = 32,            /**< Does the table type has XOR */
+    EcsTableIsDisabled = 64         /**< Does the table type has EcsDisabled */
+} ecs_table_flags_t;
+
+/** Edge used for traversing the table graph. */
 typedef struct ecs_edge_t {
-    ecs_table_t *add;
-    ecs_table_t *remove;
+    ecs_table_t *add;               /**< Edges traversed when adding */
+    ecs_table_t *remove;            /**< Edges traversed when removing */
 } ecs_edge_t;
 
-/* Table monitor */
+/** Quey matched with table with backref to query table administration.
+ * This type is used to store a matched query together with the array index of
+ * where the table is stored in the query administration. This type is used when
+ * an action that originates on a table needs to invoke a query (system) and a
+ * fast lookup is required for the query administration, as is the case with
+ * OnSet and Monitor systems. */
 typedef struct ecs_matched_query_t {
-    ecs_query_t *query;
-    int32_t matched_table_index;
+    ecs_query_t *query;             /**< The query matched with the table */
+    int32_t matched_table_index;    /**< Table index in the query type */
 } ecs_matched_query_t;
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
@@ -107,50 +125,54 @@ typedef struct ecs_matched_query_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing column systems */
 struct ecs_table_t {
-    ecs_type_t type;                  /* Identifies table type in type_index */
+    ecs_type_t type;                 /**< Identifies table type in type_index */
 
-    /* Graph traversal */
-    ecs_edge_t *lo_edges;             /* Edges to low entity ids */
-    ecs_map_t *hi_edges;              /* Edges to high entity ids */
+    ecs_edge_t *lo_edges;            /**< Edges to low entity ids */
+    ecs_map_t *hi_edges;             /**< Edges to high entity ids */
 
-    /* Component storage */
-    ecs_vector_t *data;         /* Data per stage */
+    ecs_vector_t *data;              /**< Data per stage */
 
-    /* Different kinds of matched queries */
-    ecs_vector_t *queries;            /* Queries matched with table */
-    ecs_vector_t *monitors;           /* Monitor systems */
-    ecs_vector_t** on_set;            /* OnSet systems, broken up by column */
-    ecs_vector_t* on_set_all;         /* All OnSet systems (for new_w_data) */
+    ecs_vector_t *queries;           /**< Queries matched with table */
+    ecs_vector_t *monitors;          /**< Monitor systems matched with table */
+    ecs_vector_t** on_set;           /**< OnSet systems, broken up by column */
+    ecs_vector_t* on_set_all;        /**< All OnSet systems (for new_w_data) */
 
-    /* Change tracking */
-    int32_t *dirty_state;             /* Keep track of changes in columns */
+    int32_t *dirty_state;            /**< Keep track of changes in columns */
 
-    /* Table information */
-    int32_t flags;                    /* Flags for testing table properties */
-    int32_t column_count;             /* Number of data columns in table */
+    ecs_table_flags_t flags;         /**< Flags for testing table properties */
+    int32_t column_count;            /**< Number of data columns in table */
 };
 
-/** Cached reference to a component in an entity */
+/** Cached reference to a component in an entity.
+ * This type is used to store references to components in a system signature.
+ * The type uses a regular cached reference (ecs_ref_t) but in addition also
+ * needs to store the entity and component id so they can be requested by a
+ * system. */
 struct ecs_reference_t {
-    ecs_entity_t entity;
-    ecs_entity_t component;
-    ecs_ref_t ref;
+    ecs_entity_t entity;        /**< The entity */
+    ecs_entity_t component;     /**< The component id */
+    ecs_ref_t ref;              /**< The cached reference to the component */
 };
 
-/** Type containing data for a table matched with a system */
+/** Type containing data for a table matched with a query. */
 typedef struct ecs_matched_table_t {
-    ecs_table_t *table;             /* Reference to the table */
-    int32_t *columns;               /* Mapping of system columns to table */
-    ecs_entity_t *components;       /* Actual components of system columns */
-    ecs_vector_t *references;       /* Reference columns and cached pointers */
-    int32_t rank;                   /* Rank used to sort tables */
-    int32_t *monitor;               /* Used to monitor table for changes */
+    ecs_table_t *table;            /**< Reference to the table */
+    int32_t *columns;              /**< Mapping of system columns to table */
+    ecs_entity_t *components;      /**< Actual components of system columns */
+    ecs_vector_t *references;      /**< Reference columns and cached pointers */
+    int32_t rank;                  /**< Rank used to sort tables */
+    int32_t *monitor;              /**< Used to monitor table for changes */
 } ecs_matched_table_t;
 
+/** Type storing an entity range within a table.
+ * This type is used for iterating in orer across archetypes. A sorting function
+ * constructs a list of the ranges across archetypes that are in order so that
+ * when the query iterates over the archetypes, it only needs to iterate the
+ * list of ranges. */
 typedef struct ecs_table_range_t {
-    ecs_matched_table_t *table;
-    int32_t start_row;
-    int32_t count;
+    ecs_matched_table_t *table;     /**< Reference to the matched table */
+    int32_t start_row;              /**< Start of range  */
+    int32_t count;                  /**< Number of entities in range */
 } ecs_table_range_t;
 
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
@@ -253,7 +275,6 @@ typedef struct EcsSystem {
 
     ecs_entity_t entity;                  /* Entity id of system, used for ordering */
     ecs_query_t *query;                   /* System query */
-    ecs_vector_t *jobs;                   /* Jobs for this system */
     ecs_on_demand_out_t *on_demand;       /* Keep track of [out] column refs */
     ecs_system_status_action_t status_action; /* Status action */
     void *status_ctx;                     /* User data for status action */    
@@ -350,14 +371,6 @@ typedef struct ecs_entity_info_t {
     bool is_watched;            /* Is entity being watched */
 } ecs_entity_info_t;
 
-/** A type describing a unit of work to be executed by a worker thread. */ 
-typedef struct ecs_job_t {
-    ecs_entity_t system;          /* System handle */
-    EcsSystem *system_data;       /* System to run */
-    int32_t offset;               /* Start index in row chunk */
-    int32_t limit;                /* Total number of rows to process */
-} ecs_job_t;
-
 /** A type desribing a worker thread. When a system is invoked by a worker
  * thread, it receives a pointer to an ecs_thread_t instead of a pointer to an 
  * ecs_world_t (provided by the ecs_iter_t type). When this ecs_thread_t is passed down
@@ -368,7 +381,6 @@ typedef struct ecs_job_t {
 typedef struct ecs_thread_t {
     int32_t magic;                           /* Magic number to verify thread pointer */
     ecs_world_t *world;                       /* Reference to world */
-    ecs_job_t *jobs[ECS_MAX_JOBS_PER_WORKER]; /* Array with jobs */
     ecs_stage_t *stage;                       /* Stage for thread */
     ecs_os_thread_t thread;                   /* Thread handle */
     uint16_t index;                           /* Index of thread */

@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
      * will own the component. */
     printf("instance: %f (owned = %u)\n", 
         *ecs_get(world, instance, Mass), 
-        ecs_has_owned(world, instance, Mass, true));
+        ecs_owns(world, instance, Mass, true));
 
     /* Cleanup */
     return ecs_fini(world);

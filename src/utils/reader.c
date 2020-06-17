@@ -1,4 +1,5 @@
-#include "flecs_private.h"
+#include "../flecs_private.h"
+#include "flecs/utils/serializer.h"
 
 static
 void ecs_table_reader_next(

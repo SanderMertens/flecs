@@ -32,7 +32,7 @@ ecs_entity_t ecs_find_entity_in_prefabs(
                 continue;
             }
 
-            if (ecs_type_has_owned_entity(
+            if (ecs_type_owns_entity(
                 world, prefab_type, component, true)) 
             {
                 return prefab;
@@ -282,7 +282,7 @@ bool ecs_type_has_entity(
     return false;
 }
 
-bool ecs_type_has_owned_entity(
+bool ecs_type_owns_entity(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t entity,
@@ -327,7 +327,7 @@ bool ecs_type_has_type(
     return ecs_type_contains(world, type, has, true, false);
 }
 
-bool ecs_type_has_owned_type(
+bool ecs_type_owns_type(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has,
@@ -444,7 +444,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_entity_t xor)
 {
     ecs_assert(
-        ecs_type_has_owned_entity(world, type, ECS_XOR | xor, true),
+        ecs_type_owns_entity(world, type, ECS_XOR | xor, true),
         ECS_INVALID_PARAMETER, NULL);
 
     const EcsType *type_ptr = ecs_get(world, xor, EcsType);
@@ -456,7 +456,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     for (i = 0; i < count; i ++) {
-        if (ecs_type_has_owned_entity(world, xor_type, array[i], true)) {
+        if (ecs_type_owns_entity(world, xor_type, array[i], true)) {
             return array[i];
         }
     }

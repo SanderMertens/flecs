@@ -37,6 +37,16 @@ ecs_vector_t* _ecs_vector_new(
     _ecs_vector_new(ECS_VECTOR_U(size, alignment), elem_count)    
 
 FLECS_EXPORT
+ecs_vector_t* _ecs_vector_from_array(
+    size_t elem_size,
+    int16_t offset,
+    int32_t elem_count,
+    void *array);
+
+#define ecs_vector_from_array(T, elem_count, array)\
+    _ecs_vector_from_array(ECS_VECTOR_T(T), elem_count, array)
+
+FLECS_EXPORT
 void ecs_vector_free(
     ecs_vector_t *vector);
 
@@ -193,6 +203,16 @@ int32_t _ecs_vector_set_min_size(
 
 #define ecs_vector_set_min_size(vector, T, size) \
     _ecs_vector_set_min_size(vector, ECS_VECTOR_T(T), size)
+
+FLECS_EXPORT
+int32_t _ecs_vector_set_min_count(
+    ecs_vector_t **vector_inout,
+    size_t elem_size,
+    int16_t offset,
+    int32_t elem_count);
+
+#define ecs_vector_set_min_count(vector, T, size) \
+    _ecs_vector_set_min_count(vector, ECS_VECTOR_T(T), size)
 
 FLECS_EXPORT
 int32_t ecs_vector_count(

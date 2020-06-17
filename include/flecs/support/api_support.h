@@ -9,9 +9,6 @@
 extern "C" {
 #endif
 
-typedef struct ecs_column_t ecs_column_t;
-typedef struct ecs_data_t ecs_data_t;
-
 /** This reserves entity ids for components. Regular entity ids will start after
  * this constant. This affects performance of table traversal, as edges with ids 
  * lower than this constant are looked up in an array, whereas constants higher
@@ -19,9 +16,30 @@ typedef struct ecs_data_t ecs_data_t;
  * performance at the cost of (significantly) higher memory usage. */
 #define ECS_HI_COMPONENT_ID (256) /* Maximum number of components */
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Global type handles
+////////////////////////////////////////////////////////////////////////////////
+
+/** Type handles to builtin components */
+FLECS_EXPORT
+extern ecs_type_t 
+    ecs_type(EcsComponent),
+    ecs_type(EcsComponentLifecycle),
+    ecs_type(EcsType),
+    ecs_type(EcsName);
+
+/** This allows passing 0 as type to functions that accept types */
+#define FLECS__TNULL 0
+#define FLECS__T0 0
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Private datatypes
 ////////////////////////////////////////////////////////////////////////////////
+
+typedef struct ecs_column_t ecs_column_t;
+typedef struct ecs_data_t ecs_data_t;
 
 typedef enum ecs_blob_header_kind_t {
     EcsStreamHeader,
@@ -124,6 +142,7 @@ typedef struct ecs_writer_t {
     int error;
 } ecs_writer_t;
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Error API
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,13 +151,6 @@ typedef struct ecs_writer_t {
 #define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_TYPE_FLAG_MASK)
 #define ECS_TYPE_FLAG_START ECS_CHILDOF
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Deprecated names
-////////////////////////////////////////////////////////////////////////////////
-
-struct ecs_filter_t;
-typedef struct ecs_filter_t ecs_type_filter_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Functions used in declarative (macro) API
@@ -209,6 +221,7 @@ ecs_entity_t ecs_new_pipeline(
 FLECS_EXPORT
 char* ecs_module_path_from_c(
     const char *c_name);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
@@ -325,6 +338,53 @@ void _ecs_parser_error(
 #else
 #define ecs_assert(condition, error_code, param) _ecs_assert(condition, error_code, param, #condition, __FILE__, __LINE__); assert(condition)
 #endif
+
+/** Tracing */
+FLECS_EXPORT
+void _ecs_trace(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+#define ecs_trace(lvl, ...)\
+    _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
+
+FLECS_EXPORT
+void ecs_trace_push(void);
+void ecs_trace_pop(void);
+
+#if !defined(NDEBUG) && !(defined(ECS_VERBOSITY_0) || defined(ECS_VERBOSITY_1) || defined(ECS_VERBOSITY_3))
+#define ECS_VERBOSITY_2
+#endif
+
+#ifndef NDEBUG
+
+#if defined(ECS_VERBOSITY_3)
+#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
+#define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
+#define ecs_trace_3(...) ecs_trace(3, __VA_ARGS__);
+
+#elif defined(ECS_VERBOSITY_2)
+#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
+#define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
+#define ecs_trace_3(...)
+
+#elif defined(ECS_VERBOSITY_1)
+#define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
+#define ecs_trace_2(...)
+#define ecs_trace_3(...)
+#endif
+
+#else
+
+#define ecs_trace_1(...)
+#define ecs_trace_2(...)
+#define ecs_trace_3(...)
+
+#endif
+
 
 #define ECS_INVALID_HANDLE (1)
 #define ECS_INVALID_PARAMETER (2)

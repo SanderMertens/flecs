@@ -5,7 +5,7 @@ void Iter(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
     Position *p_parent = ecs_column(it, Position, 2);
 
-    test_assert(!p_parent || ecs_is_shared(it, 2));
+    test_assert(!p_parent || !ecs_is_owned(it, 2));
 
     probe_system(it);
 
@@ -165,7 +165,7 @@ void AddParent(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
     Position *p_parent = ecs_column(it, Position, 2);
 
-    test_assert(!p_parent || ecs_is_shared(it, 2));
+    test_assert(!p_parent || !ecs_is_owned(it, 2));
 
     probe_system(it);
 

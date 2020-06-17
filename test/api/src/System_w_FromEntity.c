@@ -15,7 +15,7 @@ void Iter(ecs_iter_t *it) {
         v = ecs_column(it, Velocity, 3);
     }
 
-    test_assert(!m_ptr || ecs_is_shared(it, 1));
+    test_assert(!m_ptr || !ecs_is_owned(it, 1));
 
     probe_system(it);
 

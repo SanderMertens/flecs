@@ -39,7 +39,7 @@ void Singleton_set_ptr() {
 void Iter_w_singleton(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
     ECS_COLUMN(it, Velocity, v, 2);
-    test_assert(!v || ecs_is_shared(it, 2));
+    test_assert(!v || !ecs_is_owned(it, 2));
 
     probe_system(it);
 

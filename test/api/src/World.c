@@ -15,8 +15,8 @@ void Move(ecs_iter_t *it) {
 
     int row;
     for (row = 0; row < it->count; row ++) {
-        Position *p = ecs_field(it, Position, 1, row);
-        Velocity *v = ecs_field(it, Velocity, 2, row);
+        Position *p = ecs_element(it, Position, 1, row);
+        Velocity *v = ecs_element(it, Velocity, 2, row);
         p->x += v->x * it->delta_time;
         p->y += v->y * it->delta_time;
     }

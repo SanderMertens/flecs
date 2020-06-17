@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     ECS_IMPORT(world, SimpleModule, 0);
 
     /* Create an entity with Position and Velocity */
-    ECS_ENTITY(world, MyEntity, Position, Velocity);
+    ECS_ENTITY(world, MyEntity, simple.module.Position, simple.module.Velocity);
 
     /* Initialize values for the entity */
     ecs_set(world, MyEntity, Position, {0, 0});

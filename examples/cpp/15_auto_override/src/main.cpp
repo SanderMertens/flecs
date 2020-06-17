@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     Velocity v = e.get<Velocity>();
 
     std::cout << "Position: {" << p.x << ", " << p.y << "} (owned = " 
-        << e.has_owned<Position>() << "} " << std::endl;
+        << e.owns<Position>() << "} " << std::endl;
     std::cout << "Velocity: {" << v.x << ", " << v.y << "} (owned = " 
-        << e.has_owned<Velocity>() << "} " << std::endl;
+        << e.owns<Velocity>() << "} " << std::endl;
 }

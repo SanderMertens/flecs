@@ -18,12 +18,12 @@ void* worker(void *arg) {
     ecs_os_mutex_unlock(world->sync_mutex);
 
     while (!world->quit_workers) {
-        ecs_entity_t old_scope = ecs_set_scope(world, 0);
+        ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)thread, 0);
         ecs_pipeline_progress(
             (ecs_world_t*)thread, 
             world->pipeline, 
             world->stats.delta_time);
-        ecs_set_scope(world, old_scope);
+        ecs_set_scope((ecs_world_t*)thread, old_scope);
     }
 
     ecs_os_mutex_lock(world->sync_mutex);
@@ -71,15 +71,13 @@ void wait_for_workers(
     int32_t thread_count = ecs_vector_count(world->workers);
     bool wait = true;
 
-    if (world->workers_running != thread_count) {
-        do {
-            ecs_os_mutex_lock(world->sync_mutex);
-            if (world->workers_running == thread_count) {
-                wait = false;
-            }
-            ecs_os_mutex_unlock(world->sync_mutex);
-        } while (wait);
-    }
+    do {
+        ecs_os_mutex_lock(world->sync_mutex);
+        if (world->workers_running == thread_count) {
+            wait = false;
+        }
+        ecs_os_mutex_unlock(world->sync_mutex);
+    } while (wait);
 }
 
 /* Synchronize worker threads */

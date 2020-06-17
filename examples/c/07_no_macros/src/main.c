@@ -13,8 +13,8 @@ typedef Vector2D Velocity;
 /* Implement a simple move system */
 void Move(ecs_iter_t *it) {
     /* Get the two columns from the system signature */
-    Position *p = _ecs_column(it, sizeof(Position), 1);
-    Velocity *v = _ecs_column(it, sizeof(Velocity), 2);
+    Position *p = ecs_column_w_size(it, sizeof(Position), 1);
+    Velocity *v = ecs_column_w_size(it, sizeof(Velocity), 2);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;

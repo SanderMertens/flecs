@@ -292,7 +292,6 @@ void ecs_col_system_free(
     EcsSystem *system_data)
 {
     ecs_query_free(system_data->query);
-    ecs_vector_free(system_data->jobs);
 }
 
 /* -- Public API -- */
@@ -582,7 +581,6 @@ void ecs_colsystem_dtor(
         }           
 
         ecs_os_free(cur->on_demand);
-        ecs_vector_free(cur->jobs);
     }
 }
 

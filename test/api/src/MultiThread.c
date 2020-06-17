@@ -3,7 +3,7 @@
 void Progress(ecs_iter_t *it) {
     int row;
     for (row = 0; row < it->count; row ++) {
-        Position *foo = ecs_field(it, Position, 1, row);
+        Position *foo = ecs_element(it, Position, 1, row);
         foo->x ++;
     }
 }

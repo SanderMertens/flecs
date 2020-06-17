@@ -1,4 +1,5 @@
-#include "flecs_private.h"
+#include "../flecs_private.h"
+#include "flecs/utils/snapshot.h"
 
 static
 void dup_table(
