@@ -56,6 +56,9 @@ typedef char bool;
 #else
 #define ECS_UNUSED
 #endif
+
+#define ECS_ALIGN(size, alignment) (((((size) - 1) / (alignment)) + 1) * (alignment))
+
 /* Simple utility for determining the max of two values */
 #define ECS_MAX(a, b) ((a > b) ? a : b)
 
