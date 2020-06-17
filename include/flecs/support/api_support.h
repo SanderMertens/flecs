@@ -329,7 +329,7 @@ void _ecs_parser_error(
 
 #define ecs_abort(error_code, param) _ecs_abort(error_code, param, __FILE__, __LINE__); abort()
 
-#ifndef __BAKE_LEGACY__
+#ifndef FLECS_LEGACY
 #define ecs_parser_error(name, expr, column, ...) _ecs_parser_error(name, expr, column, __VA_ARGS__); abort()
 #endif
 
@@ -348,13 +348,15 @@ void _ecs_trace(
     const char *fmt,
     ...);
 
-#define ecs_trace(lvl, ...)\
-    _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
 
 FLECS_EXPORT
 void ecs_trace_push(void);
 void ecs_trace_pop(void);
 
+#ifndef FLECS_LEGACY
+#define ecs_trace(lvl, ...)\
+    _ecs_trace(lvl, __FILE__, __LINE__, __VA_ARGS__)
+    
 #if !defined(NDEBUG) && !(defined(ECS_VERBOSITY_0) || defined(ECS_VERBOSITY_1) || defined(ECS_VERBOSITY_3))
 #define ECS_VERBOSITY_2
 #endif
@@ -383,6 +385,7 @@ void ecs_trace_pop(void);
 #define ecs_trace_2(...)
 #define ecs_trace_3(...)
 
+#endif
 #endif
 
 

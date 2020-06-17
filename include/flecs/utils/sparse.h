@@ -117,7 +117,7 @@ void ecs_sparse_memory(
     int32_t *allocd,
     int32_t *used);
 
-#ifndef __BAKE_LEGACY__
+#ifndef FLECS_LEGACY
 #define ecs_sparse_each(sparse, T, var, ...)\
     {\
         int var##_i, var##_count = ecs_sparse_count(sparse);\

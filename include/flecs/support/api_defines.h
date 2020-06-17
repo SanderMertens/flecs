@@ -102,7 +102,7 @@ typedef char bool;
 /** Translate C type to module struct. */
 #define ecs_iter_action(T) FLECS__F##T
 
-
+#ifndef FLECS_LEGACY
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macro's for ctor, dtor, move and copy
 ////////////////////////////////////////////////////////////////////////////////
@@ -178,7 +178,7 @@ typedef char bool;
             __VA_ARGS__\
         }\
     }
-
+#endif
 #ifdef __cplusplus
 }
 #endif
