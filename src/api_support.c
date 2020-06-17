@@ -4,7 +4,7 @@
 static
 int parse_type_action(
     ecs_world_t *world,
-    const char *system_id,
+    const char *name,
     const char *sig,
     int column,
     ecs_sig_from_kind_t from_kind,
@@ -23,14 +23,22 @@ int parse_type_action(
         ecs_entity_t entity = 0;
 
         if (from_kind != EcsFromSelf) {
-            ecs_parser_error(system_id, sig, column, 
+            if (!name) {
+                return -1;
+            }
+
+            ecs_parser_error(name, sig, column, 
                 "source modifiers not supported for type expressions");
             return -1;
         }
 
         entity = ecs_lookup_fullpath(world, entity_id);
         if (!entity) {
-            ecs_parser_error(system_id, sig, column, 
+            if (!name) {
+                return -1;
+            }
+
+            ecs_parser_error(name, sig, column, 
                 "unresolved identifier '%s'", entity_id);
             return -1;
         }
@@ -39,8 +47,12 @@ int parse_type_action(
             ecs_entity_t* e_ptr = ecs_vector_add(array, ecs_entity_t);
             *e_ptr = entity | flags;
         } else {
+            if (!name) {
+                return -1;
+            }
+
             /* Only AND and OR operators are supported for type expressions */
-            ecs_parser_error(system_id, sig, column, 
+            ecs_parser_error(name, sig, column, 
                 "invalid operator for type expression");
             return -1;
         }
@@ -110,12 +122,12 @@ EcsType type_from_vec(
 static
 EcsType type_from_expr(
     ecs_world_t *world,
-    const char *id,
+    const char *name,
     const char *expr)
 {
     if (expr) {
         ecs_vector_t *vec = ecs_vector_new(ecs_entity_t, 1);
-        ecs_parse_expr(world, expr, parse_type_action, id, &vec);
+        ecs_parse_expr(world, expr, parse_type_action, name, &vec);
         EcsType result = type_from_vec(world, vec);
         ecs_vector_free(vec);
         return result;
