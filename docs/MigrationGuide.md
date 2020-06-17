@@ -144,6 +144,8 @@ In this example the `Position` component will be added after the first add opera
 While there have been many changes to the API in v2, in general the operations remained the same, and moving to v2 should be mostly a copy+paste exercise. This section lists all the changes to the API:
 
 - `ecs_rows_t` is now `ecs_iter_t`
+- `ecs_has_owned` is now `ecs_owns`
+- `ecs_is_shared` is now `ecs_is_owned`
 - Function names with underscores (`_ecs_new`) have been replaced with normal names (`ecs_new_w_type`).
 - `ecs_adopt`, `ecs_orphan`, `ecs_inherit` and `ecs_disinherit` are gone. An application should now use the following:
 
@@ -158,7 +160,6 @@ Old                      | New
 - `EcsId` is now `EcsName`
 - `ecs_lookup` will no longer return entities that have a parent / are not in the root scope, enabling proper namespacing. Use `ecs_lookup_child` or `ecs_lookup_path` to find entities that are not in the root scope.
 - `EcsTypeComponent` is now `EcsType` and is a public component
-
 - `EcsOnAdd` and `EcsOnRemove` systems are now triggers and can only be registered for a single component:
 
 ```c
