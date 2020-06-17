@@ -51,6 +51,11 @@ typedef char bool;
 #define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
+#if defined(COMPILER_GCC) || defined(__clang__)
+#define ECS_UNUSED __attribute__((unused))
+#else
+#define ECS_UNUSED
+#endif
 /* Simple utility for determining the max of two values */
 #define ECS_MAX(a, b) ((a > b) ? a : b)
 
