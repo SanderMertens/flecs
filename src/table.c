@@ -42,8 +42,6 @@ ecs_data_t* init_data(
         }
     }
 
-    table->column_count = count;
-
     return result;
 }
 

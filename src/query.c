@@ -441,12 +441,12 @@ bool match_column(
         
     } else if (from_kind == EcsFromOwned) {
         failure_info->reason = EcsMatchFromOwned;
-        return ecs_type_has_owned_entity(world, type, component, true);
+        return ecs_type_owns_entity(world, type, component, true);
 
     } else if (from_kind == EcsFromShared) {
         failure_info->reason = EcsMatchFromSelf;
-        return !ecs_type_has_owned_entity(world, type, component, true) &&
-            ecs_type_has_owned_entity(world, type, component, false);
+        return !ecs_type_owns_entity(world, type, component, true) &&
+            ecs_type_owns_entity(world, type, component, false);
 
     } else if (from_kind == EcsFromParent) {
         failure_info->reason = EcsMatchFromContainer;
@@ -486,7 +486,7 @@ bool match_table(
     ecs_type_t type, table_type = table->type;
 
     /* Don't match disabled entities */
-    if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_has_owned_entity(
+    if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_owns_entity(
         world, table_type, EcsDisabled, true))
     {
         failure_info->reason = EcsMatchEntityIsDisabled;
@@ -494,7 +494,7 @@ bool match_table(
     }
 
     /* Don't match prefab entities */
-    if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_has_owned_entity(
+    if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_owns_entity(
         world, table_type, EcsPrefab, true))
     {
         failure_info->reason = EcsMatchEntityIsPrefab;
@@ -1049,7 +1049,7 @@ void process_signature(
                 /* If the signature explicitly indicates interest in EcsDisabled,
                  * signal that disabled entities should be matched. By default,
                  * disabled entities are not matched. */
-                if (ecs_type_has_owned_entity(
+                if (ecs_type_owns_entity(
                     world, column->is.type, EcsDisabled, true))
                 {
                     query->flags |= EcsQueryMatchDisabled;
@@ -1066,7 +1066,7 @@ void process_signature(
                 /* If the signature explicitly indicates interest in EcsPrefab,
                 * signal that disabled entities should be matched. By default,
                 * prefab entities are not matched. */
-                if (ecs_type_has_owned_entity(
+                if (ecs_type_owns_entity(
                     world, column->is.type, EcsPrefab, true))
                 {
                     query->flags |= EcsQueryMatchPrefab;

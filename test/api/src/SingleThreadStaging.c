@@ -2484,7 +2484,7 @@ void OverrideAfterRemove(ecs_iter_t *it) {
         test_assert(ecs_has(it->world, it->entities[i], Position));
 
         /* The entity does not own Position */
-        test_assert(!ecs_has_owned(it->world, it->entities[i], Position, true));
+        test_assert(!ecs_owns(it->world, it->entities[i], Position, true));
 
         ecs_add(it->world, it->entities[i], Position);
         test_assert(ecs_has(it->world, it->entities[i], Position));

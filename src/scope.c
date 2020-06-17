@@ -1,5 +1,5 @@
 #include "flecs_private.h"
-#include "flecs/util/strbuf.h"
+#include "flecs/utils/strbuf.h"
 
 static
 bool path_append(

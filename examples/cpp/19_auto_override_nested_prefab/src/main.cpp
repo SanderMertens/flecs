@@ -53,11 +53,11 @@ int main(int argc, char *argv[]) {
      * e and child. */
     Position p = e.get<Position>();
     std::cout << "Position of e = {" << p.x << ", " << p.y << "} (owned = "
-        << e.has_owned<Position>() << ")"
+        << e.owns<Position>() << ")"
         << std::endl;
 
     p = child.get<Position>();
     std::cout << "Position of child = {" << p.x << ", " << p.y << "} (owned = "
-        << child.has_owned<Position>() << ")" 
+        << child.owns<Position>() << ")" 
         << std::endl;
 }

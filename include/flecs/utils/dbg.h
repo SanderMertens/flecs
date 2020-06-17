@@ -1,8 +1,6 @@
 #ifndef FLECS_DBG_H
 #define FLECS_DBG_H
 
-#include <flecs.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

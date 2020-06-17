@@ -200,7 +200,7 @@
                 "1_of_empty",
                 "has_in_progress",
                 "has_of_zero",
-                "has_owned",
+                "owns",
                 "has_entity",
                 "has_entity_0",
                 "has_entity_0_component",

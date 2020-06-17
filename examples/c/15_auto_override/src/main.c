@@ -40,8 +40,8 @@ int main(int argc, char *argv[]) {
     const Velocity *v = ecs_get(world, e, Velocity);
 
     /* Print values of entity */
-    printf("Position: {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, e, Position, true));
-    printf("Velocity: {%f, %f} (owned = %d)\n", v->x, v->y, ecs_has_owned(world, e, Velocity, true));
+    printf("Position: {%f, %f} (owned = %d)\n", p->x, p->y, ecs_owns(world, e, Position, true));
+    printf("Velocity: {%f, %f} (owned = %d)\n", v->x, v->y, ecs_owns(world, e, Velocity, true));
 
     /* Cleanup */
     return ecs_fini(world);

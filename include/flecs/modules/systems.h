@@ -70,6 +70,55 @@ typedef struct EcsContext {
 //// Systems API
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Declare a systen.
+ * This macro declares a system with the specified function, kind and signature. 
+ * Systems are matched with entities that match the system signature. The system
+ * signature is specified as a comma-separated list of column expressions, where
+ * a column expression can be any of the following: 
+ *
+ * - A simple component identifier ('Position')
+ * - An OR expression ('Position | Velocity')
+ * - An optional expression ('?Position')
+ * - A NOT expression ('!Position')
+ * - An OWNED expression ('OWNED:Position')
+ * - A SHARED expression ('SHARED:Position')
+ * - A PARENT expression ('PARENT:Position')
+ * - A CASCADE expression ('CASCADE:Position')
+ * - An entity expression ('MyEntity:Position')
+ * - An empty expression (':Position')
+ * 
+ * The systen kind specifies the phase in which the system is ran.
+ *
+ * Examples:
+ * ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity, !AngularVelocity);
+ * ECS_SYSTEM(world, Transform, EcsPostUpdate, PARENT:Transform, Transform);
+ *
+ * In these examples, 'Move' and 'Transform' must be valid identifiers to a C
+ * function of the following signature:
+ *
+ * void Move(ecs_iter_t *it) { ... }
+ *
+ * Inside this function the system can access the data from the signature with
+ * the ECS_COLUMN macro:
+ *
+ * ECS_COLUMN(it, Position, p, 1);
+ * ECS_COLUMN(it, Velocity, v, 2);
+ *
+ * For more details on system signatures and phases see the Flecs manual.
+ */
+
+#define ECS_SYSTEM(world, name, kind, ...) \
+    ecs_iter_action_t ecs_iter_action(name) = name;\
+    ecs_entity_t name = ecs_new_system(world, 0, #name, kind, #__VA_ARGS__, ecs_iter_action(name));\
+    (void)ecs_iter_action(name);\
+    (void)name;
+
+#define ECS_TRIGGER(world, name, kind, component) \
+    ecs_entity_t __F##name = ecs_new_trigger(world, 0, #name, kind, #component, name);\
+    ecs_entity_t name = __F##name;\
+    (void)__F##name;\
+    (void)name;
+
 /** Run a specific system manually.
  * This operation runs a single system manually. It is an efficient way to
  * invoke logic on a set of entities, as manual systems are only matched to

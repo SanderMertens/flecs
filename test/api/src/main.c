@@ -179,7 +179,7 @@ void Has_2_of_1(void);
 void Has_1_of_empty(void);
 void Has_has_in_progress(void);
 void Has_has_of_zero(void);
-void Has_has_owned(void);
+void Has_owns(void);
 void Has_has_entity(void);
 void Has_has_entity_0(void);
 void Has_has_entity_0_component(void);
@@ -1640,8 +1640,8 @@ static bake_test_suite suites[] = {
                 .function = Has_has_of_zero
             },
             {
-                .id = "has_owned",
-                .function = Has_has_owned
+                .id = "owns",
+                .function = Has_owns
             },
             {
                 .id = "has_entity",

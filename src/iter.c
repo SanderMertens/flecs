@@ -99,7 +99,7 @@ void* get_column(
 
 /* --- Public API --- */
 
-void* _ecs_column(
+void* ecs_column_w_size(
     const ecs_iter_t *it,
     size_t size,
     int32_t column)
@@ -108,15 +108,7 @@ void* _ecs_column(
     return get_column(it, size, column, 0);
 }
 
-const void* _ecs_const_column(
-    const ecs_iter_t *it,
-    size_t size,
-    int32_t column)
-{
-    return get_column(it, size, column, 0);
-}
-
-void* _ecs_field(
+void* ecs_element_w_size(
     const ecs_iter_t *it, 
     size_t size,
     int32_t column,
@@ -125,24 +117,24 @@ void* _ecs_field(
     return get_column(it, size, column, row);
 }
 
-bool ecs_is_shared(
+bool ecs_is_owned(
     const ecs_iter_t *it,
     int32_t column)
 {
     int32_t table_column;
 
     if (!get_table_column(it, column, &table_column)) {
-        return false;
+        return true;
     }
 
-    return table_column < 0;
+    return table_column >= 0;
 }
 
 bool ecs_is_readonly(
     const ecs_iter_t *it,
     int32_t column)
 {
-    if (ecs_is_shared(it, column)) {
+    if (!ecs_is_owned(it, column)) {
         return true;
     }
 
@@ -199,7 +191,7 @@ ecs_entity_t ecs_column_entity(
     return it->components[index - 1];
 }
 
-ecs_type_t ecs_table_type(
+ecs_type_t ecs_iter_type(
     const ecs_iter_t *it)
 {
     ecs_table_t *table = it->table;

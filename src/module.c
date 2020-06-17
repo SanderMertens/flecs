@@ -1,5 +1,5 @@
 #include "flecs_private.h"
-#include "flecs/util/strbuf.h"
+#include "flecs/utils/strbuf.h"
 
 /* Mock types so we don't have to depend on them. 
  * TODO: Need a better workaround */

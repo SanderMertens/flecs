@@ -237,9 +237,11 @@ ecs_world_t *ecs_mini(void) {
 ecs_world_t *ecs_init(void) {
     ecs_world_t *world = ecs_mini();
 
+#ifndef FLECS_NO_MODULES
     ECS_IMPORT(world, FlecsSystems, 0);
     ECS_IMPORT(world, FlecsPipeline, 0);
     ECS_IMPORT(world, FlecsTimers, 0);
+#endif
 
     return world;
 }

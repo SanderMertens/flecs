@@ -59,7 +59,6 @@ void Add_random(ecs_iter_t *it) {
         add_random(it->world, 0, ctx->component);
         add_random(it->world, it->entities[i], ctx->component_2);
         add_random(it->world, it->entities[i], ctx->component_3);
-        ctx->entity_count ++;
     }
 }
 
@@ -91,8 +90,6 @@ void Set_random(ecs_iter_t *it) {
         Rotation rot = {50};
         set_random(it->world, it->entities[i], ctx->component_3, &rot, &rot,
             sizeof(Rotation));
-
-        ctx->entity_count ++;
     }
 }
 

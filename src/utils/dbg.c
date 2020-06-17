@@ -1,4 +1,5 @@
-#include "flecs_private.h"
+#include "../flecs_private.h"
+#include "flecs/utils/dbg.h"
 
 ecs_table_t *ecs_dbg_find_table(
     ecs_world_t *world,

@@ -49,10 +49,10 @@ int main(int argc, char *argv[]) {
      * automatically override the components, the components are owned by both
      * e and child. */
     const Position *p = ecs_get(world, e, Position);
-    printf("Position of e = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, e, Position, true));
+    printf("Position of e = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_owns(world, e, Position, true));
 
     p = ecs_get(world, child, Position);
-    printf("Position of Child = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, child, Position, true));
+    printf("Position of Child = {%f, %f} (owned = %d)\n", p->x, p->y, ecs_owns(world, child, Position, true));
 
     /* Cleanup */
     return ecs_fini(world);

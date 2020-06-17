@@ -40,6 +40,16 @@ void* bake_thread_join(
 }
 
 static
+int32_t bake_ainc(int32_t *value) {
+    return ut_ainc(value);
+}
+
+static
+int32_t bake_adec(int32_t *value) {
+    return ut_adec(value);
+}
+
+static
 ecs_os_mutex_t bake_mutex_new(void) {
     struct ut_mutex_s *m = ecs_os_api.malloc(sizeof(struct ut_mutex_s));
     ut_mutex_new(m);
@@ -298,6 +308,9 @@ void ecs_os_set_api_defaults(void)
 #ifdef __BAKE__
     ecs_os_api.thread_new = bake_thread_new;
     ecs_os_api.thread_join = bake_thread_join;
+
+    ecs_os_api.ainc = bake_ainc;
+    ecs_os_api.adec = bake_adec;
 
     ecs_os_api.mutex_new = bake_mutex_new;
     ecs_os_api.mutex_free = bake_mutex_free;

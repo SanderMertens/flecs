@@ -477,7 +477,7 @@ void TableColumns(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
     ECS_COLUMN(it, Velocity, v, 2);
 
-    ecs_type_t type = ecs_table_type(it);
+    ecs_type_t type = ecs_iter_type(it);
     test_int(2, ecs_vector_count(type));
 
     ecs_entity_t *components = ecs_vector_first(type, ecs_entity_t);

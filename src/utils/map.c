@@ -1,4 +1,4 @@
-#include "types.h"
+#include "../types.h"
 
 #define LOAD_FACTOR (1.5)
 #define KEY_SIZE (sizeof(ecs_map_key_t))
