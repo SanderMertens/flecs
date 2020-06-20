@@ -69,6 +69,9 @@ void Add_add_entity(void);
 void Add_remove_entity(void);
 void Add_add_0_entity(void);
 void Add_remove_0_entity(void);
+void Add_add_w_xor(void);
+void Add_add_same_w_xor(void);
+void Add_add_after_remove_xor(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -1086,7 +1089,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Add",
-        .testcase_count = 32,
+        .testcase_count = 35,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -1215,6 +1218,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "remove_0_entity",
                 .function = Add_remove_0_entity
+            },
+            {
+                .id = "add_w_xor",
+                .function = Add_add_w_xor
+            },
+            {
+                .id = "add_same_w_xor",
+                .function = Add_add_same_w_xor
+            },
+            {
+                .id = "add_after_remove_xor",
+                .function = Add_add_after_remove_xor
             }
         }
     },

@@ -77,6 +77,8 @@ ecs_entity_t ecs_import(
     void *handles_out,
     size_t handles_size)
 {
+    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
     const char *old_name_prefix = world->name_prefix;
 

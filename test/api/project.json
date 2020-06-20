@@ -77,7 +77,10 @@
                 "add_entity",
                 "remove_entity",
                 "add_0_entity",
-                "remove_0_entity"
+                "remove_0_entity",
+                "add_w_xor",
+                "add_same_w_xor",
+                "add_after_remove_xor"
             ]
         }, {
             "id": "Remove",

@@ -584,3 +584,71 @@ void Add_remove_0_entity() {
     
     ecs_fini(world);
 }
+
+void Add_add_w_xor() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_add_entity(world, e, ECS_XOR | Type);
+    test_assert( ecs_has_entity(world, e, ECS_XOR | Type));
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_add(world, e, Velocity);
+    test_assert( !ecs_has(world, e, Position));
+    test_assert( ecs_has(world, e, Velocity));
+    
+    ecs_fini(world);
+}
+
+void Add_add_same_w_xor() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_add_entity(world, e, ECS_XOR | Type);
+    test_assert( ecs_has_entity(world, e, ECS_XOR | Type));
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_add(world, e, Position);
+    test_assert( ecs_has(world, e, Position));
+    
+    ecs_fini(world);
+}
+
+void Add_add_after_remove_xor() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TYPE(world, Type, Position, Velocity);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_add_entity(world, e, ECS_XOR | Type);
+    test_assert( ecs_has_entity(world, e, ECS_XOR | Type));
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_remove_entity(world, e, ECS_XOR | Type);
+    test_assert( !ecs_has_entity(world, e, ECS_XOR | Type));
+
+    ecs_add(world, e, Velocity);
+    test_assert( ecs_has(world, e, Position));
+    test_assert( ecs_has(world, e, Velocity));
+    
+    ecs_fini(world);
+}
