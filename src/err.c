@@ -99,34 +99,34 @@ char* ecs_colorize(
 
         if (!overrideColor) {
             if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
                 isNum = FALSE;
             }
             if (isStr && (isStr == ch) && prev != '\\') {
                 isStr = '\0';
-            } else if (((ch == '\'') || (ch == '"')) && !isStr && 
-                !isalpha(prev) && (prev != '\\')) 
+            } else if (((ch == '\'') || (ch == '"')) && !isStr &&
+                !isalpha(prev) && (prev != '\\'))
             {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_CYAN);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
                 isStr = ch;
             }
 
-            if ((isdigit(ch) || (ch == '%' && isdigit(prev)) || 
-                (ch == '-' && isdigit(ptr[1]))) && !isNum && !isStr && !isVar && 
-                 !isalpha(prev) && !isdigit(prev) && (prev != '_') && 
-                 (prev != '.')) 
+            if ((isdigit(ch) || (ch == '%' && isdigit(prev)) ||
+                (ch == '-' && isdigit(ptr[1]))) && !isNum && !isStr && !isVar &&
+                 !isalpha(prev) && !isdigit(prev) && (prev != '_') &&
+                 (prev != '.'))
             {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_GREEN);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
                 isNum = TRUE;
             }
 
             if (isVar && !isalpha(ch) && !isdigit(ch) && ch != '_') {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
                 isVar = FALSE;
             }
 
             if (!isStr && !isVar && ch == '$' && isalpha(ptr[1])) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_CYAN);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
                 isVar = TRUE;
             }
         }
@@ -139,28 +139,28 @@ char* ecs_colorize(
             if (!strncmp(&ptr[2], "]", strlen("]"))) {
                 autoColor = false;
             } else if (!strncmp(&ptr[2], "green]", strlen("green]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_GREEN);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
             } else if (!strncmp(&ptr[2], "red]", strlen("red]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_RED);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_RED);
             } else if (!strncmp(&ptr[2], "blue]", strlen("red]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_BLUE);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BLUE);
             } else if (!strncmp(&ptr[2], "magenta]", strlen("magenta]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_MAGENTA);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_MAGENTA);
             } else if (!strncmp(&ptr[2], "cyan]", strlen("cyan]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_CYAN);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
             } else if (!strncmp(&ptr[2], "yellow]", strlen("yellow]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_YELLOW);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_YELLOW);
             } else if (!strncmp(&ptr[2], "grey]", strlen("grey]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_GREY);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREY);
             } else if (!strncmp(&ptr[2], "white]", strlen("white]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             } else if (!strncmp(&ptr[2], "bold]", strlen("bold]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_BOLD);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BOLD);
             } else if (!strncmp(&ptr[2], "normal]", strlen("normal]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             } else if (!strncmp(&ptr[2], "reset]", strlen("reset]"))) {
                 overrideColor = false;
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             } else {
                 isColor = false;
                 overrideColor = false;
@@ -178,7 +178,7 @@ char* ecs_colorize(
 
         if (ch == '\n') {
             if (isNum || isStr || isVar || overrideColor) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
                 overrideColor = false;
                 isNum = false;
                 isStr = false;
@@ -192,7 +192,7 @@ char* ecs_colorize(
 
         if (!overrideColor) {
             if (((ch == '\'') || (ch == '"')) && !isStr) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             }
         }
 
@@ -200,7 +200,7 @@ char* ecs_colorize(
     }
 
     if (isNum || isStr || isVar || overrideColor) {
-        if (use_colors) ecs_strbuf_appendstr(&buff, UT_NORMAL);
+        if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
     }
 
     return ecs_strbuf_get(&buff);
