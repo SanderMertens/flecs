@@ -93,6 +93,8 @@ void init_edges(
 
     table->lo_edges = ecs_os_calloc(sizeof(ecs_edge_t), ECS_HI_COMPONENT_ID);
     table->hi_edges = ecs_map_new(ecs_edge_t, 0);
+
+    table->lo_edges[0].add = table;
     
     /* Make add edges to own components point to self */
     int32_t i;
@@ -629,6 +631,9 @@ bool ecs_entity_array_is_ordered(
     int32_t i, count = entities->count;
 
     for (i = 0; i < count; i ++) {
+        if (!array[i] && !prev) {
+            continue;
+        }
         if (array[i] <= prev) {
             return false;
         }

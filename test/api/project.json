@@ -75,7 +75,9 @@
                 "add_remove_same",
                 "add_2_remove",
                 "add_entity",
-                "remove_entity"
+                "remove_entity",
+                "add_0_entity",
+                "remove_0_entity"
             ]
         }, {
             "id": "Remove",
@@ -508,7 +510,9 @@
                 "remove_set_component_in_on_set",
                 "match_table_created_w_add_in_on_set",
                 "set_optional",
-                "set_from_nothing"
+                "set_from_nothing",
+                "add_null_type_in_on_set",
+                "add_0_entity_in_on_set"
             ]
         }, {
             "id": "SystemPeriodic",

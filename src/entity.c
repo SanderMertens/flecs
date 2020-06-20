@@ -2104,6 +2104,10 @@ bool ecs_defer_begin(
     size_t size)
 {
     if (stage->defer && op_kind != EcsOpNone) {
+        if (!components->count) {
+            return true;
+        }
+
         ecs_op_t *op = ecs_vector_add(&stage->defer_queue, ecs_op_t);
         op->kind = op_kind;
         op->entity = entity;

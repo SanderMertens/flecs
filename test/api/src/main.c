@@ -67,6 +67,8 @@ void Add_add_remove_same(void);
 void Add_add_2_remove(void);
 void Add_add_entity(void);
 void Add_remove_entity(void);
+void Add_add_0_entity(void);
+void Add_remove_0_entity(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -456,6 +458,8 @@ void SystemOnSet_remove_set_component_in_on_set(void);
 void SystemOnSet_match_table_created_w_add_in_on_set(void);
 void SystemOnSet_set_optional(void);
 void SystemOnSet_set_from_nothing(void);
+void SystemOnSet_add_null_type_in_on_set(void);
+void SystemOnSet_add_0_entity_in_on_set(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -1082,7 +1086,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Add",
-        .testcase_count = 30,
+        .testcase_count = 32,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -1203,6 +1207,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "remove_entity",
                 .function = Add_remove_entity
+            },
+            {
+                .id = "add_0_entity",
+                .function = Add_add_0_entity
+            },
+            {
+                .id = "remove_0_entity",
+                .function = Add_remove_0_entity
             }
         }
     },
@@ -2622,7 +2634,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 23,
+        .testcase_count = 25,
         .testcases = (bake_test_case[]){
             {
                 .id = "set_1_of_1",
@@ -2715,6 +2727,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_from_nothing",
                 .function = SystemOnSet_set_from_nothing
+            },
+            {
+                .id = "add_null_type_in_on_set",
+                .function = SystemOnSet_add_null_type_in_on_set
+            },
+            {
+                .id = "add_0_entity_in_on_set",
+                .function = SystemOnSet_add_0_entity_in_on_set
             }
         }
     },
