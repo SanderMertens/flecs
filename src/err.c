@@ -86,7 +86,7 @@ char* ecs_colorize(
 {
     ecs_strbuf_t buff = ECS_STRBUF_INIT;
     char *ptr, ch, prev = '\0';
-    bool isNum = FALSE;
+    bool isNum = false;
     char isStr = '\0';
     bool isVar = false;
     bool overrideColor = false;
@@ -100,7 +100,7 @@ char* ecs_colorize(
         if (!overrideColor) {
             if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-                isNum = FALSE;
+                isNum = false;
             }
             if (isStr && (isStr == ch) && prev != '\\') {
                 isStr = '\0';
@@ -117,17 +117,17 @@ char* ecs_colorize(
                  (prev != '.'))
             {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
-                isNum = TRUE;
+                isNum = true;
             }
 
             if (isVar && !isalpha(ch) && !isdigit(ch) && ch != '_') {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-                isVar = FALSE;
+                isVar = false;
             }
 
             if (!isStr && !isVar && ch == '$' && isalpha(ptr[1])) {
                 if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
-                isVar = TRUE;
+                isVar = true;
             }
         }
 
