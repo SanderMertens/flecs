@@ -192,7 +192,9 @@ void ecs_bootstrap(
 
     /* Initialize scopes */
     ecs_set(world, EcsFlecs, EcsName, {"flecs"});
+    ecs_add_entity(world, EcsFlecs, EcsModule);
     ecs_set(world, EcsFlecsCore, EcsName, {"core"});
+    ecs_add_entity(world, EcsFlecsCore, EcsModule);
     ecs_add_entity(world, EcsFlecsCore, ECS_CHILDOF | EcsFlecs);
 
     /* Initialize EcsWorld */
@@ -205,6 +207,7 @@ void ecs_bootstrap(
     ecs_set(world, EcsSingleton, EcsName, {"$"});
     ecs_assert(ecs_get_name(world, EcsSingleton) != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_lookup(world, "$") == EcsSingleton, ECS_INTERNAL_ERROR, NULL);
+    ecs_add_entity(world, EcsSingleton, ECS_CHILDOF | EcsFlecsCore);
 
     ecs_trace_1("initialize builtins");
     ecs_trace_push();

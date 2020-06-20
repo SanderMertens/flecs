@@ -100,7 +100,10 @@ typedef struct ecs_world_info_t {
 
 /** Action callback for systems and triggers */
 typedef void (*ecs_iter_action_t)(
-    ecs_iter_t *data);
+    ecs_iter_t *it);
+
+typedef bool (*ecs_iter_next_action_t)(
+    ecs_iter_t *it);
 
 /** Compare callback used for sorting */
 typedef int (*ecs_compare_action_t)(
@@ -1462,18 +1465,18 @@ bool ecs_query_next_worker(
  *
  * @param world The world.
  * @param query The query.
- * @param sort_component The component used to sort.
+ * @param component The component used to sort.
  * @param compare The compare function used to sort the components.
  */
 FLECS_EXPORT
-void ecs_query_sort(
+void ecs_query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
-    ecs_entity_t sort_component,
+    ecs_entity_t component,
     ecs_compare_action_t compare);
 
-/** Sort the matched types (tables) of a query.
- * Similar yo ecs_query_sort, but instead of sorting individual entities, this
+/** Group and sort matched tables.
+ * Similar yo ecs_query_order_by, but instead of sorting individual entities, this
  * operation only sorts matched tables. This can be useful of a query needs to
  * enforce a certain iteration order upon the tables it is iterating, for 
  * example by giving a certain component or tag a higher priority.
@@ -1488,14 +1491,14 @@ void ecs_query_sort(
  *
  * @param world The world.
  * @param query The query.
- * @param monitor_component A component passed to the rank function.
+ * @param component The component used to determine the group rank.
  * @param rank_action The rank action.
  */
 FLECS_EXPORT
-void ecs_query_sort_types(
+void ecs_query_group_by(
     ecs_world_t *world,
     ecs_query_t *query,
-    ecs_entity_t monitor_component,
+    ecs_entity_t component,
     ecs_rank_type_action_t rank_action);
 
 
@@ -1750,6 +1753,19 @@ FLECS_EXPORT
 ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent);
+
+/** Return a filtered scope iterator.
+ * Same as ecs_scope_iter, but results will be filtered.
+ *
+ * @param world The world.
+ * @param parent The parent entity for which to iterate the children.
+ * @return The iterator.
+ */
+FLECS_EXPORT
+ecs_iter_t ecs_scope_iter_w_filter(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_filter_t *filter);
 
 /** Progress the scope iterator.
  * This operation progresses the scope iterator to the next table. The iterator

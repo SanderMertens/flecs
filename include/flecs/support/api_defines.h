@@ -19,8 +19,11 @@ extern "C" {
 #include <stdlib.h>
 #include <assert.h>
 
-/* Non-standard but required. If not provided by platform, add manually. */
+/* Non-standard but required. If not provided by platform, add manually. If
+ * flecs is built by bake, stdint.h from bake is included. */
+#ifndef __BAKE__
 #include <stdint.h>
+#endif
 
 /* Contains macro's for importing / exporting symbols */
 #include "flecs/bake_config.h"

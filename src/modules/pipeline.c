@@ -394,8 +394,8 @@ void EcsOnAddPipeline(
 
         /* Create the query. Sort the query by system id and phase */
         ecs_query_t *query = ecs_query_new_w_sig(world, 0, &sig);
-        ecs_query_sort(world, query, 0, compare_entity);
-        ecs_query_sort_types(world, query, pipeline, rank_phase);
+        ecs_query_order_by(world, query, 0, compare_entity);
+        ecs_query_group_by(world, query, pipeline, rank_phase);
 
         /* Build signature for pipeline build query. The build query includes
          * systems that are inactive, as an inactive system may become active as
@@ -407,8 +407,8 @@ void EcsOnAddPipeline(
 
         /* Use the same sorting functions for the build query */
         ecs_query_t *build_query = ecs_query_new_w_sig(world, 0, &sig);
-        ecs_query_sort(world, build_query, 0, compare_entity);
-        ecs_query_sort_types(world, build_query, pipeline, rank_phase);       
+        ecs_query_order_by(world, build_query, 0, compare_entity);
+        ecs_query_group_by(world, build_query, pipeline, rank_phase);       
 
         EcsPipelineQuery *pq = ecs_get_mut(
             world, pipeline, EcsPipelineQuery, NULL);

@@ -204,6 +204,14 @@ void* ecs_table_column(
 {
     ecs_world_t *world = it->world;
     ecs_table_t *table = it->table;
+
+    ecs_assert(column_index < ecs_vector_count(table->type), 
+        ECS_INVALID_PARAMETER, NULL);
+
+    if (table->column_count < column_index) {
+        return NULL;
+    }
+
     ecs_data_t *data = ecs_table_get_data(world, table);
     ecs_column_t *column = &data->columns[column_index];
     return ecs_vector_first_t(column->data, column->size, column->alignment);

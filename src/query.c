@@ -1546,7 +1546,7 @@ bool ecs_query_next_worker(
     return true;
 }
 
-void ecs_query_sort(
+void ecs_query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t sort_component,
@@ -1567,7 +1567,7 @@ void ecs_query_sort(
     }
 }
 
-void ecs_query_sort_types(
+void ecs_query_group_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t sort_component,

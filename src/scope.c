@@ -265,6 +265,10 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_entity_t cur;
     bool core_searched = false;
 
+    if (!sep) {
+        sep = ".";
+    }
+
     parent = get_parent_from_path(world, parent, &path, prefix);
 
 retry:
@@ -341,11 +345,30 @@ ecs_iter_t ecs_scope_iter(
     };
 }
 
+ecs_iter_t ecs_scope_iter_w_filter(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_filter_t *filter)
+{
+    ecs_scope_iter_t iter = {
+        .filter = *filter,
+        .tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, parent),
+        .index = 0
+    };
+
+    return (ecs_iter_t) {
+        .world = world,
+        .iter.parent = iter
+    };
+}
+
 bool ecs_scope_next(
     ecs_iter_t *it)
 {
     ecs_scope_iter_t *iter = &it->iter.parent;
     ecs_vector_t *tables = iter->tables;
+    ecs_filter_t filter = iter->filter;
+
     int32_t count = ecs_vector_count(tables);
     int32_t i;
 
@@ -361,6 +384,12 @@ bool ecs_scope_next(
         it->count = ecs_table_count(table);
         if (!it->count) {
             continue;
+        }
+
+        if (filter.include || filter.exclude) {
+            if (!ecs_table_match_filter(it->world, table, &filter)) {
+                continue;
+            }
         }
 
         it->table = table;

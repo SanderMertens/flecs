@@ -195,7 +195,6 @@ ecs_entity_t ecs_new_entity(
     const char *expr)
 {
     EcsType type = type_from_expr(world, name, expr);
-
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
         result = e ? e : ecs_new(world, 0);

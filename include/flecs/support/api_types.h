@@ -54,6 +54,7 @@ typedef struct ecs_entities_t {
 
 /** Scope-iterator specific data */
 typedef struct ecs_scope_iter_t {
+    ecs_filter_t filter;
     ecs_vector_t *tables;
     int32_t index;
 } ecs_scope_iter_t;
