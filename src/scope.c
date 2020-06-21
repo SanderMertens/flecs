@@ -458,7 +458,9 @@ ecs_entity_t ecs_new_from_path_w_sep(
 
             ecs_os_free(name);
 
-            ecs_add_entity(world, e, ECS_CHILDOF | cur);
+            if (cur) {
+                ecs_add_entity(world, e, ECS_CHILDOF | cur);
+            }
         }
 
         cur = e;

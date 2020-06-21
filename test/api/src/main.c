@@ -135,6 +135,9 @@ void Hierarchies_scope_set_w_new(void);
 void Hierarchies_scope_set_w_new_staged(void);
 void Hierarchies_scope_set_w_lookup(void);
 void Hierarchies_scope_component(void);
+void Hierarchies_new_from_path_depth_0(void);
+void Hierarchies_new_from_path_depth_1(void);
+void Hierarchies_new_from_path_depth_2(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -1301,7 +1304,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 44,
+        .testcase_count = 47,
         .testcases = (bake_test_case[]){
             {
                 .id = "get_parent",
@@ -1478,6 +1481,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "scope_component",
                 .function = Hierarchies_scope_component
+            },
+            {
+                .id = "new_from_path_depth_0",
+                .function = Hierarchies_new_from_path_depth_0
+            },
+            {
+                .id = "new_from_path_depth_1",
+                .function = Hierarchies_new_from_path_depth_1
+            },
+            {
+                .id = "new_from_path_depth_2",
+                .function = Hierarchies_new_from_path_depth_2
             }
         }
     },

@@ -147,7 +147,10 @@
                 "scope_set_w_new",
                 "scope_set_w_new_staged",
                 "scope_set_w_lookup",
-                "scope_component"
+                "scope_component",
+                "new_from_path_depth_0",
+                "new_from_path_depth_1",
+                "new_from_path_depth_2"
             ]
         }, {
             "id": "Add_bulk",

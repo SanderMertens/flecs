@@ -667,3 +667,66 @@ void Hierarchies_fullpath_for_core() {
     ecs_fini(world);
 }
 
+
+void Hierarchies_new_from_path_depth_0() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+
+    ecs_entity_t e = ecs_new_from_path(world, 0, "foo");
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "foo");
+
+    ecs_type_t type = ecs_get_type(world, e);
+    test_assert(type != NULL);
+    test_int(ecs_vector_count(type), 1);
+
+    char *path = ecs_get_fullpath(world, e);
+    test_str(path, "foo");
+    free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_new_from_path_depth_1() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+
+    ecs_entity_t e = ecs_new_from_path(world, 0, "foo.bar");
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "bar");
+
+    ecs_type_t type = ecs_get_type(world, e);
+    test_assert(type != NULL);
+    test_int(ecs_vector_count(type), 2);
+
+    char *path = ecs_get_fullpath(world, e);
+    test_str(path, "foo.bar");
+    free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_new_from_path_depth_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Child, CHILDOF | Parent);
+
+    ecs_entity_t e = ecs_new_from_path(world, 0, "foo.bar.hello");
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "hello");
+
+    ecs_type_t type = ecs_get_type(world, e);
+    test_assert(type != NULL);
+    test_int(ecs_vector_count(type), 2);
+
+    char *path = ecs_get_fullpath(world, e);
+    test_str(path, "foo.bar.hello");
+    free(path);
+
+    ecs_fini(world);
+}
