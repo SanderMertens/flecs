@@ -330,6 +330,25 @@ ecs_entity_t ecs_get_scope(
     return stage->scope;
 }
 
+int32_t ecs_child_count(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_vector_t *tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, entity);
+    if (!tables) {
+        return 0;
+    } else {
+        int32_t count = 0;
+
+        ecs_vector_each(tables, ecs_table_t*, table_ptr, {
+            ecs_table_t *table = *table_ptr;
+            count += ecs_table_count(table);
+        });
+
+        return count;
+    }
+}
+
 ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent)

@@ -1741,6 +1741,17 @@ ecs_entity_t ecs_new_from_path_w_sep(
 //// Scopes
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Does entity have children.
+ *
+ * @param world The world
+ * @param entity The entity
+ * @return True if the entity has children, false if not.
+ */
+FLECS_EXPORT
+int32_t ecs_child_count(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
 /** Return a scope iterator.
  * A scope iterator iterates over all the child entities of the specified 
  * parent.

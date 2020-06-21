@@ -206,7 +206,7 @@ void ecs_init_system(
     ecs_query_t *query,
     void *ctx)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_trace_1("system #[green]%s#[reset] (%d) created with #[red]%s#[normal]", 
         ecs_get_name(world, system), system, query->sig.expr);

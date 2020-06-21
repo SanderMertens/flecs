@@ -349,7 +349,8 @@ ecs_entity_t ecs_new_system(
     const char *signature,
     ecs_iter_action_t action)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);  
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
     
     ecs_entity_t result = lookup(world, name, ecs_type(EcsSignatureExpr));
     if (!result) {
