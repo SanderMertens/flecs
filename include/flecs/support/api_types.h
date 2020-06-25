@@ -75,6 +75,13 @@ typedef struct ecs_query_iter_t {
     int32_t index;
 } ecs_query_iter_t;  
 
+/** Query-iterator specific data */
+typedef struct ecs_snapshot_iter_t {
+    ecs_filter_t filter;
+    ecs_vector_t *tables; /* ecs_table_leaf_t */
+    int32_t index;
+} ecs_snapshot_iter_t;  
+
 /** The ecs_iter_t struct allows applications to iterate tables.
  * Queries and filters, among others, allow an application to iterate entities
  * that match a certain set of components. Because of how data is stored 
@@ -113,6 +120,7 @@ struct ecs_iter_t {
         ecs_scope_iter_t parent;
         ecs_filter_iter_t filter;
         ecs_query_iter_t query;
+        ecs_snapshot_iter_t snapshot;
     } iter;                       /**< Iterator specific data */
 };
 

@@ -211,7 +211,6 @@ void ecs_workers_progress(
         ecs_set_scope(world, old_scope);
         ecs_pipeline_end(world);
     } else {
-        ecs_entity_t pipeline = world->pipeline;
         int32_t i, sync_count = ecs_pipeline_begin(world, pipeline);
 
         /* Make sure workers are running and ready */

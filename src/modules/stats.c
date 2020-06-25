@@ -1,7 +1,5 @@
 #include "../flecs_private.h"
-
 #include "flecs/modules/stats.h"
-#include "flecs/modules/timers.h"
 
 typedef struct EcsTablePtr {
     ecs_table_t *table;
@@ -647,12 +645,12 @@ void FlecsStatsImport(
         SYSTEM:EcsOnDemand, SYSTEM:Hidden);
 
     ECS_SYSTEM(world, StatsAddSystemStats, EcsOnStore,
-        flecs.systems.EcsSystem, [out] !EcsSystemStats,
+        flecs.system.EcsSystem, [out] !EcsSystemStats,
         SYSTEM:EcsOnDemand, SYSTEM:Hidden, 
         SYSTEM:EcsStatsSkipCollect, !EcsStatsSkipCollect);
 
     ECS_SYSTEM(world, StatsAddColSystemMemoryStats, EcsOnStore,
-        flecs.systems.EcsSystem, [out] !EcsSystemMemoryStats,
+        flecs.system.EcsSystem, [out] !EcsSystemMemoryStats,
         SYSTEM:EcsOnDemand, SYSTEM:Hidden, 
         SYSTEM:EcsStatsSkipCollect, !EcsStatsSkipCollect);
 
@@ -689,7 +687,7 @@ void FlecsStatsImport(
         SYSTEM:EcsOnDemand, SYSTEM:Hidden);      
 
     ECS_SYSTEM(world, StatsCollectSystemStats, EcsPostLoad,
-        flecs.systems.EcsSystem, [out] EcsSystemStats,
+        flecs.system.EcsSystem, [out] EcsSystemStats,
         SYSTEM:EcsOnDemand, SYSTEM:Hidden);
 
     /* This handler enables system time monitoring when system is activated */
@@ -697,7 +695,7 @@ void FlecsStatsImport(
         world, StatsCollectSystemStats, StatsCollectSystemStats_StatusAction, NULL);
 
     ECS_SYSTEM(world, StatsCollectColSystemMemoryStats, EcsPostLoad,
-        flecs.systems.EcsSystem, [out] EcsSystemMemoryStats,
+        flecs.system.EcsSystem, [out] EcsSystemMemoryStats,
         SYSTEM:EcsOnDemand, SYSTEM:Hidden);
 
     ECS_SYSTEM(world, StatsCollectComponentStats, EcsPostLoad,

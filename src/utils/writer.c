@@ -1,5 +1,5 @@
 #include "../flecs_private.h"
-#include "flecs/utils/serializer.h"
+#include "flecs/utils/reader_writer.h"
 
 static
 void ecs_name_writer_alloc(
@@ -93,12 +93,12 @@ void ecs_table_writer_finalize_table(
         if (record_ptr) {
             if (record_ptr->table != writer->table) {
                 ecs_table_t *table = record_ptr->table;                
-                ecs_data_t *data = ecs_table_get_data(world, table);
+                ecs_data_t *table_data = ecs_table_get_data(world, table);
 
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 ecs_table_delete(world, &world->stage, 
-                    table, data, record_ptr->row - 1);
+                    table, table_data, record_ptr->row - 1);
             }
         }
 
@@ -368,7 +368,8 @@ int ecs_writer_write(
 
     while (total_written < size) {
         if (writer->state == EcsStreamHeader) {
-            writer->state = *(ecs_blob_header_kind_t*)ECS_OFFSET(buffer, total_written);
+            writer->state = *(ecs_blob_header_kind_t*)ECS_OFFSET(buffer, 
+                total_written);
 
             if (writer->state != EcsTableHeader) {
                 writer->error = ECS_DESERIALIZE_FORMAT_ERROR;
@@ -378,7 +379,8 @@ int ecs_writer_write(
             written = sizeof(ecs_blob_header_kind_t);
         } else
         if (writer->state == EcsTableHeader) {
-            written = ecs_table_writer(ECS_OFFSET(buffer, total_written), remaining, writer);
+            written = ecs_table_writer(ECS_OFFSET(buffer, total_written), 
+                remaining, writer);
         }
 
         if (!written) {

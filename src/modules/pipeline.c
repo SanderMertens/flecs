@@ -10,40 +10,13 @@ typedef struct EcsPipelineQuery {
     ecs_vector_t *ops;
 } EcsPipelineQuery;
 
-static
-void ctor_pipeline_query(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entities,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    (void)world;
-    (void)component;
-    (void)entities;
-    (void)ctx;
-    memset(ptr, 0, size * count);
-}
+ECS_CTOR(EcsPipelineQuery, ptr, {
+    memset(ptr, 0, size);
+})
 
-static
-void dtor_pipeline_query(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entities,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    EcsPipelineQuery *q = ptr;
-    
-    int32_t i;
-    for (i = 0; i < count; i ++) {
-        ecs_vector_free(q[i].ops);
-    }
-}
+ECS_DTOR(EcsPipelineQuery, ptr, {
+    ecs_vector_free(ptr->ops);
+})
 
 static
 int compare_entity(
@@ -307,6 +280,7 @@ int32_t ecs_pipeline_begin(
 void ecs_pipeline_end(
     ecs_world_t *world)
 {
+    (void)world;
 }
 
 void ecs_pipeline_progress(
@@ -379,7 +353,7 @@ void EcsOnAddPipeline(
         char *str = ecs_type_str(world, type_ptr->normalized);
         ecs_trace_1("pipeline #[green]%s#[normal] created with #[red][%s]",
             ecs_get_name(world, pipeline), str);
-        free(str);
+        ecs_os_free(str);
 #endif
         ecs_trace_push();
 
@@ -502,7 +476,7 @@ float ecs_frame_begin(
         user_delta_time = delta_time;
     }
 
-    world->stats.delta_time = user_delta_time;
+    world->stats.delta_time = user_delta_time * world->stats.time_scale;
     
     return user_delta_time;
 }
@@ -531,6 +505,13 @@ bool ecs_progress(
     ecs_frame_end(world, delta_time);
 
     return !world->should_quit;
+}
+
+void ecs_set_time_scale(
+    ecs_world_t *world,
+    float scale)
+{
+    world->stats.time_scale = scale;
 }
 
 void ecs_quit(
@@ -598,6 +579,7 @@ void FlecsPipelineFini(
     ecs_world_t *world,
     void *ctx)
 {
+    (void)ctx;
     if (world->workers) {
         ecs_set_threads(world, 0);
     }
@@ -609,7 +591,7 @@ void FlecsPipelineImport(
 {
     ECS_MODULE(world, FlecsPipeline);
 
-    ECS_IMPORT(world, FlecsSystems, 0);
+    ECS_IMPORT(world, FlecsSystem, 0);
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -633,8 +615,8 @@ void FlecsPipelineImport(
 
     /* Set ctor and dtor for PipelineQuery */
     ecs_set(world, ecs_entity(EcsPipelineQuery), EcsComponentLifecycle, {
-        .ctor = ctor_pipeline_query,
-        .dtor = dtor_pipeline_query
+        .ctor = ecs_ctor(EcsPipelineQuery),
+        .dtor = ecs_dtor(EcsPipelineQuery)
     });
 
     /* When the Pipeline tag is added a pipeline will be created */
@@ -647,4 +629,6 @@ void FlecsPipelineImport(
 
     /* Cleanup thread administration when world is destroyed */
     ecs_atfini(world, FlecsPipelineFini, NULL);
+
+    (void)flags;
 }

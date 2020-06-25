@@ -15,13 +15,24 @@ extern "C" {
  * specified filter.
  *
  * @param world The world to snapshot.
- * @param filter A filter that specifies which components to snapshot.
  * @param return The snapshot.
  */
 FLECS_EXPORT
 ecs_snapshot_t* ecs_snapshot_take(
-    ecs_world_t *world,
-    const ecs_filter_t *filter);
+    ecs_world_t *world);
+
+/** Create a filtered snapshot.
+ * This operation is the same as ecs_snapshot_take, but accepts an iterator so
+ * an application can control what is stored by the snapshot. 
+ *
+ * @param iter An iterator to the data to be stored by the snapshot.
+ * @param next A function pointer to the next operation for the iterator.
+ * @param return The snapshot.
+ */
+FLECS_EXPORT
+ecs_snapshot_t* ecs_snapshot_take_w_iter(
+    ecs_iter_t *iter,
+    ecs_iter_next_action_t action);
 
 /** Restore a snapshot.
  * This operation restores the world to the state it was in when the specified
@@ -42,20 +53,24 @@ void ecs_snapshot_restore(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot);
 
-/** Copy a snapshot.
- * This operation creates a copy of the provided snapshot. An application can
- * optionally filter the tables to copy.
+/** Obtain iterator to snapshot data.
  *
- * @param world The world.
- * @param snapshot The snapshot to copy.
- * @param filter Filter to apply to the copy (optional)
- * @return The duplicated snapshot.
+ * @param snapshot The snapshot to iterate over.
+ * @return Iterator to snapshot data. */
+FLECS_EXPORT
+ecs_iter_t ecs_snapshot_iter(
+    ecs_snapshot_t *snapshot,
+    ecs_filter_t *filter);
+
+/** Progress snapshot iterator.
+ * 
+ * @param iter The snapshot iterator.
+ * @return True if more data is available, otherwise false.
  */
 FLECS_EXPORT
-ecs_snapshot_t* ecs_snapshot_copy(
-    ecs_world_t *world,
-    const ecs_snapshot_t *snapshot,
-    const ecs_filter_t *filter);
+bool ecs_snapshot_next(
+    ecs_iter_t *iter);
+
 
 /** Free snapshot resources.
  * This frees resources associated with a snapshot without restoring it.
@@ -65,7 +80,6 @@ ecs_snapshot_t* ecs_snapshot_copy(
  */
 FLECS_EXPORT
 void ecs_snapshot_free(
-    ecs_world_t *world,
     ecs_snapshot_t *snapshot);
     
 #ifdef __cplusplus

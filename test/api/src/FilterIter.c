@@ -157,7 +157,7 @@ void FilterIter_iter_snapshot_one_table() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
     test_assert(s != NULL);
 
     ecs_filter_t filter = { ecs_type(Position) };
@@ -169,11 +169,11 @@ void FilterIter_iter_snapshot_one_table() {
     /* Ensure world is empty */
     test_int( ecs_count(world, Position), 0);
 
-   ecs_iter_t it = ecs_snapshot_filter_iter(world, s, &filter);
+    ecs_iter_t it = ecs_snapshot_iter(s, &filter);
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&it)) {
+    while (ecs_snapshot_next(&it)) {
         table_count ++;
         entity_count += it.count;
 
@@ -193,7 +193,7 @@ void FilterIter_iter_snapshot_one_table() {
     test_int(table_count, 1);
     test_int(entity_count, 3);
 
-    ecs_snapshot_free(world, s);
+    ecs_snapshot_free(s);
     
     ecs_fini(world);
 }
@@ -221,7 +221,7 @@ void FilterIter_iter_snapshot_two_tables() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
     test_assert(s != NULL);
 
     ecs_filter_t filter = { ecs_type(Position) };
@@ -233,11 +233,11 @@ void FilterIter_iter_snapshot_two_tables() {
     /* Ensure world is empty */
     test_int( ecs_count(world, Position), 0);
 
-   ecs_iter_t it = ecs_snapshot_filter_iter(world, s, &filter);
+    ecs_iter_t it = ecs_snapshot_iter(s, &filter);
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&it)) {
+    while (ecs_snapshot_next(&it)) {
         table_count ++;
         entity_count += it.count;
 
@@ -257,7 +257,7 @@ void FilterIter_iter_snapshot_two_tables() {
     test_int(table_count, 2);
     test_int(entity_count, 6);
 
-    ecs_snapshot_free(world, s);
+    ecs_snapshot_free(s);
     
     ecs_fini(world);
 }
@@ -279,7 +279,7 @@ void FilterIter_iter_snapshot_two_comps() {
         ecs_set(world, e + i, Velocity, {i + 1, i * 2 + 1});
     }
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
     test_assert(s != NULL);
 
     ecs_filter_t filter = { ecs_type(Movable) };
@@ -291,11 +291,11 @@ void FilterIter_iter_snapshot_two_comps() {
     /* Ensure world is empty */
     test_int( ecs_count(world, Movable), 0);
 
-   ecs_iter_t it = ecs_snapshot_filter_iter(world, s, &filter);
+    ecs_iter_t it = ecs_snapshot_iter(s, &filter);
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&it)) {
+    while (ecs_snapshot_next(&it)) {
         table_count ++;
         entity_count += it.count;
 
@@ -322,7 +322,7 @@ void FilterIter_iter_snapshot_two_comps() {
     test_int(table_count, 1);
     test_int(entity_count, 3);
 
-    ecs_snapshot_free(world, s);
+    ecs_snapshot_free(s);
     
     ecs_fini(world);
 }
@@ -350,9 +350,11 @@ void FilterIter_iter_snapshot_filtered_table() {
         ecs_set(world, e + i, Position, {i, i * 2});
     }    
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t){
+    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
         .exclude = ecs_type(Velocity)
     });
+
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
     test_assert(s != NULL);
 
     ecs_filter_t filter = { ecs_type(Position) };
@@ -364,11 +366,11 @@ void FilterIter_iter_snapshot_filtered_table() {
     /* Ensure world is empty */
     test_int( ecs_count(world, Position), 0);
 
-   ecs_iter_t it = ecs_snapshot_filter_iter(world, s, &filter);
+    it = ecs_snapshot_iter(s, &filter);
     int table_count = 0;
     int entity_count = 0;
 
-    while (ecs_filter_next(&it)) {
+    while (ecs_snapshot_next(&it)) {
         table_count ++;
         entity_count += it.count;
 
@@ -388,7 +390,7 @@ void FilterIter_iter_snapshot_filtered_table() {
     test_int(table_count, 1);
     test_int(entity_count, 3);
 
-    ecs_snapshot_free(world, s);
+    ecs_snapshot_free(s);
     
     ecs_fini(world);
 }

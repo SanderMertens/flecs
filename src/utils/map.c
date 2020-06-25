@@ -230,7 +230,7 @@ ecs_map_t* _ecs_map_new(
     size_t alignment, 
     int32_t element_count)
 {
-    ecs_map_t *result = ecs_os_calloc(sizeof(ecs_map_t), 1);
+    ecs_map_t *result = ecs_os_calloc(sizeof(ecs_map_t) * 1);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     int32_t bucket_count = get_bucket_count(element_count);
@@ -358,7 +358,7 @@ void _ecs_map_set(
         } else {
             ecs_assert(bucket->count < BUCKET_COUNT, ECS_INTERNAL_ERROR, NULL);
 
-            int32_t bucket_count = ++bucket->count;
+            bucket_count = ++bucket->count;
             int32_t map_count = ++map->count;
             
             *elem = key;

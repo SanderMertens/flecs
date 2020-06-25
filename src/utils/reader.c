@@ -1,52 +1,88 @@
 #include "../flecs_private.h"
-#include "flecs/utils/serializer.h"
+#include "flecs/utils/reader_writer.h"
+
+static
+bool iter_table(
+    ecs_world_t *world,
+    ecs_reader_t *stream,
+    ecs_table_reader_t *reader,
+    ecs_iter_t *it,
+    ecs_iter_next_action_t next,
+    bool skip_builtin)    
+{
+    bool table_found = false;
+
+    while (next(it)) {
+        ecs_table_t *table = it->table;
+
+        reader->table = table;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_data_t *data = ecs_table_get_data(world, table);
+        reader->data = data;
+        reader->table_index ++;
+
+        if (skip_builtin && reader->table->flags & EcsTableHasBuiltins) {
+            continue;
+        }
+
+        if (!data || !it->count) {
+            continue;
+        }
+
+        table_found = true;
+        break;
+    }
+
+    return table_found;
+}
+
+static
+void next_table(
+    ecs_world_t *world,
+    ecs_reader_t *stream,
+    ecs_table_reader_t *reader)
+{    
+    int32_t count;
+
+    /* First iterate all component tables, as component data must always be
+     * stored in a blob before anything else */
+    bool table_found = iter_table(
+        world, stream, reader, &stream->component_iter, stream->component_next, 
+        false);
+
+    /* If all components have been added, add the regular data tables. Make sure
+     * to not add component tables again, in case the provided iterator also
+     * matches component tables. */
+    if (!table_found) {
+        table_found = iter_table(
+            world, stream, reader, &stream->data_iter, stream->data_next, true);
+        count = stream->data_iter.count;
+    } else {
+        count = stream->component_iter.count;
+    }
+
+    if (!table_found) {
+        stream->state = EcsFooterSegment;
+    } else {
+        reader->type = reader->table->type;
+        reader->total_columns = reader->table->column_count + 1;
+        reader->column_index = 0;
+        reader->row_count = count;
+    }
+}
 
 static
 void ecs_table_reader_next(
     ecs_reader_t *stream)
 {
     ecs_table_reader_t *reader = &stream->table;
-    ecs_sparse_t *tables = stream->tables;
     ecs_world_t *world = stream->world;
 
     switch(reader->state) {
-    case EcsTableHeader: {
-        bool table_found = false;
-
+    case EcsTableHeader:
         reader->state = EcsTableTypeSize;
-
-        do {
-            ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, reader->table_index);
-            reader->table = table;
-             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            ecs_data_t *data = ecs_table_get_data(world, table);
-            reader->data = data;
-            reader->table_index ++;
-
-            /* If a table is filtered out by the snapshot, does not have any
-             * entities or contains builtin data, skip it */
-            if (data && ecs_table_count(reader->table) &&
-                 (!(reader->table->flags & EcsTableHasBuiltins) ||
-                    reader->table->flags & EcsTableHasComponentData))
-            {
-                table_found = true;
-                break;
-            }
-        } while (reader->table_index != ecs_sparse_count(tables));
-
-        if (!table_found) {
-            stream->state = EcsFooterSegment;
-            break;
-        } else {
-            reader->type = reader->table->type;
-            reader->total_columns = reader->table->column_count + 1;
-            reader->column_index = 0;
-            reader->row_count = ecs_table_count(reader->table);
-        }
         break;
-    }
-
     case EcsTableTypeSize:
         reader->state = EcsTableType;
         reader->type_written = 0;
@@ -109,9 +145,7 @@ void ecs_table_reader_next(
         reader->column_index ++;
         if (reader->column_index == reader->total_columns) {
             reader->state = EcsTableHeader;
-            if (reader->table_index == ecs_sparse_count(tables)) {
-                stream->state = EcsFooterSegment;
-            }            
+            next_table(world, stream, reader);
         } else {
             ecs_entity_t *type_buffer = ecs_vector_first(reader->type, ecs_entity_t);
             if (reader->column_index >= 1) {
@@ -153,6 +187,7 @@ size_t ecs_table_reader(
     size_t read = 0;
 
     if (!reader->state) {
+        next_table(stream->world, stream, reader);
         reader->state = EcsTableHeader;
     }
 
@@ -163,7 +198,7 @@ size_t ecs_table_reader(
         ecs_table_reader_next(stream);
         break;
 
-    case EcsTableTypeSize:  
+    case EcsTableTypeSize:
         *(int32_t*)buffer = ecs_vector_count(reader->type);
         read = sizeof(int32_t);
         ecs_table_reader_next(stream);
@@ -252,7 +287,13 @@ size_t ecs_table_reader(
     case EcsTableColumnName:   
         read = reader->name_len - reader->name_written;
         if (read >= sizeof(int32_t)) {
-            *(int32_t*)buffer = *(int32_t*)ECS_OFFSET(reader->name, reader->name_written);
+
+            int32_t i;
+            for (i = 0; i < 4; i ++) {
+                *(char*)ECS_OFFSET(buffer, i) = 
+                    *(char*)ECS_OFFSET(reader->name, reader->name_written + i);
+            }
+
             reader->name_written += sizeof(int32_t);
         } else {
             memcpy(buffer, ECS_OFFSET(reader->name, reader->name_written), read);
@@ -314,20 +355,31 @@ ecs_reader_t ecs_reader_init(
     ecs_reader_t result = {
         .world = world,
         .state = EcsTableSegment,
-        .tables = world->stage.tables
+        .component_iter = ecs_filter_iter(world, &(ecs_filter_t){
+            .include = ecs_type(EcsComponent)
+        }),
+        .component_next = ecs_filter_next,
+        .data_iter = ecs_filter_iter(world, NULL),
+        .data_next = ecs_filter_next
     };
 
     return result;
 }
 
-ecs_reader_t ecs_snapshot_reader_init(
+ecs_reader_t ecs_reader_init_w_iter(
     ecs_world_t *world,
-    const ecs_snapshot_t *snapshot)
+    ecs_iter_t *it,
+    ecs_iter_next_action_t next)
 {
     ecs_reader_t result = {
         .world = world,
         .state = EcsTableSegment,
-        .tables = snapshot->tables
+        .component_iter = ecs_filter_iter(world, &(ecs_filter_t){
+            .include = ecs_type(EcsComponent)
+        }),
+        .component_next = ecs_filter_next,
+        .data_iter = *it,
+        .data_next = next
     };
 
     return result;

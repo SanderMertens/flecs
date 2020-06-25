@@ -272,9 +272,9 @@ ecs_vector_t* _ecs_vector_copy(
 #define ecs_vector_each(vector, T, var, ...)\
     {\
         int var##_i, var##_count = ecs_vector_count(vector);\
-        T* array = ecs_vector_first(vector, T);\
+        T* var##_array = ecs_vector_first(vector, T);\
         for (var##_i = 0; var##_i < var##_count; var##_i ++) {\
-            T* var = &array[var##_i];\
+            T* var = &var##_array[var##_i];\
             __VA_ARGS__\
         }\
     }

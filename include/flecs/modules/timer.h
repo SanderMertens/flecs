@@ -188,16 +188,16 @@ void ecs_set_tick_source(
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Timers module component */
-typedef struct FlecsTimers {
+typedef struct FlecsTimer {
     int32_t dummy;
-} FlecsTimers;
+} FlecsTimer;
 
 FLECS_EXPORT
-void FlecsTimersImport(
+void FlecsTimerImport(
     ecs_world_t *world,
     int flags);
 
-#define FlecsTimersImportHandles(handles)
+#define FlecsTimerImportHandles(handles)
 
 #ifdef __cplusplus
 }

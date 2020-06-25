@@ -283,12 +283,19 @@ void ComponentLifecycle_copy_on_new_w_data() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_bulk_new_w_type(world, ecs_type(Position), 2, (void*[]){
-        (Position[]){
-            {10, 20},
-            {30, 40}
-        }
-    });
+    ecs_entity_t e = ecs_bulk_new_w_data(world, 2, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){
+                ecs_entity(Position)
+            }, 
+            .count = 1
+        },
+        (void*[]){
+            (Position[]){
+                {10, 20},
+                {30, 40}
+            }
+        });
 
     test_int(ctx.copy.invoked, 1);
     test_assert(ctx.copy.world == world);
@@ -723,7 +730,7 @@ void ComponentLifecycle_copy_on_snapshot() {
 
     ctx = (cl_ctx){ { 0 } };
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
 
     test_int(ctx.copy.invoked, 1);
     test_assert(ctx.copy.world == world);
@@ -775,7 +782,7 @@ void ComponentLifecycle_ctor_copy_on_snapshot() {
 
     ctx = (cl_ctx){ { 0 } };
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
 
     test_int(ctx.ctor.invoked, 1);
     test_assert(ctx.ctor.world == world);
@@ -828,7 +835,7 @@ void ComponentLifecycle_dtor_on_restore() {
 
     ctx = (cl_ctx){ { 0 } };
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
 
     test_int(ctx.dtor.invoked, 0);
 
@@ -852,6 +859,7 @@ void ComponentLifecycle_dtor_on_restore() {
         test_assert(ecs_has(world, e + i, Position));
         const Position *p = ecs_get(world, e + i, Position);
         test_assert(p != NULL);
+
         test_int(p->x, i);
         test_int(p->y, i * 2);
     }   

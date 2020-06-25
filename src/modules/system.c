@@ -56,9 +56,9 @@ void activate_in_columns(
                 (!activate && !in->count))) 
             {
                 ecs_on_demand_out_t **out = ecs_vector_first(in->systems, ecs_on_demand_out_t*);
-                int32_t s, count = ecs_vector_count(in->systems);
+                int32_t s, in_count = ecs_vector_count(in->systems);
 
-                for (s = 0; s < count; s ++) {
+                for (s = 0; s < in_count; s ++) {
                     /* Increase the count of the system with the out params */
                     out[s]->count += activate ? 1 : -1;
                     
@@ -792,18 +792,18 @@ void bootstrap_set_system(
     ecs_iter_action_t action)
 {
     ecs_sig_t sig = {0};
-    ecs_entity_t sys = ecs_set(world, 0, EcsName, {name});
+    ecs_entity_t sys = ecs_set(world, 0, EcsName, {.value = name});
     ecs_add_entity(world, sys, EcsOnSet);
     ecs_sig_init(world, name, expr, &sig);
     ecs_query_t *query = ecs_query_new_w_sig(world, sys, &sig);
     ecs_init_system(world, sys, action, query, NULL);
 }
 
-void FlecsSystemsImport(
+void FlecsSystemImport(
     ecs_world_t *world,
     int flags)
 {
-    ECS_MODULE(world, FlecsSystems);
+    ECS_MODULE(world, FlecsSystem);
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -866,4 +866,6 @@ void FlecsSystemsImport(
     /* Monitors that trigger when a system is enabled or disabled */
     ECS_SYSTEM(world, DisableSystem, EcsMonitor, System, Disabled || DisabledIntern, SYSTEM:Hidden);
     ECS_SYSTEM(world, EnableSystem, EcsMonitor, System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
+
+    (void)flags;
 }

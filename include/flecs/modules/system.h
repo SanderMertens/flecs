@@ -235,16 +235,16 @@ void ecs_set_system_status_action(
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Pipeline component is empty: components and tags in module are static */
-typedef struct FlecsSystems {
+typedef struct FlecsSystem {
     int32_t dummy; 
-} FlecsSystems;
+} FlecsSystem;
 
 FLECS_EXPORT
-void FlecsSystemsImport(
+void FlecsSystemImport(
     ecs_world_t *world,
     int flags);
 
-#define FlecsSystemsImportHandles(handles)
+#define FlecsSystemImportHandles(handles)
 
 #ifdef __cplusplus
 }

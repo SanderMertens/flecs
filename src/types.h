@@ -87,10 +87,12 @@ struct ecs_data_t {
     bool marked_dirty;          /**< Was table marked dirty by stage? */  
 };
 
-typedef struct ecs_table_content_t {
+/** Small footprint data structure for storing data associated with a table. */
+typedef struct ecs_table_leaf_t {
+    ecs_table_t *table;
     ecs_type_t type;
     ecs_data_t *data;
-} ecs_table_content_t;
+} ecs_table_leaf_t;
 
 /** Flags for quickly checking for special properties of a table. */
 typedef enum ecs_table_flags_t {
@@ -386,14 +388,6 @@ typedef struct ecs_thread_t {
     uint16_t index;                           /* Index of thread */
 } ecs_thread_t;
 
-/* World snapshot */
-struct ecs_snapshot_t {
-    ecs_ei_t entity_index;
-    ecs_sparse_t *tables;
-    ecs_entity_t last_id;
-    ecs_filter_t filter;
-};
-
 /** Component-specific data */
 typedef struct ecs_c_info_t {
     ecs_vector_t *on_add;       /* Systems ran after adding this component */
@@ -522,7 +516,6 @@ struct ecs_world_t {
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */
     bool should_quit;             /* Did a system signal that app should quit */
-    bool rematch;            /* Should tablea be rematched */
     bool locking_enabled;         /* Lock world when in progress */    
 };
 

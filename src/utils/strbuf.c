@@ -6,7 +6,7 @@ void ecs_strbuf_grow(
     ecs_strbuf_t *b)
 {
     /* Allocate new element */
-    ecs_strbuf_element_embedded *e = malloc(sizeof(ecs_strbuf_element_embedded));
+    ecs_strbuf_element_embedded *e = ecs_os_malloc(sizeof(ecs_strbuf_element_embedded));
     b->size += b->current->pos;
     b->current->next = (ecs_strbuf_element*)e;
     b->current = (ecs_strbuf_element*)e;
@@ -26,7 +26,7 @@ void ecs_strbuf_grow_str(
     int32_t size)
 {
     /* Allocate new element */
-    ecs_strbuf_element_str *e = malloc(sizeof(ecs_strbuf_element_str));
+    ecs_strbuf_element_str *e = ecs_os_malloc(sizeof(ecs_strbuf_element_str));
     b->size += b->current->pos;
     b->current->next = (ecs_strbuf_element*)e;
     b->current = (ecs_strbuf_element*)e;
@@ -180,7 +180,7 @@ bool ecs_strbuf_append_intern(
                 /* Update to number of characters copied to new buffer */
                 b->current->pos += memRequired;
             } else {
-                char *remainder = strdup(str + memLeftInElement);
+                char *remainder = ecs_os_strdup(str + memLeftInElement);
                 ecs_strbuf_grow_str(b, remainder, remainder, memRequired);
             }
         } else {
@@ -207,7 +207,7 @@ bool ecs_strbuf_append_intern(
             } else {
                 /* Resulting string does not fit in standard-size buffer.
                  * Allocate a new buffer that can hold the entire string. */
-                char *dst = malloc(memRequired + 1);
+                char *dst = ecs_os_malloc(memRequired + 1);
                 vsprintf(dst, str, arg_cpy);
                 ecs_strbuf_grow_str(b, dst, dst, memRequired);
             }
@@ -306,7 +306,7 @@ bool ecs_strbuf_mergebuff(
             ecs_strbuf_appendstrn(dst_buffer, e->buf, e->pos);
 
             while ((e = e->next)) {
-                dst_buffer->current->next = malloc(sizeof(ecs_strbuf_element));
+                dst_buffer->current->next = ecs_os_malloc(sizeof(ecs_strbuf_element));
                 *dst_buffer->current->next = *e;
             }
         }
@@ -322,14 +322,14 @@ char* ecs_strbuf_get(ecs_strbuf_t *b) {
 
     if (b->elementCount) {
         if (b->buf) {
-            result = strdup(b->buf);
+            result = ecs_os_strdup(b->buf);
         } else {
             void *next = NULL;
             int32_t len = b->size + b->current->pos + 1;
 
             ecs_strbuf_element *e = (ecs_strbuf_element*)&b->firstElement;
 
-            result = malloc(len);
+            result = ecs_os_malloc(len);
             char* ptr = result;
 
             do {
@@ -338,9 +338,9 @@ char* ecs_strbuf_get(ecs_strbuf_t *b) {
                 next = e->next;
                 if (e != &b->firstElement.super) {
                     if (!e->buffer_embedded) {
-                        free(((ecs_strbuf_element_str*)e)->alloc_str);
+                        ecs_os_free(((ecs_strbuf_element_str*)e)->alloc_str);
                     }
-                    free(e);
+                    ecs_os_free(e);
                 }
             } while ((e = next));
 
@@ -362,7 +362,7 @@ void ecs_strbuf_reset(ecs_strbuf_t *b) {
         do {
             next = e->next;
             if (e != (ecs_strbuf_element*)&b->firstElement) {
-                free(e);
+                ecs_os_free(e);
             }
         } while ((e = next));
     }

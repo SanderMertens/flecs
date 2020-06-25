@@ -454,8 +454,8 @@ bool match_column(
 
     } else if (from_kind == EcsFromEntity) {
         failure_info->reason = EcsMatchFromEntity;
-        ecs_type_t type = ecs_get_type(world, source);
-        return ecs_type_has_entity(world, type, component);
+        ecs_type_t source_type = ecs_get_type(world, source);
+        return ecs_type_has_entity(world, source_type, component);
     } else {
         return true;
     }
@@ -1493,7 +1493,7 @@ bool ecs_query_next(
         it->frame_offset += prev_count;
 
         /* Table is ready to be iterated, return it struct */
-        iter->index = ++ i;
+        iter->index = i + 1;
 
         return true;
     }
@@ -1571,12 +1571,12 @@ void ecs_query_group_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t sort_component,
-    ecs_rank_type_action_t rank_table)
+    ecs_rank_type_action_t rank_table_action)
 {
     ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
     query->rank_on_component = sort_component;
-    query->rank_table = rank_table;
+    query->rank_table = rank_table_action;
 
     rank_tables(world, query);
 

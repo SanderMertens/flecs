@@ -3,12 +3,121 @@
  * @brief Blob serializer API.
  */
 
-#ifndef FLECS_SERIALIZER_H
-#define FLECS_SERIALIZER_H
+#ifndef FLECS_READER_WRITER_H
+#define FLECS_READER_WRITER_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif 
+
+typedef struct ecs_column_t ecs_column_t;
+typedef struct ecs_data_t ecs_data_t;
+
+typedef enum ecs_blob_header_kind_t {
+    EcsStreamHeader,
+
+    /* Stream states */
+    EcsTableSegment,
+    EcsFooterSegment,
+
+    /* Table segment */
+    EcsTableHeader,
+    EcsTableTypeSize,
+    EcsTableType,
+    EcsTableSize,
+    EcsTableColumn,
+    EcsTableColumnHeader,
+    EcsTableColumnSize,
+    EcsTableColumnData,
+
+    /* Name column (EcsName) */
+    EcsTableColumnNameHeader,
+    EcsTableColumnNameLength,
+    EcsTableColumnName,
+
+    EcsStreamFooter  
+} ecs_blob_header_kind_t;
+
+typedef struct ecs_table_reader_t {
+    ecs_blob_header_kind_t state;
+
+    int32_t table_index;
+    ecs_table_t *table;
+    ecs_data_t *data;
+
+    /* Current index in type */
+    size_t type_written;
+    ecs_type_t type;
+
+    /* Current column */
+    ecs_vector_t *column_vector;
+    int32_t column_index;
+    int32_t total_columns;
+
+    /* Keep track of how much of the component column has been written */
+    void *column_data;
+    size_t column_size;
+    size_t column_alignment;
+    size_t column_written;
+
+    /* Keep track of row when writing non-blittable data */
+    int32_t row_index;
+    int32_t row_count;
+
+    /* Keep track of how much of an entity name has been written */
+    const char *name;
+    size_t name_len;
+    size_t name_written;
+
+    bool has_next_table;
+} ecs_table_reader_t;
+
+typedef struct ecs_reader_t {
+    ecs_world_t *world;
+    ecs_blob_header_kind_t state;
+    ecs_iter_t data_iter;
+    ecs_iter_next_action_t data_next;
+    ecs_iter_t component_iter;
+    ecs_iter_next_action_t component_next;
+    ecs_table_reader_t table;
+} ecs_reader_t;
+
+typedef struct ecs_name_writer_t {
+    char *name;
+    int32_t written;
+    int32_t len;
+    int32_t max_len;
+} ecs_name_writer_t;
+
+typedef struct ecs_table_writer_t {
+    ecs_blob_header_kind_t state;
+
+    ecs_table_t *table;
+    ecs_vector_t *column_vector;
+
+    /* Keep state for parsing type */
+    int32_t type_count;
+    int32_t type_max_count;
+    size_t type_written;
+    ecs_entity_t *type_array;
+    
+    int32_t column_index;
+    size_t column_size;
+    size_t column_alignment;
+    size_t column_written;
+    void *column_data;
+
+    int32_t row_count;
+    int32_t row_index;
+    ecs_name_writer_t name; 
+} ecs_table_writer_t;
+
+typedef struct ecs_writer_t {
+    ecs_world_t *world;
+    ecs_blob_header_kind_t state;
+    ecs_table_writer_t table;
+    int error;
+} ecs_writer_t;
 
 /** Initialize a reader.
  * A reader serializes data in a world to a sequence of bytes that can be stored
@@ -28,13 +137,14 @@ ecs_reader_t ecs_reader_init(
  * is progressing.
  *
  * @param world The world in which the snapshot is taken.
- * @param snapshot The snapshot to serialize.
+ * @param iter Iterator to the data to be serialized.
  * @return The reader.
  */
 FLECS_EXPORT
-ecs_reader_t ecs_snapshot_reader_init(
+ecs_reader_t ecs_reader_init_w_iter(
     ecs_world_t *world,
-    const ecs_snapshot_t *snapshot);
+    ecs_iter_t *iter,
+    ecs_iter_next_action_t next);
 
 /** Read from a reader.
  * This operation reads a specified number of bytes from a reader and stores it

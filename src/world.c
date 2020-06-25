@@ -198,7 +198,6 @@ ecs_world_t *ecs_mini(void) {
     world->measure_frame_time = false;
     world->measure_system_time = false;
     world->should_quit = false;
-    world->rematch = false;
     world->locking_enabled = false;
     world->pipeline = 0;
 
@@ -210,6 +209,8 @@ ecs_world_t *ecs_mini(void) {
     world->stats.target_fps = 0;
     world->stats.last_id = 0;
 
+    world->stats.delta_time = 0;
+    world->stats.time_scale = 1.0;
     world->stats.frame_time_total = 0;
     world->stats.system_time_total = 0;
     world->stats.merge_time_total = 0;
@@ -238,9 +239,9 @@ ecs_world_t *ecs_init(void) {
     ecs_world_t *world = ecs_mini();
 
 #ifndef FLECS_NO_MODULES
-    ECS_IMPORT(world, FlecsSystems, 0);
+    ECS_IMPORT(world, FlecsSystem, 0);
     ECS_IMPORT(world, FlecsPipeline, 0);
-    ECS_IMPORT(world, FlecsTimers, 0);
+    ECS_IMPORT(world, FlecsTimer, 0);
 #endif
 
     return world;

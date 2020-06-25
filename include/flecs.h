@@ -81,6 +81,7 @@ typedef struct ecs_world_info_t {
     ecs_entity_t max_id;              /**< Last allowed entity id */
 
     float delta_time;           /**< Time passed to or computed by ecs_progress */
+    float time_scale;           /**< Time scale applied to delta_time */
     float target_fps;           /**< Target fps */
     double frame_time_total;    /**< Total time spent processing a frame */
     double system_time_total;   /**< Total time spent in systems */
@@ -639,9 +640,6 @@ ecs_entity_t ecs_bulk_new_w_entity(
  * This operation is the same as ecs_new_w_type, but creates N entities
  * instead of one and does not recycle ids. Ids of created entities are
  * guaranteed to be consecutive.
- *
- * This operation accepts an additional data argument which allows an
- * application to specify data arrays to initialize the components with.
  * 
  * @param world The world.
  * @param type The type.
@@ -652,8 +650,26 @@ FLECS_EXPORT
 ecs_entity_t ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
+    int32_t count);
+
+/** Create N new entities and initialize components.
+ * This operation is the same as ecs_bulk_new_w_type, but initializes components
+ * with the provided component array. Instead of a type the operation accepts an
+ * array of component identifiers (entities). The component arrays need to be
+ * provided in the same order as the component identifiers.
+ * 
+ * @param world The world.
+ * @param components Array with component identifiers.
+ * @param count The number of entities to create.
+ * @param data The data arrays to initialize the components with.
+ * @return The first entity id of the newly created entities.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_bulk_new_w_data(
+    ecs_world_t *world,
     int32_t count,
-    void** data);
+    ecs_entities_t *component_ids,
+    void *data);
 
 /** Create N new entities.
  * This operation is the same as ecs_new, but creates N entities
@@ -666,7 +682,7 @@ ecs_entity_t ecs_bulk_new_w_type(
  * @return The first entity id of the newly created entities.
  */
 #define ecs_bulk_new(world, component, count)\
-    ecs_bulk_new_w_type(world, ecs_type(component), count, NULL)
+    ecs_bulk_new_w_type(world, ecs_type(component), count)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1315,22 +1331,7 @@ void ecs_enable(
 FLECS_EXPORT
 ecs_iter_t ecs_filter_iter(
     ecs_world_t *world,
-    const ecs_filter_t *filter);
-
-/** Return a filter iterator for a snapshot.
- * Same as ecs_filter_iter, but for iterating snapshots tables. If NULL is
- * provided for the filter, the iterator will iterate all tables in the 
- * snapshot.
- *
- * @param world The world.
- * @param snapshot The snapshot.
- * @param filter The filter.
- */
-FLECS_EXPORT
-ecs_iter_t ecs_snapshot_filter_iter(
-    ecs_world_t *world,
-    const ecs_snapshot_t *snapshot,
-    const ecs_filter_t *filter);    
+    const ecs_filter_t *filter);  
 
 /** Iterate tables matched by filter.
  * This operation progresses the filter iterator to the next table. The 
@@ -1738,7 +1739,7 @@ ecs_entity_t ecs_new_from_path_w_sep(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Scopes
+//// Scope API
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Does entity have children.
@@ -1748,7 +1749,7 @@ ecs_entity_t ecs_new_from_path_w_sep(
  * @return True if the entity has children, false if not.
  */
 FLECS_EXPORT
-int32_t ecs_child_count(
+int32_t ecs_get_child_count(
     ecs_world_t *world,
     ecs_entity_t entity);
 
@@ -2268,15 +2269,15 @@ int ecs_enable_console(
 
 /* Optional modules */
 #ifndef FLECS_NO_MODULES
-#include "flecs/modules/systems.h"
+#include "flecs/modules/system.h"
 #include "flecs/modules/pipeline.h"
-#include "flecs/modules/timers.h"
+#include "flecs/modules/timer.h"
 #endif
 
 /* Optional utilities */
 #ifndef FLECS_NO_UTILS
 #include "flecs/utils/snapshot.h"
-#include "flecs/utils/serializer.h"
+#include "flecs/utils/reader_writer.h"
 #include "flecs/utils/ringbuf.h"
 #endif
 

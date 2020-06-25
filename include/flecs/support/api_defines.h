@@ -121,6 +121,13 @@ typedef char bool;
         int32_t count,\
         void *ctx)\
     {\
+        (void)world;\
+        (void)component;\
+        (void)entity_ptr;\
+        (void)_ptr;\
+        (void)size;\
+        (void)count;\
+        (void)ctx;\
         for (int32_t i = 0; i < count; i ++) {\
             ecs_entity_t entity = entity_ptr[i];\
             type *var = &((type*)_ptr)[i];\
@@ -134,7 +141,7 @@ typedef char bool;
 #define ECS_COPY_IMPL(type, dst_var, src_var, ...)\
     void type##_##copy(\
         ecs_world_t *world,\
-        ecs_entity_t component,    \
+        ecs_entity_t component,\
         const ecs_entity_t *dst_entities,\
         const ecs_entity_t *src_entities,\
         void *_dst_ptr,\
@@ -143,6 +150,15 @@ typedef char bool;
         int32_t count,\
         void *ctx)\
     {\
+        (void)world;\
+        (void)component;\
+        (void)dst_entities;\
+        (void)src_entities;\
+        (void)_dst_ptr;\
+        (void)_src_ptr;\
+        (void)size;\
+        (void)count;\
+        (void)ctx;\
         for (int32_t i = 0; i < count; i ++) {\
             ecs_entity_t dst_entity = dst_entities[i];\
             ecs_entity_t src_entity = src_entities[i];\
@@ -160,7 +176,7 @@ typedef char bool;
 #define ECS_MOVE_IMPL(type, dst_var, src_var, ...)\
     void type##_##move(\
         ecs_world_t *world,\
-        ecs_entity_t component,    \
+        ecs_entity_t component,\
         const ecs_entity_t *dst_entities,\
         const ecs_entity_t *src_entities,\
         void *_dst_ptr,\
@@ -169,6 +185,15 @@ typedef char bool;
         int32_t count,\
         void *ctx)\
     {\
+        (void)world;\
+        (void)component;\
+        (void)dst_entities;\
+        (void)src_entities;\
+        (void)_dst_ptr;\
+        (void)_src_ptr;\
+        (void)size;\
+        (void)count;\
+        (void)ctx;\
         for (int32_t i = 0; i < count; i ++) {\
             ecs_entity_t dst_entity = dst_entities[i];\
             ecs_entity_t src_entity = src_entities[i];\

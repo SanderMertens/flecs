@@ -309,12 +309,18 @@ void ecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table); 
 
-/* Clear data in columns */
-void ecs_table_replace_data(
+/* Merge table data */
+void ecs_table_merge_data(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data);
     
+/* Replace data */
+void ecs_table_replace_data(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data);
+
 /* Merge data of one table into another table */
 void ecs_table_merge(
     ecs_world_t *world,

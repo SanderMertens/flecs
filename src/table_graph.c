@@ -91,7 +91,7 @@ void init_edges(
     ecs_entity_t *entities = ecs_vector_first(table->type, ecs_entity_t);
     int32_t count = ecs_vector_count(table->type);
 
-    table->lo_edges = ecs_os_calloc(sizeof(ecs_edge_t), ECS_HI_COMPONENT_ID);
+    table->lo_edges = ecs_os_calloc(sizeof(ecs_edge_t) * ECS_HI_COMPONENT_ID);
     table->hi_edges = ecs_map_new(ecs_edge_t, 0);
 
     table->lo_edges[0].add = table;
@@ -344,7 +344,7 @@ ecs_table_t *find_or_create_table_include(
     int32_t count = ecs_vector_count(type);
 
     ecs_entities_t entities = {
-        .array = ecs_os_alloca(ecs_entity_t, count + 1),
+        .array = ecs_os_alloca(sizeof(ecs_entity_t) * (count + 1)),
         .count = count + 1
     };
 
@@ -355,14 +355,14 @@ ecs_table_t *find_or_create_table_include(
     ecs_entity_t replace = 0;
     if (node->flags & EcsTableHasXor) {
         ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
-        int32_t i, count = ecs_vector_count(type);
+        int32_t i, type_count = ecs_vector_count(type);
         ecs_type_t xor_type = NULL;
 
-        for (i = count - 1; i >= 0; i --) {
+        for (i = type_count - 1; i >= 0; i --) {
             ecs_entity_t e = array[i];
             if (e & ECS_XOR) {
-                ecs_entity_t type = e & ECS_ENTITY_MASK;
-                const EcsType *type_ptr = ecs_get(world, type, EcsType);
+                ecs_entity_t e_type = e & ECS_ENTITY_MASK;
+                const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 if (ecs_type_owns_entity(
@@ -403,7 +403,7 @@ ecs_table_t *find_or_create_table_exclude(
     int32_t count = ecs_vector_count(type);
 
     ecs_entities_t entities = {
-        .array = ecs_os_alloca(ecs_entity_t, count),
+        .array = ecs_os_alloca(sizeof(ecs_entity_t) * count),
         .count = count
     };
 
@@ -822,7 +822,7 @@ ecs_table_t *find_or_create(
                     table = create_table(world, stage, &table_entities);
                 }
             } else {
-                ordered_entities = ecs_os_alloca(ecs_entity_t, count);
+                ordered_entities = ecs_os_alloca(sizeof(ecs_entity_t) * count);
 
                 memcpy(ordered_entities, array, 
                     count * sizeof(ecs_entity_t));

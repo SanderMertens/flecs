@@ -519,7 +519,7 @@ void TriggerOnSet_on_set_after_snapshot_restore() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
 
     test_int(ctx.invoked, 0);
 

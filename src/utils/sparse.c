@@ -159,7 +159,7 @@ ecs_sparse_t* _ecs_sparse_new(
     size_t elem_size,
     int32_t element_count)
 {
-    ecs_sparse_t *result = ecs_os_calloc(1, sizeof(ecs_sparse_t));
+    ecs_sparse_t *result = ecs_os_calloc(sizeof(ecs_sparse_t) * 1);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->chunk_size = CHUNK_ALLOC_SIZE / elem_size;

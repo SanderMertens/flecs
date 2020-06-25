@@ -832,18 +832,17 @@ public:
 
     flecs::type to_type() const;
 
-    template<typename T>
-    const T& get() const {
-        const T* component_ptr = static_cast<const T*>(ecs_get_w_entity(
-            m_world, m_id, component_base<T>::s_entity));
-        ecs_assert(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-        return *component_ptr;
+    template <typename T>
+    const T* get() const {
+        return static_cast<const T*>(
+            ecs_get_w_entity(m_world, m_id, component_base<T>::s_entity));
     }
 
     template <typename T>
-    T* get_ptr() const {
-        return static_cast<const T*>(
-            ecs_get_w_entity(m_world, m_id, component_base<T>::s_entity));
+    T* get_mut(bool *is_added = nullptr) const {
+        return static_cast<T*>(
+            ecs_get_mut_w_entity(
+                m_world, m_id, component_base<T>::s_entity), is_added);
     }
 
     template <typename T>
@@ -1417,18 +1416,20 @@ public:
 
     void take() {
         if (m_snapshot) {
-            ecs_snapshot_free(m_world.c_ptr(), m_snapshot);
+            ecs_snapshot_free(m_snapshot);
         }
 
-        m_snapshot = ecs_snapshot_take(m_world.c_ptr(), nullptr);
+        m_snapshot = ecs_snapshot_take(m_world.c_ptr());
     }
 
     void take(flecs::filter filter) {
         if (m_snapshot) {
-            ecs_snapshot_free(m_world.c_ptr(), m_snapshot);
+            ecs_snapshot_free(m_snapshot);
         }
 
-        m_snapshot = ecs_snapshot_take(m_world.c_ptr(), filter.c_ptr());
+        ecs_iter_t it = ecs_filter_iter(m_world.c_ptr(), filter.c_ptr());
+        m_snapshot = ecs_snapshot_take_w_iter(
+            &it, ecs_filter_next);
     }
 
     void restore() {
@@ -1440,7 +1441,7 @@ public:
 
     ~snapshot() {
         if (m_snapshot) {
-            ecs_snapshot_free(m_world.c_ptr(), m_snapshot);
+            ecs_snapshot_free(m_snapshot);
         }
     }
 

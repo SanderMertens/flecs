@@ -147,7 +147,7 @@ void New_w_component_w_count(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     
     ecs_type_t type = ecs_type_from_entity(it->world, ctx->component);
-    ctx->new_entities[ctx->entity_count] = ecs_bulk_new_w_type(it->world, type, 1000, NULL);
+    ctx->new_entities[ctx->entity_count] = ecs_bulk_new_w_type(it->world, type, 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {

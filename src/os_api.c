@@ -252,11 +252,10 @@ void* ecs_os_api_malloc(size_t size) {
 }
 
 static
-void* ecs_os_api_calloc(size_t num, size_t size) {
+void* ecs_os_api_calloc(size_t size) {
     ecs_os_api_calloc_count ++;
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(num != 0, ECS_INVALID_PARAMETER, NULL);
-    return calloc(num, size);
+    return calloc(1, size);
 }
 
 static

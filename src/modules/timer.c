@@ -1,5 +1,4 @@
 #include "../flecs_private.h"
-#include "flecs/modules/timers.h"
 
 ecs_type_t ecs_type(EcsTimer);
 ecs_type_t ecs_type(EcsRateFilter);
@@ -216,11 +215,11 @@ void ecs_set_tick_source(
     system_data->tick_source = tick_source;
 }
 
-void FlecsTimersImport(
+void FlecsTimerImport(
     ecs_world_t *world,
     int flags)
-{
-    ECS_MODULE(world, FlecsTimers);
+{    
+    ECS_MODULE(world, FlecsTimer);
 
     ECS_IMPORT(world, FlecsPipeline, 0);
 
@@ -230,11 +229,13 @@ void FlecsTimersImport(
     ecs_bootstrap_component(world, EcsRateFilter);
 
     /* Add EcsTickSource to timers and rate filters */
-    ECS_SYSTEM(world, AddTickSource, EcsPreFrame, [in] Timer || RateFilter, [out] !flecs.systems.TickSource);
+    ECS_SYSTEM(world, AddTickSource, EcsPreFrame, [in] Timer || RateFilter, [out] !flecs.system.TickSource);
 
     /* Timer handling */
-    ECS_SYSTEM(world, ProgressTimers, EcsPreFrame, Timer, flecs.systems.TickSource);
+    ECS_SYSTEM(world, ProgressTimers, EcsPreFrame, Timer, flecs.system.TickSource);
 
     /* Rate filter handling */
-    ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, [in] RateFilter, [out] flecs.systems.TickSource);
+    ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, [in] RateFilter, [out] flecs.system.TickSource);
+
+    (void)flags;
 }

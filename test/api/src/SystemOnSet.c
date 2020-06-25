@@ -257,13 +257,18 @@ void SystemOnSet_bulk_new_1() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_type(world, ecs_type(Position), 3, (void*[]){
-        (Position[]) {
-            {10, 20},
-            {30, 40},
-            {50, 60}
-        }
-    });
+    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){ecs_entity(Position)}, 
+            .count = 1
+        },
+        (void*[]){
+            (Position[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            }
+        });
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);
@@ -291,18 +296,26 @@ void SystemOnSet_bulk_new_2() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_type(world, ecs_type(Type), 3, (void*[]){
-        (Position[]) {
-            {10, 20},
-            {30, 40},
-            {50, 60}
+    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){
+                ecs_entity(Position),
+                ecs_entity(Velocity)
+            }, 
+            .count = 2
         },
-        (Velocity[]) {
-            {10, 20},
-            {30, 40},
-            {50, 60}
-        }
-    });
+        (void*[]){
+            (Position[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            (Velocity[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            }
+        });
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);
@@ -332,18 +345,26 @@ void SystemOnSet_bulk_new_2_of_1() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_type(world, ecs_type(Type), 3, (void*[]){
-        (Position[]) {
-            {10, 20},
-            {30, 40},
-            {50, 60}
+    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){
+                ecs_entity(Position),
+                ecs_entity(Velocity)
+            }, 
+            .count = 2
         },
-        (Velocity[]) {
-            {10, 20},
-            {30, 40},
-            {50, 60}
-        }
-    });
+        (void*[]){
+            (Position[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            (Velocity[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            }
+        });
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);
@@ -372,23 +393,32 @@ void SystemOnSet_bulk_new_3() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_type(world, ecs_type(Type), 3, (void*[]){
-        (Position[]) {
-            {10, 20},
-            {30, 40},
-            {50, 60}
+    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){
+                ecs_entity(Position),
+                ecs_entity(Velocity),
+                ecs_entity(Mass)
+            }, 
+            .count = 3
         },
-        (Velocity[]) {
-            {10, 20},
-            {30, 40},
-            {50, 60}
-        },
-        (Mass[]) {
-            10,
-            20,
-            30
-        }
-    });
+        (void*[]){
+            (Position[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            (Velocity[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            (Mass[]) {
+                10,
+                20,
+                30
+            }
+        });
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);
@@ -421,23 +451,32 @@ void SystemOnSet_bulk_new_3_of_2() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_type(world, ecs_type(Type), 3, (void*[]){
-        (Position[]) {
-            {10, 20},
-            {30, 40},
-            {50, 60}
+    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){
+                ecs_entity(Position),
+                ecs_entity(Velocity),
+                ecs_entity(Mass)
+            }, 
+            .count = 3
         },
-        (Velocity[]) {
-            {10, 20},
-            {30, 40},
-            {50, 60}
-        },
-        (Mass[]) {
-            10,
-            20,
-            30
-        }
-    });
+        (void*[]){
+            (Position[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            (Velocity[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            (Mass[]) {
+                10,
+                20,
+                30
+            }
+        });
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);
@@ -469,18 +508,27 @@ void SystemOnSet_bulk_new_1_from_base() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_bulk_new_w_type(world, ecs_type(Type), 3, (void*[]){
-        (Velocity[]) {
-            {10, 20},
-            {30, 40},
-            {50, 60}
+    ecs_entity_t e = ecs_bulk_new_w_data(world, 3,
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){
+                ecs_entity(Velocity),
+                ecs_entity(Mass),
+                ECS_INSTANCEOF | Base
+            }, 
+            .count = 3
         },
-        (Mass[]) {
-            10,
-            20,
-            30
-        }
-    });
+        (void*[]){
+            (Velocity[]) {
+                {10, 20},
+                {30, 40},
+                {50, 60}
+            },
+            (Mass[]) {
+                10,
+                20,
+                30
+            }
+        });
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);

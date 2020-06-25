@@ -49,7 +49,6 @@ void* (*ecs_os_api_realloc_t)(
 
 typedef
 void* (*ecs_os_api_calloc_t)(
-    size_t num,
     size_t size);
 
 typedef
@@ -221,15 +220,13 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_malloc(size) ecs_os_api.malloc(size);
 #define ecs_os_free(ptr) ecs_os_api.free(ptr);
 #define ecs_os_realloc(ptr, size) ecs_os_api.realloc(ptr, size)
-#define ecs_os_calloc(num, size) ecs_os_api.calloc(num, size)
+#define ecs_os_calloc(size) ecs_os_api.calloc(size)
 #define ecs_os_strdup(str) ecs_os_api.strdup(str)
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
-#define ecs_os_alloca(type, count) _alloca(sizeof(type) * (count))
-#define _ecs_os_alloca(size, count) _alloca((size) * (count))
+#define ecs_os_alloca(size) _alloca(sizeof(size)
 #else
-#define ecs_os_alloca(type, count) alloca(sizeof(type) * (count))
-#define _ecs_os_alloca(size, count) alloca((size) * (count))
+#define ecs_os_alloca(size) alloca(size)
 #endif
 
 /* Threads */

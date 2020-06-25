@@ -98,6 +98,8 @@ ecs_entity_t find_child_in_staged(
     ecs_entity_t parent,
     const char *name)
 {
+    (void)parent;
+    
     ecs_sparse_each(stage->tables, ecs_table_t, table, {
         ecs_type_t type = table->type;
 
@@ -330,7 +332,7 @@ ecs_entity_t ecs_get_scope(
     return stage->scope;
 }
 
-int32_t ecs_child_count(
+int32_t ecs_get_child_count(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
@@ -377,7 +379,8 @@ ecs_iter_t ecs_scope_iter_w_filter(
 
     return (ecs_iter_t) {
         .world = world,
-        .iter.parent = iter
+        .iter.parent = iter,
+        .table_count = ecs_vector_count(iter.tables)
     };
 }
 
@@ -415,7 +418,7 @@ bool ecs_scope_next(
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
-        iter->index = ++i;
+        iter->index = i + 1;
 
         return true;
     }

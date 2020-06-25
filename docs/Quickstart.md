@@ -264,7 +264,7 @@ ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
 One useful application of hierarchies is CASCADE systems. CASCADE systems iterate entities ordered by depth, which can be used for (for example) transform systems:
 
 ```c
-ECS_SYSTEM(world, Transform, CASCADE:Position, Position);
+ECS_SYSTEM(world, Transform, EcsOnUpdate, CASCADE:Position, Position);
 ```
 
 Which could be implemented like this:
