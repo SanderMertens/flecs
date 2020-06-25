@@ -1,4 +1,4 @@
-#include "flecs/private/sparse.h"
+#include "flecs.h"
 
 #define CHUNK_ALLOC_SIZE (4096)
 

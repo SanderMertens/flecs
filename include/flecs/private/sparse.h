@@ -1,6 +1,8 @@
 #ifndef FLECS_SPARSE_H
 #define FLECS_SPARSE_H
 
+#include "api_defines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

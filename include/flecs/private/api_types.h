@@ -10,6 +10,8 @@
 #ifndef FLECS_API_TYPES_H
 #define FLECS_API_TYPES_H
 
+#include "api_defines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

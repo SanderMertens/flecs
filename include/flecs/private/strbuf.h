@@ -1,6 +1,8 @@
 #ifndef FLECS_STRBUF_H_
 #define FLECS_STRBUF_H_
 
+#include "api_defines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

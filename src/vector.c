@@ -1,4 +1,4 @@
-#include "flecs/private/vector.h"
+#include "flecs.h"
 
 /** Resize the vector buffer */
 static

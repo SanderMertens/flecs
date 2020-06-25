@@ -18,6 +18,10 @@ extern "C" {
 #include <time.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdarg.h>
+#include <string.h>
+#include <stdio.h>
+#include <limits.h>
 
 /* Non-standard but required. If not provided by platform, add manually. If
  * flecs is built by bake, stdint.h from bake is included. */

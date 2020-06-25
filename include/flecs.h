@@ -5,9 +5,6 @@
 /* FLECS_LEGACY should be defined when building for C89 */
 // #define FLECS_LEGACY
 
-/* FLECS_STATIC should be defined when building as a static library */
-// #define FLECS_STATIC
-
 /* FLECS_NO_CPP should be defined when building for C++ without the C++ API */
 // #define FLECS_NO_CPP
 

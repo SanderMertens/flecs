@@ -1,4 +1,4 @@
-#include "flecs/private/map.h"
+#include "flecs.h"
 
 #define LOAD_FACTOR (1.5)
 #define KEY_SIZE (sizeof(ecs_map_key_t))

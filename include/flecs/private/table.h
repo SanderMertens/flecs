@@ -2,6 +2,8 @@
 #ifndef FLECS_TABLE_H_
 #define FLECS_TABLE_H_
 
+#include "api_defines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

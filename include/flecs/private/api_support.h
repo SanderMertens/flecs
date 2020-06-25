@@ -1,6 +1,8 @@
 #ifndef FLECS_API_SUPPORT_H
 #define FLECS_API_SUPPORT_H
 
+#include "api_types.h"
+
 /** Supporting types and functions that need to be exposed either in support of 
  * the public API or for unit tests, but that may change between minor / patch 
  * releases. */
