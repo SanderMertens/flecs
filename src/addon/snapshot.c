@@ -244,7 +244,7 @@ void ecs_snapshot_restore(
 
 ecs_iter_t ecs_snapshot_iter(
     ecs_snapshot_t *snapshot,
-    ecs_filter_t *filter)
+    const ecs_filter_t *filter)
 {
     ecs_snapshot_iter_t iter = {
         .filter = filter ? *filter : (ecs_filter_t){0},

@@ -139,7 +139,6 @@ ecs_reader_t ecs_reader_init(
  */
 FLECS_EXPORT
 ecs_reader_t ecs_reader_init_w_iter(
-    ecs_world_t *world,
     ecs_iter_t *iter,
     ecs_iter_next_action_t next);
 

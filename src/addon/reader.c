@@ -367,10 +367,11 @@ ecs_reader_t ecs_reader_init(
 }
 
 ecs_reader_t ecs_reader_init_w_iter(
-    ecs_world_t *world,
     ecs_iter_t *it,
     ecs_iter_next_action_t next)
 {
+    ecs_world_t *world = it->world;
+
     ecs_reader_t result = {
         .world = world,
         .state = EcsTableSegment,

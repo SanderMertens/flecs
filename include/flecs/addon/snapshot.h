@@ -60,7 +60,7 @@ void ecs_snapshot_restore(
 FLECS_EXPORT
 ecs_iter_t ecs_snapshot_iter(
     ecs_snapshot_t *snapshot,
-    ecs_filter_t *filter);
+    const ecs_filter_t *filter);
 
 /** Progress snapshot iterator.
  * 

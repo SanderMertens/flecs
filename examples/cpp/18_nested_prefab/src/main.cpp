@@ -44,9 +44,9 @@ int main(int argc, char *argv[]) {
     /* Print position of e and of the child. Note that since we did not override
      * any components, both position components are owned by the prefabs, not by
      * the instances. */
-    Position p = e.get<Position>();
-    std::cout << "Position of e = {" << p.x << ", " << p.y << "}" << std::endl;
+    const Position *p = e.get<Position>();
+    std::cout << "Position of e = {" << p->x << ", " << p->y << "}" << std::endl;
 
     p = child.get<Position>();
-    std::cout << "Position of child = {" << p.x << ", " << p.y << "}" << std::endl;
+    std::cout << "Position of child = {" << p->x << ", " << p->y << "}" << std::endl;
 }

@@ -44,8 +44,8 @@ int main(int argc, char *argv[]) {
     ecs_iter_t it = ecs_query_iter(q);
 
     while (ecs_query_next(&it)) {        
-        ECS_COLUMN(&it, Position, p, 1);
-        ECS_COLUMN(&it, Velocity, v, 2);
+        Position *p = ecs_column(&it, Position, 1);
+        Velocity *v = ecs_column(&it, Velocity, 2);
 
         for (int i = 0; i < it.count; i ++) {
             p[i].x += v[i].x;

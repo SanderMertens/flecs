@@ -1,5 +1,7 @@
 #pragma once
 
+/* Unstable API */
+
 #include <string>
 #include <sstream>
 #include <array>
@@ -936,7 +938,7 @@ class entity_range final : public entity_fluent<entity_range> {
 public:
     entity_range(const world& world, std::int32_t count) 
         : m_world(world.c_ptr())
-        , m_id_start( ecs_bulk_new_w_type(m_world, nullptr, count, NULL))
+        , m_id_start( ecs_bulk_new_w_type(m_world, nullptr, count))
         , m_count(count) { }
 
     template <typename Func>
@@ -1391,8 +1393,10 @@ public:
 
     snapshot(const snapshot& obj) 
         : m_world( obj.m_world )
-        , m_snapshot( ecs_snapshot_copy(m_world.c_ptr(), obj.m_snapshot, nullptr) )
-    { }
+    { 
+        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot, nullptr);
+        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);
+    }
 
     snapshot(snapshot&& obj) 
         : m_world(obj.m_world)
@@ -1403,7 +1407,8 @@ public:
 
     snapshot& operator=(const snapshot& obj) {
         ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
-        m_snapshot = ecs_snapshot_copy(m_world.c_ptr(), obj.m_snapshot, nullptr);
+        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot, nullptr);
+        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);        
         return *this;
     }
 
@@ -1835,7 +1840,7 @@ public:
 
     filter_iterator(const world& world, const snapshot& snapshot, const filter& filter) 
         : m_world( world.c_ptr() )
-        , m_iter( ecs_snapshot_filter_iter(m_world, snapshot.c_ptr(), filter.c_ptr()) )
+        , m_iter( ecs_snapshot_iter(snapshot.c_ptr(), filter.c_ptr()) )
     {
         m_has_next = ecs_filter_next(&m_iter);
     }
@@ -1977,7 +1982,8 @@ public:
     }
 
     reader(world& world, snapshot& snapshot) {
-        m_reader = ecs_snapshot_reader_init(world.c_ptr(), snapshot.c_ptr());
+        ecs_iter_t it = ecs_snapshot_iter(snapshot.c_ptr(), nullptr);
+        m_reader = ecs_reader_init_w_iter(&it, ecs_snapshot_next);
     }
 
     std::size_t read(char *buffer, std::size_t size) {

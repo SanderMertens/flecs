@@ -41,7 +41,7 @@ ecs_vector_t* serialize_snapshot_to_vector(
     ecs_snapshot_t *snapshot) 
 {
     ecs_iter_t it = ecs_snapshot_iter(snapshot, NULL);
-    ecs_reader_t reader = ecs_reader_init_w_iter(world, &it, ecs_snapshot_next);
+    ecs_reader_t reader = ecs_reader_init_w_iter(&it, ecs_snapshot_next);
     return serialize_reader_to_vector(world, buffer_size, &reader);
 }
 

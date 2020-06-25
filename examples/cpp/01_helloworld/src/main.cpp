@@ -22,10 +22,10 @@ int main(int argc, char *argv[]) {
     e.set<Position>({10, 20});
 
     // Get the Position component.
-    const Position& p = e.get<Position>();
+    const Position *p = e.get<Position>();
 
     std::cout << "Position of " << e.name() << " is {" 
-              << p.x << ", " << p.y << "}" 
+              << p->x << ", " << p->y << "}" 
               << std::endl;
 
     return 0;
