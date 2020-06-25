@@ -1,0 +1,70 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install bake
+      run: |
+        git clone https://github.com/SanderMertens/bake
+        make -C bake/build-$(uname)
+        bake/bake setup
+
+    - name: Build Flecs
+      run: bake
+
+    - name: Build examples
+      run: |
+        bake examples/c
+        bake examples/cpp
+         
+    - name: Run tests
+      run: bake test
+      
+  windows:
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, windows-2016]
+        toolset: [clang-cl, default]
+        include:
+          - toolset: clang-cl
+            toolset_option: -T"ClangCl"
+        exclude:
+          - os: windows-2016
+            toolset: clang-cl  
+            
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install bake
+      run: |
+        git clone https://github.com/SanderMertens/bake
+        cd bake\build-Windows\
+        nmake
+        cd ..
+        bake.exe setup --local
+        set PATH=%USERPROFILE%\bake;%PATH%
+        cd ..\flecs
+
+    - name: Build Flecs
+      run: bake
+
+    - name: Build examples
+      run: |
+        bake examples/c
+        bake examples/cpp
+         
+    - name: Run tests
+      run: bake test
