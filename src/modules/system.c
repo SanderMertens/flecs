@@ -1,5 +1,6 @@
 #include "../flecs_private.h"
 
+/* Global type variables */
 ecs_type_t ecs_type(EcsComponentLifecycle);
 ecs_type_t ecs_type(EcsTrigger);
 ecs_type_t ecs_type(EcsModule);
@@ -136,6 +137,19 @@ void register_out_columns(
     ecs_assert(out_count != 0, ECS_NO_OUT_COLUMNS, ecs_get_name(world, system));
 }
 
+static
+void invoke_status_action(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    const EcsSystem *system_data,
+    ecs_system_status_t status)
+{
+    ecs_system_status_action_t action = system_data->status_action;
+    if (action) {
+        action(world, system, status, system_data->status_ctx);
+    }
+}
+
 /* Invoked when system becomes active or inactive */
 void ecs_system_activate(
     ecs_world_t *world,
@@ -158,7 +172,7 @@ void ecs_system_activate(
         world, system_data->query, world->on_activate_components, activate);
 
     /* Invoke system status action */
-    ecs_invoke_status_action(world, system, system_data, 
+    invoke_status_action(world, system, system_data, 
         activate ? EcsSystemActivated : EcsSystemDeactivated);
 
     ecs_trace_1("system #[green]%s#[reset] %s", 
@@ -194,7 +208,7 @@ void ecs_enable_system(
         enabled);
     
     /* Invoke action for enable/disable status */
-    ecs_invoke_status_action(
+    invoke_status_action(
         world, system, system_data,
         enabled ? EcsSystemEnabled : EcsSystemDisabled);
 }
@@ -274,19 +288,6 @@ void ecs_init_system(
     ecs_trace_pop();
 }
 
-/* -- Private API -- */
-
-void ecs_invoke_status_action(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    const EcsSystem *system_data,
-    ecs_system_status_t status)
-{
-    ecs_system_status_action_t action = system_data->status_action;
-    if (action) {
-        action(world, system, status, system_data->status_ctx);
-    }
-}
 
 void ecs_col_system_free(
     EcsSystem *system_data)
@@ -334,12 +335,12 @@ void ecs_set_system_status_action(
         /* If system is already enabled, generate enable status. The API 
          * should guarantee that it exactly matches enable-disable 
          * notifications and activate-deactivate notifications. */
-        ecs_invoke_status_action(world, system, system_data, EcsSystemEnabled);
+        invoke_status_action(world, system, system_data, EcsSystemEnabled);
 
         /* If column system has active (non-empty) tables, also generate the
          * activate status. */
         if (ecs_vector_count(system_data->query->tables)) {
-            ecs_invoke_status_action(
+            invoke_status_action(
                 world, system, system_data, EcsSystemActivated);
         }
     }
@@ -570,14 +571,14 @@ void ecs_colsystem_dtor(
 
         /* Invoke Deactivated action for active systems */
         if (cur->query && ecs_vector_count(cur->query->tables)) {
-            ecs_invoke_status_action(world, e, ptr, EcsSystemDeactivated);
+            invoke_status_action(world, e, ptr, EcsSystemDeactivated);
         }
 
         /* Invoke Disabled action for enabled systems */
         if (!ecs_has_entity(world, e, EcsDisabled) && 
             !ecs_has_entity(world, e, EcsDisabledIntern)) 
         {
-            ecs_invoke_status_action(world, e, ptr, EcsSystemDisabled);
+            invoke_status_action(world, e, ptr, EcsSystemDisabled);
         }           
 
         ecs_os_free(cur->on_demand);

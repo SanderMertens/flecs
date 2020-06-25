@@ -46,15 +46,6 @@ typedef struct EcsQuery {
     ecs_query_t *query;
 } EcsQuery;
 
-/* Component used for registering component triggers */
-typedef struct EcsTrigger {
-    ecs_entity_t kind;
-    ecs_iter_action_t action;
-    ecs_entity_t component;
-    ecs_entity_t self;
-    void *ctx;
-} EcsTrigger;
-
 /* System action */
 typedef struct EcsIterAction {
     ecs_iter_action_t action;

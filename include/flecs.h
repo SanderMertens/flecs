@@ -169,6 +169,14 @@ typedef struct EcsComponentLifecycle {
     void *ctx;              /**< User defined context */
 } EcsComponentLifecycle;
 
+/* Component used for registering component triggers */
+typedef struct EcsTrigger {
+    ecs_entity_t kind;
+    ecs_iter_action_t action;
+    ecs_entity_t component;
+    ecs_entity_t self;
+    void *ctx;
+} EcsTrigger;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Type roles

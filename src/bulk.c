@@ -93,13 +93,6 @@ void ecs_bulk_delete(
     bulk_delete(world, filter, true);
 }
 
-void ecs_clear_w_filter(
-    ecs_world_t *world,
-    const ecs_filter_t *filter)
-{
-    bulk_delete(world, filter, false);
-}
-
 void ecs_bulk_add_remove_type(
     ecs_world_t *world,
     ecs_type_t to_add,

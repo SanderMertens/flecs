@@ -16,22 +16,6 @@
 void ecs_bootstrap(
     ecs_world_t *world);
 
-/* Initialize builtins */
-void ecs_init_builtins(
-    ecs_world_t *world);
-
-/* Initialize system builtins */
-void ecs_init_system_builtins(
-    ecs_world_t *world);    
-
-void _ecs_bootstrap_component(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t entity,
-    const char *id,
-    size_t size,
-    size_t alignment);
-
 ecs_type_t ecs_bootstrap_type(
     ecs_world_t *world,
     ecs_entity_t entity);
@@ -43,17 +27,10 @@ ecs_type_t ecs_bootstrap_type(
     ecs_set(world, name, EcsName, {.value = &#name[strlen("Ecs")], .symbol = #name});\
     ecs_add_entity(world, name, ECS_CHILDOF | ecs_get_scope(world))
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API
 ////////////////////////////////////////////////////////////////////////////////
-
-/* Get prefab from type, even if type was introduced while in progress */
-ecs_entity_t ecs_get_prefab_from_type(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    bool is_new_table,
-    ecs_entity_t entity,
-    ecs_type_t type_id);
 
 /* Mark an entity as being watched. This is used to trigger automatic rematching
  * when entities used in system expressions change their components. */
@@ -69,23 +46,6 @@ ecs_entity_t ecs_find_in_type(
     ecs_entity_t component,
     ecs_entity_t flags);
 
-void ecs_clear_w_filter(
-    ecs_world_t *world,
-    const ecs_filter_t *filter);
-
-/* Get actual row from record row */
-int32_t ecs_record_to_row(
-    int32_t row, 
-    bool *is_watched_out);
-
-/* Convert actual row to record row */
-int32_t ecs_row_to_record(
-    int32_t row, 
-    bool is_watched);
-
-/* Convert type to entity array */
-ecs_entities_t ecs_type_to_entities(
-    ecs_type_t type);    
 
 ////////////////////////////////////////////////////////////////////////////////
 //// World API
@@ -135,9 +95,17 @@ void ecs_defer_end(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
+void ecs_measure_frame_time(
+    ecs_world_t *world,
+    bool enable);
+
+void ecs_measure_system_time(
+    ecs_world_t *world,
+    bool enable);
+
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Pipeline API
+//// Pipeline API (to be removed from core)
 ////////////////////////////////////////////////////////////////////////////////
 
 int32_t ecs_pipeline_update(
@@ -158,7 +126,7 @@ void ecs_pipeline_progress(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Worker API
+//// Worker API (to be removed from core)
 ////////////////////////////////////////////////////////////////////////////////
 
 void ecs_worker_begin(
@@ -221,12 +189,6 @@ ecs_type_t ecs_type_add_intern(
     ecs_type_t type,
     ecs_entity_t component);
 
-/* Get number of containers (parents) for a type */
-int32_t ecs_type_container_depth(
-   ecs_world_t *world,
-   ecs_type_t type,
-   ecs_entity_t component);
-
 /* Find entity in prefabs of type */
 ecs_entity_t ecs_find_entity_in_prefabs(
     ecs_world_t *world,
@@ -264,16 +226,6 @@ void ecs_run_component_trigger(
     int32_t row,
     int32_t count);
 
-void ecs_run_set_actions(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_c_info_t *c_info,
-    ecs_entity_t component,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count);
-
 void ecs_run_set_systems(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -283,6 +235,7 @@ void ecs_run_set_systems(
     int32_t row,
     int32_t count,
     bool set_all);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table API
@@ -298,11 +251,6 @@ void ecs_table_register_query(
     ecs_table_t *table,
     ecs_query_t *query,
     int32_t matched_table_index);
-
-void ecs_table_unregister_monitor(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t system);
 
 /* Free table */
 void ecs_table_free(
@@ -349,6 +297,7 @@ ecs_table_t *ecs_table_traverse_remove(
     ecs_entities_t *to_remove,
     ecs_entities_t *removed);    
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
@@ -378,6 +327,20 @@ void ecs_query_set_iter(
     int32_t row,
     int32_t count);
 
+void ecs_query_rematch(
+    ecs_world_t *world,
+    ecs_query_t *query);
+
+void ecs_run_monitor(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_matched_query_t *monitor,
+    ecs_entities_t *components,
+    int32_t row,
+    int32_t count,
+    ecs_entity_t *entities);
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API
 ////////////////////////////////////////////////////////////////////////////////
@@ -391,50 +354,21 @@ void ecs_sig_init(
 void ecs_sig_deinit(
     ecs_sig_t *sig);
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// System API
-////////////////////////////////////////////////////////////////////////////////
-
-/* Initialize new system */
-void ecs_init_system(
+/* Check if all non-table column constraints are met */
+bool ecs_sig_check_constraints(
     ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_iter_action_t action,
-    ecs_query_t *query,
-    void *ctx);
+    ecs_sig_t *sig);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// System API (to be removed from core)
+////////////////////////////////////////////////////////////////////////////////
 
 /* Invoked when system becomes active / inactive */
 void ecs_system_activate(
     ecs_world_t *world,
     ecs_entity_t system,
     bool activate);
-
-/* Invoke status action */
-void ecs_invoke_status_action(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    const EcsSystem *system_data,
-    ecs_system_status_t status);
-
-/* Check if all non-table column constraints are met */
-bool ecs_sig_check_constraints(
-    ecs_world_t *world,
-    ecs_sig_t *sig);
-
-/* Notify row system of a new type, which initiates system-type matching */
-void ecs_row_system_notify_of_type(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_entity_t system,
-    ecs_type_t type);
-
-/* Activate table for system (happens if table goes from empty to not empty) */
-void ecs_system_activate_table(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_table_t *table,
-    bool active);
 
 /* Internal function to run a system */
 ecs_entity_t ecs_run_intern(
@@ -448,66 +382,6 @@ ecs_entity_t ecs_run_intern(
     const ecs_filter_t *filter,
     void *param,
     bool ran_by_app);
-
-/* Callback for parse_component_expr that stores result as ecs_sig_column_t's */
-int ecs_parse_signature_action(
-    ecs_world_t *world,
-    const char *system_id,
-    const char *sig,
-    int column,    
-    ecs_sig_from_kind_t from_kind,
-    ecs_sig_oper_kind_t oper_kind,
-    ecs_sig_inout_kind_t inout_kind,
-    ecs_entity_t flags,
-    const char *component_id,
-    const char *source_id,
-    void *data);
-
-/* Trigger rematch of system */
-void ecs_query_rematch(
-    ecs_world_t *world,
-    ecs_query_t *query);
-
-void ecs_measure_frame_time(
-    ecs_world_t *world,
-    bool enable);
-
-void ecs_measure_system_time(
-    ecs_world_t *world,
-    bool enable);
-
-void ecs_run_monitor(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_matched_query_t *monitor,
-    ecs_entities_t *components,
-    int32_t row,
-    int32_t count,
-    ecs_entity_t *entities);
-
-void ecs_enable_system(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    EcsSystem *system_data,
-    bool enabled);
-
-////////////////////////////////////////////////////////////////////////////////
-//// Worker API
-////////////////////////////////////////////////////////////////////////////////
-
-/* Compute schedule based on current number of entities matching system */
-void ecs_schedule_jobs(
-    ecs_world_t *world,
-    ecs_entity_t system);
-
-/* Prepare jobs */
-void ecs_prepare_jobs(
-    ecs_world_t *world,
-    ecs_entity_t system);
-
-/* Run jobs */
-void ecs_run_jobs(
-    ecs_world_t *world);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -535,6 +409,20 @@ ecs_record_t ecs_to_row(
 /* Get 64bit integer from ecs_record_t */
 uint64_t ecs_from_row(
     ecs_record_t record);
+
+/* Get actual row from record row */
+int32_t ecs_record_to_row(
+    int32_t row, 
+    bool *is_watched_out);
+
+/* Convert actual row to record row */
+int32_t ecs_row_to_record(
+    int32_t row, 
+    bool is_watched);
+
+/* Convert type to entity array */
+ecs_entities_t ecs_type_to_entities(
+    ecs_type_t type);    
 
 /* Utility that print a descriptive error string*/
 //void ecs_print_error_string(const char *error_description, const char* signature, const char* system_id, const char* component_id);
