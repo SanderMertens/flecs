@@ -14,18 +14,16 @@
 /* FLECS_NO_MODULES should be defined when modules should not be included */
 // #define FLECS_NO_MODULES
 
-/* FLECS_NO_UTILS should be defined when optional utils should not be included */
-// #define FLECS_NO_UTILS
+/* FLECS_NO_ADDONS should be defined when optional addons should not be included */
+// #define FLECS_NO_ADDONS
 
-#include "flecs/support/api_defines.h"
+#include "flecs/private/api_defines.h"
+#include "flecs/private/vector.h"  /* Vector datatype */
+#include "flecs/private/sparse.h"  /* Sparse set */
+#include "flecs/private/map.h"     /* Hashmap */
+#include "flecs/private/strbuf.h"  /* Efficient string builder */
 
-/* Required utilities */
-#include "flecs/utils/os_api.h"  /* Abstraction for operating system functions */
-#include "flecs/utils/vector.h"  /* Vector datatype */
-#include "flecs/utils/ringbuf.h" /* Ringbuffer datatype */
-#include "flecs/utils/sparse.h"  /* Sparse set */
-#include "flecs/utils/map.h"     /* Hashmap */
-#include "flecs/utils/strbuf.h"  /* Efficient string builder */
+#include "flecs/os_api.h"  /* Abstraction for operating system functions */
 
 #ifdef __cplusplus
 extern "C" {
@@ -129,9 +127,9 @@ typedef void (*ecs_fini_action_t)(
     ecs_world_t *world,
     void *ctx);
 
-#include "flecs/support/api_types.h"        /* Supporting API types */
-#include "flecs/support/api_support.h"      /* Supporting API functions */
-#include "flecs/utils/type.h"               /* Type API */
+#include "flecs/private/api_types.h"        /* Supporting API types */
+#include "flecs/private/api_support.h"      /* Supporting API functions */
+#include "flecs/type.h"                     /* Type API */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,6 +175,7 @@ typedef struct EcsTrigger {
     ecs_entity_t self;
     void *ctx;
 } EcsTrigger;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Type roles
@@ -2283,10 +2282,10 @@ int ecs_enable_console(
 #endif
 
 /* Optional utilities */
-#ifndef FLECS_NO_UTILS
-#include "flecs/utils/snapshot.h"
-#include "flecs/utils/reader_writer.h"
-#include "flecs/utils/ringbuf.h"
+#ifndef FLECS_NO_ADDONS
+#include "flecs/addon/snapshot.h"
+#include "flecs/addon/reader_writer.h"
+#include "flecs/addon/ringbuf.h"
 #endif
 
 #ifdef __cplusplus

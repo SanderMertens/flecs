@@ -1,5 +1,5 @@
 #include "../flecs_private.h"
-#include "flecs/utils/snapshot.h"
+#include "flecs/addon/snapshot.h"
 
 /* World snapshot */
 struct ecs_snapshot_t {

@@ -31,6 +31,12 @@ typedef struct ecs_record_t ecs_record_t;
 /** A reference stores a components from a specific entity for a query */
 typedef struct ecs_reference_t ecs_reference_t;
 
+/** Table column */
+typedef struct ecs_column_t ecs_column_t;
+
+/** Table data */
+typedef struct ecs_data_t ecs_data_t;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
@@ -124,6 +130,29 @@ struct ecs_iter_t {
     } iter;                       /**< Iterator specific data */
 };
 
+typedef enum EcsMatchFailureReason {
+    EcsMatchOk,
+    EcsMatchNotASystem,
+    EcsMatchSystemIsATask,
+    EcsMatchEntityIsDisabled,
+    EcsMatchEntityIsPrefab,
+    EcsMatchFromSelf,
+    EcsMatchFromOwned,
+    EcsMatchFromShared,
+    EcsMatchFromContainer,
+    EcsMatchFromEntity,
+    EcsMatchOrFromSelf,
+    EcsMatchOrFromContainer,
+    EcsMatchNotFromSelf,
+    EcsMatchNotFromOwned,
+    EcsMatchNotFromShared,
+    EcsMatchNotFromContainer,
+} EcsMatchFailureReason;
+
+typedef struct ecs_match_failure_t {
+    EcsMatchFailureReason reason;
+    int32_t column;
+} ecs_match_failure_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Function types

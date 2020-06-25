@@ -24,8 +24,9 @@
 #endif
 
 #include "flecs.h"
-#include "flecs/utils/dbg.h"
-#include "flecs/support/entity_index.h"
+#include "flecs/private/entity_index.h"
+#include "flecs/private/table.h"
+#include "flecs/private/strbuf.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 

@@ -4,8 +4,6 @@
 /* This file contains declarations to private flecs functions */
 
 #include "types.h"
-#include "flecs/support/entity_index.h"
-#include "flecs/support/table.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +44,12 @@ ecs_entity_t ecs_find_in_type(
     ecs_entity_t component,
     ecs_entity_t flags);
 
+/* Obtain entity info */
+bool ecs_get_info(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_info_t *info);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// World API
@@ -102,44 +106,6 @@ void ecs_measure_frame_time(
 void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Pipeline API (to be removed from core)
-////////////////////////////////////////////////////////////////////////////////
-
-int32_t ecs_pipeline_update(
-    ecs_world_t *world,
-    ecs_entity_t pipeline);
-
-int32_t ecs_pipeline_begin(
-    ecs_world_t *world,
-    ecs_entity_t pipeline);
-
-void ecs_pipeline_end(
-    ecs_world_t *world);
-
-void ecs_pipeline_progress(
-    ecs_world_t *world,
-    ecs_entity_t pipeline,
-    float delta_time);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Worker API (to be removed from core)
-////////////////////////////////////////////////////////////////////////////////
-
-void ecs_worker_begin(
-    ecs_world_t *world);
-
-bool ecs_worker_sync(
-    ecs_world_t *world);
-
-void ecs_worker_end(
-    ecs_world_t *world);
-
-void ecs_workers_progress(
-    ecs_world_t *world);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,6 +306,11 @@ void ecs_run_monitor(
     int32_t count,
     ecs_entity_t *entities);
 
+bool ecs_query_match(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_query_t *query,
+    ecs_match_failure_t *failure_info);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Signature API

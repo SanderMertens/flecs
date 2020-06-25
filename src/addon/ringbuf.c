@@ -1,5 +1,5 @@
 
-#include "../flecs_private.h"
+#include "flecs/addon/ringbuf.h"
 
 struct ecs_ringbuf_t {
     ecs_vector_t *data;

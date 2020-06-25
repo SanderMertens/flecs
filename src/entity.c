@@ -211,8 +211,7 @@ bool get_staged_info(
 }
 
 /* Get entity info */
-static
-bool get_any_info(
+bool ecs_get_info(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -1313,7 +1312,7 @@ void add_remove(
     ecs_stage_t *stage = ecs_get_stage(&world);
 
     ecs_entity_info_t info;
-    get_any_info(world, stage, entity, &info);
+    ecs_get_info(world, stage, entity, &info);
 
     ecs_entity_t add_buffer[ECS_MAX_ADD_REMOVE];
     ecs_entity_t remove_buffer[ECS_MAX_ADD_REMOVE];
@@ -1384,7 +1383,7 @@ void add_entities(
     }
 
     ecs_entity_info_t info;
-    get_any_info(world, stage, entity, &info);
+    ecs_get_info(world, stage, entity, &info);
 
     ecs_entity_t buffer[ECS_MAX_ADD_REMOVE];
     ecs_entities_t added = { .array = buffer };
@@ -1413,7 +1412,7 @@ void remove_entities(
     }
 
     ecs_entity_info_t info;
-    get_any_info(world, stage, entity, &info);
+    ecs_get_info(world, stage, entity, &info);
 
     ecs_entity_t buffer[ECS_MAX_ADD_REMOVE];
     ecs_entities_t removed = { .array = buffer };
@@ -1466,7 +1465,7 @@ void *get_mutable(
         add_entities_w_info(world, stage, entity, info, &to_add);
 
         /* Reobtain info, as triggers could have changed the entity */
-        get_any_info(world, stage, entity, info);
+        ecs_get_info(world, stage, entity, info);
 
         dst = get_component(info, component);
 
@@ -1759,7 +1758,7 @@ ecs_entity_t ecs_clone(
     }
 
     ecs_entity_info_t src_info;
-    bool found = get_any_info(world, stage, src, &src_info);
+    bool found = ecs_get_info(world, stage, src, &src_info);
     ecs_table_t *src_table = src_info.table;
 
     if (!found || !src_table) {
@@ -1805,7 +1804,7 @@ const void* ecs_get_w_entity(
 
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
-    bool found = get_any_info(world, stage, entity, &info);
+    bool found = ecs_get_info(world, stage, entity, &info);
     if (found) {
         if (!info.table) {
             return NULL;
@@ -1901,7 +1900,7 @@ void ecs_modified_w_entity(
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_entity_info_t info = {0};
 
-    if (get_any_info(world, stage, entity, &info)) {
+    if (ecs_get_info(world, stage, entity, &info)) {
         ecs_entities_t added = {
             .array = &component,
             .count = 1
@@ -2209,21 +2208,4 @@ void ecs_defer_end(
     }
 }
 
-/* -- Debug functionality -- */
-
-void ecs_dbg_entity(
-    ecs_world_t *world, 
-    ecs_entity_t entity, 
-    ecs_dbg_entity_t *dbg_out)
-{
-    *dbg_out = (ecs_dbg_entity_t){.entity = entity};
-    
-    ecs_entity_info_t info = { 0 };
-    if (get_info(world, entity, &info)) {
-        dbg_out->table = info.table;
-        dbg_out->row = info.row;
-        dbg_out->is_watched = info.is_watched;
-        dbg_out->type = info.table ? info.table->type : NULL;
-    }
-}
 

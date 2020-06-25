@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+/* Unstable API */
+
 typedef struct ecs_dbg_entity_t {
     ecs_entity_t entity;
     ecs_table_t *table;
@@ -33,30 +35,6 @@ typedef struct ecs_dbg_col_system_t {
     bool enabled;
     void *system_data;
 } ecs_dbg_col_system_t;
-
-typedef enum EcsDbgMatchFailureReason {
-    EcsMatchOk,
-    EcsMatchNotASystem,
-    EcsMatchSystemIsATask,
-    EcsMatchEntityIsDisabled,
-    EcsMatchEntityIsPrefab,
-    EcsMatchFromSelf,
-    EcsMatchFromOwned,
-    EcsMatchFromShared,
-    EcsMatchFromContainer,
-    EcsMatchFromEntity,
-    EcsMatchOrFromSelf,
-    EcsMatchOrFromContainer,
-    EcsMatchNotFromSelf,
-    EcsMatchNotFromOwned,
-    EcsMatchNotFromShared,
-    EcsMatchNotFromContainer,
-} EcsDbgMatchFailureReason;
-
-typedef struct ecs_dbg_match_failure_t {
-    EcsDbgMatchFailureReason reason;
-    int32_t column;
-} ecs_dbg_match_failure_t;
 
 FLECS_EXPORT
 void ecs_dbg_entity(
@@ -115,7 +93,7 @@ bool ecs_dbg_match_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t system,
-    ecs_dbg_match_failure_t *failure_info_out);
+    ecs_match_failure_t *failure_info_out);
 
 #ifdef __cplusplus
 }

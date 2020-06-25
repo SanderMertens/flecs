@@ -1,4 +1,4 @@
-#include "../flecs_private.h"
+#include "pipeline.h"
 
 /* Worker thread */
 static

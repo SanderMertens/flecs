@@ -433,7 +433,7 @@ bool match_column(
     ecs_sig_from_kind_t from_kind,
     ecs_entity_t component,
     ecs_entity_t source,
-    ecs_dbg_match_failure_t *failure_info)
+    ecs_match_failure_t *failure_info)
 {
     if (from_kind == EcsFromSelf) {
         failure_info->reason = EcsMatchFromSelf;
@@ -462,15 +462,14 @@ bool match_column(
 }
 
 /* Match table with system */
-static
-bool match_table(
+bool ecs_query_match(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_query_t *query,
-    ecs_dbg_match_failure_t *failure_info)
+    ecs_match_failure_t *failure_info)
 {
     /* Prevent having to add if not null checks everywhere */
-    ecs_dbg_match_failure_t tmp_failure_info;
+    ecs_match_failure_t tmp_failure_info;
     if (!failure_info) {
         failure_info = &tmp_failure_info;
     }
@@ -568,7 +567,7 @@ void match_tables(
         ecs_table_t *table = ecs_sparse_get(
             world->stage.tables, ecs_table_t, i);
 
-        if (match_table(world, table, query, NULL)) {
+        if (ecs_query_match(world, table, query, NULL)) {
             add_table(world, query, table);
         }
     }
@@ -1110,7 +1109,7 @@ void ecs_query_match_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    if (match_table(world, table, query, NULL)) {
+    if (ecs_query_match(world, table, query, NULL)) {
         add_table(world, query, table);
     }
 }
@@ -1192,7 +1191,7 @@ void ecs_query_rematch(
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         int32_t match = table_matched(query->tables, table);
 
-        if (match_table(world, table, query, NULL)) {
+        if (ecs_query_match(world, table, query, NULL)) {
             /* If the table matches, and it is not currently matched, add */
             if (match == -1) {
                 if (table_matched(query->empty_tables, table) == -1) {
@@ -1583,26 +1582,4 @@ void ecs_query_group_by(
     order_ranked_tables(world, query);
 
     build_sorted_tables(world, query);
-}
-
-/* -- Debug functionality -- */
-
-bool ecs_dbg_match_entity(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t system,
-    ecs_dbg_match_failure_t *failure_info_out)
-{
-    ecs_dbg_entity_t dbg;
-    ecs_dbg_entity(world, entity, &dbg);
-
-    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
-    if (!system_data) {
-        failure_info_out->reason = EcsMatchNotASystem;
-        failure_info_out->column = -1;
-        return false;
-    }
-
-    return match_table(
-        world, dbg.table, system_data->query, failure_info_out);
 }

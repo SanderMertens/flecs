@@ -1,5 +1,5 @@
 #include "../flecs_private.h"
-#include "flecs/utils/reader_writer.h"
+#include "flecs/addon/reader_writer.h"
 
 static
 bool iter_table(

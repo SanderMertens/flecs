@@ -1,5 +1,4 @@
-#include "../flecs_private.h"
-#include "flecs/modules/pipeline.h"
+#include "pipeline.h"
 
 ecs_type_t ecs_type(EcsPipelineQuery);
 

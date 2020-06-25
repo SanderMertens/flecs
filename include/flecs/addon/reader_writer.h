@@ -10,9 +10,6 @@
 extern "C" {
 #endif 
 
-typedef struct ecs_column_t ecs_column_t;
-typedef struct ecs_data_t ecs_data_t;
-
 typedef enum ecs_blob_header_kind_t {
     EcsStreamHeader,
 

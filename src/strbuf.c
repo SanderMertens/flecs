@@ -1,4 +1,4 @@
-#include "../flecs_private.h"
+#include "flecs/private/strbuf.h"
 
 /* Add an extra element to the buffer */
 static

@@ -1,5 +1,5 @@
 #include "../flecs_private.h"
-#include "flecs/utils/dbg.h"
+#include "flecs/addon/dbg.h"
 
 ecs_table_t *ecs_dbg_find_table(
     ecs_world_t *world,
@@ -208,4 +208,40 @@ ecs_type_t ecs_dbg_get_column_type(
     }
     
     return result;
+}
+
+void ecs_dbg_entity(
+    ecs_world_t *world, 
+    ecs_entity_t entity, 
+    ecs_dbg_entity_t *dbg_out)
+{
+    *dbg_out = (ecs_dbg_entity_t){.entity = entity};
+    
+    ecs_entity_info_t info = { 0 };
+    if (ecs_get_info(world, &world->stage, entity, &info)) {
+        dbg_out->table = info.table;
+        dbg_out->row = info.row;
+        dbg_out->is_watched = info.is_watched;
+        dbg_out->type = info.table ? info.table->type : NULL;
+    }
+}
+
+bool ecs_dbg_match_entity(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t system,
+    ecs_match_failure_t *failure_info_out)
+{
+    ecs_dbg_entity_t dbg;
+    ecs_dbg_entity(world, entity, &dbg);
+
+    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
+    if (!system_data) {
+        failure_info_out->reason = EcsMatchNotASystem;
+        failure_info_out->column = -1;
+        return false;
+    }
+
+    return ecs_query_match(
+        world, dbg.table, system_data->query, failure_info_out);
 }
