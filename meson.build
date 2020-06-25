@@ -4,9 +4,35 @@ flecs_inc = include_directories('include')
 
 flecs_deps = dependency('threads')
 
-flecs_src = []
-
-subdir('src')
+flecs_src = files([
+    'api_support.c',
+    'bootstrap.c',
+    'bulk.c',
+    'entity_index.c',
+    'entity.c',
+    'err.c',
+    'filter.c',
+    'iter.c',
+    'map.c',
+    'misc.c',
+    'module.c',
+    'os_api.c',
+    'query.c',
+    'scope.c',
+    'signature.c',
+    'sparse.c',
+    'strbuf.c',
+    'table_graph.c',
+    'table.c',
+    'type.c',
+    'vector.c',
+    'world.c',
+    'addon/dbg.c',
+    'addon/reader.c',
+    'addon/ringbug.c',
+    'addon/snapshot.c',
+    'addon/writer.c'
+])
 
 install_headers('include/flecs.h')
 install_subdir('include/flecs', install_dir : get_option('includedir'))
