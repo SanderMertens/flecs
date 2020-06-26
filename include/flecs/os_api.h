@@ -224,7 +224,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_strdup(str) ecs_os_api.strdup(str)
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
-#define ecs_os_alloca(size) _alloca(sizeof(size))
+#define ecs_os_alloca(size) _alloca(size)
 #else
 #define ecs_os_alloca(size) alloca(size)
 #endif
