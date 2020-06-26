@@ -1272,6 +1272,10 @@ ecs_query_t* ecs_query_new_w_sig(
             result->flags |= EcsQueryOnSet;
         }
 
+        if (ecs_has_entity(world, system, EcsUnSet)) {
+            result->flags |= EcsQueryUnSet;
+        }        
+
         match_tables(world, result);
     } else {
         /* Add stub table that resolves references (if any) so everything is

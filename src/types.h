@@ -140,6 +140,7 @@ struct ecs_table_t {
     ecs_vector_t **on_set;           /**< OnSet systems, broken up by column */
     ecs_vector_t *on_set_all;        /**< All OnSet systems */
     ecs_vector_t *on_set_override;   /**< All OnSet systems with overrides */
+    ecs_vector_t *un_set_all;        /**< All OnSet systems */
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
 
@@ -182,11 +183,12 @@ typedef struct ecs_table_range_t {
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
 #define EcsQueryMonitor (2)          /* Query needs to be registered as a monitor */
 #define EcsQueryOnSet (4)            /* Query needs to be registered as on_set system */
-#define EcsQueryMatchDisabled (8)    /* Does query match disabled */
-#define EcsQueryMatchPrefab (16)     /* Does query match prefabs */
-#define EcsQueryHasRefs (32)         /* Does query have references */
+#define EcsQueryUnSet (8)            /* Query needs to be registered as un_set system */
+#define EcsQueryMatchDisabled (16)    /* Does query match disabled */
+#define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
+#define EcsQueryHasRefs (64)         /* Does query have references */
 
-#define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet)
+#define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {

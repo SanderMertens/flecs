@@ -511,6 +511,8 @@
                 "add_base_to_1_of_2_overridden",
                 "on_set_after_remove_override",
                 "no_set_after_remove_base",
+                "un_set_after_remove",
+                "un_set_after_remove_base",
                 "add_to_current_in_on_set",
                 "remove_from_current_in_on_set",
                 "remove_set_component_in_on_set",

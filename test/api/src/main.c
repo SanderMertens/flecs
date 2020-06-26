@@ -458,6 +458,8 @@ void SystemOnSet_add_base_to_2_overridden(void);
 void SystemOnSet_add_base_to_1_of_2_overridden(void);
 void SystemOnSet_on_set_after_remove_override(void);
 void SystemOnSet_no_set_after_remove_base(void);
+void SystemOnSet_un_set_after_remove(void);
+void SystemOnSet_un_set_after_remove_base(void);
 void SystemOnSet_add_to_current_in_on_set(void);
 void SystemOnSet_remove_from_current_in_on_set(void);
 void SystemOnSet_remove_set_component_in_on_set(void);
@@ -2663,7 +2665,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 25,
+        .testcase_count = 27,
         .testcases = (bake_test_case[]){
             {
                 .id = "set_1_of_1",
@@ -2732,6 +2734,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "no_set_after_remove_base",
                 .function = SystemOnSet_no_set_after_remove_base
+            },
+            {
+                .id = "un_set_after_remove",
+                .function = SystemOnSet_un_set_after_remove
+            },
+            {
+                .id = "un_set_after_remove_base",
+                .function = SystemOnSet_un_set_after_remove_base
             },
             {
                 .id = "add_to_current_in_on_set",

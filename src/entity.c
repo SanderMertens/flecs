@@ -831,7 +831,7 @@ void ecs_run_deinit_actions(
                 dtor(world, component, ids, ptr, size, count, ctx);
             }
         }
-    }
+    } 
 }
 
 static
@@ -962,6 +962,9 @@ int32_t move_entity(
             src_row, !same_stage);
 
         if (removed) {
+            run_monitors(world, stage, dst_table, src_table->un_set_all, 
+                dst_row, 1, dst_table->un_set_all);
+
             ecs_run_deinit_actions(
                 world, src_table, src_data, src_row, 1, *removed, true);
         }            
@@ -984,7 +987,7 @@ int32_t move_entity(
 
     if (removed && dst_table->flags & EcsTableHasBase) {
         run_monitors(world, stage, dst_table, src_table->on_set_override, 
-            dst_row, 1, dst_table->on_set_override);
+            dst_row, 1, dst_table->on_set_override);          
     }
 
     info->data = dst_data;
@@ -1002,6 +1005,9 @@ void delete_entity(
     ecs_entities_t *removed)
 {
     if (removed) {
+        run_monitors(world, stage, src_table, src_table->un_set_all, 
+            src_row, 1, NULL);
+
         ecs_run_deinit_actions(
             world, src_table, src_data, src_row, 1, *removed, true);
     }

@@ -804,6 +804,46 @@ void SystemOnSet_no_set_after_remove_base() {
     ecs_fini(world);
 }
 
+void SystemOnSet_un_set_after_remove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_SYSTEM(world, OnPosition, EcsUnSet, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void SystemOnSet_un_set_after_remove_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, Base, Position);
+    ECS_SYSTEM(world, OnPosition, EcsUnSet, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_entity(world, e, ECS_INSTANCEOF | Base);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_entity(world, e, ECS_INSTANCEOF | Base);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
 void SystemOnSet_add_to_current_in_on_set() {
     ecs_world_t *world = ecs_init();
 
@@ -1095,3 +1135,4 @@ void SystemOnSet_add_0_entity_in_on_set() {
 
     ecs_fini(world);
 }
+

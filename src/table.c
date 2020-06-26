@@ -121,6 +121,30 @@ int compare_matched_query(
     return s1 - s2;
 }
 
+static
+void add_monitor(
+    ecs_vector_t **array,
+    ecs_query_t *query,
+    int32_t matched_table_index)
+{
+    /* Add the system to a list that contains all OnSet systems matched with
+     * this table. This makes it easy to get the list of systems that need to be
+     * executed when all components are set, like when new_w_data is used */
+    ecs_matched_query_t *m = ecs_vector_add(array, ecs_matched_query_t);
+    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    m->query = query;
+    m->matched_table_index = matched_table_index;
+
+    /* Sort the system list so that it is easy to get the difference OnSet
+     * OnSet systems between two tables. */
+    qsort(
+        ecs_vector_first(*array, ecs_matched_query_t), 
+        ecs_vector_count(*array),
+        sizeof(ecs_matched_query_t), 
+        compare_matched_query);
+}
+
 /* This function is called when a query is matched with a table. A table keeps
  * a list of tables that match so that they can be notified when the table
  * becomes empty / non-empty. */
@@ -144,19 +168,7 @@ void register_monitor(
         }
     });
 
-    /* Monitor hasn't been registered with table, register it now */
-    ecs_matched_query_t *m = ecs_vector_add(&table->monitors, ecs_matched_query_t);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    m->query = query;
-    m->matched_table_index = matched_table_index;
-
-    /* Sort the vector so we can quickly compare monitors between tables */
-    qsort(
-        ecs_vector_first(table->monitors, ecs_matched_query_t), 
-        ecs_vector_count(table->monitors), 
-        sizeof(ecs_matched_query_t), 
-        compare_matched_query);
+    add_monitor(&table->monitors, query, matched_table_index);
 
 #ifndef NDEBUG
     char *str = ecs_type_str(world, table->type);
@@ -193,28 +205,6 @@ bool is_override(
     }
 
     return false;
-}
-
-static
-void add_on_set(
-    ecs_vector_t **array,
-    ecs_query_t *query,
-    int32_t matched_table_index)
-{
-    /* Add the system to a list that contains all OnSet systems matched with
-     * this table. This makes it easy to get the list of systems that need to be
-     * executed when all components are set, like when new_w_data is used */
-    ecs_matched_query_t *m = ecs_vector_add(array, ecs_matched_query_t);
-    m->query = query;
-    m->matched_table_index = matched_table_index;
-
-    /* Sort the system list so that it is easy to get the difference OnSet
-     * OnSet systems between two tables. */
-    qsort(
-        ecs_vector_first(*array, ecs_matched_query_t), 
-        ecs_vector_count(*array),
-        sizeof(ecs_matched_query_t), 
-        compare_matched_query);
 }
 
 static
@@ -269,11 +259,21 @@ void register_on_set(
         });   
 
         if (match_override) {
-            add_on_set(&table->on_set_override, query, matched_table_index);
+            add_monitor(&table->on_set_override, query, matched_table_index);
         }
     }
 
-    add_on_set(&table->on_set_all, query, matched_table_index);   
+    add_monitor(&table->on_set_all, query, matched_table_index);   
+}
+
+static
+void register_un_set(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_query_t *query,
+    int32_t matched_table_index)
+{
+    add_monitor(&table->un_set_all, query, matched_table_index);
 }
 
 /* -- Private functions -- */
@@ -346,6 +346,11 @@ void ecs_table_register_query(
     /* Register the query as an on_set system */
     if (query->flags & EcsQueryOnSet) {
         register_on_set(world, table, query, matched_table_index);
+    }
+
+    /* Register the query as an un_set system */
+    if (query->flags & EcsQueryUnSet) {
+        register_un_set(world, table, query, matched_table_index);
     }
 }
 
