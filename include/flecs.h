@@ -126,6 +126,7 @@ typedef void (*ecs_fini_action_t)(
 
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
+#include "flecs/private/log.h"              /* Logging API */
 #include "flecs/type.h"                     /* Type API */
 
 
@@ -574,12 +575,25 @@ void ecs_unlock(
     ecs_world_t *world);
 
 /** Enable or disable tracing.
+ * This will enable builtin tracing. For tracing to work, it will have to be
+ * compiled in which requires defining one of the following macro's:
  *
- * @param enabled True if enabling, false if disabling. 
+ * ECS_TRACE_0 - All tracing is disabled
+ * ECS_TRACE_1 - Enable tracing level 1
+ * ECS_TRACE_2 - Enable tracing level 2 and below
+ * ECS_TRACE_3 - Enable tracing level 3 and below
+ *
+ * If no tracing level is defined and this is a debug build, ECS_TRACE_3 will
+ * have been automatically defined.
+ *
+ * The provided level corresponds with the tracing level. If -1 is provided as
+ * value, warnings are disabled. If -2 is provided, errors are disabled as well.
+ *
+ * @param level Desired tracing level.
  */
 FLECS_EXPORT
 void ecs_tracing_enable(
-    bool enabled);
+    int8_t level);
 
 
 ////////////////////////////////////////////////////////////////////////////////

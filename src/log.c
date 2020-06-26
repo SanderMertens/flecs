@@ -1,54 +1,4 @@
 #include "flecs_private.h"
-#include <string.h>
-
-#define ECS_BLACK   "\033[1;30m"
-#define ECS_RED     "\033[0;31m"
-#define ECS_GREEN   "\033[0;32m"
-#define ECS_YELLOW  "\033[0;33m"
-#define ECS_BLUE    "\033[0;34m"
-#define ECS_MAGENTA "\033[0;35m"
-#define ECS_CYAN    "\033[0;36m"
-#define ECS_WHITE   "\033[1;37m"
-#define ECS_GREY    "\033[0;37m"
-#define ECS_NORMAL  "\033[0;49m"
-#define ECS_BOLD    "\033[1;49m"
-
-void _ecs_abort(
-    int32_t error_code,
-    const char *param,
-    const char *file,
-    int32_t line)
-{
-    if (param) {
-        ecs_os_err("abort %s:%d: %s (%s)",
-            file, line, ecs_strerror(error_code), param);
-    } else {
-        ecs_os_err("abort %s:%d: %s", file, line, ecs_strerror(error_code));
-    }
-
-    ecs_os_abort();
-}
-
-void _ecs_assert(
-    bool condition,
-    int32_t error_code,
-    const char *param,
-    const char *condition_str,
-    const char *file,
-    int32_t line)
-{
-    if (!condition) {
-        if (param) {
-            ecs_os_err("assert(%s) %s:%d: %s (%s)",
-                condition_str, file, line, ecs_strerror(error_code), param);
-        } else {
-            ecs_os_err("assert(%s) %s:%d: %s",
-                condition_str, file, line, ecs_strerror(error_code));
-        }
-
-        ecs_os_abort();
-    }
-}
 
 static
 char *ecs_vasprintf(
@@ -206,43 +156,20 @@ char* ecs_colorize(
     return ecs_strbuf_get(&buff);
 }
 
-
-void _ecs_parser_error(
-    const char *name,
-    const char *expr, 
-    int column,
-    const char *fmt,
-    ...)
-{
-    va_list valist;
-    va_start(valist, fmt);
-    char *msg = ecs_vasprintf(fmt, valist);
-
-    fprintf(stderr, "%s:%d: error: %s\n", name, column + 1, msg);
-    fprintf(stderr, "    %s\n", expr);
-    fprintf(stderr, "    %*s^\n", column, "");
-    
-    ecs_os_free(msg);
-    ecs_os_abort();
-}
-
 static int trace_indent = 0;
-static bool trace_enabled = false;
+static int8_t trace_level = 0;
 
-void _ecs_trace(
+void ecs_log_print(
     int level,
     const char *file,
     int32_t line,
     const char *fmt,
-    ...)
+    va_list valist)
 {
     (void)level;
     (void)line;
 
-    va_list valist;
-    va_start(valist, fmt);
-
-    if (!trace_enabled) {
+    if (level > trace_level) {
         return;
     }
 
@@ -271,24 +198,130 @@ void _ecs_trace(
 
     char *msg = ecs_vasprintf(fmt, valist);
     char *color_msg = ecs_colorize(msg);
-    fprintf(stdout, "%sinfo%s: %s%s%s%s\n",
-        ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+
+    if (level >= 0) {
+        ecs_os_log("%sinfo%s: %s%s%s%s",
+            ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+    } else if (level == -1) {
+        ecs_os_warn("%sinfo%s: %s%s%s%s",
+            ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+    } else if (level == -2) {
+        ecs_os_err("%sinfo%s: %s%s%s%s",
+            ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
+    }
+
     ecs_os_free(color_msg);
     ecs_os_free(msg);
 }
 
-void ecs_trace_push(void) {
+void _ecs_trace(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    va_list valist;
+    va_start(valist, fmt);
+
+    ecs_log_print(level, file, line, fmt, valist);
+}
+
+void _ecs_warn(
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    va_list valist;
+    va_start(valist, fmt);
+
+    ecs_log_print(-2, file, line, fmt, valist);
+}
+
+void _ecs_err(
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    va_list valist;
+    va_start(valist, fmt);
+
+    ecs_log_print(-3, file, line, fmt, valist);
+}
+
+void ecs_log_push(void) {
     trace_indent ++;
 }
 
-void ecs_trace_pop(void) {
+void ecs_log_pop(void) {
     trace_indent --;
 }
 
 void ecs_tracing_enable(
-    bool enabled)
+    int8_t level)
 {
-    trace_enabled = enabled;
+    trace_level = level;
+}
+
+void _ecs_parser_error(
+    const char *name,
+    const char *expr, 
+    int column,
+    const char *fmt,
+    ...)
+{
+    if (trace_level != -2) {
+        va_list valist;
+        va_start(valist, fmt);
+        char *msg = ecs_vasprintf(fmt, valist);
+
+        ecs_os_err("%s:%d: error: %s", name, column + 1, msg);
+        ecs_os_err("    %s", expr);
+        ecs_os_err("    %*s^", column, "");
+        
+        ecs_os_free(msg);        
+    }
+
+    ecs_os_abort();
+}
+
+void _ecs_abort(
+    int32_t error_code,
+    const char *param,
+    const char *file,
+    int32_t line)
+{
+    if (param) {
+        ecs_err("abort %s:%d: %s (%s)",
+            file, line, ecs_strerror(error_code), param);
+    } else {
+        ecs_err("abort %s:%d: %s", file, line, ecs_strerror(error_code));
+    }
+
+    ecs_os_abort();
+}
+
+void _ecs_assert(
+    bool condition,
+    int32_t error_code,
+    const char *param,
+    const char *condition_str,
+    const char *file,
+    int32_t line)
+{
+    if (!condition) {
+        if (param) {
+            ecs_err("assert(%s) %s:%d: %s (%s)",
+                condition_str, file, line, ecs_strerror(error_code), param);
+        } else {
+            ecs_err("assert(%s) %s:%d: %s",
+                condition_str, file, line, ecs_strerror(error_code));
+        }
+
+        ecs_os_abort();
+    }
 }
 
 const char* ecs_strerror(

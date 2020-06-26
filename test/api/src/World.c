@@ -1011,20 +1011,6 @@ void World_recreate_world_w_component() {
     }
 }
 
-void World_init_w_args_enable_dbg() {
-    ecs_world_t *world = ecs_init_w_args(2, ((char*[]){
-        "test",
-        "--debug",
-        NULL
-    }));
-
-    test_assert(world != NULL);
-
-    test_assert(ecs_os_dbg_enabled() == true);
-
-    ecs_fini(world);
-}
-
 void World_no_threading() {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;

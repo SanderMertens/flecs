@@ -126,6 +126,7 @@ bool check_column(
 static
 bool build_pipeline(
     ecs_world_t *world,
+    ecs_entity_t pipeline,
     EcsPipelineQuery *pq)
 {
     ecs_query_iter(pq->query);
@@ -134,6 +135,9 @@ bool build_pipeline(
         /* No need to rebuild the pipeline */
         return false;
     }
+
+    ecs_trace_1("rebuilding pipeline #[green]%s", 
+        ecs_get_name(world, pipeline));
 
     world->stats.pipeline_build_count_total ++;
 
@@ -251,7 +255,7 @@ int32_t ecs_pipeline_update(
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (build_pipeline(world, pq)) {
+    if (build_pipeline(world, pipeline, pq)) {
         return ecs_vector_count(pq->ops);
     } else {
         return 0;
@@ -271,7 +275,7 @@ int32_t ecs_pipeline_begin(
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    build_pipeline(world, pq);
+    build_pipeline(world, pipeline, pq);
 
     return ecs_vector_count(pq->ops);
 }
@@ -354,7 +358,7 @@ void EcsOnAddPipeline(
             ecs_get_name(world, pipeline), str);
         ecs_os_free(str);
 #endif
-        ecs_trace_push();
+        ecs_log_push();
 
         /* Build signature for pipeline quey that matches EcsSystems, has the
          * pipeline as a XOR column, and ignores systems with EcsInactive and
@@ -392,7 +396,7 @@ void EcsOnAddPipeline(
         pq->match_count = -1;
         pq->ops = NULL;
 
-        ecs_trace_pop();
+        ecs_log_pop();
     }
 }
 

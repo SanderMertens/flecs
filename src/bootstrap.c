@@ -156,12 +156,12 @@ void ecs_bootstrap(
 {
     ecs_type(EcsComponent) = NULL;
 
+    ecs_trace_1("bootstrap core components");
+    ecs_log_push();
+
     /* Create table that will hold components (EcsComponent, EcsName) */
     ecs_table_t *table = bootstrap_component_table(world);
     assert(table != NULL);
-
-    ecs_trace_1("initialize builtin components");
-    ecs_trace_push();
 
     bootstrap_component(world, table, EcsComponent);
     bootstrap_component(world, table, EcsType);
@@ -180,8 +180,6 @@ void ecs_bootstrap(
     ecs_bootstrap_tag(world, EcsPrefab);
     ecs_bootstrap_tag(world, EcsHidden);
     ecs_bootstrap_tag(world, EcsDisabled);
-
-    ecs_trace_pop();
 
     ecs_set_component_actions(world, ecs_entity(EcsName), &(EcsComponentLifecycle){
         .ctor = ecs_ctor(EcsName),
@@ -209,10 +207,7 @@ void ecs_bootstrap(
     ecs_assert(ecs_lookup(world, "$") == EcsSingleton, ECS_INTERNAL_ERROR, NULL);
     ecs_add_entity(world, EcsSingleton, ECS_CHILDOF | EcsFlecsCore);
 
-    ecs_trace_1("initialize builtins");
-    ecs_trace_push();
-
-    ecs_trace_pop();
-
     ecs_set_scope(world, 0);
+
+    ecs_log_pop();
 }

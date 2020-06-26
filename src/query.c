@@ -218,7 +218,7 @@ void add_table(
 
 #ifndef NDEBUG
         char *type_expr = ecs_type_str(world, table->type);
-        ecs_trace_1("query #[green]%s#[reset] matched with table #[green][%s]",
+        ecs_trace_2("query #[green]%s#[reset] matched with table #[green][%s]",
             query_name(world, query), type_expr);
         ecs_os_free(type_expr);
 #endif
@@ -1183,6 +1183,8 @@ void ecs_query_rematch(
     ecs_world_t *world,
     ecs_query_t *query)
 {
+    ecs_trace_1("rematch query %s", query_name(world, query));
+
     ecs_sparse_t *tables = world->stage.tables;
     int32_t i, count = ecs_sparse_count(tables);
 
@@ -1256,10 +1258,10 @@ ecs_query_t* ecs_query_new_w_sig(
 
     process_signature(world, result);
 
-    ecs_trace_1("query #[green]%s#[reset] created with expression #[red]%s", 
+    ecs_trace_2("query #[green]%s#[reset] created with expression #[red]%s", 
         query_name(world, result), result->sig.expr);
 
-    ecs_trace_push();
+    ecs_log_push();
 
     if (result->flags & EcsQueryNeedsTables) {
         if (ecs_has_entity(world, system, EcsMonitor)) {
@@ -1281,7 +1283,7 @@ ecs_query_t* ecs_query_new_w_sig(
         result->rank_table = rank_by_depth;
     }
 
-    ecs_trace_pop();
+    ecs_log_pop();
 
     /* Make sure application can't try to free sig resources */
     *sig = (ecs_sig_t){ 0 };

@@ -22,6 +22,7 @@ extern "C" {
 #include <string.h>
 #include <stdio.h>
 #include <limits.h>
+#include <string.h>
 
 /* Non-standard but required. If not provided by platform, add manually. If
  * flecs is built by bake, stdint.h from bake is included. */

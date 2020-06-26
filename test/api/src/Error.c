@@ -104,12 +104,6 @@ void Error_log_dbg() {
     test_assert(true);
 }
 
-void Error_log_dbg_enabled() {
-    ecs_os_enable_dbg(true);
-    ecs_os_dbg("test debug message");
-    test_assert(true);
-}
-
 void Error_log_log() {
     ecs_os_log("test log message");
     test_assert(true);

@@ -267,12 +267,6 @@ void ecs_os_err(const char *fmt, ...);
 FLECS_EXPORT
 void ecs_os_dbg(const char *fmt, ...);
 
-FLECS_EXPORT
-void ecs_os_enable_dbg(bool enable);
-
-FLECS_EXPORT
-bool ecs_os_dbg_enabled(void);
-
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort()
 

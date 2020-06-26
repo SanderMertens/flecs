@@ -175,7 +175,7 @@ void ecs_system_activate(
     invoke_status_action(world, system, system_data, 
         activate ? EcsSystemActivated : EcsSystemDeactivated);
 
-    ecs_trace_1("system #[green]%s#[reset] %s", 
+    ecs_trace_2("system #[green]%s#[reset] %s", 
         ecs_get_name(world, system), 
         activate ? "activated" : "deactivated");
 }
@@ -221,11 +221,6 @@ void ecs_init_system(
     void *ctx)
 {
     ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
-
-    ecs_trace_1("system #[green]%s#[reset] (%d) created with #[red]%s#[normal]", 
-        ecs_get_name(world, system), system, query->sig.expr);
-
-    ecs_trace_push();
 
     /* Add & initialize the EcsSystem component */
     bool is_added = false;
@@ -285,7 +280,8 @@ void ecs_init_system(
         }
     }
 
-    ecs_trace_pop();
+    ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
+        ecs_get_name(world, system), query->sig.expr);
 }
 
 
@@ -674,11 +670,7 @@ void OnSetComponentLifecycle(
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-
-        ecs_set_component_actions(world, e, &cl[i]);
-
-        ecs_trace_1("component #[green]%s#[normal] lifecycle callbacks set",
-            ecs_get_name(world, e));        
+        ecs_set_component_actions(world, e, &cl[i]);   
     }
 }
 

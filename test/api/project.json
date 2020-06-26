@@ -779,7 +779,6 @@
                 "get_delta_time_auto",
                 "recreate_world",
                 "recreate_world_w_component",
-                "init_w_args_enable_dbg",
                 "no_threading",
                 "no_time",
                 "is_entity_enabled"

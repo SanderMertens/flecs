@@ -702,7 +702,6 @@ void World_get_delta_time(void);
 void World_get_delta_time_auto(void);
 void World_recreate_world(void);
 void World_recreate_world_w_component(void);
-void World_init_w_args_enable_dbg(void);
 void World_no_threading(void);
 void World_no_time(void);
 void World_is_entity_enabled(void);
@@ -3576,7 +3575,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 31,
+        .testcase_count = 30,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -3685,10 +3684,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "recreate_world_w_component",
                 .function = World_recreate_world_w_component
-            },
-            {
-                .id = "init_w_args_enable_dbg",
-                .function = World_init_w_args_enable_dbg
             },
             {
                 .id = "no_threading",

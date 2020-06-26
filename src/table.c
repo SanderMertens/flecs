@@ -160,7 +160,7 @@ void register_monitor(
 
 #ifndef NDEBUG
     char *str = ecs_type_str(world, table->type);
-    ecs_trace_1("monitor #[green]%s#[reset] registered with table #[red]%s",
+    ecs_trace_2("monitor #[green]%s#[reset] registered with table #[red]%s",
         ecs_get_name(world, query->system), str);
     ecs_os_free(str);
 #endif
@@ -242,7 +242,7 @@ void ecs_table_activate(
         ecs_query_activate_table(world, query, table, activate);
         #ifndef NDEBUG
             char *expr = ecs_type_str(world, table->type);
-            ecs_trace_1("table #[green][%s]#[reset] %s for single query", expr, 
+            ecs_trace_2("table #[green][%s]#[reset] %s for single query", expr, 
                 activate ? "activated" : "deactivatd");
             ecs_os_free(expr);
         #endif           
@@ -260,7 +260,7 @@ void ecs_table_activate(
         #ifndef NDEBUG
             if (ecs_vector_count(queries)) {
                 char *expr = ecs_type_str(world, table->type);
-                ecs_trace_1("table #[green][%s]#[reset] %s for %d queries", expr, 
+                ecs_trace_2("table #[green][%s]#[reset] %s for %d queries", expr, 
                     activate ? "activated" : "deactivated",
                     ecs_vector_count(queries));
                 ecs_os_free(expr);

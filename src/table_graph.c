@@ -202,17 +202,17 @@ ecs_table_t *create_table(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, result->type);
-    ecs_trace_1("table #[green][%s]#[normal] created", expr);
+    ecs_trace_2("table #[green][%s]#[normal] created", expr);
     ecs_os_free(expr);
 #endif
-    ecs_trace_push();
+    ecs_log_push();
 
     /* Don't notify queries if table is created in stage */
     if (stage == &world->stage) {
         ecs_notify_queries_of_table(world, result);
     }
 
-    ecs_trace_pop();
+    ecs_log_pop();
 
     return result;
 }
