@@ -145,7 +145,7 @@ void init_edges(
         }
 
         if (e & ECS_INSTANCEOF) {
-            table->flags |= EcsTableHasPrefab;
+            table->flags |= EcsTableHasBase;
         }
 
         if (e & ECS_CHILDOF) {
@@ -182,6 +182,7 @@ void init_table(
     table->monitors = NULL;
     table->on_set = NULL;
     table->on_set_all = NULL;
+    table->on_set_override = NULL;
     
     init_edges(world, stage, table);
 
@@ -767,12 +768,12 @@ ecs_table_t *find_or_create(
 
         if (!table) {
             /* A new table needs to be created. To ensure that one table is
-                * created per combination of components, regardless of in
-                * which order the components are specified, the entity array
-                * with which the table is created must be ordered. This
-                * provides a canonical path through which the table can always
-                * be reached, and allows other paths to be created 
-                * progressively.*/
+             * created per combination of components, regardless of in
+             * which order the components are specified, the entity array
+             * with which the table is created must be ordered. This
+             * provides a canonical path through which the table can always
+             * be reached, and allows other paths to be created 
+             * progressively.*/
 
             /* First, determine if the entities array is ordered. Do this
              * only once per lookup */

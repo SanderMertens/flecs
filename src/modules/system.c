@@ -813,6 +813,7 @@ void FlecsSystemImport(
     ecs_bootstrap_tag(world, EcsOnAdd);
     ecs_bootstrap_tag(world, EcsOnRemove);
     ecs_bootstrap_tag(world, EcsOnSet);
+    ecs_bootstrap_tag(world, EcsUnSet);
 
     ecs_bootstrap_tag(world, EcsDisabledIntern);
     ecs_bootstrap_tag(world, EcsInactive);

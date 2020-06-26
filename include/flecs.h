@@ -239,7 +239,10 @@ typedef struct EcsTrigger {
 /* Trigger tags */
 #define EcsOnAdd (ECS_HI_COMPONENT_ID + 9)
 #define EcsOnRemove (ECS_HI_COMPONENT_ID + 10)
+
+/* Set system tags */
 #define EcsOnSet (ECS_HI_COMPONENT_ID + 11)
+#define EcsUnSet (ECS_HI_COMPONENT_ID + 12)
 
 /* Builtin pipeline tags */
 #define EcsPreFrame (ECS_HI_COMPONENT_ID + 13)

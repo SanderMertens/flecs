@@ -167,6 +167,57 @@ void register_monitor(
 }
 
 static
+bool is_override(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t comp)
+{
+    if (!(table->flags & EcsTableHasBase)) {
+        return false;
+    }
+
+    ecs_type_t type = table->type;
+    int32_t i, count = ecs_vector_count(type);
+    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
+
+    for (i = count - 1; i >= 0; i --) {
+        ecs_entity_t e = entities[i];
+        if (e & ECS_INSTANCEOF) {
+            if (ecs_has_entity(world, e & ECS_ENTITY_MASK, comp)) {
+                return true;
+            }
+        } else {
+            /* ECS_INSTANCEOF will always appear at the end of a type */
+            return false;
+        }
+    }
+
+    return false;
+}
+
+static
+void add_on_set(
+    ecs_vector_t **array,
+    ecs_query_t *query,
+    int32_t matched_table_index)
+{
+    /* Add the system to a list that contains all OnSet systems matched with
+     * this table. This makes it easy to get the list of systems that need to be
+     * executed when all components are set, like when new_w_data is used */
+    ecs_matched_query_t *m = ecs_vector_add(array, ecs_matched_query_t);
+    m->query = query;
+    m->matched_table_index = matched_table_index;
+
+    /* Sort the system list so that it is easy to get the difference OnSet
+     * OnSet systems between two tables. */
+    qsort(
+        ecs_vector_first(*array, ecs_matched_query_t), 
+        ecs_vector_count(*array),
+        sizeof(ecs_matched_query_t), 
+        compare_matched_query);
+}
+
+static
 void register_on_set(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -179,6 +230,12 @@ void register_on_set(
         if (!table->on_set) {
             table->on_set = ecs_os_calloc(sizeof(ecs_vector_t) * table->column_count);
         }
+
+        /* Keep track of whether query matches overrides. When a component is
+         * removed, diffing these arrays between the source and detination
+         * tables gives the list of OnSet systems to run, after exposing the
+         * component that was overridden. */
+        bool match_override = false;
 
         /* Add system to each matched column. This makes it easy to get the list of
         * systems when setting a single component. */
@@ -202,29 +259,21 @@ void register_on_set(
                 }
                 
                 ecs_vector_t *set_c = table->on_set[index];
-                ecs_matched_query_t * m = ecs_vector_add(&set_c, ecs_matched_query_t);
-                
+                ecs_matched_query_t *m = ecs_vector_add(&set_c, ecs_matched_query_t);
                 m->query = query;
                 m->matched_table_index = matched_table_index;
-
                 table->on_set[index] = set_c;
+                
+                match_override |= is_override(world, table, comp);
             }
-        });
+        });   
+
+        if (match_override) {
+            add_on_set(&table->on_set_override, query, matched_table_index);
+        }
     }
 
-    /* Add the system to a list that contains all OnSet systems matched with
-     * this table. This makes it easy to get the list of systems that need to be
-     * executed when all components are set, like when new_w_data is used */
-    ecs_matched_query_t * m = ecs_vector_add(&table->on_set_all, 
-        ecs_matched_query_t);
-    m->query = query;
-    m->matched_table_index = matched_table_index;
-
-    qsort(
-        ecs_vector_first(table->on_set_all, ecs_matched_query_t), 
-        ecs_vector_count(table->on_set_all), 
-        sizeof(ecs_matched_query_t), 
-        compare_matched_query);
+    add_on_set(&table->on_set_all, query, matched_table_index);   
 }
 
 /* -- Private functions -- */
@@ -457,6 +506,7 @@ void ecs_table_free(
     ecs_os_free(table->dirty_state);
     ecs_vector_free(table->monitors);
     ecs_vector_free(table->on_set_all);
+    ecs_vector_free(table->on_set_override);
     
     if (table->on_set) {
         int32_t i;

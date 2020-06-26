@@ -99,7 +99,7 @@ typedef struct ecs_table_leaf_t {
 typedef enum ecs_table_flags_t {
     EcsTableHasBuiltins = 1,        /**< Does table have builtin components */
     EcsTableIsPrefab = 2,           /**< Does the table store prefabs */
-    EcsTableHasPrefab = 4,          /**< Does the table type has INSTANCEOF */
+    EcsTableHasBase = 4,          /**< Does the table type has INSTANCEOF */
     EcsTableHasParent = 8,          /**< Does the table type has CHILDOF */
     EcsTableHasComponentData = 16,  /**< Does the table have component data */
     EcsTableHasXor = 32,            /**< Does the table type has XOR */
@@ -137,8 +137,9 @@ struct ecs_table_t {
 
     ecs_vector_t *queries;           /**< Queries matched with table */
     ecs_vector_t *monitors;          /**< Monitor systems matched with table */
-    ecs_vector_t** on_set;           /**< OnSet systems, broken up by column */
-    ecs_vector_t* on_set_all;        /**< All OnSet systems (for new_w_data) */
+    ecs_vector_t **on_set;           /**< OnSet systems, broken up by column */
+    ecs_vector_t *on_set_all;        /**< All OnSet systems */
+    ecs_vector_t *on_set_override;   /**< All OnSet systems with overrides */
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
 

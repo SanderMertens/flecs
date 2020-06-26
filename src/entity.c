@@ -668,7 +668,7 @@ void ecs_run_init_actions(
     ecs_entity_t *type_array;
     ecs_c_info_t *c_info_array = world->c_info;
     
-    bool has_base = table->flags & EcsTableHasPrefab;
+    bool has_base = table->flags & EcsTableHasBase;
     ecs_table_t *table_without_base = table;
 
     if (components.count) {
@@ -756,6 +756,8 @@ void ecs_run_init_actions(
         }
     }
 
+    /* Run OnSet actions when a base entity is added to the entity for 
+     * components not overridden by the entity. */
     if (run_on_set && table_without_base != table) {
         run_monitors(world, stage, table, table->on_set_all, row, count, 
             table_without_base->on_set_all);
@@ -777,7 +779,7 @@ void ecs_run_deinit_actions(
     ecs_column_t *component_columns = data->columns;
     ecs_type_t type;
     int32_t type_count, column_count = table->column_count;
-    ecs_entity_t *type_array; 
+    ecs_entity_t *type_array;
 
     (void)type_count;
     
@@ -977,7 +979,13 @@ int32_t move_entity(
             set_mask, true);
     }
 
-    run_monitors(world, stage, dst_table, dst_table->monitors, dst_row, 1, src_table->monitors);
+    run_monitors(world, stage, dst_table, dst_table->monitors, dst_row, 1, 
+        src_table->monitors);
+
+    if (removed && dst_table->flags & EcsTableHasBase) {
+        run_monitors(world, stage, dst_table, src_table->on_set_override, 
+            dst_row, 1, dst_table->on_set_override);
+    }
 
     info->data = dst_data;
 
@@ -1221,7 +1229,8 @@ int32_t new_w_data(
 
     ecs_defer_begin(world, stage, EcsOpNone, 0, 0, NULL, 0);
 
-    ecs_run_init_actions(world, stage, table, data, row, count, added, set_mask, component_data == NULL);
+    ecs_run_init_actions(world, stage, table, data, row, count, added, set_mask, 
+        component_data == NULL);
 
     if (component_data) {
         /* Set components that we're setting in the component mask so the init
