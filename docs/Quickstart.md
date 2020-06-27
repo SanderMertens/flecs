@@ -450,6 +450,26 @@ void OnSetPV(ecs_iter_t *it) {
 }
 ```
 
+The opposite of an `EcsOnSet` system is an `EcsUnSet` system:
+
+```c
+ECS_SYSTEM(world, UnSetP, EcsUnSet, Position);
+```
+
+An UnSet system is invoked when an entity no longer has a value for the specified component:
+
+```c
+ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+
+// The UnSet system is invoked
+ecs_remove(world, e, Position);
+```
+
+OnSet and UnSet systems are typically invoked when components are set and removed, but there are two edge cases:
+
+- A component is removed but the entity inherits a value for the component from a base entity. In this case OnSet is invoked, because the value for the component changed.
+- The entity does not have the component, but the base that has the component is removed. In this case UnSet is invoked, since the entity no longer has the component.
+
 ## Triggers
 Triggers are callbacks that are invoked when a component is added or removed to/from an entity. Triggers can only be defined on a single component:
 
@@ -491,79 +511,26 @@ typedef struct String {
 } String;
 
 // Component constructor
-void StringCtor(
-    ecs_world_t *world,             // World
-    ecs_entity_t component,         // Component id
-    const ecs_entity_t *entity_ptr, // Array with entity ids
-    void *ptr,                      // Array with component ptrs
-    size_t size,                    // Component size
-    int32_t count,                  // Number of elements
-    void *ctx)                      // User context
-{
-    String *elements = ptr;
-
-    for (int i = 0; i < count; i ++) {
-        elements[i].value = NULL;
-    }
-}
+ECS_CTOR(String, ptr, {
+    ptr->value = NULL;
+});
 
 // Component destructor
-void StringDtor(
-    ecs_world_t *world,             // World
-    ecs_entity_t component,         // Component id
-    const ecs_entity_t *entity_ptr, // Array with entity ids
-    void *ptr,                      // Array with component ptrs
-    size_t size,                    // Component size
-    int32_t count,                  // Number of elements
-    void *ctx)                      // User context
-{
-    String *elements = ptr;
-
-    for (int i = 0; i < count; i ++) {
-        free(elements[i].value);
-    }
-}
+ECS_DTOR(String, ptr, {
+    free(ptr->value);
+});
 
 // Component copy
-void StringCopy(
-    ecs_world_t *world,             // World
-    ecs_entity_t component,         // Component id
-    const ecs_entity_t *dst_entity, // Destination entities
-    const ecs_entity_t *src_entity, // Source entities
-    void *dst_ptr,                  // Destination component array
-    const void *src_ptr,            // Source component array   
-    size_t size,                    // Component size
-    int32_t count,                  // Number of elements
-    void *ctx)                      // User context
-{
-    String *dst_elements = dst_ptr;
-    String *src_elements = src_ptr;
-
-    for (int i = 0; i < count; i ++) {
-        dst_elements[i].value = strdup(src_elements[i].value);
-    }
-}
+ECS_COPY(String, dst, src, {
+    free(dst->value);
+    dst->value = strdup(src->value);
+});
 
 // Component move
-void StringMove(
-    ecs_world_t *world,             // World
-    ecs_entity_t component,         // Component id
-    const ecs_entity_t *dst_entity, // Destination entities
-    const ecs_entity_t *src_entity, // Source entities
-    void *dst_ptr,                  // Destination component array
-    void *src_ptr,                  // Source component array
-    size_t size,                    // Component size
-    int32_t count,                  // Number of elements
-    void *ctx)                      // User context
-{
-    String *dst_elements = dst_ptr;
-    String *src_elements = src_ptr;
-
-    for (int i = 0; i < count; i ++) {
-        dst_elements[i].value = src_elements[i].value;
-        src_elements[i].value = NULL;
-    }
-}
+ECS_MOVE(String, dst, src, {
+    dst->value = src->value;
+    src->value = NULL;
+});
 ```
 
 The component lifecycle callbacks can be registered like this:
@@ -571,20 +538,21 @@ The component lifecycle callbacks can be registered like this:
 ```c
 ECS_COMPONENT(world, String);
 
-ecs_set(world, ecs_entity(String), EcsComponentLifecycle, {
-    .ctor = StringCtor,
-    .dtor = StringDtor,
-    .copy = StringCopy,
-    .move = StringMove
-});
+ecs_set_component_actions(world, ecs_entity(String), 
+    &(EcsComponentLifecycle){
+        .ctor = ecs_ctor(String),
+        .dtor = ecs_dtor(String),
+        .copy = ecs_copy(String),
+        .move = ecs_move(String)
+    });
 ```
 
 ## Modules
 Modules are used to add organization to components and systems, and to enable reusability across multiple applications. Modules are typically imported at the start of an application like this:
 
 ```c
-// Import a module called MyModule. This will declare handles to the
-// module contents in the current scope.
+// Import module called MyModule. This declares handles to the
+// module contents in the current C scope.
 ECS_IMPORT(world, MyModule, 0);
 ```
 
@@ -633,6 +601,32 @@ void MyModuleImport(
     ECS_EXPORT_COMPONENT(Velocity);
     ECS_EXPORT_ENTITY(Move);
 }
+```
+
+Modules are namespaced, which emans that the components and system identifiers within a module will be prefixed with the module name. The module name is translated from PascalCase into lowercase separated by dots, such that `MyModule` becomes `my.module`.
+
+If an application wants to create a system that uses components from the module, it has to include the namespace in the signature, for example:
+
+```c
+ECS_SYSTEM(world, Move, EcsOnUpdate, 
+    my.module.Position, 
+    my.module.Velocity);
+```
+
+This prevents modules from accidentally creating components or systems that clash with each other. If a module wants however, it can override the scope:
+
+```c
+ECS_MODULE(world, MyModule);
+
+// Set scope to root
+ecs_entity_t old_scope = ecs_set_scope(world, 0);
+
+// Define components as usual
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity);
+
+// Change scope back to the module scope
+ecs_set_scope(world, old_scope);
 ```
 
 ## Pipelines
