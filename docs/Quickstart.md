@@ -18,7 +18,7 @@ flecs::world world();
 ```
 
 ## Entities
-An entity (`ecs_entity_t`) is a 64-bit integer that uniquely identifies something in your application. Entities are created with the `ecs_new` function:
+An entity (`ecs_entity_t`) is a 64-bit integer that uniquely identifies a thing or object in your application. Entities are created with the `ecs_new` function:
 
 ```c
 ecs_entity_t e = ecs_new(world, 0);
