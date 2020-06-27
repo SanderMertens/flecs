@@ -7,14 +7,14 @@ static
 void no_threading(
     const char *function)
 {
-    ecs_os_dbg("threading unavailable: %s not implemented", function);
+    ecs_trace(1, "threading unavailable: %s not implemented", function);
 }
 
 static
 void no_time(
     const char *function)
 {
-    ecs_os_dbg("time management: %s not implemented", function);
+    ecs_trace(1, "time management: %s not implemented", function);
 }
 #endif
 
@@ -122,7 +122,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_os_set_api_defaults();
 
     ecs_trace_1("bootstrap");
-    ecs_trace_push();
+    ecs_log_push();
 
 #ifdef __BAKE__
     ut_init(NULL);
@@ -198,7 +198,6 @@ ecs_world_t *ecs_mini(void) {
     world->measure_frame_time = false;
     world->measure_system_time = false;
     world->should_quit = false;
-    world->rematch = false;
     world->locking_enabled = false;
     world->pipeline = 0;
 
@@ -210,6 +209,8 @@ ecs_world_t *ecs_mini(void) {
     world->stats.target_fps = 0;
     world->stats.last_id = 0;
 
+    world->stats.delta_time = 0;
+    world->stats.time_scale = 1.0;
     world->stats.frame_time_total = 0;
     world->stats.system_time_total = 0;
     world->stats.merge_time_total = 0;
@@ -231,6 +232,8 @@ ecs_world_t *ecs_mini(void) {
 
     ecs_bootstrap(world);
 
+    ecs_log_pop();
+
     return world;
 }
 
@@ -238,9 +241,14 @@ ecs_world_t *ecs_init(void) {
     ecs_world_t *world = ecs_mini();
 
 #ifndef FLECS_NO_MODULES
-    ECS_IMPORT(world, FlecsSystems, 0);
+    ecs_trace_1("import builtin modules");
+    ecs_log_push();
+
+    ECS_IMPORT(world, FlecsSystem, 0);
     ECS_IMPORT(world, FlecsPipeline, 0);
-    ECS_IMPORT(world, FlecsTimers, 0);
+    ECS_IMPORT(world, FlecsTimer, 0);
+
+    ecs_log_pop();
 #endif
 
     return world;
@@ -272,8 +280,6 @@ ecs_world_t* ecs_init_w_args(
     for (i = 1; i < argc; i ++) {
         if (argv[i][0] == '-') {
             bool parsed = false;
-
-            ARG(0, "debug", ecs_os_enable_dbg(true));
 
             /* Ignore arguments that were not parsed */
             (void)parsed;

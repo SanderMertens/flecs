@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 #define MAX_SYS_COLUMNS (20)
-#define MAX_ENTITIES (64)
+#define MAX_ENTITIES (256)
 #define MAX_INVOCATIONS (1024)
 
 typedef struct Probe {

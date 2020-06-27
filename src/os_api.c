@@ -1,7 +1,6 @@
 #include "flecs_private.h"
 
 static bool ecs_os_api_initialized = false;
-static bool ecs_os_api_debug_enabled = false;
 
 ecs_os_api_t ecs_os_api;
 
@@ -160,30 +159,24 @@ char* bake_module_to_dl(
 
 static
 void ecs_log(const char *fmt, va_list args) {
-    fprintf(stdout, "[log] ");
     vfprintf(stdout, fmt, args);
     fprintf(stdout, "\n");
 }
 
 static
 void ecs_log_error(const char *fmt, va_list args) {
-    fprintf(stderr, "[err] ");
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
 }
 
 static
 void ecs_log_debug(const char *fmt, va_list args) {
-    if (ecs_os_api_debug_enabled) {
-        fprintf(stderr, "[dbg] ");
-        vfprintf(stderr, fmt, args);
-        fprintf(stderr, "\n");
-    }
+    vfprintf(stdout, fmt, args);
+    fprintf(stdout, "\n");
 }
 
 static
 void ecs_log_warning(const char *fmt, va_list args) {
-    fprintf(stderr, "[warn] ");
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
 }
@@ -228,14 +221,6 @@ void ecs_os_err(const char *fmt, ...) {
     va_end(args);
 }
 
-void ecs_os_enable_dbg(bool enable) {
-    ecs_os_api_debug_enabled = enable;
-}
-
-bool ecs_os_dbg_enabled(void) {
-    return ecs_os_api_debug_enabled;
-}
-
 void ecs_os_gettime(ecs_time_t *timeOut)
 {
     uint64_t now = ecs_os_time_now();
@@ -252,11 +237,10 @@ void* ecs_os_api_malloc(size_t size) {
 }
 
 static
-void* ecs_os_api_calloc(size_t num, size_t size) {
+void* ecs_os_api_calloc(size_t size) {
     ecs_os_api_calloc_count ++;
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(num != 0, ECS_INVALID_PARAMETER, NULL);
-    return calloc(num, size);
+    return calloc(1, size);
 }
 
 static

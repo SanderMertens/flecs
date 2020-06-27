@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
      * shared with the base entity. */
     std::cout << "Before overriding:" << std::endl;
     std::cout << "instance: " 
-        << instance.get<Mass>().value << " (owned = " 
+        << instance.get<Mass>()->value << " (owned = " 
         << instance.owns<Mass>() << ")" << std::endl;
 
     /* Override Mass of instance, which will give instance a private copy of the
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
      * shared with the base entity. */
     std::cout << "After overriding:" << std::endl;
     std::cout << "instance: " 
-        << instance.get<Mass>().value << " (owned = " 
+        << instance.get<Mass>()->value << " (owned = " 
         << instance.owns<Mass>() << ")" << std::endl;
 
     /* Remove override of Mass. This will remove the private copy of the Mass
@@ -47,6 +47,6 @@ int main(int argc, char *argv[]) {
      * owned, as the instance is again sharing the component with base. */
     std::cout << "After removing override:" << std::endl;
     std::cout << "instance: " 
-        << instance.get<Mass>().value << " (owned = " 
+        << instance.get<Mass>()->value << " (owned = " 
         << instance.owns<Mass>() << ")" << std::endl;
 }

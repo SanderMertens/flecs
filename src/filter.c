@@ -17,23 +17,6 @@ ecs_iter_t ecs_filter_iter(
     };
 }
 
-ecs_iter_t ecs_snapshot_filter_iter(
-    ecs_world_t *world,
-    const ecs_snapshot_t *snapshot,
-    const ecs_filter_t *filter)
-{
-    ecs_filter_iter_t iter = {
-        .filter = filter ? *filter : (ecs_filter_t){0},
-        .tables = snapshot->tables,
-        .index = 0
-    };
-
-    return (ecs_iter_t){
-        .world = world,
-        .iter.filter = iter
-    };
-}
-
 bool ecs_filter_next(
     ecs_iter_t *it)
 {
@@ -60,7 +43,7 @@ bool ecs_filter_next(
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
-        iter->index = ++i;
+        iter->index = i + 1;
 
         return true;
     }

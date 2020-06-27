@@ -1,5 +1,4 @@
 #include "flecs_private.h"
-#include "flecs/utils/strbuf.h"
 
 /* Mock types so we don't have to depend on them. 
  * TODO: Need a better workaround */
@@ -77,17 +76,24 @@ ecs_entity_t ecs_import(
     void *handles_out,
     size_t handles_size)
 {
+    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
     const char *old_name_prefix = world->name_prefix;
 
     ecs_entity_t e = ecs_lookup_fullpath(world, module_name);
     if (!e) {
+        ecs_trace_1("import %s", module_name);
+        ecs_log_push();
+
         /* Load module */
         init_action(world, flags);
 
         /* Lookup module entity (must be registered by module) */
         e = ecs_lookup_fullpath(world, module_name);
         ecs_assert(e != 0, ECS_MODULE_UNDEFINED, module_name);
+
+        ecs_log_pop();
     }
 
     /* Copy value of module component in handles_out parameter */
@@ -165,7 +171,7 @@ ecs_entity_t ecs_import_from_library(
         }
         return 0;
     } else {
-        ecs_os_dbg("found file '%s' for library '%s'", 
+        ecs_trace_1("found file '%s' for library '%s'", 
             library_filename, library_name);
     }
 
@@ -182,7 +188,7 @@ ecs_entity_t ecs_import_from_library(
 
         return 0;
     } else {
-        ecs_os_dbg("library '%s' ('%s') loaded", 
+        ecs_trace_1("library '%s' ('%s') loaded", 
             library_name, library_filename);
     }
 
@@ -195,7 +201,7 @@ ecs_entity_t ecs_import_from_library(
         ecs_os_dlclose(dl);            
         return 0;
     } else {
-        ecs_os_dbg("found import function '%s' in library '%s' for module '%s'",
+        ecs_trace_1("found import function '%s' in library '%s' for module '%s'",
             import_func, library_name, module);
     }
 

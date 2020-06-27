@@ -40,7 +40,8 @@ ecs_vector_t* serialize_snapshot_to_vector(
     int buffer_size,
     ecs_snapshot_t *snapshot) 
 {
-    ecs_reader_t reader = ecs_snapshot_reader_init(world, snapshot);
+    ecs_iter_t it = ecs_snapshot_iter(snapshot, NULL);
+    ecs_reader_t reader = ecs_reader_init_w_iter(&it, ecs_snapshot_next);
     return serialize_reader_to_vector(world, buffer_size, &reader);
 }
 
@@ -121,19 +122,25 @@ static
 int simple_test(int buffer_size) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
-    
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 4});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 6});
+    ecs_entity_t e1;
+    ecs_entity_t e2;
+    ecs_entity_t e3;
+    ecs_vector_t *v;
 
-    test_int( ecs_count(world, Position), 3);
+    {
+        ECS_COMPONENT(world, Position);
+        
+        e1 = ecs_set(world, 0, Position, {1, 2});
+        e2 = ecs_set(world, 0, Position, {3, 4});
+        e3 = ecs_set(world, 0, Position, {5, 6});
 
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+        test_int( ecs_count(world, Position), 3);
 
-    ecs_fini(world);
+        v = serialize_to_vector(world, buffer_size);
 
-    world = deserialize_from_vector(v, buffer_size);
+        ecs_fini(world);
+        world = deserialize_from_vector(v, buffer_size);
+    }
 
     {
         ECS_COMPONENT(world, Position);
@@ -271,47 +278,53 @@ void ReaderWriter_id() {
 
 static
 int id_w_simple_test(int buffer_size) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world;
+    ecs_entity_t e1, e2, e3, e4, e5, e6, e7, e8;
+    ecs_vector_t *v;
 
-    ECS_COMPONENT(world, Position);
-    
-    /* Entities with different name lengths to test if alignment & fragmentation
-     * works properly */
-    ecs_entity_t e1 = 
-    ecs_set(world, 0, EcsName, {""});
-    ecs_set(world, e1, Position, {1, 2});
+    {
+        world = ecs_init();
 
-    ecs_entity_t e2 = 
-    ecs_set(world, 0, EcsName, {"E"});
-    ecs_set(world, e2, Position, {3, 4});
+        ECS_COMPONENT(world, Position);
+        
+        /* Entities with different name lengths to test if alignment & fragmentation
+        * works properly */
+        e1 = 
+        ecs_set(world, 0, EcsName, {""});
+        ecs_set(world, e1, Position, {1, 2});
 
-    ecs_entity_t e3 = 
-    ecs_set(world, 0, EcsName, {"E3"});
-    ecs_set(world, e3, Position, {5, 6});
+        e2 = 
+        ecs_set(world, 0, EcsName, {"E"});
+        ecs_set(world, e2, Position, {3, 4});
 
-    ecs_entity_t e4 = 
-    ecs_set(world, 0, EcsName, {"E4E"});
-    ecs_set(world, e4, Position, {7, 8});
+        e3 = 
+        ecs_set(world, 0, EcsName, {"E3"});
+        ecs_set(world, e3, Position, {5, 6});
 
-    ecs_entity_t e5 = 
-    ecs_set(world, 0, EcsName, {"E5E5"});
-    ecs_set(world, e5, Position, {9, 10});
+        e4 = 
+        ecs_set(world, 0, EcsName, {"E4E"});
+        ecs_set(world, e4, Position, {7, 8});
 
-    ecs_entity_t e6 = 
-    ecs_set(world, 0, EcsName, {"E6E6E"});
-    ecs_set(world, e6, Position, {11, 12});   
+        e5 = 
+        ecs_set(world, 0, EcsName, {"E5E5"});
+        ecs_set(world, e5, Position, {9, 10});
 
-    ecs_entity_t e7 = 
-    ecs_set(world, 0, EcsName, {"E7E7E7E"});
-    ecs_set(world, e7, Position, {13, 14});  
+        e6 = 
+        ecs_set(world, 0, EcsName, {"E6E6E"});
+        ecs_set(world, e6, Position, {11, 12});   
 
-    ecs_entity_t e8 = 
-    ecs_set(world, 0, EcsName, {"E8E8E8E8"});
-    ecs_set(world, e8, Position, {15, 16});
+        e7 = 
+        ecs_set(world, 0, EcsName, {"E7E7E7E"});
+        ecs_set(world, e7, Position, {13, 14});  
 
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+        e8 = 
+        ecs_set(world, 0, EcsName, {"E8E8E8E8"});
+        ecs_set(world, e8, Position, {15, 16});
 
-    ecs_fini(world);
+        v = serialize_to_vector(world, buffer_size);
+
+        ecs_fini(world);
+    }
 
     world = deserialize_from_vector(v, buffer_size);
 
@@ -426,23 +439,29 @@ typedef char Byte;
 
 static
 int unaligned_test(int buffer_size, int entity_count) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world;
+    ecs_entity_t first;
+    ecs_vector_t *v;
 
-    ECS_COMPONENT(world, Byte);
+    {
+        world = ecs_init();
 
-    ecs_entity_t first = 0;
-    int i;
-    for (i = 0; i < entity_count; i ++) {
-        ecs_entity_t e = ecs_set(world, 0, Byte, {i});
-        if (!i) {
-            first = e;
+        ECS_COMPONENT(world, Byte);
+
+        first = 0;
+        int i;
+        for (i = 0; i < entity_count; i ++) {
+            ecs_entity_t e = ecs_set(world, 0, Byte, {i});
+            if (!i) {
+                first = e;
+            }
         }
+
+        v = serialize_to_vector(world, buffer_size);
+
+        ecs_fini(world);
     }
-
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
-
-    ecs_fini(world);
-
+    
     world = deserialize_from_vector(v, buffer_size);
 
     {
@@ -450,6 +469,7 @@ int unaligned_test(int buffer_size, int entity_count) {
 
         test_int( ecs_count(world, Byte), entity_count);
 
+        int32_t i;
         for (i = 0; i < entity_count; i ++) {
             test_assert( !!ecs_get_type(world, first + i));
             test_assert( ecs_has(world, first + i, Byte));
@@ -501,17 +521,23 @@ void ReaderWriter_empty() {
 
 static
 int tag_test(int buffer_size) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world;
+    ecs_entity_t e1, e2, e3;
+    ecs_vector_t *v;
 
-    ECS_ENTITY(world, Tag, 0);
+    {
+        world = ecs_init();
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, Tag);
-    ecs_entity_t e2 = ecs_new_w_entity(world, Tag);
-    ecs_entity_t e3 = ecs_new_w_entity(world, Tag);
+        ECS_ENTITY(world, Tag, 0);
 
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+        e1 = ecs_new_w_entity(world, Tag);
+        e2 = ecs_new_w_entity(world, Tag);
+        e3 = ecs_new_w_entity(world, Tag);
 
-    ecs_fini(world);
+        v = serialize_to_vector(world, buffer_size);
+
+        ecs_fini(world);
+    }
 
     world = deserialize_from_vector(v, buffer_size);
 
@@ -555,24 +581,29 @@ void ReaderWriter_tag() {
 
 static
 int simple_w_tag_test(int buffer_size) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world;
+    ecs_entity_t e1, e2, e3;
+    ecs_vector_t *v;
 
     /* Component comes before tag */
-    ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Tag, 0);
+    {
+        world = ecs_init();
+        ECS_COMPONENT(world, Position);
+        ECS_ENTITY(world, Tag, 0);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, Tag);
-    ecs_set(world, e1, Position, {1, 2});
+        e1 = ecs_new_w_entity(world, Tag);
+        ecs_set(world, e1, Position, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_w_entity(world, Tag);
-    ecs_set(world, e2, Position, {3, 4});
+        e2 = ecs_new_w_entity(world, Tag);
+        ecs_set(world, e2, Position, {3, 4});
 
-    ecs_entity_t e3 = ecs_new_w_entity(world, Tag);
-    ecs_set(world, e3, Position, {5, 6});
+        e3 = ecs_new_w_entity(world, Tag);
+        ecs_set(world, e3, Position, {5, 6});
 
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+        v = serialize_to_vector(world, buffer_size);
 
-    ecs_fini(world);
+        ecs_fini(world);
+    }
 
     world = deserialize_from_vector(v, buffer_size);
 
@@ -638,24 +669,29 @@ void ReaderWriter_simple_w_tag() {
 
 static
 int tag_w_simple_test(int buffer_size) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world;
+    ecs_entity_t e1, e2, e3;
+    ecs_vector_t *v;
 
     /* Component comes after tag */
-    ECS_ENTITY(world, Tag, 0);
-    ECS_COMPONENT(world, Position);
+    {
+        world = ecs_init();
+        ECS_ENTITY(world, Tag, 0);
+        ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, Tag);
-    ecs_set(world, e1, Position, {1, 2});
+        e1 = ecs_new_w_entity(world, Tag);
+        ecs_set(world, e1, Position, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_w_entity(world, Tag);
-    ecs_set(world, e2, Position, {3, 4});
+        e2 = ecs_new_w_entity(world, Tag);
+        ecs_set(world, e2, Position, {3, 4});
 
-    ecs_entity_t e3 = ecs_new_w_entity(world, Tag);
-    ecs_set(world, e3, Position, {5, 6});
+        e3 = ecs_new_w_entity(world, Tag);
+        ecs_set(world, e3, Position, {5, 6});
 
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+        v = serialize_to_vector(world, buffer_size);
 
-    ecs_fini(world);
+        ecs_fini(world);
+    }
 
     world = deserialize_from_vector(v, buffer_size);
 
@@ -772,20 +808,27 @@ void ReaderWriter_empty_parent() {
 
 static
 int parent_test(int buffer_size) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world;
+    ecs_entity_t e1, e2, e3, parent;
+    ecs_vector_t *v;
+    ecs_type_t ecs_type(parent);
 
-    ECS_COMPONENT(world, Position);
+    {
+        world = ecs_init();
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
-    ecs_type_t ecs_type(parent) = ecs_type_from_entity(world, parent);
+        ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
-    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
-    ecs_entity_t e3 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+        parent = ecs_set(world, 0, Position, {1, 2});
+        ecs_type(parent) = ecs_type_from_entity(world, parent);
 
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+        e1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+        e2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+        e3 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
 
-    ecs_fini(world);
+        v = serialize_to_vector(world, buffer_size);
+
+        ecs_fini(world);
+    }
 
     world = deserialize_from_vector(v, buffer_size);
 
@@ -836,24 +879,30 @@ void ReaderWriter_parent() {
 
 static
 int simple_w_parent_test(int buffer_size) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world;
+    ecs_entity_t e1, e2, e3, parent;
+    ecs_vector_t *v;
 
-    ECS_COMPONENT(world, Position);
+    {
+        world = ecs_init();
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+        ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
-    ecs_set(world, e1, Position, {1, 2});
+        parent = ecs_set(world, 0, Position, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
-    ecs_set(world, e2, Position, {3, 4});
+        e1 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+        ecs_set(world, e1, Position, {1, 2});
 
-    ecs_entity_t e3 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
-    ecs_set(world, e3, Position, {5, 6});
+        e2 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+        ecs_set(world, e2, Position, {3, 4});
 
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+        e3 = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+        ecs_set(world, e3, Position, {5, 6});
 
-    ecs_fini(world);
+        v = serialize_to_vector(world, buffer_size);
+
+        ecs_fini(world);
+    }
 
     world = deserialize_from_vector(v, buffer_size);
 
@@ -922,20 +971,27 @@ void ReaderWriter_simple_w_parent() {
 
 static
 int inheritance_test(int buffer_size) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world;
+    ecs_entity_t e1, e2, e3, base;
+    ecs_vector_t *v;
+    ecs_type_t ecs_type(base);
 
-    ECS_COMPONENT(world, Position);
+    {
+        world = ecs_init();
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {1, 2});
-    ecs_type_t ecs_type(base) = ecs_type_from_entity(world, base);
+        ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-    ecs_entity_t e3 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        base = ecs_set(world, 0, Position, {1, 2});
+        ecs_type(base) = ecs_type_from_entity(world, base);
 
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+        e1 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        e3 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
 
-    ecs_fini(world);
+        v = serialize_to_vector(world, buffer_size);
+
+        ecs_fini(world);
+    }
 
     world = deserialize_from_vector(v, buffer_size);
 
@@ -989,24 +1045,31 @@ void ReaderWriter_inheritance() {
 
 static
 int simple_w_inheritance_test(int buffer_size) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world;
+    ecs_entity_t e1, e2, e3, base;
+    ecs_type_t ecs_type(base);
+    ecs_vector_t *v;
 
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
+    {    
+        world = ecs_init();
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {1, 2});
-    ecs_type_t ecs_type(base) = ecs_type_from_entity(world, base);
+        ECS_COMPONENT(world, Position);
+        ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-    ecs_set(world, e1, Velocity, {3, 4});
-    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-    ecs_set(world, e2, Velocity, {5, 6});
-    ecs_entity_t e3 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
-    ecs_set(world, e3, Velocity, {7, 8});
+        base = ecs_set(world, 0, Position, {1, 2});
+        ecs_type(base) = ecs_type_from_entity(world, base);
 
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+        e1 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        ecs_set(world, e1, Velocity, {3, 4});
+        e2 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        ecs_set(world, e2, Velocity, {5, 6});
+        e3 = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+        ecs_set(world, e3, Velocity, {7, 8});
 
-    ecs_fini(world);
+        v = serialize_to_vector(world, buffer_size);
+
+        ecs_fini(world);
+    }
 
     world = deserialize_from_vector(v, buffer_size);
 
@@ -1082,17 +1145,23 @@ void ReaderWriter_simple_w_inheritance() {
 
 static
 int deserialize_twice_test(int buffer_size) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world;
+    ecs_entity_t e1, e2, e3;
+    ecs_vector_t *v;
 
-    ECS_COMPONENT(world, Position);
-    
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 4});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 6});
+    {
+        world = ecs_init();
 
-    ecs_vector_t *v = serialize_to_vector(world, buffer_size);
+        ECS_COMPONENT(world, Position);
+        
+        e1 = ecs_set(world, 0, Position, {1, 2});
+        e2 = ecs_set(world, 0, Position, {3, 4});
+        e3 = ecs_set(world, 0, Position, {5, 6});
 
-    ecs_fini(world);
+        v = serialize_to_vector(world, buffer_size);
+
+        ecs_fini(world);
+    }
 
     world = deserialize_from_vector(v, buffer_size);
     world = deserialize_from_vector(v, buffer_size);
@@ -1204,20 +1273,26 @@ void ReaderWriter_entity_conflict() {
 
 void ReaderWriter_snapshot_reader_simple() {
     ecs_world_t *world = ecs_init();
+    ecs_entity_t e1, e2, e3;
+    ecs_vector_t *v;
 
-    ECS_COMPONENT(world, Position);
-    
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 4});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 6});
+    {
+        world = ecs_init();
 
-    ecs_snapshot_t *snapshot = ecs_snapshot_take(world, NULL);
+        ECS_COMPONENT(world, Position);
+        
+        e1 = ecs_set(world, 0, Position, {1, 2});
+        e2 = ecs_set(world, 0, Position, {3, 4});
+        e3 = ecs_set(world, 0, Position, {5, 6});
 
-    ecs_vector_t *v = serialize_snapshot_to_vector(world, 36, snapshot);
+        ecs_snapshot_t *snapshot = ecs_snapshot_take(world);
 
-    ecs_snapshot_free(world, snapshot);
+        v = serialize_snapshot_to_vector(world, 36, snapshot);
 
-    ecs_fini(world);
+        ecs_snapshot_free(snapshot);
+
+        ecs_fini(world);
+    }
 
     world = deserialize_from_vector(v, 36);
 
@@ -1278,9 +1353,9 @@ void ReaderWriter_snapshot_reader_id() {
     ecs_entity_t e7 = ecs_set(world, 0, EcsName, {"E7E7E7E"});
     ecs_entity_t e8 = ecs_set(world, 0, EcsName, {"E8E8E8E8"});
 
-    ecs_snapshot_t *snapshot = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *snapshot = ecs_snapshot_take(world);
     ecs_vector_t *v = serialize_snapshot_to_vector(world, 36, snapshot);
-    ecs_snapshot_free(world, snapshot);
+    ecs_snapshot_free(snapshot);
 
     int id_count = ecs_count(world, EcsName);
 

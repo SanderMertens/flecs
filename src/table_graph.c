@@ -91,8 +91,10 @@ void init_edges(
     ecs_entity_t *entities = ecs_vector_first(table->type, ecs_entity_t);
     int32_t count = ecs_vector_count(table->type);
 
-    table->lo_edges = ecs_os_calloc(sizeof(ecs_edge_t), ECS_HI_COMPONENT_ID);
+    table->lo_edges = ecs_os_calloc(sizeof(ecs_edge_t) * ECS_HI_COMPONENT_ID);
     table->hi_edges = ecs_map_new(ecs_edge_t, 0);
+
+    table->lo_edges[0].add = table;
     
     /* Make add edges to own components point to self */
     int32_t i;
@@ -143,7 +145,7 @@ void init_edges(
         }
 
         if (e & ECS_INSTANCEOF) {
-            table->flags |= EcsTableHasPrefab;
+            table->flags |= EcsTableHasBase;
         }
 
         if (e & ECS_CHILDOF) {
@@ -180,6 +182,8 @@ void init_table(
     table->monitors = NULL;
     table->on_set = NULL;
     table->on_set_all = NULL;
+    table->on_set_override = NULL;
+    table->un_set_all = NULL;
     
     init_edges(world, stage, table);
 
@@ -200,17 +204,17 @@ ecs_table_t *create_table(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, result->type);
-    ecs_trace_1("table #[green][%s]#[normal] created", expr);
+    ecs_trace_2("table #[green][%s]#[normal] created", expr);
     ecs_os_free(expr);
 #endif
-    ecs_trace_push();
+    ecs_log_push();
 
     /* Don't notify queries if table is created in stage */
     if (stage == &world->stage) {
         ecs_notify_queries_of_table(world, result);
     }
 
-    ecs_trace_pop();
+    ecs_log_pop();
 
     return result;
 }
@@ -342,7 +346,7 @@ ecs_table_t *find_or_create_table_include(
     int32_t count = ecs_vector_count(type);
 
     ecs_entities_t entities = {
-        .array = ecs_os_alloca(ecs_entity_t, count + 1),
+        .array = ecs_os_alloca(sizeof(ecs_entity_t) * (count + 1)),
         .count = count + 1
     };
 
@@ -353,14 +357,14 @@ ecs_table_t *find_or_create_table_include(
     ecs_entity_t replace = 0;
     if (node->flags & EcsTableHasXor) {
         ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
-        int32_t i, count = ecs_vector_count(type);
+        int32_t i, type_count = ecs_vector_count(type);
         ecs_type_t xor_type = NULL;
 
-        for (i = count - 1; i >= 0; i --) {
+        for (i = type_count - 1; i >= 0; i --) {
             ecs_entity_t e = array[i];
             if (e & ECS_XOR) {
-                ecs_entity_t type = e & ECS_ENTITY_MASK;
-                const EcsType *type_ptr = ecs_get(world, type, EcsType);
+                ecs_entity_t e_type = e & ECS_ENTITY_MASK;
+                const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 if (ecs_type_owns_entity(
@@ -401,7 +405,7 @@ ecs_table_t *find_or_create_table_exclude(
     int32_t count = ecs_vector_count(type);
 
     ecs_entities_t entities = {
-        .array = ecs_os_alloca(ecs_entity_t, count),
+        .array = ecs_os_alloca(sizeof(ecs_entity_t) * count),
         .count = count
     };
 
@@ -629,6 +633,9 @@ bool ecs_entity_array_is_ordered(
     int32_t i, count = entities->count;
 
     for (i = 0; i < count; i ++) {
+        if (!array[i] && !prev) {
+            continue;
+        }
         if (array[i] <= prev) {
             return false;
         }
@@ -762,12 +769,12 @@ ecs_table_t *find_or_create(
 
         if (!table) {
             /* A new table needs to be created. To ensure that one table is
-                * created per combination of components, regardless of in
-                * which order the components are specified, the entity array
-                * with which the table is created must be ordered. This
-                * provides a canonical path through which the table can always
-                * be reached, and allows other paths to be created 
-                * progressively.*/
+             * created per combination of components, regardless of in
+             * which order the components are specified, the entity array
+             * with which the table is created must be ordered. This
+             * provides a canonical path through which the table can always
+             * be reached, and allows other paths to be created 
+             * progressively.*/
 
             /* First, determine if the entities array is ordered. Do this
              * only once per lookup */
@@ -817,7 +824,7 @@ ecs_table_t *find_or_create(
                     table = create_table(world, stage, &table_entities);
                 }
             } else {
-                ordered_entities = ecs_os_alloca(ecs_entity_t, count);
+                ordered_entities = ecs_os_alloca(sizeof(ecs_entity_t) * count);
 
                 memcpy(ordered_entities, array, 
                     count * sizeof(ecs_entity_t));

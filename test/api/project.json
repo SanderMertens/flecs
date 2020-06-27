@@ -75,7 +75,12 @@
                 "add_remove_same",
                 "add_2_remove",
                 "add_entity",
-                "remove_entity"
+                "remove_entity",
+                "add_0_entity",
+                "remove_0_entity",
+                "add_w_xor",
+                "add_same_w_xor",
+                "add_after_remove_xor"
             ]
         }, {
             "id": "Remove",
@@ -142,7 +147,10 @@
                 "scope_set_w_new",
                 "scope_set_w_new_staged",
                 "scope_set_w_lookup",
-                "scope_component"
+                "scope_component",
+                "new_from_path_depth_0",
+                "new_from_path_depth_1",
+                "new_from_path_depth_2"
             ]
         }, {
             "id": "Add_bulk",
@@ -503,12 +511,16 @@
                 "add_base_to_1_of_2_overridden",
                 "on_set_after_remove_override",
                 "no_set_after_remove_base",
+                "un_set_after_remove",
+                "un_set_after_remove_base",
                 "add_to_current_in_on_set",
                 "remove_from_current_in_on_set",
                 "remove_set_component_in_on_set",
                 "match_table_created_w_add_in_on_set",
                 "set_optional",
-                "set_from_nothing"
+                "set_from_nothing",
+                "add_null_type_in_on_set",
+                "add_0_entity_in_on_set"
             ]
         }, {
             "id": "SystemPeriodic",
@@ -769,7 +781,6 @@
                 "get_delta_time_auto",
                 "recreate_world",
                 "recreate_world_w_component",
-                "init_w_args_enable_dbg",
                 "no_threading",
                 "no_time",
                 "is_entity_enabled"

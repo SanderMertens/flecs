@@ -5,27 +5,22 @@
 /* FLECS_LEGACY should be defined when building for C89 */
 // #define FLECS_LEGACY
 
-/* FLECS_STATIC should be defined when building as a static library */
-// #define FLECS_STATIC
-
 /* FLECS_NO_CPP should be defined when building for C++ without the C++ API */
 // #define FLECS_NO_CPP
 
 /* FLECS_NO_MODULES should be defined when modules should not be included */
 // #define FLECS_NO_MODULES
 
-/* FLECS_NO_UTILS should be defined when optional utils should not be included */
-// #define FLECS_NO_UTILS
+/* FLECS_NO_ADDONS should be defined when optional addons should not be included */
+// #define FLECS_NO_ADDONS
 
-#include "flecs/support/api_defines.h"
+#include "flecs/private/api_defines.h"
+#include "flecs/private/vector.h"  /* Vector datatype */
+#include "flecs/private/sparse.h"  /* Sparse set */
+#include "flecs/private/map.h"     /* Hashmap */
+#include "flecs/private/strbuf.h"  /* Efficient string builder */
 
-/* Required utilities */
-#include "flecs/utils/os_api.h"  /* Abstraction for operating system functions */
-#include "flecs/utils/vector.h"  /* Vector datatype */
-#include "flecs/utils/ringbuf.h" /* Ringbuffer datatype */
-#include "flecs/utils/sparse.h"  /* Sparse set */
-#include "flecs/utils/map.h"     /* Hashmap */
-#include "flecs/utils/strbuf.h"  /* Efficient string builder */
+#include "flecs/os_api.h"  /* Abstraction for operating system functions */
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,6 +76,7 @@ typedef struct ecs_world_info_t {
     ecs_entity_t max_id;              /**< Last allowed entity id */
 
     float delta_time;           /**< Time passed to or computed by ecs_progress */
+    float time_scale;           /**< Time scale applied to delta_time */
     float target_fps;           /**< Target fps */
     double frame_time_total;    /**< Total time spent processing a frame */
     double system_time_total;   /**< Total time spent in systems */
@@ -100,7 +96,10 @@ typedef struct ecs_world_info_t {
 
 /** Action callback for systems and triggers */
 typedef void (*ecs_iter_action_t)(
-    ecs_iter_t *data);
+    ecs_iter_t *it);
+
+typedef bool (*ecs_iter_next_action_t)(
+    ecs_iter_t *it);
 
 /** Compare callback used for sorting */
 typedef int (*ecs_compare_action_t)(
@@ -125,9 +124,10 @@ typedef void (*ecs_fini_action_t)(
     ecs_world_t *world,
     void *ctx);
 
-#include "flecs/support/api_types.h"        /* Supporting API types */
-#include "flecs/support/api_support.h"      /* Supporting API functions */
-#include "flecs/utils/type.h"               /* Type API */
+#include "flecs/private/api_types.h"        /* Supporting API types */
+#include "flecs/private/api_support.h"      /* Supporting API functions */
+#include "flecs/private/log.h"              /* Logging API */
+#include "flecs/type.h"                     /* Type API */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +164,15 @@ typedef struct EcsComponentLifecycle {
     ecs_move_t move;        /**< Component move */
     void *ctx;              /**< User defined context */
 } EcsComponentLifecycle;
+
+/* Component used for registering component triggers */
+typedef struct EcsTrigger {
+    ecs_entity_t kind;
+    ecs_iter_action_t action;
+    ecs_entity_t component;
+    ecs_entity_t self;
+    void *ctx;
+} EcsTrigger;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -230,7 +239,10 @@ typedef struct EcsComponentLifecycle {
 /* Trigger tags */
 #define EcsOnAdd (ECS_HI_COMPONENT_ID + 9)
 #define EcsOnRemove (ECS_HI_COMPONENT_ID + 10)
+
+/* Set system tags */
 #define EcsOnSet (ECS_HI_COMPONENT_ID + 11)
+#define EcsUnSet (ECS_HI_COMPONENT_ID + 12)
 
 /* Builtin pipeline tags */
 #define EcsPreFrame (ECS_HI_COMPONENT_ID + 13)
@@ -566,12 +578,25 @@ void ecs_unlock(
     ecs_world_t *world);
 
 /** Enable or disable tracing.
+ * This will enable builtin tracing. For tracing to work, it will have to be
+ * compiled in which requires defining one of the following macro's:
  *
- * @param enabled True if enabling, false if disabling. 
+ * ECS_TRACE_0 - All tracing is disabled
+ * ECS_TRACE_1 - Enable tracing level 1
+ * ECS_TRACE_2 - Enable tracing level 2 and below
+ * ECS_TRACE_3 - Enable tracing level 3 and below
+ *
+ * If no tracing level is defined and this is a debug build, ECS_TRACE_3 will
+ * have been automatically defined.
+ *
+ * The provided level corresponds with the tracing level. If -1 is provided as
+ * value, warnings are disabled. If -2 is provided, errors are disabled as well.
+ *
+ * @param level Desired tracing level.
  */
 FLECS_EXPORT
 void ecs_tracing_enable(
-    bool enabled);
+    int8_t level);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -636,9 +661,6 @@ ecs_entity_t ecs_bulk_new_w_entity(
  * This operation is the same as ecs_new_w_type, but creates N entities
  * instead of one and does not recycle ids. Ids of created entities are
  * guaranteed to be consecutive.
- *
- * This operation accepts an additional data argument which allows an
- * application to specify data arrays to initialize the components with.
  * 
  * @param world The world.
  * @param type The type.
@@ -649,8 +671,26 @@ FLECS_EXPORT
 ecs_entity_t ecs_bulk_new_w_type(
     ecs_world_t *world,
     ecs_type_t type,
+    int32_t count);
+
+/** Create N new entities and initialize components.
+ * This operation is the same as ecs_bulk_new_w_type, but initializes components
+ * with the provided component array. Instead of a type the operation accepts an
+ * array of component identifiers (entities). The component arrays need to be
+ * provided in the same order as the component identifiers.
+ * 
+ * @param world The world.
+ * @param components Array with component identifiers.
+ * @param count The number of entities to create.
+ * @param data The data arrays to initialize the components with.
+ * @return The first entity id of the newly created entities.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_bulk_new_w_data(
+    ecs_world_t *world,
     int32_t count,
-    void** data);
+    ecs_entities_t *component_ids,
+    void *data);
 
 /** Create N new entities.
  * This operation is the same as ecs_new, but creates N entities
@@ -663,7 +703,7 @@ ecs_entity_t ecs_bulk_new_w_type(
  * @return The first entity id of the newly created entities.
  */
 #define ecs_bulk_new(world, component, count)\
-    ecs_bulk_new_w_type(world, ecs_type(component), count, NULL)
+    ecs_bulk_new_w_type(world, ecs_type(component), count)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1312,22 +1352,7 @@ void ecs_enable(
 FLECS_EXPORT
 ecs_iter_t ecs_filter_iter(
     ecs_world_t *world,
-    const ecs_filter_t *filter);
-
-/** Return a filter iterator for a snapshot.
- * Same as ecs_filter_iter, but for iterating snapshots tables. If NULL is
- * provided for the filter, the iterator will iterate all tables in the 
- * snapshot.
- *
- * @param world The world.
- * @param snapshot The snapshot.
- * @param filter The filter.
- */
-FLECS_EXPORT
-ecs_iter_t ecs_snapshot_filter_iter(
-    ecs_world_t *world,
-    const ecs_snapshot_t *snapshot,
-    const ecs_filter_t *filter);    
+    const ecs_filter_t *filter);  
 
 /** Iterate tables matched by filter.
  * This operation progresses the filter iterator to the next table. The 
@@ -1462,18 +1487,18 @@ bool ecs_query_next_worker(
  *
  * @param world The world.
  * @param query The query.
- * @param sort_component The component used to sort.
+ * @param component The component used to sort.
  * @param compare The compare function used to sort the components.
  */
 FLECS_EXPORT
-void ecs_query_sort(
+void ecs_query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
-    ecs_entity_t sort_component,
+    ecs_entity_t component,
     ecs_compare_action_t compare);
 
-/** Sort the matched types (tables) of a query.
- * Similar yo ecs_query_sort, but instead of sorting individual entities, this
+/** Group and sort matched tables.
+ * Similar yo ecs_query_order_by, but instead of sorting individual entities, this
  * operation only sorts matched tables. This can be useful of a query needs to
  * enforce a certain iteration order upon the tables it is iterating, for 
  * example by giving a certain component or tag a higher priority.
@@ -1488,14 +1513,14 @@ void ecs_query_sort(
  *
  * @param world The world.
  * @param query The query.
- * @param monitor_component A component passed to the rank function.
+ * @param component The component used to determine the group rank.
  * @param rank_action The rank action.
  */
 FLECS_EXPORT
-void ecs_query_sort_types(
+void ecs_query_group_by(
     ecs_world_t *world,
     ecs_query_t *query,
-    ecs_entity_t monitor_component,
+    ecs_entity_t component,
     ecs_rank_type_action_t rank_action);
 
 
@@ -1735,8 +1760,19 @@ ecs_entity_t ecs_new_from_path_w_sep(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Scopes
+//// Scope API
 ////////////////////////////////////////////////////////////////////////////////
+
+/** Does entity have children.
+ *
+ * @param world The world
+ * @param entity The entity
+ * @return True if the entity has children, false if not.
+ */
+FLECS_EXPORT
+int32_t ecs_get_child_count(
+    ecs_world_t *world,
+    ecs_entity_t entity);
 
 /** Return a scope iterator.
  * A scope iterator iterates over all the child entities of the specified 
@@ -1750,6 +1786,19 @@ FLECS_EXPORT
 ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent);
+
+/** Return a filtered scope iterator.
+ * Same as ecs_scope_iter, but results will be filtered.
+ *
+ * @param world The world.
+ * @param parent The parent entity for which to iterate the children.
+ * @return The iterator.
+ */
+FLECS_EXPORT
+ecs_iter_t ecs_scope_iter_w_filter(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_filter_t *filter);
 
 /** Progress the scope iterator.
  * This operation progresses the scope iterator to the next table. The iterator
@@ -2241,16 +2290,16 @@ int ecs_enable_console(
 
 /* Optional modules */
 #ifndef FLECS_NO_MODULES
-#include "flecs/modules/systems.h"
+#include "flecs/modules/system.h"
 #include "flecs/modules/pipeline.h"
-#include "flecs/modules/timers.h"
+#include "flecs/modules/timer.h"
 #endif
 
 /* Optional utilities */
-#ifndef FLECS_NO_UTILS
-#include "flecs/utils/snapshot.h"
-#include "flecs/utils/serializer.h"
-#include "flecs/utils/ringbuf.h"
+#ifndef FLECS_NO_ADDONS
+#include "flecs/addon/snapshot.h"
+#include "flecs/addon/reader_writer.h"
+#include "flecs/addon/ringbuf.h"
 #endif
 
 #ifdef __cplusplus

@@ -108,7 +108,7 @@ void Prefab_new_w_count_prefab() {
 
     ecs_entity_t e_start = ecs_bulk_new_w_entity(world, ECS_INSTANCEOF | Prefab, 10);
 
-    int i;
+    ecs_entity_t i;
     const Position *p_prev = NULL;
     for (i = e_start; i < (e_start + 10); i ++) {
         const Position *p = ecs_get(world, i, Position);
@@ -1409,7 +1409,7 @@ void Prefab_prefab_w_child_new_w_count() {
     ecs_entity_t e = ecs_bulk_new_w_entity(world, ECS_INSTANCEOF | Parent, 3);
     test_assert(e != 0);
 
-    int end = e + 3;
+    ecs_entity_t end = e + 3;
     for (; e < end; e ++) {
         test_assert( ecs_has(world, e, Position));
 
@@ -1734,7 +1734,7 @@ void Prefab_ref_after_realloc() {
 
     /* Trigger a realloc of the table in which the prefab is stored. This should
      * cause systems with refs to re-resolve their cached ref ptrs  */
-    ecs_bulk_new_w_type(world, prefab_type, 1000, NULL);
+    ecs_bulk_new_w_type(world, prefab_type, 1000);
     
     ecs_set(world, Prefab, Mass, {2});
     ecs_progress(world, 1);
@@ -1772,7 +1772,7 @@ void Prefab_revalidate_ref_w_mixed_table_refs() {
 
     /* Trigger a realloc of the table in which the prefab is stored. This should
      * cause systems with refs to re-resolve their cached ref ptrs  */
-    ecs_bulk_new_w_type(world, prefab_type, 1000, NULL);
+    ecs_bulk_new_w_type(world, prefab_type, 1000);
     
     ecs_set(world, Prefab, Mass, {2});
     ecs_progress(world, 1);

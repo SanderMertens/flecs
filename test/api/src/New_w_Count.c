@@ -247,7 +247,13 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
     ecs_set(world, AddPosition, EcsContext, {&ecs_entity(Velocity)});
     ecs_set(world, SetPosition, EcsContext, {&ecs_entity(Rotation)});
 
-    ecs_entity_t e = ecs_bulk_new_w_type(world, ecs_type(Position), 3, 
+    ecs_entity_t e = ecs_bulk_new_w_data(world, 3, 
+        &(ecs_entities_t){
+            .array = (ecs_entity_t[]){
+                ecs_entity(Position)
+            }, 
+            .count = 1
+        },    
         (void*[]){ 
             (Position[]){
                 {10, 20},

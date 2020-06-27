@@ -120,7 +120,7 @@ void Singleton_system_w_not_singleton() {
 void Singleton_lookup_singleton() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_lookup(world, "$");
+    ecs_entity_t e = ecs_lookup_fullpath(world, "$");
     test_assert(e == EcsSingleton);
 
     ecs_fini(world);

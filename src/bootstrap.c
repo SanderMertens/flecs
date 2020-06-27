@@ -11,14 +11,14 @@ ECS_CTOR(EcsName, ptr, {
     ptr->value = NULL;
     ptr->alloc_value = NULL;
     ptr->symbol = NULL;
-});
+})
 
 ECS_DTOR(EcsName, ptr, {
     ecs_os_free(ptr->alloc_value);
     ptr->value = NULL;
     ptr->alloc_value = NULL;
     ptr->symbol = NULL;
-});
+})
 
 ECS_COPY(EcsName, dst, src, {
     if (src->alloc_value) {
@@ -29,7 +29,7 @@ ECS_COPY(EcsName, dst, src, {
         dst->value = src->value;
     }
     dst->symbol = src->symbol;
-});
+})
 
 ECS_MOVE(EcsName, dst, src, {
     dst->value = src->value;
@@ -39,7 +39,7 @@ ECS_MOVE(EcsName, dst, src, {
     src->value = NULL;
     src->alloc_value = NULL;
     src->symbol = NULL;
-});
+})
 
 
 /* -- Bootstrapping -- */
@@ -156,12 +156,12 @@ void ecs_bootstrap(
 {
     ecs_type(EcsComponent) = NULL;
 
+    ecs_trace_1("bootstrap core components");
+    ecs_log_push();
+
     /* Create table that will hold components (EcsComponent, EcsName) */
     ecs_table_t *table = bootstrap_component_table(world);
     assert(table != NULL);
-
-    ecs_trace_1("initialize builtin components");
-    ecs_trace_push();
 
     bootstrap_component(world, table, EcsComponent);
     bootstrap_component(world, table, EcsType);
@@ -181,8 +181,6 @@ void ecs_bootstrap(
     ecs_bootstrap_tag(world, EcsHidden);
     ecs_bootstrap_tag(world, EcsDisabled);
 
-    ecs_trace_pop();
-
     ecs_set_component_actions(world, ecs_entity(EcsName), &(EcsComponentLifecycle){
         .ctor = ecs_ctor(EcsName),
         .dtor = ecs_dtor(EcsName),
@@ -191,25 +189,25 @@ void ecs_bootstrap(
     });
 
     /* Initialize scopes */
-    ecs_set(world, EcsFlecs, EcsName, {"flecs"});
-    ecs_set(world, EcsFlecsCore, EcsName, {"core"});
+    ecs_set(world, EcsFlecs, EcsName, {.value = "flecs"});
+    ecs_add_entity(world, EcsFlecs, EcsModule);
+    ecs_set(world, EcsFlecsCore, EcsName, {.value = "core"});
+    ecs_add_entity(world, EcsFlecsCore, EcsModule);
     ecs_add_entity(world, EcsFlecsCore, ECS_CHILDOF | EcsFlecs);
 
     /* Initialize EcsWorld */
-    ecs_set(world, EcsWorld, EcsName, {"World"});
+    ecs_set(world, EcsWorld, EcsName, {.value = "World"});
     ecs_assert(ecs_get_name(world, EcsWorld) != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_lookup(world, "World") == EcsWorld, ECS_INTERNAL_ERROR, NULL);
     ecs_add_entity(world, EcsWorld, ECS_CHILDOF | EcsFlecsCore);
 
     /* Initialize EcsSingleton */
-    ecs_set(world, EcsSingleton, EcsName, {"$"});
+    ecs_set(world, EcsSingleton, EcsName, {.value = "$"});
     ecs_assert(ecs_get_name(world, EcsSingleton) != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_lookup(world, "$") == EcsSingleton, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_trace_1("initialize builtins");
-    ecs_trace_push();
-
-    ecs_trace_pop();
+    ecs_add_entity(world, EcsSingleton, ECS_CHILDOF | EcsFlecsCore);
 
     ecs_set_scope(world, 0);
+
+    ecs_log_pop();
 }

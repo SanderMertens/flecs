@@ -29,6 +29,6 @@ int main(int argc, char *argv[]) {
     /* Print value of mass. The value will be equal to base, and the instance
      * will own the component. */
     std::cout << "instance: " 
-        << instance.get<Mass>().value << " (owned = " 
+        << instance.get<Mass>()->value << " (owned = " 
         << instance.owns<Mass>() << ")" << std::endl;
 }

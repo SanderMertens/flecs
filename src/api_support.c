@@ -195,12 +195,11 @@ ecs_entity_t ecs_new_entity(
     const char *expr)
 {
     EcsType type = type_from_expr(world, name, expr);
-
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
         result = e ? e : ecs_new(world, 0);
         ecs_add_type(world, result, type.normalized);
-        ecs_set(world, result, EcsName, {name});
+        ecs_set(world, result, EcsName, {.value = name});
     }
 
     return result;
@@ -219,7 +218,7 @@ ecs_entity_t ecs_new_prefab(
         result = e ? e : ecs_new(world, 0);
         ecs_add_entity(world, result, EcsPrefab);
         ecs_add_type(world, result, type.normalized);
-        ecs_set(world, result, EcsName, {name});
+        ecs_set(world, result, EcsName, {.value = name});
     } else {
         if (!ecs_has_entity(world, result, EcsPrefab)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
@@ -321,7 +320,7 @@ ecs_entity_t ecs_new_type(
     ecs_entity_t result = lookup(world, name, ecs_type(EcsType));
     if (!result) {
         result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {name});
+        ecs_set(world, result, EcsName, {.value = name});
         ecs_set(world, result, EcsType, {
             .type = type.type, .normalized = type.normalized
         });        
@@ -350,12 +349,13 @@ ecs_entity_t ecs_new_system(
     const char *signature,
     ecs_iter_action_t action)
 {
-    assert(world->magic == ECS_WORLD_MAGIC);  
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
+    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
     
     ecs_entity_t result = lookup(world, name, ecs_type(EcsSignatureExpr));
     if (!result) {
         result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {name});
+        ecs_set(world, result, EcsName, {.value = name});
         if (tag) {
             ecs_add_entity(world, result, tag);
 
@@ -397,7 +397,7 @@ ecs_entity_t ecs_new_trigger(
     ecs_entity_t result = lookup(world, name, ecs_type(EcsTrigger));
     if (!result) {
         result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {name});
+        ecs_set(world, result, EcsName, {.value = name});
         ecs_set(world, result, EcsTrigger, {
             .kind = kind,
             .action = action,

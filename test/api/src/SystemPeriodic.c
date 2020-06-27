@@ -1,7 +1,5 @@
 #include <api.h>
 
-#include "flecs/modules/timers.h"
-
 static
 void install_test_abort() {
     ecs_os_set_api_defaults();

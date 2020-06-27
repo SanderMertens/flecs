@@ -48,9 +48,11 @@ int main(int argc, char *argv[]) {
 
     /* Take a snapshot that records the current state of the entity. Filter out
      * any entities that have the 'Mass' component. */
-    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t){
+    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
         .exclude = ecs_type(Mass)
     });
+    
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
 
     /* Progress the world a few times, updates position */
     ecs_progress(world, 0);

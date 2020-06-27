@@ -270,9 +270,9 @@ void *test_malloc(size_t size) {
 }
 
 static
-void *test_calloc(size_t size, size_t n) {
+void *test_calloc(size_t size) {
     malloc_count ++;
-    return calloc(size, n);
+    return calloc(size, 1);
 }
 
 static
@@ -993,8 +993,10 @@ void World_recreate_world_w_component() {
     ecs_world_t *world = ecs_init();
     test_assert(world != NULL);
 
-    ECS_COMPONENT(world, Position);
-    test_assert(ecs_entity(Position) != 0);
+    {
+        ECS_COMPONENT(world, Position);
+        test_assert(ecs_entity(Position) != 0);
+    }
 
     test_assert(ecs_fini(world) == 0);
 
@@ -1008,21 +1010,6 @@ void World_recreate_world_w_component() {
         test_assert(ecs_fini(world) == 0);
     }
 }
-
-void World_init_w_args_enable_dbg() {
-    ecs_world_t *world = ecs_init_w_args(2, ((char*[]){
-        "test",
-        "--debug",
-        NULL
-    }));
-
-    test_assert(world != NULL);
-
-    test_assert(ecs_os_dbg_enabled() == true);
-
-    ecs_fini(world);
-}
-
 
 void World_no_threading() {
     ecs_os_set_api_defaults();

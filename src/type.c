@@ -364,7 +364,6 @@ char* ecs_type_str(
 
     ecs_vector_t *chbuf = ecs_vector_new(char, 32);
     char *dst;
-    int32_t len;
 
     ecs_entity_t *handles = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
@@ -423,7 +422,7 @@ char* ecs_type_str(
 
         ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        len = strlen(str);
+        int32_t len = strlen(str);
         dst = ecs_vector_addn(&chbuf, char, len);
         memcpy(dst, str, len);
         if (h != 1) {

@@ -27,9 +27,9 @@ void *test_malloc(size_t size) {
 }
 
 static
-void *test_calloc(size_t size, size_t n) {
+void *test_calloc(size_t size) {
     malloc_count ++;
-    return calloc(size, n);
+    return calloc(1, size);
 }
 
 static

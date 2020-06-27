@@ -93,13 +93,6 @@ void ecs_bulk_delete(
     bulk_delete(world, filter, true);
 }
 
-void ecs_clear_w_filter(
-    ecs_world_t *world,
-    const ecs_filter_t *filter)
-{
-    bulk_delete(world, filter, false);
-}
-
 void ecs_bulk_add_remove_type(
     ecs_world_t *world,
     ecs_type_t to_add,
@@ -115,18 +108,22 @@ void ecs_bulk_add_remove_type(
     ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
 
     ecs_entities_t added = {
-        .array = ecs_os_alloca(ecs_entity_t, to_add_array.count),
+        .array = ecs_os_alloca(sizeof(ecs_entity_t) * to_add_array.count),
         .count = 0
     }; 
 
     ecs_entities_t removed = {
-        .array = ecs_os_alloca(ecs_entity_t, to_remove_array.count),
+        .array = ecs_os_alloca(sizeof(ecs_entity_t) * to_remove_array.count),
         .count = 0
     };
 
     int32_t i, count = ecs_sparse_count(stage->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
+
+        if (table->flags & EcsTableHasBuiltins) {
+            continue;
+        }
 
         if (!ecs_table_match_filter(world, table, filter)) {
             continue;
@@ -166,13 +163,17 @@ void ecs_bulk_add_type(
 
     ecs_entities_t to_add_array = ecs_type_to_entities(to_add);
     ecs_entities_t added = {
-        .array = ecs_os_alloca(ecs_entity_t, to_add_array.count),
+        .array = ecs_os_alloca(sizeof(ecs_entity_t) * to_add_array.count),
         .count = 0
     };
 
     int32_t i, count = ecs_sparse_count(stage->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
+
+        if (table->flags & EcsTableHasBuiltins) {
+            continue;
+        }
 
         if (!ecs_table_match_filter(world, table, filter)) {
             continue;
@@ -216,6 +217,10 @@ void ecs_bulk_add_entity(
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
 
+        if (table->flags & EcsTableHasBuiltins) {
+            continue;
+        }
+
         if (!ecs_table_match_filter(world, table, filter)) {
             continue;
         }
@@ -248,13 +253,17 @@ void ecs_bulk_remove_type(
 
     ecs_entities_t to_remove_array = ecs_type_to_entities(to_remove);
     ecs_entities_t removed = {
-        .array = ecs_os_alloca(ecs_entity_t, to_remove_array.count),
+        .array = ecs_os_alloca(sizeof(ecs_entity_t) * to_remove_array.count),
         .count = 0
     };
 
     int32_t i, count = ecs_sparse_count(stage->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
+
+        if (table->flags & EcsTableHasBuiltins) {
+            continue;
+        }
 
         if (!ecs_table_match_filter(world, table, filter)) {
             continue;
@@ -297,6 +306,11 @@ void ecs_bulk_remove_entity(
     int32_t i, count = ecs_sparse_count(stage->tables);
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = ecs_sparse_get(stage->tables, ecs_table_t, i);
+
+        if (table->flags & EcsTableHasBuiltins) {
+            continue;
+        }
+
         if (!ecs_table_match_filter(world, table, filter)) {
             continue;
         }            

@@ -35,7 +35,7 @@ ECS (Entity Component System) is a way to organize code that is mostly used in g
 - [C++ examples](examples/cpp)
 
 ## Example
-This is a simple flecs example using the C99 API:
+This is a simple flecs example in the C99 and C++11 APIs:
 
 ```c
 typedef struct Position {
@@ -46,8 +46,8 @@ typedef struct Position {
 typedef float Speed;
 
 void Move(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Speed, s, 2);
+    Position *p = ecs_column(it, Position, 1);
+    Speed *s = ecs_column(it, Speed, 2);
     
     for (int i = 0; i < it->count; i ++) {
         p[i].x += s[i] * it->delta_time;
@@ -56,23 +56,21 @@ void Move(ecs_iter_t *it) {
 }
 
 int main(int argc, char *argv[]) {
-    ecs_world_t *world = ecs_init_w_args(argc, argv);
+    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Speed);
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Speed);
-    ECS_ENTITY(world, MyEntity, Position, Speed);
-    
-    ecs_set(world, MyEntity, Position, {0, 0});
-    ecs_set(world, MyEntity, Speed, {1});
+
+    ecs_entity_t e = ecs_new(world, 0);    
+    ecs_set(world, e, Position, {0, 0});
+    ecs_set(world, e, Speed, {1});
     
     while (ecs_progress(world, 0));
 
     return ecs_fini(world);
 }
 ```
-
-This is the same example in the C++11 API:
 
 ```c++
 struct Position {
@@ -85,7 +83,7 @@ struct Speed {
 };
 
 int main(int argc, char *argv[]) {
-    flecs::world world(argc, argv);
+    flecs::world world();
 
     flecs::component<Position>(world, "Position");
     flecs::component<Speed>(world, "Speed");

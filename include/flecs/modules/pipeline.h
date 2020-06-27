@@ -19,11 +19,23 @@ extern "C" {
     ecs_entity_t name = ecs_new_pipeline(world, 0, #name, #__VA_ARGS__);
 #endif
 
+/** Set a custom pipeline.
+ * This operation sets the pipeline to run when ecs_progress is invoked.
+ *
+ * @param world The world.
+ * @param pipeline The pipeline to set.
+ */
 FLECS_EXPORT
 void ecs_set_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline);       
 
+/** Get the current pipeline.
+ * This operation gets the current pipeline.
+ *
+ * @param world The world.
+ * @param pipeline The pipeline to set.
+ */
 FLECS_EXPORT
 ecs_entity_t ecs_get_pipeline(
     ecs_world_t *world);  
@@ -70,6 +82,16 @@ FLECS_EXPORT
 void ecs_set_target_fps(
     ecs_world_t *world,
     float fps);
+
+/** Set time scale.
+ * Increase or decrease simulation speed by the provided multiplier.
+ *
+ * @param world The world.
+ * @param scale The scale to apply (default = 1).
+ */
+void ecs_set_time_scale(
+    ecs_world_t *world,
+    float scale);
 
 /** Signal exit
  * This operation signals that the application should quit. It will cause

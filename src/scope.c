@@ -1,5 +1,4 @@
 #include "flecs_private.h"
-#include "flecs/utils/strbuf.h"
 
 static
 bool path_append(
@@ -98,6 +97,8 @@ ecs_entity_t find_child_in_staged(
     ecs_entity_t parent,
     const char *name)
 {
+    (void)parent;
+    
     ecs_sparse_each(stage->tables, ecs_table_t, table, {
         ecs_type_t type = table->type;
 
@@ -265,6 +266,10 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_entity_t cur;
     bool core_searched = false;
 
+    if (!sep) {
+        sep = ".";
+    }
+
     parent = get_parent_from_path(world, parent, &path, prefix);
 
 retry:
@@ -326,6 +331,25 @@ ecs_entity_t ecs_get_scope(
     return stage->scope;
 }
 
+int32_t ecs_get_child_count(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_vector_t *tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, entity);
+    if (!tables) {
+        return 0;
+    } else {
+        int32_t count = 0;
+
+        ecs_vector_each(tables, ecs_table_t*, table_ptr, {
+            ecs_table_t *table = *table_ptr;
+            count += ecs_table_count(table);
+        });
+
+        return count;
+    }
+}
+
 ecs_iter_t ecs_scope_iter(
     ecs_world_t *world,
     ecs_entity_t parent)
@@ -341,11 +365,31 @@ ecs_iter_t ecs_scope_iter(
     };
 }
 
+ecs_iter_t ecs_scope_iter_w_filter(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_filter_t *filter)
+{
+    ecs_scope_iter_t iter = {
+        .filter = *filter,
+        .tables = ecs_map_get_ptr(world->child_tables, ecs_vector_t*, parent),
+        .index = 0
+    };
+
+    return (ecs_iter_t) {
+        .world = world,
+        .iter.parent = iter,
+        .table_count = ecs_vector_count(iter.tables)
+    };
+}
+
 bool ecs_scope_next(
     ecs_iter_t *it)
 {
     ecs_scope_iter_t *iter = &it->iter.parent;
     ecs_vector_t *tables = iter->tables;
+    ecs_filter_t filter = iter->filter;
+
     int32_t count = ecs_vector_count(tables);
     int32_t i;
 
@@ -363,11 +407,17 @@ bool ecs_scope_next(
             continue;
         }
 
+        if (filter.include || filter.exclude) {
+            if (!ecs_table_match_filter(it->world, table, &filter)) {
+                continue;
+            }
+        }
+
         it->table = table;
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
-        iter->index = ++i;
+        iter->index = i + 1;
 
         return true;
     }
@@ -410,7 +460,9 @@ ecs_entity_t ecs_new_from_path_w_sep(
 
             ecs_os_free(name);
 
-            ecs_add_entity(world, e, ECS_CHILDOF | cur);
+            if (cur) {
+                ecs_add_entity(world, e, ECS_CHILDOF | cur);
+            }
         }
 
         cur = e;

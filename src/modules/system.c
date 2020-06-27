@@ -1,5 +1,6 @@
 #include "../flecs_private.h"
 
+/* Global type variables */
 ecs_type_t ecs_type(EcsComponentLifecycle);
 ecs_type_t ecs_type(EcsTrigger);
 ecs_type_t ecs_type(EcsModule);
@@ -56,9 +57,9 @@ void activate_in_columns(
                 (!activate && !in->count))) 
             {
                 ecs_on_demand_out_t **out = ecs_vector_first(in->systems, ecs_on_demand_out_t*);
-                int32_t s, count = ecs_vector_count(in->systems);
+                int32_t s, in_count = ecs_vector_count(in->systems);
 
-                for (s = 0; s < count; s ++) {
+                for (s = 0; s < in_count; s ++) {
                     /* Increase the count of the system with the out params */
                     out[s]->count += activate ? 1 : -1;
                     
@@ -136,6 +137,19 @@ void register_out_columns(
     ecs_assert(out_count != 0, ECS_NO_OUT_COLUMNS, ecs_get_name(world, system));
 }
 
+static
+void invoke_status_action(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    const EcsSystem *system_data,
+    ecs_system_status_t status)
+{
+    ecs_system_status_action_t action = system_data->status_action;
+    if (action) {
+        action(world, system, status, system_data->status_ctx);
+    }
+}
+
 /* Invoked when system becomes active or inactive */
 void ecs_system_activate(
     ecs_world_t *world,
@@ -158,10 +172,10 @@ void ecs_system_activate(
         world, system_data->query, world->on_activate_components, activate);
 
     /* Invoke system status action */
-    ecs_invoke_status_action(world, system, system_data, 
+    invoke_status_action(world, system, system_data, 
         activate ? EcsSystemActivated : EcsSystemDeactivated);
 
-    ecs_trace_1("system #[green]%s#[reset] %s", 
+    ecs_trace_2("system #[green]%s#[reset] %s", 
         ecs_get_name(world, system), 
         activate ? "activated" : "deactivated");
 }
@@ -194,7 +208,7 @@ void ecs_enable_system(
         enabled);
     
     /* Invoke action for enable/disable status */
-    ecs_invoke_status_action(
+    invoke_status_action(
         world, system, system_data,
         enabled ? EcsSystemEnabled : EcsSystemDisabled);
 }
@@ -206,12 +220,7 @@ void ecs_init_system(
     ecs_query_t *query,
     void *ctx)
 {
-    ecs_assert(!world->in_progress, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_trace_1("system #[green]%s#[reset] (%d) created with #[red]%s#[normal]", 
-        ecs_get_name(world, system), system, query->sig.expr);
-
-    ecs_trace_push();
+    ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
 
     /* Add & initialize the EcsSystem component */
     bool is_added = false;
@@ -271,22 +280,10 @@ void ecs_init_system(
         }
     }
 
-    ecs_trace_pop();
+    ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
+        ecs_get_name(world, system), query->sig.expr);
 }
 
-/* -- Private API -- */
-
-void ecs_invoke_status_action(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    const EcsSystem *system_data,
-    ecs_system_status_t status)
-{
-    ecs_system_status_action_t action = system_data->status_action;
-    if (action) {
-        action(world, system, status, system_data->status_ctx);
-    }
-}
 
 void ecs_col_system_free(
     EcsSystem *system_data)
@@ -334,12 +331,12 @@ void ecs_set_system_status_action(
         /* If system is already enabled, generate enable status. The API 
          * should guarantee that it exactly matches enable-disable 
          * notifications and activate-deactivate notifications. */
-        ecs_invoke_status_action(world, system, system_data, EcsSystemEnabled);
+        invoke_status_action(world, system, system_data, EcsSystemEnabled);
 
         /* If column system has active (non-empty) tables, also generate the
          * activate status. */
         if (ecs_vector_count(system_data->query->tables)) {
-            ecs_invoke_status_action(
+            invoke_status_action(
                 world, system, system_data, EcsSystemActivated);
         }
     }
@@ -570,14 +567,14 @@ void ecs_colsystem_dtor(
 
         /* Invoke Deactivated action for active systems */
         if (cur->query && ecs_vector_count(cur->query->tables)) {
-            ecs_invoke_status_action(world, e, ptr, EcsSystemDeactivated);
+            invoke_status_action(world, e, ptr, EcsSystemDeactivated);
         }
 
         /* Invoke Disabled action for enabled systems */
         if (!ecs_has_entity(world, e, EcsDisabled) && 
             !ecs_has_entity(world, e, EcsDisabledIntern)) 
         {
-            ecs_invoke_status_action(world, e, ptr, EcsSystemDisabled);
+            invoke_status_action(world, e, ptr, EcsSystemDisabled);
         }           
 
         ecs_os_free(cur->on_demand);
@@ -673,11 +670,7 @@ void OnSetComponentLifecycle(
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-
-        ecs_set_component_actions(world, e, &cl[i]);
-
-        ecs_trace_1("component #[green]%s#[normal] lifecycle callbacks set",
-            ecs_get_name(world, e));        
+        ecs_set_component_actions(world, e, &cl[i]);   
     }
 }
 
@@ -792,18 +785,18 @@ void bootstrap_set_system(
     ecs_iter_action_t action)
 {
     ecs_sig_t sig = {0};
-    ecs_entity_t sys = ecs_set(world, 0, EcsName, {name});
+    ecs_entity_t sys = ecs_set(world, 0, EcsName, {.value = name});
     ecs_add_entity(world, sys, EcsOnSet);
     ecs_sig_init(world, name, expr, &sig);
     ecs_query_t *query = ecs_query_new_w_sig(world, sys, &sig);
     ecs_init_system(world, sys, action, query, NULL);
 }
 
-void FlecsSystemsImport(
+void FlecsSystemImport(
     ecs_world_t *world,
     int flags)
 {
-    ECS_MODULE(world, FlecsSystems);
+    ECS_MODULE(world, FlecsSystem);
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -820,6 +813,7 @@ void FlecsSystemsImport(
     ecs_bootstrap_tag(world, EcsOnAdd);
     ecs_bootstrap_tag(world, EcsOnRemove);
     ecs_bootstrap_tag(world, EcsOnSet);
+    ecs_bootstrap_tag(world, EcsUnSet);
 
     ecs_bootstrap_tag(world, EcsDisabledIntern);
     ecs_bootstrap_tag(world, EcsInactive);
@@ -866,4 +860,6 @@ void FlecsSystemsImport(
     /* Monitors that trigger when a system is enabled or disabled */
     ECS_SYSTEM(world, DisableSystem, EcsMonitor, System, Disabled || DisabledIntern, SYSTEM:Hidden);
     ECS_SYSTEM(world, EnableSystem, EcsMonitor, System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
+
+    (void)flags;
 }

@@ -218,7 +218,7 @@ void add_table(
 
 #ifndef NDEBUG
         char *type_expr = ecs_type_str(world, table->type);
-        ecs_trace_1("query #[green]%s#[reset] matched with table #[green][%s]",
+        ecs_trace_2("query #[green]%s#[reset] matched with table #[green][%s]",
             query_name(world, query), type_expr);
         ecs_os_free(type_expr);
 #endif
@@ -433,7 +433,7 @@ bool match_column(
     ecs_sig_from_kind_t from_kind,
     ecs_entity_t component,
     ecs_entity_t source,
-    ecs_dbg_match_failure_t *failure_info)
+    ecs_match_failure_t *failure_info)
 {
     if (from_kind == EcsFromSelf) {
         failure_info->reason = EcsMatchFromSelf;
@@ -454,23 +454,22 @@ bool match_column(
 
     } else if (from_kind == EcsFromEntity) {
         failure_info->reason = EcsMatchFromEntity;
-        ecs_type_t type = ecs_get_type(world, source);
-        return ecs_type_has_entity(world, type, component);
+        ecs_type_t source_type = ecs_get_type(world, source);
+        return ecs_type_has_entity(world, source_type, component);
     } else {
         return true;
     }
 }
 
 /* Match table with system */
-static
-bool match_table(
+bool ecs_query_match(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_query_t *query,
-    ecs_dbg_match_failure_t *failure_info)
+    ecs_match_failure_t *failure_info)
 {
     /* Prevent having to add if not null checks everywhere */
-    ecs_dbg_match_failure_t tmp_failure_info;
+    ecs_match_failure_t tmp_failure_info;
     if (!failure_info) {
         failure_info = &tmp_failure_info;
     }
@@ -568,7 +567,7 @@ void match_tables(
         ecs_table_t *table = ecs_sparse_get(
             world->stage.tables, ecs_table_t, i);
 
-        if (match_table(world, table, query, NULL)) {
+        if (ecs_query_match(world, table, query, NULL)) {
             add_table(world, query, table);
         }
     }
@@ -1110,7 +1109,7 @@ void ecs_query_match_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    if (match_table(world, table, query, NULL)) {
+    if (ecs_query_match(world, table, query, NULL)) {
         add_table(world, query, table);
     }
 }
@@ -1184,6 +1183,8 @@ void ecs_query_rematch(
     ecs_world_t *world,
     ecs_query_t *query)
 {
+    ecs_trace_1("rematch query %s", query_name(world, query));
+
     ecs_sparse_t *tables = world->stage.tables;
     int32_t i, count = ecs_sparse_count(tables);
 
@@ -1192,7 +1193,7 @@ void ecs_query_rematch(
         ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
         int32_t match = table_matched(query->tables, table);
 
-        if (match_table(world, table, query, NULL)) {
+        if (ecs_query_match(world, table, query, NULL)) {
             /* If the table matches, and it is not currently matched, add */
             if (match == -1) {
                 if (table_matched(query->empty_tables, table) == -1) {
@@ -1257,10 +1258,10 @@ ecs_query_t* ecs_query_new_w_sig(
 
     process_signature(world, result);
 
-    ecs_trace_1("query #[green]%s#[reset] created with expression #[red]%s", 
+    ecs_trace_2("query #[green]%s#[reset] created with expression #[red]%s", 
         query_name(world, result), result->sig.expr);
 
-    ecs_trace_push();
+    ecs_log_push();
 
     if (result->flags & EcsQueryNeedsTables) {
         if (ecs_has_entity(world, system, EcsMonitor)) {
@@ -1270,6 +1271,10 @@ ecs_query_t* ecs_query_new_w_sig(
         if (ecs_has_entity(world, system, EcsOnSet)) {
             result->flags |= EcsQueryOnSet;
         }
+
+        if (ecs_has_entity(world, system, EcsUnSet)) {
+            result->flags |= EcsQueryUnSet;
+        }        
 
         match_tables(world, result);
     } else {
@@ -1282,7 +1287,7 @@ ecs_query_t* ecs_query_new_w_sig(
         result->rank_table = rank_by_depth;
     }
 
-    ecs_trace_pop();
+    ecs_log_pop();
 
     /* Make sure application can't try to free sig resources */
     *sig = (ecs_sig_t){ 0 };
@@ -1493,7 +1498,7 @@ bool ecs_query_next(
         it->frame_offset += prev_count;
 
         /* Table is ready to be iterated, return it struct */
-        iter->index = ++ i;
+        iter->index = i + 1;
 
         return true;
     }
@@ -1546,7 +1551,7 @@ bool ecs_query_next_worker(
     return true;
 }
 
-void ecs_query_sort(
+void ecs_query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t sort_component,
@@ -1567,42 +1572,20 @@ void ecs_query_sort(
     }
 }
 
-void ecs_query_sort_types(
+void ecs_query_group_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t sort_component,
-    ecs_rank_type_action_t rank_table)
+    ecs_rank_type_action_t rank_table_action)
 {
     ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
     query->rank_on_component = sort_component;
-    query->rank_table = rank_table;
+    query->rank_table = rank_table_action;
 
     rank_tables(world, query);
 
     order_ranked_tables(world, query);
 
     build_sorted_tables(world, query);
-}
-
-/* -- Debug functionality -- */
-
-bool ecs_dbg_match_entity(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t system,
-    ecs_dbg_match_failure_t *failure_info_out)
-{
-    ecs_dbg_entity_t dbg;
-    ecs_dbg_entity(world, entity, &dbg);
-
-    const EcsSystem *system_data = ecs_get(world, system, EcsSystem);
-    if (!system_data) {
-        failure_info_out->reason = EcsMatchNotASystem;
-        failure_info_out->column = -1;
-        return false;
-    }
-
-    return match_table(
-        world, dbg.table, system_data->query, failure_info_out);
 }

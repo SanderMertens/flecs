@@ -51,13 +51,13 @@ int main(int argc, char *argv[]) {
     /* Print position of e and of the child. Note that since types were used to
      * automatically override the components, the components are owned by both
      * e and child. */
-    Position p = e.get<Position>();
-    std::cout << "Position of e = {" << p.x << ", " << p.y << "} (owned = "
+    const Position *p = e.get<Position>();
+    std::cout << "Position of e = {" << p->x << ", " << p->y << "} (owned = "
         << e.owns<Position>() << ")"
         << std::endl;
 
     p = child.get<Position>();
-    std::cout << "Position of child = {" << p.x << ", " << p.y << "} (owned = "
+    std::cout << "Position of child = {" << p->x << ", " << p->y << "} (owned = "
         << child.owns<Position>() << ")" 
         << std::endl;
 }

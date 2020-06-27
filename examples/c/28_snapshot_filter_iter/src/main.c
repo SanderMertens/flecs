@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     ecs_set(world, e2, Velocity, {1, 1});
 
     /* Take a snapshot of the current state */
-    ecs_snapshot_t *s = ecs_snapshot_take(world, NULL);
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
 
     ecs_filter_t f = {
         .include = ecs_type(Movable),
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     ecs_bulk_delete(world, &f);
 
     /* Create iterator for snapshot */
-    ecs_iter_t it = ecs_snapshot_filter_iter(world, s, &f);
+    ecs_iter_t it = ecs_snapshot_iter(s, &f);
 
     /* Iterate it, progress entities in snapshot */
     while (ecs_filter_next(&it)) {

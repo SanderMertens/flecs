@@ -67,6 +67,11 @@ void Add_add_remove_same(void);
 void Add_add_2_remove(void);
 void Add_add_entity(void);
 void Add_remove_entity(void);
+void Add_add_0_entity(void);
+void Add_remove_0_entity(void);
+void Add_add_w_xor(void);
+void Add_add_same_w_xor(void);
+void Add_add_after_remove_xor(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -130,6 +135,9 @@ void Hierarchies_scope_set_w_new(void);
 void Hierarchies_scope_set_w_new_staged(void);
 void Hierarchies_scope_set_w_lookup(void);
 void Hierarchies_scope_component(void);
+void Hierarchies_new_from_path_depth_0(void);
+void Hierarchies_new_from_path_depth_1(void);
+void Hierarchies_new_from_path_depth_2(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -450,12 +458,16 @@ void SystemOnSet_add_base_to_2_overridden(void);
 void SystemOnSet_add_base_to_1_of_2_overridden(void);
 void SystemOnSet_on_set_after_remove_override(void);
 void SystemOnSet_no_set_after_remove_base(void);
+void SystemOnSet_un_set_after_remove(void);
+void SystemOnSet_un_set_after_remove_base(void);
 void SystemOnSet_add_to_current_in_on_set(void);
 void SystemOnSet_remove_from_current_in_on_set(void);
 void SystemOnSet_remove_set_component_in_on_set(void);
 void SystemOnSet_match_table_created_w_add_in_on_set(void);
 void SystemOnSet_set_optional(void);
 void SystemOnSet_set_from_nothing(void);
+void SystemOnSet_add_null_type_in_on_set(void);
+void SystemOnSet_add_0_entity_in_on_set(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -692,7 +704,6 @@ void World_get_delta_time(void);
 void World_get_delta_time_auto(void);
 void World_recreate_world(void);
 void World_recreate_world_w_component(void);
-void World_init_w_args_enable_dbg(void);
 void World_no_threading(void);
 void World_no_time(void);
 void World_is_entity_enabled(void);
@@ -1082,7 +1093,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Add",
-        .testcase_count = 30,
+        .testcase_count = 35,
         .testcases = (bake_test_case[]){
             {
                 .id = "zero",
@@ -1203,6 +1214,26 @@ static bake_test_suite suites[] = {
             {
                 .id = "remove_entity",
                 .function = Add_remove_entity
+            },
+            {
+                .id = "add_0_entity",
+                .function = Add_add_0_entity
+            },
+            {
+                .id = "remove_0_entity",
+                .function = Add_remove_0_entity
+            },
+            {
+                .id = "add_w_xor",
+                .function = Add_add_w_xor
+            },
+            {
+                .id = "add_same_w_xor",
+                .function = Add_add_same_w_xor
+            },
+            {
+                .id = "add_after_remove_xor",
+                .function = Add_add_after_remove_xor
             }
         }
     },
@@ -1274,7 +1305,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 44,
+        .testcase_count = 47,
         .testcases = (bake_test_case[]){
             {
                 .id = "get_parent",
@@ -1451,6 +1482,18 @@ static bake_test_suite suites[] = {
             {
                 .id = "scope_component",
                 .function = Hierarchies_scope_component
+            },
+            {
+                .id = "new_from_path_depth_0",
+                .function = Hierarchies_new_from_path_depth_0
+            },
+            {
+                .id = "new_from_path_depth_1",
+                .function = Hierarchies_new_from_path_depth_1
+            },
+            {
+                .id = "new_from_path_depth_2",
+                .function = Hierarchies_new_from_path_depth_2
             }
         }
     },
@@ -2622,7 +2665,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemOnSet",
-        .testcase_count = 23,
+        .testcase_count = 27,
         .testcases = (bake_test_case[]){
             {
                 .id = "set_1_of_1",
@@ -2693,6 +2736,14 @@ static bake_test_suite suites[] = {
                 .function = SystemOnSet_no_set_after_remove_base
             },
             {
+                .id = "un_set_after_remove",
+                .function = SystemOnSet_un_set_after_remove
+            },
+            {
+                .id = "un_set_after_remove_base",
+                .function = SystemOnSet_un_set_after_remove_base
+            },
+            {
                 .id = "add_to_current_in_on_set",
                 .function = SystemOnSet_add_to_current_in_on_set
             },
@@ -2715,6 +2766,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "set_from_nothing",
                 .function = SystemOnSet_set_from_nothing
+            },
+            {
+                .id = "add_null_type_in_on_set",
+                .function = SystemOnSet_add_null_type_in_on_set
+            },
+            {
+                .id = "add_0_entity_in_on_set",
+                .function = SystemOnSet_add_0_entity_in_on_set
             }
         }
     },
@@ -3526,7 +3585,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "World",
-        .testcase_count = 31,
+        .testcase_count = 30,
         .testcases = (bake_test_case[]){
             {
                 .id = "progress_w_0",
@@ -3635,10 +3694,6 @@ static bake_test_suite suites[] = {
             {
                 .id = "recreate_world_w_component",
                 .function = World_recreate_world_w_component
-            },
-            {
-                .id = "init_w_args_enable_dbg",
-                .function = World_init_w_args_enable_dbg
             },
             {
                 .id = "no_threading",

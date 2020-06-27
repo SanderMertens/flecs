@@ -1286,7 +1286,7 @@ void System_w_FromContainer_realloc_after_match() {
     ecs_type_t parent_type = ecs_get_type(world, parent);
     test_assert(parent_type != 0);
 
-    ecs_bulk_new_w_type(world, parent_type, 1000, NULL);
+    ecs_bulk_new_w_type(world, parent_type, 1000);
 
     /* Change value of parent Mass. This will update the value in the new table.
      * If the realloc would not be properly handled, the code could either crash

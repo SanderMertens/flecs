@@ -24,8 +24,9 @@
 #endif
 
 #include "flecs.h"
-#include "flecs/utils/dbg.h"
-#include "flecs/support/entity_index.h"
+#include "flecs/private/entity_index.h"
+#include "flecs/private/table.h"
+#include "flecs/private/strbuf.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 
@@ -87,16 +88,18 @@ struct ecs_data_t {
     bool marked_dirty;          /**< Was table marked dirty by stage? */  
 };
 
-typedef struct ecs_table_content_t {
+/** Small footprint data structure for storing data associated with a table. */
+typedef struct ecs_table_leaf_t {
+    ecs_table_t *table;
     ecs_type_t type;
     ecs_data_t *data;
-} ecs_table_content_t;
+} ecs_table_leaf_t;
 
 /** Flags for quickly checking for special properties of a table. */
 typedef enum ecs_table_flags_t {
     EcsTableHasBuiltins = 1,        /**< Does table have builtin components */
     EcsTableIsPrefab = 2,           /**< Does the table store prefabs */
-    EcsTableHasPrefab = 4,          /**< Does the table type has INSTANCEOF */
+    EcsTableHasBase = 4,          /**< Does the table type has INSTANCEOF */
     EcsTableHasParent = 8,          /**< Does the table type has CHILDOF */
     EcsTableHasComponentData = 16,  /**< Does the table have component data */
     EcsTableHasXor = 32,            /**< Does the table type has XOR */
@@ -134,8 +137,10 @@ struct ecs_table_t {
 
     ecs_vector_t *queries;           /**< Queries matched with table */
     ecs_vector_t *monitors;          /**< Monitor systems matched with table */
-    ecs_vector_t** on_set;           /**< OnSet systems, broken up by column */
-    ecs_vector_t* on_set_all;        /**< All OnSet systems (for new_w_data) */
+    ecs_vector_t **on_set;           /**< OnSet systems, broken up by column */
+    ecs_vector_t *on_set_all;        /**< All OnSet systems */
+    ecs_vector_t *on_set_override;   /**< All OnSet systems with overrides */
+    ecs_vector_t *un_set_all;        /**< All OnSet systems */
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
 
@@ -178,11 +183,12 @@ typedef struct ecs_table_range_t {
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
 #define EcsQueryMonitor (2)          /* Query needs to be registered as a monitor */
 #define EcsQueryOnSet (4)            /* Query needs to be registered as on_set system */
-#define EcsQueryMatchDisabled (8)    /* Does query match disabled */
-#define EcsQueryMatchPrefab (16)     /* Does query match prefabs */
-#define EcsQueryHasRefs (32)         /* Does query have references */
+#define EcsQueryUnSet (8)            /* Query needs to be registered as un_set system */
+#define EcsQueryMatchDisabled (16)    /* Does query match disabled */
+#define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
+#define EcsQueryHasRefs (64)         /* Does query have references */
 
-#define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet)
+#define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
@@ -386,14 +392,6 @@ typedef struct ecs_thread_t {
     uint16_t index;                           /* Index of thread */
 } ecs_thread_t;
 
-/* World snapshot */
-struct ecs_snapshot_t {
-    ecs_ei_t entity_index;
-    ecs_sparse_t *tables;
-    ecs_entity_t last_id;
-    ecs_filter_t filter;
-};
-
 /** Component-specific data */
 typedef struct ecs_c_info_t {
     ecs_vector_t *on_add;       /* Systems ran after adding this component */
@@ -522,7 +520,6 @@ struct ecs_world_t {
     bool measure_frame_time;      /* Time spent on each frame */
     bool measure_system_time;     /* Time spent by each system */
     bool should_quit;             /* Did a system signal that app should quit */
-    bool rematch;            /* Should tablea be rematched */
     bool locking_enabled;         /* Lock world when in progress */    
 };
 
