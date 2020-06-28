@@ -2078,7 +2078,7 @@ void AddPrefabInProgress(ecs_iter_t *it) {
     }
 }
 
-void Prefab_get_ptr_from_prefab_from_new_table_in_progress() {
+void Prefab_get_ptr_from_prefab_from_new_table_in_progress() {    
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

@@ -51,6 +51,15 @@ bool ecs_get_info(
     ecs_entity_t entity,
     ecs_entity_info_t *info);
 
+void ecs_run_monitors(
+    ecs_world_t *world, 
+    ecs_stage_t *stage, 
+    ecs_table_t *dst_table,
+    ecs_vector_t *v_dst_monitors, 
+    int32_t dst_row, 
+    int32_t count, 
+    ecs_vector_t *v_src_monitors);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// World API
 ////////////////////////////////////////////////////////////////////////////////

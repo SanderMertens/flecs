@@ -203,9 +203,11 @@ ecs_table_t *create_table(
     init_table(world, stage, result, entities);
 
 #ifndef NDEBUG
-    char *expr = ecs_type_str(world, result->type);
-    ecs_trace_2("table #[green][%s]#[normal] created", expr);
-    ecs_os_free(expr);
+    if (stage == &world->stage) {
+        char *expr = ecs_type_str(world, result->type);
+        ecs_trace_2("table #[green][%s]#[normal] created", expr);
+        ecs_os_free(expr);
+    }
 #endif
     ecs_log_push();
 

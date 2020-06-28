@@ -33,7 +33,7 @@
 #elif flecs_EXPORTS
   #define FLECS_EXPORT __attribute__((__visibility__("default")))
 #elif defined _MSC_VER
-  #define FLECS_EXPORTS __declspec(dllimport)
+  #define FLECS_EXPORT __declspec(dllimport)
 #else
   #define FLECS_EXPORT
 #endif

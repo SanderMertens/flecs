@@ -160,7 +160,7 @@ static int trace_indent = 0;
 static int8_t trace_level = 0;
 
 void ecs_log_print(
-    int level,
+    int8_t level,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -202,10 +202,10 @@ void ecs_log_print(
     if (level >= 0) {
         ecs_os_log("%sinfo%s: %s%s%s%s",
             ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
-    } else if (level == -1) {
+    } else if (level == -2) {
         ecs_os_warn("%sinfo%s: %s%s%s%s",
             ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
-    } else if (level == -2) {
+    } else if (level <= -2) {
         ecs_os_err("%sinfo%s: %s%s%s%s",
             ECS_MAGENTA, ECS_NORMAL, ECS_GREY, indent, ECS_NORMAL, color_msg);
     }
