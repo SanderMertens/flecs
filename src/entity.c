@@ -367,8 +367,7 @@ int32_t find_prefab(
     return -1;
 }
 
-static
-void run_monitors(
+void ecs_run_monitors(
     ecs_world_t *world, 
     ecs_stage_t *stage, 
     ecs_table_t *dst_table,
@@ -759,7 +758,7 @@ void ecs_run_init_actions(
     /* Run OnSet actions when a base entity is added to the entity for 
      * components not overridden by the entity. */
     if (run_on_set && table_without_base != table) {
-        run_monitors(world, stage, table, table->on_set_all, row, count, 
+        ecs_run_monitors(world, stage, table, table->on_set_all, row, count, 
             table_without_base->on_set_all);
     }
 }
@@ -893,7 +892,7 @@ int32_t new_entity(
     ecs_run_init_actions(world, stage, new_table, dst_data, new_row, 1, *added, 
         set_mask, true);
 
-    run_monitors(world, stage, new_table, new_table->monitors, new_row, 1, NULL);
+    ecs_run_monitors(world, stage, new_table, new_table->monitors, new_row, 1, NULL);
 
     info->data = dst_data;
     
@@ -962,7 +961,7 @@ int32_t move_entity(
             src_row, !same_stage);
 
         if (removed) {
-            run_monitors(world, stage, dst_table, src_table->un_set_all, 
+            ecs_run_monitors(world, stage, dst_table, src_table->un_set_all, 
                 dst_row, 1, dst_table->un_set_all);
 
             ecs_run_deinit_actions(
@@ -982,11 +981,11 @@ int32_t move_entity(
             set_mask, true);
     }
 
-    run_monitors(world, stage, dst_table, dst_table->monitors, dst_row, 1, 
+    ecs_run_monitors(world, stage, dst_table, dst_table->monitors, dst_row, 1, 
         src_table->monitors);
 
     if (removed && dst_table->flags & EcsTableHasBase) {
-        run_monitors(world, stage, dst_table, src_table->on_set_override, 
+        ecs_run_monitors(world, stage, dst_table, src_table->on_set_override, 
             dst_row, 1, dst_table->on_set_override);          
     }
 
@@ -1005,7 +1004,7 @@ void delete_entity(
     ecs_entities_t *removed)
 {
     if (removed) {
-        run_monitors(world, stage, src_table, src_table->un_set_all, 
+        ecs_run_monitors(world, stage, src_table, src_table->un_set_all, 
             src_row, 1, NULL);
 
         ecs_run_deinit_actions(
@@ -1282,7 +1281,7 @@ int32_t new_w_data(
     
     /* Only invoke monitors if entity hasn't changed. If components did change,
      * the monitor will already have been invoked. */
-    run_monitors(world, stage, table, table->monitors, row, count, NULL);
+    ecs_run_monitors(world, stage, table, table->monitors, row, count, NULL);
 
     ecs_defer_end(world, stage);
 

@@ -1377,6 +1377,8 @@ void ecs_query_set_iter(
 
     ecs_table_t *world_table = table->table;
     ecs_data_t *table_data = ecs_table_get_staged_data(world, stage, world_table);
+    ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     ecs_entity_t *entity_buffer = ecs_vector_first(table_data->entities, ecs_entity_t);  
     it->entities = &entity_buffer[row];
 
