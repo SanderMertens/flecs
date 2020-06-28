@@ -18,19 +18,25 @@ flecs::world world();
 ```
 
 ## Entities
-An entity (`ecs_entity_t`) is a 64-bit integer that uniquely identifies a thing or object in your application. Entities are created with the `ecs_new` function:
+An entity (`ecs_entity_t`) is a 64-bit integer that uniquely identifies a thing or object in your application. Entities are created like this:
 
 ```c
 ecs_entity_t e = ecs_new(world, 0);
 ```
+```cpp
+auto e = flecs::entity(world);
+```
 
-Entities do not have to be explicitly created with `ecs_new`. You can also use plain numbers:
+You can also use plain numbers:
 
 ```c
 ecs_entity_t e = 1000;
 ```
+```cpp
+auto e = flecs::entity(world, 1000);
+```
 
-The only difference is that `ecs_new` guarantees to return an id that is not in use.
+When not using an explicit id, the framework guarantees that the returned id is not in use.
 
 ## Components
 A component is a plain datatype that can be attached to an entity. An entity can contain any number of components. Components must be registered with the world like this:
@@ -48,11 +54,27 @@ int main() {
     ECS_COMPONENT(world, Position);
 }
 ```
+```cpp
+// Components can be defined from regular types
+struct Position {
+    float x, y;
+};
 
-Once registered, a component can be added to an entity using `ecs_add`:
+int main() {
+    flecs::world world();
+
+    // Register the component with the world
+    flecs::component<Position>(world);
+}
+```
+
+Once registered, a component can be added to an entity using `add`:
 
 ```c
 ecs_add(world, e, Position);
+```
+```cpp
+e.add<Position>();
 ```
 
 You can also create an entity with a component already added:
@@ -60,11 +82,17 @@ You can also create an entity with a component already added:
 ```c
 ecs_entity_t e = ecs_new(world, Position);
 ```
+```cpp
+auto e = flecs::entity(world).add<Position>();
+```
 
-An application can also use `ecs_set` to assign a value to the component. If the component was not added yet, `ecs_set` will add it implicitly:
+An application can also use `set` to assign a value to the component. If the component was not added yet, `set` will add it implicitly:
 
 ```c
 ecs_set(world, e, Position, {10, 20});
+```
+```cpp
+e.set<Position>({10, 20});
 ```
 
 The value of a component can be requested with `ecs_get`, which will return `NULL` if the entity does not have the component:
