@@ -273,6 +273,7 @@ void register_un_set(
     ecs_query_t *query,
     int32_t matched_table_index)
 {
+    (void)world;
     add_monitor(&table->un_set_all, query, matched_table_index);
 }
 

@@ -89,6 +89,7 @@ bool check_column_component(
             if (state == WriteToStage) {
                 return true;
             }
+            // fall through
         case EcsOut:
             if (is_active && column->inout_kind != EcsIn) {
                 set_write_state(write_state, component, WriteToMain);
@@ -101,6 +102,7 @@ bool check_column_component(
             if (is_active) {
                 set_write_state(write_state, component, WriteToStage);
             }
+            break;
         default:
             break;
         };

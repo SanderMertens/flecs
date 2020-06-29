@@ -20,7 +20,7 @@ jobs:
         bake/bake setup
 
     - name: Build Flecs
-      run: bake
+      run: bake --strict
 
     - name: Build examples
       run: |
@@ -43,7 +43,7 @@ jobs:
         bake/bake setup
 
     - name: Build Flecs
-      run: bake
+      run: bake --strict
 
     - name: Build examples
       run: |
