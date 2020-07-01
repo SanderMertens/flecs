@@ -128,7 +128,7 @@ typedef enum ecs_sig_inout_kind_t {
 
 /** Type that is used by systems to indicate where to fetch a component from */
 typedef enum ecs_sig_from_kind_t {
-    EcsFromSelf,            /* Get component from self (default) */
+    EcsFromAny,            /* Get component from self (default) */
     EcsFromOwned,           /* Get owned component from self */
     EcsFromShared,          /* Get shared component from self */
     EcsFromParent,          /* Get component from container */

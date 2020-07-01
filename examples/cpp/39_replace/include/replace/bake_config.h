@@ -21,21 +21,17 @@
 #include <flecs.h>
 
 /* Headers of private dependencies */
-#ifdef REPLACE_IMPL
+#ifdef replace_EXPORT
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#ifndef REPLACE_STATIC
-  #if REPLACE_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define REPLACE_EXPORT __declspec(dllexport)
-  #elif REPLACE_IMPL
-    #define REPLACE_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define REPLACE_EXPORT __declspec(dllimport)
-  #else
-    #define REPLACE_EXPORT
-  #endif
+#if replace_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
+  #define REPLACE_EXPORT __declspec(dllexport)
+#elif replace_EXPORTS
+  #define REPLACE_EXPORT __attribute__((__visibility__("default")))
+#elif defined _MSC_VER
+  #define REPLACE_EXPORT __declspec(dllimport)
 #else
   #define REPLACE_EXPORT
 #endif

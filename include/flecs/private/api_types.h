@@ -144,6 +144,8 @@ typedef enum EcsMatchFailureReason {
     EcsMatchFromContainer,
     EcsMatchFromEntity,
     EcsMatchOrFromSelf,
+    EcsMatchOrFromOwned,
+    EcsMatchOrFromShared,
     EcsMatchOrFromContainer,
     EcsMatchNotFromSelf,
     EcsMatchNotFromOwned,

@@ -21,6 +21,11 @@ void New_type_w_tag(void);
 void New_type_w_2_tags(void);
 void New_type_w_tag_mixed(void);
 void New_redefine_component(void);
+void New_recycle_id_empty(void);
+void New_recycle_id_w_entity(void);
+void New_recycle_id_w_type(void);
+void New_recycle_empty_staged_delete(void);
+void New_recycle_staged_delete(void);
 
 // Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
@@ -329,6 +334,7 @@ void Pipeline_merge_after_staged_out(void);
 void Pipeline_merge_after_not_out(void);
 void Pipeline_no_merge_after_main_out(void);
 void Pipeline_no_merge_after_staged_in_out(void);
+void Pipeline_merge_after_staged_out_before_owned(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -506,8 +512,10 @@ void SystemPeriodic_match_prefab_and_normal(void);
 void SystemPeriodic_is_shared_on_column_not_set(void);
 void SystemPeriodic_owned_column(void);
 void SystemPeriodic_owned_not_column(void);
+void SystemPeriodic_owned_or_column(void);
 void SystemPeriodic_shared_column(void);
 void SystemPeriodic_shared_not_column(void);
+void SystemPeriodic_shared_or_column(void);
 void SystemPeriodic_container_dont_match_inheritance(void);
 void SystemPeriodic_cascade_dont_match_inheritance(void);
 void SystemPeriodic_not_from_singleton(void);
@@ -985,7 +993,7 @@ void Error_log_error(void);
 static bake_test_suite suites[] = {
     {
         .id = "New",
-        .testcase_count = 12,
+        .testcase_count = 17,
         .testcases = (bake_test_case[]){
             {
                 .id = "empty",
@@ -1034,6 +1042,26 @@ static bake_test_suite suites[] = {
             {
                 .id = "redefine_component",
                 .function = New_redefine_component
+            },
+            {
+                .id = "recycle_id_empty",
+                .function = New_recycle_id_empty
+            },
+            {
+                .id = "recycle_id_w_entity",
+                .function = New_recycle_id_w_entity
+            },
+            {
+                .id = "recycle_id_w_type",
+                .function = New_recycle_id_w_type
+            },
+            {
+                .id = "recycle_empty_staged_delete",
+                .function = New_recycle_empty_staged_delete
+            },
+            {
+                .id = "recycle_staged_delete",
+                .function = New_recycle_staged_delete
             }
         }
     },
@@ -2177,7 +2205,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Pipeline",
-        .testcase_count = 13,
+        .testcase_count = 14,
         .testcases = (bake_test_case[]){
             {
                 .id = "system_order_same_phase",
@@ -2230,6 +2258,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "no_merge_after_staged_in_out",
                 .function = Pipeline_no_merge_after_staged_in_out
+            },
+            {
+                .id = "merge_after_staged_out_before_owned",
+                .function = Pipeline_merge_after_staged_out_before_owned
             }
         }
     },
@@ -2779,7 +2811,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemPeriodic",
-        .testcase_count = 49,
+        .testcase_count = 51,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -2926,12 +2958,20 @@ static bake_test_suite suites[] = {
                 .function = SystemPeriodic_owned_not_column
             },
             {
+                .id = "owned_or_column",
+                .function = SystemPeriodic_owned_or_column
+            },
+            {
                 .id = "shared_column",
                 .function = SystemPeriodic_shared_column
             },
             {
                 .id = "shared_not_column",
                 .function = SystemPeriodic_shared_not_column
+            },
+            {
+                .id = "shared_or_column",
+                .function = SystemPeriodic_shared_or_column
             },
             {
                 .id = "container_dont_match_inheritance",

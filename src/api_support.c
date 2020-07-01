@@ -22,7 +22,7 @@ int parse_type_action(
     if (strcmp(entity_id, "0")) {
         ecs_entity_t entity = 0;
 
-        if (from_kind != EcsFromSelf) {
+        if (from_kind != EcsFromOwned) {
             if (!name) {
                 return -1;
             }

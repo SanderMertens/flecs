@@ -21,21 +21,17 @@
 #include <flecs.h>
 
 /* Headers of private dependencies */
-#ifdef OVERRIDE_IMPL
+#ifdef override_EXPORT
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#ifndef OVERRIDE_STATIC
-  #if OVERRIDE_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define OVERRIDE_EXPORT __declspec(dllexport)
-  #elif OVERRIDE_IMPL
-    #define OVERRIDE_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define OVERRIDE_EXPORT __declspec(dllimport)
-  #else
-    #define OVERRIDE_EXPORT
-  #endif
+#if override_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
+  #define OVERRIDE_EXPORT __declspec(dllexport)
+#elif override_EXPORTS
+  #define OVERRIDE_EXPORT __attribute__((__visibility__("default")))
+#elif defined _MSC_VER
+  #define OVERRIDE_EXPORT __declspec(dllimport)
 #else
   #define OVERRIDE_EXPORT
 #endif

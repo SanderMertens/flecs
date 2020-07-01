@@ -43,12 +43,10 @@ void clear_columns(
                  * recycled. */
                 ecs_eis_clear_entity(&world->stage, e, is_watched);
             } else {
-                /* If the stage record did not have a table, delete the entity from
-                 * the main stage table */
                 ecs_eis_delete(&world->stage, e);
-            }            
+            }
         } else {
-            /* If there was no main stage record, nothing needs to be done */
+            ecs_eis_delete(&world->stage, e);
         }
     }
 }

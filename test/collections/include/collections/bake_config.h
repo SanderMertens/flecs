@@ -35,7 +35,7 @@
 #elif collections_EXPORTS
   #define COLLECTIONS_EXPORT __attribute__((__visibility__("default")))
 #elif defined _MSC_VER
-  #define COLLECTIONS_EXPORTS __declspec(dllimport)
+  #define COLLECTIONS_EXPORT __declspec(dllimport)
 #else
   #define COLLECTIONS_EXPORT
 #endif

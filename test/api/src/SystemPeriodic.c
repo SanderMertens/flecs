@@ -1714,6 +1714,46 @@ void SystemPeriodic_owned_not_column() {
     ecs_fini(world);
 }
 
+void OwnedOr(ecs_iter_t *it) {
+    probe_system(it);
+}
+
+void SystemPeriodic_owned_or_column() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, base, Velocity);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Mass);
+    ECS_ENTITY(world, e3, Position, INSTANCEOF | base);
+
+    ECS_SYSTEM(world, OwnedOr, EcsOnUpdate, Position, OWNED:Velocity || OWNED:Mass);
+
+    Probe ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.s[0][1], 0);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.c[1][0], ecs_entity(Position));
+    test_int(ctx.s[1][0], 0);
+    test_int(ctx.c[1][1], ecs_entity(Mass));
+    test_int(ctx.s[1][1], 0);
+    test_int(ctx.e[1], e2);
+
+    ecs_fini(world);
+}
+
 void SystemPeriodic_shared_column() {
     ecs_world_t *world = ecs_init();
 
@@ -1769,6 +1809,48 @@ void SystemPeriodic_shared_not_column() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
     test_int(ctx.e[0], e1);
+
+    ecs_fini(world);
+}
+
+void SharedOr(ecs_iter_t *it) {
+    probe_system(it);
+}
+
+void SystemPeriodic_shared_or_column() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, base1, Velocity);
+    ECS_ENTITY(world, base2, Mass);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Mass);
+    ECS_ENTITY(world, e3, Position, INSTANCEOF | base1);
+    ECS_ENTITY(world, e4, Position, INSTANCEOF | base2);
+
+    ECS_SYSTEM(world, SharedOr, EcsOnUpdate, Position, SHARED:Velocity || SHARED:Mass);
+
+    Probe ctx = {0};
+    ecs_set_context(world, &ctx);
+
+    ecs_progress(world, 1);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.column_count, 2);
+    test_int(ctx.c[0][0], ecs_entity(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_entity(Velocity));
+    test_int(ctx.s[0][1], base1);
+    test_int(ctx.e[0], e3);
+    test_int(ctx.c[1][0], ecs_entity(Position));
+    test_int(ctx.s[1][0], 0);
+    test_int(ctx.c[1][1], ecs_entity(Mass));
+    test_int(ctx.s[1][1], base2);
+    test_int(ctx.e[1], e4);
 
     ecs_fini(world);
 }

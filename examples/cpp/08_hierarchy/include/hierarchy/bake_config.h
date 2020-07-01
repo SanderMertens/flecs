@@ -21,21 +21,17 @@
 #include <flecs.h>
 
 /* Headers of private dependencies */
-#ifdef HIERARCHY_IMPL
+#ifdef hierarchy_EXPORT
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#ifndef HIERARCHY_STATIC
-  #if HIERARCHY_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define HIERARCHY_EXPORT __declspec(dllexport)
-  #elif HIERARCHY_IMPL
-    #define HIERARCHY_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define HIERARCHY_EXPORT __declspec(dllimport)
-  #else
-    #define HIERARCHY_EXPORT
-  #endif
+#if hierarchy_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
+  #define HIERARCHY_EXPORT __declspec(dllexport)
+#elif hierarchy_EXPORTS
+  #define HIERARCHY_EXPORT __attribute__((__visibility__("default")))
+#elif defined _MSC_VER
+  #define HIERARCHY_EXPORT __declspec(dllimport)
 #else
   #define HIERARCHY_EXPORT
 #endif

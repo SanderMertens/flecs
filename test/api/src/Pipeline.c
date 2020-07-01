@@ -475,3 +475,31 @@ void Pipeline_no_merge_after_staged_in_out() {
 
     ecs_fini(world);
 }
+
+void Pipeline_merge_after_staged_out_before_owned() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, E, Position);
+
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, SysInMain, EcsOnUpdate, Velocity);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_progress(world, 1);
+
+    test_int(stats->systems_ran_frame, 2);
+    test_int(stats->merge_count_total, 2);
+    test_int(stats->pipeline_build_count_total, 2);
+
+    test_int(sys_out_invoked, 1);
+    test_int(sys_in_invoked, 1);
+
+    ecs_progress(world, 1);
+    test_int(stats->pipeline_build_count_total, 2);
+
+    ecs_fini(world);
+}

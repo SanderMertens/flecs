@@ -21,21 +21,17 @@
 #include <flecs.h>
 
 /* Headers of private dependencies */
-#ifdef OPTIONAL_IMPL
+#ifdef optional_EXPORT
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#ifndef OPTIONAL_STATIC
-  #if OPTIONAL_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define OPTIONAL_EXPORT __declspec(dllexport)
-  #elif OPTIONAL_IMPL
-    #define OPTIONAL_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define OPTIONAL_EXPORT __declspec(dllimport)
-  #else
-    #define OPTIONAL_EXPORT
-  #endif
+#if optional_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
+  #define OPTIONAL_EXPORT __declspec(dllexport)
+#elif optional_EXPORTS
+  #define OPTIONAL_EXPORT __attribute__((__visibility__("default")))
+#elif defined _MSC_VER
+  #define OPTIONAL_EXPORT __declspec(dllimport)
 #else
   #define OPTIONAL_EXPORT
 #endif

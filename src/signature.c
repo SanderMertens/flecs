@@ -12,7 +12,7 @@
 #define TOK_ANNOTATE_OPEN '['
 #define TOK_ANNOTATE_CLOSE ']'
 
-#define TOK_SELF "SELF"
+#define TOK_ANY "ANY"
 #define TOK_OWNED "OWNED"
 #define TOK_SHARED "SHARED"
 #define TOK_SYSTEM "SYSTEM"
@@ -89,8 +89,8 @@ char* parse_complex_elem(
             *from_kind = EcsFromParent;
         } else if (!strncmp(bptr, TOK_SYSTEM, src - bptr)) {
             *from_kind = EcsFromSystem;
-        } else if (!strncmp(bptr, TOK_SELF, src - bptr)) {
-            /* default */
+        } else if (!strncmp(bptr, TOK_ANY, src - bptr)) {
+            *from_kind = EcsFromAny;
         } else if (!strncmp(bptr, TOK_OWNED, src - bptr)) {
             *from_kind = EcsFromOwned;
         } else if (!strncmp(bptr, TOK_SHARED, src - bptr)) {
@@ -272,7 +272,7 @@ int ecs_parse_expr(
 
     bool complex_expr = false;
     bool prev_is_0 = false;
-    ecs_sig_from_kind_t from_kind = EcsFromSelf;
+    ecs_sig_from_kind_t from_kind = EcsFromOwned;
     ecs_sig_oper_kind_t oper_kind = EcsOperAnd;
     ecs_sig_inout_kind_t inout_kind = EcsInOut;
     ecs_entity_t flags = 0;
@@ -420,7 +420,7 @@ int ecs_parse_expr(
 
             /* Reset variables for next column */
             complex_expr = false;
-            from_kind = EcsFromSelf;
+            from_kind = EcsFromOwned;
             oper_kind = EcsOperAnd;
             flags = 0;
 

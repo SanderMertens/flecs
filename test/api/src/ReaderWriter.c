@@ -1018,7 +1018,7 @@ int inheritance_test(int buffer_size) {
         test_assert( !ecs_owns(world, e2, Position, true));
         test_assert( !ecs_owns(world, e3, Position, true));
 
-        ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+        ECS_SYSTEM(world, Dummy, EcsOnUpdate, ANY:Position);
         Probe ctx = {0};
         ecs_set_context(world, &ctx);      
         ecs_progress(world, 0);
@@ -1118,7 +1118,7 @@ int simple_w_inheritance_test(int buffer_size) {
         test_int(p->x, 7);
         test_int(p->y, 8); 
 
-        ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position, Velocity);
+        ECS_SYSTEM(world, Dummy, EcsOnUpdate, ANY:Position, Velocity);
         Probe ctx = {0};
         ecs_set_context(world, &ctx);      
         ecs_progress(world, 0);

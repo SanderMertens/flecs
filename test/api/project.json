@@ -25,7 +25,12 @@
                 "type_w_tag",
                 "type_w_2_tags",
                 "type_w_tag_mixed",
-                "redefine_component"
+                "redefine_component",
+                "recycle_id_empty",
+                "recycle_id_w_entity",
+                "recycle_id_w_type",
+                "recycle_empty_staged_delete",
+                "recycle_staged_delete"
             ]
         }, {
             "id": "New_w_Count",
@@ -369,7 +374,8 @@
                 "merge_after_staged_out",
                 "merge_after_not_out",
                 "no_merge_after_main_out",
-                "no_merge_after_staged_in_out"
+                "no_merge_after_staged_in_out",
+                "merge_after_staged_out_before_owned"
             ]
         }, {
             "id": "SystemMisc",
@@ -561,8 +567,10 @@
                 "is_shared_on_column_not_set",
                 "owned_column",
                 "owned_not_column",
+                "owned_or_column",
                 "shared_column",
                 "shared_not_column",
+                "shared_or_column",
                 "container_dont_match_inheritance",
                 "cascade_dont_match_inheritance",
                 "not_from_singleton",

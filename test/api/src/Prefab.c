@@ -706,7 +706,7 @@ void Prefab_iterate_w_prefab_field() {
     ECS_COMPONENT(world, Velocity);
     ECS_PREFAB(world, Prefab, Velocity);
     ECS_TYPE(world, Type, INSTANCEOF | Prefab, Position);
-    ECS_SYSTEM(world, Prefab_w_field, EcsOnUpdate, Position, Velocity);
+    ECS_SYSTEM(world, Prefab_w_field, EcsOnUpdate, Position, ANY:Velocity);
 
     ecs_set(world, Prefab, Velocity, {1, 2});
 
@@ -775,7 +775,7 @@ void Prefab_iterate_w_prefab_shared() {
     ECS_COMPONENT(world, Velocity);
     ECS_PREFAB(world, Prefab, Velocity);
     ECS_TYPE(world, Type, INSTANCEOF | Prefab, Position);
-    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, Velocity);
+    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, ANY:Velocity);
 
     ecs_set(world, Prefab, Velocity, {1, 2});
 
@@ -817,7 +817,7 @@ void Prefab_match_entity_prefab_w_system_optional() {
 
     ECS_PREFAB(world, Prefab, Velocity, Mass);
     ECS_TYPE(world, Type, INSTANCEOF | Prefab, Position);
-    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, Velocity, ?Mass);
+    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, ANY:Velocity, ?ANY:Mass);
 
     ecs_set(world, Prefab, Velocity, {1, 2});
     ecs_set(world, Prefab, Mass, {3});
@@ -862,7 +862,7 @@ void Prefab_prefab_in_system_expr() {
 
     ECS_PREFAB(world, Prefab1, Velocity);
     ECS_PREFAB(world, Prefab2, Velocity);
-    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, Velocity, Mass, INSTANCEOF | Prefab1);
+    ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, ANY:Velocity, Mass, INSTANCEOF | Prefab1);
 
     ecs_set(world, Prefab1, Velocity, {1, 2});
     ecs_set(world, Prefab2, Velocity, {1, 2});
@@ -1088,7 +1088,7 @@ void Prefab_match_table_created_in_progress() {
     ECS_ENTITY(world, e, INSTANCEOF | Prefab, Position);
 
     ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, !Velocity);
-    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity, Mass);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity, ANY:Mass);
 
     ecs_set(world, e, Position, {0, 0});
     
@@ -1565,7 +1565,7 @@ void Prefab_on_set_on_instance() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnSet, Position);
+    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnSet, ANY:Position);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -1728,7 +1728,7 @@ void Prefab_ref_after_realloc() {
 
     ECS_ENTITY(world, e_2, Position, INSTANCEOF | Prefab);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, ANY:Mass, Position);
 
     ecs_type_t prefab_type = ecs_get_type(world, Prefab);
 
@@ -1766,7 +1766,7 @@ void Prefab_revalidate_ref_w_mixed_table_refs() {
     ECS_ENTITY(world, e_2, Position, Mass);
     ecs_set(world, e_2, Mass, {3});
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, ANY:Mass, Position);
 
     ecs_type_t prefab_type = ecs_get_type(world, Prefab);
 
@@ -2129,7 +2129,7 @@ void Prefab_match_base() {
     ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Child);
     ecs_add(world, e, Position);
 
-    ECS_SYSTEM(world, TestBase, EcsOnUpdate, Position, Velocity);
+    ECS_SYSTEM(world, TestBase, EcsOnUpdate, Position, ANY:Velocity);
 
     ecs_progress(world, 1);
 
@@ -2161,7 +2161,7 @@ void Prefab_match_base_after_add_in_prev_phase() {
     ecs_add(world, e, Position);
 
     ECS_SYSTEM(world, AddMass, EcsPreUpdate, Position, !Mass);
-    ECS_SYSTEM(world, TestBase, EcsOnUpdate, Position, Velocity);
+    ECS_SYSTEM(world, TestBase, EcsOnUpdate, Position, ANY:Velocity);
 
     ecs_progress(world, 1);
 
@@ -2174,7 +2174,7 @@ void Prefab_override_watched_prefab() {
     ECS_COMPONENT(world, Position);
 
     /* Create a system that listens for Position */
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, ANY:Position);
 
     /* Create a prefab with Position */
     ECS_PREFAB(world, Prefab, Position);
@@ -2205,7 +2205,7 @@ void Prefab_rematch_twice() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position, Velocity, Mass);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, ANY:Position, ANY:Velocity, ANY:Mass);
 
     ECS_PREFAB(world, Prefab, Position);
     ECS_ENTITY(world, Entity, INSTANCEOF | Prefab);
@@ -2514,7 +2514,7 @@ void Prefab_create_multiple_nested_w_on_set_in_progress() {
 
     ECS_SYSTEM(world, CreateInstances, EcsOnUpdate, :Prefab);
     ECS_SYSTEM(world, OnAddEntity, EcsOnSet, ecs_entity_t);
-    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, ANY:Velocity);
 
     ecs_progress(world, 1);
 

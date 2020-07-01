@@ -82,7 +82,7 @@ bool check_column_component(
 {
     int8_t state = get_write_state(write_state, component);
 
-    if (column->from_kind == EcsFromSelf && column->oper_kind != EcsOperNot) {
+    if ((column->from_kind == EcsFromAny || column->from_kind == EcsFromOwned) && column->oper_kind != EcsOperNot) {
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsIn:
@@ -366,10 +366,10 @@ void EcsOnAddPipeline(
          * pipeline as a XOR column, and ignores systems with EcsInactive and
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsInactive, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
 
         /* Create the query. Sort the query by system id and phase */
         ecs_query_t *query = ecs_query_new_w_sig(world, 0, &sig);
@@ -380,9 +380,9 @@ void EcsOnAddPipeline(
          * systems that are inactive, as an inactive system may become active as
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
 
         /* Use the same sorting functions for the build query */
         ecs_query_t *build_query = ecs_query_new_w_sig(world, 0, &sig);

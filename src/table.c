@@ -233,7 +233,7 @@ void register_on_set(
             ecs_sig_oper_kind_t oper_kind = column->oper_kind;
             ecs_sig_from_kind_t from_kind = column->from_kind;
 
-            if (from_kind != EcsFromSelf && from_kind != EcsFromOwned) {
+            if (from_kind != EcsFromAny && from_kind != EcsFromOwned) {
                 continue;
             }
 

@@ -95,7 +95,9 @@ ecs_entity_t new_entity_handle(
     ecs_entity_t entity;
 
     if (!world->in_progress) {
-        entity = ++ world->stats.last_id;
+        if (!(entity = ecs_eis_recycle(&world->stage))) {
+            entity = ++ world->stats.last_id;
+        }
     } else {
         int32_t thread_count = ecs_vector_count(world->workers);
         if (thread_count >= 1) { 
@@ -1592,6 +1594,8 @@ ecs_entity_t ecs_new_w_type(
     if (type || stage->scope) {
         ecs_entities_t to_add = ecs_type_to_entities(type);
         new(world, stage, entity, &to_add);
+    } else {
+        ecs_eis_set(&world->stage, entity, &(ecs_record_t){ 0 });
     }
 
     return entity;
@@ -1612,6 +1616,8 @@ ecs_entity_t ecs_new_w_entity(
         };
 
         new(world, stage, entity, &to_add);
+    } else {
+        ecs_eis_set(&world->stage, entity, &(ecs_record_t){ 0 });
     }
 
     return entity;
@@ -1695,8 +1701,17 @@ void ecs_delete(
      * NULL. That way the merge will know to delete this entity vs. just to
      * remove its components */
     if (stage != &world->stage) {
+        if (!table) {
+            /* If entity was empty, add it to the root table so its id will be
+             * recycled when merging the stage */
+            table = &stage->root;
+            ecs_data_t *data = ecs_table_get_or_create_data(world, stage, table);
+            ecs_table_append(world, table, data, entity, NULL);
+        }
         ecs_eis_set(stage, entity, &(ecs_record_t){ NULL, 0 });
-    }   
+    } else {
+        ecs_eis_delete(stage, entity);
+    }
 }
 
 void ecs_add_type(

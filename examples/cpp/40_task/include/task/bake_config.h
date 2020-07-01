@@ -21,21 +21,17 @@
 #include <flecs.h>
 
 /* Headers of private dependencies */
-#ifdef TASK_IMPL
+#ifdef task_EXPORT
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#ifndef TASK_STATIC
-  #if TASK_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define TASK_EXPORT __declspec(dllexport)
-  #elif TASK_IMPL
-    #define TASK_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define TASK_EXPORT __declspec(dllimport)
-  #else
-    #define TASK_EXPORT
-  #endif
+#if task_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
+  #define TASK_EXPORT __declspec(dllexport)
+#elif task_EXPORTS
+  #define TASK_EXPORT __attribute__((__visibility__("default")))
+#elif defined _MSC_VER
+  #define TASK_EXPORT __declspec(dllimport)
 #else
   #define TASK_EXPORT
 #endif

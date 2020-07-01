@@ -21,21 +21,17 @@
 #include <flecs.h>
 
 /* Headers of private dependencies */
-#ifdef GET_CHILDREN_IMPL
+#ifdef get_children_EXPORT
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#ifndef GET_CHILDREN_STATIC
-  #if GET_CHILDREN_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define GET_CHILDREN_EXPORT __declspec(dllexport)
-  #elif GET_CHILDREN_IMPL
-    #define GET_CHILDREN_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define GET_CHILDREN_EXPORT __declspec(dllimport)
-  #else
-    #define GET_CHILDREN_EXPORT
-  #endif
+#if get_children_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
+  #define GET_CHILDREN_EXPORT __declspec(dllexport)
+#elif get_children_EXPORTS
+  #define GET_CHILDREN_EXPORT __attribute__((__visibility__("default")))
+#elif defined _MSC_VER
+  #define GET_CHILDREN_EXPORT __declspec(dllimport)
 #else
   #define GET_CHILDREN_EXPORT
 #endif

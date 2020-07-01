@@ -21,21 +21,17 @@
 #include <flecs.h>
 
 /* Headers of private dependencies */
-#ifdef DELTA_TIME_IMPL
+#ifdef delta_time_EXPORT
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#ifndef DELTA_TIME_STATIC
-  #if DELTA_TIME_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define DELTA_TIME_EXPORT __declspec(dllexport)
-  #elif DELTA_TIME_IMPL
-    #define DELTA_TIME_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define DELTA_TIME_EXPORT __declspec(dllimport)
-  #else
-    #define DELTA_TIME_EXPORT
-  #endif
+#if delta_time_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
+  #define DELTA_TIME_EXPORT __declspec(dllexport)
+#elif delta_time_EXPORTS
+  #define DELTA_TIME_EXPORT __attribute__((__visibility__("default")))
+#elif defined _MSC_VER
+  #define DELTA_TIME_EXPORT __declspec(dllimport)
 #else
   #define DELTA_TIME_EXPORT
 #endif

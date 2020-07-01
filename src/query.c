@@ -252,7 +252,6 @@ void add_table(
 
     /* Walk columns parsed from the system signature */
     ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
-
     for (c = 0; c < column_count; c ++) {
         ecs_sig_column_t *column = &columns[c];
         ecs_entity_t entity = 0, component = 0;
@@ -265,7 +264,7 @@ void add_table(
         }
 
         /* Column that retrieves data from self or a fixed entity */
-        if (from == EcsFromSelf || from == EcsFromEntity || 
+        if (from == EcsFromAny || from == EcsFromEntity || 
             from == EcsFromOwned || from == EcsFromShared) 
         {
             if (op == EcsOperAnd || op == EcsOperNot) {
@@ -365,7 +364,7 @@ void add_table(
          * change the set of components, so that this column will turn into a
          * reference. Having the reference already linked to the system table
          * makes changing this administation easier when the change happens.
-         * */
+         */
         if ((entity || table_data->columns[c] == -1 || from == EcsCascade)) {
             const EcsComponent *c_info = ecs_get(
                     world, component, EcsComponent);
@@ -435,7 +434,7 @@ bool match_column(
     ecs_entity_t source,
     ecs_match_failure_t *failure_info)
 {
-    if (from_kind == EcsFromSelf) {
+    if (from_kind == EcsFromAny) {
         failure_info->reason = EcsMatchFromSelf;
         return ecs_type_has_entity(world, type, component);
         
@@ -444,7 +443,7 @@ bool match_column(
         return ecs_type_owns_entity(world, type, component, true);
 
     } else if (from_kind == EcsFromShared) {
-        failure_info->reason = EcsMatchFromSelf;
+        failure_info->reason = EcsMatchFromShared;
         return !ecs_type_owns_entity(world, type, component, true) &&
             ecs_type_owns_entity(world, type, component, false);
 
@@ -529,13 +528,29 @@ bool ecs_query_match(
         } else if (oper_kind == EcsOperOr) {
             type = elem->is.type;
 
-            if (from_kind == EcsFromSelf) {
+            if (from_kind == EcsFromAny) {
                 if (!ecs_type_contains(
                     world, table_type, type, false, true))
                 {
                     failure_info->reason = EcsMatchOrFromSelf;
                     return false;
                 }
+            } else if (from_kind == EcsFromOwned) {
+                if (!ecs_type_contains(
+                    world, table_type, type, false, false))
+                {
+                    failure_info->reason = EcsMatchOrFromOwned;
+                    return false;
+                }
+            } else if (from_kind == EcsFromShared) {
+                if (ecs_type_contains(
+                        world, table_type, type, false, false) ||
+                    !ecs_type_contains(
+                        world, table_type, type, false, true))
+                {
+                    failure_info->reason = EcsMatchOrFromShared;
+                    return false;
+                }                                
             } else if (from_kind == EcsFromParent) {
                 if (!(table->flags & EcsTableHasParent)) {
                     failure_info->reason = EcsMatchOrFromContainer;
@@ -968,7 +983,7 @@ bool has_refs(
              * shared expression, the expression is translated to FromId to
              * prevent resolving the ref */
             return true;
-        } else if (from_kind != EcsFromSelf && from_kind != EcsFromEmpty) {
+        } else if (from_kind != EcsFromAny && from_kind != EcsFromEmpty) {
             /* If the component is not from the entity being iterated over, and
              * the column is not just passing an id, it must be a reference to
              * another entity. */
@@ -1012,7 +1027,7 @@ void register_monitors(
         /* FromSelf also requires registering a monitor, as FromSelf columns can
          * be matched with prefabs. The only column kinds that do not require
          * registering a monitor are FromOwned and FromNothing. */
-        } else if (column->from_kind == EcsFromSelf || 
+        } else if (column->from_kind == EcsFromAny || 
             column->from_kind == EcsFromShared ||
             column->from_kind == EcsFromEntity ||
             column->from_kind == EcsFromParent)
@@ -1077,7 +1092,7 @@ void process_signature(
             }
         }
 
-        if (from == EcsFromSelf || 
+        if (from == EcsFromAny || 
             from == EcsFromOwned ||
             from == EcsFromShared ||
             from == EcsFromParent) 

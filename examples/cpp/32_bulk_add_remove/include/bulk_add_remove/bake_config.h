@@ -21,21 +21,17 @@
 #include <flecs.h>
 
 /* Headers of private dependencies */
-#ifdef BULK_ADD_REMOVE_IMPL
+#ifdef bulk_add_remove_EXPORT
 /* No dependencies */
 #endif
 
 /* Convenience macro for exporting symbols */
-#ifndef BULK_ADD_REMOVE_STATIC
-  #if BULK_ADD_REMOVE_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define BULK_ADD_REMOVE_EXPORT __declspec(dllexport)
-  #elif BULK_ADD_REMOVE_IMPL
-    #define BULK_ADD_REMOVE_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define BULK_ADD_REMOVE_EXPORT __declspec(dllimport)
-  #else
-    #define BULK_ADD_REMOVE_EXPORT
-  #endif
+#if bulk_add_remove_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
+  #define BULK_ADD_REMOVE_EXPORT __declspec(dllexport)
+#elif bulk_add_remove_EXPORTS
+  #define BULK_ADD_REMOVE_EXPORT __attribute__((__visibility__("default")))
+#elif defined _MSC_VER
+  #define BULK_ADD_REMOVE_EXPORT __declspec(dllimport)
 #else
   #define BULK_ADD_REMOVE_EXPORT
 #endif

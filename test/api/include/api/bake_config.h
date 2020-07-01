@@ -35,7 +35,7 @@
 #elif api_EXPORTS
   #define API_EXPORT __attribute__((__visibility__("default")))
 #elif defined _MSC_VER
-  #define API_EXPORTS __declspec(dllimport)
+  #define API_EXPORT __declspec(dllimport)
 #else
   #define API_EXPORT
 #endif
