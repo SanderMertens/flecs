@@ -225,6 +225,75 @@ ecs_set(world, EcsName, {.alloc_value = str});
 free(str); // Safe, framework made a copy of the string
 ```
 
+### Macro's
+The C99 API heavily relies on function-style macro's, probably more than you would see in other libraries. The number one reason for this is that an ECS framework needs to work with user-defined types, and C does not provide out of the box support for generics. A few strategies have been employed in the API to improve its overall ergonomics, type safety and readability. Let's start with a simple example:
+
+```c
+typedef struct Position {
+    float x;
+    float y;
+} Position;
+
+ECS_COMPONENT(world, Position);
+
+ecs_entity_t e = ecs_new(world, Position);
+```
+
+From a readability perspective this code looks fine as we can easily tell what is happening here. Though if we take a closer look, we can see that a typename is used where we expect an expression, and that is not possible in plain C. So what is going on?
+
+Let's first remove the `ECS_COMPONENT` macro and replace it with equivalent code (details are omitted for brevity):
+
+```c
+ecs_entity_t ecs_entity(Position) = ecs_new_component(world, "Position", sizeof(Position));
+ecs_type_t ecs_type(Position) = ecs_type_from_entity(world, ecs_entity(Position));
+```
+
+The first line actually registers the component with Flecs, and captures its name and size. The result is stored in a variable with name `ecs_entity(Position)`. Here, `ecs_entity` is a macro that translates the typename of the component to a variable name. The actual name of the variable is:
+
+```c
+FLECS__EPosition
+```
+
+The second thing that happens is that a type variable is declared with the name `ecs_type(Position)`, which translates to `FLECS__TPosition`. A type is a vector of components. In this case, the type only contains the component id for `Position`. We will see in a moment why this is necessary.
+
+The next statement creates a new entity with the `Position` component. The `ecs_new` function is a macro in disguise, and when it is replaced with the actual code, it looks like this:
+
+```c
+ecs_entity_t e = ecs_new_w_type(world, ecs_type(Position));
+```
+
+We can see that the actual plain C function that is called is `ecs_new_w_type`, and that the macro is passing in the type variable into the function. When creating a new entity, it can be initialized with multiple components which is why it accepts a type. Other operations, like `ecs_get` only accept a single component, and use the entity variable:
+
+```c
+Position *p = ecs_get(world, e, Position);
+```
+
+Translates into:
+
+```c
+Position *p = (Position*)ecs_get_w_entity(world, e, ecs_entity(Position));
+```
+
+As you can see, the `ecs_get` macro casts the result of the function to the correct type, so a compiler will throw a warning when an application tries to assign the result of the operation to a variable of the wrong type.
+
+Similarly, `ecs_set` is a macro that ensures that anything we pass into it is of the right type:
+
+```c
+ecs_set(world, e, Position, {10, 20});
+```
+
+Translates into:
+
+```c
+ecs_set_ptr_w_entity
+    (world, e, ecs_entity(Position), sizeof(Position), 
+    &(Position){10, 20});
+```
+
+In addition to casting the value to the right type and passing in the component, this macro also captures the size of the type, which saves Flecs from having to do a component data lookup.
+
+Understanding how the macro's work will go a long way in being able to write effective code in Flecs, and will lead to less surprises when debugging the code.
+
 ## Good practices
 Writing code for an Entity Component System is different from object oriented code, and while the concepts are not very complex, it can be counter intuitive if you have never used one. This section provides a couple of guidelines on how to write code for ECS and Flecs specifically to get you started.
 
@@ -290,4 +359,282 @@ The following guidelines apply to Flecs specifically. Following these guidelines
 - Use `ecs_progress` to run the main loop. This will make it possible to plug & play new features into application by importing modules from the Flecs ecosystem, and also enable applications to use automatic FPS control, time management and multithreading.
 
 - Use component references (`ecs_get_ref`) when repeatedly accessing the same component. This is a faster alternative to `ecs_get`, with as only downside that a little bit of state has to be stored.
+
+## Entities
+Entities are uniquely identifiable objects in a game or simulation. In a real time strategy game, there may be entities for the different units, buildings, UI elements and particle effects, but also for exmaple the camera, world and player. An entity does not contain any state, and is not of a particular type. In a traditional OOP-based game, you may expect a tank in the game is of class "Tank". In ECS, an entity is simply a unique identifier, and any data and behavior associated with that entity is implemented with components and systems.
+
+In Flecs, an entity is represented by a 64 bit integer, which is also how it is exposed on the API:
+
+```c
+typedef uint64_t ecs_entity_t;
+```
+
+Zero indicates an invalid entity. Applications can create new entities with the `ecs_new` operation:
+
+```c
+ecs_entity_t e = ecs_new(world, 0);
+```
+
+This operation guarantees to return an unused entity identifier. The first entity returned is not 1, as Flecs creates a number of builtin entities during the intialization of the world. The identifier of the first returned entity is stored in the `EcsFirstUserEntityId` constant.
+
+
+### Named entities
+In Flecs, entities can be named. A named entity is an entity that has the `EcsName` component. Setting this component is straightforward:
+
+```c
+ecs_entity_t e = ecs_new(world, 0);
+ecs_set(world, e, EcsName, {"MyEntity"});
+```
+
+Alternatively, named entities can be declared with the `ECS_ENTITY` macro, which also allows for the entity to be initialized with a set of components:
+
+```c
+ECS_ENTITY(world, e, Position, Velocity);
+```
+
+Named entities can be looked up with `ecs_lookup`:
+
+```c
+ecs_entity_t e = ecs_lookup(world, "MyEntity");
+```
+
+An application can also request the name of a named entity:
+
+```c
+const char *name = ecs_get_name(world, e);
+```
+
+### Id recycling
+Entity identifiers are reused when deleted. The `ecs_new` operation will first attempt to recycle a deleted identifier before producing a new one. If no identifier can be recycled, it will return the last issued identifier + 1. 
+
+Entity identifiers can only be recycled if they have been deleted with `ecs_delete`. Repeatedly calling `ecs_delete` with `ecs_new` will cause unbounded memory growth, as the framework stores a list of entity identifiers that can be recycled. An application should never delete an identifier that has not been returned by `ecs_new`, and never delete the returned identifier more than once.
+
+When using multiple threads, the `ecs_new` operation guarantees that the returned identifiers are unique, by using atomic increments instead of a simple increment operation. Ids will not be recycled when using multiple threads, since this would require locking global administration.
+
+When creating entities in bulk, the returned entity identifiers are guaranteed to be contiguous. For example, the following operation:
+
+```c
+ecs_entity_t e = ecs_bulk_new(world, 0, 1000);
+```
+
+is guaranteed to return entity identifiers `e .. e + 1000`. As a consequence, this operation also does not recycle ids, as ids are unlikely to be deleted in contiguous order.
+
+### Manual id generation
+Applications do not have to rely on `ecs_new` and `ecs_delete` to create and delete entity identifiers. Entity ids may be used directly, like in this example:
+
+```c
+ecs_add(world, 42, Position);
+```
+
+This is particularly useful when the lifecycle of an entity is managed by another data source (like a multiplayer server) and prevents networking code from having to check whether the entity exists. This also allows applications to reuse existing identifiers, as long as these fit inside a 64 bit integer.
+
+When not using manual ids, id recycling mechanisms are bypassed as these are only invoked by the `ecs_new` and `ecs_delete` operations. Combining manual ids with `ecs_new` and `ecs_delete` can result in unexpected behavior, as `ecs_new` may return an identifier that an application has already used.
+
+### Id ranges
+An application can instruct Flecs to issue ids from a specific offset and up to a certain limit with the `ecs_set_entity_range` operation. This example ensures that id generation starts from id 5000:
+
+```c
+ecs_set_entity_range(world, 5000, 0);
+```
+
+If the last issued id was higher than 5000, the operation will not cause the last id to be reset to 5000. An application can also specify the highest id that can be generated:
+
+```c
+ecs_set_entity_range(world, 5000, 10000);
+```
+
+If invoking `ecs_new` would result in an id higher than `10000`, the application would assert. If `0` is provided for the maximum id, no uppper bound will be enforced.
+
+It is possible for an application to enforce that entity operations (`ecs_add`, `ecs_remove`, `ecs_delete`) are only allowed for the configured range with the `ecs_enable_range_check` operation:
+
+```c
+ecs_enable_range_check(world, true);
+```
+
+This can be useful for enforcing that an application is not modifying entities that are owned by another datasource.
+
+
+## Types
+
+### Basic usage
+A type is typically used to describe the contents (components) of an entity. A simple example:
+
+```c
+// Create entity with type Position
+ecs_entity_t e = ecs_new(world, Position);
+
+// Add Velocity to the entity
+ecs_add(world, e, Velocity);
+```
+
+After running this code, the type can be printed:
+
+```c
+// Print the type of the entity
+ecs_type_t type = ecs_get_type(world, e);
+char *str = ecs_type_str(world, type);
+```
+
+Which will produce:
+
+```
+Position, Velocity
+```
+
+Types can be used to add multiple components in one operation:
+
+```c
+ecs_entity_t e2 = ecs_new_w_type(world, type);
+```
+
+Alternatively, the `ECS_TYPE` macro can be used to create a type:
+
+```c
+ECS_TYPE(world, MyType, Position, Velocity);
+
+ecs_entity_t e = ecs_new(world, MyType);
+```
+
+### Advanced usage
+A type is stored as a vector of identifiers. Because components are stored as entities in Flecs, a type is defined as (pseudo, not actual definition):
+
+```cpp
+typedef vector<ecs_entity_t> ecs_type_t;
+```
+
+As a result, an application is able to do this:
+
+```c
+ecs_entity_t tag_1 = ecs_new(world, 0);
+ecs_entity_t tag_2 = ecs_new(world, 0);
+
+ecs_entity_t e = ecs_new(world, 0);
+ecs_add_entity(world, e, tag_1);
+ecs_add_entity(world, e, tag_2);
+```
+
+Printing the contents of the type of `e` now would produce something similar to:
+
+```
+256, 257
+```
+
+When the type contained components the names of the components were printed. This is because the component entities contained an `EcsName` component. The following  example does the same for `tag_1` and `tag_2`:
+
+```c
+ecs_set(world, tag_1, EcsName, {"tag_1"});
+ecs_set(world, tag_2, EcsName, {"tag_2"});
+```
+
+Printing the type again will now produce:
+
+```
+tag_1, tag_2
+```
+
+### Type roles
+The ability to add entities, and not just components to entities is the cornerstone of many features such as tags, hierarchies and instancing. To be able to define whether an entity in a type is a parent or not, type flags are used.
+
+This example shows how to add an entity as a parent:
+
+```c
+ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+```
+
+Here, `ECS_CHILDOF` is the type flag. This is an overview of the different type flags:
+
+| Flag | Description |
+|------|-------------|
+| ECS_INSTANCEOF | The entity is a base |
+| ECS_CHILDOF | The entity is a parent |
+
+Entities with type flags can be dynamically added or removed:
+
+```c
+ecs_add_entity(world, child, ECS_CHILDOF | parent);
+ecs_remove_entity(world, child, ECS_CHILDOF | parent);
+```
+
+Additionally, type flags can also be used inside of type and signature expressions, such as in the `ECS_TYPE` and `ECS_ENTITY` macro's:
+
+```c
+ECS_ENTITY(world, Base, Position);
+ECS_ENTITY(world, Parent, Position, INSTANCEOF | Base);
+ECS_TYPE(world, MyType, CHILDOF | Parent);
+```
+
+Note that when used inside a type expression, there is no need to provide the `ECS` prefix.
+
+### Type constraints
+Type constraints are special type flags that allow an application to put constraints on what entities a type can contain. Type constraints apply to type
+entities, typically created with the `ECS_TYPE` macro. An example:
+
+```c
+// Sandwich toppings
+ECS_TAG(world, Bacon);
+ECS_TAG(world, Lettuce);
+ECS_TAG(world, Tomato);
+
+// A type that contains all sandwich toppings
+ECS_TYPE(world, Toppings, Bacon, Lettuce, Tomato);
+
+// Create a sandwich entity, enforce it has at least one topping
+ECS_ENTITY(world, Sandwich, Bacon, Lettuce, OR | Toppings);
+```
+
+The `Sandwich` entity contains an `OR` type constraint that is applied to the `Toppings` type. This enforces that the entity must have _at least one_ of the entities in the `Toppings` type in its type. An overview of the constraints:
+
+| Constraint | Description |
+|------|-------------|
+| ECS_AND | Entity must have all entities from provided type |
+| ECS_OR | Entity must have at least one entity from provided type |
+| ECS_NOT | Entity must have no entities from provided type | 
+| ECS_XOR | Entity must have exactly one entity from provided type |
+
+Type constraints can be added and removed like other type flags:
+
+```c
+ecs_add_entity(world, child, ECS_OR | Toppings);
+ecs_remove_entity(world, child, ECS_OR | Toppings);
+```
+
+## Components
+
+## Queries
+
+## Sorting
+
+## Filters
+
+## Systems
+
+## Triggers
+
+## Modules
+
+## Hierarchies
+
+## Instancing
+
+## Pipelines
+
+## Time management
+
+## Snapshots
+
+## Serialization
+
+## Statistics
+
+## Staging
+
+## Threading
+
+## Tracing
+
+## Debug API
+
+## OS Abstraction API
+
 
