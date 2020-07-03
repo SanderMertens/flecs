@@ -1,4 +1,4 @@
-project('flecs', 'c')
+project('flecs', 'c', license : 'mit', default_options : ['c_std=c99'])
 
 if get_option('default_library') == 'shared'
     add_project_arguments('-Dflecs_EXPORTS', language : 'c')
