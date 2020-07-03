@@ -1021,7 +1021,8 @@
                 "snapshot_activate_table_w_filter",
                 "snapshot_copy",
                 "snapshot_copy_filtered",
-                "snapshot_copy_w_filter"
+                "snapshot_copy_w_filter",
+                "snapshot_get_ref_after_restore"
             ]
         }, {
             "id": "ReaderWriter",

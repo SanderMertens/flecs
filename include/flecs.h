@@ -428,6 +428,19 @@ void ecs_atfini(
     ecs_fini_action_t action,
     void *ctx);
 
+/** Register action to be executed once after frame.
+ * Post frame actions are typically used for calling operations that cannot be
+ * invoked during iteration, such as changing the number of threads.
+ * 
+ * @param world The world.
+ * @param action The function to execute.
+ * @param ctx Userdata to pass to the function */
+FLECS_EXPORT
+void ecs_run_post_frame(
+    ecs_world_t *world,
+    ecs_fini_action_t action,
+    void *ctx);    
+
 /** Register ctor, dtor, copy & move actions for component.
  *
  * @param world The world.

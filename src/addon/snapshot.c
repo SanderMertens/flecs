@@ -168,8 +168,10 @@ void ecs_snapshot_restore(
     bool is_filtered = true;
 
     if (snapshot->entity_index.lo || snapshot->entity_index.hi) {
-        ecs_ei_free(&world->stage.entity_index);
-        world->stage.entity_index = snapshot->entity_index;
+        ecs_sparse_restore(world->stage.entity_index.lo, snapshot->entity_index.lo);
+        ecs_sparse_free(snapshot->entity_index.lo);
+        ecs_map_free(world->stage.entity_index.hi);
+        world->stage.entity_index.hi = snapshot->entity_index.hi;
         is_filtered = false;
     }
 
@@ -231,6 +233,8 @@ void ecs_snapshot_restore(
                 ecs_table_clear_silent(world, table);
             }
         }
+
+        table->alloc_count ++;
     }
 
     ecs_vector_free(snapshot->tables);

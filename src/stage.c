@@ -467,6 +467,7 @@ void ecs_stage_init(
     stage->scope = 0;
     stage->defer = 0;
     stage->defer_queue = NULL;
+    stage->post_frame_actions = NULL;
 
     stage->range_check_enabled = true;
 }

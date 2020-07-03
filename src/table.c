@@ -558,6 +558,7 @@ int32_t ecs_table_append(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     int32_t column_count = table->column_count;
+    bool realloc = false;
 
     if (column_count) {
         ecs_column_t *columns = data->columns;
@@ -577,20 +578,26 @@ int32_t ecs_table_append(
             size_t size = columns[i].size;
             size_t alignment = columns[i].alignment;
             if (size) {
+                ecs_vector_t *prev = columns[i].data;
                 ecs_vector_add_t(&columns[i].data, size, alignment);
+                realloc |= prev != columns[i].data;
             }
         }
     }
 
     /* Fist add entity to array with entity ids */
+    ecs_vector_t *prev_e = data->entities;
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
     *e = entity;
+    realloc |= prev_e != data->entities;
 
     /* Add record ptr to array with record ptrs */
+    ecs_vector_t *prev_r = data->record_ptrs;
     ecs_record_t **r = ecs_vector_add(&data->record_ptrs, ecs_record_t*);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     *r = record;
+    realloc |= prev_r != data->record_ptrs;
 
     /* If the table is monitored indicate that there has been a change */
     mark_dirty(table, 0);
@@ -600,6 +607,9 @@ int32_t ecs_table_append(
     if (!world->in_progress && !index) {
         ecs_table_activate(world, table, 0, true);
     }
+
+    /* Keep track of alloc count */
+    table->alloc_count += realloc;
 
     /* Return index of last added entity */
     return index;
@@ -747,6 +757,8 @@ int32_t ecs_table_grow(
         ecs_table_activate(world, table, 0, true);
     }
 
+    table->alloc_count ++;
+
     /* Return index of first added entity */
     return row_count - count;
 }
@@ -778,6 +790,8 @@ int16_t ecs_table_set_size(
             ecs_vector_set_size_t(&columns[i].data, size, alignment, count);
         }
     }
+    
+    table->alloc_count ++;
 
     return 0;
 }
@@ -809,6 +823,8 @@ int16_t ecs_table_set_count(
             ecs_vector_set_count_t(&columns[i].data, size, alignment, count);
         }
     }
+
+    table->alloc_count ++;
 
     return 0;
 }
@@ -1081,6 +1097,8 @@ void ecs_table_merge(
     /* Merge table columns */
     merge_table_data(world, new_table, old_table, old_count, new_count, 
         old_data, new_data);
+
+    new_table->alloc_count ++;
 }
 
 void ecs_table_merge_data(
@@ -1138,6 +1156,8 @@ void ecs_table_merge_data(
     if (!old_count && new_count) {
         ecs_table_activate(world, table, 0, true);
     }
+
+    table->alloc_count ++;
 }
 
 void ecs_table_replace_data(

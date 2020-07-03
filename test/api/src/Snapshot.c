@@ -600,3 +600,38 @@ void Snapshot_snapshot_copy_w_filter() {
 
     ecs_fini(world);
 }
+
+void Snapshot_snapshot_get_ref_after_restore() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_ref_t ref = {0};
+    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
+
+    Position *p_mut = ecs_get_mut(world, e, Position, NULL);
+    test_int(p_mut->x, 10);
+    test_int(p_mut->y, 20);
+
+    p_mut->x ++;
+    p_mut->y ++;
+
+    ecs_snapshot_restore(world, s);
+
+    test_assert(ecs_has(world, e, Position));
+    p = ecs_get_ref(world, &ref, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

@@ -143,6 +143,7 @@ struct ecs_table_t {
     ecs_vector_t *un_set_all;        /**< All OnSet systems */
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
+    int32_t alloc_count;             /**< Increases when columns are reallocd */
 
     ecs_table_flags_t flags;         /**< Flags for testing table properties */
     int32_t column_count;            /**< Number of data columns in table */
@@ -364,6 +365,9 @@ struct ecs_stage_t {
     int32_t defer;
     ecs_vector_t *defer_queue;
 
+    /* One-shot actions to be executed after the merge */
+    ecs_vector_t *post_frame_actions;
+
     /* Is entity range checking enabled? */
     bool range_check_enabled;
 };
@@ -408,10 +412,10 @@ typedef struct ecs_component_monitor_t {
 } ecs_component_monitor_t;
 
 /* fini actions */
-typedef struct ecs_fini_action_elem_t {
+typedef struct ecs_action_elem_t {
     ecs_fini_action_t action;
     void *ctx;
-} ecs_fini_action_elem_t;
+} ecs_action_elem_t;
 
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */

@@ -1879,13 +1879,12 @@ const void* ecs_get_ref_w_entity(
     }
 
     ecs_table_t *table = record->table;
-    ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
 
     if (ref->stage == stage &&
         ref->record == record &&
         ref->table == table &&
         ref->row == record->row &&
-        ref->size == ecs_vector_size(data->entities))
+        ref->alloc_count == table->alloc_count)
     {
         return ref->ptr;
     }
@@ -1893,7 +1892,7 @@ const void* ecs_get_ref_w_entity(
     ref->stage = stage;
     ref->table = table;
     ref->row = record->row;
-    ref->size = ecs_vector_size(data->entities);
+    ref->alloc_count = table->alloc_count;
 
     ecs_entity_info_t info = {0};
     set_info_from_record(world, &info, record);

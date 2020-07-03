@@ -931,6 +931,7 @@ void Snapshot_snapshot_activate_table_w_filter(void);
 void Snapshot_snapshot_copy(void);
 void Snapshot_snapshot_copy_filtered(void);
 void Snapshot_snapshot_copy_w_filter(void);
+void Snapshot_snapshot_get_ref_after_restore(void);
 
 // Testsuite 'ReaderWriter'
 void ReaderWriter_simple(void);
@@ -4527,7 +4528,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Snapshot",
-        .testcase_count = 17,
+        .testcase_count = 18,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_snapshot",
@@ -4596,6 +4597,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "snapshot_copy_w_filter",
                 .function = Snapshot_snapshot_copy_w_filter
+            },
+            {
+                .id = "snapshot_get_ref_after_restore",
+                .function = Snapshot_snapshot_get_ref_after_restore
             }
         }
     },

@@ -407,6 +407,51 @@ ecs_sparse_t* ecs_sparse_copy(
     return dst;
 }
 
+void ecs_sparse_restore(
+    ecs_sparse_t *dst,
+    ecs_sparse_t *src)
+{
+    ecs_assert(dst->elem_size == src->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(dst->chunk_size == src->chunk_size, ECS_INVALID_PARAMETER, NULL);
+
+    /* Copy chunk data */
+    chunk_t *src_chunks = ecs_vector_first(src->chunks, chunk_t);
+    chunk_t *dst_chunks = ecs_vector_first(dst->chunks, chunk_t);
+    int32_t i, count = ecs_vector_count(src->chunks);
+
+    for (i = 0; i < count; i ++) {
+        memcpy(dst_chunks[i].data, src_chunks[i].data,
+            dst->chunk_size * dst->elem_size);
+    }
+
+    /* Clean up remaining chunks */
+    int32_t dst_count = ecs_vector_count(dst->chunks);
+    for (i = count; i < dst_count; i ++) {
+        ecs_os_free(dst_chunks[i].data);
+    }
+
+    ecs_vector_set_count(&dst->chunks, chunk_t, count);
+
+    /* Copy dense array */
+    int32_t elem_count = ecs_vector_count(src->dense);
+    ecs_vector_set_count(&dst->dense, int32_t, elem_count);
+
+    int32_t *dst_dense = ecs_vector_first(dst->dense, int32_t);
+    int32_t *src_dense = ecs_vector_first(src->dense, int32_t);
+    memcpy(dst_dense, src_dense, elem_count * sizeof(int32_t));
+
+    /* Copy sparse array */
+    int32_t sparse_count = ecs_vector_count(src->sparse);
+    ecs_vector_set_count(&dst->sparse, sparse_elem_t, sparse_count);
+
+    sparse_elem_t *dst_sparse = ecs_vector_first(dst->sparse, sparse_elem_t);
+    sparse_elem_t *src_sparse = ecs_vector_first(src->sparse, sparse_elem_t);
+    
+    for (i = 0; i < sparse_count; i ++) {
+        dst_sparse[i].dense = src_sparse[i].dense;
+    }
+}
+
 void ecs_sparse_memory(
     ecs_sparse_t *sparse,
     int32_t *allocd,

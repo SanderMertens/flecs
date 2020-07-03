@@ -114,6 +114,11 @@ ecs_sparse_t* ecs_sparse_copy(
     const ecs_sparse_t *src);    
 
 FLECS_EXPORT
+void ecs_sparse_restore(
+    ecs_sparse_t *dst,
+    ecs_sparse_t *src);
+
+FLECS_EXPORT
 void ecs_sparse_memory(
     ecs_sparse_t *sparse,
     int32_t *allocd,
