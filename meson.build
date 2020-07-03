@@ -60,6 +60,14 @@ flecs_dep = declare_dependency(
     include_directories : flecs_inc
 )
 
+helloword_inc = include_directories('examples/c/01_helloworld/include')
+
+helloworld_exe = executable('helloword',
+    'examples/c/01_helloworld/src/main.c',
+    include_directories : helloword_inc,
+    dependencies : flecs_dep
+)
+
 if meson.version().version_compare('>= 0.54.0')
     meson.override_dependency('flecs', flecs_dep)
 endif
