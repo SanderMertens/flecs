@@ -1,7 +1,7 @@
 project('flecs', 'c', license : 'mit', default_options : ['c_std=c99'])
 
-if get_option('default_library') == 'shared'
-    add_project_arguments('-Dflecs_EXPORTS', language : 'c')
+if get_option('default_library') == 'static'
+    add_project_arguments('-DFLECS_STATIC', language : 'c')
 endif
 
 flecs_inc = include_directories('include')
@@ -50,6 +50,7 @@ install_subdir('include/flecs', install_dir : get_option('includedir'))
 flecs_lib = library('flecs',
     flecs_src,
     install : true,
+    c_args : '-Dflecs_EXPORTS',
     dependencies : flecs_deps,
     include_directories : flecs_inc
 )
