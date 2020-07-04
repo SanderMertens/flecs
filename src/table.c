@@ -1182,7 +1182,6 @@ void ecs_table_replace_data(
         return;
     }
 
-    ecs_entities_t components = ecs_type_to_entities(table->type);
     int32_t count = ecs_table_count(table);
 
     if (!prev_count && count) {
