@@ -55,6 +55,8 @@ typedef char bool;
 /* Use alignof in C++, or a trick in C. */
 #ifdef __cplusplus
 #define ECS_ALIGNOF(T) alignof(T)
+#elif defined(_MSC_VER)
+#define ECS_ALIGNOF(T) __alignof(T)
 #else
 #define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
 #endif
