@@ -1185,9 +1185,6 @@ void ecs_table_replace_data(
     ecs_entities_t components = ecs_type_to_entities(table->type);
     int32_t count = ecs_table_count(table);
 
-    ecs_run_set_systems(world, &world->stage, &components, table, table_data, 0, 
-        count, true);
-
     if (!prev_count && count) {
         ecs_table_activate(world, table, 0, true);
     } else if (prev_count && !count) {

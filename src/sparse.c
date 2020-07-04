@@ -450,6 +450,14 @@ void ecs_sparse_restore(
     for (i = 0; i < sparse_count; i ++) {
         dst_sparse[i].dense = src_sparse[i].dense;
     }
+
+    /* Copy unused elements */
+    int32_t unused_count = ecs_vector_count(src->unused_elements);
+    ecs_vector_set_count(&dst->unused_elements, int32_t, elem_count);
+
+    int32_t *dst_unused = ecs_vector_first(dst->unused_elements, int32_t);
+    int32_t *src_unused = ecs_vector_first(src->unused_elements, int32_t);
+    memcpy(dst_unused, src_unused, unused_count * sizeof(int32_t));    
 }
 
 void ecs_sparse_memory(

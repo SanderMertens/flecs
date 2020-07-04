@@ -1024,8 +1024,13 @@
                 "snapshot_copy_w_filter",
                 "snapshot_get_ref_after_restore",
                 "new_after_snapshot",
+                "new_empty_after_snapshot",
                 "add_after_snapshot",
-                "delete_after_snapshot"
+                "delete_after_snapshot",
+                "set_after_snapshot",
+                "restore_recycled",
+                "snapshot_w_new_in_onset",
+                "snapshot_w_new_in_onset_in_snapshot_table"
             ]
         }, {
             "id": "ReaderWriter",

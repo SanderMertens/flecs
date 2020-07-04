@@ -646,20 +646,7 @@ void Snapshot_new_after_snapshot() {
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
     ecs_snapshot_t *s = ecs_snapshot_take(world);
-
-    Position *p_mut = ecs_get_mut(world, e, Position, NULL);
-    test_int(p_mut->x, 10);
-    test_int(p_mut->y, 20);
-
-    p_mut->x ++;
-    p_mut->y ++;
 
     ecs_snapshot_restore(world, s);
 
@@ -683,20 +670,7 @@ void Snapshot_add_after_snapshot() {
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
     ecs_snapshot_t *s = ecs_snapshot_take(world);
-
-    Position *p_mut = ecs_get_mut(world, e, Position, NULL);
-    test_int(p_mut->x, 10);
-    test_int(p_mut->y, 20);
-
-    p_mut->x ++;
-    p_mut->y ++;
 
     ecs_snapshot_restore(world, s);
 
@@ -715,26 +689,154 @@ void Snapshot_delete_after_snapshot() {
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
     ecs_snapshot_t *s = ecs_snapshot_take(world);
-
-    Position *p_mut = ecs_get_mut(world, e, Position, NULL);
-    test_int(p_mut->x, 10);
-    test_int(p_mut->y, 20);
-
-    p_mut->x ++;
-    p_mut->y ++;
 
     ecs_snapshot_restore(world, s);
 
     ecs_delete(world, e);
     test_assert(!ecs_has(world, e, Position));
     test_assert(ecs_get_type(world, e) == NULL);
+
+    ecs_fini(world);
+}
+
+void Snapshot_new_empty_after_snapshot() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
+
+    ecs_snapshot_restore(world, s);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 != 0);
+
+    ecs_fini(world);
+}
+
+void Snapshot_set_after_snapshot() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
+
+    ecs_snapshot_restore(world, s);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 != 0);
+
+    ecs_set(world, e2, EcsName, {"e2"});
+    test_assert(ecs_has(world, e2, EcsName));
+    test_str(ecs_get_name(world, e2), "e2");
+
+    ecs_fini(world);
+}
+
+void Snapshot_restore_recycled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
+
+    ecs_delete(world, e);
+
+    ecs_snapshot_restore(world, s);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 != 0);
+    test_assert(e != e2);
+
+    ecs_fini(world);
+}
+
+static
+void SetP(ecs_iter_t *it) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, 0, EcsName, {"e2"});
+    }
+}
+
+void Snapshot_snapshot_w_new_in_onset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ECS_SYSTEM(world, SetP, EcsOnSet, Position);
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
+
+    ecs_snapshot_restore(world, s);
+
+    ecs_entity_t e2 = ecs_lookup(world, "e2");
+    test_assert(e2 != 0);
+
+    ecs_entity_t e3 = ecs_set(world, 0, EcsName, {"e3"});
+    test_assert(e3 != 0);
+    test_assert(e3 > e2);
+    test_str(ecs_get_name(world, e3), "e3");
+
+    ecs_fini(world);
+}
+
+static ecs_entity_t v_entity = 0;
+
+static
+void CreateV(ecs_iter_t *it) {
+    ecs_entity_t ecs_entity(Velocity) = ecs_column_entity(it, 2);
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        v_entity = ecs_set(it->world, 0, Velocity, {3, 4});
+    }    
+}
+
+void Snapshot_snapshot_w_new_in_onset_in_snapshot_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Velocity, {1, 2});
+
+    ECS_SYSTEM(world, CreateV, EcsOnSet, Position, :Velocity);
+
+    ecs_snapshot_t *s = ecs_snapshot_take(world);
+
+    ecs_snapshot_restore(world, s);
+
+    const Velocity *v = ecs_get(world, e2, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    v = ecs_get(world, v_entity, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 3);
+    test_int(v->y, 4);
 
     ecs_fini(world);
 }

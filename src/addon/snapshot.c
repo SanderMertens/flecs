@@ -176,6 +176,10 @@ void ecs_snapshot_restore(
         ecs_map_free(world->stage.entity_index.hi);
         world->stage.entity_index.hi = snapshot->entity_index.hi;
         is_filtered = false;
+    }   
+
+    if (!is_filtered) {
+        world->stats.last_id = snapshot->last_id;
     }
 
     ecs_table_leaf_t *leafs = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
@@ -187,6 +191,8 @@ void ecs_snapshot_restore(
         if (table->flags & EcsTableHasBuiltins) {
             continue;
         }
+
+        // printf("restore [%s]\n", ecs_type_str(world, table->type));
 
         ecs_table_leaf_t *leaf = NULL;
         if (l < count) {
@@ -240,11 +246,28 @@ void ecs_snapshot_restore(
         table->alloc_count ++;
     }
 
-    ecs_vector_free(snapshot->tables);
-
+    /* If snapshot was not filtered, run OnSet systems now. This cannot be done
+     * while restoring the snapshot, because the world is in an inconsistent
+     * state while restoring. When a snapshot is filtered, the world is not left
+     * in an inconsistent state, which makes running OnSet systems while
+     * restoring safe */
     if (!is_filtered) {
-        world->stats.last_id = snapshot->last_id;
+        for (t = 0; t < table_count; t ++) {
+            ecs_table_t *table = ecs_sparse_get(world->stage.tables, ecs_table_t, t);
+            if (table->flags & EcsTableHasBuiltins) {
+                continue;
+            }
+
+            ecs_entities_t components = ecs_type_to_entities(table->type);
+            ecs_data_t *table_data = ecs_table_get_data(world, table);
+            int32_t entity_count = ecs_table_data_count(table_data);
+
+            ecs_run_set_systems(world, &world->stage, &components, table, 
+                table_data, 0, entity_count, true);            
+        }
     }
+
+    ecs_vector_free(snapshot->tables);   
 
     ecs_os_free(snapshot);
 }

@@ -933,8 +933,13 @@ void Snapshot_snapshot_copy_filtered(void);
 void Snapshot_snapshot_copy_w_filter(void);
 void Snapshot_snapshot_get_ref_after_restore(void);
 void Snapshot_new_after_snapshot(void);
+void Snapshot_new_empty_after_snapshot(void);
 void Snapshot_add_after_snapshot(void);
 void Snapshot_delete_after_snapshot(void);
+void Snapshot_set_after_snapshot(void);
+void Snapshot_restore_recycled(void);
+void Snapshot_snapshot_w_new_in_onset(void);
+void Snapshot_snapshot_w_new_in_onset_in_snapshot_table(void);
 
 // Testsuite 'ReaderWriter'
 void ReaderWriter_simple(void);
@@ -4531,7 +4536,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Snapshot",
-        .testcase_count = 21,
+        .testcase_count = 26,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_snapshot",
@@ -4610,12 +4615,32 @@ static bake_test_suite suites[] = {
                 .function = Snapshot_new_after_snapshot
             },
             {
+                .id = "new_empty_after_snapshot",
+                .function = Snapshot_new_empty_after_snapshot
+            },
+            {
                 .id = "add_after_snapshot",
                 .function = Snapshot_add_after_snapshot
             },
             {
                 .id = "delete_after_snapshot",
                 .function = Snapshot_delete_after_snapshot
+            },
+            {
+                .id = "set_after_snapshot",
+                .function = Snapshot_set_after_snapshot
+            },
+            {
+                .id = "restore_recycled",
+                .function = Snapshot_restore_recycled
+            },
+            {
+                .id = "snapshot_w_new_in_onset",
+                .function = Snapshot_snapshot_w_new_in_onset
+            },
+            {
+                .id = "snapshot_w_new_in_onset_in_snapshot_table",
+                .function = Snapshot_snapshot_w_new_in_onset_in_snapshot_table
             }
         }
     },
