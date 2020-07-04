@@ -1022,7 +1022,10 @@
                 "snapshot_copy",
                 "snapshot_copy_filtered",
                 "snapshot_copy_w_filter",
-                "snapshot_get_ref_after_restore"
+                "snapshot_get_ref_after_restore",
+                "new_after_snapshot",
+                "add_after_snapshot",
+                "delete_after_snapshot"
             ]
         }, {
             "id": "ReaderWriter",

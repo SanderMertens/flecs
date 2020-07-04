@@ -28,6 +28,9 @@ ecs_data_t* duplicate_data(
     result->entities = ecs_vector_copy(main_data->entities, ecs_entity_t);
     ecs_entity_t *entities = ecs_vector_first(result->entities, ecs_entity_t);
 
+    /* Copy record ptrs */
+    result->record_ptrs = ecs_vector_copy(main_data->record_ptrs, ecs_record_t*);
+
     /* Copy each column */
     for (i = 0; i < column_count; i ++) {
         ecs_entity_t component = components[i];
