@@ -149,17 +149,6 @@ struct ecs_table_t {
     int32_t column_count;            /**< Number of data columns in table */
 };
 
-/** Cached reference to a component in an entity.
- * This type is used to store references to components in a system signature.
- * The type uses a regular cached reference (ecs_ref_t) but in addition also
- * needs to store the entity and component id so they can be requested by a
- * system. */
-struct ecs_reference_t {
-    ecs_entity_t entity;        /**< The entity */
-    ecs_entity_t component;     /**< The component id */
-    ecs_ref_t ref;              /**< The cached reference to the component */
-};
-
 /** Type containing data for a table matched with a query. */
 typedef struct ecs_matched_table_t {
     ecs_table_t *table;            /**< Reference to the table */

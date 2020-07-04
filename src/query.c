@@ -370,8 +370,8 @@ void add_table(
                     world, component, EcsComponent);
             
             ecs_entity_t e;
-            ecs_reference_t *ref = ecs_vector_add(
-                    &table_data->references, ecs_reference_t);
+            ecs_ref_t *ref = ecs_vector_add(
+                    &table_data->references, ecs_ref_t);
             
             table_data->columns[c] = -ecs_vector_count(table_data->references);
 
@@ -391,15 +391,15 @@ void add_table(
                 ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
             }
             
+            *ref = (ecs_ref_t){0};
             ref->entity = e;
             ref->component = component;
-            ref->ref = (ecs_ref_t){0};
                 
             if (ecs_has(world, component, EcsComponent)) {
                 if (c_info->size && from != EcsFromEmpty) {
                     if (e) {
                         ecs_get_ref_w_entity(
-                            world, &ref->ref, e, component);
+                            world, ref, e, component);
                         ecs_set_watch(world, &world->stage, e);                     
                     }
 
@@ -646,11 +646,11 @@ void resolve_cascade_container(
     int32_t ref_index = -column_indices[column] - 1;
 
     /* Obtain pointer to the reference data */
-    ecs_reference_t *references = ecs_vector_first(table_data->references, ecs_reference_t);
+    ecs_ref_t *references = ecs_vector_first(table_data->references, ecs_ref_t);
     ecs_assert(ref_index < ecs_vector_count(table_data->references), 
         ECS_INTERNAL_ERROR, NULL);
 
-    ecs_reference_t *ref = &references[ref_index];
+    ecs_ref_t *ref = &references[ref_index];
     ecs_assert(ref->component == get_cascade_component(query), 
         ECS_INTERNAL_ERROR, NULL);
 
@@ -662,7 +662,7 @@ void resolve_cascade_container(
     if (container) {
         references[ref_index].entity = container;
         ecs_get_ref_w_entity(
-            world, &references[ref_index].ref, container, 
+            world, &references[ref_index], container, 
             ref->component);
     } else {
         references[ref_index].entity = 0;
@@ -1406,7 +1406,7 @@ void ecs_query_set_iter(
     it->table_columns = table_data->columns;
     it->columns = table->columns;
     it->components = table->components;
-    it->references = ecs_vector_first(table->references, ecs_reference_t);
+    it->references = ecs_vector_first(table->references, ecs_ref_t);
     it->offset = row;
     it->count = count;
     it->total_count = count;
@@ -1511,7 +1511,7 @@ bool ecs_query_next(
         it->table = world_table;
         it->columns = table->columns;
         it->components = table->components;
-        it->references = ecs_vector_first(table->references, ecs_reference_t);
+        it->references = ecs_vector_first(table->references, ecs_ref_t);
         it->frame_offset += prev_count;
 
         /* Table is ready to be iterated, return it struct */

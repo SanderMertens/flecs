@@ -1858,8 +1858,14 @@ const void* ecs_get_ref_w_entity(
     ecs_entity_t component)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ref != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!entity || !ref->entity || entity == ref->entity, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!component || !ref->component || component == ref->component, ECS_INVALID_PARAMETER, NULL);
+
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_record_t *record = ref->record;
+
+    entity |= ref->entity;
 
     if (stage != &world->stage) {
         ecs_record_t *staged = ecs_eis_get(stage, entity);
@@ -1889,6 +1895,10 @@ const void* ecs_get_ref_w_entity(
         return ref->ptr;
     }
 
+    component |= ref->component;
+
+    ref->entity = entity;
+    ref->component = component;
     ref->stage = stage;
     ref->table = table;
     ref->row = record->row;
