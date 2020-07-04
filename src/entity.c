@@ -1615,7 +1615,16 @@ ecs_entity_t ecs_new_w_entity(
             .count = 1
         };
 
+        ecs_entity_t old_scope = 0;
+        if (component & ECS_CHILDOF) {
+            old_scope = ecs_set_scope(world, 0);
+        }
+
         new(world, stage, entity, &to_add);
+
+        if (component & ECS_CHILDOF) {
+            ecs_set_scope(world, old_scope);
+        }
     } else {
         ecs_eis_set(&world->stage, entity, &(ecs_record_t){ 0 });
     }

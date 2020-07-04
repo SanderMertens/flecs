@@ -155,7 +155,8 @@
                 "scope_component",
                 "new_from_path_depth_0",
                 "new_from_path_depth_1",
-                "new_from_path_depth_2"
+                "new_from_path_depth_2",
+                "new_w_child_in_root"
             ]
         }, {
             "id": "Add_bulk",

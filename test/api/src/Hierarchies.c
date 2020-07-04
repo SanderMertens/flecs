@@ -730,3 +730,22 @@ void Hierarchies_new_from_path_depth_2() {
 
     ecs_fini(world);
 }
+
+void Hierarchies_new_w_child_in_root() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t scope = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world, 0);
+    
+    ecs_set_scope(world, scope);
+
+    ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+    test_assert( ecs_has_entity(world, child, ECS_CHILDOF | parent));
+    test_assert( !ecs_has_entity(world, child, ECS_CHILDOF | scope));
+
+    ecs_entity_t child_2 = ecs_new(world, 0);
+    test_assert( !ecs_has_entity(world, child_2, ECS_CHILDOF | parent));
+    test_assert( ecs_has_entity(world, child_2, ECS_CHILDOF | scope));
+
+    ecs_fini(world);
+}
