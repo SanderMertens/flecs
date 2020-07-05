@@ -209,6 +209,7 @@ ecs_world_t *ecs_mini(void) {
     world->stats.target_fps = 0;
     world->stats.last_id = 0;
 
+    world->stats.delta_time_raw = 0;
     world->stats.delta_time = 0;
     world->stats.time_scale = 1.0;
     world->stats.frame_time_total = 0;

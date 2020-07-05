@@ -481,6 +481,7 @@ float ecs_frame_begin(
         user_delta_time = delta_time;
     }
 
+    world->stats.delta_time_raw = user_delta_time;
     world->stats.delta_time = user_delta_time * world->stats.time_scale;
     
     return user_delta_time;

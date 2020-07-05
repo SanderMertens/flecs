@@ -156,15 +156,15 @@ char* ecs_os_api_module_to_dl(const char *module) {
     /* Best guess, use module name with underscores + OS library extension */
     char *file_base = module_file_base(module, '_');
 
-#ifdef ECS_OS_LINUX
+#if defined(ECS_OS_LINUX)
     ecs_strbuf_appendstr(&lib, "lib");
     ecs_strbuf_appendstr(&lib, file_base);
     ecs_strbuf_appendstr(&lib, ".so");
-#elif ECS_OS_DARWIN
+#elif defined(ECS_OS_DARWIN)
     ecs_strbuf_appendstr(&lib, "lib");
     ecs_strbuf_appendstr(&lib, file_base);
     ecs_strbuf_appendstr(&lib, ".dylib");
-#elif ECS_OS_WINDOWS
+#elif defined(ECS_OS_WINDOWS)
     ecs_strbuf_appendstr(&lib, file_base);
     ecs_strbuf_appendstr(&lib, ".dll");
 #endif
