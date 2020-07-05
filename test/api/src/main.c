@@ -977,6 +977,18 @@ void FilterIter_iter_snapshot_filtered_table(void);
 void Modules_simple_module(void);
 void Modules_import_module_from_system(void);
 void Modules_import_again(void);
+void Modules_scoped_component(void);
+void Modules_scoped_tag(void);
+void Modules_scoped_system(void);
+void Modules_scoped_entity(void);
+void Modules_name_prefix_component(void);
+void Modules_name_prefix_tag(void);
+void Modules_name_prefix_system(void);
+void Modules_name_prefix_entity(void);
+void Modules_name_prefix_type(void);
+void Modules_name_prefix_prefab(void);
+void Modules_name_prefix_pipeline(void);
+void Modules_name_prefix_trigger(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -4771,7 +4783,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Modules",
-        .testcase_count = 3,
+        .testcase_count = 15,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_module",
@@ -4784,6 +4796,54 @@ static bake_test_suite suites[] = {
             {
                 .id = "import_again",
                 .function = Modules_import_again
+            },
+            {
+                .id = "scoped_component",
+                .function = Modules_scoped_component
+            },
+            {
+                .id = "scoped_tag",
+                .function = Modules_scoped_tag
+            },
+            {
+                .id = "scoped_system",
+                .function = Modules_scoped_system
+            },
+            {
+                .id = "scoped_entity",
+                .function = Modules_scoped_entity
+            },
+            {
+                .id = "name_prefix_component",
+                .function = Modules_name_prefix_component
+            },
+            {
+                .id = "name_prefix_tag",
+                .function = Modules_name_prefix_tag
+            },
+            {
+                .id = "name_prefix_system",
+                .function = Modules_name_prefix_system
+            },
+            {
+                .id = "name_prefix_entity",
+                .function = Modules_name_prefix_entity
+            },
+            {
+                .id = "name_prefix_type",
+                .function = Modules_name_prefix_type
+            },
+            {
+                .id = "name_prefix_prefab",
+                .function = Modules_name_prefix_prefab
+            },
+            {
+                .id = "name_prefix_pipeline",
+                .function = Modules_name_prefix_pipeline
+            },
+            {
+                .id = "name_prefix_trigger",
+                .function = Modules_name_prefix_trigger
             }
         }
     },

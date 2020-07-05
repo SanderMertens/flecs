@@ -195,11 +195,14 @@ ecs_entity_t ecs_new_entity(
     const char *expr)
 {
     EcsType type = type_from_expr(world, name, expr);
+
+    const char *e_name = get_entity_name(world, name);
+
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
         result = e ? e : ecs_new(world, 0);
         ecs_add_type(world, result, type.normalized);
-        ecs_set(world, result, EcsName, {.value = name});
+        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
     }
 
     return result;
@@ -213,12 +216,14 @@ ecs_entity_t ecs_new_prefab(
 {
     EcsType type = type_from_expr(world, name, expr);
 
+    const char *e_name = get_entity_name(world, name);
+
     ecs_entity_t result = lookup(world, name, type.normalized);
     if (!result) {
         result = e ? e : ecs_new(world, 0);
         ecs_add_entity(world, result, EcsPrefab);
         ecs_add_type(world, result, type.normalized);
-        ecs_set(world, result, EcsName, {.value = name});
+        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
     } else {
         if (!ecs_has_entity(world, result, EcsPrefab)) {
             ecs_abort(ECS_ALREADY_DEFINED, name);
@@ -316,11 +321,13 @@ ecs_entity_t ecs_new_type(
 {
     assert(world->magic == ECS_WORLD_MAGIC);  
     EcsType type = type_from_expr(world, name, expr);
+
+    const char *e_name = get_entity_name(world, name);
     
     ecs_entity_t result = lookup(world, name, ecs_type(EcsType));
     if (!result) {
         result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {.value = name});
+        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
         ecs_set(world, result, EcsType, {
             .type = type.type, .normalized = type.normalized
         });        
@@ -351,11 +358,13 @@ ecs_entity_t ecs_new_system(
 {
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_FROM_WORKER, NULL);
     ecs_assert(!world->in_progress, ECS_INVALID_WHILE_ITERATING, NULL);
+
+    const char *e_name = get_entity_name(world, name);
     
     ecs_entity_t result = lookup(world, name, ecs_type(EcsSignatureExpr));
     if (!result) {
         result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {.value = name});
+        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
         if (tag) {
             ecs_add_entity(world, result, tag);
 
@@ -393,11 +402,13 @@ ecs_entity_t ecs_new_trigger(
 
     ecs_entity_t component = ecs_lookup_fullpath(world, component_name);
     ecs_assert(component != 0, ECS_INVALID_COMPONENT_ID, component_name);
+
+    const char *e_name = get_entity_name(world, name);
     
     ecs_entity_t result = lookup(world, name, ecs_type(EcsTrigger));
     if (!result) {
         result = e ? e : ecs_new(world, 0);
-        ecs_set(world, result, EcsName, {.value = name});
+        ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
         ecs_set(world, result, EcsTrigger, {
             .kind = kind,
             .action = action,

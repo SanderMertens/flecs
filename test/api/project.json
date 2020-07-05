@@ -1073,7 +1073,19 @@
             "testcases": [
                 "simple_module",
                 "import_module_from_system",
-                "import_again"
+                "import_again",
+                "scoped_component",
+                "scoped_tag",
+                "scoped_system",
+                "scoped_entity",
+                "name_prefix_component",
+                "name_prefix_tag",
+                "name_prefix_system",
+                "name_prefix_entity",
+                "name_prefix_type",
+                "name_prefix_prefab",
+                "name_prefix_pipeline",
+                "name_prefix_trigger"
             ]
         }, {
             "id": "Internals",
