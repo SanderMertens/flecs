@@ -24,6 +24,7 @@ flecs_src = files(
     'src/addon/reader.c',
     'src/addon/dbg.c',
     'src/addon/snapshot.c',
+    'src/addon/os_api_impl.c',
     'src/table.c',
     'src/signature.c',
     'src/world.c',

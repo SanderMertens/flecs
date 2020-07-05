@@ -9,6 +9,16 @@
 #include <alloca.h>
 #endif
 
+#if defined(_WIN32)
+#define ECS_OS_WINDOWS
+#elif defined(__linux__)
+#define ECS_OS_LINUX
+#elif defined(__APPLE__) && defined(__MACH__)
+#define ECS_OS_DARWIN
+#else
+/* Unknown OS */
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -151,7 +161,7 @@ void (*ecs_os_api_dlclose_t)(
     ecs_os_dl_t lib);
 
 typedef
-char* (*ecs_os_api_module_to_dl_t)(
+char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
 typedef struct ecs_os_api_t {
@@ -201,9 +211,13 @@ typedef struct ecs_os_api_t {
     ecs_os_api_dlproc_t dlproc;
     ecs_os_api_dlclose_t dlclose;
 
-    /* Overridable function that translates from a logical module id to the
-     * a shared library filename */
-    ecs_os_api_module_to_dl_t module_to_dl;
+    /* Overridable function that translates from a logical module id to a
+     * shared library filename */
+    ecs_os_api_module_to_path_t module_to_dl;
+
+    /* Overridable function that translates from a logical module id to a
+     * path that contains module-specif resources or assets */
+    ecs_os_api_module_to_path_t module_to_etc;    
 } ecs_os_api_t;
 
 FLECS_EXPORT
@@ -277,6 +291,7 @@ void ecs_os_dbg(const char *fmt, ...);
 
 /* Module id translation */
 #define ecs_os_module_to_dl(lib) ecs_os_api.module_to_dl(lib)
+#define ecs_os_module_to_etc(lib) ecs_os_api.module_to_etc(lib)
 
 /* Sleep with floating point time */
 FLECS_EXPORT
