@@ -475,9 +475,8 @@ float start_measure_frame(
 
         world->frame_start_time = t;  
 
-        /* Compute total time passed since start of simulation */
-        ecs_time_t diff = ecs_time_sub(t, world->world_start_time);
-        world->stats.world_time_total = ecs_time_to_double(diff);
+        /* Keep track of total time passed in world */
+        world->stats.world_time_total_raw += delta_time;
     }
 
     return delta_time;
@@ -540,6 +539,9 @@ float ecs_frame_begin(
 
     world->stats.delta_time_raw = user_delta_time;
     world->stats.delta_time = user_delta_time * world->stats.time_scale;
+
+    /* Keep track of total scaled time passed in world */
+    world->stats.world_time_total += world->stats.delta_time;
     
     return user_delta_time;
 }
@@ -575,6 +577,13 @@ void ecs_set_time_scale(
     float scale)
 {
     world->stats.time_scale = scale;
+}
+
+void ecs_reset_clock(
+    ecs_world_t *world)
+{
+    world->stats.world_time_total = 0;
+    world->stats.world_time_total_raw = 0;
 }
 
 void ecs_quit(

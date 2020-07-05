@@ -82,7 +82,8 @@ typedef struct ecs_world_info_t {
     double frame_time_total;    /**< Total time spent processing a frame */
     double system_time_total;   /**< Total time spent in systems */
     double merge_time_total;    /**< Total time spent in merges */
-    double world_time_total;    /**< Time elapsed since first frame */
+    double world_time_total;    /**< Time elapsed in simulation */
+    double world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
     
     int32_t frame_count_total;  /**< Total number of frames */
     int32_t merge_count_total;  /**< Total number of merges */
