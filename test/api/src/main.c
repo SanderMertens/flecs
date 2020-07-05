@@ -336,6 +336,7 @@ void Pipeline_merge_after_not_out(void);
 void Pipeline_no_merge_after_main_out(void);
 void Pipeline_no_merge_after_staged_in_out(void);
 void Pipeline_merge_after_staged_out_before_owned(void);
+void Pipeline_switch_pipeline(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -2231,7 +2232,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Pipeline",
-        .testcase_count = 14,
+        .testcase_count = 15,
         .testcases = (bake_test_case[]){
             {
                 .id = "system_order_same_phase",
@@ -2288,6 +2289,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "merge_after_staged_out_before_owned",
                 .function = Pipeline_merge_after_staged_out_before_owned
+            },
+            {
+                .id = "switch_pipeline",
+                .function = Pipeline_switch_pipeline
             }
         }
     },

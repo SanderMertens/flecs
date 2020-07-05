@@ -35,7 +35,34 @@ int rank_phase(
     ecs_entity_t rank_component,
     ecs_type_t type) 
 {
-    return ecs_type_get_entity_for_xor(world, type, rank_component);
+    const EcsType *pipeline_type = ecs_get(world, rank_component, EcsType);
+    ecs_assert(pipeline_type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Find tag in system that belongs to pipeline */
+    ecs_entity_t *sys_comps = ecs_vector_first(type, ecs_entity_t);
+    int32_t c, t, count = ecs_vector_count(type);
+
+    ecs_entity_t *tags = ecs_vector_first(pipeline_type->normalized, ecs_entity_t);
+    int32_t tag_count = ecs_vector_count(pipeline_type->normalized);
+
+    ecs_entity_t result = 0;
+
+    for (c = 0; c < count; c ++) {
+        ecs_entity_t comp = sys_comps[c];
+        for (t = 0; t < tag_count; t ++) {
+            if (comp == tags[t]) {
+                result = comp;
+                break;
+            }
+        }
+        if (result) {
+            break;
+        }
+    }
+
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+
+    return result;
 }
 
 typedef enum ComponentWriteState {
@@ -339,6 +366,24 @@ void ecs_pipeline_progress(
     ecs_worker_end(real_world);
 }
 
+static
+void add_pipeline_tags_to_sig(
+    ecs_world_t *world,
+    ecs_sig_t *sig,
+    ecs_type_t type)
+{
+    int32_t i, count = ecs_vector_count(type);
+    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
+
+    for (i = 0; i < count; i ++) {
+        if (!i) {
+            ecs_sig_add(sig, EcsFromAny, EcsOperAnd, EcsIn, entities[i], 0);
+        } else {
+            ecs_sig_add(sig, EcsFromAny, EcsOperOr, EcsIn, entities[i], 0);
+        }
+    }
+}
+
 static 
 void EcsOnAddPipeline(
     ecs_iter_t *it)
@@ -367,9 +412,9 @@ void EcsOnAddPipeline(
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
         ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
         ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0);
         ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Create the query. Sort the query by system id and phase */
         ecs_query_t *query = ecs_query_new_w_sig(world, 0, &sig);
@@ -381,8 +426,8 @@ void EcsOnAddPipeline(
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
         ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
         ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Use the same sorting functions for the build query */
         ecs_query_t *build_query = ecs_query_new_w_sig(world, 0, &sig);

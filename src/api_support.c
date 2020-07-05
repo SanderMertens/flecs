@@ -367,13 +367,6 @@ ecs_entity_t ecs_new_system(
         ecs_set(world, result, EcsName, {.value = e_name, .symbol = name});
         if (tag) {
             ecs_add_entity(world, result, tag);
-
-            const EcsType *t = ecs_get(world, world->pipeline, EcsType);
-            if (t) {
-                if (ecs_type_has_entity(world, t->normalized, tag)) {
-                    ecs_add_entity(world, result, ECS_XOR | world->pipeline);
-                }
-            }
         }
 
         ecs_set(world, result, EcsSignatureExpr, {signature});

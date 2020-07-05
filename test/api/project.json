@@ -376,7 +376,8 @@
                 "merge_after_not_out",
                 "no_merge_after_main_out",
                 "no_merge_after_staged_in_out",
-                "merge_after_staged_out_before_owned"
+                "merge_after_staged_out_before_owned",
+                "switch_pipeline"
             ]
         }, {
             "id": "SystemMisc",
