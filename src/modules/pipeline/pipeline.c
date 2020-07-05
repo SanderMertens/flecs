@@ -372,6 +372,8 @@ void add_pipeline_tags_to_sig(
     ecs_sig_t *sig,
     ecs_type_t type)
 {
+    (void)world;
+    
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
 
