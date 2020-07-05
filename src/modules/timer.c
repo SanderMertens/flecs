@@ -26,7 +26,7 @@ void ProgressTimers(ecs_iter_t *it) {
             continue;
         }
 
-        float time_elapsed = timer[i].time + it->delta_time;
+        float time_elapsed = timer[i].time + it->world->stats.delta_time_raw;
         float timeout = timer[i].timeout;
         
         if (time_elapsed >= timeout) {

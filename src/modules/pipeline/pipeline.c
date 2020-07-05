@@ -499,7 +499,17 @@ void stop_measure_frame(
             float sleep = (1.0 / target_fps) - delta_time + world->fps_sleep;
 
             if (sleep > 0.01) {
-                ecs_sleepf(sleep);
+                 ecs_sleepf(sleep);
+            } else {
+                double sleep_time = sleep / 10;
+                
+                ecs_time_t t_sleep = t;
+                double time_passed = ecs_time_measure(&t_sleep);
+                while((time_passed - frame_time) < sleep){
+                    ecs_sleepf(sleep_time);
+                    t_sleep = t;
+                    time_passed = ecs_time_measure(&t_sleep);
+                }
             }
 
             world->fps_sleep = sleep;
