@@ -20,21 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef simple_module_EXPORT
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#if simple_module_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define SIMPLE_MODULE_EXPORT __declspec(dllexport)
-#elif simple_module_EXPORTS
-  #define SIMPLE_MODULE_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-  #define SIMPLE_MODULE_EXPORT __declspec(dllimport)
-#else
-  #define SIMPLE_MODULE_EXPORT
-#endif
-
 #endif
 

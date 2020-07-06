@@ -20,21 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef sorting_EXPORT
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#if sorting_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define SORTING_EXPORT __declspec(dllexport)
-#elif sorting_EXPORTS
-  #define SORTING_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-  #define SORTING_EXPORT __declspec(dllimport)
-#else
-  #define SORTING_EXPORT
-#endif
-
 #endif
 

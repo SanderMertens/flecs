@@ -22,12 +22,8 @@
 #include <bake_util.h>
 #endif
 
-/* Headers of private dependencies */
-#ifdef flecs_EXPORT
-/* No dependencies */
-#endif
-
 /* Convenience macro for exporting symbols */
+#ifndef flecs_STATIC
 #if flecs_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
   #define FLECS_EXPORT __declspec(dllexport)
 #elif flecs_EXPORTS
@@ -36,6 +32,7 @@
   #define FLECS_EXPORT __declspec(dllimport)
 #else
   #define FLECS_EXPORT
+#endif
 #endif
 
 #endif

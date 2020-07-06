@@ -20,21 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef system_features_EXPORT
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#if system_features_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define SYSTEM_FEATURES_EXPORT __declspec(dllexport)
-#elif system_features_EXPORTS
-  #define SYSTEM_FEATURES_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-  #define SYSTEM_FEATURES_EXPORT __declspec(dllimport)
-#else
-  #define SYSTEM_FEATURES_EXPORT
-#endif
-
 #endif
 

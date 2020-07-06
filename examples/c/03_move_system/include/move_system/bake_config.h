@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef MOVE_SYSTEM_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef MOVE_SYSTEM_STATIC
-  #if MOVE_SYSTEM_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define MOVE_SYSTEM_EXPORT __declspec(dllexport)
-  #elif MOVE_SYSTEM_IMPL
-    #define MOVE_SYSTEM_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define MOVE_SYSTEM_EXPORT __declspec(dllimport)
-  #else
-    #define MOVE_SYSTEM_EXPORT
-  #endif
-#else
-  #define MOVE_SYSTEM_EXPORT
-#endif
-
 #endif
 

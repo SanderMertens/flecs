@@ -20,21 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef replace_EXPORT
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#if replace_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define REPLACE_EXPORT __declspec(dllexport)
-#elif replace_EXPORTS
-  #define REPLACE_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-  #define REPLACE_EXPORT __declspec(dllimport)
-#else
-  #define REPLACE_EXPORT
-#endif
-
 #endif
 

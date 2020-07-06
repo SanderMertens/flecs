@@ -20,21 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef periodic_system_EXPORT
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#if periodic_system_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define PERIODIC_SYSTEM_EXPORT __declspec(dllexport)
-#elif periodic_system_EXPORTS
-  #define PERIODIC_SYSTEM_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-  #define PERIODIC_SYSTEM_EXPORT __declspec(dllimport)
-#else
-  #define PERIODIC_SYSTEM_EXPORT
-#endif
-
 #endif
 

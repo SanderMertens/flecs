@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef HIERARCHY_API_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef HIERARCHY_API_STATIC
-  #if HIERARCHY_API_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define HIERARCHY_API_EXPORT __declspec(dllexport)
-  #elif HIERARCHY_API_IMPL
-    #define HIERARCHY_API_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define HIERARCHY_API_EXPORT __declspec(dllimport)
-  #else
-    #define HIERARCHY_API_EXPORT
-  #endif
-#else
-  #define HIERARCHY_API_EXPORT
-#endif
-
 #endif
 

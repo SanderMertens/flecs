@@ -20,21 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef persistent_query_EXPORT
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#if persistent_query_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define PERSISTENT_QUERY_EXPORT __declspec(dllexport)
-#elif persistent_query_EXPORTS
-  #define PERSISTENT_QUERY_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-  #define PERSISTENT_QUERY_EXPORT __declspec(dllimport)
-#else
-  #define PERSISTENT_QUERY_EXPORT
-#endif
-
 #endif
 

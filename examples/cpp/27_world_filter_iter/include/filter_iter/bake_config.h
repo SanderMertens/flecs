@@ -20,21 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef filter_iter_EXPORT
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#if filter_iter_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define FILTER_ITER_EXPORT __declspec(dllexport)
-#elif filter_iter_EXPORTS
-  #define FILTER_ITER_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-  #define FILTER_ITER_EXPORT __declspec(dllimport)
-#else
-  #define FILTER_ITER_EXPORT
-#endif
-
 #endif
 

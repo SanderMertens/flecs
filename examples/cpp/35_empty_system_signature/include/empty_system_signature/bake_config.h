@@ -20,21 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef empty_system_signature_EXPORT
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#if empty_system_signature_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define EMPTY_SYSTEM_SIGNATURE_EXPORT __declspec(dllexport)
-#elif empty_system_signature_EXPORTS
-  #define EMPTY_SYSTEM_SIGNATURE_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-  #define EMPTY_SYSTEM_SIGNATURE_EXPORT __declspec(dllimport)
-#else
-  #define EMPTY_SYSTEM_SIGNATURE_EXPORT
-#endif
-
 #endif
 

@@ -20,21 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef add_type_EXPORT
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#if add_type_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define ADD_TYPE_EXPORT __declspec(dllexport)
-#elif add_type_EXPORTS
-  #define ADD_TYPE_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-  #define ADD_TYPE_EXPORT __declspec(dllimport)
-#else
-  #define ADD_TYPE_EXPORT
-#endif
-
 #endif
 

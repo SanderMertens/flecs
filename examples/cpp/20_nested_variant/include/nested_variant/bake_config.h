@@ -20,21 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef nested_variant_EXPORT
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#if nested_variant_EXPORTS && (defined(_MSC_VER) || defined(__MINGW32__))
-  #define NESTED_VARIANT_EXPORT __declspec(dllexport)
-#elif nested_variant_EXPORTS
-  #define NESTED_VARIANT_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-  #define NESTED_VARIANT_EXPORT __declspec(dllimport)
-#else
-  #define NESTED_VARIANT_EXPORT
-#endif
-
 #endif
 
