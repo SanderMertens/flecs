@@ -434,6 +434,19 @@
                 "system_readeactivate_w_2_systems"
             ]
         }, {
+            "id": "Sorting",
+            "testcases": [
+                "sort_by_component",
+                "sort_by_component_2_tables",
+                "sort_by_component_3_tables",
+                "sort_by_entity",
+                "sort_after_add",
+                "sort_after_remove",
+                "sort_after_delete",
+                "sort_after_set",
+                "sort_after_system"
+            ]
+        }, {
             "id": "TriggerOnAdd",
             "testcases": [
                 "new_match_1_of_1",

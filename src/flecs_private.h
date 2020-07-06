@@ -272,6 +272,13 @@ ecs_table_t *ecs_table_traverse_remove(
     ecs_entities_t *to_remove,
     ecs_entities_t *removed);    
 
+void ecs_table_mark_dirty_w_index(
+    ecs_table_t *table,
+    int32_t index);
+
+void ecs_table_mark_dirty(
+    ecs_table_t *table,
+    ecs_entity_t component);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API

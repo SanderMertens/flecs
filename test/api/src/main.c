@@ -390,6 +390,17 @@ void SystemMisc_change_system_action(void);
 void SystemMisc_system_readeactivate(void);
 void SystemMisc_system_readeactivate_w_2_systems(void);
 
+// Testsuite 'Sorting'
+void Sorting_sort_by_component(void);
+void Sorting_sort_by_component_2_tables(void);
+void Sorting_sort_by_component_3_tables(void);
+void Sorting_sort_by_entity(void);
+void Sorting_sort_after_add(void);
+void Sorting_sort_after_remove(void);
+void Sorting_sort_after_delete(void);
+void Sorting_sort_after_set(void);
+void Sorting_sort_after_system(void);
+
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
 void TriggerOnAdd_new_match_1_of_2(void);
@@ -2499,6 +2510,48 @@ static bake_test_suite suites[] = {
             {
                 .id = "system_readeactivate_w_2_systems",
                 .function = SystemMisc_system_readeactivate_w_2_systems
+            }
+        }
+    },
+    {
+        .id = "Sorting",
+        .testcase_count = 9,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "sort_by_component",
+                .function = Sorting_sort_by_component
+            },
+            {
+                .id = "sort_by_component_2_tables",
+                .function = Sorting_sort_by_component_2_tables
+            },
+            {
+                .id = "sort_by_component_3_tables",
+                .function = Sorting_sort_by_component_3_tables
+            },
+            {
+                .id = "sort_by_entity",
+                .function = Sorting_sort_by_entity
+            },
+            {
+                .id = "sort_after_add",
+                .function = Sorting_sort_after_add
+            },
+            {
+                .id = "sort_after_remove",
+                .function = Sorting_sort_after_remove
+            },
+            {
+                .id = "sort_after_delete",
+                .function = Sorting_sort_after_delete
+            },
+            {
+                .id = "sort_after_set",
+                .function = Sorting_sort_after_set
+            },
+            {
+                .id = "sort_after_system",
+                .function = Sorting_sort_after_system
             }
         }
     },
@@ -4937,5 +4990,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 49);
+    return bake_test_run("api", argc, argv, suites, 50);
 }

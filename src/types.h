@@ -264,10 +264,8 @@ typedef struct ecs_on_demand_in_t {
  * ran, and 'time_passed' is decreased by 'period'. 
  */
 typedef struct EcsSystem {
-    ecs_iter_action_t action;    /* Callback to be invoked for matching it */
-    void *ctx;                     /* Userdata for system */
-    float time_spent;              /* Time spent on running system */
-    int32_t invoke_count;          /* Number of times system is invoked */
+    ecs_iter_action_t action;       /* Callback to be invoked for matching it */
+    void *ctx;                      /* Userdata for system */
 
     ecs_entity_t entity;                  /* Entity id of system, used for ordering */
     ecs_query_t *query;                   /* System query */
@@ -275,7 +273,11 @@ typedef struct EcsSystem {
     ecs_system_status_action_t status_action; /* Status action */
     void *status_ctx;                     /* User data for status action */    
     ecs_entity_t tick_source;             /* Tick source associated with system */
+    
+    int32_t invoke_count;                 /* Number of times system is invoked */
+    float time_spent;                     /* Time spent on running system */
     float time_passed;                    /* Time passed since last invocation */
+    bool has_out_columns;                 /* True if system has out columns */
 } EcsSystem;
 
 #define ECS_TYPE_DB_MAX_CHILD_NODES (256)

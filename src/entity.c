@@ -2002,6 +2002,8 @@ ecs_entity_t ecs_set_ptr_w_entity(
         memset(dst, 0, size);
     }
 
+    ecs_table_mark_dirty(info.table, component);
+
     ecs_run_set_systems(world, stage, &added, 
         info.table, info.data, info.row, 1, false);
 

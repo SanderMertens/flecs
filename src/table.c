@@ -538,12 +538,30 @@ void ecs_table_reset(
     }
 }
 
-static
 void mark_dirty(
     ecs_table_t *table,
     int32_t index)
 {
     if (table->dirty_state) {
+        table->dirty_state[index] ++;
+    }
+}
+
+void ecs_table_mark_dirty_w_index(
+    ecs_table_t *table,
+    int32_t index)
+{
+    mark_dirty(table, index);
+}
+
+void ecs_table_mark_dirty(
+    ecs_table_t *table,
+    ecs_entity_t component)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (table->dirty_state) {
+        int32_t index = ecs_type_index_of(table->type, component);
+        ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
         table->dirty_state[index] ++;
     }
 }

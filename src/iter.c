@@ -101,7 +101,6 @@ void* ecs_column_w_size(
     size_t size,
     int32_t column)
 {
-    // ecs_assert(!ecs_is_readonly(it, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
     return get_column(it, size, column, 0);
 }
 
