@@ -53,7 +53,7 @@ install_subdir('include/flecs', install_dir : get_option('includedir'))
 flecs_lib = library('flecs',
     flecs_src,
     install : true,
-    c_args : flecs_args,
+    c_args : [ '-Dflecs_EXPORTS', flecs_args ],
     dependencies : flecs_deps,
     include_directories : flecs_inc
 )
