@@ -33,6 +33,8 @@
 #else
   #define FLECS_EXPORT
 #endif
+#else
+  #define FLECS_EXPORT
 #endif
 
 #endif
