@@ -102,6 +102,19 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+## Modules
+The following modules are available in [flecs-hub](https://github.com/flecs-hub) and are compatible with v2:
+
+Module      | Description      
+------------|------------------
+[flecs.meta](https://github.com/flecs-hub/flecs-meta) | Reflection for Flecs components
+[flecs.json](https://github.com/flecs-hub/flecs-json) | JSON serializer for Flecs components
+[flecs.rest](https://github.com/flecs-hub/flecs-rest) | A REST interface for introspecting & editing entities
+[flecs.player](https://github.com/flecs-hub/flecs-player) | Play, stop and pause simulations
+[flecs.dash](https://github.com/flecs-hub/flecs-dash) | Web-frontend for remote monitoring and debugging of Flecs apps
+[flecs.components.http](https://github.com/flecs-hub/flecs-components-http) | Components describing an HTTP server
+[flecs.systems.civetweb](https://github.com/flecs-hub/flecs-systems-civetweb) | A civetweb-based implementation of flecs.components.http
+
 ## Building
 You can build flecs with either CMake, Meson, [Bake](https://github.com/SanderMertens/bake) or embed the sources into your own project.
 

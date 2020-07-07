@@ -149,6 +149,15 @@ typedef struct EcsComponent {
     size_t alignment;      /**< Component alignment */
 } EcsComponent;
 
+/* Trait information */
+typedef struct EcsTrait {
+    ecs_entity_t trait;      /**< Component id of trait type */
+    ecs_entity_t component;  /**< Component id to which trait is applied to */
+
+    size_t size;             /**< Component size */
+    size_t alignment;        /**< Component alignment */
+} EcsTrait;
+
 /** Component that stores an ecs_type_t. 
  * This component allows for the creation of entities that represent a type, and
  * therefore the creation of named types. This component is typically 
@@ -202,13 +211,16 @@ typedef struct EcsTrigger {
  * the entity that instantiates the type. */
 #define ECS_CHILDOF ((ecs_entity_t)1 << 62)
 
+/** The TRAIT role indicates that the entity is a trait identifier. */
+#define ECS_TRAIT ((ecs_entity_t)1 << 61)
+
 /** Enforce that all entities of a type are present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_AND ((ecs_entity_t)1 << 61)
+#define ECS_AND ((ecs_entity_t)1 << 60)
 
 /** Enforce that at least one entity of a type must be present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_OR ((ecs_entity_t)1 << 60)
+#define ECS_OR ((ecs_entity_t)1 << 59)
 
 /** Enforce that exactly one entity of a type must be present in the type.
  * This flag can only be used in combination with an entity that has EcsType. 
@@ -216,11 +228,11 @@ typedef struct EcsTrigger {
  * previous entity is removed from the entity. This makes XOR useful for
  * implementing state machines, as it allows for traversing states while 
  * ensuring that only one state is ever active at the same time. */
-#define ECS_XOR ((ecs_entity_t)1 << 59)
+#define ECS_XOR ((ecs_entity_t)1 << 58)
 
 /** None of the entities in a type may be added to the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_NOT ((ecs_entity_t)1 << 58)
+#define ECS_NOT ((ecs_entity_t)1 << 57)
 
 
 ////////////////////////////////////////////////////////////////////////////////
