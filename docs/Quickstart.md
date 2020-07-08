@@ -368,6 +368,71 @@ Because these entities are defined as prefabs, they will not be matched with sys
 ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | Destroyer);
 ```
 
+## Traits
+Traits are a special kind of component that is added to an entity,component tuple. Trait components can be useful for implementing functionality that is not specific to one component. A typical example is implementing a timer after which a component should be deleted. We can define the trait component type like this:
+
+```c
+typedef struct ExpiryTimer {
+    float expiry_time;
+    float t;
+} ExpiryTimer;
+```
+
+We then create a system that increases the value of t every frame until it matches or exceeds expiry_time, after which we will remove our component. Before looking at the system, let's first look at how we can add a trait to an entity:
+
+```c
+ecs_entity_t e = ecs_new(world, 0);
+
+// Add HealthBuff, set the ExpiryTimer trait for HealthBuff to 10 seconds
+ecs_add(world, e, HealthBuff);
+ecs_set_trait(world, e, HealthBuff, ExpiryTimer, {
+    .expiry_time = 10
+});
+
+// Add StaminaBuff, set the ExpiryTimer trait for StaminaBuff to 5 seconds
+ecs_set_trait(world, e, StaminaBuff, ExpiryTimer, {
+    .expiry_time = 5
+});
+```
+
+Now we need to write a system to increase the timer and execute the remove logic. The system definition looks almost like a regular system:
+
+```c
+ECS_SYSTEM(world, ExpireComponents, EcsOnUpdate, TRAIT | ExpiryTimer);
+```
+
+Note that the `ExpiryTimer` has the `TRAIT` role. This lets the system know it should match this component as a trait, not as a regular component. Now lets look at the implementation of this system:
+
+```c
+void ExpireComponents(ecs_iter_t *it) {
+    /* Get the trait component just like a normal component */
+    ExpiryTimer *et = ecs_column(it, ExpiryTimer, 1);
+
+    /* Get the trait handle */
+    ecs_entity_t trait = ecs_column_entity(it, 1);
+
+    /* Obtain the component handlem, which is the lower 32 bits
+     * of the trait handle, which can be obtained with the 
+     * ecs_entity_t_lo macro. */
+    ecs_entity_t comp = ecs_entity_t_lo(trait);
+
+    /* Iterate trait component as usual ... */
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        /* When timer hits expiry time, remove component */
+        et[i].t += it->delta_time;
+        if (et[i].t >= et[i].expiry_time) {
+            /* Remove component */
+            ecs_remove_entity(it->world, it->entities[i], comp);
+
+            /* Removes trait, so system won't be invoked again */
+            ecs_remove_entity(it->world, it->entities[i], trait);
+        }
+    }
+```
+
+Note that this system doesn't contain any code that is specific for the components to which the traits were added. This means this system can be applied to any component.
+
 ## Queries
 Queries are like systems in that they let applications iterate over entities, but without having to create a separate function. Systems use queries internally however, so their APIs are similar:
 

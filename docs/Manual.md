@@ -617,6 +617,8 @@ ecs_remove_entity(world, child, ECS_OR | Toppings);
 
 ## Instancing
 
+## Traits
+
 ## Pipelines
 
 ## Time management
@@ -636,5 +638,3 @@ ecs_remove_entity(world, child, ECS_OR | Toppings);
 ## Debug API
 
 ## OS Abstraction API
-
-

@@ -1131,7 +1131,15 @@ void* ecs_get_mut_w_entity(
 #define ecs_get_mut(world, entity, component, is_added)\
     ((component*)ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added))
 
-/** Add trait to component. */
+/** Get trait for component. 
+ * This operation obtains the value of a trait for a componetn that has been 
+ * added by ecs_set_trait.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param component The component to which the trait was added.
+ * @param trait The trait that was added.
+ */
 const void* ecs_get_trait_w_entity(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -1223,7 +1231,19 @@ ecs_entity_t ecs_set_ptr_w_entity(
     ecs_set_ptr_w_entity(world, entity, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
 #endif
 
-/** Add trait to component. */
+/** Set trait for component. 
+ * This operation adds a trait for an entity and component. Traits can be added
+ * multiple times to the same entity, as long as it is for different components.
+ *
+ * Traits can be matched with systems by providing the TRAIT role to the 
+ * trait component in the system signature. A system will match multiple times
+ * with the same entity if the trait is added for multiple components.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param component The component for which to add the trait.
+ * @param trait The trait to add.
+ */
 ecs_entity_t ecs_set_trait_w_entity(
     ecs_world_t *world,
     ecs_entity_t e,
