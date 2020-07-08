@@ -40,6 +40,14 @@ void Traits_type_w_one_trait() {
 
     ecs_progress(world, 0);
 
+    const Trait* tr = ecs_get_trait(world, e1, Position, Trait);
+    test_assert(tr != NULL);
+    test_int(tr->value, 11);
+
+    tr = ecs_get_trait(world, e2, Velocity, Trait);
+    test_assert(tr != NULL);
+    test_int(tr->value, 21); 
+
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, ProcessTraits);
@@ -98,6 +106,22 @@ void Traits_type_w_two_traits() {
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 0);
+
+    const Trait* tr = ecs_get_trait(world, e1, Position, Trait);
+    test_assert(tr != NULL);
+    test_int(tr->value, 11);
+
+    tr = ecs_get_trait(world, e1, Velocity, Trait);
+    test_assert(tr != NULL);
+    test_int(tr->value, 21);    
+
+    tr = ecs_get_trait(world, e2, Position, Trait);
+    test_assert(tr != NULL);
+    test_int(tr->value, 31);
+
+    tr = ecs_get_trait(world, e2, Velocity, Trait);
+    test_assert(tr != NULL);
+    test_int(tr->value, 41); 
 
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 2);

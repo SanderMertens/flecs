@@ -1860,6 +1860,16 @@ const void* ecs_get_w_entity(
     return ptr;
 }
 
+const void* ecs_get_trait_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t component,
+    ecs_entity_t trait)
+{
+    ecs_entity_t trait_comb = ECS_TRAIT | ecs_entity_t_comb(component, trait);
+    return ecs_get_w_entity(world, e, trait_comb);
+}
+
 const void* ecs_get_ref_w_entity(
     ecs_world_t *world,
     ecs_ref_t *ref,

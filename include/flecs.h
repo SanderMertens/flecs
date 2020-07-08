@@ -1131,6 +1131,16 @@ void* ecs_get_mut_w_entity(
 #define ecs_get_mut(world, entity, component, is_added)\
     ((component*)ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added))
 
+/** Add trait to component. */
+const void* ecs_get_trait_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t component,
+    ecs_entity_t trait);
+
+#define ecs_get_trait(world, entity, component, trait)\
+    ((trait*)ecs_get_trait_w_entity(world, entity, ecs_entity(component), ecs_entity(trait)))
+
 /** Signal that a component has been modified.
  * This operation allows an application to signal to Flecs that a component has
  * been modified. As a result, OnSet systems will be invoked.
