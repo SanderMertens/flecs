@@ -636,7 +636,7 @@ bool override_component(
     do {
         ecs_entity_t e = type_array[i];
 
-        if (e < ECS_TYPE_FLAG_START) {
+        if (e < ECS_TYPE_ROLE_START) {
             break;
         }
 
@@ -1453,7 +1453,7 @@ void *get_mutable(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert((component & ECS_ENTITY_MASK) == component, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((component & ECS_ENTITY_MASK) == component || component & ECS_TRAIT, ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
     if (stage == &world->stage) {
@@ -1991,8 +1991,8 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
     if (ptr) {
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
-        ecs_copy_t copy = cdata->lifecycle.copy;
-        if (copy) {
+        ecs_copy_t copy;
+        if (cdata && (copy = cdata->lifecycle.copy)) {
             copy(world, component, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
         } else {
@@ -2010,6 +2010,18 @@ ecs_entity_t ecs_set_ptr_w_entity(
     ecs_defer_end(world, stage);
 
     return entity;
+}
+
+ecs_entity_t ecs_set_trait_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t component,
+    ecs_entity_t trait,
+    size_t size,
+    const void *ptr)
+{
+    ecs_entity_t trait_id = ECS_TRAIT | ecs_entity_t_comb(component, trait);
+    return ecs_set_ptr_w_entity(world, e, trait_id, size, ptr);
 }
 
 bool ecs_has_entity(

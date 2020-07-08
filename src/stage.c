@@ -86,8 +86,8 @@ void merge_columns(
 
         ecs_entity_t component = components[c];
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
-        ecs_move_t move = cdata->lifecycle.move;
-        if (move) {
+        ecs_move_t move;
+        if (cdata && (move = cdata->lifecycle.move)) {
             void *ctx = cdata->lifecycle.ctx;
             move(world, component, dst_entities, src_entities, dst, src, 
                 size, src_entity_count, ctx);

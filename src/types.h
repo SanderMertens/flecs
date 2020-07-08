@@ -174,9 +174,10 @@ typedef struct ecs_table_range_t {
 #define EcsQueryMonitor (2)          /* Query needs to be registered as a monitor */
 #define EcsQueryOnSet (4)            /* Query needs to be registered as on_set system */
 #define EcsQueryUnSet (8)            /* Query needs to be registered as un_set system */
-#define EcsQueryMatchDisabled (16)    /* Does query match disabled */
+#define EcsQueryMatchDisabled (16)   /* Does query match disabled */
 #define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
 #define EcsQueryHasRefs (64)         /* Does query have references */
+#define EcsQueryHasTraits (128)      /* Does query have traits */
 
 #define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
@@ -202,7 +203,7 @@ struct ecs_query_t {
 
     /* Used for table sorting */
     ecs_entity_t rank_on_component;
-    ecs_rank_type_action_t rank_table;
+    ecs_rank_type_action_t group_table;
 
     /* The query kind determines how it is registered with tables */
     int8_t flags;

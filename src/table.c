@@ -24,8 +24,15 @@ ecs_data_t* init_data(
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
 
     for (i = 0; i < count; i ++) {
-        const EcsComponent *component = ecs_get(
-                world, entities[i], EcsComponent);
+        ecs_entity_t e = entities[i];
+
+        /* If this is a trait, get the trait component from the identifier */
+        if (e & ECS_TRAIT) {
+            e = e & ECS_ENTITY_MASK;
+            e = ecs_entity_t_hi(e);
+        }
+
+        const EcsComponent *component = ecs_get(world, e, EcsComponent);            
 
         /* Is the column a component? */
         if (component) {
@@ -1006,8 +1013,8 @@ void merge_table_data(
         size_t size = new_columns[i_new].size;
         size_t alignment = new_columns[i_new].alignment;
 
-        if ((new_component & ECS_TYPE_FLAG_MASK) || 
-            (old_component & ECS_TYPE_FLAG_MASK)) 
+        if ((new_component & ECS_TYPE_ROLE_MASK) || 
+            (old_component & ECS_TYPE_ROLE_MASK)) 
         {
             break;
         }
@@ -1262,8 +1269,8 @@ void ecs_table_move(
                     ecs_c_info_t *cdata = ecs_get_c_info(
                         world, new_component);
 
-                    ecs_copy_t copy = cdata->lifecycle.copy;
-                    if (copy) {
+                    ecs_copy_t copy;
+                    if (cdata && (copy = cdata->lifecycle.copy)) {
                         void *ctx = cdata->lifecycle.ctx;
                         copy(world, new_component, &dst_entity, &src_entity, dst, src, 
                             size, 1, ctx);

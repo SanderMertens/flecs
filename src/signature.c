@@ -21,6 +21,7 @@
 
 #define TOK_ROLE_CHILDOF "CHILDOF"
 #define TOK_ROLE_INSTANCEOF "INSTANCEOF"
+#define TOK_ROLE_TRAIT "TRAIT"
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
 #define TOK_ROLE_XOR "XOR"
@@ -122,6 +123,8 @@ char* parse_complex_elem(
             *flags = ECS_CHILDOF;
         } else if (!strncmp(bptr, TOK_ROLE_INSTANCEOF, or - bptr)) {
             *flags = ECS_INSTANCEOF;
+        } else if (!strncmp(bptr, TOK_ROLE_TRAIT, or - bptr)) {
+            *flags = ECS_TRAIT;            
         } else if (!strncmp(bptr, TOK_ROLE_AND, or - bptr)) {
             *flags = ECS_AND;
         } else if (!strncmp(bptr, TOK_ROLE_OR, or - bptr)) {

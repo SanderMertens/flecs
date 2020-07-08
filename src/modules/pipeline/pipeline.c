@@ -398,10 +398,10 @@ void EcsOnAddPipeline(
         ecs_entity_t pipeline = entities[i];
         ecs_sig_t sig = { 0 };
 
-#ifndef NDEBUG
         const EcsType *type_ptr = ecs_get(world, pipeline, EcsType);
         ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
+        
+#ifndef NDEBUG
         char *str = ecs_type_str(world, type_ptr->normalized);
         ecs_trace_1("pipeline #[green]%s#[normal] created with #[red][%s]",
             ecs_get_name(world, pipeline), str);
@@ -487,6 +487,14 @@ void stop_measure_frame(
     ecs_world_t *world,
     float delta_time)
 {
+    /* These values automatically calibrate the timer based on the accuracy of
+     * the OS sleep. Above the sleep_threshold Flecs will just do a single
+     * sleep with the required timeout to meet the FPS target. Below that a busy
+     * loop will be used with a timeout that is the required sleep time times
+     * the sleep_granularity. */
+    static float sleep_threshold = 0.1;
+    static float sleep_granularity = 0.1;
+
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
         double frame_time = ecs_time_measure(&t);
@@ -497,17 +505,57 @@ void stop_measure_frame(
         if (target_fps) {
             float sleep = (1.0 / target_fps) - delta_time + world->fps_sleep;
 
-            if (sleep > 0.01) {
-                 ecs_sleepf(sleep);
-            } else {
-                double sleep_time = sleep / 10;
+            /* Sleep value is above threshold. Sleep for the requested amount of
+             * time in a single sleep. */
+            if (sleep > sleep_threshold) {
+                ecs_sleepf(sleep);
+
+            /* If sleep value is smaller than threshold but above zero, use a
+             * busy loop with a smaller sleep value. */
+            } else if (sleep > 0 ) {
+                double sleep_time;
+
+                /* Use the sleep time times the sleep granularity value */
+                if (sleep_granularity) {
+                    sleep_time = sleep * sleep_granularity;
+                } else {
+                    sleep_time = 0;
+                }
                 
                 ecs_time_t t_sleep = t;
                 double time_passed = ecs_time_measure(&t_sleep);
-                while((time_passed - frame_time) < sleep){
+                while((time_passed - frame_time) < sleep) {
                     ecs_sleepf(sleep_time);
                     t_sleep = t;
                     time_passed = ecs_time_measure(&t_sleep);
+                }
+
+            /* If the sleep time was negative, it means that we slept too much
+             * in the previous frame, which is an indication of our sleep not
+             * being able to sleep for short durations. Automatically adjust
+             * based on the accuracy of the OS sleep. */
+            } else {
+                /* As long as the sleep threshold is lower than 1, keep
+                 * increasing the sleep threshold. This will cause more sleeping
+                 * to take place in the busy loop, which is more accurate. */
+                if (sleep_threshold < 1) {
+                    sleep_threshold *= 1.1;
+
+                /* If the sleep threshold is above 1, adjust the sleep 
+                 * granularity so that the sleep durations become smaller. This
+                 * may not help much as apparently the OS sleep is not very 
+                 * accurate, but it's worth trying out. */
+                } else if (sleep_granularity < 100) {
+                    sleep_granularity /= 1.1;
+
+                /* If the sleep accuracy is really poor, sleep 0 seconds which
+                 * regresses to a busy loop that can cause load of a CPU core to
+                 * spike to 100%, even if the actual load is not that high. This 
+                 * should probably be discoverable at the API level, as an 
+                 * application may at this point switch to an alternative method 
+                 * of FPS control like vsync. */
+                } else {
+                    sleep_granularity = 0;
                 }
             }
 

@@ -447,6 +447,12 @@
                 "sort_after_system"
             ]
         }, {
+            "id": "Traits",
+            "testcases": [
+                "type_w_one_trait",
+                "type_w_two_traits"
+            ]
+        }, {
             "id": "TriggerOnAdd",
             "testcases": [
                 "new_match_1_of_1",

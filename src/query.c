@@ -96,7 +96,7 @@ int32_t rank_by_depth(
             if (j != c_count) {
                 break;
             }
-        } else if (!(array[i] & ECS_TYPE_FLAG_MASK)) {
+        } else if (!(array[i] & ECS_TYPE_ROLE_MASK)) {
             /* No more parents after this */
             break;
         }
@@ -121,7 +121,7 @@ void order_ranked_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    if (query->rank_table) {
+    if (query->group_table) {
         ecs_vector_sort(query->tables, ecs_matched_table_t, table_compare);       
     }
 
@@ -139,13 +139,13 @@ void order_ranked_tables(
 }
 
 static
-void rank_table(
+void group_table(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_matched_table_t *table)
 {
-    if (query->rank_table) {
-        table->rank = query->rank_table(
+    if (query->group_table) {
+        table->rank = query->group_table(
             world, query->rank_on_component, table->table->type);
     } else {
         table->rank = 0;
@@ -155,17 +155,17 @@ void rank_table(
 /* Rank all tables of query. Only necessary if a new ranking function was
  * provided or if a monitored entity set the component used for ranking. */
 static
-void rank_tables(
+void group_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    if (query->rank_table) {
+    if (query->group_table) {
         ecs_vector_each(query->tables, ecs_matched_table_t, table, {
-            rank_table(world, query, table);
+            group_table(world, query, table);
         });
 
         ecs_vector_each(query->empty_tables, ecs_matched_table_t, table, {
-            rank_table(world, query, table);
+            group_table(world, query, table);
         });              
     }
 }
@@ -194,6 +194,262 @@ const char* query_name(
 
 #endif
 
+static
+void get_comp_and_src(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_type_t table_type,
+    ecs_sig_column_t *column,
+    ecs_sig_oper_kind_t op,
+    ecs_sig_from_kind_t from,
+    ecs_entity_t *component_out,
+    ecs_entity_t *entity_out)
+{
+    ecs_entity_t component = 0, entity = 0;
+
+    if (op == EcsOperNot) {
+        entity = column->source;
+    }
+
+    /* Column that retrieves data from self or a fixed entity */
+    if (from == EcsFromAny || from == EcsFromEntity || 
+        from == EcsFromOwned || from == EcsFromShared) 
+    {
+        if (op == EcsOperAnd || op == EcsOperNot) {
+            component = column->is.component;
+        } else if (op == EcsOperOptional) {
+            component = column->is.component;
+        } else if (op == EcsOperOr) {
+            component = ecs_type_contains(
+                world, table_type, column->is.type, 
+                false, true);
+        }
+
+        if (from == EcsFromEntity) {
+            entity = column->source;
+        }
+
+    /* Column that just passes a handle to the system (no data) */
+    } else if (from == EcsFromEmpty) {
+        component = column->is.component;
+
+    /* Column that retrieves data from a dynamic entity */
+    } else if (from == EcsFromParent || from == EcsCascade) {
+        if (op == EcsOperAnd ||
+            op == EcsOperOptional)
+        {
+            component = column->is.component;
+            entity = ecs_find_in_type(
+                world, table_type, component, ECS_CHILDOF);
+
+        } else if (op == EcsOperOr) {
+            component = components_contains(
+                world,
+                table_type,
+                column->is.type,
+                &entity,
+                false);
+        }
+
+    /* Column that retrieves data from a system */
+    } else if (from == EcsFromSystem) {
+        if (op == EcsOperAnd) {
+            component = column->is.component;
+        }
+
+        entity = query->system;
+    }
+
+    *component_out = component;
+    *entity_out = entity;
+}
+
+static
+int32_t get_component_index(
+    ecs_world_t *world,
+    ecs_type_t table_type,
+    ecs_entity_t component,
+    int32_t column_index,
+    ecs_sig_oper_kind_t op,
+    int32_t *trait_index_offsets)
+{
+    int32_t result = 0;
+
+    if (component) {
+        if (component & ECS_TRAIT) {
+            ecs_assert(trait_index_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            component &= ECS_ENTITY_MASK;
+
+            result = ecs_type_trait_index_of(table_type, 
+                trait_index_offsets[column_index], component);
+
+            if (result != -1) {
+                trait_index_offsets[column_index] = result + 1;
+            }
+        } else {
+            /* Retrieve offset for component */
+            result = ecs_type_index_of(table_type, component);         
+        }
+
+        /* If column is found, add one to the index, as column zero in
+        * a table is reserved for entity id's */
+        if (result != -1) {
+            result ++;
+
+            /* Check if component is a tag. If it is, set table_data to
+            * zero, so that a system won't try to access the data */
+            const EcsComponent *data = ecs_get(
+                world, component, EcsComponent);
+
+            if (!data || !data->size) {
+                result = 0;
+            }
+        }
+        
+        /* ecs_table_column_offset may return -1 if the component comes
+        * from a prefab. If so, the component will be resolved as a
+        * reference (see below) */           
+    }
+
+    if (op == EcsOperOptional) {
+        /* If table doesn't have the field, mark it as no data */
+        if (!ecs_type_has_entity(
+            world, table_type, component))
+        {
+            result = 0;
+        }
+    }
+
+    return result;
+}
+
+static
+void add_ref(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_type_t table_type,
+    int32_t column_index,
+    ecs_matched_table_t *table_data,
+    ecs_entity_t component,
+    ecs_entity_t entity,
+    ecs_sig_from_kind_t from)
+{
+    const EcsComponent *c_info = ecs_get(world, component, EcsComponent);
+    
+    ecs_entity_t e;
+    ecs_ref_t *ref = ecs_vector_add(
+            &table_data->references, ecs_ref_t);
+    
+    table_data->columns[column_index] = -ecs_vector_count(table_data->references);
+
+    /* Find the entity for the component */
+    if (from == EcsFromEntity || from == EcsFromEmpty) {
+        e = entity;
+    } else if (from == EcsCascade) {
+        e = entity;
+    } else if (from == EcsFromSystem) {
+        e = entity;
+    } else {
+        e = get_entity_for_component(
+            world, entity, table_type, component);
+    }
+
+    if (from != EcsCascade) {
+        ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+    }
+    
+    *ref = (ecs_ref_t){0};
+    ref->entity = e;
+    ref->component = component;
+
+    if (ecs_has(world, component, EcsComponent)) {
+        if (c_info->size && from != EcsFromEmpty) {
+            if (e) {
+                ecs_get_ref_w_entity(
+                    world, ref, e, component);
+                ecs_set_watch(world, &world->stage, e);                     
+            }
+
+            query->flags |= EcsQueryHasRefs;
+        }
+    }
+}
+
+static
+ecs_entity_t is_column_trait(
+    ecs_sig_column_t *column)
+{
+    ecs_sig_from_kind_t from_kind = column->from_kind;
+    ecs_sig_oper_kind_t oper_kind = column->oper_kind;
+
+    /* For now traits are only supported on owned columns */
+    if (from_kind == EcsFromOwned && oper_kind == EcsOperAnd) {
+        if (column->is.component & ECS_TRAIT) {
+            return column->is.component;
+        }
+    }
+
+    return 0;
+}
+
+static
+int32_t type_trait_count(
+    ecs_type_t type,
+    ecs_entity_t trait)
+{
+    int32_t i, count = ecs_vector_count(type);
+    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
+    int32_t result = 0;
+
+    trait &= ECS_ENTITY_MASK;
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = entities[i];
+        if (e & ECS_TRAIT) {
+            e &= ECS_ENTITY_MASK;
+            if (ecs_entity_t_hi(e) == trait) {
+                result ++;
+            }
+        }
+    }
+
+    return result;
+}
+
+/* For each trait that the query subscribes for, count the occurrences in the
+ * table. Cardinality of subscribed for traits must be the same as in the table
+ * or else the table won't match. */
+static
+int32_t count_traits(
+    ecs_query_t *query,
+    ecs_type_t type)
+{
+    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
+    int32_t i, count = ecs_vector_count(query->sig.columns);
+    int32_t first_count = 0, trait_count = 0;
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t trait = is_column_trait(&columns[i]);
+        if (trait) {
+            trait_count = type_trait_count(type, trait);
+            if (!first_count) {
+                first_count = trait_count;
+            } else {
+                if (first_count != trait_count) {
+                    /* The traits that this query subscribed for occur in the
+                     * table but don't have the same cardinality. Ignore the
+                     * table. This could typically happen for empty tables along
+                     * a path in the table graph. */
+                    return -1;
+                }
+            }
+        }
+    }
+
+    return first_count;
+}
+
 /** Add table to system, compute offsets for system components in table it */
 static
 void add_table(
@@ -209,6 +465,22 @@ void add_table(
         table_type = table->type;
     }
 
+    int32_t trait_cur = 0, trait_count = count_traits(query, table_type);
+    
+    /* If the query has traits, we need to account for the fact that a table may
+     * have multiple components to which the trait is applied, which means the
+     * table has to be registered with the query multiple times, with different
+     * table columns. If so, allocate a small array for each trait in which the
+     * last added table index of the trait is stored, so that in the next 
+     * iteration we can start the search from the correct offset type. */
+    int32_t *trait_index_offsets = NULL;
+    if (trait_count) {
+        trait_index_offsets = ecs_os_calloc(sizeof(int32_t) * column_count);
+    }
+
+    /* From here we recurse */
+add_trait:
+
     /* Initially always add table to inactive group. If the system is registered
      * with the table and the table is not empty, the table will send an
      * activate signal to the system. */
@@ -216,12 +488,12 @@ void add_table(
         table_type = table->type;
         table_data = ecs_vector_add(&query->empty_tables, ecs_matched_table_t);
 
-#ifndef NDEBUG
+        #ifndef NDEBUG
         char *type_expr = ecs_type_str(world, table->type);
         ecs_trace_2("query #[green]%s#[reset] matched with table #[green][%s]",
             query_name(world, query), type_expr);
         ecs_os_free(type_expr);
-#endif
+        #endif
     } else {
         /* If no table is provided to function, this is a system that contains
          * no columns that require table matching. In this case, the system will
@@ -237,7 +509,9 @@ void add_table(
     table_data->columns = NULL;
     table_data->components = NULL;
     table_data->monitor = NULL;
-    rank_table(world, query, table_data);
+
+    /* If grouping is enabled for query, assign the group rank to the table */
+    group_table(world, query, table_data);
 
     if (column_count) {
         /* Array that contains the system column to table column mapping */
@@ -251,7 +525,9 @@ void add_table(
     }
 
     /* Walk columns parsed from the system signature */
-    ecs_sig_column_t *columns = ecs_vector_first(query->sig.columns, ecs_sig_column_t);
+    ecs_sig_column_t *columns = ecs_vector_first(
+        query->sig.columns, ecs_sig_column_t);
+
     for (c = 0; c < column_count; c ++) {
         ecs_sig_column_t *column = &columns[c];
         ecs_entity_t entity = 0, component = 0;
@@ -260,93 +536,29 @@ void add_table(
 
         if (op == EcsOperNot) {
             from = EcsFromEmpty;
-            entity = column->source;
         }
 
-        /* Column that retrieves data from self or a fixed entity */
-        if (from == EcsFromAny || from == EcsFromEntity || 
-            from == EcsFromOwned || from == EcsFromShared) 
-        {
-            if (op == EcsOperAnd || op == EcsOperNot) {
-                component = column->is.component;
-            } else if (op == EcsOperOptional) {
-                component = column->is.component;
-            } else if (op == EcsOperOr) {
-                component = ecs_type_contains(
-                    world, table_type, column->is.type, 
-                    false, true);
-            }
+        table_data->columns[c] = 0;
 
-            if (from == EcsFromEntity) {
-                entity = column->source;
-            }
-
-        /* Column that just passes a handle to the system (no data) */
-        } else if (from == EcsFromEmpty) {
-            component = column->is.component;
-            table_data->columns[c] = 0;
-
-        /* Column that retrieves data from a dynamic entity */
-        } else if (from == EcsFromParent || from == EcsCascade) {
-            if (op == EcsOperAnd ||
-                op == EcsOperOptional)
-            {
-                component = column->is.component;
-                entity = ecs_find_in_type(
-                    world, table_type, component, ECS_CHILDOF);
-
-            } else if (op == EcsOperOr) {
-                component = components_contains(
-                    world,
-                    table_type,
-                    column->is.type,
-                    &entity,
-                    false);
-            }
-
-        /* Column that retrieves data from a system */
-        } else if (from == EcsFromSystem) {
-            if (op == EcsOperAnd) {
-                component = column->is.component;
-            }
-
-            entity = query->system;
-        }
+        /* Get actual component and component source for current column */
+        get_comp_and_src(world, query, table_type, column, op, from, &component, 
+            &entity);
 
         /* This column does not retrieve data from a static entity (either
          * EcsFromSystem or EcsFromParent) and is not just a handle */
         if (!entity && from != EcsFromEmpty) {
-            if (component) {
-                /* Retrieve offset for component */
-                table_data->columns[c] = ecs_type_index_of(table_type, component);
+            int32_t index = get_component_index(
+                world, table_type, component, c, op, trait_index_offsets);
+            
+            table_data->columns[c] = index;
 
-                /* If column is found, add one to the index, as column zero in
-                 * a table is reserved for entity id's */
-                if (table_data->columns[c] != -1) {
-                    table_data->columns[c] ++;
-
-                    /* Check if component is a tag. If it is, set table_data to
-                     * zero, so that a system won't try to access the data */
-                    const EcsComponent *data = ecs_get(
-                        world, component, EcsComponent);
-
-                    if (!data || !data->size) {
-                        table_data->columns[c] = 0;
-                    }
-                }
-                
-                /* ecs_table_column_offset may return -1 if the component comes
-                 * from a prefab. If so, the component will be resolved as a
-                 * reference (see below) */
-            }
-        }
-
-        if (op == EcsOperOptional) {
-            /* If table doesn't have the field, mark it as no data */
-            if (!ecs_type_has_entity(
-                world, table_type, component))
-            {
-                table_data->columns[c] = 0;
+            /* If component of current column is a trait, get the actual trait
+             * type for the table, so the system can see which component the
+             * trait was applied to */
+            if (index != -1 && component & ECS_TRAIT) {
+                ecs_assert(ecs_vector_count(table_type) > index - 1, 
+                    ECS_INTERNAL_ERROR, NULL);
+                component = *ecs_vector_get(table_type, ecs_entity_t, index - 1);
             }
         }
 
@@ -366,46 +578,8 @@ void add_table(
          * makes changing this administation easier when the change happens.
          */
         if ((entity || table_data->columns[c] == -1 || from == EcsCascade)) {
-            const EcsComponent *c_info = ecs_get(
-                    world, component, EcsComponent);
-            
-            ecs_entity_t e;
-            ecs_ref_t *ref = ecs_vector_add(
-                    &table_data->references, ecs_ref_t);
-            
-            table_data->columns[c] = -ecs_vector_count(table_data->references);
-
-            /* Find the entity for the component */
-            if (from == EcsFromEntity || from == EcsFromEmpty) {
-                e = entity;
-            } else if (from == EcsCascade) {
-                e = entity;
-            } else if (from == EcsFromSystem) {
-                e = entity;
-            } else {
-                e = get_entity_for_component(
-                    world, entity, table_type, component);
-            }
-
-            if (from != EcsCascade) {
-                ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
-            }
-            
-            *ref = (ecs_ref_t){0};
-            ref->entity = e;
-            ref->component = component;
-                
-            if (ecs_has(world, component, EcsComponent)) {
-                if (c_info->size && from != EcsFromEmpty) {
-                    if (e) {
-                        ecs_get_ref_w_entity(
-                            world, ref, e, component);
-                        ecs_set_watch(world, &world->stage, e);                     
-                    }
-
-                    query->flags |= EcsQueryHasRefs;
-                }
-            }
+            add_ref(world, query, table_type, c, table_data, component, entity, 
+                from);
         }
 
         table_data->components[c] = component;
@@ -422,6 +596,16 @@ void add_table(
         }
         
         ecs_table_register_query(world, table, query, matched_table_index);
+    }
+
+    /* Use tail recursion when adding table for multiple traits */
+    trait_cur ++;
+    if (trait_cur < trait_count) {
+        goto add_trait;
+    }
+
+    if (trait_index_offsets) {
+        ecs_os_free(trait_index_offsets);
     }
 }
 
@@ -496,6 +680,11 @@ bool ecs_query_match(
         world, table_type, EcsPrefab, true))
     {
         failure_info->reason = EcsMatchEntityIsPrefab;
+        return false;
+    }
+
+    /* Check if trait cardinality matches traits in query, if any */
+    if (count_traits(query, table->type) == -1) {
         return false;
     }
 
@@ -995,6 +1184,22 @@ bool has_refs(
 }
 
 static
+bool has_traits(
+    ecs_sig_t *sig)
+{
+    int32_t i, count = ecs_vector_count(sig->columns);
+    ecs_sig_column_t *columns = ecs_vector_first(sig->columns, ecs_sig_column_t);
+
+    for (i = 0; i < count; i ++) {
+        if (is_column_trait(&columns[i])) {
+            return true;
+        }
+    }
+
+    return false;    
+}
+
+static
 void register_monitors(
     ecs_world_t *world,
     ecs_query_t *query)
@@ -1112,6 +1317,7 @@ void process_signature(
     }
 
     query->flags |= has_refs(&query->sig) * EcsQueryHasRefs;
+    query->flags |= has_traits(&query->sig) * EcsQueryHasTraits;
 
     register_monitors(world, query);
 }
@@ -1237,7 +1443,7 @@ void ecs_query_rematch(
         }
     }
 
-    rank_tables(world, query);
+    group_tables(world, query);
 
     order_ranked_tables(world, query);
 
@@ -1299,7 +1505,7 @@ ecs_query_t* ecs_query_new_w_sig(
     }
 
     if (result->cascade_by) {
-        result->rank_table = rank_by_depth;
+        result->group_table = rank_by_depth;
     }
 
     ecs_log_pop();
@@ -1593,14 +1799,14 @@ void ecs_query_group_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t sort_component,
-    ecs_rank_type_action_t rank_table_action)
+    ecs_rank_type_action_t group_table_action)
 {
     ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
     query->rank_on_component = sort_component;
-    query->rank_table = rank_table_action;
+    query->group_table = group_table_action;
 
-    rank_tables(world, query);
+    group_tables(world, query);
 
     order_ranked_tables(world, query);
 

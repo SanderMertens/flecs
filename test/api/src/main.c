@@ -401,6 +401,10 @@ void Sorting_sort_after_delete(void);
 void Sorting_sort_after_set(void);
 void Sorting_sort_after_system(void);
 
+// Testsuite 'Traits'
+void Traits_type_w_one_trait(void);
+void Traits_type_w_two_traits(void);
+
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
 void TriggerOnAdd_new_match_1_of_2(void);
@@ -2552,6 +2556,20 @@ static bake_test_suite suites[] = {
             {
                 .id = "sort_after_system",
                 .function = Sorting_sort_after_system
+            }
+        }
+    },
+    {
+        .id = "Traits",
+        .testcase_count = 2,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "type_w_one_trait",
+                .function = Traits_type_w_one_trait
+            },
+            {
+                .id = "type_w_two_traits",
+                .function = Traits_type_w_two_traits
             }
         }
     },
@@ -4990,5 +5008,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 50);
+    return bake_test_run("api", argc, argv, suites, 51);
 }

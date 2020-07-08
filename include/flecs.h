@@ -821,7 +821,6 @@ void ecs_bulk_add_type(
 #define ecs_bulk_add(world, type, filter)\
     ecs_bulk_add_type(world, ecs_type(type), filter)
 
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Removing components
 ////////////////////////////////////////////////////////////////////////////////
@@ -1213,6 +1212,18 @@ ecs_entity_t ecs_set_ptr_w_entity(
 #define ecs_set(world, entity, component, ...)\
     ecs_set_ptr_w_entity(world, entity, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
 #endif
+
+/** Add trait to component. */
+ecs_entity_t ecs_set_trait_w_entity(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t component,
+    ecs_entity_t trait,
+    size_t size,
+    const void *ptr);
+
+#define ecs_set_trait(world, entity, component, trait, ...)\
+    ecs_set_trait_w_entity(world, entity, ecs_entity(component), ecs_entity(trait), sizeof(trait), &(trait)__VA_ARGS__)
 
 
 ////////////////////////////////////////////////////////////////////////////////
