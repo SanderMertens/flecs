@@ -25,6 +25,12 @@ int32_t data_column_count(
     ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
         ecs_entity_t component = *c_ptr;
 
+        /* If this is a trait, get the trait component from the identifier */
+        if (component & ECS_TRAIT) {
+            ecs_entity_t e = component & ECS_ENTITY_MASK;
+            component = ecs_entity_t_hi(e);
+        }
+
         /* Typically all components will be clustered together at the start of
          * the type as components are created from a separate id pool, and type
          * vectors are sorted. 
@@ -184,6 +190,7 @@ void init_table(
     table->on_set_all = NULL;
     table->on_set_override = NULL;
     table->un_set_all = NULL;
+    table->alloc_count = 0;
     
     init_edges(world, stage, table);
 
@@ -687,7 +694,7 @@ int32_t count_occurrences(
     int i;
     for (i = 0; i < constraint_index; i ++) {
         ecs_entity_t e = entities->array[i];
-        if (e & ECS_TYPE_FLAG_MASK) {
+        if (e & ECS_TYPE_ROLE_MASK) {
             break;
         }
 
@@ -707,7 +714,7 @@ void verify_constraints(
     int i, count = entities->count;
     for (i = count - 1; i >= 0; i --) {
         ecs_entity_t e = entities->array[i];
-        ecs_entity_t mask = e & ECS_TYPE_FLAG_MASK;
+        ecs_entity_t mask = e & ECS_TYPE_ROLE_MASK;
         if (!mask || !(mask & (ECS_OR | ECS_XOR | ECS_NOT))) {
             break;
         }

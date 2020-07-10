@@ -503,7 +503,7 @@ void SystemOnSet_bulk_new_1_from_base() {
     ECS_COMPONENT(world, Mass);
     ECS_ENTITY(world, Base, Position);
     ECS_TYPE(world, Type, INSTANCEOF | Base, Velocity, Mass);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position, Velocity, Mass);
+    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position, Velocity, Mass);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -555,7 +555,7 @@ void SystemOnSet_set_1_of_2_1_from_base() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position, Velocity);
+    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -592,7 +592,7 @@ void SystemOnSet_set_1_of_3_1_from_base() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position, Velocity, Mass);
+    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position, Velocity, Mass);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -650,7 +650,7 @@ void SystemOnSet_add_base() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position, Velocity);
+    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -679,7 +679,7 @@ void SystemOnSet_add_base_to_1_overridden() {
 
     ECS_COMPONENT(world, Position);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position);
+    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -699,7 +699,7 @@ void SystemOnSet_add_base_to_2_overridden() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position, Velocity);
+    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position, ANY:Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -720,7 +720,7 @@ void SystemOnSet_add_base_to_1_of_2_overridden() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position);
+    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -787,7 +787,7 @@ void SystemOnSet_no_set_after_remove_base() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position);
+    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -827,7 +827,7 @@ void SystemOnSet_un_set_after_remove_base() {
 
     ECS_COMPONENT(world, Position);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsUnSet, Position);
+    ECS_SYSTEM(world, OnPosition, EcsUnSet, ANY:Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);

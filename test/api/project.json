@@ -25,7 +25,12 @@
                 "type_w_tag",
                 "type_w_2_tags",
                 "type_w_tag_mixed",
-                "redefine_component"
+                "redefine_component",
+                "recycle_id_empty",
+                "recycle_id_w_entity",
+                "recycle_id_w_type",
+                "recycle_empty_staged_delete",
+                "recycle_staged_delete"
             ]
         }, {
             "id": "New_w_Count",
@@ -150,7 +155,8 @@
                 "scope_component",
                 "new_from_path_depth_0",
                 "new_from_path_depth_1",
-                "new_from_path_depth_2"
+                "new_from_path_depth_2",
+                "new_w_child_in_root"
             ]
         }, {
             "id": "Add_bulk",
@@ -369,7 +375,9 @@
                 "merge_after_staged_out",
                 "merge_after_not_out",
                 "no_merge_after_main_out",
-                "no_merge_after_staged_in_out"
+                "no_merge_after_staged_in_out",
+                "merge_after_staged_out_before_owned",
+                "switch_pipeline"
             ]
         }, {
             "id": "SystemMisc",
@@ -424,6 +432,27 @@
                 "change_system_action",
                 "system_readeactivate",
                 "system_readeactivate_w_2_systems"
+            ]
+        }, {
+            "id": "Sorting",
+            "testcases": [
+                "sort_by_component",
+                "sort_by_component_2_tables",
+                "sort_by_component_3_tables",
+                "sort_by_entity",
+                "sort_after_add",
+                "sort_after_remove",
+                "sort_after_delete",
+                "sort_after_set",
+                "sort_after_system"
+            ]
+        }, {
+            "id": "Traits",
+            "testcases": [
+                "type_w_one_trait",
+                "type_w_two_traits",
+                "add_trait",
+                "remove_trait"
             ]
         }, {
             "id": "TriggerOnAdd",
@@ -561,8 +590,10 @@
                 "is_shared_on_column_not_set",
                 "owned_column",
                 "owned_not_column",
+                "owned_or_column",
                 "shared_column",
                 "shared_not_column",
+                "shared_or_column",
                 "container_dont_match_inheritance",
                 "cascade_dont_match_inheritance",
                 "not_from_singleton",
@@ -1013,7 +1044,16 @@
                 "snapshot_activate_table_w_filter",
                 "snapshot_copy",
                 "snapshot_copy_filtered",
-                "snapshot_copy_w_filter"
+                "snapshot_copy_w_filter",
+                "snapshot_get_ref_after_restore",
+                "new_after_snapshot",
+                "new_empty_after_snapshot",
+                "add_after_snapshot",
+                "delete_after_snapshot",
+                "set_after_snapshot",
+                "restore_recycled",
+                "snapshot_w_new_in_onset",
+                "snapshot_w_new_in_onset_in_snapshot_table"
             ]
         }, {
             "id": "ReaderWriter",
@@ -1055,7 +1095,19 @@
             "testcases": [
                 "simple_module",
                 "import_module_from_system",
-                "import_again"
+                "import_again",
+                "scoped_component",
+                "scoped_tag",
+                "scoped_system",
+                "scoped_entity",
+                "name_prefix_component",
+                "name_prefix_tag",
+                "name_prefix_system",
+                "name_prefix_entity",
+                "name_prefix_type",
+                "name_prefix_prefab",
+                "name_prefix_pipeline",
+                "name_prefix_trigger"
             ]
         }, {
             "id": "Internals",

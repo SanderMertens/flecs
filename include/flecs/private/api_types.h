@@ -30,9 +30,6 @@ typedef struct ecs_table_t ecs_table_t;
 /** A record stores data to map an entity id to a location in a table */
 typedef struct ecs_record_t ecs_record_t;
 
-/** A reference stores a components from a specific entity for a query */
-typedef struct ecs_reference_t ecs_reference_t;
-
 /** Table column */
 typedef struct ecs_column_t ecs_column_t;
 
@@ -46,9 +43,11 @@ typedef struct ecs_data_t ecs_data_t;
 
 /** Cached reference. */
 struct ecs_ref_t {
+    ecs_entity_t entity;    /**< Entity of the reference */
+    ecs_entity_t component; /**< Component of the reference */
     void *table;            /**< Last known table */
     int32_t row;            /**< Last known location in table */
-    int32_t size;           /**< Last known size of table (data reallocd?) */
+    int32_t alloc_count;    /**< Last known alloc count of table */
     ecs_stage_t *stage;     /**< Last known stage */
     ecs_record_t *record;   /**< Pointer to record, if in main stage */
     const void *ptr;        /**< Cached ptr */
@@ -107,7 +106,7 @@ struct ecs_iter_t {
     ecs_table_t *table;          /**< The current table. */
     void *table_columns;         /**< Table component data */
     ecs_query_t *query;          /**< Current query being evaluated */
-    ecs_reference_t *references; /**< References to entities (from query) */
+    ecs_ref_t *references;       /**< References to entities (from query) */
     ecs_entity_t *components;    /**< Components in current table */
     ecs_entity_t *entities;      /**< Entity identifiers */
 
@@ -144,6 +143,8 @@ typedef enum EcsMatchFailureReason {
     EcsMatchFromContainer,
     EcsMatchFromEntity,
     EcsMatchOrFromSelf,
+    EcsMatchOrFromOwned,
+    EcsMatchOrFromShared,
     EcsMatchOrFromContainer,
     EcsMatchNotFromSelf,
     EcsMatchNotFromOwned,

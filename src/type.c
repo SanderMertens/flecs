@@ -261,8 +261,14 @@ bool ecs_type_has_entity(
     ecs_type_t type,
     ecs_entity_t entity)
 {
+    ecs_entity_t trait = 0;
+
     if (!entity) {
         return true;
+    }
+
+    if (entity & ECS_TRAIT) {
+        trait = entity & ECS_ENTITY_MASK;
     }
 
     ecs_vector_each(type, ecs_entity_t, c_ptr, {
@@ -274,6 +280,12 @@ bool ecs_type_has_entity(
         if (e & ECS_INSTANCEOF && entity != EcsPrefab && entity != EcsDisabled){
             ecs_entity_t base = e & ECS_ENTITY_MASK;
             if (ecs_has_entity(world, base, entity)) {
+                return true;
+            }
+        } else 
+        if (trait && e & ECS_TRAIT) {
+            e &= ECS_ENTITY_MASK;
+            if (trait == ecs_entity_t_hi(e)) {
                 return true;
             }
         }
@@ -288,19 +300,38 @@ bool ecs_type_owns_entity(
     ecs_entity_t entity,
     bool owned)
 {
+    bool is_trait = false;
+
     if (!type) {
         return false;
+    }
+
+    if (entity & ECS_TRAIT) {
+        is_trait = true;
+        entity = entity & ECS_ENTITY_MASK;
     }
     
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     int i, count = ecs_vector_count(type);
 
     if (owned) {
-        ecs_entity_t e = array[0];
-        for (i = 0; i < count && entity != e && e < entity; i ++) {
-            e = array[i];
+        if (is_trait) {
+             for (i = 0; i < count; i ++) {
+                 ecs_entity_t e = array[i];
+                 if (e & ECS_TRAIT) {
+                     e &= ECS_ENTITY_MASK;
+                     if (ecs_entity_t_hi(e)) {
+                         return true;
+                     }
+                 }
+             }
+        } else {
+            ecs_entity_t e = array[0];
+            for (i = 0; i < count && entity != e && e < entity; i ++) {
+                e = array[i];
+            }
+            return e == entity;
         }
-        return e == entity;
     } else {
         for (i = count - 1; i >= 0; i --) {
             ecs_entity_t e = array[i];
@@ -354,6 +385,32 @@ ecs_type_t ecs_type_remove(
     return ecs_type_remove_intern(world, stage, type, e);
 }
 
+static
+void append_name(
+    ecs_world_t *world,
+    ecs_vector_t **chbuf,
+    ecs_entity_t h)
+{
+    const char *str = NULL;
+    char *dst;
+
+    if (h == 1) {
+        /* Prevent issues during bootstrap */
+        str = "EcsComponent";
+    } else {
+        str = ecs_get_fullpath(world, h);
+    }
+
+    ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t len = strlen(str);
+    dst = ecs_vector_addn(chbuf, char, len);
+    memcpy(dst, str, len);
+    if (h != 1) {
+        ecs_os_free((char*)str);
+    }
+}
+
 char* ecs_type_str(
     ecs_world_t *world,
     ecs_type_t type)
@@ -370,7 +427,8 @@ char* ecs_type_str(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t h;
-        ecs_entity_t flags = split_entity_id(handles[i], &h) & ECS_TYPE_FLAG_MASK;
+        ecs_entity_t trait = 0;
+        ecs_entity_t flags = split_entity_id(handles[i], &h) & ECS_TYPE_ROLE_MASK;
 
         if (i) {
             *(char*)ecs_vector_add(&chbuf, char) = ',';
@@ -386,6 +444,14 @@ char* ecs_type_str(
             int len = sizeof("CHILDOF|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             memcpy(dst, "CHILDOF|", len);
+        }
+
+        if (flags & ECS_TRAIT) {
+            int len = sizeof("TRAIT|") - 1;
+            dst = ecs_vector_addn(&chbuf, char, len);
+            memcpy(dst, "TRAIT|", len);
+            trait = ecs_entity_t_hi(h);
+            h = ecs_entity_t_lo(h);
         }
 
         if (flags & ECS_XOR) {
@@ -404,7 +470,7 @@ char* ecs_type_str(
             int len = sizeof("AND|") - 1;
             dst = ecs_vector_addn(&chbuf, char, len);
             memcpy(dst, "AND|", len);
-        }        
+        }
 
         if (flags & ECS_NOT) {
             int len = sizeof("NOT|") - 1;
@@ -412,21 +478,12 @@ char* ecs_type_str(
             memcpy(dst, "NOT|", len);
         }
 
-        const char *str = NULL;
-        if (h == 1) {
-            /* Prevent issues during bootstrap */
-            str = "EcsComponent";
-        } else {
-            str = ecs_get_fullpath(world, h);
-        }
+        append_name(world, &chbuf, h);
 
-        ecs_assert(str != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        int32_t len = strlen(str);
-        dst = ecs_vector_addn(&chbuf, char, len);
-        memcpy(dst, str, len);
-        if (h != 1) {
-            ecs_os_free((char*)str);
+        if (trait) {
+            char *ch = ecs_vector_add(&chbuf, char);
+            *ch = '<';
+            append_name(world, &chbuf, trait);
         }
     }
 
@@ -461,4 +518,25 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     }
 
     return 0;
+}
+
+int32_t ecs_type_trait_index_of(
+    ecs_type_t type, 
+    int32_t start_index, 
+    ecs_entity_t trait)
+{
+    int32_t i, count = ecs_vector_count(type);
+    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
+
+    for (i = start_index; i < count; i ++) {
+        ecs_entity_t e = array[i];
+        if (e & ECS_TRAIT) {
+            e &= ECS_ENTITY_MASK;
+            if (trait == ecs_entity_t_hi(e)) {
+                return i;
+            }
+        }
+    }
+
+    return -1;
 }

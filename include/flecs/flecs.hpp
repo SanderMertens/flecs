@@ -199,9 +199,9 @@ private:
 class iter final {
     using row_iterator = range_iterator<int>;
 public:    
-    iter(const ecs_iter_t *iter) : m_iter(iter) { 
+    iter(const ecs_iter_t *it) : m_iter(it) { 
         m_begin = 0;
-        m_end = iter->count;
+        m_end = it->count;
     }
 
     row_iterator begin() const {
@@ -233,8 +233,8 @@ public:
     }
 
     /* Is column shared */
-    bool is_shared(int32_t column) const {
-        return !ecs_is_owned(m_iter, column);
+    bool is_shared(int32_t col) const {
+        return !ecs_is_owned(m_iter, col);
     }
     
     /* Access param field */
@@ -243,21 +243,21 @@ public:
     }
 
     /* Is column readonly */
-    bool is_readonly(int32_t column) const {
-        return ecs_is_readonly(m_iter, column);
+    bool is_readonly(int32_t col) const {
+        return ecs_is_readonly(m_iter, col);
     }
 
     /* Obtain entity being iterated over for row */
     flecs::entity entity(int32_t row) const;
 
     /* Obtain column source (0 if self) */
-    flecs::entity column_source(int32_t column) const;
+    flecs::entity column_source(int32_t col) const;
 
     /* Obtain component/tag entity of column */
-    flecs::entity column_entity(int32_t column) const;
+    flecs::entity column_entity(int32_t col) const;
 
     /* Obtain type of column */
-    type column_type(int32_t column) const;
+    type column_type(int32_t col) const;
 
     /* Obtain type of table being iterated over */
     type table_type() const;
@@ -271,62 +271,62 @@ public:
     }
 
     /* Obtain untyped pointer to table column */
-    void* table_column(int32_t table_column) const {
-        return ecs_table_column(m_iter, table_column);
+    void* table_column(int32_t col) const {
+        return ecs_table_column(m_iter, col);
     }
 
     /* Obtain typed pointer to table column */
     template <typename T>
     flecs::column<T> table_column() const {
         auto type = ecs_iter_type(m_iter);
-        auto column = ecs_type_index_of(type, component_base<T>::s_entity);
-        ecs_assert(column != -1, ECS_INVALID_PARAMETER, NULL);
-        return flecs::column<T>(static_cast<T*>(ecs_table_column(m_iter, column)), m_iter->count, false);
+        auto col = ecs_type_index_of(type, component_base<T>::s_entity);
+        ecs_assert(col != -1, ECS_INVALID_PARAMETER, NULL);
+        return flecs::column<T>(static_cast<T*>(ecs_table_column(m_iter, col)), m_iter->count, false);
     }
 
     /* Obtain column with a const type */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
-    flecs::column<T> column(unsigned int column) const {
-        return get_column<T>(column);
+    flecs::column<T> column(unsigned int col) const {
+        return get_column<T>(col);
     }
 
     /* Obtain column with non-const type. Ensure that column is not readonly */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value == false, void>::type* = nullptr>
-    flecs::column<T> column(int32_t column) const {
-        ecs_assert(!ecs_is_readonly(m_iter, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
-        return get_column<T>(column);
+    flecs::column<T> column(int32_t col) const {
+        ecs_assert(!ecs_is_readonly(m_iter, col), ECS_COLUMN_ACCESS_VIOLATION, NULL);
+        return get_column<T>(col);
     }
 
     /* Get owned */
     template <typename T>
-    flecs::column<T> owned(int32_t column) const {
-        ecs_assert(!!ecs_is_owned(m_iter, column), ECS_COLUMN_IS_SHARED, NULL);
-        return this->column<T>(column);
+    flecs::column<T> owned(int32_t col) const {
+        ecs_assert(!!ecs_is_owned(m_iter, col), ECS_COLUMN_IS_SHARED, NULL);
+        return this->column<T>(col);
     }
 
     /* Get shared */
     template <typename T>
-    const T& shared(int32_t column) const {
-        ecs_assert(ecs_column_entity(m_iter, column) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
-        ecs_assert(!ecs_is_owned(m_iter, column), ECS_COLUMN_IS_NOT_SHARED, NULL);
-        return *static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), column));
+    const T& shared(int32_t col) const {
+        ecs_assert(ecs_column_entity(m_iter, col) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
+        ecs_assert(!ecs_is_owned(m_iter, col), ECS_COLUMN_IS_NOT_SHARED, NULL);
+        return *static_cast<T*>(ecs_column_w_size(m_iter, sizeof(T), col));
     }
 
     /* Get single field of a const type */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>    
-    T& field(int32_t column, int32_t row) const {
-        return get_field<T>(column, row);
+    T& field(int32_t col, int32_t row) const {
+        return get_field<T>(col, row);
     }
 
     /* Get single field of a non-const type. Ensure that column is not readonly */
     template <typename T,
         typename std::enable_if<std::is_const<T>::value == false, void>::type* = nullptr>
-    T& field(int32_t column, int32_t row) const {
-        ecs_assert(!ecs_is_readonly(m_iter, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
-        return get_field<T>(column, row);
+    T& field(int32_t col, int32_t row) const {
+        ecs_assert(!ecs_is_readonly(m_iter, col), ECS_COLUMN_ACCESS_VIOLATION, NULL);
+        return get_field<T>(col, row);
     }
 
 private:
@@ -353,9 +353,9 @@ private:
 
     /* Get single field, check if correct type is used */
     template <typename T>
-    T& get_field(int32_t column, int32_t row) const {
-        ecs_assert(ecs_column_entity(m_iter, column) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
-        return *static_cast<T*>(ecs_element_w_size(m_iter, sizeof(T), column, row));
+    T& get_field(int32_t col, int32_t row) const {
+        ecs_assert(ecs_column_entity(m_iter, col) == component_base<T>::s_entity, ECS_COLUMN_TYPE_MISMATCH, NULL);
+        return *static_cast<T*>(ecs_element_w_size(m_iter, sizeof(T), col, row));
     }       
 
     const ecs_iter_t *m_iter;
@@ -364,8 +364,8 @@ private:
 };
 
 template <typename T>
-inline column<T>::column(iter &iter, int column) {
-    *this = iter.column<T>(column);
+inline column<T>::column(iter &iter, int col) {
+    *this = iter.column<T>(col);
 }
 
 
@@ -383,8 +383,8 @@ public:
         : m_world( ecs_init_w_args(argc, argv) )
         , m_owned( true ) { init_builtin_components(); }
 
-    explicit world(world_t *world) 
-        : m_world( world ) 
+    explicit world(world_t *w) 
+        : m_world( w ) 
         , m_owned( false ) { }
 
     /* Not allowed to copy a world. May only take a reference */
@@ -876,8 +876,8 @@ public:
         return ecs_has_type(m_world, m_id, type);
     }
 
-    bool has(const entity& entity) const {
-        return has(entity.id());
+    bool has(const entity& e) const {
+        return has(e.id());
     }
 
     template <typename T>
@@ -893,8 +893,8 @@ public:
         return ecs_type_owns_type(m_world, ecs_get_type(m_world, m_id), type, true);
     }
 
-    bool owns(const entity& entity) const {
-        return owns(entity.id());
+    bool owns(const entity& e) const {
+        return owns(e.id());
     }
 
     template <typename T>
@@ -975,26 +975,26 @@ public:
         sync_from_flecs();
     }
 
-    type(const flecs::world& world, type_t type)
+    type(const flecs::world& world, type_t t)
         : entity( world )
-        , m_type( type )
-        , m_normalized( type ) { }
+        , m_type( t )
+        , m_normalized( t ) { }
 
-    type(world_t *world, type_t type)
+    type(world_t *world, type_t t)
         : entity( world )
-        , m_type( type )
-        , m_normalized( type ) { }
+        , m_type( t )
+        , m_normalized( t ) { }
 
-    type& add(const type& type) {
-        m_type = ecs_type_add(m_world, m_type, type.id());
-        m_normalized = ecs_type_merge(m_world, m_normalized, type.c_ptr(), nullptr);
+    type& add(const type& t) {
+        m_type = ecs_type_add(m_world, m_type, t.id());
+        m_normalized = ecs_type_merge(m_world, m_normalized, t.c_ptr(), nullptr);
         sync_from_me();
         return *this;
     }
 
-    type& add(const entity& entity) {
-        m_type = ecs_type_add(m_world, m_type, entity.id());
-        m_normalized = ecs_type_add(m_world, m_normalized, entity.id());
+    type& add(const entity& e) {
+        m_type = ecs_type_add(m_world, m_type, e.id());
+        m_normalized = ecs_type_add(m_world, m_normalized, e.id());
         sync_from_me();
         return *this;
     }
@@ -1007,16 +1007,16 @@ public:
         return *this;
     }
 
-    type& add_instanceof(const entity& entity) {
-        m_type = ecs_type_add(m_world, m_type, entity.id() | ECS_INSTANCEOF);
-        m_normalized = ecs_type_add(m_world, m_normalized, entity.id() | ECS_INSTANCEOF);
+    type& add_instanceof(const entity& e) {
+        m_type = ecs_type_add(m_world, m_type, e.id() | ECS_INSTANCEOF);
+        m_normalized = ecs_type_add(m_world, m_normalized, e.id() | ECS_INSTANCEOF);
         sync_from_me();
         return *this;
     }
 
-    type& add_childof(const entity& entity) {
-        m_type = ecs_type_add(m_world, m_type, entity.id() | ECS_CHILDOF);
-        m_normalized = ecs_type_add(m_world, m_normalized, entity.id() | ECS_CHILDOF);
+    type& add_childof(const entity& e) {
+        m_type = ecs_type_add(m_world, m_type, e.id() | ECS_CHILDOF);
+        m_normalized = ecs_type_add(m_world, m_normalized, e.id() | ECS_CHILDOF);
         sync_from_me();
         return *this;
     }
@@ -1370,6 +1370,8 @@ private:
             if (i) {
                 str << ",";
             }
+
+            str << "ANY:";
             str << id;
             i ++;
         }
@@ -1640,7 +1642,7 @@ public:
         ecs_assert(!m_finalized, ECS_INVALID_PARAMETER, NULL);
         auto ctx = new action_invoker<Func, Components...>(func);
 
-        std::string signature = build_signature();
+        std::string signature = build_signature(false);
 
         entity_t e = ecs_new_system(
             m_world, 
@@ -1668,7 +1670,7 @@ public:
     system& each(Func func) {
         auto ctx = new each_invoker<Func, Components...>(func);
 
-        std::string signature = build_signature();
+        std::string signature = build_signature(true);
 
         if (!signature.length()) {
             signature = "0";
@@ -1696,42 +1698,42 @@ public:
 
     ~system() = default;
 private:
-    std::string build_signature() {
-        bool set = false;
+    std::string build_signature(bool is_each) {
+        bool is_set = false;
 
         std::stringstream str;
-        if (pack_args_to_string(str)) {
-            set = true;
+        if (pack_args_to_string(str, is_each)) {
+            is_set = true;
         }
 
         if (m_signature) {
-            if (set) {
+            if (is_set) {
                 str << ",";
             }
             str << m_signature;
-            set = true;
+            is_set = true;
         }
 
         if (m_hidden) {
-            if (set) {
+            if (is_set) {
                 str << ",";
             }            
             str << "SYSTEM:Hidden";
-            set = true;
+            is_set = true;
         }    
 
         if (m_on_demand) {
-            if (set) {
+            if (is_set) {
                 str << ",";
             }            
             str << "SYSTEM:EcsOnDemand";
-            set = true;
+            is_set = true;
         } 
 
         return str.str();       
     }
 
-    bool pack_args_to_string(std::stringstream& str) {
+    bool pack_args_to_string(std::stringstream& str, bool is_each) {
         std::array<const char*, sizeof...(Components)> ids = {
             component_base<Components>::s_name...
         };
@@ -1746,6 +1748,9 @@ private:
                 str << ",";
             }
             str << inout_modifiers[i];
+            if (is_each) {
+                str << "ANY:";
+            }
             str << id;
             i ++;
         }  
@@ -2141,18 +2146,18 @@ inline flecs::entity iter::entity(int32_t row) const {
 }
 
 /* Obtain column source (0 if self) */
-inline flecs::entity iter::column_source(int32_t column) const {
-    return flecs::entity(m_iter->world, ecs_column_source(m_iter, column));
+inline flecs::entity iter::column_source(int32_t col) const {
+    return flecs::entity(m_iter->world, ecs_column_source(m_iter, col));
 }
 
 /* Obtain component/tag entity of column */
-inline flecs::entity iter::column_entity(int32_t column) const {
-    return flecs::entity(m_iter->world, ecs_column_entity(m_iter, column));
+inline flecs::entity iter::column_entity(int32_t col) const {
+    return flecs::entity(m_iter->world, ecs_column_entity(m_iter, col));
 }
 
 /* Obtain type of column */
-inline type iter::column_type(int32_t column) const {
-    return flecs::type(m_iter->world, ecs_column_type(m_iter, column));
+inline type iter::column_type(int32_t col) const {
+    return flecs::type(m_iter->world, ecs_column_type(m_iter, col));
 }
 
 /* Obtain type of table being iterated over */

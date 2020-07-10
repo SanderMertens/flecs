@@ -21,7 +21,7 @@ init:
     cd ..\flecs
 
 build_script:
-  - bake
+  - bake --trace
     
 test_script:
 - cmd: bake run test/collections

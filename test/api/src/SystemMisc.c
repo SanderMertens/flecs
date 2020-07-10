@@ -754,7 +754,7 @@ void SystemMisc_dont_enable_after_rematch() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position, Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, ANY:Position, ANY:Velocity);
 
     /* Create an entity that is watched. Whenever components are added/removed
      * to and/or from watched entities, a rematch is triggered. */

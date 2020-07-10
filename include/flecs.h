@@ -75,13 +75,15 @@ typedef struct ecs_world_info_t {
     ecs_entity_t min_id;              /**< First allowed entity id */
     ecs_entity_t max_id;              /**< Last allowed entity id */
 
+    float delta_time_raw;       /**< Raw delta time (no time scaling) */
     float delta_time;           /**< Time passed to or computed by ecs_progress */
     float time_scale;           /**< Time scale applied to delta_time */
     float target_fps;           /**< Target fps */
     double frame_time_total;    /**< Total time spent processing a frame */
     double system_time_total;   /**< Total time spent in systems */
     double merge_time_total;    /**< Total time spent in merges */
-    double world_time_total;    /**< Time elapsed since first frame */
+    double world_time_total;    /**< Time elapsed in simulation */
+    double world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
     
     int32_t frame_count_total;  /**< Total number of frames */
     int32_t merge_count_total;  /**< Total number of merges */
@@ -200,13 +202,16 @@ typedef struct EcsTrigger {
  * the entity that instantiates the type. */
 #define ECS_CHILDOF ((ecs_entity_t)1 << 62)
 
+/** The TRAIT role indicates that the entity is a trait identifier. */
+#define ECS_TRAIT ((ecs_entity_t)1 << 61)
+
 /** Enforce that all entities of a type are present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_AND ((ecs_entity_t)1 << 61)
+#define ECS_AND ((ecs_entity_t)1 << 60)
 
 /** Enforce that at least one entity of a type must be present in the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_OR ((ecs_entity_t)1 << 60)
+#define ECS_OR ((ecs_entity_t)1 << 59)
 
 /** Enforce that exactly one entity of a type must be present in the type.
  * This flag can only be used in combination with an entity that has EcsType. 
@@ -214,11 +219,11 @@ typedef struct EcsTrigger {
  * previous entity is removed from the entity. This makes XOR useful for
  * implementing state machines, as it allows for traversing states while 
  * ensuring that only one state is ever active at the same time. */
-#define ECS_XOR ((ecs_entity_t)1 << 59)
+#define ECS_XOR ((ecs_entity_t)1 << 58)
 
 /** None of the entities in a type may be added to the type.
  * This flag can only be used in combination with an entity that has EcsType. */
-#define ECS_NOT ((ecs_entity_t)1 << 58)
+#define ECS_NOT ((ecs_entity_t)1 << 57)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -427,6 +432,19 @@ void ecs_atfini(
     ecs_world_t *world,
     ecs_fini_action_t action,
     void *ctx);
+
+/** Register action to be executed once after frame.
+ * Post frame actions are typically used for calling operations that cannot be
+ * invoked during iteration, such as changing the number of threads.
+ * 
+ * @param world The world.
+ * @param action The function to execute.
+ * @param ctx Userdata to pass to the function */
+FLECS_EXPORT
+void ecs_run_post_frame(
+    ecs_world_t *world,
+    ecs_fini_action_t action,
+    void *ctx);    
 
 /** Register ctor, dtor, copy & move actions for component.
  *
@@ -794,7 +812,6 @@ void ecs_bulk_add_type(
 #define ecs_bulk_add(world, type, filter)\
     ecs_bulk_add_type(world, ecs_type(type), filter)
 
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Removing components
 ////////////////////////////////////////////////////////////////////////////////
@@ -954,6 +971,74 @@ void ecs_bulk_add_remove_type(
  */
 #define ecs_bulk_add_remove(world, to_add, to_remove, filter)\
     ecs_bulk_add_remove_type(world, ecs_type(to_add), ecs_type(to_remove), filter)
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Traits
+////////////////////////////////////////////////////////////////////////////////
+
+/** Add a trait
+ * This operation adds a trait from an entity.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The entity for which to remove the trait.
+ * @param trait The trait to remove.
+ */
+#define ecs_add_trait(world, entity, component, trait)\
+    ecs_add_entity(world, entity, ecs_trait(component, trait))
+
+/** Remove a trait
+ * This operation removes a trait from an entity.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The entity for which to remove the trait.
+ * @param trait The trait to remove.
+ */
+#define ecs_remove_trait(world, entity, component, trait)\
+    ecs_remove_entity(world, entity, ecs_trait(component, trait))
+
+/** Test if an entity has a trait.
+ * This operation returns true if the entity has the provided trait for the
+ * specified component in its type.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The entity.
+ * @param trait The entity.
+ * @return True if the entity has the trait, false if not.
+ */
+#define ecs_has_trait(world, entity, component, trait)\
+    ecs_has_entity(world, entity, ecs_trait(component, trait))
+
+/** Set trait for component. 
+ * This operation adds a trait for an entity and component. Traits can be added
+ * multiple times to the same entity, as long as it is for different components.
+ *
+ * Traits can be matched with systems by providing the TRAIT role to the 
+ * trait component in the system signature. A system will match multiple times
+ * with the same entity if the trait is added for multiple components.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param component The component for which to add the trait.
+ * @param trait The trait to add.
+ */
+#define ecs_set_trait(world, entity, component, trait, ...)\
+    ecs_set_ptr_w_entity(world, entity, ecs_trait(component, trait), sizeof(trait), &(trait)__VA_ARGS__)
+
+/** Get trait for component. 
+ * This operation obtains the value of a trait for a componetn that has been 
+ * added by ecs_set_trait.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param component The component to which the trait was added.
+ * @param trait The trait that was added.
+ */
+#define ecs_get_trait(world, entity, component, trait)\
+    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(component, trait)))
 
 
 ////////////////////////////////////////////////////////////////////////////////

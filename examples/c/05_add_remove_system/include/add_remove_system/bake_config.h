@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef ADD_REMOVE_SYSTEM_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef ADD_REMOVE_SYSTEM_STATIC
-  #if ADD_REMOVE_SYSTEM_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define ADD_REMOVE_SYSTEM_EXPORT __declspec(dllexport)
-  #elif ADD_REMOVE_SYSTEM_IMPL
-    #define ADD_REMOVE_SYSTEM_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define ADD_REMOVE_SYSTEM_EXPORT __declspec(dllimport)
-  #else
-    #define ADD_REMOVE_SYSTEM_EXPORT
-  #endif
-#else
-  #define ADD_REMOVE_SYSTEM_EXPORT
-#endif
-
 #endif
 

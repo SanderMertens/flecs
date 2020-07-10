@@ -95,7 +95,9 @@ ecs_entity_t new_entity_handle(
     ecs_entity_t entity;
 
     if (!world->in_progress) {
-        entity = ++ world->stats.last_id;
+        if (!(entity = ecs_eis_recycle(&world->stage))) {
+            entity = ++ world->stats.last_id;
+        }
     } else {
         int32_t thread_count = ecs_vector_count(world->workers);
         if (thread_count >= 1) { 
@@ -634,7 +636,7 @@ bool override_component(
     do {
         ecs_entity_t e = type_array[i];
 
-        if (e < ECS_TYPE_FLAG_START) {
+        if (e < ECS_TYPE_ROLE_START) {
             break;
         }
 
@@ -1451,7 +1453,7 @@ void *get_mutable(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert((component & ECS_ENTITY_MASK) == component, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((component & ECS_ENTITY_MASK) == component || component & ECS_TRAIT, ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
     if (stage == &world->stage) {
@@ -1592,6 +1594,8 @@ ecs_entity_t ecs_new_w_type(
     if (type || stage->scope) {
         ecs_entities_t to_add = ecs_type_to_entities(type);
         new(world, stage, entity, &to_add);
+    } else {
+        ecs_eis_set(&world->stage, entity, &(ecs_record_t){ 0 });
     }
 
     return entity;
@@ -1611,7 +1615,18 @@ ecs_entity_t ecs_new_w_entity(
             .count = 1
         };
 
+        ecs_entity_t old_scope = 0;
+        if (component & ECS_CHILDOF) {
+            old_scope = ecs_set_scope(world, 0);
+        }
+
         new(world, stage, entity, &to_add);
+
+        if (component & ECS_CHILDOF) {
+            ecs_set_scope(world, old_scope);
+        }
+    } else {
+        ecs_eis_set(&world->stage, entity, &(ecs_record_t){ 0 });
     }
 
     return entity;
@@ -1695,8 +1710,17 @@ void ecs_delete(
      * NULL. That way the merge will know to delete this entity vs. just to
      * remove its components */
     if (stage != &world->stage) {
+        if (!table) {
+            /* If entity was empty, add it to the root table so its id will be
+             * recycled when merging the stage */
+            table = &stage->root;
+            ecs_data_t *data = ecs_table_get_or_create_data(world, stage, table);
+            ecs_table_append(world, table, data, entity, NULL);
+        }
         ecs_eis_set(stage, entity, &(ecs_record_t){ NULL, 0 });
-    }   
+    } else {
+        ecs_eis_delete(stage, entity);
+    }
 }
 
 void ecs_add_type(
@@ -1843,8 +1867,14 @@ const void* ecs_get_ref_w_entity(
     ecs_entity_t component)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ref != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!entity || !ref->entity || entity == ref->entity, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!component || !ref->component || component == ref->component, ECS_INVALID_PARAMETER, NULL);
+
     ecs_stage_t *stage = ecs_get_stage(&world);
     ecs_record_t *record = ref->record;
+
+    entity |= ref->entity;
 
     if (stage != &world->stage) {
         ecs_record_t *staged = ecs_eis_get(stage, entity);
@@ -1864,21 +1894,24 @@ const void* ecs_get_ref_w_entity(
     }
 
     ecs_table_t *table = record->table;
-    ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
 
     if (ref->stage == stage &&
         ref->record == record &&
         ref->table == table &&
         ref->row == record->row &&
-        ref->size == ecs_vector_size(data->entities))
+        ref->alloc_count == table->alloc_count)
     {
         return ref->ptr;
     }
 
+    component |= ref->component;
+
+    ref->entity = entity;
+    ref->component = component;
     ref->stage = stage;
     ref->table = table;
     ref->row = record->row;
-    ref->size = ecs_vector_size(data->entities);
+    ref->alloc_count = table->alloc_count;
 
     ecs_entity_info_t info = {0};
     set_info_from_record(world, &info, record);
@@ -1958,8 +1991,8 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
     if (ptr) {
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
-        ecs_copy_t copy = cdata->lifecycle.copy;
-        if (copy) {
+        ecs_copy_t copy;
+        if (cdata && (copy = cdata->lifecycle.copy)) {
             copy(world, component, &entity, &entity, dst, ptr, size, 1, 
                 cdata->lifecycle.ctx);
         } else {
@@ -1968,6 +2001,8 @@ ecs_entity_t ecs_set_ptr_w_entity(
     } else {
         memset(dst, 0, size);
     }
+
+    ecs_table_mark_dirty(info.table, component);
 
     ecs_run_set_systems(world, stage, &added, 
         info.table, info.data, info.row, 1, false);

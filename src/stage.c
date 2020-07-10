@@ -43,12 +43,10 @@ void clear_columns(
                  * recycled. */
                 ecs_eis_clear_entity(&world->stage, e, is_watched);
             } else {
-                /* If the stage record did not have a table, delete the entity from
-                 * the main stage table */
                 ecs_eis_delete(&world->stage, e);
-            }            
+            }
         } else {
-            /* If there was no main stage record, nothing needs to be done */
+            ecs_eis_delete(&world->stage, e);
         }
     }
 }
@@ -88,8 +86,8 @@ void merge_columns(
 
         ecs_entity_t component = components[c];
         ecs_c_info_t *cdata = ecs_get_c_info(world, component);
-        ecs_move_t move = cdata->lifecycle.move;
-        if (move) {
+        ecs_move_t move;
+        if (cdata && (move = cdata->lifecycle.move)) {
             void *ctx = cdata->lifecycle.ctx;
             move(world, component, dst_entities, src_entities, dst, src, 
                 size, src_entity_count, ctx);
@@ -469,6 +467,7 @@ void ecs_stage_init(
     stage->scope = 0;
     stage->defer = 0;
     stage->defer_queue = NULL;
+    stage->post_frame_actions = NULL;
 
     stage->range_check_enabled = true;
 }

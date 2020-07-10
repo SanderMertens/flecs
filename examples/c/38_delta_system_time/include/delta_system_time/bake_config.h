@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef DELTA_SYSTEM_TIME_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef DELTA_SYSTEM_TIME_STATIC
-  #if DELTA_SYSTEM_TIME_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define DELTA_SYSTEM_TIME_EXPORT __declspec(dllexport)
-  #elif DELTA_SYSTEM_TIME_IMPL
-    #define DELTA_SYSTEM_TIME_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define DELTA_SYSTEM_TIME_EXPORT __declspec(dllimport)
-  #else
-    #define DELTA_SYSTEM_TIME_EXPORT
-  #endif
-#else
-  #define DELTA_SYSTEM_TIME_EXPORT
-#endif
-
 #endif
 

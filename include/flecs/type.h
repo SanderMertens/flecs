@@ -92,6 +92,12 @@ int16_t ecs_type_index_of(
     ecs_type_t type,
     ecs_entity_t component);
 
+FLECS_EXPORT
+int32_t ecs_type_trait_index_of(
+    ecs_type_t type, 
+    int32_t start_index, 
+    ecs_entity_t trait);
+
 #ifdef __cplusplus
 }
 #endif

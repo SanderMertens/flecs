@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef ON_DEMAND_SYSTEM_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef ON_DEMAND_SYSTEM_STATIC
-  #if ON_DEMAND_SYSTEM_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define ON_DEMAND_SYSTEM_EXPORT __declspec(dllexport)
-  #elif ON_DEMAND_SYSTEM_IMPL
-    #define ON_DEMAND_SYSTEM_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define ON_DEMAND_SYSTEM_EXPORT __declspec(dllimport)
-  #else
-    #define ON_DEMAND_SYSTEM_EXPORT
-  #endif
-#else
-  #define ON_DEMAND_SYSTEM_EXPORT
-#endif
-
 #endif
 

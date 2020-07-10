@@ -21,6 +21,11 @@ void New_type_w_tag(void);
 void New_type_w_2_tags(void);
 void New_type_w_tag_mixed(void);
 void New_redefine_component(void);
+void New_recycle_id_empty(void);
+void New_recycle_id_w_entity(void);
+void New_recycle_id_w_type(void);
+void New_recycle_empty_staged_delete(void);
+void New_recycle_staged_delete(void);
 
 // Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
@@ -138,6 +143,7 @@ void Hierarchies_scope_component(void);
 void Hierarchies_new_from_path_depth_0(void);
 void Hierarchies_new_from_path_depth_1(void);
 void Hierarchies_new_from_path_depth_2(void);
+void Hierarchies_new_w_child_in_root(void);
 
 // Testsuite 'Add_bulk'
 void Add_bulk_add_comp_from_comp_to_empty(void);
@@ -329,6 +335,8 @@ void Pipeline_merge_after_staged_out(void);
 void Pipeline_merge_after_not_out(void);
 void Pipeline_no_merge_after_main_out(void);
 void Pipeline_no_merge_after_staged_in_out(void);
+void Pipeline_merge_after_staged_out_before_owned(void);
+void Pipeline_switch_pipeline(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -381,6 +389,23 @@ void SystemMisc_add_own_component(void);
 void SystemMisc_change_system_action(void);
 void SystemMisc_system_readeactivate(void);
 void SystemMisc_system_readeactivate_w_2_systems(void);
+
+// Testsuite 'Sorting'
+void Sorting_sort_by_component(void);
+void Sorting_sort_by_component_2_tables(void);
+void Sorting_sort_by_component_3_tables(void);
+void Sorting_sort_by_entity(void);
+void Sorting_sort_after_add(void);
+void Sorting_sort_after_remove(void);
+void Sorting_sort_after_delete(void);
+void Sorting_sort_after_set(void);
+void Sorting_sort_after_system(void);
+
+// Testsuite 'Traits'
+void Traits_type_w_one_trait(void);
+void Traits_type_w_two_traits(void);
+void Traits_add_trait(void);
+void Traits_remove_trait(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -506,8 +531,10 @@ void SystemPeriodic_match_prefab_and_normal(void);
 void SystemPeriodic_is_shared_on_column_not_set(void);
 void SystemPeriodic_owned_column(void);
 void SystemPeriodic_owned_not_column(void);
+void SystemPeriodic_owned_or_column(void);
 void SystemPeriodic_shared_column(void);
 void SystemPeriodic_shared_not_column(void);
+void SystemPeriodic_shared_or_column(void);
 void SystemPeriodic_container_dont_match_inheritance(void);
 void SystemPeriodic_cascade_dont_match_inheritance(void);
 void SystemPeriodic_not_from_singleton(void);
@@ -923,6 +950,15 @@ void Snapshot_snapshot_activate_table_w_filter(void);
 void Snapshot_snapshot_copy(void);
 void Snapshot_snapshot_copy_filtered(void);
 void Snapshot_snapshot_copy_w_filter(void);
+void Snapshot_snapshot_get_ref_after_restore(void);
+void Snapshot_new_after_snapshot(void);
+void Snapshot_new_empty_after_snapshot(void);
+void Snapshot_add_after_snapshot(void);
+void Snapshot_delete_after_snapshot(void);
+void Snapshot_set_after_snapshot(void);
+void Snapshot_restore_recycled(void);
+void Snapshot_snapshot_w_new_in_onset(void);
+void Snapshot_snapshot_w_new_in_onset_in_snapshot_table(void);
 
 // Testsuite 'ReaderWriter'
 void ReaderWriter_simple(void);
@@ -959,6 +995,18 @@ void FilterIter_iter_snapshot_filtered_table(void);
 void Modules_simple_module(void);
 void Modules_import_module_from_system(void);
 void Modules_import_again(void);
+void Modules_scoped_component(void);
+void Modules_scoped_tag(void);
+void Modules_scoped_system(void);
+void Modules_scoped_entity(void);
+void Modules_name_prefix_component(void);
+void Modules_name_prefix_tag(void);
+void Modules_name_prefix_system(void);
+void Modules_name_prefix_entity(void);
+void Modules_name_prefix_type(void);
+void Modules_name_prefix_prefab(void);
+void Modules_name_prefix_pipeline(void);
+void Modules_name_prefix_trigger(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -985,7 +1033,7 @@ void Error_log_error(void);
 static bake_test_suite suites[] = {
     {
         .id = "New",
-        .testcase_count = 12,
+        .testcase_count = 17,
         .testcases = (bake_test_case[]){
             {
                 .id = "empty",
@@ -1034,6 +1082,26 @@ static bake_test_suite suites[] = {
             {
                 .id = "redefine_component",
                 .function = New_redefine_component
+            },
+            {
+                .id = "recycle_id_empty",
+                .function = New_recycle_id_empty
+            },
+            {
+                .id = "recycle_id_w_entity",
+                .function = New_recycle_id_w_entity
+            },
+            {
+                .id = "recycle_id_w_type",
+                .function = New_recycle_id_w_type
+            },
+            {
+                .id = "recycle_empty_staged_delete",
+                .function = New_recycle_empty_staged_delete
+            },
+            {
+                .id = "recycle_staged_delete",
+                .function = New_recycle_staged_delete
             }
         }
     },
@@ -1305,7 +1373,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Hierarchies",
-        .testcase_count = 47,
+        .testcase_count = 48,
         .testcases = (bake_test_case[]){
             {
                 .id = "get_parent",
@@ -1494,6 +1562,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "new_from_path_depth_2",
                 .function = Hierarchies_new_from_path_depth_2
+            },
+            {
+                .id = "new_w_child_in_root",
+                .function = Hierarchies_new_w_child_in_root
             }
         }
     },
@@ -2177,7 +2249,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Pipeline",
-        .testcase_count = 13,
+        .testcase_count = 15,
         .testcases = (bake_test_case[]){
             {
                 .id = "system_order_same_phase",
@@ -2230,6 +2302,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "no_merge_after_staged_in_out",
                 .function = Pipeline_no_merge_after_staged_in_out
+            },
+            {
+                .id = "merge_after_staged_out_before_owned",
+                .function = Pipeline_merge_after_staged_out_before_owned
+            },
+            {
+                .id = "switch_pipeline",
+                .function = Pipeline_switch_pipeline
             }
         }
     },
@@ -2436,6 +2516,70 @@ static bake_test_suite suites[] = {
             {
                 .id = "system_readeactivate_w_2_systems",
                 .function = SystemMisc_system_readeactivate_w_2_systems
+            }
+        }
+    },
+    {
+        .id = "Sorting",
+        .testcase_count = 9,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "sort_by_component",
+                .function = Sorting_sort_by_component
+            },
+            {
+                .id = "sort_by_component_2_tables",
+                .function = Sorting_sort_by_component_2_tables
+            },
+            {
+                .id = "sort_by_component_3_tables",
+                .function = Sorting_sort_by_component_3_tables
+            },
+            {
+                .id = "sort_by_entity",
+                .function = Sorting_sort_by_entity
+            },
+            {
+                .id = "sort_after_add",
+                .function = Sorting_sort_after_add
+            },
+            {
+                .id = "sort_after_remove",
+                .function = Sorting_sort_after_remove
+            },
+            {
+                .id = "sort_after_delete",
+                .function = Sorting_sort_after_delete
+            },
+            {
+                .id = "sort_after_set",
+                .function = Sorting_sort_after_set
+            },
+            {
+                .id = "sort_after_system",
+                .function = Sorting_sort_after_system
+            }
+        }
+    },
+    {
+        .id = "Traits",
+        .testcase_count = 4,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "type_w_one_trait",
+                .function = Traits_type_w_one_trait
+            },
+            {
+                .id = "type_w_two_traits",
+                .function = Traits_type_w_two_traits
+            },
+            {
+                .id = "add_trait",
+                .function = Traits_add_trait
+            },
+            {
+                .id = "remove_trait",
+                .function = Traits_remove_trait
             }
         }
     },
@@ -2779,7 +2923,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "SystemPeriodic",
-        .testcase_count = 49,
+        .testcase_count = 51,
         .testcases = (bake_test_case[]){
             {
                 .id = "1_type_1_component",
@@ -2926,12 +3070,20 @@ static bake_test_suite suites[] = {
                 .function = SystemPeriodic_owned_not_column
             },
             {
+                .id = "owned_or_column",
+                .function = SystemPeriodic_owned_or_column
+            },
+            {
                 .id = "shared_column",
                 .function = SystemPeriodic_shared_column
             },
             {
                 .id = "shared_not_column",
                 .function = SystemPeriodic_shared_not_column
+            },
+            {
+                .id = "shared_or_column",
+                .function = SystemPeriodic_shared_or_column
             },
             {
                 .id = "container_dont_match_inheritance",
@@ -4487,7 +4639,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Snapshot",
-        .testcase_count = 17,
+        .testcase_count = 26,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_snapshot",
@@ -4556,6 +4708,42 @@ static bake_test_suite suites[] = {
             {
                 .id = "snapshot_copy_w_filter",
                 .function = Snapshot_snapshot_copy_w_filter
+            },
+            {
+                .id = "snapshot_get_ref_after_restore",
+                .function = Snapshot_snapshot_get_ref_after_restore
+            },
+            {
+                .id = "new_after_snapshot",
+                .function = Snapshot_new_after_snapshot
+            },
+            {
+                .id = "new_empty_after_snapshot",
+                .function = Snapshot_new_empty_after_snapshot
+            },
+            {
+                .id = "add_after_snapshot",
+                .function = Snapshot_add_after_snapshot
+            },
+            {
+                .id = "delete_after_snapshot",
+                .function = Snapshot_delete_after_snapshot
+            },
+            {
+                .id = "set_after_snapshot",
+                .function = Snapshot_set_after_snapshot
+            },
+            {
+                .id = "restore_recycled",
+                .function = Snapshot_restore_recycled
+            },
+            {
+                .id = "snapshot_w_new_in_onset",
+                .function = Snapshot_snapshot_w_new_in_onset
+            },
+            {
+                .id = "snapshot_w_new_in_onset_in_snapshot_table",
+                .function = Snapshot_snapshot_w_new_in_onset_in_snapshot_table
             }
         }
     },
@@ -4681,7 +4869,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Modules",
-        .testcase_count = 3,
+        .testcase_count = 15,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_module",
@@ -4694,6 +4882,54 @@ static bake_test_suite suites[] = {
             {
                 .id = "import_again",
                 .function = Modules_import_again
+            },
+            {
+                .id = "scoped_component",
+                .function = Modules_scoped_component
+            },
+            {
+                .id = "scoped_tag",
+                .function = Modules_scoped_tag
+            },
+            {
+                .id = "scoped_system",
+                .function = Modules_scoped_system
+            },
+            {
+                .id = "scoped_entity",
+                .function = Modules_scoped_entity
+            },
+            {
+                .id = "name_prefix_component",
+                .function = Modules_name_prefix_component
+            },
+            {
+                .id = "name_prefix_tag",
+                .function = Modules_name_prefix_tag
+            },
+            {
+                .id = "name_prefix_system",
+                .function = Modules_name_prefix_system
+            },
+            {
+                .id = "name_prefix_entity",
+                .function = Modules_name_prefix_entity
+            },
+            {
+                .id = "name_prefix_type",
+                .function = Modules_name_prefix_type
+            },
+            {
+                .id = "name_prefix_prefab",
+                .function = Modules_name_prefix_prefab
+            },
+            {
+                .id = "name_prefix_pipeline",
+                .function = Modules_name_prefix_pipeline
+            },
+            {
+                .id = "name_prefix_trigger",
+                .function = Modules_name_prefix_trigger
             }
         }
     },
@@ -4782,5 +5018,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 49);
+    return bake_test_run("api", argc, argv, suites, 51);
 }

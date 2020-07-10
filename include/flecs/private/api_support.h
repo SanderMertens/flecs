@@ -37,15 +37,6 @@ extern ecs_type_t
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Error API
-////////////////////////////////////////////////////////////////////////////////
-
-#define ECS_TYPE_FLAG_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF | ECS_AND | ECS_OR | ECS_XOR | ECS_NOT))
-#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_TYPE_FLAG_MASK)
-#define ECS_TYPE_FLAG_START ECS_CHILDOF
-
-
-////////////////////////////////////////////////////////////////////////////////
 //// Functions used in declarative (macro) API
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -128,7 +119,7 @@ typedef enum ecs_sig_inout_kind_t {
 
 /** Type that is used by systems to indicate where to fetch a component from */
 typedef enum ecs_sig_from_kind_t {
-    EcsFromSelf,            /* Get component from self (default) */
+    EcsFromAny,            /* Get component from self (default) */
     EcsFromOwned,           /* Get owned component from self */
     EcsFromShared,          /* Get shared component from self */
     EcsFromParent,          /* Get component from container */

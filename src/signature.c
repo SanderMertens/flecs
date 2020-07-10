@@ -12,7 +12,7 @@
 #define TOK_ANNOTATE_OPEN '['
 #define TOK_ANNOTATE_CLOSE ']'
 
-#define TOK_SELF "SELF"
+#define TOK_ANY "ANY"
 #define TOK_OWNED "OWNED"
 #define TOK_SHARED "SHARED"
 #define TOK_SYSTEM "SYSTEM"
@@ -21,6 +21,7 @@
 
 #define TOK_ROLE_CHILDOF "CHILDOF"
 #define TOK_ROLE_INSTANCEOF "INSTANCEOF"
+#define TOK_ROLE_TRAIT "TRAIT"
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
 #define TOK_ROLE_XOR "XOR"
@@ -89,8 +90,8 @@ char* parse_complex_elem(
             *from_kind = EcsFromParent;
         } else if (!strncmp(bptr, TOK_SYSTEM, src - bptr)) {
             *from_kind = EcsFromSystem;
-        } else if (!strncmp(bptr, TOK_SELF, src - bptr)) {
-            /* default */
+        } else if (!strncmp(bptr, TOK_ANY, src - bptr)) {
+            *from_kind = EcsFromAny;
         } else if (!strncmp(bptr, TOK_OWNED, src - bptr)) {
             *from_kind = EcsFromOwned;
         } else if (!strncmp(bptr, TOK_SHARED, src - bptr)) {
@@ -122,6 +123,8 @@ char* parse_complex_elem(
             *flags = ECS_CHILDOF;
         } else if (!strncmp(bptr, TOK_ROLE_INSTANCEOF, or - bptr)) {
             *flags = ECS_INSTANCEOF;
+        } else if (!strncmp(bptr, TOK_ROLE_TRAIT, or - bptr)) {
+            *flags = ECS_TRAIT;            
         } else if (!strncmp(bptr, TOK_ROLE_AND, or - bptr)) {
             *flags = ECS_AND;
         } else if (!strncmp(bptr, TOK_ROLE_OR, or - bptr)) {
@@ -272,7 +275,7 @@ int ecs_parse_expr(
 
     bool complex_expr = false;
     bool prev_is_0 = false;
-    ecs_sig_from_kind_t from_kind = EcsFromSelf;
+    ecs_sig_from_kind_t from_kind = EcsFromOwned;
     ecs_sig_oper_kind_t oper_kind = EcsOperAnd;
     ecs_sig_inout_kind_t inout_kind = EcsInOut;
     ecs_entity_t flags = 0;
@@ -420,7 +423,7 @@ int ecs_parse_expr(
 
             /* Reset variables for next column */
             complex_expr = false;
-            from_kind = EcsFromSelf;
+            from_kind = EcsFromOwned;
             oper_kind = EcsOperAnd;
             flags = 0;
 

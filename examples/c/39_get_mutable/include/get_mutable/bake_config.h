@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef GET_MUTABLE_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef GET_MUTABLE_STATIC
-  #if GET_MUTABLE_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define GET_MUTABLE_EXPORT __declspec(dllexport)
-  #elif GET_MUTABLE_IMPL
-    #define GET_MUTABLE_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define GET_MUTABLE_EXPORT __declspec(dllimport)
-  #else
-    #define GET_MUTABLE_EXPORT
-  #endif
-#else
-  #define GET_MUTABLE_EXPORT
-#endif
-
 #endif
 

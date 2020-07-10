@@ -209,6 +209,7 @@ ecs_world_t *ecs_mini(void) {
     world->stats.target_fps = 0;
     world->stats.last_id = 0;
 
+    world->stats.delta_time_raw = 0;
     world->stats.delta_time = 0;
     world->stats.time_scale = 1.0;
     world->stats.frame_time_total = 0;
@@ -342,12 +343,28 @@ void ecs_atfini(
 {
     ecs_assert(action != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_fini_action_elem_t *elem = ecs_vector_add(&world->fini_actions, 
-        ecs_fini_action_elem_t);
+    ecs_action_elem_t *elem = ecs_vector_add(&world->fini_actions, 
+        ecs_action_elem_t);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
     elem->action = action;
     elem->ctx = ctx;
+}
+
+void ecs_run_post_frame(
+    ecs_world_t *world,
+    ecs_fini_action_t action,
+    void *ctx)
+{
+    ecs_assert(action != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_stage_t *stage = ecs_get_stage(&world);
+
+    ecs_action_elem_t *elem = ecs_vector_add(&stage->post_frame_actions, 
+        ecs_action_elem_t);
+    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    elem->action = action;
+    elem->ctx = ctx;    
 }
 
 int ecs_fini(
@@ -358,7 +375,7 @@ int ecs_fini(
     assert(!world->is_merging);
 
     /* Execute fini actions */
-    ecs_vector_each(world->fini_actions, ecs_fini_action_elem_t, elem, {
+    ecs_vector_each(world->fini_actions, ecs_action_elem_t, elem, {
         elem->action(world, elem->ctx);
     });
 
@@ -488,6 +505,28 @@ void ecs_merge(
     }
 
     world->stats.merge_count_total ++;
+
+    /* Execute post frame actions */
+    ecs_vector_each(world->stage.post_frame_actions, ecs_action_elem_t, action, {
+        action->action(world, action->ctx);
+    });
+
+    ecs_vector_free(world->stage.post_frame_actions);
+    world->stage.post_frame_actions = NULL;
+
+    ecs_vector_each(world->temp_stage.post_frame_actions, ecs_action_elem_t, action, {
+        action->action(world, action->ctx);
+    });
+    ecs_vector_free(world->temp_stage.post_frame_actions);
+    world->temp_stage.post_frame_actions = NULL;
+
+    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
+        ecs_vector_each(stage->post_frame_actions, ecs_action_elem_t, action, {
+            action->action(world, action->ctx);
+        });
+        ecs_vector_free(stage->post_frame_actions);
+        stage->post_frame_actions = NULL;
+    });    
 }
 
 void ecs_set_automerge(

@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef AUTO_OVERRIDE_NESTED_PREFAB_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef AUTO_OVERRIDE_NESTED_PREFAB_STATIC
-  #if AUTO_OVERRIDE_NESTED_PREFAB_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define AUTO_OVERRIDE_NESTED_PREFAB_EXPORT __declspec(dllexport)
-  #elif AUTO_OVERRIDE_NESTED_PREFAB_IMPL
-    #define AUTO_OVERRIDE_NESTED_PREFAB_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define AUTO_OVERRIDE_NESTED_PREFAB_EXPORT __declspec(dllimport)
-  #else
-    #define AUTO_OVERRIDE_NESTED_PREFAB_EXPORT
-  #endif
-#else
-  #define AUTO_OVERRIDE_NESTED_PREFAB_EXPORT
-#endif
-
 #endif
 

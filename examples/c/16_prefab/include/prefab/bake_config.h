@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef PREFAB_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef PREFAB_STATIC
-  #if PREFAB_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define PREFAB_EXPORT __declspec(dllexport)
-  #elif PREFAB_IMPL
-    #define PREFAB_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define PREFAB_EXPORT __declspec(dllimport)
-  #else
-    #define PREFAB_EXPORT
-  #endif
-#else
-  #define PREFAB_EXPORT
-#endif
-
 #endif
 

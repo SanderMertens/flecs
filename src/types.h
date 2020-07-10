@@ -143,20 +143,10 @@ struct ecs_table_t {
     ecs_vector_t *un_set_all;        /**< All OnSet systems */
 
     int32_t *dirty_state;            /**< Keep track of changes in columns */
+    int32_t alloc_count;             /**< Increases when columns are reallocd */
 
     ecs_table_flags_t flags;         /**< Flags for testing table properties */
     int32_t column_count;            /**< Number of data columns in table */
-};
-
-/** Cached reference to a component in an entity.
- * This type is used to store references to components in a system signature.
- * The type uses a regular cached reference (ecs_ref_t) but in addition also
- * needs to store the entity and component id so they can be requested by a
- * system. */
-struct ecs_reference_t {
-    ecs_entity_t entity;        /**< The entity */
-    ecs_entity_t component;     /**< The component id */
-    ecs_ref_t ref;              /**< The cached reference to the component */
 };
 
 /** Type containing data for a table matched with a query. */
@@ -184,9 +174,10 @@ typedef struct ecs_table_range_t {
 #define EcsQueryMonitor (2)          /* Query needs to be registered as a monitor */
 #define EcsQueryOnSet (4)            /* Query needs to be registered as on_set system */
 #define EcsQueryUnSet (8)            /* Query needs to be registered as un_set system */
-#define EcsQueryMatchDisabled (16)    /* Does query match disabled */
+#define EcsQueryMatchDisabled (16)   /* Does query match disabled */
 #define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
 #define EcsQueryHasRefs (64)         /* Does query have references */
+#define EcsQueryHasTraits (128)      /* Does query have traits */
 
 #define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
@@ -212,7 +203,7 @@ struct ecs_query_t {
 
     /* Used for table sorting */
     ecs_entity_t rank_on_component;
-    ecs_rank_type_action_t rank_table;
+    ecs_rank_type_action_t group_table;
 
     /* The query kind determines how it is registered with tables */
     int8_t flags;
@@ -274,10 +265,8 @@ typedef struct ecs_on_demand_in_t {
  * ran, and 'time_passed' is decreased by 'period'. 
  */
 typedef struct EcsSystem {
-    ecs_iter_action_t action;    /* Callback to be invoked for matching it */
-    void *ctx;                     /* Userdata for system */
-    float time_spent;              /* Time spent on running system */
-    int32_t invoke_count;          /* Number of times system is invoked */
+    ecs_iter_action_t action;       /* Callback to be invoked for matching it */
+    void *ctx;                      /* Userdata for system */
 
     ecs_entity_t entity;                  /* Entity id of system, used for ordering */
     ecs_query_t *query;                   /* System query */
@@ -285,7 +274,11 @@ typedef struct EcsSystem {
     ecs_system_status_action_t status_action; /* Status action */
     void *status_ctx;                     /* User data for status action */    
     ecs_entity_t tick_source;             /* Tick source associated with system */
+    
+    int32_t invoke_count;                 /* Number of times system is invoked */
+    float time_spent;                     /* Time spent on running system */
     float time_passed;                    /* Time passed since last invocation */
+    bool has_out_columns;                 /* True if system has out columns */
 } EcsSystem;
 
 #define ECS_TYPE_DB_MAX_CHILD_NODES (256)
@@ -364,6 +357,9 @@ struct ecs_stage_t {
     int32_t defer;
     ecs_vector_t *defer_queue;
 
+    /* One-shot actions to be executed after the merge */
+    ecs_vector_t *post_frame_actions;
+
     /* Is entity range checking enabled? */
     bool range_check_enabled;
 };
@@ -408,10 +404,10 @@ typedef struct ecs_component_monitor_t {
 } ecs_component_monitor_t;
 
 /* fini actions */
-typedef struct ecs_fini_action_elem_t {
+typedef struct ecs_action_elem_t {
     ecs_fini_action_t action;
     void *ctx;
-} ecs_fini_action_elem_t;
+} ecs_action_elem_t;
 
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */

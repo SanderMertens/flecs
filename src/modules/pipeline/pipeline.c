@@ -35,7 +35,34 @@ int rank_phase(
     ecs_entity_t rank_component,
     ecs_type_t type) 
 {
-    return ecs_type_get_entity_for_xor(world, type, rank_component);
+    const EcsType *pipeline_type = ecs_get(world, rank_component, EcsType);
+    ecs_assert(pipeline_type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Find tag in system that belongs to pipeline */
+    ecs_entity_t *sys_comps = ecs_vector_first(type, ecs_entity_t);
+    int32_t c, t, count = ecs_vector_count(type);
+
+    ecs_entity_t *tags = ecs_vector_first(pipeline_type->normalized, ecs_entity_t);
+    int32_t tag_count = ecs_vector_count(pipeline_type->normalized);
+
+    ecs_entity_t result = 0;
+
+    for (c = 0; c < count; c ++) {
+        ecs_entity_t comp = sys_comps[c];
+        for (t = 0; t < tag_count; t ++) {
+            if (comp == tags[t]) {
+                result = comp;
+                break;
+            }
+        }
+        if (result) {
+            break;
+        }
+    }
+
+    ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+
+    return result;
 }
 
 typedef enum ComponentWriteState {
@@ -82,13 +109,14 @@ bool check_column_component(
 {
     int8_t state = get_write_state(write_state, component);
 
-    if (column->from_kind == EcsFromSelf && column->oper_kind != EcsOperNot) {
+    if ((column->from_kind == EcsFromAny || column->from_kind == EcsFromOwned) && column->oper_kind != EcsOperNot) {
         switch(column->inout_kind) {
         case EcsInOut:
         case EcsIn:
             if (state == WriteToStage) {
                 return true;
             }
+            // fall through
         case EcsOut:
             if (is_active && column->inout_kind != EcsIn) {
                 set_write_state(write_state, component, WriteToMain);
@@ -101,6 +129,7 @@ bool check_column_component(
             if (is_active) {
                 set_write_state(write_state, component, WriteToStage);
             }
+            break;
         default:
             break;
         };
@@ -337,6 +366,26 @@ void ecs_pipeline_progress(
     ecs_worker_end(real_world);
 }
 
+static
+void add_pipeline_tags_to_sig(
+    ecs_world_t *world,
+    ecs_sig_t *sig,
+    ecs_type_t type)
+{
+    (void)world;
+    
+    int32_t i, count = ecs_vector_count(type);
+    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
+
+    for (i = 0; i < count; i ++) {
+        if (!i) {
+            ecs_sig_add(sig, EcsFromAny, EcsOperAnd, EcsIn, entities[i], 0);
+        } else {
+            ecs_sig_add(sig, EcsFromAny, EcsOperOr, EcsIn, entities[i], 0);
+        }
+    }
+}
+
 static 
 void EcsOnAddPipeline(
     ecs_iter_t *it)
@@ -349,10 +398,10 @@ void EcsOnAddPipeline(
         ecs_entity_t pipeline = entities[i];
         ecs_sig_t sig = { 0 };
 
-#ifndef NDEBUG
         const EcsType *type_ptr = ecs_get(world, pipeline, EcsType);
         ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
+        
+#ifndef NDEBUG
         char *str = ecs_type_str(world, type_ptr->normalized);
         ecs_trace_1("pipeline #[green]%s#[normal] created with #[red][%s]",
             ecs_get_name(world, pipeline), str);
@@ -364,10 +413,10 @@ void EcsOnAddPipeline(
          * pipeline as a XOR column, and ignores systems with EcsInactive and
          * EcsDisabledIntern. Note that EcsDisabled is automatically ignored by
          * the regular query matching */
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsInactive, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsInactive, 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Create the query. Sort the query by system id and phase */
         ecs_query_t *query = ecs_query_new_w_sig(world, 0, &sig);
@@ -378,9 +427,9 @@ void EcsOnAddPipeline(
          * systems that are inactive, as an inactive system may become active as
          * a result of another system, and as a result the correct merge 
          * operations need to be put in place. */
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperAnd, EcsIn, ECS_XOR | pipeline, 0);
-        ecs_sig_add(&sig, EcsFromSelf, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperAnd, EcsIn, ecs_entity(EcsSystem), 0);
+        ecs_sig_add(&sig, EcsFromAny, EcsOperNot, EcsIn, EcsDisabledIntern, 0);
+        add_pipeline_tags_to_sig(world, &sig, type_ptr->normalized);
 
         /* Use the same sorting functions for the build query */
         ecs_query_t *build_query = ecs_query_new_w_sig(world, 0, &sig);
@@ -426,9 +475,8 @@ float start_measure_frame(
 
         world->frame_start_time = t;  
 
-        /* Compute total time passed since start of simulation */
-        ecs_time_t diff = ecs_time_sub(t, world->world_start_time);
-        world->stats.world_time_total = ecs_time_to_double(diff);
+        /* Keep track of total time passed in world */
+        world->stats.world_time_total_raw += delta_time;
     }
 
     return delta_time;
@@ -439,6 +487,14 @@ void stop_measure_frame(
     ecs_world_t *world,
     float delta_time)
 {
+    /* These values automatically calibrate the timer based on the accuracy of
+     * the OS sleep. Above the sleep_threshold Flecs will just do a single
+     * sleep with the required timeout to meet the FPS target. Below that a busy
+     * loop will be used with a timeout that is the required sleep time times
+     * the sleep_granularity. */
+    static float sleep_threshold = 0.1;
+    static float sleep_granularity = 0.1;
+
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
         double frame_time = ecs_time_measure(&t);
@@ -449,8 +505,58 @@ void stop_measure_frame(
         if (target_fps) {
             float sleep = (1.0 / target_fps) - delta_time + world->fps_sleep;
 
-            if (sleep > 0.01) {
+            /* Sleep value is above threshold. Sleep for the requested amount of
+             * time in a single sleep. */
+            if (sleep > sleep_threshold) {
                 ecs_sleepf(sleep);
+
+            /* If sleep value is smaller than threshold but above zero, use a
+             * busy loop with a smaller sleep value. */
+            } else if (sleep > 0 ) {
+                double sleep_time;
+
+                /* Use the sleep time times the sleep granularity value */
+                if (sleep_granularity) {
+                    sleep_time = sleep * sleep_granularity;
+                } else {
+                    sleep_time = 0;
+                }
+                
+                ecs_time_t t_sleep = t;
+                double time_passed = ecs_time_measure(&t_sleep);
+                while((time_passed - frame_time) < sleep) {
+                    ecs_sleepf(sleep_time);
+                    t_sleep = t;
+                    time_passed = ecs_time_measure(&t_sleep);
+                }
+
+            /* If the sleep time was negative, it means that we slept too much
+             * in the previous frame, which is an indication of our sleep not
+             * being able to sleep for short durations. Automatically adjust
+             * based on the accuracy of the OS sleep. */
+            } else {
+                /* As long as the sleep threshold is lower than 1, keep
+                 * increasing the sleep threshold. This will cause more sleeping
+                 * to take place in the busy loop, which is more accurate. */
+                if (sleep_threshold < 1) {
+                    sleep_threshold *= 1.1;
+
+                /* If the sleep threshold is above 1, adjust the sleep 
+                 * granularity so that the sleep durations become smaller. This
+                 * may not help much as apparently the OS sleep is not very 
+                 * accurate, but it's worth trying out. */
+                } else if (sleep_granularity < 100) {
+                    sleep_granularity /= 1.1;
+
+                /* If the sleep accuracy is really poor, sleep 0 seconds which
+                 * regresses to a busy loop that can cause load of a CPU core to
+                 * spike to 100%, even if the actual load is not that high. This 
+                 * should probably be discoverable at the API level, as an 
+                 * application may at this point switch to an alternative method 
+                 * of FPS control like vsync. */
+                } else {
+                    sleep_granularity = 0;
+                }
             }
 
             world->fps_sleep = sleep;
@@ -479,7 +585,11 @@ float ecs_frame_begin(
         user_delta_time = delta_time;
     }
 
+    world->stats.delta_time_raw = user_delta_time;
     world->stats.delta_time = user_delta_time * world->stats.time_scale;
+
+    /* Keep track of total scaled time passed in world */
+    world->stats.world_time_total += world->stats.delta_time;
     
     return user_delta_time;
 }
@@ -515,6 +625,13 @@ void ecs_set_time_scale(
     float scale)
 {
     world->stats.time_scale = scale;
+}
+
+void ecs_reset_clock(
+    ecs_world_t *world)
+{
+    world->stats.world_time_total = 0;
+    world->stats.world_time_total_raw = 0;
 }
 
 void ecs_quit(

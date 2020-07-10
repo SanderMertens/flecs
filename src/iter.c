@@ -38,13 +38,10 @@ const void* get_shared_column(
     }
 #endif
 
-    ecs_reference_t *ref = &it->references[-table_column - 1];
+    ecs_ref_t *ref = &it->references[-table_column - 1];
 
     return (void*)ecs_get_ref_w_entity(
-        it->world,
-        &ref->ref,
-        ref->entity,
-        ref->component);
+        it->world, ref, ref->entity, ref->component);
 }
 
 static
@@ -104,7 +101,6 @@ void* ecs_column_w_size(
     size_t size,
     int32_t column)
 {
-    // ecs_assert(!ecs_is_readonly(it, column), ECS_COLUMN_ACCESS_VIOLATION, NULL);
     return get_column(it, size, column, 0);
 }
 
@@ -163,7 +159,7 @@ ecs_entity_t ecs_column_source(
 
     ecs_assert(it->references != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_reference_t *ref = &it->references[-table_column - 1];
+    ecs_ref_t *ref = &it->references[-table_column - 1];
 
     return ref->entity;
 }

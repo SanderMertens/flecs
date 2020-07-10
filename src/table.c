@@ -24,8 +24,15 @@ ecs_data_t* init_data(
     ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
 
     for (i = 0; i < count; i ++) {
-        const EcsComponent *component = ecs_get(
-                world, entities[i], EcsComponent);
+        ecs_entity_t e = entities[i];
+
+        /* If this is a trait, get the trait component from the identifier */
+        if (e & ECS_TRAIT) {
+            e = e & ECS_ENTITY_MASK;
+            e = ecs_entity_t_hi(e);
+        }
+
+        const EcsComponent *component = ecs_get(world, e, EcsComponent);            
 
         /* Is the column a component? */
         if (component) {
@@ -233,7 +240,7 @@ void register_on_set(
             ecs_sig_oper_kind_t oper_kind = column->oper_kind;
             ecs_sig_from_kind_t from_kind = column->from_kind;
 
-            if (from_kind != EcsFromSelf && from_kind != EcsFromOwned) {
+            if (from_kind != EcsFromAny && from_kind != EcsFromOwned) {
                 continue;
             }
 
@@ -273,6 +280,7 @@ void register_un_set(
     ecs_query_t *query,
     int32_t matched_table_index)
 {
+    (void)world;
     add_monitor(&table->un_set_all, query, matched_table_index);
 }
 
@@ -537,12 +545,30 @@ void ecs_table_reset(
     }
 }
 
-static
 void mark_dirty(
     ecs_table_t *table,
     int32_t index)
 {
     if (table->dirty_state) {
+        table->dirty_state[index] ++;
+    }
+}
+
+void ecs_table_mark_dirty_w_index(
+    ecs_table_t *table,
+    int32_t index)
+{
+    mark_dirty(table, index);
+}
+
+void ecs_table_mark_dirty(
+    ecs_table_t *table,
+    ecs_entity_t component)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (table->dirty_state) {
+        int32_t index = ecs_type_index_of(table->type, component);
+        ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
         table->dirty_state[index] ++;
     }
 }
@@ -557,6 +583,7 @@ int32_t ecs_table_append(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     int32_t column_count = table->column_count;
+    bool realloc = false;
 
     if (column_count) {
         ecs_column_t *columns = data->columns;
@@ -576,20 +603,26 @@ int32_t ecs_table_append(
             size_t size = columns[i].size;
             size_t alignment = columns[i].alignment;
             if (size) {
+                ecs_vector_t *prev = columns[i].data;
                 ecs_vector_add_t(&columns[i].data, size, alignment);
+                realloc |= prev != columns[i].data;
             }
         }
     }
 
     /* Fist add entity to array with entity ids */
+    ecs_vector_t *prev_e = data->entities;
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
     *e = entity;
+    realloc |= prev_e != data->entities;
 
     /* Add record ptr to array with record ptrs */
+    ecs_vector_t *prev_r = data->record_ptrs;
     ecs_record_t **r = ecs_vector_add(&data->record_ptrs, ecs_record_t*);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     *r = record;
+    realloc |= prev_r != data->record_ptrs;
 
     /* If the table is monitored indicate that there has been a change */
     mark_dirty(table, 0);
@@ -599,6 +632,9 @@ int32_t ecs_table_append(
     if (!world->in_progress && !index) {
         ecs_table_activate(world, table, 0, true);
     }
+
+    /* Keep track of alloc count */
+    table->alloc_count += realloc;
 
     /* Return index of last added entity */
     return index;
@@ -746,6 +782,8 @@ int32_t ecs_table_grow(
         ecs_table_activate(world, table, 0, true);
     }
 
+    table->alloc_count ++;
+
     /* Return index of first added entity */
     return row_count - count;
 }
@@ -777,6 +815,8 @@ int16_t ecs_table_set_size(
             ecs_vector_set_size_t(&columns[i].data, size, alignment, count);
         }
     }
+    
+    table->alloc_count ++;
 
     return 0;
 }
@@ -808,6 +848,8 @@ int16_t ecs_table_set_count(
             ecs_vector_set_count_t(&columns[i].data, size, alignment, count);
         }
     }
+
+    table->alloc_count ++;
 
     return 0;
 }
@@ -971,8 +1013,8 @@ void merge_table_data(
         size_t size = new_columns[i_new].size;
         size_t alignment = new_columns[i_new].alignment;
 
-        if ((new_component & ECS_TYPE_FLAG_MASK) || 
-            (old_component & ECS_TYPE_FLAG_MASK)) 
+        if ((new_component & ECS_TYPE_ROLE_MASK) || 
+            (old_component & ECS_TYPE_ROLE_MASK)) 
         {
             break;
         }
@@ -1080,6 +1122,8 @@ void ecs_table_merge(
     /* Merge table columns */
     merge_table_data(world, new_table, old_table, old_count, new_count, 
         old_data, new_data);
+
+    new_table->alloc_count ++;
 }
 
 void ecs_table_merge_data(
@@ -1137,6 +1181,8 @@ void ecs_table_merge_data(
     if (!old_count && new_count) {
         ecs_table_activate(world, table, 0, true);
     }
+
+    table->alloc_count ++;
 }
 
 void ecs_table_replace_data(
@@ -1161,11 +1207,7 @@ void ecs_table_replace_data(
         return;
     }
 
-    ecs_entities_t components = ecs_type_to_entities(table->type);
     int32_t count = ecs_table_count(table);
-
-    ecs_run_set_systems(world, &world->stage, &components, table, table_data, 0, 
-        count, true);
 
     if (!prev_count && count) {
         ecs_table_activate(world, table, 0, true);
@@ -1227,8 +1269,8 @@ void ecs_table_move(
                     ecs_c_info_t *cdata = ecs_get_c_info(
                         world, new_component);
 
-                    ecs_copy_t copy = cdata->lifecycle.copy;
-                    if (copy) {
+                    ecs_copy_t copy;
+                    if (cdata && (copy = cdata->lifecycle.copy)) {
                         void *ctx = cdata->lifecycle.ctx;
                         copy(world, new_component, &dst_entity, &src_entity, dst, src, 
                             size, 1, ctx);

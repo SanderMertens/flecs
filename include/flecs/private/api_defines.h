@@ -55,6 +55,8 @@ typedef char bool;
 /* Use alignof in C++, or a trick in C. */
 #ifdef __cplusplus
 #define ECS_ALIGNOF(T) alignof(T)
+#elif defined(_MSC_VER)
+#define ECS_ALIGNOF(T) __alignof(T)
 #else
 #define ECS_ALIGNOF(T) ((size_t)&((struct { char c; T d; } *)0)->d)
 #endif
@@ -100,6 +102,15 @@ typedef char bool;
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Type role macro's
+////////////////////////////////////////////////////////////////////////////////
+
+#define ECS_TYPE_ROLE_MASK ((ecs_entity_t)(ECS_INSTANCEOF | ECS_CHILDOF | ECS_TRAIT | ECS_AND | ECS_OR | ECS_XOR | ECS_NOT))
+#define ECS_ENTITY_MASK ((ecs_entity_t)~ECS_TYPE_ROLE_MASK)
+#define ECS_TYPE_ROLE_START ECS_CHILDOF
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Convert between C typenames and variables
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -119,6 +130,16 @@ typedef char bool;
 #define ecs_iter_action(T) FLECS__F##T
 
 #ifndef FLECS_LEGACY
+////////////////////////////////////////////////////////////////////////////////
+//// Utilities for working with trait identifiers
+////////////////////////////////////////////////////////////////////////////////
+
+#define ecs_entity_t_lo(value) ((uint32_t)(value))
+#define ecs_entity_t_hi(value) ((uint32_t)((value) >> 32))
+#define ecs_entity_t_comb(v1, v2) (((uint64_t)(v2) << 32) + (uint32_t)(v1))
+#define ecs_trait(comp, trait) ECS_TRAIT | ecs_entity_t_comb(ecs_entity(comp), ecs_entity(trait))
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macro's for ctor, dtor, move and copy
 ////////////////////////////////////////////////////////////////////////////////

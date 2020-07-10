@@ -4,7 +4,6 @@
 static
 bool iter_table(
     ecs_world_t *world,
-    ecs_reader_t *stream,
     ecs_table_reader_t *reader,
     ecs_iter_t *it,
     ecs_iter_next_action_t next,
@@ -48,7 +47,7 @@ void next_table(
     /* First iterate all component tables, as component data must always be
      * stored in a blob before anything else */
     bool table_found = iter_table(
-        world, stream, reader, &stream->component_iter, stream->component_next, 
+        world, reader, &stream->component_iter, stream->component_next, 
         false);
 
     /* If all components have been added, add the regular data tables. Make sure
@@ -56,7 +55,7 @@ void next_table(
      * matches component tables. */
     if (!table_found) {
         table_found = iter_table(
-            world, stream, reader, &stream->data_iter, stream->data_next, true);
+            world, reader, &stream->data_iter, stream->data_next, true);
         count = stream->data_iter.count;
     } else {
         count = stream->component_iter.count;
@@ -137,9 +136,8 @@ void ecs_table_reader_next(
         if (reader->row_index < reader->row_count) {
             reader->state = EcsTableColumnNameLength;
             break;
-        } else {
-            /* Fallthrough on purpose */
         }
+        // fall through
 
     case EcsTableColumnData:
         reader->column_index ++;

@@ -177,3 +177,85 @@ void New_redefine_component() {
     
     ecs_fini(world);
 }
+
+void New_recycle_id_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    test_assert(e1 != 0);
+    ecs_delete(world, e1);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 != 0);
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}
+
+void New_recycle_id_w_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_new(world, 0);
+
+    ecs_entity_t e1 = ecs_new_w_entity(world, tag);
+    test_assert(e1 != 0);
+    ecs_delete(world, e1);
+
+    ecs_entity_t e2 = ecs_new_w_entity(world, tag);
+    test_assert(e2 != 0);
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}
+
+void New_recycle_id_w_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_new_w_type(world, ecs_type(Position));
+    test_assert(e1 != 0);
+    ecs_delete(world, e1);
+
+    ecs_entity_t e2 = ecs_new_w_type(world, ecs_type(Position));
+    test_assert(e2 != 0);
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}
+
+void New_recycle_empty_staged_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    test_assert(e1 != 0);
+
+    ecs_staging_begin(world);
+    ecs_delete(world, e1);
+    ecs_staging_end(world, false);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 != 0);
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}
+
+void New_recycle_staged_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    test_assert(e1 != 0);
+
+    ecs_staging_begin(world);
+    ecs_delete(world, e1);
+    ecs_staging_end(world, false);
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    test_assert(e2 != 0);
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}

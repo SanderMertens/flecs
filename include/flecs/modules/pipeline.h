@@ -1,5 +1,4 @@
 
-
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H
 
@@ -89,9 +88,19 @@ void ecs_set_target_fps(
  * @param world The world.
  * @param scale The scale to apply (default = 1).
  */
+FLECS_EXPORT 
 void ecs_set_time_scale(
     ecs_world_t *world,
     float scale);
+
+/** Reset world clock.
+ * Reset the clock that keeps track of the total time passed in the simulation.
+ *
+ * @param world The world.
+ */
+FLECS_EXPORT
+void ecs_reset_clock(
+    ecs_world_t *world);
 
 /** Signal exit
  * This operation signals that the application should quit. It will cause

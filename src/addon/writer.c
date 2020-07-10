@@ -197,9 +197,8 @@ void ecs_table_writer_next(
         if (writer->row_index < writer->row_count) {
             writer->state = EcsTableColumnNameLength;
             break;
-        } else {
-            /* Fallthrough on purpose */
         }
+        // fall through
 
     case EcsTableColumnData:
         writer->column_index ++;
@@ -313,6 +312,7 @@ size_t ecs_table_writer(
     case EcsTableColumnNameHeader:
         ecs_table_writer_prepare_column(stream, sizeof(EcsName));
         ecs_table_writer_next(stream);
+        // fall through
 
     case EcsTableColumnNameLength:
         ecs_name_writer_alloc(&writer->name, *(int32_t*)buffer);

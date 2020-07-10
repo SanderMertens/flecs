@@ -365,7 +365,7 @@ void collect_system_table_metrics(
     /* Refs are different for each table, so we'll have to loop to get accurate 
      * numbers */
     for (i = 0; i < count; i ++) {
-        ecs_vector_memory(tables_buffer[i].references, ecs_reference_t, 
+        ecs_vector_memory(tables_buffer[i].references, ecs_ref_t, 
             &stat->allocd_bytes, &stat->used_bytes);
     }
 }
