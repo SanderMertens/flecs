@@ -149,15 +149,6 @@ typedef struct EcsComponent {
     size_t alignment;      /**< Component alignment */
 } EcsComponent;
 
-/* Trait information */
-typedef struct EcsTrait {
-    ecs_entity_t trait;      /**< Component id of trait type */
-    ecs_entity_t component;  /**< Component id to which trait is applied to */
-
-    size_t size;             /**< Component size */
-    size_t alignment;        /**< Component alignment */
-} EcsTrait;
-
 /** Component that stores an ecs_type_t. 
  * This component allows for the creation of entities that represent a type, and
  * therefore the creation of named types. This component is typically 
@@ -983,6 +974,74 @@ void ecs_bulk_add_remove_type(
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Traits
+////////////////////////////////////////////////////////////////////////////////
+
+/** Add a trait
+ * This operation adds a trait from an entity.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The entity for which to remove the trait.
+ * @param trait The trait to remove.
+ */
+#define ecs_add_trait(world, entity, component, trait)\
+    ecs_add_entity(world, entity, ecs_trait(component, trait))
+
+/** Remove a trait
+ * This operation removes a trait from an entity.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The entity for which to remove the trait.
+ * @param trait The trait to remove.
+ */
+#define ecs_remove_trait(world, entity, component, trait)\
+    ecs_remove_entity(world, entity, ecs_trait(component, trait))
+
+/** Test if an entity has a trait.
+ * This operation returns true if the entity has the provided trait for the
+ * specified component in its type.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The entity.
+ * @param trait The entity.
+ * @return True if the entity has the trait, false if not.
+ */
+#define ecs_has_trait(world, entity, component, trait)\
+    ecs_has_entity(world, entity, ecs_trait(component, trait))
+
+/** Set trait for component. 
+ * This operation adds a trait for an entity and component. Traits can be added
+ * multiple times to the same entity, as long as it is for different components.
+ *
+ * Traits can be matched with systems by providing the TRAIT role to the 
+ * trait component in the system signature. A system will match multiple times
+ * with the same entity if the trait is added for multiple components.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param component The component for which to add the trait.
+ * @param trait The trait to add.
+ */
+#define ecs_set_trait(world, entity, component, trait, ...)\
+    ecs_set_ptr_w_entity(world, entity, ecs_trait(component, trait), sizeof(trait), &(trait)__VA_ARGS__)
+
+/** Get trait for component. 
+ * This operation obtains the value of a trait for a componetn that has been 
+ * added by ecs_set_trait.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param component The component to which the trait was added.
+ * @param trait The trait that was added.
+ */
+#define ecs_get_trait(world, entity, component, trait)\
+    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(component, trait)))
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Deleting entities
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1131,24 +1190,6 @@ void* ecs_get_mut_w_entity(
 #define ecs_get_mut(world, entity, component, is_added)\
     ((component*)ecs_get_mut_w_entity(world, entity, ecs_entity(component), is_added))
 
-/** Get trait for component. 
- * This operation obtains the value of a trait for a componetn that has been 
- * added by ecs_set_trait.
- *
- * @param world The world.
- * @param e The entity.
- * @param component The component to which the trait was added.
- * @param trait The trait that was added.
- */
-const void* ecs_get_trait_w_entity(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    ecs_entity_t component,
-    ecs_entity_t trait);
-
-#define ecs_get_trait(world, entity, component, trait)\
-    ((trait*)ecs_get_trait_w_entity(world, entity, ecs_entity(component), ecs_entity(trait)))
-
 /** Signal that a component has been modified.
  * This operation allows an application to signal to Flecs that a component has
  * been modified. As a result, OnSet systems will be invoked.
@@ -1230,30 +1271,6 @@ ecs_entity_t ecs_set_ptr_w_entity(
 #define ecs_set(world, entity, component, ...)\
     ecs_set_ptr_w_entity(world, entity, ecs_entity(component), sizeof(component), &(component)__VA_ARGS__)
 #endif
-
-/** Set trait for component. 
- * This operation adds a trait for an entity and component. Traits can be added
- * multiple times to the same entity, as long as it is for different components.
- *
- * Traits can be matched with systems by providing the TRAIT role to the 
- * trait component in the system signature. A system will match multiple times
- * with the same entity if the trait is added for multiple components.
- *
- * @param world The world.
- * @param e The entity.
- * @param component The component for which to add the trait.
- * @param trait The trait to add.
- */
-ecs_entity_t ecs_set_trait_w_entity(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    ecs_entity_t component,
-    ecs_entity_t trait,
-    size_t size,
-    const void *ptr);
-
-#define ecs_set_trait(world, entity, component, trait, ...)\
-    ecs_set_trait_w_entity(world, entity, ecs_entity(component), ecs_entity(trait), sizeof(trait), &(trait)__VA_ARGS__)
 
 
 ////////////////////////////////////////////////////////////////////////////////

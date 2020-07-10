@@ -29,11 +29,13 @@ void Traits_type_w_one_trait() {
         .value = 10
     });  
     test_assert(e1 != 0);
+    test_assert( ecs_has_trait(world, e1, Position, Trait));
 
     ecs_entity_t e2 = ecs_set_trait(world, 0, Velocity, Trait, {
         .value = 20
     });
     test_assert(e2 != 0);
+    test_assert( ecs_has_trait(world, e2, Velocity, Trait));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -89,18 +91,23 @@ void Traits_type_w_two_traits() {
     ecs_set_trait(world, e1, Position, Trait, {
         .value = 10
     });  
+    test_assert( ecs_has_trait(world, e1, Position, Trait));
 
     ecs_set_trait(world, e1, Velocity, Trait, {
         .value = 20
     });      
+    test_assert( ecs_has_trait(world, e1, Velocity, Trait));
 
     ecs_entity_t e2 = ecs_new(world, 0);
     ecs_set_trait(world, e2, Position, Trait, {
         .value = 30
-    });      
+    });
+    test_assert( ecs_has_trait(world, e2, Position, Trait));
+
     ecs_set_trait(world, e2, Velocity, Trait, {
         .value = 40
     });
+    test_assert( ecs_has_trait(world, e2, Position, Trait));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -153,3 +160,44 @@ void Traits_type_w_two_traits() {
 
     ecs_fini(world);
 }
+
+void Traits_add_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Trait);
+
+    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, TRAIT | Trait);
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    test_assert(e1 != 0);
+
+    ecs_add_trait(world, e1, Position, Trait);
+    test_assert( ecs_has_trait(world, e1, Position, Trait));
+
+    ecs_fini(world);
+}
+
+void Traits_remove_trait() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Trait);
+
+    ECS_SYSTEM(world, ProcessTraits, EcsOnUpdate, TRAIT | Trait);
+
+    ecs_entity_t e1 = ecs_set_trait(world, 0, Position, Trait, {
+        .value = 10
+    });  
+    test_assert(e1 != 0);
+    test_assert( ecs_has_trait(world, e1, Position, Trait));
+
+    ecs_remove_trait(world, e1, Position, Trait);
+
+    test_assert( !ecs_has_trait(world, e1, Position, Trait));
+
+    ecs_fini(world);
+}
+

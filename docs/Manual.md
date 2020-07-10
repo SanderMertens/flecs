@@ -623,6 +623,8 @@ ecs_remove_entity(world, child, ECS_OR | Toppings);
 
 ## Time management
 
+## Timers
+
 ## Snapshots
 
 ## Serialization

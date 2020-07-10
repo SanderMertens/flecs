@@ -261,15 +261,14 @@ bool ecs_type_has_entity(
     ecs_type_t type,
     ecs_entity_t entity)
 {
-    bool is_trait = false;
+    ecs_entity_t trait = 0;
 
     if (!entity) {
         return true;
     }
 
     if (entity & ECS_TRAIT) {
-        is_trait = true;
-        entity = entity & ECS_ENTITY_MASK;
+        trait = entity & ECS_ENTITY_MASK;
     }
 
     ecs_vector_each(type, ecs_entity_t, c_ptr, {
@@ -284,9 +283,9 @@ bool ecs_type_has_entity(
                 return true;
             }
         } else 
-        if (is_trait && e & ECS_TRAIT) {
+        if (trait && e & ECS_TRAIT) {
             e &= ECS_ENTITY_MASK;
-            if (entity == ecs_entity_t_hi(e)) {
+            if (trait == ecs_entity_t_hi(e)) {
                 return true;
             }
         }

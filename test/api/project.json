@@ -450,7 +450,9 @@
             "id": "Traits",
             "testcases": [
                 "type_w_one_trait",
-                "type_w_two_traits"
+                "type_w_two_traits",
+                "add_trait",
+                "remove_trait"
             ]
         }, {
             "id": "TriggerOnAdd",

@@ -404,6 +404,8 @@ void Sorting_sort_after_system(void);
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
 void Traits_type_w_two_traits(void);
+void Traits_add_trait(void);
+void Traits_remove_trait(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -2561,7 +2563,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Traits",
-        .testcase_count = 2,
+        .testcase_count = 4,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_w_one_trait",
@@ -2570,6 +2572,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "type_w_two_traits",
                 .function = Traits_type_w_two_traits
+            },
+            {
+                .id = "add_trait",
+                .function = Traits_add_trait
+            },
+            {
+                .id = "remove_trait",
+                .function = Traits_remove_trait
             }
         }
     },
