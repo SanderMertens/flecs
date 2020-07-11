@@ -1011,6 +1011,7 @@ void Modules_name_prefix_type(void);
 void Modules_name_prefix_prefab(void);
 void Modules_name_prefix_pipeline(void);
 void Modules_name_prefix_trigger(void);
+void Modules_name_prefix_underscore(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -4889,7 +4890,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Modules",
-        .testcase_count = 15,
+        .testcase_count = 16,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_module",
@@ -4950,6 +4951,10 @@ static bake_test_suite suites[] = {
             {
                 .id = "name_prefix_trigger",
                 .function = Modules_name_prefix_trigger
+            },
+            {
+                .id = "name_prefix_underscore",
+                .function = Modules_name_prefix_underscore
             }
         }
     },

@@ -1111,7 +1111,8 @@
                 "name_prefix_type",
                 "name_prefix_prefab",
                 "name_prefix_pipeline",
-                "name_prefix_trigger"
+                "name_prefix_trigger",
+                "name_prefix_underscore"
             ]
         }, {
             "id": "Internals",

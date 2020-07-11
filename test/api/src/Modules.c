@@ -29,6 +29,7 @@ typedef struct SimpleModule {
     ECS_DECLARE_ENTITY(SimpleFooPrefab);
     ECS_DECLARE_ENTITY(SimpleFooPipeline);
     ECS_DECLARE_ENTITY(SimpleFooTrigger);
+    ECS_DECLARE_ENTITY(Simple_underscore);
 } SimpleModule;
 
 #define SimpleModuleImportHandles(handles)\
@@ -44,7 +45,8 @@ typedef struct SimpleModule {
     ECS_IMPORT_ENTITY(handles, SimpleFooType);\
     ECS_IMPORT_ENTITY(handles, SimpleFooPrefab);\
     ECS_IMPORT_ENTITY(handles, SimpleFooPipeline);\
-    ECS_IMPORT_ENTITY(handles, SimpleFooTrigger);
+    ECS_IMPORT_ENTITY(handles, SimpleFooTrigger);\
+    ECS_IMPORT_ENTITY(handles, Simple_underscore);
 
 void SimpleModuleImport(
     ecs_world_t *world)
@@ -68,6 +70,7 @@ void SimpleModuleImport(
     ECS_SYSTEM(world, SimpleFooSystem, EcsOnUpdate, Position);
     ECS_PIPELINE(world, SimpleFooPipeline, Tag);
     ECS_TRIGGER(world, SimpleFooTrigger, EcsOnAdd, Position);
+    ECS_TAG(world, Simple_underscore);
 
     ECS_SET_COMPONENT(Position);
     ECS_SET_COMPONENT(Velocity);
@@ -82,6 +85,7 @@ void SimpleModuleImport(
     ECS_SET_ENTITY(SimpleFooType);
     ECS_SET_ENTITY(SimpleFooPipeline);
     ECS_SET_ENTITY(SimpleFooTrigger);
+    ECS_SET_ENTITY(Simple_underscore);
 }
 
 /* -- End module code -- */
@@ -287,6 +291,18 @@ void Modules_name_prefix_trigger() {
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooTrigger");
     test_assert(e != 0);
     test_assert(e == SimpleFooTrigger);
+    
+    ecs_fini(world);
+}
+
+void Modules_name_prefix_underscore() {
+   ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, SimpleModule);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.underscore");
+    test_assert(e != 0);
+    test_assert(e == Simple_underscore);
     
     ecs_fini(world);
 }

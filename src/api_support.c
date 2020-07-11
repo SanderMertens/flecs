@@ -148,8 +148,12 @@ const char* get_entity_name(
     const char *prefix = world->name_prefix;
     if (type_name && prefix) {
         size_t len = strlen(prefix);
-        if (!strncmp(type_name, prefix, len) && isupper(type_name[len])) {
-            return type_name + len;
+        if (!strncmp(type_name, prefix, len) && (isupper(type_name[len]) || type_name[len] == '_')) {
+            if (type_name[len] == '_') {
+                return type_name + len + 1;
+            } else {
+                return type_name + len;
+            }
         }
     }
 
