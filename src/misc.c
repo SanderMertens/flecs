@@ -165,13 +165,13 @@ void ecs_os_time_sleep(
     }
 #else
     HANDLE timer;
-	LARGE_INTEGER ft;
+    LARGE_INTEGER ft;
 
-	ft.QuadPart = -((int64_t)sec * 10000000 + (int64_t)nanosec / 100);
+    ft.QuadPart = -((int64_t)sec * 10000000 + (int64_t)nanosec / 100);
 
-	timer = CreateWaitableTimer(NULL, TRUE, NULL);
-	SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
-	WaitForSingleObject(timer, INFINITE);
-	CloseHandle(timer);
+    timer = CreateWaitableTimer(NULL, TRUE, NULL);
+    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+    WaitForSingleObject(timer, INFINITE);
+    CloseHandle(timer);
 #endif
 }
