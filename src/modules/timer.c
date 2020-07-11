@@ -216,12 +216,11 @@ void ecs_set_tick_source(
 }
 
 void FlecsTimerImport(
-    ecs_world_t *world,
-    int flags)
+    ecs_world_t *world)
 {    
     ECS_MODULE(world, FlecsTimer);
 
-    ECS_IMPORT(world, FlecsPipeline, 0);
+    ECS_IMPORT(world, FlecsPipeline);
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -236,6 +235,4 @@ void FlecsTimerImport(
 
     /* Rate filter handling */
     ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, [in] RateFilter, [out] flecs.system.TickSource);
-
-    (void)flags;
 }

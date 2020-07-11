@@ -245,9 +245,9 @@ ecs_world_t *ecs_init(void) {
     ecs_trace_1("import builtin modules");
     ecs_log_push();
 
-    ECS_IMPORT(world, FlecsSystem, 0);
-    ECS_IMPORT(world, FlecsPipeline, 0);
-    ECS_IMPORT(world, FlecsTimer, 0);
+    ECS_IMPORT(world, FlecsSystem);
+    ECS_IMPORT(world, FlecsPipeline);
+    ECS_IMPORT(world, FlecsTimer);
 
     ecs_log_pop();
 #endif

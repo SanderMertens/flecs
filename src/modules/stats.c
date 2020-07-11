@@ -597,14 +597,11 @@ void StatsCollectTypeStats(ecs_iter_t *it) {
 /* -- Module import function -- */
 
 void FlecsStatsImport(
-    ecs_world_t *world,
-    int flags)
-{
-    (void)flags;
-    
+    ecs_world_t *world)
+{    
     ECS_MODULE(world, FlecsStats);
 
-    ECS_IMPORT(world, FlecsPipeline, 0);
+    ECS_IMPORT(world, FlecsPipeline);
 
     ecs_set_name_prefix(world, "Ecs");
 

@@ -118,8 +118,7 @@ typedef int32_t (*ecs_rank_type_action_t)(
 
 /** Initialization action for modules */
 typedef void (*ecs_module_action_t)(
-    ecs_world_t *world,
-    int flags);    
+    ecs_world_t *world);    
 
 /** Action callback on world exit */
 typedef void (*ecs_fini_action_t)(
@@ -2226,7 +2225,6 @@ ecs_entity_t ecs_import(
     ecs_world_t *world,
     ecs_module_action_t module,
     const char *module_name,
-    int flags,
     void *handles_out,
     size_t handles_size);
 
@@ -2253,8 +2251,7 @@ FLECS_EXPORT
 ecs_entity_t ecs_import_from_library(
     ecs_world_t *world,
     const char *library_name,
-    const char *module_name,
-    int flags);
+    const char *module_name);
 
 /** Define module
  */
@@ -2280,11 +2277,11 @@ ecs_entity_t ecs_import_from_library(
  * The contents of a module component are module specific, although they
  * typically contain handles to the content of the module.
  */
-#define ECS_IMPORT(world, id, flags) \
+#define ECS_IMPORT(world, id) \
     id ecs_module(id);\
     char *id##__name = ecs_module_path_from_c(#id);\
     ECS_ENTITY_VAR(id) = ecs_import(\
-        world, id##Import, id##__name, flags, &ecs_module(id), sizeof(id));\
+        world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
     ecs_os_free(id##__name);\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
     id##ImportHandles(ecs_module(id));\
@@ -2320,11 +2317,6 @@ ecs_entity_t ecs_import_from_library(
     ECS_TYPE_VAR(entity) = (handles).ecs_type(entity); (void)ecs_type(entity);\
     (void)entity;\
     (void)ecs_type(entity)
-
-/** -- Builtin module flags -- */
-#define ECS_REFLECTION (1)
-#define ECS_2D (2)
-#define ECS_3D (3)
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -841,8 +841,7 @@ void bootstrap_set_system(
 }
 
 void FlecsSystemImport(
-    ecs_world_t *world,
-    int flags)
+    ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsSystem);
 
@@ -908,6 +907,4 @@ void FlecsSystemImport(
     /* Monitors that trigger when a system is enabled or disabled */
     ECS_SYSTEM(world, DisableSystem, EcsMonitor, System, Disabled || DisabledIntern, SYSTEM:Hidden);
     ECS_SYSTEM(world, EnableSystem, EcsMonitor, System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
-
-    (void)flags;
 }

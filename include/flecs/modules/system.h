@@ -232,8 +232,7 @@ typedef struct FlecsSystem {
 
 FLECS_EXPORT
 void FlecsSystemImport(
-    ecs_world_t *world,
-    int flags);
+    ecs_world_t *world);
 
 #define FlecsSystemImportHandles(handles)
 

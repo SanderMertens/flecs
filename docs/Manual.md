@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Velocity);
     
     // Module names are PascalCase
-    ECS_IMPORT(world, MyModule, 0);
+    ECS_IMPORT(world, MyModule);
 
     // Enumeration constants ('EcsOnUpdate') use PascalCase
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);

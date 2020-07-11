@@ -31,8 +31,7 @@ typedef struct SimpleModule {
 /* This is the function that implements the module loader. It is automatically
  * invoked by the ECS_IMPORT macro. */
 void SimpleModuleImport(
-    ecs_world_t *world,
-    int flags);
+    ecs_world_t *world);
 
 /* This macro is used to declare variables that contain the handles inside the
  * module. It is invoked by the ECS_IMPORT macro to declare variables in the

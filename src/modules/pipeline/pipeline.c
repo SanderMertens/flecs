@@ -706,12 +706,11 @@ void FlecsPipelineFini(
 }
 
 void FlecsPipelineImport(
-    ecs_world_t *world,
-    int flags)
+    ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsPipeline);
 
-    ECS_IMPORT(world, FlecsSystem, 0);
+    ECS_IMPORT(world, FlecsSystem);
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -749,6 +748,4 @@ void FlecsPipelineImport(
 
     /* Cleanup thread administration when world is destroyed */
     ecs_atfini(world, FlecsPipelineFini, NULL);
-
-    (void)flags;
 }

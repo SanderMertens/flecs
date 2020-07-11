@@ -47,8 +47,7 @@ typedef struct SimpleModule {
     ECS_IMPORT_ENTITY(handles, SimpleFooTrigger);
 
 void SimpleModuleImport(
-    ecs_world_t *world, 
-    int flags)
+    ecs_world_t *world)
 {
     ECS_MODULE(world, SimpleModule);
 
@@ -90,7 +89,7 @@ void SimpleModuleImport(
 void Modules_simple_module() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -115,7 +114,7 @@ void AddVtoP(ecs_iter_t *it) {
 void Modules_import_module_from_system() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
     ECS_SYSTEM(world, AddVtoP, EcsOnUpdate, simple.module.Position, simple.module:simple.module);
 
     const void *module_ptr = ecs_get(world, ecs_entity(SimpleModule), SimpleModule);
@@ -133,14 +132,14 @@ void Modules_import_module_from_system() {
 }
 
 ecs_entity_t import_module(ecs_world_t *world) {
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
     return ecs_entity(SimpleModule);
 }
 
 void Modules_import_again() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     test_assert(ecs_entity(SimpleModule) != 0);
     test_assert(ecs_entity(SimpleModule) == import_module(world));
@@ -151,7 +150,7 @@ void Modules_import_again() {
 void Modules_scoped_component() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.Position");
     test_assert(e != 0);
@@ -163,7 +162,7 @@ void Modules_scoped_component() {
 void Modules_scoped_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.Tag");
     test_assert(e != 0);
@@ -175,7 +174,7 @@ void Modules_scoped_tag() {
 void Modules_scoped_system() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.Move");
     test_assert(e != 0);
@@ -187,7 +186,7 @@ void Modules_scoped_system() {
 void Modules_scoped_entity() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.Entity");
     test_assert(e != 0);
@@ -199,7 +198,7 @@ void Modules_scoped_entity() {
 void Modules_name_prefix_component() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooComponent");
     test_assert(e != 0);
@@ -211,7 +210,7 @@ void Modules_name_prefix_component() {
 void Modules_name_prefix_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooTag");
     test_assert(e != 0);
@@ -223,7 +222,7 @@ void Modules_name_prefix_tag() {
 void Modules_name_prefix_system() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooSystem");
     test_assert(e != 0);
@@ -235,7 +234,7 @@ void Modules_name_prefix_system() {
 void Modules_name_prefix_entity() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooEntity");
     test_assert(e != 0);
@@ -247,7 +246,7 @@ void Modules_name_prefix_entity() {
 void Modules_name_prefix_type() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooType");
     test_assert(e != 0);
@@ -259,7 +258,7 @@ void Modules_name_prefix_type() {
 void Modules_name_prefix_prefab() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooPrefab");
     test_assert(e != 0);
@@ -271,7 +270,7 @@ void Modules_name_prefix_prefab() {
 void Modules_name_prefix_pipeline() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooPipeline");
     test_assert(e != 0);
@@ -283,7 +282,7 @@ void Modules_name_prefix_pipeline() {
 void Modules_name_prefix_trigger() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooTrigger");
     test_assert(e != 0);

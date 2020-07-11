@@ -16,8 +16,7 @@ void Move(ecs_iter_t *it) {
 }
 
 void SimpleModuleImport(
-    ecs_world_t *world,
-    int flags)
+    ecs_world_t *world)
 {
     /* Define module */
     ECS_MODULE(world, SimpleModule);
