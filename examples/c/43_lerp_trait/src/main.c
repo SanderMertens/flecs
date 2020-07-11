@@ -1,6 +1,5 @@
 #include <lerp_trait.h>
 
-/* Ordinary position & velocity components */
 typedef struct Position {
     float x;
     float y;
@@ -79,7 +78,7 @@ void PrintPosition(ecs_iter_t *it) {
 int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init();
 
-    /* Register components and trait as a regular component */
+    /* Register components and trait as a regular components and tags */
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Lerp);
     ECS_TAG(world, LerpStart);
