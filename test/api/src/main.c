@@ -406,6 +406,10 @@ void Traits_type_w_one_trait(void);
 void Traits_type_w_two_traits(void);
 void Traits_add_trait(void);
 void Traits_remove_trait(void);
+void Traits_add_tag_trait_for_tag(void);
+void Traits_add_tag_trait_for_component(void);
+void Traits_query_2_traits(void);
+void Traits_query_2_traits_2_instances_per_type(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -2563,7 +2567,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Traits",
-        .testcase_count = 4,
+        .testcase_count = 8,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_w_one_trait",
@@ -2580,6 +2584,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "remove_trait",
                 .function = Traits_remove_trait
+            },
+            {
+                .id = "add_tag_trait_for_tag",
+                .function = Traits_add_tag_trait_for_tag
+            },
+            {
+                .id = "add_tag_trait_for_component",
+                .function = Traits_add_tag_trait_for_component
+            },
+            {
+                .id = "query_2_traits",
+                .function = Traits_query_2_traits
+            },
+            {
+                .id = "query_2_traits_2_instances_per_type",
+                .function = Traits_query_2_traits_2_instances_per_type
             }
         }
     },

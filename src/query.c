@@ -268,12 +268,13 @@ static
 int32_t get_component_index(
     ecs_world_t *world,
     ecs_type_t table_type,
-    ecs_entity_t component,
+    ecs_entity_t *component_out,
     int32_t column_index,
     ecs_sig_oper_kind_t op,
     int32_t *trait_index_offsets)
 {
     int32_t result = 0;
+    ecs_entity_t component = *component_out;
 
     if (component) {
         if (component & ECS_TRAIT) {
@@ -286,10 +287,24 @@ int32_t get_component_index(
 
             if (result != -1) {
                 trait_index_offsets[column_index] = result + 1;
+
+                /* If component of current column is a trait, get the actual trait
+                 * type for the table, so the system can see which component the
+                 * trait was applied to */   
+                ecs_entity_t *trait = ecs_vector_get(
+                    table_type, ecs_entity_t, result);
+                *component_out = *trait;
+
+                /* Check if the trait is a tag or whether it has data */
+                if (ecs_get(world, component, EcsComponent) == NULL) {
+                    /* If trait has no data associated with it, use the
+                     * component to which the trait has been added */
+                    component = ecs_entity_t_lo(*trait);
+                }
             }
         } else {
-            /* Retrieve offset for component */
-            result = ecs_type_index_of(table_type, component);         
+            /* Get column index for component */
+            result = ecs_type_index_of(table_type, component);
         }
 
         /* If column is found, add one to the index, as column zero in
@@ -548,18 +563,9 @@ add_trait:
          * EcsFromSystem or EcsFromParent) and is not just a handle */
         if (!entity && from != EcsFromEmpty) {
             int32_t index = get_component_index(
-                world, table_type, component, c, op, trait_index_offsets);
+                world, table_type, &component, c, op, trait_index_offsets);
             
             table_data->columns[c] = index;
-
-            /* If component of current column is a trait, get the actual trait
-             * type for the table, so the system can see which component the
-             * trait was applied to */
-            if (index != -1 && component & ECS_TRAIT) {
-                ecs_assert(ecs_vector_count(table_type) > index - 1, 
-                    ECS_INTERNAL_ERROR, NULL);
-                component = *ecs_vector_get(table_type, ecs_entity_t, index - 1);
-            }
         }
 
         /* Check if a the component is a reference. If 'entity' is set, the

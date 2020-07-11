@@ -986,7 +986,7 @@ void ecs_bulk_add_remove_type(
  * @param trait The trait to remove.
  */
 #define ecs_add_trait(world, entity, component, trait)\
-    ecs_add_entity(world, entity, ecs_trait(component, trait))
+    ecs_add_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)))
 
 /** Remove a trait
  * This operation removes a trait from an entity.
@@ -997,7 +997,7 @@ void ecs_bulk_add_remove_type(
  * @param trait The trait to remove.
  */
 #define ecs_remove_trait(world, entity, component, trait)\
-    ecs_remove_entity(world, entity, ecs_trait(component, trait))
+    ecs_remove_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)))
 
 /** Test if an entity has a trait.
  * This operation returns true if the entity has the provided trait for the
@@ -1010,7 +1010,7 @@ void ecs_bulk_add_remove_type(
  * @return True if the entity has the trait, false if not.
  */
 #define ecs_has_trait(world, entity, component, trait)\
-    ecs_has_entity(world, entity, ecs_trait(component, trait))
+    ecs_has_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)))
 
 /** Set trait for component. 
  * This operation adds a trait for an entity and component. Traits can be added
@@ -1020,13 +1020,31 @@ void ecs_bulk_add_remove_type(
  * trait component in the system signature. A system will match multiple times
  * with the same entity if the trait is added for multiple components.
  *
+ * * This operation can only be used with traits that are components.
+ *
  * @param world The world.
  * @param e The entity.
  * @param component The component for which to add the trait.
  * @param trait The trait to add.
  */
 #define ecs_set_trait(world, entity, component, trait, ...)\
-    ecs_set_ptr_w_entity(world, entity, ecs_trait(component, trait), sizeof(trait), &(trait)__VA_ARGS__)
+    ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)), sizeof(trait), &(trait)__VA_ARGS__)
+
+/** Set tag trait for component. 
+ * This operation is similar to ecs_set_trait, but is used for trait tags. When
+ * a trait tag is set on an entity, the trait type is not used (tags have no
+ * type) and instead the component type is used.
+ *
+ * This operation can only be used with traits that are not components.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param component The component for which to add the trait.
+ * @param trait The trait to add.
+ */
+#define ecs_set_trait_tag(world, entity, trait, component, ...)\
+    ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_entity(component), trait), sizeof(component), &(component)__VA_ARGS__)
+
 
 /** Get trait for component. 
  * This operation obtains the value of a trait for a componetn that has been 
@@ -1038,7 +1056,7 @@ void ecs_bulk_add_remove_type(
  * @param trait The trait that was added.
  */
 #define ecs_get_trait(world, entity, component, trait)\
-    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(component, trait)))
+    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait))))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2121,6 +2139,25 @@ FLECS_EXPORT
 void* ecs_table_column(
     const ecs_iter_t *it,
     int32_t column);
+
+/** Get the size of a table column.
+ *
+ * @param it The iterator.
+ * @param component The component for which to obtain the index. 
+ */
+FLECS_EXPORT
+size_t ecs_table_column_size(
+    const ecs_iter_t *it,
+    int32_t column_index);
+
+/** Get the index of the table column for a component.
+ * 
+ * @param it The iterator.
+ * @param component The component for which to obtain the index.
+ */
+int32_t ecs_table_component_index(
+    const ecs_iter_t *it,
+    ecs_entity_t component);
 
 /** Get a strongly typed pointer to a column (owned or shared). */
 #define ECS_COLUMN(it, type, id, column)\

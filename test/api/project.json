@@ -452,7 +452,11 @@
                 "type_w_one_trait",
                 "type_w_two_traits",
                 "add_trait",
-                "remove_trait"
+                "remove_trait",
+                "add_tag_trait_for_tag",
+                "add_tag_trait_for_component",
+                "query_2_traits",
+                "query_2_traits_2_instances_per_type"
             ]
         }, {
             "id": "TriggerOnAdd",

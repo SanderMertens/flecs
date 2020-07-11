@@ -26,15 +26,8 @@ ecs_data_t* init_data(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
-        /* If this is a trait, get the trait component from the identifier */
-        if (e & ECS_TRAIT) {
-            e = e & ECS_ENTITY_MASK;
-            e = ecs_entity_t_hi(e);
-        }
-
-        const EcsComponent *component = ecs_get(world, e, EcsComponent);            
-
         /* Is the column a component? */
+        const EcsComponent *component = ecs_component_from_id(world, e);
         if (component) {
             /* Is the component associated wit a (non-empty) type? */
             if (component->size) {

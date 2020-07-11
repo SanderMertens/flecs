@@ -129,7 +129,7 @@ typedef char bool;
 #define ecs_entity_t_lo(value) ((uint32_t)(value))
 #define ecs_entity_t_hi(value) ((uint32_t)((value) >> 32))
 #define ecs_entity_t_comb(v1, v2) (((uint64_t)(v2) << 32) + (uint32_t)(v1))
-#define ecs_trait(comp, trait) ECS_TRAIT | ecs_entity_t_comb(ecs_entity(comp), ecs_entity(trait))
+#define ecs_trait(comp, trait) ECS_TRAIT | ecs_entity_t_comb(comp, trait)
 
 
 ////////////////////////////////////////////////////////////////////////////////
