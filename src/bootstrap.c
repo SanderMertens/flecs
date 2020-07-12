@@ -181,7 +181,7 @@ void ecs_bootstrap(
     ecs_bootstrap_tag(world, EcsHidden);
     ecs_bootstrap_tag(world, EcsDisabled);
 
-    ecs_set_component_actions(world, ecs_entity(EcsName), &(EcsComponentLifecycle){
+    ecs_set_component_actions(world, EcsName, {
         .ctor = ecs_ctor(EcsName),
         .dtor = ecs_dtor(EcsName),
         .copy = ecs_copy(EcsName),

@@ -86,14 +86,32 @@ void deinit_all_data(
 }
 
 static
+void run_un_set_handlers(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data)
+{
+    int32_t count = ecs_vector_count(data->entities);
+
+    if (count) {
+        ecs_run_monitors(world, &world->stage, table, table->un_set_all, 
+            0, count, NULL);
+    }
+}
+
+static
 void run_on_remove_handlers(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data)
 {
     int32_t count = ecs_vector_count(data->entities);
+
     if (count) {
         ecs_entities_t components = ecs_type_to_entities(table->type);
+
+        ecs_run_monitors(world, &world->stage, table, NULL, 
+                0, count, table->un_set_all);
 
         /* Run deinit actions (dtors) for components. Don't run triggers */
         ecs_run_deinit_actions(
@@ -490,6 +508,19 @@ void ecs_table_clear(
     }
 
     ecs_table_clear_silent(world, table);
+}
+
+/* Unset all components in table. This function is called before a table is 
+ * deleted, and invokes all UnSet handlers, if any */
+void ecs_table_unset(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    (void)world;
+    ecs_data_t *data = ecs_table_get_data(world, table);
+    if (data) {
+        run_un_set_handlers(world, table, data);
+    }   
 }
 
 /* Free table resources. Do not invoke handlers and do not activate/deactivate

@@ -145,18 +145,18 @@ typedef char bool;
         ecs_entity_t component,\
         const ecs_entity_t *entity_ptr,\
         void *_ptr,\
-        size_t size,\
-        int32_t count,\
+        size_t _size,\
+        int32_t _count,\
         void *ctx)\
     {\
         (void)world;\
         (void)component;\
         (void)entity_ptr;\
         (void)_ptr;\
-        (void)size;\
-        (void)count;\
+        (void)_size;\
+        (void)_count;\
         (void)ctx;\
-        for (int32_t i = 0; i < count; i ++) {\
+        for (int32_t i = 0; i < _count; i ++) {\
             ecs_entity_t entity = entity_ptr[i];\
             type *var = &((type*)_ptr)[i];\
             (void)entity;\
@@ -174,8 +174,8 @@ typedef char bool;
         const ecs_entity_t *src_entities,\
         void *_dst_ptr,\
         const void *_src_ptr,\
-        size_t size,\
-        int32_t count,\
+        size_t _size,\
+        int32_t _count,\
         void *ctx)\
     {\
         (void)world;\
@@ -184,10 +184,10 @@ typedef char bool;
         (void)src_entities;\
         (void)_dst_ptr;\
         (void)_src_ptr;\
-        (void)size;\
-        (void)count;\
+        (void)_size;\
+        (void)_count;\
         (void)ctx;\
-        for (int32_t i = 0; i < count; i ++) {\
+        for (int32_t i = 0; i < _count; i ++) {\
             ecs_entity_t dst_entity = dst_entities[i];\
             ecs_entity_t src_entity = src_entities[i];\
             type *dst_var = &((type*)_dst_ptr)[i];\
@@ -209,8 +209,8 @@ typedef char bool;
         const ecs_entity_t *src_entities,\
         void *_dst_ptr,\
         void *_src_ptr,\
-        size_t size,\
-        int32_t count,\
+        size_t _size,\
+        int32_t _count,\
         void *ctx)\
     {\
         (void)world;\
@@ -219,10 +219,10 @@ typedef char bool;
         (void)src_entities;\
         (void)_dst_ptr;\
         (void)_src_ptr;\
-        (void)size;\
-        (void)count;\
+        (void)_size;\
+        (void)_count;\
         (void)ctx;\
-        for (int32_t i = 0; i < count; i ++) {\
+        for (int32_t i = 0; i < _count; i ++) {\
             ecs_entity_t dst_entity = dst_entities[i];\
             ecs_entity_t src_entity = src_entities[i];\
             type *dst_var = &((type*)_dst_ptr)[i];\

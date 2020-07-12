@@ -718,7 +718,7 @@ void OnSetComponentLifecycle(
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_set_component_actions(world, e, &cl[i]);   
+        ecs_set_component_actions_w_entity(world, e, &cl[i]);   
     }
 }
 

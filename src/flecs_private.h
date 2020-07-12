@@ -227,6 +227,11 @@ void ecs_table_register_query(
     ecs_query_t *query,
     int32_t matched_table_index);
 
+/* Unset components in table */
+void ecs_table_unset(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
 /* Free table */
 void ecs_table_free(
     ecs_world_t *world,

@@ -10,7 +10,7 @@ typedef struct EcsPipelineQuery {
 } EcsPipelineQuery;
 
 ECS_CTOR(EcsPipelineQuery, ptr, {
-    memset(ptr, 0, size);
+    memset(ptr, 0, _size);
 })
 
 ECS_DTOR(EcsPipelineQuery, ptr, {
@@ -602,6 +602,10 @@ void ecs_frame_end(
 
     if (world->locking_enabled) {
         ecs_unlock(world);
+
+        ecs_os_mutex_lock(world->thr_sync);
+        ecs_os_cond_broadcast(world->thr_cond);
+        ecs_os_mutex_unlock(world->thr_sync);
     }
 
     stop_measure_frame(world, delta_time);   

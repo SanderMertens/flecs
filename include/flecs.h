@@ -452,10 +452,13 @@ void ecs_run_post_frame(
  * @param actions Type that contains the component actions.
  */
 FLECS_EXPORT
-void ecs_set_component_actions(
+void ecs_set_component_actions_w_entity(
     ecs_world_t *world,
     ecs_entity_t component,
     EcsComponentLifecycle *actions);
+
+#define ecs_set_component_actions(world, component, ...)\
+    ecs_set_component_actions_w_entity(world, ecs_entity(component), &(EcsComponentLifecycle)__VA_ARGS__)
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
@@ -592,6 +595,28 @@ void ecs_lock(
  */
 FLECS_EXPORT
 void ecs_unlock(
+    ecs_world_t *world);
+
+/** Wait until world becomes available.
+ * When a non-flecs thread needs to interact with the world, it should invoke
+ * this function to wait until the world becomes available (as in, it is not
+ * progressing the frame). Invoking this function guarantees that the thread
+ * will not starve. (as opposed to simply taking the world lock).
+ *
+ * An application will have to invoke ecs_end_wait after this function returns.
+ * 
+ * @param world The world.
+ */
+void ecs_begin_wait(
+    ecs_world_t *world);
+
+/** Release world after calling ecs_begin_wait.
+ * This operation should be invoked after invoking ecs_begin_wait, and will
+ * release the world back to the thread running the main loop.
+ *
+ * @param world The world.
+ */
+void ecs_end_wait(
     ecs_world_t *world);
 
 /** Enable or disable tracing.
