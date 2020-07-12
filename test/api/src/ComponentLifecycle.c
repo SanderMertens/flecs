@@ -400,6 +400,7 @@ void ComponentLifecycle_move_on_merge() {
     cl_ctx ctx = { { 0 } };
 
     ecs_set(world, ecs_entity(Position), EcsComponentLifecycle, {
+        .ctor = comp_ctor,
         .move = comp_move,
         .ctx = &ctx
     });
@@ -410,9 +411,11 @@ void ComponentLifecycle_move_on_merge() {
     ecs_staging_begin(world);
 
     ecs_add(world, e, Velocity);
+    test_int(ctx.ctor.invoked, 1);
     test_int(ctx.move.invoked, 0);
 
     ecs_staging_end(world, false);
+    test_int(ctx.ctor.invoked, 2);
     test_int(ctx.move.invoked, 1);
     test_assert(ctx.move.world == world);
     test_int(ctx.move.component, ecs_entity(Position));
