@@ -306,3 +306,23 @@ void Modules_name_prefix_underscore() {
     
     ecs_fini(world);
 }
+
+void Modules_lookup_by_symbol() {
+   ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, SimpleModule);
+
+    ecs_entity_t e = ecs_lookup_symbol(world, "Position");
+    test_assert(e != 0);
+    test_assert(e == ecs_entity(Position));
+
+    e = ecs_lookup_symbol(world, "SimpleFooComponent");
+    test_assert(e != 0);
+    test_assert(e == ecs_entity(SimpleFooComponent));
+    
+    e = ecs_lookup_symbol(world, "Simple_underscore");
+    test_assert(e != 0);
+    test_assert(e == Simple_underscore);
+
+    ecs_fini(world);
+}

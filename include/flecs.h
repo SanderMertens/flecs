@@ -1758,6 +1758,18 @@ ecs_entity_t ecs_lookup_path_w_sep(
 #define ecs_lookup_fullpath(world, path)\
     ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
 
+/** Lookup an entity by its symbol name.
+ * This looks up an entity by the symbol name that was provided in EcsName. The
+ * operation does not take into account scoping, which means it will search all
+ * entities that have an EcsName.
+ *
+ * This operation can be useful to resolve, for example, a type by its C 
+ * identifier, which does not include the Flecs namespacing.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup_symbol(
+    ecs_world_t *world,
+    const char *name);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Path utilities
