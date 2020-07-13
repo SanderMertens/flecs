@@ -401,6 +401,15 @@ void Sorting_sort_after_delete(void);
 void Sorting_sort_after_set(void);
 void Sorting_sort_after_system(void);
 
+// Testsuite 'Queries'
+void Queries_query_changed_after_new(void);
+void Queries_query_changed_after_delete(void);
+void Queries_query_changed_after_add(void);
+void Queries_query_changed_after_remove(void);
+void Queries_query_changed_after_set(void);
+void Queries_query_change_after_out_system(void);
+void Queries_query_change_after_in_system(void);
+
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
 void Traits_type_w_two_traits(void);
@@ -2564,6 +2573,40 @@ static bake_test_suite suites[] = {
             {
                 .id = "sort_after_system",
                 .function = Sorting_sort_after_system
+            }
+        }
+    },
+    {
+        .id = "Queries",
+        .testcase_count = 7,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "query_changed_after_new",
+                .function = Queries_query_changed_after_new
+            },
+            {
+                .id = "query_changed_after_delete",
+                .function = Queries_query_changed_after_delete
+            },
+            {
+                .id = "query_changed_after_add",
+                .function = Queries_query_changed_after_add
+            },
+            {
+                .id = "query_changed_after_remove",
+                .function = Queries_query_changed_after_remove
+            },
+            {
+                .id = "query_changed_after_set",
+                .function = Queries_query_changed_after_set
+            },
+            {
+                .id = "query_change_after_out_system",
+                .function = Queries_query_change_after_out_system
+            },
+            {
+                .id = "query_change_after_in_system",
+                .function = Queries_query_change_after_in_system
             }
         }
     },
@@ -5048,5 +5091,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 51);
+    return bake_test_run("api", argc, argv, suites, 52);
 }

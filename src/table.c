@@ -1360,8 +1360,7 @@ int32_t* ecs_table_get_dirty_state(
     ecs_table_t *table)
 {
     if (!table->dirty_state) {
-        int32_t column_count = ecs_vector_size(table->type);
-        table->dirty_state = ecs_os_calloc(sizeof(int32_t) * (column_count + 1));
+        table->dirty_state = ecs_os_calloc(sizeof(int32_t) * (table->column_count + 1));
         ecs_assert(table->dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
     }
     return table->dirty_state;
@@ -1373,6 +1372,6 @@ int32_t* ecs_table_get_monitor(
     int32_t *dirty_state = ecs_table_get_dirty_state(table);
     ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t column_count = ecs_vector_size(table->type);
+    int32_t column_count = table->column_count;
     return ecs_os_memdup(dirty_state, (column_count + 1) * sizeof(int32_t));
 }

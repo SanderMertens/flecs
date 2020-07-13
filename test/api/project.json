@@ -447,6 +447,17 @@
                 "sort_after_system"
             ]
         }, {
+            "id": "Queries",
+            "testcases": [
+                "query_changed_after_new",
+                "query_changed_after_delete",
+                "query_changed_after_add",
+                "query_changed_after_remove",
+                "query_changed_after_set",
+                "query_change_after_out_system",
+                "query_change_after_in_system"
+            ]
+        }, {
             "id": "Traits",
             "testcases": [
                 "type_w_one_trait",

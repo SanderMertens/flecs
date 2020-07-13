@@ -1650,6 +1650,19 @@ void ecs_query_group_by(
     ecs_entity_t component,
     ecs_rank_type_action_t rank_action);
 
+/** Returns whether the query data changed since the last iteration.
+ * This operation must be invoked before obtaining the iterator, as this will
+ * reset the changed state. The operation will return true after:
+ * - new entities have been matched with
+ * - matched entities were deleted
+ * - matched components were changed
+ * 
+ * @param query The query.
+ * @return true if entities changed, otherwise false.
+ */
+FLECS_EXPORT
+bool ecs_query_changed(
+    ecs_query_t *query);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Counting entities

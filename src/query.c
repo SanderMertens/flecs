@@ -1094,6 +1094,62 @@ void build_sorted_tables(
 }
 
 static
+bool tables_dirty(
+    ecs_query_t *query)
+{
+    int32_t i, count = ecs_vector_count(query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
+    bool is_dirty = false;
+
+    for (i = 0; i < count; i ++) {
+        ecs_matched_table_t *m_table = &tables[i];
+        ecs_table_t *table = m_table->table;
+
+        if (!m_table->monitor) {
+            m_table->monitor = ecs_table_get_monitor(table);
+            is_dirty = true;
+        }
+
+        int32_t *dirty_state = ecs_table_get_dirty_state(table);
+        int32_t t, type_count = table->column_count;
+        for (t = 0; t < type_count + 1; t ++) {
+            is_dirty |= dirty_state[t] != m_table->monitor[t];
+        }
+    }
+
+    is_dirty |= query->match_count != query->prev_match_count;
+
+    return is_dirty;
+}
+
+static
+void tables_reset_dirty(
+    ecs_query_t *query)
+{
+    query->prev_match_count = query->match_count;
+
+    int32_t i, count = ecs_vector_count(query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
+
+    for (i = 0; i < count; i ++) {
+        ecs_matched_table_t *m_table = &tables[i];
+        ecs_table_t *table = m_table->table;
+
+        if (!m_table->monitor) {
+            /* If one table doesn't have a monitor, none of the tables will have
+             * a monitor, so early out. */
+            return;
+        }
+
+        int32_t *dirty_state = ecs_table_get_dirty_state(table);
+        int32_t t, type_count = table->column_count;
+        for (t = 0; t < type_count + 1; t ++) {
+            m_table->monitor[t] = dirty_state[t];
+        }
+    }
+}
+
+static
 void sort_tables(
     ecs_world_t *world,
     ecs_query_t *query)
@@ -1143,15 +1199,6 @@ void sort_tables(
         if (is_dirty) {
             /* Sort the table */
             sort_table(world, table, index, compare);
-
-            /* Sorting the table will make it dirty again, so update our monitor
-             * after the sort */
-            m_table->monitor[0] = dirty_state[0];
-
-            if (index != -1) {
-                m_table->monitor[index + 1] = dirty_state[index + 1];
-            }
-
             tables_sorted = true;
         }
     }
@@ -1159,7 +1206,6 @@ void sort_tables(
     if (tables_sorted || query->match_count != query->prev_match_count) {
         build_sorted_tables(world, query);
         query->match_count ++; /* Increase version if tables changed */
-        query->prev_match_count = query->match_count;
     }
 }
 
@@ -1558,6 +1604,8 @@ ecs_iter_t ecs_query_iter_page(
 
     sort_tables(query->world, query);
 
+    tables_reset_dirty(query);
+
     int32_t table_count;
     if (query->table_ranges) {
         table_count = ecs_vector_count(query->table_ranges);
@@ -1817,4 +1865,10 @@ void ecs_query_group_by(
     order_ranked_tables(world, query);
 
     build_sorted_tables(world, query);
+}
+
+bool ecs_query_changed(
+    ecs_query_t *query)
+{
+    return tables_dirty(query);
 }
