@@ -443,12 +443,10 @@ A query can be used like this:
 ecs_query_t *query = ecs_query_new(world, "Position, Velocity");
 
 // Create iterator for query
-ecs_query_iter_t it = ecs_query_iter(query);
+ecs_iter_t it = ecs_query_iter(query);
 
 // Iterate all the matching archetypes
 while (ecs_query_next(&it)) {
-    ecs_iter_t *it = &it.it;
-
     // Get the component arrays
     Position *p = ecs_column(it, Position, 1);
     Velocity *v = ecs_column(it, Velocity, 2);

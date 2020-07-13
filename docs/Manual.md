@@ -600,14 +600,575 @@ ecs_remove_entity(world, child, ECS_OR | Toppings);
 ```
 
 ## Components
+A component is a plain datatype that can be attached to an entity. An entity can contain any number of components, and each component can be added only once per entity. Components are registered with a world using the `ECS_COMPONENT` macro, after which they can be added and removed to and from entities. Components can be of any datatype. The following example shows how to register and use components:
+
+```c
+// Components can be defined from regular types
+typedef struct Position {
+    float x, y;
+} Position;
+
+int main() {
+    ecs_world_t *world = ecs_init();
+
+    // Register the component with the world
+    ECS_COMPONENT(world, Position);
+
+    // Create a new entity with the component
+    ecs_entity_t e = ecs_new(world, Position);
+
+    // Remove the component from the entity
+    ecs_remove(world, e, Position);
+
+    // Add the component again
+    ecs_add(world, e, Position);
+}
+```
+
+Component values can be set with the `ecs_set` operation. If the entity did not yet have the component, it will be added:
+
+```c
+ecs_set(world, e, Position, {10, 20});
+```
+
+Applications can get the value of a component with the `ecs_get` function:
+
+The value of a component can be requested with `ecs_get`, which will return `NULL` if the entity does not have the component:
+
+```c
+const Position *p = ecs_get(world, e, Position);
+```
+
+The `ecs_get` operation returns a const pointer which should not be modified by the application. An application can obtain a mutable pointer with `ecs_get_mut`. The `ecs_get_mut` operation ensures that, even when using multiple threads, an application obtains a pointer to a component that can be safely modified, whereas the `ecs_get` operation might return a pointer to memory that is shared between threads. When an application modified a component obtained with `ecs_get_mut`, it should invoke `ecs_modified` to let the framework know the component value was changed. An example:
+
+```c
+Position *p = ecs_get_mut(world, e, Position);
+p->x ++;
+ecs_modified(world, p, Position);
+```
+
+### Component handles
+In order to be able to add, remove and set components on an entity, the API needs access to the component handle. A component handle uniquely identifies a component and is passed to API functions. There are two types of handles that are accepted by API functions, a type handle and an entity handle. These handles are automatically defined as variables by the `ECS_COMPONENT` macro, however if an application wants to use the component in another scope, the handle will have to be passed to that scope.
+
+Some operations can process multiple components in a single operation, like `ecs_add` and `ecs_remove`. Such operations require a handle of `ecs_type_t`. The `ECS_COMPONENT` macro defines a variable of `ecs_type_t` that contains only the id of the component. The variable defined by `ECS_COMPONENT` can be accessed with `ecs_type(ComponentName)`. This escapes the component name, which is necessary as it would otherwise conflict with the C type name. The following example shows how to pass a type handle to another function:
+
+```c
+typedef struct Position {
+    float x, y;
+} Position;
+
+void new_w_position(ecs_world_t *t, ecs_type_t ecs_type(Position)) {
+    // ecs_new uses an ecs_type_t
+    ecs_new(world, Position);
+}
+
+int main() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    new_w_position(world, ecs_type(Position));
+
+    ecs_fini(world);
+}
+```
+
+The `ecs_new`, `ecs_add` and `ecs_remove` (not exhaustive) functions are wrapper macro's arround functions functions that accept a type. The following code is equivalent to the previous example:
+
+```c
+typedef struct Position {
+    float x, y;
+} Position;
+
+void new_w_position(ecs_world_t *t, ecs_type_t p_handle) {
+    // Use plain variable name with the ecs_new_w_type operation
+    ecs_new_w_type(world, p_handle); 
+}
+
+int main() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    new_w_position(world, ecs_type(Position));
+
+    ecs_fini(world);
+}
+```
+
+There are also operations which operate on a single component at a time, like `ecs_get` and `ecs_set`. These operations require a component handle of type `ecs_entity_t`. The `ECS_COMPONENT` macro defines a variable of type `ecs_entity_t`that contains the id of the component. The variable defined by `ECS_COMPONENT` can be accessed by the application with `ecs_entity(ComponentName)`. The following example shows how to pass an entity handle to another function:
+
+```c
+typedef struct Position {
+    float x, y;
+} Position;
+
+void set_position(ecs_world_t *t, ecs_entity_t ecs_entity(Position)) {
+    ecs_entity_t e = ecs_new(world, 0);
+    ecs_set(world, e, Position, {10, 20});
+}
+
+int main() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    set_position(world, ecs_entity(Position));
+
+    ecs_fini(world);
+}
+```
+
+The `ecs_set`, `ecs_get` (not exhaustive) functions are wrapper macro's arround functions functions that accept a type. The following code shows how to use the underlying function for `ecs_get`, `ecs_get_w_entity`:
+
+```c
+typedef struct Position {
+    float x, y;
+} Position;
+
+const Position* get_position(ecs_world_t *t, ecs_entity_t e, ecs_entity_t p_handle) {
+    return ecs_get_w_entity(world, e, p_handle);
+}
+
+int main() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world, Position);
+
+    Position *p = get_position(world, e, ecs_entity(Position));
+
+    ecs_fini(world);
+}
+```
+
+## Tagging
+Tags are much like components, but they are not associated with a data type. Tags are typically used to add a flag to an entity, for example to indicate that an entity is an Enemy:
+
+```c
+int main() {
+    ecs_world_t *world = ecs_init();
+
+    // Register the tag with the world. There is no Enemy type
+    ECS_TAG(world, Enemy);
+
+    // Add the Enemy tag
+    ecs_add(world, e, Enemy);
+
+    // Remove the Enemy tag
+    ecs_remove(world, e, Enemy);    
+}
+```
+
+### Tag handles
+Just like components, the API needs a handle to a tag before it can use it, and just like `ECS_COMPONENT`, the `ECS_TAG` macro defines two variables, one of type `ecs_type_t` and one of `ecs_entity_t`. Passing a handle of an `ecs_type_t` into a function looks similar to a component:
+
+```c
+void new_w_tag(ecs_world_t *t, ecs_type_t ecs_type(Tag)) {
+    // ecs_new uses an ecs_type_t
+    ecs_new(world, Tag);
+}
+
+int main() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    new_w_tag(world, ecs_type(Tag));
+
+    ecs_fini(world);
+}
+```
+
+For functions that require an `ecs_entity_t` handle, the tag variable names are not escaped, since they do not clash with a C type name. An example:
+
+```c
+void add_tag(ecs_world_t *t, ecs_entity_t e, ecs_entity_t Tag) {
+    ecs_add_entity(world, e, Tag);
+}
+
+int main() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    add_tag(world, e, Tag);
+
+    ecs_fini(world);
+}
+```
+
+Anyone who paid careful attention to this example will notice that the `ecs_add_entity` operation accepts two regular entities. 
 
 ## Queries
+Queries allow an application to iterate entities that match a component expression, called a signature (see "Signatures"). Queries are stateful, in that they are registered with the world, and keep track of a list of entities (archetypes) that they match with. Whenever a new combination of entities is introduced (usually through an `ecs_add` or `ecs_remove` operation) it will be matched with the system, and if it matches, stored in a list with matched tables. This continuous matching process means that when an application starts iterating the query, it does not need to evaluate the query signature, which makes queries the most performant way to iterate entities.
+
+A query can be used like this:
+
+```c
+// Create a query for all entities with Position, Velocity
+ecs_query_t *query = ecs_query_new(world, "Position, Velocity");
+
+// Create iterator for query
+ecs_iter_t it = ecs_query_iter(query);
+
+// Iterate all the matching archetypes
+while (ecs_query_next(&it)) {
+    // Get the component arrays
+    Position *p = ecs_column(&it, Position, 1);
+    Velocity *v = ecs_column(&it, Velocity, 2);
+
+    // Iterate the entities in the archetype
+    for (int i = 0; i < it.count, i ++) {
+        p[i].x += v[i].x;
+        p[i].y += v[i].y;
+    }
+}
+```
+
+When an application is iterating the query, it can obtain pointers to the component arrays using the `ecs_column` function, which accepts the iterator, component name and the index of the component in the signature, which is offset by one. In the above example, `1` points to `Position`, which is the first component in the signature. and `2` points to `Velocity` which is the second.
+
+Each time the `ecs_query_next` function returns true, the iterator contains entities that all have the same set of components, or belong to the same archetype, or table. The `count` member of the iterator contains the number of entities in the current table. An application can access the entity identifiers being iterated over with the `entities` member of the iterator:
+
+```c
+while (ecs_query_next(&it)) {
+    for (int i = 0; i < it.count, i ++) {
+        printf("Entity %s\n", ecs_get_name(world, it.entities[i]));
+    }
+}
+```
+
+## Signatures
+The query signature accepts a wide range of operators and options that allow an application to determine with fine granularity which entities to iterate over. The most common kind of signature is one that subscribes for entities with a set of components. An example of such a signature looks like a comma delimited list of component or tag identifiers:
+
+```
+Position, Velocity
+```
+
+Component identifiers can be namespaced, as is often the case with components from a module. If so, a signature will have to include the full path to the component, separated by dots:
+
+```
+my.namespace.Position, my.namespace.Velocity
+```
+
+Signatures may contain type roles. Type roles have the same identifier as the API constants, without the `ECS` prefix.
+
+```
+INSTANCEOF | base, my.namespace.Position
+```
+
+The subset of signatures described so far are called "type expressions", and can be used not only for queries, but also for defining types, usually in combination with the `ECS_TYPE` macro:
+
+```c
+ECS_TYPE(world, MyType, INSTANCEOF | base, my.namespace.Position);
+```
+
+The features described from here are not allowed in type expressions, and may only occur for queries and systems.
+
+### Source modifiers
+By default, components in a query are matched against the entities in a table. Source modifiers allow a query to request data from other entities, typically ones that have a special relationship with the matched entities. A source modifier can be specified with the colon (`:`) character. The following source modifiers can be provided in a signature:
+
+Modifier | Description
+---------|------------
+OWNED    | Match only owned components (default)
+SHARED   | Match only shared components
+ANY      | Match owned or shared components
+PARENT   | Match component from parent
+CASCADE  | Match component from parent, iterate depth-first
+Nothing  | Do not get the component from an entity, just pass in handle
+
+This is an example of a query that requests the `Position` component from both the entity and its parent:
+
+```
+PARENT:Position, Position
+```
+
+#### OWNED
+The `OWNED` modifier matches a component if the entity owns the component. Whenever a component is added to an entity, it is said that the entity owns the component:
+
+```c
+ecs_entity_t e = ecs_new(world, 0);
+
+// Entity 'e' owns Position
+ecs_add(world, e, Position);
+```
+
+Components can be shared, when an entity has an `INSTANCEOF` relationship, in which case an entity may share components with a base entity:
+
+```c
+ecs_entity_t base = ecs_new(world, 0);
+ecs_add(world, base, Position);
+
+// Entity 'e' does not own Position, Position is shared
+ecs_entity_t e = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
+```
+
+An example of a signature expression with `OWNED:
+
+```
+OWNED:Position, OWNED:Velocity
+```
+
+`OWNED` is the default modifier, which means that if an application does not provide a source modifier, `OWNED` is used.
+
+#### SHARED
+The `SHARED` modifier only matches shared components. A shared component is a component that the entity inherits from a base entity, through an `INSTANCEOF` relationship (see the examples in `OWNED`).
+
+When a query or system matches with a `SHARED` component, the `ecs_column` function does not provide an array. Instead it provides a pointer to the shared component which is shared with the entities in the table being iterated over:
+
+```c
+// Request Position, Velocity where Velocity must be shared
+ecs_query_t *query = ecs_query_new(world, "Position, SHARED:Velocity");
+
+ecs_iter_t it = ecs_query_iter(query);
+
+while (ecs_query_next(&it)) {
+    // Pointer is an array, Velocity is a pointer
+    Position *p = ecs_column(&it, Position, 1);
+    Velocity *v = ecs_column(&it, Velocity, 2);
+
+    for (int i = 0; i < it.count, i ++) {
+        // Access velocity as pointer, not as array
+        p[i].x += v->x;
+        p[i].y += v->y;
+    }
+}
+```
+
+#### ANY
+The `ANY` modifier matches both `OWNED` and `SHARED` components. When `ANY` is used, a system should use the `ecs_is_owned` function to test whether it is owned or shared:
+
+```c
+// Request Position, Velocity where Velocity must be shared
+ecs_query_t *query = ecs_query_new(world, "Position, ANY:Velocity");
+
+ecs_iter_t it = ecs_query_iter(query);
+
+while (ecs_query_next(&it)) {
+    Position *p = ecs_column(&it, Position, 1);
+    Velocity *v = ecs_column(&it, Velocity, 2);
+
+    // Test outside of loop for better performance
+    if (ecs_is_owned(it, 2)) {
+        // Velocity is owned, access as array
+        for (int i = 0; i < it.count, i ++) {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+        }
+    } else {
+        // Velocity is shared, access as pointer
+        for (int i = 0; i < it.count, i ++) {
+            p[i].x += v->x;
+            p[i].y += v->y;
+        }        
+    }
+}
+```
+
+#### PARENT
+The `PARENT` modifier requests a component from the parent of an entity. This works with entities that have a `CHILDOF` relationship:
+
+```c
+ecs_entity_t parent = ecs_new(world, 0);
+ecs_add(world, parent, Position);
+
+ecs_entity_t child = ecs_new_w_entity(world, ECS_CHILDOF | parent);
+```
+
+Queries that use a `PARENT` column should access the column data as if it were a `SHARED` column, as a pointer and not as an array:
+
+```c
+ecs_query_t *query = ecs_query_new(world, "Position, PARENT:Position");
+
+ecs_iter_t it = ecs_query_iter(query);
+
+while (ecs_query_next(&it)) {
+    // 1st Position is array, 2nd one is pointer
+    Position *p = ecs_column(&it, Position, 1);
+    Position *p_parent = ecs_column(&it, Position, 2);
+
+    for (int i = 0; i < it.count, i ++) {
+        p[i].x += p_parent->x;
+        p[i].y += p_parent->y;
+    }
+}
+```
+
+If an entity does not have a parent with the specified component, the query will not match with the entity.
+
+#### CASCADE
+The `CASCADE` modifier is like the `PARENT` modifier, except that it iterates entities depth-first, calculated by counting the number of parents from an entity to the root. Another difference with `PARENT` is that `CASCADE` matches with the root of a tree, which does not have a parent with the specified component. This requires `CASCADE` queries to check if the parent component is available:
+
+```c
+ecs_query_t *query = ecs_query_new(world, "Position, CASCADE:Position");
+
+ecs_iter_t it = ecs_query_iter(query);
+
+while (ecs_query_next(&it)) {
+    Position *p = ecs_column(&it, Position, 1);
+    Position *p_parent = ecs_column(&it, Position, 2);
+
+    if (p_parent) {
+        for (int i = 0; i < it.count, i ++) {
+            p[i].x += p_parent->x;
+            p[i].y += p_parent->y;
+        }
+    }
+}
+```
+
+The `CASCADE` modifier is useful for systems that need a certain parent component to be written before the child component is written, which is the case when, for example, transforming from local coordinates to world coordinates.
+
+#### Nothing
+The nothing modifier does not get the component from an entity, but instead just passes its identifier to a query or system. An example:
+
+```c
+ecs_query_t *query = ecs_query_new(world, "Position, :Velocity");
+
+ecs_iter_t it = ecs_query_iter(query);
+
+while (ecs_query_next(&it)) {
+    Position *p = ecs_column(&it, Position, 1);
+
+    // Get component identifier from column
+    ecs_entity_t vel_id = ecs_column_entity(&it, 2);
+}
+```
+
+### Operators
+Signatures may contain operators, which allow queries to make more granular selections of entities. The following operators are avaialble:
+
+Operator | Symbol | Description
+---------|--------|------------
+And      | `,`    | All elements in AND expression must match
+Or       | `||`   | At least one components in OR expression must match
+Not      | `!`    | Entity should not have component
+Optional | `?`    | Entity may have component
+
+Operators can be combined with source modifiers:
+
+```
+Position, !PARENT:Velocity
+```
+
+#### AND
+And is the most common operator, and allows a query to request a set of components that an entity must have in order to be matched. The AND operator takes lowest precedence, and elements in an AND expression may contain other operators. An example of a signature with an `AND` operator is:
+
+```
+Position, Velocity
+```
+
+#### OR
+OR expressions allow a signature to match with one of the components in the OR expression. An example of a signature with an `OR` operator is:
+
+```
+Postion, Velocity || Speed
+```
+
+In this example, any entity that has `Position`, and `Velocity` OR `Speed` will match the signature. Components in an OR expression may contain SOURCE modifiers, but the source modifier must be the same for all elements:
+
+```
+Postion, PARENT:Velocity || PARENT:Speed
+```
+
+#### NOT
+Not expressions allow a signature to exclude entities that have a component. An example of a signature with a `NOT` operator is:
+
+```
+Position, !Velocity
+```
+
+This signature matches all entities that have `Position`, but not have `Velocity`. An expression with a `NOT` column does not pass any data into a system, which means that the `ecs_column` function is guaranteed to return `NULL` for a column.
+
+#### Optional
+The optional operator allows a signature to both match entities with and without a specific component. An exampole with an optional operator is:
+
+```
+Position, ?Velocity
+```
+
+A query with an optional column should test if the component is set before using it:
+
+```c
+ecs_query_t *query = ecs_query_new(world, "Position, CASCADE:Position");
+
+ecs_iter_t it = ecs_query_iter(query);
+
+while (ecs_query_next(&it)) {
+    Position *p = ecs_column(&it, Position, 1);
+    Velocity *v = ecs_column(&it, Velocity, 2);
+
+    if (v) {
+        for (int i = 0; i < it.count, i ++) {
+            p[i].x += v[i].x
+            p[i].y += v[i].y
+        }
+    }
+}
+```
+
+### Access modifiers
+A signature can contain access modifiers, which lets the framework know whether a system or query will read or write the component. The following access modifiers are supported:
+
+Modifier | Description
+---------|------------
+in       | The component is read only
+out      | The component is write only
+inout    | The component can both be read and written
+
+Access modifiers are added to a signature using angular brackets:
+
+```
+[out] Position, [in] Velocity
+```
+
+The default access modifier is `[inout]`, which by default allows a system to read and write a component, but also means Flecs cannot make optimizations in, for example, how systems can be executed in parallel. For this reason, while not mandatory, applications are encouraged to add access modifiers to systems where possible.
 
 ## Sorting
 
 ## Filters
 
 ## Systems
+Systems allow the application to run logic that is matched with a set of entities every frame, periodically or as the result of some event. An example of a simple system definition is:
+
+```c
+ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+```
+
+In this definition, `Move` is the name of the system and also fo the function that will be registered with the system. `EcsOnUpdate` is the system "phase" which indicates when the system is ran in a frame (see "Pipelines"). The part that follows is the system expression, which follows the rules as described in "Signatures").
+
+A system implementation is a function with the following signature:
+
+```c
+void Move(ecs_iter_t *it) { }
+```
+
+The implementation of a system is a regular query iteration:
+
+```c
+Position *p = ecs_column(it, Position, 1);
+Velocity *v = ecs_column(it, Velocity, 2);
+
+for (int i = 0; i < it->count, i ++) {
+    p[i].x += v[i].x;
+    p[i].y += v[i].y;
+}
+```
+
+Systems are implemented using queries, which gives them a very simmilar API and performance characteristics. In addition to a regular query iteration, a system provides a `delta_time` which contains the time passed since the last frame:
+
+```c
+Position *p = ecs_column(it, Position, 1);
+Velocity *v = ecs_column(it, Velocity, 2);
+
+for (int i = 0; i < it->count, i ++) {
+    p[i].x += v[i].x * it->delta_time;
+    p[i].y += v[i].y * it->delta_time;
+}
+```
+
 
 ## Triggers
 
@@ -628,6 +1189,8 @@ ecs_remove_entity(world, child, ECS_OR | Toppings);
 ## Snapshots
 
 ## Serialization
+
+## Bulk operations
 
 ## Statistics
 
