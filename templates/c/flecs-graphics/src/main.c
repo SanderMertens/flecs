@@ -18,11 +18,11 @@ void MoveSquare(ecs_iter_t *it) {
 int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
-    ECS_IMPORT(world, FlecsComponentsTransform, ECS_2D);
-    ECS_IMPORT(world, FlecsComponentsGeometry, ECS_2D);
-    ECS_IMPORT(world, FlecsComponentsGraphics, ECS_2D);
-    ECS_IMPORT(world, FlecsComponentsInput, ECS_2D);
-    ECS_IMPORT(world, FlecsSystemsSdl2, ECS_2D);
+    ECS_IMPORT(world, FlecsComponentsTransform);
+    ECS_IMPORT(world, FlecsComponentsGeometry);
+    ECS_IMPORT(world, FlecsComponentsGraphics);
+    ECS_IMPORT(world, FlecsComponentsInput);
+    ECS_IMPORT(world, FlecsSystemsSdl2);
 
     /* Define entity for square */
     ECS_ENTITY(world, Square, EcsPosition2D, EcsSquare, EcsColor);

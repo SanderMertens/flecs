@@ -9,12 +9,12 @@ int ecs_enable_admin(
 	ecs_world_t* world,
 	uint16_t port)
 {
-    if (!ecs_import_from_library(world, "flecs.systems.civetweb", NULL, 0)) {
+    if (!ecs_import_from_library(world, "flecs.systems.civetweb", NULL)) {
         ecs_os_err("Failed to load flecs.systems.civetweb");
         return 1;
     }
     
-    if (!ecs_import_from_library(world, "flecs.systems.admin", NULL, 0)) {
+    if (!ecs_import_from_library(world, "flecs.systems.admin", NULL)) {
         ecs_os_err("Failed to load flecs.systems.admin");
         return 1;
     }
@@ -35,7 +35,7 @@ int ecs_enable_admin(
 int ecs_enable_console(
 	ecs_world_t* world)
 {
-    if (!ecs_import_from_library( world, "flecs.systems.console", NULL, 0)) {
+    if (!ecs_import_from_library( world, "flecs.systems.console", NULL)) {
         ecs_os_err("Failed to load flecs.systems.console");
         return 1;
     }
@@ -72,7 +72,6 @@ ecs_entity_t ecs_import(
     ecs_world_t *world,
     ecs_module_action_t init_action,
     const char *module_name,
-    int flags,
     void *handles_out,
     size_t handles_size)
 {
@@ -87,7 +86,7 @@ ecs_entity_t ecs_import(
         ecs_log_push();
 
         /* Load module */
-        init_action(world, flags);
+        init_action(world);
 
         /* Lookup module entity (must be registered by module) */
         e = ecs_lookup_fullpath(world, module_name);
@@ -112,8 +111,7 @@ ecs_entity_t ecs_import(
 ecs_entity_t ecs_import_from_library(
     ecs_world_t *world,
     const char *library_name,
-    const char *module_name,
-    int flags)
+    const char *module_name)
 {
     ecs_assert(library_name != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -206,7 +204,7 @@ ecs_entity_t ecs_import_from_library(
     }
 
     /* Do not free id, as it will be stored as the component identifier */
-    ecs_entity_t result = ecs_import(world, action, module, flags, NULL, 0);
+    ecs_entity_t result = ecs_import(world, action, module, NULL, 0);
 
     if (import_func != module_name) {
         ecs_os_free(import_func);

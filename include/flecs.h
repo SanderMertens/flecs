@@ -118,8 +118,7 @@ typedef int32_t (*ecs_rank_type_action_t)(
 
 /** Initialization action for modules */
 typedef void (*ecs_module_action_t)(
-    ecs_world_t *world,
-    int flags);    
+    ecs_world_t *world);    
 
 /** Action callback on world exit */
 typedef void (*ecs_fini_action_t)(
@@ -453,10 +452,13 @@ void ecs_run_post_frame(
  * @param actions Type that contains the component actions.
  */
 FLECS_EXPORT
-void ecs_set_component_actions(
+void ecs_set_component_actions_w_entity(
     ecs_world_t *world,
     ecs_entity_t component,
     EcsComponentLifecycle *actions);
+
+#define ecs_set_component_actions(world, component, ...)\
+    ecs_set_component_actions_w_entity(world, ecs_entity(component), &(EcsComponentLifecycle)__VA_ARGS__)
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
@@ -593,6 +595,28 @@ void ecs_lock(
  */
 FLECS_EXPORT
 void ecs_unlock(
+    ecs_world_t *world);
+
+/** Wait until world becomes available.
+ * When a non-flecs thread needs to interact with the world, it should invoke
+ * this function to wait until the world becomes available (as in, it is not
+ * progressing the frame). Invoking this function guarantees that the thread
+ * will not starve. (as opposed to simply taking the world lock).
+ *
+ * An application will have to invoke ecs_end_wait after this function returns.
+ * 
+ * @param world The world.
+ */
+void ecs_begin_wait(
+    ecs_world_t *world);
+
+/** Release world after calling ecs_begin_wait.
+ * This operation should be invoked after invoking ecs_begin_wait, and will
+ * release the world back to the thread running the main loop.
+ *
+ * @param world The world.
+ */
+void ecs_end_wait(
     ecs_world_t *world);
 
 /** Enable or disable tracing.
@@ -986,7 +1010,7 @@ void ecs_bulk_add_remove_type(
  * @param trait The trait to remove.
  */
 #define ecs_add_trait(world, entity, component, trait)\
-    ecs_add_entity(world, entity, ecs_trait(component, trait))
+    ecs_add_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)))
 
 /** Remove a trait
  * This operation removes a trait from an entity.
@@ -997,7 +1021,7 @@ void ecs_bulk_add_remove_type(
  * @param trait The trait to remove.
  */
 #define ecs_remove_trait(world, entity, component, trait)\
-    ecs_remove_entity(world, entity, ecs_trait(component, trait))
+    ecs_remove_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)))
 
 /** Test if an entity has a trait.
  * This operation returns true if the entity has the provided trait for the
@@ -1010,7 +1034,7 @@ void ecs_bulk_add_remove_type(
  * @return True if the entity has the trait, false if not.
  */
 #define ecs_has_trait(world, entity, component, trait)\
-    ecs_has_entity(world, entity, ecs_trait(component, trait))
+    ecs_has_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)))
 
 /** Set trait for component. 
  * This operation adds a trait for an entity and component. Traits can be added
@@ -1020,13 +1044,31 @@ void ecs_bulk_add_remove_type(
  * trait component in the system signature. A system will match multiple times
  * with the same entity if the trait is added for multiple components.
  *
+ * * This operation can only be used with traits that are components.
+ *
  * @param world The world.
  * @param e The entity.
  * @param component The component for which to add the trait.
  * @param trait The trait to add.
  */
 #define ecs_set_trait(world, entity, component, trait, ...)\
-    ecs_set_ptr_w_entity(world, entity, ecs_trait(component, trait), sizeof(trait), &(trait)__VA_ARGS__)
+    ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait)), sizeof(trait), &(trait)__VA_ARGS__)
+
+/** Set tag trait for component. 
+ * This operation is similar to ecs_set_trait, but is used for trait tags. When
+ * a trait tag is set on an entity, the trait type is not used (tags have no
+ * type) and instead the component type is used.
+ *
+ * This operation can only be used with traits that are not components.
+ *
+ * @param world The world.
+ * @param e The entity.
+ * @param component The component for which to add the trait.
+ * @param trait The trait to add.
+ */
+#define ecs_set_trait_tag(world, entity, trait, component, ...)\
+    ecs_set_ptr_w_entity(world, entity, ecs_trait(ecs_entity(component), trait), sizeof(component), &(component)__VA_ARGS__)
+
 
 /** Get trait for component. 
  * This operation obtains the value of a trait for a componetn that has been 
@@ -1038,7 +1080,7 @@ void ecs_bulk_add_remove_type(
  * @param trait The trait that was added.
  */
 #define ecs_get_trait(world, entity, component, trait)\
-    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(component, trait)))
+    ((trait*)ecs_get_w_entity(world, entity, ecs_trait(ecs_entity(component), ecs_entity(trait))))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1608,6 +1650,19 @@ void ecs_query_group_by(
     ecs_entity_t component,
     ecs_rank_type_action_t rank_action);
 
+/** Returns whether the query data changed since the last iteration.
+ * This operation must be invoked before obtaining the iterator, as this will
+ * reset the changed state. The operation will return true after:
+ * - new entities have been matched with
+ * - matched entities were deleted
+ * - matched components were changed
+ * 
+ * @param query The query.
+ * @return true if entities changed, otherwise false.
+ */
+FLECS_EXPORT
+bool ecs_query_changed(
+    ecs_query_t *query);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Counting entities
@@ -1741,6 +1796,18 @@ ecs_entity_t ecs_lookup_path_w_sep(
 #define ecs_lookup_fullpath(world, path)\
     ecs_lookup_path_w_sep(world, 0, path, ".", NULL)
 
+/** Lookup an entity by its symbol name.
+ * This looks up an entity by the symbol name that was provided in EcsName. The
+ * operation does not take into account scoping, which means it will search all
+ * entities that have an EcsName.
+ *
+ * This operation can be useful to resolve, for example, a type by its C 
+ * identifier, which does not include the Flecs namespacing.
+ */
+FLECS_EXPORT
+ecs_entity_t ecs_lookup_symbol(
+    ecs_world_t *world,
+    const char *name);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Path utilities
@@ -2122,6 +2189,25 @@ void* ecs_table_column(
     const ecs_iter_t *it,
     int32_t column);
 
+/** Get the size of a table column.
+ *
+ * @param it The iterator.
+ * @param component The component for which to obtain the index. 
+ */
+FLECS_EXPORT
+size_t ecs_table_column_size(
+    const ecs_iter_t *it,
+    int32_t column_index);
+
+/** Get the index of the table column for a component.
+ * 
+ * @param it The iterator.
+ * @param component The component for which to obtain the index.
+ */
+int32_t ecs_table_component_index(
+    const ecs_iter_t *it,
+    ecs_entity_t component);
+
 /** Get a strongly typed pointer to a column (owned or shared). */
 #define ECS_COLUMN(it, type, id, column)\
     ECS_ENTITY_VAR(type) = ecs_column_entity(it, column);\
@@ -2189,7 +2275,6 @@ ecs_entity_t ecs_import(
     ecs_world_t *world,
     ecs_module_action_t module,
     const char *module_name,
-    int flags,
     void *handles_out,
     size_t handles_size);
 
@@ -2216,8 +2301,7 @@ FLECS_EXPORT
 ecs_entity_t ecs_import_from_library(
     ecs_world_t *world,
     const char *library_name,
-    const char *module_name,
-    int flags);
+    const char *module_name);
 
 /** Define module
  */
@@ -2243,11 +2327,11 @@ ecs_entity_t ecs_import_from_library(
  * The contents of a module component are module specific, although they
  * typically contain handles to the content of the module.
  */
-#define ECS_IMPORT(world, id, flags) \
+#define ECS_IMPORT(world, id) \
     id ecs_module(id);\
     char *id##__name = ecs_module_path_from_c(#id);\
     ECS_ENTITY_VAR(id) = ecs_import(\
-        world, id##Import, id##__name, flags, &ecs_module(id), sizeof(id));\
+        world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
     ecs_os_free(id##__name);\
     ECS_TYPE_VAR(id) = ecs_type_from_entity(world, ecs_entity(id));\
     id##ImportHandles(ecs_module(id));\
@@ -2283,11 +2367,6 @@ ecs_entity_t ecs_import_from_library(
     ECS_TYPE_VAR(entity) = (handles).ecs_type(entity); (void)ecs_type(entity);\
     (void)entity;\
     (void)ecs_type(entity)
-
-/** -- Builtin module flags -- */
-#define ECS_REFLECTION (1)
-#define ECS_2D (2)
-#define ECS_3D (3)
 
 
 ////////////////////////////////////////////////////////////////////////////////

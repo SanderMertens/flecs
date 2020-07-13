@@ -443,12 +443,10 @@ A query can be used like this:
 ecs_query_t *query = ecs_query_new(world, "Position, Velocity");
 
 // Create iterator for query
-ecs_query_iter_t it = ecs_query_iter(query);
+ecs_iter_t it = ecs_query_iter(query);
 
 // Iterate all the matching archetypes
 while (ecs_query_next(&it)) {
-    ecs_iter_t *it = &it.it;
-
     // Get the component arrays
     Position *p = ecs_column(it, Position, 1);
     Velocity *v = ecs_column(it, Velocity, 2);
@@ -646,7 +644,7 @@ Modules are used to add organization to components and systems, and to enable re
 ```c
 // Import module called MyModule. This declares handles to the
 // module contents in the current C scope.
-ECS_IMPORT(world, MyModule, 0);
+ECS_IMPORT(world, MyModule);
 ```
 
 Modules often have a header and a source file. This is an example module header:
@@ -661,8 +659,7 @@ typedef struct MyModule {
 
 // The function that is executed when the module is imported
 void MyModuleImport(
-    ecs_world_t *world, 
-    int flags);
+    ecs_world_t *world);
 
 // This macro declares the module handles in the current scope
 #define MyModuleImportHandles(module)\
@@ -675,8 +672,7 @@ The corresponding module source file looks like this:
 
 ```c
 void MyModuleImport(
-    ecs_world_t *world, 
-    int flags)
+    ecs_world_t *world)
 {
     // Declare the module
     ECS_MODULE(world, MyModule);

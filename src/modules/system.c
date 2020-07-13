@@ -718,7 +718,7 @@ void OnSetComponentLifecycle(
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_set_component_actions(world, e, &cl[i]);   
+        ecs_set_component_actions_w_entity(world, e, &cl[i]);   
     }
 }
 
@@ -841,8 +841,7 @@ void bootstrap_set_system(
 }
 
 void FlecsSystemImport(
-    ecs_world_t *world,
-    int flags)
+    ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsSystem);
 
@@ -908,6 +907,4 @@ void FlecsSystemImport(
     /* Monitors that trigger when a system is enabled or disabled */
     ECS_SYSTEM(world, DisableSystem, EcsMonitor, System, Disabled || DisabledIntern, SYSTEM:Hidden);
     ECS_SYSTEM(world, EnableSystem, EcsMonitor, System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
-
-    (void)flags;
 }

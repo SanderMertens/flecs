@@ -15,6 +15,30 @@ void ecs_notify_queries_of_table(
     }
 }
 
+const EcsComponent* ecs_component_from_id(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_entity_t trait = 0;
+
+    /* If this is a trait, get the trait component from the identifier */
+    if (e & ECS_TRAIT) {
+        trait = e;
+        e = e & ECS_ENTITY_MASK;
+        e = ecs_entity_t_hi(e);
+    }
+
+    const EcsComponent *component = ecs_get(world, e, EcsComponent);
+    if (!component && trait) {
+        /* If this is a trait column and the trait is not a component, use
+            * the component type of the component the trait is applied to. */
+        e = ecs_entity_t_lo(trait);
+        component = ecs_get(world, e, EcsComponent);
+    }    
+
+    return component;
+}
+
 /* Count number of columns with data (excluding tags) */
 static
 int32_t data_column_count(
@@ -25,12 +49,6 @@ int32_t data_column_count(
     ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
         ecs_entity_t component = *c_ptr;
 
-        /* If this is a trait, get the trait component from the identifier */
-        if (component & ECS_TRAIT) {
-            ecs_entity_t e = component & ECS_ENTITY_MASK;
-            component = ecs_entity_t_hi(e);
-        }
-
         /* Typically all components will be clustered together at the start of
          * the type as components are created from a separate id pool, and type
          * vectors are sorted. 
@@ -38,7 +56,7 @@ int32_t data_column_count(
          * doesn't work during bootstrap. */
         if ((component == ecs_entity(EcsComponent)) || 
             (component == ecs_entity(EcsName)) || 
-            ecs_has_entity(world, component, ecs_entity(EcsComponent))) 
+            ecs_component_from_id(world, component) != NULL) 
         {
             count = c_ptr_i + 1;
         }

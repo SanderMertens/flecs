@@ -836,7 +836,7 @@ void Dummy(ecs_iter_t *it) { }
 void World_world_stats() {
     ecs_world_t *world = ecs_init();
 
-    ECS_IMPORT(world, FlecsStats, 0);
+    ECS_IMPORT(world, FlecsStats);
 
     ECS_COMPONENT(world, Velocity);
 

@@ -504,6 +504,8 @@ struct ecs_world_t {
     /* -- World lock -- */
 
     ecs_os_mutex_t mutex;         /* Locks the world if locking enabled */
+    ecs_os_mutex_t thr_sync;      /* Used to signal threads at end of frame */
+    ecs_os_cond_t thr_cond;       /* Used to signal threads at end of frame */
 
 
     /* -- World state -- */

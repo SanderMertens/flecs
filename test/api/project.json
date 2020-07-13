@@ -447,12 +447,27 @@
                 "sort_after_system"
             ]
         }, {
+            "id": "Queries",
+            "testcases": [
+                "query_changed_after_new",
+                "query_changed_after_delete",
+                "query_changed_after_add",
+                "query_changed_after_remove",
+                "query_changed_after_set",
+                "query_change_after_out_system",
+                "query_change_after_in_system"
+            ]
+        }, {
             "id": "Traits",
             "testcases": [
                 "type_w_one_trait",
                 "type_w_two_traits",
                 "add_trait",
-                "remove_trait"
+                "remove_trait",
+                "add_tag_trait_for_tag",
+                "add_tag_trait_for_component",
+                "query_2_traits",
+                "query_2_traits_2_instances_per_type"
             ]
         }, {
             "id": "TriggerOnAdd",
@@ -1107,7 +1122,9 @@
                 "name_prefix_type",
                 "name_prefix_prefab",
                 "name_prefix_pipeline",
-                "name_prefix_trigger"
+                "name_prefix_trigger",
+                "name_prefix_underscore",
+                "lookup_by_symbol"
             ]
         }, {
             "id": "Internals",

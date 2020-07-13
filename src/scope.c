@@ -58,9 +58,14 @@ ecs_entity_t find_child_in_table(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_table_t *table,
-    int32_t name_index,
     const char *name)
 {
+    /* If table doesn't have EcsName, then don't bother */
+    int32_t name_index = ecs_type_index_of(table->type, ecs_entity(EcsName));
+    if (name_index == -1) {
+        return 0;
+    }
+
     ecs_data_t *data = ecs_table_get_staged_data(world, stage, table);
     if (!data || !data->columns) {
         return 0;
@@ -91,7 +96,7 @@ ecs_entity_t find_child_in_table(
 }
 
 static
-ecs_entity_t find_child_in_staged(
+ecs_entity_t find_child_in_stage(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t parent,
@@ -100,16 +105,7 @@ ecs_entity_t find_child_in_staged(
     (void)parent;
     
     ecs_sparse_each(stage->tables, ecs_table_t, table, {
-        ecs_type_t type = table->type;
-
-        /* If table doesn't have EcsName, then don't bother */
-        int32_t name_index = ecs_type_index_of(type, ecs_entity(EcsName));
-        if (name_index == -1) {
-            continue;
-        }
-
-        ecs_entity_t result = find_child_in_table(world, stage, table, 
-            name_index, name);
+        ecs_entity_t result = find_child_in_table(world, stage, table, name);
         if (result) {
             return result;
         }
@@ -132,19 +128,12 @@ ecs_entity_t ecs_lookup_child(
     if (child_tables) {
         ecs_vector_each(child_tables, ecs_table_t*, table_ptr, {
             ecs_table_t *table = *table_ptr;
-            ecs_type_t type = table->type;
 
-            /* If table doesn't have EcsName, then don't bother */
-            int32_t name_index = ecs_type_index_of(type, ecs_entity(EcsName));
-            if (name_index == -1) {
-                continue;
-            }
-
-            result = find_child_in_table(world, stage, table, name_index, name);
+            result = find_child_in_table(world, stage, table, name);
             if (!result) {
                 if (stage != &world->stage) {
                     result = find_child_in_table(world, &world->stage, table, 
-                        name_index, name);
+                        name);
                 }
             }
 
@@ -162,7 +151,7 @@ ecs_entity_t ecs_lookup_child(
      * since the number of tables should stabilize over time, which
      * means table creation while staged should be infrequent. */    
     if (!result && stage != &world->stage) {
-        result = find_child_in_staged(world, stage, parent, name);
+        result = find_child_in_stage(world, stage, parent, name);
     }
 
     return result;
@@ -181,6 +170,21 @@ ecs_entity_t ecs_lookup(
     }
     
     return ecs_lookup_child(world, 0, name);
+}
+
+ecs_entity_t ecs_lookup_symbol(
+    ecs_world_t *world,
+    const char *name)
+{   
+    if (!name) {
+        return 0;
+    }
+
+    if (isdigit(name[0])) {
+        return atoi(name);
+    }
+    
+    return find_child_in_stage(world, &world->stage, 0, name);
 }
 
 static

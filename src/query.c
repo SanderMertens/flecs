@@ -268,12 +268,13 @@ static
 int32_t get_component_index(
     ecs_world_t *world,
     ecs_type_t table_type,
-    ecs_entity_t component,
+    ecs_entity_t *component_out,
     int32_t column_index,
     ecs_sig_oper_kind_t op,
     int32_t *trait_index_offsets)
 {
     int32_t result = 0;
+    ecs_entity_t component = *component_out;
 
     if (component) {
         if (component & ECS_TRAIT) {
@@ -286,10 +287,24 @@ int32_t get_component_index(
 
             if (result != -1) {
                 trait_index_offsets[column_index] = result + 1;
+
+                /* If component of current column is a trait, get the actual trait
+                 * type for the table, so the system can see which component the
+                 * trait was applied to */   
+                ecs_entity_t *trait = ecs_vector_get(
+                    table_type, ecs_entity_t, result);
+                *component_out = *trait;
+
+                /* Check if the trait is a tag or whether it has data */
+                if (ecs_get(world, component, EcsComponent) == NULL) {
+                    /* If trait has no data associated with it, use the
+                     * component to which the trait has been added */
+                    component = ecs_entity_t_lo(*trait);
+                }
             }
         } else {
-            /* Retrieve offset for component */
-            result = ecs_type_index_of(table_type, component);         
+            /* Get column index for component */
+            result = ecs_type_index_of(table_type, component);
         }
 
         /* If column is found, add one to the index, as column zero in
@@ -548,18 +563,9 @@ add_trait:
          * EcsFromSystem or EcsFromParent) and is not just a handle */
         if (!entity && from != EcsFromEmpty) {
             int32_t index = get_component_index(
-                world, table_type, component, c, op, trait_index_offsets);
+                world, table_type, &component, c, op, trait_index_offsets);
             
             table_data->columns[c] = index;
-
-            /* If component of current column is a trait, get the actual trait
-             * type for the table, so the system can see which component the
-             * trait was applied to */
-            if (index != -1 && component & ECS_TRAIT) {
-                ecs_assert(ecs_vector_count(table_type) > index - 1, 
-                    ECS_INTERNAL_ERROR, NULL);
-                component = *ecs_vector_get(table_type, ecs_entity_t, index - 1);
-            }
         }
 
         /* Check if a the component is a reference. If 'entity' is set, the
@@ -1088,6 +1094,62 @@ void build_sorted_tables(
 }
 
 static
+bool tables_dirty(
+    ecs_query_t *query)
+{
+    int32_t i, count = ecs_vector_count(query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
+    bool is_dirty = false;
+
+    for (i = 0; i < count; i ++) {
+        ecs_matched_table_t *m_table = &tables[i];
+        ecs_table_t *table = m_table->table;
+
+        if (!m_table->monitor) {
+            m_table->monitor = ecs_table_get_monitor(table);
+            is_dirty = true;
+        }
+
+        int32_t *dirty_state = ecs_table_get_dirty_state(table);
+        int32_t t, type_count = table->column_count;
+        for (t = 0; t < type_count + 1; t ++) {
+            is_dirty |= dirty_state[t] != m_table->monitor[t];
+        }
+    }
+
+    is_dirty |= query->match_count != query->prev_match_count;
+
+    return is_dirty;
+}
+
+static
+void tables_reset_dirty(
+    ecs_query_t *query)
+{
+    query->prev_match_count = query->match_count;
+
+    int32_t i, count = ecs_vector_count(query->tables);
+    ecs_matched_table_t *tables = ecs_vector_first(query->tables, ecs_matched_table_t);
+
+    for (i = 0; i < count; i ++) {
+        ecs_matched_table_t *m_table = &tables[i];
+        ecs_table_t *table = m_table->table;
+
+        if (!m_table->monitor) {
+            /* If one table doesn't have a monitor, none of the tables will have
+             * a monitor, so early out. */
+            return;
+        }
+
+        int32_t *dirty_state = ecs_table_get_dirty_state(table);
+        int32_t t, type_count = table->column_count;
+        for (t = 0; t < type_count + 1; t ++) {
+            m_table->monitor[t] = dirty_state[t];
+        }
+    }
+}
+
+static
 void sort_tables(
     ecs_world_t *world,
     ecs_query_t *query)
@@ -1137,15 +1199,6 @@ void sort_tables(
         if (is_dirty) {
             /* Sort the table */
             sort_table(world, table, index, compare);
-
-            /* Sorting the table will make it dirty again, so update our monitor
-             * after the sort */
-            m_table->monitor[0] = dirty_state[0];
-
-            if (index != -1) {
-                m_table->monitor[index + 1] = dirty_state[index + 1];
-            }
-
             tables_sorted = true;
         }
     }
@@ -1153,7 +1206,6 @@ void sort_tables(
     if (tables_sorted || query->match_count != query->prev_match_count) {
         build_sorted_tables(world, query);
         query->match_count ++; /* Increase version if tables changed */
-        query->prev_match_count = query->match_count;
     }
 }
 
@@ -1552,6 +1604,8 @@ ecs_iter_t ecs_query_iter_page(
 
     sort_tables(query->world, query);
 
+    tables_reset_dirty(query);
+
     int32_t table_count;
     if (query->table_ranges) {
         table_count = ecs_vector_count(query->table_ranges);
@@ -1811,4 +1865,10 @@ void ecs_query_group_by(
     order_ranked_tables(world, query);
 
     build_sorted_tables(world, query);
+}
+
+bool ecs_query_changed(
+    ecs_query_t *query)
+{
+    return tables_dirty(query);
 }

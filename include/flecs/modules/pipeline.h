@@ -163,8 +163,7 @@ typedef struct FlecsPipeline {
 
 FLECS_EXPORT
 void FlecsPipelineImport(
-    ecs_world_t *world,
-    int flags);
+    ecs_world_t *world);
 
 #define FlecsPipelineImportHandles(handles)
 

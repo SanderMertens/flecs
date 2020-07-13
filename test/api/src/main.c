@@ -401,11 +401,24 @@ void Sorting_sort_after_delete(void);
 void Sorting_sort_after_set(void);
 void Sorting_sort_after_system(void);
 
+// Testsuite 'Queries'
+void Queries_query_changed_after_new(void);
+void Queries_query_changed_after_delete(void);
+void Queries_query_changed_after_add(void);
+void Queries_query_changed_after_remove(void);
+void Queries_query_changed_after_set(void);
+void Queries_query_change_after_out_system(void);
+void Queries_query_change_after_in_system(void);
+
 // Testsuite 'Traits'
 void Traits_type_w_one_trait(void);
 void Traits_type_w_two_traits(void);
 void Traits_add_trait(void);
 void Traits_remove_trait(void);
+void Traits_add_tag_trait_for_tag(void);
+void Traits_add_tag_trait_for_component(void);
+void Traits_query_2_traits(void);
+void Traits_query_2_traits_2_instances_per_type(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_new_match_1_of_1(void);
@@ -1007,6 +1020,8 @@ void Modules_name_prefix_type(void);
 void Modules_name_prefix_prefab(void);
 void Modules_name_prefix_pipeline(void);
 void Modules_name_prefix_trigger(void);
+void Modules_name_prefix_underscore(void);
+void Modules_lookup_by_symbol(void);
 
 // Testsuite 'Internals'
 void Internals_deactivate_table(void);
@@ -2562,8 +2577,42 @@ static bake_test_suite suites[] = {
         }
     },
     {
+        .id = "Queries",
+        .testcase_count = 7,
+        .testcases = (bake_test_case[]){
+            {
+                .id = "query_changed_after_new",
+                .function = Queries_query_changed_after_new
+            },
+            {
+                .id = "query_changed_after_delete",
+                .function = Queries_query_changed_after_delete
+            },
+            {
+                .id = "query_changed_after_add",
+                .function = Queries_query_changed_after_add
+            },
+            {
+                .id = "query_changed_after_remove",
+                .function = Queries_query_changed_after_remove
+            },
+            {
+                .id = "query_changed_after_set",
+                .function = Queries_query_changed_after_set
+            },
+            {
+                .id = "query_change_after_out_system",
+                .function = Queries_query_change_after_out_system
+            },
+            {
+                .id = "query_change_after_in_system",
+                .function = Queries_query_change_after_in_system
+            }
+        }
+    },
+    {
         .id = "Traits",
-        .testcase_count = 4,
+        .testcase_count = 8,
         .testcases = (bake_test_case[]){
             {
                 .id = "type_w_one_trait",
@@ -2580,6 +2629,22 @@ static bake_test_suite suites[] = {
             {
                 .id = "remove_trait",
                 .function = Traits_remove_trait
+            },
+            {
+                .id = "add_tag_trait_for_tag",
+                .function = Traits_add_tag_trait_for_tag
+            },
+            {
+                .id = "add_tag_trait_for_component",
+                .function = Traits_add_tag_trait_for_component
+            },
+            {
+                .id = "query_2_traits",
+                .function = Traits_query_2_traits
+            },
+            {
+                .id = "query_2_traits_2_instances_per_type",
+                .function = Traits_query_2_traits_2_instances_per_type
             }
         }
     },
@@ -4869,7 +4934,7 @@ static bake_test_suite suites[] = {
     },
     {
         .id = "Modules",
-        .testcase_count = 15,
+        .testcase_count = 17,
         .testcases = (bake_test_case[]){
             {
                 .id = "simple_module",
@@ -4930,6 +4995,14 @@ static bake_test_suite suites[] = {
             {
                 .id = "name_prefix_trigger",
                 .function = Modules_name_prefix_trigger
+            },
+            {
+                .id = "name_prefix_underscore",
+                .function = Modules_name_prefix_underscore
+            },
+            {
+                .id = "lookup_by_symbol",
+                .function = Modules_lookup_by_symbol
             }
         }
     },
@@ -5018,5 +5091,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 51);
+    return bake_test_run("api", argc, argv, suites, 52);
 }

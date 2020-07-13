@@ -150,8 +150,7 @@ typedef struct FlecsStats {
 
 FLECS_EXPORT
 void FlecsStatsImport(
-    ecs_world_t *world,
-    int flags);
+    ecs_world_t *world);
 
 #define FlecsStatsImportHandles(handles)\
     ECS_IMPORT_COMPONENT(handles, EcsAllocStats);\

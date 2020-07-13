@@ -26,15 +26,8 @@ ecs_data_t* init_data(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
 
-        /* If this is a trait, get the trait component from the identifier */
-        if (e & ECS_TRAIT) {
-            e = e & ECS_ENTITY_MASK;
-            e = ecs_entity_t_hi(e);
-        }
-
-        const EcsComponent *component = ecs_get(world, e, EcsComponent);            
-
         /* Is the column a component? */
+        const EcsComponent *component = ecs_component_from_id(world, e);
         if (component) {
             /* Is the component associated wit a (non-empty) type? */
             if (component->size) {
@@ -93,14 +86,32 @@ void deinit_all_data(
 }
 
 static
+void run_un_set_handlers(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data)
+{
+    int32_t count = ecs_vector_count(data->entities);
+
+    if (count) {
+        ecs_run_monitors(world, &world->stage, table, table->un_set_all, 
+            0, count, NULL);
+    }
+}
+
+static
 void run_on_remove_handlers(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *data)
 {
     int32_t count = ecs_vector_count(data->entities);
+
     if (count) {
         ecs_entities_t components = ecs_type_to_entities(table->type);
+
+        ecs_run_monitors(world, &world->stage, table, NULL, 
+                0, count, table->un_set_all);
 
         /* Run deinit actions (dtors) for components. Don't run triggers */
         ecs_run_deinit_actions(
@@ -497,6 +508,19 @@ void ecs_table_clear(
     }
 
     ecs_table_clear_silent(world, table);
+}
+
+/* Unset all components in table. This function is called before a table is 
+ * deleted, and invokes all UnSet handlers, if any */
+void ecs_table_unset(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    (void)world;
+    ecs_data_t *data = ecs_table_get_data(world, table);
+    if (data) {
+        run_un_set_handlers(world, table, data);
+    }   
 }
 
 /* Free table resources. Do not invoke handlers and do not activate/deactivate
@@ -1336,8 +1360,7 @@ int32_t* ecs_table_get_dirty_state(
     ecs_table_t *table)
 {
     if (!table->dirty_state) {
-        int32_t column_count = ecs_vector_size(table->type);
-        table->dirty_state = ecs_os_calloc(sizeof(int32_t) * (column_count + 1));
+        table->dirty_state = ecs_os_calloc(sizeof(int32_t) * (table->column_count + 1));
         ecs_assert(table->dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
     }
     return table->dirty_state;
@@ -1349,6 +1372,6 @@ int32_t* ecs_table_get_monitor(
     int32_t *dirty_state = ecs_table_get_dirty_state(table);
     ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t column_count = ecs_vector_size(table->type);
+    int32_t column_count = table->column_count;
     return ecs_os_memdup(dirty_state, (column_count + 1) * sizeof(int32_t));
 }

@@ -194,8 +194,7 @@ typedef struct FlecsTimer {
 
 FLECS_EXPORT
 void FlecsTimerImport(
-    ecs_world_t *world,
-    int flags);
+    ecs_world_t *world);
 
 #define FlecsTimerImportHandles(handles)
 

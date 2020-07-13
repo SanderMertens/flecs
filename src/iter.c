@@ -194,6 +194,13 @@ ecs_type_t ecs_iter_type(
     return table->type;
 }
 
+int32_t ecs_table_component_index(
+    const ecs_iter_t *it,
+    ecs_entity_t component)
+{
+    return ecs_type_index_of(it->table->type, component);
+}
+
 void* ecs_table_column(
     const ecs_iter_t *it,
     int32_t column_index)
@@ -210,4 +217,23 @@ void* ecs_table_column(
     ecs_column_t *columns = it->table_columns;
     ecs_column_t *column = &columns[column_index];
     return ecs_vector_first_t(column->data, column->size, column->alignment);
+}
+
+size_t ecs_table_column_size(
+    const ecs_iter_t *it,
+    int32_t column_index)
+{
+    ecs_table_t *table = it->table;
+
+    ecs_assert(column_index < ecs_vector_count(table->type), 
+        ECS_INVALID_PARAMETER, NULL);
+
+    if (table->column_count < column_index) {
+        return 0;
+    }
+
+    ecs_column_t *columns = it->table_columns;
+    ecs_column_t *column = &columns[column_index];
+    
+    return column->size;
 }

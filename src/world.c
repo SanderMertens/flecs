@@ -245,9 +245,9 @@ ecs_world_t *ecs_init(void) {
     ecs_trace_1("import builtin modules");
     ecs_log_push();
 
-    ECS_IMPORT(world, FlecsSystem, 0);
-    ECS_IMPORT(world, FlecsPipeline, 0);
-    ECS_IMPORT(world, FlecsTimer, 0);
+    ECS_IMPORT(world, FlecsSystem);
+    ECS_IMPORT(world, FlecsPipeline);
+    ECS_IMPORT(world, FlecsTimer);
 
     ecs_log_pop();
 #endif
@@ -327,7 +327,7 @@ void on_demand_in_map_deinit(
     ecs_map_free(map);
 }
 
-void ecs_set_component_actions(
+void ecs_set_component_actions_w_entity(
     ecs_world_t *world,
     ecs_entity_t component,
     EcsComponentLifecycle *lifecycle)
@@ -373,6 +373,11 @@ int ecs_fini(
     assert(world->magic == ECS_WORLD_MAGIC);
     assert(!world->in_progress);
     assert(!world->is_merging);
+
+    /* Unset data in tables */
+    ecs_sparse_each(world->stage.tables, ecs_table_t, table, {
+        ecs_table_unset(world, table);
+    });
 
     /* Execute fini actions */
     ecs_vector_each(world->fini_actions, ecs_action_elem_t, elem, {
@@ -639,10 +644,14 @@ bool ecs_enable_locking(
     if (enable) {
         if (!world->locking_enabled) {
             world->mutex = ecs_os_mutex_new();
+            world->thr_sync = ecs_os_mutex_new();
+            world->thr_cond = ecs_os_cond_new();
         }
     } else {
         if (world->locking_enabled) {
             ecs_os_mutex_free(world->mutex);
+            ecs_os_mutex_free(world->thr_sync);
+            ecs_os_cond_free(world->thr_cond);
         }
     }
 
@@ -663,6 +672,21 @@ void ecs_unlock(
 {
     ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
     ecs_os_mutex_unlock(world->mutex);
+}
+
+void ecs_begin_wait(
+    ecs_world_t *world)
+{
+    ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
+    ecs_os_mutex_lock(world->thr_sync);
+    ecs_os_cond_wait(world->thr_cond, world->thr_sync);
+}
+
+void ecs_end_wait(
+    ecs_world_t *world)
+{
+    ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
+    ecs_os_mutex_unlock(world->thr_sync);
 }
 
 ecs_c_info_t * ecs_get_c_info(

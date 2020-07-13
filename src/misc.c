@@ -164,6 +164,14 @@ void ecs_os_time_sleep(
         ecs_os_err("nanosleep failed");
     }
 #else
-	Sleep(sec * 1000 + nanosec / 1000000);
+    HANDLE timer;
+    LARGE_INTEGER ft;
+
+    ft.QuadPart = -((int64_t)sec * 10000000 + (int64_t)nanosec / 100);
+
+    timer = CreateWaitableTimer(NULL, TRUE, NULL);
+    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+    WaitForSingleObject(timer, INFINITE);
+    CloseHandle(timer);
 #endif
 }
