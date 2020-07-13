@@ -15,6 +15,9 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 - Modules allow for creation of large scale applications by organizing systems & components in reusable plug & play units
 - A fully customizable core that makes it easy to integrate Flecs into other frameworks / game engines
 
+This is Flecs v2, which is a breaking change from v1. For the last v1 release, see:
+https://github.com/SanderMertens/flecs/releases/tag/v1.3
+
 ## What is an Entity Component System?
 ECS (Entity Component System) is a way to organize code that is mostly used in gaming and simulation projects. ECS code generally performs better than traditional OOP, and is typically easier to reuse. The main differences between ECS and OOP are composition is a first class citizen in ECS, and that data is represented as plain data types rather than encapsulated classes.  A framework is an Entity Component System if it:
 
