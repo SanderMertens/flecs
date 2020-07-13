@@ -41,11 +41,11 @@ int main(int argc, char *argv[]) {
     auto e = flecs::entity(world)
         .add(Movable);
 
-    Position p = e.get<Position>();
-    Velocity v = e.get<Velocity>();
+    const Position *p = e.get<Position>();
+    const Velocity *v = e.get<Velocity>();
 
-    std::cout << "Position: {" << p.x << ", " << p.y << "} (owned = " 
-        << e.has_owned<Position>() << "} " << std::endl;
-    std::cout << "Velocity: {" << v.x << ", " << v.y << "} (owned = " 
-        << e.has_owned<Velocity>() << "} " << std::endl;
+    std::cout << "Position: {" << p->x << ", " << p->y << "} (owned = " 
+        << e.owns<Position>() << "} " << std::endl;
+    std::cout << "Velocity: {" << v->x << ", " << v->y << "} (owned = " 
+        << e.owns<Velocity>() << "} " << std::endl;
 }

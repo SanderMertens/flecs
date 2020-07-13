@@ -29,11 +29,13 @@ int main(int argc, char *argv[]) {
         .set<Position>({10, 20});
         
         /* Create two child prefabs that inherit from ChildBase */
-        flecs::prefab(world, "Child1", Root)
+        flecs::prefab(world, "Child1")
+            .add_childof(Root)
             .add_instanceof(ChildBase)
             .set<Velocity>({30, 40});
 
-        flecs::prefab(world, "Child2", Root)
+        flecs::prefab(world, "Child2")
+            .add_childof(Root)
             .add_instanceof(ChildBase)
             .set<Velocity>({50, 60});            
 
@@ -49,18 +51,18 @@ int main(int argc, char *argv[]) {
     std::cout << "Child2 type = [" << child2.type().str() << "]" << std::endl;
 
     /* e shares Position from Root */
-    Position p = e.get<Position>();
-    std::cout << "Position of e = {" << p.x << ", " << p.y << "}" << std::endl;
+    const Position *p = e.get<Position>();
+    std::cout << "Position of e = {" << p->x << ", " << p->y << "}" << std::endl;
 
     /* Children will share Position from ChildBase and Velocity from the Child1
      * and Child2 prefabs respectively */
     p = child1.get<Position>();
-    Velocity v = child1.get<Velocity>();
-    std::cout << "Child1 Position = {" << p.x << ", " << p.y << "} " 
-        << "Velocity = {" << v.x << ", " << v.y << "}" << std::endl;
+    const Velocity *v = child1.get<Velocity>();
+    std::cout << "Child1 Position = {" << p->x << ", " << p->y << "} " 
+        << "Velocity = {" << v->x << ", " << v->y << "}" << std::endl;
 
     p = child2.get<Position>();
     v = child2.get<Velocity>();
-    std::cout << "Child2 Position = {" << p.x << ", " << p.y << "} " 
-        << "Velocity = {" << v.x << ", " << v.y << "}" << std::endl;        
+    std::cout << "Child2 Position = {" << p->x << ", " << p->y << "} " 
+        << "Velocity = {" << v->x << ", " << v->y << "}" << std::endl;        
 }

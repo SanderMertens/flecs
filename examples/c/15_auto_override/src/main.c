@@ -36,12 +36,12 @@ int main(int argc, char *argv[]) {
     ecs_entity_t e = ecs_new(world, Movable);
 
     /* Get pointers to component values */
-    Position *p = ecs_get_ptr(world, e, Position);
-    Velocity *v = ecs_get_ptr(world, e, Velocity);
+    const Position *p = ecs_get(world, e, Position);
+    const Velocity *v = ecs_get(world, e, Velocity);
 
     /* Print values of entity */
-    printf("Position: {%f, %f} (owned = %d)\n", p->x, p->y, ecs_has_owned(world, e, Position));
-    printf("Velocity: {%f, %f} (owned = %d)\n", v->x, v->y, ecs_has_owned(world, e, Velocity));
+    printf("Position: {%f, %f} (owned = %d)\n", p->x, p->y, ecs_owns(world, e, Position, true));
+    printf("Velocity: {%f, %f} (owned = %d)\n", v->x, v->y, ecs_owns(world, e, Velocity, true));
 
     /* Cleanup */
     return ecs_fini(world);

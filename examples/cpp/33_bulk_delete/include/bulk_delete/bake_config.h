@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef BULK_DELETE_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef BULK_DELETE_STATIC
-  #if BULK_DELETE_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define BULK_DELETE_EXPORT __declspec(dllexport)
-  #elif BULK_DELETE_IMPL
-    #define BULK_DELETE_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define BULK_DELETE_EXPORT __declspec(dllimport)
-  #else
-    #define BULK_DELETE_EXPORT
-  #endif
-#else
-  #define BULK_DELETE_EXPORT
-#endif
-
 #endif
 

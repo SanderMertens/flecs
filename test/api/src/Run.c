@@ -1,25 +1,25 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
 
-    if (rows->column_count >= 2) {
-        v = ecs_column(rows, Velocity, 2);
+    if (it->column_count >= 2) {
+        v = ecs_column(it, Velocity, 2);
     }
 
-    if (rows->column_count >= 3) {
-        m = ecs_column(rows, Mass, 3);
+    if (it->column_count >= 3) {
+        m = ecs_column(it, Mass, 3);
     }
 
-    int *param = rows->param;
+    int *param = it->param;
 
-    ProbeSystem(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -55,9 +55,9 @@ void Run_run() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -88,10 +88,10 @@ void Run_run() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -106,9 +106,9 @@ void Run_run_w_param() {
 
     ECS_ENTITY(world, e_1, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position);
+    ECS_SYSTEM(world, Iter, 0, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -128,7 +128,7 @@ void Run_run_w_param() {
     test_int(ctx.c[0][0], ecs_entity(Position));
     test_int(ctx.s[0][0], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_int(p->x, 15);
     test_int(p->y, 25);
 
@@ -151,9 +151,9 @@ void Run_run_w_offset() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -182,10 +182,10 @@ void Run_run_w_offset() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -209,9 +209,9 @@ void Run_run_w_offset_skip_1_archetype() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -239,10 +239,10 @@ void Run_run_w_offset_skip_1_archetype() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -266,9 +266,9 @@ void Run_run_w_offset_skip_1_archetype_plus_one() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -295,10 +295,10 @@ void Run_run_w_offset_skip_1_archetype_plus_one() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -322,9 +322,9 @@ void Run_run_w_offset_skip_2_archetypes() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -346,10 +346,10 @@ void Run_run_w_offset_skip_2_archetypes() {
     test_int(ctx.c[0][1], ecs_entity(Velocity));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_6, Position);
+    const Position *p = ecs_get(world, e_6, Position);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    Velocity *v = ecs_get_ptr(world, e_6, Velocity);
+    const Velocity *v = ecs_get(world, e_6, Velocity);
     test_int(v->x, 30);
     test_int(v->y, 40);        
 
@@ -372,9 +372,9 @@ void Run_run_w_limit_skip_1_archetype() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -404,10 +404,10 @@ void Run_run_w_limit_skip_1_archetype() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -431,9 +431,9 @@ void Run_run_w_limit_skip_1_archetype_minus_one() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -462,10 +462,10 @@ void Run_run_w_limit_skip_1_archetype_minus_one() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -489,9 +489,9 @@ void Run_run_w_limit_skip_2_archetypes() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -519,10 +519,10 @@ void Run_run_w_limit_skip_2_archetypes() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -546,9 +546,9 @@ void Run_run_w_offset_1_limit_max() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -578,10 +578,10 @@ void Run_run_w_offset_1_limit_max() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -605,9 +605,9 @@ void Run_run_w_offset_1_limit_minus_1() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -636,10 +636,10 @@ void Run_run_w_offset_1_limit_minus_1() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -663,9 +663,9 @@ void Run_run_w_offset_2_type_limit_max() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -693,10 +693,10 @@ void Run_run_w_offset_2_type_limit_max() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -720,9 +720,9 @@ void Run_run_w_offset_2_type_limit_minus_1() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -749,10 +749,10 @@ void Run_run_w_offset_2_type_limit_minus_1() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -776,9 +776,9 @@ void Run_run_w_limit_1_all_offsets() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -815,10 +815,10 @@ void Run_run_w_limit_1_all_offsets() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -842,9 +842,9 @@ void Run_run_w_offset_out_of_bounds() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -875,9 +875,9 @@ void Run_run_w_limit_out_of_bounds() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -903,10 +903,10 @@ void Run_run_w_limit_out_of_bounds() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -930,16 +930,18 @@ void Run_run_w_component_filter() {
     ECS_ENTITY(world, e_6, Position, Velocity, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, Mass, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, &(ecs_filter_t){
+        .include = ecs_type(Mass)
+    }, NULL), 0);
 
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
@@ -959,10 +961,10 @@ void Run_run_w_component_filter() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -988,16 +990,18 @@ void Run_run_w_type_filter_of_2() {
     ECS_ENTITY(world, e_6, Position, Velocity, Mass, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, Type, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, &(ecs_filter_t){
+        .include = ecs_type(Type)
+    }, NULL), 0);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -1016,10 +1020,10 @@ void Run_run_w_type_filter_of_2() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);
-        Velocity *v = ecs_get_ptr(world, ctx.e[i], Velocity);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
         test_int(v->x, 30);
         test_int(v->y, 40);        
     }
@@ -1045,28 +1049,30 @@ void Run_run_w_container_filter() {
     ECS_ENTITY(world, e_6, Position, Velocity, Mass, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position);
+    ECS_SYSTEM(world, Iter, 0, Position);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Create a parent entity */
     ecs_entity_t parent = ecs_new(world, 0);
 
     /* Adopt child entities */
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_4, parent);
-    ecs_adopt(world, e_6, parent);
-    ecs_adopt(world, e_7, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_6, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_7, ECS_CHILDOF | parent);
 
     /* Get type from parent to use as filter */
-    ecs_type_t TParent = ecs_type_from_entity(world, parent);
+    ecs_type_t ecs_type(Parent) = ecs_type_from_entity(world, ECS_CHILDOF | parent);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
     test_int(ctx.invoked, 0);
 
-    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, Parent, NULL), 0);
+    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, &(ecs_filter_t){
+        .include = ecs_type(Parent)
+    }, NULL), 0);
 
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 4);
@@ -1074,10 +1080,10 @@ void Run_run_w_container_filter() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e_6);
-    test_int(ctx.e[1], e_7);
-    test_int(ctx.e[2], e_1);
-    test_int(ctx.e[3], e_4);
+    probe_has_entity(&ctx, e_1);
+    probe_has_entity(&ctx, e_4);
+    probe_has_entity(&ctx, e_6);
+    probe_has_entity(&ctx, e_7);
 
     int i;
     for (i = 0; i < ctx.invoked; i ++) {
@@ -1086,7 +1092,7 @@ void Run_run_w_container_filter() {
     }
 
     for (i = 0; i < ctx.count; i ++) {
-        Position *p = ecs_get_ptr(world, ctx.e[i], Position);
+        const Position *p = ecs_get(world, ctx.e[i], Position);
         test_int(p->x, 10);
         test_int(p->y, 20);       
     }
@@ -1102,9 +1108,9 @@ void Run_run_no_match() {
 
     ECS_ENTITY(world, e_1, Position);
 
-    ECS_SYSTEM(world, Iter, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* Ensure system is not run by ecs_progress */
@@ -1125,26 +1131,26 @@ typedef struct Param {
 } Param;
 
 static
-void TestSubset(ecs_rows_t *rows) {
-    Param *param = rows->param;
+void TestSubset(ecs_iter_t *it) {
+    Param *param = it->param;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        test_assert(param->entity != rows->entities[i]);
+    for (i = 0; i < it->count; i ++) {
+        test_assert(param->entity != it->entities[i]);
         param->count ++;
     }    
 }
 
 static
-void TestAll(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
+void TestAll(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
 
-    ecs_entity_t TestSubset = ecs_column_entity(rows, 2);
+    ecs_entity_t TestSubset = ecs_column_entity(it, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        Param param = {.entity = rows->entities[i], 0};
-        ecs_run_w_filter(rows->world, TestSubset, 1, rows->frame_offset + i + 1, 0, 0, &param);
+    for (i = 0; i < it->count; i ++) {
+        Param param = {.entity = it->entities[i], 0};
+        ecs_run_w_filter(it->world, TestSubset, 1, it->frame_offset + i + 1, 0, 0, &param);
         p[i].x += param.count;
     }
 }
@@ -1154,12 +1160,12 @@ void Run_run_comb_10_entities_1_type() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
+    ECS_SYSTEM(world, TestSubset, 0, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, :TestSubset);
 
     int i, ENTITIES = 10;
 
-    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES);
+    ecs_entity_t start = ecs_bulk_new(world, Position, ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, start + i, Position, {1, 2});
@@ -1168,7 +1174,7 @@ void Run_run_comb_10_entities_1_type() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        Position *p = ecs_get_ptr(world, start + i, Position);
+        const Position *p = ecs_get(world, start + i, Position);
         test_int(p->x, ENTITIES - i);
     }
 
@@ -1182,13 +1188,13 @@ void Run_run_comb_10_entities_2_types() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, TestSubset, EcsManual, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, .TestSubset);
+    ECS_SYSTEM(world, TestSubset, 0, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, :TestSubset);
 
     int i, ENTITIES = 10;
 
-    ecs_entity_t start = ecs_new_w_count(world, Position, ENTITIES / 2);
-    ecs_new_w_count(world, Type, ENTITIES / 2);
+    ecs_entity_t start = ecs_bulk_new(world, Position, ENTITIES / 2);
+    ecs_bulk_new(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES; i ++) {
         ecs_set(world, start + i, Position, {1, 2});
@@ -1197,7 +1203,7 @@ void Run_run_comb_10_entities_2_types() {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
-        Position *p = ecs_get_ptr(world, start + i, Position);
+        const Position *p = ecs_get(world, start + i, Position);
         test_int(p->x, ENTITIES - i);
     }
 
@@ -1205,11 +1211,11 @@ void Run_run_comb_10_entities_2_types() {
 }
 
 static
-void Interrupt(ecs_rows_t *rows) {
+void Interrupt(ecs_iter_t *it) {
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (i == 2) {
-            rows->interrupted_by = rows->entities[i];
+            it->interrupted_by = it->entities[i];
             break;
         }
     }
@@ -1231,7 +1237,7 @@ void Run_run_w_interrupt() {
     ECS_ENTITY(world, e_6, Position, Velocity, Mass, Rotation);
     ECS_ENTITY(world, e_7, Position);
 
-    ECS_SYSTEM(world, Interrupt, EcsManual, Position);
+    ECS_SYSTEM(world, Interrupt, 0, Position);
 
     ecs_entity_t e = ecs_run(world, Interrupt, 0, NULL);
     test_int(e, e_3);
@@ -1240,22 +1246,21 @@ void Run_run_w_interrupt() {
 }
 
 static
-void AddVelocity(ecs_rows_t *rows) {
-    ecs_world_t *world = rows->world;
+void AddVelocity(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
 
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN_COMPONENT(rows, Position, 1);
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN_COMPONENT(it, Velocity, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_entity_t e = rows->entities[i];
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
 
         float x = p[i].x;
         float y = p[i].y;
         
         ecs_set(world, e, Position, {x + 1, y + 2});
-        Position *p_stage = ecs_get_ptr(world, e, Position);
+        const Position *p_stage = ecs_get(world, e, Position);
         test_int(p_stage->x, x + 1);
         test_int(p_stage->y, y + 2);
 
@@ -1264,7 +1269,7 @@ void AddVelocity(ecs_rows_t *rows) {
         test_int(p[i].y, y);
 
         ecs_set(world, e, Velocity, {1, 2});
-        Velocity *v = ecs_get_ptr(world, e, Velocity);
+        const Velocity *v = ecs_get(world, e, Velocity);
         test_int(v->x, 1);
         test_int(v->y, 2);
     }
@@ -1279,26 +1284,26 @@ void Run_run_staging() {
     ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
     ecs_entity_t e2 = ecs_set(world, 0, Position, {30, 40});
 
-    ECS_SYSTEM(world, AddVelocity, EcsManual, Position, .Velocity);
+    ECS_SYSTEM(world, AddVelocity, 0, Position, :Velocity);
 
     ecs_run(world, AddVelocity, 0, NULL);
 
     test_assert( ecs_has(world, e1, Position));
     test_assert( ecs_has(world, e1, Velocity));
 
-    Position *p = ecs_get_ptr(world, e1, Position);
+    const Position *p = ecs_get(world, e1, Position);
     test_int(p->x, 11);
     test_int(p->y, 22);
 
-    Velocity *v = ecs_get_ptr(world, e1, Velocity);
+    const Velocity *v = ecs_get(world, e1, Velocity);
     test_int(v->x, 1);
     test_int(v->y, 2);
 
-    p = ecs_get_ptr(world, e2, Position);
+    p = ecs_get(world, e2, Position);
     test_int(p->x, 31);
     test_int(p->y, 42);
 
-    v = ecs_get_ptr(world, e2, Velocity);
+    v = ecs_get(world, e2, Velocity);
     test_int(v->x, 1);
     test_int(v->y, 2);
  

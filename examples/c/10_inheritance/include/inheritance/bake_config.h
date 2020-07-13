@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef INHERITANCE_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef INHERITANCE_STATIC
-  #if INHERITANCE_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define INHERITANCE_EXPORT __declspec(dllexport)
-  #elif INHERITANCE_IMPL
-    #define INHERITANCE_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define INHERITANCE_EXPORT __declspec(dllimport)
-  #else
-    #define INHERITANCE_EXPORT
-  #endif
-#else
-  #define INHERITANCE_EXPORT
-#endif
-
 #endif
 

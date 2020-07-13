@@ -11,19 +11,19 @@ typedef Vector2D Position;
 typedef Vector2D Velocity;
 
 /* Implement a simple move system */
-void Move(ecs_rows_t *rows) {
+void Move(ecs_iter_t *it) {
     /* Get the two columns from the system signature */
-    Position *p = _ecs_column(rows, sizeof(Position), 1);
-    Velocity *v = _ecs_column(rows, sizeof(Velocity), 2);
+    Position *p = ecs_column_w_size(it, sizeof(Position), 1);
+    Velocity *v = ecs_column_w_size(it, sizeof(Velocity), 2);
 
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
 
         /* Print something to the console so we can see the system is being
          * invoked */
         printf("%s moved to {.x = %f, .y = %f}\n",
-            ecs_get_id(rows->world, rows->entities[i]),
+            ecs_get_name(it->world, it->entities[i]),
             p[i].x, p[i].y);
     }
 }
@@ -34,31 +34,28 @@ int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     /* Register components */
-    ecs_entity_t EPosition = ecs_new_component(world, "Position", sizeof(Position));
-    ecs_entity_t EVelocity = ecs_new_component(world, "Velocity", sizeof(Velocity));
-
-    /* Obtain variables to component types */
-    ecs_type_t TPosition = ecs_type_from_entity(world, EPosition);
-    ecs_type_t TVelocity = ecs_type_from_entity(world, EVelocity);
+    ecs_entity_t FLECS__EPosition = ecs_new_component(world, 0, "Position", sizeof(Position), ECS_ALIGNOF(Position));
+    ecs_entity_t FLECS__EVelocity = ecs_new_component(world, 0, "Velocity", sizeof(Velocity), ECS_ALIGNOF(Velocity));
 
     /* Register system */
-    ecs_new_system(world, "Move", EcsOnUpdate, "Position, Velocity", Move);
+    ecs_new_system(world, 0, "Move", EcsOnUpdate, "Position, Velocity", Move);
 
     /* Create entity */
-    ecs_entity_t MyEntity = _ecs_new(world, 0);
+    ecs_entity_t MyEntity = ecs_new_w_type(world, 0);
 
     /* Set entity identifier using builtin component */
-    _ecs_set_ptr(world, MyEntity, EEcsId, sizeof(EcsId), &(EcsId){"MyEntity"});
+    ecs_set_ptr_w_entity(world, MyEntity, FLECS__EEcsName, sizeof(EcsName), &(EcsName){"MyEntity"});
 
     /* Components are automatically added when doing an ecs_set, but this is for
-     * demonstration purposes. The ecs_add operation accepts a type variable, as
-     * it can add multiple components in a single operation. */
-    _ecs_add(world, MyEntity, TPosition);
-    _ecs_add(world, MyEntity, TVelocity);
+     * demonstration purposes. The ecs_add_entity operation accepts the
+     * component identifier. Alternatively applications can use ecs_add_type,
+     * which can add multiple components in one operation. */
+    ecs_add_entity(world, MyEntity, FLECS__EPosition);
+    ecs_add_entity(world, MyEntity, FLECS__EVelocity);
 
     /* Set values for entity. */
-    _ecs_set_ptr(world, MyEntity, EPosition, sizeof(Position), &(Position){0, 0});
-    _ecs_set_ptr(world, MyEntity, EVelocity, sizeof(Velocity), &(Velocity){1, 1});
+    ecs_set_ptr_w_entity(world, MyEntity, FLECS__EPosition, sizeof(Position), &(Position){0, 0});
+    ecs_set_ptr_w_entity(world, MyEntity, FLECS__EVelocity, sizeof(Velocity), &(Velocity){1, 1});
 
     /* Set target FPS for main loop to 1 frame per second */
     ecs_set_target_fps(world, 1);

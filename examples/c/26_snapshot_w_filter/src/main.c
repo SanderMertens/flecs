@@ -12,15 +12,15 @@ typedef struct Velocity {
 
 typedef float Mass;
 
-void Move(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
+void Move(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
 
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
         printf("Move '%s' {%f, %f}\n", 
-            ecs_get_id(rows->world, rows->entities[i]), p[i].x, p[i].y);
+            ecs_get_name(it->world, it->entities[i]), p[i].x, p[i].y);
     }
 }
 
@@ -36,21 +36,23 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     ecs_entity_t e1 = 
-    ecs_set(world, 0, EcsId, {"E1"});
+    ecs_set(world, 0, EcsName, {"E1"});
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Velocity, {1, 2});
 
     ecs_entity_t e2 =
-    ecs_set(world, 0, EcsId, {"E2"});
+    ecs_set(world, 0, EcsName, {"E2"});
     ecs_set(world, e2, Position, {0, 0});
     ecs_set(world, e2, Velocity, {1, 2});
     ecs_set(world, e2, Mass, {10});
 
     /* Take a snapshot that records the current state of the entity. Filter out
      * any entities that have the 'Mass' component. */
-    ecs_snapshot_t *s = ecs_snapshot_take(world, &(ecs_filter_t){
+    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
         .exclude = ecs_type(Mass)
     });
+    
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
 
     /* Progress the world a few times, updates position */
     ecs_progress(world, 0);

@@ -9,27 +9,27 @@ extern "C" {
 #endif
 
 #define MAX_SYS_COLUMNS (20)
-#define MAX_ENTITIES (64)
+#define MAX_ENTITIES (256)
 #define MAX_INVOCATIONS (1024)
 
-typedef struct SysTestData {
+typedef struct Probe {
     ecs_entity_t system;
-    uint32_t offset;
-    uint32_t count;
-    uint32_t invoked;
-    uint32_t column_count;
+    int32_t offset;
+    int32_t count;
+    int32_t invoked;
+    int32_t column_count;
     ecs_entity_t e[MAX_ENTITIES];
     ecs_entity_t c[MAX_INVOCATIONS][MAX_SYS_COLUMNS];
     ecs_entity_t s[MAX_INVOCATIONS][MAX_SYS_COLUMNS];
     void *param;
-} SysTestData;
+} Probe;
 
 typedef struct IterData {
-    ecs_type_t component;
-    ecs_type_t component_2;
-    ecs_type_t component_3;
+    ecs_entity_t component;
+    ecs_entity_t component_2;
+    ecs_entity_t component_3;
     ecs_entity_t new_entities[MAX_ENTITIES];
-    uint32_t entity_count;
+    int32_t entity_count;
 } IterData;
 
 typedef struct Position {
@@ -53,7 +53,13 @@ typedef struct Color {
     float a;
 } Color;
 
-void ProbeSystem(ecs_rows_t *rows);
+void probe_system_w_ctx(
+    ecs_iter_t *it,
+    Probe *ctx);
+
+void probe_system(ecs_iter_t *it);
+
+void probe_has_entity(Probe *probe, ecs_entity_t e);
 
 #ifdef __cplusplus
 }

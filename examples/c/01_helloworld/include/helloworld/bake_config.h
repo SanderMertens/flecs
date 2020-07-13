@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef HELLOWORLD_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef HELLOWORLD_STATIC
-  #if HELLOWORLD_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define HELLOWORLD_EXPORT __declspec(dllexport)
-  #elif HELLOWORLD_IMPL
-    #define HELLOWORLD_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define HELLOWORLD_EXPORT __declspec(dllimport)
-  #else
-    #define HELLOWORLD_EXPORT
-  #endif
-#else
-  #define HELLOWORLD_EXPORT
-#endif
-
 #endif
 

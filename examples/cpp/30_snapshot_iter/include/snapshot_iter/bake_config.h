@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef SNAPSHOT_ITER_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef SNAPSHOT_ITER_STATIC
-  #if SNAPSHOT_ITER_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define SNAPSHOT_ITER_EXPORT __declspec(dllexport)
-  #elif SNAPSHOT_ITER_IMPL
-    #define SNAPSHOT_ITER_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define SNAPSHOT_ITER_EXPORT __declspec(dllimport)
-  #else
-    #define SNAPSHOT_ITER_EXPORT
-  #endif
-#else
-  #define SNAPSHOT_ITER_EXPORT
-#endif
-
 #endif
 

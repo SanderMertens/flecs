@@ -4,16 +4,16 @@ typedef struct TaskContext {
     int value;
 } TaskContext;
 
-void MyTask(ecs_rows_t *rows) {
+void MyTask(ecs_iter_t *it) {
     printf("Task executed every second\n");
 }
 
-void My2ndTask(ecs_rows_t *rows) {
+void My2ndTask(ecs_iter_t *it) {
     printf("Task executed every 2 seconds\n");
 }
 
-void My3rdTask(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, TaskContext, ctx, 1);
+void My3rdTask(ecs_iter_t *it) {
+    ECS_COLUMN(it, TaskContext, ctx, 1);
 
     printf("Task with context: %d\n", ctx->value);
 }
@@ -30,10 +30,10 @@ int main(int argc, char *argv[]) {
 
      // Task that is executed every 2 seconds
     ECS_SYSTEM(world, My2ndTask, EcsOnUpdate, 0);
-    ecs_set_period(world, My2ndTask, 2.0);
+    ecs_set_interval(world, My2ndTask, 2.0);
 
     // It is possible to add components to a task, just like regular systems
-    ECS_SYSTEM(world, My3rdTask, EcsOnUpdate, SYSTEM.TaskContext);
+    ECS_SYSTEM(world, My3rdTask, EcsOnUpdate, SYSTEM:TaskContext);
     ecs_set(world, My3rdTask, TaskContext, {10});
 
     /* Set target FPS for main loop */

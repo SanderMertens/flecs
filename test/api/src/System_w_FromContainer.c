@@ -1,29 +1,29 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Mass, m_ptr, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Mass, m_ptr, 1);
     bool shared = false;
     
     if (m_ptr) {
-        shared = ecs_is_shared(rows, 1);
+        shared = !ecs_is_owned(it, 1);
     }
 
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (rows->column_count >= 2) {
-        p = ecs_column(rows, Position, 2);
+    if (it->column_count >= 2) {
+        p = ecs_column(it, Position, 2);
     }
 
-    if (rows->column_count >= 3) {
-        v = ecs_column(rows, Velocity, 3);
+    if (it->column_count >= 3) {
+        v = ecs_column(it, Velocity, 3);
     }
 
-    ProbeSystem(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         Mass m = 1;
         if (m_ptr) {
             if (shared) {
@@ -54,15 +54,14 @@ void System_w_FromContainer_1_column_from_container() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
 
-    ecs_adopt(world, e_3, parent);
-
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -81,17 +80,17 @@ void System_w_FromContainer_1_column_from_container() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -111,14 +110,14 @@ void System_w_FromContainer_2_column_1_from_container() {
     ECS_ENTITY(world, e_3, Position, Velocity);
     ECS_ENTITY(world, e_4, Position, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position, Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position, Velocity);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
-    ecs_adopt(world, e_3, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -139,32 +138,32 @@ void System_w_FromContainer_2_column_1_from_container() {
     test_int(ctx.c[0][2], ecs_entity(Velocity));
     test_int(ctx.s[0][2], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    Velocity *v = ecs_get_ptr(world, e_1, Velocity);
+    const Velocity *v = ecs_get(world, e_1, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 60);
     test_int(v->y, 80);
 
-    v = ecs_get_ptr(world, e_2, Velocity);
+    v = ecs_get(world, e_2, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 60);
     test_int(v->y, 80);
 
-    v = ecs_get_ptr(world, e_3, Velocity);
+    v = ecs_get(world, e_3, Velocity);
     test_assert(v != NULL);
     test_int(v->x, 60);
     test_int(v->y, 80);
@@ -173,26 +172,26 @@ void System_w_FromContainer_2_column_1_from_container() {
 }
 
 static
-void Iter_2_shared(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Mass, m_ptr, 1);
+void Iter_2_shared(ecs_iter_t *it) {
+    ECS_COLUMN(it, Mass, m_ptr, 1);
 
     Rotation *r_ptr = NULL;
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (rows->column_count >= 2) {
-        r_ptr = ecs_column(rows, Rotation, 2);
+    if (it->column_count >= 2) {
+        r_ptr = ecs_column(it, Rotation, 2);
     }
 
-    if (rows->column_count >= 3) {
-        p = ecs_column(rows, Position, 3);
+    if (it->column_count >= 3) {
+        p = ecs_column(it, Position, 3);
     }
 
-    if (rows->column_count >= 4) {
-        v = ecs_column(rows, Velocity, 4);
+    if (it->column_count >= 4) {
+        v = ecs_column(it, Velocity, 4);
     }    
 
-    ProbeSystem(rows);
+    probe_system(it);
 
     Mass m = 1;
     if (m_ptr) {
@@ -205,7 +204,7 @@ void Iter_2_shared(ecs_rows_t *rows) {
     }
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         if (p) {
             p[i].x = 10 * m + r;
             p[i].y = 20 * m + r;
@@ -230,16 +229,16 @@ void System_w_FromContainer_3_column_2_from_container() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, CONTAINER.Mass, CONTAINER.Rotation, Position);
+    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, PARENT:Mass, PARENT:Rotation, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
     ecs_set(world, parent, Rotation, {3});
 
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
-    ecs_adopt(world, e_4, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -260,17 +259,17 @@ void System_w_FromContainer_3_column_2_from_container() {
     test_int(ctx.c[0][2], ecs_entity(Position));
     test_int(ctx.s[0][2], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get_ptr(world, e_4, Position);
+    p = ecs_get(world, e_4, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
@@ -292,25 +291,25 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     ECS_ENTITY(world, e_5, Position);
     ECS_ENTITY(world, e_6, Position);
 
-    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, CONTAINER.Mass, CONTAINER.Rotation, Position);
+    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, PARENT:Mass, PARENT:Rotation, Position);
 
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
 
-    ecs_adopt(world, e_1, parent_1);
-    ecs_adopt(world, e_1, parent_2);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_2);
 
-    ecs_adopt(world, e_2, parent_1);
-    ecs_adopt(world, e_2, parent_2);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
 
-    ecs_adopt(world, e_3, parent_1);
-    ecs_adopt(world, e_3, parent_2);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_2);
 
     /* e_4 and e_5 should not be matched */
-    ecs_adopt(world, e_4, parent_1);
-    ecs_adopt(world, e_5, parent_2);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_2);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -331,17 +330,17 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     test_int(ctx.c[0][2], ecs_entity(Position));
     test_int(ctx.s[0][2], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 23);
     test_int(p->y, 43);
@@ -362,17 +361,17 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     ECS_ENTITY(world, e_4, Position);
     ECS_ENTITY(world, e_5, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, !CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, !PARENT:Mass, Position);
 
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
 
-    ecs_adopt(world, e_1, parent_2);
-    ecs_adopt(world, e_2, parent_2);
-    ecs_adopt(world, e_3, parent_2);
-    ecs_adopt(world, e_4, parent_1);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_1);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -396,22 +395,22 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     test_int(ctx.c[1][1], ecs_entity(Position));
     test_int(ctx.s[1][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    p = ecs_get_ptr(world, e_5, Position);
+    p = ecs_get(world, e_5, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -433,20 +432,20 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     ECS_ENTITY(world, e_5, Position);
     ECS_ENTITY(world, e_6, Position);
 
-    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, !CONTAINER.Mass, CONTAINER.Rotation, Position);
+    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, !PARENT:Mass, PARENT:Rotation, Position);
 
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
     ecs_entity_t parent_3 = ecs_set(world, 0, Mass, {4});
     ecs_set(world, parent_3, Rotation, {5});
 
-    ecs_adopt(world, e_1, parent_2);
-    ecs_adopt(world, e_2, parent_2);
-    ecs_adopt(world, e_3, parent_2);
-    ecs_adopt(world, e_4, parent_1);
-    ecs_adopt(world, e_5, parent_3);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_3);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -467,17 +466,17 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     test_int(ctx.c[0][2], ecs_entity(Position));
     test_int(ctx.s[0][2], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 13);
     test_int(p->y, 23);
@@ -497,16 +496,16 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
     ECS_ENTITY(world, e_1, Position);
     ECS_ENTITY(world, e_2, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, !CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, !PARENT:Mass, Position);
 
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
 
-    ecs_add(world, e_1, Prefab);
+    ecs_add_entity(world, e_1, ECS_INSTANCEOF | Prefab);
 
-    ecs_adopt(world, e_1, parent_1);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_1);
     ecs_set(world, e_1, Position, {1, 2});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -523,12 +522,12 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);
     test_int(p->y, 2);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -552,22 +551,22 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     ECS_ENTITY(world, e_5, Position);
     ECS_ENTITY(world, e_6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass | CONTAINER.Rotation, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass || PARENT:Rotation, Position);
 
     ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
     ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
     ecs_entity_t parent_3 = ecs_set(world, 0, Rotation, {4});
-        ecs_set(world, parent_3, Mass, {5});
+                            ecs_set(world, parent_3, Mass, {5});
     ecs_entity_t parent_4 = ecs_set(world, 0, Velocity, {10, 20});
 
-    ecs_adopt(world, e_1, parent_1);
-    ecs_adopt(world, e_2, parent_2);
-    ecs_adopt(world, e_3, parent_3);
-    ecs_adopt(world, e_4, parent_4);
-    ecs_adopt(world, e_5, parent_2); 
-    ecs_adopt(world, e_5, parent_3);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent_1);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent_3);
+    ecs_add_entity(world, e_4, ECS_CHILDOF | parent_4);
+    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_2);
+    ecs_add_entity(world, e_5, ECS_CHILDOF | parent_3);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -599,22 +598,22 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     test_int(ctx.c[3][1], ecs_entity(Position));
     test_int(ctx.s[3][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 40);
     test_int(p->y, 80);
 
-    p = ecs_get_ptr(world, e_5, Position);
+    p = ecs_get(world, e_5, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);
@@ -623,13 +622,13 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
 }
 
 static
-void Dummy(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Mass, m_ptr, 1);
-    ECS_COLUMN(rows, Position, p, 2);
+void Dummy(ecs_iter_t *it) {
+    ECS_COLUMN(it, Mass, m_ptr, 1);
+    ECS_COLUMN(it, Position, p, 2);
 
-    test_assert(!m_ptr || ecs_is_shared(rows, 1));
+    test_assert(!m_ptr || !ecs_is_owned(it, 1));
 
-    ProbeSystem(rows);
+    probe_system(it);
 
     Mass m = 1;
     if (m_ptr) {
@@ -637,7 +636,7 @@ void Dummy(ecs_rows_t *rows) {
     }
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x += m;
         p[i].y += m;
     }
@@ -654,15 +653,15 @@ void System_w_FromContainer_add_component_after_match() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_set(world, parent, Mass, {2});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -680,12 +679,12 @@ void System_w_FromContainer_add_component_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -704,13 +703,13 @@ void System_w_FromContainer_add_component_after_match_and_rematch() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* This will rematch tables, but not match Iter with e_1 and e_2 because the
@@ -721,7 +720,7 @@ void System_w_FromContainer_add_component_after_match_and_rematch() {
     ecs_set(world, parent, Mass, {2});
 
     /* Now a rematch of tables need to happen again, since parent has changed */
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
     ecs_progress(world, 1);
 
     test_int(ctx.count, 2);
@@ -737,12 +736,12 @@ void System_w_FromContainer_add_component_after_match_and_rematch() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -759,13 +758,13 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, e_1, Position, CHILDOF | Parent);
     ECS_ENTITY(world, e_2, Position, CHILDOF | Parent);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* This will rematch tables, but not match Iter with e_1 and e_2 because the
@@ -776,7 +775,7 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     ecs_set(world, Parent, Mass, {2});
 
     /* Now a rematch of tables need to happen again, since parent has changed */
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
     ecs_progress(world, 1);
 
     test_int(ctx.count, 2);
@@ -792,12 +791,12 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -806,12 +805,12 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
 }
 
 static
-void SetMass(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Mass, 2);
+void SetMass(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Mass, 2);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(rows->world, rows->entities[i], Mass, {2});
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Mass, {2});
     }
 }
 
@@ -825,14 +824,14 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);     
 
-    ECS_SYSTEM(world, SetMass, EcsOnUpdate, Velocity, .Mass);
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, SetMass, EcsOnUpdate, Velocity, :Mass);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ECS_ENTITY(world, Parent, Velocity);
     ECS_ENTITY(world, e_1, Position, CHILDOF | Parent);
     ECS_ENTITY(world, e_2, Position, CHILDOF | Parent);  
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     /* This will rematch tables, but not match Iter with e_1 and e_2 because the
@@ -841,7 +840,7 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     test_int(ctx.count, 0);
 
     /* Now a rematch of tables need to happen again, since parent has changed */
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
     ecs_progress(world, 1);
 
     test_int(ctx.count, 2);
@@ -857,12 +856,12 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -880,15 +879,15 @@ void System_w_FromContainer_add_component_after_match_unmatch() {
     ECS_ENTITY(world, e_2, Position);
     ECS_ENTITY(world, e_3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, !CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, !PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_set(world, parent, Mass, {2});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -905,7 +904,7 @@ void System_w_FromContainer_add_component_after_match_unmatch() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_3, Position);
+    const Position *p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -922,16 +921,16 @@ void System_w_FromContainer_add_component_after_match_unmatch_match() {
     ECS_ENTITY(world, e_1, Position);
     ECS_ENTITY(world, e_2, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_set(world, parent, Mass, {2});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -949,12 +948,12 @@ void System_w_FromContainer_add_component_after_match_unmatch_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -972,16 +971,16 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
     ECS_ENTITY(world, e_2, Position);
     ECS_ENTITY(world, e_3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_set(world, parent, Mass, {2});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1001,12 +1000,12 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 22);
     test_int(p->y, 42);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 22);
     test_int(p->y, 42);
@@ -1015,12 +1014,12 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
 }
 
 static
-void AddMass(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Mass, 2);
+void AddMass(ecs_iter_t *it) {
+    ecs_entity_t ecs_entity(Mass) = *(ecs_entity_t*)it->param;
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_set(rows->world, rows->entities[i], Mass, {2});
+    for (i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Mass, {2});
     }
 }
 
@@ -1029,23 +1028,25 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, 0);
 
     ECS_ENTITY(world, e_1, Position);
     ECS_ENTITY(world, e_2, Position);
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
-    ECS_SYSTEM(world, AddMass, EcsOnAdd, Tag, .Mass);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
+    ECS_TRIGGER(world, AddMass, EcsOnAdd, Tag);
+
+    ecs_set(world, AddMass, EcsContext, {&ecs_entity(Mass)});
 
     ecs_entity_t parent = ecs_new(world, 0);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
-    ecs_add(world, parent, Tag);
+    ecs_add_entity(world, parent, Tag);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1063,12 +1064,12 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1086,15 +1087,15 @@ void System_w_FromContainer_adopt_after_match() {
     ECS_ENTITY(world, e_2, Position);
     ECS_ENTITY(world, e_3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_new(world, Mass);
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
 
     ecs_set(world, parent, Mass, {2});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1112,12 +1113,12 @@ void System_w_FromContainer_adopt_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1133,15 +1134,15 @@ void System_w_FromContainer_new_child_after_match() {
 
     ECS_ENTITY(world, e_3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
-    ecs_entity_t parent = ecs_new(world, Mass);
-    ecs_entity_t e_1 = ecs_new_child(world, parent, Position);
-    ecs_entity_t e_2 = ecs_new_child(world, parent, Position);
+    ECS_ENTITY(world, parent, Mass);
+    ECS_ENTITY(world, e_1, CHILDOF | parent, Position);
+    ECS_ENTITY(world, e_2, CHILDOF | parent, Position);
 
     ecs_set(world, parent, Mass, {2});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1159,12 +1160,12 @@ void System_w_FromContainer_new_child_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1172,16 +1173,16 @@ void System_w_FromContainer_new_child_after_match() {
     ecs_fini(world);
 }
 
-void IterSame(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p_parent, 1);
-    ECS_COLUMN(rows, Position, p, 2);
+void IterSame(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p_parent, 1);
+    Position *p = ecs_column(it, Position, 2);
 
-    test_assert(ecs_is_shared(rows, 1));
+    test_assert(!ecs_is_owned(it, 1));
 
-    ProbeSystem(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x += p_parent->x;
         p[i].y += p_parent->y;
     }
@@ -1198,18 +1199,18 @@ void System_w_FromContainer_select_same_from_container() {
     ECS_ENTITY(world, e_3, Position);
     ECS_ENTITY(world, e_4, Position);
 
-    ECS_SYSTEM(world, IterSame, EcsOnUpdate, CONTAINER.Position, Position);
+    ECS_SYSTEM(world, IterSame, EcsOnUpdate, PARENT:Position, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
-    ecs_adopt(world, e_1, parent);
-    ecs_adopt(world, e_2, parent);
-    ecs_adopt(world, e_3, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_2, ECS_CHILDOF | parent);
+    ecs_add_entity(world, e_3, ECS_CHILDOF | parent);
 
     ecs_set(world, e_1, Position, {10, 20});
     ecs_set(world, e_2, Position, {20, 40});
     ecs_set(world, e_3, Position, {30, 60});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1228,17 +1229,17 @@ void System_w_FromContainer_select_same_from_container() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 22);
 
-    p = ecs_get_ptr(world, e_2, Position);
+    p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 21);
     test_int(p->y, 42);
 
-    p = ecs_get_ptr(world, e_3, Position);
+    p = ecs_get(world, e_3, Position);
     test_assert(p != NULL);
     test_int(p->x, 31);
     test_int(p->y, 62);
@@ -1254,12 +1255,12 @@ void System_w_FromContainer_realloc_after_match() {
 
     ECS_ENTITY(world, e_1, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, CONTAINER.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
-    ecs_adopt(world, e_1, parent);
+    ecs_add_entity(world, e_1, ECS_CHILDOF | parent);
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -1276,7 +1277,7 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_1, Position);
+    const Position *p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 40);
@@ -1285,14 +1286,14 @@ void System_w_FromContainer_realloc_after_match() {
     ecs_type_t parent_type = ecs_get_type(world, parent);
     test_assert(parent_type != 0);
 
-    _ecs_new_w_count(world, parent_type, 1000);
+    ecs_bulk_new_w_type(world, parent_type, 1000);
 
     /* Change value of parent Mass. This will update the value in the new table.
      * If the realloc would not be properly handled, the code could either crash
      * or reference freed memory and use the old value. */
     ecs_set(world, parent, Mass, {3});
 
-    ctx = (SysTestData){0};
+    ctx = (Probe){0};
 
     ecs_progress(world, 1);
 
@@ -1308,7 +1309,7 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    p = ecs_get_ptr(world, e_1, Position);
+    p = ecs_get(world, e_1, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 60);

@@ -17,16 +17,13 @@ struct Velocity {
 };
 
 /* Implement a simple move system */
-void Move(flecs::rows& rows, flecs::column<Position> p, flecs::column<Velocity> v) {
+void Move(flecs::entity e, Position& p, Velocity& v) {
+    p.x += v.x;
+    p.y += v.y;
 
-    for (auto row : rows) {
-        p[row].x += v[row].x;
-        p[row].y += v[row].y;
-
-        std::cout << rows.entity(row).name() << " moved to {.x = "
-            << p[row].x << ", .y = "
-            << p[row].y << "}" << std::endl;
-    }
+    std::cout << e.name() << " moved to {.x = "
+        << p.x << ", .y = "
+        << p.y << "}" << std::endl;
 }
 
 /* Implement a system that transforms world coordinates hierarchically. If the 
@@ -34,20 +31,20 @@ void Move(flecs::rows& rows, flecs::column<Position> p, flecs::column<Velocity> 
  * will be used to then transform Position to WorldPosition of the child.
  * If the CASCADE column is not set, the system matched a root. In that case,
  * just assign the Position to the WorldPosition. */
-void Transform(flecs::rows& rows, flecs::column<WorldPosition> wp, flecs::column<Position> p) {
-    flecs::column<const WorldPosition> parent_wp(rows, 3);
+void Transform(flecs::iter& it, flecs::column<WorldPosition> wp, flecs::column<Position> p) {
+    flecs::column<const WorldPosition> parent_wp(it, 3);
 
     if (!parent_wp.is_set()) {
-        for (auto row : rows) {
+        for (auto row : it) {
             wp[row].x = p[row].x;
             wp[row].y = p[row].y;
 
-            std::cout << rows.entity(row).name() << " transformed to {.x = "
+            std::cout << it.entity(row).name() << " transformed to {.x = "
                 << wp[row].x << ", .y = "
                 << wp[row].y << "} <<root>>" << std::endl;
         }
     } else {
-        for (auto row : rows) {
+        for (auto row : it) {
             /* Note that we're not using row to access parent_wp. This function
              * ('Transform') is invoked for every matching archetype, and the 
              * parent is part of the archetype. That means that all entities 
@@ -55,7 +52,7 @@ void Transform(flecs::rows& rows, flecs::column<WorldPosition> wp, flecs::column
             wp[row].x = parent_wp->x + p[row].x;
             wp[row].y = parent_wp->y + p[row].y;
 
-            std::cout << rows.entity(row).name() << " transformed to {.x = "
+            std::cout << it.entity(row).name() << " transformed to {.x = "
                 << wp[row].x << ", .y = "
                 << wp[row].y << "} <<child>>" << std::endl;
         }
@@ -73,7 +70,7 @@ int main(int argc, char *argv[]) {
     flecs::component<Velocity>(world, "Velocity");
 
     /* Move entities with Position and Velocity */
-    flecs::system<Position, Velocity>(world).action(Move);
+    flecs::system<Position, Velocity>(world).each(Move);
 
     /* Transform local coordinates to world coordinates. A CASCADE column
      * guarantees that entities are evaluated breadth-first, according to the
@@ -84,10 +81,17 @@ int main(int argc, char *argv[]) {
      * as a template parameter, and have to be specified using hte 'signature'
      * method. This string will be appended to the signature, so that the full
      * signature for this system will be:
-     *     WorldPosition, Position. CASCADE.WorldPosition. 
+     *     WorldPosition, Position. CASCADE:WorldPosition.
+     *
+     * Additionally, note that we're using 'action' instead of 'each'. Actions
+     * provide more flexibility and performance, but also are slightly more
+     * complex to implement.
+     *
+     * In this case we need to use 'action', since otherwise we cannot access
+     * the WorldPosition component from the parent.
      */
     flecs::system<WorldPosition, Position>(world)
-        .signature("CASCADE.WorldPosition")
+        .signature("CASCADE:WorldPosition")
         .action(Transform);
 
     /* Create root of the hierachy which moves around */

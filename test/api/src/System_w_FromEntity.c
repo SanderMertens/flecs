@@ -1,23 +1,23 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Mass, m_ptr, 1);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Mass, m_ptr, 1);
 
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (rows->column_count >= 2) {
-        p = ecs_column(rows, Position, 2);
+    if (it->column_count >= 2) {
+        p = ecs_column(it, Position, 2);
     }
 
-    if (rows->column_count >= 3) {
-        v = ecs_column(rows, Velocity, 3);
+    if (it->column_count >= 3) {
+        v = ecs_column(it, Velocity, 3);
     }
 
-    test_assert(!m_ptr || ecs_is_shared(rows, 1));
+    test_assert(!m_ptr || !ecs_is_owned(it, 1));
 
-    ProbeSystem(rows);
+    probe_system(it);
 
     Mass m = 1;
     if (m_ptr) {
@@ -25,7 +25,7 @@ void Iter(ecs_rows_t *rows) {
     }
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10 * m;
         p[i].y = 20 * m;
 
@@ -45,11 +45,11 @@ void System_w_FromEntity_2_column_1_from_entity() {
     ECS_ENTITY(world, e_1, Mass);
     ECS_ENTITY(world, e_2, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, e_1.Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, e_1:Mass, Position);
 
     ecs_set(world, e_1, Mass, {5});
 
-    SysTestData ctx = {0};
+    Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
@@ -66,7 +66,7 @@ void System_w_FromEntity_2_column_1_from_entity() {
     test_int(ctx.c[0][1], ecs_entity(Position));
     test_int(ctx.s[0][1], 0);
 
-    Position *p = ecs_get_ptr(world, e_2, Position);
+    const Position *p = ecs_get(world, e_2, Position);
     test_assert(p != NULL);
     test_int(p->x, 50);
     test_int(p->y, 100);
@@ -86,10 +86,10 @@ void dummy_reset() {
 }
 
 static
-void Dummy(ecs_rows_t *rows) {
+void Dummy(ecs_iter_t *it) {
     dummy_invoked = 1;
-    dummy_component = ecs_column_entity(rows, 1);
-    dummy_source = ecs_column_source(rows, 1);
+    dummy_component = ecs_column_entity(it, 1);
+    dummy_source = ecs_column_source(it, 1);
 }
 
 void System_w_FromEntity_task_from_entity() {
@@ -99,7 +99,7 @@ void System_w_FromEntity_task_from_entity() {
 
     ECS_ENTITY(world, e_1, Position);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, e_1.Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, e_1:Position);
 
     ecs_progress(world, 1);
 
@@ -123,7 +123,7 @@ void System_w_FromEntity_task_not_from_entity() {
 
     ECS_ENTITY(world, e_1, Position);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !e_1.Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !e_1:Position);
 
     ecs_progress(world, 1);
 

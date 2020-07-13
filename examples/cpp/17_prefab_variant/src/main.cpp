@@ -60,18 +60,18 @@ int main(int argc, char *argv[]) {
         .add(Sub2);        
 
     /* Print values of e1 */
-    Position p = e1.get<Position>();
-    Velocity v = e1.get<Velocity>();
-    std::cout << "e1 Position: {" << p.x << ", " << p.y << "} (owned = " 
-        << e1.has_owned<Position>() << "} " << std::endl;
-    std::cout << "e1 Velocity: {" << v.x << ", " << v.y << "} (owned = " 
-        << e1.has_owned<Velocity>() << "} " << std::endl;
+    const Position *p = e1.get<Position>();
+    const Velocity *v = e1.get<Velocity>();
+    std::cout << "e1 Position: {" << p->x << ", " << p->y << "} (owned = " 
+        << e1.owns<Position>() << "} " << std::endl;
+    std::cout << "e1 Velocity: {" << v->x << ", " << v->y << "} (owned = " 
+        << e1.owns<Velocity>() << "} " << std::endl;
 
     /* Print values of e2 */
     p = e2.get<Position>();
     v = e2.get<Velocity>();
-    std::cout << "e2 Position: {" << p.x << ", " << p.y << "} (owned = " 
-        << e2.has_owned<Position>() << "} " << std::endl;
-    std::cout << "e2 Velocity: {" << v.x << ", " << v.y << "} (owned = " 
-        << e2.has_owned<Velocity>() << "} " << std::endl;        
+    std::cout << "e2 Position: {" << p->x << ", " << p->y << "} (owned = " 
+        << e2.owns<Position>() << "} " << std::endl;
+    std::cout << "e2 Velocity: {" << v->x << ", " << v->y << "} (owned = " 
+        << e2.owns<Velocity>() << "} " << std::endl;        
 }

@@ -16,12 +16,12 @@ int main(int argc, char *argv[]) {
     ecs_set(world, base, Mass, {10});
 
     /* Create instances which share the Mass component from a base */
-    ecs_entity_t instance = ecs_new_instance(world, base, 0);
+    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
 
     /* Print value before overriding Mass. The component is not owned, as it is
      * shared with the base entity. */
     printf("Before overriding:\n");
-    printf("instance: %f (owned = %u)\n", ecs_get(world, instance, Mass), ecs_has_owned(world, instance, Mass));
+    printf("instance: %f (owned = %u)\n", *ecs_get(world, instance, Mass), ecs_owns(world, instance, Mass, true));
 
     /* Override Mass of instance, which will give instance a private copy of the
      * Mass component. */
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
      * be the value assigned in the override (20). Instance now owns Mass,
      * confirming it has a private copy of the component. */
     printf("\nAfter overriding:\n");
-    printf("instance: %f (owned = %u)\n", ecs_get(world, instance, Mass), ecs_has_owned(world, instance, Mass));
+    printf("instance: %f (owned = %u)\n", *ecs_get(world, instance, Mass), ecs_owns(world, instance, Mass, true));
 
     /* Remove override of Mass. This will remove the private copy of the Mass
      * component from instance. */
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     /* Print value after removing the override Mass. The component is no longer
      * owned, as the instance is again sharing the component with base. */
     printf("\nAfter removing override:\n");
-    printf("instance: %f (owned = %u)\n", ecs_get(world, instance, Mass), ecs_has_owned(world, instance, Mass));
+    printf("instance: %f (owned = %u)\n", *ecs_get(world, instance, Mass), ecs_owns(world, instance, Mass, true));
 
     /* Cleanup */
     return ecs_fini(world);

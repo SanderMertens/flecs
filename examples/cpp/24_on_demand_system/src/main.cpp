@@ -27,15 +27,15 @@ int main(int argc, char *argv[]) {
      * run this system if there is interest in any of its [out] columns. In this
      * case the system will only be ran if there is interest in Position. */
     flecs::system<>(world).signature("[out] Position, Velocity").on_demand()
-        .action([](flecs::rows& rows){
-            flecs::column<Position> p(rows, 1);
-            flecs::column<Velocity> v(rows, 2);
+        .action([](flecs::iter& it){
+            flecs::column<Position> p(it, 1);
+            flecs::column<Velocity> v(it, 2);
 
-            for (auto row: rows) {
+            for (auto row: it) {
                 p[row].x += v[row].x;
                 p[row].y += v[row].y;
 
-                std::cout << "Moved " << rows.entity(row).name() << " to {" <<
+                std::cout << "Moved " << it.entity(row).name() << " to {" <<
                     p[row].x << ", " << p[row].y << "}" << std::endl;                
             }
         });
@@ -45,12 +45,10 @@ int main(int argc, char *argv[]) {
      * provide a value for it. If there are any OnDemand systems that provide
      * 'Position' as an output, they will be enabled. */
     auto PrintPosition = flecs::system<const Position, Printable>(world)
-        .action([](flecs::rows& rows, flecs::column<const Position> p, flecs::column<Printable> printable) {
-            for (auto row : rows) {
-                std::cout << "Position of " << rows.entity(row).name() 
-                    << " is {" << p[row].x << ", " << p[row].y << "}" 
-                    << std::endl; 
-            }
+        .each([](flecs::entity e, const Position& p, Printable& printable) {
+            std::cout << "Position of " << e.name() 
+                << " is {" << p.x << ", " << p.y << "}" 
+                << std::endl; 
         });
 
     /* Create dummy entity. Entity does not match with PrintPosition because it

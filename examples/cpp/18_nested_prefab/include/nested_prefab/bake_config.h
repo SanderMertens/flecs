@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef NESTED_PREFAB_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef NESTED_PREFAB_STATIC
-  #if NESTED_PREFAB_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define NESTED_PREFAB_EXPORT __declspec(dllexport)
-  #elif NESTED_PREFAB_IMPL
-    #define NESTED_PREFAB_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define NESTED_PREFAB_EXPORT __declspec(dllimport)
-  #else
-    #define NESTED_PREFAB_EXPORT
-  #endif
-#else
-  #define NESTED_PREFAB_EXPORT
-#endif
-
 #endif
 

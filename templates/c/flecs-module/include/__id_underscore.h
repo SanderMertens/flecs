@@ -20,8 +20,7 @@ typedef struct ${id pascalcase} {
 } ${id pascalcase};
 
 void ${id pascalcase}Import(
-    ecs_world_t *world,
-    int flags);
+    ecs_world_t *world);
 
 #define ${id pascalcase}ImportHandles(handles) /*\
     * ECS_IMPORT_ENTITY(handles, MyTag);\

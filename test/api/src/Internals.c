@@ -1,15 +1,15 @@
 #include <api.h>
 
 static
-void Iter(ecs_rows_t *rows) {
-    ECS_COLUMN(rows, Position, p, 1);
-    ECS_COLUMN(rows, Velocity, v, 2);
-    ECS_COLUMN(rows, Mass, m, 3);
+void Iter(ecs_iter_t *it) {
+    ECS_COLUMN(it, Position, p, 1);
+    ECS_COLUMN(it, Velocity, v, 2);
+    ECS_COLUMN(it, Mass, m, 3);
 
-    ProbeSystem(rows);
+    probe_system(it);
 
     int i;
-    for (i = 0; i < rows->count; i ++) {
+    for (i = 0; i < it->count; i ++) {
         p[i].x = 10;
         p[i].y = 20;
 
@@ -135,17 +135,17 @@ void Internals_activate_deactivate_activate_other() {
 static int invoked = 0;
 
 static
-void CreateNewTable(ecs_rows_t *rows) {
-    ECS_COLUMN_COMPONENT(rows, Velocity, 2);
+void CreateNewTable(ecs_iter_t *it) {
+    ECS_COLUMN_COMPONENT(it, Velocity, 2);
 
-    uint32_t i;
-    for (i = 0; i < rows->count; i ++) {
-        ecs_add(rows->world, rows->entities[i], Velocity);
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
     }
 }
 
 static
-void ManualSystem(ecs_rows_t *rows) {
+void ManualSystem(ecs_iter_t *it) {
     invoked ++;
 }
 
@@ -157,8 +157,8 @@ void Internals_no_double_system_table_after_merge() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, CreateNewTable, EcsOnUpdate, Position, .Velocity);
-    ECS_SYSTEM(world, ManualSystem, EcsManual, Position, Velocity);
+    ECS_SYSTEM(world, CreateNewTable, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, ManualSystem, 0, Position, Velocity);
 
     /* CreateNewTable system created a new, non-empty table. This will be merged
      * which will trigger activation of ManualSystem. This will cause the system

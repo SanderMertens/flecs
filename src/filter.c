@@ -1,59 +1,50 @@
 
 #include "flecs_private.h"
 
-ecs_filter_iter_t ecs_filter_iter(
+ecs_iter_t ecs_filter_iter(
     ecs_world_t *world,
     const ecs_filter_t *filter)
 {
-    return (ecs_filter_iter_t){
+    ecs_filter_iter_t iter = {
         .filter = filter ? *filter : (ecs_filter_t){0},
-        .tables = world->main_stage.tables,
-        .index = 0,
-        .rows = {
-            .world = world
-        }
+        .tables = world->stage.tables,
+        .index = 0
     };
-}
 
-ecs_filter_iter_t ecs_snapshot_filter_iter(
-    ecs_world_t *world,
-    const ecs_snapshot_t *snapshot,
-    const ecs_filter_t *filter)
-{
-    return (ecs_filter_iter_t){
-        .filter = filter ? *filter : (ecs_filter_t){0},
-        .tables = snapshot->tables,
-        .index = 0,
-        .rows = {
-            .world = world
-        }
+    return (ecs_iter_t){
+        .world = world,
+        .iter.filter = iter
     };
 }
 
 bool ecs_filter_next(
-    ecs_filter_iter_t *iter)
+    ecs_iter_t *it)
 {
-    ecs_chunked_t *tables = iter->tables;
-    int32_t count = ecs_chunked_count(tables);
+    ecs_filter_iter_t *iter = &it->iter.filter;
+    ecs_sparse_t *tables = iter->tables;
+    int32_t count = ecs_sparse_count(tables);
     int32_t i;
 
     for (i = iter->index; i < count; i ++) {
-        ecs_table_t *table = ecs_chunked_get(tables, ecs_table_t, i);
+        ecs_table_t *table = ecs_sparse_get(tables, ecs_table_t, i);
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+        
+        ecs_data_t *data = ecs_vector_first(table->data, ecs_data_t);
 
-        if (!table->columns) {
+        if (!data) {
             continue;
         }
 
-        if (!ecs_type_match_w_filter(iter->rows.world, table->type, &iter->filter)) {
+        if (!ecs_table_match_filter(it->world, table, &iter->filter)) {
             continue;
         }
 
-        ecs_rows_t *rows = &iter->rows;
-        rows->table = table;
-        rows->table_columns = table->columns;
-        rows->count = ecs_table_count(table);
-        rows->entities = ecs_vector_first(table->columns[0].data);
-        iter->index = ++i;
+        it->table = table;
+        it->table_columns = data->columns;
+        it->count = ecs_table_count(table);
+        it->entities = ecs_vector_first(data->entities, ecs_entity_t);
+        iter->index = i + 1;
+
         return true;
     }
 

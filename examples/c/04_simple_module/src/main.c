@@ -8,10 +8,10 @@ int main(int argc, char *argv[]) {
     /* Import SimpleModule module. After this statement, the application is able
      * to use the Position and Velocity components, and the Move system will be
      * loaded and matched against entities with Position, Velocity. */
-    ECS_IMPORT(world, SimpleModule, 0);
+    ECS_IMPORT(world, SimpleModule);
 
     /* Create an entity with Position and Velocity */
-    ECS_ENTITY(world, MyEntity, Position, Velocity);
+    ECS_ENTITY(world, MyEntity, simple.module.Position, simple.module.Velocity);
 
     /* Initialize values for the entity */
     ecs_set(world, MyEntity, Position, {0, 0});

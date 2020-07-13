@@ -6,13 +6,13 @@ typedef struct Message {
 } Message;
 
 /* Must have the same name as the ECS_SYSTEM definition */
-void PrintMessage(ecs_rows_t *rows) {
+void PrintMessage(ecs_iter_t *it) {
     /* Get a pointer to the array of the first column in the system. The order
      * of columns is the same as the one provided in the system signature. */
-    ECS_COLUMN(rows, Message, msg, 1);
+    ECS_COLUMN(it, Message, msg, 1);
     
     /* Iterate all the messages */
-    for (int i = 0; i < rows->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         printf("%s\n", msg[i].text);
     }
 }

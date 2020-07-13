@@ -24,25 +24,5 @@
 #endif
 #include <bake_test.h>
 
-/* Headers of private dependencies */
-#ifdef API_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef API_STATIC
-  #if API_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define API_EXPORT __declspec(dllexport)
-  #elif API_IMPL
-    #define API_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define API_EXPORT __declspec(dllimport)
-  #else
-    #define API_EXPORT
-  #endif
-#else
-  #define API_EXPORT
-#endif
-
 #endif
 

@@ -28,7 +28,8 @@ int main(int argc, char *argv[]) {
         /* Specify the RootPrefab as the parent for the nested prefab. This will
          * cause the child prefab to be instantiated whenever an instanceof
          * RootPrefab is created. */
-        flecs::prefab(world, "Child", Root)
+        flecs::prefab(world, "Child")
+            .add_childof(Root)
             .set<Position>({30, 40});
 
     auto e = flecs::entity(world)
@@ -43,9 +44,9 @@ int main(int argc, char *argv[]) {
     /* Print position of e and of the child. Note that since we did not override
      * any components, both position components are owned by the prefabs, not by
      * the instances. */
-    Position p = e.get<Position>();
-    std::cout << "Position of e = {" << p.x << ", " << p.y << "}" << std::endl;
+    const Position *p = e.get<Position>();
+    std::cout << "Position of e = {" << p->x << ", " << p->y << "}" << std::endl;
 
     p = child.get<Position>();
-    std::cout << "Position of child = {" << p.x << ", " << p.y << "}" << std::endl;
+    std::cout << "Position of child = {" << p->x << ", " << p->y << "}" << std::endl;
 }

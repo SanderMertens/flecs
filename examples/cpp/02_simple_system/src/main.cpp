@@ -14,10 +14,8 @@ int main(int argc, char *argv[]) {
     flecs::component<Message>(world, "Message");
 
     flecs::system<Message>(world)
-        .action([](const flecs::rows& rows, flecs::column<Message> messages) {
-            for (auto row : rows) {
-                std::cout << messages[row].text << std::endl;
-            }
+        .each([](flecs::entity e, Message& messages) {
+            std::cout << messages.text << std::endl;
         });
 
     flecs::entity(world)

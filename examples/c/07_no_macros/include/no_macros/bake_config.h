@@ -20,25 +20,5 @@
 /* Headers of public dependencies */
 #include <flecs.h>
 
-/* Headers of private dependencies */
-#ifdef NO_MACROS_IMPL
-/* No dependencies */
-#endif
-
-/* Convenience macro for exporting symbols */
-#ifndef NO_MACROS_STATIC
-  #if NO_MACROS_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
-    #define NO_MACROS_EXPORT __declspec(dllexport)
-  #elif NO_MACROS_IMPL
-    #define NO_MACROS_EXPORT __attribute__((__visibility__("default")))
-  #elif defined _MSC_VER
-    #define NO_MACROS_EXPORT __declspec(dllimport)
-  #else
-    #define NO_MACROS_EXPORT
-  #endif
-#else
-  #define NO_MACROS_EXPORT
-#endif
-
 #endif
 

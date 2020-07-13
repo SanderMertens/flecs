@@ -1,7 +1,6 @@
 #include "flecs_private.h"
 
 static bool ecs_os_api_initialized = false;
-static bool ecs_os_api_debug_enabled = false;
 
 ecs_os_api_t ecs_os_api;
 
@@ -19,160 +18,26 @@ void ecs_os_set_api(
     }
 }
 
-/* When flecs is built with bake, use functions from bake.util */
-#ifdef __BAKE__
-
-static
-ecs_os_thread_t bake_thread_new(
-    ecs_os_thread_callback_t callback, 
-    void *param)
-{
-    return (ecs_os_thread_t)ut_thread_new(callback, param);
-}
-
-static
-void* bake_thread_join(
-    ecs_os_thread_t thread)
-{
-    void *arg;
-    ut_thread_join((ut_thread)thread, &arg);
-    return arg;
-}
-
-static
-ecs_os_mutex_t bake_mutex_new(void) {
-    struct ut_mutex_s *m = ecs_os_api.malloc(sizeof(struct ut_mutex_s));
-    ut_mutex_new(m);
-    return (ecs_os_mutex_t)(uintptr_t)m;
-}
-
-static
-void bake_mutex_free(ecs_os_mutex_t mutex) {
-    ut_mutex_free((struct ut_mutex_s*)mutex);
-    ecs_os_api.free((struct ut_mutex_s*)mutex);
-}
-
-static
-void bake_mutex_lock(ecs_os_mutex_t mutex) {
-    ut_mutex_lock((struct ut_mutex_s*)mutex);
-}
-
-static
-void bake_mutex_unlock(ecs_os_mutex_t mutex) {
-    ut_mutex_unlock((struct ut_mutex_s*)mutex);
-}
-
-static
-ecs_os_cond_t bake_cond_new(void) {
-    struct ut_cond_s *c = ecs_os_api.malloc(sizeof(struct ut_cond_s));
-    ut_cond_new(c);
-    return (ecs_os_cond_t)(uintptr_t)c;
-}
-
-static 
-void bake_cond_free(ecs_os_cond_t cond) {
-    ut_cond_free((struct ut_cond_s *)cond);
-}
-
-static 
-void bake_cond_signal(ecs_os_cond_t cond) {
-    ut_cond_signal((struct ut_cond_s *)cond);
-}
-
-static 
-void bake_cond_broadcast(ecs_os_cond_t cond) {
-    ut_cond_broadcast((struct ut_cond_s *)cond);
-}
-
-static 
-void bake_cond_wait(ecs_os_cond_t cond, ecs_os_mutex_t mutex) {
-    ut_cond_wait((struct ut_cond_s *)cond, (struct ut_mutex_s *)mutex);
-}
-
-static 
-void bake_log(
-    ut_log_verbosity level,
-    const char *msg,
-    void *ctx)
-{
-    (void)ctx;
-    if (level >= UT_ERROR) {
-        ecs_os_err("%s", msg);
-    } else if (level <= UT_TRACE) {
-        ecs_os_dbg("%s", msg);
-    } else {
-        ecs_os_log("%s", msg);
-    }
-}
-
-static
-ecs_os_dl_t bake_dlopen(
-    const char *dlname)
-{
-    return (ecs_os_dl_t)ut_dl_open(dlname);
-}
-
-static
-void bake_dlclose(
-    ecs_os_dl_t dl)
-{
-    ut_dl_close((ut_dl)dl);
-}
-
-static
-ecs_os_proc_t bake_dlproc(
-    ecs_os_dl_t dl,
-    const char *procname)
-{
-    ecs_os_proc_t result = (ecs_os_proc_t)ut_dl_proc((ut_dl)dl, procname);
-    if (!result) {
-        ut_raise();
-    }
-    return result;
-}
-
-static
-char* bake_module_to_dl(
-    const char *module_id)
-{
-    const char *result = ut_locate(module_id, NULL, UT_LOCATE_LIB);
-    if (result) {
-        return ut_strdup(result);
-    } else {
-        return NULL;
-    }
-}
-
-
-/* __BAKE__ */
-#endif
-
 static
 void ecs_log(const char *fmt, va_list args) {
-    fprintf(stdout, "[log] ");
     vfprintf(stdout, fmt, args);
     fprintf(stdout, "\n");
 }
 
 static
 void ecs_log_error(const char *fmt, va_list args) {
-    fprintf(stderr, "[err] ");
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
 }
 
 static
 void ecs_log_debug(const char *fmt, va_list args) {
-    if (ecs_os_api_debug_enabled) {
-        fprintf(stderr, "[dbg] ");
-        vfprintf(stderr, fmt, args);
-        fprintf(stderr, "\n");
-    }
+    vfprintf(stdout, fmt, args);
+    fprintf(stdout, "\n");
 }
 
 static
 void ecs_log_warning(const char *fmt, va_list args) {
-    fprintf(stderr, "[warn] ");
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
 }
@@ -217,19 +82,12 @@ void ecs_os_err(const char *fmt, ...) {
     va_end(args);
 }
 
-void ecs_os_enable_dbg(bool enable) {
-    ecs_os_api_debug_enabled = enable;
-}
-
-bool ecs_os_dbg_enabled(void) {
-    return ecs_os_api_debug_enabled;
-}
-
 void ecs_os_gettime(ecs_time_t *timeOut)
 {
     uint64_t now = ecs_os_time_now();
-    timeOut->sec = now / 1000000000;
-    timeOut->nanosec = now - timeOut->sec * 1000000000;
+    uint64_t sec = now / 1000000000;
+    timeOut->sec = sec;
+    timeOut->nanosec = now - sec * 1000000000;
 }
 
 static
@@ -240,11 +98,10 @@ void* ecs_os_api_malloc(size_t size) {
 }
 
 static
-void* ecs_os_api_calloc(size_t num, size_t size) {
+void* ecs_os_api_calloc(size_t size) {
     ecs_os_api_calloc_count ++;
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(num != 0, ECS_INVALID_PARAMETER, NULL);
-    return calloc(num, size);
+    return calloc(1, size);
 }
 
 static
@@ -278,6 +135,62 @@ char* ecs_os_api_strdup(const char *str) {
     return result;
 }
 
+/* Replace dots with underscores */
+static
+char *module_file_base(const char *module, char sep) {
+    char *base = ecs_os_strdup(module);
+    size_t i, len = strlen(base);
+    for (i = 0; i < len; i ++) {
+        if (base[i] == '.') {
+            base[i] = sep;
+        }
+    }
+
+    return base;
+}
+
+static
+char* ecs_os_api_module_to_dl(const char *module) {
+    ecs_strbuf_t lib = ECS_STRBUF_INIT;
+
+    /* Best guess, use module name with underscores + OS library extension */
+    char *file_base = module_file_base(module, '_');
+
+#if defined(ECS_OS_LINUX)
+    ecs_strbuf_appendstr(&lib, "lib");
+    ecs_strbuf_appendstr(&lib, file_base);
+    ecs_strbuf_appendstr(&lib, ".so");
+#elif defined(ECS_OS_DARWIN)
+    ecs_strbuf_appendstr(&lib, "lib");
+    ecs_strbuf_appendstr(&lib, file_base);
+    ecs_strbuf_appendstr(&lib, ".dylib");
+#elif defined(ECS_OS_WINDOWS)
+    ecs_strbuf_appendstr(&lib, file_base);
+    ecs_strbuf_appendstr(&lib, ".dll");
+#endif
+
+    ecs_os_free(file_base);
+
+    return ecs_strbuf_get(&lib);
+}
+
+static
+char* ecs_os_api_module_to_etc(const char *module) {
+    ecs_strbuf_t lib = ECS_STRBUF_INIT;
+
+    /* Best guess, use module name with dashes + /etc */
+    char *file_base = module_file_base(module, '-');
+
+    ecs_strbuf_appendstr(&lib, file_base);
+    ecs_strbuf_appendstr(&lib, "/etc");
+
+    ecs_os_free(file_base);
+
+    return ecs_strbuf_get(&lib);
+}
+
+void ecs_os_api_impl(ecs_os_api_t *api);
+
 void ecs_os_set_api_defaults(void)
 {
     /* Don't overwrite if already initialized */
@@ -293,30 +206,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.calloc = ecs_os_api_calloc;
     ecs_os_api.strdup = ecs_os_api_strdup;
 
-#ifdef __BAKE__
-    ecs_os_api.thread_new = bake_thread_new;
-    ecs_os_api.thread_join = bake_thread_join;
-
-    ecs_os_api.mutex_new = bake_mutex_new;
-    ecs_os_api.mutex_free = bake_mutex_free;
-    ecs_os_api.mutex_lock = bake_mutex_lock;
-    ecs_os_api.mutex_unlock = bake_mutex_unlock;
-
-    ecs_os_api.cond_new = bake_cond_new;
-    ecs_os_api.cond_free = bake_cond_free;
-    ecs_os_api.cond_signal = bake_cond_signal;
-    ecs_os_api.cond_broadcast = bake_cond_broadcast;
-    ecs_os_api.cond_wait = bake_cond_wait;
-
-    ecs_os_api.dlopen = bake_dlopen;
-    ecs_os_api.dlproc = bake_dlproc;
-    ecs_os_api.dlclose = bake_dlclose;
-
-    ecs_os_api.module_to_dl = bake_module_to_dl;
-
-    ut_log_handlerRegister(bake_log, NULL);
-/* __BAKE__ */
-#endif
+    ecs_os_api_impl(&ecs_os_api);
 
     ecs_os_api.sleep = ecs_os_time_sleep;
     ecs_os_api.get_time = ecs_os_gettime;
@@ -325,6 +215,14 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.log_error = ecs_log_error;
     ecs_os_api.log_debug = ecs_log_debug;
     ecs_os_api.log_warning = ecs_log_warning;
+
+    if (!ecs_os_api.module_to_dl) {
+        ecs_os_api.module_to_dl = ecs_os_api_module_to_dl;
+    }
+
+    if (!ecs_os_api.module_to_etc) {
+        ecs_os_api.module_to_etc = ecs_os_api_module_to_etc;
+    }
 
     ecs_os_api.abort = abort;
 }

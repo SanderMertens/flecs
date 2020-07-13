@@ -22,11 +22,11 @@ int main(int argc, char *argv[]) {
      * being matched with systems. This is a common approach to creating
      * entities that are only used as templates for other entities, or in this
      * case, for providing initial component values. */
-    ecs_entity_t base = ecs_new(world, EcsDisabled);
+    ecs_entity_t base = ecs_new_w_entity(world, EcsDisabled);
     ecs_set(world, base, Mass, {10});
 
     /* Create instances which share the Mass component from a base */
-    ecs_entity_t instance = ecs_new_instance(world, base, 0);
+    ecs_entity_t instance = ecs_new_w_entity(world, ECS_INSTANCEOF | base);
 
     /* Add component without setting it. This will initialize the new component
      * with the value from the base, which is a common approach to initializing
@@ -35,7 +35,9 @@ int main(int argc, char *argv[]) {
 
     /* Print value of mass. The value will be equal to base, and the instance
      * will own the component. */
-    printf("instance: %f (owned = %u)\n", ecs_get(world, instance, Mass), ecs_has_owned(world, instance, Mass));
+    printf("instance: %f (owned = %u)\n", 
+        *ecs_get(world, instance, Mass), 
+        ecs_owns(world, instance, Mass, true));
 
     /* Cleanup */
     return ecs_fini(world);

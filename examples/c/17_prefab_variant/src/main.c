@@ -42,13 +42,13 @@ int main(int argc, char *argv[]) {
     ecs_entity_t e2 = ecs_new(world, Sub2);
 
     /* Print values of e1 */
-    Position *p = ecs_get_ptr(world, e1, Position);
-    Velocity *v = ecs_get_ptr(world, e1, Velocity);
+    const Position *p = ecs_get(world, e1, Position);
+    const Velocity *v = ecs_get(world, e1, Velocity);
     printf("e1 Position: {%f, %f} Velocity: {%f, %f}\n", p->x, p->y, v->x, v->y);
 
     /* Print values of e2 */
-    p = ecs_get_ptr(world, e2, Position);
-    v = ecs_get_ptr(world, e2, Velocity);
+    p = ecs_get(world, e2, Position);
+    v = ecs_get(world, e2, Velocity);
     printf("e2 Position: {%f, %f} Velocity: {%f, %f}\n", p->x, p->y, v->x, v->y);
 
     /* Cleanup */

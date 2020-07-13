@@ -5,3 +5,8 @@ bin
 gcov
 .idea
 cmake-build-debug
+bazel-bin
+bazel-flecs
+bazel-genfiles
+bazel-out
+bazel-testlogs
