@@ -15,10 +15,6 @@ Flecs is a fast and lightweight [Entity Component System](#what-is-an-entity-com
 - Modules allow for creation of large scale applications by organizing systems & components in reusable plug & play units
 - A fully customizable core that makes it easy to integrate Flecs into other frameworks / game engines
 
-Make sure to check the flecs [dashboard](https://github.com/SanderMertens/flecs-systems-admin):
-
-![dashboard](https://user-images.githubusercontent.com/9919222/54180572-309ec380-4459-11e9-9e48-1a08de57ff91.png)
-
 ## What is an Entity Component System?
 ECS (Entity Component System) is a way to organize code that is mostly used in gaming and simulation projects. ECS code generally performs better than traditional OOP, and is typically easier to reuse. The main differences between ECS and OOP are composition is a first class citizen in ECS, and that data is represented as plain data types rather than encapsulated classes.  A framework is an Entity Component System if it:
 
@@ -112,7 +108,12 @@ Module      | Description
 [flecs.rest](https://github.com/flecs-hub/flecs-rest) | A REST interface for introspecting & editing entities
 [flecs.player](https://github.com/flecs-hub/flecs-player) | Play, stop and pause simulations
 [flecs.dash](https://github.com/flecs-hub/flecs-dash) | Web-frontend for remote monitoring and debugging of Flecs apps
+[flecs.components.geometry](https://github.com/flecs-hub/flecs-components-geometry) | Components that describe geometry
+[flecs.components.graphics](https://github.com/flecs-hub/flecs-components-graphics) | Components used for computer graphics
+[flecs.components.gui](https://github.com/flecs-hub/flecs-components-gui) | Components used to describe GUI components
 [flecs.components.http](https://github.com/flecs-hub/flecs-components-http) | Components describing an HTTP server
+[flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input
+[flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe physics and movement
 [flecs.systems.civetweb](https://github.com/flecs-hub/flecs-systems-civetweb) | A civetweb-based implementation of flecs.components.http
 
 ## Building
