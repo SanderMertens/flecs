@@ -161,18 +161,15 @@ void New_redefine_component() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t c = 0;
-    ecs_type_t t = NULL;
 
     {
         ECS_COMPONENT(world, Position);
         c = ecs_entity(Position);
-        t = ecs_type(Position);
     }
 
     {
         ECS_COMPONENT(world, Position);
         test_assert(c == ecs_entity(Position));
-        test_assert(t == ecs_type(Position));
     }
     
     ecs_fini(world);

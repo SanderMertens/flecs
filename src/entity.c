@@ -1341,7 +1341,7 @@ void add_remove(
         world, stage, src_table, to_remove, &removed);
 
     dst_table = ecs_table_traverse_add(
-        world, stage, dst_table, to_add, &added);        
+        world, stage, dst_table, to_add, &added);    
 
     commit(world, stage, entity, &info, dst_table, &added, &removed);
 }
