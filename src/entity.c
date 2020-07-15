@@ -1964,6 +1964,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
     size_t size,
     const void *ptr)
 {    
+    ecs_world_t *original_world = world;
     ecs_stage_t *stage = ecs_get_stage(&world);
 
     ecs_entities_t added = {
@@ -2004,7 +2005,7 @@ ecs_entity_t ecs_set_ptr_w_entity(
 
     ecs_table_mark_dirty(info.table, component);
 
-    ecs_run_set_systems(world, stage, &added, 
+    ecs_run_set_systems(original_world, stage, &added, 
         info.table, info.data, info.row, 1, false);
 
     ecs_defer_end(world, stage);

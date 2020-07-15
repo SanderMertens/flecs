@@ -320,7 +320,7 @@ bool ecs_type_owns_entity(
                  ecs_entity_t e = array[i];
                  if (e & ECS_TRAIT) {
                      e &= ECS_ENTITY_MASK;
-                     if (ecs_entity_t_hi(e)) {
+                     if (ecs_entity_t_hi(e) == entity) {
                          return true;
                      }
                  }

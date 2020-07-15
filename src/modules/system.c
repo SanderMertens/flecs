@@ -544,6 +544,9 @@ void ecs_run_monitor(
     int32_t count,
     ecs_entity_t *entities)
 {
+    ecs_world_t *original_world = world;
+    ecs_get_stage(&world);
+
     ecs_query_t *query = monitor->query;
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -559,6 +562,7 @@ void ecs_run_monitor(
     ecs_query_set_iter( world, stage, query, &it, 
         monitor->matched_table_index, row, count);
 
+    it.world = original_world;
     it.triggered_by = components;
     it.param = system_data->ctx;
 

@@ -493,6 +493,7 @@ void add_table(
         trait_index_offsets = ecs_os_calloc(sizeof(int32_t) * column_count);
     }
 
+
     /* From here we recurse */
 add_trait:
 
@@ -702,7 +703,7 @@ bool ecs_query_match(
         ecs_sig_from_kind_t from_kind = elem->from_kind;
         ecs_sig_oper_kind_t oper_kind = elem->oper_kind;
 
-        failure_info->column = i + 1;     
+        failure_info->column = i + 1;
 
         if (oper_kind == EcsOperAnd) {
             if (!match_column(
