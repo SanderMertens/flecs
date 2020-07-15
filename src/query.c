@@ -879,14 +879,13 @@ int32_t qsort_table(
     int32_t hi,
     ecs_compare_action_t compare)
 {
+    int32_t p = (hi + lo) / 2;
+    void *pivot = ELEM(ptr, elem_size, p);
+    ecs_entity_t pivot_e = entities[p];
+    int32_t i = lo - 1, j = hi + 1;
+    void *el;    
 repeat:
     {
-        int32_t p = (hi + lo) / 2;
-        void *pivot = ELEM(ptr, elem_size, p);
-        ecs_entity_t pivot_e = entities[p];
-        int32_t i = lo - 1, j = hi + 1;
-        void *el;
-        
         do {
             i ++;
             el = ELEM(ptr, elem_size, i);
@@ -902,6 +901,7 @@ repeat:
         }
 
         ecs_table_swap(world, &world->stage, table, data, i, j);
+
         goto repeat;
     }
 }

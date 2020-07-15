@@ -444,7 +444,8 @@
                 "sort_after_remove",
                 "sort_after_delete",
                 "sort_after_set",
-                "sort_after_system"
+                "sort_after_system",
+                "sort_by_component_same_value"
             ]
         }, {
             "id": "Queries",

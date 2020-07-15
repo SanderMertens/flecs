@@ -50,6 +50,38 @@ void Sorting_sort_by_component() {
     ecs_fini(world);
 }
 
+void Sorting_sort_by_component_same_value() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 0});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {2, 0});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {1, 0});
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_order_by(world, q, ecs_entity(Position), compare_position);
+
+    ecs_iter_t it = ecs_query_iter(q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 5);
+    
+
+    test_assert(it.entities[0] == e5);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.entities[2] == e3);
+    test_assert(it.entities[3] == e2);
+    test_assert(it.entities[4] == e1);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+
 void Sorting_sort_by_component_2_tables() {
     ecs_world_t *world = ecs_init();
 
